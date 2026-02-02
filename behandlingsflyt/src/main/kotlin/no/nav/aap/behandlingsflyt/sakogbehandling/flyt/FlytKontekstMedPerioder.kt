@@ -17,10 +17,14 @@ data class FlytKontekstMedPerioder(
     val behandlingType: TypeBehandling,
     val vurderingType: VurderingType,
     val rettighetsperiode: Periode,
-    val vurderingsbehovRelevanteForSteg: Set<Vurderingsbehov>,
     val vurderingsbehovRelevanteForStegMedPerioder: Set<VurderingsbehovMedPeriode>
 ) {
-    
+
+    val vurderingsbehovRelevanteForSteg: Set<Vurderingsbehov>
+        get() {
+            return vurderingsbehovRelevanteForStegMedPerioder.map { it.type }.toSet()
+        }
+
     fun harNoeTilBehandling(): Boolean {
         return vurderingType != VurderingType.IKKE_RELEVANT
     }

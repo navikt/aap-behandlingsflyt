@@ -45,7 +45,6 @@ class FlytKontekstMedPerioderBuilder {
             forrigeBehandlingId = forrigeBehandlingId,
             vurderingType = vurderingType,
             rettighetsperiode = rettighetsperiode,
-            vurderingsbehovRelevanteForSteg = vurderingsbehovRelevanteForSteg,
             vurderingsbehovRelevanteForStegMedPerioder = vurderingsbehovRelevanteForStegMedPerioder
                 ?: vurderingsbehovRelevanteForSteg.map { VurderingsbehovMedPeriode(it) }.toSet()
         )

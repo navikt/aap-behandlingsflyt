@@ -55,7 +55,6 @@ class FlytKontekstMedPeriodeService(
                 typeBehandling = kontekst.behandlingType
             ),
             rettighetsperiode = sak.rettighetsperiode,
-            vurderingsbehovRelevanteForSteg = relevanteVurderingsbehov,
             vurderingsbehovRelevanteForStegMedPerioder = relevanteVurderingsbehovMedPerioder
         )
     }

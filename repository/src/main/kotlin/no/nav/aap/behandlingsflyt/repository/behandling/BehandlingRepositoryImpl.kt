@@ -73,14 +73,15 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
             VALUES (?, ?, ?::daterange, ?, ?, ?)
         """.trimIndent()
 
+        val opprettetTid = LocalDateTime.now()
         connection.executeBatch(vurderingsbehovQuery, vurderingsbehovOgÅrsak.vurderingsbehov) {
             setParams {
                 setLong(1, behandlingId)
                 setEnumName(2, it.type)
                 setPeriode(3, it.periode)
                 setLong(4, behandlingÅrsakId)
-                setLocalDateTime(5, LocalDateTime.now())
-                setLocalDateTime(6, LocalDateTime.now())
+                setLocalDateTime(5, opprettetTid)
+                setLocalDateTime(6, opprettetTid)
             }
         }
 
