@@ -97,7 +97,9 @@ fun NormalOpenAPIRoute.saksApi(
                                     Resultat.AVBRUTT -> ResultatKode.AVBRUTT
                                     null -> null
                                 }
-                            })
+                            },
+                            opprettetNy = sak.status() == Status.OPPRETTET
+                        )
                     }
                 }
 
@@ -173,7 +175,9 @@ fun NormalOpenAPIRoute.saksApi(
                                     Resultat.AVBRUTT -> ResultatKode.AVBRUTT
                                     null -> null
                                 }
-                            })
+                            },
+                            opprettetNy = sak.status() == Status.OPPRETTET
+                        )
                     }
                 }
 
@@ -269,7 +273,8 @@ fun NormalOpenAPIRoute.saksApi(
                         saksnummer = sak.saksnummer.toString(),
                         opprettetTidspunkt = sak.opprettetTidspunkt,
                         periode = periode,
-                        ident = sak.person.aktivIdent().identifikator
+                        ident = sak.person.aktivIdent().identifikator,
+                        opprettetNy = sak.status() == Status.OPPRETTET
                     )
                 }
                 respond(saken)
@@ -287,7 +292,8 @@ fun NormalOpenAPIRoute.saksApi(
                                 saksnummer = sak.saksnummer.toString(),
                                 opprettetTidspunkt = sak.opprettetTidspunkt,
                                 periode = sak.rettighetsperiode,
-                                ident = sak.person.aktivIdent().identifikator
+                                ident = sak.person.aktivIdent().identifikator,
+                                opprettetNy = sak.status() == Status.OPPRETTET
                             )
                         }
                 }

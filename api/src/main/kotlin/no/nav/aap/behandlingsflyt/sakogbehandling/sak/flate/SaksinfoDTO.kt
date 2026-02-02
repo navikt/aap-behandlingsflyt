@@ -9,5 +9,6 @@ data class SaksinfoDTO(
     val opprettetTidspunkt: LocalDateTime,
     val periode: Periode,
     val ident: String,
-    val resultat: ResultatKode? = null
+    val resultat: ResultatKode? = null,
+    val opprettetNy: Boolean
 )
