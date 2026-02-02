@@ -56,9 +56,9 @@ for (taskName in listOf<String>("clean", "build", "check")) {
 tasks.register("testMatrix") {
     notCompatibleWithConfigurationCache("Accesses project at execution time")
     doLast {
-        val checkTaskPaths = subprojects.mapNotNull {
-            it.tasks.findByName("check")?.path
-        }
+        val checkTaskPaths = subprojects
+            .filter { it.name != "docs" }
+            .mapNotNull { it.tasks.findByName("check")?.path }
         val json = checkTaskPaths.joinToString(separator = ",", prefix = "[", postfix = "]") { "\"$it\"" }
         println(json)
     }
