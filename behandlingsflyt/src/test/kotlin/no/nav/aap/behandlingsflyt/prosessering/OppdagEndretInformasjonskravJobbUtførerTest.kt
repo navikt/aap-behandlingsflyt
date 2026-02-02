@@ -17,7 +17,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Av
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkår
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsperiode
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnGateway
@@ -39,6 +38,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreInformasjo
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreRegisterGateway
 import no.nav.aap.behandlingsflyt.help.FakePdlGateway
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
+import no.nav.aap.behandlingsflyt.help.genererVilkårsresultat
 import no.nav.aap.behandlingsflyt.help.sak
 import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
@@ -197,7 +197,7 @@ class OppdagEndretInformasjonskravJobbUtførerTest {
                     institusjonsnavn = "hei"
                 )
             )
-            
+
             val klokke = fixedClock(sak.rettighetsperiode.fom.plusWeeks(2))
 
             OppdagEndretInformasjonskravJobbUtfører.konstruerMedKlokke(repositoryProvider, gatewayProvider, klokke)
@@ -249,6 +249,78 @@ class OppdagEndretInformasjonskravJobbUtførerTest {
         }
     }
 
+    @Test
+    fun `Kan sjekke om bruker har rett i en gitt periode`() {
+        val rettighetsperiode = Periode(1 januar 2020, Tid.MAKS)
+
+        val nå = 1 januar 2021
+
+        val avslagPåAlderIGår = genererVilkårsresultat(
+            periode,
+            aldersVilkåret = Vilkår(
+                Vilkårtype.ALDERSVILKÅRET, setOf(
+                    Vilkårsperiode(
+                        Periode(rettighetsperiode.fom, nå),
+                        Utfall.OPPFYLT,
+                        false,
+                        null,
+                        faktagrunnlag = null
+                    ),
+                    Vilkårsperiode(
+                        Periode(nå.plusDays(1), Tid.MAKS),
+                        Utfall.IKKE_OPPFYLT,
+                        false,
+                        null,
+                        faktagrunnlag = null,
+                        avslagsårsak = Avslagsårsak.BRUKER_OVER_67
+                    )
+                )
+            )
+        ).rettighetstypeTidslinje()
+
+        val avslagPåAlderIDag = genererVilkårsresultat(
+            periode,
+            aldersVilkåret = Vilkår(
+                Vilkårtype.ALDERSVILKÅRET, setOf(
+                    Vilkårsperiode(
+                        Periode(rettighetsperiode.fom, nå.minusDays(1)),
+                        Utfall.OPPFYLT,
+                        false,
+                        null,
+                        faktagrunnlag = null
+                    ),
+                    Vilkårsperiode(
+                        Periode(nå, Tid.MAKS),
+                        Utfall.IKKE_OPPFYLT,
+                        false,
+                        null,
+                        faktagrunnlag = null,
+                        avslagsårsak = Avslagsårsak.BRUKER_OVER_67
+                    )
+                )
+            )
+        ).rettighetstypeTidslinje()
+
+
+        assertThat(
+            OppdagEndretInformasjonskravJobbUtfører.harRettInnenforPeriode(
+                Periode(
+                    nå,
+                    rettighetsperiode.tom
+                ), avslagPåAlderIGår
+            )
+        ).isTrue()
+
+        assertThat(
+            OppdagEndretInformasjonskravJobbUtfører.harRettInnenforPeriode(
+                Periode(
+                    nå,
+                    rettighetsperiode.tom
+                ), avslagPåAlderIDag
+            )
+        ).isFalse()
+    }
+
     private fun settOppFørstegangsvurdering(): Pair<Sak, Behandling> {
         return dataSource.transaction { connection ->
             val repositoryProvider = postgresRepositoryRegistry.provider(connection)
@@ -287,98 +359,13 @@ class OppdagEndretInformasjonskravJobbUtførerTest {
             repositoryProvider.provide<VilkårsresultatRepository>().lagre(
                 førstegangsbehandlingen.id,
                 genererVilkårsresultat(Periode(sak.rettighetsperiode.fom, Tid.MAKS))
-                
+
             )
-            repositoryProvider.provide<VedtakRepository>().lagre(førstegangsbehandlingen.id, LocalDateTime.now(), LocalDate.now())
+            repositoryProvider.provide<VedtakRepository>()
+                .lagre(førstegangsbehandlingen.id, LocalDateTime.now(), LocalDate.now())
             repositoryProvider.provide<BehandlingRepository>()
                 .oppdaterBehandlingStatus(førstegangsbehandlingen.id, Status.AVSLUTTET)
             Pair(sak, førstegangsbehandlingen)
         }
-    }
-    
-    private fun genererVilkårsresultat(periode: Periode, oppfyltBistand: Boolean = true): Vilkårsresultat {
-        val aldersVilkåret =
-            Vilkår(
-                Vilkårtype.ALDERSVILKÅRET, setOf(
-                    Vilkårsperiode(
-                        periode,
-                        Utfall.OPPFYLT,
-                        false,
-                        null,
-                        faktagrunnlag = null
-                    )
-                )
-            )
-        val sykdomsVilkåret =
-            Vilkår(
-                Vilkårtype.SYKDOMSVILKÅRET, setOf(
-                    Vilkårsperiode(
-                        periode,
-                        Utfall.OPPFYLT,
-                        false,
-                        null,
-                        faktagrunnlag = null
-                    )
-                )
-            )
-        val lovvalgsVilkåret =
-            Vilkår(
-                Vilkårtype.LOVVALG, setOf(
-                    Vilkårsperiode(
-                        periode,
-                        Utfall.OPPFYLT,
-                        false,
-                        null,
-                        faktagrunnlag = null
-                    )
-                )
-            )
-        val medlemskapVilkåret =
-            Vilkår(
-                Vilkårtype.MEDLEMSKAP, setOf(
-                    Vilkårsperiode(
-                        periode,
-                        Utfall.OPPFYLT,
-                        false,
-                        null,
-                        faktagrunnlag = null
-                    )
-                )
-            )
-        val bistandVilkåret =
-            Vilkår(
-                Vilkårtype.BISTANDSVILKÅRET, setOf(
-                    Vilkårsperiode(
-                        periode,
-                        if (oppfyltBistand) Utfall.OPPFYLT else Utfall.IKKE_OPPFYLT,
-                        false,
-                        null,
-                        faktagrunnlag = null,
-                        avslagsårsak = if (oppfyltBistand) null else Avslagsårsak.IKKE_BEHOV_FOR_OPPFOLGING
-                    )
-                )
-            )
-        val grunnlagVilkåret = Vilkår(
-            Vilkårtype.GRUNNLAGET, setOf(
-                Vilkårsperiode(
-                    periode,
-                    Utfall.OPPFYLT,
-                    false,
-                    null,
-                    faktagrunnlag = null
-                )
-            )
-        )
-
-        return Vilkårsresultat(
-            vilkår = listOf(
-                aldersVilkåret,
-                lovvalgsVilkåret,
-                sykdomsVilkåret,
-                medlemskapVilkåret,
-                bistandVilkåret,
-                grunnlagVilkåret,
-            )
-        )
     }
 }
