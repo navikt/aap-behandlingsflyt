@@ -72,7 +72,11 @@ class TestSakService(
 
         val eksisterendeSaker = sakService.finnSakerFor(ident)
         if (eksisterendeSaker.isNotEmpty()) {
-            throw OpprettTestSakException("Det finnes allerede en eller flere saker for bruker ${ident.getMasked()}. Fant sak med saksnummer: ${eksisterendeSaker.first().saksnummer}. Vennligst bruk en annen testbruker eller gjenbruk den åpne saken.")
+            throw OpprettTestSakException(
+                "Det finnes allerede en eller flere saker for bruker ${ident.getMasked()}. " +
+                        "Fant sak med saksnummer: ${eksisterendeSaker.first().saksnummer}. " +
+                        "Vennligst bruk en annen testbruker eller gjenbruk den åpne saken."
+            )
         }
 
         val sak = sakService.finnEllerOpprett(ident, periode)

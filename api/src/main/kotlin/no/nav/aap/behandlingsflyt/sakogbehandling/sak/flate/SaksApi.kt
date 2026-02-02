@@ -146,7 +146,6 @@ fun NormalOpenAPIRoute.saksApi(
                 if (person == null) {
                     emptyList()
                 } else {
-                    // Her skal vi strengt tatt bare ha én sak?
                     val saker = repositoryProvider.provide<SakRepository>().finnSakerFor(person)
 
                     saker.map { sak ->
@@ -258,7 +257,9 @@ fun NormalOpenAPIRoute.saksApi(
                     val ident = Ident(dto.ident)
                     val periode = Periode(
                         dto.søknadsdato, dto.søknadsdato.plusYears(1).minusDays(1)
-                    ) // Setter til fra og med dagens dato, til og med et år frem i tid minus en dag som er tilsvarende "vedtakslengde" i forskriften
+                    )
+                    // Setter 'fra og med' til dagens dato, 'til og med' et år frem i tid minus en dag.
+                    // Dette tilsvarer "vedtakslengde" i forskriften.
                     val sak = PersonOgSakService(
                         pdlGateway = identGateway,
                         personRepository = repositoryProvider.provide<PersonRepository>(),
