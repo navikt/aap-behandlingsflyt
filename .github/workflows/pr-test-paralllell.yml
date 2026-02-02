@@ -71,4 +71,4 @@ jobs:
               if: success() || failure() # always run even if the previous step fails
               with:
                 report_paths: '**/build/test-results/test/TEST-*.xml'
-                check_name: 'JUnit Test Report for ${{ matrix.java }}'
+                check_name: 'JUnit Test Report for ${{ matrix.gradle_args }}'
