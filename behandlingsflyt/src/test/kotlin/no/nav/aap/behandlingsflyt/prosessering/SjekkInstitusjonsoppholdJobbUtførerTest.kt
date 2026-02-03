@@ -195,7 +195,7 @@ class SjekkInstitusjonsoppholdJobbUtførerTest {
             )
         } returns fakeOpprettetBehandling
 
-        val underveisGrunnlag = UnderveisGrunnlag(
+        every { underveisgrunnlagRepositoryMock.hentHvisEksisterer(any()) } returns UnderveisGrunnlag(
             id = 100L,
             perioder = listOf(
                 underveisperiode(
@@ -206,8 +206,6 @@ class SjekkInstitusjonsoppholdJobbUtførerTest {
                 )
             )
         )
-        every { underveisgrunnlagRepositoryMock.hentHvisEksisterer(any()) } returns underveisGrunnlag
-        every { underveisgrunnlagRepositoryMock.hent(any()) } returns underveisGrunnlag
 
         every {
             prosesserBehandlingServiceMock.triggProsesserBehandling(

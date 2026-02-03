@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.integrasjon.brev
 
+import no.nav.aap.behandlingsflyt.behandling.brev.Arbeidssøker
 import no.nav.aap.behandlingsflyt.behandling.brev.Avslag
 import no.nav.aap.behandlingsflyt.behandling.brev.BrevBehov
 import no.nav.aap.behandlingsflyt.behandling.brev.GrunnlagBeregning
@@ -53,6 +54,7 @@ import no.nav.aap.komponenter.json.DefaultJsonMapper
 import org.slf4j.LoggerFactory
 import java.io.InputStream
 import java.net.URI
+import java.time.LocalDate
 import kotlin.collections.orEmpty
 
 class BrevGateway : BrevbestillingGateway {
@@ -312,6 +314,7 @@ class BrevGateway : BrevbestillingGateway {
             is Innvilgelse ->
                 buildSet {
                     add(Faktagrunnlag.AapFomDato(brevBehov.virkningstidspunkt))
+                    add(Faktagrunnlag.SisteDagMedYtelse(brevBehov.sisteDagMedYtelse))
                     if (brevBehov.tilkjentYtelse != null) {
                         add(
                             tilkjentYtelseTilFaktagrunnlag(brevBehov.tilkjentYtelse!!)
@@ -330,11 +333,25 @@ class BrevGateway : BrevbestillingGateway {
 
             is VurderesForUføretrygd -> {
                 buildSet {
+                    add(Faktagrunnlag.KravdatoUføretrygd(brevBehov.kravdatoUføretrygd))
+                    add(Faktagrunnlag.SisteDagMedYtelse(brevBehov.sisteDagMedYtelse))
                     if (brevBehov.grunnlagBeregning != null) {
                         add(
                             grunnlagBeregningTilFaktagrunnlag(brevBehov.grunnlagBeregning!!)
                         )
                     }
+                    if (brevBehov.tilkjentYtelse != null) {
+                        add(
+                            tilkjentYtelseTilFaktagrunnlag(brevBehov.tilkjentYtelse!!)
+                        )
+                    }
+                }
+            }
+
+            is Arbeidssøker -> {
+                buildSet {
+                    add(Faktagrunnlag.DatoAvklartForJobbsøk(brevBehov.datoAvklartForJobbsøk))
+                    add(Faktagrunnlag.SisteDagMedYtelse(brevBehov.sisteDagMedYtelse))
                     if (brevBehov.tilkjentYtelse != null) {
                         add(
                             tilkjentYtelseTilFaktagrunnlag(brevBehov.tilkjentYtelse!!)
@@ -354,7 +371,7 @@ class BrevGateway : BrevbestillingGateway {
             is UtvidVedtakslengde -> {
                 buildSet {
                     add(
-                        Faktagrunnlag.SisteDagMedYtelse(brevBehov.sluttdato)
+                        Faktagrunnlag.SisteDagMedYtelse(brevBehov.sisteDagMedYtelse)
                     )
                 }
             }
@@ -374,9 +391,7 @@ class BrevGateway : BrevbestillingGateway {
             antallBarn = tilkjentYtelse.antallBarn,
             minsteÅrligYtelse = tilkjentYtelse.minsteÅrligYtelse?.heltallverdi(),
             minsteÅrligYtelseUnder25 = tilkjentYtelse.minsteÅrligYtelseUnder25?.heltallverdi(),
-            årligYtelse = tilkjentYtelse.årligYtelse?.heltallverdi(),
-            sisteDagMedYtelse = tilkjentYtelse.sisteDagMedYtelse,
-            kravdatoUføretrygd = tilkjentYtelse.kravdatoUføretrygd
+            årligYtelse = tilkjentYtelse.årligYtelse?.heltallverdi()
         )
     }
 
