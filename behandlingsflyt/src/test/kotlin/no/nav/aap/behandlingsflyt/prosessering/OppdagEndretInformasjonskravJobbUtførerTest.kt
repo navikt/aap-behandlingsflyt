@@ -254,6 +254,22 @@ class OppdagEndretInformasjonskravJobbUtførerTest {
         val rettighetsperiode = Periode(1 januar 2020, Tid.MAKS)
 
         val nå = 1 januar 2021
+        
+        val fulltAvslag = genererVilkårsresultat(
+            periode,
+            bistandVilkåret = Vilkår(
+                Vilkårtype.BISTANDSVILKÅRET, setOf(
+                    Vilkårsperiode(
+                        rettighetsperiode,
+                        Utfall.IKKE_OPPFYLT,
+                        false,
+                        null,
+                        faktagrunnlag = null,
+                        avslagsårsak = Avslagsårsak.IKKE_BEHOV_FOR_OPPFOLGING
+                    )
+                )
+            )
+        )
 
         val avslagPåAlderIGår = genererVilkårsresultat(
             periode,
@@ -276,7 +292,7 @@ class OppdagEndretInformasjonskravJobbUtførerTest {
                     )
                 )
             )
-        ).rettighetstypeTidslinje()
+        )
 
         val avslagPåAlderIDag = genererVilkårsresultat(
             periode,
@@ -299,7 +315,7 @@ class OppdagEndretInformasjonskravJobbUtførerTest {
                     )
                 )
             )
-        ).rettighetstypeTidslinje()
+        )
 
 
         assertThat(
@@ -317,6 +333,15 @@ class OppdagEndretInformasjonskravJobbUtførerTest {
                     nå,
                     rettighetsperiode.tom
                 ), avslagPåAlderIDag
+            )
+        ).isFalse()
+
+        assertThat(
+            OppdagEndretInformasjonskravJobbUtfører.harRettInnenforPeriode(
+                Periode(
+                    nå,
+                    rettighetsperiode.tom
+                ), fulltAvslag
             )
         ).isFalse()
     }

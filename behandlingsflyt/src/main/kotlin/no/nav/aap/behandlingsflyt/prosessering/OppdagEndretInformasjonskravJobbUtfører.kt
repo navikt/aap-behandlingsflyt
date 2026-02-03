@@ -1,11 +1,15 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
+import no.nav.aap.behandlingsflyt.behandling.rettighetstype.KvoteOk
+import no.nav.aap.behandlingsflyt.behandling.rettighetstype.vurderRettighetstypeOgKvoter
+import no.nav.aap.behandlingsflyt.behandling.underveis.KvoteService
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Avslag
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.VarighetRegel
 import no.nav.aap.behandlingsflyt.faktagrunnlag.KanTriggeRevurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseVurderingInformasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdInformasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningInformasjonskrav
@@ -56,6 +60,12 @@ class OppdagEndretInformasjonskravJobbUtfører(
         val sisteFattedeYtelsesbehandling = sakOgBehandlingService.finnBehandlingMedSisteFattedeVedtak(sakId)
             ?: error("Fant ikke siste behandling med fattet vedtak for sak $sakId")
 
+
+        /**
+         * TODO: Denne utleder rettighetstype og kvote basert på lagret vilkårsresultat.
+         * Bør bruke nedlagret rettighetstype med kvote, men vi gjør ikke dette enda.
+         * Underveis er avgrenset i fremtiden, og kan derfor ikke brukes.
+         */
         val harNyligEllerFremtidigRett = harRettInnenforPeriode(
             sisteFattedeYtelsesbehandling.id, Periode(
                 LocalDate.now(klokke).minusWeeks(2),
@@ -88,14 +98,14 @@ class OppdagEndretInformasjonskravJobbUtfører(
                 log.info("Lar være å opprette revurdering for sak $sakId med behov $vurderingsbehov da opplysningene er registrert fra før. ")
             }
         }
-        
+
         låsRepository.verifiserSkrivelås(sakSkrivelås)
     }
 
     private fun harRettInnenforPeriode(behandlingId: BehandlingId, periode: Periode): Boolean {
-        val rettighetstypeTidslinje =
-            vilkårsresultatRepository.hent(behandlingId).rettighetstypeTidslinje()
-        return harRettInnenforPeriode(periode, rettighetstypeTidslinje)
+        val vilkårsresultat =
+            vilkårsresultatRepository.hent(behandlingId)
+        return harRettInnenforPeriode(periode, vilkårsresultat)
     }
 
 
@@ -117,7 +127,7 @@ class OppdagEndretInformasjonskravJobbUtfører(
                 vilkårsresultatRepository = repositoryProvider.provide()
             )
         }
-        
+
         fun konstruerMedKlokke(
             repositoryProvider: RepositoryProvider,
             gatewayProvider: GatewayProvider,
@@ -133,20 +143,11 @@ class OppdagEndretInformasjonskravJobbUtfører(
                 klokke = klokke
             )
         }
-
-
-        fun harRettInnenforPeriode(periode: Periode, rettighetstypeTidslinje: Tidslinje<RettighetsType>): Boolean {
-            val varighetstidslinje = VarighetRegel().simuler(rettighetstypeTidslinje)
-            val rettighetJustertForKvote =
-                Tidslinje.map2(rettighetstypeTidslinje, varighetstidslinje) { rettighet, varighet ->
-                    rettighet != null && varighet !is Avslag
-                }.begrensetTil(periode)
-
-            return rettighetJustertForKvote
-                .segmenter()
-                .any { it.verdi }
-
+        
+        fun harRettInnenforPeriode(periode: Periode, vilkårsresultat: Vilkårsresultat): Boolean {
+            val rettighetMedKvote = vurderRettighetstypeOgKvoter(vilkårsresultat, KvoteService().beregn())
+            return rettighetMedKvote.begrensetTil(periode).segmenter()
+                .any { it.verdi.rettighetsType != null && it.verdi is KvoteOk }
         }
     }
-
 }
