@@ -30,6 +30,12 @@ class Avklaringsbehov(
             it.status != Status.AVBRUTT
         }
 
+    val perioderVedtaketBehøverVurdering: List<Periode>?
+        get() = aktivHistorikk
+            .lastOrNull { it.status == Status.OPPRETTET }
+            ?.perioderVedtaketBehøverVurdering
+            ?.sorted()
+
     fun erTotrinn(): Boolean {
         if (definisjon.kreverToTrinn) {
             return true
@@ -255,7 +261,7 @@ class Avklaringsbehov(
     }
 
     fun perioderVedtaketBehøverVurdering(): Set<Periode>? {
-        return aktivHistorikk.filter { it.status.erÅpent() }.maxOfOrNull { it }?.perioderVedtaketBehøverVurdering
+        return perioderVedtaketBehøverVurdering?.toSet()
     }
 
     fun perioderSomIkkeErTilstrekkeligVurdert(): Set<Periode>? {
