@@ -17,7 +17,6 @@ import no.nav.aap.motor.JobbUtfører
 import no.nav.aap.motor.ProvidersJobbSpesifikasjon
 import no.nav.aap.motor.cron.CronExpression
 import org.slf4j.LoggerFactory
-import java.time.LocalDate
 
 class OpprettJobbForMigrereRettighetsperiodeJobbUtfører(
     private val flytJobbRepository: FlytJobbRepository,
@@ -31,7 +30,7 @@ class OpprettJobbForMigrereRettighetsperiodeJobbUtfører(
 
     override fun utfør(input: JobbInput) {
 
-        val saker = sakRepository.finnSakerMedUtenRiktigSluttdatoPåRettighetsperiode()
+        val saker = sakRepository.finnSakerMedAvsluttedeBehandlingerUtenRiktigSluttdatoPåRettighetsperiode()
         val sakerForMigrering = saker
             .filter { sak ->
                 val sisteYtelsesbehandling = sakOgBehandlingService.finnSisteYtelsesbehandlingFor(sak.id)

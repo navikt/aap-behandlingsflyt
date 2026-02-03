@@ -5,14 +5,12 @@ import io.mockk.verify
 import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingService
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadVurdering
+import no.nav.aap.behandlingsflyt.help.flytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
-import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvbrytRevurderingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
@@ -58,15 +56,11 @@ class AvklaringsbehovServiceTest {
         val vedtakBehøverVurdering = { true }
         val erTilstrekkeligVurdert = { false }
         val tilbakestillGrunnlag = mockk<() -> Unit>(relaxed = true)
-        val kontekst = FlytKontekstMedPerioder(
-            sakId = SakId(1),
-            behandlingId = behandlingId,
-            forrigeBehandlingId = null,
-            behandlingType = TypeBehandling.Førstegangsbehandling,
-            vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
-            rettighetsperiode = Periode(LocalDate.now(), Tid.MAKS),
-            vurderingsbehovRelevanteForSteg = emptySet()
-        )
+        val kontekst = flytKontekstMedPerioder {
+            this.behandlingId = behandlingId
+            this.rettighetsperiode = Periode(LocalDate.now(), Tid.MAKS)
+            this.vurderingsbehovRelevanteForSteg = emptySet()
+        }
 
         // Act
         avklaringsbehovService.oppdaterAvklaringsbehov(
@@ -97,15 +91,11 @@ class AvklaringsbehovServiceTest {
         val vedtakBehøverVurdering = { true }
         val erTilstrekkeligVurdert = { true }
         val tilbakestillGrunnlag = mockk<() -> Unit>(relaxed = true)
-        val kontekst = FlytKontekstMedPerioder(
-            sakId = SakId(1),
-            behandlingId = behandlingId,
-            forrigeBehandlingId = null,
-            behandlingType = TypeBehandling.Førstegangsbehandling,
-            vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
-            rettighetsperiode = Periode(LocalDate.now(), Tid.MAKS),
-            vurderingsbehovRelevanteForSteg = emptySet()
-        )
+        val kontekst = flytKontekstMedPerioder {
+            this.behandlingId = behandlingId
+            this.rettighetsperiode = Periode(LocalDate.now(), Tid.MAKS)
+            this.vurderingsbehovRelevanteForSteg = emptySet()
+        }
 
         // Act
         avklaringsbehovService.oppdaterAvklaringsbehov(
@@ -133,15 +123,11 @@ class AvklaringsbehovServiceTest {
         val vedtakBehøverVurdering = { false }
         val erTilstrekkeligVurdert = { false }
         val tilbakestillGrunnlag = mockk<() -> Unit>(relaxed = true)
-        val kontekst = FlytKontekstMedPerioder(
-            sakId = SakId(1),
-            behandlingId = behandlingId,
-            forrigeBehandlingId = null,
-            behandlingType = TypeBehandling.Førstegangsbehandling,
-            vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
-            rettighetsperiode = Periode(LocalDate.now(), Tid.MAKS),
-            vurderingsbehovRelevanteForSteg = emptySet()
-        )
+        val kontekst = flytKontekstMedPerioder {
+            this.behandlingId = behandlingId
+            this.rettighetsperiode = Periode(LocalDate.now(), Tid.MAKS)
+            this.vurderingsbehovRelevanteForSteg = emptySet()
+        }
 
         // Act
         avklaringsbehovService.oppdaterAvklaringsbehov(
@@ -167,15 +153,11 @@ class AvklaringsbehovServiceTest {
         val vedtakBehøverVurdering = { false }
         val erTilstrekkeligVurdert = { false }
         val tilbakestillGrunnlag = mockk<() -> Unit>(relaxed = true)
-        val kontekst = FlytKontekstMedPerioder(
-            sakId = SakId(1),
-            behandlingId = behandlingId,
-            forrigeBehandlingId = null,
-            behandlingType = TypeBehandling.Førstegangsbehandling,
-            vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
-            rettighetsperiode = Periode(LocalDate.now(), Tid.MAKS),
-            vurderingsbehovRelevanteForSteg = emptySet()
-        )
+        val kontekst = flytKontekstMedPerioder {
+            this.behandlingId = behandlingId
+            this.rettighetsperiode = Periode(LocalDate.now(), Tid.MAKS)
+            this.vurderingsbehovRelevanteForSteg = emptySet()
+        }
 
         // Act
         avklaringsbehovService.oppdaterAvklaringsbehov(
@@ -223,15 +205,11 @@ class AvklaringsbehovServiceTest {
             )
         }
         val tilbakestillGrunnlag = mockk<() -> Unit>(relaxed = true)
-        val kontekst = FlytKontekstMedPerioder(
-            sakId = SakId(1),
-            behandlingId = behandlingId,
-            forrigeBehandlingId = null,
-            behandlingType = TypeBehandling.Førstegangsbehandling,
-            vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
-            rettighetsperiode = helePeriode,
-            vurderingsbehovRelevanteForSteg = tvingerAvklaringsbehov
-        )
+        val kontekst = flytKontekstMedPerioder {
+            this.behandlingId = behandlingId
+            this.rettighetsperiode = helePeriode
+            this.vurderingsbehovRelevanteForSteg = tvingerAvklaringsbehov
+        }
 
         avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
             definisjon = definisjon,
@@ -275,15 +253,11 @@ class AvklaringsbehovServiceTest {
             )
         }
         val tilbakestillGrunnlag = mockk<() -> Unit>(relaxed = true)
-        val kontekst = FlytKontekstMedPerioder(
-            sakId = SakId(1),
-            behandlingId = behandlingId,
-            forrigeBehandlingId = null,
-            behandlingType = TypeBehandling.Førstegangsbehandling,
-            vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
-            rettighetsperiode = helePeriode,
-            vurderingsbehovRelevanteForSteg = tvingerAvklaringsbehov
-        )
+        val kontekst = flytKontekstMedPerioder {
+            this.behandlingId = behandlingId
+            this.rettighetsperiode = helePeriode
+            this.vurderingsbehovRelevanteForSteg = tvingerAvklaringsbehov
+        }
 
         avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
             definisjon = definisjon,
@@ -328,15 +302,11 @@ class AvklaringsbehovServiceTest {
             )
         }
         val tilbakestillGrunnlag = mockk<() -> Unit>(relaxed = true)
-        val kontekst = FlytKontekstMedPerioder(
-            sakId = SakId(1),
-            behandlingId = behandlingId,
-            forrigeBehandlingId = null,
-            behandlingType = TypeBehandling.Førstegangsbehandling,
-            vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
-            rettighetsperiode = helePeriode,
-            vurderingsbehovRelevanteForSteg = tvingerAvklaringsbehov
-        )
+        val kontekst = flytKontekstMedPerioder {
+            this.behandlingId = behandlingId
+            this.rettighetsperiode = helePeriode
+            this.vurderingsbehovRelevanteForSteg = tvingerAvklaringsbehov
+        }
 
         avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
             definisjon = definisjon,
@@ -383,15 +353,11 @@ class AvklaringsbehovServiceTest {
             )
         }
         val tilbakestillGrunnlag = mockk<() -> Unit>(relaxed = true)
-        val kontekst = FlytKontekstMedPerioder(
-            sakId = SakId(1),
-            behandlingId = behandlingId,
-            forrigeBehandlingId = null,
-            behandlingType = TypeBehandling.Førstegangsbehandling,
-            vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
-            rettighetsperiode = helePeriode,
-            vurderingsbehovRelevanteForSteg = tvingerAvklaringsbehov
-        )
+        val kontekst = flytKontekstMedPerioder {
+            this.behandlingId = behandlingId
+            this.rettighetsperiode = helePeriode
+            this.vurderingsbehovRelevanteForSteg = tvingerAvklaringsbehov
+        }
 
         avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
             definisjon = definisjon,
@@ -430,15 +396,11 @@ class AvklaringsbehovServiceTest {
         }
         val perioderSomIkkeErTilstrekkeligVurdert = setOf(periode2, periode3)
         val tilbakestillGrunnlag = mockk<() -> Unit>(relaxed = true)
-        val kontekst = FlytKontekstMedPerioder(
-            sakId = SakId(1),
-            behandlingId = behandlingId,
-            forrigeBehandlingId = null,
-            behandlingType = TypeBehandling.Førstegangsbehandling,
-            vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
-            rettighetsperiode = helePeriode,
-            vurderingsbehovRelevanteForSteg = tvingerAvklaringsbehov
-        )
+        val kontekst = flytKontekstMedPerioder {
+            this.behandlingId = behandlingId
+            this.rettighetsperiode = helePeriode
+            this.vurderingsbehovRelevanteForSteg = tvingerAvklaringsbehov
+        }
 
         avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkårTilstrekkeligVurdert(
             definisjon = definisjon,
@@ -478,15 +440,11 @@ class AvklaringsbehovServiceTest {
         }
         val perioderSomIkkeErTilstrekkeligVurdert = emptySet<Periode>()
         val tilbakestillGrunnlag = mockk<() -> Unit>(relaxed = true)
-        val kontekst = FlytKontekstMedPerioder(
-            sakId = SakId(1),
-            behandlingId = behandlingId,
-            forrigeBehandlingId = null,
-            behandlingType = TypeBehandling.Førstegangsbehandling,
-            vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
-            rettighetsperiode = helePeriode,
-            vurderingsbehovRelevanteForSteg = tvingerAvklaringsbehov
-        )
+        val kontekst = flytKontekstMedPerioder {
+            this.behandlingId = behandlingId
+            this.rettighetsperiode = helePeriode
+            this.vurderingsbehovRelevanteForSteg = tvingerAvklaringsbehov
+        }
 
         avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkårTilstrekkeligVurdert(
             definisjon = definisjon,
@@ -513,15 +471,11 @@ class AvklaringsbehovServiceTest {
         val vedtakBehøverVurdering = { false }
         val erTilstrekkeligVurdert = { false }
         val tilbakestillGrunnlag = mockk<() -> Unit>(relaxed = true)
-        val kontekst = FlytKontekstMedPerioder(
-            sakId = SakId(1),
-            behandlingId = behandlingId,
-            forrigeBehandlingId = null,
-            behandlingType = TypeBehandling.Førstegangsbehandling,
-            vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
-            rettighetsperiode = Periode(LocalDate.now(), Tid.MAKS),
-            vurderingsbehovRelevanteForSteg = emptySet()
-        )
+        val kontekst = flytKontekstMedPerioder {
+            this.behandlingId = behandlingId
+            this.rettighetsperiode = Periode(LocalDate.now(), Tid.MAKS)
+            this.vurderingsbehovRelevanteForSteg = emptySet()
+        }
 
         // Act
         avklaringsbehovService.oppdaterAvklaringsbehov(
@@ -550,18 +504,14 @@ class AvklaringsbehovServiceTest {
         val vedtakBehøverVurdering = { false }
         val erTilstrekkeligVurdert = { false }
         val tilbakestillGrunnlag = mockk<() -> Unit>(relaxed = true)
-        val kontekst = FlytKontekstMedPerioder(
-            sakId = SakId(1),
-            behandlingId = behandlingId,
-            forrigeBehandlingId = null,
-            behandlingType = TypeBehandling.Førstegangsbehandling,
-            vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
-            rettighetsperiode = Periode(LocalDate.now(), Tid.MAKS),
-            vurderingsbehovRelevanteForSteg = emptySet()
-        )
+        val kontekst = flytKontekstMedPerioder {
+            this.behandlingId = behandlingId
+            this.rettighetsperiode = Periode(LocalDate.now(), Tid.MAKS)
+            this.vurderingsbehovRelevanteForSteg = emptySet()
+        }
+
         trukketSøknadRepository.lagreTrukketSøknadVurdering(
-            behandlingId,
-            TrukketSøknadVurdering(
+            behandlingId, TrukketSøknadVurdering(
                 journalpostId = JournalpostId("12344321"),
                 begrunnelse = "en grunn",
                 vurdertAv = Bruker("Z00000"),

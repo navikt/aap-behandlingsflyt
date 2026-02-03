@@ -4,7 +4,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.Faktagrunnlag
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.GUnit
 import no.nav.aap.komponenter.verdityper.Prosent
-import java.math.BigDecimal
 import java.time.Year
 
 /**
@@ -88,15 +87,36 @@ data class GrunnlagYrkesskade(
 
     override fun faktagrunnlag(): Faktagrunnlag {
         return Fakta(
-            grunnlaget = grunnlaget.verdi(),
-            beregningsgrunnlag = beregningsgrunnlag.faktagrunnlag()
+            grunnlaget = grunnlaget,
+            beregningsgrunnlag = beregningsgrunnlag,
+            terskelverdiForYrkesskade = terskelverdiForYrkesskade,
+            andelSomSkyldesYrkesskade = andelSomSkyldesYrkesskade,
+            andelYrkesskade = andelYrkesskade,
+            benyttetAndelForYrkesskade = benyttetAndelForYrkesskade,
+            andelSomIkkeSkyldesYrkesskade = andelSomIkkeSkyldesYrkesskade,
+            antattÅrligInntektYrkesskadeTidspunktet = antattÅrligInntektYrkesskadeTidspunktet,
+            yrkesskadeTidspunkt = yrkesskadeTidspunkt,
+            grunnlagForBeregningAvYrkesskadeandel = grunnlagForBeregningAvYrkesskadeandel,
+            grunnbeløp = grunnbeløp,
+            yrkesskadeinntektIG = yrkesskadeinntektIG,
+            grunnlagEtterYrkesskadeFordel = grunnlagEtterYrkesskadeFordel
         )
     }
 
     internal class Fakta(
-        // FIXME: BigDecimal serialiseres til JSON på standardform
-        val grunnlaget: BigDecimal,
-        val beregningsgrunnlag: Faktagrunnlag
+        val grunnlaget: GUnit,
+        val beregningsgrunnlag: Beregningsgrunnlag,
+        val terskelverdiForYrkesskade: Prosent,
+        val andelSomSkyldesYrkesskade: GUnit,
+        val andelYrkesskade: Prosent,
+        val benyttetAndelForYrkesskade: Prosent,
+        val andelSomIkkeSkyldesYrkesskade: GUnit,
+        val antattÅrligInntektYrkesskadeTidspunktet: Beløp,
+        val yrkesskadeTidspunkt: Year,
+        val grunnlagForBeregningAvYrkesskadeandel: GUnit,
+        val grunnbeløp: Beløp,
+        val yrkesskadeinntektIG: GUnit,
+        val grunnlagEtterYrkesskadeFordel: GUnit
     ) : Faktagrunnlag
 
     fun underliggende(): Beregningsgrunnlag {

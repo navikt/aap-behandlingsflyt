@@ -68,7 +68,8 @@ class MottattHendelseService(
                     brevkategori = dto.type,
                     kanal = dto.kanal,
                     melding = dto.melding,
-                    mottattTidspunkt = dto.mottattTidspunkt
+                    mottattTidspunkt = dto.mottattTidspunkt,
+                    digitalisertAvPostmottak = dto.digitalisertAvPostmottak
                 ),
             )
         }

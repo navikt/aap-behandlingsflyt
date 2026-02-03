@@ -4,7 +4,7 @@ on:
   push:
     branches: [ main ]
     paths-ignore:
-      - '.github/pr.yml'
+      - '.github/pr-test-parallell.yml'
       - '*.md'
       - '.run/*'
       - 'docker-compose.yaml'
