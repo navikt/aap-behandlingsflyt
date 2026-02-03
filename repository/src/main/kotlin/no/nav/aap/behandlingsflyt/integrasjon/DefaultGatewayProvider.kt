@@ -23,6 +23,7 @@ import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlBarnGateway
 import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlPersonopplysningGateway
 import no.nav.aap.behandlingsflyt.integrasjon.samordning.AbakusForeldrepengerGateway
 import no.nav.aap.behandlingsflyt.integrasjon.samordning.AbakusSykepengerGateway
+import no.nav.aap.behandlingsflyt.integrasjon.samordning.DagpengerGatewayImpl
 import no.nav.aap.behandlingsflyt.integrasjon.samordning.TjenestePensjonGatewayImpl
 import no.nav.aap.behandlingsflyt.integrasjon.statistikk.StatistikkGatewayImpl
 import no.nav.aap.behandlingsflyt.integrasjon.tilgang.TilgangGatewayImpl
@@ -69,5 +70,6 @@ fun defaultGatewayProvider(utvidelser: GatewayRegistry.() -> Unit = {}) = create
     register<InntektkomponentenGatewayImpl>()
     register<InstitusjonsoppholdGatewayImpl>()
     register<GosysGateway>()
+    register<DagpengerGatewayImpl>()
     utvidelser()
 }

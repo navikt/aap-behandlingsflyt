@@ -39,7 +39,8 @@ object ProsesseringsJobber {
             SendFagsysteminfoBehovTilTilbakekrevingUtfører,
             SjekkInstitusjonsOppholdJobbUtfører,
             HåndterUbehandledeDokumenterJobbUtfører,
-            HåndterUbehandletDokumentJobbUtfører
+            HåndterUbehandletDokumentJobbUtfører,
+            DigitaliserteMeldekortTilMeldekortBackendJobbUtfører
         )
     }
 }
