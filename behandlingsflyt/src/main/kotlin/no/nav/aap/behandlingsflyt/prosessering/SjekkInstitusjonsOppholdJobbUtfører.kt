@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
+import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
@@ -31,6 +32,7 @@ class SjekkInstitusjonsOppholdJobbUtfører(
     private val sakRepository: SakRepository,
     private val institusjonsOppholdRepository: InstitusjonsoppholdRepository,
     private val sakOgBehandlingService: SakOgBehandlingService,
+    private val trukketSøknadService: TrukketSøknadService,
     private val behandlingRepository: BehandlingRepository,
     private val underveisgrunnlagRepository: UnderveisRepository,
     private val unleashGateway: UnleashGateway,
@@ -63,23 +65,28 @@ class SjekkInstitusjonsOppholdJobbUtfører(
                             if (underveisgrunnlag == null) {
                                 log.info("Finner ikke underveisgrunnlag for behandlingId ${sisteYtelsesBehandling.id}")
                             } else {
-                                val alleIkkeOppfylt =
-                                    underveisgrunnlag
-                                        .somTidslinje()
-                                        .segmenter()
-                                        .all { it.verdi.utfall == Utfall.IKKE_OPPFYLT }
-                                if (vurderingsbehovOgÅrsaker.any { it.vurderingsbehov.any { vurderingsbehovMedPeriode -> vurderingsbehovMedPeriode.type == Vurderingsbehov.INSTITUSJONSOPPHOLD } }) {
-                                    log.info("Vurderingsbehov for institusjonsopphold finnes allerede")
-                                } else if (alleIkkeOppfylt) {
-                                    log.info("Vurderingsbehov for institusjonsopphold opprettes ikke, da det er avslag overalt")
+                                val søknadErTrukket = trukketSøknadService.søknadErTrukket(sisteYtelsesBehandling.id)
+                                if (søknadErTrukket) {
+                                    log.info("Institusjonsopphold oppdateres ikke, da sak med $sak.id er trukket")
                                 } else {
-                                    log.info("Fant sak med institusjonsopphold $sak.id")
-                                    val opprettInstitusjonsOppholdBehandling = opprettNyBehandling(sak)
-                                    log.info("Opprettet behandling for instopphold for ${opprettInstitusjonsOppholdBehandling.id} og ${opprettInstitusjonsOppholdBehandling.forrigeBehandlingId}")
-                                    prosesserBehandlingService.triggProsesserBehandling(
-                                        opprettInstitusjonsOppholdBehandling
-                                    )
-                                    log.info("Ferdig med å trigge instopphold for $sak.id")
+                                    val alleIkkeOppfylt =
+                                        underveisgrunnlag
+                                            .somTidslinje()
+                                            .segmenter()
+                                            .all { it.verdi.utfall == Utfall.IKKE_OPPFYLT }
+                                    if (vurderingsbehovOgÅrsaker.any { it.vurderingsbehov.any { vurderingsbehovMedPeriode -> vurderingsbehovMedPeriode.type == Vurderingsbehov.INSTITUSJONSOPPHOLD } }) {
+                                        log.info("Vurderingsbehov for institusjonsopphold finnes allerede")
+                                    } else if (alleIkkeOppfylt) {
+                                        log.info("Vurderingsbehov for institusjonsopphold opprettes ikke, da det er avslag overalt")
+                                    } else {
+                                        log.info("Fant sak med institusjonsopphold $sak.id")
+                                        val opprettInstitusjonsOppholdBehandling = opprettNyBehandling(sak)
+                                        log.info("Opprettet behandling for instopphold for ${opprettInstitusjonsOppholdBehandling.id} og ${opprettInstitusjonsOppholdBehandling.forrigeBehandlingId}")
+                                        prosesserBehandlingService.triggProsesserBehandling(
+                                            opprettInstitusjonsOppholdBehandling
+                                        )
+                                        log.info("Ferdig med å trigge instopphold for $sak.id")
+                                    }
                                 }
                             }
                         }
@@ -127,6 +134,7 @@ class SjekkInstitusjonsOppholdJobbUtfører(
                 sakRepository = repositoryProvider.provide(),
                 institusjonsOppholdRepository = repositoryProvider.provide(),
                 sakOgBehandlingService = SakOgBehandlingService(repositoryProvider, gatewayProvider),
+                trukketSøknadService = TrukketSøknadService(repositoryProvider),
                 behandlingRepository = repositoryProvider.provide(),
                 underveisgrunnlagRepository = repositoryProvider.provide(),
                 unleashGateway = gatewayProvider.provide(),
