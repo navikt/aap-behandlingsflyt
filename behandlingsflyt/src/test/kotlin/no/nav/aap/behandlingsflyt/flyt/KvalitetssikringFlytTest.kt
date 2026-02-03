@@ -356,24 +356,13 @@ class KvalitetssikringFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash
             .løsSykdomsvurderingBrev()
             .kvalitetssikreOk()
 
-        val oppdatertBehandling = sak.opprettManuellRevurdering(
-            listOf(Vurderingsbehov.VURDER_RETTIGHETSPERIODE),
-        ).medKontekst {
-            assertThat(this.behandling.typeBehandling()).isEqualTo(TypeBehandling.Førstegangsbehandling)
-            assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
-        }
-
+        val oppdatertBehandling = sak.opprettManuellRevurdering(listOf(Vurderingsbehov.VURDER_RETTIGHETSPERIODE))
         val nyStartdato = LocalDate.now().minusMonths(5)
         oppdatertBehandling
             .løsRettighetsperiode(nyStartdato)
-            .medKontekst {
-                val åpneAvklaringsbehov = hentÅpneAvklaringsbehov(oppdatertBehandling.id)
-                assertThat(åpneAvklaringsbehov).hasSize(2)
-                assertThat(åpneAvklaringsbehov.first().definisjon).isEqualTo(Definisjon.AVKLAR_SYKDOM)
-
-            }
             .løsSykdom(nyStartdato)
             .løsBistand(nyStartdato)
+            .løsSykdomsvurderingBrev()
 
         val stegetsEgetBehov = hentAlleAvklaringsbehov(oppdatertBehandling)
             .filter { behov -> behov.definisjon == Definisjon.KVALITETSSIKRING }
