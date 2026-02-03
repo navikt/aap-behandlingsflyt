@@ -118,9 +118,10 @@ class AvklaringsbehovService(
         val erTilstrekkeligVurdertBakoverkompatibel =
             { erTilstrekkeligVurdert() || perioderSomIkkeErTilstrekkeligVurdert()?.isEmpty() == true }
 
+        val vurderingsbehovErNyere = vurderingsbehovetErNyereEnnAvklaringsbehovet(kontekst, avklaringsbehov)
+
         if (vedtakBehøverVurdering()) {
-            avbrytAvklaringsbehovOmVurderingsbehovErNyere(kontekst, avklaringsbehov, avklaringsbehovene, definisjon)
-            if (avklaringsbehov == null || !avklaringsbehov.harAvsluttetStatusIHistorikken() || avklaringsbehov.status() == AVBRUTT) {
+            if (avklaringsbehov == null || !avklaringsbehov.harAvsluttetStatusIHistorikken() || avklaringsbehov.status() == AVBRUTT || vurderingsbehovErNyere) {
                 /* ønsket tilstand: OPPRETTET */
                 when (avklaringsbehov?.status()) {
                     OPPRETTET -> {
@@ -132,7 +133,7 @@ class AvklaringsbehovService(
                         )
                     }
 
-                    null, AVBRUTT ->
+                    null, AVBRUTT, AVSLUTTET ->
                         avklaringsbehovene.leggTil(
                             definisjon,
                             definisjon.løsesISteg,
@@ -143,8 +144,7 @@ class AvklaringsbehovService(
                     TOTRINNS_VURDERT,
                     SENDT_TILBAKE_FRA_BESLUTTER,
                     KVALITETSSIKRET,
-                    SENDT_TILBAKE_FRA_KVALITETSSIKRER,
-                    AVSLUTTET ->
+                    SENDT_TILBAKE_FRA_KVALITETSSIKRER ->
                         error("Ikke mulig: fikk ${avklaringsbehov.status()}")
                 }
             } else if (erTilstrekkeligVurdertBakoverkompatibel()) {
@@ -219,20 +219,17 @@ class AvklaringsbehovService(
         }
     }
 
-    private fun avbrytAvklaringsbehovOmVurderingsbehovErNyere(
+    private fun vurderingsbehovetErNyereEnnAvklaringsbehovet(
         kontekst: FlytKontekstMedPerioder,
-        avklaringsbehov: Avklaringsbehov?,
-        avklaringsbehovene: Avklaringsbehovene,
-        definisjon: Definisjon
-    ) {
+        avklaringsbehov: Avklaringsbehov?
+    ): Boolean {
         val nyesteVurderingsbehov = kontekst.vurderingsbehovRelevanteForStegMedPerioder.maxOfOrNull { it.oppdatertTid }
-        val nyesteAvklaringsbehovEndring = avklaringsbehov?.aktivHistorikk?.maxOfOrNull { it.tidsstempel } ?: return
+        val nyesteAvklaringsbehovEndring =
+            avklaringsbehov?.aktivHistorikk?.maxOfOrNull { it.tidsstempel } ?: LocalDateTime.MIN
         val vurderingsbehovErNyere = nyesteVurderingsbehov != null && nyesteVurderingsbehov.isAfter(
             nyesteAvklaringsbehovEndring
         )
-        if (vurderingsbehovErNyere) {
-            avklaringsbehovene.internalAvbryt(definisjon)
-        }
+        return vurderingsbehovErNyere
     }
 
     private fun oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
