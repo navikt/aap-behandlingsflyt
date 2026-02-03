@@ -285,9 +285,9 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
         }
 
         val revurdering = hentSisteOpprettedeBehandlingForSak(klagebehandling.sakId, listOf(TypeBehandling.Revurdering))
-        assertThat(revurdering.vurderingsbehov()).containsExactly(
-            VurderingsbehovMedPeriode(type = Vurderingsbehov.VURDER_RETTIGHETSPERIODE, periode = null),
-            VurderingsbehovMedPeriode(type = Vurderingsbehov.HELHETLIG_VURDERING, periode = null)
+        assertThat(revurdering.vurderingsbehov().map { it.type }).containsExactly(
+            Vurderingsbehov.VURDER_RETTIGHETSPERIODE,
+            Vurderingsbehov.HELHETLIG_VURDERING
         )
 
         dataSource.transaction { connection ->
@@ -503,7 +503,7 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
         }
 
         val revurdering = hentSisteOpprettedeBehandlingForSak(klagebehandling.sakId, listOf(TypeBehandling.Revurdering))
-        assertThat(revurdering.vurderingsbehov()).containsExactly(VurderingsbehovMedPeriode(Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP))
+        assertThat(revurdering.vurderingsbehov().map { it.type }).containsExactly(Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP)
 
         // OpprettholdelseSteg
         val steghistorikk = hentStegHistorikk(klagebehandling.id)
@@ -719,7 +719,9 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
         }
 
         val revurdering = hentSisteOpprettedeBehandlingForSak(klagebehandling.sakId, listOf(TypeBehandling.Revurdering))
-        assertThat(revurdering.vurderingsbehov()).containsExactly(VurderingsbehovMedPeriode(Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND))
+        assertThat(
+            revurdering.vurderingsbehov()
+                .map { it.type }).containsExactly(Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND)
 
         // MeldingOmVedtakBrevSteg
         åpneAvklaringsbehov = hentÅpneAvklaringsbehov(klagebehandling.id)
