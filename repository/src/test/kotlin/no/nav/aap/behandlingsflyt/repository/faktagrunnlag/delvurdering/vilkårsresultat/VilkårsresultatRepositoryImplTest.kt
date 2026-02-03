@@ -6,18 +6,13 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
-import no.nav.aap.behandlingsflyt.help.FakePdlGateway
+import no.nav.aap.behandlingsflyt.help.opprettSak
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
-import no.nav.aap.behandlingsflyt.test.FakeApiInternGateway
-import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.type.Periode
@@ -47,16 +42,12 @@ class VilkårsresultatRepositoryImplTest {
     fun `Test oprett vilkårsresultat og hent ut igjen`() {
         val behandling = dataSource.transaction { connection ->
             // Opprett person, sak og behandling
-            val personOgSakService = PersonOgSakService(
-                FakePdlGateway,
-                FakeApiInternGateway.konstruer(),
-                PersonRepositoryImpl(connection),
-                SakRepositoryImpl(connection)
-            )
             val behandlingRepo = BehandlingRepositoryImpl(connection)
 
-            val sak =
-                personOgSakService.finnEllerOpprett(ident(), Periode(LocalDate.now(), LocalDate.now().plusYears(3)))
+            val sak = opprettSak(
+                connection,
+                Periode(LocalDate.now(), LocalDate.now().plusYears(3))
+            )
             val behandling =
                 behandlingRepo.opprettBehandling(
                     sak.id,

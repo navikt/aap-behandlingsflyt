@@ -17,8 +17,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapDa
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.flyt.VilkårDTO
-import no.nav.aap.behandlingsflyt.help.FakePdlGateway
-import no.nav.aap.behandlingsflyt.integrasjon.defaultGatewayProvider
+import no.nav.aap.behandlingsflyt.help.opprettSak
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
@@ -30,23 +29,18 @@ import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
-import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.FinnEllerOpprettSakDTO
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.SaksinfoDTO
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.UtvidetSaksinfoDTO
 import no.nav.aap.behandlingsflyt.test.AzureTokenGen
-import no.nav.aap.behandlingsflyt.test.FakeApiInternGateway
 import no.nav.aap.behandlingsflyt.test.FakePersoner
 import no.nav.aap.behandlingsflyt.test.FakeServers
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.behandlingsflyt.test.LokalUnleash
-import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.behandlingsflyt.test.testGatewayProvider
 import no.nav.aap.komponenter.config.requiredConfigForKey
@@ -164,16 +158,11 @@ class ApiTest {
         val dataSource = initDatasource(dbConfig)
 
         val opprettetBehandling = dataSource.transaction { connection ->
-            val personOgSakService = PersonOgSakService(
-                FakePdlGateway,
-                FakeApiInternGateway.konstruer(),
-                PersonRepositoryImpl(connection),
-                SakRepositoryImpl(connection)
+            val sak = opprettSak(
+                connection,
+                Periode(LocalDate.now(), LocalDate.now().plusYears(3))
             )
             val behandlingRepo = BehandlingRepositoryImpl(connection)
-
-            val sak =
-                personOgSakService.finnEllerOpprett(ident(), Periode(LocalDate.now(), LocalDate.now().plusYears(3)))
             val behandling = behandlingRepo.opprettBehandling(
                 sakId = sak.id,
                 vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
@@ -220,15 +209,8 @@ class ApiTest {
     fun `kalle beregningsgrunnlag-api`() {
         val ds = initDatasource(dbConfig)
         val referanse = ds.transaction { connection ->
-            val personOgSakService = PersonOgSakService(
-                FakePdlGateway,
-                FakeApiInternGateway.konstruer(),
-                PersonRepositoryImpl(connection),
-                SakRepositoryImpl(connection)
-            )
+            val sak = opprettSak(connection, Periode(LocalDate.now(), LocalDate.now().plusYears(3)))
             val behandlingRepo = BehandlingRepositoryImpl(connection)
-            val sak =
-                personOgSakService.finnEllerOpprett(ident(), Periode(LocalDate.now(), LocalDate.now().plusYears(3)))
             val behandling = behandlingRepo.opprettBehandling(
                 sakId = sak.id,
                 vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(

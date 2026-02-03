@@ -1,14 +1,9 @@
 package no.nav.aap.behandlingsflyt.repository.behandling.tilkjentytelse
 
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Reduksjon11_9
-import no.nav.aap.behandlingsflyt.help.FakePdlGateway
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
-import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
+import no.nav.aap.behandlingsflyt.help.opprettSak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
-import no.nav.aap.behandlingsflyt.test.FakeApiInternGateway
-import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
@@ -107,16 +102,7 @@ class Reduksjon11_9RepositoryImplTest {
 
 
     private fun lagSakOgBehandling(connection: DBConnection): Behandling {
-        val ident = ident()
-        val sak = PersonOgSakService(
-            FakePdlGateway,
-            FakeApiInternGateway.konstruer(),
-            PersonRepositoryImpl(connection),
-            SakRepositoryImpl(connection)
-        ).finnEllerOpprett(
-            ident,
-            periode
-        )
+        val sak = opprettSak(connection, periode)
         return finnEllerOpprettBehandling(connection, sak)
     }
 

@@ -16,7 +16,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.ArbeidIPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Meldekort
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Status
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
-import no.nav.aap.behandlingsflyt.help.FakePdlGateway
+import no.nav.aap.behandlingsflyt.help.opprettSak
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
@@ -24,14 +24,11 @@ import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.meldeperiode.MeldeperiodeRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.underveis.UnderveisRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.dokument.arbeid.MeldekortRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
-import no.nav.aap.behandlingsflyt.test.FakeApiInternGateway
 import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
@@ -73,11 +70,7 @@ class DatadelingMeldekortServiceTest {
             val behandlingRepository = BehandlingRepositoryImpl(connection)
             val mottattDokumentRepository = MottattDokumentRepositoryImpl(connection)
             val meldekortRepository = MeldekortRepositoryImpl(connection)
-            val personRepository = PersonRepositoryImpl(connection)
             val sakRepository = SakRepositoryImpl(connection)
-            val personOgSakService = PersonOgSakService(
-                FakePdlGateway, FakeApiInternGateway.konstruer(), personRepository, sakRepository
-            )
             val underveisRepository = UnderveisRepositoryImpl(connection)
             val meldeperiodeRepository = MeldeperiodeRepositoryImpl(connection)
 
@@ -89,7 +82,7 @@ class DatadelingMeldekortServiceTest {
             )
 
             // Legg inn testdata
-            val testSak = personOgSakService.finnEllerOpprett(testIdent, testPeriode)
+            val testSak = opprettSak(connection, testIdent, testPeriode)
 
             // aktiv behandling med meldekort
             val testBehandling = behandlingRepository.opprettBehandling(

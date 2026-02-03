@@ -4,22 +4,17 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Status
-import no.nav.aap.behandlingsflyt.help.FakePdlGateway
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
+import no.nav.aap.behandlingsflyt.help.opprettSak
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
-import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
-import no.nav.aap.behandlingsflyt.test.FakeApiInternGateway
 import no.nav.aap.behandlingsflyt.test.Fakes
-import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
@@ -54,9 +49,9 @@ internal class LegeerklæringVentebehovEvaluererTest {
 
 
     @Test
-    fun `Løser behov når det finnes avvist dokument` () {
+    fun `Løser behov når det finnes avvist dokument`() {
         val behandling = dataSource.transaction { connection ->
-            val sak = opprettSak(connection)
+            val sak = opprettSakMedTestPeriode(connection)
             finnEllerOpprettBehandling(connection, sak, Vurderingsbehov.MOTTATT_AVVIST_LEGEERKLÆRING)
         }
 
@@ -82,7 +77,7 @@ internal class LegeerklæringVentebehovEvaluererTest {
     @Test
     fun `løser behov når det finnes mottatt legeerklæring` () {
         val behandling = dataSource.transaction { connection ->
-            val sak = opprettSak(connection)
+            val sak = opprettSakMedTestPeriode(connection)
             finnEllerOpprettBehandling(connection, sak, Vurderingsbehov.MOTTATT_LEGEERKLÆRING)
         }
 
@@ -108,7 +103,7 @@ internal class LegeerklæringVentebehovEvaluererTest {
     @Test
     fun `løser behov når det finnes mottatt dialogmelding`() {
         val behandling = dataSource.transaction { connection ->
-            val sak = opprettSak(connection)
+            val sak = opprettSakMedTestPeriode(connection)
             finnEllerOpprettBehandling(connection, sak, Vurderingsbehov.MOTTATT_DIALOGMELDING)
         }
 
@@ -134,7 +129,7 @@ internal class LegeerklæringVentebehovEvaluererTest {
     @Test
     fun `løser ikke behov når legeerklæring er eldre enn bestilling`() {
         val behandling = dataSource.transaction { connection ->
-            val sak = opprettSak(connection)
+            val sak = opprettSakMedTestPeriode(connection)
             finnEllerOpprettBehandling(connection, sak, Vurderingsbehov.MOTTATT_SØKNAD)
         }
 
@@ -159,7 +154,7 @@ internal class LegeerklæringVentebehovEvaluererTest {
     @Test
     fun `løser ikke behov når ikke det finnes avvist dokument` () {
         val behandling = dataSource.transaction { connection ->
-            val sak = opprettSak(connection)
+            val sak = opprettSakMedTestPeriode(connection)
             finnEllerOpprettBehandling(connection, sak, Vurderingsbehov.MOTTATT_SØKNAD)
         }
 
@@ -205,14 +200,9 @@ internal class LegeerklæringVentebehovEvaluererTest {
         )
     }
 
-    private fun opprettSak(connection: DBConnection): Sak {
-        return PersonOgSakService(
-            FakePdlGateway,
-            FakeApiInternGateway.konstruer(),
-            PersonRepositoryImpl(connection),
-            SakRepositoryImpl(connection)
-        ).finnEllerOpprett(
-            ident(), Periode(LocalDate.now(), LocalDate.now().plusYears(3))
+    private fun opprettSakMedTestPeriode(connection: DBConnection): Sak {
+        return opprettSak(
+            connection, Periode(LocalDate.now(), LocalDate.now().plusYears(3))
         )
     }
 }

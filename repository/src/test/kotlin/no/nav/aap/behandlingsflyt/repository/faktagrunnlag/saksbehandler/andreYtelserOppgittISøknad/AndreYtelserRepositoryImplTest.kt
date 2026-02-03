@@ -2,29 +2,21 @@ package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.andreY
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.AndreUtbetalingerYtelser
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.AndreYtelserSøknad
-import no.nav.aap.behandlingsflyt.help.FakePdlGateway
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
+import no.nav.aap.behandlingsflyt.help.opprettSak
 
-import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
-import no.nav.aap.behandlingsflyt.test.FakeApiInternGateway
 import no.nav.aap.behandlingsflyt.test.desember
-import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
-import java.time.LocalDate
 
 class AndreYtelserRepositoryImplTest {
     private lateinit var dataSource: TestDataSource
@@ -41,7 +33,7 @@ class AndreYtelserRepositoryImplTest {
 
     @Test
     fun `lagre og slett`() {
-        val sak = dataSource.transaction { sak(it) }
+        val sak = dataSource.transaction { sakForTestPeriode(it) }
 
         val behandling1 = dataSource.transaction {
             finnEllerOpprettBehandling(it, sak)
@@ -84,7 +76,7 @@ class AndreYtelserRepositoryImplTest {
     @Test
     fun `lagre og kopier, så slette gamle`() {
 
-        val sak = dataSource.transaction { sak(it) }
+        val sak = dataSource.transaction { sakForTestPeriode(it) }
 
         val behandling1 = dataSource.transaction {
             finnEllerOpprettBehandling(it, sak)
@@ -99,7 +91,7 @@ class AndreYtelserRepositoryImplTest {
             stønad = stønad,
             afpKilder = "Arbeidsgiver"
         )
-        val sak2 = dataSource.transaction { sak(it) }
+        val sak2 = dataSource.transaction { sakForTestPeriode(it) }
         val behandling2 = dataSource.transaction {
             finnEllerOpprettBehandling(it, sak2)
         }
@@ -151,7 +143,7 @@ class AndreYtelserRepositoryImplTest {
     @Test
     fun `lagre og henter andre ytelser`() {
 
-        val sak = dataSource.transaction { sak(it) }
+        val sak = dataSource.transaction { sakForTestPeriode(it) }
 
         val behandling1 = dataSource.transaction {
             finnEllerOpprettBehandling(it, sak)
@@ -164,7 +156,7 @@ class AndreYtelserRepositoryImplTest {
             ekstraLønn = true,
             stønad = stønad1
         )
-        val sak2 = dataSource.transaction { sak(it) }
+        val sak2 = dataSource.transaction { sakForTestPeriode(it) }
         val behandling2 = dataSource.transaction {
             finnEllerOpprettBehandling(it, sak2)
         }
@@ -204,12 +196,7 @@ class AndreYtelserRepositoryImplTest {
     }
 
 
-    private fun sak(connection: DBConnection): Sak {
-        return PersonOgSakService(
-            FakePdlGateway,
-            FakeApiInternGateway.konstruer(),
-            PersonRepositoryImpl(connection),
-            SakRepositoryImpl(connection)
-        ).finnEllerOpprett(ident(), Periode(1 januar 2022, 31.desember(2023)))
+    private fun sakForTestPeriode(connection: DBConnection): Sak {
+        return opprettSak(connection, Periode(1 januar 2022, 31.desember(2023)))
     }
 }
