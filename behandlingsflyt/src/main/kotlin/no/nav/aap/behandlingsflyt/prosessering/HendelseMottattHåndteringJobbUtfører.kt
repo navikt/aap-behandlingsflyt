@@ -55,7 +55,10 @@ class HendelseMottattHåndteringJobbUtfører(
         } else null
 
         val referanse = DefaultJsonMapper.fromJson<InnsendingReferanse>(input.parameter(MOTTATT_DOKUMENT_REFERANSE))
-        val digitalisertAvPostmottak = DefaultJsonMapper.fromJson<Boolean?>(input.parameter(DIGITALISERT_AV_POSTMOTTAK))
+
+        val digitalisertAvPostmottak = input.optionalParameter(DIGITALISERT_AV_POSTMOTTAK)?.let {
+            DefaultJsonMapper.fromJson<Boolean?>(it)
+        }
 
         if (kjennerTilDokumentFraFør(referanse, innsendingType, sakId)) {
             log.warn("Allerede håndtert dokument med referanse {}", referanse)
