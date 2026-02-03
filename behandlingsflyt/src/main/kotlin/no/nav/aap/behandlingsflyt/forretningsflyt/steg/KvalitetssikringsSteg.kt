@@ -117,36 +117,50 @@ class KvalitetssikringsSteg(
         }
 
         /**
-         * Dersom ett eller flere av avklaringsbehovene som krever kvalitetssikring blir åpnet opp på nytt etter at de er kvalitetssikret,
-         * må kvalitetssikring gjøres på nytt. Dette må skje om behandlingen dras tilbake til før Sykdom og uten at kvalitetssikrer eller
-         * beslutter faktisk har returnert. (Skjer ved ny startdato i 22-13)
+         * Dersom flyten blir dratt tilbake til et steg før kvalitetssikring, og det allerede er gjort en kvalitetssikring,
+         * så skal dette potensielt trigge en ny kvalitetssikring. Dette kan skje selv om kvalitetssikrer og beslutter ikke har returnert,
+         * men f. eks. ved at nytt starttidspunkt i 22-13 blir satt. Dette igjen vil løfte avklaringsbehovene under Sykdom.
          */
-        if (avklaringsbehovene.alle()
-            .filter { it.kreverKvalitetssikring() }
-            .any { it.status() == Status.AVSLUTTET }
-        ) {
+        val avsluttedeBehov = avklaringsbehovene.alle()
+            .filter { it.kreverKvalitetssikring() && it.status() == Status.AVSLUTTET }
+
+        if (avsluttedeBehov.isNotEmpty()) {
             /**
-             * Når beslutter returnerer et behov som ikke skal kvalitetssikres (22-13), blir alle behov reåpnet
-             * og status KVALITETSSIKRET går tapt selv om det var kvalitetssikret tidligere.
-             * Derfor må historikken sjekkes for å avgjøre om kvalitetssikring kan hoppes over.
+             * Når flyten blir dratt tilbake eller beslutter returnerer et behov som ikke skal kvalitetssikres (22-13),
+             * blir alle behov reåpnet og gjeldende status "KVALITETSSIKRET" går tapt, selv om kvalitetssikring har skjedd.
+             * Derfor må historikken sjekkes for å avgjøre om det er skjedd en tidligere kvalitetssikring.
              */
-            val kvalitetssikretIForrigeRunde = avklaringsbehovene.alle()
-                .filter { it.kreverKvalitetssikring() && it.status() == Status.AVSLUTTET }
+            val erKvalitetssikretFørRetur = avsluttedeBehov
                 .any {
                     val aktivHistorikk = it.aktivHistorikk
-                    val kvalitetssikretIForrigeRunde = it.aktivHistorikk.getOrNull(aktivHistorikk.size - 3)
-                    kvalitetssikretIForrigeRunde?.status == Status.KVALITETSSIKRET
+                    val endring = it.aktivHistorikk.getOrNull(aktivHistorikk.size - 3)
+                    endring?.status == Status.KVALITETSSIKRET
                 }
-            if (kvalitetssikretIForrigeRunde) {
-                /* På dette tidspunktet kan 2 ting ha skjedd: */
-                /* 1. Beslutter har returnert et behov som ikke krever kvalitetssikring (22-13) */
-                /* 2. Flyten er dratt tilbake til 22-13 og ny startdao er satt */
-                val sendtTilbakeFraBeslutter = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.VURDER_RETTIGHETSPERIODE)
-                    ?.aktivHistorikk
-                    ?.let { history ->
-                        history.size >= 2 &&
-                                history[history.size - 2].status == Status.SENDT_TILBAKE_FRA_BESLUTTER
-                    } ?: false
+            if (erKvalitetssikretFørRetur) {
+                /**
+                 * På dette tidspunktet kan to ting ha skjedd:
+                 * 1. Beslutter har kun returnert et behov som ikke krever kvalitetssikring (f. eks. 22-13)
+                 * 2. Flyten er dratt tilbake til 22-13 og nytt starttidspunkt er satt
+                 */
+                val behovSomIkkeKreverKvalitetssikring = avklaringsbehovene.alle()
+                    .filter { !it.kreverKvalitetssikring() }
+
+                val sendtTilbakeFraBeslutter =
+                    behovSomIkkeKreverKvalitetssikring.any { behov ->
+                        val endring = behov.aktivHistorikk
+                        endring.size >= 2 && endring[endring.size - 2].status == Status.SENDT_TILBAKE_FRA_BESLUTTER
+                    }
+                /*
+                val sendtTilbakeFraBeslutter =
+                    avklaringsbehovene.hentBehovForDefinisjon(Definisjon.VURDER_RETTIGHETSPERIODE)
+                        ?.aktivHistorikk
+                        ?.let { endring ->
+                            endring.size >= 2 &&
+                                    endring[endring.size - 2].status == Status.SENDT_TILBAKE_FRA_BESLUTTER
+                        } ?: false
+
+                 */
+                // TODO: legg bak bryter
                 if (sendtTilbakeFraBeslutter) {
                     return true
                 }
