@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status.AVBRUTT
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status.AVSLUTTET
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status.KVALITETSSIKRET
@@ -133,7 +134,7 @@ class AvklaringsbehovService(
                         )
                     }
 
-                    null, AVBRUTT, AVSLUTTET ->
+                    null, AVBRUTT, AVSLUTTET, KVALITETSSIKRET, TOTRINNS_VURDERT ->
                         avklaringsbehovene.leggTil(
                             definisjon,
                             definisjon.løsesISteg,
@@ -141,9 +142,7 @@ class AvklaringsbehovService(
                             perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering()
                         )
 
-                    TOTRINNS_VURDERT,
                     SENDT_TILBAKE_FRA_BESLUTTER,
-                    KVALITETSSIKRET,
                     SENDT_TILBAKE_FRA_KVALITETSSIKRER ->
                         error("Ikke mulig: fikk ${avklaringsbehov.status()}")
                 }
