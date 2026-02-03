@@ -367,7 +367,6 @@ class SamordningStegTest {
     private fun flytKontekstMedPerioder(behandling: Behandling): FlytKontekstMedPerioder =
         no.nav.aap.behandlingsflyt.help.flytKontekstMedPerioder {
             this.behandling = behandling
-            this.vurderingsbehovRelevanteForSteg = setOf(Vurderingsbehov.MOTTATT_SØKNAD)
             this.rettighetsperiode = Periode(LocalDate.now().minusYears(1), LocalDate.now())
         }
 
@@ -398,7 +397,6 @@ class SamordningStegTest {
         val kontekst =
             no.nav.aap.behandlingsflyt.help.flytKontekstMedPerioder {
                 this.behandling = behandling
-                this.vurderingsbehovRelevanteForSteg = setOf(Vurderingsbehov.MOTTATT_SØKNAD)
                 this.rettighetsperiode = Periode(LocalDate.now().minusYears(1), LocalDate.now())
             }
 
