@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.flyt
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.vedtak.TotrinnsVurdering
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FatteVedtakLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.ForeslåVedtakLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.KvalitetssikringLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VurderRettighetsperiodeLøsning
@@ -301,8 +302,6 @@ class KvalitetssikringFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash
         assertThat(åpneAvklaringsbehov.first().definisjon).isEqualTo(Definisjon.SKRIV_VEDTAKSBREV)
     }
 
-    // AVKLARING_SYKDOM får AVSLUTTET som siste status her i kvalitetssikringssteget,
-    // uten at avklaringsbehovet er vurdert på nytt.
     @Test
     fun `Beslutter underkjenner kun VURDER_RETTIGHETSPERIODE, ingen ny kvalitetssikring, beslutter fatter vedtak`() {
         val fom = LocalDate.now().minusMonths(3)
@@ -337,6 +336,57 @@ class KvalitetssikringFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash
         val åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling)
         assertThat(åpneAvklaringsbehov).hasSize(1)
         assertThat(åpneAvklaringsbehov.first().definisjon).isEqualTo(Definisjon.SKRIV_VEDTAKSBREV)
+    }
+
+    @Test
+    fun `Beslutter underkjenner VURDER_RETTIGHETSPERIODE og AVKLAR_SYKDOM, ny kvalitetssikring skal skje`() {
+        val fom = LocalDate.now().minusMonths(3)
+        val periode = Periode(fom, fom.plusYears(3))
+
+        val person = TestPersoner.STANDARD_PERSON()
+
+        val (sak, behandling) = sendInnFørsteSøknad(
+            person = person,
+            periode = periode,
+        )
+
+        sak.opprettManuellRevurdering(vurderingsbehov = Vurderingsbehov.VURDER_RETTIGHETSPERIODE)
+
+        behandling
+            .løsRettighetsperiodeIngenEndring()
+            .løsSykdom(fom)
+            .løsBistand(fom)
+            .løsRefusjonskrav()
+            .løsSykdomsvurderingBrev()
+            .kvalitetssikreOk()
+            .løsBeregningstidspunkt()
+            .løsOppholdskrav(fom)
+            .løsAndreStatligeYtelser()
+            .løsAvklaringsBehov(ForeslåVedtakLøsning())
+
+        løsAvklaringsBehov(
+            behandling,
+            FatteVedtakLøsning(
+                hentAlleAvklaringsbehov(behandling)
+                    .filter { behov -> behov.erTotrinn() }
+                    .map { behov ->
+                        TotrinnsVurdering(
+                            behov.definisjon.kode,
+                            if (behov.definisjon == Definisjon.VURDER_RETTIGHETSPERIODE || behov.definisjon == Definisjon.AVKLAR_SYKDOM) false else true,
+                            "begrunnelse",
+                            emptyList()
+                        )
+                    }),
+            Bruker("BESLUTTER")
+        )
+
+        motor.kjørJobber()
+        behandling.løsRettighetsperiodeIngenEndring()
+            .løsSykdom(fom)
+
+        val stegetsEgetBehov = hentAlleAvklaringsbehov(behandling)
+            .filter { behov -> behov.definisjon == Definisjon.KVALITETSSIKRING }
+        assertThat(stegetsEgetBehov.first().status()).isEqualTo(AvklaringsbehovStatus.OPPRETTET)
     }
 
     @Test
