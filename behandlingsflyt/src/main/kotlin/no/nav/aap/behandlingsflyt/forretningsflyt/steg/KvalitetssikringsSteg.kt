@@ -114,6 +114,7 @@ class KvalitetssikringsSteg(
             return false
         }
 
+        // TODO: legg bak bryter
         /**
          * Dersom flyten blir dratt tilbake til et steg før kvalitetssikring, og det allerede er gjort en kvalitetssikring,
          * så skal dette potensielt trigge en ny kvalitetssikring. Dette kan skje selv om kvalitetssikrer og beslutter ikke har returnert,
@@ -137,7 +138,7 @@ class KvalitetssikringsSteg(
             if (erKvalitetssikretFørRetur) {
                 /**
                  * På dette tidspunktet kan to ting ha skjedd:
-                 * 1. Beslutter har kun returnert et behov som ikke krever kvalitetssikring (f. eks. 22-13)
+                 * 1. Beslutter har kun returnert behov som ikke krever kvalitetssikring (f. eks. 22-13)
                  * 2. Flyten er dratt tilbake til 22-13 og nytt starttidspunkt er satt
                  */
                 val behovSomIkkeKreverKvalitetssikring = avklaringsbehovene.alle()
@@ -148,17 +149,7 @@ class KvalitetssikringsSteg(
                         val endring = behov.aktivHistorikk
                         endring.size >= 2 && endring[endring.size - 2].status == Status.SENDT_TILBAKE_FRA_BESLUTTER
                     }
-                /*
-                val sendtTilbakeFraBeslutter =
-                    avklaringsbehovene.hentBehovForDefinisjon(Definisjon.VURDER_RETTIGHETSPERIODE)
-                        ?.aktivHistorikk
-                        ?.let { endring ->
-                            endring.size >= 2 &&
-                                    endring[endring.size - 2].status == Status.SENDT_TILBAKE_FRA_BESLUTTER
-                        } ?: false
 
-                 */
-                // TODO: legg bak bryter
                 if (sendtTilbakeFraBeslutter) {
                     return true
                 }
