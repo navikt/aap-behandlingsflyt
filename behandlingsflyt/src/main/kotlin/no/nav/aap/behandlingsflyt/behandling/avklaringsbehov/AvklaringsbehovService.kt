@@ -93,6 +93,8 @@ class AvklaringsbehovService(
          * Denne funksjonen kalles kun om `vedtakBehøverVurdering() == true` og avklaringsbehovet
          * [definisjon] allerede har en løsning. Merk at selv om definisjonen allerede har en løsning,
          * så kan den løsningen ha blitt rullet tilbake (se [tilbakestillGrunnlag]).
+         *
+         * @return `null` betyr at [erTilstrekkeligVurdert] benyttes i stedet for periodebasert sjekk.
          */
         perioderSomIkkeErTilstrekkeligVurdert: () -> Set<Periode>?,
         erTilstrekkeligVurdert: () -> Boolean,
@@ -325,7 +327,7 @@ class AvklaringsbehovService(
         )
     }
 
-    /** Special case av [oppdaterAvklaringsbehov] for vilkår som er periodisert. Brukeren
+    /** Spesialtilfelle av [oppdaterAvklaringsbehov] for vilkår som er periodisert. Brukeren
      * av funksjonen må fortelle hvilke perioder hvor vilkåret kan bli vurdert for ([nårVurderingErRelevant]).
      *
      * Hvis det er en periode som trenger vurdering som ikke trengte vurdering i forrige behandling, så løftes

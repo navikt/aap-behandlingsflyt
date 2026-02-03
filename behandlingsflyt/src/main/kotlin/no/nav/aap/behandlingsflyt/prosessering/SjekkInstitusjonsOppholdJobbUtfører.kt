@@ -58,22 +58,29 @@ class SjekkInstitusjonsOppholdJobbUtfører(
                         if (erKandidatForVurderingAvInstitusjonsopphold(sisteYtelsesBehandling.id)) {
                             val vurderingsbehovOgÅrsaker =
                                 behandlingRepository.hentVurderingsbehovOgÅrsaker(sisteYtelsesBehandling.id)
-                            val underveisgrunnlag = underveisgrunnlagRepository.hent(sisteYtelsesBehandling.id)
-                            val alleIkkeOppfylt =
-                                underveisgrunnlag
-                                    .somTidslinje()
-                                    .segmenter()
-                                    .all { it.verdi.utfall == Utfall.IKKE_OPPFYLT }
-                            if (vurderingsbehovOgÅrsaker.any { it.vurderingsbehov.any { vurderingsbehovMedPeriode -> vurderingsbehovMedPeriode.type == Vurderingsbehov.INSTITUSJONSOPPHOLD } }) {
-                                log.info("Vurderingsbehov for institusjonsopphold finnes allerede")
-                            } else if (alleIkkeOppfylt) {
-                                log.info("Vurderingsbehov for institusjonsopphold opprettes ikke, da det er avslag overalt")
+                            val underveisgrunnlag =
+                                underveisgrunnlagRepository.hentHvisEksisterer(sisteYtelsesBehandling.id)
+                            if (underveisgrunnlag == null) {
+                                log.info("Finner ikke underveisgrunnlag for behandlingId ${sisteYtelsesBehandling.id}")
                             } else {
-                                val opprettInstitusjonsOppholdBehandling = opprettNyBehandling(sak)
-                                log.info("Fant sak med institusjonsopphold $sak.id")
-                                log.info("Opprettet behandling for instopphold for ${opprettInstitusjonsOppholdBehandling.id} og ${opprettInstitusjonsOppholdBehandling.forrigeBehandlingId}")
-                                prosesserBehandlingService.triggProsesserBehandling(opprettInstitusjonsOppholdBehandling)
-
+                                val alleIkkeOppfylt =
+                                    underveisgrunnlag
+                                        .somTidslinje()
+                                        .segmenter()
+                                        .all { it.verdi.utfall == Utfall.IKKE_OPPFYLT }
+                                if (vurderingsbehovOgÅrsaker.any { it.vurderingsbehov.any { vurderingsbehovMedPeriode -> vurderingsbehovMedPeriode.type == Vurderingsbehov.INSTITUSJONSOPPHOLD } }) {
+                                    log.info("Vurderingsbehov for institusjonsopphold finnes allerede")
+                                } else if (alleIkkeOppfylt) {
+                                    log.info("Vurderingsbehov for institusjonsopphold opprettes ikke, da det er avslag overalt")
+                                } else {
+                                    log.info("Fant sak med institusjonsopphold $sak.id")
+                                    val opprettInstitusjonsOppholdBehandling = opprettNyBehandling(sak)
+                                    log.info("Opprettet behandling for instopphold for ${opprettInstitusjonsOppholdBehandling.id} og ${opprettInstitusjonsOppholdBehandling.forrigeBehandlingId}")
+                                    prosesserBehandlingService.triggProsesserBehandling(
+                                        opprettInstitusjonsOppholdBehandling
+                                    )
+                                    log.info("Ferdig med å trigge instopphold for $sak.id")
+                                }
                             }
                         }
                     } else {
@@ -91,8 +98,11 @@ class SjekkInstitusjonsOppholdJobbUtfører(
 
         val grunnlag = institusjonsOppholdRepository.hentHvisEksisterer(behandlingId)
         grunnlag?.oppholdene?.opphold?.forEach { opphold ->
-            if (tomErInnenTreMaaneder(opphold.periode))
+            if (tomErInnenTreMaaneder(opphold.periode)) {
+                log.info("For behandlingsid $behandlingId er oppholdene true")
                 return true
+            }
+            log.info("For behandlingsid $behandlingId er oppholdene false")
         }
         return false
     }
@@ -132,6 +142,7 @@ class SjekkInstitusjonsOppholdJobbUtfører(
         /**
          * Kjøres hver time enn så lenge, slås av og på med Feature Toggle
          */
-        override val cron = CronExpression.createWithoutSeconds("0 * * * *")
+        // override val cron = CronExpression.createWithoutSeconds("0 * * * *")
+        override val cron = CronExpression.createWithoutSeconds("*/5 * * * *")
     }
 }
