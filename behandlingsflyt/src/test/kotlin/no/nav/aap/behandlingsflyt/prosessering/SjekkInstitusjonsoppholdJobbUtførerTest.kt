@@ -196,7 +196,7 @@ class `SjekkInstitusjonsoppholdJobbUtførerTest` {
             )
         } returns fakeOpprettetBehandling
 
-        every { underveisgrunnlagRepositoryMock.hent(any()) } returns UnderveisGrunnlag(
+        every { underveisgrunnlagRepositoryMock.hentHvisEksisterer(any()) } returns UnderveisGrunnlag(
             id = 100L,
             perioder = listOf(
                 underveisperiode(
