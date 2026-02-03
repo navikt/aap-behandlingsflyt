@@ -486,7 +486,6 @@ class AvklaringsbehovServiceTest {
         assertThat(avklaringsbehov?.status()).isEqualTo(Status.OPPRETTET)
     }
 
-
     @Test
     fun `skal opprette avklaringsbehov for vurderingsbehov som tvinger avklaringsbehov, også når behovet har blitt løst før, men kun om vurderingsbehovet er nyere`() {
         val behandlingId = BehandlingId(20099)
@@ -607,50 +606,4 @@ class AvklaringsbehovServiceTest {
         assertThat(avklaringsbehov?.status()).isEqualTo(Status.AVBRUTT)
         verify(exactly = 1) { tilbakestillGrunnlag() }
     }
-
-    @Test
-    fun `om vurderingsbehovet er nyere enn siste løste avklaringsbehov, så skal behovet opprettes`() {
-        val behandlingId = BehandlingId(2007)
-        val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, behandlingId)
-        val definisjon = Definisjon.AVKLAR_SYKDOM
-        avklaringsbehovene.leggTil(definisjon, definisjon.løsesISteg, null, null)
-        avklaringsbehovene.løsAvklaringsbehov(definisjon, begrunnelse = "Test", endretAv = "Tester")
-
-        val startDato = LocalDate.of(2024, 6, 1)
-        val periode = Periode(startDato, startDato.plusMonths(1))
-
-        val nårVurderingErRelevant: (FlytKontekstMedPerioder) -> Tidslinje<Boolean> = {
-            Tidslinje(
-                listOf(
-                    Segment(periode, true)
-                )
-            )
-        }
-        val perioderSomIkkeErTilstrekkeligVurdert = emptySet<Periode>()
-        val tilbakestillGrunnlag = mockk<() -> Unit>(relaxed = true)
-        val kontekst = flytKontekstMedPerioder {
-            this.behandlingId = behandlingId
-            this.rettighetsperiode = periode
-            this.vurderingsbehovRelevanteForStegMedPerioder =
-                setOf(
-                    VurderingsbehovMedPeriode(
-                        Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND,
-                        oppdatertTid = LocalDateTime.now().plusMinutes(1)
-                    )
-                )
-        }
-
-        avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkårTilstrekkeligVurdert(
-            definisjon = definisjon,
-            tvingerAvklaringsbehov = setOf(Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND),
-            nårVurderingErRelevant = nårVurderingErRelevant,
-            kontekst = kontekst,
-            perioderSomIkkeErTilstrekkeligVurdert = { perioderSomIkkeErTilstrekkeligVurdert },
-            tilbakestillGrunnlag = tilbakestillGrunnlag
-        )
-
-        val avklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(definisjon)
-        assertThat(avklaringsbehov?.status()).isEqualTo(Status.OPPRETTET)
-    }
-
 }
