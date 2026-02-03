@@ -9,6 +9,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Stat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeInformasjonskrav
 import no.nav.aap.behandlingsflyt.help.FakePdlGateway
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
+import no.nav.aap.behandlingsflyt.help.flytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.integrasjon.aordning.InntektkomponentenGatewayImpl
 import no.nav.aap.behandlingsflyt.integrasjon.arbeidsforhold.AARegisterGateway
 import no.nav.aap.behandlingsflyt.integrasjon.arbeidsforhold.EREGGateway
@@ -304,16 +305,12 @@ class InformasjonskravGrunnlagTest {
             )
         )
 
-        val flytKontekst = behandling.flytKontekst()
-        return ident to FlytKontekstMedPerioder(
-            flytKontekst.sakId,
-            flytKontekst.behandlingId,
-            flytKontekst.forrigeBehandlingId,
-            behandling.typeBehandling(),
-            vurderingType = vurderingType,
-            vurderingsbehovRelevanteForSteg = årsakerTilBehandling,
-            rettighetsperiode = Periode(LocalDate.now(), LocalDate.now()),
-        )
+        return ident to flytKontekstMedPerioder {
+            this.behandling = behandling
+            this.vurderingType = vurderingType
+            vurderingsbehovRelevanteForSteg = årsakerTilBehandling
+            rettighetsperiode = Periode(LocalDate.now(), LocalDate.now())
+        }
     }
 
     private fun leggTilBarnPåPerson(ident: Ident) {

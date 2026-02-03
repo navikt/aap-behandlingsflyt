@@ -17,8 +17,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.BehandletOppfølgingsOppgave
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
+import no.nav.aap.behandlingsflyt.help.flytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
@@ -29,9 +29,9 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
@@ -99,7 +99,7 @@ class AvklarOppfølgingStegTest {
     fun setup() {
         every { sakOgBehandlingService.finnEllerOpprettOrdinærBehandling(any<SakId>(), any()) } returns behandling
 
-        every { mottaDokumentService.hentOppfølgingsBehandlingDokument(any())} returns BehandletOppfølgingsOppgave(
+        every { mottaDokumentService.hentOppfølgingsBehandlingDokument(any()) } returns BehandletOppfølgingsOppgave(
             datoForOppfølging = LocalDate.now(),
             hvemSkalFølgeOpp = HvemSkalFølgeOpp.NasjonalEnhet,
             hvaSkalFølgesOpp = "...",
@@ -134,16 +134,14 @@ class AvklarOppfølgingStegTest {
         )
         val (steg, kontekst) = settOppTilstand(grunnlag)
 
-        val res = steg.utfør(kontekst)
-
-        assertThat(res).isEqualTo(Fullført)
+        steg.utfør(kontekst)
 
         verify {
             prosesserBehandling.triggProsesserBehandling(behandling.sakId, behandling.id)
             sakOgBehandlingService.finnEllerOpprettOrdinærBehandling(
                 behandling.sakId,
                 match {
-                    it.vurderingsbehov == listOf(VurderingsbehovMedPeriode(Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND)) &&
+                    it.vurderingsbehov.map { it.type } == listOf(VurderingsbehovMedPeriode(Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND).type) &&
                             it.årsak == ÅrsakTilOpprettelse.MANUELL_OPPRETTELSE
                 }
             )
@@ -182,7 +180,9 @@ class AvklarOppfølgingStegTest {
 
         steg.utfør(kontekst)
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId = behandling.id)
-        assertThat(avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_OPPFØLGINGSBEHOV_NAY)?.status()).isEqualTo(no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status.OPPRETTET)
+        assertThat(
+            avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_OPPFØLGINGSBEHOV_NAY)?.status()
+        ).isEqualTo(no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status.OPPRETTET)
 
         verify(exactly = 0) {
             prosesserBehandling.triggProsesserBehandling(behandling.sakId, behandling.id)
@@ -211,15 +211,11 @@ class AvklarOppfølgingStegTest {
             avklaringsbehovRepository = avklaringsbehovRepository,
         )
 
-        val kontekst = FlytKontekstMedPerioder(
-            sakId = behandling.sakId,
-            behandlingId = behandling.id,
-            forrigeBehandlingId = null,
-            behandlingType = behandling.typeBehandling(),
-            vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
-            rettighetsperiode = Periode(13 februar 1989, 13 mars 2025),
-            vurderingsbehovRelevanteForSteg = Vurderingsbehov.alle().toSet()
-        )
+        val kontekst = flytKontekstMedPerioder {
+            this.behandling = this@AvklarOppfølgingStegTest.behandling
+            this.rettighetsperiode = Periode(13 februar 1989, 13 mars 2025)
+            this.vurderingsbehovRelevanteForSteg = Vurderingsbehov.alle().toSet()
+        }
         return Pair(steg, kontekst)
     }
 

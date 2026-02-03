@@ -250,10 +250,11 @@ and exists (
         }
     }
 
-    override fun finnSakerMedUtenRiktigSluttdatoPåRettighetsperiode(): List<Sak> {
+    override fun finnSakerMedAvsluttedeBehandlingerUtenRiktigSluttdatoPåRettighetsperiode(): List<Sak> {
         val sql = """
             select * from sak s
-            where upper(s.rettighetsperiode) < ?
+                where s.id not in (select sak_id from behandling where status not in('AVSLUTTET', 'IVERKSETTES'))
+            AND upper(s.rettighetsperiode) < ?
         """.trimIndent()
 
         return connection.queryList(sql) {

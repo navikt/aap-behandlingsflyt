@@ -8,16 +8,14 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovServ
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.behandling.trekkklage.TrekkKlageService
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
-import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.*
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageresultatUtleder
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
+import no.nav.aap.behandlingsflyt.help.flytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
 import no.nav.aap.komponenter.type.Periode
@@ -51,15 +49,12 @@ class FatteVedtakStegTest {
         } returns Unit
     }
 
-    private fun kontekst() = FlytKontekstMedPerioder(
-        sakId = SakId(1L),
-        behandlingId = BehandlingId(1L),
-        behandlingType = TypeBehandling.Klage,
-        forrigeBehandlingId = null,
-        vurderingType = VurderingType.IKKE_RELEVANT,
-        rettighetsperiode = Periode(LocalDate.now().minusDays(1), LocalDate.now().plusYears(1)),
-        vurderingsbehovRelevanteForSteg = setOf(Vurderingsbehov.MOTATT_KLAGE)
-    )
+    private fun kontekst() = flytKontekstMedPerioder {
+        this.behandlingType = TypeBehandling.Klage
+        this.vurderingType = VurderingType.IKKE_RELEVANT
+        this.rettighetsperiode = Periode(LocalDate.now().minusDays(1), LocalDate.now().plusYears(1))
+        this.vurderingsbehovRelevanteForSteg = setOf(Vurderingsbehov.MOTATT_KLAGE)
+    }
 
     private fun steg() = FatteVedtakSteg(
         avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,

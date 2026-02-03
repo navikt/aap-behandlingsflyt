@@ -73,7 +73,7 @@ class SjekkInstitusjonsOppholdJobbUtfører(
                                 log.info("Fant sak med institusjonsopphold $sak.id")
                                 log.info("Opprettet behandling for instopphold for ${opprettInstitusjonsOppholdBehandling.id} og ${opprettInstitusjonsOppholdBehandling.forrigeBehandlingId}")
                                 prosesserBehandlingService.triggProsesserBehandling(opprettInstitusjonsOppholdBehandling)
-
+                                log.info("Ferdig med å trigge instopphold for $sak.id")
                             }
                         }
                     } else {
@@ -91,8 +91,11 @@ class SjekkInstitusjonsOppholdJobbUtfører(
 
         val grunnlag = institusjonsOppholdRepository.hentHvisEksisterer(behandlingId)
         grunnlag?.oppholdene?.opphold?.forEach { opphold ->
-            if (tomErInnenTreMaaneder(opphold.periode))
+            if (tomErInnenTreMaaneder(opphold.periode)) {
+                log.info("For behandlingsid $behandlingId er oppholdene true")
                 return true
+            }
+            log.info("For behandlingsid $behandlingId er oppholdene false")
         }
         return false
     }
@@ -132,6 +135,7 @@ class SjekkInstitusjonsOppholdJobbUtfører(
         /**
          * Kjøres hver time enn så lenge, slås av og på med Feature Toggle
          */
-        override val cron = CronExpression.createWithoutSeconds("0 * * * *")
+        // override val cron = CronExpression.createWithoutSeconds("0 * * * *")
+        override val cron = CronExpression.createWithoutSeconds("*/5 * * * *")
     }
 }
