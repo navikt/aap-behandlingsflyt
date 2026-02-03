@@ -68,14 +68,8 @@ fun NormalOpenAPIRoute.overgangUforeGrunnlagApi(
                     val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
                     val avklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_OVERGANG_UFORE)
 
-                    val unleashGateway = gatewayProvider.provide<UnleashGateway>()
-
                     OvergangUføreGrunnlagResponse(
-                        harTilgangTilÅSaksbehandle = if (unleashGateway.isEnabled(BehandlingsflytFeature.KvalitetssikringsSteg)) {
-                            harTilgangOgKanSaksbehandle(kanSaksbehandle(), avklaringsbehovene)
-                        } else {
-                            kanSaksbehandle()
-                        },
+                        harTilgangTilÅSaksbehandle = harTilgangOgKanSaksbehandle(kanSaksbehandle(), avklaringsbehovene),
                         vurdering = nyesteVurdering, // TODO: Fjern
                         nyeVurderinger = nyeVurderinger,
                         // TODO: Fjern

@@ -73,14 +73,8 @@ fun NormalOpenAPIRoute.arbeidsopptrappingGrunnlagApi(
                     val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
                     val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
 
-                    val unleashGateway = gatewayProvider.provide<UnleashGateway>()
-
                     ArbeidsopptrappingGrunnlagResponse(
-                        harTilgangTilÅSaksbehandle = if (unleashGateway.isEnabled(BehandlingsflytFeature.KvalitetssikringsSteg)) {
-                            harTilgangOgKanSaksbehandle(kanSaksbehandle(), avklaringsbehovene)
-                        } else {
-                            kanSaksbehandle()
-                        },
+                        harTilgangTilÅSaksbehandle = harTilgangOgKanSaksbehandle(kanSaksbehandle(), avklaringsbehovene),
                         sisteVedtatteVurderinger = ArbeidsopptrappingVurderingResponse.fraDomene(
                             forrigeGrunnlag.gjeldendeVurderinger(),
                             vurdertAvService

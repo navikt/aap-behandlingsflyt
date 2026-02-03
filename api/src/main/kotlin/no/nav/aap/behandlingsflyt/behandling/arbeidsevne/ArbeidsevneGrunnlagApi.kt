@@ -58,11 +58,7 @@ fun NormalOpenAPIRoute.arbeidsevneGrunnlagApi(
                 val unleashGateway = gatewayProvider.provide<UnleashGateway>()
 
                 ArbeidsevneGrunnlagDto(
-                    harTilgangTilÅSaksbehandle = if (unleashGateway.isEnabled(BehandlingsflytFeature.KvalitetssikringsSteg)) {
-                        harTilgangOgKanSaksbehandle(kanSaksbehandle(), avklaringsbehovene)
-                    } else {
-                        kanSaksbehandle()
-                    },
+                    harTilgangTilÅSaksbehandle = harTilgangOgKanSaksbehandle(kanSaksbehandle(), avklaringsbehovene),
                     kanVurderes = listOf(sak.rettighetsperiode),
                     behøverVurderinger = emptyList(),
                     nyeVurderinger = nyeVurderinger.map { it.toResponse(vurdertAvService) },

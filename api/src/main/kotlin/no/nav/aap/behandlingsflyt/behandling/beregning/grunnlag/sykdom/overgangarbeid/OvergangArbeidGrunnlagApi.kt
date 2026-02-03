@@ -59,14 +59,8 @@ fun NormalOpenAPIRoute.overgangArbeidGrunnlagApi(
                     val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
                     val perioderSomTrengerVurdering = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_OVERGANG_ARBEID)?.perioderVedtaketBehøverVurdering().orEmpty()
 
-                    val unleashGateway = gatewayProvider.provide<UnleashGateway>()
-
                     OvergangArbeidGrunnlagResponse(
-                        harTilgangTilÅSaksbehandle = if (unleashGateway.isEnabled(BehandlingsflytFeature.KvalitetssikringsSteg)) {
-                            harTilgangOgKanSaksbehandle(kanSaksbehandle(), avklaringsbehovene)
-                        } else {
-                            kanSaksbehandle()
-                        },
+                        harTilgangTilÅSaksbehandle = harTilgangOgKanSaksbehandle(kanSaksbehandle(), avklaringsbehovene),
                         sisteVedtatteVurderinger = OvergangArbeidVurderingResponse.fraDomene(
                             forrigeGrunnlag.gjeldendeVurderinger(),
                             vurdertAvService,

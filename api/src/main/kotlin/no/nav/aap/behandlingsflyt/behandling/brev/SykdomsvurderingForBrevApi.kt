@@ -47,8 +47,6 @@ fun NormalOpenAPIRoute.sykdomsvurderingForBrevApi(
                 val behandling = behandlingRepository.hent(behandlingReferanse)
                 val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
 
-                val unleashGateway = gatewayProvider.provide<UnleashGateway>()
-
                 val sykdomsvurderingForBrev = hentSykdomsvurderingForBrev(
                     behandlingReferanse,
                     behandlingRepository,
@@ -73,11 +71,7 @@ fun NormalOpenAPIRoute.sykdomsvurderingForBrevApi(
                             behandlingRepository.hent(behandlingReferanse)
                         )
                     },
-                    kanSaksbehandle = if (unleashGateway.isEnabled(BehandlingsflytFeature.KvalitetssikringsSteg)) {
-                        harTilgangOgKanSaksbehandle(kanSaksbehandle(), avklaringsbehovene)
-                    } else {
-                        kanSaksbehandle()
-                    },
+                    kanSaksbehandle = harTilgangOgKanSaksbehandle(kanSaksbehandle(), avklaringsbehovene),
                 )
             }
             respond(grunnlag)

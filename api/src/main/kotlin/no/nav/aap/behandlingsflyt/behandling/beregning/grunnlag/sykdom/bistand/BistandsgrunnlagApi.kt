@@ -79,14 +79,8 @@ fun NormalOpenAPIRoute.bistandsgrunnlagApi(
                             ?.perioderVedtaketBehøverVurdering()
                             .orEmpty()
 
-                    val unleashGateway = gatewayProvider.provide<UnleashGateway>()
-
                     BistandGrunnlagResponse(
-                        harTilgangTilÅSaksbehandle = if (unleashGateway.isEnabled(BehandlingsflytFeature.KvalitetssikringsSteg)) {
-                            harTilgangOgKanSaksbehandle(kanSaksbehandle(), avklaringsbehovene)
-                        } else {
-                            kanSaksbehandle()
-                        },
+                        harTilgangTilÅSaksbehandle = harTilgangOgKanSaksbehandle(kanSaksbehandle(), avklaringsbehovene),
                         vurderinger = nyeVurderinger, // TODO: Fjern
                         nyeVurderinger = nyeVurderinger,
                         gjeldendeVedtatteVurderinger = BistandVurderingResponse.fraDomene(
