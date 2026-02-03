@@ -804,6 +804,7 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
             }
             // Gi avslag på 11-13
             .løsSykdom(vurderingGjelderFra = periode.fom, erOppfylt = false)
+            .kvalitetssikreOk()
             .medKontekst {
                 val tilkjentYtelseFraRepo = hentTilkjentYtelse(behandling.id)
 
