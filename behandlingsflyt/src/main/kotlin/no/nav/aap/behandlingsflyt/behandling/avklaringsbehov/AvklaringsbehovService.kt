@@ -21,6 +21,7 @@ import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
+import java.time.LocalDateTime
 
 class AvklaringsbehovService(
     private val avbrytRevurderingService: AvbrytRevurderingService,
@@ -116,6 +117,8 @@ class AvklaringsbehovService(
         // TODO: Fjern denne når alle kall tar i bruk perioderSomIkkeErTilstrekkeligVurdert
         val erTilstrekkeligVurdertBakoverkompatibel =
             { erTilstrekkeligVurdert() || perioderSomIkkeErTilstrekkeligVurdert()?.isEmpty() == true }
+
+        avbrytAvklaringsbehovOmVurderingsbehovErNyere(kontekst, avklaringsbehov, avklaringsbehovene, definisjon)
 
         if (vedtakBehøverVurdering()) {
             if (avklaringsbehov == null || !avklaringsbehov.harAvsluttetStatusIHistorikken() || avklaringsbehov.status() == AVBRUTT) {
@@ -217,6 +220,22 @@ class AvklaringsbehovService(
         }
     }
 
+    private fun avbrytAvklaringsbehovOmVurderingsbehovErNyere(
+        kontekst: FlytKontekstMedPerioder,
+        avklaringsbehov: Avklaringsbehov?,
+        avklaringsbehovene: Avklaringsbehovene,
+        definisjon: Definisjon
+    ) {
+        val nyesteVurderingsbehov = kontekst.vurderingsbehovRelevanteForStegMedPerioder.maxOfOrNull { it.oppdatertTid }
+        val nyesteAvklaringsbehovEndring = avklaringsbehov?.aktivHistorikk?.maxOfOrNull { it.tidsstempel }
+        val vurderingsbehovErNyere = nyesteVurderingsbehov != null && nyesteVurderingsbehov.isAfter(
+            nyesteAvklaringsbehovEndring ?: LocalDateTime.MIN
+        )
+        if (vurderingsbehovErNyere && nyesteAvklaringsbehovEndring != null) {
+            avklaringsbehovene.internalAvbryt(definisjon)
+        }
+    }
+
     private fun oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
         definisjon: Definisjon,
         tvingerAvklaringsbehov: Set<Vurderingsbehov>,
@@ -260,7 +279,7 @@ class AvklaringsbehovService(
                 if (perioderVilkåretErRelevant.segmenter().any { it.verdi }
                     && kontekst.vurderingsbehovRelevanteForSteg.any { it in tvingerAvklaringsbehov }
                 ) {
-                    // Vi behøver vurdering, men har ikke nødvendigvis noen obligatoriske perioder)
+                    // Vi behøver vurdering, men har ikke nødvendigvis noen obligatoriske perioder
                     Pair(true, perioderSomBehøverVurdering)
                 } else {
                     Pair(perioderSomBehøverVurdering.isNotEmpty(), perioderSomBehøverVurdering)
