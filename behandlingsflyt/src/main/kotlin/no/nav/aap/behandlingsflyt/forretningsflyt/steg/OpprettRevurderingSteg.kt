@@ -6,7 +6,6 @@ import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 
@@ -14,22 +13,9 @@ import no.nav.aap.lookup.repository.RepositoryProvider
  * Tidligere brukt for å opprette revurdering dersom samordning hadde usikker sluttdato.
  * Dette løses nå med å opprette oppfølgingsoppgave istedenfor.
  */
-class OpprettRevurderingSteg(
-) : BehandlingSteg {
+class OpprettRevurderingSteg : BehandlingSteg {
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        return when (kontekst.vurderingType) {
-            VurderingType.FØRSTEGANGSBEHANDLING,
-            VurderingType.REVURDERING,
-            VurderingType.MELDEKORT,
-            VurderingType.AUTOMATISK_BREV,
-            VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
-            VurderingType.UTVID_VEDTAKSLENGDE,
-            VurderingType.MIGRER_RETTIGHETSPERIODE,
-            VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9,
-            VurderingType.IKKE_RELEVANT -> {
-                Fullført
-            }
-        }
+        return Fullført
     }
 
     companion object : FlytSteg {

@@ -42,8 +42,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.Instant
 import java.time.LocalDate
-import java.util.Random
-import java.util.UUID
+import java.util.*
 
 class OvergangArbeidStegTest {
     private val random = Random(1235123)
@@ -99,25 +98,13 @@ class OvergangArbeidStegTest {
                 every { isDisabled(BehandlingsflytFeature.OvergangArbeid) } returns false
             }
         )
-        
+
         steg.utfør(kontekstMedPerioder)
         val behov = hentOvergangArbeidBehov(behandling)
         assertThat(behov).isNotNull
         assertThat(behov!!.erÅpent()).isTrue
     }
 
-
-    private fun opprettOgLøsBistandsbehov(behandling: Behandling) {
-        InMemoryAvklaringsbehovRepository.opprett(
-            behandling.id,
-            Definisjon.AVKLAR_BISTANDSBEHOV,
-            Definisjon.AVKLAR_BISTANDSBEHOV.løsesISteg,
-            null,
-            "..."
-        )
-        InMemoryAvklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
-            .løsAvklaringsbehov(Definisjon.AVKLAR_BISTANDSBEHOV, "...", "meg")
-    }
 
     private fun hentOvergangArbeidBehov(behandling: Behandling): Avklaringsbehov? =
         InMemoryAvklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
@@ -129,12 +116,12 @@ class OvergangArbeidStegTest {
         behandling: Behandling,
         vurderingType: VurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
         vurderingsbehov: Set<Vurderingsbehov> = setOf(Vurderingsbehov.MOTTATT_SØKNAD)
-    ): FlytKontekstMedPerioder = FlytKontekstMedPerioder(
-        sak.id, behandling.id, behandling.forrigeBehandlingId, behandling.typeBehandling(),
-        vurderingType = vurderingType,
-        vurderingsbehovRelevanteForSteg = vurderingsbehov,
-        rettighetsperiode = sak.rettighetsperiode
-    )
+    ): FlytKontekstMedPerioder = no.nav.aap.behandlingsflyt.help.flytKontekstMedPerioder {
+        this.behandling = behandling
+        this.vurderingType = vurderingType
+        this.vurderingsbehovRelevanteForSteg = vurderingsbehov
+        this.rettighetsperiode = sak.rettighetsperiode
+    }
 
     private fun behandling(sak: Sak, typeBehandling: TypeBehandling): Behandling =
         behandlingRepository.opprettBehandling(

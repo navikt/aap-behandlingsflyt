@@ -74,8 +74,9 @@ fun NormalOpenAPIRoute.driftApi(
             }
         }
 
+        data class AvbrytBrevBody(val begrunnelse: String)
         route("/brev/{brevbestillingReferanse}/avbryt") {
-            authorizedPost<BrevbestillingReferanse, Unit, Unit>(
+            authorizedPost<BrevbestillingReferanse, Unit, AvbrytBrevBody>(
                 AuthorizationParamPathConfig(
                     operasjon = Operasjon.DRIFTE,
                     relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
@@ -84,13 +85,13 @@ fun NormalOpenAPIRoute.driftApi(
                         behandlingFraBrevbestilling(repositoryRegistry, dataSource)
                     )
                 )
-            ) { param, _ ->
+            ) { param, req ->
                 dataSource.transaction { connection ->
                     val repositoryProvider = repositoryRegistry.provider(connection)
                     val driftsfunksjoner = Driftfunksjoner(repositoryProvider, gatewayProvider)
-                   
-                    driftsfunksjoner.avbrytBrevbestilling(param)
-                    
+
+                    driftsfunksjoner.avbrytVedtsaksbrevBestilling(bruker(), param, req.begrunnelse)
+
                     log.info("Brevbestilling med referanse ${param} er avbrutt av ${bruker()}.")
                 }
                 respondWithStatus(HttpStatusCode.NoContent)

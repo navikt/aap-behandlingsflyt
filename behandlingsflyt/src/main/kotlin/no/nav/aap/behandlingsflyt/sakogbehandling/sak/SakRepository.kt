@@ -32,7 +32,7 @@ interface SakRepository : Repository {
 
     fun finnSakerMedInstitusjonsOpphold(): List<Sak>
 
-    fun finnSakerMedUtenRiktigSluttdatoPåRettighetsperiode(): List<Sak>
+    fun finnSakerMedAvsluttedeBehandlingerUtenRiktigSluttdatoPåRettighetsperiode(): List<Sak>
 
     fun finnSakerMedBarnetillegg(påDato: LocalDate): List<SakId>
 

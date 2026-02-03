@@ -14,6 +14,7 @@ import java.time.LocalDateTime
  * @param kanal Om innsendingen kom via digitale kanaler eller via papir. Dette er relevant for statistikkformål.
  * @param mottattTidspunkt Tidspunktet da dokumentet ble mottatt.
  * @param melding Strukturert melding.
+ * @param digitalisertAvPostmottak Om hendelsen ble digitalisert i postmottak, eller om det ble utført i annet system/kanal
  */
 public class Innsending(
     public val saksnummer: Saksnummer,
@@ -22,6 +23,7 @@ public class Innsending(
     public val kanal: Kanal = Kanal.DIGITAL,
     public val mottattTidspunkt: LocalDateTime,
     public val melding: Melding? = null,
+    public val digitalisertAvPostmottak: Boolean? = null
 ) {
     init {
         when (type) {

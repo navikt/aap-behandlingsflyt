@@ -27,7 +27,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedP
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
@@ -365,15 +364,11 @@ class SamordningStegTest {
         verifiserAvklaringsbehov(behandling, Status.OPPRETTET)
     }
 
-    private fun flytKontekstMedPerioder(behandling: Behandling): FlytKontekstMedPerioder = FlytKontekstMedPerioder(
-        sakId = behandling.sakId,
-        behandlingId = behandling.id,
-        forrigeBehandlingId = behandling.forrigeBehandlingId,
-        behandlingType = behandling.typeBehandling(),
-        vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
-        vurderingsbehovRelevanteForSteg = setOf(Vurderingsbehov.MOTTATT_SØKNAD),
-        rettighetsperiode = Periode(LocalDate.now().minusYears(1), LocalDate.now())
-    )
+    private fun flytKontekstMedPerioder(behandling: Behandling): FlytKontekstMedPerioder =
+        no.nav.aap.behandlingsflyt.help.flytKontekstMedPerioder {
+            this.behandling = behandling
+            this.rettighetsperiode = Periode(LocalDate.now().minusYears(1), LocalDate.now())
+        }
 
     @Test
     fun `skal kunne regne ut samordninggrad også uten registeropplysninger, kun vurderinger`() {
@@ -399,15 +394,11 @@ class SamordningStegTest {
             )
         )
 
-        val kontekst = FlytKontekstMedPerioder(
-            sakId = behandling.sakId,
-            behandlingId = behandling.id,
-            forrigeBehandlingId = behandling.forrigeBehandlingId,
-            behandlingType = behandling.typeBehandling(),
-            vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
-            vurderingsbehovRelevanteForSteg = setOf(Vurderingsbehov.MOTTATT_SØKNAD),
-            rettighetsperiode = Periode(LocalDate.now(), LocalDate.now().plusYears(1))
-        )
+        val kontekst =
+            no.nav.aap.behandlingsflyt.help.flytKontekstMedPerioder {
+                this.behandling = behandling
+                this.rettighetsperiode = Periode(LocalDate.now().minusYears(1), LocalDate.now())
+            }
 
         val res = steg.utfør(kontekst)
 
@@ -444,15 +435,11 @@ class SamordningStegTest {
             )
         )
 
-        val kontekst = FlytKontekstMedPerioder(
-            sakId = behandling.sakId,
-            behandlingId = behandling.id,
-            forrigeBehandlingId = behandling.forrigeBehandlingId,
-            behandlingType = behandling.typeBehandling(),
-            vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
-            vurderingsbehovRelevanteForSteg = setOf(Vurderingsbehov.MOTTATT_SØKNAD),
-            rettighetsperiode = Periode(LocalDate.now(), LocalDate.now().plusYears(1))
-        )
+        val kontekst = no.nav.aap.behandlingsflyt.help.flytKontekstMedPerioder {
+            this.behandling = behandling
+            this.vurderingsbehovRelevanteForSteg = setOf(Vurderingsbehov.MOTTATT_SØKNAD)
+            this.rettighetsperiode = Periode(LocalDate.now().minusYears(1), LocalDate.now())
+        }
 
         val res = steg.utfør(kontekst)
 

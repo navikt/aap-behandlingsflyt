@@ -17,6 +17,7 @@ class SkrivVedtaksbrevLøsning(
     @param:JsonProperty("brevbestillingReferanse", required = true) val brevbestillingReferanse: UUID,
     @param:JsonProperty("handling", required = true) val handling: SkrivBrevAvklaringsbehovLøsning.Handling,
     @param:JsonProperty("mottakere") val mottakere: List<MottakerDto> = emptyList(),
+    @param:JsonProperty("begrunnelse") val begrunnelse: String? = null,
     @param:JsonProperty("behovstype", required = true, defaultValue = SKRIV_VEDTAKSBREV_KODE)
     val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`5051`
 ) : EnkeltAvklaringsbehovLøsning {
