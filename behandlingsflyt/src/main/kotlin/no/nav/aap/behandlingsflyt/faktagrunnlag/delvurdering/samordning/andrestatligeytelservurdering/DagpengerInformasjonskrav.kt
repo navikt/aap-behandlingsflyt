@@ -49,6 +49,7 @@ class DagpengerInformasjonskrav(
     }
 
     override fun hentData(input: DagpengerInput): DagpengerRegisterdata {
+        return DagpengerRegisterdata(emptySet())
         val (person, rettighetsperiode) = input
         val dagpengerPerioder = dagpengerGateway.hentYtelseDagpenger(
             personidentifikatorer = person.aktivIdent().identifikator,
