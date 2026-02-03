@@ -6,7 +6,6 @@ import io.mockk.junit5.MockKExtension
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.verify
-
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.ArbeidsGradering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
@@ -58,7 +57,7 @@ import java.util.*
 import kotlin.test.Test
 
 @ExtendWith(MockKExtension::class)
-class `SjekkInstitusjonsoppholdJobbUtførerTest` {
+class SjekkInstitusjonsoppholdJobbUtførerTest {
 
     private val sakId = SakId(123L)
 
@@ -196,7 +195,7 @@ class `SjekkInstitusjonsoppholdJobbUtførerTest` {
             )
         } returns fakeOpprettetBehandling
 
-        every { underveisgrunnlagRepositoryMock.hent(any()) } returns UnderveisGrunnlag(
+        val underveisGrunnlag = UnderveisGrunnlag(
             id = 100L,
             perioder = listOf(
                 underveisperiode(
@@ -207,6 +206,8 @@ class `SjekkInstitusjonsoppholdJobbUtførerTest` {
                 )
             )
         )
+        every { underveisgrunnlagRepositoryMock.hentHvisEksisterer(any()) } returns underveisGrunnlag
+        every { underveisgrunnlagRepositoryMock.hent(any()) } returns underveisGrunnlag
 
         every {
             prosesserBehandlingServiceMock.triggProsesserBehandling(
