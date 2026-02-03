@@ -61,7 +61,8 @@ class MottaDokumentService(
                 UbehandletMeldekort.fraKontrakt(
                     meldekort = meldekort(it),
                     journalpostId = it.referanse.asJournalpostId,
-                    mottattTidspunkt = it.mottattTidspunkt
+                    mottattTidspunkt = it.mottattTidspunkt,
+                    digitalisertAvPostmottak = it.digitalisertAvPostmottak
                 )
             }
             .toSet()
@@ -69,6 +70,15 @@ class MottaDokumentService(
 
     private fun meldekort(dokument: MottattDokument): Meldekort {
         return requireNotNull(dokument.strukturerteData<Meldekort>()?.data)
+    }
+
+    fun tilUbehandletMeldekort(dokument: MottattDokument): UbehandletMeldekort {
+        return UbehandletMeldekort.fraKontrakt(
+            meldekort = meldekort(dokument),
+            journalpostId = dokument.referanse.asJournalpostId,
+            mottattTidspunkt = dokument.mottattTidspunkt,
+            digitalisertAvPostmottak = dokument.digitalisertAvPostmottak
+        )
     }
 
     fun søknaderSomIkkeHarBlittBehandlet(sakId: SakId): Set<UbehandletSøknad> {

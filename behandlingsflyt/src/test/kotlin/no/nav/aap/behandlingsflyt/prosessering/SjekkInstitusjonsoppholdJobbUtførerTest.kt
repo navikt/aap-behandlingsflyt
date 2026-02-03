@@ -6,6 +6,7 @@ import io.mockk.junit5.MockKExtension
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.verify
+import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.ArbeidsGradering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
@@ -91,6 +92,7 @@ class SjekkInstitusjonsoppholdJobbUtførerTest {
     ): Pair<SjekkInstitusjonsOppholdJobbUtfører, SakOgBehandlingService> {
         val sakServiceMock = mockk<SakService>()
         val sakOgBehandlingServiceMock = mockk<SakOgBehandlingService>()
+        val trukketSøknadServiceMock = mockk<TrukketSøknadService>()
         val sakRepositoryMock = mockk<SakRepository>()
         val behandlingRepositoryMock = mockk<BehandlingRepository>()
         val prosesserBehandlingServiceMock = mockk<ProsesserBehandlingService>()
@@ -188,6 +190,8 @@ class SjekkInstitusjonsoppholdJobbUtførerTest {
 
         every { sakOgBehandlingServiceMock.finnSisteYtelsesbehandlingFor(sakId) } returns fakeBehandling
 
+        every { trukketSøknadServiceMock.søknadErTrukket(any()) } returns false
+
         every {
             sakOgBehandlingServiceMock.finnEllerOpprettOrdinærBehandling(
                 any<SakId>(),
@@ -263,6 +267,7 @@ class SjekkInstitusjonsoppholdJobbUtførerTest {
             sakRepository = sakRepositoryMock,
             institusjonsOppholdRepository = institusjonsoppholdRepositoryMock,
             sakOgBehandlingService = sakOgBehandlingServiceMock,
+            trukketSøknadService = trukketSøknadServiceMock,
             behandlingRepository = behandlingRepositoryMock,
             underveisgrunnlagRepository = underveisgrunnlagRepositoryMock,
             unleashGateway = unleashGateway,

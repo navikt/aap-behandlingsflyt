@@ -19,6 +19,8 @@ import no.nav.aap.behandlingsflyt.test.FødselsnummerGenerator
 import no.nav.aap.behandlingsflyt.test.PersonNavn
 import no.nav.aap.behandlingsflyt.test.TestPersonService
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.gateway.DagpengerPeriode
+
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.Prosent
 import java.time.LocalDate
@@ -59,6 +61,7 @@ class TestPerson(
     var sykepenger: List<Sykepenger>? = null,
     val foreldrepenger: List<ForeldrePenger>? = null,
     val tjenestePensjon: TjenestePensjonRespons? = null,
+    val dagpenger : List<DagpengerPeriode>? = null,
     @JsonIgnore
     val testPersonService: TestPersonService = FakePersoner
 ) {
