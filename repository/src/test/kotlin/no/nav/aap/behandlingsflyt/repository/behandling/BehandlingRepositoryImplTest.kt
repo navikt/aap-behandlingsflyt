@@ -53,6 +53,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅ
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
+import no.nav.aap.behandlingsflyt.test.FakeApiInternGateway
 import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
@@ -86,6 +87,7 @@ internal class BehandlingRepositoryImplTest {
         val skapt = dataSource.transaction { connection ->
             val sak = PersonOgSakService(
                 FakePdlGateway,
+                FakeApiInternGateway.konstruer(),
                 PersonRepositoryImpl(connection),
                 SakRepositoryImpl(connection)
             ).finnEllerOpprett(
@@ -129,6 +131,7 @@ internal class BehandlingRepositoryImplTest {
         val skapt = dataSource.transaction { connection ->
             val sak = PersonOgSakService(
                 FakePdlGateway,
+                FakeApiInternGateway.konstruer(),
                 PersonRepositoryImpl(connection),
                 SakRepositoryImpl(connection)
             ).finnEllerOpprett(
@@ -164,6 +167,7 @@ internal class BehandlingRepositoryImplTest {
         val (sak, førstegang, klage) = dataSource.transaction { connection ->
             val sak = PersonOgSakService(
                 FakePdlGateway,
+                FakeApiInternGateway.konstruer(),
                 PersonRepositoryImpl(connection),
                 SakRepositoryImpl(connection)
             ).finnEllerOpprett(
@@ -221,6 +225,7 @@ internal class BehandlingRepositoryImplTest {
         val (sak, førstegang, _) = dataSource.transaction { connection ->
             val sak = PersonOgSakService(
                 FakePdlGateway,
+                FakeApiInternGateway.konstruer(),
                 PersonRepositoryImpl(connection),
                 SakRepositoryImpl(connection)
             ).finnEllerOpprett(

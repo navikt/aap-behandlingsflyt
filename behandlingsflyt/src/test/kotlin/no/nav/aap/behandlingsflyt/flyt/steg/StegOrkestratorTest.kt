@@ -17,6 +17,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
+import no.nav.aap.behandlingsflyt.test.FakeApiInternGateway
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.type.Periode
@@ -51,6 +52,7 @@ internal class StegOrkestratorTest {
             val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
             val sak = PersonOgSakService(
                 FakePdlGateway,
+                FakeApiInternGateway.konstruer(),
                 PersonRepositoryImpl(connection),
                 SakRepositoryImpl(connection)
             ).finnEllerOpprett(ident, periode)

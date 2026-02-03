@@ -8,6 +8,7 @@ import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.medlemsskap.
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
+import no.nav.aap.behandlingsflyt.test.FakeApiInternGateway
 import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
@@ -43,6 +44,7 @@ internal class MedlemskapRepositoryTest {
         val (sak, behandling) = dataSource.transaction {
             val sak = PersonOgSakService(
                 FakePdlGateway,
+                FakeApiInternGateway.konstruer(),
                 PersonRepositoryImpl(it),
                 SakRepositoryImpl(it)
             ).finnEllerOpprett(

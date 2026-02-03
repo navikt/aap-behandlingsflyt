@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.test
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PdlQueryException
+import no.nav.aap.behandlingsflyt.hendelse.datadeling.ApiInternGateway
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.StudentStatus
@@ -30,14 +31,16 @@ class TestSakService(
     private val sakRepository: SakRepository,
     private val personRepository: PersonRepository,
     private val flytJobbRepository: FlytJobbRepository,
-    private val identGateway: IdentGateway
+    private val identGateway: IdentGateway,
+    private val apiInternGateway: ApiInternGateway
 ) {
 
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         sakRepository = repositoryProvider.provide(),
         personRepository = repositoryProvider.provide(),
         flytJobbRepository = repositoryProvider.provide(),
-        identGateway = gatewayProvider.provide()
+        identGateway = gatewayProvider.provide(),
+        apiInternGateway = gatewayProvider.provide()
     )
 
 
@@ -59,8 +62,9 @@ class TestSakService(
             throw OpprettTestSakException("Fant ikke ident i PDL. Har man brukt en gyldig bruker fra Dolly?")
         }
 
-        val sakService = PersonOgSakService(
+        val personOgSakService = PersonOgSakService(
             identGateway,
+            apiInternGateway,
             personRepository,
             sakRepository
         )
@@ -70,7 +74,7 @@ class TestSakService(
             Tid.MAKS
         )
 
-        val eksisterendeSaker = sakService.finnSakerFor(ident)
+        val eksisterendeSaker = personOgSakService.finnSakerFor(ident)
         if (eksisterendeSaker.isNotEmpty()) {
             throw OpprettTestSakException(
                 "Det finnes allerede en eller flere saker for bruker ${ident.getMasked()}. " +
@@ -79,7 +83,7 @@ class TestSakService(
             )
         }
 
-        val sak = sakService.finnEllerOpprett(ident, periode)
+        val sak = personOgSakService.finnEllerOpprett(ident, periode)
 
         val melding = SøknadV0(
             student = SøknadStudentDto(erStudent = erStudent.toJaNei()),

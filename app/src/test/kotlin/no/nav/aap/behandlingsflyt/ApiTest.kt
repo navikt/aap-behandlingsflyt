@@ -41,11 +41,14 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.FinnEllerOpprettSakD
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.SaksinfoDTO
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.UtvidetSaksinfoDTO
 import no.nav.aap.behandlingsflyt.test.AzureTokenGen
+import no.nav.aap.behandlingsflyt.test.FakeApiInternGateway
 import no.nav.aap.behandlingsflyt.test.FakePersoner
 import no.nav.aap.behandlingsflyt.test.FakeServers
 import no.nav.aap.behandlingsflyt.test.Fakes
+import no.nav.aap.behandlingsflyt.test.LokalUnleash
 import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
+import no.nav.aap.behandlingsflyt.test.testGatewayProvider
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
@@ -135,7 +138,7 @@ class ApiTest {
             server(
                 dbConfig = dbConfig,
                 repositoryRegistry = postgresRepositoryRegistry,
-                gatewayProvider = defaultGatewayProvider(),
+                gatewayProvider = testGatewayProvider(LokalUnleash::class)
             )
         }
 
@@ -163,6 +166,7 @@ class ApiTest {
         val opprettetBehandling = dataSource.transaction { connection ->
             val personOgSakService = PersonOgSakService(
                 FakePdlGateway,
+                FakeApiInternGateway.konstruer(),
                 PersonRepositoryImpl(connection),
                 SakRepositoryImpl(connection)
             )
@@ -218,6 +222,7 @@ class ApiTest {
         val referanse = ds.transaction { connection ->
             val personOgSakService = PersonOgSakService(
                 FakePdlGateway,
+                FakeApiInternGateway.konstruer(),
                 PersonRepositoryImpl(connection),
                 SakRepositoryImpl(connection)
             )

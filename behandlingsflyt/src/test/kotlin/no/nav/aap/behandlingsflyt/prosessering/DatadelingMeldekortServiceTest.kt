@@ -31,6 +31,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅ
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
+import no.nav.aap.behandlingsflyt.test.FakeApiInternGateway
 import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
@@ -75,7 +76,7 @@ class DatadelingMeldekortServiceTest {
             val personRepository = PersonRepositoryImpl(connection)
             val sakRepository = SakRepositoryImpl(connection)
             val personOgSakService = PersonOgSakService(
-                FakePdlGateway, personRepository, sakRepository
+                FakePdlGateway, FakeApiInternGateway.konstruer(), personRepository, sakRepository
             )
             val underveisRepository = UnderveisRepositoryImpl(connection)
             val meldeperiodeRepository = MeldeperiodeRepositoryImpl(connection)
