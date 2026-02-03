@@ -27,10 +27,11 @@ jobs:
           uses: gradle/actions/setup-gradle@v5
           with:
             gradle-version: wrapper
+            cache-read-only: false
         - name: Finn tasks
           id: set-matrix
           run: |
-            TASKS=$(./gradlew -q testMatrix)
+            TASKS=$(./gradlew -q testMatrix --no-daemon --configuration-cache)
             echo $TASKS
             echo "matrix={\"gradle_args\":$TASKS}" >> $GITHUB_OUTPUT
 
@@ -57,6 +58,7 @@ jobs:
               uses: gradle/actions/setup-gradle@v5
               with:
                   gradle-version: wrapper
+                  cache-read-only: false
             - name: Bygg og test (${{matrix.gradle_args}})
               run: ./gradlew ${{matrix.gradle_args}} --continue --stacktrace
             - uses: dorny/test-reporter@v2.5.0
