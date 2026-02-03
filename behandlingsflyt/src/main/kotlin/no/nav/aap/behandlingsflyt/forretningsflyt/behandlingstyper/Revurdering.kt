@@ -395,7 +395,7 @@ object Revurdering : BehandlingType {
             )
             .medSteg(
                 steg = SamordningAndreStatligeYtelserSteg,
-                informasjonskrav = listOf(),//DagpengerInformasjonskrav),
+                informasjonskrav = listOf(DagpengerInformasjonskrav),
                 vurderingsbehovRelevanteForSteg = listOf(
                     Vurderingsbehov.MOTTATT_SØKNAD,
                     Vurderingsbehov.SAMORDNING_OG_AVREGNING,
