@@ -226,11 +226,11 @@ class AvklaringsbehovService(
         definisjon: Definisjon
     ) {
         val nyesteVurderingsbehov = kontekst.vurderingsbehovRelevanteForStegMedPerioder.maxOfOrNull { it.oppdatertTid }
-        val nyesteAvklaringsbehovEndring = avklaringsbehov?.aktivHistorikk?.maxOfOrNull { it.tidsstempel }
+        val nyesteAvklaringsbehovEndring = avklaringsbehov?.aktivHistorikk?.maxOfOrNull { it.tidsstempel } ?: return
         val vurderingsbehovErNyere = nyesteVurderingsbehov != null && nyesteVurderingsbehov.isAfter(
-            nyesteAvklaringsbehovEndring ?: LocalDateTime.MIN
+            nyesteAvklaringsbehovEndring
         )
-        if (vurderingsbehovErNyere && nyesteAvklaringsbehovEndring != null) {
+        if (vurderingsbehovErNyere) {
             avklaringsbehovene.internalAvbryt(definisjon)
         }
     }
