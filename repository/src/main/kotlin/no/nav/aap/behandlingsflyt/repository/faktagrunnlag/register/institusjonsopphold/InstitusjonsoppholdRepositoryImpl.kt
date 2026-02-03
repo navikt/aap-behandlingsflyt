@@ -445,8 +445,8 @@ class InstitusjonsoppholdRepositoryImpl(private val connection: DBConnection) :
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
         require(fraBehandling != tilBehandling)
         val query =
-            """INSERT INTO OPPHOLD_GRUNNLAG (BEHANDLING_ID, OPPHOLD_PERSON_ID, soning_vurderinger_id, HELSEOPPHOLD_VURDERINGER_ID) 
-            SELECT ?, OPPHOLD_PERSON_ID, soning_vurderinger_id, HELSEOPPHOLD_VURDERINGER_ID 
+            """INSERT INTO OPPHOLD_GRUNNLAG (BEHANDLING_ID, OPPHOLD_PERSON_ID, soning_vurderinger_id) 
+            SELECT ?, OPPHOLD_PERSON_ID, soning_vurderinger_id 
             FROM OPPHOLD_GRUNNLAG 
             WHERE AKTIV AND BEHANDLING_ID = ?""".trimMargin()
         connection.execute(
