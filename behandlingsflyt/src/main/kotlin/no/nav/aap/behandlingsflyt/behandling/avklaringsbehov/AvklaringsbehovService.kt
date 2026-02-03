@@ -118,9 +118,8 @@ class AvklaringsbehovService(
         val erTilstrekkeligVurdertBakoverkompatibel =
             { erTilstrekkeligVurdert() || perioderSomIkkeErTilstrekkeligVurdert()?.isEmpty() == true }
 
-        avbrytAvklaringsbehovOmVurderingsbehovErNyere(kontekst, avklaringsbehov, avklaringsbehovene, definisjon)
-
         if (vedtakBehøverVurdering()) {
+            avbrytAvklaringsbehovOmVurderingsbehovErNyere(kontekst, avklaringsbehov, avklaringsbehovene, definisjon)
             if (avklaringsbehov == null || !avklaringsbehov.harAvsluttetStatusIHistorikken() || avklaringsbehov.status() == AVBRUTT) {
                 /* ønsket tilstand: OPPRETTET */
                 when (avklaringsbehov?.status()) {

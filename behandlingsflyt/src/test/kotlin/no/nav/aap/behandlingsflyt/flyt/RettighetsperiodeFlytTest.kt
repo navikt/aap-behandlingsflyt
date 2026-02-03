@@ -313,6 +313,7 @@ class RettighetsperiodeFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleas
             }
             .løsSykdom(nyStartDato)
             .løsBistand(nyStartDato)
+            .kvalitetssikreOk()
             .løsBeregningstidspunkt(nyStartDato)
             .løsOppholdskrav(nyStartDato)
             .løsAndreStatligeYtelser()
