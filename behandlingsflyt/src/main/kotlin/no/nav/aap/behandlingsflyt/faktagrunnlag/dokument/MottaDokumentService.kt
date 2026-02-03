@@ -72,6 +72,15 @@ class MottaDokumentService(
         return requireNotNull(dokument.strukturerteData<Meldekort>()?.data)
     }
 
+    fun tilUbehandletMeldekort(dokument: MottattDokument): UbehandletMeldekort {
+        return UbehandletMeldekort.fraKontrakt(
+            meldekort = meldekort(dokument),
+            journalpostId = dokument.referanse.asJournalpostId,
+            mottattTidspunkt = dokument.mottattTidspunkt,
+            digitalisertAvPostmottak = dokument.digitalisertAvPostmottak
+        )
+    }
+
     fun søknaderSomIkkeHarBlittBehandlet(sakId: SakId): Set<UbehandletSøknad> {
         val ubehandledeSøknader =
             mottattDokumentRepository.hentUbehandledeDokumenterAvType(sakId, InnsendingType.SØKNAD)

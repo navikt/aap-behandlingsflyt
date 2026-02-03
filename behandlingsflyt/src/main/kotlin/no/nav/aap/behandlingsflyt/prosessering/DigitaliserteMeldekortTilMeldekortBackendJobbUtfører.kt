@@ -1,6 +1,8 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.UbehandletMeldekort
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
@@ -12,24 +14,30 @@ import no.nav.aap.meldekort.kontrakt.sak.TimerArbeidetDto
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.motor.JobbUtfører
 import no.nav.aap.motor.ProvidersJobbSpesifikasjon
+import no.nav.aap.verdityper.dokument.JournalpostId
 
 class DigitaliserteMeldekortTilMeldekortBackendJobbUtfører(
     private val meldekortGateway: MeldekortGateway,
-    private val sakRepository: SakRepository
+    private val sakRepository: SakRepository,
+    private val mottattDokumentRepository: MottattDokumentRepository,
+    private val mottaDokumentService: MottaDokumentService
 ) : JobbUtfører {
     override fun utfør(input: JobbInput) {
-        val payload = input.payload<UbehandletMeldekort>()
+        val journalpostId = input.payload<JournalpostId>()
         val sak = sakRepository.hent(SakId(input.sakId()))
+
+        val journalpost = mottattDokumentRepository.hent(InnsendingReferanse(journalpostId))
+        val ubehandletMeldekort = mottaDokumentService.tilUbehandletMeldekort(journalpost)
 
         val request = BehandslingsflytUtfyllingRequest(
             saksnummer = sak.saksnummer.toString(),
             ident = sak.person.aktivIdent().identifikator,
             periode = Periode(
-                fom = payload.timerArbeidPerPeriode.minOf { it.periode.fom },
-                tom = payload.timerArbeidPerPeriode.maxOf { it.periode.tom }
+                fom = ubehandletMeldekort.timerArbeidPerPeriode.minOf { it.periode.fom },
+                tom = ubehandletMeldekort.timerArbeidPerPeriode.maxOf { it.periode.tom }
             ),
-            harDuJobbet = payload.harDuArbeidet,
-            dager = payload.timerArbeidPerPeriode.map {
+            harDuJobbet = ubehandletMeldekort.harDuArbeidet,
+            dager = ubehandletMeldekort.timerArbeidPerPeriode.map {
                 TimerArbeidetDto(it.periode.fom, it.timerArbeid.antallTimer.toDouble())
             }
         )
@@ -50,7 +58,9 @@ class DigitaliserteMeldekortTilMeldekortBackendJobbUtfører(
         ): JobbUtfører {
             return DigitaliserteMeldekortTilMeldekortBackendJobbUtfører(
                 gatewayProvider.provide(),
-                repositoryProvider.provide()
+                repositoryProvider.provide(),
+                repositoryProvider.provide(),
+                MottaDokumentService(repositoryProvider)
             )
         }
 

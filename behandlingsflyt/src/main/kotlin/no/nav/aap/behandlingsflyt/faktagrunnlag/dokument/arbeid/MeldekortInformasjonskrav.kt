@@ -1,7 +1,5 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid
 
-import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
-import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.ENDRET
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.IKKE_ENDRET
@@ -23,15 +21,12 @@ import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
-import no.nav.aap.meldekort.kontrakt.Periode
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.JobbInput
-import java.time.LocalDate
 
 class MeldekortInformasjonskrav private constructor(
     private val mottaDokumentService: MottaDokumentService,
     private val meldekortRepository: MeldekortRepository,
-    private val tidligereVurderinger: TidligereVurderinger,
     private val flytJobbRepository: FlytJobbRepository,
     private val unleashGateway: UnleashGateway
 ) : Informasjonskrav<IngenInput, IngenRegisterData> {
@@ -47,7 +42,6 @@ class MeldekortInformasjonskrav private constructor(
             return MeldekortInformasjonskrav(
                 MottaDokumentService(repositoryProvider),
                 repositoryProvider.provide<MeldekortRepository>(),
-                TidligereVurderingerImpl(repositoryProvider),
                 repositoryProvider.provide<FlytJobbRepository>(),
                 gatewayProvider.provide()
             )
@@ -98,7 +92,7 @@ class MeldekortInformasjonskrav private constructor(
                 if (ubehandletMeldekort.digitalisertAvPostmottak == true) {
                     flytJobbRepository.leggTil(
                         JobbInput(jobb = DigitaliserteMeldekortTilMeldekortBackendJobbUtfører).medPayload(
-                            ubehandletMeldekort
+                            ubehandletMeldekort.journalpostId
                         ).forSak(sakId = kontekst.sakId.id)
                     )
                 }
