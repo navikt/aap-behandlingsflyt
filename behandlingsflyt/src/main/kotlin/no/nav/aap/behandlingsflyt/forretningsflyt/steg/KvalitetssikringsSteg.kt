@@ -16,6 +16,8 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 
@@ -23,13 +25,15 @@ class KvalitetssikringsSteg(
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
     private val avklaringsbehovService: AvklaringsbehovService,
     private val tidligereVurderinger: TidligereVurderinger,
-    private val trekkKlageService: TrekkKlageService
+    private val trekkKlageService: TrekkKlageService,
+    private val unleashGateway: UnleashGateway
 ) : BehandlingSteg {
-    constructor(repositoryProvider: RepositoryProvider) : this(
+    constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         avklaringsbehovRepository = repositoryProvider.provide(),
         avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
-        trekkKlageService = TrekkKlageService(repositoryProvider)
+        trekkKlageService = TrekkKlageService(repositoryProvider),
+        unleashGateway = gatewayProvider.provide()
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
@@ -114,47 +118,48 @@ class KvalitetssikringsSteg(
             return false
         }
 
-        // TODO: legg bak bryter
         /**
          * Dersom flyten blir dratt tilbake til et steg før kvalitetssikring, og det allerede er gjort en kvalitetssikring,
          * så skal dette potensielt trigge en ny kvalitetssikring. Dette kan skje selv om kvalitetssikrer og beslutter ikke har returnert,
          * men f. eks. ved at nytt starttidspunkt i 22-13 blir satt. Dette igjen vil løfte avklaringsbehovene under Sykdom.
          */
-        val avsluttedeBehov = avklaringsbehovene.alle()
-            .filter { it.kreverKvalitetssikring() && it.status() == Status.AVSLUTTET }
+        if (unleashGateway.isEnabled(BehandlingsflytFeature.KvalitetssikringVed2213)) {
+            val avsluttedeBehov = avklaringsbehovene.alle()
+                .filter { it.kreverKvalitetssikring() && it.status() == Status.AVSLUTTET }
 
-        if (avsluttedeBehov.isNotEmpty()) {
-            /**
-             * Når flyten blir dratt tilbake eller beslutter returnerer et behov som ikke skal kvalitetssikres (22-13),
-             * blir alle behov reåpnet og gjeldende status "KVALITETSSIKRET" går tapt, selv om kvalitetssikring har skjedd.
-             * Derfor må historikken sjekkes for å avgjøre om det er skjedd en tidligere kvalitetssikring.
-             */
-            val erKvalitetssikretFørRetur = avsluttedeBehov
-                .any {
-                    val aktivHistorikk = it.aktivHistorikk
-                    val endring = it.aktivHistorikk.getOrNull(aktivHistorikk.size - 3)
-                    endring?.status == Status.KVALITETSSIKRET
-                }
-            if (erKvalitetssikretFørRetur) {
+            if (avsluttedeBehov.isNotEmpty()) {
                 /**
-                 * På dette tidspunktet kan to ting ha skjedd:
-                 * 1. Beslutter har kun returnert behov som ikke krever kvalitetssikring (f. eks. 22-13)
-                 * 2. Flyten er dratt tilbake til 22-13 og nytt starttidspunkt er satt
+                 * Når flyten blir dratt tilbake eller beslutter returnerer et behov som ikke skal kvalitetssikres (22-13),
+                 * blir alle behov reåpnet og gjeldende status "KVALITETSSIKRET" går tapt, selv om kvalitetssikring har skjedd.
+                 * Derfor må historikken sjekkes for å avgjøre om det er skjedd en tidligere kvalitetssikring.
                  */
-                val behovSomIkkeKreverKvalitetssikring = avklaringsbehovene.alle()
-                    .filter { !it.kreverKvalitetssikring() }
-
-                val sendtTilbakeFraBeslutter =
-                    behovSomIkkeKreverKvalitetssikring.any { behov ->
-                        val endring = behov.aktivHistorikk
-                        endring.size >= 2 && endring[endring.size - 2].status == Status.SENDT_TILBAKE_FRA_BESLUTTER
+                val erKvalitetssikretFørRetur = avsluttedeBehov
+                    .any {
+                        val aktivHistorikk = it.aktivHistorikk
+                        val endring = it.aktivHistorikk.getOrNull(aktivHistorikk.size - 3)
+                        endring?.status == Status.KVALITETSSIKRET
                     }
+                if (erKvalitetssikretFørRetur) {
+                    /**
+                     * På dette tidspunktet kan to ting ha skjedd:
+                     * 1. Beslutter har kun returnert behov som ikke krever kvalitetssikring (f. eks. 22-13)
+                     * 2. Flyten er dratt tilbake til 22-13 og nytt starttidspunkt er satt
+                     */
+                    val behovSomIkkeKreverKvalitetssikring = avklaringsbehovene.alle()
+                        .filter { !it.kreverKvalitetssikring() }
 
-                if (sendtTilbakeFraBeslutter) {
-                    return true
+                    val sendtTilbakeFraBeslutter =
+                        behovSomIkkeKreverKvalitetssikring.any { behov ->
+                            val endring = behov.aktivHistorikk
+                            endring.size >= 2 && endring[endring.size - 2].status == Status.SENDT_TILBAKE_FRA_BESLUTTER
+                        }
+
+                    if (sendtTilbakeFraBeslutter) {
+                        return true
+                    }
                 }
+                return false
             }
-            return false
         }
 
         return true
@@ -164,7 +169,7 @@ class KvalitetssikringsSteg(
         override fun konstruer(
             repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider
         ): BehandlingSteg {
-            return KvalitetssikringsSteg(repositoryProvider)
+            return KvalitetssikringsSteg(repositoryProvider, gatewayProvider)
         }
 
         override fun type(): StegType {
