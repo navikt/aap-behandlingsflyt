@@ -72,7 +72,7 @@ object InstitusjonsoppholdGatewayImpl : InstitusjonsoppholdGateway {
     private val log = LoggerFactory.getLogger(javaClass)
 
     private val personOppholdUrl =
-        URI.create(requiredConfigForKey("integrasjon.institusjonsopphold.url"))
+        URI.create(requiredConfigForKey("integrasjon.institusjonsopphold.url") + "?Med-Institusjonsinformasjon=true")
     private val enkeltOppholdURL =
         URI.create(requiredConfigForKey("integrasjon.institusjonsoppholdenkelt.url"))
     private val config = ClientConfig(scope = requiredConfigForKey("integrasjon.institusjonsopphold.scope"))
