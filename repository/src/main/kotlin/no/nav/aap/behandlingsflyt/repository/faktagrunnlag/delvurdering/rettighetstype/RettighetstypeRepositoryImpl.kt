@@ -1,13 +1,14 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.rettighetstype
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.rettighetstype.RettighetstypeFaktagrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.rettighetstype.RettighetstypePerioder
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.rettighetstype.RettighetstypePeriode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.rettighetstype.RettighetstypeGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.rettighetstype.RettighetstypeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
+import no.nav.aap.komponenter.tidslinje.Segment
+import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.lookup.repository.Factory
 
 class RettighetstypeRepositoryImpl(private val connection: DBConnection) : RettighetstypeRepository {
@@ -18,11 +19,11 @@ class RettighetstypeRepositoryImpl(private val connection: DBConnection) : Retti
         }
     }
 
-    override fun hent(behandlingId: BehandlingId): RettighetstypePerioder {
+    override fun hent(behandlingId: BehandlingId): RettighetstypeGrunnlag {
         return requireNotNull(hentHvisEksisterer(behandlingId)) { "Fant ikke rettighetstypegrunnlag for behandlingId=$behandlingId" }
     }
 
-    override fun hentHvisEksisterer(behandlingId: BehandlingId): RettighetstypePerioder? {
+    override fun hentHvisEksisterer(behandlingId: BehandlingId): RettighetstypeGrunnlag? {
         val query = """
             select * from rettighetstype_grunnlag where behandling_id = ? and aktiv = true
         """.trimIndent()
@@ -32,35 +33,36 @@ class RettighetstypeRepositoryImpl(private val connection: DBConnection) : Retti
         }
     }
 
-    private fun mapGrunnlag(row: Row): RettighetstypePerioder {
+    private fun mapGrunnlag(row: Row): RettighetstypeGrunnlag {
         val perioderId = row.getLong("perioder_id")
         val query = """
             select * from rettighetstype_periode where perioder_id = ? order by periode
         """.trimIndent()
-        val perioder = connection.querySet(query) {
+        val segmenter = connection.querySet(query) {
             setParams { setLong(1, perioderId) }
-            setRowMapper { mapPeriode(it) }
-        }
-        return RettighetstypePerioder(perioder)
+            setRowMapper { mapSegment(it) }
+        }.sortedBy { it.periode.fom }
+        
+        return RettighetstypeGrunnlag(Tidslinje(segmenter))
     }
 
-    private fun mapPeriode(row: Row): RettighetstypePeriode {
-        return RettighetstypePeriode(
+    private fun mapSegment(row: Row): Segment<RettighetsType> {
+        return Segment(
             periode = row.getPeriode("periode"),
-            rettighetstype = RettighetsType.valueOf(row.getString("rettighetstype")),
+            verdi = RettighetsType.valueOf(row.getString("rettighetstype")),
         )
     }
 
     override fun lagre(
         behandlingId: BehandlingId,
-        rettighetstypePerioder: Set<RettighetstypePeriode>,
+        rettighetstypeTidslinje: Tidslinje<RettighetsType>,
         faktagrunnlag: RettighetstypeFaktagrunnlag,
         versjon: String,
     ) {
         val eksisterende = hentHvisEksisterer(behandlingId)
-        val nyePerioder = RettighetstypePerioder(rettighetstypePerioder)
+        val nyePerioder = RettighetstypeGrunnlag(rettighetstypeTidslinje)
 
-        if (eksisterende?.perioder != nyePerioder) {
+        if (eksisterende != nyePerioder) {
             if (eksisterende != null) {
                 deaktiverGrunnlag(behandlingId)
             }
@@ -88,18 +90,18 @@ class RettighetstypeRepositoryImpl(private val connection: DBConnection) : Retti
 
     private fun lagreNyttGrunnlag(
         behandlingId: BehandlingId,
-        perioder: RettighetstypePerioder
+        grunnlag: RettighetstypeGrunnlag
     ): Long {
         val perioderId = connection.executeReturnKey("insert into rettighetstype_perioder default values")
         val query = """
             insert into rettighetstype_periode (perioder_id, periode, rettighetstype)
             values (?, ?::daterange, ?)
         """.trimIndent()
-        connection.executeBatch(query, perioder.perioder) {
-            setParams { periode ->
+        connection.executeBatch(query, grunnlag.rettighetstypeTidslinje.segmenter()) {
+            setParams { segment ->
                 setLong(1, perioderId)
-                setPeriode(2, periode.periode)
-                setString(3, periode.rettighetstype.name)
+                setPeriode(2, segment.periode)
+                setString(3, segment.verdi.name)
             }
         }
         val grunnlagQuery = """
@@ -142,7 +144,7 @@ class RettighetstypeRepositoryImpl(private val connection: DBConnection) : Retti
     override fun slett(behandlingId: BehandlingId) {
         slettMedCount(behandlingId)
     }
-    
+
     fun hentSporingHvisEksisterer(behandlingId: BehandlingId): Pair<String, String>? {
         val query = """
             select s.* from rettighetstype_sporing s
@@ -200,7 +202,7 @@ class RettighetstypeRepositoryImpl(private val connection: DBConnection) : Retti
         ) {
             setParams { setLongArray(1, perioderIds) }
         }
-        
+
         return slettetSporing + slettetGrunnlag + slettedePerioder + slettetPerioder
     }
 }

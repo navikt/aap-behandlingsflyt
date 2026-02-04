@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.rettighetstype
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.rettighetstype.RettighetstypePeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.help.sak
@@ -8,11 +7,12 @@ import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.rettighetstype.RettighetstypeFaktagrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.rettighetstype.RettighetstypePerioder
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.rettighetstype.RettighetstypeGrunnlag
 import no.nav.aap.behandlingsflyt.help.genererVilkårsresultat
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.test.januar
+import no.nav.aap.komponenter.tidslinje.tidslinjeOf
 import no.nav.aap.komponenter.verdityper.Tid
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.*
@@ -41,15 +41,9 @@ class RettighetstypeRepositoryImplTest {
 
         val periodeMedSpe = Periode(rettighetsperiode.fom, rettighetsperiode.fom.plusDays(10))
         val periodeMedBistandsbehov = Periode(periodeMedSpe.tom.plusDays(1), periodeMedSpe.tom.plusDays(1).plusYears(3))
-        val rettighetstypePerioder = setOf(
-            RettighetstypePeriode(
-                periode = periodeMedSpe,
-                rettighetstype = RettighetsType.SYKEPENGEERSTATNING,
-            ),
-            RettighetstypePeriode(
-                periode = periodeMedBistandsbehov,
-                rettighetstype = RettighetsType.BISTANDSBEHOV,
-            )
+        val rettighetstypeTidslinje = tidslinjeOf(
+            periodeMedSpe to RettighetsType.SYKEPENGEERSTATNING,
+            periodeMedBistandsbehov to RettighetsType.BISTANDSBEHOV
         )
 
         val input = RettighetstypeFaktagrunnlag(
@@ -58,18 +52,17 @@ class RettighetstypeRepositoryImplTest {
 
         // Lagre
         dataSource.transaction {
-            RettighetstypeRepositoryImpl(it).lagre(behandling.id, rettighetstypePerioder, input, versjon = "1")
+            RettighetstypeRepositoryImpl(it).lagre(behandling.id, rettighetstypeTidslinje, input, versjon = "1")
         }
 
         // Hent rettighetstype
         val uthentet = dataSource.transaction {
             RettighetstypeRepositoryImpl(it).hent(behandling.id)
         }
-        assertThat(uthentet.perioder).hasSize(2)
+        assertThat(uthentet.rettighetstypeTidslinje.segmenter()).hasSize(2)
 
         assertThat(uthentet)
-            .usingRecursiveComparison()
-            .isEqualTo(RettighetstypePerioder(rettighetstypePerioder))
+            .isEqualTo(RettighetstypeGrunnlag(rettighetstypeTidslinje))
 
         // Hent sporing
         val sporing = dataSource.transaction {
@@ -103,11 +96,8 @@ class RettighetstypeRepositoryImplTest {
         val behandling = dataSource.transaction { finnEllerOpprettBehandling(it, sak) }
 
         val periodeMedRett = Periode(rettighetsperiode.fom, rettighetsperiode.fom.plusYears(3))
-        val rettighetstypePerioder = setOf(
-            RettighetstypePeriode(
-                periode = periodeMedRett,
-                rettighetstype = RettighetsType.BISTANDSBEHOV,
-            )
+        val rettighetstypeTidslinje = tidslinjeOf(
+            periodeMedRett to RettighetsType.BISTANDSBEHOV
         )
 
         val input = RettighetstypeFaktagrunnlag(
@@ -120,7 +110,7 @@ class RettighetstypeRepositoryImplTest {
 
 
             RettighetstypeRepositoryImpl(connection).lagre(
-                behandling.id, rettighetstypePerioder, input, versjon = "1"
+                behandling.id, rettighetstypeTidslinje, input, versjon = "1"
             )
 
             // Kopier
@@ -131,11 +121,10 @@ class RettighetstypeRepositoryImplTest {
             val kopiert = RettighetstypeRepositoryImpl(connection).hent(
                 nyBehandling.id
             )
-            assertThat(kopiert.perioder).hasSize(1)
+            assertThat(kopiert.rettighetstypeTidslinje.segmenter()).hasSize(1)
 
             assertThat(kopiert)
-                .usingRecursiveComparison()
-                .isEqualTo(RettighetstypePerioder(rettighetstypePerioder))
+                .isEqualTo(RettighetstypeGrunnlag(rettighetstypeTidslinje))
 
         }
     }
