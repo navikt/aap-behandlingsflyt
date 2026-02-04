@@ -28,7 +28,7 @@ class OrdinærKvoteVilkårTest {
         val studentOppfylt = Periode(1 januar 2024, 7 januar 2024) // Bruker 5 dager av ordinær kvote
         val speOppfylt =
             Periode(8 januar 2024, 14 januar 2024) // Bruker 5 dager av sykepengeerstatning-kvote
-        val andrePeriodeBistandOppfylt = Periode(15 januar 2024, Tid.MAKS) // Bruker gjenværende dager av ordinær kvote
+        val periodeBistandOppfylt = Periode(15 januar 2024, Tid.MAKS) // Bruker gjenværende dager av ordinær kvote
 
         val vilkårsresultat = genererVilkårsresultat(
             rettighetsperiode,
@@ -49,7 +49,7 @@ class OrdinærKvoteVilkårTest {
                 Vilkårtype.BISTANDSVILKÅRET,
                 setOf(
                     Vilkårsperiode(
-                        andrePeriodeBistandOppfylt,
+                        periodeBistandOppfylt,
                         Utfall.OPPFYLT,
                         false,
                         null,
@@ -82,8 +82,8 @@ class OrdinærKvoteVilkårTest {
         )
 
         // Verifiser forventet resultat av vurderingen
-        val forventetSistePeriodeOppfyltOrdinær = Periode(
-            andrePeriodeBistandOppfylt.fom,
+        val forventetPeriodeOppfyltOrdinær = Periode(
+            periodeBistandOppfylt.fom,
             21 januar 2024 // Siste dag med kvote
         )
 
@@ -102,7 +102,7 @@ class OrdinærKvoteVilkårTest {
                 assertThat(it is KvoteOk).isTrue()
                 assertThat(it.rettighetsType).isEqualTo(RettighetsType.SYKEPENGEERSTATNING)
             },
-            forventetSistePeriodeOppfyltOrdinær to {
+            forventetPeriodeOppfyltOrdinær to {
                 assertThat(it is KvoteOk).isTrue()
                 assertThat(it.rettighetsType).isEqualTo(RettighetsType.BISTANDSBEHOV)
             },
@@ -121,7 +121,7 @@ class OrdinærKvoteVilkårTest {
             vilkåret.tidslinje(),
             studentOppfylt to { assertThat(it.utfall).isEqualTo(Utfall.OPPFYLT) },
             speOppfylt to { assertThat(it.utfall).isEqualTo(Utfall.IKKE_RELEVANT) },
-            forventetSistePeriodeOppfyltOrdinær to { assertThat(it.utfall).isEqualTo(Utfall.OPPFYLT) },
+            forventetPeriodeOppfyltOrdinær to { assertThat(it.utfall).isEqualTo(Utfall.OPPFYLT) },
             forventetPeriodeOrdinærKvoteBruktOpp to { assertThat(it.utfall).isEqualTo(Utfall.IKKE_OPPFYLT) },
         )
     }
