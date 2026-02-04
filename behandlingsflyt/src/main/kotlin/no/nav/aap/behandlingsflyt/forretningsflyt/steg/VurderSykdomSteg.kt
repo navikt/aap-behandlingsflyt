@@ -96,8 +96,8 @@ class VurderSykdomSteg(
             tilbakestillGrunnlag = {
                 val vedtatteSykdomsvurderinger = kontekst.forrigeBehandlingId
                     ?.let { sykdomRepository.hentHvisEksisterer(it) }
-                    ?.sykdomsvurderinger
-                    ?: emptyList()
+                    ?.sykdomsvurderinger.orEmpty()
+
                 sykdomRepository.lagre(kontekst.behandlingId, vedtatteSykdomsvurderinger)
             },
             kontekst
