@@ -15,13 +15,19 @@ create table rettighetstype_grunnlag
 
 create table rettighetstype_periode
 (
-    id                    bigserial primary key,
-    perioder_id           bigint references rettighetstype_perioder (id) not null,
-    periode               daterange                                      not null,
-    rettighetstype        text                                           not null,
-    bruker_av_kvoter      text[],
-    avslagsaarsaker_kvote text[],
-    opprettet_tid         timestamp default current_timestamp            not null
+    id             bigserial primary key,
+    perioder_id    bigint references rettighetstype_perioder (id) not null,
+    periode        daterange                                      not null,
+    rettighetstype text                                           not null,
+    opprettet_tid  timestamp default current_timestamp            not null
+);
+
+create table rettighetstype_sporing
+(
+    id                         bigserial primary key,
+    rettighetstype_grunnlag_id bigint not null references rettighetstype_grunnlag (id),
+    versjon                    text   not null,
+    faktagrunnlag              text   not null
 );
 
 create unique index uidx_rettighetstype_grunnlag_behandling_id on rettighetstype_grunnlag (behandling_id) where (aktiv = true); 

@@ -1,22 +1,20 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.rettighetstype
 
-import no.nav.aap.behandlingsflyt.behandling.rettighetstype.KravForOrdinærAap
-import no.nav.aap.behandlingsflyt.behandling.rettighetstype.KvoteOk
-import no.nav.aap.behandlingsflyt.behandling.rettighetstype.KvoteVurdering
-import no.nav.aap.behandlingsflyt.behandling.rettighetstype.RettighetstypeVurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.Faktagrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.rettighetstype.RettighetstypeMedKvote
+import no.nav.aap.behandlingsflyt.behandling.underveis.Kvoter
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.rettighetstype.RettighetstypePeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.help.sak
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.type.Periode
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Kvote
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.rettighetstype.RettighetstypeFaktagrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.rettighetstype.RettighetstypePerioder
+import no.nav.aap.behandlingsflyt.help.genererVilkårsresultat
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.test.januar
-import no.nav.aap.komponenter.tidslinje.tidslinjeOf
 import no.nav.aap.komponenter.verdityper.Tid
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.*
@@ -25,7 +23,7 @@ class RettighetstypeRepositoryImplTest {
 
     companion object {
         private lateinit var dataSource: TestDataSource
-        
+
         @BeforeAll
         @JvmStatic
         fun setUp() {
@@ -43,77 +41,90 @@ class RettighetstypeRepositoryImplTest {
         val sak = dataSource.transaction { sak(it, rettighetsperiode) }
         val behandling = dataSource.transaction { finnEllerOpprettBehandling(it, sak) }
 
-        val vurdering = KvoteOk(
-            brukerKvote = Kvote.ORDINÆR,
-            rettighetstypeVurdering = RettighetstypeVurdering(
-                kravspesifikasjonForRettighetsType = KravForOrdinærAap,
-                vilkårsvurderinger = emptyMap()
+        val periodeMedSpe = Periode(rettighetsperiode.fom, rettighetsperiode.fom.plusDays(10))
+        val periodeMedBistandsbehov = Periode(periodeMedSpe.tom.plusDays(1), periodeMedSpe.tom.plusDays(1).plusYears(3))
+        val rettighetstypePerioder = setOf(
+            RettighetstypePeriode(
+                periode = periodeMedSpe,
+                rettighetstype = RettighetsType.SYKEPENGEERSTATNING,
+            ),
+            RettighetstypePeriode(
+                periode = periodeMedBistandsbehov,
+                rettighetstype = RettighetsType.BISTANDSBEHOV,
             )
         )
 
-        val tidslinje = tidslinjeOf<KvoteVurdering>(rettighetsperiode to vurdering)
-
-
-        val input = object : Faktagrunnlag {
-            override fun hent() = "test"
-        }
+        val input = RettighetstypeFaktagrunnlag(
+            vilkår = genererVilkårsresultat(rettighetsperiode).alle(),
+            kvoter = Kvoter(Hverdager(784), Hverdager(131))
+        )
 
         // Lagre
         dataSource.transaction {
-            RettighetstypeRepositoryImpl(it).lagre(behandling.id, tidslinje, input)
+            RettighetstypeRepositoryImpl(it).lagre(behandling.id, rettighetstypePerioder, input, versjon = "1")
         }
 
-        // Hent
+        // Hent rettighetstype
         val uthentet = dataSource.transaction {
             RettighetstypeRepositoryImpl(it).hent(behandling.id)
         }
-        assertThat(uthentet.perioder).hasSize(1)
-        val expected = RettighetstypeMedKvote(
-            periode = rettighetsperiode,
-            rettighetstype = RettighetsType.BISTANDSBEHOV,
-            avslagsårsaker = setOf(),
-            brukerAvKvoter = setOf(Kvote.ORDINÆR)
-        )
-        assertThat(uthentet.perioder.first())
+        assertThat(uthentet.perioder).hasSize(2)
+
+        assertThat(uthentet)
             .usingRecursiveComparison()
-            .isEqualTo(expected)
+            .isEqualTo(RettighetstypePerioder(rettighetstypePerioder))
+
+        // Hent sporing
+        val sporing = dataSource.transaction {
+            RettighetstypeRepositoryImpl(it).hentSporingHvisEksisterer(behandling.id)
+        }
+
+        assertThat(sporing).isNotNull()
+        assertThat(sporing!!.first).isEqualTo("1")
+        assertThat(sporing.second).isEqualTo("{\"vilkår\":[{\"type\":\"ALDERSVILKÅRET\",\"vurdertTidspunkt\":null},{\"type\":\"LOVVALG\",\"vurdertTidspunkt\":null},{\"type\":\"SYKDOMSVILKÅRET\",\"vurdertTidspunkt\":null},{\"type\":\"MEDLEMSKAP\",\"vurdertTidspunkt\":null},{\"type\":\"BISTANDSVILKÅRET\",\"vurdertTidspunkt\":null},{\"type\":\"GRUNNLAGET\",\"vurdertTidspunkt\":null}],\"kvoter\":{\"ordinærkvote\":784,\"sykepengeerstatningkvote\":131}}")
 
         // Slett
         dataSource.transaction {
-            RettighetstypeRepositoryImpl(it).slett(behandling.id)
+            val antallRaderSlettet = RettighetstypeRepositoryImpl(it).slettMedCount(behandling.id)
+            assertThat(antallRaderSlettet).isEqualTo(1 + 1 + 2 + 1) // grunnlag + perioder + periode + faktagrunnlag
         }
 
-        val slettet = dataSource.transaction {
+        val slettetGrunnlag = dataSource.transaction {
             RettighetstypeRepositoryImpl(it).hentHvisEksisterer(behandling.id)
         }
-        assertThat(slettet).isNull()
+        val slettetSporing = dataSource.transaction {
+            RettighetstypeRepositoryImpl(it).hentSporingHvisEksisterer(behandling.id)
+        }
+        assertThat(slettetGrunnlag).isNull()
+        assertThat(slettetSporing).isNull()
     }
 
     @Test
-    fun `Kopier`() {
+    fun Kopier() {
         val rettighetsperiode = Periode(1 januar 2020, Tid.MAKS)
         val sak = dataSource.transaction { sak(it, rettighetsperiode) }
         val behandling = dataSource.transaction { finnEllerOpprettBehandling(it, sak) }
 
-        val vurdering = KvoteOk(
-            brukerKvote = Kvote.ORDINÆR,
-            rettighetstypeVurdering = RettighetstypeVurdering(
-                kravspesifikasjonForRettighetsType = KravForOrdinærAap,
-                vilkårsvurderinger = emptyMap()
+        val periodeMedRett = Periode(rettighetsperiode.fom, rettighetsperiode.fom.plusYears(3))
+        val rettighetstypePerioder = setOf(
+            RettighetstypePeriode(
+                periode = periodeMedRett,
+                rettighetstype = RettighetsType.BISTANDSBEHOV,
             )
         )
 
-        val tidslinje = tidslinjeOf<KvoteVurdering>(rettighetsperiode to vurdering)
-        val input = object : Faktagrunnlag {
-            override fun hent() = "test"
-        }
+        val input = RettighetstypeFaktagrunnlag(
+            vilkår = genererVilkårsresultat(rettighetsperiode).alle(),
+            kvoter = Kvoter(Hverdager(784), Hverdager(131))
+        )
+
         // Lagre
         dataSource.transaction { connection ->
             BehandlingRepositoryImpl(connection).oppdaterBehandlingStatus(behandling.id, Status.AVSLUTTET)
 
 
             RettighetstypeRepositoryImpl(connection).lagre(
-                behandling.id, tidslinje, input
+                behandling.id, rettighetstypePerioder, input, versjon = "1"
             )
 
             // Kopier
@@ -125,16 +136,10 @@ class RettighetstypeRepositoryImplTest {
                 nyBehandling.id
             )
             assertThat(kopiert.perioder).hasSize(1)
-            val expected = RettighetstypeMedKvote(
-                periode = rettighetsperiode,
-                rettighetstype = RettighetsType.BISTANDSBEHOV,
-                avslagsårsaker = setOf(),
-                brukerAvKvoter = setOf(Kvote.ORDINÆR)
-            )
 
-            assertThat(kopiert.perioder.first())
+            assertThat(kopiert)
                 .usingRecursiveComparison()
-                .isEqualTo(expected)
+                .isEqualTo(RettighetstypePerioder(rettighetstypePerioder))
 
         }
     }
