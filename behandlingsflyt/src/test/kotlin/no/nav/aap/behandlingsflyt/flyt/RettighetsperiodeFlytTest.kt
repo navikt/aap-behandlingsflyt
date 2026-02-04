@@ -483,7 +483,8 @@ class RettighetsperiodeFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleas
         Vilkårtype.OVERGANGARBEIDVILKÅRET,
         Vilkårtype.SYKEPENGEERSTATNING,
         Vilkårtype.SAMORDNING,
-        Vilkårtype.STUDENT
+        Vilkårtype.STUDENT,
+        Vilkårtype.ORDINÆR_KVOTE
     )
 
 
