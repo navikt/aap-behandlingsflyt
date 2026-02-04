@@ -157,8 +157,8 @@ class KvalitetssikringsSteg(
                     if (sendtTilbakeFraBeslutter) {
                         return true
                     }
+                    return false
                 }
-                return false
             }
         }
 
