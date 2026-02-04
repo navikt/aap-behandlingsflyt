@@ -243,7 +243,7 @@ object Revurdering : BehandlingType {
                     Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP,
                 )
             )
-            .medSteg(steg = KvalitetssikringsSteg)
+            .medSteg(steg = KvalitetssikringsSteg, vurderingsbehovRelevanteForSteg = emptyList())
             .medSteg(
                 steg = VurderYrkesskadeSteg, vurderingsbehovRelevanteForSteg = listOf(
                     Vurderingsbehov.MOTTATT_SØKNAD,
@@ -425,7 +425,7 @@ object Revurdering : BehandlingType {
             )
             .medSteg(
                 steg = ForeslåVedtakSteg,
-                vurderingsbehovRelevanteForSteg = Vurderingsbehov.alleInklusivGRegulering()
+                vurderingsbehovRelevanteForSteg = emptyList()
             ) // en-trinn
             .sluttÅOppdatereFaktagrunnlag()
             .medSteg(
