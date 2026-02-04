@@ -9,7 +9,6 @@ enum class BehandlingsflytFeature : FeatureToggle {
     IngenValidering,
     NyBrevtype11_17,
     OvergangArbeid,
-    KvalitetssikringsSteg,
     NyBrevbyggerV3,
     LagreVedtakIFatteVedtak,
     PeriodisertSykepengeErstatningNyAvklaringsbehovService,
