@@ -8,6 +8,11 @@ import io.ktor.http.*
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingReferanse
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Innvilgelsesårsak
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
@@ -95,6 +100,45 @@ fun NormalOpenAPIRoute.driftApi(
                     log.info("Brevbestilling med referanse ${param} er avbrutt av ${bruker()}.")
                 }
                 respondWithStatus(HttpStatusCode.NoContent)
+            }
+        }
+
+        route("/behandling/{referanse}/vilkår") {
+            authorizedPost<BehandlingReferanse, List<VilkårDriftsinfoDTO>, Unit>(
+                AuthorizationParamPathConfig(
+                    behandlingPathParam = BehandlingPathParam("referanse"),
+                    operasjon = Operasjon.DRIFTE
+                )
+            ) { params, _ ->
+                val vilkår = dataSource.transaction { connection ->
+                    val repositoryProvider = repositoryRegistry.provider(connection)
+                    val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+
+                    val vilkårRepository = repositoryProvider.provide<VilkårsresultatRepository>()
+
+                    val behandling = behandlingRepository.hent(BehandlingReferanse(params.referanse))
+
+                    vilkårRepository.hent(behandling.id)
+                        .alle()
+                        .map { vilkår ->
+                            VilkårDriftsinfoDTO(
+                                vilkår.type,
+                                perioder = vilkår.vilkårsperioder().map { vp ->
+                                    ForenkletVilkårsperiode(
+                                        vp.periode,
+                                        vp.utfall,
+                                        vp.manuellVurdering,
+                                        vp.avslagsårsak,
+                                        vp.innvilgelsesårsak
+                                    )
+                                },
+                                vurdertTidspunkt = vilkår.vurdertTidspunkt
+                            )
+                        }
+                        .sortedBy { it.vurdertTidspunkt }
+                }
+
+                respond(vilkår)
             }
         }
 
@@ -189,6 +233,20 @@ private data class ForenkletAvklaringsbehov(
     val status: Status,
     val tidsstempel: LocalDateTime = LocalDateTime.now(),
     val endretAv: String
+)
+
+private data class VilkårDriftsinfoDTO(
+    val type: Vilkårtype,
+    val perioder: List<ForenkletVilkårsperiode>,
+    val vurdertTidspunkt: LocalDateTime?,
+)
+
+private data class ForenkletVilkårsperiode(
+    val periode: Periode,
+    val utfall: Utfall,
+    val manuellVurdering: Boolean,
+    val avslagsårsak: Avslagsårsak?,
+    val innvilgelsesårsak: Innvilgelsesårsak?
 )
 
 fun behandlingFraBrevbestilling(

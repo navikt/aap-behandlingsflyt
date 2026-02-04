@@ -226,7 +226,7 @@ class ForeslåVedtakStegTest {
     }
 
     @Test
-    fun `hvis NAY-avklaringsbehov skal foreslå vedtak åpnes også etter tilbakehopp`() {
+    fun `hvis NAY-avklaringsbehov finnes, skal foreslå vedtak åpnes også etter tilbakehopp`() {
         val person =
             Person(PersonId(random.nextLong()), UUID.randomUUID(), listOf(genererIdent(LocalDate.now().minusYears(23))))
 
@@ -258,7 +258,6 @@ class ForeslåVedtakStegTest {
         val kontekstMedPerioder = flytKontekstMedPerioder {
             this.behandling = behandling
             vurderingType = VurderingType.FØRSTEGANGSBEHANDLING
-            vurderingsbehovRelevanteForSteg = setOf(Vurderingsbehov.MOTTATT_SØKNAD)
             rettighetsperiode = Periode(LocalDate.now(), LocalDate.now())
         }
 
