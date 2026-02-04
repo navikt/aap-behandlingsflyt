@@ -177,4 +177,12 @@ enum class Vilkårtype(
         ),
         hjemmel = "§ 11-4 2. ledd"
     ),
+    ORDINÆR_KVOTE(
+        kode = "AAP-12",
+        spesielleInnvilgelsesÅrsaker = emptyList(),
+        avslagsårsaker = listOf(
+            Avslagsårsak.ORDINÆRKVOTE_BRUKT_OPP
+        ),
+        hjemmel = "§ 11-12",
+    )
 }
