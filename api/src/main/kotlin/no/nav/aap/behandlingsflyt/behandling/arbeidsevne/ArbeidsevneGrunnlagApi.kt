@@ -15,8 +15,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingRef
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.tilgang.kanSaksbehandle
 import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
@@ -54,8 +52,6 @@ fun NormalOpenAPIRoute.arbeidsevneGrunnlagApi(
 
                 val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
                 val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
-
-                val unleashGateway = gatewayProvider.provide<UnleashGateway>()
 
                 ArbeidsevneGrunnlagDto(
                     harTilgangTilÅSaksbehandle = harTilgangOgKanSaksbehandle(kanSaksbehandle(), avklaringsbehovene),
