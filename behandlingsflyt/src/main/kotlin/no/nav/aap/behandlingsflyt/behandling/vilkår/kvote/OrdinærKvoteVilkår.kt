@@ -4,7 +4,7 @@ import no.nav.aap.behandlingsflyt.behandling.rettighetstype.KvoteBruktOpp
 import no.nav.aap.behandlingsflyt.behandling.rettighetstype.KvoteOk
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Kvote
 import no.nav.aap.behandlingsflyt.behandling.vilkår.Vilkårsvurderer
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkår
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
@@ -20,7 +20,7 @@ class OrdinærKvoteVilkår(vilkårsresultat: Vilkårsresultat) : Vilkårsvurdere
         vilkår.leggTilVurderinger(
             kvotevurderinger.map { kvotevurdering ->
                 when (kvotevurdering) {
-                    is KvoteOk if kvotevurdering.brukerAvKvoter().contains(Kvote.ORDINÆR) -> {
+                    is KvoteOk if kvotevurdering.brukerKvote == Kvote.ORDINÆR -> {
                         Vilkårsvurdering(
                             utfall = Utfall.OPPFYLT,
                             manuellVurdering = false,
@@ -33,7 +33,7 @@ class OrdinærKvoteVilkår(vilkårsresultat: Vilkårsresultat) : Vilkårsvurdere
                         Vilkårsvurdering(
                             utfall = Utfall.IKKE_OPPFYLT,
                             manuellVurdering = false,
-                            avslagsårsak = kvotevurdering.avslagsårsaker().single(),
+                            avslagsårsak = Avslagsårsak.ORDINÆRKVOTE_BRUKT_OPP,
                             begrunnelse = null,
                             faktagrunnlag = grunnlag,
                         )
