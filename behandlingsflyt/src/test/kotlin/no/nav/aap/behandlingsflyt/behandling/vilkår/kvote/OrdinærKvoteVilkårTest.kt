@@ -25,26 +25,38 @@ class OrdinærKvoteVilkårTest {
         // Sett opp vilkårsresultat
         val rettighetsperiode = Periode(1 januar 2024, Tid.MAKS) // Mandag
 
-        val førstePeriodeBistandOppfylt = Periode(1 januar 2024, 7 januar 2024) // Bruker 5 dager av ordinær kvote
+        val studentOppfylt = Periode(1 januar 2024, 7 januar 2024) // Bruker 5 dager av ordinær kvote
         val speOppfylt =
             Periode(8 januar 2024, 14 januar 2024) // Bruker 5 dager av sykepengeerstatning-kvote
         val andrePeriodeBistandOppfylt = Periode(15 januar 2024, Tid.MAKS) // Bruker gjenværende dager av ordinær kvote
 
         val vilkårsresultat = genererVilkårsresultat(
             rettighetsperiode,
-            bistandVilkåret = Vilkår(
-                Vilkårtype.BISTANDSVILKÅRET, listOf(
-                    førstePeriodeBistandOppfylt, andrePeriodeBistandOppfylt
-                ).map {
+            studentVilkår = Vilkår(
+                Vilkårtype.STUDENT,
+                setOf(
                     Vilkårsperiode(
-                        it,
+                        studentOppfylt,
                         Utfall.OPPFYLT,
                         false,
                         null,
                         faktagrunnlag = null,
                         avslagsårsak = null
                     )
-                }.toSet()
+                )
+            ),
+            bistandVilkåret = Vilkår(
+                Vilkårtype.BISTANDSVILKÅRET,
+                setOf(
+                    Vilkårsperiode(
+                        andrePeriodeBistandOppfylt,
+                        Utfall.OPPFYLT,
+                        false,
+                        null,
+                        faktagrunnlag = null,
+                        avslagsårsak = null
+                    )
+                )
             ),
             sykepengeerstatningVilkåret = Vilkår(
                 Vilkårtype.SYKEPENGEERSTATNING, setOf(
@@ -82,9 +94,9 @@ class OrdinærKvoteVilkårTest {
 
         assertTidslinje(
             kvotevurdering,
-            førstePeriodeBistandOppfylt to {
+            studentOppfylt to {
                 assertThat(it is KvoteOk).isTrue()
-                assertThat(it.rettighetsType).isEqualTo(RettighetsType.BISTANDSBEHOV)
+                assertThat(it.rettighetsType).isEqualTo(RettighetsType.STUDENT)
             },
             speOppfylt to {
                 assertThat(it is KvoteOk).isTrue()
@@ -107,7 +119,7 @@ class OrdinærKvoteVilkårTest {
 
         assertTidslinje(
             vilkåret.tidslinje(),
-            førstePeriodeBistandOppfylt to { assertThat(it.utfall).isEqualTo(Utfall.OPPFYLT) },
+            studentOppfylt to { assertThat(it.utfall).isEqualTo(Utfall.OPPFYLT) },
             speOppfylt to { assertThat(it.utfall).isEqualTo(Utfall.IKKE_RELEVANT) },
             forventetSistePeriodeOppfyltOrdinær to { assertThat(it.utfall).isEqualTo(Utfall.OPPFYLT) },
             forventetPeriodeOrdinærKvoteBruktOpp to { assertThat(it.utfall).isEqualTo(Utfall.IKKE_OPPFYLT) },

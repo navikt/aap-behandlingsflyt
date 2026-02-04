@@ -92,6 +92,17 @@ fun genererVilkårsresultat(
                 avslagsårsak = null
             )
         )
+    ),
+    studentVilkår: Vilkår = Vilkår(
+        Vilkårtype.STUDENT, setOf(
+            Vilkårsperiode(
+                periode,
+                Utfall.IKKE_VURDERT,
+                false,
+                null,
+                faktagrunnlag = null
+            )
+        )
     )
 ): Vilkårsresultat {
     return Vilkårsresultat(
@@ -102,7 +113,8 @@ fun genererVilkårsresultat(
             medlemskapVilkåret,
             bistandVilkåret,
             grunnlagVilkåret,
-            sykepengeerstatningVilkåret
+            sykepengeerstatningVilkåret,
+            studentVilkår
         )
     )
 }
