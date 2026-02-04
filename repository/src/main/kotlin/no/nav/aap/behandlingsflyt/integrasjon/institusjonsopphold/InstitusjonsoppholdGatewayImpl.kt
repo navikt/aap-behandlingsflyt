@@ -122,7 +122,6 @@ object InstitusjonsoppholdGatewayImpl : InstitusjonsoppholdGateway {
         val request = InstitusjonoppholdRequest(person.aktivIdent().identifikator)
         val oppholdRes = query(request)
         val institusjonsopphold = oppholdRes.map { opphold ->
-            log.info("Rått organisasjonsnummer: ${opphold.organisasjonsnummer}")
             Institusjonsopphold.nyttOpphold(
                 institusjonstype = requireNotNull(opphold.institusjonstype) { "Institusjonstype på institusjonsopphold må være satt." },
                 kategori = opphold.kategori,
