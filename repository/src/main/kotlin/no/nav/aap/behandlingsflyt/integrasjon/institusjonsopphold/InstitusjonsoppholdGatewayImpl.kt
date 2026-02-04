@@ -14,9 +14,11 @@ import no.nav.aap.komponenter.httpklient.httpclient.request.GetRequest
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
 import no.nav.aap.komponenter.json.DefaultJsonMapper
+import org.slf4j.LoggerFactory
 import java.net.URI
 import java.time.LocalDate
 import java.time.LocalDateTime
+import kotlin.jvm.javaClass
 
 data class InstitusjonoppholdRequest(
     val personident: String
@@ -67,6 +69,8 @@ data class InstitusjonsoppholdJSON(
 )
 
 object InstitusjonsoppholdGatewayImpl : InstitusjonsoppholdGateway {
+    private val log = LoggerFactory.getLogger(javaClass)
+
     private val personOppholdUrl =
         URI.create(requiredConfigForKey("integrasjon.institusjonsopphold.url"))
     private val enkeltOppholdURL =
@@ -118,15 +122,17 @@ object InstitusjonsoppholdGatewayImpl : InstitusjonsoppholdGateway {
         val request = InstitusjonoppholdRequest(person.aktivIdent().identifikator)
         val oppholdRes = query(request)
         val institusjonsopphold = oppholdRes.map { opphold ->
+            log.info("Rått organisasjonsnummer: ${opphold.organisasjonsnummer}")
             Institusjonsopphold.nyttOpphold(
-                requireNotNull(opphold.institusjonstype) { "Institusjonstype på institusjonsopphold må være satt." },
-                opphold.kategori,
-                requireNotNull(opphold.startdato) { "Startdato på institusjonsopphold må være satt." },
-                opphold.faktiskSluttdato ?: opphold.forventetSluttdato,
-                opphold.organisasjonsnummer ?: "Ukjent",
-                opphold.institusjonsnavn ?: "Ukjent institusjon"
+                institusjonstype = requireNotNull(opphold.institusjonstype) { "Institusjonstype på institusjonsopphold må være satt." },
+                kategori = opphold.kategori,
+                startdato = requireNotNull(opphold.startdato) { "Startdato på institusjonsopphold må være satt." },
+                sluttdato = opphold.faktiskSluttdato ?: opphold.forventetSluttdato,
+                orgnr = opphold.organisasjonsnummer ?: "Ukjent",
+                institusjonsnavn = opphold.institusjonsnavn ?: "Ukjent institusjon"
             )
         }
+
         return institusjonsopphold
     }
 
@@ -136,12 +142,12 @@ object InstitusjonsoppholdGatewayImpl : InstitusjonsoppholdGateway {
         val institusjonsopphold =
 
             Institusjonsopphold.nyttOpphold(
-                requireNotNull(oppholdRes.institusjonstype) { "Institusjonstype på institusjonsopphold må være satt." },
-                oppholdRes.kategori,
-                requireNotNull(oppholdRes.startdato) { "Startdato på institusjonsopphold må være satt." },
-                oppholdRes.faktiskSluttdato ?: oppholdRes.forventetSluttdato,
-                oppholdRes.organisasjonsnummer ?: "Ukjent",
-                oppholdRes.institusjonsnavn ?: "Ukjent institusjon"
+                institusjonstype = requireNotNull(oppholdRes.institusjonstype) { "Institusjonstype på institusjonsopphold må være satt." },
+                kategori = oppholdRes.kategori,
+                startdato = requireNotNull(oppholdRes.startdato) { "Startdato på institusjonsopphold må være satt." },
+                sluttdato = oppholdRes.faktiskSluttdato ?: oppholdRes.forventetSluttdato,
+                orgnr = oppholdRes.organisasjonsnummer ?: "Ukjent",
+                institusjonsnavn = oppholdRes.institusjonsnavn ?: "Ukjent institusjon"
             )
 
         return institusjonsopphold
