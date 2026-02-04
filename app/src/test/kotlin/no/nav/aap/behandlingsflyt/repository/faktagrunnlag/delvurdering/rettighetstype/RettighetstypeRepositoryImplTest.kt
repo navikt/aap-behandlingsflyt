@@ -1,7 +1,5 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.rettighetstype
 
-import no.nav.aap.behandlingsflyt.behandling.underveis.Kvoter
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.rettighetstype.RettighetstypePeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
@@ -56,7 +54,6 @@ class RettighetstypeRepositoryImplTest {
 
         val input = RettighetstypeFaktagrunnlag(
             vilkårsresultat = genererVilkårsresultat(rettighetsperiode),
-            kvoter = Kvoter(Hverdager(784), Hverdager(131))
         )
 
         // Lagre
@@ -81,7 +78,7 @@ class RettighetstypeRepositoryImplTest {
 
         assertThat(sporing).isNotNull()
         assertThat(sporing!!.first).isEqualTo("1")
-        assertThat(sporing.second).isEqualTo("{\"vilkårsresultat\":{\"id\$behandlingsflyt_behandlingsflyt\":null},\"kvoter\":{\"ordinærkvote\":784,\"sykepengeerstatningkvote\":131}}")
+        assertThat(sporing.second).isEqualTo("{\"vilkårsresultat\":{\"id\$behandlingsflyt_behandlingsflyt\":null}}")
 
         // Slett
         dataSource.transaction {
@@ -115,7 +112,6 @@ class RettighetstypeRepositoryImplTest {
 
         val input = RettighetstypeFaktagrunnlag(
             vilkårsresultat = genererVilkårsresultat(rettighetsperiode),
-            kvoter = Kvoter(Hverdager(784), Hverdager(131))
         )
 
         // Lagre
