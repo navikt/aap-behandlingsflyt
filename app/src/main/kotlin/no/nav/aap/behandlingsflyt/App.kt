@@ -21,6 +21,7 @@ import no.nav.aap.behandlingsflyt.api.config.definisjoner.configApi
 import no.nav.aap.behandlingsflyt.auditlog.auditlogApi
 import no.nav.aap.behandlingsflyt.behandling.aktivitetsplikt.brudd_11_7.aktivitetsplikt11_7GrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.aktivitetsplikt.brudd_11_9.aktivitetsplikt11_9GrunnlagApi
+import no.nav.aap.behandlingsflyt.behandling.andrestatligeytelser.andreStatligeYtelserGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.arbeidsevne.arbeidsevneGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.arbeidsopptrapping.arbeidsopptrappingGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.avklaringsbehovApi
@@ -286,6 +287,7 @@ internal fun Application.server(
                 beregningVurderingApi(dataSource, repositoryRegistry, gatewayProvider)
                 beregningsGrunnlagApi(dataSource, repositoryRegistry)
                 aldersGrunnlagApi(dataSource, repositoryRegistry)
+                andreStatligeYtelserGrunnlagApi(dataSource, repositoryRegistry)
                 barnetilleggApi(dataSource, repositoryRegistry, gatewayProvider)
                 motorApi(dataSource)
                 behandlingsflytPipApi(dataSource, repositoryRegistry)

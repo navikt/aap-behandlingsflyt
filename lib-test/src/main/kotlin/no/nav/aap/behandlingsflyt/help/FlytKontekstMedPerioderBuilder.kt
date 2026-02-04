@@ -18,7 +18,7 @@ class FlytKontekstMedPerioderBuilder {
     var forrigeBehandlingId: BehandlingId? = null
     var vurderingType: VurderingType? = null
     var rettighetsperiode: Periode = Periode(LocalDate.now().minusDays(1), LocalDate.now().plusYears(1))
-    var vurderingsbehovRelevanteForSteg: Set<Vurderingsbehov> = setOf(Vurderingsbehov.MOTTATT_MELDEKORT)
+    var vurderingsbehovRelevanteForSteg: Set<Vurderingsbehov> = emptySet()
     var vurderingsbehovRelevanteForStegMedPerioder: Set<VurderingsbehovMedPeriode>? = null
 
     var behandling: Behandling? = null

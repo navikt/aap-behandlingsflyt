@@ -9,6 +9,7 @@ import no.nav.aap.behandlingsflyt.help.flytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvbrytRevurderingRepository
@@ -27,6 +28,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.Instant
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 class AvklaringsbehovServiceTest {
 
@@ -59,7 +61,6 @@ class AvklaringsbehovServiceTest {
         val kontekst = flytKontekstMedPerioder {
             this.behandlingId = behandlingId
             this.rettighetsperiode = Periode(LocalDate.now(), Tid.MAKS)
-            this.vurderingsbehovRelevanteForSteg = emptySet()
         }
 
         // Act
@@ -94,7 +95,6 @@ class AvklaringsbehovServiceTest {
         val kontekst = flytKontekstMedPerioder {
             this.behandlingId = behandlingId
             this.rettighetsperiode = Periode(LocalDate.now(), Tid.MAKS)
-            this.vurderingsbehovRelevanteForSteg = emptySet()
         }
 
         // Act
@@ -126,7 +126,6 @@ class AvklaringsbehovServiceTest {
         val kontekst = flytKontekstMedPerioder {
             this.behandlingId = behandlingId
             this.rettighetsperiode = Periode(LocalDate.now(), Tid.MAKS)
-            this.vurderingsbehovRelevanteForSteg = emptySet()
         }
 
         // Act
@@ -156,7 +155,6 @@ class AvklaringsbehovServiceTest {
         val kontekst = flytKontekstMedPerioder {
             this.behandlingId = behandlingId
             this.rettighetsperiode = Periode(LocalDate.now(), Tid.MAKS)
-            this.vurderingsbehovRelevanteForSteg = emptySet()
         }
 
         // Act
@@ -179,7 +177,6 @@ class AvklaringsbehovServiceTest {
         val behandlingId = BehandlingId(2001)
         val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, behandlingId)
         val definisjon = Definisjon.AVKLAR_SYKDOM
-        val tvingerAvklaringsbehov = setOf(Vurderingsbehov.MOTTATT_SØKNAD)
         val startDato = LocalDate.of(2024, 1, 1)
         val periode1 = Periode(startDato, startDato.plusMonths(2).minusDays(1))
         val periode2 = Periode(startDato.plusMonths(2), startDato.plusMonths(4).minusDays(1))
@@ -208,12 +205,11 @@ class AvklaringsbehovServiceTest {
         val kontekst = flytKontekstMedPerioder {
             this.behandlingId = behandlingId
             this.rettighetsperiode = helePeriode
-            this.vurderingsbehovRelevanteForSteg = tvingerAvklaringsbehov
         }
 
         avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
             definisjon = definisjon,
-            tvingerAvklaringsbehov = tvingerAvklaringsbehov,
+            tvingerAvklaringsbehov = emptySet(),
             nårVurderingErRelevant = nårVurderingErRelevant,
             nårVurderingErGyldig = nårVurderingErGyldig,
             kontekst = kontekst,
@@ -230,7 +226,6 @@ class AvklaringsbehovServiceTest {
         val behandlingId = BehandlingId(2002)
         val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, behandlingId)
         val definisjon = Definisjon.AVKLAR_SYKDOM
-        val tvingerAvklaringsbehov = setOf(Vurderingsbehov.MOTTATT_SØKNAD)
         val startDato = LocalDate.of(2024, 1, 1)
         val periode1 = Periode(startDato, startDato.plusMonths(1).minusDays(1))
         val periode2 = Periode(startDato.plusMonths(1), startDato.plusMonths(3))
@@ -253,15 +248,15 @@ class AvklaringsbehovServiceTest {
             )
         }
         val tilbakestillGrunnlag = mockk<() -> Unit>(relaxed = true)
+
         val kontekst = flytKontekstMedPerioder {
             this.behandlingId = behandlingId
             this.rettighetsperiode = helePeriode
-            this.vurderingsbehovRelevanteForSteg = tvingerAvklaringsbehov
         }
 
         avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
             definisjon = definisjon,
-            tvingerAvklaringsbehov = tvingerAvklaringsbehov,
+            tvingerAvklaringsbehov = emptySet(),
             nårVurderingErRelevant = nårVurderingErRelevant,
             nårVurderingErGyldig = nårVurderingErGyldig,
             kontekst = kontekst,
@@ -279,7 +274,6 @@ class AvklaringsbehovServiceTest {
         val definisjon = Definisjon.AVKLAR_SYKDOM
         avklaringsbehovene.leggTil(definisjon, definisjon.løsesISteg, null, null)
 
-        val tvingerAvklaringsbehov = setOf(Vurderingsbehov.MOTTATT_SØKNAD)
         val startDato = LocalDate.of(2024, 2, 1)
         val periode1 = Periode(startDato, startDato.plusMonths(2).minusDays(1))
         val periode2 = Periode(startDato.plusMonths(2), startDato.plusMonths(5))
@@ -302,15 +296,15 @@ class AvklaringsbehovServiceTest {
             )
         }
         val tilbakestillGrunnlag = mockk<() -> Unit>(relaxed = true)
+
         val kontekst = flytKontekstMedPerioder {
             this.behandlingId = behandlingId
             this.rettighetsperiode = helePeriode
-            this.vurderingsbehovRelevanteForSteg = tvingerAvklaringsbehov
         }
 
         avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
             definisjon = definisjon,
-            tvingerAvklaringsbehov = tvingerAvklaringsbehov,
+            tvingerAvklaringsbehov = emptySet(),
             nårVurderingErRelevant = nårVurderingErRelevant,
             nårVurderingErGyldig = nårVurderingErGyldig,
             kontekst = kontekst,
@@ -327,7 +321,6 @@ class AvklaringsbehovServiceTest {
         val behandlingId = BehandlingId(2004)
         val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, behandlingId)
         val definisjon = Definisjon.AVKLAR_SYKDOM
-        val tvingerAvklaringsbehov = setOf(Vurderingsbehov.MOTTATT_SØKNAD)
         val startDato = LocalDate.of(2024, 3, 1)
         val periode1 = Periode(startDato, startDato.plusMonths(1).minusDays(1))
         val periode2 = Periode(startDato.plusMonths(1), startDato.plusMonths(2).minusDays(1))
@@ -356,12 +349,11 @@ class AvklaringsbehovServiceTest {
         val kontekst = flytKontekstMedPerioder {
             this.behandlingId = behandlingId
             this.rettighetsperiode = helePeriode
-            this.vurderingsbehovRelevanteForSteg = tvingerAvklaringsbehov
         }
 
         avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
             definisjon = definisjon,
-            tvingerAvklaringsbehov = tvingerAvklaringsbehov,
+            tvingerAvklaringsbehov = emptySet(),
             nårVurderingErRelevant = nårVurderingErRelevant,
             nårVurderingErGyldig = nårVurderingErGyldig,
             kontekst = kontekst,
@@ -378,7 +370,6 @@ class AvklaringsbehovServiceTest {
         val behandlingId = BehandlingId(2006)
         val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, behandlingId)
         val definisjon = Definisjon.AVKLAR_SYKDOM
-        val tvingerAvklaringsbehov = setOf(Vurderingsbehov.MOTTATT_SØKNAD)
         val startDato = LocalDate.of(2024, 5, 1)
         val periode1 = Periode(startDato, startDato.plusMonths(1).minusDays(1))
         val periode2 = Periode(startDato.plusMonths(1), startDato.plusMonths(2).minusDays(1))
@@ -388,23 +379,21 @@ class AvklaringsbehovServiceTest {
         val nårVurderingErRelevant: (FlytKontekstMedPerioder) -> Tidslinje<Boolean> = {
             Tidslinje(
                 listOf(
-                    Segment(periode1, true),
-                    Segment(periode2, true),
-                    Segment(periode3, true)
+                    Segment(periode1, true), Segment(periode2, true), Segment(periode3, true)
                 )
             )
         }
         val perioderSomIkkeErTilstrekkeligVurdert = setOf(periode2, periode3)
         val tilbakestillGrunnlag = mockk<() -> Unit>(relaxed = true)
+
         val kontekst = flytKontekstMedPerioder {
             this.behandlingId = behandlingId
             this.rettighetsperiode = helePeriode
-            this.vurderingsbehovRelevanteForSteg = tvingerAvklaringsbehov
         }
 
         avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkårTilstrekkeligVurdert(
             definisjon = definisjon,
-            tvingerAvklaringsbehov = tvingerAvklaringsbehov,
+            tvingerAvklaringsbehov = emptySet(),
             nårVurderingErRelevant = nårVurderingErRelevant,
             kontekst = kontekst,
             perioderSomIkkeErTilstrekkeligVurdert = { perioderSomIkkeErTilstrekkeligVurdert },
@@ -424,7 +413,6 @@ class AvklaringsbehovServiceTest {
         avklaringsbehovene.leggTil(definisjon, definisjon.løsesISteg, null, null)
         avklaringsbehovene.løsAvklaringsbehov(definisjon, begrunnelse = "Test", endretAv = "Tester")
 
-        val tvingerAvklaringsbehov = setOf(Vurderingsbehov.MOTTATT_SØKNAD)
         val startDato = LocalDate.of(2024, 6, 1)
         val periode1 = Periode(startDato, startDato.plusMonths(1).minusDays(1))
         val periode2 = Periode(startDato.plusMonths(1), startDato.plusMonths(2))
@@ -440,15 +428,15 @@ class AvklaringsbehovServiceTest {
         }
         val perioderSomIkkeErTilstrekkeligVurdert = emptySet<Periode>()
         val tilbakestillGrunnlag = mockk<() -> Unit>(relaxed = true)
+
         val kontekst = flytKontekstMedPerioder {
             this.behandlingId = behandlingId
             this.rettighetsperiode = helePeriode
-            this.vurderingsbehovRelevanteForSteg = tvingerAvklaringsbehov
         }
 
         avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkårTilstrekkeligVurdert(
             definisjon = definisjon,
-            tvingerAvklaringsbehov = tvingerAvklaringsbehov,
+            tvingerAvklaringsbehov = emptySet(),
             nårVurderingErRelevant = nårVurderingErRelevant,
             kontekst = kontekst,
             perioderSomIkkeErTilstrekkeligVurdert = { perioderSomIkkeErTilstrekkeligVurdert },
@@ -457,6 +445,92 @@ class AvklaringsbehovServiceTest {
 
         val avklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(definisjon)
         assertThat(avklaringsbehov?.status()).isEqualTo(Status.AVSLUTTET)
+    }
+
+    @Test
+    fun `skal opprette avklaringsbehov for vurderingsbehov som tvinger avklaringsbehov`() {
+        val behandlingId = BehandlingId(2008)
+        val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, behandlingId)
+        val definisjon = Definisjon.AVKLAR_SYKDOM
+
+        val startDato = LocalDate.of(2024, 6, 1)
+        val periode1 = Periode(startDato, startDato.plusMonths(1).minusDays(1))
+        val helePeriode = Periode(startDato, startDato.plusMonths(2))
+
+        val nårVurderingErRelevant: (FlytKontekstMedPerioder) -> Tidslinje<Boolean> = {
+            Tidslinje(
+                listOf(
+                    Segment(periode1, true),
+                )
+            )
+        }
+        val perioderSomIkkeErTilstrekkeligVurdert = emptySet<Periode>()
+        val tilbakestillGrunnlag = mockk<() -> Unit>(relaxed = true)
+
+        val kontekst = flytKontekstMedPerioder {
+            this.behandlingId = behandlingId
+            this.rettighetsperiode = helePeriode
+            this.vurderingsbehovRelevanteForSteg = setOf(Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND)
+        }
+
+        avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkårTilstrekkeligVurdert(
+            definisjon = definisjon,
+            tvingerAvklaringsbehov = setOf(Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND),
+            nårVurderingErRelevant = nårVurderingErRelevant,
+            kontekst = kontekst,
+            perioderSomIkkeErTilstrekkeligVurdert = { perioderSomIkkeErTilstrekkeligVurdert },
+            tilbakestillGrunnlag = tilbakestillGrunnlag
+        )
+
+        val avklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(definisjon)
+        assertThat(avklaringsbehov?.status()).isEqualTo(Status.OPPRETTET)
+    }
+
+    @Test
+    fun `skal opprette avklaringsbehov for vurderingsbehov som tvinger avklaringsbehov, også når behovet har blitt løst før, men kun om vurderingsbehovet er nyere`() {
+        val behandlingId = BehandlingId(20099)
+        val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, behandlingId)
+        val definisjon = Definisjon.AVKLAR_SYKDOM
+        avklaringsbehovene.leggTil(definisjon, definisjon.løsesISteg, null, null)
+        avklaringsbehovene.løsAvklaringsbehov(definisjon, begrunnelse = "Test", endretAv = "Tester")
+
+        val startDato = LocalDate.of(2024, 6, 1)
+        val periode1 = Periode(startDato, startDato.plusMonths(1).minusDays(1))
+        val helePeriode = Periode(startDato, startDato.plusMonths(2))
+
+        val nårVurderingErRelevant: (FlytKontekstMedPerioder) -> Tidslinje<Boolean> = {
+            Tidslinje(
+                listOf(
+                    Segment(periode1, true),
+                )
+            )
+        }
+        val perioderSomIkkeErTilstrekkeligVurdert = emptySet<Periode>()
+        val tilbakestillGrunnlag = mockk<() -> Unit>(relaxed = true)
+
+        val kontekst = flytKontekstMedPerioder {
+            this.behandlingId = behandlingId
+            this.rettighetsperiode = helePeriode
+            this.vurderingsbehovRelevanteForStegMedPerioder =
+                setOf(
+                    VurderingsbehovMedPeriode(
+                        Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND,
+                        oppdatertTid = LocalDateTime.now().plusMinutes(1)
+                    )
+                )
+        }
+
+        avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkårTilstrekkeligVurdert(
+            definisjon = definisjon,
+            tvingerAvklaringsbehov = setOf(Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND),
+            nårVurderingErRelevant = nårVurderingErRelevant,
+            kontekst = kontekst,
+            perioderSomIkkeErTilstrekkeligVurdert = { perioderSomIkkeErTilstrekkeligVurdert },
+            tilbakestillGrunnlag = tilbakestillGrunnlag
+        )
+
+        val avklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(definisjon)
+        assertThat(avklaringsbehov?.status()).isEqualTo(Status.OPPRETTET)
     }
 
     @Test
@@ -474,7 +548,6 @@ class AvklaringsbehovServiceTest {
         val kontekst = flytKontekstMedPerioder {
             this.behandlingId = behandlingId
             this.rettighetsperiode = Periode(LocalDate.now(), Tid.MAKS)
-            this.vurderingsbehovRelevanteForSteg = emptySet()
         }
 
         // Act
@@ -507,7 +580,6 @@ class AvklaringsbehovServiceTest {
         val kontekst = flytKontekstMedPerioder {
             this.behandlingId = behandlingId
             this.rettighetsperiode = Periode(LocalDate.now(), Tid.MAKS)
-            this.vurderingsbehovRelevanteForSteg = emptySet()
         }
 
         trukketSøknadRepository.lagreTrukketSøknadVurdering(
