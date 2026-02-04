@@ -2,9 +2,9 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.rettighetstype
 
 import no.nav.aap.behandlingsflyt.behandling.underveis.Kvoter
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Faktagrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkår
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 
 class RettighetstypeFaktagrunnlag(
-    val vilkår: List<Vilkår>,
+    val vilkårsresultat: Vilkårsresultat,
     val kvoter: Kvoter,
 ): Faktagrunnlag

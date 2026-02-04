@@ -55,7 +55,7 @@ class RettighetstypeRepositoryImplTest {
         )
 
         val input = RettighetstypeFaktagrunnlag(
-            vilkår = genererVilkårsresultat(rettighetsperiode).alle(),
+            vilkårsresultat = genererVilkårsresultat(rettighetsperiode),
             kvoter = Kvoter(Hverdager(784), Hverdager(131))
         )
 
@@ -81,7 +81,7 @@ class RettighetstypeRepositoryImplTest {
 
         assertThat(sporing).isNotNull()
         assertThat(sporing!!.first).isEqualTo("1")
-        assertThat(sporing.second).isEqualTo("{\"vilkår\":[{\"type\":\"ALDERSVILKÅRET\",\"vurdertTidspunkt\":null},{\"type\":\"LOVVALG\",\"vurdertTidspunkt\":null},{\"type\":\"SYKDOMSVILKÅRET\",\"vurdertTidspunkt\":null},{\"type\":\"MEDLEMSKAP\",\"vurdertTidspunkt\":null},{\"type\":\"BISTANDSVILKÅRET\",\"vurdertTidspunkt\":null},{\"type\":\"GRUNNLAGET\",\"vurdertTidspunkt\":null}],\"kvoter\":{\"ordinærkvote\":784,\"sykepengeerstatningkvote\":131}}")
+        assertThat(sporing.second).isEqualTo("{\"vilkårsresultat\":{\"id\$behandlingsflyt_behandlingsflyt\":null},\"kvoter\":{\"ordinærkvote\":784,\"sykepengeerstatningkvote\":131}}")
 
         // Slett
         dataSource.transaction {
@@ -114,7 +114,7 @@ class RettighetstypeRepositoryImplTest {
         )
 
         val input = RettighetstypeFaktagrunnlag(
-            vilkår = genererVilkårsresultat(rettighetsperiode).alle(),
+            vilkårsresultat = genererVilkårsresultat(rettighetsperiode),
             kvoter = Kvoter(Hverdager(784), Hverdager(131))
         )
 
