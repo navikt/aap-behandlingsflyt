@@ -49,6 +49,7 @@ import no.nav.aap.behandlingsflyt.forretningsflyt.steg.OvergangArbeidSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.OvergangUføreSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.RefusjonkravSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.RettighetsperiodeSteg
+import no.nav.aap.behandlingsflyt.forretningsflyt.steg.RettighetstypeSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.SamordningAndreStatligeYtelserSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.SamordningArbeidsgiverSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.SamordningAvslagSteg
@@ -406,6 +407,7 @@ object Revurdering : BehandlingType {
                     Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP,
                 )
             )
+            .medSteg(steg = RettighetstypeSteg)
             .medSteg(
                 steg = IkkeOppfyltMeldepliktSteg,
                 vurderingsbehovRelevanteForSteg = Vurderingsbehov.alleInklusivGRegulering(),
