@@ -115,7 +115,6 @@ class RettighetstypeRepositoryImplTest {
 
             // Kopier
             val nyBehandling = finnEllerOpprettBehandling(connection, sak)
-            RettighetstypeRepositoryImpl(connection).kopier(behandling.id, nyBehandling.id)
 
             // Hent kopiert
             val kopiert = RettighetstypeRepositoryImpl(connection).hent(
