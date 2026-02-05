@@ -18,7 +18,7 @@ class PersonRepositoryImpl(private val connection: DBConnection) : PersonReposit
         }
     }
 
-    override fun finnEllerOpprett(identer: List<Ident>): Person {
+    override fun finn(identer: List<Ident>): Person? {
         require(identer.isNotEmpty())
 
         val relevantePersoner = connection.queryList(
@@ -32,11 +32,13 @@ class PersonRepositoryImpl(private val connection: DBConnection) : PersonReposit
             }
             setRowMapper(::mapPerson)
         }
-        return if (relevantePersoner.isNotEmpty()) {
-            if (relevantePersoner.size > 1) {
-                throw IllegalStateException("Har flere personer knyttet til denne identen")
-            }
-            val person = relevantePersoner.first()
+        require(relevantePersoner.size <= 1) { "Fant flere personer knyttet til denne identen" }
+        return relevantePersoner.firstOrNull()
+    }
+
+    override fun finnEllerOpprett(identer: List<Ident>): Person {
+        val person = finn(identer)
+        return if (person != null) {
             oppdater(person, identer)
             // Henter på nytt etter oppdatering
             hent(person.id)
@@ -164,16 +166,7 @@ class PersonRepositoryImpl(private val connection: DBConnection) : PersonReposit
     }
 
     override fun finn(ident: Ident): Person? {
-        return connection.queryFirstOrNull(
-            """SELECT DISTINCT p.id, p.referanse FROM PERSON p INNER JOIN PERSON_IDENT pi ON pi.person_id = p.id WHERE pi.ident = ?"""
-        ) {
-            setParams {
-                setString(1, ident.identifikator)
-            }
-            setRowMapper { row ->
-                mapPerson(row)
-            }
-        }
+        return finn(listOf(ident))
     }
 
     override fun slett(behandlingId: BehandlingId) {

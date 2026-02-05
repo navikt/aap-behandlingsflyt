@@ -1,8 +1,8 @@
 package no.nav.aap.behandlingsflyt.repository.behandling
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepositoryImpl
-import no.nav.aap.behandlingsflyt.help.FakePdlGateway
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
+import no.nav.aap.behandlingsflyt.help.opprettSak
 import no.nav.aap.behandlingsflyt.help.sak
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
@@ -52,8 +52,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedP
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
-import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.type.Periode
@@ -84,12 +82,8 @@ internal class BehandlingRepositoryImplTest {
     @Test
     fun `Kan lagre og hente ut behandling med uuid`() {
         val skapt = dataSource.transaction { connection ->
-            val sak = PersonOgSakService(
-                FakePdlGateway,
-                PersonRepositoryImpl(connection),
-                SakRepositoryImpl(connection)
-            ).finnEllerOpprett(
-                ident(),
+            val sak = opprettSak(
+                connection,
                 Periode(LocalDate.now(), LocalDate.now().plusYears(3))
             )
             val behandlingRepo = BehandlingRepositoryImpl(connection)
@@ -127,12 +121,8 @@ internal class BehandlingRepositoryImplTest {
     @Test
     fun `Opprettet dato lagres på behandling og hentes ut korrekt`() {
         val skapt = dataSource.transaction { connection ->
-            val sak = PersonOgSakService(
-                FakePdlGateway,
-                PersonRepositoryImpl(connection),
-                SakRepositoryImpl(connection)
-            ).finnEllerOpprett(
-                ident(),
+            val sak = opprettSak(
+                connection,
                 Periode(LocalDate.now(), LocalDate.now().plusYears(3))
             )
             val behandlingRepo = BehandlingRepositoryImpl(connection)
@@ -162,12 +152,8 @@ internal class BehandlingRepositoryImplTest {
     @Test
     fun `Kan hente ut behandlinger for sak filtrert på type`() {
         val (sak, førstegang, klage) = dataSource.transaction { connection ->
-            val sak = PersonOgSakService(
-                FakePdlGateway,
-                PersonRepositoryImpl(connection),
-                SakRepositoryImpl(connection)
-            ).finnEllerOpprett(
-                ident(),
+            val sak = opprettSak(
+                connection,
                 Periode(LocalDate.now(), LocalDate.now().plusYears(3))
             )
             val behandlingRepo = BehandlingRepositoryImpl(connection)
@@ -219,12 +205,8 @@ internal class BehandlingRepositoryImplTest {
 
 
         val (sak, førstegang, _) = dataSource.transaction { connection ->
-            val sak = PersonOgSakService(
-                FakePdlGateway,
-                PersonRepositoryImpl(connection),
-                SakRepositoryImpl(connection)
-            ).finnEllerOpprett(
-                ident(),
+            val sak = opprettSak(
+                connection,
                 Periode(LocalDate.now(), LocalDate.now().plusYears(3))
             )
             val behandlingRepo = BehandlingRepositoryImpl(connection)
