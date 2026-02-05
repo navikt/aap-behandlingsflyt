@@ -1,5 +1,7 @@
 package no.nav.aap.behandlingsflyt.test.modell
 
+import com.fasterxml.jackson.annotation.JsonIgnore
+import com.fasterxml.jackson.annotation.JsonProperty
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.gateway.TjenestePensjonRespons
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Dødsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
@@ -17,7 +19,8 @@ import no.nav.aap.behandlingsflyt.test.FødselsnummerGenerator
 import no.nav.aap.behandlingsflyt.test.PersonNavn
 import no.nav.aap.behandlingsflyt.test.TestPersonService
 import no.nav.aap.komponenter.type.Periode
-import com.fasterxml.jackson.annotation.JsonIgnore
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.gateway.DagpengerPeriode
+
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.Prosent
 import java.time.LocalDate
@@ -58,15 +61,16 @@ class TestPerson(
     var sykepenger: List<Sykepenger>? = null,
     val foreldrepenger: List<ForeldrePenger>? = null,
     val tjenestePensjon: TjenestePensjonRespons? = null,
+    val dagpenger : List<DagpengerPeriode>? = null,
     @JsonIgnore
     val testPersonService: TestPersonService = FakePersoner
 ) {
     data class Sykepenger(val grad: Int, val periode: Periode)
     data class ForeldrePenger(val grad: Number, val periode: Periode)
 
-
     private val inntekter: MutableList<InntektPerÅr> = inntekter.toMutableList()
 
+    @JsonProperty
     fun inntekter(): List<InntektPerÅr> {
         return inntekter.toList()
     }

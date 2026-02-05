@@ -20,8 +20,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingRef
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.tilgang.kanSaksbehandle
 import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
@@ -32,8 +30,6 @@ import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.getGrunnlag
 import java.time.LocalDate
 import javax.sql.DataSource
-import kotlin.collections.map
-import kotlin.collections.orEmpty
 
 fun NormalOpenAPIRoute.arbeidsopptrappingGrunnlagApi(
     dataSource: DataSource,
@@ -73,14 +69,8 @@ fun NormalOpenAPIRoute.arbeidsopptrappingGrunnlagApi(
                     val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
                     val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
 
-                    val unleashGateway = gatewayProvider.provide<UnleashGateway>()
-
                     ArbeidsopptrappingGrunnlagResponse(
-                        harTilgangTilÅSaksbehandle = if (unleashGateway.isEnabled(BehandlingsflytFeature.KvalitetssikringsSteg)) {
-                            harTilgangOgKanSaksbehandle(kanSaksbehandle(), avklaringsbehovene)
-                        } else {
-                            kanSaksbehandle()
-                        },
+                        harTilgangTilÅSaksbehandle = harTilgangOgKanSaksbehandle(kanSaksbehandle(), avklaringsbehovene),
                         sisteVedtatteVurderinger = ArbeidsopptrappingVurderingResponse.fraDomene(
                             forrigeGrunnlag.gjeldendeVurderinger(),
                             vurdertAvService

@@ -17,14 +17,12 @@ import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryProvider
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
-import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.motor.JobbUtfører
 import no.nav.aap.motor.ProvidersJobbSpesifikasjon
 import org.slf4j.LoggerFactory
-import java.time.LocalDate
 
 class VarsleVedtakJobbUtfører(
     private val repositoryProvider: RepositoryProvider,
@@ -78,21 +76,23 @@ class VarsleVedtakJobbUtfører(
             utvidetFrist = null,
         )
 
-        val relevantPeriode = Periode(virkFom, sak.rettighetsperiode.tom.coerceAtMost(LocalDate.now().minusWeeks(2)))
 
+        //val relevantPeriode = Periode(virkFom, sak.rettighetsperiode.tom.coerceAtMost(LocalDate.now().minusWeeks(2)))
+        val førstegangsbehandling = behandling.typeBehandling() == TypeBehandling.Førstegangsbehandling
+        val endringIRettighetsTypeTidslinje = endringIRettighetstypeTidslinje(
+            forrigeUnderveisGrunnlag,
+            nåværendeUnderveisGrunnlag!!
+        )
         val relevantEndring =
             listOf(
-                behandling.typeBehandling() == TypeBehandling.Førstegangsbehandling,
-                endringITilkjentYtelseTidslinje(forrigeTilkjentYtelse?.begrensetTil(relevantPeriode), nåværendeTilkjentYtelse?.begrensetTil(relevantPeriode)),
-                endringIRettighetstypeTidslinje(
-                    forrigeUnderveisGrunnlag,
-                    nåværendeUnderveisGrunnlag!!
-                )
+                førstegangsbehandling,
+                //endringITilkjentYtelseTidslinje(forrigeTilkjentYtelse?.begrensetTil(relevantPeriode), nåværendeTilkjentYtelse?.begrensetTil(relevantPeriode)),
+                endringIRettighetsTypeTidslinje
             )
 
 
-        if (relevantEndring.any()) {
-            log.info("Varsler SAM for behandling med referanse ${behandling.referanse} og saksnummer ${sak.saksnummer}. Årsak: førstegangsbehandling=${relevantEndring[0]}, endringITilkjentYtelse=${relevantEndring[1]}, endringIRettighetstype=${relevantEndring[2]}")
+        if (relevantEndring.contains(true)) {
+            log.info("Varsler SAM for behandling med referanse ${behandling.referanse} og saksnummer ${sak.saksnummer}. Årsak: førstegangsbehandling=${førstegangsbehandling}, endringIRettighetstype=${endringIRettighetsTypeTidslinje}")
             samGateway.varsleVedtak(request)
         }
 

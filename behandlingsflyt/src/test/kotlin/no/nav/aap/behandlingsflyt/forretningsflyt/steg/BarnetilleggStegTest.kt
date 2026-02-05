@@ -13,6 +13,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.OppgitteBarn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Relasjon
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
+import no.nav.aap.behandlingsflyt.help.flytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
@@ -168,14 +169,11 @@ class BarnetilleggStegTest {
         vurderingType: VurderingType,
         vurderingsbehov: List<Vurderingsbehov>
     ): FlytKontekstMedPerioder {
-        return FlytKontekstMedPerioder(
-            sakId = mockk(),
-            behandlingId = behandlingId,
-            forrigeBehandlingId = null,
-            behandlingType = mockk(),
-            vurderingType = vurderingType,
-            rettighetsperiode = Periode(LocalDate.now(), LocalDate.now().plusMonths(6)),
-            vurderingsbehovRelevanteForSteg = vurderingsbehov.toSet()
-        )
+        return flytKontekstMedPerioder {
+            this.behandlingId = this@BarnetilleggStegTest.behandlingId
+            this.vurderingType = vurderingType
+            this.rettighetsperiode = Periode(LocalDate.now(), LocalDate.now().plusMonths(6))
+            this.vurderingsbehovRelevanteForSteg = vurderingsbehov.toSet()
+        }
     }
 }

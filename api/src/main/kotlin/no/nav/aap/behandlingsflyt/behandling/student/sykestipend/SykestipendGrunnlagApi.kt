@@ -4,6 +4,8 @@ import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.AndreUtbetalingerYtelser
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.andreYtelserOppgittISøknad.AndreYtelserOppgittISøknadRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.sykestipend.SykestipendRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
@@ -41,6 +43,12 @@ fun NormalOpenAPIRoute.sykestipendGrunnlagApi(
 
                     val gjeldendeVurdering = sykestipendRepository.hentHvisEksisterer(behandlingId = behandling.id)
 
+                    val andreYtelserRepository = repositoryProvider.provide<AndreYtelserOppgittISøknadRepository>()
+                    val andreUtbetalinger = andreYtelserRepository.hentHvisEksisterer(behandling.id)
+
+                    val svarFraSøknad = andreUtbetalinger?.stønad?.contains(AndreUtbetalingerYtelser.STIPEND_FRA_LÅNEKASSEN)
+
+
                     SykestipendGrunnlagResponse(
                         harTilgangTilÅSaksbehandle = kanSaksbehandle(),
                         historiskeVurderinger = emptyList(),
@@ -49,7 +57,8 @@ fun NormalOpenAPIRoute.sykestipendGrunnlagApi(
                                 it.vurdering,
                                 vurdertAvService
                             )
-                        }
+                        },
+                        sykeStipendSvarFraSøknad = svarFraSøknad
                     )
 
                 }

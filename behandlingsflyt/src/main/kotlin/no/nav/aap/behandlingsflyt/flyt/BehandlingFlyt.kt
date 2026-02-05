@@ -255,13 +255,6 @@ class BehandlingFlyt private constructor(
         return requireNotNull(aktivtSteg).oppdaterFaktagrunnlag
     }
 
-    /**
-     * Lager en kopi av flyten uten vurderingsbehov knyttet til steg.
-     */
-    fun utenVurderingsbehov(): BehandlingFlyt {
-        return BehandlingFlyt(flyt = flyt)
-    }
-
     fun vurderingsbehovRelevantForSteg(stegType: StegType): Set<Vurderingsbehov> {
         return if (steg(stegType).oppdaterFaktagrunnlag) {
             vurderingsbehov.filter { entry -> entry.value.contains(stegType) }.keys

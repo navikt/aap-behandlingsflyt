@@ -4,7 +4,10 @@ import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseReposi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.ArbeidsGradering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
@@ -19,6 +22,7 @@ import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.miljo.Miljø
 import no.nav.aap.komponenter.tidslinje.somTidslinje
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.JobbInput
@@ -26,6 +30,7 @@ import no.nav.aap.motor.JobbUtfører
 import no.nav.aap.motor.ProvidersJobbSpesifikasjon
 import org.slf4j.LoggerFactory
 import java.math.BigDecimal
+import java.time.LocalDate
 
 class OpprettBehandlingMigrereRettighetsperiodeJobbUtfører(
     private val prosesserBehandlingService: ProsesserBehandlingService,
@@ -92,7 +97,7 @@ class OpprettBehandlingMigrereRettighetsperiodeJobbUtfører(
         if (rettighetstypeFør.isEmpty() && rettighetstypeEtter.isEmpty()) {
             log.info("Rettighetstypen er tom før og etter migrering - totalt avslag")
             return
-        } else if(rettighetstypeFør.isEmpty()) {
+        } else if (rettighetstypeFør.isEmpty()) {
             log.warn("Rettighetstypen er tom før migrering, men finnes etter migrering - bør følges opp")
             return
         }
@@ -112,20 +117,33 @@ class OpprettBehandlingMigrereRettighetsperiodeJobbUtfører(
     ) {
         /**
          * Må nulle ut periode og id for å kunne komprimere og se reelle forskjeller på underveisperiodene
+         * Hvis forrige var førstegangsbehandling vil meldepliktstatus naturlig endre seg
          */
+        val forrigeBehandlingFørstegangsbehandling = behandlingFørMigrering.typeBehandling() == TypeBehandling.Førstegangsbehandling
+        fun overstyrVerdierForPeriode(underveisperiode: Underveisperiode): Underveisperiode =
+            underveisperiode.copy(
+                periode = Periode(Tid.MIN, Tid.MAKS),
+                id = null,
+                meldepliktStatus = if (forrigeBehandlingFørstegangsbehandling) null else underveisperiode.meldepliktStatus
+            )
+
         val underveisFør =
             underveisRepository.hentHvisEksisterer(behandlingFørMigrering.id)?.somTidslinje()
-                ?.map { it.copy(periode = Periode(Tid.MIN, Tid.MAKS), id = null) }?.komprimer()
+                ?.map { overstyrVerdierForPeriode(it) }?.komprimer()
                 ?.segmenter()?.toList()
-                ?: error("Fant ikke underveis for behandling ${behandlingFørMigrering.id}")
+                ?: emptyList()
         val underveisEtter =
             underveisRepository.hentHvisEksisterer(behandlingEtterMigrering.id)?.somTidslinje()
-                ?.map { it.copy(periode = Periode(Tid.MIN, Tid.MAKS), id = null) }?.komprimer()
+                ?.map { overstyrVerdierForPeriode(it) }?.komprimer()
                 ?.segmenter()?.toList()
                 ?: error("Fant ikke underveis for behandling ${behandlingEtterMigrering.id}")
         secureLogger.info("Migrering underveis før=$underveisFør og etter=$underveisEtter")
 
-        if (skalValidereUnderveis(sak, behandlingFørMigrering)) {
+        if (underveisFør.isEmpty() && underveisEtter.isNotEmpty()) {
+            if (underveisEtter.any { it.verdi.utfall == Utfall.OPPFYLT }) {
+               throw IllegalStateException("Mangler underveis tidligere, men fant innvilget periode etter migreringen")
+            }
+        } else if (skalValidereUnderveis(sak, behandlingFørMigrering)) {
             if (underveisFør.size != underveisEtter.size) {
                 log.info("Ulikt antall underveisperioder før ${underveisFør.size} og etter migrering ${underveisEtter.size}")
             }
@@ -161,8 +179,14 @@ class OpprettBehandlingMigrereRettighetsperiodeJobbUtfører(
     private fun skalValidereUnderveis(sak: Sak, behandlingFørMigrering: Behandling): Boolean {
         val erForrigeBehandlingFastsattPeriodePassert =
             behandlingFørMigrering.vurderingsbehov().map { it.type }.contains(Vurderingsbehov.FASTSATT_PERIODE_PASSERT)
-        val forhåndsgodkjenteSaksnummerMedPotensiellEndringIUnderveis = listOf(
-            "4oA3ZQ8",
+        val forhåndsgodkjenteSaksnummerMedPotensiellEndringIUnderveis = listOf<String>(
+            "4MUP7N4",
+            "4M35WWW",
+            "4LER540",
+            "4LRL174",
+            "4MLAKA8",
+            "4MESXSG",
+            "4MH3GGW"
         )
         val skalIgnoreres =
             forhåndsgodkjenteSaksnummerMedPotensiellEndringIUnderveis.contains(sak.saksnummer.toString())
@@ -198,9 +222,14 @@ class OpprettBehandlingMigrereRettighetsperiodeJobbUtfører(
     ) {
         val tilkjentYtelseEffektivDagsatsFør =
             tilkjentYtelseRepository.hentHvisEksisterer(behandlingFørMigrering.id)
-                ?.somTidslinje({ it.periode }, { it.tilkjent.redusertDagsats() })?.komprimer()
+                ?.somTidslinje({ it.periode }, {
+                    // Tidligere i Kelvin ble dagsats satt til en verdi frem i tid, dette er feil og skjer ikke lenger.
+                    // Da må vi sammenligne med det som BURDE vært dagsats
+                    if (it.periode.fom > LocalDate.now()) Beløp(0) else it.tilkjent.redusertDagsats()
+                })?.komprimer()
                 ?.segmenter()?.toList()
                 ?: emptyList()
+        // Før fikk man satt dagsats i tilkjent ytelse frem i tid - dette bør ikke skje
         val tilkjentYtelseEffektivDagsatsEtter =
             tilkjentYtelseRepository.hentHvisEksisterer(behandlingEtterMigrering.id)
                 ?.somTidslinje({ it.periode }, { it.tilkjent.redusertDagsats() })?.komprimer()

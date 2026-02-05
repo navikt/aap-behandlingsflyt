@@ -32,6 +32,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreInformasjo
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreRegisterGateway
 import no.nav.aap.behandlingsflyt.help.FakePdlGateway
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
+import no.nav.aap.behandlingsflyt.help.flytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.help.sak
 import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
@@ -41,8 +42,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
@@ -197,6 +196,9 @@ class OppdagEndretInformasjonskravJobbUtførerTest {
                 .isNotEqualTo(førstegangsbehandlingen.id)
             assertThat(sisteYtelsesbehandling.vurderingsbehov()).hasSize(3)
             assertThat(sisteYtelsesbehandling.vurderingsbehov().toSet())
+                .usingRecursiveComparison()
+                .ignoringCollectionOrder()
+                .ignoringFields("oppdatertTid")
                 .isEqualTo(
                     setOf(
                         VurderingsbehovMedPeriode(Vurderingsbehov.REVURDER_SAMORDNING_ANDRE_FOLKETRYGDYTELSER),
@@ -241,15 +243,11 @@ class OppdagEndretInformasjonskravJobbUtførerTest {
             val sak = sak(connection, periode)
             val førstegangsbehandlingen = finnEllerOpprettBehandling(connection, sak)
 
-            val kontekst = FlytKontekstMedPerioder(
-                sakId = sak.id,
-                behandlingId = førstegangsbehandlingen.id,
-                forrigeBehandlingId = null,
-                behandlingType = TypeBehandling.Førstegangsbehandling,
-                vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
-                rettighetsperiode = sak.rettighetsperiode,
-                vurderingsbehovRelevanteForSteg = emptySet()
-            )
+            val kontekst = flytKontekstMedPerioder {
+                this.behandling = førstegangsbehandlingen
+                this.rettighetsperiode = sak.rettighetsperiode
+                this.vurderingsbehovRelevanteForSteg = emptySet()
+            }
 
             fun klargjørInformasjonskrav(informasjonskrav: List<Informasjonskravkonstruktør>) {
                 informasjonskrav.forEach {

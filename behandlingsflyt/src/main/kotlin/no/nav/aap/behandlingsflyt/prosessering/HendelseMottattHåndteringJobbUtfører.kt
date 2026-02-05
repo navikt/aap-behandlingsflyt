@@ -30,6 +30,7 @@ private const val BREVKODE = "brevkode"
 private const val KANAL = "kanal"
 private const val MOTTATT_DOKUMENT_REFERANSE = "referanse"
 private const val MOTTATT_TIDSPUNKT = "mottattTidspunkt"
+private const val DIGITALISERT_AV_POSTMOTTAK = "digitalisertAvPostmottak"
 
 class HendelseMottattHåndteringJobbUtfører(
     private val låsRepository: TaSkriveLåsRepository,
@@ -55,6 +56,10 @@ class HendelseMottattHåndteringJobbUtfører(
 
         val referanse = DefaultJsonMapper.fromJson<InnsendingReferanse>(input.parameter(MOTTATT_DOKUMENT_REFERANSE))
 
+        val digitalisertAvPostmottak = input.optionalParameter(DIGITALISERT_AV_POSTMOTTAK)?.let {
+            DefaultJsonMapper.fromJson<Boolean?>(it)
+        }
+
         if (kjennerTilDokumentFraFør(referanse, innsendingType, sakId)) {
             log.warn("Allerede håndtert dokument med referanse {}", referanse)
             return
@@ -67,7 +72,8 @@ class HendelseMottattHåndteringJobbUtfører(
             mottattTidspunkt = mottattTidspunkt,
             brevkategori = innsendingType,
             kanal = kanal,
-            strukturertDokument = if (payloadAsString != null) UnparsedStrukturertDokument(payloadAsString) else null
+            strukturertDokument = if (payloadAsString != null) UnparsedStrukturertDokument(payloadAsString) else null,
+            digitalisertAvPostmottak = digitalisertAvPostmottak
         )
 
         when (innsendingType) {
@@ -81,6 +87,7 @@ class HendelseMottattHåndteringJobbUtfører(
                     referanse = referanse
                 )
             }
+
             InnsendingType.KLAGE -> {
                 håndterMottattDokumentService.håndterMottatteKlage(
                     sakId = sakId,
@@ -108,14 +115,15 @@ class HendelseMottattHåndteringJobbUtfører(
             }
 
             InnsendingType.DIALOGMELDING -> {
-                    håndterMottattDokumentService.håndterMottattDialogMelding(
-                        sakId = sakId,
-                        referanse = referanse,
-                        mottattTidspunkt = mottattTidspunkt,
-                        brevkategori = innsendingType,
-                        melding = parsedMelding,
-                    )
+                håndterMottattDokumentService.håndterMottattDialogMelding(
+                    sakId = sakId,
+                    referanse = referanse,
+                    mottattTidspunkt = mottattTidspunkt,
+                    brevkategori = innsendingType,
+                    melding = parsedMelding,
+                )
             }
+
             InnsendingType.OMGJØRING_KLAGE_REVURDERING -> {
                 håndterMottattDokumentService.håndterMottattOmgjøringEtterKlage(
                     sakId = sakId,
@@ -125,6 +133,7 @@ class HendelseMottattHåndteringJobbUtfører(
                     melding = parsedMelding as OmgjøringKlageRevurdering,
                 )
             }
+
             else -> {
                 håndterMottattDokumentService.håndterMottatteDokumenter(
                     sakId,
@@ -156,7 +165,8 @@ class HendelseMottattHåndteringJobbUtfører(
             brevkategori: InnsendingType,
             kanal: Kanal,
             melding: Melding? = null,
-            mottattTidspunkt: LocalDateTime
+            mottattTidspunkt: LocalDateTime,
+            digitalisertAvPostmottak: Boolean? = null
         ) = JobbInput(HendelseMottattHåndteringJobbUtfører)
             .apply {
                 forSak(sakId.toLong())
@@ -165,6 +175,7 @@ class HendelseMottattHåndteringJobbUtfører(
                 medParameter(BREVKODE, brevkategori.name)
                 medParameter(KANAL, kanal.name)
                 medParameter(MOTTATT_TIDSPUNKT, DefaultJsonMapper.toJson(mottattTidspunkt))
+                medParameter(DIGITALISERT_AV_POSTMOTTAK, DefaultJsonMapper.toJson(digitalisertAvPostmottak ?: false))
                 medPayload(melding)
             }
 

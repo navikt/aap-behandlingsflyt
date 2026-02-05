@@ -8,7 +8,8 @@ import no.nav.aap.komponenter.type.Periode
 data class SykestipendGrunnlagResponse(
     val harTilgangTilÅSaksbehandle: Boolean,
     val historiskeVurderinger: List<SykestipendvurderingResponse>,
-    val gjeldendeVurdering: SykestipendvurderingResponse?
+    val gjeldendeVurdering: SykestipendvurderingResponse?,
+    val sykeStipendSvarFraSøknad: Boolean? = null
 )
 
 data class SykestipendvurderingResponse(

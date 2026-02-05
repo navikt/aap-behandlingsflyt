@@ -7,8 +7,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Pers
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Personopplysning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Statsborgerskap
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeInformasjonskrav
-import no.nav.aap.behandlingsflyt.help.FakePdlGateway
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
+import no.nav.aap.behandlingsflyt.help.flytKontekstMedPerioder
+import no.nav.aap.behandlingsflyt.help.opprettSak
 import no.nav.aap.behandlingsflyt.integrasjon.aordning.InntektkomponentenGatewayImpl
 import no.nav.aap.behandlingsflyt.integrasjon.arbeidsforhold.AARegisterGateway
 import no.nav.aap.behandlingsflyt.integrasjon.arbeidsforhold.EREGGateway
@@ -22,13 +23,10 @@ import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.InformasjonskravRepos
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.medlemskaplovvalg.MedlemskapArbeidInntektRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.personopplysning.PersonopplysningRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
-import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.test.FakePersoner
 import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.test.Fakes
@@ -288,11 +286,7 @@ class InformasjonskravGrunnlagTest {
 
     ): Pair<Ident, FlytKontekstMedPerioder> {
         val ident = ident()
-        val sak = PersonOgSakService(
-            FakePdlGateway,
-            PersonRepositoryImpl(connection),
-            SakRepositoryImpl(connection)
-        ).finnEllerOpprett(ident, periode)
+        val sak = opprettSak(connection, ident, periode)
         val behandling = finnEllerOpprettBehandling(connection, sak)
         val personopplysningRepository = PersonopplysningRepositoryImpl(connection)
         personopplysningRepository.lagre(
@@ -304,16 +298,12 @@ class InformasjonskravGrunnlagTest {
             )
         )
 
-        val flytKontekst = behandling.flytKontekst()
-        return ident to FlytKontekstMedPerioder(
-            flytKontekst.sakId,
-            flytKontekst.behandlingId,
-            flytKontekst.forrigeBehandlingId,
-            behandling.typeBehandling(),
-            vurderingType = vurderingType,
-            vurderingsbehovRelevanteForSteg = årsakerTilBehandling,
-            rettighetsperiode = Periode(LocalDate.now(), LocalDate.now()),
-        )
+        return ident to flytKontekstMedPerioder {
+            this.behandling = behandling
+            this.vurderingType = vurderingType
+            vurderingsbehovRelevanteForSteg = årsakerTilBehandling
+            rettighetsperiode = Periode(LocalDate.now(), LocalDate.now())
+        }
     }
 
     private fun leggTilBarnPåPerson(ident: Ident) {

@@ -110,6 +110,7 @@ class UføreRepositoryImpl(private val connection: DBConnection) : UføreReposit
                 Uføre(
                     virkningstidspunkt = row.getLocalDate("virkningstidspunkt"),
                     uføregrad = Prosent(row.getInt("uforegrad")),
+                    uføregradTom = row.getLocalDateOrNull("uforegrad_tom")
                 )
             }
         }
@@ -134,13 +135,14 @@ class UføreRepositoryImpl(private val connection: DBConnection) : UføreReposit
         }
 
         connection.executeBatch(
-            "INSERT INTO UFORE_GRADERING (UFORE_ID, UFOREGRAD, VIRKNINGSTIDSPUNKT) VALUES (?, ?, ?)",
+            "INSERT INTO UFORE_GRADERING (UFORE_ID, UFOREGRAD, VIRKNINGSTIDSPUNKT, UFOREGRAD_TOM) VALUES (?, ?, ?, ?)",
             uføre
         ) {
             setParams {
                 setLong(1, uføreId)
                 setInt(2, it.uføregrad.prosentverdi())
                 setLocalDate(3, it.virkningstidspunkt)
+                setLocalDate(4, it.uføregradTom)
             }
         }
     }

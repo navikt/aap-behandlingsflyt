@@ -18,7 +18,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevu
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelsePeriode
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
-import no.nav.aap.behandlingsflyt.help.FakePdlGateway
+import no.nav.aap.behandlingsflyt.help.opprettInMemorySak
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
@@ -27,15 +27,10 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedP
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
-import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
-import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryPersonRepository
-import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySamordningRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySamordningVurderingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySamordningYtelseRepository
@@ -365,15 +360,11 @@ class SamordningStegTest {
         verifiserAvklaringsbehov(behandling, Status.OPPRETTET)
     }
 
-    private fun flytKontekstMedPerioder(behandling: Behandling): FlytKontekstMedPerioder = FlytKontekstMedPerioder(
-        sakId = behandling.sakId,
-        behandlingId = behandling.id,
-        forrigeBehandlingId = behandling.forrigeBehandlingId,
-        behandlingType = behandling.typeBehandling(),
-        vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
-        vurderingsbehovRelevanteForSteg = setOf(Vurderingsbehov.MOTTATT_SØKNAD),
-        rettighetsperiode = Periode(LocalDate.now().minusYears(1), LocalDate.now())
-    )
+    private fun flytKontekstMedPerioder(behandling: Behandling): FlytKontekstMedPerioder =
+        no.nav.aap.behandlingsflyt.help.flytKontekstMedPerioder {
+            this.behandling = behandling
+            this.rettighetsperiode = Periode(LocalDate.now().minusYears(1), LocalDate.now())
+        }
 
     @Test
     fun `skal kunne regne ut samordninggrad også uten registeropplysninger, kun vurderinger`() {
@@ -399,15 +390,11 @@ class SamordningStegTest {
             )
         )
 
-        val kontekst = FlytKontekstMedPerioder(
-            sakId = behandling.sakId,
-            behandlingId = behandling.id,
-            forrigeBehandlingId = behandling.forrigeBehandlingId,
-            behandlingType = behandling.typeBehandling(),
-            vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
-            vurderingsbehovRelevanteForSteg = setOf(Vurderingsbehov.MOTTATT_SØKNAD),
-            rettighetsperiode = Periode(LocalDate.now(), LocalDate.now().plusYears(1))
-        )
+        val kontekst =
+            no.nav.aap.behandlingsflyt.help.flytKontekstMedPerioder {
+                this.behandling = behandling
+                this.rettighetsperiode = Periode(LocalDate.now().minusYears(1), LocalDate.now())
+            }
 
         val res = steg.utfør(kontekst)
 
@@ -444,15 +431,11 @@ class SamordningStegTest {
             )
         )
 
-        val kontekst = FlytKontekstMedPerioder(
-            sakId = behandling.sakId,
-            behandlingId = behandling.id,
-            forrigeBehandlingId = behandling.forrigeBehandlingId,
-            behandlingType = behandling.typeBehandling(),
-            vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
-            vurderingsbehovRelevanteForSteg = setOf(Vurderingsbehov.MOTTATT_SØKNAD),
-            rettighetsperiode = Periode(LocalDate.now(), LocalDate.now().plusYears(1))
-        )
+        val kontekst = no.nav.aap.behandlingsflyt.help.flytKontekstMedPerioder {
+            this.behandling = behandling
+            this.vurderingsbehovRelevanteForSteg = setOf(Vurderingsbehov.MOTTATT_SØKNAD)
+            this.rettighetsperiode = Periode(LocalDate.now().minusYears(1), LocalDate.now())
+        }
 
         val res = steg.utfør(kontekst)
 
@@ -513,11 +496,7 @@ class SamordningStegTest {
     }
 
     private fun nySak(): Sak {
-        return PersonOgSakService(
-            FakePdlGateway,
-            InMemoryPersonRepository,
-            InMemorySakRepository
-        ).finnEllerOpprett(ident(), Periode(LocalDate.now(), LocalDate.now().plusYears(1)))
+        return opprettInMemorySak(Periode(LocalDate.now(), LocalDate.now().plusYears(1)))
     }
 
     private fun opprettBehandling(sak: Sak): Behandling {
