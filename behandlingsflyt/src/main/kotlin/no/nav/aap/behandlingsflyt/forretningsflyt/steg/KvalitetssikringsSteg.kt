@@ -16,7 +16,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
@@ -123,7 +122,6 @@ class KvalitetssikringsSteg(
          * så skal dette potensielt trigge en ny kvalitetssikring. Dette kan skje selv om kvalitetssikrer og beslutter ikke har returnert,
          * men f. eks. ved at nytt starttidspunkt i 22-13 blir satt. Dette igjen vil løfte avklaringsbehovene under Sykdom.
          */
-        if (unleashGateway.isEnabled(BehandlingsflytFeature.KvalitetssikringVed2213)) {
             val avsluttedeBehov = avklaringsbehovene.alle()
                 .filter { it.kreverKvalitetssikring() && it.status() == Status.AVSLUTTET }
 
@@ -136,6 +134,12 @@ class KvalitetssikringsSteg(
                 val erKvalitetssikretFørRetur = avsluttedeBehov
                     .any {
                         val aktivHistorikk = it.aktivHistorikk
+                        /**
+                         * De tre siste statusene i historikken skal være følgende etter reåpning:
+                         * "KVALITETSSIKRET"
+                         * "OPPRETTET"
+                         * "AVSLUTTET" (gjeldende status)
+                         */
                         val endring = it.aktivHistorikk.getOrNull(aktivHistorikk.size - 3)
                         endring?.status == Status.KVALITETSSIKRET
                     }
@@ -150,8 +154,13 @@ class KvalitetssikringsSteg(
 
                     val sendtTilbakeFraBeslutter =
                         behovSomIkkeKreverKvalitetssikring.any { behov ->
-                            val endring = behov.aktivHistorikk
-                            endring.size >= 2 && endring[endring.size - 2].status == Status.SENDT_TILBAKE_FRA_BESLUTTER
+                            /**
+                             * Dersom beslutter har returnert vil de to siste statusene i historikken være følgende etter reåpning:
+                             * "SENDT_TILBAKE_FRA_BESLUTTER"
+                             * "AVSLUTTET" (gjeldende status)
+                             */
+                            val endringer = behov.aktivHistorikk
+                            endringer.size >= 2 && endringer[endringer.size - 2].status == Status.SENDT_TILBAKE_FRA_BESLUTTER
                         }
 
                     if (sendtTilbakeFraBeslutter) {
@@ -160,7 +169,6 @@ class KvalitetssikringsSteg(
                     return false
                 }
             }
-        }
 
         return true
     }

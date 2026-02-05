@@ -337,7 +337,7 @@ class KvalitetssikringFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash
     }
 
     @Test
-    fun `Beslutter underkjenner VURDER_RETTIGHETSPERIODE og AVKLAR_SYKDOM, ny kvalitetssikring skal skje`() {
+    fun `Ny kvalitetssikring skal skje dersom beslutter underkjenner VURDER_RETTIGHETSPERIODE og AVKLAR_SYKDOM`() {
         val fom = LocalDate.now().minusMonths(3)
         val periode = Periode(fom, fom.plusYears(3))
 
@@ -370,7 +370,7 @@ class KvalitetssikringFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash
                     .map { behov ->
                         TotrinnsVurdering(
                             behov.definisjon.kode,
-                            if (behov.definisjon == Definisjon.VURDER_RETTIGHETSPERIODE || behov.definisjon == Definisjon.AVKLAR_SYKDOM) false else true,
+                            behov.definisjon !in listOf(Definisjon.VURDER_RETTIGHETSPERIODE, Definisjon.AVKLAR_SYKDOM),
                             "begrunnelse",
                             emptyList()
                         )
