@@ -41,7 +41,7 @@ class SignaturService(
                     signaturSaksbehandlerNasjonal?.let { add(it) }
                     signaturKvalitetssikrer?.let { add(it) }
                     signaturSaksbehandlerOppfolging?.let { add(it) }
-                    if (signaturBeslutter == null && !any { it.navIdent == bruker.ident }) {
+                    if (signaturBeslutter == null && none { it.navIdent == bruker.ident }) {
                         // Dersom ingen har saksbehandlet med rollen beslutter så tas innlogget bruker med i signatur.
                         // Dette fordi det er beslutter som skriver vedtaksbrev.
                         addFirst(
