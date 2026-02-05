@@ -16,6 +16,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
@@ -122,6 +123,7 @@ class KvalitetssikringsSteg(
          * så skal dette potensielt trigge en ny kvalitetssikring. Dette kan skje selv om kvalitetssikrer og beslutter ikke har returnert,
          * men f. eks. ved at nytt starttidspunkt i 22-13 blir satt. Dette igjen vil løfte avklaringsbehovene under Sykdom.
          */
+        if (unleashGateway.isEnabled(BehandlingsflytFeature.KvalitetssikringVed2213)) {
             val avsluttedeBehov = avklaringsbehovene.alle()
                 .filter { it.kreverKvalitetssikring() && it.status() == Status.AVSLUTTET }
 
@@ -169,6 +171,7 @@ class KvalitetssikringsSteg(
                     return false
                 }
             }
+        }
 
         return true
     }
