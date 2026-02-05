@@ -55,23 +55,9 @@ class InstitusjonsoppholdInformasjonskrav private constructor(
     }
 
     override fun hentData(input: Input): InstitusjonsoppholdRegisterdata {
-        val sak = input.sak
+        val institusjonsopphold = hentInstitusjonsopphold(input.sak)
 
-        return InstitusjonsoppholdRegisterdata(
-            opphold = institusjonsoppholdRegisterGateway
-                .innhent(sak.person)
-                .filter {
-                    try {
-                        it.periode().overlapper(sak.rettighetsperiode)
-                    } catch (e: IllegalArgumentException) {
-                        logger.error(
-                            "Ugyldig periode for institusjonsopphold funnet i sak ${sak.id} og ignoreres (startdato=${it.startdato}, sluttdato=${it.sluttdato}",
-                            e
-                        )
-                        false
-                    }
-                }
-        )
+        return InstitusjonsoppholdRegisterdata(institusjonsopphold)
     }
 
     override fun oppdater(
@@ -88,10 +74,20 @@ class InstitusjonsoppholdInformasjonskrav private constructor(
         return if (erEndret(eksisterendeGrunnlag, institusjonsopphold)) ENDRET else IKKE_ENDRET
     }
 
-    private fun hentInstitusjonsopphold(behandlingId: BehandlingId): List<Institusjonsopphold> {
-        val sak = sakService.hentSakFor(behandlingId)
-        return institusjonsoppholdRegisterGateway.innhent(sak.person)
-            .filter { it.periode().overlapper(sak.rettighetsperiode) }
+    private fun hentInstitusjonsopphold(sak: Sak): List<Institusjonsopphold> {
+        return institusjonsoppholdRegisterGateway
+            .innhent(sak.person)
+            .filter {
+                try {
+                    it.periode().overlapper(sak.rettighetsperiode)
+                } catch (e: IllegalArgumentException) {
+                    logger.error(
+                        "Ugyldig periode for institusjonsopphold funnet i sak ${sak.id} og ignoreres (startdato=${it.startdato}, sluttdato=${it.sluttdato}",
+                        e
+                    )
+                    false
+                }
+            }
     }
 
     fun hentHvisEksisterer(behandlingId: BehandlingId): InstitusjonsoppholdGrunnlag? {
@@ -100,7 +96,8 @@ class InstitusjonsoppholdInformasjonskrav private constructor(
 
     override fun behovForRevurdering(behandlingId: BehandlingId): List<VurderingsbehovMedPeriode> {
         val eksisterendeGrunnlag = hentHvisEksisterer(behandlingId)
-        val institusjonsopphold = hentInstitusjonsopphold(behandlingId)
+        val sak = sakService.hentSakFor(behandlingId)
+        val institusjonsopphold = hentInstitusjonsopphold(sak)
 
         return if (erEndret(eksisterendeGrunnlag, institusjonsopphold))
             listOf(VurderingsbehovMedPeriode(Vurderingsbehov.INSTITUSJONSOPPHOLD))

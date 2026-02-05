@@ -5,7 +5,6 @@ import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
-import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status.AVBRUTT
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status.AVSLUTTET
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status.KVALITETSSIKRET
@@ -124,8 +123,8 @@ class AvklaringsbehovService(
         if (vedtakBehøverVurdering()) {
             if (avklaringsbehov == null || !avklaringsbehov.harAvsluttetStatusIHistorikken() || avklaringsbehov.status() == AVBRUTT || vurderingsbehovErNyere) {
                 /* ønsket tilstand: OPPRETTET */
-                when (avklaringsbehov?.status()) {
-                    OPPRETTET -> {
+                when {
+                    avklaringsbehov?.status()?.erÅpent() == true -> {
                         /* ønsket tilstand er OPPRETTET */
                         avklaringsbehovene.oppdaterPerioder(
                             avklaringsbehov.definisjon,
@@ -134,17 +133,12 @@ class AvklaringsbehovService(
                         )
                     }
 
-                    null, AVBRUTT, AVSLUTTET, KVALITETSSIKRET, TOTRINNS_VURDERT ->
-                        avklaringsbehovene.leggTil(
-                            definisjon,
-                            definisjon.løsesISteg,
-                            perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert(),
-                            perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering()
-                        )
-
-                    SENDT_TILBAKE_FRA_BESLUTTER,
-                    SENDT_TILBAKE_FRA_KVALITETSSIKRER ->
-                        error("Ikke mulig: fikk ${avklaringsbehov.status()}")
+                    else -> avklaringsbehovene.leggTil(
+                        definisjon,
+                        definisjon.løsesISteg,
+                        perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert(),
+                        perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering()
+                    )
                 }
             } else if (erTilstrekkeligVurdertBakoverkompatibel()) {
                 /* ønsket tilstand: ... */

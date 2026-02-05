@@ -101,7 +101,9 @@ public enum class Vilkårtype {
     SAMORDNING,
     INNTEKTSBORTFALL,
     SAMORDNING_ANNEN_LOVGIVNING,
-    STUDENT
+    STUDENT,
+    ORDINÆR_KVOTE,
+    SYKEPENGEERSTATNING_KVOTE
 }
 
 public data class VilkårsPeriodeDTO(

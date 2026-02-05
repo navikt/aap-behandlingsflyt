@@ -169,6 +169,53 @@ class BeslutterFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class
     }
 
     @Test
+    fun `er hos beslutter, kommer inn meldekort, skal ikke kaste tilbake til kvalitettsikrer`() {
+        val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
+
+        val person = TestPersoner.STANDARD_PERSON()
+        // Sender inn en søknad
+        val (sak, behandling) = sendInnFørsteSøknad(
+            periode = periode,
+            person = person,
+            søknad = TestSøknader.STANDARD_SØKNAD
+        )
+        behandling.medKontekst {
+            assertThat(behandling.typeBehandling()).isEqualTo(TypeBehandling.Førstegangsbehandling)
+            assertThat(åpneAvklaringsbehov).isNotEmpty()
+            assertThat(behandling.status()).isEqualTo(Status.UTREDES)
+        }
+            .løsSykdom(sak.rettighetsperiode.fom)
+            .løsBistand(periode.fom)
+            .løsRefusjonskrav()
+            .løsSykdomsvurderingBrev()
+            .medKontekst {
+                // Saken står til en-trinnskontroll hos saksbehandler klar for å bli sendt til beslutter
+                assertThat(åpneAvklaringsbehov).isNotEmpty()
+                assertThat(åpneAvklaringsbehov.map { it.definisjon }).containsExactly(Definisjon.KVALITETSSIKRING)
+                assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
+            }
+            .kvalitetssikreOk()
+            .løsBeregningstidspunkt()
+            .løsOppholdskrav(periode.fom)
+            .løsAndreStatligeYtelser()
+            .løsAvklaringsBehov(ForeslåVedtakLøsning())
+            .medKontekst {
+                // Saken står til To-trinnskontroll hos beslutter
+                assertThat(this.behandling.aktivtSteg()).isEqualTo(StegType.FATTE_VEDTAK)
+                assertThat(åpneAvklaringsbehov.map { it.definisjon }).containsExactly(Definisjon.FATTE_VEDTAK)
+                assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
+            }
+
+        // Send inn meldekort lager nytt vurderingsbehov
+        sak.sendInnMeldekort(mapOf(sak.rettighetsperiode.fom to 5.0))
+
+        behandling.medKontekst {
+            assertThat(this.behandling.aktivtSteg()).isEqualTo(StegType.FATTE_VEDTAK)
+            assertThat(åpneAvklaringsbehov.map { it.definisjon }).containsExactly(Definisjon.FATTE_VEDTAK)
+        }
+    }
+
+    @Test
     fun `Når beslutter ikke godkjenner vurdering av samordning skal flyt tilbakeføres`() {
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
 

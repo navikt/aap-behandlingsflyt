@@ -4,7 +4,6 @@ import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
-import no.nav.aap.behandlingsflyt.kontrakt.steg.StegGruppe
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
@@ -203,21 +202,12 @@ class Avklaringsbehov(
         return definisjon.skalLøsesISteg(type, funnetISteg)
     }
 
-    fun skalLøsesIStegGruppe(gruppe: StegGruppe): Boolean {
-        val steg = StegType.entries.filter { it.gruppe == gruppe }
-        return steg.any { skalLøsesISteg(it) }
-    }
-
     fun erForeslåttVedtak(): Boolean {
         return definisjon == Definisjon.FORESLÅ_VEDTAK
     }
 
     fun erLovvalgOgMedlemskap(): Boolean {
         return definisjon == Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP
-    }
-
-    fun erForeslåttUttak(): Boolean {
-        return definisjon == Definisjon.FORESLÅ_UTTAK
     }
 
     fun harVærtSendtTilbakeFraBeslutterTidligere(): Boolean {
