@@ -105,7 +105,7 @@ class SjekkInstitusjonsOppholdJobbUtfører(
 
         val grunnlag = institusjonsOppholdRepository.hentHvisEksisterer(behandlingId)
         grunnlag?.oppholdene?.opphold?.forEach { opphold ->
-            if (tomErInnenTreMaaneder(opphold.periode)) {
+            if (tomErIFremtidenOgInnenTreMaaneder(opphold.periode)) {
                 log.info("For behandlingsid $behandlingId er oppholdene true")
                 return true
             }
@@ -114,8 +114,8 @@ class SjekkInstitusjonsOppholdJobbUtfører(
         return false
     }
 
-    private fun tomErInnenTreMaaneder(periode: Periode): Boolean {
-        return periode.tom.isBefore(LocalDate.now().withDayOfMonth(1).plusMonths(4))
+    private fun tomErIFremtidenOgInnenTreMaaneder(periode: Periode): Boolean {
+        return periode.tom.isBefore(LocalDate.now().withDayOfMonth(1).plusMonths(4)) && periode.tom.isAfter(LocalDate.now())
     }
 
     private fun opprettNyBehandling(sak: Sak): Behandling =
