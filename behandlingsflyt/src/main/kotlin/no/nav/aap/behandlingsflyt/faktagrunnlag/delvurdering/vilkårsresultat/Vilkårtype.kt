@@ -183,6 +183,14 @@ enum class Vilkårtype(
         avslagsårsaker = listOf(
             Avslagsårsak.ORDINÆRKVOTE_BRUKT_OPP
         ),
-        hjemmel = "§ 11-12",
+        hjemmel = "§ 11-12 1. ledd",
+    ),
+    SYKEPENGEERSTATNING_KVOTE(
+        kode = "AAP-13-1",
+        spesielleInnvilgelsesÅrsaker = emptyList(),
+        avslagsårsaker = listOf(
+            Avslagsårsak.SYKEPENGEERSTATNINGKVOTE_BRUKT_OPP
+        ),
+        hjemmel = "§ 11-13 1. ledd",
     )
 }

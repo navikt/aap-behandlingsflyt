@@ -484,7 +484,8 @@ class RettighetsperiodeFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleas
         Vilkårtype.SYKEPENGEERSTATNING,
         Vilkårtype.SAMORDNING,
         Vilkårtype.STUDENT,
-        Vilkårtype.ORDINÆR_KVOTE
+        Vilkårtype.ORDINÆR_KVOTE,
+        Vilkårtype.SYKEPENGEERSTATNING_KVOTE
     )
 
 
