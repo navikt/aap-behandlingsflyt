@@ -77,7 +77,7 @@ class InstitusjonsOppholdKafkaKonsument(
                     meldingVerdi.institusjonsOpphold = beriketInstitusjonsopphold
                     val sluttdato = meldingVerdi.institusjonsOpphold?.sluttdato
 
-                    if (sluttdato != null && sluttdato > omTreeMaaneder) {
+                    if (sluttdato != null && sluttdato < omTreeMaaneder) {
                         hendelseService.registrerMottattHendelse(
                             dto = meldingVerdi.tilInnsending(
                                 meldingKey,
