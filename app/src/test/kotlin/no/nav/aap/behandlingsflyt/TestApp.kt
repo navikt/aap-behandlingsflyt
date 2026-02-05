@@ -401,6 +401,8 @@ private fun opprettNySakOgBehandling(dto: OpprettTestcaseDTO, gatewayProvider: G
             if (dto.yrkesskade) {
                 løsFastsettYrkesskadeInntekt(behandling)
             }
+            if (dto.steg == StegType.VURDER_MEDLEMSKAP) return sak
+            løsForutgåendeMedlemskap(behandling, sak)
 
             // Oppholdskrav
             if (dto.steg == StegType.VURDER_OPPHOLDSKRAV) return sak
