@@ -28,6 +28,7 @@ enum class BehandlingsflytFeature : FeatureToggle {
     UbehandledeMeldekortJobb,
     ForenkletKvote,
     PapirMeldekortFraBehandingsflyt,
+    RettighetstypeSteg,
     VirksomhetsEtablering
     ;
 
