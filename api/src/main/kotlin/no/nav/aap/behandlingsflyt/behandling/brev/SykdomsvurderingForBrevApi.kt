@@ -16,8 +16,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.tilgang.kanSaksbehandle
 import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
@@ -47,8 +45,6 @@ fun NormalOpenAPIRoute.sykdomsvurderingForBrevApi(
                 val behandling = behandlingRepository.hent(behandlingReferanse)
                 val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
 
-                val unleashGateway = gatewayProvider.provide<UnleashGateway>()
-
                 val sykdomsvurderingForBrev = hentSykdomsvurderingForBrev(
                     behandlingReferanse,
                     behandlingRepository,
@@ -73,11 +69,7 @@ fun NormalOpenAPIRoute.sykdomsvurderingForBrevApi(
                             behandlingRepository.hent(behandlingReferanse)
                         )
                     },
-                    kanSaksbehandle = if (unleashGateway.isEnabled(BehandlingsflytFeature.KvalitetssikringsSteg)) {
-                        harTilgangOgKanSaksbehandle(kanSaksbehandle(), avklaringsbehovene)
-                    } else {
-                        kanSaksbehandle()
-                    },
+                    kanSaksbehandle = harTilgangOgKanSaksbehandle(kanSaksbehandle(), avklaringsbehovene),
                 )
             }
             respond(grunnlag)

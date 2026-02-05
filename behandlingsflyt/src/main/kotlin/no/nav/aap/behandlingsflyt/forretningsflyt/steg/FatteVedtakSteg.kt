@@ -45,11 +45,12 @@ class FatteVedtakSteg(
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
 
         val vedtakBehøverVurdering = vedtakBehøverVurdering(kontekst, avklaringsbehovene)
+        val erTilstrekkeligVurdert = erTilstrekkeligVurdert(kontekst, avklaringsbehovene)
 
         avklaringsbehovService.oppdaterAvklaringsbehov(
             definisjon = Definisjon.FATTE_VEDTAK,
             vedtakBehøverVurdering = { vedtakBehøverVurdering },
-            erTilstrekkeligVurdert = { erTilstrekkeligVurdert(kontekst, avklaringsbehovene) },
+            erTilstrekkeligVurdert = { erTilstrekkeligVurdert },
             tilbakestillGrunnlag = {},
             kontekst = kontekst
         )
@@ -62,12 +63,13 @@ class FatteVedtakSteg(
             val vedtakstidspunkt = if (vedtakBehøverVurdering)
                 avklaringsbehovene.hentBehovForDefinisjon(Definisjon.FATTE_VEDTAK)
                     ?.historikk
-                    ?.singleOrNull { it.status == Status.AVSLUTTET }
+                    ?.filter { it.status == Status.AVSLUTTET }
+                    ?.maxOrNull()
                     ?.tidsstempel
             else
                 LocalDateTime.now(ZoneId.of("Europe/Oslo"))
 
-            if (skalLagreYtelsesvedtak(kontekst) && vedtakstidspunkt != null) {
+            if (erTilstrekkeligVurdert && vedtakstidspunkt != null && skalLagreYtelsesvedtak(kontekst)) {
                 vedtakService.lagreVedtak(
                     behandlingId = kontekst.behandlingId,
                     vedtakstidspunkt = vedtakstidspunkt,
@@ -124,9 +126,6 @@ class FatteVedtakSteg(
         kontekst: FlytKontekstMedPerioder,
         avklaringsbehovene: Avklaringsbehovene
     ): Boolean {
-        val harHattAvklaringsbehovSomHarKrevdTotrinnOgSomIkkeErVurdert =
-            avklaringsbehovene.harAvklaringsbehovSomKreverToTrinnMenIkkeErVurdert()
-
         val erKlage = kontekst.behandlingType == TypeBehandling.Klage
         val erTrukketEllerIngenGrunnlag =
             tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type()) ||
@@ -135,7 +134,7 @@ class FatteVedtakSteg(
         return when {
             erTrukketEllerIngenGrunnlag -> true
             erKlage -> true
-            harHattAvklaringsbehovSomHarKrevdTotrinnOgSomIkkeErVurdert -> false
+            avklaringsbehovene.harAvklaringsbehovSomKreverToTrinnMenIkkeErGodkjent() -> false
             else -> true
         }
     }

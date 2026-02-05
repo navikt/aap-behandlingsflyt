@@ -88,15 +88,9 @@ fun NormalOpenAPIRoute.refusjonGrunnlagApi(
                             val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
                             val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
 
-                            val unleashGateway = gatewayProvider.provide<UnleashGateway>()
-
                             RefusjonkravGrunnlagResponse(
                                 nåværendeVirkningsTidspunkt = virkningstidspunkt,
-                                harTilgangTilÅSaksbehandle = if (unleashGateway.isEnabled(BehandlingsflytFeature.KvalitetssikringsSteg)) {
-                                    harTilgangOgKanSaksbehandle(kanSaksbehandle(), avklaringsbehovene)
-                                } else {
-                                    kanSaksbehandle()
-                                },
+                                harTilgangTilÅSaksbehandle = harTilgangOgKanSaksbehandle(kanSaksbehandle(), avklaringsbehovene),
                                 gjeldendeVurdering = gjeldendeVurdering,
                                 gjeldendeVurderinger = gjeldendeVurderinger,
                                 økonomiskSosialHjelp = økonomiskSosialHjelp,

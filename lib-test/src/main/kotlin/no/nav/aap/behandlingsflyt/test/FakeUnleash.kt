@@ -35,7 +35,6 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.IngenValidering to true,
         BehandlingsflytFeature.NyBrevtype11_17 to true,
         BehandlingsflytFeature.OvergangArbeid to true,
-        BehandlingsflytFeature.KvalitetssikringsSteg to true,
         BehandlingsflytFeature.NyBrevbyggerV3 to false,
         BehandlingsflytFeature.LagreVedtakIFatteVedtak to true,
         BehandlingsflytFeature.PeriodisertSykepengeErstatningNyAvklaringsbehovService to true,
@@ -64,7 +63,6 @@ object LokalUnleash : FakeUnleashBase(
 object AlleAvskruddUnleash : FakeUnleashBaseWithDefaultDisabled(
     enabledFlags = listOf(
         BehandlingsflytFeature.IngenValidering, // Vi må ha på validering, slik oppførselen er i prod. Dette er egentlig for å støtte superbruker
-        BehandlingsflytFeature.KvalitetssikringsSteg // Mange tester tryner om denne er av, fikser ikke det nå, men denne fjernes snart
     )
 )
 
