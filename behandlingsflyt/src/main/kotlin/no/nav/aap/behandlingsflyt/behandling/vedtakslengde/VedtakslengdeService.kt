@@ -57,9 +57,10 @@ class VedtakslengdeService(
 
         if (sisteVedtatteUnderveisperiode != null) {
             val forrigeSluttdato = sisteVedtatteUnderveisperiode.periode.tom
-            val harFremtidigRettOrdinær = harFremtidigRettOrdinær(forrigeSluttdato, behandlingId)
+            val forrigeVedtakslengdeVurdering = vedtakslengdeRepository.hentHvisEksisterer(forrigeBehandlingId)?.vurdering
+            val harFremtidigRettOrdinær = harFremtidigRettOrdinær(forrigeSluttdato, forrigeVedtakslengdeVurdering, behandlingId)
 
-            log.info("Behandling $behandlingId har harFremtidigRettOrdinær=$harFremtidigRettOrdinær og forrigeSluttdato=$forrigeSluttdato")
+            log.info("Behandling $behandlingId har harFremtidigRettOrdinær=$harFremtidigRettOrdinær og forrigeSluttdato=${forrigeVedtakslengdeVurdering?.sluttdato ?: forrigeSluttdato}")
             return datoForUtvidelse >= forrigeSluttdato && harFremtidigRettOrdinær
         } else {
             log.info("Behandling $behandlingId har ingen vedtatte underveisperioder")
@@ -74,14 +75,10 @@ class VedtakslengdeService(
         val vedtattUnderveis = forrigeBehandlingId?.let { underveisRepository.hentHvisEksisterer(it) }
         val sisteVedtatteUnderveisperiode = vedtattUnderveis?.perioder?.maxByOrNull { it.periode.tom }
 
-        if (sisteVedtatteUnderveisperiode != null && skalUtvideVedtakslengde(behandlingId, forrigeBehandlingId)) {
+        if (sisteVedtatteUnderveisperiode != null) {
             val forrigeSluttdato = sisteVedtatteUnderveisperiode.periode.tom
             val forrigeUtvidelse = vedtakslengdeRepository.hentHvisEksisterer(forrigeBehandlingId)?.vurdering
-            val utvidelseMedHverdager = when (forrigeUtvidelse?.utvidetMed) {
-                null, ÅrMedHverdager.FØRSTE_ÅR -> ÅrMedHverdager.ANDRE_ÅR // Antar at man skal utvide med andre år dersom grunnlag ikke finnes
-                ÅrMedHverdager.ANDRE_ÅR -> ÅrMedHverdager.TREDJE_ÅR
-                ÅrMedHverdager.TREDJE_ÅR, ÅrMedHverdager.ANNET -> ÅrMedHverdager.ANNET
-            }
+            val utvidelseMedHverdager = hentNesteUtvidelse(forrigeUtvidelse)
 
             val nySluttdato = forrigeSluttdato.plussEtÅrMedHverdager(utvidelseMedHverdager)
             vedtakslengdeRepository.lagre(
@@ -127,6 +124,13 @@ class VedtakslengdeService(
         }
     }
 
+    private fun hentNesteUtvidelse(forrigeUtvidelse: VedtakslengdeVurdering?): ÅrMedHverdager =
+        when (forrigeUtvidelse?.utvidetMed) {
+            null, ÅrMedHverdager.FØRSTE_ÅR -> ÅrMedHverdager.ANDRE_ÅR // Antar at man skal utvide med andre år dersom grunnlag ikke finnes
+            ÅrMedHverdager.ANDRE_ÅR -> ÅrMedHverdager.TREDJE_ÅR
+            ÅrMedHverdager.TREDJE_ÅR, ÅrMedHverdager.ANNET -> ÅrMedHverdager.ANNET
+        }
+
     private fun utledInitiellSluttdato(
         behandlingId: BehandlingId,
         rettighetsperiode: Periode
@@ -155,16 +159,17 @@ class VedtakslengdeService(
      */
     private fun harFremtidigRettOrdinær(
         vedtattSluttdato: LocalDate,
+        forrigeVedtakslengdeVurdering: VedtakslengdeVurdering?,
         behandlingId: BehandlingId,
     ): Boolean {
-        // TODO her må vi vel ta høyde for eventuelle tidligere utvidelser?
-        val nySluttdato = vedtattSluttdato.plussEtÅrMedHverdager(ÅrMedHverdager.FØRSTE_ÅR)
-        val nyUtvidetVedtaksperiode = Periode(vedtattSluttdato.plusDays(1), nySluttdato)
-        val nyUtvidetVedtaksperiodeTidslinje = Tidslinje(Periode(vedtattSluttdato.plusDays(1), nySluttdato), true)
+        val gjeldendeSluttdato = forrigeVedtakslengdeVurdering?.sluttdato ?: vedtattSluttdato
+        val utvidetSluttdato = gjeldendeSluttdato.plussEtÅrMedHverdager(hentNesteUtvidelse(forrigeVedtakslengdeVurdering))
+
+        val nyUtvidetVedtaksperiode = Periode(gjeldendeSluttdato.plusDays(1), utvidetSluttdato)
+        val nyUtvidetVedtaksperiodeTidslinje = Tidslinje(nyUtvidetVedtaksperiode, true)
 
         if (unleashGateway.isEnabled(BehandlingsflytFeature.ForenkletKvote)) {
             return vurderRettighetstypeOgKvoter(vilkårsresultatRepository.hent(behandlingId), KvoteService().beregn())
-                .begrensetTil(nyUtvidetVedtaksperiode)
                 .rightJoin(nyUtvidetVedtaksperiodeTidslinje) { vurdering, _ ->
                     vurdering != null && vurdering is KvoteOk && Kvote.ORDINÆR in vurdering.brukerAvKvoter()
                 }
@@ -174,7 +179,6 @@ class VedtakslengdeService(
         } else {
             val rettighetstypeTidslinjeForInneværendeBehandling = vilkårsresultatRepository.hent(behandlingId).rettighetstypeTidslinje()
             return VarighetRegel().simuler(rettighetstypeTidslinjeForInneværendeBehandling)
-                .begrensetTil(nyUtvidetVedtaksperiode)
                 .rightJoin(nyUtvidetVedtaksperiodeTidslinje) { vurdering, _ ->
                     vurdering != null && vurdering !is Avslag && vurdering.brukerAvKvoter.any { kvote -> kvote == Kvote.ORDINÆR }
                 }
