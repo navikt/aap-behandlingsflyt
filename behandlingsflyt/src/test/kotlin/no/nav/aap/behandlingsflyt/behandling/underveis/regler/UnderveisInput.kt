@@ -56,6 +56,7 @@ fun tomUnderveisInput(
         overstyringMeldepliktGrunnlag = overstyringMeldepliktGrunnlag,
         meldeperioder = meldeperioder,
         vedtaksdatoFørstegangsbehandling = vedtaksdatoFørstegangsbehandling,
+        rettighetstypeGrunnlag = null // TODO: Legg til riktig grunnlag for å teste ny variant
     )
 }
 
