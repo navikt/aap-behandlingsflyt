@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
+import no.nav.aap.behandlingsflyt.behandling.rettighetstype.KvoteOk
 import no.nav.aap.behandlingsflyt.behandling.rettighetstype.vurderRettighetstypeOgKvoter
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.VirkningstidspunktUtleder
 import no.nav.aap.behandlingsflyt.behandling.underveis.KvoteService
@@ -25,6 +26,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.lookup.repository.RepositoryProvider
@@ -127,28 +129,36 @@ class VedtakslengdeSteg(
         )
     }
 
-    // Det finnes en fremtidig periode med ordinær rett og gjenværende kvote
-    fun harFremtidigRettOrdinær(
+    /**
+     * Neste periode (hele året) er av type ordinær med gjenværende kvote
+     */
+    private fun harFremtidigRettOrdinær(
         vedtattSluttdato: LocalDate,
         behandlingId: BehandlingId,
     ): Boolean {
+        // TODO her må vi vel ta høyde for eventuelle tidligere utvidelser?
+        val nySluttdato = vedtattSluttdato.plussEtÅrMedHverdager(ÅrMedHverdager.FØRSTE_ÅR)
+        val nyUtvidetVedtaksperiode = Periode(vedtattSluttdato.plusDays(1), nySluttdato)
+        val nyUtvidetVedtaksperiodeTidslinje = Tidslinje(nyUtvidetVedtaksperiode, true)
+
         if (unleashGateway.isEnabled(BehandlingsflytFeature.ForenkletKvote)) {
-            val rettighetstypeTidslinjeForInneværendeBehandling = vurderRettighetstypeOgKvoter(
-                vilkårsresultatRepository.hent(behandlingId),
-                KvoteService().beregn()
-            )
-            return rettighetstypeTidslinjeForInneværendeBehandling.begrensetTil(Periode(vedtattSluttdato.plusDays(1), Tid.MAKS))
+            return vurderRettighetstypeOgKvoter(vilkårsresultatRepository.hent(behandlingId), KvoteService().beregn())
+                .begrensetTil(nyUtvidetVedtaksperiode)
+                .rightJoin(nyUtvidetVedtaksperiodeTidslinje) { vurdering, _ ->
+                    vurdering != null && vurdering is KvoteOk && Kvote.ORDINÆR in vurdering.brukerAvKvoter()
+                }
                 .segmenter()
-                .any { varighetSegment -> Kvote.ORDINÆR in varighetSegment.verdi.brukerAvKvoter()  }
+                .all { it.verdi }
+
         } else {
             val rettighetstypeTidslinjeForInneværendeBehandling = vilkårsresultatRepository.hent(behandlingId).rettighetstypeTidslinje()
-            val varighetstidslinje = VarighetRegel().simuler(rettighetstypeTidslinjeForInneværendeBehandling)
-            return varighetstidslinje.begrensetTil(Periode(vedtattSluttdato.plusDays(1), Tid.MAKS))
-                .segmenter()
-                .any { varighetSegment ->
-                    varighetSegment.verdi.brukerAvKvoter.any { kvote -> kvote == Kvote.ORDINÆR }
-                            && varighetSegment.verdi !is Avslag
+            return VarighetRegel().simuler(rettighetstypeTidslinjeForInneværendeBehandling)
+                .begrensetTil(nyUtvidetVedtaksperiode)
+                .rightJoin(nyUtvidetVedtaksperiodeTidslinje) { vurdering, _ ->
+                    vurdering != null && vurdering !is Avslag && vurdering.brukerAvKvoter.any { kvote -> kvote == Kvote.ORDINÆR }
                 }
+                .segmenter()
+                .all { it.verdi }
         }
     }
 
