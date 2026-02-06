@@ -21,6 +21,8 @@ import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.komponenter.tidslinje.outerJoin
 import no.nav.aap.komponenter.tidslinje.tidslinjeOf
+import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
 
@@ -116,7 +118,7 @@ class TidligereVurderingerImpl(
             Sjekk(StegType.VURDER_ALDER) { vilkårsresultat, _ ->
                 ikkeOppfyltFørerTilAvslag(Vilkårtype.ALDERSVILKÅRET, vilkårsresultat)
             },
-            
+
             Sjekk(StegType.VURDER_BISTANDSBEHOV) { _, kontekst ->
                 /* TODO: Tror ikke dette er riktig. Sykdomsvilkåret er ikke satt når
                 *   man er i steget VURDER_BiSTANDSBEHOV. */
@@ -129,7 +131,17 @@ class TidligereVurderingerImpl(
                 sykdomstidslinje.outerJoin(studenttidslinje) { segmentPeriode, sykdomsvurdering, studentVurdering ->
                     if (studentVurdering != null && studentVurdering.erOppfylt()) return@outerJoin UKJENT
 
-                    if (!Sykdomsvurdering.erFørsteVurdering(kontekst.rettighetsperiode.fom, segmentPeriode)) {
+                    val erIkkeFørsteSykdomsvurdering =
+                        !Sykdomsvurdering.erFørsteVurdering(kontekst.rettighetsperiode.fom, segmentPeriode)
+
+                    val harTidligereInnvilgetSykdomsvurdering by lazy {
+                        sykdomstidslinje
+                            .begrensetTil(Periode(Tid.MIN, segmentPeriode.fom.minusDays(1)))
+                            .segmenter()
+                            .any { it.verdi.erOppfyltForYrkesskadeSettBortIfraÅrsakssammenhengOgVissVarighet() }
+                    }
+
+                    if (erIkkeFørsteSykdomsvurdering && harTidligereInnvilgetSykdomsvurdering) {
                         return@outerJoin UKJENT
                     }
 
@@ -166,7 +178,7 @@ class TidligereVurderingerImpl(
             Sjekk(StegType.SAMORDNING_AVSLAG) { vilkårsresultat, _ ->
                 ikkeOppfyltFørerTilAvslag(Vilkårtype.SAMORDNING, vilkårsresultat)
             },
-            
+
             Sjekk(StegType.SAMORDNING_SYKESTIPEND) { vilkårsresultat, _ ->
                 ikkeOppfyltFørerTilAvslag(Vilkårtype.SAMORDNING_ANNEN_LOVGIVNING, vilkårsresultat)
             },

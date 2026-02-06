@@ -23,6 +23,8 @@ import no.nav.aap.behandlingsflyt.help.assertTidslinje
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.underveis.UnderveisRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
@@ -33,6 +35,7 @@ import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.verdityper.dokument.JournalpostId
+import no.nav.aap.verdityper.dokument.Kanal
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
@@ -44,7 +47,8 @@ import kotlin.reflect.KClass
 
 @ParameterizedClass
 @MethodSource("unleashTestDataSource")
-class YrkesskadeFlytTest(val unleashGateway: KClass<UnleashGateway>) : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
+class YrkesskadeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
+    AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
     @Test
     fun `skal ikke vise avklaringsbehov for yrkesskade ved avslag i tidligere steg`() {
         val personMedYrkesskade = TestPersoner.PERSON_MED_YRKESSKADE()
@@ -690,4 +694,113 @@ class YrkesskadeFlytTest(val unleashGateway: KClass<UnleashGateway>) : AbstraktF
                 assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
             }
     }
+
+    @Test
+    fun `førstegangsbehandling yrkesskade under grense, etterfulgt av revurdering med avslag`() {
+        val fom = LocalDate.now().minusMonths(6)
+        val periode = Periode(fom, fom.plusYears(3))
+
+        val person = TestPersoner.PERSON_MED_YRKESSKADE()
+
+        var (sak, behandling) = sendInnFørsteSøknad(
+            person = person,
+            mottattTidspunkt = fom.atStartOfDay(),
+            periode = periode,
+        )
+
+        val alleAvklaringsbehov = hentAlleAvklaringsbehov(behandling)
+        assertThat(alleAvklaringsbehov).isNotEmpty()
+        assertThat(behandling.status()).isEqualTo(Status.UTREDES)
+
+        behandling = løsAvklaringsBehov(
+            behandling,
+            AvklarSykdomLøsning(
+                løsningerForPerioder = listOf(
+                    SykdomsvurderingLøsningDto(
+                        begrunnelse = "Er ikke syk nok",
+                        dokumenterBruktIVurdering = listOf(JournalpostId("1231299")),
+                        harSkadeSykdomEllerLyte = true,
+                        erArbeidsevnenNedsatt = true,
+                        erSkadeSykdomEllerLyteVesentligdel = null,
+                        erNedsettelseIArbeidsevneAvEnVissVarighet = null,
+                        erNedsettelseIArbeidsevneMerEnnHalvparten = false,
+                        erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = false,
+                        yrkesskadeBegrunnelse = "Skade under grense for yrkesskade",
+                        fom = periode.fom,
+                        tom = null
+                    )
+                )
+            ),
+        )
+            .løsSykdomsvurderingBrev()
+            .kvalitetssikreOk()
+            .medKontekst {
+                // Saken står til To-trinnskontroll hos beslutter
+                assertThat(åpneAvklaringsbehov.map { it.definisjon }).containsOnly(Definisjon.FATTE_VEDTAK)
+                assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
+            }
+            .fattVedtak()
+            .medKontekst {
+                assertThat(this.behandling.status()).isEqualTo(Status.IVERKSETTES)
+            }
+
+        val vedtak = hentVedtak(behandling.id)
+        assertThat(vedtak.vedtakstidspunkt.toLocalDate()).isToday
+
+        // Revurdering opprettes fra ny legeerklæring
+        sak.sendInn(
+            referanse = InnsendingReferanse(JournalpostId("1231299")),
+            type = InnsendingType.LEGEERKLÆRING,
+            kanal = Kanal.DIGITAL,
+            mottattTidspunkt = LocalDateTime.now(),
+            melding = null
+        )
+        val revurdering = hentSisteOpprettedeBehandlingForSak(sak.id)
+
+        revurdering
+            .medKontekst { assertThat(this.behandling.id).isNotEqualTo(behandling.id) }
+            .løsAvklaringsBehov(
+                AvklarSykdomLøsning(
+                    løsningerForPerioder = listOf(
+                        SykdomsvurderingLøsningDto(
+                            begrunnelse = "Er ikke syk nok",
+                            dokumenterBruktIVurdering = listOf(JournalpostId("1231299")),
+                            harSkadeSykdomEllerLyte = false, // person er ikke lenger syk
+                            erArbeidsevnenNedsatt = null,
+                            erSkadeSykdomEllerLyteVesentligdel = null,
+                            erNedsettelseIArbeidsevneAvEnVissVarighet = null,
+                            erNedsettelseIArbeidsevneMerEnnHalvparten = null,
+                            erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
+                            yrkesskadeBegrunnelse = null,
+                            fom = LocalDateTime.now().minusDays(5).toLocalDate(),
+                            tom = null
+                        )
+                    )
+                )
+            )
+            .løsSykdomsvurderingBrev()
+            .medKontekst {
+                assertThat(åpneAvklaringsbehov)
+                    .extracting<Definisjon> { it.definisjon }
+                    .doesNotContainAnyElementsOf(
+                        listOf(
+                            Definisjon.AVKLAR_YRKESSKADE,
+                            Definisjon.FASTSETT_YRKESSKADEINNTEKT
+                        )
+                    )
+            }
+            .medKontekst {
+                // Saken står til To-trinnskontroll hos beslutter
+                assertThat(åpneAvklaringsbehov.map { it.definisjon }).containsOnly(Definisjon.FATTE_VEDTAK)
+                assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
+            }
+            .fattVedtak()
+            .medKontekst {
+                assertThat(this.behandling.status()).isEqualTo(Status.IVERKSETTES)
+            }
+
+        val revurderingVedtak = hentVedtak(revurdering.id)
+        assertThat(revurderingVedtak.vedtakstidspunkt.toLocalDate()).isToday
+    }
+
 }
