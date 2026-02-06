@@ -56,7 +56,7 @@ class SjekkInstitusjonsOppholdJobbUtfører(
 
                     if (sisteYtelsesBehandling != null) {
                         val sak = sakRepository.hent(sak.id)
-                        log.info("Gjeldende behandling for sak $sak.id (${sak.saksnummer}) er ${sisteYtelsesBehandling.id}")
+                        log.info("Gjeldende behandling for sak ${sak.id} (${sak.saksnummer}) er ${sisteYtelsesBehandling.id}")
                         if (erKandidatForVurderingAvInstitusjonsopphold(sisteYtelsesBehandling.id)) {
                             val vurderingsbehovOgÅrsaker =
                                 behandlingRepository.hentVurderingsbehovOgÅrsaker(sisteYtelsesBehandling.id)
