@@ -3,23 +3,33 @@ package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarHelseinstitusjonLøsning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjon
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.HelseinstitusjonVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.flate.HelseinstitusjonVurderingDto
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.utils.Validation
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.tidslinje.Segment
+import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
+import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 class AvklarHelseinstitusjonLøser(
     private val helseinstitusjonRepository: InstitusjonsoppholdRepository,
+    private val behandlingRepository: BehandlingRepository
 ) : AvklaringsbehovsLøser<AvklarHelseinstitusjonLøsning> {
 
     constructor(repositoryProvider: RepositoryProvider) : this(
         helseinstitusjonRepository = repositoryProvider.provide(),
+        behandlingRepository = repositoryProvider.provide(),
     )
 
     override fun løs(
@@ -28,6 +38,8 @@ class AvklarHelseinstitusjonLøser(
     ): LøsningsResultat {
         val grunnlag = helseinstitusjonRepository.hentHvisEksisterer(kontekst.kontekst.behandlingId)
         val oppholdSegmenter = grunnlag?.oppholdene?.opphold ?: emptyList()
+        val behandling = behandlingRepository.hent(kontekst.behandlingId())
+        val vurdertAv = kontekst.bruker.ident
 
         validerReduksjonsdatoForInstitusjonsopphold(
             oppholdSegmenter,
@@ -36,25 +48,83 @@ class AvklarHelseinstitusjonLøser(
             UgyldigForespørselException(it.errorMessage)
         }
 
-        val vurderingsSegmenter = løsning.helseinstitusjonVurdering.vurderinger
-            .sortedBy { it.periode }
+        val vedtatteVurderinger =
+            behandling.forrigeBehandlingId?.let { helseinstitusjonRepository.hentHvisEksisterer(it) }
+
+        val oppdaterteVurderinger =
+            slåSammenMedNyeVurderinger(
+                vedtatteVurderinger,
+                løsning.helseinstitusjonVurdering.vurderinger,
+                behandling,
+                vurdertAv
+            )
+
+        helseinstitusjonRepository.lagreHelseVurdering(
+            kontekst.kontekst.behandlingId,
+            vurdertAv,
+            oppdaterteVurderinger
+        )
+
+        return LøsningsResultat(løsning.helseinstitusjonVurdering.vurderinger.joinToString(" ") { it.begrunnelse })
+    }
+
+    private fun slåSammenMedNyeVurderinger(
+        grunnlag: InstitusjonsoppholdGrunnlag?,
+        nyeVurderinger: List<HelseinstitusjonVurderingDto>,
+        behandling: Behandling,
+        vurdertAv: String,
+    ): List<HelseinstitusjonVurdering> {
+        val eksisterendeTidslinje = byggTidslinjeForHelseoppholdvurderinger(grunnlag)
+
+        val nyeVurderingerTidslinje = Tidslinje(nyeVurderinger.sortedBy { it.periode }
             .map {
-                HelseinstitusjonVurdering(
+                Segment(
+                    it.periode,
+                    HelseoppholdVurderingData(
+                        begrunnelse = it.begrunnelse,
+                        faarFriKostOgLosji = it.faarFriKostOgLosji,
+                        forsoergerEktefelle = it.forsoergerEktefelle,
+                        harFasteUtgifter = it.harFasteUtgifter,
+                        vurdertIBehandling = behandling.id,
+                        vurdertAv = vurdertAv,
+                        vurdertTidspunkt = LocalDateTime.now()
+                    )
+                )
+            }).komprimer()
+
+        return eksisterendeTidslinje.kombiner(
+            nyeVurderingerTidslinje,
+            StandardSammenslåere.prioriterHøyreSideCrossJoin()
+        ).segmenter().map {
+            HelseinstitusjonVurdering(
+                begrunnelse = it.verdi.begrunnelse,
+                faarFriKostOgLosji = it.verdi.faarFriKostOgLosji,
+                forsoergerEktefelle = it.verdi.forsoergerEktefelle,
+                harFasteUtgifter = it.verdi.harFasteUtgifter,
+                periode = it.periode,
+                vurdertIBehandling = it.verdi.vurdertIBehandling,
+                vurdertAv = vurdertAv,
+                vurdertTidspunkt = it.verdi.vurdertTidspunkt
+            )
+        }
+    }
+
+    private fun byggTidslinjeForHelseoppholdvurderinger(grunnlag: InstitusjonsoppholdGrunnlag?): Tidslinje<HelseoppholdVurderingData> {
+        if (grunnlag == null) {
+            return Tidslinje()
+        }
+        return grunnlag.helseoppholdvurderinger?.tilTidslinje()
+            ?.mapValue {
+                HelseoppholdVurderingData(
                     begrunnelse = it.begrunnelse,
                     faarFriKostOgLosji = it.faarFriKostOgLosji,
                     forsoergerEktefelle = it.forsoergerEktefelle,
                     harFasteUtgifter = it.harFasteUtgifter,
-                    periode = it.periode
+                    vurdertIBehandling = it.vurdertIBehandling,
+                    vurdertAv = it.vurdertAv,
+                    vurdertTidspunkt = it.vurdertTidspunkt
                 )
-            }
-
-        helseinstitusjonRepository.lagreHelseVurdering(
-            kontekst.kontekst.behandlingId,
-            kontekst.bruker.ident,
-            vurderingsSegmenter
-        )
-
-        return LøsningsResultat(løsning.helseinstitusjonVurdering.vurderinger.joinToString(" ") { it.begrunnelse })
+            }.orEmpty()
     }
 
     private fun validerReduksjonsdatoForInstitusjonsopphold(
@@ -145,4 +215,14 @@ class AvklarHelseinstitusjonLøser(
     override fun forBehov(): Definisjon {
         return Definisjon.AVKLAR_HELSEINSTITUSJON
     }
+
+    internal data class HelseoppholdVurderingData(
+        val begrunnelse: String,
+        val faarFriKostOgLosji: Boolean,
+        val forsoergerEktefelle: Boolean? = null,
+        val harFasteUtgifter: Boolean? = null,
+        val vurdertIBehandling: BehandlingId,
+        val vurdertAv: String,
+        val vurdertTidspunkt: LocalDateTime
+    )
 }

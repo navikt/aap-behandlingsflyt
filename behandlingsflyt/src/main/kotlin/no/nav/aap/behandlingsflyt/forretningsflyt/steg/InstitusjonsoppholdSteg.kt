@@ -53,7 +53,7 @@ class InstitusjonsoppholdSteg(
                 } else if (vedtatteVurderinger != null && vedtatteVurderinger.vurderinger.toSet() != aktiveVurderinger.toSet()) {
                     institusjonsoppholdRepository.lagreHelseVurdering(
                         kontekst.behandlingId,
-                        vedtatteVurderinger.vurdertAv,
+                        vedtatteVurderinger.vurderinger.firstOrNull()!!.vurdertAv,
                         vedtatteVurderinger.vurderinger
                     )
                 }

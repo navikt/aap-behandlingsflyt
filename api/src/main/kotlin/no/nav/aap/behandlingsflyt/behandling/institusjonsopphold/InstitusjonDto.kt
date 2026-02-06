@@ -42,8 +42,7 @@ data class HelseinstitusjonGrunnlagDto(
     val harTilgangTilÅSaksbehandle: Boolean,
     val opphold: List<InstitusjonsoppholdDto>,
     val vurderinger: List<HelseoppholdDto>,
-    val vedtatteVurderinger: List<HelseoppholdDto>,
-    val vurdertAv: VurdertAvResponse?
+    val vedtatteVurderinger: List<HelseoppholdDto>
 )
 
 data class HelseoppholdDto(
@@ -59,6 +58,7 @@ data class HelseinstitusjonVurderingDto(
     val forsoergerEktefelle: Boolean? = null,
     val harFasteUtgifter: Boolean? = null,
     val periode: Periode,
+    val vurdertAv: VurdertAvResponse?
 )
 
 data class SoningsGrunnlagDto(
