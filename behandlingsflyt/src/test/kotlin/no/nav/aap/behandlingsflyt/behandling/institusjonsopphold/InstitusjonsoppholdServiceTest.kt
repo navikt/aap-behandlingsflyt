@@ -9,16 +9,19 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.Helsei
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.Soningsvurdering
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.barnetillegg.BarnetilleggRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdRepositoryImpl
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.test.MockConnection
 import no.nav.aap.behandlingsflyt.test.februar
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
+import no.nav.aap.behandlingsflyt.test.juni
 import no.nav.aap.behandlingsflyt.test.mai
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
+import java.time.LocalDateTime
 import kotlin.test.Ignore
 
 internal class InstitusjonsoppholdServiceTest {
@@ -82,7 +85,10 @@ internal class InstitusjonsoppholdServiceTest {
                     begrunnelse = "lagt inn med kost og losji",
                     faarFriKostOgLosji = true,
                     forsoergerEktefelle = false,
-                    harFasteUtgifter = false
+                    harFasteUtgifter = false,
+                    vurdertIBehandling = BehandlingId(1L),
+                    vurdertAv = "ident",
+                    vurdertTidspunkt = (25 juni 2024).atStartOfDay()
                 )
             ),
             rettighetsperiode = Periode(27 februar 2023, 31 mai 2025)
@@ -292,7 +298,11 @@ internal class InstitusjonsoppholdServiceTest {
                     begrunnelse = "lagt inn med kost og losji",
                     faarFriKostOgLosji = true,
                     forsoergerEktefelle = false,
-                    harFasteUtgifter = false
+                    harFasteUtgifter = false,
+                    vurdertIBehandling = BehandlingId(1L),
+                    vurdertAv = "ident",
+                    vurdertTidspunkt = (25 juni 2025).atStartOfDay()
+
                 )
             ),
             rettighetsperiode = Periode(LocalDate.now().minusYears(1), LocalDate.now().plusYears(2))
@@ -331,7 +341,10 @@ internal class InstitusjonsoppholdServiceTest {
                     begrunnelse = "vurder",
                     faarFriKostOgLosji = false,
                     forsoergerEktefelle = true,
-                    harFasteUtgifter = true
+                    harFasteUtgifter = true,
+                    vurdertIBehandling = BehandlingId(1L),
+                    vurdertAv = "ident",
+                    vurdertTidspunkt = LocalDateTime.now().minusMonths(7)
                 )
             ),
             rettighetsperiode = rettighetsperiode
@@ -402,7 +415,10 @@ internal class InstitusjonsoppholdServiceTest {
                     begrunnelse = "vurder",
                     faarFriKostOgLosji = false,
                     forsoergerEktefelle = true,
-                    harFasteUtgifter = true
+                    harFasteUtgifter = true,
+                    vurdertIBehandling = BehandlingId(1L),
+                    vurdertAv = "ident",
+                    vurdertTidspunkt = LocalDateTime.now().plusMonths(1)
                 )
             ),
             rettighetsperiode = rettighetsperiode
