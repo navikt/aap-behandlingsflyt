@@ -68,7 +68,7 @@ class OpprettJobbUtvidVedtakslengdeJobbUtførerTest {
         val jobbInputSak = JobbInput(OpprettBehandlingUtvidVedtakslengdeJobbUtfører).forSak(sakId.id)
 
         every { vedtakslengdeService.hentSakerAktuelleForUtvidelseAvVedtakslengde(any()) } returns setOf(sakId)
-        every { vedtakslengdeService.skalUtvideVedtakslengde(behandlingId, behandlingId, any<LocalDate>())} returns true
+        every { vedtakslengdeService.skalUtvideSluttdato(behandlingId, behandlingId, any<LocalDate>())} returns true
         every { sakOgBehandlingService.finnBehandlingMedSisteFattedeVedtak(sakId) } returns behandlingMedVedtak()
         every { flytJobbRepository.leggTil(match { it.sakId() == sakId.id }) } just Runs
 

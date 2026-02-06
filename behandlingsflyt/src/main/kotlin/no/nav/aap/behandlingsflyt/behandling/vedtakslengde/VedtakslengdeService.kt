@@ -2,8 +2,8 @@ package no.nav.aap.behandlingsflyt.behandling.vedtakslengde
 
 import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.behandling.rettighetstype.KvoteOk
-import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.VirkningstidspunktUtleder
 import no.nav.aap.behandlingsflyt.behandling.rettighetstype.vurderRettighetstypeOgKvoter
+import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.VirkningstidspunktUtleder
 import no.nav.aap.behandlingsflyt.behandling.underveis.KvoteService
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Avslag
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companion.plussEtÅrMedHverdager
@@ -47,7 +47,7 @@ class VedtakslengdeService(
         return underveisRepository.hentSakerMedSisteUnderveisperiodeFørDato(datoForUtvidelse)
     }
 
-    fun skalUtvideVedtakslengde(
+    fun skalUtvideSluttdato(
         behandlingId: BehandlingId,
         forrigeBehandlingId: BehandlingId?,
         datoForUtvidelse: LocalDate = LocalDate.now(clock).plusDays(28)
@@ -56,12 +56,15 @@ class VedtakslengdeService(
         val sisteVedtatteUnderveisperiode = vedtattUnderveis?.perioder?.maxByOrNull { it.periode.tom }
 
         if (sisteVedtatteUnderveisperiode != null) {
-            val forrigeSluttdato = sisteVedtatteUnderveisperiode.periode.tom
+            val forrigeSluttdatoUnderveis = sisteVedtatteUnderveisperiode.periode.tom
             val forrigeVedtakslengdeVurdering = vedtakslengdeRepository.hentHvisEksisterer(forrigeBehandlingId)?.vurdering
-            val harFremtidigRettOrdinær = harFremtidigRettOrdinær(forrigeSluttdato, forrigeVedtakslengdeVurdering, behandlingId)
+            val vedtattSluttdato = forrigeVedtakslengdeVurdering?.sluttdato ?: forrigeSluttdatoUnderveis
+            val utvidetSluttdato = vedtattSluttdato.plussEtÅrMedHverdager(hentNesteUtvidelse(forrigeVedtakslengdeVurdering))
 
-            log.info("Behandling $behandlingId har harFremtidigRettOrdinær=$harFremtidigRettOrdinær og forrigeSluttdato=${forrigeVedtakslengdeVurdering?.sluttdato ?: forrigeSluttdato}")
-            return datoForUtvidelse >= forrigeSluttdato && harFremtidigRettOrdinær
+            val harFremtidigRettOrdinær = harFremtidigRettOrdinær(vedtattSluttdato, utvidetSluttdato, behandlingId)
+            log.info("Behandling $behandlingId har harFremtidigRettOrdinær=$harFremtidigRettOrdinær og forrigeSluttdato=${vedtattSluttdato}")
+
+            return datoForUtvidelse >= vedtattSluttdato && harFremtidigRettOrdinær
         } else {
             log.info("Behandling $behandlingId har ingen vedtatte underveisperioder")
         }
@@ -159,13 +162,10 @@ class VedtakslengdeService(
      */
     private fun harFremtidigRettOrdinær(
         vedtattSluttdato: LocalDate,
-        forrigeVedtakslengdeVurdering: VedtakslengdeVurdering?,
+        utvidetSluttdato: LocalDate,
         behandlingId: BehandlingId,
     ): Boolean {
-        val gjeldendeSluttdato = forrigeVedtakslengdeVurdering?.sluttdato ?: vedtattSluttdato
-        val utvidetSluttdato = gjeldendeSluttdato.plussEtÅrMedHverdager(hentNesteUtvidelse(forrigeVedtakslengdeVurdering))
-
-        val nyUtvidetVedtaksperiode = Periode(gjeldendeSluttdato.plusDays(1), utvidetSluttdato)
+        val nyUtvidetVedtaksperiode = Periode(vedtattSluttdato.plusDays(1), utvidetSluttdato)
         val nyUtvidetVedtaksperiodeTidslinje = Tidslinje(nyUtvidetVedtaksperiode, true)
 
         if (unleashGateway.isEnabled(BehandlingsflytFeature.ForenkletKvote)) {
