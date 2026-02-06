@@ -26,6 +26,7 @@ import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.test.FakeUnleashBaseWithDefaultDisabled
 import no.nav.aap.behandlingsflyt.test.LokalUnleash
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.utils.toHumanReadable
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.type.Periode
@@ -105,13 +106,13 @@ class OvergangUføreFlytTest: AbstraktFlytOrkestratorTest(OvergangArbeidEnabledU
             )
             .assertThrows(
                 UgyldigForespørselException::class,
-                "Løsning mangler vurdering for perioder: ${
+                "Du mangler vurdering for ${
                     listOf(
                         Periode(
                             periode.fom,
                             virkningsdatoFørsteLøsningOvertgangUføre.minusDays(1)
                         )
-                    )
+                    ).toHumanReadable()
                 }"
             ) { behandling ->
                 behandling.løsAvklaringsBehov(

@@ -1,14 +1,10 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap
 
-import no.nav.aap.behandlingsflyt.help.FakePdlGateway
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
+import no.nav.aap.behandlingsflyt.help.opprettSak
 import no.nav.aap.behandlingsflyt.help.sak
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.medlemsskap.MedlemskapRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
-import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.tidslinje.Segment
@@ -41,12 +37,8 @@ internal class MedlemskapRepositoryTest {
     fun `lagre og hente inn unntak`() {
         // SETUP
         val (sak, behandling) = dataSource.transaction {
-            val sak = PersonOgSakService(
-                FakePdlGateway,
-                PersonRepositoryImpl(it),
-                SakRepositoryImpl(it)
-            ).finnEllerOpprett(
-                ident(),
+            val sak = opprettSak(
+                it,
                 Periode(fom = LocalDate.now().minusYears(2), tom = LocalDate.now())
             )
             val behandling = finnEllerOpprettBehandling(it, sak)

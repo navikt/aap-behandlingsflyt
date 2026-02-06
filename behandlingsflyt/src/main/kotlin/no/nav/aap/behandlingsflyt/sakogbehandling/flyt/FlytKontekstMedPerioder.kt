@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.sakogbehandling.flyt
 
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.type.Periode
 
@@ -16,9 +17,14 @@ data class FlytKontekstMedPerioder(
     val behandlingType: TypeBehandling,
     val vurderingType: VurderingType,
     val rettighetsperiode: Periode,
-    val vurderingsbehovRelevanteForSteg: Set<Vurderingsbehov>
+    val vurderingsbehovRelevanteForStegMedPerioder: Set<VurderingsbehovMedPeriode>
 ) {
-    
+
+    val vurderingsbehovRelevanteForSteg: Set<Vurderingsbehov>
+        get() {
+            return vurderingsbehovRelevanteForStegMedPerioder.map { it.type }.toSet()
+        }
+
     fun harNoeTilBehandling(): Boolean {
         return vurderingType != VurderingType.IKKE_RELEVANT
     }

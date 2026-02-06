@@ -27,6 +27,8 @@ import no.nav.aap.behandlingsflyt.datadeling.sam.HentSamIdResponse
 import no.nav.aap.behandlingsflyt.datadeling.sam.SamordneVedtakRequest
 import no.nav.aap.behandlingsflyt.datadeling.sam.SamordneVedtakRespons
 import no.nav.aap.behandlingsflyt.datadeling.sam.SamordningsmeldingApi
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.gateway.DagpengerKilde
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.gateway.DagpengerYtelseType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.gateway.TjenestePensjonRespons
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.Anvist
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.ForeldrepengerRequest
@@ -138,6 +140,7 @@ import java.time.format.DateTimeFormatter
 import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
+import kotlin.collections.emptyList
 
 object FakeServers : AutoCloseable {
     private val log = LoggerFactory.getLogger(javaClass)
@@ -170,6 +173,7 @@ object FakeServers : AutoCloseable {
     private val sam = embeddedServer(Netty, port = 0, module = { sam() })
     private val gosys = embeddedServer(Netty, port = 0, module = { gosysFake() })
     private val leaderElector = embeddedServer(Netty, port = 0, module = { leaderElectorFake() })
+    private val dagpenger = embeddedServer(Netty, port = 0, module = { dagpengerFake() })
 
     internal val statistikkHendelser = mutableListOf<StoppetBehandling>()
     internal val legeerklæringStatuser = mutableListOf<LegeerklæringStatusResponse>()
@@ -340,6 +344,59 @@ object FakeServers : AutoCloseable {
                             success = true
                         )
                     )
+                }
+            }
+        }
+    }
+
+    private fun Application.dagpengerFake() {
+        data class DagpengerRequest(
+            val personIdent: String,
+            val fraOgMedDato: String,
+            val tilOgMedDato: String
+        )
+
+        data class DagpengerPeriodeResponse(
+            val fraOgMedDato: LocalDate,
+            val tilOgMedDato: LocalDate,
+            val kilde: DagpengerKilde,
+            val ytelseType: DagpengerYtelseType
+        )
+
+        data class DagpengerResponse(
+            val personIdent: String,
+            val perioder: List<DagpengerPeriodeResponse>
+        )
+
+        installerContentNegotiation()
+        routing {
+            route("/dagpenger/datadeling/v1/perioder") {
+                post {
+                    val body = call.receive<DagpengerRequest>()
+                    val hentPerson = fakePersoner.hentPerson(body.personIdent)
+                    val dagpenger = hentPerson?.dagpenger
+                    if (hentPerson != null && dagpenger != null) {
+                        call.respond(DagpengerResponse(
+                            personIdent = body.personIdent,
+                            perioder = dagpenger.map { dp ->
+                            DagpengerPeriodeResponse(
+                                fraOgMedDato = dp.periode.fom,
+                                tilOgMedDato = dp.periode.tom,
+                                kilde = dp.kilde,
+                                ytelseType = dp.dagpengerYtelseType
+                            )
+                            }.toList()
+                        ))
+                        return@post
+                    }
+
+                    call.respond(
+                        DagpengerResponse(
+                            perioder = emptyList(),
+                            personIdent = body.personIdent
+                        )
+                    )
+
                 }
             }
         }
@@ -1937,6 +1994,7 @@ object FakeServers : AutoCloseable {
         norg.start()
         kabal.start()
         ereg.start()
+        dagpenger.start()
         gosys.start()
         leaderElector.start()
 
@@ -2013,6 +2071,10 @@ object FakeServers : AutoCloseable {
         // Dokumentinnhenting
         System.setProperty("integrasjon.dokumentinnhenting.url", "http://localhost:${dokumentinnhenting.port()}")
         System.setProperty("integrasjon.dokumentinnhenting.scope", "scope")
+
+        // Dagpenger
+        System.setProperty("integrasjon.dagpenger.url", "http://localhost:${dagpenger.port()}")
+        System.setProperty("integrasjon.dagpenger.scope", "scope")
 
         // AAregisteret
         System.setProperty("integrasjon.aareg.url", "http://localhost:${aareg.port()}")
@@ -2110,6 +2172,7 @@ object FakeServers : AutoCloseable {
         norg.stop(0L, 0L)
         kabal.stop(0L, 0L)
         ereg.stop(0L, 0L)
+        dagpenger.stop(0L, 0L)
         leaderElector.stop(0L, 0L)
     }
 }

@@ -44,27 +44,11 @@ class KvalitetssikrerLøser(
         )
 
         if (skalSendesTilbake(relevanteVurderinger)) {
-            val flyt = behandling.flyt()
             val vurderingerSomErSendtTilbake = relevanteVurderinger
                 .filter { it.godkjent == false }
 
-            val tidligsteStegMedRetur = vurderingerSomErSendtTilbake
-                .map { Definisjon.forKode(it.definisjon) }
-                .map { it.løsesISteg }
-                .minWith(flyt.stegComparator)
-
-            val vurderingerFørRetur = if (unleashGateway.isEnabled(BehandlingsflytFeature.KvalitetssikringsSteg)) {
-                relevanteVurderinger.filter { it.godkjent == true }
-            } else {
-                relevanteVurderinger
-                    .filter { it.godkjent == true }
-                    .filter {
-                        flyt.erStegFør(
-                            Definisjon.forKode(it.definisjon).løsesISteg,
-                            tidligsteStegMedRetur
-                        )
-                    }
-            }
+            val vurderingerFørRetur = relevanteVurderinger
+                .filter { it.godkjent == true }
 
             val vurderingerSomMåReåpnes = relevanteVurderinger
                 .filter { vurdering ->

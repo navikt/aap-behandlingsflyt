@@ -1349,17 +1349,18 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
 
     protected fun Behandling.medKontekst(block: BehandlingInfo.() -> Unit): Behandling {
         val åpneAvklaringsbehov = hentÅpneAvklaringsbehov(this)
+        val oppdatertBehandling = hentBehandling(this.referanse)
         dataSource.transaction { connection ->
             block(
                 BehandlingInfo(
                     åpneAvklaringsbehov = åpneAvklaringsbehov,
-                    behandling = this,
+                    behandling = oppdatertBehandling,
                     ventebehov = åpneAvklaringsbehov.filter { it.erVentepunkt() },
                     repositoryProvider = postgresRepositoryRegistry.provider(connection)
                 )
             )
         }
-        return this
+        return oppdatertBehandling
     }
 
     protected fun nyPerson(
