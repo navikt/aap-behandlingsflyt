@@ -45,7 +45,7 @@ class InstitusjonsOppholdKafkaKonsument(
 
     fun håndter(melding: ConsumerRecord<String, InstitusjonsOppholdHendelseKafkaMelding>) {
         log.info(
-            "Behandler institusjonsopphold-record med id: ${melding.key()}, partition ${melding.partition()}, offset: ${melding.offset()}, topic: ${topic}"
+            "Behandler institusjonsopphold-record med id: ${melding.key()}, partition ${melding.partition()}, offset: ${melding.offset()}, topic: $topic"
         )
         val meldingKey = "${melding.partition()}-${melding.offset()}"
         håndter(meldingKey, melding.value())
@@ -59,7 +59,7 @@ class InstitusjonsOppholdKafkaKonsument(
             val hendelseService =
                 MottattHendelseService(repositoryProvider)
             val person = personRepository.finn(Ident(meldingVerdi.norskident))
-            secureLogger.info("Prøver å finne person for ${meldingVerdi.norskident} ${person}")
+            secureLogger.info("Prøver å finne person for ${meldingVerdi.norskident} $person")
             if (person != null) {
 
                 val saker = sakRepository.finnSakerFor(person)
