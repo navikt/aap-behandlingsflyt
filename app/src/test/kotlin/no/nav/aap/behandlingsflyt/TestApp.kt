@@ -229,7 +229,7 @@ private fun mapTilSøknad(dto: OpprettTestcaseDTO, urelaterteBarn: List<TestPers
             identer = emptySet()
         )
     } else {
-        log.info("Oppretter ikke oppgitte barn siden det ikke er noen urelatert barn i testcase")
+        log.info("Oppretter ikke oppgitte barn siden det ikke er noen urelaterte barn i testcase")
         null
     }
     val harMedlemskap = if (dto.medlemskap) "JA" else "NEI"

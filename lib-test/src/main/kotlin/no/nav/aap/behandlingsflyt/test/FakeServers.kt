@@ -187,8 +187,7 @@ object FakeServers : AutoCloseable {
         install(StatusPages) {
             exception<Throwable> { call, cause ->
                 this@oppgavestyringFake.log.info(
-                    "Inntekt :: Ukjent feil ved kall til '{}'",
-                    call.request.local.uri,
+                    "Inntekt :: Ukjent feil ved kall til '${call.request.local.uri}'",
                     cause
                 )
                 call.respond(
@@ -203,7 +202,7 @@ object FakeServers : AutoCloseable {
                 val åpneBehov = received.avklaringsbehov.filter { it.status.erÅpent() }
                     .map { Pair(it.avklaringsbehovDefinisjon.name, it.status) }
                 FakeServers.log.info("Åpne behov $åpneBehov")
-                FakeServers.log.info("Fikk oppgave-oppdatering: {}", received)
+                FakeServers.log.info("Fikk oppgave-oppdatering: ${received}")
                 call.respond(HttpStatusCode.NoContent)
             }
         }
@@ -213,7 +212,7 @@ object FakeServers : AutoCloseable {
         installerContentNegotiation()
         install(StatusPages) {
             exception<Throwable> { call, cause ->
-                this@pesysFake.log.info("Inntekt :: Ukjent feil ved kall til '{}'", call.request.local.uri, cause)
+                this@pesysFake.log.info("Inntekt :: Ukjent feil ved kall til '${call.request.local.uri}'", cause)
                 call.respond(
                     status = HttpStatusCode.InternalServerError,
                     message = ErrorRespons(cause.message)
@@ -256,7 +255,7 @@ object FakeServers : AutoCloseable {
 
         install(StatusPages) {
             exception<Throwable> { call, cause ->
-                this@sam.log.info("Inntekt :: Ukjent feil ved kall til '{}'", call.request.local.uri, cause)
+                this@sam.log.info("Inntekt :: Ukjent feil ved kall til '${call.request.local.uri}'", cause)
                 call.respond(
                     status = HttpStatusCode.InternalServerError,
                     message = ErrorRespons(cause.message)
