@@ -5,29 +5,26 @@ import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.sykdom.SykdomsvurderingResponse
+import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
+import no.nav.aap.behandlingsflyt.harTilgangOgKanSaksbehandle
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.tilgang.kanSaksbehandle
+import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
+import no.nav.aap.komponenter.tidslinje.orEmpty
+import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.getGrunnlag
 import javax.sql.DataSource
-import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
-import no.nav.aap.behandlingsflyt.harTilgangOgKanSaksbehandle
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
-import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
-import no.nav.aap.komponenter.tidslinje.orEmpty
-import no.nav.aap.komponenter.type.Periode
-import kotlin.collections.orEmpty
 
 fun NormalOpenAPIRoute.overgangUforeGrunnlagApi(
     dataSource: DataSource, repositoryRegistry: RepositoryRegistry,
@@ -68,14 +65,8 @@ fun NormalOpenAPIRoute.overgangUforeGrunnlagApi(
                     val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
                     val avklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_OVERGANG_UFORE)
 
-                    val unleashGateway = gatewayProvider.provide<UnleashGateway>()
-
                     OvergangUføreGrunnlagResponse(
-                        harTilgangTilÅSaksbehandle = if (unleashGateway.isEnabled(BehandlingsflytFeature.KvalitetssikringsSteg)) {
-                            harTilgangOgKanSaksbehandle(kanSaksbehandle(), avklaringsbehovene)
-                        } else {
-                            kanSaksbehandle()
-                        },
+                        harTilgangTilÅSaksbehandle = harTilgangOgKanSaksbehandle(kanSaksbehandle(), avklaringsbehovene),
                         vurdering = nyesteVurdering, // TODO: Fjern
                         nyeVurderinger = nyeVurderinger,
                         // TODO: Fjern

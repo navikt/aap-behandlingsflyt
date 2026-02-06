@@ -1,11 +1,14 @@
 package no.nav.aap.behandlingsflyt.flyt
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.vedtak.TotrinnsVurdering
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FatteVedtakLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.ForeslåVedtakLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.KvalitetssikringLøsning
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
@@ -298,7 +301,7 @@ class KvalitetssikringFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash
     }
 
     @Test
-    fun `Beslutter underkjenner VURDER_RETTIGHETSPERIODE, ingen ny kvalitetssikring, beslutter fatter vedtak`() {
+    fun `Beslutter underkjenner kun VURDER_RETTIGHETSPERIODE, ingen ny kvalitetssikring, beslutter fatter vedtak`() {
         val fom = LocalDate.now().minusMonths(3)
         val periode = Periode(fom, fom.plusYears(3))
 
@@ -331,5 +334,122 @@ class KvalitetssikringFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash
         val åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling)
         assertThat(åpneAvklaringsbehov).hasSize(1)
         assertThat(åpneAvklaringsbehov.first().definisjon).isEqualTo(Definisjon.SKRIV_VEDTAKSBREV)
+    }
+
+    @Test
+    fun `Ny kvalitetssikring skal skje dersom beslutter underkjenner VURDER_RETTIGHETSPERIODE og AVKLAR_SYKDOM`() {
+        val fom = LocalDate.now().minusMonths(3)
+        val periode = Periode(fom, fom.plusYears(3))
+
+        val person = TestPersoner.STANDARD_PERSON()
+
+        val (sak, behandling) = sendInnFørsteSøknad(
+            person = person,
+            periode = periode,
+        )
+
+        sak.opprettManuellRevurdering(vurderingsbehov = Vurderingsbehov.VURDER_RETTIGHETSPERIODE)
+
+        behandling
+            .løsRettighetsperiodeIngenEndring()
+            .løsSykdom(fom)
+            .løsBistand(fom)
+            .løsRefusjonskrav()
+            .løsSykdomsvurderingBrev()
+            .kvalitetssikreOk()
+            .løsBeregningstidspunkt()
+            .løsOppholdskrav(fom)
+            .løsAndreStatligeYtelser()
+            .løsAvklaringsBehov(ForeslåVedtakLøsning())
+
+        løsAvklaringsBehov(
+            behandling,
+            FatteVedtakLøsning(
+                hentAlleAvklaringsbehov(behandling)
+                    .filter { behov -> behov.erTotrinn() }
+                    .map { behov ->
+                        TotrinnsVurdering(
+                            behov.definisjon.kode,
+                            behov.definisjon !in listOf(Definisjon.VURDER_RETTIGHETSPERIODE, Definisjon.AVKLAR_SYKDOM),
+                            "begrunnelse",
+                            emptyList()
+                        )
+                    }),
+            Bruker("BESLUTTER")
+        )
+
+        motor.kjørJobber()
+        behandling.løsRettighetsperiodeIngenEndring()
+            .løsSykdom(fom)
+
+        val stegetsEgetBehov = hentAlleAvklaringsbehov(behandling)
+            .filter { behov -> behov.definisjon == Definisjon.KVALITETSSIKRING }
+        assertThat(stegetsEgetBehov.first().status()).isEqualTo(AvklaringsbehovStatus.OPPRETTET)
+    }
+
+    @Test
+    fun `Ny kvalitetssikring skal skje dersom behandlingen blir dratt tilbake til 22-13 og ny startdato settes`() {
+        if (gatewayProvider.provide<UnleashGateway>().isDisabled(BehandlingsflytFeature.KvalitetssikringVed2213)) {
+            return
+        }
+
+        val fom = LocalDate.now().minusMonths(3)
+        val periode = Periode(fom, fom.plusYears(3))
+
+        val person = TestPersoner.STANDARD_PERSON()
+
+        val (sak, behandling) = sendInnFørsteSøknad(
+            person = person,
+            periode = periode,
+        )
+        behandling
+            .løsSykdom(fom)
+            .løsBistand(fom)
+            .løsRefusjonskrav()
+            .løsSykdomsvurderingBrev()
+            .kvalitetssikreOk()
+
+        val oppdatertBehandling = sak.opprettManuellRevurdering(listOf(Vurderingsbehov.VURDER_RETTIGHETSPERIODE))
+        val nyStartdato = LocalDate.now().minusMonths(5)
+        oppdatertBehandling
+            .løsRettighetsperiode(nyStartdato)
+            .løsSykdom(nyStartdato)
+            .løsBistand(nyStartdato)
+            .løsSykdomsvurderingBrev()
+
+        val stegetsEgetBehov = hentAlleAvklaringsbehov(oppdatertBehandling)
+            .filter { behov -> behov.definisjon == Definisjon.KVALITETSSIKRING }
+        assertThat(stegetsEgetBehov.first().status()).isEqualTo(AvklaringsbehovStatus.OPPRETTET)
+    }
+
+    @Test
+    fun `Ny kvalitetssikring skal IKKE skje dersom behandlingen blir dratt tilbake til 22-13 og ingen ny startdato settes`() {
+        val fom = LocalDate.now().minusMonths(3)
+        val periode = Periode(fom, fom.plusYears(3))
+
+        val person = TestPersoner.STANDARD_PERSON()
+
+        val (sak, behandling) = sendInnFørsteSøknad(
+            person = person,
+            periode = periode,
+        )
+        behandling
+            .løsSykdom(fom)
+            .løsBistand(fom)
+            .løsRefusjonskrav()
+            .løsSykdomsvurderingBrev()
+            .kvalitetssikreOk()
+
+        val oppdatertBehandling = sak.opprettManuellRevurdering(listOf(Vurderingsbehov.VURDER_RETTIGHETSPERIODE))
+        oppdatertBehandling
+            .løsRettighetsperiodeIngenEndring()
+
+        val stegetsEgetBehov = hentAlleAvklaringsbehov(oppdatertBehandling)
+            .filter { behov -> behov.definisjon == Definisjon.KVALITETSSIKRING }
+        assertThat(stegetsEgetBehov.first().status()).isEqualTo(AvklaringsbehovStatus.AVSLUTTET)
+
+        val fastsettBeregningstidspunktBehov = hentAlleAvklaringsbehov(oppdatertBehandling)
+            .filter { behov -> behov.definisjon == Definisjon.FASTSETT_BEREGNINGSTIDSPUNKT }
+        assertThat(fastsettBeregningstidspunktBehov.first().status()).isEqualTo(AvklaringsbehovStatus.OPPRETTET)
     }
 }

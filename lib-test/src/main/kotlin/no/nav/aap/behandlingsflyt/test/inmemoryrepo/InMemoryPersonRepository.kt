@@ -26,6 +26,10 @@ object InMemoryPersonRepository : PersonRepository {
         return personer.values.find { it.identer().contains(ident) }
     }
 
+    override fun finn(identer: List<Ident>): Person? {
+        return personer.values.find { it.identer().intersect(identer).isNotEmpty() }
+    }
+
     override fun slett(behandlingId: BehandlingId) {
     }
 

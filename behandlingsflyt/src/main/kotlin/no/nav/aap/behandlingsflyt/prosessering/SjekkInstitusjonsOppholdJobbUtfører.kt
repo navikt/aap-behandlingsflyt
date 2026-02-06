@@ -56,7 +56,7 @@ class SjekkInstitusjonsOppholdJobbUtfører(
 
                     if (sisteYtelsesBehandling != null) {
                         val sak = sakRepository.hent(sak.id)
-                        log.info("Gjeldende behandling for sak $sak.id (${sak.saksnummer}) er ${sisteYtelsesBehandling.id}")
+                        log.info("Gjeldende behandling for sak ${sak.id} (${sak.saksnummer}) er ${sisteYtelsesBehandling.id}")
                         if (erKandidatForVurderingAvInstitusjonsopphold(sisteYtelsesBehandling.id)) {
                             val vurderingsbehovOgÅrsaker =
                                 behandlingRepository.hentVurderingsbehovOgÅrsaker(sisteYtelsesBehandling.id)
@@ -67,7 +67,7 @@ class SjekkInstitusjonsOppholdJobbUtfører(
                             } else {
                                 val søknadErTrukket = trukketSøknadService.søknadErTrukket(sisteYtelsesBehandling.id)
                                 if (søknadErTrukket) {
-                                    log.info("Institusjonsopphold oppdateres ikke, da sak med $sak.id er trukket")
+                                    log.info("Institusjonsopphold oppdateres ikke, da sak med ${sak.id} er trukket")
                                 } else {
                                     val alleIkkeOppfylt =
                                         underveisgrunnlag
@@ -79,19 +79,19 @@ class SjekkInstitusjonsOppholdJobbUtfører(
                                     } else if (alleIkkeOppfylt) {
                                         log.info("Vurderingsbehov for institusjonsopphold opprettes ikke, da det er avslag overalt")
                                     } else {
-                                        log.info("Fant sak med institusjonsopphold $sak.id")
+                                        log.info("Fant sak med institusjonsopphold ${sak.id}")
                                         val opprettInstitusjonsOppholdBehandling = opprettNyBehandling(sak)
                                         log.info("Opprettet behandling for instopphold for ${opprettInstitusjonsOppholdBehandling.id} og ${opprettInstitusjonsOppholdBehandling.forrigeBehandlingId}")
                                         prosesserBehandlingService.triggProsesserBehandling(
                                             opprettInstitusjonsOppholdBehandling
                                         )
-                                        log.info("Ferdig med å trigge instopphold for $sak.id")
+                                        log.info("Ferdig med å trigge instopphold for ${sak.id}")
                                     }
                                 }
                             }
                         }
                     } else {
-                        log.info("Sak med id $sak.id har ikke behandling, hopper over")
+                        log.info("Sak med id ${sak.id} har ikke behandling, hopper over")
                     }
 
                 }
@@ -105,7 +105,7 @@ class SjekkInstitusjonsOppholdJobbUtfører(
 
         val grunnlag = institusjonsOppholdRepository.hentHvisEksisterer(behandlingId)
         grunnlag?.oppholdene?.opphold?.forEach { opphold ->
-            if (tomErInnenTreMaaneder(opphold.periode)) {
+            if (tomErIFremtidenOgInnenTreMaaneder(opphold.periode)) {
                 log.info("For behandlingsid $behandlingId er oppholdene true")
                 return true
             }
@@ -114,8 +114,8 @@ class SjekkInstitusjonsOppholdJobbUtfører(
         return false
     }
 
-    private fun tomErInnenTreMaaneder(periode: Periode): Boolean {
-        return periode.tom.isBefore(LocalDate.now().withDayOfMonth(1).plusMonths(4))
+    private fun tomErIFremtidenOgInnenTreMaaneder(periode: Periode): Boolean {
+        return periode.tom.isBefore(LocalDate.now().withDayOfMonth(1).plusMonths(4)) && periode.tom.isAfter(LocalDate.now())
     }
 
     private fun opprettNyBehandling(sak: Sak): Behandling =

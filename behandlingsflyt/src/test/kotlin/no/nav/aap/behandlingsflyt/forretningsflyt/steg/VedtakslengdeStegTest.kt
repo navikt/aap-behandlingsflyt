@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Kvote
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus
+import no.nav.aap.behandlingsflyt.behandling.vedtakslengde.VedtakslengdeService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Faktagrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.ArbeidsGradering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
@@ -13,6 +14,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
+import no.nav.aap.behandlingsflyt.flyt.VedtakslengdeUnleash
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.periodisering.FlytKontekstMedPeriodeService
@@ -30,6 +32,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.test.desember
+import no.nav.aap.behandlingsflyt.test.fixedClock
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryUnderveisRepository
@@ -46,11 +49,8 @@ import no.nav.aap.komponenter.verdityper.TimerArbeid
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
-import java.time.Clock
 import java.time.LocalDate
-import java.time.ZoneId
-import java.util.Random
-import java.util.UUID
+import java.util.*
 
 class VedtakslengdeStegTest {
     private val random = Random(1235123)
@@ -112,14 +112,16 @@ class VedtakslengdeStegTest {
                 )
 
         val dagensDato = 10 desember 2020
-        
-        val zone = ZoneId.of("Europe/Oslo")
+
         val steg = VedtakslengdeSteg(
-            underveisRepository = InMemoryUnderveisRepository,
-            vilkårsresultatRepository = InMemoryVilkårsresultatRepository,
-            vedtakslengdeRepository = vedtakslengdeRepository,
+            vedtakslengdeService = VedtakslengdeService(
+                vedtakslengdeRepository = InMemoryVedtakslengdeRepository,
+                underveisRepository = InMemoryUnderveisRepository,
+                vilkårsresultatRepository = InMemoryVilkårsresultatRepository,
+                clock = fixedClock(dagensDato),
+                unleashGateway = AlleAvskruddUnleash
+            ),
             unleashGateway = AlleAvskruddUnleash,
-            clock = Clock.fixed(dagensDato.atStartOfDay().atZone(zone).toInstant(), zone)
         )
 
         steg.utfør(kontekst)

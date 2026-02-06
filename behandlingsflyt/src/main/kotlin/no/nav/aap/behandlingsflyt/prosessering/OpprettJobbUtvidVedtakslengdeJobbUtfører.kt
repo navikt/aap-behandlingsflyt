@@ -62,7 +62,8 @@ class OpprettJobbUtvidVedtakslengdeJobbUtfører(
     private fun kunSakerMedBehovForUtvidelseAvVedtakslengde(id: SakId, dato: LocalDate): Boolean {
         val sisteGjeldendeBehandling = sakOgBehandlingService.finnBehandlingMedSisteFattedeVedtak(id)
         if (sisteGjeldendeBehandling != null) {
-            return vedtakslengdeService.skalUtvideVedtakslengde(sisteGjeldendeBehandling.id, dato)
+            // Bruker sisteGjeldendeBehandling.id både for behandlingId og forrigeBehandlingId fordi vi ser på gjeldende behandling
+            return vedtakslengdeService.skalUtvideVedtakslengde(sisteGjeldendeBehandling.id, sisteGjeldendeBehandling.id, dato)
         }
         return false
     }

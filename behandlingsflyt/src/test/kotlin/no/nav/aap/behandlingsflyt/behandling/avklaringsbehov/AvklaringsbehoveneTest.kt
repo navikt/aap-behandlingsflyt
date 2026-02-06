@@ -272,7 +272,7 @@ class AvklaringsbehoveneTest {
             )
         }
 
-        assertThat(exception.message).isEqualTo("Løsning mangler vurdering for perioder: [Periode(fom=2021-03-01, tom=2021-04-01)]")
+        assertThat(exception.message).isEqualTo("Du mangler vurdering for 01.03.2021–01.04.2021")
 
         every { løsningMock.definisjon() } returns Definisjon.AVKLAR_OVERGANG_ARBEID
         every { løsningMock.løsningerForPerioder } returns listOf(
