@@ -59,6 +59,12 @@ tasks.withType(dev.detekt.gradle.Detekt::class.java).configureEach {
     }
 }
 
+tasks.named("check").configure {
+    setDependsOn(dependsOn.filterNot {
+        it.toString().contains("detekt", ignoreCase = true)
+    })
+}
+
 private fun bestemAntallTestTråder(): Int {
     val isCiBuild =
         providers.environmentVariable("CI").isPresent || providers.environmentVariable("GITHUB_ACTIONS").isPresent

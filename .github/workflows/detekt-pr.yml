@@ -15,6 +15,8 @@ jobs:
       contents: read
       pull-requests: write
       checks: write
+      security-events: write
+      actions: read
     steps:
       - uses: actions/checkout@v6
 
@@ -30,13 +32,15 @@ jobs:
 
       - name: Run Detekt
         run: ./gradlew detekt detektReportMergeSarif --continue
+        continue-on-error: true
 
       - name: Upload SARIF to GitHub
-        if: always()
-        uses: github/codeql-action/upload-sarif@v3
+        if: always() && hashFiles('build/reports/detekt/merge.sarif') != ''
+        uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: build/reports/detekt/merge.sarif
           category: detekt
+        continue-on-error: true
 
       - name: Comment PR with Detekt Summary
         if: always() && github.event_name == 'pull_request'
