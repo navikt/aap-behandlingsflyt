@@ -138,7 +138,7 @@ class TidligereVurderingerImpl(
                         sykdomstidslinje
                             .begrensetTil(Periode(Tid.MIN, segmentPeriode.fom.minusDays(1)))
                             .segmenter()
-                            .any { it.verdi.erOppfyltOrdinærSettBortIfraVissVarighet() }
+                            .any { it.verdi.erOppfyltForYrkesskadeSettBortIfraÅrsakssammenhengOgVissVarighet() }
                     }
 
                     if (erIkkeFørsteSykdomsvurdering && harTidligereInnvilgetSykdomsvurdering) {
