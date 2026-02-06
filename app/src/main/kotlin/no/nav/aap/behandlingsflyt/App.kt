@@ -40,6 +40,7 @@ import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.sykepenge
 import no.nav.aap.behandlingsflyt.behandling.beregning.manuellinntekt.manglendeGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.beregning.tidspunkt.beregningVurderingApi
 import no.nav.aap.behandlingsflyt.behandling.brev.sykdomsvurderingForBrevApi
+import no.nav.aap.behandlingsflyt.behandling.etableringegenvirksomhet.etableringEgenVirksomhetApi
 import no.nav.aap.behandlingsflyt.behandling.foreslåvedtak.foreslaaVedtakApi
 import no.nav.aap.behandlingsflyt.behandling.grunnlag.medlemskap.medlemskapsgrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.grunnlag.samordning.samordningGrunnlag
@@ -268,6 +269,7 @@ internal fun Application.server(
                 meldepliktOverstyringGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
                 arbeidsevneGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
                 arbeidsopptrappingGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
+                etableringEgenVirksomhetApi(dataSource, repositoryRegistry)
                 overgangUforeGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
                 medlemskapsgrunnlagApi(dataSource, repositoryRegistry)
                 studentgrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)

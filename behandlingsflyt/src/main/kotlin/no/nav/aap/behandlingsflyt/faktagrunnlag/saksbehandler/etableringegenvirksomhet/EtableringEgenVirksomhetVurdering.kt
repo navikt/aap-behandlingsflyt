@@ -1,0 +1,22 @@
+package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet
+
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Bruker
+import java.time.Instant
+import java.time.LocalDate
+
+data class EtableringEgenVirksomhetVurdering(
+    val begrunnelse: String,
+    val foreliggerFagligVurdering: Boolean,
+    val virksomhetErNy: Boolean,
+    val brukerEierVirksomheten: Boolean,
+    val kanFøreTilSelvforsørget: Boolean,
+    val utviklingsPerioder: List<Periode>,
+    val oppstartsPerioder: List<Periode>,
+    val vurdertAv: Bruker,
+    val opprettetTid: Instant,
+    val vurdertIBehandling: BehandlingId,
+    val vurderingenGjelderFra: LocalDate,
+    val vurderingenGjelderTil: LocalDate?
+)
