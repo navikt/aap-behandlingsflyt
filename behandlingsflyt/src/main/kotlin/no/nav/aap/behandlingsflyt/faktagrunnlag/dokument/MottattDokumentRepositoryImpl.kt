@@ -22,8 +22,8 @@ class MottattDokumentRepositoryImpl(private val connection: DBConnection) : Mott
     override fun lagre(mottattDokument: MottattDokument) {
         val query = """
             INSERT INTO MOTTATT_DOKUMENT (sak_id, MOTTATT_TID, type, status, strukturert_dokument, referanse,
-                                          referanse_type, behandling_id, kanal)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                                          referanse_type, behandling_id, kanal, DIGITALISERT_MANUELT_POSTMOTTAK)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """.trimIndent()
 
         connection.execute(query) {
@@ -37,6 +37,7 @@ class MottattDokumentRepositoryImpl(private val connection: DBConnection) : Mott
                 setEnumName(7, mottattDokument.referanse.type)
                 setLong(8, mottattDokument.behandlingId?.toLong())
                 setEnumName(9, mottattDokument.kanal)
+                setBoolean(10, mottattDokument.digitalisertAvPostmottak)
             }
         }
     }
@@ -143,6 +144,7 @@ class MottattDokumentRepositoryImpl(private val connection: DBConnection) : Mott
             kanal = row.getEnum("kanal"),
             status = row.getEnum("status"),
             strukturertDokument = LazyStrukturertDokument(referanse, connection),
+            digitalisertAvPostmottak = row.getBooleanOrNull("DIGITALISERT_MANUELT_POSTMOTTAK")
         )
     }
 

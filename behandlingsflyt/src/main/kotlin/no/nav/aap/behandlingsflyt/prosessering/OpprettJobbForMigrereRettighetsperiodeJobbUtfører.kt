@@ -17,7 +17,6 @@ import no.nav.aap.motor.JobbUtfører
 import no.nav.aap.motor.ProvidersJobbSpesifikasjon
 import no.nav.aap.motor.cron.CronExpression
 import org.slf4j.LoggerFactory
-import java.time.LocalDate
 
 class OpprettJobbForMigrereRettighetsperiodeJobbUtfører(
     private val flytJobbRepository: FlytJobbRepository,
@@ -31,7 +30,7 @@ class OpprettJobbForMigrereRettighetsperiodeJobbUtfører(
 
     override fun utfør(input: JobbInput) {
 
-        val saker = sakRepository.finnSakerMedUtenRiktigSluttdatoPåRettighetsperiode()
+        val saker = sakRepository.finnSakerMedAvsluttedeBehandlingerUtenRiktigSluttdatoPåRettighetsperiode()
         val sakerForMigrering = saker
             .filter { sak ->
                 val sisteYtelsesbehandling = sakOgBehandlingService.finnSisteYtelsesbehandlingFor(sak.id)
@@ -51,12 +50,21 @@ class OpprettJobbForMigrereRettighetsperiodeJobbUtfører(
 
         if (unleashGateway.isEnabled(BehandlingsflytFeature.MigrerRettighetsperiode)) {
             sakerForMigrering.forEach { sak ->
-                flytJobbRepository.leggTil(JobbInput(OpprettBehandlingMigrereRettighetsperiodeJobbUtfører).forSak(sak.id.toLong()))
+
+                if (!finnesAlleredeMigreringsjobbForSak(sak)) {
+                    flytJobbRepository.leggTil(JobbInput(OpprettBehandlingMigrereRettighetsperiodeJobbUtfører).forSak(sak.id.toLong()))
+                } else {
+                    log.info("Finnes allerede en jobb for å migrere rettighetsperiode sak ${sak.id} ")
+                }
             }
 
             log.info("Jobb for migrering av rettighetsperiode fullført for ${sakerForMigrering.size}")
         }
     }
+
+    private fun finnesAlleredeMigreringsjobbForSak(sak: Sak):Boolean =
+        flytJobbRepository.hentJobberForSak(sak.id.toLong())
+            .any { it.type() == OpprettBehandlingMigrereRettighetsperiodeJobbUtfører.type }
 
     /**
      * Kan kun behandle de som er avsluttet og ønsker ikke å migrere de som er trukket

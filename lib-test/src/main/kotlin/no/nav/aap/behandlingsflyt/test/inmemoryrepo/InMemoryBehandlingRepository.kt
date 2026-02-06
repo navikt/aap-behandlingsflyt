@@ -54,11 +54,11 @@ object InMemoryBehandlingRepository : BehandlingRepository {
         }
     }
 
-    override fun finnFørstegangsbehandling(sakId: SakId): Behandling? {
+    override fun finnFørstegangsbehandling(sakId: SakId): Behandling {
         synchronized(lock) {
             return memory.values
                 .filter { behandling -> behandling.sakId == sakId }
-                .firstOrNull { behandling -> behandling.typeBehandling() == TypeBehandling.Førstegangsbehandling }
+                .firstOrNull { behandling -> behandling.typeBehandling() == TypeBehandling.Førstegangsbehandling }!!
         }
     }
 

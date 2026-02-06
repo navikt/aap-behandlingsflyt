@@ -1,8 +1,8 @@
 package no.nav.aap.behandlingsflyt.repository.behandling
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepositoryImpl
-import no.nav.aap.behandlingsflyt.help.FakePdlGateway
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
+import no.nav.aap.behandlingsflyt.help.opprettSak
 import no.nav.aap.behandlingsflyt.help.sak
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
@@ -52,8 +52,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedP
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
-import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.type.Periode
@@ -64,6 +62,7 @@ import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
+import kotlin.math.abs
 
 internal class BehandlingRepositoryImplTest {
     companion object {
@@ -83,12 +82,8 @@ internal class BehandlingRepositoryImplTest {
     @Test
     fun `Kan lagre og hente ut behandling med uuid`() {
         val skapt = dataSource.transaction { connection ->
-            val sak = PersonOgSakService(
-                FakePdlGateway,
-                PersonRepositoryImpl(connection),
-                SakRepositoryImpl(connection)
-            ).finnEllerOpprett(
-                ident(),
+            val sak = opprettSak(
+                connection,
                 Periode(LocalDate.now(), LocalDate.now().plusYears(3))
             )
             val behandlingRepo = BehandlingRepositoryImpl(connection)
@@ -113,11 +108,9 @@ internal class BehandlingRepositoryImplTest {
 
             assertThat(hententMedReferanse.referanse).isEqualTo(skapt.referanse)
             assertThat(hententMedReferanse.vurderingsbehov()).containsExactlyElementsOf(skapt.vurderingsbehov())
-            assertThat(hententMedReferanse.vurderingsbehov()).containsExactlyElementsOf(
+            assertThat(hententMedReferanse.vurderingsbehov().map { it.type }).containsExactlyElementsOf(
                 listOf(
-                    VurderingsbehovMedPeriode(
-                        type = Vurderingsbehov.MOTTATT_SØKNAD
-                    )
+                    Vurderingsbehov.MOTTATT_SØKNAD
                 )
             )
             assertThat(hententMedReferanse.typeBehandling()).isEqualTo(TypeBehandling.Førstegangsbehandling)
@@ -128,12 +121,8 @@ internal class BehandlingRepositoryImplTest {
     @Test
     fun `Opprettet dato lagres på behandling og hentes ut korrekt`() {
         val skapt = dataSource.transaction { connection ->
-            val sak = PersonOgSakService(
-                FakePdlGateway,
-                PersonRepositoryImpl(connection),
-                SakRepositoryImpl(connection)
-            ).finnEllerOpprett(
-                ident(),
+            val sak = opprettSak(
+                connection,
                 Periode(LocalDate.now(), LocalDate.now().plusYears(3))
             )
             val behandlingRepo = BehandlingRepositoryImpl(connection)
@@ -163,12 +152,8 @@ internal class BehandlingRepositoryImplTest {
     @Test
     fun `Kan hente ut behandlinger for sak filtrert på type`() {
         val (sak, førstegang, klage) = dataSource.transaction { connection ->
-            val sak = PersonOgSakService(
-                FakePdlGateway,
-                PersonRepositoryImpl(connection),
-                SakRepositoryImpl(connection)
-            ).finnEllerOpprett(
-                ident(),
+            val sak = opprettSak(
+                connection,
                 Periode(LocalDate.now(), LocalDate.now().plusYears(3))
             )
             val behandlingRepo = BehandlingRepositoryImpl(connection)
@@ -219,13 +204,9 @@ internal class BehandlingRepositoryImplTest {
         val virkningstidspunkt = LocalDate.now().plusMonths(1)
 
 
-        val (sak, førstegang, klage) = dataSource.transaction { connection ->
-            val sak = PersonOgSakService(
-                FakePdlGateway,
-                PersonRepositoryImpl(connection),
-                SakRepositoryImpl(connection)
-            ).finnEllerOpprett(
-                ident(),
+        val (sak, førstegang, _) = dataSource.transaction { connection ->
+            val sak = opprettSak(
+                connection,
                 Periode(LocalDate.now(), LocalDate.now().plusYears(3))
             )
             val behandlingRepo = BehandlingRepositoryImpl(connection)
@@ -267,7 +248,8 @@ internal class BehandlingRepositoryImplTest {
             val alleDefault = behandlingRepo.hentAlleMedVedtakFor(sak.person)
             assertThat(alleDefault).hasSize(1)
 
-            val alleFørstegang = behandlingRepo.hentAlleMedVedtakFor(sak.person, listOf(TypeBehandling.Førstegangsbehandling))
+            val alleFørstegang =
+                behandlingRepo.hentAlleMedVedtakFor(sak.person, listOf(TypeBehandling.Førstegangsbehandling))
             assertThat(alleFørstegang).hasSize(1)
             assertThat(alleFørstegang[0].saksnummer).isEqualTo(sak.saksnummer)
             assertThat(alleFørstegang[0].referanse).isEqualTo(førstegang.referanse)
@@ -363,17 +345,25 @@ internal class BehandlingRepositoryImplTest {
             val vurderingsbehovOgÅrsaker = behandlingRepository.hentVurderingsbehovOgÅrsaker(behandling.id)
             assertThat(vurderingsbehovOgÅrsaker).hasSize(2)
             assertThat(vurderingsbehovOgÅrsaker.map { Pair(it.årsak, it.vurderingsbehov) })
-                .containsExactlyInAnyOrder(
-                    ÅrsakTilOpprettelse.SØKNAD to listOf(
-                        VurderingsbehovMedPeriode(
-                            type = Vurderingsbehov.MOTTATT_SØKNAD,
-                            periode = null
-                        )
-                    ),
-                    ÅrsakTilOpprettelse.MELDEKORT to listOf(
-                        VurderingsbehovMedPeriode(
-                            type = Vurderingsbehov.MOTTATT_MELDEKORT,
-                            periode = sak.rettighetsperiode
+                .usingRecursiveComparison()
+                .ignoringCollectionOrder()
+                .withEqualsForType({ a: LocalDateTime, b: LocalDateTime ->
+                    abs(ChronoUnit.MILLIS.between(b, a)) < 100000
+                }, LocalDateTime::class.java)
+                .isEqualTo(
+                    listOf(
+                        ÅrsakTilOpprettelse.SØKNAD to listOf(
+                            VurderingsbehovMedPeriode(
+                                type = Vurderingsbehov.MOTTATT_SØKNAD,
+                                periode = null
+                            )
+                        ),
+                        ÅrsakTilOpprettelse.MELDEKORT to listOf(
+                            VurderingsbehovMedPeriode(
+                                type = Vurderingsbehov.MOTTATT_MELDEKORT,
+                                periode = sak.rettighetsperiode,
+                                oppdatertTid = LocalDateTime.now()
+                            )
                         )
                     )
                 )
@@ -406,7 +396,12 @@ internal class BehandlingRepositoryImplTest {
             finnEllerOpprettBehandling(connection, sakMedFlereVedtatteBehandlingOgÅpenBehandling).let { behandling ->
                 behandlingRepo.oppdaterBehandlingStatus(behandling.id, Status.IVERKSETTES)
                 vedtakRepo.lagre(behandling.id, LocalDateTime.now().minusWeeks(1), LocalDate.now().minusWeeks(1))
-                sisteVedtatteBehandlinger.add(SakOgBehandling(sakMedFlereVedtatteBehandlingOgÅpenBehandling.id, behandling.id))
+                sisteVedtatteBehandlinger.add(
+                    SakOgBehandling(
+                        sakMedFlereVedtatteBehandlingOgÅpenBehandling.id,
+                        behandling.id
+                    )
+                )
             }
             finnEllerOpprettBehandling(connection, sakMedFlereVedtatteBehandlingOgÅpenBehandling)
 
@@ -414,18 +409,75 @@ internal class BehandlingRepositoryImplTest {
             assertThat(alleGjeldendeVedtatteBehandlinger.toSet()).isEqualTo(sisteVedtatteBehandlinger)
 
             sisteVedtatteBehandlinger.forEach { sakOgBehandling ->
-                val gjeldendeVedtattBehandling = behandlingRepo.finnGjeldendeVedtattBehandlingForSak(sakOgBehandling.sakId)
+                val gjeldendeVedtattBehandling =
+                    behandlingRepo.finnGjeldendeVedtattBehandlingForSak(sakOgBehandling.sakId)
                 assertThat(gjeldendeVedtattBehandling?.behandlingId).isEqualTo(sakOgBehandling.behandlingId)
             }
             assertThat(behandlingRepo.finnGjeldendeVedtattBehandlingForSak(åpenSak.id)).isNull()
         }
     }
+
+    @Test
+    fun `legge til nytt vurderingsbehov på behandling`() {
+        val behandling = dataSource.transaction { connection ->
+            val sak = sak(connection)
+            finnEllerOpprettBehandling(connection, sak)
+        }
+
+        assertThat(behandling.vurderingsbehov().map { it.type }).containsOnly(Vurderingsbehov.MOTTATT_SØKNAD)
+
+        val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(1))
+        val oppdatertBehandling = dataSource.transaction {
+            BehandlingRepositoryImpl(it).oppdaterVurderingsbehovOgÅrsak(
+                behandling,
+                VurderingsbehovOgÅrsak(
+                    vurderingsbehov = listOf(
+                        VurderingsbehovMedPeriode(
+                            type = Vurderingsbehov.REVURDER_MEDLEMSKAP,
+                            periode = periode
+                        )
+                    ),
+                    årsak = ÅrsakTilOpprettelse.SØKNAD
+                )
+            )
+
+            BehandlingRepositoryImpl(it).hent(behandling.id)
+        }
+
+        assertThat(oppdatertBehandling.vurderingsbehov().map { it.type })
+            .contains(Vurderingsbehov.REVURDER_MEDLEMSKAP)
+
+        val vurderingsbehovFørOppdatering =
+            oppdatertBehandling.vurderingsbehov().first { it.type == Vurderingsbehov.REVURDER_MEDLEMSKAP }
+
+        val oppdatertBehandling2 = dataSource.transaction {
+            BehandlingRepositoryImpl(it).oppdaterVurderingsbehovOgÅrsak(
+                behandling,
+                VurderingsbehovOgÅrsak(
+                    vurderingsbehov = listOf(
+                        VurderingsbehovMedPeriode(
+                            type = Vurderingsbehov.REVURDER_MEDLEMSKAP,
+                            periode
+                        )
+                    ),
+                    årsak = ÅrsakTilOpprettelse.SØKNAD
+                )
+            )
+
+            BehandlingRepositoryImpl(it).hent(behandling.id)
+        }
+
+        val vurderingsbehov =
+            oppdatertBehandling2.vurderingsbehov().first { it.type == Vurderingsbehov.REVURDER_MEDLEMSKAP }
+
+        assertThat(vurderingsbehov.oppdatertTid).isAfter(vurderingsbehovFørOppdatering.oppdatertTid)
+    }
 }
 
 // Midlertidig test
 fun main() {
-        val dataSource = TestDataSource()
-        dataSource.transaction { connection ->
+    val dataSource = TestDataSource()
+    dataSource.transaction { connection ->
         BeregningsgrunnlagRepositoryImpl(connection).slett(
             BehandlingId(1L)
         )

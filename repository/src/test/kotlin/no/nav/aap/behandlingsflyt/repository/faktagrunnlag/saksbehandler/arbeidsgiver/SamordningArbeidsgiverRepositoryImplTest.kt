@@ -1,18 +1,11 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.arbeidsgiver
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.arbeidsgiver.SamordningArbeidsgiverVurdering
-import no.nav.aap.behandlingsflyt.help.FakePdlGateway
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
+import no.nav.aap.behandlingsflyt.help.opprettSak
 import no.nav.aap.behandlingsflyt.test.desember
 import no.nav.aap.behandlingsflyt.test.februar
-import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.behandlingsflyt.test.januar
-import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.type.Periode
@@ -21,7 +14,6 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import java.time.LocalDate
 
 class SamordningArbeidsgiverRepositoryImplTest {
     private lateinit var dataSource: TestDataSource
@@ -40,7 +32,7 @@ class SamordningArbeidsgiverRepositoryImplTest {
     fun `lagre og slett`() {
 
         val behandling = dataSource.transaction {
-            val sak = sak(it, Periode(1 januar 2023, 31 desember 2023))
+            val sak = opprettSak(it, Periode(1 januar 2023, 31 desember 2023))
             finnEllerOpprettBehandling(it, sak)
         }
 
@@ -82,12 +74,12 @@ class SamordningArbeidsgiverRepositoryImplTest {
     fun `lagre, hent, kopier og slett arbeidsgiver perioder`() {
 
         val behandling = dataSource.transaction {
-            val sak = sak(it, Periode(1 januar 2023, 31 desember 2023))
+            val sak = opprettSak(it, Periode(1 januar 2023, 31 desember 2023))
             finnEllerOpprettBehandling(it, sak)
         }
 
         val behandling2 = dataSource.transaction {
-            val sak = sak(it, Periode(1 januar 2023, 31 desember 2023))
+            val sak = opprettSak(it, Periode(1 januar 2023, 31 desember 2023))
             finnEllerOpprettBehandling(it, sak)
         }
 
@@ -146,12 +138,4 @@ class SamordningArbeidsgiverRepositoryImplTest {
 
     }
 
-
-    private fun sak(connection: DBConnection, periode: Periode): Sak {
-        return PersonOgSakService(
-            FakePdlGateway,
-            PersonRepositoryImpl(connection),
-            SakRepositoryImpl(connection)
-        ).finnEllerOpprett(ident(), periode)
-    }
 }

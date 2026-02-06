@@ -17,7 +17,7 @@ import java.util.*
 import java.util.concurrent.Executor
 
 class MockConnection : Connection {
-    override fun <T : Any?> unwrap(iface: Class<T>?): T {
+    override fun <T> unwrap(iface: Class<T>?): T {
         TODO("Not yet implemented")
     }
 

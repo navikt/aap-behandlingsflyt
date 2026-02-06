@@ -82,7 +82,7 @@ class SignaturServiceTest {
 
         val signaturer = signaturService.finnSignaturGrunnlag(brevbestilling, Bruker(""))
 
-        assertThat(signaturer).containsExactly(
+        assertThat(signaturer).containsExactly( // NB: Tester også rekkefølge.
             SignaturGrunnlag(navIdent = beslutterIdent, rolle = Rolle.BESLUTTER),
             SignaturGrunnlag(navIdent = saksbehandlerIdent, rolle = Rolle.SAKSBEHANDLER_NASJONAL),
             SignaturGrunnlag(navIdent = kvalitetssikrerIdent, rolle = Rolle.KVALITETSSIKRER),
@@ -163,6 +163,7 @@ class SignaturServiceTest {
             status = Status.FORHÅNDSVISNING_KLAR,
             opprettet = LocalDateTime.now()
         )
+        val saksbehandlerIdent = "s000000"
         val innloggetBrukerIdent = "i000000"
 
         every { avklaringsbehovOperasjonerRepository.hent(behandlingId) } returns avklaringsbehovene
@@ -171,10 +172,69 @@ class SignaturServiceTest {
             behandlingId
         )
 
+        leggTilEndring(
+            Definisjon.FASTSETT_BEREGNINGSTIDSPUNKT, endretAv = saksbehandlerIdent, AvklaringsbehovStatus.AVSLUTTET
+        )
+
         val signaturer = signaturService.finnSignaturGrunnlag(brevbestilling, Bruker(innloggetBrukerIdent))
 
         assertThat(signaturer).containsExactlyInAnyOrder(
-            SignaturGrunnlag(navIdent = innloggetBrukerIdent, rolle = null))
+            SignaturGrunnlag(navIdent = innloggetBrukerIdent, rolle = null),
+            SignaturGrunnlag(navIdent = saksbehandlerIdent, rolle = Rolle.SAKSBEHANDLER_NASJONAL)
+        )
+    }
+
+    @Test
+    fun `dersom beslutter ikke har saksbehandlet og innlogget bruker har saksbehandlet beholdes rollen til innlogget bruker`() {
+
+        val avklaringsbehovRepository = mockk<AvklaringsbehovRepository>()
+        val avklaringsbehovOperasjonerRepository = mockk<AvklaringsbehovOperasjonerRepository>()
+
+        val signaturService = SignaturService(avklaringsbehovRepository)
+
+        val behandlingId = BehandlingId(Random.nextLong())
+        val brevbestilling = Brevbestilling(
+            id = 0,
+            behandlingId = behandlingId,
+            typeBrev = TypeBrev.KLAGE_OPPRETTHOLDELSE,
+            referanse = BrevbestillingReferanse(UUID.randomUUID()),
+            status = Status.FORHÅNDSVISNING_KLAR,
+            opprettet = LocalDateTime.now()
+        )
+        val veilederIdent = "v000000"
+        val kvalitetssikrerIdent = "k000000"
+        val saksbehandlerIdent = "s000000"
+
+        leggTilEndring(
+            Definisjon.FASTSETT_PÅKLAGET_BEHANDLING,
+            endretAv = saksbehandlerIdent,
+            AvklaringsbehovStatus.AVSLUTTET
+        )
+        leggTilEndring(Definisjon.FASTSETT_FULLMEKTIG, endretAv = saksbehandlerIdent, AvklaringsbehovStatus.AVSLUTTET)
+        leggTilEndring(Definisjon.VURDER_FORMKRAV, endretAv = saksbehandlerIdent, AvklaringsbehovStatus.AVSLUTTET)
+        leggTilEndring(
+            Definisjon.FASTSETT_BEHANDLENDE_ENHET,
+            endretAv = saksbehandlerIdent,
+            AvklaringsbehovStatus.AVSLUTTET
+        )
+        leggTilEndring(Definisjon.VURDER_KLAGE_KONTOR, endretAv = veilederIdent, AvklaringsbehovStatus.AVSLUTTET)
+        leggTilEndring(Definisjon.KVALITETSSIKRING, endretAv = kvalitetssikrerIdent, AvklaringsbehovStatus.AVSLUTTET)
+        leggTilEndring(Definisjon.VURDER_KLAGE_KONTOR, endretAv = veilederIdent, AvklaringsbehovStatus.AVSLUTTET)
+        leggTilEndring(Definisjon.KVALITETSSIKRING, endretAv = kvalitetssikrerIdent, AvklaringsbehovStatus.AVSLUTTET)
+
+        every { avklaringsbehovOperasjonerRepository.hent(behandlingId) } returns avklaringsbehovene
+        every { avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId) } returns Avklaringsbehovene(
+            avklaringsbehovOperasjonerRepository,
+            behandlingId
+        )
+
+        val signaturer = signaturService.finnSignaturGrunnlag(brevbestilling, Bruker(kvalitetssikrerIdent))
+        signaturer.forEach { println(it) }
+        assertThat(signaturer).containsExactly(
+            SignaturGrunnlag(navIdent = saksbehandlerIdent, rolle = Rolle.SAKSBEHANDLER_NASJONAL),
+            SignaturGrunnlag(navIdent = kvalitetssikrerIdent, rolle = Rolle.KVALITETSSIKRER),
+            SignaturGrunnlag(navIdent = veilederIdent, rolle = Rolle.SAKSBEHANDLER_OPPFOLGING),
+        )
     }
 
     private val avklaringsbehovene = mutableListOf<Avklaringsbehov>()
@@ -189,7 +249,8 @@ class SignaturServiceTest {
         ).also {
             avklaringsbehovene.add(it)
         }
-        val tidsstempel = avklaringsbehovene.flatMap { it.historikk }.maxOrNull()?.tidsstempel?.plusMinutes(1) ?: LocalDateTime.now()
+        val tidsstempel =
+            avklaringsbehovene.flatMap { it.historikk }.maxOrNull()?.tidsstempel?.plusMinutes(1) ?: LocalDateTime.now()
         avklaringsbehov.historikk.add(
             Endring(
                 status = status,

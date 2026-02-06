@@ -646,7 +646,7 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
             }
             .løsAvklaringsBehov(ForeslåVedtakLøsning())
             .medKontekst {
-                assertThat(åpneAvklaringsbehov).anySatisfy { assertThat(it.definisjon).isEqualTo(Definisjon.FATTE_VEDTAK) }
+                assertThat(åpneAvklaringsbehov.map { it.definisjon }).containsExactly(Definisjon.FATTE_VEDTAK)
                 assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
             }
             .fattVedtak()
@@ -804,6 +804,7 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
             }
             // Gi avslag på 11-13
             .løsSykdom(vurderingGjelderFra = periode.fom, erOppfylt = false)
+            .kvalitetssikreOk()
             .medKontekst {
                 val tilkjentYtelseFraRepo = hentTilkjentYtelse(behandling.id)
 

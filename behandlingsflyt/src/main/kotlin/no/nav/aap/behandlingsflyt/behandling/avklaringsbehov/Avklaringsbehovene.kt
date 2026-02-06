@@ -9,6 +9,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
+import no.nav.aap.behandlingsflyt.utils.toHumanReadable
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
 import no.nav.aap.komponenter.tidslinje.Tidslinje
@@ -298,7 +299,7 @@ class Avklaringsbehovene(
         return alle().any { it.erIkkeAvbrutt() && it.erTotrinn() }
     }
 
-    fun harAvklaringsbehovSomKreverToTrinnMenIkkeErVurdert(): Boolean {
+    fun harAvklaringsbehovSomKreverToTrinnMenIkkeErGodkjent(): Boolean {
         return alle().any { it.erIkkeAvbrutt() && it.erTotrinn() && !it.erTotrinnsVurdert() }
     }
 
@@ -360,7 +361,7 @@ class Avklaringsbehovene(
                 }.filter { !it.verdi }.perioder().toSet()
 
             if (perioderSomManglerLøsning.isNotEmpty()) {
-                throw UgyldigForespørselException("Løsning mangler vurdering for perioder: $perioderSomManglerLøsning")
+                throw UgyldigForespørselException("Du mangler vurdering for ${perioderSomManglerLøsning.toHumanReadable()}")
             }
         }
     }

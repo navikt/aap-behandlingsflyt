@@ -136,6 +136,8 @@ spec:
           namespace: team-rocket
         - application: logging
           namespace: nais-system
+        - application: dp-datadeling
+          namespace: teamdagpenger
 
   env:
     - name: INTEGRASJON_PDL_URL
@@ -252,3 +254,7 @@ spec:
       value: api://dev-fss.pensjonsamhandling.sam-q2/.default
     - name: INTEGRASJON_SAM_URL
       value: https://sam-q2.dev-fss-pub.nais.io
+    - name: INTEGRASJON_DAGPENGER_URL
+      value: http://dp-datadeling.teamdagpenger
+    - name: INTEGRASJON_DAGPENGER_SCOPE
+      value: api://dev-gcp.teamdagpenger.dp-datadeling/.default

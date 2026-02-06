@@ -19,7 +19,8 @@ class MottattDokument(
     val type: InnsendingType,
     val kanal: Kanal,
     val status: Status = Status.MOTTATT,
-    val strukturertDokument: StrukturerteData?
+    val strukturertDokument: StrukturerteData?,
+    val digitalisertAvPostmottak: Boolean? = null
 ) {
 
     inline fun <reified T : Melding> strukturerteData(): StrukturertDokument<T>? {

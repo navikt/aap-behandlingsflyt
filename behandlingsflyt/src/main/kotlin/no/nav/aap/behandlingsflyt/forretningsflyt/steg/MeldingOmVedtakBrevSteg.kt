@@ -132,7 +132,7 @@ class MeldingOmVedtakBrevSteg(
 
             is UtvidVedtakslengde -> {
                 val sak = sakRepository.hent(kontekst.sakId)
-                "${sak.saksnummer}-${brevBehov.typeBrev}-${brevBehov.sluttdato.format(DateTimeFormatter.ISO_DATE)}"
+                "${sak.saksnummer}-${brevBehov.typeBrev}-${brevBehov.sisteDagMedYtelse.format(DateTimeFormatter.ISO_DATE)}"
             }
 
             else -> {
