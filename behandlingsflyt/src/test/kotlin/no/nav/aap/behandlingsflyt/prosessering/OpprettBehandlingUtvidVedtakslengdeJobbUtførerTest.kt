@@ -6,6 +6,8 @@ import io.mockk.junit5.MockKExtension
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.verify
+import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.ÅrMedHverdager
 import no.nav.aap.behandlingsflyt.behandling.vedtakslengde.VedtakslengdeService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
@@ -80,6 +82,7 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtførerTest {
         every { sakOgBehandlingService.finnEllerOpprettBehandling(sak.id, any()) } returns opprettetBehandling()
         every { prosesserBehandlingService.triggProsesserBehandling(any<SakOgBehandlingService.OpprettetBehandling>()) } just Runs
         every { vilkårsresultatRepository.hent(behandlingId) } returns genererVilkårsresultat(sak.rettighetsperiode)
+        every { vedtakslengdeRepository.hentHvisEksisterer(behandling.id) } returns null
 
         opprettBehandlingUtvidVedtakslengdeJobbUtfører.utfør(jobbInput)
 
@@ -123,11 +126,21 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtførerTest {
         every { sakOgBehandlingService.finnEllerOpprettBehandling(sak.id, any()) } returns opprettetBehandling()
         every { prosesserBehandlingService.triggProsesserBehandling(any<SakOgBehandlingService.OpprettetBehandling>()) } just Runs
         every { vilkårsresultatRepository.hent(behandlingId) } returns genererVilkårsresultat(sak.rettighetsperiode, oppfyltBistand = false)
+        every { vedtakslengdeRepository.hentHvisEksisterer(behandling.id) } returns null
 
         opprettBehandlingUtvidVedtakslengdeJobbUtfører.utfør(jobbInput)
 
         verify(exactly = 0) { prosesserBehandlingService.triggProsesserBehandling(any<SakOgBehandlingService.OpprettetBehandling>()) }
     }
+
+    private fun vedtakslengdeVurdering(sluttdato: LocalDate) =
+        no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeVurdering(
+            sluttdato = sluttdato,
+            utvidetMed = ÅrMedHverdager.FØRSTE_ÅR,
+            vurdertAv = SYSTEMBRUKER,
+            vurdertIBehandling = behandlingId,
+            opprettet = java.time.Instant.now()
+        )
 
     private fun behandling(status: Status = Status.IVERKSETTES) =
         Behandling(
