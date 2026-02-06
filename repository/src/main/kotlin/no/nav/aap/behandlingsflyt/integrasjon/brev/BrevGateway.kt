@@ -370,6 +370,11 @@ class BrevGateway : BrevbestillingGateway {
 
             is UtvidVedtakslengde -> {
                 buildSet {
+                    /* TODO: Add and bump aap-brev avhengighet
+                    add(
+                        Faktagrunnlag.UtvidetAapFomDato(brevBehov.utvidetAapFomDato)
+                    )
+                     */
                     add(
                         Faktagrunnlag.SisteDagMedYtelse(brevBehov.sisteDagMedYtelse)
                     )
