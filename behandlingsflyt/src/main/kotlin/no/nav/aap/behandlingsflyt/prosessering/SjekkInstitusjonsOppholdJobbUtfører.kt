@@ -67,7 +67,7 @@ class SjekkInstitusjonsOppholdJobbUtfører(
                             } else {
                                 val søknadErTrukket = trukketSøknadService.søknadErTrukket(sisteYtelsesBehandling.id)
                                 if (søknadErTrukket) {
-                                    log.info("Institusjonsopphold oppdateres ikke, da sak med $sak.id er trukket")
+                                    log.info("Institusjonsopphold oppdateres ikke, da sak med ${sak.id} er trukket")
                                 } else {
                                     val alleIkkeOppfylt =
                                         underveisgrunnlag
@@ -79,19 +79,19 @@ class SjekkInstitusjonsOppholdJobbUtfører(
                                     } else if (alleIkkeOppfylt) {
                                         log.info("Vurderingsbehov for institusjonsopphold opprettes ikke, da det er avslag overalt")
                                     } else {
-                                        log.info("Fant sak med institusjonsopphold $sak.id")
+                                        log.info("Fant sak med institusjonsopphold ${sak.id}")
                                         val opprettInstitusjonsOppholdBehandling = opprettNyBehandling(sak)
                                         log.info("Opprettet behandling for instopphold for ${opprettInstitusjonsOppholdBehandling.id} og ${opprettInstitusjonsOppholdBehandling.forrigeBehandlingId}")
                                         prosesserBehandlingService.triggProsesserBehandling(
                                             opprettInstitusjonsOppholdBehandling
                                         )
-                                        log.info("Ferdig med å trigge instopphold for $sak.id")
+                                        log.info("Ferdig med å trigge instopphold for ${sak.id}")
                                     }
                                 }
                             }
                         }
                     } else {
-                        log.info("Sak med id $sak.id har ikke behandling, hopper over")
+                        log.info("Sak med id ${sak.id} har ikke behandling, hopper over")
                     }
 
                 }
