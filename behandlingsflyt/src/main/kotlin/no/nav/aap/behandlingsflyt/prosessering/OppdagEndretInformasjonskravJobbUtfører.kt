@@ -1,26 +1,17 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
-import no.nav.aap.behandlingsflyt.behandling.rettighetstype.KvoteOk
-import no.nav.aap.behandlingsflyt.behandling.rettighetstype.vurderRettighetstypeOgKvoter
-import no.nav.aap.behandlingsflyt.behandling.underveis.KvoteService
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Avslag
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.VarighetRegel
+import no.nav.aap.behandlingsflyt.behandling.underveis.RettighetstypeService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.KanTriggeRevurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseVurderingInformasjonskrav
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdInformasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningInformasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreInformasjonskrav
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.gateway.GatewayProvider
-import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.lookup.repository.RepositoryProvider
@@ -37,7 +28,7 @@ class OppdagEndretInformasjonskravJobbUtfører(
     private val prosesserBehandlingService: ProsesserBehandlingService,
     private val sakOgBehandlingService: SakOgBehandlingService,
     private val låsRepository: TaSkriveLåsRepository,
-    private val vilkårsresultatRepository: VilkårsresultatRepository,
+    private val rettighetstypeService: RettighetstypeService,
     private val klokke: Clock = Clock.systemDefaultZone(),
 ) : JobbUtfører {
     private val log = LoggerFactory.getLogger(javaClass)
@@ -60,13 +51,7 @@ class OppdagEndretInformasjonskravJobbUtfører(
         val sisteFattedeYtelsesbehandling = sakOgBehandlingService.finnBehandlingMedSisteFattedeVedtak(sakId)
             ?: error("Fant ikke siste behandling med fattet vedtak for sak $sakId")
 
-
-        /**
-         * TODO: Denne utleder rettighetstype og kvote basert på lagret vilkårsresultat.
-         * Bør bruke nedlagret rettighetstype med kvote, men vi gjør ikke dette enda.
-         * Underveis er avgrenset i fremtiden, og kan derfor ikke brukes.
-         */
-        val harNyligEllerFremtidigRett = harRettInnenforPeriode(
+        val harNyligEllerFremtidigRett = rettighetstypeService.harRettInnenforPeriode(
             sisteFattedeYtelsesbehandling.id, Periode(
                 LocalDate.now(klokke).minusWeeks(2),
                 Tid.MAKS
@@ -101,13 +86,7 @@ class OppdagEndretInformasjonskravJobbUtfører(
 
         låsRepository.verifiserSkrivelås(sakSkrivelås)
     }
-
-    private fun harRettInnenforPeriode(behandlingId: BehandlingId, periode: Periode): Boolean {
-        val vilkårsresultat =
-            vilkårsresultatRepository.hent(behandlingId)
-        return harRettInnenforPeriode(periode, vilkårsresultat)
-    }
-
+    
 
     companion object : ProvidersJobbSpesifikasjon {
         override val type = "flyt.informasjonskrav"
@@ -124,7 +103,7 @@ class OppdagEndretInformasjonskravJobbUtfører(
                 prosesserBehandlingService = ProsesserBehandlingService(repositoryProvider, gatewayProvider),
                 sakOgBehandlingService = SakOgBehandlingService(repositoryProvider, gatewayProvider),
                 låsRepository = repositoryProvider.provide(),
-                vilkårsresultatRepository = repositoryProvider.provide()
+                rettighetstypeService = RettighetstypeService(repositoryProvider, gatewayProvider)
             )
         }
 
@@ -139,15 +118,9 @@ class OppdagEndretInformasjonskravJobbUtfører(
                 prosesserBehandlingService = ProsesserBehandlingService(repositoryProvider, gatewayProvider),
                 sakOgBehandlingService = SakOgBehandlingService(repositoryProvider, gatewayProvider),
                 låsRepository = repositoryProvider.provide(),
-                vilkårsresultatRepository = repositoryProvider.provide(),
-                klokke = klokke
+                rettighetstypeService = RettighetstypeService(repositoryProvider, gatewayProvider),
+                klokke = klokke,
             )
-        }
-        
-        fun harRettInnenforPeriode(periode: Periode, vilkårsresultat: Vilkårsresultat): Boolean {
-            val rettighetMedKvote = vurderRettighetstypeOgKvoter(vilkårsresultat, KvoteService().beregn())
-            return rettighetMedKvote.begrensetTil(periode).segmenter()
-                .any { it.verdi.rettighetsType != null && it.verdi is KvoteOk }
         }
     }
 }

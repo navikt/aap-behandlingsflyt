@@ -228,3 +228,4 @@ fun avslagsårsakerVedTapAvRettPåAAP(
         }
         .let(::Tidslinje)
 }
+
