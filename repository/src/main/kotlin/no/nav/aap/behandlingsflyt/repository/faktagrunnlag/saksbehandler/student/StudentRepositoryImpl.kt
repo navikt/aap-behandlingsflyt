@@ -247,7 +247,7 @@ class StudentRepositoryImpl(private val connection: DBConnection) : StudentRepos
 
     private fun mapStudentVurderinger(studentVurderingerId: Long): Set<StudentVurdering>? {
         val query = """
-            SELECT * FROM STUDENT_VURDERING WHERE id = ?
+            SELECT * FROM STUDENT_VURDERING WHERE student_vurdering.student_vurderinger_id = ?
         """.trimIndent()
 
         return connection.queryList(query) {
