@@ -6,7 +6,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 
 data class StudentVurdering(
-    val fom: LocalDate,
+    val fom: LocalDate? = null, // TODO: Gjør påkrevd,
     val tom: LocalDate? = null,
     val begrunnelse: String,
     val harAvbruttStudie: Boolean,
@@ -17,7 +17,7 @@ data class StudentVurdering(
     val avbruddMerEnn6Måneder: Boolean?,
     val vurdertAv: String,
     val vurdertTidspunkt: LocalDateTime = LocalDateTime.now(),
-    val vurdertIBehandling: BehandlingId,
+    val vurdertIBehandling: BehandlingId?, // TODO: Gjør påkrevd
 ) {
     fun erOppfylt(): Boolean {
         return harAvbruttStudie &&
