@@ -16,7 +16,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
@@ -31,7 +30,6 @@ import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepos
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryTrukketSøknadRepository
-import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.behandlingsflyt.test.modell.genererIdent
 import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
@@ -207,7 +205,6 @@ class RettighetsperiodeStegTest {
         // Behandlingen har kun et vurderingsbehov som ikke er relevant for dette steget
         val flytKontekst = flytKontekstMedPerioder(
             behandling,
-            forrigeBehandlingId = forrigeBehandling.id,
             vurderingsbehov = Vurderingsbehov.SØKNAD_TRUKKET
         )
         val avklaringsbehovene = Avklaringsbehovene(InMemoryAvklaringsbehovRepository, behandling.id)
@@ -237,25 +234,17 @@ class RettighetsperiodeStegTest {
             null
         )
         avklaringsbehovene.løsAvklaringsbehov(Definisjon.VURDER_RETTIGHETSPERIODE, "begrunnelse", "saksbehandler")
-        avklaringsbehovene.avslutt(Definisjon.VURDER_RETTIGHETSPERIODE)
     }
 
     private fun flytKontekstMedPerioder(
         behandling: Behandling,
-        forrigeBehandlingId: BehandlingId? = null,
         vurderingType: VurderingType? = null,
         vurderingsbehov: Vurderingsbehov = Vurderingsbehov.VURDER_RETTIGHETSPERIODE
-    ): FlytKontekstMedPerioder = FlytKontekstMedPerioder(
-        behandling.sakId, behandling.id, forrigeBehandlingId, behandling.typeBehandling(),
-        vurderingType = vurderingType
-            ?: when (behandling.typeBehandling()) {
-                TypeBehandling.Førstegangsbehandling -> VurderingType.FØRSTEGANGSBEHANDLING
-                TypeBehandling.Revurdering -> VurderingType.REVURDERING
-                else -> VurderingType.IKKE_RELEVANT
-            },
-        vurderingsbehovRelevanteForSteg = setOf(vurderingsbehov),
-        rettighetsperiode = Periode(1 januar 2025, 1 januar 2026)
-    )
+    ): FlytKontekstMedPerioder = no.nav.aap.behandlingsflyt.help.flytKontekstMedPerioder {
+        this.behandling = behandling
+        this.vurderingsbehovRelevanteForSteg = setOf(vurderingsbehov)
+        if (vurderingType != null) this.vurderingType = vurderingType
+    }
 
     private fun behandling(
         typeBehandling: TypeBehandling,

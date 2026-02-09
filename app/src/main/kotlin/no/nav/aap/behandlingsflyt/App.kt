@@ -21,6 +21,7 @@ import no.nav.aap.behandlingsflyt.api.config.definisjoner.configApi
 import no.nav.aap.behandlingsflyt.auditlog.auditlogApi
 import no.nav.aap.behandlingsflyt.behandling.aktivitetsplikt.brudd_11_7.aktivitetsplikt11_7GrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.aktivitetsplikt.brudd_11_9.aktivitetsplikt11_9GrunnlagApi
+import no.nav.aap.behandlingsflyt.behandling.andrestatligeytelser.andreStatligeYtelserGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.arbeidsevne.arbeidsevneGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.arbeidsopptrapping.arbeidsopptrappingGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.avklaringsbehovApi
@@ -225,8 +226,8 @@ internal fun Application.server(
     if (!Miljø.erLokal()) {
         startPDLHendelseKonsument(dataSource, repositoryRegistry, gatewayProvider)
     }
-    if (!Miljø.erLokal() && !Miljø.erProd()) {
-        startTilbakekrevingEventKonsument(dataSource, repositoryRegistry, gatewayProvider)
+    if (!Miljø.erLokal()) {
+        startTilbakekrevingEventKonsument(dataSource, repositoryRegistry)
     }
 
     if (!Miljø.erLokal() && !Miljø.erProd()) {
@@ -286,6 +287,7 @@ internal fun Application.server(
                 beregningVurderingApi(dataSource, repositoryRegistry, gatewayProvider)
                 beregningsGrunnlagApi(dataSource, repositoryRegistry)
                 aldersGrunnlagApi(dataSource, repositoryRegistry)
+                andreStatligeYtelserGrunnlagApi(dataSource, repositoryRegistry)
                 barnetilleggApi(dataSource, repositoryRegistry, gatewayProvider)
                 motorApi(dataSource)
                 behandlingsflytPipApi(dataSource, repositoryRegistry)
@@ -427,7 +429,7 @@ fun Application.startKabalKonsument(
 }
 
 fun Application.startTilbakekrevingEventKonsument(
-    dataSource: DataSource, repositoryRegistry: RepositoryRegistry, gatewayProvider: GatewayProvider
+    dataSource: DataSource, repositoryRegistry: RepositoryRegistry
 ): KafkaKonsument<String, String> {
     val konsument = TilbakekrevingKafkaKonsument(
         config = KafkaConsumerConfig(), dataSource = dataSource, repositoryRegistry = repositoryRegistry,
@@ -476,10 +478,13 @@ fun Application.startPDLHendelseKonsument(
         }
         t.start()
     }
-    monitor.subscribe(ApplicationStopPreparing) { environment ->
-        environment.log.info("Forbereder stopp av applikasjon, lukker PDLHendelseKonsument.")
+    monitor.subscribe(ApplicationStopped) { env ->
+        env.log.info("ktor stopper, lukker PDLHendelseKonsument.")
 
-        konsument.lukk()
+        // ktor sine eventer kjøres synkront, så vi må kjøre dette asynkront for ikke å blokkere nedstengings-sekvensen
+        env.launch(Dispatchers.IO) {
+            konsument.lukk()
+        }
     }
 
     return konsument
@@ -510,10 +515,13 @@ fun Application.startInstitusjonsOppholdKonsument(
         }
         t.start()
     }
-    monitor.subscribe(ApplicationStopPreparing) { environment ->
-        environment.log.info("Forbereder stopp av applikasjon, lukker InstitusjonKonsument.")
+    monitor.subscribe(ApplicationStopping) { env ->
+        env.log.info("Forbereder stopp av applikasjon, lukker InstitusjonKonsument.")
 
-        konsument.lukk()
+        // ktor sine eventer kjøres synkront, så vi må kjøre dette asynkront for ikke å blokkere nedstengings-sekvensen
+        env.launch(Dispatchers.IO) {
+            konsument.lukk()
+        }
     }
 
     return konsument

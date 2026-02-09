@@ -15,7 +15,6 @@ import no.nav.aap.komponenter.repository.RepositoryRegistry
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.apache.kafka.clients.consumer.ConsumerRecords
 import org.slf4j.LoggerFactory
-import java.time.LocalDate
 import javax.sql.DataSource
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
@@ -46,7 +45,7 @@ class InstitusjonsOppholdKafkaKonsument(
 
     fun håndter(melding: ConsumerRecord<String, InstitusjonsOppholdHendelseKafkaMelding>) {
         log.info(
-            "Behandler institusjonsopphold-record med id: ${melding.key()}, partition ${melding.partition()}, offset: ${melding.offset()}, topic: ${topic}"
+            "Behandler institusjonsopphold-record med id: ${melding.key()}, partition ${melding.partition()}, offset: ${melding.offset()}, topic: $topic"
         )
         val meldingKey = "${melding.partition()}-${melding.offset()}"
         håndter(meldingKey, melding.value())
@@ -60,13 +59,10 @@ class InstitusjonsOppholdKafkaKonsument(
             val hendelseService =
                 MottattHendelseService(repositoryProvider)
             val person = personRepository.finn(Ident(meldingVerdi.norskident))
-            secureLogger.info("Prøver å finne person for ${meldingVerdi.norskident} ${person}")
+            secureLogger.info("Prøver å finne person for ${meldingVerdi.norskident} $person")
             if (person != null) {
 
                 val saker = sakRepository.finnSakerFor(person)
-                val omTreeMaaneder = LocalDate.now()
-                    .withDayOfMonth(1)
-                    .plusMonths(4)
 
                 for (saken in saker) {
                     val institusjonsopphold = institusjonsoppholdKlient.hentDataForHendelse(meldingVerdi.oppholdId)
@@ -76,8 +72,10 @@ class InstitusjonsOppholdKafkaKonsument(
                     )
                     meldingVerdi.institusjonsOpphold = beriketInstitusjonsopphold
                     val sluttdato = meldingVerdi.institusjonsOpphold?.sluttdato
-
-                    if (sluttdato != null && sluttdato > omTreeMaaneder) {
+                    val varighetOverTreeMaaneder = institusjonsopphold.startdato
+                        .withDayOfMonth(1)
+                        .plusMonths(4)
+                    if (sluttdato != null && sluttdato > varighetOverTreeMaaneder) {
                         hendelseService.registrerMottattHendelse(
                             dto = meldingVerdi.tilInnsending(
                                 meldingKey,

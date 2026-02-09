@@ -95,7 +95,13 @@ class ManglendeLigningGrunnlagStegTest {
             every { revurderingErAvbrutt(any()) } returns false
         }
 
-        avklaringsbehovService = AvklaringsbehovService(avbrytRevurderingService, avklaringsbehovRepository, behandlingRepository, vilkårsresultatRepository, TrukketSøknadService(trukketSøknadRepository))
+        avklaringsbehovService = AvklaringsbehovService(
+            avbrytRevurderingService,
+            avklaringsbehovRepository,
+            behandlingRepository,
+            vilkårsresultatRepository,
+            TrukketSøknadService(trukketSøknadRepository)
+        )
 
         steg = ManglendeLigningGrunnlagSteg(
             avklaringsbehovRepository,
@@ -279,7 +285,11 @@ class ManglendeLigningGrunnlagStegTest {
     private fun leggTilLøstOgAvsluttetAvklaringsbehov(avklaringsbehovene: Avklaringsbehovene) {
         avklaringsbehovene.leggTil(Definisjon.FASTSETT_MANUELL_INNTEKT, StegType.MANGLENDE_LIGNING, null, null)
         avklaringsbehovene.løsAvklaringsbehov(Definisjon.FASTSETT_MANUELL_INNTEKT, "begrunnelse", "saksbehandler")
-        avklaringsbehovene.avslutt(Definisjon.FASTSETT_MANUELL_INNTEKT)
+        avklaringsbehovene.løsAvklaringsbehov(
+            Definisjon.FASTSETT_MANUELL_INNTEKT,
+            begrunnelse = "",
+            endretAv = "Krongov"
+        )
     }
 
     private fun manuelleVurderinger(): Set<ManuellInntektVurdering> = setOf(
@@ -306,19 +316,16 @@ class ManglendeLigningGrunnlagStegTest {
 
     private fun flytKontekstMedPerioder(
         behandling: Behandling, vurderingType: VurderingType? = null
-    ): FlytKontekstMedPerioder = FlytKontekstMedPerioder(
-        behandling.sakId,
-        behandling.id,
-        behandling.forrigeBehandlingId,
-        behandling.typeBehandling(),
-        vurderingType = vurderingType ?: when (behandling.typeBehandling()) {
+    ): FlytKontekstMedPerioder = no.nav.aap.behandlingsflyt.help.flytKontekstMedPerioder {
+        this.behandling = behandling
+        this.vurderingType = vurderingType ?: when (behandling.typeBehandling()) {
             TypeBehandling.Førstegangsbehandling -> VurderingType.FØRSTEGANGSBEHANDLING
             TypeBehandling.Revurdering -> VurderingType.REVURDERING
             else -> VurderingType.IKKE_RELEVANT
-        },
-        vurderingsbehovRelevanteForSteg = behandling.vurderingsbehov().map { it.type }.toSet(),
+        }
+        vurderingsbehovRelevanteForSteg = behandling.vurderingsbehov().map { it.type }.toSet()
         rettighetsperiode = Periode(1 januar 2025, 1 januar 2026)
-    )
+    }
 
     private fun behandling(
         typeBehandling: TypeBehandling,

@@ -4,7 +4,6 @@ import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
-import no.nav.aap.behandlingsflyt.kontrakt.steg.StegGruppe
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
@@ -30,6 +29,12 @@ class Avklaringsbehov(
         get() = historikk.takeLastWhile {
             it.status != Status.AVBRUTT
         }
+
+    val perioderVedtaketBehøverVurdering: List<Periode>?
+        get() = aktivHistorikk
+            .lastOrNull { it.status == Status.OPPRETTET }
+            ?.perioderVedtaketBehøverVurdering
+            ?.sorted()
 
     fun erTotrinn(): Boolean {
         if (definisjon.kreverToTrinn) {
@@ -121,7 +126,7 @@ class Avklaringsbehov(
     internal fun oppdaterPerioder(
         perioderSomIkkeErTilstrekkeligVurdert: Set<Periode>?,
         perioderVedtaketBehøverVurdering: Set<Periode>?
-    ) {
+    ): Boolean {
         val siste = historikk.last()
         require(siste.status.erÅpent()) {
             "Prøvde å oppdatere perioder på et lukket avklaringsbehov"
@@ -132,7 +137,9 @@ class Avklaringsbehov(
                 perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering,
                 tidsstempel = LocalDateTime.now()
             )
+            return true
         }
+        return false
     }
 
     fun erÅpent(): Boolean {
@@ -164,13 +171,13 @@ class Avklaringsbehov(
         )
     }
 
-    internal fun avslutt() {
+    internal fun avslutt(begrunnelse: String) {
         check(historikk.any { it.status == Status.AVSLUTTET }) {
             "Et steg burde vel ha vært løst minst en gang for å kunne regnes som avsluttet?"
         }
 
         historikk += Endring(
-            status = Status.AVSLUTTET, begrunnelse = "", endretAv = SYSTEMBRUKER.ident
+            status = Status.AVSLUTTET, begrunnelse = begrunnelse, endretAv = SYSTEMBRUKER.ident
         )
     }
 
@@ -203,21 +210,12 @@ class Avklaringsbehov(
         return definisjon.skalLøsesISteg(type, funnetISteg)
     }
 
-    fun skalLøsesIStegGruppe(gruppe: StegGruppe): Boolean {
-        val steg = StegType.entries.filter { it.gruppe == gruppe }
-        return steg.any { skalLøsesISteg(it) }
-    }
-
     fun erForeslåttVedtak(): Boolean {
         return definisjon == Definisjon.FORESLÅ_VEDTAK
     }
 
     fun erLovvalgOgMedlemskap(): Boolean {
         return definisjon == Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP
-    }
-
-    fun erForeslåttUttak(): Boolean {
-        return definisjon == Definisjon.FORESLÅ_UTTAK
     }
 
     fun harVærtSendtTilbakeFraBeslutterTidligere(): Boolean {
@@ -265,7 +263,7 @@ class Avklaringsbehov(
     }
 
     fun perioderVedtaketBehøverVurdering(): Set<Periode>? {
-        return aktivHistorikk.filter { it.status.erÅpent() }.maxOfOrNull { it }?.perioderVedtaketBehøverVurdering
+        return perioderVedtaketBehøverVurdering?.toSet()
     }
 
     fun perioderSomIkkeErTilstrekkeligVurdert(): Set<Periode>? {

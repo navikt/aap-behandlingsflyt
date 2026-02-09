@@ -51,3 +51,51 @@ for (taskName in listOf<String>("clean", "build", "check")) {
         dependsOn(subprojects.map { it.path + ":$taskName" })
     }
 }
+
+// Emit a JSON-formatted list of check tasks to be run in CI
+abstract class TestMatrixTask : DefaultTask() {
+    @get:Input
+    abstract val checkTaskPaths: ListProperty<String>
+
+    @TaskAction
+    fun printMatrix() {
+        val json = checkTaskPaths.get().joinToString(separator = ",", prefix = "[", postfix = "]") { "\"$it\"" }
+        println(json)
+    }
+}
+
+tasks.register<TestMatrixTask>("testMatrix") {
+    checkTaskPaths.set(provider {
+        subprojects
+            .filter { it.name != "docs" }
+            .map { it.path + ":check" }
+    })
+}
+
+// If we're executing the `testMatrix` task, disable tests and other slow tasks
+// so that we can get a result quickly.
+gradle.taskGraph.whenReady {
+    if (hasTask(tasks.named("testMatrix").get())) {
+        subprojects.forEach { subproject ->
+            subproject.tasks.withType<Test>().configureEach {
+                enabled = false
+            }
+            subproject.tasks.findByName("shadowJar")?.enabled = false
+            subproject.tasks.findByName("javadoc")?.enabled = false
+        }
+    }
+}
+
+// Merge Detekt reports from all subprojects
+val detektReportMergeSarif by tasks.registering(dev.detekt.gradle.report.ReportMergeTask::class) {
+    output.set(rootProject.layout.buildDirectory.file("reports/detekt/merge.sarif"))
+}
+
+subprojects {
+    tasks.withType<dev.detekt.gradle.Detekt>().configureEach {
+        finalizedBy(detektReportMergeSarif)
+        detektReportMergeSarif.configure {
+            input.from(reports.sarif.outputLocation)
+        }
+    }
+}

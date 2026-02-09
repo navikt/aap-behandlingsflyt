@@ -1,11 +1,11 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.ArbeidsGradering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
@@ -20,7 +20,6 @@ import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.miljo.Miljø
-import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.somTidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
@@ -132,7 +131,7 @@ class OpprettBehandlingMigrereRettighetsperiodeJobbUtfører(
             underveisRepository.hentHvisEksisterer(behandlingFørMigrering.id)?.somTidslinje()
                 ?.map { overstyrVerdierForPeriode(it) }?.komprimer()
                 ?.segmenter()?.toList()
-                ?: error("Fant ikke underveis for behandling ${behandlingFørMigrering.id}")
+                ?: emptyList()
         val underveisEtter =
             underveisRepository.hentHvisEksisterer(behandlingEtterMigrering.id)?.somTidslinje()
                 ?.map { overstyrVerdierForPeriode(it) }?.komprimer()
@@ -140,7 +139,11 @@ class OpprettBehandlingMigrereRettighetsperiodeJobbUtfører(
                 ?: error("Fant ikke underveis for behandling ${behandlingEtterMigrering.id}")
         secureLogger.info("Migrering underveis før=$underveisFør og etter=$underveisEtter")
 
-        if (skalValidereUnderveis(sak, behandlingFørMigrering)) {
+        if (underveisFør.isEmpty() && underveisEtter.isNotEmpty()) {
+            if (underveisEtter.any { it.verdi.utfall == Utfall.OPPFYLT }) {
+               throw IllegalStateException("Mangler underveis tidligere, men fant innvilget periode etter migreringen")
+            }
+        } else if (skalValidereUnderveis(sak, behandlingFørMigrering)) {
             if (underveisFør.size != underveisEtter.size) {
                 log.info("Ulikt antall underveisperioder før ${underveisFør.size} og etter migrering ${underveisEtter.size}")
             }
@@ -177,10 +180,13 @@ class OpprettBehandlingMigrereRettighetsperiodeJobbUtfører(
         val erForrigeBehandlingFastsattPeriodePassert =
             behandlingFørMigrering.vurderingsbehov().map { it.type }.contains(Vurderingsbehov.FASTSATT_PERIODE_PASSERT)
         val forhåndsgodkjenteSaksnummerMedPotensiellEndringIUnderveis = listOf<String>(
-            "4NMNiHS",
-            "4NTPi0G",
-            "4NS3MoG",
-            "4NPBYPS",
+            "4MUP7N4",
+            "4M35WWW",
+            "4LER540",
+            "4LRL174",
+            "4MLAKA8",
+            "4MESXSG",
+            "4MH3GGW"
         )
         val skalIgnoreres =
             forhåndsgodkjenteSaksnummerMedPotensiellEndringIUnderveis.contains(sak.saksnummer.toString())

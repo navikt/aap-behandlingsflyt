@@ -19,7 +19,7 @@ class OvergangUføreGrunnlagTest {
                 OvergangUføreVurdering(
                     begrunnelse = "test",
                     brukerHarSøktOmUføretrygd = true,
-                    brukerHarFåttVedtakOmUføretrygd = "bla..bla",
+                    brukerHarFåttVedtakOmUføretrygd = UføreSøknadVedtakResultat.JA_INNVILGET_GRADERT,
                     brukerRettPåAAP = true,
                     fom = gittKravdato,
                     tom = 31 desember 2025,

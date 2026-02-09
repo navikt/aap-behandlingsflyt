@@ -19,6 +19,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.formkrav.FormkravVarsel
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.formkrav.FormkravVurdering
 import no.nav.aap.behandlingsflyt.flyt.steg.FantVentebehov
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
+import no.nav.aap.behandlingsflyt.help.flytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
@@ -27,15 +28,12 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryTrukketSøknadRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryVilkårsresultatRepository
-import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -66,28 +64,25 @@ class FormkravStegTest {
         every { trekkKlageServiceMock.klageErTrukket(any()) } returns false
         every { formkravRepositoryMock.hentHvisEksisterer(any()) } returns null
         every { avbrytRevurderingServiceMock.revurderingErAvbrutt(any()) } returns true
-        every { avklaringsbehovServiceMock.oppdaterAvklaringsbehov(
-            definisjon = Definisjon.VURDER_FORMKRAV,
-            vedtakBehøverVurdering = any(),
-            erTilstrekkeligVurdert = any(),
-            tilbakestillGrunnlag = any(),
-            kontekst = any(),
-        ) } returns Unit
+        every {
+            avklaringsbehovServiceMock.oppdaterAvklaringsbehov(
+                definisjon = Definisjon.VURDER_FORMKRAV,
+                vedtakBehøverVurdering = any(),
+                erTilstrekkeligVurdert = any(),
+                tilbakestillGrunnlag = any(),
+                kontekst = any(),
+            )
+        } returns Unit
         InMemoryAvklaringsbehovRepository.clearMemory()
     }
 
     @Test
     fun `FormkravSteg-utfører skal gi avklaringsbehov VURDER_FORMKRAV om man ikke har vurdert dette formkravet enda`() {
         every { brevbestillingServiceMock.hentBestillinger(any(), any()) } returns listOf()
-        val kontekst = FlytKontekstMedPerioder(
-            sakId = SakId(1L),
-            behandlingId = BehandlingId(1L),
-            behandlingType = TypeBehandling.Klage,
-            forrigeBehandlingId = null,
-            vurderingType = VurderingType.IKKE_RELEVANT,
-            rettighetsperiode = Periode(LocalDate.now().minusDays(1), LocalDate.now().plusYears(1)),
-            vurderingsbehovRelevanteForSteg = setOf(Vurderingsbehov.MOTATT_KLAGE)
-        )
+        val kontekst = flytKontekstMedPerioder {
+            behandlingType = TypeBehandling.Klage
+            this.vurderingsbehovRelevanteForSteg = setOf(Vurderingsbehov.MOTATT_KLAGE)
+        }
 
         InMemoryAvklaringsbehovRepository.opprett(
             BehandlingId(1),
@@ -117,7 +112,9 @@ class FormkravStegTest {
         steg.utfør(kontekst)
 
         val avklaringsbehovene = InMemoryAvklaringsbehovRepository.hentAvklaringsbehovene(BehandlingId(1))
-        assertThat(avklaringsbehovene.hentBehovForDefinisjon(Definisjon.VURDER_FORMKRAV)?.definisjon).isEqualTo(Definisjon.VURDER_FORMKRAV)
+        assertThat(avklaringsbehovene.hentBehovForDefinisjon(Definisjon.VURDER_FORMKRAV)?.definisjon).isEqualTo(
+            Definisjon.VURDER_FORMKRAV
+        )
     }
 
     @Test
@@ -133,15 +130,11 @@ class FormkravStegTest {
             )
         )
 
-        val kontekst = FlytKontekstMedPerioder(
-            sakId = SakId(1L),
-            behandlingId = BehandlingId(2L),
-            behandlingType = TypeBehandling.Klage,
-            forrigeBehandlingId = null,
-            vurderingType = VurderingType.IKKE_RELEVANT,
-            rettighetsperiode = Periode(LocalDate.now().minusDays(1), LocalDate.now().plusYears(1)),
-            vurderingsbehovRelevanteForSteg = setOf(Vurderingsbehov.MOTATT_KLAGE)
-        )
+        val kontekst = flytKontekstMedPerioder {
+            behandlingType = TypeBehandling.Klage
+            this.behandlingId = BehandlingId(2)
+            this.vurderingsbehovRelevanteForSteg = setOf(Vurderingsbehov.MOTATT_KLAGE)
+        }
 
         InMemoryAvklaringsbehovRepository.opprett(
             BehandlingId(2L),
@@ -199,15 +192,10 @@ class FormkravStegTest {
         every { behandlingRepositoryMock.hent(any<BehandlingId>()) } returns tomBehandling(BehandlingId(1L))
         every { formkravRepositoryMock.lagreVarsel(any(), any()) } returns Unit
 
-        val kontekst = FlytKontekstMedPerioder(
-            sakId = SakId(1L),
-            behandlingId = BehandlingId(1L),
-            behandlingType = TypeBehandling.Klage,
-            forrigeBehandlingId = null,
-            vurderingType = VurderingType.IKKE_RELEVANT,
-            rettighetsperiode = Periode(LocalDate.now().minusDays(1), LocalDate.now().plusYears(1)),
-            vurderingsbehovRelevanteForSteg = setOf(Vurderingsbehov.MOTATT_KLAGE)
-        )
+        val kontekst = flytKontekstMedPerioder {
+            behandlingType = TypeBehandling.Klage
+            this.vurderingsbehovRelevanteForSteg = setOf(Vurderingsbehov.MOTATT_KLAGE)
+        }
 
         InMemoryAvklaringsbehovRepository.opprett(
             BehandlingId(1L),
@@ -255,7 +243,7 @@ class FormkravStegTest {
         )
 
         every { brevbestillingServiceMock.hentBestillinger(any(), any()) } returns emptyList()
-        every { brevbestillingServiceMock.bestill(any(),any(),any(),any(),) } returns UUID.randomUUID()
+        every { brevbestillingServiceMock.bestill(any(), any(), any(), any()) } returns UUID.randomUUID()
 
         val resultat = steg.utfør(kontekst)
 
@@ -268,15 +256,10 @@ class FormkravStegTest {
         every { brevbestillingServiceMock.bestill(any(), any(), any(), any()) } returns UUID.randomUUID()
         every { formkravRepositoryMock.lagreVarsel(any(), any()) } returns Unit
 
-        val kontekst = FlytKontekstMedPerioder(
-            sakId = SakId(1L),
-            behandlingId = BehandlingId(1L),
-            behandlingType = TypeBehandling.Klage,
-            forrigeBehandlingId = null,
-            vurderingType = VurderingType.IKKE_RELEVANT,
-            rettighetsperiode = Periode(LocalDate.now().minusDays(1), LocalDate.now().plusYears(1)),
-            vurderingsbehovRelevanteForSteg = setOf(Vurderingsbehov.MOTATT_KLAGE)
-        )
+        val kontekst = flytKontekstMedPerioder {
+            behandlingType = TypeBehandling.Klage
+            this.vurderingsbehovRelevanteForSteg = setOf(Vurderingsbehov.MOTATT_KLAGE)
+        }
 
         InMemoryAvklaringsbehovRepository.opprett(
             BehandlingId(1),
@@ -332,7 +315,9 @@ class FormkravStegTest {
 
         steg.utfør(kontekst)
         val avklaringsbehovene = InMemoryAvklaringsbehovRepository.hentAvklaringsbehovene(BehandlingId(1))
-        assertThat(avklaringsbehovene.hentBehovForDefinisjon(Definisjon.SKRIV_FORHÅNDSVARSEL_KLAGE_FORMKRAV_BREV)?.definisjon).isEqualTo(Definisjon.SKRIV_FORHÅNDSVARSEL_KLAGE_FORMKRAV_BREV)
+        assertThat(avklaringsbehovene.hentBehovForDefinisjon(Definisjon.SKRIV_FORHÅNDSVARSEL_KLAGE_FORMKRAV_BREV)?.definisjon).isEqualTo(
+            Definisjon.SKRIV_FORHÅNDSVARSEL_KLAGE_FORMKRAV_BREV
+        )
 
         verify { brevbestillingServiceMock.bestill(BehandlingId(1L), any(), any(), any()) }
     }
@@ -368,15 +353,10 @@ class FormkravStegTest {
             )
         )
 
-        val kontekst = FlytKontekstMedPerioder(
-            sakId = SakId(1L),
-            behandlingId = BehandlingId(1L),
-            behandlingType = TypeBehandling.Klage,
-            forrigeBehandlingId = null,
-            vurderingType = VurderingType.IKKE_RELEVANT,
-            rettighetsperiode = Periode(LocalDate.now().minusDays(1), LocalDate.now().plusYears(1)),
-            vurderingsbehovRelevanteForSteg = setOf(Vurderingsbehov.MOTATT_KLAGE)
-        )
+        val kontekst = flytKontekstMedPerioder {
+            behandlingType = TypeBehandling.Klage
+            this.vurderingsbehovRelevanteForSteg = setOf(Vurderingsbehov.MOTATT_KLAGE)
+        }
 
         InMemoryAvklaringsbehovRepository.opprett(
             BehandlingId(1),
@@ -419,23 +399,20 @@ class FormkravStegTest {
             unleashGateway = gatewayProvider.provide()
         )
 
-        val resultat = steg.utfør(kontekst)
+        steg.utfør(kontekst)
 
         val avklaringsbehovene = InMemoryAvklaringsbehovRepository.hentAvklaringsbehovene(BehandlingId(1))
-        assertThat(avklaringsbehovene.hentBehovForDefinisjon(Definisjon.SKRIV_FORHÅNDSVARSEL_KLAGE_FORMKRAV_BREV)?.definisjon).isEqualTo(Definisjon.SKRIV_FORHÅNDSVARSEL_KLAGE_FORMKRAV_BREV)
+        assertThat(avklaringsbehovene.hentBehovForDefinisjon(Definisjon.SKRIV_FORHÅNDSVARSEL_KLAGE_FORMKRAV_BREV)?.definisjon).isEqualTo(
+            Definisjon.SKRIV_FORHÅNDSVARSEL_KLAGE_FORMKRAV_BREV
+        )
     }
 
     @Test
     fun `FormkravSteg-utfører skal gi ventebehov om brev er sendt og formkravet ikke er oppfyllt`() {
-        val kontekst = FlytKontekstMedPerioder(
-            sakId = SakId(1L),
-            behandlingId = BehandlingId(1L),
-            behandlingType = TypeBehandling.Klage,
-            forrigeBehandlingId = null,
-            vurderingType = VurderingType.IKKE_RELEVANT,
-            rettighetsperiode = Periode(LocalDate.now().minusDays(1), LocalDate.now().plusYears(1)),
-            vurderingsbehovRelevanteForSteg = setOf(Vurderingsbehov.MOTATT_KLAGE)
-        )
+        val kontekst = flytKontekstMedPerioder {
+            behandlingType = TypeBehandling.Klage
+            this.vurderingsbehovRelevanteForSteg = setOf(Vurderingsbehov.MOTATT_KLAGE)
+        }
 
         InMemoryAvklaringsbehovRepository.opprett(
             BehandlingId(1),
@@ -502,15 +479,10 @@ class FormkravStegTest {
 
     @Test
     fun `FormkravSteg-utfører skal gi FULLFØRT om varsel er sendt og formkrav ikke er oppfyllt - men men er over svarfristen på 3 uker`() {
-        val kontekst = FlytKontekstMedPerioder(
-            sakId = SakId(1L),
-            behandlingId = BehandlingId(1L),
-            behandlingType = TypeBehandling.Klage,
-            forrigeBehandlingId = null,
-            vurderingType = VurderingType.IKKE_RELEVANT,
-            rettighetsperiode = Periode(LocalDate.now().minusDays(1), LocalDate.now().plusYears(1)),
-            vurderingsbehovRelevanteForSteg = setOf(Vurderingsbehov.MOTATT_KLAGE)
-        )
+        val kontekst = flytKontekstMedPerioder {
+            behandlingType = TypeBehandling.Klage
+            this.vurderingsbehovRelevanteForSteg = setOf(Vurderingsbehov.MOTATT_KLAGE)
+        }
 
         InMemoryAvklaringsbehovRepository.opprett(
             BehandlingId(1),

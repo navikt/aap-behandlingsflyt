@@ -9,7 +9,6 @@ enum class BehandlingsflytFeature : FeatureToggle {
     IngenValidering,
     NyBrevtype11_17,
     OvergangArbeid,
-    KvalitetssikringsSteg,
     NyBrevbyggerV3,
     LagreVedtakIFatteVedtak,
     PeriodisertSykepengeErstatningNyAvklaringsbehovService,
@@ -20,14 +19,16 @@ enum class BehandlingsflytFeature : FeatureToggle {
     MigrerRettighetsperiode,
     SendBrevVedMottattKlage,
     PeriodisertSykdom,
-    Sykestipend,
     ForlengelseIManuellBehandling,
     UtvidVedtakslengdeJobb,
     InstitusjonsoppholdJobb,
     TrekkSoeknadOpprettetFraLegeerklaering,
     UbehandledeMeldekortJobb,
     ForenkletKvote,
-    PapirMeldekortFraBehandingsflyt
+    PapirMeldekortFraBehandingsflyt,
+    RettighetstypeSteg,
+    VirksomhetsEtablering,
+    KvalitetssikringVed2213
     ;
 
     override fun key(): String = name

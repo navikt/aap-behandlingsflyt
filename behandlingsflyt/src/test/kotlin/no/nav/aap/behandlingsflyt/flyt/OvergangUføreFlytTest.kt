@@ -13,6 +13,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Re
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.BistandLøsningDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.UføreSøknadVedtakResultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.flate.OvergangUføreLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.flate.OvergangUføreVurderingLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.SykdomsvurderingLøsningDto
@@ -26,6 +27,7 @@ import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.test.FakeUnleashBaseWithDefaultDisabled
 import no.nav.aap.behandlingsflyt.test.LokalUnleash
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.utils.toHumanReadable
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.type.Periode
@@ -105,13 +107,13 @@ class OvergangUføreFlytTest: AbstraktFlytOrkestratorTest(OvergangArbeidEnabledU
             )
             .assertThrows(
                 UgyldigForespørselException::class,
-                "Løsning mangler vurdering for perioder: ${
+                "Du mangler vurdering for ${
                     listOf(
                         Periode(
                             periode.fom,
                             virkningsdatoFørsteLøsningOvertgangUføre.minusDays(1)
                         )
-                    )
+                    ).toHumanReadable()
                 }"
             ) { behandling ->
                 behandling.løsAvklaringsBehov(
@@ -120,7 +122,7 @@ class OvergangUføreFlytTest: AbstraktFlytOrkestratorTest(OvergangArbeidEnabledU
                             OvergangUføreLøsningDto(
                                 begrunnelse = "Løsning",
                                 brukerHarSøktOmUføretrygd = true,
-                                brukerHarFåttVedtakOmUføretrygd = "NEI",
+                                brukerHarFåttVedtakOmUføretrygd = UføreSøknadVedtakResultat.NEI,
                                 brukerRettPåAAP = true,
                                 fom = virkningsdatoFørsteLøsningOvertgangUføre,
                                 tom = null,
@@ -142,7 +144,7 @@ class OvergangUføreFlytTest: AbstraktFlytOrkestratorTest(OvergangArbeidEnabledU
                     OvergangUføreVurderingLøsningDto(
                         begrunnelse = "Løsning",
                         brukerHarSøktOmUføretrygd = true,
-                        brukerHarFåttVedtakOmUføretrygd = "NEI",
+                        brukerHarFåttVedtakOmUføretrygd = UføreSøknadVedtakResultat.NEI,
                         brukerRettPåAAP = true,
                         virkningsdato = virkningsdatoAndreLøsningOvergangUføre,
                         fom = virkningsdatoAndreLøsningOvergangUføre,
@@ -281,7 +283,7 @@ class OvergangUføreFlytTest: AbstraktFlytOrkestratorTest(OvergangArbeidEnabledU
                         OvergangUføreLøsningDto(
                             begrunnelse = "Løsning",
                             brukerHarSøktOmUføretrygd = true,
-                            brukerHarFåttVedtakOmUføretrygd = "NEI",
+                            brukerHarFåttVedtakOmUføretrygd = UføreSøknadVedtakResultat.NEI,
                             brukerRettPåAAP = true,
                             fom = overgangUførDato,
                             tom = null,
@@ -344,7 +346,7 @@ class OvergangUføreFlytTest: AbstraktFlytOrkestratorTest(OvergangArbeidEnabledU
                         OvergangUføreLøsningDto(
                             begrunnelse = "Løsning",
                             brukerHarSøktOmUføretrygd = true,
-                            brukerHarFåttVedtakOmUføretrygd = "NEI",
+                            brukerHarFåttVedtakOmUføretrygd = UføreSøknadVedtakResultat.NEI,
                             brukerRettPåAAP = false,
                             fom = ikkeLengerSykDato,
                             tom = null,

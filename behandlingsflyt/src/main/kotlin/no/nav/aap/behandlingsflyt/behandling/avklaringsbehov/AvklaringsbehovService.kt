@@ -21,6 +21,7 @@ import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
+import java.time.LocalDateTime
 
 class AvklaringsbehovService(
     private val avbrytRevurderingService: AvbrytRevurderingService,
@@ -93,6 +94,8 @@ class AvklaringsbehovService(
          * Denne funksjonen kalles kun om `vedtakBehøverVurdering() == true` og avklaringsbehovet
          * [definisjon] allerede har en løsning. Merk at selv om definisjonen allerede har en løsning,
          * så kan den løsningen ha blitt rullet tilbake (se [tilbakestillGrunnlag]).
+         *
+         * @return `null` betyr at [erTilstrekkeligVurdert] benyttes i stedet for periodebasert sjekk.
          */
         perioderSomIkkeErTilstrekkeligVurdert: () -> Set<Periode>?,
         erTilstrekkeligVurdert: () -> Boolean,
@@ -115,11 +118,13 @@ class AvklaringsbehovService(
         val erTilstrekkeligVurdertBakoverkompatibel =
             { erTilstrekkeligVurdert() || perioderSomIkkeErTilstrekkeligVurdert()?.isEmpty() == true }
 
+        val vurderingsbehovErNyere = vurderingsbehovetErNyereEnnAvklaringsbehovet(kontekst, avklaringsbehov)
+
         if (vedtakBehøverVurdering()) {
-            if (avklaringsbehov == null || !avklaringsbehov.harAvsluttetStatusIHistorikken() || avklaringsbehov.status() == AVBRUTT) {
+            if (avklaringsbehov == null || !avklaringsbehov.harAvsluttetStatusIHistorikken() || avklaringsbehov.status() == AVBRUTT || vurderingsbehovErNyere) {
                 /* ønsket tilstand: OPPRETTET */
-                when (avklaringsbehov?.status()) {
-                    OPPRETTET -> {
+                when {
+                    avklaringsbehov?.status()?.erÅpent() == true -> {
                         /* ønsket tilstand er OPPRETTET */
                         avklaringsbehovene.oppdaterPerioder(
                             avklaringsbehov.definisjon,
@@ -128,26 +133,18 @@ class AvklaringsbehovService(
                         )
                     }
 
-                    null, AVBRUTT ->
-                        avklaringsbehovene.leggTil(
-                            definisjon,
-                            definisjon.løsesISteg,
-                            perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert(),
-                            perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering()
-                        )
-
-                    TOTRINNS_VURDERT,
-                    SENDT_TILBAKE_FRA_BESLUTTER,
-                    KVALITETSSIKRET,
-                    SENDT_TILBAKE_FRA_KVALITETSSIKRER,
-                    AVSLUTTET ->
-                        error("Ikke mulig: fikk ${avklaringsbehov.status()}")
+                    else -> avklaringsbehovene.leggTil(
+                        definisjon,
+                        definisjon.løsesISteg,
+                        perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert(),
+                        perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering()
+                    )
                 }
             } else if (erTilstrekkeligVurdertBakoverkompatibel()) {
                 /* ønsket tilstand: ... */
                 when (avklaringsbehov.status()) {
                     OPPRETTET, AVBRUTT ->
-                        avklaringsbehovene.internalAvslutt(definisjon)
+                        avklaringsbehovene.avslutt(definisjon, "Behovet var åpent, men er nå tilstrekkelig vurdert.")
 
                     AVSLUTTET,
                     SENDT_TILBAKE_FRA_BESLUTTER,
@@ -206,13 +203,26 @@ class AvklaringsbehovService(
                         return
                     }
 
-                    avklaringsbehovene.internalAvbryt(definisjon)
+                    avklaringsbehovene.avbryt(definisjon)
                     if (!avbrytRevurderingService.revurderingErAvbrutt(kontekst.behandlingId)) {
                         tilbakestillGrunnlag()
                     }
                 }
             }
         }
+    }
+
+    private fun vurderingsbehovetErNyereEnnAvklaringsbehovet(
+        kontekst: FlytKontekstMedPerioder,
+        avklaringsbehov: Avklaringsbehov?
+    ): Boolean {
+        val nyesteVurderingsbehov = kontekst.vurderingsbehovRelevanteForStegMedPerioder.maxOfOrNull { it.oppdatertTid }
+        val nyesteAvklaringsbehovEndring =
+            avklaringsbehov?.aktivHistorikk?.maxOfOrNull { it.tidsstempel } ?: LocalDateTime.MIN
+        val vurderingsbehovErNyere = nyesteVurderingsbehov != null && nyesteVurderingsbehov.isAfter(
+            nyesteAvklaringsbehovEndring
+        )
+        return vurderingsbehovErNyere
     }
 
     private fun oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
@@ -258,7 +268,7 @@ class AvklaringsbehovService(
                 if (perioderVilkåretErRelevant.segmenter().any { it.verdi }
                     && kontekst.vurderingsbehovRelevanteForSteg.any { it in tvingerAvklaringsbehov }
                 ) {
-                    // Vi behøver vurdering, men har ikke nødvendigvis noen obligatoriske perioder)
+                    // Vi behøver vurdering, men har ikke nødvendigvis noen obligatoriske perioder
                     Pair(true, perioderSomBehøverVurdering)
                 } else {
                     Pair(perioderSomBehøverVurdering.isNotEmpty(), perioderSomBehøverVurdering)
@@ -325,7 +335,7 @@ class AvklaringsbehovService(
         )
     }
 
-    /** Special case av [oppdaterAvklaringsbehov] for vilkår som er periodisert. Brukeren
+    /** Spesialtilfelle av [oppdaterAvklaringsbehov] for vilkår som er periodisert. Brukeren
      * av funksjonen må fortelle hvilke perioder hvor vilkåret kan bli vurdert for ([nårVurderingErRelevant]).
      *
      * Hvis det er en periode som trenger vurdering som ikke trengte vurdering i forrige behandling, så løftes
