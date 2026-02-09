@@ -95,7 +95,7 @@ class AvklarHelseinstitusjonLøser(
         return eksisterendeTidslinje.kombiner(
             nyeVurderingerTidslinje,
             StandardSammenslåere.prioriterHøyreSideCrossJoin()
-        ).segmenter().map {
+        ).komprimer().segmenter().map {
             HelseinstitusjonVurdering(
                 begrunnelse = it.verdi.begrunnelse,
                 faarFriKostOgLosji = it.verdi.faarFriKostOgLosji,
@@ -159,13 +159,15 @@ class AvklarHelseinstitusjonLøser(
             for (i in 1 until oppholdsliste.size) {
                 val forrigeOpphold = oppholdsliste[i - 1].key
                 val nåværendeOpphold = oppholdsliste[i].key
+                val vurderingerForrige = oppholdsliste[i - 1].value
                 val vurderingerNåværende = oppholdsliste[i].value
 
                 val treMånederEtterUtskrivelse = forrigeOpphold.periode.tom.plusMonths(3)
                 val erInnenTreMåneder = !nåværendeOpphold.periode.fom.isAfter(treMånederEtterUtskrivelse)
                 val første = førsteReduksjonsvurdering(vurderingerNåværende)
+                val haddeReduksjonForrige = førsteReduksjonsvurdering(vurderingerForrige) != null
 
-                if (erInnenTreMåneder) {
+                if (erInnenTreMåneder && haddeReduksjonForrige) {
                     // Reduksjon skal starte fra måneden etter nytt opphold
                     val tidligsteReduksjonsdato = nåværendeOpphold.periode.fom.withDayOfMonth(1).plusMonths(1)
                     val resultat = validerReduksjonsdato(
@@ -176,9 +178,11 @@ class AvklarHelseinstitusjonLøser(
                     if (resultat != null) return resultat
                 } else {
                     // Nytt opphold behandles som første opphold (4 måneders karantene)
+                    // Dette gjelder hvis oppholdet er mer enn 3 måneder etter forrige,
+                    // eller hvis forrige opphold ikke førte til reduksjon
                     val tidligsteReduksjonsdato = nåværendeOpphold.periode.fom.withDayOfMonth(1).plusMonths(4)
                     val resultat = validerReduksjonsdato(
-                        vurderinger, første, tidligsteReduksjonsdato,
+                        vurderingerNåværende, første, tidligsteReduksjonsdato,
                         "Reduksjon ved nytt opphold starter for tidlig. Skal ikke starte før"
                     )
 

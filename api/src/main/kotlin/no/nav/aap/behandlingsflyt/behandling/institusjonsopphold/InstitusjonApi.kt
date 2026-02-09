@@ -138,10 +138,6 @@ fun NormalOpenAPIRoute.institusjonApi(
                     val vurderingerGruppertPerOpphold =
                         institusjonsoppholdRepository.hentVurderingerGruppertPerOpphold(behandling.id)
 
-                    /*val vedtatteVurderingerForOpphold1 = vurderingerGruppertPerOpphold
-                        .mapValues { it.value.filterNot { vurdering -> vurdering.vurdertIBehandling == behandling.id } }
-                        .filterValues { it.isNotEmpty() }*/ //TODO Thao
-
                     val nyeVurderingerForOpphold =
                         vurderingerGruppertPerOpphold.mapValues { (_, vurderinger) ->
                             vurderinger.filter { it.vurdertIBehandling == behandling.id }
@@ -173,7 +169,22 @@ fun NormalOpenAPIRoute.institusjonApi(
                                 } else null
                             }.flatten()
                     } else {
-                        mapVurderingerToDto(nyeVurderingerForOpphold, oppholdInfo, ansattInfoService)
+                        val uavklarteDto = helseoppholdPerioder.segmenter()
+                            .filter { it.verdi != null && it.verdi?.vurdering == OppholdVurdering.UAVKLART }
+                            .flatMap { segment ->
+                                oppholdInfo.begrensetTil(segment.periode).segmenter().map { oppholdSegment ->
+                                    HelseoppholdDto(
+                                        periode = oppholdSegment.periode,
+                                        oppholdId = lagOppholdId(
+                                            oppholdSegment.verdi.navn,
+                                            oppholdSegment.periode.fom
+                                        ),
+                                        vurderinger = emptyList()
+                                    )
+                                }
+                            }
+
+                        mapVurderingerToDto(nyeVurderingerForOpphold, oppholdInfo, ansattInfoService) + uavklarteDto
                     }
 
                     HelseinstitusjonGrunnlagDto(
