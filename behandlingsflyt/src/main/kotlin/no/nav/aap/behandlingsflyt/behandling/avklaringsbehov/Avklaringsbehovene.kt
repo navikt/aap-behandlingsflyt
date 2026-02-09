@@ -178,9 +178,9 @@ class Avklaringsbehovene(
     /**
      *  Brukes for logikk internt for avklaringsbehov. Fra steg, bruk AvklaringsbehovService / løs-metoden.
      */
-    internal fun avslutt(definisjon: Definisjon) {
+    internal fun avslutt(definisjon: Definisjon, begrunnelse: String) {
         val avklaringsbehov = alle().single { it.definisjon == definisjon }
-        avklaringsbehov.avslutt()
+        avklaringsbehov.avslutt(begrunnelse)
         repository.endre(avklaringsbehov.id, avklaringsbehov.historikk.last())
     }
 

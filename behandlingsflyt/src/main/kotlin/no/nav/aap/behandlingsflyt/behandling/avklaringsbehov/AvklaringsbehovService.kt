@@ -144,7 +144,7 @@ class AvklaringsbehovService(
                 /* ønsket tilstand: ... */
                 when (avklaringsbehov.status()) {
                     OPPRETTET, AVBRUTT ->
-                        avklaringsbehovene.avslutt(definisjon)
+                        avklaringsbehovene.avslutt(definisjon, "Behovet var åpent, men er nå tilstrekkelig vurdert.")
 
                     AVSLUTTET,
                     SENDT_TILBAKE_FRA_BESLUTTER,
