@@ -68,20 +68,37 @@ class StudentRepositoryImplTest {
             vurdertTidspunkt = LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS),
             vurdertIBehandling = behandling.id
         )
+        val studentvurdering2 = StudentVurdering(
+            fom = 2 april 2020,
+            tom = null,
+            begrunnelse = "Nei",
+            harAvbruttStudie = false,
+            godkjentStudieAvLånekassen = null,
+            avbruttPgaSykdomEllerSkade = null,
+            harBehovForBehandling = null,
+            avbruttStudieDato = null,
+            avbruddMerEnn6Måneder = true,
+            vurdertAv = "Gokken Gokkestad",
+            vurdertTidspunkt = LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS),
+            vurdertIBehandling = behandling.id
+        )
         
         dataSource.transaction {
             StudentRepositoryImpl(it).lagre(
-                behandling.id, setOf(studentvurdering)
+                behandling.id, setOf(studentvurdering, studentvurdering2)
             )
         }
 
         val uthentet = dataSource.transaction {
             StudentRepositoryImpl(it).hent(behandling.id)
         }
-        assertThat(uthentet.vurderinger).hasSize(1)
-        assertThat(uthentet.vurderinger!!.single())
+        assertThat(uthentet.vurderinger).hasSize(2)
+        assertThat(uthentet.vurderinger!!.first{it.fom.isEqual(1 januar 2020)})
             .usingRecursiveComparison().ignoringFields("id")
             .isEqualTo(studentvurdering)
+        assertThat(uthentet.vurderinger!!.first{it.fom.isEqual(2 april 2020)})
+            .usingRecursiveComparison().ignoringFields("id")
+            .isEqualTo(studentvurdering2)
         assertThat(uthentet.oppgittStudent)
             .usingRecursiveComparison().ignoringFields("id")
             .isEqualTo(oppgittStudent)

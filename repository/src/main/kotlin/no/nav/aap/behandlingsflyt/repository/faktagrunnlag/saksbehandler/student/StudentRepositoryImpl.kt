@@ -136,9 +136,9 @@ class StudentRepositoryImpl(private val connection: DBConnection) : StudentRepos
         vurderinger: Set<StudentVurdering>?,
         oppgittStudentId: Long?
     ) {
-        val (vurderingId, vurderingerId) = when {
-            vurderinger.isNullOrEmpty() -> Pair(null, null)
-            else -> lagreVurdering(vurderinger.single())
+        val vurderingerId = when {
+            vurderinger.isNullOrEmpty() -> null
+            else -> lagreVurdering(vurderinger)
         }
 
         val query = """
@@ -154,7 +154,7 @@ class StudentRepositoryImpl(private val connection: DBConnection) : StudentRepos
         }
     }
 
-    private fun lagreVurdering(studentvurdering: StudentVurdering): Pair<Long, Long> {
+    private fun lagreVurdering(studentvurderinger: Set<StudentVurdering>): Long {
         val vurderingerId = connection.executeReturnKey("""INSERT INTO STUDENT_VURDERINGER DEFAULT VALUES""")
 
         val query = """
@@ -162,8 +162,8 @@ class StudentRepositoryImpl(private val connection: DBConnection) : StudentRepos
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """.trimIndent()
 
-        val vurderingId = connection.executeReturnKey(query) {
-            setParams {
+        val vurderingId = connection.executeBatch(query, studentvurderinger) {
+            setParams { studentvurdering ->
                 setString(1, studentvurdering.begrunnelse)
                 setBoolean(2, studentvurdering.harAvbruttStudie)
                 setBoolean(3, studentvurdering.godkjentStudieAvLånekassen)
@@ -180,7 +180,7 @@ class StudentRepositoryImpl(private val connection: DBConnection) : StudentRepos
             }
         }
 
-        return Pair(vurderingId, vurderingerId)
+        return vurderingerId
     }
 
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
