@@ -17,6 +17,7 @@ data class EtableringEgenVirksomhetGrunnlagResponse(
     override val kanVurderes: List<Periode>,
     override val behøverVurderinger: List<Periode>,
     val kvalitetssikretAv: VurdertAvResponse?,
+    val ikkeVurderbarePerioder: List<Periode>
 ) : PeriodiserteVurderingerDto<EtableringEgenVirksomhetVurderingResponse>
 
 data class EtableringEgenVirksomhetVurderingResponse(
@@ -32,8 +33,8 @@ data class EtableringEgenVirksomhetVurderingResponse(
     val virksomhetErNy: Boolean,
     val brukerEierVirksomheten: Boolean,
     val kanFøreTilSelvforsørget: Boolean,
-    val utviklingsPeriode: Periode,
-    val oppstartsPeriode: Periode
+    val utviklingsPeriode: List<Periode>,
+    val oppstartsPeriode: List<Periode>
 ) : VurderingDto {
     companion object {
         fun fraDomene(
@@ -67,8 +68,8 @@ data class EtableringEgenVirksomhetVurderingResponse(
             virksomhetErNy = etableringEgenVirksomhetVurdering.virksomhetErNy,
             brukerEierVirksomheten = etableringEgenVirksomhetVurdering.brukerEierVirksomheten,
             kanFøreTilSelvforsørget = etableringEgenVirksomhetVurdering.kanFøreTilSelvforsørget,
-            utviklingsPeriode = etableringEgenVirksomhetVurdering.utviklingsPeriode,
-            oppstartsPeriode = etableringEgenVirksomhetVurdering.oppstartsPeriode,
+            utviklingsPeriode = etableringEgenVirksomhetVurdering.utviklingsPerioder,
+            oppstartsPeriode = etableringEgenVirksomhetVurdering.oppstartsPerioder,
             vurdertAv = vurdertAvService.medNavnOgEnhet(
                 etableringEgenVirksomhetVurdering.vurdertAv.ident,
                 etableringEgenVirksomhetVurdering.opprettetTid

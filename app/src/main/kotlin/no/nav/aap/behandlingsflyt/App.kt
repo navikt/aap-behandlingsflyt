@@ -269,7 +269,7 @@ internal fun Application.server(
                 meldepliktOverstyringGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
                 arbeidsevneGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
                 arbeidsopptrappingGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
-                etableringEgenVirksomhetApi(dataSource, repositoryRegistry)
+                etableringEgenVirksomhetApi(dataSource, repositoryRegistry, gatewayProvider)
                 overgangUforeGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
                 medlemskapsgrunnlagApi(dataSource, repositoryRegistry)
                 studentgrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
