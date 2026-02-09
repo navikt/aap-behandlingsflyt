@@ -26,7 +26,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.somTidslinje
@@ -45,7 +44,6 @@ class SamordningYtelseVurderingInformasjonskrav(
     private val fpGateway: ForeldrepengerGateway,
     private val spGateway: SykepengerGateway,
     private val sakService: SakService,
-    private val unleashGateway: UnleashGateway
 ) : Informasjonskrav<SamordningInput, SamordningRegisterdata>, KanTriggeRevurdering {
     private val log = LoggerFactory.getLogger(javaClass)
 
@@ -220,7 +218,6 @@ class SamordningYtelseVurderingInformasjonskrav(
                 gatewayProvider.provide(),
                 gatewayProvider.provide(),
                 SakService(repositoryProvider),
-                gatewayProvider.provide()
             )
         }
 
