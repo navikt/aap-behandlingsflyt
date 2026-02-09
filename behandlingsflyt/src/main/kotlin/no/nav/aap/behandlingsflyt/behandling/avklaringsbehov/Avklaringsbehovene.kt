@@ -169,49 +169,19 @@ class Avklaringsbehovene(
         repository.endre(avklaringsbehov.id, avklaringsbehov.historikk.last())
     }
 
-    @Deprecated("Bruk hjelpemetoder i AvklaringsbehovService for å styre avklaringsbehov")
-    fun avbryt(definisjon: Definisjon) {
+    internal fun avbryt(definisjon: Definisjon) {
         val avklaringsbehov = alle().single { it.definisjon == definisjon }
         avklaringsbehov.avbryt()
         repository.endre(avklaringsbehov.id, avklaringsbehov.historikk.last())
     }
 
-    /* Kan fjerne internal-prefikset når deprecated `avbryt` er slettet. */
-    internal fun internalAvbryt(definisjon: Definisjon) {
+    /**
+     *  Brukes for logikk internt for avklaringsbehov. Fra steg, bruk AvklaringsbehovService / løs-metoden.
+     */
+    internal fun avslutt(definisjon: Definisjon, begrunnelse: String) {
         val avklaringsbehov = alle().single { it.definisjon == definisjon }
-        avklaringsbehov.avbryt()
+        avklaringsbehov.avslutt(begrunnelse)
         repository.endre(avklaringsbehov.id, avklaringsbehov.historikk.last())
-    }
-
-    @Deprecated("Styr avklaringsbehov med AvklaringsbehovService")
-    fun avbrytForSteg(steg: StegType) {
-        for (avklaringsbehov in åpne()) {
-            if (avklaringsbehov.skalLøsesISteg(steg)) {
-                avklaringsbehov.avbryt()
-                repository.endre(avklaringsbehov.id, avklaringsbehov.historikk.last())
-            }
-        }
-    }
-
-    @Deprecated("Styr avklaringsbehov med AvklaringsbehovService")
-    fun avslutt(definisjon: Definisjon) {
-        val avklaringsbehov = alle().single { it.definisjon == definisjon }
-        avklaringsbehov.avslutt()
-        repository.endre(avklaringsbehov.id, avklaringsbehov.historikk.last())
-    }
-
-    /* Kan fjerne internal-prefixet når den deperecated avslutt-metoden er borte. */
-    internal fun internalAvslutt(definisjon: Definisjon) {
-        val avklaringsbehov = alle().single { it.definisjon == definisjon }
-        avklaringsbehov.avslutt()
-        repository.endre(avklaringsbehov.id, avklaringsbehov.historikk.last())
-    }
-
-    @Deprecated("Styr avklaringsbehov med AvklaringsbehovService")
-    fun avbrytÅpneAvklaringsbehov() {
-        val avklaringsbehovSomSkalAvbrytes =
-            alle().filter { it.erÅpent() && !(it.erVentepunkt() || it.erBrevVentebehov()) }
-        avklaringsbehovSomSkalAvbrytes.map { it.definisjon }.distinct().forEach { avbryt(it) }
     }
 
 
@@ -303,13 +273,6 @@ class Avklaringsbehovene(
         return alle().any { it.erIkkeAvbrutt() && it.erTotrinn() && !it.erTotrinnsVurdert() }
     }
 
-    fun harHattAvklaringsbehovSomKreverKvalitetssikring(): Boolean {
-        return alle()
-            .filter { avklaringsbehov -> avklaringsbehov.kreverKvalitetssikring() }
-            .filter { avklaringsbehov -> avklaringsbehov.erIkkeAvbrutt() }
-            .any { avklaringsbehov -> !avklaringsbehov.erKvalitetssikretTidligere() }
-    }
-
     fun harAvklaringsbehovSomKreverKvalitetssikring(): Boolean {
         return alle()
             .filter { avklaringsbehov -> avklaringsbehov.kreverKvalitetssikring() }
@@ -338,7 +301,11 @@ class Avklaringsbehovene(
         )
     }
 
-    fun validerPerioder(løsning: PeriodisertAvklaringsbehovLøsning<*>, kontekst: FlytKontekst, repositoryProvider: RepositoryProvider) {
+    fun validerPerioder(
+        løsning: PeriodisertAvklaringsbehovLøsning<*>,
+        kontekst: FlytKontekst,
+        repositoryProvider: RepositoryProvider
+    ) {
         val perioderDekketAvLøsning = løsning.løsningerForPerioder.sortedBy { it.fom }
             .somTidslinje { Periode(fom = it.fom, tom = it.tom ?: Tid.MAKS) }
             .map { true }.komprimer()
@@ -348,7 +315,10 @@ class Avklaringsbehovene(
                 .map { true }.komprimer()
         } ?: Tidslinje()
 
-        val perioderDekket = perioderDekkerAvTidligereVurderinger.kombiner(perioderDekketAvLøsning, StandardSammenslåere.prioriterHøyreSideCrossJoin()).komprimer()
+        val perioderDekket = perioderDekkerAvTidligereVurderinger.kombiner(
+            perioderDekketAvLøsning,
+            StandardSammenslåere.prioriterHøyreSideCrossJoin()
+        ).komprimer()
 
         val behovForDefinisjon = this.hentBehovForDefinisjon(løsning.definisjon())
         if (behovForDefinisjon != null) {

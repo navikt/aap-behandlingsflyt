@@ -8,7 +8,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.formkrav.FormkravVurdering
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.utils.Validation
-import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.LocalDateTime
 
@@ -32,13 +31,13 @@ class VurderFormkravLøser(
         return when (val validatedLøsning = løsning.valider()) {
             is Validation.Invalid -> throw IllegalArgumentException(validatedLøsning.errorMessage)
             is Validation.Valid -> {
-                settKlagePåVentHvisInnenforFristenOgBrevAlleredeSendt(kontekst.behandlingId(), vurdering, kontekst.bruker)
+                settKlagePåVentHvisInnenforFristenOgBrevAlleredeSendt(kontekst.behandlingId(), vurdering)
                 LøsningsResultat(begrunnelse = løsning.formkravVurdering.begrunnelse)
             }
         }
     }
 
-    private fun settKlagePåVentHvisInnenforFristenOgBrevAlleredeSendt(behandlingId: BehandlingId, vurdering: FormkravVurdering, bruker: Bruker) {
+    private fun settKlagePåVentHvisInnenforFristenOgBrevAlleredeSendt(behandlingId: BehandlingId, vurdering: FormkravVurdering) {
         val avklaringsbehov = avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId)
         val ventebehov = avklaringsbehov.hentBehovForDefinisjon(Definisjon.VENTE_PÅ_FRIST_FORHÅNDSVARSEL_KLAGE_FORMKRAV)
 

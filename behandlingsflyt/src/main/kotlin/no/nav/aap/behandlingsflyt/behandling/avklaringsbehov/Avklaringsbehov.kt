@@ -169,13 +169,13 @@ class Avklaringsbehov(
         )
     }
 
-    internal fun avslutt() {
+    internal fun avslutt(begrunnelse: String) {
         check(historikk.any { it.status == Status.AVSLUTTET }) {
             "Et steg burde vel ha vært løst minst en gang for å kunne regnes som avsluttet?"
         }
 
         historikk += Endring(
-            status = Status.AVSLUTTET, begrunnelse = "", endretAv = SYSTEMBRUKER.ident
+            status = Status.AVSLUTTET, begrunnelse = begrunnelse, endretAv = SYSTEMBRUKER.ident
         )
     }
 

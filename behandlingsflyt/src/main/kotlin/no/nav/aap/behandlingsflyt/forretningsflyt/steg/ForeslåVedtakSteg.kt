@@ -74,7 +74,11 @@ class ForeslåVedtakSteg internal constructor(
             return false
         }
 
-        val nayHarBareLøstLovvalgEllerVentepunkt = avklaringsbehovene.avklaringsbehovLøstAvNay().filterNot { it.erLovvalgOgMedlemskap() }.filterNot { it.erVentepunkt() }.isEmpty()
+        val nayHarBareLøstLovvalgEllerVentepunkt =
+            avklaringsbehovene.avklaringsbehovLøstAvNay()
+                .filterNot { it.erLovvalgOgMedlemskap() }
+                .filterNot { it.erVentepunkt() }
+                .isEmpty()
         if (!nayHarBareLøstLovvalgEllerVentepunkt) {
             return true
         }
