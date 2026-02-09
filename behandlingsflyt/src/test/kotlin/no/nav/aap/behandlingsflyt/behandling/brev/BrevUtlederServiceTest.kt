@@ -39,6 +39,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdomsvurderingbr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.UføreSøknadVedtakResultat
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
@@ -283,7 +284,7 @@ class BrevUtlederServiceTest {
                     OvergangUføreVurdering(
                         begrunnelse = "test",
                         brukerHarSøktOmUføretrygd = true,
-                        brukerHarFåttVedtakOmUføretrygd = "nei",
+                        brukerHarFåttVedtakOmUføretrygd = UføreSøknadVedtakResultat.NEI,
                         brukerRettPåAAP = true,
                         fom = kravdatoUføretrygd,
                         tom = sisteDagMedYtelse,
@@ -357,7 +358,7 @@ class BrevUtlederServiceTest {
                     OvergangUføreVurdering(
                         begrunnelse = "test",
                         brukerHarSøktOmUføretrygd = true,
-                        brukerHarFåttVedtakOmUføretrygd = "nei",
+                        brukerHarFåttVedtakOmUføretrygd = UføreSøknadVedtakResultat.NEI,
                         brukerRettPåAAP = true,
                         fom = kravdatoUføretrygd,
                         tom = sisteDagMedYtelse,

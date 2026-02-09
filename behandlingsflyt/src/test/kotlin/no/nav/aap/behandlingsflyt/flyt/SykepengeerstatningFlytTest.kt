@@ -18,6 +18,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Re
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.UføreSøknadVedtakResultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.flate.OvergangUføreLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerGrunn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.SykdomsvurderingLøsningDto
@@ -163,7 +164,7 @@ class SykepengeerstatningFlytTest(val unleashGateway: KClass<UnleashGateway>) : 
                         OvergangUføreLøsningDto(
                             begrunnelse = "Løsning",
                             brukerHarSøktOmUføretrygd = true,
-                            brukerHarFåttVedtakOmUføretrygd = "NEI",
+                            brukerHarFåttVedtakOmUføretrygd = UføreSøknadVedtakResultat.NEI,
                             brukerRettPåAAP = true,
                             fom = nå,
                             tom = null,
