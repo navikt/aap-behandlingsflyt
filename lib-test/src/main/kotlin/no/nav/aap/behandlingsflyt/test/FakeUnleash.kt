@@ -45,7 +45,6 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.HentSykepengerVedOverlapp to true,
         BehandlingsflytFeature.SendBrevVedMottattKlage to true,
         BehandlingsflytFeature.PeriodisertSykdom to true,
-        BehandlingsflytFeature.Sykestipend to true,
         BehandlingsflytFeature.ForlengelseIManuellBehandling to true,
         BehandlingsflytFeature.UtvidVedtakslengdeJobb to true,
         BehandlingsflytFeature.InstitusjonsoppholdJobb to true,
