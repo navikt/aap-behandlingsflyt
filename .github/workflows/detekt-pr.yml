@@ -2,6 +2,9 @@ name: Detekt Code Quality
 
 on:
   pull_request:
+  push:
+    branches:
+      - main
 
 concurrency:
   group: "detekt-${{ github.head_ref || github.sha }}"
