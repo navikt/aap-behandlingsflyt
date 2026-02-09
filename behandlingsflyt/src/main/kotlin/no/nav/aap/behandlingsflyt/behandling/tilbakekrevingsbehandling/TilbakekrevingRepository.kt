@@ -6,4 +6,5 @@ import no.nav.aap.lookup.repository.Repository
 interface TilbakekrevingRepository : Repository {
     fun lagre(sakId: SakId, tilbakekrevingshendelse: Tilbakekrevingshendelse)
     fun hent(sakId: SakId): List<Tilbakekrevingsbehandling>
+    fun hent(tilbakekrevingsBehandlingId: String): Tilbakekrevingsbehandling
 }
