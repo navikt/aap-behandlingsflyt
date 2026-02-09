@@ -19,5 +19,4 @@ class SykdomsFaktagrunnlag(
     val bistandvurderingFaktagrunnlag: BistandGrunnlag?,
     val studentvurdering: StudentVurdering?,
     val sykepengeerstatningVilkår: Tidslinje<Vilkårsvurdering>,
-    val sykestipendFeature: Boolean = false,
 ) : Faktagrunnlag

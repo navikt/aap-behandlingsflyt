@@ -46,11 +46,7 @@ class SykestipendSteg private constructor(
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val studentGrunnlag = studentRepository.hentHvisEksisterer(kontekst.behandlingId)
         val sykestipendGrunnlag = sykestipendRepository.hentHvisEksisterer(kontekst.behandlingId)
-
-        if (unleashGateway.isDisabled(BehandlingsflytFeature.Sykestipend)) {
-            return Fullført
-        }
-
+        
         avklaringsbehovService.oppdaterAvklaringsbehov(
             definisjon = Definisjon.AVKLAR_SAMORDNING_SYKESTIPEND,
             vedtakBehøverVurdering = {
