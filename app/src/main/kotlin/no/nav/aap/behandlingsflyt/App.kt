@@ -227,12 +227,12 @@ internal fun Application.server(
     if (!Miljø.erLokal()) {
         startPDLHendelseKonsument(dataSource, repositoryRegistry, gatewayProvider)
     }
-    if (!Miljø.erLokal() && !Miljø.erProd()) {
-        startTilbakekrevingEventKonsument(dataSource, repositoryRegistry, gatewayProvider)
+    if (!Miljø.erLokal()) {
+        startTilbakekrevingEventKonsument(dataSource, repositoryRegistry)
     }
 
     if (!Miljø.erLokal() && !Miljø.erProd()) {
-        // startInstitusjonsOppholdKonsument(dataSource, repositoryRegistry)
+        startInstitusjonsOppholdKonsument(dataSource, repositoryRegistry)
     }
 
     monitor.subscribe(ApplicationStopPreparing) { environment ->
@@ -431,7 +431,7 @@ fun Application.startKabalKonsument(
 }
 
 fun Application.startTilbakekrevingEventKonsument(
-    dataSource: DataSource, repositoryRegistry: RepositoryRegistry, gatewayProvider: GatewayProvider
+    dataSource: DataSource, repositoryRegistry: RepositoryRegistry
 ): KafkaKonsument<String, String> {
     val konsument = TilbakekrevingKafkaKonsument(
         config = KafkaConsumerConfig(), dataSource = dataSource, repositoryRegistry = repositoryRegistry,
@@ -480,10 +480,13 @@ fun Application.startPDLHendelseKonsument(
         }
         t.start()
     }
-    monitor.subscribe(ApplicationStopPreparing) { environment ->
-        environment.log.info("Forbereder stopp av applikasjon, lukker PDLHendelseKonsument.")
+    monitor.subscribe(ApplicationStopped) { env ->
+        env.log.info("ktor stopper, lukker PDLHendelseKonsument.")
 
-        konsument.lukk()
+        // ktor sine eventer kjøres synkront, så vi må kjøre dette asynkront for ikke å blokkere nedstengings-sekvensen
+        env.launch(Dispatchers.IO) {
+            konsument.lukk()
+        }
     }
 
     return konsument
@@ -514,10 +517,13 @@ fun Application.startInstitusjonsOppholdKonsument(
         }
         t.start()
     }
-    monitor.subscribe(ApplicationStopPreparing) { environment ->
-        environment.log.info("Forbereder stopp av applikasjon, lukker InstitusjonKonsument.")
+    monitor.subscribe(ApplicationStopping) { env ->
+        env.log.info("Forbereder stopp av applikasjon, lukker InstitusjonKonsument.")
 
-        konsument.lukk()
+        // ktor sine eventer kjøres synkront, så vi må kjøre dette asynkront for ikke å blokkere nedstengings-sekvensen
+        env.launch(Dispatchers.IO) {
+            konsument.lukk()
+        }
     }
 
     return konsument

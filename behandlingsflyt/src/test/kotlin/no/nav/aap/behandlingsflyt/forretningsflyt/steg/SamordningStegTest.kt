@@ -18,7 +18,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevu
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelsePeriode
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
-import no.nav.aap.behandlingsflyt.help.FakePdlGateway
+import no.nav.aap.behandlingsflyt.help.opprettInMemorySak
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
@@ -28,13 +28,9 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅ
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
-import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
-import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryPersonRepository
-import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySamordningRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySamordningVurderingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySamordningYtelseRepository
@@ -500,11 +496,7 @@ class SamordningStegTest {
     }
 
     private fun nySak(): Sak {
-        return PersonOgSakService(
-            FakePdlGateway,
-            InMemoryPersonRepository,
-            InMemorySakRepository
-        ).finnEllerOpprett(ident(), Periode(LocalDate.now(), LocalDate.now().plusYears(1)))
+        return opprettInMemorySak(Periode(LocalDate.now(), LocalDate.now().plusYears(1)))
     }
 
     private fun opprettBehandling(sak: Sak): Behandling {

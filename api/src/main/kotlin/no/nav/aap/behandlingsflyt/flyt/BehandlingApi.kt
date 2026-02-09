@@ -79,12 +79,14 @@ fun NormalOpenAPIRoute.behandlingApi(
                 val dto = dataSource.transaction(readOnly = true) { connection ->
                     val repositoryProvider = repositoryRegistry.provider(connection)
                     val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+                    val sakRepository = repositoryProvider.provide<SakRepository>()
                     val avklaringsbehovRepository =
                         repositoryProvider.provide<AvklaringsbehovRepository>()
                     val vilkårsresultatRepository =
                         repositoryProvider.provide<VilkårsresultatRepository>()
 
                     val behandling = behandling(behandlingRepository, req)
+                    val sak = sakRepository.hent(behandling.sakId)
                     val virkningstidspunkt =
                         runCatching {
                             if (behandling.erYtelsesbehandling()) VirkningstidspunktUtleder(
@@ -122,16 +124,8 @@ fun NormalOpenAPIRoute.behandlingApi(
                             behandling.aktivtSteg()
                         ).alle().map { avklaringsbehov ->
                             AvklaringsbehovDTO(
-                                definisjon = avklaringsbehov.definisjon,
-                                status = avklaringsbehov.status(),
-                                endringer = avklaringsbehov.historikk.map { endring ->
-                                    EndringDTO(
-                                        status = endring.status,
-                                        tidsstempel = endring.tidsstempel,
-                                        begrunnelse = endring.begrunnelse,
-                                        endretAv = endring.endretAv
-                                    )
-                                }
+                                avklaringsbehov = avklaringsbehov,
+                                kravdato = sak.rettighetsperiode.fom
                             )
                         },
                         vilkår = vilkårResultat(vilkårsresultatRepository, behandling.id).alle()

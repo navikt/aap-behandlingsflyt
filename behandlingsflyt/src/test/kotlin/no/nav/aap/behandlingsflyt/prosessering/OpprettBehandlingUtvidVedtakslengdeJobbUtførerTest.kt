@@ -18,6 +18,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeRepository
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
@@ -29,7 +30,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettels
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
-import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.test.desember
 import no.nav.aap.behandlingsflyt.test.fixedClock
 import no.nav.aap.komponenter.type.Periode
@@ -51,6 +51,7 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtførerTest {
     private val jobbInput = JobbInput(OpprettBehandlingUtvidVedtakslengdeJobbUtfører).forSak(sakId.id)
 
     private val prosesserBehandlingService = mockk<ProsesserBehandlingService>()
+    private val vedtakslengdeRepository = mockk<VedtakslengdeRepository>()
     private val underveisRepository = mockk<UnderveisRepository>()
     private val sakOgBehandlingService = mockk<SakOgBehandlingService>()
     private val vilkårsresultatRepository = mockk<VilkårsresultatRepository>()
@@ -59,12 +60,13 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtførerTest {
             prosesserBehandlingService = prosesserBehandlingService,
             sakOgBehandlingService = sakOgBehandlingService,
             vedtakslengdeService = VedtakslengdeService(
-                underveisRepository,
-                vilkårsresultatRepository,
-                AlleAvskruddUnleash,
-                fixedClock(dagensDato)
+                vedtakslengdeRepository = vedtakslengdeRepository,
+                underveisRepository = underveisRepository,
+                vilkårsresultatRepository = vilkårsresultatRepository,
+                unleashGateway = VedtakslengdeUnleash,
+                clock = clock
             ),
-            clock = fixedClock(dagensDato)
+            clock = clock
         )
 
 

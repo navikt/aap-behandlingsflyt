@@ -102,7 +102,7 @@ class FlytOrkestrator(
 
         val endredeInformasjonskrav = informasjonskravGrunnlag
             .flettOpplysningerFraAtomærBehandling(kontekst, behandlingFlyt.alleInformasjonskravForÅpneSteg())
-        log.info("Endrede informasjonskrav etter atomær behandling: {}", endredeInformasjonskrav)
+        log.info("Endrede informasjonskrav etter atomær behandling: ${endredeInformasjonskrav}")
         tilbakefør(
             kontekst = kontekst,
             behandling = behandling,
@@ -144,9 +144,9 @@ class FlytOrkestrator(
                 val tilbakeflyt = behandlingFlyt.tilbakeflyt(behovSomBleLøst)
                 if (!tilbakeflyt.erTom()) {
                     log.info(
-                        "Tilbakeført etter tatt av vent fra '{}' til '{}'",
-                        behandling.aktivtSteg(),
-                        tilbakeflyt.stegene().last()
+                        "Tilbakeført etter tatt av vent fra '${behandling.aktivtSteg()}' til '${
+                            tilbakeflyt.stegene().last()
+                        }'",
                     )
                 }
                 tilbakefør(kontekst, behandling, tilbakeflyt, avklaringsbehovene)
@@ -167,13 +167,11 @@ class FlytOrkestrator(
 
         if (!tilbakeføringsflyt.erTom()) {
             log.info(
-                "Tilbakeført etter oppdatering av registeropplysninger fra '{}' til '{}'. " +
-                        "Oppdatert faktagrunnlag for kravliste: {} " +
-                        "Med triggere: {}",
-                behandling.aktivtSteg(),
-                tilbakeføringsflyt.stegene().last(),
-                oppdaterFaktagrunnlagForKravliste.joinToString { it.navn.toString() },
-                triggere.joinToString { it.toString() }
+                "Tilbakeført etter oppdatering av registeropplysninger fra '${behandling.aktivtSteg()}' til '${
+                    tilbakeføringsflyt.stegene().last()
+                }'. " +
+                        "Oppdatert faktagrunnlag for kravliste: ${oppdaterFaktagrunnlagForKravliste.joinToString { it.navn.toString() }} " +
+                        "Med triggere: ${triggere.joinToString { it.toString() }}",
             )
         }
         tilbakefør(kontekst, behandling, tilbakeføringsflyt, avklaringsbehovene)
@@ -247,9 +245,7 @@ class FlytOrkestrator(
                     }
                 }
                 log.info(
-                    "Tilbakeført fra '{}' til '{}'",
-                    gjeldendeSteg.type(),
-                    tilbakeføringsflyt.stegene().last()
+                    "Tilbakeført fra '${gjeldendeSteg.type()}' til '${tilbakeføringsflyt.stegene().last()}'"
                 )
                 tilbakefør(kontekst, behandling, tilbakeføringsflyt, avklaringsbehovene, false)
             }
@@ -375,12 +371,8 @@ class FlytOrkestrator(
         }
 
         log.info(
-            "Tilbakefører {} for behandling {} med flyt {}",
-            behandling.aktivtSteg(),
-            behandling.referanse,
-            behandlingFlyt
+            "Tilbakefører ${behandling.aktivtSteg()} for behandling ${behandling.referanse} med flyt ${behandlingFlyt}"
         )
-
         var neste: FlytSteg? = behandlingFlyt.aktivtSteg()
         while (true) {
 
@@ -405,9 +397,7 @@ class FlytOrkestrator(
         avklaringsbehovene: Avklaringsbehovene
     ) {
         log.info(
-            "Stopper opp ved {} med {}",
-            behandling.aktivtSteg(),
-            avklaringsbehovene.åpne()
+            "Stopper opp ved ${behandling.aktivtSteg()} med ${ avklaringsbehovene.åpne()}"
         )
     }
 

@@ -32,6 +32,7 @@ data class SamordningAndreStatligeYtelserVurderingPeriodeDto(
 
 enum class AndreStatligeYtelser {
     SYKEPENGER,
+    FORELDREPENGER,
     TILTAKSPENGER,
     OMSTILLINGSSTØNAD,
     OVERGANGSSTØNAD,
