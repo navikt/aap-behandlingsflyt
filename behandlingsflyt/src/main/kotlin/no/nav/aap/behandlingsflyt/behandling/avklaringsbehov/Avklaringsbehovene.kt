@@ -209,11 +209,13 @@ class Avklaringsbehovene(
         perioderVedtaketBehøverVurdering: Set<Periode>?
     ) {
         val avklaringsbehov = alle().single { it.definisjon == definisjon }
-        avklaringsbehov.oppdaterPerioder(
+        val harEndring = avklaringsbehov.oppdaterPerioder(
             perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert,
             perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering
         )
-        repository.endre(avklaringsbehov.id, avklaringsbehov.historikk.last())
+        if (harEndring) {
+            repository.endre(avklaringsbehov.id, avklaringsbehov.historikk.last())
+        }
     }
 
 
