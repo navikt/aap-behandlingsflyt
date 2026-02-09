@@ -13,6 +13,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Re
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.BistandLøsningDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.UføreSøknadVedtakResultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.flate.OvergangUføreLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.flate.OvergangUføreVurderingLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.SykdomsvurderingLøsningDto
@@ -121,7 +122,7 @@ class OvergangUføreFlytTest: AbstraktFlytOrkestratorTest(OvergangArbeidEnabledU
                             OvergangUføreLøsningDto(
                                 begrunnelse = "Løsning",
                                 brukerHarSøktOmUføretrygd = true,
-                                brukerHarFåttVedtakOmUføretrygd = "NEI",
+                                brukerHarFåttVedtakOmUføretrygd = UføreSøknadVedtakResultat.NEI,
                                 brukerRettPåAAP = true,
                                 fom = virkningsdatoFørsteLøsningOvertgangUføre,
                                 tom = null,
@@ -143,7 +144,7 @@ class OvergangUføreFlytTest: AbstraktFlytOrkestratorTest(OvergangArbeidEnabledU
                     OvergangUføreVurderingLøsningDto(
                         begrunnelse = "Løsning",
                         brukerHarSøktOmUføretrygd = true,
-                        brukerHarFåttVedtakOmUføretrygd = "NEI",
+                        brukerHarFåttVedtakOmUføretrygd = UføreSøknadVedtakResultat.NEI,
                         brukerRettPåAAP = true,
                         virkningsdato = virkningsdatoAndreLøsningOvergangUføre,
                         fom = virkningsdatoAndreLøsningOvergangUføre,
@@ -282,7 +283,7 @@ class OvergangUføreFlytTest: AbstraktFlytOrkestratorTest(OvergangArbeidEnabledU
                         OvergangUføreLøsningDto(
                             begrunnelse = "Løsning",
                             brukerHarSøktOmUføretrygd = true,
-                            brukerHarFåttVedtakOmUføretrygd = "NEI",
+                            brukerHarFåttVedtakOmUføretrygd = UføreSøknadVedtakResultat.NEI,
                             brukerRettPåAAP = true,
                             fom = overgangUførDato,
                             tom = null,
@@ -345,7 +346,7 @@ class OvergangUføreFlytTest: AbstraktFlytOrkestratorTest(OvergangArbeidEnabledU
                         OvergangUføreLøsningDto(
                             begrunnelse = "Løsning",
                             brukerHarSøktOmUføretrygd = true,
-                            brukerHarFåttVedtakOmUføretrygd = "NEI",
+                            brukerHarFåttVedtakOmUføretrygd = UføreSøknadVedtakResultat.NEI,
                             brukerRettPåAAP = false,
                             fom = ikkeLengerSykDato,
                             tom = null,
