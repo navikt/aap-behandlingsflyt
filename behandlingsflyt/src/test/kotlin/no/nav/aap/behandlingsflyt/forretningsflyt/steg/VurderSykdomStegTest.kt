@@ -38,6 +38,8 @@ import java.time.LocalDateTime
 class VurderSykdomStegTest {
     @Test
     fun `Sykdom skal vurderes når studentvurderinger går fra oppfylt til ikke-oppfylt`() {
+        val rettighetsperiode = Periode(1 januar 2025, 1 januar 2026)
+        
         val sakId = SakId(1)
         val behandlingId = InMemoryBehandlingRepository.opprettBehandling(
             sakId,
@@ -65,6 +67,7 @@ class VurderSykdomStegTest {
             every { hentHvisEksisterer(behandlingId) } returns StudentGrunnlag(
                 setOf(
                     StudentVurdering(
+                        fom = rettighetsperiode.fom,
                         begrunnelse = "begrunnelse",
                         vurdertAv = "saksbehandler",
                         harAvbruttStudie = true,
@@ -82,6 +85,7 @@ class VurderSykdomStegTest {
             every { hentHvisEksisterer(revurderingId) } returns StudentGrunnlag(
                 setOf(
                     StudentVurdering(
+                        fom = rettighetsperiode.fom,
                         begrunnelse = "begrunnelse",
                         vurdertAv = "saksbehandler",
                         harAvbruttStudie = true,
@@ -113,7 +117,7 @@ class VurderSykdomStegTest {
         val kontekst = flytKontekstMedPerioder {
             this.behandling  = InMemoryBehandlingRepository.hent(behandlingId)
             this.vurderingsbehovRelevanteForSteg = emptySet()
-            this.rettighetsperiode = Periode(1 januar 2025, 1 januar 2026)
+            this.rettighetsperiode = rettighetsperiode
         }
 
         steg.utfør(kontekst)
