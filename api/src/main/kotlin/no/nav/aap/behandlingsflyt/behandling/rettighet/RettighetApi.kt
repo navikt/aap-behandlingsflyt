@@ -99,6 +99,7 @@ fun NormalOpenAPIRoute.rettighetApi(
                         kvote = rettighetKvoter.totalKvote,
                         bruktKvote = rettighetKvoter.bruktKvote,
                         gjenværendeKvote = gjenværendeKvote,
+                        periodeKvoter = rettighetKvoter.periodeKvoter,
                         startDato = startdato,
                         maksDato = maksDato,
                         avslagDato = avslagDato,
