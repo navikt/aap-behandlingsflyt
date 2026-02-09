@@ -56,7 +56,6 @@ class SjekkInstitusjonsOppholdJobbUtfører(
 
                     if (sisteYtelsesBehandling != null) {
                         val sak = sakRepository.hent(sak.id)
-                        log.info("Gjeldende behandling for sak ${sak.id} (${sak.saksnummer}) er ${sisteYtelsesBehandling.id}")
                         if (erKandidatForVurderingAvInstitusjonsopphold(sisteYtelsesBehandling.id)) {
                             val vurderingsbehovOgÅrsaker =
                                 behandlingRepository.hentVurderingsbehovOgÅrsaker(sisteYtelsesBehandling.id)
@@ -150,7 +149,6 @@ class SjekkInstitusjonsOppholdJobbUtfører(
         /**
          * Kjøres hver time enn så lenge, slås av og på med Feature Toggle
          */
-        // override val cron = CronExpression.createWithoutSeconds("0 * * * *")
-        override val cron = CronExpression.createWithoutSeconds("*/5 * * * *")
+        override val cron = CronExpression.createWithoutSeconds("0 3 * * *")
     }
 }
