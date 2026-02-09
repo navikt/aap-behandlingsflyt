@@ -119,7 +119,11 @@ class SaksHistorikkService(
 
                         Definisjon.KVALITETSSIKRING -> {
                             avklaringsbehov.historikk
-                                .filter { it.status != Status.AVSLUTTET }
+                                .filterIndexed { index, h ->
+                                    h.status != Status.AVSLUTTET &&
+                                            // skal bare vise hendelser der avklaringsbehovet er opprettet eller gjenåpnet
+                                            (index == 0 || avklaringsbehov.historikk[index - 1].status == Status.AVSLUTTET)
+                                }
                                 .map { h ->
                                     BehandlingHendelseDTO(
                                         hendelse = BehandlingHendelseType.SENDT_TIL_KVALITETSSIKRER,
