@@ -1,9 +1,12 @@
 package no.nav.aap.behandlingsflyt.integrasjon.brev
 
+import no.nav.aap.behandlingsflyt.behandling.brev.Arbeidssøker
 import no.nav.aap.behandlingsflyt.behandling.brev.Avslag
 import no.nav.aap.behandlingsflyt.behandling.brev.BrevBehov
 import no.nav.aap.behandlingsflyt.behandling.brev.GrunnlagBeregning
 import no.nav.aap.behandlingsflyt.behandling.brev.Innvilgelse
+import no.nav.aap.behandlingsflyt.behandling.brev.TilkjentYtelse
+import no.nav.aap.behandlingsflyt.behandling.brev.UtvidVedtakslengde
 import no.nav.aap.behandlingsflyt.behandling.brev.VurderesForUføretrygd
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingGateway
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingReferanse
@@ -51,6 +54,7 @@ import no.nav.aap.komponenter.json.DefaultJsonMapper
 import org.slf4j.LoggerFactory
 import java.io.InputStream
 import java.net.URI
+import java.time.LocalDate
 import kotlin.collections.orEmpty
 
 class BrevGateway : BrevbestillingGateway {
@@ -287,6 +291,7 @@ class BrevGateway : BrevbestillingGateway {
     private fun mapTypeBrev(typeBrev: TypeBrev): Brevtype = when (typeBrev) {
         TypeBrev.VEDTAK_AVSLAG -> Brevtype.AVSLAG
         TypeBrev.VEDTAK_INNVILGELSE -> Brevtype.INNVILGELSE
+        TypeBrev.VEDTAK_UTVID_VEDTAKSLENGDE -> Brevtype.VEDTAK_UTVID_VEDTAKSLENGDE
         TypeBrev.VEDTAK_ENDRING -> Brevtype.VEDTAK_ENDRING
         TypeBrev.BARNETILLEGG_SATS_REGULERING -> Brevtype.BARNETILLEGG_SATS_REGULERING
         TypeBrev.VARSEL_OM_BESTILLING -> Brevtype.VARSEL_OM_BESTILLING
@@ -309,22 +314,10 @@ class BrevGateway : BrevbestillingGateway {
             is Innvilgelse ->
                 buildSet {
                     add(Faktagrunnlag.AapFomDato(brevBehov.virkningstidspunkt))
+                    add(Faktagrunnlag.SisteDagMedYtelse(brevBehov.sisteDagMedYtelse))
                     if (brevBehov.tilkjentYtelse != null) {
                         add(
-                            Faktagrunnlag.TilkjentYtelse(
-                                dagsats = brevBehov.tilkjentYtelse?.dagsats?.verdi,
-                                gradertDagsats = brevBehov.tilkjentYtelse?.gradertDagsats?.verdi,
-                                barnetilleggSats = brevBehov.tilkjentYtelse?.barnetilleggsats?.verdi,
-                                gradertBarnetillegg = brevBehov.tilkjentYtelse?.gradertBarnetillegg?.verdi,
-                                gradertDagsatsInkludertBarnetillegg = brevBehov.tilkjentYtelse?.gradertDagsatsInkludertBarnetillegg?.verdi,
-                                barnetillegg = brevBehov.tilkjentYtelse?.barnetillegg?.verdi,
-                                antallBarn = brevBehov.tilkjentYtelse?.antallBarn,
-                                minsteÅrligYtelse = brevBehov.tilkjentYtelse?.minsteÅrligYtelse?.heltallverdi(),
-                                minsteÅrligYtelseUnder25 = brevBehov.tilkjentYtelse?.minsteÅrligYtelseUnder25?.heltallverdi(),
-                                årligYtelse = brevBehov.tilkjentYtelse?.årligYtelse?.heltallverdi(),
-                                sisteDagMedYtelse = brevBehov.tilkjentYtelse?.sisteDagMedYtelse,
-                                kravdatoUføretrygd = null
-                            )
+                            tilkjentYtelseTilFaktagrunnlag(brevBehov.tilkjentYtelse!!)
                         )
                     }
                     if (brevBehov.grunnlagBeregning != null) {
@@ -340,9 +333,28 @@ class BrevGateway : BrevbestillingGateway {
 
             is VurderesForUføretrygd -> {
                 buildSet {
+                    add(Faktagrunnlag.KravdatoUføretrygd(brevBehov.kravdatoUføretrygd))
+                    add(Faktagrunnlag.SisteDagMedYtelse(brevBehov.sisteDagMedYtelse))
                     if (brevBehov.grunnlagBeregning != null) {
                         add(
                             grunnlagBeregningTilFaktagrunnlag(brevBehov.grunnlagBeregning!!)
+                        )
+                    }
+                    if (brevBehov.tilkjentYtelse != null) {
+                        add(
+                            tilkjentYtelseTilFaktagrunnlag(brevBehov.tilkjentYtelse!!)
+                        )
+                    }
+                }
+            }
+
+            is Arbeidssøker -> {
+                buildSet {
+                    add(Faktagrunnlag.DatoAvklartForJobbsøk(brevBehov.datoAvklartForJobbsøk))
+                    add(Faktagrunnlag.SisteDagMedYtelse(brevBehov.sisteDagMedYtelse))
+                    if (brevBehov.tilkjentYtelse != null) {
+                        add(
+                            tilkjentYtelseTilFaktagrunnlag(brevBehov.tilkjentYtelse!!)
                         )
                     }
                 }
@@ -356,8 +368,31 @@ class BrevGateway : BrevbestillingGateway {
                 }
             }
 
+            is UtvidVedtakslengde -> {
+                buildSet {
+                    add(
+                        Faktagrunnlag.SisteDagMedYtelse(brevBehov.sisteDagMedYtelse)
+                    )
+                }
+            }
+
             else -> emptySet()
         }
+    }
+
+    private fun tilkjentYtelseTilFaktagrunnlag(tilkjentYtelse: TilkjentYtelse): Faktagrunnlag {
+        return Faktagrunnlag.TilkjentYtelse(
+            dagsats = tilkjentYtelse.dagsats?.verdi,
+            gradertDagsats = tilkjentYtelse.gradertDagsats?.verdi,
+            barnetilleggSats = tilkjentYtelse.barnetilleggsats?.verdi,
+            gradertBarnetillegg = tilkjentYtelse.gradertBarnetillegg?.verdi,
+            gradertDagsatsInkludertBarnetillegg = tilkjentYtelse.gradertDagsatsInkludertBarnetillegg?.verdi,
+            barnetillegg = tilkjentYtelse.barnetillegg?.verdi,
+            antallBarn = tilkjentYtelse.antallBarn,
+            minsteÅrligYtelse = tilkjentYtelse.minsteÅrligYtelse?.heltallverdi(),
+            minsteÅrligYtelseUnder25 = tilkjentYtelse.minsteÅrligYtelseUnder25?.heltallverdi(),
+            årligYtelse = tilkjentYtelse.årligYtelse?.heltallverdi()
+        )
     }
 
     private fun grunnlagBeregningTilFaktagrunnlag(grunnlagBeregning: GrunnlagBeregning): Faktagrunnlag.GrunnlagBeregning {

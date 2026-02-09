@@ -141,7 +141,13 @@ internal class BeregningsgrunnlagRepositoryImplTest {
             type = GrunnlagUføre.Type.YTTERLIGERE_NEDSATT,
             grunnlag = grunnlag11_19Standard,
             grunnlagYtterligereNedsatt = grunnlag11_19Ytterligere,
-            uføregrader = setOf(Uføre(LocalDate.of(2022,4,1), Prosent.`50_PROSENT`)),
+            uføregrader = setOf(
+                Uføre(
+                    virkningstidspunkt = LocalDate.of(2022, 4, 1),
+                    uføregradTom = LocalDate.of(2023, 4, 1),
+                    uføregrad = Prosent.`50_PROSENT`
+                )
+            ),
             uføreInntekterFraForegåendeÅr = inntektPerÅrUføre.map(InntekterForUføre::uføreInntekt),
             uføreYtterligereNedsattArbeidsevneÅr = Year.of(2022)
         )
@@ -155,11 +161,11 @@ internal class BeregningsgrunnlagRepositoryImplTest {
             val beregningsgrunnlag: GrunnlagUføre =
                 BeregningsgrunnlagRepositoryImpl(connection).hentHvisEksisterer(behandling.id) as GrunnlagUføre
 
+            assertThat(beregningsgrunnlag).usingRecursiveComparison().isEqualTo(grunnlagUføre)
             assertThat(beregningsgrunnlag).isEqualTo(grunnlagUføre)
             assertThat(beregningsgrunnlag.underliggende().inntekter()).isEqualTo(inntektPerÅr)
             assertThat(beregningsgrunnlag.underliggendeYtterligereNedsatt().inntekter())
                 .isEqualTo(inntektPerÅrUføre.map(InntekterForUføre::grunnlagInntekt))
-            assertThat(beregningsgrunnlag).isEqualTo(grunnlagUføre)
         }
 
         // Test sletting
@@ -277,7 +283,7 @@ internal class BeregningsgrunnlagRepositoryImplTest {
             type = GrunnlagUføre.Type.STANDARD,
             grunnlag = grunnlag11_19Standard,
             grunnlagYtterligereNedsatt = grunnlag11_19Ytterligere,
-            uføregrader = setOf(Uføre(LocalDate.of(2022,4,1), Prosent.`50_PROSENT`)),
+            uføregrader = setOf(Uføre(LocalDate.of(2022, 4, 1), Prosent.`50_PROSENT`)),
             uføreInntekterFraForegåendeÅr = inntektPerÅrUføre.map(InntekterForUføre::uføreInntekt),
             uføreYtterligereNedsattArbeidsevneÅr = Year.of(2022)
         )
@@ -438,7 +444,7 @@ internal class BeregningsgrunnlagRepositoryImplTest {
             type = GrunnlagUføre.Type.YTTERLIGERE_NEDSATT,
             grunnlag = grunnlag11_19Standard_2,
             grunnlagYtterligereNedsatt = grunnlag11_19Ytterligere,
-            uføregrader = setOf(Uføre(LocalDate.of(2022,4,1), Prosent.`50_PROSENT`)),
+            uføregrader = setOf(Uføre(LocalDate.of(2022, 4, 1), Prosent.`50_PROSENT`)),
             uføreInntekterFraForegåendeÅr = inntektPerÅrUføre.map(InntekterForUføre::uføreInntekt),
             uføreYtterligereNedsattArbeidsevneÅr = Year.of(2022)
         )

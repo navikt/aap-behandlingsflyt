@@ -21,7 +21,6 @@ import no.nav.aap.tilgang.getGrunnlag
 import java.time.LocalDate
 import javax.sql.DataSource
 
-
 data class RettighetsperiodeGrunnlagResponse(
     val vurdering: RettighetsperiodeVurderingResponse?,
     val søknadsdato: LocalDate?,

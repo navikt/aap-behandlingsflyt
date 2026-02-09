@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.prosessering
 
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
@@ -29,50 +30,62 @@ class OpprettJobbForMigrereRettighetsperiodeJobbUtfører(
 
     override fun utfør(input: JobbInput) {
 
-        val saker = sakRepository.finnSakerMedUtenRiktigSluttdatoPåRettighetsperiode()
-        val sakerForMigrering = saker.filter { sak ->
-            val sisteYtelsesbehandling = sakOgBehandlingService.finnSisteYtelsesbehandlingFor(sak.id)
-            if (sisteYtelsesbehandling != null) {
-                val erTrukket = trukketSøknadService.søknadErTrukket(sisteYtelsesbehandling.id)
-                sisteYtelsesbehandling.status().erAvsluttet() && !erTrukket
-            } else {
-                log.info("Fant ikke ytelsesbehandlinger for sak ${sak.id} ")
-                false
+        val saker = sakRepository.finnSakerMedAvsluttedeBehandlingerUtenRiktigSluttdatoPåRettighetsperiode()
+        val sakerForMigrering = saker
+            .filter { sak ->
+                val sisteYtelsesbehandling = sakOgBehandlingService.finnSisteYtelsesbehandlingFor(sak.id)
+                if (sisteYtelsesbehandling != null) {
+                    erAktuellForMigrering(sisteYtelsesbehandling)
+                } else {
+                    log.info("Fant ikke ytelsesbehandlinger for sak ${sak.id} ")
+                    false
+                }
+
             }
-        }.filter { erForhåndskvalifisertSak(it) }
+            .filter { erForhåndskvalifisertSak(it) }
+            .sortedByDescending { it.opprettetTidspunkt }
+            .take(75)
 
         log.info("Fant ${saker.size} migrering av rettighetsperiode. Antall iverksatte/avsluttede kandidater: ${sakerForMigrering.size}")
 
         if (unleashGateway.isEnabled(BehandlingsflytFeature.MigrerRettighetsperiode)) {
             sakerForMigrering.forEach { sak ->
-                flytJobbRepository.leggTil(JobbInput(OpprettBehandlingMigrereRettighetsperiodeJobbUtfører).forSak(sak.id.toLong()))
+
+                if (!finnesAlleredeMigreringsjobbForSak(sak)) {
+                    flytJobbRepository.leggTil(JobbInput(OpprettBehandlingMigrereRettighetsperiodeJobbUtfører).forSak(sak.id.toLong()))
+                } else {
+                    log.info("Finnes allerede en jobb for å migrere rettighetsperiode sak ${sak.id} ")
+                }
             }
 
             log.info("Jobb for migrering av rettighetsperiode fullført for ${sakerForMigrering.size}")
         }
     }
 
+    private fun finnesAlleredeMigreringsjobbForSak(sak: Sak):Boolean =
+        flytJobbRepository.hentJobberForSak(sak.id.toLong())
+            .any { it.type() == OpprettBehandlingMigrereRettighetsperiodeJobbUtfører.type }
+
+    /**
+     * Kan kun behandle de som er avsluttet og ønsker ikke å migrere de som er trukket
+     * Ønsker å begrense utplukket og øke intervall gradvis de nyeste har minst sjanse for
+     * diff i tilkjent ytelse, underveis eller vilkår
+     */
+    private fun erAktuellForMigrering(sisteYtelsesbehandling: Behandling): Boolean =
+        sisteYtelsesbehandling.status().erAvsluttet()
+                && !harSøknadTrukket(sisteYtelsesbehandling)
+
+    private fun harSøknadTrukket(sisteYtelsesbehandling: Behandling): Boolean =
+        trukketSøknadService.søknadErTrukket(sisteYtelsesbehandling.id)
+
     /**
      * Før vi skrur på for fullt ønsker vi å teste enkeltsaker i hvert miljø
      */
     fun erForhåndskvalifisertSak(sak: Sak): Boolean {
         val forhåndskvalifisertDev = listOf<String>()
-        val forhåndskvalifisertProd = listOf<String>(
-                    "4LFDNAo",
-                    "4LFY0BK",
-                    "4LG2AN4",
-                    "4LG8Q4G",
-                    "4LGiDCG",
-                    "4LGPVEo",
-                    "4LGQXZK",
-                    "4LGS0KG",
-                    "4LGT35C",
-                    "4LGWAW0",
-
-        )
         return when (Miljø.er()) {
-            MiljøKode.DEV -> forhåndskvalifisertDev.contains(sak.saksnummer.toString())
-            MiljøKode.PROD -> forhåndskvalifisertProd.contains(sak.saksnummer.toString())
+            MiljøKode.DEV -> false
+            MiljøKode.PROD -> true // forhåndskvalifisertProd.contains(sak.saksnummer.toString())
             MiljøKode.LOKALT -> true
         }
     }

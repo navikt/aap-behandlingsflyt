@@ -10,8 +10,13 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.komponenter.tidslinje.somTidslinje
 import no.nav.aap.komponenter.type.Periode
+import java.time.LocalDate
 
 class StudentVilkår(vilkårsresultat: Vilkårsresultat) : Vilkårsvurderer<StudentFaktagrunnlag> {
+    companion object {
+        fun utledVarighetSluttdato(fraDato: LocalDate) = fraDato.plusMonths(6).minusDays(1)
+    }
+
     private val vilkår: Vilkår = vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.STUDENT)
 
     override fun vurder(grunnlag: StudentFaktagrunnlag) {
@@ -22,7 +27,7 @@ class StudentVilkår(vilkårsresultat: Vilkårsresultat) : Vilkårsvurderer<Stud
         val varighetsTidslinje =
             grunnlag.studentGrunnlag?.gjeldendeStudentvurderinger(grunnlag.rettighetsperiode).orEmpty()
                 .filter { it.avbruttStudieDato != null }.sortedBy { it.avbruttStudieDato }
-                .somTidslinje { Periode(it.avbruttStudieDato!!, it.avbruttStudieDato.plusMonths(6).minusDays(1)) }
+                .somTidslinje { Periode(it.avbruttStudieDato!!, utledVarighetSluttdato(it.avbruttStudieDato)) }
                 .mapValue { true }
 
         vilkår.leggTilIkkeVurdertPeriode(grunnlag.rettighetsperiode) // Resetter vilkårstidslinjen

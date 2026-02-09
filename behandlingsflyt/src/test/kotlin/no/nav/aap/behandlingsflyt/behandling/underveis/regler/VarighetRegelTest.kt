@@ -1,5 +1,12 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 
+import no.nav.aap.behandlingsflyt.behandling.rettighetstype.KravForOrdinærAap
+import no.nav.aap.behandlingsflyt.behandling.rettighetstype.KravForOvergangArbeid
+import no.nav.aap.behandlingsflyt.behandling.rettighetstype.KravForOvergangUføretrygd
+import no.nav.aap.behandlingsflyt.behandling.rettighetstype.KravForStudent
+import no.nav.aap.behandlingsflyt.behandling.rettighetstype.KravForSykepengeerstatning
+import no.nav.aap.behandlingsflyt.behandling.rettighetstype.RettighetstypeVurdering
+import no.nav.aap.behandlingsflyt.behandling.rettighetstype.vurderKvoter
 import no.nav.aap.behandlingsflyt.behandling.underveis.Kvoter
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.VarighetVurdering.Avslagsårsak.ORDINÆRKVOTE_BRUKT_OPP
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.VarighetVurdering.Avslagsårsak.SYKEPENGEERSTATNINGKVOTE_BRUKT_OPP
@@ -725,10 +732,22 @@ class VarighetRegelTest {
         )
     }
 
-    private val regel = VarighetRegel()
+    private fun vurder(underveisInput: UnderveisInput, vurderinger: Tidslinje<Vurdering>): Tidslinje<Vurdering> {
+        val kvoteVurderinger = vurderKvoter(underveisInput.kvoter, vurderinger.map {
+            RettighetstypeVurdering(
+                kravspesifikasjonForRettighetsType = when (it.fårAapEtter) {
+                    null -> null
+                    RettighetsType.BISTANDSBEHOV -> KravForOrdinærAap
+                    RettighetsType.SYKEPENGEERSTATNING -> KravForSykepengeerstatning
+                    RettighetsType.STUDENT -> KravForStudent
+                    RettighetsType.ARBEIDSSØKER -> KravForOvergangArbeid
+                    RettighetsType.VURDERES_FOR_UFØRETRYGD -> KravForOvergangUføretrygd
+                },
+                vilkårsvurderinger = emptyMap(),
+            )
+        })
 
-    private fun vurder(input: UnderveisInput, resultat: Tidslinje<Vurdering>): Tidslinje<Vurdering> {
-        return regel.vurder(input, resultat)
+        return vurderinger.leggTilVurderinger(kvoteVurderinger, Vurdering::leggTilVarighetVurdering)
     }
 }
 

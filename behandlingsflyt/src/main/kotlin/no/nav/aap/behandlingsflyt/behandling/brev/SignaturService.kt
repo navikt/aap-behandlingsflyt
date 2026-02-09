@@ -28,21 +28,32 @@ class SignaturService(
         return when (brevbestilling.typeBrev) {
             TypeBrev.VEDTAK_AVSLAG, TypeBrev.VEDTAK_INNVILGELSE, TypeBrev.VEDTAK_ENDRING, TypeBrev.KLAGE_AVVIST,
             TypeBrev.KLAGE_OPPRETTHOLDELSE, TypeBrev.KLAGE_TRUKKET, TypeBrev.VEDTAK_11_17, TypeBrev.VEDTAK_11_18,
-            TypeBrev.VEDTAK_11_7, TypeBrev.VEDTAK_11_9, TypeBrev.VEDTAK_11_23_SJETTE_LEDD -> {
+            TypeBrev.VEDTAK_11_7, TypeBrev.VEDTAK_11_9, TypeBrev.VEDTAK_11_23_SJETTE_LEDD,
+            TypeBrev.VEDTAK_UTVID_VEDTAKSLENGDE -> {
 
                 val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(brevbestilling.behandlingId)
-                listOfNotNull(
-                    utledSignatur(Rolle.BESLUTTER, avklaringsbehovene)
-                    // Dersom ingen har saksbehandlet med rollen beslutter så tas innlogget bruker med i signatur.
-                    // Dette fordi det er saksbehandlere med beslutter-rolle som skriver vedtaksbrev.
-                        ?: SignaturGrunnlag(
-                        bruker.ident,
-                        null
-                    ),
-                    utledSignatur(Rolle.SAKSBEHANDLER_NASJONAL, avklaringsbehovene),
-                    utledSignatur(Rolle.KVALITETSSIKRER, avklaringsbehovene),
-                    utledSignatur(Rolle.SAKSBEHANDLER_OPPFOLGING, avklaringsbehovene)
-                )
+                val signaturBeslutter = utledSignatur(Rolle.BESLUTTER, avklaringsbehovene)
+                val signaturSaksbehandlerNasjonal = utledSignatur(Rolle.SAKSBEHANDLER_NASJONAL, avklaringsbehovene)
+                val signaturKvalitetssikrer = utledSignatur(Rolle.KVALITETSSIKRER, avklaringsbehovene)
+                val signaturSaksbehandlerOppfolging = utledSignatur(Rolle.SAKSBEHANDLER_OPPFOLGING, avklaringsbehovene)
+
+                buildList {
+                    signaturSaksbehandlerNasjonal?.let { add(it) }
+                    signaturKvalitetssikrer?.let { add(it) }
+                    signaturSaksbehandlerOppfolging?.let { add(it) }
+                    if (signaturBeslutter == null && none { it.navIdent == bruker.ident }) {
+                        // Dersom ingen har saksbehandlet med rollen beslutter så tas innlogget bruker med i signatur.
+                        // Dette fordi det er beslutter som skriver vedtaksbrev.
+                        addFirst(
+                            SignaturGrunnlag(
+                                navIdent = bruker.ident,
+                                rolle = null
+                            )
+                        )
+                    } else {
+                        signaturBeslutter?.let { addFirst(it) }
+                    }
+                }
             }
 
             TypeBrev.FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT, TypeBrev.FORHÅNDSVARSEL_KLAGE_FORMKRAV -> {

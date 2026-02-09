@@ -1,5 +1,7 @@
 package no.nav.aap.behandlingsflyt.behandling.vilkår.overganguføre
 
+import no.nav.aap.behandlingsflyt.behandling.underveis.Kvoter
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager
 import no.nav.aap.behandlingsflyt.behandling.vilkår.Varighetsvurdering
 import no.nav.aap.behandlingsflyt.behandling.vilkår.Vilkårsvurderer
 import no.nav.aap.behandlingsflyt.behandling.vilkår.mapMedDatoTilDatoVarighet
@@ -10,8 +12,13 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.komponenter.tidslinje.orEmpty
+import java.time.LocalDate
 
 class OvergangUføreVilkår(vilkårsresultat: Vilkårsresultat) : Vilkårsvurderer<OvergangUføreFaktagrunnlag> {
+    companion object {
+        fun utledVarighetSluttdato(fraDato: LocalDate) = fraDato.plusMonths(8).minusDays(1)
+    }
+
     private val vilkår: Vilkår = vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.OVERGANGUFØREVILKÅRET)
     override fun vurder(grunnlag: OvergangUføreFaktagrunnlag) {
         val vurderinger =
@@ -27,7 +34,7 @@ class OvergangUføreVilkår(vilkårsresultat: Vilkårsresultat) : Vilkårsvurder
                                  *
                                  * Dagens praksis i Arena er dato-til-dato, men regelspesifiseringen gir ingen spesifikasjon.
                                  */
-                        it.plusMonths(8).minusDays(1)
+                        utledVarighetSluttdato(it)
                     },
                 ) { varighetsvurdering, vurdering ->
                     when (varighetsvurdering) {

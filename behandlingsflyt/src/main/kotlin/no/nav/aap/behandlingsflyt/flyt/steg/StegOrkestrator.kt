@@ -150,9 +150,7 @@ class StegOrkestrator(
         val behandlingSteg = stegKonstruktør.konstruer(aktivtSteg)
 
         log.debug(
-            "Behandler steg({}) med status({})",
-            aktivtSteg.type(),
-            gjeldendeStegStatus
+            "Behandler steg(${aktivtSteg.type()}) med status(${gjeldendeStegStatus})"
         )
 
         val transisjon = when (gjeldendeStegStatus) {

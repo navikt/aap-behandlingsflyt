@@ -8,7 +8,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.MedlemskapDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.utenlandsopphold.UtenlandsOppholdData
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.ArbeidsInntektInformasjon
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.ArbeidsInntektMaaned
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.ArbeidsInntektMåned
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.Inntekt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.Virksomhet
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.KildesystemKode
@@ -351,13 +351,13 @@ internal class MedlemskapArbeidInntektRepositoryImplTest {
         )
     )
 
-    private fun inntektGrunnlag(): List<ArbeidsInntektMaaned> = listOf(
-        ArbeidsInntektMaaned(
-            aarMaaned = YearMonth.now(),
+    private fun inntektGrunnlag(): List<ArbeidsInntektMåned> = listOf(
+        ArbeidsInntektMåned(
+            årMåned = YearMonth.now(),
             arbeidsInntektInformasjon = ArbeidsInntektInformasjon(
                 listOf(
                     Inntekt(
-                        beloep = 1.0,
+                        beløp = 1.0,
                         opptjeningsland = null,
                         skattemessigBosattLand = null,
                         opptjeningsperiodeFom = null,
@@ -368,7 +368,7 @@ internal class MedlemskapArbeidInntektRepositoryImplTest {
                         beskrivelse = null
                     ),
                     Inntekt(
-                        beloep = 1.0,
+                        beløp = 1.0,
                         opptjeningsland = null,
                         skattemessigBosattLand = null,
                         opptjeningsperiodeFom = null,

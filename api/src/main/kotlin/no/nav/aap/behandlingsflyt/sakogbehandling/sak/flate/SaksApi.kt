@@ -13,6 +13,7 @@ import no.nav.aap.behandlingsflyt.behandling.Resultat
 import no.nav.aap.behandlingsflyt.behandling.ResultatUtleder
 import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
+import no.nav.aap.behandlingsflyt.hendelse.datadeling.ApiInternGateway
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Status
@@ -146,7 +147,6 @@ fun NormalOpenAPIRoute.saksApi(
                 if (person == null) {
                     emptyList()
                 } else {
-                    // Her skal vi strengt tatt bare ha én sak?
                     val saker = repositoryProvider.provide<SakRepository>().finnSakerFor(person)
 
                     saker.map { sak ->
@@ -256,14 +256,17 @@ fun NormalOpenAPIRoute.saksApi(
                 val saken: SaksinfoDTO = dataSource.transaction { connection ->
                     val repositoryProvider = repositoryRegistry.provider(connection)
                     val ident = Ident(dto.ident)
+
+                    // Setter 'fra og med' til dagens dato, 'til og med' et år frem i tid minus en dag.
+                    // Dette tilsvarer "vedtakslengde" i forskriften.
                     val periode = Periode(
                         dto.søknadsdato, dto.søknadsdato.plusYears(1).minusDays(1)
-                    ) // Setter til fra og med dagens dato, til og med et år frem i tid minus en dag som er tilsvarende "vedtakslengde" i forskriften
-                    val sak = PersonOgSakService(
-                        pdlGateway = identGateway,
-                        personRepository = repositoryProvider.provide<PersonRepository>(),
-                        sakRepository = repositoryProvider.provide<SakRepository>()
-                    ).finnEllerOpprett(ident = ident, periode = periode)
+                    )
+
+                    val sak = PersonOgSakService(gatewayProvider, repositoryProvider).finnEllerOpprett(
+                        ident = ident,
+                        periode = periode
+                    )
 
                     SaksinfoDTO(
                         saksnummer = sak.saksnummer.toString(),

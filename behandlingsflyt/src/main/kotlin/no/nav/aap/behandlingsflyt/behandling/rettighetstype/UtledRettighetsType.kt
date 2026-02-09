@@ -1,5 +1,10 @@
 package no.nav.aap.behandlingsflyt.behandling.rettighetstype
 
+import no.nav.aap.behandlingsflyt.behandling.underveis.KvoteService
+import no.nav.aap.behandlingsflyt.behandling.underveis.Kvoter
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companion.antallHverdager
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Kvote
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
@@ -8,13 +13,51 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.tidslinjeOf
+import no.nav.aap.komponenter.tidslinje.tidslinjeOfNotNullPeriode
 import no.nav.aap.komponenter.type.Periode
+import java.time.DayOfWeek
+import java.time.LocalDate
+
 
 data class RettighetstypeVurdering(
     /** Er `null` hvis medlemmet ikke har rett etter noen av spesifikasjonenen. */
     val kravspesifikasjonForRettighetsType: KravspesifikasjonForRettighetsType?,
     val vilkårsvurderinger: Map<Vilkårtype, Vilkårsvurdering>,
 )
+
+internal data class Telleverk(
+    val ordinærForbruk: Hverdager = Hverdager(0),
+    val sykepengeerstatningForbruk: Hverdager = Hverdager(0),
+) {
+    fun maksdato(kvoter: Kvoter, kvote: Kvote, fom: LocalDate): LocalDate? {
+        val hverdagerIgjen =
+            when (kvote) {
+                Kvote.ORDINÆR -> kvoter.ordinærkvote - ordinærForbruk
+                Kvote.SYKEPENGEERSTATNING -> kvoter.sykepengeerstatningkvote - sykepengeerstatningForbruk
+            }
+
+        return when {
+            Hverdager(0) < hverdagerIgjen ->
+                hverdagerIgjen.fraOgMed(fom)
+
+            hverdagerIgjen == Hverdager(0) && fom.dayOfWeek == DayOfWeek.SATURDAY ->
+                fom.plusDays(1)
+
+            hverdagerIgjen == Hverdager(0) && fom.dayOfWeek == DayOfWeek.SUNDAY ->
+                fom
+
+            else ->
+                null
+        }
+    }
+
+    fun oppdater(kvote: Kvote, hverdager: Hverdager): Telleverk {
+        return when (kvote) {
+            Kvote.ORDINÆR -> this.copy(ordinærForbruk = ordinærForbruk + hverdager)
+            Kvote.SYKEPENGEERSTATNING -> this.copy(sykepengeerstatningForbruk = sykepengeerstatningForbruk + hverdager)
+        }
+    }
+}
 
 /** Her er det en del rom for forbedringer:
  * 1. regn ut alle rettighetstyper som er mulige, ikke bare en
@@ -46,16 +89,81 @@ fun utledRettighetstypevurderinger(vilkårsresultat: Vilkårsresultat): Tidslinj
                         vilkårsvurderinger = vilkårsvurderinger
                     )
                 )
-            )
+            ).komprimer()
         }
-        .segmenter()
-        .map { segment -> Segment(segment.periode, segment.verdi) }
-        .let(::Tidslinje)
+}
+
+sealed interface KvoteVurdering {
+    val rettighetstypeVurdering: RettighetstypeVurdering
+    fun avslagsårsaker(): Set<Avslagsårsak>
+    fun brukerAvKvoter(): Set<Kvote>
+
+    val rettighetsType: RettighetsType?
+        get() = rettighetstypeVurdering.kravspesifikasjonForRettighetsType?.rettighetstype
+}
+
+data class KvoteOk(
+    val brukerKvote: Kvote?,
+    override val rettighetstypeVurdering: RettighetstypeVurdering,
+) : KvoteVurdering {
+    override fun avslagsårsaker() = setOf<Avslagsårsak>()
+    override fun brukerAvKvoter() = setOfNotNull(brukerKvote)
+}
+
+data class KvoteBruktOpp(
+    val kvoteBruktOpp: Kvote,
+    override val rettighetstypeVurdering: RettighetstypeVurdering,
+) : KvoteVurdering {
+    override fun avslagsårsaker() = setOf(kvoteBruktOpp.nyAvslagsårsak)
+    override fun brukerAvKvoter() = emptySet<Kvote>()
+}
+
+internal fun vurderKvoter(
+    kvoter: Kvoter,
+    rettighetsType: Tidslinje<RettighetstypeVurdering>
+): Tidslinje<KvoteVurdering> {
+    var telleverk = Telleverk()
+
+    return rettighetsType.flatMap { (periode, rettighetstypevurdering) ->
+        val kvote = rettighetstypevurdering.kravspesifikasjonForRettighetsType?.rettighetstype?.kvote
+            ?: return@flatMap tidslinjeOf(
+                periode to KvoteOk(null, rettighetstypevurdering),
+            )
+
+        val maksdato = telleverk.maksdato(kvoter, kvote, periode.fom)
+            ?: return@flatMap tidslinjeOf(
+                periode to KvoteBruktOpp(kvote, rettighetstypevurdering)
+            )
+
+        val maksdatoForPeriode = minOf(maksdato, periode.tom)
+
+        val periodeKvoteOk = Periode.orNull(periode.fom, maksdatoForPeriode)
+        val periodeKvoteBruktOpp = Periode.orNull(maksdatoForPeriode.plusDays(1), periode.tom)
+        telleverk = telleverk.oppdater(kvote, periode.antallHverdager())
+
+        tidslinjeOfNotNullPeriode(
+            periodeKvoteOk to KvoteOk(kvote, rettighetstypevurdering),
+            periodeKvoteBruktOpp to KvoteBruktOpp(kvote, rettighetstypevurdering),
+        )
+    }
+}
+
+fun vurderRettighetsType(
+    vilkårsresultat: Vilkårsresultat,
+    kvoter: Kvoter = KvoteService().beregn()
+): Tidslinje<RettighetsType> {
+    val vurderKvoter = vurderRettighetstypeOgKvoter(vilkårsresultat, kvoter)
+    return vurderKvoter
+        .mapNotNull { kvotevurdering -> kvotevurdering.rettighetsType }
         .komprimer()
 }
 
-fun vurderRettighetsType(vilkårsresultat: Vilkårsresultat): Tidslinje<RettighetsType> {
-    return utledRettighetstypevurderinger(vilkårsresultat).mapNotNull { it.kravspesifikasjonForRettighetsType?.rettighetstype }
+fun vurderRettighetstypeOgKvoter(
+    vilkårsresultat: Vilkårsresultat,
+    kvoter: Kvoter
+): Tidslinje<KvoteVurdering> {
+    val rettighetstypevurderinger = utledRettighetstypevurderinger(vilkårsresultat)
+    return vurderKvoter(kvoter, rettighetstypevurderinger)
 }
 
 /** Identifiserer hva som er avslagsårsakene som fører til at medlemmet mister retten
@@ -76,28 +184,43 @@ fun vurderRettighetsType(vilkårsresultat: Vilkårsresultat): Tidslinje<Rettighe
  * så er ikke dette nye opphør eller stans – for meldemmet har ikke AAP å stanse eller opphøre.
  */
 fun avslagsårsakerVedTapAvRettPåAAP(
-    vilkårsresultat: Vilkårsresultat
+    vilkårsresultat: Vilkårsresultat,
+    kvoter: Kvoter = KvoteService().beregn(),
 ): Tidslinje<Set<Avslagsårsak>> {
     val rettighetstypeVurderingTidslinje = utledRettighetstypevurderinger(vilkårsresultat)
-    return rettighetstypeVurderingTidslinje
-        .mergePrioriterVenstre(
-            tidslinjeOf(
-                rettighetstypeVurderingTidslinje.helePerioden() to RettighetstypeVurdering(
-                    null,
-                    emptyMap()
+        .let {
+            /* Fyll "tomrom" i tidslinjen. Body til [windowed]-kallet forutsetter at segmenter
+             * ligger inntil hverandre. */
+            it.mergePrioriterVenstre(
+                tidslinjeOf(
+                    it.helePerioden() to RettighetstypeVurdering(
+                        kravspesifikasjonForRettighetsType = null,
+                        vilkårsvurderinger = emptyMap(),
+                    )
                 )
             )
-        )
+        }
+    return vurderKvoter(kvoter, rettighetstypeVurderingTidslinje)
         .segmenter().windowed(2)
         .flatMap { (vurderingSegment, nesteVurderingSegment) ->
-            val innvilgendeKravspesifikasjon = vurderingSegment.verdi.kravspesifikasjonForRettighetsType
+            require(vurderingSegment.tom().plusDays(1) == nesteVurderingSegment.fom()) {
+                """Korrektheten av koden under er avhengig av en sammenhengende tidslinje
+                    |for å oppdage perioder uten AAP.
+                """.trimMargin()
+            }
+            val (_, kvotevurdering) = vurderingSegment
+            val (_, nesteKvotevurdering) = nesteVurderingSegment
+
+            val innvilgendeKravspesifikasjon = kvotevurdering.rettighetstypeVurdering.kravspesifikasjonForRettighetsType
             val nesteInnvilgendeKravspesifikasjon =
-                nesteVurderingSegment.verdi.kravspesifikasjonForRettighetsType
-            if (innvilgendeKravspesifikasjon != null && nesteInnvilgendeKravspesifikasjon == null) {
-                /* hadde rett rett, men mister den */
+                nesteKvotevurdering.rettighetstypeVurdering.kravspesifikasjonForRettighetsType
+            val haddeRettTilAAP = innvilgendeKravspesifikasjon != null && kvotevurdering is KvoteOk
+            val misterRettTilAAP = nesteInnvilgendeKravspesifikasjon == null || nesteKvotevurdering is KvoteBruktOpp
+            if (haddeRettTilAAP && misterRettTilAAP) {
                 val sisteDagMedRett = vurderingSegment.periode.tom
                 val avslagsårsaker =
-                    innvilgendeKravspesifikasjon.avslagsårsaker(nesteVurderingSegment.verdi.vilkårsvurderinger)
+                    innvilgendeKravspesifikasjon.avslagsårsaker(nesteKvotevurdering.rettighetstypeVurdering.vilkårsvurderinger) +
+                            nesteKvotevurdering.avslagsårsaker()
                 listOf(Segment(Periode(sisteDagMedRett, sisteDagMedRett), avslagsårsaker))
             } else {
                 listOf()

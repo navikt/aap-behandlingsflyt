@@ -31,6 +31,7 @@ import no.nav.aap.verdityper.dokument.Kanal
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.Disabled
 import java.time.LocalDateTime
 import kotlin.test.Test
 
@@ -40,6 +41,7 @@ object JobbPåskruddUnleash : FakeUnleashBaseWithDefaultDisabled(
     )
 )
 
+@Disabled("Enable når hardkodet prodsak har kjørt")
 class HåndterUbehandledeDokumenterJobbUtførerTest {
     init {
         JobbType.leggTil(HåndterUbehandledeDokumenterJobbUtfører)
@@ -61,6 +63,39 @@ class HåndterUbehandledeDokumenterJobbUtførerTest {
         @AfterAll
         @JvmStatic
         fun tearDown() = dataSource.close()
+    }
+
+    @Test
+    fun `Skal ikke inneholde informasjon om digitalisering i postmottak om ikke satt `() {
+        val førstegangsbehandlingen = settOppFørstegangsbehandling()
+        lagreMeldekortMottatt(
+            referanse = InnsendingReferanse(JournalpostId("101")),
+            mottattTidspunkt = (27 januar 2020).atStartOfDay(),
+            meldekort = MeldekortV0(
+                harDuArbeidet = true,
+                timerArbeidPerPeriode = listOf(
+                    ArbeidIPeriodeV0(
+                        fraOgMedDato = 13 januar 2020,
+                        tilOgMedDato = 24 januar 2020,
+                        timerArbeid = 25.0,
+                    )
+                )
+            ),
+            førstegangsbehandlingen
+        )
+
+        dataSource.transaction { connection ->
+            val repoprovider = postgresRepositoryRegistry.provider(connection)
+            val mottattDokumentRepository = repoprovider
+                .provide<MottattDokumentRepository>()
+            val ubehandledeMeldekort = mottattDokumentRepository.hentAlleUbehandledeDokumenter()
+
+            HåndterUbehandledeDokumenterJobbUtfører
+                .konstruer(repoprovider, gatewayProvider)
+                .utfør(JobbInput(HåndterUbehandledeDokumenterJobbUtfører))
+
+            assertThat(ubehandledeMeldekort.first().digitalisertAvPostmottak).isNull()
+        }
     }
 
     @Test

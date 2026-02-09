@@ -16,11 +16,10 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentGru
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
+import no.nav.aap.behandlingsflyt.help.flytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.test.FakeTidligereVurderinger
 import no.nav.aap.behandlingsflyt.test.desember
@@ -106,11 +105,8 @@ class VurderSykdomStegTest {
         val steg = VurderSykdomSteg(
             studentRepository,
             sykdomRepository,
-            avklaringsbehovRepository,
             FakeTidligereVurderinger(),
             avklaringsbehovService,
-            InMemoryBehandlingRepository,
-            vilkårsresultatRepository,
             unleashGateway = mockk {
                 every { isDisabled(BehandlingsflytFeature.PeriodisertSykdom) } returns false
             },
@@ -118,16 +114,11 @@ class VurderSykdomStegTest {
 
         lagreNedAlder(vilkårsresultatRepository, behandlingId)
 
-
-        val kontekst = FlytKontekstMedPerioder(
-            sakId = SakId(1),
-            behandlingId = behandlingId,
-            forrigeBehandlingId = null,
-            behandlingType = TypeBehandling.Revurdering,
-            vurderingType = VurderingType.REVURDERING,
-            vurderingsbehovRelevanteForSteg = emptySet(),
-            rettighetsperiode = rettighetsperiode
-        )
+        val kontekst = flytKontekstMedPerioder {
+            this.behandling  = InMemoryBehandlingRepository.hent(behandlingId)
+            this.vurderingsbehovRelevanteForSteg = emptySet()
+            this.rettighetsperiode = rettighetsperiode
+        }
 
         steg.utfør(kontekst)
 

@@ -13,7 +13,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingMedVedtak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
@@ -28,6 +27,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
+import java.time.LocalDate
 import java.time.LocalDateTime
 
 object VedtakslengdeUnleash : FakeUnleashBaseWithDefaultDisabled(
@@ -68,8 +68,7 @@ class OpprettJobbUtvidVedtakslengdeJobbUtførerTest {
         val jobbInputSak = JobbInput(OpprettBehandlingUtvidVedtakslengdeJobbUtfører).forSak(sakId.id)
 
         every { vedtakslengdeService.hentSakerAktuelleForUtvidelseAvVedtakslengde(any()) } returns setOf(sakId)
-        every { vedtakslengdeService.skalUtvideVedtakslengde(behandlingId, any())} returns true
-        every { sakOgBehandlingService.finnSisteYtelsesbehandlingFor(sakId) } returns behandling()
+        every { vedtakslengdeService.skalUtvideVedtakslengde(behandlingId, behandlingId, any<LocalDate>())} returns true
         every { sakOgBehandlingService.finnBehandlingMedSisteFattedeVedtak(sakId) } returns behandlingMedVedtak()
         every { flytJobbRepository.leggTil(match { it.sakId() == sakId.id }) } just Runs
 
@@ -84,16 +83,6 @@ class OpprettJobbUtvidVedtakslengdeJobbUtførerTest {
     }
 
     @Test
-    fun `skal ikke opprette jobber for åpne behandlinger`() {
-        every { vedtakslengdeService.hentSakerAktuelleForUtvidelseAvVedtakslengde(any()) } returns setOf(sakId)
-        every { sakOgBehandlingService.finnSisteYtelsesbehandlingFor(sakId) } returns behandling(status = Status.UTREDES)
-
-        opprettJobbUtvidVedtakslengdeJobbUtfører.utfør(jobbInput)
-
-        verify(exactly = 0) { flytJobbRepository.leggTil(any()) }
-    }
-
-    @Test
     fun `skal ikke opprette jobber hvis ingen saker returneres`() {
         every { vedtakslengdeService.hentSakerAktuelleForUtvidelseAvVedtakslengde(any()) } returns emptySet()
 
@@ -101,19 +90,6 @@ class OpprettJobbUtvidVedtakslengdeJobbUtførerTest {
 
         verify(exactly = 0) { flytJobbRepository.leggTil(any()) }
     }
-
-    private fun behandling(status: Status = Status.IVERKSETTES) =
-        Behandling(
-            sakId = sakId,
-            id = behandlingId,
-            referanse = BehandlingReferanse(),
-            typeBehandling = TypeBehandling.Førstegangsbehandling,
-            status = status,
-            opprettetTidspunkt = LocalDateTime.now(),
-            årsakTilOpprettelse = ÅrsakTilOpprettelse.SØKNAD,
-            forrigeBehandlingId = null,
-            versjon = 1L
-        )
 
     private fun behandlingMedVedtak(): BehandlingMedVedtak =
         BehandlingMedVedtak(

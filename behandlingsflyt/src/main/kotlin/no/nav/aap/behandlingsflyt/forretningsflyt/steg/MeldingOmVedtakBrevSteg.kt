@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovServ
 import no.nav.aap.behandlingsflyt.behandling.brev.BarnetilleggSatsRegulering
 import no.nav.aap.behandlingsflyt.behandling.brev.BrevBehov
 import no.nav.aap.behandlingsflyt.behandling.brev.BrevUtlederService
+import no.nav.aap.behandlingsflyt.behandling.brev.UtvidVedtakslengde
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingService
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.behandling.trekkklage.TrekkKlageService
@@ -24,6 +25,7 @@ import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
+import java.time.format.DateTimeFormatter
 
 private val log = LoggerFactory.getLogger("BrevSteg")
 
@@ -95,39 +97,47 @@ class MeldingOmVedtakBrevSteg(
     }
 
     private fun vedtakBehøverVurdering(klageErTrukket: Boolean, brevBehov: BrevBehov?): Boolean {
-        return !klageErTrukket && brevBehov != null && brevBehov != BarnetilleggSatsRegulering
+        return !klageErTrukket && brevBehov != null && !erAutomatiskBrev(brevBehov)
     }
 
     private fun bestillBrev(kontekst: FlytKontekstMedPerioder, brevBehov: BrevBehov) {
-        if (brevBehov == BarnetilleggSatsRegulering) {
-            val alleredeBestilt =
-                brevbestillingService.hentBestillingerForSak(kontekst.sakId, brevBehov.typeBrev).isNotEmpty()
-            if (alleredeBestilt) {
-                log.info("Har allerede bestilt automatisk brev om barnetillegg sats endring for sak ${kontekst.sakId}.")
-                return
-            }
-            log.info("Bestiller automatisk brev om barnetillegg sats endring for sak ${kontekst.sakId}.")
-            val sak = sakRepository.hent(kontekst.sakId)
-            val unikReferanse =
+        val automatisk = erAutomatiskBrev(brevBehov)
+        log.info("Bestiller${if (automatisk) " automatisk" else ""} brev for behandling ${kontekst.behandlingId}.")
+        brevbestillingService.bestill(
+            behandlingId = kontekst.behandlingId,
+            brevBehov = brevBehov,
+            unikReferanse = unikReferanse(brevBehov, kontekst),
+            ferdigstillAutomatisk = automatisk,
+            brukApiV3 = brukApiV3(kontekst.behandlingId, brevBehov.typeBrev)
+        )
+    }
+
+    private fun erAutomatiskBrev(brevBehov: BrevBehov): Boolean {
+        return when (brevBehov.typeBrev) {
+            TypeBrev.BARNETILLEGG_SATS_REGULERING,
+            TypeBrev.VEDTAK_UTVID_VEDTAKSLENGDE -> true
+
+            else -> false
+        }
+    }
+
+    private fun unikReferanse(brevBehov: BrevBehov, kontekst: FlytKontekstMedPerioder): String {
+        val behandling = behandlingRepository.hent(kontekst.behandlingId)
+
+        return when (brevBehov) {
+            is BarnetilleggSatsRegulering -> {
+                val sak = sakRepository.hent(kontekst.sakId)
                 "${sak.saksnummer}-${brevBehov.typeBrev}-${OpprettJobbForTriggBarnetilleggSatsJobbUtfører.jobbKonfigurasjon.unikBrevreferanseForSak}"
-            brevbestillingService.bestill(
-                behandlingId = kontekst.behandlingId,
-                brevBehov = brevBehov,
-                unikReferanse = unikReferanse,
-                ferdigstillAutomatisk = true,
-                brukApiV3 = false
-            )
-        } else {
-            log.info("Bestiller brev for sak ${kontekst.sakId}.")
-            val behandling = behandlingRepository.hent(kontekst.behandlingId)
-            val unikReferanse = "${behandling.referanse}-${brevBehov.typeBrev}"
-            brevbestillingService.bestill(
-                behandlingId = kontekst.behandlingId,
-                brevBehov = brevBehov,
-                unikReferanse = unikReferanse,
-                ferdigstillAutomatisk = false,
-                brukApiV3 = brukApiV3(kontekst.behandlingId, brevBehov.typeBrev)
-            )
+            }
+
+            is UtvidVedtakslengde -> {
+                val sak = sakRepository.hent(kontekst.sakId)
+                "${sak.saksnummer}-${brevBehov.typeBrev}-${brevBehov.sisteDagMedYtelse.format(DateTimeFormatter.ISO_DATE)}"
+            }
+
+            else -> {
+                "${behandling.referanse}-${brevBehov.typeBrev}"
+            }
         }
     }
 

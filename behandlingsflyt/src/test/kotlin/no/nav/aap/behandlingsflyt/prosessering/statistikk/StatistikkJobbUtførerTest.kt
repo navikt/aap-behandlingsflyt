@@ -75,6 +75,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
+import no.nav.aap.behandlingsflyt.test.FakeApiInternGateway
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryArbeidsopptrappingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
@@ -133,6 +134,7 @@ class StatistikkJobbUtførerTest {
     @Test
     fun `mottatt tidspunkt er korrekt når revurdering`(hendelser: List<StoppetBehandling>) {
         var opprettetTidspunkt: LocalDateTime? = null
+        lateinit var meldekortRevurderingMottattTid: LocalDateTime
         val (behandling, sak, ident) = dataSource.transaction { connection ->
             val behandlingRepository = BehandlingRepositoryImpl(connection)
 
@@ -145,7 +147,10 @@ class StatistikkJobbUtførerTest {
                 }
             }
             val sak = PersonOgSakService(
-                identGateway, PersonRepositoryImpl(connection), SakRepositoryImpl(connection)
+                identGateway,
+                FakeApiInternGateway.konstruer(),
+                PersonRepositoryImpl(connection),
+                SakRepositoryImpl(connection)
             ).finnEllerOpprett(
                 ident, periode = Periode(LocalDate.now().minusDays(10), LocalDate.now().plusDays(1))
             )
@@ -163,7 +168,7 @@ class StatistikkJobbUtførerTest {
                 )
             )
 
-            sendInnMeldekort(connection, sak, opprettetBehandling, "123")
+            sendInnMeldekort(connection, sak, opprettetBehandling, "123", LocalDateTime.now().minusDays(23))
 
             val revurdering = behandlingRepository.opprettBehandling(
                 sak.id,
@@ -186,12 +191,14 @@ class StatistikkJobbUtførerTest {
                     sakId = sak.id,
                     behandlingId = opprettetBehandling.id,
                     mottattTidspunkt = LocalDateTime.now().minusDays(23),
+                    opprettetTid = LocalDateTime.now().minusDays(22),
                     type = InnsendingType.SØKNAD,
                     kanal = Kanal.PAPIR,
                     strukturertDokument = null
                 )
             )
-            sendInnMeldekort(connection, sak, revurdering, "456")
+            meldekortRevurderingMottattTid = LocalDateTime.now().minusDays(23)
+            sendInnMeldekort(connection, sak, revurdering, "456", meldekortRevurderingMottattTid)
 
             Triple(revurdering, sak, ident)
         }
@@ -233,7 +240,7 @@ class StatistikkJobbUtførerTest {
         assertThat(hendelser).isNotEmpty()
         assertThat(hendelser.size).isEqualTo(1)
         assertThat(hendelser.first().mottattTid.truncatedTo(ChronoUnit.SECONDS)).isEqualTo(
-            opprettetTidspunkt.truncatedTo(
+            meldekortRevurderingMottattTid.truncatedTo(
                 ChronoUnit.SECONDS
             )
         )
@@ -241,14 +248,19 @@ class StatistikkJobbUtførerTest {
     }
 
     private fun sendInnMeldekort(
-        connection: DBConnection, sak: Sak, opprettetBehandling: Behandling, journalpostId: String
+        connection: DBConnection,
+        sak: Sak,
+        opprettetBehandling: Behandling,
+        journalpostId: String,
+        mottattTid: LocalDateTime
     ) {
         MottattDokumentRepositoryImpl(connection).lagre(
             MottattDokument(
                 referanse = InnsendingReferanse(InnsendingReferanse.Type.JOURNALPOST, journalpostId),
                 sakId = sak.id,
                 behandlingId = opprettetBehandling.id,
-                mottattTidspunkt = LocalDateTime.now().minusDays(23),
+                mottattTidspunkt = mottattTid,
+                opprettetTid = LocalDateTime.now(),
                 type = InnsendingType.MELDEKORT,
                 kanal = Kanal.DIGITAL,
                 strukturertDokument = StrukturertDokument(
@@ -311,7 +323,10 @@ class StatistikkJobbUtførerTest {
             }
 
             val sak = PersonOgSakService(
-                identGateway, PersonRepositoryImpl(connection), SakRepositoryImpl(connection)
+                identGateway,
+                FakeApiInternGateway.konstruer(),
+                PersonRepositoryImpl(connection),
+                SakRepositoryImpl(connection)
             ).finnEllerOpprett(
                 ident, periode = Periode(LocalDate.now().minusDays(10), LocalDate.now().plusDays(1))
             )
@@ -369,6 +384,7 @@ class StatistikkJobbUtførerTest {
                     sakId = sak.id,
                     behandlingId = opprettetBehandling.id,
                     mottattTidspunkt = LocalDateTime.now().minusDays(1),
+                    opprettetTid = LocalDateTime.now(),
                     type = InnsendingType.SØKNAD,
                     kanal = Kanal.PAPIR,
                     strukturertDokument = null
@@ -559,6 +575,7 @@ class StatistikkJobbUtførerTest {
                 sakId = sakId,
                 behandlingId = behandling.id,
                 mottattTidspunkt = nå.minusDays(1),
+                opprettetTid = nå,
                 type = InnsendingType.SØKNAD,
                 kanal = Kanal.DIGITAL,
                 strukturertDokument = null
@@ -570,6 +587,7 @@ class StatistikkJobbUtførerTest {
                 sakId = sakId,
                 behandlingId = behandling.id,
                 mottattTidspunkt = tidligsteMottattTid,
+                opprettetTid = tidligsteMottattTid,
                 type = InnsendingType.SØKNAD,
                 kanal = Kanal.PAPIR,
                 strukturertDokument = null

@@ -5,7 +5,7 @@ import no.nav.aap.behandlingsflyt.behandling.lovvalg.EnhetGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.ForutgåendeMedlemskapArbeidInntektGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.InntektINorgeGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForForutgåendeMedlemskap
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.ArbeidsInntektMaaned
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.ArbeidsInntektMåned
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.KildesystemKode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.KildesystemMedl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapArbeidInntektForutgåendeRepository
@@ -130,7 +130,7 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: 
     override fun lagreArbeidsforholdOgInntektINorge(
         behandlingId: BehandlingId,
         arbeidGrunnlag: List<ArbeidINorgeGrunnlag>,
-        inntektGrunnlag: List<ArbeidsInntektMaaned>,
+        inntektGrunnlag: List<ArbeidsInntektMåned>,
         medlId: Long?,
         enhetGrunnlag: List<EnhetGrunnlag>
     ) {
@@ -254,7 +254,7 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: 
     }
 
     private fun lagreArbeidsInntektGrunnlag(
-        arbeidsInntektGrunnlag: List<ArbeidsInntektMaaned>,
+        arbeidsInntektGrunnlag: List<ArbeidsInntektMåned>,
         enhetGrunnlag: List<EnhetGrunnlag>
     ): Long? {
         if (arbeidsInntektGrunnlag.isEmpty()) return null
@@ -273,7 +273,7 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: 
             arbeidsInntektGrunnlag.flatMap {
                 it.arbeidsInntektInformasjon.inntektListe.map { inntekt ->
                     Pair(
-                        it.aarMaaned,
+                        it.årMåned,
                         inntekt
                     )
                 }
@@ -285,7 +285,7 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: 
                 val tomFallback = inntekt.opptjeningsperiodeFom ?: årMåned.atDay(1)
 
                 setString(1, inntekt.virksomhet.identifikator)
-                setDouble(2, inntekt.beloep)
+                setDouble(2, inntekt.beløp)
                 setString(3, inntekt.skattemessigBosattLand)
                 setString(4, inntekt.opptjeningsland)
                 setString(5, inntekt.beskrivelse)

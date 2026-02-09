@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.behandling.beregning
 
 import io.github.nchaugen.tabletest.junit.TableTest
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag11_19
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagUføre
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagYrkesskade
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år.BeregningInput
@@ -16,6 +17,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.Beregnin
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.YrkesskadeBeløpVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.YrkesskadeSak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Yrkesskadevurdering
+import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.GUnit
 import no.nav.aap.komponenter.verdityper.Prosent
@@ -84,6 +86,43 @@ class BeregningTest {
 
         val beregning = Beregning(input).beregneMedInput()
         assertThat(beregning.grunnlaget()).isEqualTo(GUnit("6"))
+    }
+
+    @Test
+    fun `velger ikke uføreberegning om uføregraden er frasagt`() {
+        val årsInntekter = setOf(
+            InntektPerÅr(2022, Beløp(500000)),
+            InntektPerÅr(2023, Beløp(400000)),
+            InntektPerÅr(2024, Beløp(300000))
+        )
+        val input = Inntektsbehov(
+            BeregningInput(
+                nedsettelsesDato = LocalDate.of(2025, 1, 1),
+                årsInntekter = årsInntekter,
+                uføregrad = setOf(
+                    Uføre(
+                        virkningstidspunkt = 1 januar 2023,
+                        uføregradTom = 1 januar 2024,
+                        uføregrad = Prosent(30)
+                    )
+                ),
+                yrkesskadevurdering = null,
+                beregningGrunnlag = BeregningGrunnlag(
+                    tidspunktVurdering = BeregningstidspunktVurdering(
+                        begrunnelse = "test",
+                        nedsattArbeidsevneEllerStudieevneDato = 1 januar 2024,
+                        ytterligereNedsattBegrunnelse = "test2",
+                        ytterligereNedsattArbeidsevneDato = 1 januar 2025,
+                        vurdertAv = "saksbehandler"
+                    ), yrkesskadeBeløpVurdering = null
+                ),
+                registrerteYrkesskader = null,
+                inntektsPerioder = inntektsPerioder(årsInntekter)
+            )
+        )
+
+        val beregning = Beregning(input).beregneMedInput()
+        assertThat(beregning).isInstanceOf(Grunnlag11_19::class.java)
     }
 
     @Test

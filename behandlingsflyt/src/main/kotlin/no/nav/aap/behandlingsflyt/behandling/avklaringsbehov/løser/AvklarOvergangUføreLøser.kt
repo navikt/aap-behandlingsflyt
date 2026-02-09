@@ -13,6 +13,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
+import no.nav.aap.behandlingsflyt.utils.toHumanReadable
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.tidslinje.Tidslinje
@@ -106,11 +107,7 @@ class AvklarOvergangUføreLøser(
         ).filter { !it.verdi }.perioder().toSet()
         if (inkonsistentePerioder.isNotEmpty()) {
             throw UgyldigForespørselException(
-                "Følgende perioder er inkonsekvente med vurderinger av sykdom og bistand: ${
-                    inkonsistentePerioder.joinToString(
-                        ","
-                    )
-                }"
+                "Vurderingene for ${inkonsistentePerioder.toHumanReadable()} stemmer ikke med periodene i § 11-6 Sykdom og bistand."
             )
         }
     }

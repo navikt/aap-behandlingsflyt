@@ -3,7 +3,7 @@ package no.nav.aap.behandlingsflyt.behandling.klage.klagebehandling
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
-import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
+import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.kontor.KlagebehandlingKontorRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.VURDER_KLAGE_KONTOR_KODE
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
@@ -24,7 +24,6 @@ fun NormalOpenAPIRoute.klagebehandlingKontorGrunnlagApi(
     repositoryRegistry: RepositoryRegistry,
     gatewayProvider: GatewayProvider,
 ) {
-    val ansattInfoService = AnsattInfoService(gatewayProvider)
     route("api/klage/{referanse}/grunnlag/klagebehandling-kontor") {
         getGrunnlag<BehandlingReferanse, KlagebehandlingKontorGrunnlagDto>(
             relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
@@ -34,6 +33,7 @@ fun NormalOpenAPIRoute.klagebehandlingKontorGrunnlagApi(
             val respons = dataSource.transaction(readOnly = true) { connection ->
                 val repositoryProvider = repositoryRegistry.provider(connection)
                 val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+                val vurdertAvService = VurdertAvService(repositoryProvider, gatewayProvider)
                 val klagebehandlingKontorRepository = repositoryProvider.provide<KlagebehandlingKontorRepository>()
 
                 val behandling: Behandling =
@@ -41,7 +41,8 @@ fun NormalOpenAPIRoute.klagebehandlingKontorGrunnlagApi(
 
                 klagebehandlingKontorRepository.hentHvisEksisterer(behandling.id)?.tilDto(
                     kanSaksbehandle(),
-                    ansattInfoService
+                    vurdertAvService,
+                    behandling.id
                 )
                     ?: KlagebehandlingKontorGrunnlagDto(harTilgangTilÅSaksbehandle = kanSaksbehandle())
             }

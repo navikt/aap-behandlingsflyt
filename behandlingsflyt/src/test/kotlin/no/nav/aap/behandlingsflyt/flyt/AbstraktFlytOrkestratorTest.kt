@@ -132,6 +132,7 @@ import no.nav.aap.behandlingsflyt.test.modell.TestYrkesskade
 import no.nav.aap.behandlingsflyt.test.modell.defaultInntekt
 import no.nav.aap.behandlingsflyt.test.testGatewayProvider
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
+import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.tidslinje.orEmpty
@@ -1348,17 +1349,18 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
 
     protected fun Behandling.medKontekst(block: BehandlingInfo.() -> Unit): Behandling {
         val åpneAvklaringsbehov = hentÅpneAvklaringsbehov(this)
+        val oppdatertBehandling = hentBehandling(this.referanse)
         dataSource.transaction { connection ->
             block(
                 BehandlingInfo(
                     åpneAvklaringsbehov = åpneAvklaringsbehov,
-                    behandling = this,
+                    behandling = oppdatertBehandling,
                     ventebehov = åpneAvklaringsbehov.filter { it.erVentepunkt() },
                     repositoryProvider = postgresRepositoryRegistry.provider(connection)
                 )
             )
         }
-        return this
+        return oppdatertBehandling
     }
 
     protected fun nyPerson(

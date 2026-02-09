@@ -28,6 +28,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsopptrapping
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdomsvurderingbrev.SykdomsvurderingForBrevRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreRepository
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
@@ -63,6 +64,7 @@ class BrevUtlederService(
     private val aktivitetsplikt11_7Repository: Aktivitetsplikt11_7Repository,
     private val arbeidsopptrappingRepository: ArbeidsopptrappingRepository,
     private val sykdomsvurderingForBrevRepository: SykdomsvurderingForBrevRepository,
+    private val overgangUføreRepository: OvergangUføreRepository,
     private val unleashGateway: UnleashGateway
 ) {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
@@ -77,6 +79,7 @@ class BrevUtlederService(
         aktivitetsplikt11_7Repository = repositoryProvider.provide(),
         arbeidsopptrappingRepository = repositoryProvider.provide(),
         sykdomsvurderingForBrevRepository = repositoryProvider.provide(),
+        overgangUføreRepository = repositoryProvider.provide(),
         unleashGateway = gatewayProvider.provide()
     )
 
@@ -128,7 +131,6 @@ class BrevUtlederService(
                         FRITAK_MELDEPLIKT,
                         MOTTATT_MELDEKORT,
                         FASTSATT_PERIODE_PASSERT,
-                        UTVID_VEDTAKSLENGDE,
                         MIGRER_RETTIGHETSPERIODE,
                         EFFEKTUER_AKTIVITETSPLIKT,
                         EFFEKTUER_AKTIVITETSPLIKT_11_9,
@@ -141,6 +143,10 @@ class BrevUtlederService(
 
                 if (vurderingsbehov == setOf(BARNETILLEGG_SATS_REGULERING)) {
                     return BarnetilleggSatsRegulering
+                }
+
+                if (vurderingsbehov == setOf(UTVID_VEDTAKSLENGDE)) {
+                    return brevBehovUtvidVedtakslengde(behandling)
                 }
 
                 if (resultat == Resultat.AVBRUTT) {
@@ -161,7 +167,7 @@ class BrevUtlederService(
                     behandling.forrigeBehandlingId != null &&
                     !harRettighetsType(behandling.forrigeBehandlingId, RettighetsType.ARBEIDSSØKER)
                 ) {
-                    return Arbeidssøker
+                    return brevBehovArbeidssøker(behandling)
                 }
                 return VedtakEndring
             }
@@ -196,6 +202,24 @@ class BrevUtlederService(
         }
     }
 
+    private fun brevBehovUtvidVedtakslengde(behandling: Behandling): UtvidVedtakslengde {
+        val underveisGrunnlag = underveisRepository.hent(behandling.id)
+        return UtvidVedtakslengde(sisteDagMedYtelse = underveisGrunnlag.sisteDagMedYtelse())
+    }
+
+    private fun brevBehovArbeidssøker(behandling: Behandling): Arbeidssøker {
+        val underveisGrunnlag = underveisRepository.hent(behandling.id)
+        val datoAvklartForJobbsøk = underveisGrunnlag.utledStartdatoForRettighet(RettighetsType.ARBEIDSSØKER)
+        checkNotNull(datoAvklartForJobbsøk) {
+            "Vedtak for behandling for arbeidssøker mangler datoAvklartForJobbsøk"
+        }
+        return Arbeidssøker(
+            datoAvklartForJobbsøk = datoAvklartForJobbsøk,
+            sisteDagMedYtelse = underveisGrunnlag.sisteDagMedYtelse(),
+            tilkjentYtelse = utledTilkjentYtelse(behandling.id, datoAvklartForJobbsøk)
+        )
+    }
+
     private fun brevBehovInnvilgelse(behandling: Behandling): Innvilgelse {
         val vedtak = checkNotNull(vedtakRepository.hent(behandling.id)) {
             "Fant ikke vedtak for behandling med innvilgelse"
@@ -209,9 +233,12 @@ class BrevUtlederService(
 
         val sykdomsvurdering = hentSykdomsvurdering(behandling.id)
 
+        val underveisGrunnlag = underveisRepository.hent(behandling.id)
+
 
         return Innvilgelse(
             virkningstidspunkt = vedtak.virkningstidspunkt,
+            sisteDagMedYtelse = underveisGrunnlag.sisteDagMedYtelse(),
             grunnlagBeregning = grunnlagBeregning,
             tilkjentYtelse = tilkjentYtelse,
             sykdomsvurdering = sykdomsvurdering,
@@ -226,9 +253,17 @@ class BrevUtlederService(
     private fun brevBehovVurderesForUføretrygd(behandling: Behandling): VurderesForUføretrygd {
         // Sender per nå ikke med dato som betyr at beregningsgrunnlag (beløp) blir null
         val grunnlagBeregning = hentGrunnlagBeregning(behandling.id, null)
-
+        val kravdatoUføretrygd = overgangUføreRepository.hentHvisEksisterer(behandling.id)?.kravdatoUføretrygd()
+        checkNotNull(kravdatoUføretrygd) {
+            "Vedtak vurdert for uføretrygd mangler kravdato"
+        }
+        val tilkjentYtelse = utledTilkjentYtelse(behandling.id, kravdatoUføretrygd)
+        val underveisGrunnlag = underveisRepository.hent(behandling.id)
         return VurderesForUføretrygd(
-            grunnlagBeregning = grunnlagBeregning
+            kravdatoUføretrygd = kravdatoUføretrygd,
+            sisteDagMedYtelse = underveisGrunnlag.sisteDagMedYtelse(),
+            grunnlagBeregning = grunnlagBeregning,
+            tilkjentYtelse = tilkjentYtelse
         )
     }
 
@@ -301,7 +336,7 @@ class BrevUtlederService(
         )
     }
 
-    private fun utledTilkjentYtelse(behandlingId: BehandlingId, virkningstidspunkt: LocalDate): TilkjentYtelse? {
+    private fun utledTilkjentYtelse(behandlingId: BehandlingId, oppslagsDato: LocalDate): TilkjentYtelse? {
         /**
          * Henter data basert på virkningstidspunkt.
          */
@@ -360,9 +395,9 @@ class BrevUtlederService(
                 minsteÅrligYtelse = minsteÅrligYtelse,
                 minsteÅrligYtelseUnder25 = Beløp(minsteÅrligYtelse.toTredjedeler()),
                 årligYtelse = tilkjent.dagsats.multiplisert(ANTALL_ÅRLIGE_ARBEIDSDAGER),
-                sisteDagMedYtelse = underveidGrunnlag.sisteDagMedYtelse()
+                kravdatoUføretrygd = null
             )
-        }.segment(virkningstidspunkt)?.verdi
+        }.segment(oppslagsDato)?.verdi
     }
 
     private fun utledBeregningstidspunktUføre(

@@ -26,4 +26,5 @@ data class UnderveisInput(
     val overstyringMeldepliktGrunnlag: OverstyringMeldepliktGrunnlag,
     val meldeperioder: List<Periode>,
     val vedtaksdatoFørstegangsbehandling: LocalDate?,
+    val forenkletKvoteFeature: Boolean = false,
 ) : Faktagrunnlag

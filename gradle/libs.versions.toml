@@ -1,10 +1,10 @@
 [versions]
 ktor = "3.3.3"
-komponenter = "1.0.933"
+komponenter = "1.0.936"
 tilgang = "1.0.178"
-utbetaling = "0.0.73"
-brev = "0.0.223"
-meldekort = "0.0.174"
+utbetaling = "0.0.74"
+brev = "0.0.226"
+meldekort = "0.0.178"
 apiIntern = "0.0.25"
 junit = "6.0.1"
 testcontainers = "2.0.2"
@@ -77,7 +77,7 @@ testcontainersKafka = { module = "org.testcontainers:testcontainers-kafka", vers
 mockOauth2Server = { module = "no.nav.security:mock-oauth2-server", version = "3.0.1" }
 mockk = { module = "io.mockk:mockk", version = "1.14.6" }
 
-ktorOpenApiGenerator = { module = "no.nav:ktor-openapi-generator", version = "1.0.137" }
+ktorOpenApiGenerator = { module = "no.nav.aap.kelvin:ktor-openapi-generator", version.ref = "komponenter" }
 
 [bundles]
 junit = ["junitApi", "junitJupiterEngine", "junitJupiterParams", "assertJ"]

@@ -18,6 +18,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeRepository
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
@@ -50,6 +51,7 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtførerTest {
     private val jobbInput = JobbInput(OpprettBehandlingUtvidVedtakslengdeJobbUtfører).forSak(sakId.id)
 
     private val prosesserBehandlingService = mockk<ProsesserBehandlingService>()
+    private val vedtakslengdeRepository = mockk<VedtakslengdeRepository>()
     private val underveisRepository = mockk<UnderveisRepository>()
     private val sakOgBehandlingService = mockk<SakOgBehandlingService>()
     private val vilkårsresultatRepository = mockk<VilkårsresultatRepository>()
@@ -57,8 +59,14 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtførerTest {
         OpprettBehandlingUtvidVedtakslengdeJobbUtfører(
             prosesserBehandlingService = prosesserBehandlingService,
             sakOgBehandlingService = sakOgBehandlingService,
-            vedtakslengdeService = VedtakslengdeService(underveisRepository, vilkårsresultatRepository, fixedClock(dagensDato)),
-            clock = fixedClock(dagensDato)
+            vedtakslengdeService = VedtakslengdeService(
+                vedtakslengdeRepository = vedtakslengdeRepository,
+                underveisRepository = underveisRepository,
+                vilkårsresultatRepository = vilkårsresultatRepository,
+                unleashGateway = VedtakslengdeUnleash,
+                clock = clock
+            ),
+            clock = clock
         )
 
 
@@ -68,7 +76,6 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtførerTest {
         val behandling = behandlingMedVedtak()
 
         every { underveisRepository.hentHvisEksisterer(behandling.id)} returns underveisGrunnlag()
-        every { sakOgBehandlingService.finnSisteYtelsesbehandlingFor(sakId) } returns behandling()
         every { sakOgBehandlingService.finnBehandlingMedSisteFattedeVedtak(sakId) } returns behandlingMedVedtak()
         every { sakOgBehandlingService.finnEllerOpprettBehandling(sak.id, any()) } returns opprettetBehandling()
         every { prosesserBehandlingService.triggProsesserBehandling(any<SakOgBehandlingService.OpprettetBehandling>()) } just Runs
@@ -84,7 +91,6 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtførerTest {
         val behandling = behandlingMedVedtak()
 
         every { underveisRepository.hentHvisEksisterer(behandling.id)} returns underveisGrunnlag()
-        every { sakOgBehandlingService.finnSisteYtelsesbehandlingFor(sakId) } returns behandling()
         every { sakOgBehandlingService.finnBehandlingMedSisteFattedeVedtak(sakId) } returns null
 
         opprettBehandlingUtvidVedtakslengdeJobbUtfører.utfør(jobbInput)
@@ -98,7 +104,6 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtførerTest {
         val behandling = behandlingMedVedtak()
 
         every { underveisRepository.hentHvisEksisterer(behandling.id)} returns underveisGrunnlag(perioder = underveisPerioderIkkeUtløpt())
-        every { sakOgBehandlingService.finnSisteYtelsesbehandlingFor(sakId) } returns behandling()
         every { sakOgBehandlingService.finnBehandlingMedSisteFattedeVedtak(sakId) } returns null
         every { sakOgBehandlingService.finnEllerOpprettBehandling(sak.id, any()) } returns opprettetBehandling()
         every { vilkårsresultatRepository.hent(behandlingId) } returns genererVilkårsresultat(sak.rettighetsperiode)
@@ -114,7 +119,6 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtførerTest {
         val behandling = behandlingMedVedtak()
 
         every { underveisRepository.hentHvisEksisterer(behandling.id)} returns underveisGrunnlag()
-        every { sakOgBehandlingService.finnSisteYtelsesbehandlingFor(sakId) } returns behandling()
         every { sakOgBehandlingService.finnBehandlingMedSisteFattedeVedtak(sakId) } returns behandlingMedVedtak()
         every { sakOgBehandlingService.finnEllerOpprettBehandling(sak.id, any()) } returns opprettetBehandling()
         every { prosesserBehandlingService.triggProsesserBehandling(any<SakOgBehandlingService.OpprettetBehandling>()) } just Runs
