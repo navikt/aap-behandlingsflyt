@@ -12,6 +12,14 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 class EtableringEgenVirksomhetSteg private constructor() : BehandlingSteg {
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
+        // Verifiser state her ift revurderinger, om ikke lengre gyldig.
+
+        // If finnes en vurdering
+            // Alle perioder er gyldig (tidspunkter hvor både 11-5 og 11-6 b er oppfylt)
+            // -- Utviklingsperiode inntil 6 mnd (131 dager?
+            // -- Oppstartsperiode inntil 3 mnd (hvor mange dager?)
+            // -- Oppstartsperioder kan aldri ligge før en utviklingsperiode.
+            // -- Man må ha definert minst en periode i tidsplanen dersom vilkåret er oppfylt for en periode
 
         // Masse kult her
 

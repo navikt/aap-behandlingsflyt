@@ -28,6 +28,8 @@ data class EtableringEgenVirksomhetVurderingResponse(
     override val besluttetAv: VurdertAvResponse?,
 
     val begrunnelse: String,
+    val virksomhetNavn: String,
+    val orgNr: Long?,
     val vurderingenGjelderFra: LocalDate,
     val foreliggerFagligVurdering: Boolean,
     val virksomhetErNy: Boolean,
@@ -63,6 +65,8 @@ data class EtableringEgenVirksomhetVurderingResponse(
             tom: LocalDate? = etableringEgenVirksomhetVurdering.vurderingenGjelderTil
         ) = EtableringEgenVirksomhetVurderingResponse(
             begrunnelse = etableringEgenVirksomhetVurdering.begrunnelse,
+            virksomhetNavn = etableringEgenVirksomhetVurdering.virksomhetNavn,
+            orgNr = etableringEgenVirksomhetVurdering.orgNr,
             vurderingenGjelderFra = etableringEgenVirksomhetVurdering.vurderingenGjelderFra,
             foreliggerFagligVurdering = etableringEgenVirksomhetVurdering.foreliggerFagligVurdering,
             virksomhetErNy = etableringEgenVirksomhetVurdering.virksomhetErNy,

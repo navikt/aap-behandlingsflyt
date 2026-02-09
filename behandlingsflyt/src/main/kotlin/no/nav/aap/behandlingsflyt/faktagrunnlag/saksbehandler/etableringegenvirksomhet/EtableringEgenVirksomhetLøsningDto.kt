@@ -11,6 +11,8 @@ data class EtableringEgenVirksomhetLøsningDto(
     override val begrunnelse: String,
     override val fom: LocalDate,
     override val tom: LocalDate?,
+    val virksomhetNavn: String,
+    val orgNr: Long? = null,
     val foreliggerFagligVurdering: Boolean,
     val virksomhetErNy: Boolean,
     val brukerEierVirksomheten: Boolean,
@@ -32,5 +34,7 @@ data class EtableringEgenVirksomhetLøsningDto(
             vurdertIBehandling = avklaringsbehovKontekst.behandlingId(),
             vurderingenGjelderFra = fom,
             vurderingenGjelderTil = tom,
+            virksomhetNavn = virksomhetNavn,
+            orgNr = orgNr
         )
 }

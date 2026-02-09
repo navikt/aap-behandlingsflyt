@@ -8,6 +8,8 @@ import java.time.LocalDate
 
 data class EtableringEgenVirksomhetVurdering(
     val begrunnelse: String,
+    val virksomhetNavn: String,
+    val orgNr: Long? = null,
     val foreliggerFagligVurdering: Boolean,
     val virksomhetErNy: Boolean,
     val brukerEierVirksomheten: Boolean,

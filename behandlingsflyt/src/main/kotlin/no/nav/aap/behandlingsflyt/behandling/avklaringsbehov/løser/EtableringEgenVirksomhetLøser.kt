@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.EtableringEgenVirksomhetLøsning
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companion.antallHverdager
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetRepository
@@ -11,6 +12,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.orEmpty
+import no.nav.aap.komponenter.tidslinje.somTidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.LocalDate
@@ -22,7 +24,6 @@ class EtableringEgenVirksomhetLøser(
     private val bistandRepository: BistandRepository,
     private val sykdomRepository: SykdomRepository,
 ) : AvklaringsbehovsLøser<EtableringEgenVirksomhetLøsning> {
-
     constructor(repositoryProvider: RepositoryProvider) : this(
         etableringEgenVirksomhetRepository = repositoryProvider.provide(),
         behandlingRepository = repositoryProvider.provide(),
@@ -39,19 +40,45 @@ class EtableringEgenVirksomhetLøser(
         val sykdomGrunnlag = sykdomRepository.hentHvisEksisterer(behandling.id)
         val bistandGrunnlag = bistandRepository.hentHvisEksisterer(behandling.id)
 
+        val nyeVurderinger = løsning.løsningerForPerioder.map { it.toEtableringEgenVirksomhetVurdering(kontekst) }
+        val gamleVurderinger =
+            behandling.forrigeBehandlingId?.let { etableringEgenVirksomhetRepository.hentHvisEksisterer(it) }?.vurderinger.orEmpty()
+        val alleVurderinger = gamleVurderinger + nyeVurderinger
+
         val førsteMuligeDato =
             utledGyldighetsPeriode(sykdomGrunnlag, bistandGrunnlag, LocalDate.now().plusDays(1)).first().fom
 
-        val nyeVurderinger = løsning.løsningerForPerioder.map { it.toEtableringEgenVirksomhetVurdering(kontekst) }
+        // Man må ha definert minst en periode i tidsplanen dersom vilkåret er oppfylt for en periode
+        require(nyeVurderinger.all { it.utviklingsPerioder.isNotEmpty() || it.oppstartsPerioder.isNotEmpty() })
 
-        require(nyeVurderinger.all { it.vurderingenGjelderFra.isAfter(førsteMuligeDato) })
+        // Må være minst én dag etter første mulige dag med AAP
+        require(alleVurderinger.all { it.vurderingenGjelderFra.isAfter(førsteMuligeDato) })
 
-        val gamleVurderinger =
-            behandling.forrigeBehandlingId?.let { etableringEgenVirksomhetRepository.hentHvisEksisterer(it) }?.vurderinger.orEmpty()
+        val alleUtviklingsPerioder = alleVurderinger.flatMap { it.utviklingsPerioder }
+        val alleOppstartsPerioder = alleVurderinger.flatMap { it.oppstartsPerioder }
+
+        // Oppstartsperioder kan aldri ligge før en utviklingsperiode.
+        alleUtviklingsPerioder.maxOf { uPeriode -> uPeriode.tom }.let {
+            require(alleOppstartsPerioder.none { oPeriode -> oPeriode.fom.isBefore(it) })
+        }
+
+        // Finn et nice sted for disse
+        val maksUtviklingsdager = 131
+        val maksOppstartsdager = 90
+
+        val bruktUtviklingsDager =
+            (alleVurderinger).flatMap { it.utviklingsPerioder }.somTidslinje { it }.komprimer().segmenter()
+                .sumOf { it.periode.antallHverdager().asInt }
+        val bruktOppstartsdager =
+            (alleVurderinger).flatMap { it.oppstartsPerioder }.somTidslinje { it }.komprimer().segmenter()
+                .sumOf { it.periode.antallHverdager().asInt }
+
+        require(bruktUtviklingsDager <= maksUtviklingsdager)
+        require(bruktOppstartsdager <= maksOppstartsdager)
 
         etableringEgenVirksomhetRepository.lagre(
             behandlingId = behandling.id,
-            etableringEgenvirksomhetVurderinger = gamleVurderinger + nyeVurderinger
+            etableringEgenvirksomhetVurderinger = alleVurderinger
         )
         return LøsningsResultat(begrunnelse = "Vurdert etablering egen virksomhet")
     }
