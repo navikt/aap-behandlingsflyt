@@ -16,6 +16,7 @@ data class OvergangUføreGrunnlagResponse(
     val historiskeVurderinger: List<OvergangUføreVurderingResponse>,
     val gjeldendeSykdsomsvurderinger: List<SykdomsvurderingResponse>,
     override val kanVurderes: List<Periode>,
+    override val ikkeRelevantePerioder: List<Periode>,
     override val behøverVurderinger: List<Periode>,
     val perioderSomIkkeErTilstrekkeligVurdert: List<Periode>,
     val kvalitetssikretAv: VurdertAvResponse?,
