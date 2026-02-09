@@ -75,6 +75,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
+import no.nav.aap.behandlingsflyt.test.FakeApiInternGateway
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryArbeidsopptrappingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
@@ -146,7 +147,10 @@ class StatistikkJobbUtførerTest {
                 }
             }
             val sak = PersonOgSakService(
-                identGateway, PersonRepositoryImpl(connection), SakRepositoryImpl(connection)
+                identGateway,
+                FakeApiInternGateway.konstruer(),
+                PersonRepositoryImpl(connection),
+                SakRepositoryImpl(connection)
             ).finnEllerOpprett(
                 ident, periode = Periode(LocalDate.now().minusDays(10), LocalDate.now().plusDays(1))
             )
@@ -319,7 +323,10 @@ class StatistikkJobbUtførerTest {
             }
 
             val sak = PersonOgSakService(
-                identGateway, PersonRepositoryImpl(connection), SakRepositoryImpl(connection)
+                identGateway,
+                FakeApiInternGateway.konstruer(),
+                PersonRepositoryImpl(connection),
+                SakRepositoryImpl(connection)
             ).finnEllerOpprett(
                 ident, periode = Periode(LocalDate.now().minusDays(10), LocalDate.now().plusDays(1))
             )

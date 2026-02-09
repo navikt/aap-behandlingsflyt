@@ -50,12 +50,21 @@ class OpprettJobbForMigrereRettighetsperiodeJobbUtfører(
 
         if (unleashGateway.isEnabled(BehandlingsflytFeature.MigrerRettighetsperiode)) {
             sakerForMigrering.forEach { sak ->
-                flytJobbRepository.leggTil(JobbInput(OpprettBehandlingMigrereRettighetsperiodeJobbUtfører).forSak(sak.id.toLong()))
+
+                if (!finnesAlleredeMigreringsjobbForSak(sak)) {
+                    flytJobbRepository.leggTil(JobbInput(OpprettBehandlingMigrereRettighetsperiodeJobbUtfører).forSak(sak.id.toLong()))
+                } else {
+                    log.info("Finnes allerede en jobb for å migrere rettighetsperiode sak ${sak.id} ")
+                }
             }
 
             log.info("Jobb for migrering av rettighetsperiode fullført for ${sakerForMigrering.size}")
         }
     }
+
+    private fun finnesAlleredeMigreringsjobbForSak(sak: Sak):Boolean =
+        flytJobbRepository.hentJobberForSak(sak.id.toLong())
+            .any { it.type() == OpprettBehandlingMigrereRettighetsperiodeJobbUtfører.type }
 
     /**
      * Kan kun behandle de som er avsluttet og ønsker ikke å migrere de som er trukket

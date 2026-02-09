@@ -371,6 +371,9 @@ class BrevGateway : BrevbestillingGateway {
             is UtvidVedtakslengde -> {
                 buildSet {
                     add(
+                        Faktagrunnlag.UtvidetAapFomDato(brevBehov.utvidetAapFomDato)
+                    )
+                    add(
                         Faktagrunnlag.SisteDagMedYtelse(brevBehov.sisteDagMedYtelse)
                     )
                 }

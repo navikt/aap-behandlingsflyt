@@ -20,14 +20,16 @@ enum class BehandlingsflytFeature : FeatureToggle {
     HentSykepengerVedOverlapp,
     SendBrevVedMottattKlage,
     PeriodisertSykdom,
-    Sykestipend,
     ForlengelseIManuellBehandling,
     UtvidVedtakslengdeJobb,
     InstitusjonsoppholdJobb,
     TrekkSoeknadOpprettetFraLegeerklaering,
     UbehandledeMeldekortJobb,
     ForenkletKvote,
-    PapirMeldekortFraBehandingsflyt
+    PapirMeldekortFraBehandingsflyt,
+    RettighetstypeSteg,
+    VirksomhetsEtablering,
+    KvalitetssikringVed2213
     ;
 
     override fun key(): String = name

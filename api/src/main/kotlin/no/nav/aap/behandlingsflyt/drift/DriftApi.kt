@@ -220,7 +220,7 @@ private data class BehandlingDriftsinfo(
                 referanse = behandling.referanse.referanse,
                 type = behandling.typeBehandling().identifikator(),
                 status = behandling.status(),
-                vurderingsbehov = behandling.vurderingsbehov().map(VurderingsbehovMedPeriode::type),
+                vurderingsbehov = behandling.vurderingsbehov().map(VurderingsbehovMedPeriode::type).distinct(),
                 årsakTilOpprettelse = behandling.årsakTilOpprettelse,
                 opprettet = behandling.opprettetTidspunkt,
                 avklaringsbehov = avklaringsbehovene,

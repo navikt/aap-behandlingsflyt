@@ -72,7 +72,7 @@ object InstitusjonsoppholdGatewayImpl : InstitusjonsoppholdGateway {
     private val log = LoggerFactory.getLogger(javaClass)
 
     private val personOppholdUrl =
-        URI.create(requiredConfigForKey("integrasjon.institusjonsopphold.url"))
+        URI.create(requiredConfigForKey("integrasjon.institusjonsopphold.url") + "?Med-Institusjonsinformasjon=true")
     private val enkeltOppholdURL =
         URI.create(requiredConfigForKey("integrasjon.institusjonsoppholdenkelt.url"))
     private val config = ClientConfig(scope = requiredConfigForKey("integrasjon.institusjonsopphold.scope"))
@@ -122,7 +122,6 @@ object InstitusjonsoppholdGatewayImpl : InstitusjonsoppholdGateway {
         val request = InstitusjonoppholdRequest(person.aktivIdent().identifikator)
         val oppholdRes = query(request)
         val institusjonsopphold = oppholdRes.map { opphold ->
-            log.info("Rått organisasjonsnummer: ${opphold.organisasjonsnummer}")
             Institusjonsopphold.nyttOpphold(
                 institusjonstype = requireNotNull(opphold.institusjonstype) { "Institusjonstype på institusjonsopphold må være satt." },
                 kategori = opphold.kategori,
