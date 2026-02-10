@@ -81,14 +81,15 @@ class OpprettBehandlingMigrereRettighetsperiodeJobbUtfører(
         val behandlingEtterMigrering = sakOgBehandlingService.finnSisteYtelsesbehandlingFor(sak.id)
             ?: error("Fant ikke behandling for sak=${sakId}")
         validerBehandlingerErUlike(behandlingFørMigrering, behandlingEtterMigrering)
-        validerRettighetstype(behandlingFørMigrering, behandlingEtterMigrering)
+        validerRettighetstype(behandlingFørMigrering, behandlingEtterMigrering, sak)
         validerTilkjentYtelse(behandlingFørMigrering, behandlingEtterMigrering, sak)
         validerUnderveisPerioder(behandlingFørMigrering, behandlingEtterMigrering, sak)
     }
 
     private fun validerRettighetstype(
         behandlingFørMigrering: Behandling,
-        behandlingEtterMigrering: Behandling
+        behandlingEtterMigrering: Behandling,
+        sak: Sak
     ) {
         val vilkårFør = vilkårsresultatRepository.hent(behandlingFørMigrering.id)
         val vilkårEtter = vilkårsresultatRepository.hent(behandlingEtterMigrering.id)
@@ -103,6 +104,9 @@ class OpprettBehandlingMigrereRettighetsperiodeJobbUtfører(
         }
         val rettighetstypeEtterBegrenset = rettighetstypeEtter.begrensetTil(rettighetstypeFør.helePerioden())
         secureLogger.info("Migrering vilkår før=${rettighetstypeFør} og etter=$rettighetstypeEtter")
+        if(skalIgnorereTilkjentYtelseSjekk(sak)) {
+            return
+        }
         if (rettighetstypeEtterBegrenset != rettighetstypeFør) {
             secureLogger.info("Migrering vilkår før=${rettighetstypeFør} og etter=$rettighetstypeEtterBegrenset")
             secureLogger.info("Vilkår før=$vilkårFør og etter=$vilkårEtter")
