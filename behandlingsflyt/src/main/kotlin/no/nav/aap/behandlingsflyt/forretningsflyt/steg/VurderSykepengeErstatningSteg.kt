@@ -35,7 +35,6 @@ class VurderSykepengeErstatningSteg private constructor(
     private val sykepengerErstatningRepository: SykepengerErstatningRepository,
     private val sykdomRepository: SykdomRepository,
     private val bistandRepository: BistandRepository,
-    private val behandlingRepository: BehandlingRepository,
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
     private val tidligereVurderinger: TidligereVurderinger,
     private val avklaringsbehovService: AvklaringsbehovService,
@@ -46,7 +45,6 @@ class VurderSykepengeErstatningSteg private constructor(
         sykepengerErstatningRepository = repositoryProvider.provide(),
         sykdomRepository = repositoryProvider.provide(),
         bistandRepository = repositoryProvider.provide(),
-        behandlingRepository = repositoryProvider.provide(),
         avklaringsbehovRepository = repositoryProvider.provide(),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
         avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
@@ -55,8 +53,6 @@ class VurderSykepengeErstatningSteg private constructor(
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
-
         val vedtatteVurderinger =
             kontekst.forrigeBehandlingId?.let { sykepengerErstatningRepository.hentHvisEksisterer(it) }
                 ?.vurderinger.orEmpty()
@@ -137,14 +133,16 @@ class VurderSykepengeErstatningSteg private constructor(
 
         val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
         val overganguføreVilkår = vilkårsresultat.optionalVilkår(Vilkårtype.OVERGANGUFØREVILKÅRET)?.tidslinje().orEmpty()
+        val overgangarbeidVilkår = vilkårsresultat.optionalVilkår(Vilkårtype.OVERGANGARBEIDVILKÅRET)?.tidslinje().orEmpty()
 
-        return Tidslinje.map5(
+        return Tidslinje.map6(
             tidligereVurderingsutfall,
             sykdomsvurderinger,
             bistandvurderinger,
             yrkesskadevurderinger,
-            overganguføreVilkår
-        ) { segmentPeriode, behandlingsutfall, sykdomsvurdering, bistandvurdering, yrkesskadevurdering, overgangUføreVilkårsvurdering ->
+            overganguføreVilkår,
+            overgangarbeidVilkår
+        ) { segmentPeriode, behandlingsutfall, sykdomsvurdering, bistandvurdering, yrkesskadevurdering, overgangUføreVilkårsvurdering, overgangarbeidVilkår ->
             when (behandlingsutfall) {
                 null -> false
                 TidligereVurderinger.Behandlingsutfall.IKKE_BEHANDLINGSGRUNNLAG -> false
@@ -153,7 +151,8 @@ class VurderSykepengeErstatningSteg private constructor(
                     when {
                         sykdomsvurdering?.erOppfyltOrdinær(kravDato, segmentPeriode) == true
                                 && bistandvurdering?.erBehovForBistand() != true
-                                && overgangUføreVilkårsvurdering?.utfall != Utfall.OPPFYLT -> true
+                                && overgangUføreVilkårsvurdering?.utfall != Utfall.OPPFYLT
+                                && overgangarbeidVilkår?.utfall != Utfall.OPPFYLT -> true
 
                         /* caset oppfyller ikke medlemmet vilkåret for ordinær AAP, men SPE er mulig */
                         sykdomsvurdering?.erOppfyltOrdinærtEllerMedYrkesskadeMenIkkeVissVarighet(yrkesskadevurdering) == true ->
