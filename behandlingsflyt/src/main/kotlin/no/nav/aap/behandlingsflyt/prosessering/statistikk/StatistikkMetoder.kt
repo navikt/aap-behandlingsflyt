@@ -282,7 +282,7 @@ class StatistikkMetoder(
             log.info("Ingen søknader funnet for behandling ${behandling.referanse} av type ${behandling.typeBehandling()}.")
             return behandling.opprettetTidspunkt
         }
-        return mottattTidspunkt
+        return minOf(mottattTidspunkt, behandling.opprettetTidspunkt)
     }
 
     private fun hentRelevanteDokumenterForBehandling(behandling: Behandling): Set<MottattDokument> {

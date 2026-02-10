@@ -144,7 +144,7 @@ class AvklaringsbehovService(
                 /* ønsket tilstand: ... */
                 when (avklaringsbehov.status()) {
                     OPPRETTET, AVBRUTT ->
-                        avklaringsbehovene.internalAvslutt(definisjon)
+                        avklaringsbehovene.avslutt(definisjon, "Behovet var åpent, men er nå tilstrekkelig vurdert.")
 
                     AVSLUTTET,
                     SENDT_TILBAKE_FRA_BESLUTTER,
@@ -203,7 +203,7 @@ class AvklaringsbehovService(
                         return
                     }
 
-                    avklaringsbehovene.internalAvbryt(definisjon)
+                    avklaringsbehovene.avbryt(definisjon)
                     if (!avbrytRevurderingService.revurderingErAvbrutt(kontekst.behandlingId)) {
                         tilbakestillGrunnlag()
                     }

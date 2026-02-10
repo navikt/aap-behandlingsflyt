@@ -74,7 +74,6 @@ class GosysGateway : OppgaveGateway {
             }
 
 
-
         val oppgaveRequest = OpprettOppgaveRequest(
             oppgavetype = OppgaveType.VURDER_KONSEKVENS_FOR_YTELSE.verdi,
             tema = "AAP",

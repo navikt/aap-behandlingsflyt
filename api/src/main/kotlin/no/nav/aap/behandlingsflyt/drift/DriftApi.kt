@@ -28,6 +28,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.SaksnummerParameter
 import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.komponenter.httpklient.exception.IkkeTillattException
 import no.nav.aap.komponenter.httpklient.exception.VerdiIkkeFunnetException
 import no.nav.aap.komponenter.json.DefaultJsonMapper
 import no.nav.aap.komponenter.repository.RepositoryRegistry
@@ -138,6 +139,8 @@ fun NormalOpenAPIRoute.driftApi(
                         .sortedBy { it.vurdertTidspunkt }
                 }
 
+                krevDtoErUtenFødselsnummer(vilkår)
+
                 respond(vilkår)
             }
         }
@@ -177,6 +180,7 @@ fun NormalOpenAPIRoute.driftApi(
 
                             BehandlingDriftsinfo.fra(behandling, avklaringsbehovene)
                         }
+                        .sortedByDescending { it.opprettet }
 
                     SakDriftsinfoDTO(
                         saksnummer = sak.saksnummer.toString(),
@@ -187,13 +191,17 @@ fun NormalOpenAPIRoute.driftApi(
                     )
                 }
 
-                require(!Regex("""\d{11}""").containsMatchIn(DefaultJsonMapper.toJson(sakDriftsinfoDTO))) {
-                    "DTO-en inneholder (potensielt) sensitive personopplysninger!"
-                }
+                krevDtoErUtenFødselsnummer(sakDriftsinfoDTO)
 
                 respond(sakDriftsinfoDTO)
             }
         }
+    }
+}
+
+private fun krevDtoErUtenFødselsnummer(dto: Any) {
+    if (Regex("""(?<!\w)\d{11}(?!\w)""").containsMatchIn(DefaultJsonMapper.toJson(dto))) {
+        throw IkkeTillattException("DTO-en inneholder (potensielt) sensitive personopplysninger!")
     }
 }
 

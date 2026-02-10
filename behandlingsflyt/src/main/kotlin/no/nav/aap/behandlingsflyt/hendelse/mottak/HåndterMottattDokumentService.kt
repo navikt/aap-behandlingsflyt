@@ -276,19 +276,19 @@ class HåndterMottattDokumentService(
         val sak = sakService.hent(sakId)
         val periode = utledPeriode(brevkategori, mottattTidspunkt, melding)
         val vurderingsbehov = utledVurderingsbehov(brevkategori, melding, periode)
-        log.info("Håndterer dialogmelding for $sak.id")
+        log.info("Håndterer dialogmelding for ${sak.id}")
         val sisteYtelsesBehandling = sakOgBehandlingService.finnSisteYtelsesbehandlingFor(sak.id)
 
         if (sisteYtelsesBehandling != null) {
             mottaDokumentService.markerSomBehandlet(sakId, sisteYtelsesBehandling.id, referanse)
-            log.info("Markerer dialogmelding som behandlet $sisteYtelsesBehandling.id")
+            log.info("Markerer dialogmelding som behandlet ${sisteYtelsesBehandling.id}")
             if (sisteYtelsesBehandling.status().erÅpen()) {
                 prosesserBehandling.triggProsesserBehandling(
                     sisteYtelsesBehandling,
                     vurderingsbehov = vurderingsbehov.filter { it.type == Vurderingsbehov.MOTTATT_DIALOGMELDING }
                         .map { it.type }
                 )
-                log.info("Prosessert behandling etter mottatt dialogmelding $sisteYtelsesBehandling.id")
+                log.info("Prosessert behandling etter mottatt dialogmelding ${sisteYtelsesBehandling.id}")
             }
 
         }
@@ -334,7 +334,7 @@ class HåndterMottattDokumentService(
             ÅrsakTilOpprettelse.AKTIVITETSPLIKT,
             ÅrsakTilOpprettelse.AKTIVITETSPLIKT_11_9,
             ÅrsakTilOpprettelse.UTVID_VEDTAKSLENGDE,
-            ÅrsakTilOpprettelse.MIGRER_RETTIGHETSPERIODE-> FagsysteminfoSvarHendelse.RevurderingDto.Årsak.NYE_OPPLYSNINGER
+            ÅrsakTilOpprettelse.MIGRER_RETTIGHETSPERIODE -> FagsysteminfoSvarHendelse.RevurderingDto.Årsak.NYE_OPPLYSNINGER
 
             ÅrsakTilOpprettelse.MELDEKORT,
             ÅrsakTilOpprettelse.MANUELL_OPPRETTELSE -> FagsysteminfoSvarHendelse.RevurderingDto.Årsak.KORRIGERING
