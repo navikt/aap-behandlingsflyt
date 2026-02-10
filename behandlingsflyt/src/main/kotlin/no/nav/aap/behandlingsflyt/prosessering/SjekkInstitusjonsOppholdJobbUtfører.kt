@@ -104,7 +104,7 @@ class SjekkInstitusjonsOppholdJobbUtfører(
 
         val grunnlag = institusjonsOppholdRepository.hentHvisEksisterer(behandlingId)
         grunnlag?.oppholdene?.opphold?.forEach { opphold ->
-            if (tomErIFremtidenOgInnenTreMaaneder(opphold.periode)) {
+            if (periodeErMinstFireMaanederOgTomInnenToMaaneder(opphold.periode)) {
                 log.info("For behandlingsid $behandlingId er oppholdene true")
                 return true
             }
@@ -113,8 +113,16 @@ class SjekkInstitusjonsOppholdJobbUtfører(
         return false
     }
 
-    private fun tomErIFremtidenOgInnenTreMaaneder(periode: Periode): Boolean {
-        return periode.tom.isBefore(LocalDate.now().withDayOfMonth(1).plusMonths(4)) && periode.tom.isAfter(LocalDate.now())
+    private fun periodeErMinstFireMaanederOgTomInnenToMaaneder(periode: Periode): Boolean {
+        val now = LocalDate.now()
+
+        val varighetPaMinstFireMaaneder =
+            !periode.tom.isBefore(periode.fom.plusMonths(4))
+
+        val tomInnenToMaaneder =
+            periode.tom.isBefore(now.withDayOfMonth(1).plusMonths(2))
+
+        return varighetPaMinstFireMaaneder && tomInnenToMaaneder
     }
 
     private fun opprettNyBehandling(sak: Sak): Behandling =
@@ -147,7 +155,7 @@ class SjekkInstitusjonsOppholdJobbUtfører(
         override val beskrivelse = "Skal trigge behandling som vurderer institusjonsopphold"
 
         /**
-         * Kjøres hver time enn så lenge, slås av og på med Feature Toggle
+         * Kjøres en gang hver dag, slås av og på med Feature Toggle
          */
         override val cron = CronExpression.createWithoutSeconds("0 3 * * *")
     }
