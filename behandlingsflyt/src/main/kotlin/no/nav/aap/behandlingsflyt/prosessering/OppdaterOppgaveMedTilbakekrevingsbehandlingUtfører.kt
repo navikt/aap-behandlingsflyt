@@ -9,6 +9,9 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.TilbakekrevingsbehandlingOpp
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.TilbakekrevingBehandlingsstatus
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.FeatureToggle
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryProvider
 import no.nav.aap.motor.JobbInput
@@ -20,6 +23,7 @@ import java.util.UUID
 class OppdaterOppgaveMedTilbakekrevingsbehandlingUtfører(
     val oppgaveStyringGateway: OppgavestyringGateway,
     val tilbakekrevingsbehandlingRepository: TilbakekrevingRepository,
+    val unleashGateway : UnleashGateway,
     val sakRepository: SakRepository
 
 ): JobbUtfører {
@@ -27,8 +31,9 @@ class OppdaterOppgaveMedTilbakekrevingsbehandlingUtfører(
     private val log = LoggerFactory.getLogger(javaClass)
 
     override fun utfør(input: JobbInput) {
-        log.info("Varsle tilbakekrevingsbehandling til oppgavestyring er ikke koblet på enda")
-        return
+        if (!unleashGateway.isEnabled(BehandlingsflytFeature.tilbakekrevingsOppgaverTilOppgave)){
+            return
+        }
         val tilbakekrevingSakId = SakId(input.sakId())
         val sak = sakRepository.hent(tilbakekrevingSakId)
         val tilbakekrevingBehandlingId = input.parameter("tilbakekrevingBehandlingId")
@@ -47,9 +52,6 @@ class OppdaterOppgaveMedTilbakekrevingsbehandlingUtfører(
         )
 
         oppgaveStyringGateway.varsleTilbakekrevingHendelse(tilbakekrevingsbehandlingOppdatertHendelse)
-
-
-
     }
 
     companion object : ProvidersJobbSpesifikasjon {
@@ -58,6 +60,7 @@ class OppdaterOppgaveMedTilbakekrevingsbehandlingUtfører(
             return OppdaterOppgaveMedTilbakekrevingsbehandlingUtfører(
                 oppgaveStyringGateway = gatewayProvider.provide<OppgavestyringGateway>(),
                 tilbakekrevingsbehandlingRepository = repositoryProvider.provide<TilbakekrevingRepository>(),
+                unleashGateway = gatewayProvider.provide<UnleashGateway>(),
                 sakRepository = repositoryProvider.provide<SakRepository>(),
             )
         }

@@ -53,7 +53,8 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.PapirMeldekortFraBehandingsflyt to true,
         BehandlingsflytFeature.RettighetstypeSteg to true,
         BehandlingsflytFeature.VirksomhetsEtablering to true,
-        BehandlingsflytFeature.KvalitetssikringVed2213 to true
+        BehandlingsflytFeature.KvalitetssikringVed2213 to true,
+        BehandlingsflytFeature.tilbakekrevingsOppgaverTilOppgave to true,
         )
 )
 
