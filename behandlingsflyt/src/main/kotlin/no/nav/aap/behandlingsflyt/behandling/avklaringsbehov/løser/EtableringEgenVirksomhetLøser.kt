@@ -64,7 +64,7 @@ class EtableringEgenVirksomhetLøser(
 
         // Finn et nice sted for disse
         val maksUtviklingsdager = 131
-        val maksOppstartsdager = 90
+        val maksOppstartsdager = 66
 
         val bruktUtviklingsDager =
             (alleVurderinger).flatMap { it.utviklingsPerioder }.somTidslinje { it }.komprimer().segmenter()
