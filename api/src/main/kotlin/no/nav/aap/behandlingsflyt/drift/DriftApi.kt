@@ -180,6 +180,7 @@ fun NormalOpenAPIRoute.driftApi(
 
                             BehandlingDriftsinfo.fra(behandling, avklaringsbehovene)
                         }
+                        .sortedByDescending { it.opprettet }
 
                     SakDriftsinfoDTO(
                         saksnummer = sak.saksnummer.toString(),
