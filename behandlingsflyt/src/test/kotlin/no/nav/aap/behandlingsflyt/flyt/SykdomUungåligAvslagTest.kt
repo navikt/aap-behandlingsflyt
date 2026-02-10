@@ -103,7 +103,7 @@ class SykdomUungåligAvslagTest : AbstraktFlytOrkestratorTest(LokalUnleash::clas
         assertThat(vedtak.vedtakstidspunkt.toLocalDate()).isToday
 
         val resultat = dataSource.transaction {
-            ResultatUtleder(postgresRepositoryRegistry.provider(it)).utledResultat(behandling.id)
+            ResultatUtleder(postgresRepositoryRegistry.provider(it)).utledResultatFørstegangsBehandling(behandling.id)
         }
         assertThat(resultat).isEqualTo(Resultat.AVSLAG)
         val brevbestilling = hentBrevAvType(behandling, TypeBrev.VEDTAK_AVSLAG)
@@ -191,7 +191,7 @@ class SykdomUungåligAvslagTest : AbstraktFlytOrkestratorTest(LokalUnleash::clas
         assertThat(vedtak.vedtakstidspunkt.toLocalDate()).isToday
 
         val resultat = dataSource.transaction {
-            ResultatUtleder(postgresRepositoryRegistry.provider(it)).utledResultat(behandling.id)
+            ResultatUtleder(postgresRepositoryRegistry.provider(it)).utledResultatFørstegangsBehandling(behandling.id)
         }
         assertThat(resultat).isEqualTo(Resultat.AVSLAG)
         val brevbestilling = hentBrevAvType(behandling, TypeBrev.VEDTAK_AVSLAG)
@@ -279,7 +279,7 @@ class SykdomUungåligAvslagTest : AbstraktFlytOrkestratorTest(LokalUnleash::clas
         assertThat(vedtak.vedtakstidspunkt.toLocalDate()).isToday
 
         val resultat = dataSource.transaction {
-            ResultatUtleder(postgresRepositoryRegistry.provider(it)).utledResultat(behandling.id)
+            ResultatUtleder(postgresRepositoryRegistry.provider(it)).utledResultatFørstegangsBehandling(behandling.id)
         }
         assertThat(resultat).isEqualTo(Resultat.AVSLAG)
         val brevbestilling = hentBrevAvType(behandling, TypeBrev.VEDTAK_AVSLAG)
@@ -393,7 +393,7 @@ class SykdomUungåligAvslagTest : AbstraktFlytOrkestratorTest(LokalUnleash::clas
         assertThat(vedtak.vedtakstidspunkt.toLocalDate()).isToday
 
         val resultat = dataSource.transaction {
-            ResultatUtleder(postgresRepositoryRegistry.provider(it)).utledResultat(behandling.id)
+            ResultatUtleder(postgresRepositoryRegistry.provider(it)).utledResultatFørstegangsBehandling(behandling.id)
         }
         assertThat(resultat).isEqualTo(Resultat.AVSLAG)
     }
