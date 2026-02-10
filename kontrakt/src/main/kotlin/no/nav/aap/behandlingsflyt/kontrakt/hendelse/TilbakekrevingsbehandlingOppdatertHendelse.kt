@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.kontrakt.hendelse
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.TilbakekrevingBehandlingsstatus
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
+import java.math.BigDecimal
 import java.time.LocalDateTime
 
 public data class TilbakekrevingsbehandlingOppdatertHendelse(
@@ -12,4 +13,6 @@ public data class TilbakekrevingsbehandlingOppdatertHendelse(
     val behandlingStatus: TilbakekrevingBehandlingsstatus,
     val sakOpprettet: LocalDateTime,
     val avklaringsbehov: List<AvklaringsbehovHendelseDto>,
+    val totaltFeilutbetaltBeløp: BigDecimal,
+    val saksbehandlingURL: String,
 )

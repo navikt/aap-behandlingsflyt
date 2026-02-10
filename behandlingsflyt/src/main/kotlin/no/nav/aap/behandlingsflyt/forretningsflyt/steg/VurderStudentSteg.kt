@@ -44,7 +44,7 @@ class VurderStudentSteg private constructor(
                 when (kontekst.vurderingType) {
                     VurderingType.FØRSTEGANGSBEHANDLING ->
                         tidligereVurderinger.muligMedRettTilAAP(kontekst, type()) &&
-                                studentGrunnlag.søkerOppgirStudentstatus()
+                                (studentGrunnlag.søkerOppgirStudentstatus() || Vurderingsbehov.REVURDER_STUDENT in kontekst.vurderingsbehovRelevanteForSteg)
 
                     VurderingType.REVURDERING ->
                         tidligereVurderinger.muligMedRettTilAAP(kontekst, type()) &&
@@ -71,11 +71,12 @@ class VurderStudentSteg private constructor(
             },
             kontekst
         )
-        
+
         when (kontekst.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING, VurderingType.REVURDERING, VurderingType.MIGRER_RETTIGHETSPERIODE -> {
                 vurderStudentvilkår(kontekst)
             }
+
             VurderingType.UTVID_VEDTAKSLENGDE,
             VurderingType.MELDEKORT,
             VurderingType.AUTOMATISK_BREV,
@@ -85,17 +86,17 @@ class VurderStudentSteg private constructor(
                 /* noop */
             }
         }
-        
+
         return Fullført
     }
-    
+
     private fun vurderStudentvilkår(kontekst: FlytKontekstMedPerioder) {
         val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
         vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.STUDENT)
-        
+
         val grunnlag = StudentFaktagrunnlag(
             rettighetsperiode = kontekst.rettighetsperiode,
-            studentGrunnlag = studentRepository.hentHvisEksisterer(kontekst.behandlingId) 
+            studentGrunnlag = studentRepository.hentHvisEksisterer(kontekst.behandlingId)
         )
         StudentVilkår(vilkårsresultat).vurder(grunnlag = grunnlag)
         vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
