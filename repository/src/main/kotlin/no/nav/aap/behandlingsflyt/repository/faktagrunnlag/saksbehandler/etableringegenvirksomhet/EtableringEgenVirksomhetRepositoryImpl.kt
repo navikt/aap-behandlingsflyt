@@ -48,7 +48,9 @@ class EtableringEgenVirksomhetRepositoryImpl(private val connection: DBConnectio
             INSERT INTO ETABLERING_EGEN_VIRKSOMHET_VURDERINGER (OPPRETTET_TID)
             VALUES (?)
         """.trimIndent()
-        val vurderingerId = connection.executeReturnKey(query)
+        val vurderingerId = connection.executeReturnKey(query) {
+            setParams { setInstant(1, Instant.now()) }
+        }
 
         connection.executeBatch(
             """
@@ -93,7 +95,9 @@ class EtableringEgenVirksomhetRepositoryImpl(private val connection: DBConnectio
             INSERT INTO EGEN_VIRKSOMHET_UTVIKLING_PERIODER (OPPRETTET_TID)
             VALUES (?)
         """.trimIndent()
-        val utviklingPerioderId = connection.executeReturnKey(utviklingPerioderQuery)
+        val utviklingPerioderId = connection.executeReturnKey(utviklingPerioderQuery) {
+            setParams { setInstant(1, Instant.now()) }
+        }
 
         connection.executeBatch(
             """
@@ -169,7 +173,9 @@ class EtableringEgenVirksomhetRepositoryImpl(private val connection: DBConnectio
             INSERT INTO EGEN_VIRKSOMHET_OPPSTART_PERIODER (OPPRETTET_TID)
             VALUES (?)
         """.trimIndent()
-        val oppstartPerioderId = connection.executeReturnKey(oppstartPerioderQuery)
+        val oppstartPerioderId = connection.executeReturnKey(oppstartPerioderQuery) {
+            setParams { setInstant(1, Instant.now()) }
+        }
 
         connection.executeBatch(
             """
@@ -242,12 +248,20 @@ class EtableringEgenVirksomhetRepositoryImpl(private val connection: DBConnectio
         }
     }
 
-    private fun getVurderingerIds(behandlingId: BehandlingId): List<InternalEtableringEgenVirksomhetGrunnlag> =
+    private fun getVurderingerIds(
+        behandlingId: BehandlingId
+    ): List<InternalEtableringEgenVirksomhetGrunnlag> =
         connection.queryList(
             """
-            SELECT vurderinger_id, egen_virksomhet_utvikling_perioder_id, egen_virksomhet_oppstart_perioder_id
-            FROM ETABLERING_EGEN_VIRKSOMHET_GRUNNLAG
-            WHERE behandling_id = ?
+            SELECT
+                g.vurderinger_id,
+                v.egen_virksomhet_utvikling_perioder_id,
+                v.egen_virksomhet_oppstart_perioder_id
+            FROM ETABLERING_EGEN_VIRKSOMHET_GRUNNLAG g
+            JOIN ETABLERING_EGEN_VIRKSOMHET_VURDERING v
+                ON v.vurderinger_id = g.vurderinger_id
+            WHERE g.behandling_id = ?
+              AND g.aktiv = TRUE
         """.trimIndent()
         ) {
             setParams {
@@ -257,7 +271,7 @@ class EtableringEgenVirksomhetRepositoryImpl(private val connection: DBConnectio
                 InternalEtableringEgenVirksomhetGrunnlag(
                     vurderingerId = row.getLong("vurderinger_id"),
                     utviklingsperioderId = row.getLongOrNull("egen_virksomhet_utvikling_perioder_id"),
-                    oppstartsperioderId = row.getLongOrNull("egen_virksomhet_oppstart_perioder_id")
+                    oppstartsperioderId = row.getLongOrNull("egen_virksomhet_oppstart_perioder_id"),
                 )
             }
         }
