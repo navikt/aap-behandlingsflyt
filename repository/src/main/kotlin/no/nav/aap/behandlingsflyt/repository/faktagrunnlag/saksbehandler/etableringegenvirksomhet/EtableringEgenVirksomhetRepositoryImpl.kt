@@ -6,11 +6,14 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirk
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.lookup.repository.Factory
+import org.slf4j.LoggerFactory
 import java.time.Instant
 
 class EtableringEgenVirksomhetRepositoryImpl(private val connection: DBConnection) :
     EtableringEgenVirksomhetRepository {
+    private val log = LoggerFactory.getLogger(javaClass)
 
     companion object : Factory<EtableringEgenVirksomhetRepositoryImpl> {
         override fun konstruer(connection: DBConnection): EtableringEgenVirksomhetRepositoryImpl {
@@ -19,7 +22,20 @@ class EtableringEgenVirksomhetRepositoryImpl(private val connection: DBConnectio
     }
 
     override fun hentHvisEksisterer(behandlingId: BehandlingId): EtableringEgenVirksomhetGrunnlag? {
-        TODO("Not yet implemented")
+        val query = """
+            SELECT * FROM ETABLERING_EGEN_VIRKSOMHET_GRUNNLAG WHERE behandling_id = ? and aktiv = true
+        """.trimIndent()
+
+        return connection.queryFirstOrNull(query) {
+            setParams {
+                setLong(1, behandlingId.id)
+            }
+            setRowMapper { row ->
+                EtableringEgenVirksomhetGrunnlag(
+                    row.getLong("vurderinger_id").let(::mapVurdering)
+                )
+            }
+        }
     }
 
     override fun lagre(
@@ -94,6 +110,60 @@ class EtableringEgenVirksomhetRepositoryImpl(private val connection: DBConnectio
         return utviklingPerioderId
     }
 
+    private fun mapVurdering(vurderingerId: Long): List<EtableringEgenVirksomhetVurdering> {
+        val query = """
+            SELECT * FROM ETABLERING_EGEN_VIRKSOMHET_VURDERING WHERE vurderinger_id = ?
+        """.trimIndent()
+
+        return connection.queryList(query) {
+            setParams {
+                setLong(1, vurderingerId)
+            }
+            setRowMapper { row ->
+                EtableringEgenVirksomhetVurdering(
+                    begrunnelse = row.getString("BEGRUNNELSE"),
+                    virksomhetNavn = row.getString("VIRKSOMHET_NAVN"),
+                    orgNr = row.getLongOrNull("ORG_NR"),
+                    foreliggerFagligVurdering = row.getBoolean("FORELIGGER_FAGLIG_VURDERING"),
+                    virksomhetErNy = row.getBoolean("VIRKSOMHET_ER_NY"),
+                    brukerEierVirksomheten = row.getBoolean("BRUKER_EIER_VIRKSOMHET"),
+                    kanFøreTilSelvforsørget = row.getBoolean("KAN_BLI_SELVFORSORGET"),
+                    utviklingsPerioder = row.getLongOrNull("EGEN_VIRKSOMHET_UTVIKLING_PERIODER_ID")
+                        .let(::hentVirksomhetUtviklingsperioder),
+                    oppstartsPerioder = row.getLongOrNull("EGEN_VIRKSOMHET_OPPSTART_PERIODER_ID")
+                        .let(::hentVirksomhetOppstartsperioder),
+                    vurdertAv = Bruker(row.getString("VURDERT_AV")),
+                    opprettetTid = row.getInstant("OPPRETTET_TID"),
+                    vurdertIBehandling = row.getLong("VURDERT_I_BEHANDLING").let(::BehandlingId),
+                    vurderingenGjelderFra = row.getLocalDate("GJELDER_FRA"),
+                    vurderingenGjelderTil = row.getLocalDateOrNull("GJELDER_TIL")
+                )
+            }
+        }
+    }
+
+    private fun hentVirksomhetUtviklingsperioder(utviklingsperioderId: Long?): List<Periode> {
+        if (utviklingsperioderId == null) return emptyList()
+        val query = """
+            SELECT * FROM EGEN_VIRKSOMHET_UTVIKLING_PERIODE WHERE PERIODER_ID = ?
+        """.trimIndent()
+        return connection.queryList(query) {
+            setParams { setLong(1, utviklingsperioderId) }
+            setRowMapper { row -> row.getPeriode("PERIODE") }
+        }
+    }
+
+    private fun hentVirksomhetOppstartsperioder(oppstartsperioderId: Long?): List<Periode> {
+        if (oppstartsperioderId == null) return emptyList()
+        val query = """
+            SELECT * FROM EGEN_VIRKSOMHET_OPPSTART_PERIODE WHERE PERIODER_ID = ?
+        """.trimIndent()
+        return connection.queryList(query) {
+            setParams { setLong(1, oppstartsperioderId) }
+            setRowMapper { row -> row.getPeriode("PERIODE") }
+        }
+    }
+
     private fun lagreOppstartsperiode(perioder: List<Periode>): Long {
         val oppstartPerioderQuery = """
             INSERT INTO EGEN_VIRKSOMHET_OPPSTART_PERIODER (OPPRETTET_TID)
@@ -117,17 +187,84 @@ class EtableringEgenVirksomhetRepositoryImpl(private val connection: DBConnectio
     }
 
     private fun deaktiverGrunnlag(behandlingId: BehandlingId) {
-        TODO("Not yet implemented")
+        connection.execute("UPDATE ETABLERING_EGEN_VIRKSOMHET_GRUNNLAG set aktiv = false WHERE behandling_id = ? and aktiv = true") {
+            setParams {
+                setLong(1, behandlingId.id)
+            }
+        }
     }
 
     override fun slett(behandlingId: BehandlingId) {
-        TODO("Not yet implemented")
+        val vurderingerGrunnlagIds = getVurderingerIds(behandlingId)
+        val vurderingerIds = vurderingerGrunnlagIds.map { it.vurderingerId }
+        val utviklingIds = vurderingerGrunnlagIds.mapNotNull { it.utviklingsperioderId }
+        val oppstartIds = vurderingerGrunnlagIds.mapNotNull { it.oppstartsperioderId }
+
+        val deletedRows = connection.executeReturnUpdated(
+            """
+                delete from ETABLERING_EGEN_VIRKSOMHET_GRUNNLAG where behandling_id = ?; 
+                delete from ETABLERING_EGEN_VIRKSOMHET_VURDERING where vurderinger_id = ANY(?::bigint[]);
+                delete from ETABLERING_EGEN_VIRKSOMHET_VURDERINGER where id = ANY(?::bigint[]);
+                delete from EGEN_VIRKSOMHET_UTVIKLING_PERIODE where PERIODER_ID = ANY(?::bigint[]);
+                delete from EGEN_VIRKSOMHET_OPPSTART_PERIODE where PERIODER_ID = ANY(?::bigint[]);
+                delete from EGEN_VIRKSOMHET_UTVIKLING_PERIODER where id = ANY(?::bigint[]);
+                delete from EGEN_VIRKSOMHET_OPPSTART_PERIODER where id = ANY(?::bigint[]);
+            """.trimIndent()
+        ) {
+            setParams {
+                setLong(1, behandlingId.id)
+                setLongArray(2, vurderingerIds)
+                setLongArray(3, vurderingerIds)
+                setLongArray(4, utviklingIds)
+                setLongArray(5, utviklingIds)
+                setLongArray(6, oppstartIds)
+                setLongArray(7, oppstartIds)
+            }
+        }
+        log.info("Slettet $deletedRows rader fra EtableringEgenVirksomhetGrunnlag")
     }
 
     override fun kopier(
         fraBehandling: BehandlingId,
         tilBehandling: BehandlingId
     ) {
-        TODO("Not yet implemented")
+        hentHvisEksisterer(fraBehandling) ?: return
+
+        val query = """
+            INSERT INTO ETABLERING_EGEN_VIRKSOMHET_GRUNNLAG (behandling_id, vurderinger_id)
+            SELECT ?, vurderinger_id from ETABLERING_EGEN_VIRKSOMHET_GRUNNLAG where behandling_id = ? and aktiv
+        """.trimIndent()
+        connection.execute(query) {
+            setParams {
+                setLong(1, tilBehandling.id)
+                setLong(2, fraBehandling.id)
+            }
+        }
     }
+
+    private fun getVurderingerIds(behandlingId: BehandlingId): List<InternalEtableringEgenVirksomhetGrunnlag> =
+        connection.queryList(
+            """
+            SELECT vurderinger_id, egen_virksomhet_utvikling_perioder_id, egen_virksomhet_oppstart_perioder_id
+            FROM ETABLERING_EGEN_VIRKSOMHET_GRUNNLAG
+            WHERE behandling_id = ?
+        """.trimIndent()
+        ) {
+            setParams {
+                setLong(1, behandlingId.id)
+            }
+            setRowMapper { row ->
+                InternalEtableringEgenVirksomhetGrunnlag(
+                    vurderingerId = row.getLong("vurderinger_id"),
+                    utviklingsperioderId = row.getLongOrNull("egen_virksomhet_utvikling_perioder_id"),
+                    oppstartsperioderId = row.getLongOrNull("egen_virksomhet_oppstart_perioder_id")
+                )
+            }
+        }
+
+    private data class InternalEtableringEgenVirksomhetGrunnlag(
+        val vurderingerId: Long,
+        val utviklingsperioderId: Long?,
+        val oppstartsperioderId: Long?,
+    )
 }
