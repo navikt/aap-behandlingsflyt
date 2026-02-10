@@ -163,10 +163,12 @@ class InstitusjonsoppholdRepositoryImpl(private val connection: DBConnection) :
             setParams {
                 setLong(1, helseoppholdId)
             }
-            setRowMapper {
+            setRowMapper { row ->
                 Helseoppholdvurderinger(
                     id = helseoppholdId,
-                    vurderinger = vurderingene,  // Sortert etter opphold og vurderingsperiode
+                    vurderinger = vurderingene,
+                    vurdertAv = row.getString("VURDERT_AV"),
+                    vurdertTidspunkt = row.getLocalDateTime("OPPRETTET_TID")
                 )
             }
         }
@@ -309,9 +311,16 @@ class InstitusjonsoppholdRepositoryImpl(private val connection: DBConnection) :
             }
         }
 
-        val vurderingerId =
-            connection.executeReturnKey(""" INSERT INTO HELSEOPPHOLD_VURDERINGER DEFAULT VALUES """.trimIndent())
-
+        val vurderingerId = connection.executeReturnKey(
+            """
+                INSERT INTO HELSEOPPHOLD_VURDERINGER (VURDERT_AV)
+                VALUES (?)
+            """.trimIndent()
+        ) {
+            setParams {
+                setString(1, vurdertAv)
+            }
+        }
         val query = """
         INSERT INTO HELSEOPPHOLD_VURDERING 
         (HELSEOPPHOLD_VURDERINGER_ID, OPPHOLD_ID, KOST_OG_LOSJI, FORSORGER_EKTEFELLE, FASTE_UTGIFTER, BEGRUNNELSE, PERIODE, VURDERT_I_BEHANDLING, VURDERT_AV) 
@@ -323,7 +332,7 @@ class InstitusjonsoppholdRepositoryImpl(private val connection: DBConnection) :
                  ORDER BY PERIODE
                  LIMIT 1), 
                 ?, ?, ?, ?, ? ::daterange, ?, ?)
-    """.trimIndent()
+         """.trimIndent()
 
         connection.executeBatch(query, helseoppholdVurderinger) {
             setParams { vurdering ->
@@ -335,7 +344,7 @@ class InstitusjonsoppholdRepositoryImpl(private val connection: DBConnection) :
                 setBoolean(6, vurdering.harFasteUtgifter)
                 setString(7, vurdering.begrunnelse)
                 setPeriode(8, vurdering.periode)
-                setLong(9, vurdering.vurdertIBehandling.toLong())
+                setLong(9, vurdering.vurdertIBehandling?.toLong())
                 setString(10, vurdertAv)
             }
         }

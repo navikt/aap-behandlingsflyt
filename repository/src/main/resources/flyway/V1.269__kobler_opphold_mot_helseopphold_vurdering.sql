@@ -1,6 +1,6 @@
 ALTER TABLE HELSEOPPHOLD_VURDERING
     ADD COLUMN OPPHOLD_ID           BIGINT REFERENCES OPPHOLD (ID) NULL,
-    ADD COLUMN VURDERT_I_BEHANDLING BIGINT REFERENCES BEHANDLING (ID),
+    ADD COLUMN VURDERT_I_BEHANDLING BIGINT REFERENCES BEHANDLING (ID) NULL,
     ADD COLUMN VURDERT_AV           varchar(50) NOT NULL DEFAULT 'Ukjent';
 
 -- Sett vurdert_av for eksisterende rader
@@ -12,43 +12,3 @@ WHERE hv.HELSEOPPHOLD_VURDERINGER_ID = hvs.ID;
 ALTER TABLE HELSEOPPHOLD_VURDERING
     ALTER COLUMN VURDERT_AV DROP DEFAULT;
 
-ALTER TABLE HELSEOPPHOLD_VURDERINGER
-    DROP COLUMN VURDERT_AV;
-
---  Migrer OPPHOLD_ID på eksisterende data // TODO Thao: Må tenke nøyere igjennom.
--- UPDATE HELSEOPPHOLD_VURDERING hv
--- SET OPPHOLD_ID = (SELECT o.ID
---                   FROM OPPHOLD o
---                            INNER JOIN OPPHOLD_GRUNNLAG og ON o.OPPHOLD_PERSON_ID = og.OPPHOLD_PERSON_ID
---                            INNER JOIN HELSEOPPHOLD_VURDERINGER hvs ON hvs.ID = hv.HELSEOPPHOLD_VURDERINGER_ID
---                            INNER JOIN OPPHOLD_GRUNNLAG og2 ON og2.HELSEOPPHOLD_VURDERINGER_ID = hvs.ID
---                   WHERE og.AKTIV = TRUE
---                     AND og2.AKTIV = TRUE
---                     AND o.INSTITUSJONSTYPE = 'HS'
---                     AND o.PERIODE && hv.PERIODE -- Periode overlapper
---                   ORDER BY o.PERIODE
---                   LIMIT 1)
--- WHERE OPPHOLD_ID IS NULL;
-
--- Migrer vurdert_i_behandling for eksisterende data // TODO Thao: Denne må tenkes nøyere igjennom.
--- UPDATE HELSEOPPHOLD_VURDERING hv
--- SET VURDERT_I_BEHANDLING = g.BEHANDLING_ID
--- FROM OPPHOLD_GRUNNLAG g
--- WHERE g.HELSEOPPHOLD_VURDERINGER_ID = hv.HELSEOPPHOLD_VURDERINGER_ID
---   AND hv.vurdert_i_behandling IS NULL;
-
--- Sjekk hvor mange vurderinger som ikke kunne matches til opphold (hvis noen)
--- SELECT * FROM HELSEOPPHOLD_VURDERING WHERE OPPHOLD_ID IS NULL;
--- Håndter vurderinger som ikke kunne matches (hvis noen) Orphaned vurderinger uten opphold?
--- DELETE FROM HELSEOPPHOLD_VURDERING WHERE OPPHOLD_ID IS NULL;
-
--- -- Steg 4: Gjør kolonnen NOT NULL (hvis alle er migrert)
--- ALTER TABLE HELSEOPPHOLD_VURDERING ALTER COLUMN OPPHOLD_ID SET NOT NULL;
-
--- -- Steg 5: Legg til foreign key constraint
--- ALTER TABLE HELSEOPPHOLD_VURDERING
---     ADD CONSTRAINT FK_HELSEOPPHOLD_VURDERING_OPPHOLD
---         FOREIGN KEY (OPPHOLD_ID) REFERENCES OPPHOLD(ID) ON DELETE CASCADE;
---
--- -- Steg 6: Legg til index for ytelse
--- CREATE INDEX IDX_HELSEOPPHOLD_VURDERING_OPPHOLD_ID ON HELSEOPPHOLD_VURDERING(OPPHOLD_ID);
