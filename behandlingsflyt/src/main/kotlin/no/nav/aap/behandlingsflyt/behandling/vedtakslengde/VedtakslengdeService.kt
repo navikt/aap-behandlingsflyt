@@ -98,17 +98,19 @@ class VedtakslengdeService(
     ) {
         val vedtattVedtakslengdeGrunnlag =
             forrigeBehandlingId?.let { vedtakslengdeRepository.hentHvisEksisterer(it) }
-        val sluttdato = utledSluttdato(behandlingId, vedtattVedtakslengdeGrunnlag, rettighetsperiode)
+        val vedtattSluttdato = hentVedtattSluttdato(forrigeBehandlingId, vedtattVedtakslengdeGrunnlag)
+        val sluttdato = utledSluttdato(behandlingId, rettighetsperiode, vedtattSluttdato)
+
         val nyEllerEndretSluttdato = vedtattVedtakslengdeGrunnlag == null || vedtattVedtakslengdeGrunnlag.vurdering.sluttdato != sluttdato
 
         if (nyEllerEndretSluttdato) {
             vedtakslengdeRepository.lagre(
                 behandlingId, VedtakslengdeVurdering(
                     sluttdato = sluttdato,
-                    utvidetMed = ÅrMedHverdager.FØRSTE_ÅR, // TODO gir denne mening for annet enn jobben som utvider ordinær?
+                    utvidetMed = ÅrMedHverdager.FØRSTE_ÅR,
                     vurdertAv = SYSTEMBRUKER,
                     vurdertIBehandling = behandlingId,
-                    opprettet = Instant.now()
+                    opprettet = Instant.now(clock)
                 )
             )
         }
@@ -116,9 +118,10 @@ class VedtakslengdeService(
 
     private fun utledSluttdato(
         behandlingId: BehandlingId,
-        vedtakslengdeGrunnlag: VedtakslengdeGrunnlag?,
         rettighetsperiode: Periode,
+        vedtattSluttdato: LocalDate?,
     ): LocalDate {
+        // TODO burde dette hentes fra RettighetstypeRepository
         val rettighetstypeTidslinjeForInneværendeBehandling = vurderRettighetstypeOgKvoter(
             vilkårsresultat = vilkårsresultatRepository.hent(behandlingId),
             kvoter = KvoteService().beregn()
@@ -130,38 +133,22 @@ class VedtakslengdeService(
                 .lastOrNull { it.verdi.rettighetsType != null && it.verdi is KvoteOk }
 
         val sluttdatoForBehandlingen = when (sisteSegmentMedKvoteOk?.verdi?.rettighetsType) {
-            RettighetsType.BISTANDSBEHOV ->
-                if (vedtakslengdeGrunnlag != null) {
-                    vedtakslengdeGrunnlag.vurdering.sluttdato
-                } else {
-                    val startdatoForBehandlingen =
-                        VirkningstidspunktUtleder(vilkårsresultatRepository).utledVirkningsTidspunkt(behandlingId)
-                            ?: rettighetsperiode.fom
+            RettighetsType.BISTANDSBEHOV, null ->
+                // Sluttdato for bistandsbehov utvides kun av jobben (inntil videre)
+                utledInitiellSluttdato(behandlingId, rettighetsperiode).tom
+                // TODO vedtattSluttdato ?: utledInitiellSluttdato(behandlingId, rettighetsperiode).tom
 
-                    // Denne settes initielt til ett år fra startdato for behandlingen - bumpes 28 dager før utløp av jobb
-                    startdatoForBehandlingen.plussEtÅrMedHverdager(ÅrMedHverdager.FØRSTE_ÅR)
-                }
-
-            // TODO blir neppe riktig med sykepengeerstatning her?
             RettighetsType.SYKEPENGEERSTATNING,
             RettighetsType.STUDENT,
             RettighetsType.VURDERES_FOR_UFØRETRYGD,
             RettighetsType.ARBEIDSSØKER ->
                 sisteSegmentMedKvoteOk.periode.tom
-
-            else -> throw IllegalStateException("Ugyldig rettighetstype for behandling $behandlingId")
         }
 
-        /**
-         * For behandlinger som har passert alle vilkår og vurderinger med kortere rettighetsperiode
-         * enn "sluttdatoForBehandlingen" så vil det bli feil å vurdere underveis lenger enn faktisk rettighetsperiode.
-         */
-        val sluttdatoForBakoverkompabilitet = minOf(rettighetsperiode.tom, sluttdatoForBehandlingen)
-
-        return sluttdatoForBakoverkompabilitet
+        return sluttdatoForBehandlingen
     }
 
-    @Deprecated("Den første varianten - denne vil utvide med ett år")
+    @Deprecated("Den første varianten - denne vil utvide med ett år uavhengig av rettighetstype")
     fun lagreGjeldendeSluttdatoHvisIkkeEksisterer(
         behandlingId: BehandlingId,
         forrigeBehandlingId: BehandlingId?,
@@ -197,7 +184,7 @@ class VedtakslengdeService(
         val sluttdatoSisteVedtatteUnderveis = vedtattUnderveis?.perioder?.maxByOrNull { it.periode.tom }?.periode?.tom
         val sluttdatoSisteVedtatteVedtakslengdeVurdering = vedtakslengdeGrunnlag?.vurdering?.sluttdato
 
-        return sluttdatoSisteVedtatteVedtakslengdeVurdering ?: sluttdatoSisteVedtatteUnderveis
+        return listOfNotNull(sluttdatoSisteVedtatteUnderveis, sluttdatoSisteVedtatteVedtakslengdeVurdering).maxOrNull()
     }
 
     private fun hentNesteUtvidelse(forrigeUtvidelse: VedtakslengdeVurdering?): ÅrMedHverdager =

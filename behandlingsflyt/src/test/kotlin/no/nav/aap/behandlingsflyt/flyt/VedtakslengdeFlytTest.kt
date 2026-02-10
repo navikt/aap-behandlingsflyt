@@ -51,14 +51,14 @@ import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.LocalDateTime
 
-object VedtakslengdeUnleash : FakeUnleashBaseWithDefaultDisabled(
+object VedtakslengdeFlytUnleash : FakeUnleashBaseWithDefaultDisabled(
     enabledFlags = listOf(
         BehandlingsflytFeature.UtvidVedtakslengdeJobb,
         BehandlingsflytFeature.ForlengelseIManuellBehandling,
     )
 )
 
-class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(VedtakslengdeUnleash::class) {
+class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(VedtakslengdeFlytUnleash::class) {
 
     private val clock = fixedClock(1 desember 2025)
 
@@ -80,7 +80,7 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(VedtakslengdeUnleash::
             .medKontekst {
                 val vedtasklengdeRepository: VedtakslengdeRepository = repositoryProvider.provide()
                 val vedtakslengdeGrunnlag = vedtasklengdeRepository.hentHvisEksisterer(this.behandling.id)
-                assertThat(vedtakslengdeGrunnlag?.vurdering?.sluttdato).isEqualTo(startDato.plusYears(1).minusDays(1))
+                assertThat(vedtakslengdeGrunnlag?.vurdering?.sluttdato).isEqualTo(startDato.plussEtÅrMedHverdager(ÅrMedHverdager.FØRSTE_ÅR))
             }
     }
 
@@ -147,7 +147,7 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(VedtakslengdeUnleash::
             .løsSykdom(startDato, vissVarighet = true, erOppfylt = true)
             .løsBistand(startDato, false)
             .løsAvklaringsBehov(
-                `AvklarOvergangUføreLøsning`(
+                AvklarOvergangUføreLøsning(
                     løsningerForPerioder = listOf(
                         OvergangUføreLøsningDto(
                             begrunnelse = "Overgang uføre ok",
@@ -214,6 +214,7 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(VedtakslengdeUnleash::
             .løsRefusjonskrav()
             .løsBeregningstidspunkt(startDato)
             .løsOppholdskrav(startDato)
+            .løsSykestipend()
             .løsAndreStatligeYtelser()
             .medKontekst {
                 val vedtasklengdeRepository: VedtakslengdeRepository = repositoryProvider.provide()
@@ -345,7 +346,7 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(VedtakslengdeUnleash::
 
             )
             .løsAvklaringsBehov(
-                `AvklarBistandsbehovLøsning`(
+                AvklarBistandsbehovLøsning(
                     løsningerForPerioder = listOf(
                         BistandLøsningDto(
                             begrunnelse = "Trenger hjelp fra nav",
@@ -455,7 +456,7 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(VedtakslengdeUnleash::
                 sakOgBehandlingService = SakOgBehandlingService(repositoryProvider, gatewayProvider),
                 vedtakslengdeService = VedtakslengdeService(repositoryProvider, gatewayProvider),
                 flytJobbRepository = FlytJobbRepositoryImpl(connection),
-                unleashGateway = VedtakslengdeUnleash,
+                unleashGateway = VedtakslengdeFlytUnleash,
                 clock = clock,
             )
 
@@ -526,7 +527,7 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(VedtakslengdeUnleash::
                 sakOgBehandlingService = SakOgBehandlingService(repositoryProvider, gatewayProvider),
                 vedtakslengdeService = VedtakslengdeService(repositoryProvider, gatewayProvider),
                 flytJobbRepository = FlytJobbRepositoryImpl(connection),
-                unleashGateway = VedtakslengdeUnleash,
+                unleashGateway = VedtakslengdeFlytUnleash,
                 clock = clock,
             )
 
@@ -626,7 +627,7 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(VedtakslengdeUnleash::
                 sakOgBehandlingService = SakOgBehandlingService(repositoryProvider, gatewayProvider),
                 vedtakslengdeService = VedtakslengdeService(repositoryProvider, gatewayProvider),
                 flytJobbRepository = FlytJobbRepositoryImpl(connection),
-                unleashGateway = VedtakslengdeUnleash,
+                unleashGateway = VedtakslengdeFlytUnleash,
                 clock = clock,
             )
 
@@ -642,7 +643,7 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(VedtakslengdeUnleash::
             ).finnBehandlingMedSisteFattedeVedtak(sak.id)!!
 
             val vedtakslengdeVurdering = VedtakslengdeRepositoryImpl(connection).hentHvisEksisterer(behandlingMedSisteFattedeVedtak.id)
-            assertThat(vedtakslengdeVurdering).isNull()
+            assertThat(vedtakslengdeVurdering).isNotNull()
 
             val underveisGrunnlag = UnderveisRepositoryImpl(connection).hentHvisEksisterer(behandlingMedSisteFattedeVedtak.id)
             val sisteUnderveisperiode = underveisGrunnlag?.perioder?.maxBy { it.periode.fom }!!
@@ -709,7 +710,7 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(VedtakslengdeUnleash::
                 sakOgBehandlingService = SakOgBehandlingService(repositoryProvider, gatewayProvider),
                 vedtakslengdeService = VedtakslengdeService(repositoryProvider, gatewayProvider),
                 flytJobbRepository = FlytJobbRepositoryImpl(connection),
-                unleashGateway = VedtakslengdeUnleash,
+                unleashGateway = VedtakslengdeFlytUnleash,
                 clock = clock,
             )
 
