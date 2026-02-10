@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.overga
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.UføreSøknadVedtakResultat
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.dbconnect.DBConnection
@@ -57,7 +58,7 @@ class OvergangUføreRepositoryImpl(private val connection: DBConnection) : Overg
         return OvergangUføreVurdering(
             begrunnelse = row.getString("BEGRUNNELSE"),
             brukerHarSøktOmUføretrygd = row.getBoolean("BRUKER_SOKT_UFORETRYGD"),
-            brukerHarFåttVedtakOmUføretrygd = row.getStringOrNull("BRUKER_VEDTAK_UFORETRYGD"),
+            brukerHarFåttVedtakOmUføretrygd = row.getEnumOrNull("BRUKER_VEDTAK_UFORETRYGD"),
             brukerRettPåAAP = row.getBooleanOrNull("BRUKER_RETT_PAA_AAP"),
             vurdertIBehandling = row.getLong("VURDERT_I_BEHANDLING").let(::BehandlingId),
             fom = row.getLocalDate("VIRKNINGSDATO"), // Virkningsdato er 'vurderingen gjelder fra'
@@ -165,7 +166,7 @@ class OvergangUføreRepositoryImpl(private val connection: DBConnection) : Overg
             setParams { vurdering ->
                 setString(1, vurdering.begrunnelse)
                 setBoolean(2, vurdering.brukerHarSøktOmUføretrygd)
-                setString(3, vurdering.brukerHarFåttVedtakOmUføretrygd)
+                setEnumName(3, vurdering.brukerHarFåttVedtakOmUføretrygd)
                 setBoolean(4, vurdering.brukerRettPåAAP)
                 setLocalDate(5, vurdering.fom)
                 setString(6, vurdering.vurdertAv)

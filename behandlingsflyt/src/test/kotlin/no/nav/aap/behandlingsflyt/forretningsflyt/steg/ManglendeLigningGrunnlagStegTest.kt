@@ -285,7 +285,11 @@ class ManglendeLigningGrunnlagStegTest {
     private fun leggTilLøstOgAvsluttetAvklaringsbehov(avklaringsbehovene: Avklaringsbehovene) {
         avklaringsbehovene.leggTil(Definisjon.FASTSETT_MANUELL_INNTEKT, StegType.MANGLENDE_LIGNING, null, null)
         avklaringsbehovene.løsAvklaringsbehov(Definisjon.FASTSETT_MANUELL_INNTEKT, "begrunnelse", "saksbehandler")
-        avklaringsbehovene.avslutt(Definisjon.FASTSETT_MANUELL_INNTEKT)
+        avklaringsbehovene.løsAvklaringsbehov(
+            Definisjon.FASTSETT_MANUELL_INNTEKT,
+            begrunnelse = "",
+            endretAv = "Krongov"
+        )
     }
 
     private fun manuelleVurderinger(): Set<ManuellInntektVurdering> = setOf(

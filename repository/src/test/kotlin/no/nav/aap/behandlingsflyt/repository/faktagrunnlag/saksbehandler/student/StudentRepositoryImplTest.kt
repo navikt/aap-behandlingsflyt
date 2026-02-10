@@ -17,7 +17,6 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
-import java.sql.Timestamp
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 

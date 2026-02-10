@@ -73,7 +73,4 @@ class OvergangUføreVilkår(vilkårsresultat: Vilkårsresultat) : Vilkårsvurder
         vilkår.leggTilVurderinger(vurderinger)
     }
 
-    enum class UføreSøknadVedtak(val verdi: String) {
-        JA_AVSLAG("JA_AVSLAG"), JA_GRADERT("JA_GRADERT"), JA_FULL("JA_FULL"), NEI("NEI")
-    }
 }

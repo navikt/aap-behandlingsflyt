@@ -75,7 +75,7 @@ class SjekkInstitusjonsoppholdJobbUtførerTest {
     }
 
     @Test
-    fun `Skal ikke opprette revurdering dersom det ikke finnes institusjonsopphold`() {
+    fun `Skal ikke opprette revurdering dersom institusjonsoppholdet er for langt frem i tid`() {
         val (utfører, sakOgBehandlingServiceMock) =
             mockAvhengigheterForInstitusjonsoppholdJobbUtfører(
                 hentInstitusjonsoppholdReturn = langvarigInstitusjonsopphold
@@ -281,8 +281,8 @@ class SjekkInstitusjonsoppholdJobbUtførerTest {
                 Institusjonsopphold(
                     Institusjonstype.HS,
                     Oppholdstype.H,
-                    LocalDate.now().minusMonths(1),
-                    LocalDate.now().plusMonths(2),
+                    LocalDate.now().minusMonths(3),
+                    LocalDate.now().plusMonths(1),
                     orgnr = "123",
                     institusjonsnavn = "Det er institusjonen sin, det",
                 ),
