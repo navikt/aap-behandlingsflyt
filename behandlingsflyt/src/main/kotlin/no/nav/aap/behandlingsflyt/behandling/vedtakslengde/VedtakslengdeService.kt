@@ -88,7 +88,7 @@ class VedtakslengdeService(
                     utvidetMed = utvidelse,
                     vurdertAv = SYSTEMBRUKER,
                     vurdertIBehandling = behandlingId,
-                    opprettet = Instant.now()
+                    opprettet = Instant.now(clock)
                 )
             )
         } else {
@@ -114,7 +114,7 @@ class VedtakslengdeService(
                     utvidetMed = ÅrMedHverdager.FØRSTE_ÅR,
                     vurdertAv = SYSTEMBRUKER,
                     vurdertIBehandling = behandlingId,
-                    opprettet = Instant.now()
+                    opprettet = Instant.now(clock)
                 )
             )
         }
