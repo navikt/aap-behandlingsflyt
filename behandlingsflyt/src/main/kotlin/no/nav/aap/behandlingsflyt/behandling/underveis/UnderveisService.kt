@@ -225,7 +225,7 @@ class UnderveisService(
         val kalkulertSluttdatoForBehandlingen = maxOf(sak.rettighetsperiode.fom, startdatoForBehandlingen)
             .plussEtÅrMedHverdager(ÅrMedHverdager.FØRSTE_ÅR)
 
-        val sistVedtatteUnderveisperiode = if (behandlingId.toLong() == 29634L) null else sistVedtatteUnderveisperiode(behandlingId)
+        val sistVedtatteUnderveisperiode = sistVedtatteUnderveisperiode(behandlingId)
         val sluttDatoForBehandlingen =
             listOfNotNull(sistVedtatteUnderveisperiode, kalkulertSluttdatoForBehandlingen).max()
 
