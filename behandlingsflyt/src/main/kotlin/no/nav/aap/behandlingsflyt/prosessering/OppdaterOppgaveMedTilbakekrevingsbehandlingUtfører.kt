@@ -1,16 +1,13 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
-import no.nav.aap.behandlingsflyt.behandling.gosysoppgave.OppgaveGateway
 import no.nav.aap.behandlingsflyt.behandling.tilbakekrevingsbehandling.TilbakekrevingRepository
 import no.nav.aap.behandlingsflyt.behandling.tilbakekrevingsbehandling.tilKontrakt
 import no.nav.aap.behandlingsflyt.hendelse.oppgavestyring.OppgavestyringGateway
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.TilbakekrevingsbehandlingOppdatertHendelse
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.TilbakekrevingBehandlingsstatus
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
-import no.nav.aap.behandlingsflyt.unleash.FeatureToggle
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryProvider
@@ -27,20 +24,21 @@ class OppdaterOppgaveMedTilbakekrevingsbehandlingUtfører(
     val sakRepository: SakRepository
 
 ): JobbUtfører {
-    //TODO: HER BLIR MELDINGEN OM TILBAKEKREVING SENDT TIL OPPGAVESTYRING
+    // HER BLIR MELDINGEN OM TILBAKEKREVING SENDT TIL OPPGAVESTYRING
     private val log = LoggerFactory.getLogger(javaClass)
 
     override fun utfør(input: JobbInput) {
+        val sak = sakRepository.hent(SakId(input.sakId()))
+
         if (!unleashGateway.isEnabled(BehandlingsflytFeature.tilbakekrevingsOppgaverTilOppgave)){
-            log.info("Feature toggle for tilbakekrevingsOppgaverTilOppgave er ikke aktivert, sender ikke melding til oppgavestyring")
+            log.info("Feature toggle for tilbakekrevingsOppgaverTilOppgave er ikke aktivert, sender ikke melding til oppgavestyring for sak: ${sak.saksnummer}")
             return
         }
-        log.info("Mottatt melding om oppdatering av oppgave med tilbakekrevingsbehandling, input: $input")
-        val tilbakekrevingSakId = SakId(input.sakId())
-        val sak = sakRepository.hent(tilbakekrevingSakId)
-        val tilbakekrevingBehandlingId = input.parameter("tilbakekrevingBehandlingId")
-        val tilbakekrevingsbehandling = tilbakekrevingsbehandlingRepository.hent(tilbakekrevingsBehandlingId = tilbakekrevingBehandlingId)
-        val tilbakekrevingsbehandlingOppdatertHendelse = TilbakekrevingsbehandlingOppdatertHendelse(
+
+        val tilbakekrevingBehandlingId = UUID.fromString(input.parameter("tilbakekrevingBehandlingId"))
+        val tilbakekrevingsbehandling = tilbakekrevingsbehandlingRepository.hent(tilbakekrevingBehandlingId)
+        log.info("Mottatt melding om oppdatering av oppgave med tilbakekrevingsbehandling, input: ${sak.saksnummer}")
+         val tilbakekrevingsbehandlingOppdatertHendelse = TilbakekrevingsbehandlingOppdatertHendelse(
             personIdent = sak.person.aktivIdent().identifikator,
             saksnummer = sak.saksnummer,
             behandlingref = BehandlingReferanse(

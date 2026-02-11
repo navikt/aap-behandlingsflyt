@@ -45,24 +45,25 @@ fun NormalOpenAPIRoute.rettighetApi(
                 val sak = sakRepository.hentHvisFinnes(Saksnummer(saksnummer.saksnummer))
                     ?: throw VerdiIkkeFunnetException("Sak med saksnummer ${saksnummer.saksnummer} finnes ikke")
                 val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
-                val behandling = behandlingRepository.finnSisteOpprettedeBehandlingFor(
+
+                val sisteVedtatteYtelsesbehandling = behandlingRepository.hentAlleFor(
                     sak.id,
                     listOf(TypeBehandling.Førstegangsbehandling, TypeBehandling.Revurdering)
-                )
+                ).filter { it.status().erVedtatt() }.maxByOrNull { it.opprettetTidspunkt }
 
-                if (behandling == null) {
+                if (sisteVedtatteYtelsesbehandling == null) {
                     return@transaction null
                 }
 
                 val underveisgrunnlagRepository = repositoryProvider.provide<UnderveisRepository>()
-                val underveisgrunnlag = underveisgrunnlagRepository.hentHvisEksisterer(behandling.id)
+                val underveisgrunnlag = underveisgrunnlagRepository.hentHvisEksisterer(sisteVedtatteYtelsesbehandling.id)
 
                 if (underveisgrunnlag == null) {
                     return@transaction null
                 }
 
                 val vilkårsresultatRepository = repositoryProvider.provide<VilkårsresultatRepository>()
-                val vilkårsresultat = vilkårsresultatRepository.hent(behandling.id)
+                val vilkårsresultat = vilkårsresultatRepository.hent(sisteVedtatteYtelsesbehandling.id)
                 val avslagForTapAvAAP = avslagsårsakerVedTapAvRettPåAAP(vilkårsresultat)
                 val rettighetstyper = underveisgrunnlag.perioder.mapNotNull { it.rettighetsType }.distinct()
 
@@ -99,6 +100,7 @@ fun NormalOpenAPIRoute.rettighetApi(
                         kvote = rettighetKvoter.totalKvote,
                         bruktKvote = rettighetKvoter.bruktKvote,
                         gjenværendeKvote = gjenværendeKvote,
+                        periodeKvoter = rettighetKvoter.periodeKvoter,
                         startDato = startdato,
                         maksDato = maksDato,
                         avslagDato = avslagDato,
