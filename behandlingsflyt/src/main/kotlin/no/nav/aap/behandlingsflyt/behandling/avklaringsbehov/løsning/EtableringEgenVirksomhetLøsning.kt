@@ -31,7 +31,10 @@ class EtableringEgenVirksomhetLøsning(
         kontekst: AvklaringsbehovKontekst,
         gatewayProvider: GatewayProvider
     ): LøsningsResultat {
-        return EtableringEgenVirksomhetLøser(repositoryProvider).løs(kontekst, this)
+        return EtableringEgenVirksomhetLøser(
+            repositoryProvider,
+            gatewayProvider
+        ).løs(kontekst, this)
     }
 
     override fun hentLagredeLøstePerioder(

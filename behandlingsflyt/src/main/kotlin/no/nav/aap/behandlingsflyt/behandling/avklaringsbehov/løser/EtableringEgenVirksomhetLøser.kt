@@ -10,6 +10,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomGrunn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.komponenter.tidslinje.somTidslinje
@@ -23,18 +26,24 @@ class EtableringEgenVirksomhetLøser(
     private val behandlingRepository: BehandlingRepository,
     private val bistandRepository: BistandRepository,
     private val sykdomRepository: SykdomRepository,
+    private val unleashGateway: UnleashGateway
 ) : AvklaringsbehovsLøser<EtableringEgenVirksomhetLøsning> {
-    constructor(repositoryProvider: RepositoryProvider) : this(
+    constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         etableringEgenVirksomhetRepository = repositoryProvider.provide(),
         behandlingRepository = repositoryProvider.provide(),
         bistandRepository = repositoryProvider.provide(),
-        sykdomRepository = repositoryProvider.provide()
+        sykdomRepository = repositoryProvider.provide(),
+        unleashGateway = gatewayProvider.provide()
     )
 
     override fun løs(
         kontekst: AvklaringsbehovKontekst,
         løsning: EtableringEgenVirksomhetLøsning
     ): LøsningsResultat {
+        if (unleashGateway.isDisabled(BehandlingsflytFeature.VirksomhetsEtablering)) {
+            return LøsningsResultat(begrunnelse = "Vurdert etablering egen virksomhet")
+        }
+
         val behandling = behandlingRepository.hent(kontekst.kontekst.behandlingId)
 
         val sykdomGrunnlag = sykdomRepository.hentHvisEksisterer(behandling.id)
@@ -48,18 +57,21 @@ class EtableringEgenVirksomhetLøser(
         val førsteMuligeDato =
             utledGyldighetsPeriode(sykdomGrunnlag, bistandGrunnlag, LocalDate.now().plusDays(1)).first().fom
 
-        // Man må ha definert minst en periode i tidsplanen dersom vilkåret er oppfylt for en periode
-        require(nyeVurderinger.all { it.utviklingsPerioder.isNotEmpty() || it.oppstartsPerioder.isNotEmpty() })
+        require(nyeVurderinger.all { it.utviklingsPerioder.isNotEmpty() || it.oppstartsPerioder.isNotEmpty() }) {
+            "Må ha definert minst én periode i tidsplanen dersom vilkåret er oppfylt for en periode"
+        }
 
-        // Må være minst én dag etter første mulige dag med AAP
-        require(alleVurderinger.all { it.vurderingenGjelderFra.isAfter(førsteMuligeDato) })
+        require(alleVurderinger.all { it.vurderingenGjelderFra.isAfter(førsteMuligeDato) }) {
+            "vurderingenGjelderFra må være minst én dag etter første mulige dag med AAP"
+        }
 
         val alleUtviklingsPerioder = alleVurderinger.flatMap { it.utviklingsPerioder }
         val alleOppstartsPerioder = alleVurderinger.flatMap { it.oppstartsPerioder }
 
-        // Oppstartsperioder kan aldri ligge før en utviklingsperiode.
         alleUtviklingsPerioder.maxOf { uPeriode -> uPeriode.tom }.let {
-            require(alleOppstartsPerioder.none { oPeriode -> oPeriode.fom.isBefore(it) })
+            require(alleOppstartsPerioder.none { oPeriode -> oPeriode.fom.isBefore(it) }) {
+                "Oppstartsperioder kan ikke ligge før en utviklingsperiode"
+            }
         }
 
         // Finn et nice sted for disse
@@ -73,8 +85,12 @@ class EtableringEgenVirksomhetLøser(
             (alleVurderinger).flatMap { it.oppstartsPerioder }.somTidslinje { it }.komprimer().segmenter()
                 .sumOf { it.periode.antallHverdager().asInt }
 
-        require(bruktUtviklingsDager <= maksUtviklingsdager)
-        require(bruktOppstartsdager <= maksOppstartsdager)
+        require(bruktUtviklingsDager <= maksUtviklingsdager){
+            "Oppsatte utviklingsdager overstiger gjenværende dager: $bruktUtviklingsDager / $maksUtviklingsdager"
+        }
+        require(bruktOppstartsdager <= maksOppstartsdager){
+            "Oppsatte oppstartsdager overstiger gjenværende dager: $bruktOppstartsdager / $maksOppstartsdager"
+        }
 
         etableringEgenVirksomhetRepository.lagre(
             behandlingId = behandling.id,
