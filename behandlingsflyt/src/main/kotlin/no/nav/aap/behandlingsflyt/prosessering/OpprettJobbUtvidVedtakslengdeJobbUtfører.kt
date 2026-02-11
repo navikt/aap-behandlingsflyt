@@ -41,7 +41,7 @@ class OpprettJobbUtvidVedtakslengdeJobbUtfører(
                 // TODO fjerne dette filteret når vi har fått verifisert at jobben fungerer som forventet i dev/prod
                 .filter {
                     if (erDev()) it.id == 4243L
-                    else if (erProd()) it.id == 1100L
+                    else if (erProd()) it.id == 50L
                     else if (erLokal()) true
                     else false
                 }
@@ -63,7 +63,7 @@ class OpprettJobbUtvidVedtakslengdeJobbUtfører(
         val sisteGjeldendeBehandling = sakOgBehandlingService.finnBehandlingMedSisteFattedeVedtak(id)
         if (sisteGjeldendeBehandling != null) {
             // Bruker sisteGjeldendeBehandling.id både for behandlingId og forrigeBehandlingId fordi vi ser på gjeldende behandling
-            return vedtakslengdeService.skalUtvideVedtakslengde(sisteGjeldendeBehandling.id, sisteGjeldendeBehandling.id, dato)
+            return vedtakslengdeService.skalUtvideSluttdato(sisteGjeldendeBehandling.id, sisteGjeldendeBehandling.id, dato)
         }
         return false
     }
