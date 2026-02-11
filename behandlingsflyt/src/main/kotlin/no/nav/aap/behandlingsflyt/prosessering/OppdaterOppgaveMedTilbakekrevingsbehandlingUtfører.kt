@@ -36,10 +36,10 @@ class OppdaterOppgaveMedTilbakekrevingsbehandlingUtfører(
         val tilbakekrevingBehandlingId = input.parameter("tilbakekrevingBehandlingId")
         val tilbakekrevingsbehandling = tilbakekrevingsbehandlingRepository.hent(tilbakekrevingsBehandlingId = tilbakekrevingBehandlingId)
         if (!unleashGateway.isEnabled(BehandlingsflytFeature.tilbakekrevingsOppgaverTilOppgave)){
-            log.info("Feature toggle for tilbakekrevingsOppgaverTilOppgave er ikke aktivert, sender ikke melding til oppgavestyring for sak: ${tilbakekrevingsbehandling.eksternFagsakId}")
+            log.info("Feature toggle for tilbakekrevingsOppgaverTilOppgave er ikke aktivert, sender ikke melding til oppgavestyring for sak: ${sak.saksnummer}")
             return
         }
-        log.info("Mottatt melding om oppdatering av oppgave med tilbakekrevingsbehandling, input: ${tilbakekrevingsbehandling.eksternFagsakId}")
+        log.info("Mottatt melding om oppdatering av oppgave med tilbakekrevingsbehandling, input: ${sak.saksnummer}")
          val tilbakekrevingsbehandlingOppdatertHendelse = TilbakekrevingsbehandlingOppdatertHendelse(
             personIdent = sak.person.aktivIdent().identifikator,
             saksnummer = sak.saksnummer,
