@@ -24,7 +24,7 @@ class OppdaterOppgaveMedTilbakekrevingsbehandlingUtfører(
     val sakRepository: SakRepository
 
 ): JobbUtfører {
-    //TODO: HER BLIR MELDINGEN OM TILBAKEKREVING SENDT TIL OPPGAVESTYRING
+    // HER BLIR MELDINGEN OM TILBAKEKREVING SENDT TIL OPPGAVESTYRING
     private val log = LoggerFactory.getLogger(javaClass)
 
     override fun utfør(input: JobbInput) {
