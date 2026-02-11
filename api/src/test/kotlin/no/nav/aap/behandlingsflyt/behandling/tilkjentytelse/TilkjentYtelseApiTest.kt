@@ -71,7 +71,7 @@ class TilkjentYtelseApiTest : BaseApiTest() {
                 barnetillegg = Beløp(72),
                 utbetalingsdato = rettighetsperiode.fom,
                 minsteSats = Minstesats.MINSTESATS_UNDER_25,
-                redusertDagsats = Beløp(250)
+                redusertDagsats = Beløp(236)
             )
 
             val tilkjentYtelsePerioder = perioder.mapIndexed { index, periode ->
@@ -81,12 +81,19 @@ class TilkjentYtelseApiTest : BaseApiTest() {
                         fom = periode.fom,
                         tom = periode.tom,
                     ),
-                    tilkjent = tilkjentYtelseVerdi.copy(dagsats = Beløp(400 + index * 100.00.toLong()))
+                    tilkjent = tilkjentYtelseVerdi.copy(
+                        dagsats = Beløp(400 + index * 100.00.toLong()),
+                        redusertDagsats = null
+                    )
                 )
             }
 
             InMemoryTilkjentYtelseRepository.lagre(
-                behandling.id, tilkjent = tilkjentYtelsePerioder, faktagrunnlag = tomtTilkjentYtelseGrunnlag, versjon = "")
+                behandling.id,
+                tilkjent = tilkjentYtelsePerioder,
+                faktagrunnlag = tomtTilkjentYtelseGrunnlag,
+                versjon = ""
+            )
 
             InMemoryMeldekortRepository.lagre(
                 behandling.id, setOf(
