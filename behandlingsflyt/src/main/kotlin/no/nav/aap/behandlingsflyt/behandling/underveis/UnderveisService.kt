@@ -1,12 +1,14 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis
 
 import no.nav.aap.behandlingsflyt.behandling.institusjonsopphold.InstitusjonsoppholdUtlederService
+import no.nav.aap.behandlingsflyt.behandling.institusjonsopphold.InstitusjonsoppholdUtlederServiceNy
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.VirkningstidspunktUtleder
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.AapEtterRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FastsettGrenseverdiArbeidRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.GraderingArbeidRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companion.plussEtÅrMedHverdager
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.InstitusjonRegel
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.InstitusjonRegelNy
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MapInstitusjonoppholdTilRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.UnderveisInput
@@ -53,6 +55,7 @@ class UnderveisService(
     private val meldekortRepository: MeldekortRepository,
     private val underveisRepository: UnderveisRepository,
     private val institusjonsoppholdUtlederService: InstitusjonsoppholdUtlederService,
+    private val institusjonsoppholdUtlederServiceNy: InstitusjonsoppholdUtlederServiceNy,
     private val arbeidsevneRepository: ArbeidsevneRepository,
     private val meldepliktRepository: MeldepliktRepository,
     private val overstyringMeldepliktRepository: OverstyringMeldepliktRepository,
@@ -69,6 +72,7 @@ class UnderveisService(
         meldekortRepository = repositoryProvider.provide(),
         underveisRepository = repositoryProvider.provide(),
         institusjonsoppholdUtlederService = InstitusjonsoppholdUtlederService(repositoryProvider),
+        institusjonsoppholdUtlederServiceNy = InstitusjonsoppholdUtlederServiceNy(repositoryProvider),
         arbeidsevneRepository = repositoryProvider.provide(),
         meldepliktRepository = repositoryProvider.provide(),
         meldeperiodeRepository = repositoryProvider.provide(),
@@ -83,35 +87,6 @@ class UnderveisService(
     private val kvoteService = KvoteService()
 
     companion object {
-        private val regelset = listOf(
-            AapEtterRegel(),
-            UtledMeldeperiodeRegel(),
-            InstitusjonRegel(),
-            MeldepliktRegel(),
-            FastsettGrenseverdiArbeidRegel(),
-            GraderingArbeidRegel(),
-            VarighetRegel(),
-        )
-
-        init {
-            fun sjekkAvhengighet(forventetFør: KClass<*>, forventetEtter: KClass<*>) {
-                val offset1 = regelset.indexOfFirst { it::class == forventetFør }
-                val offset2 = regelset.indexOfFirst { it::class == forventetEtter }
-                check(offset1 != -1) { "Regel ${forventetFør.qualifiedName} er ikke med" }
-                check(offset2 != -1) { "Regel ${forventetEtter.qualifiedName} er ikke med" }
-                check(offset1 < offset2) {
-                    "Regel ${forventetFør.qualifiedName} må ha kjørt før ${forventetEtter.qualifiedName}, men er kjørt etter"
-                }
-            }
-
-            sjekkAvhengighet(forventetFør = UtledMeldeperiodeRegel::class, forventetEtter = MeldepliktRegel::class)
-            sjekkAvhengighet(forventetFør = UtledMeldeperiodeRegel::class, forventetEtter = GraderingArbeidRegel::class)
-            sjekkAvhengighet(
-                forventetFør = FastsettGrenseverdiArbeidRegel::class,
-                forventetEtter = GraderingArbeidRegel::class
-            )
-        }
-
         fun tilUnderveisperioder(vurderRegler: Tidslinje<Vurdering>): List<Underveisperiode> = vurderRegler.segmenter()
             .map {
                 Underveisperiode(
@@ -132,7 +107,39 @@ class UnderveisService(
                         Prosent.`100_PROSENT`
                 )
             }
+    }
 
+    private val regelset = listOf(
+        AapEtterRegel(),
+        UtledMeldeperiodeRegel(),
+        if (unleashGateway.isEnabled(BehandlingsflytFeature.PeriodiseringHelseinstitusjonOpphold)) {
+            InstitusjonRegelNy()
+        } else {
+            InstitusjonRegel()
+        },
+        MeldepliktRegel(),
+        FastsettGrenseverdiArbeidRegel(),
+        GraderingArbeidRegel(),
+        VarighetRegel(),
+    )
+
+    init {
+        fun sjekkAvhengighet(forventetFør: KClass<*>, forventetEtter: KClass<*>) {
+            val offset1 = regelset.indexOfFirst { it::class == forventetFør }
+            val offset2 = regelset.indexOfFirst { it::class == forventetEtter }
+            check(offset1 != -1) { "Regel ${forventetFør.qualifiedName} er ikke med" }
+            check(offset2 != -1) { "Regel ${forventetEtter.qualifiedName} er ikke med" }
+            check(offset1 < offset2) {
+                "Regel ${forventetFør.qualifiedName} må ha kjørt før ${forventetEtter.qualifiedName}, men er kjørt etter"
+            }
+        }
+
+        sjekkAvhengighet(forventetFør = UtledMeldeperiodeRegel::class, forventetEtter = MeldepliktRegel::class)
+        sjekkAvhengighet(forventetFør = UtledMeldeperiodeRegel::class, forventetEtter = GraderingArbeidRegel::class)
+        sjekkAvhengighet(
+            forventetFør = FastsettGrenseverdiArbeidRegel::class,
+            forventetEtter = GraderingArbeidRegel::class
+        )
     }
 
     fun vurder(sakId: SakId, behandlingId: BehandlingId): Tidslinje<Vurdering> {
@@ -162,7 +169,11 @@ class UnderveisService(
         val innsendingsTidspunkt = meldekortGrunnlag?.innsendingsdatoPerMelding().orEmpty()
         val kvote = kvoteService.beregn()
         val utlederResultat =
-            institusjonsoppholdUtlederService.utled(behandlingId, begrensetTilRettighetsperiode = false)
+            if (unleashGateway.isEnabled(BehandlingsflytFeature.PeriodiseringHelseinstitusjonOpphold)) {
+                institusjonsoppholdUtlederServiceNy.utled(behandlingId, begrensetTilRettighetsperiode = false)
+            } else {
+                institusjonsoppholdUtlederService.utled(behandlingId, begrensetTilRettighetsperiode = false)
+            }
 
         val institusjonsopphold = MapInstitusjonoppholdTilRegel.map(utlederResultat)
 
