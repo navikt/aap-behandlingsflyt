@@ -58,7 +58,8 @@ class AvklarHelseinstitusjonLøser(
             slåSammenMedNyeVurderinger(
                 vedtatteVurderinger,
                 løsning.helseinstitusjonVurdering.vurderinger,
-                kontekst.bruker.ident
+                kontekst.bruker.ident,
+                behandling.id
             )
         helseinstitusjonRepository.lagreHelseVurdering(
             kontekst.kontekst.behandlingId,
@@ -106,6 +107,7 @@ class AvklarHelseinstitusjonLøser(
         grunnlag: InstitusjonsoppholdGrunnlag?,
         nyeVurderinger: List<HelseinstitusjonVurderingDto>,
         vurdertAv: String,
+        behandlingId: BehandlingId,
     ): List<HelseinstitusjonVurdering> {
         val eksisterendeTidslinje = byggTidslinjeForHelseoppholdvurderinger(grunnlag)
 
@@ -118,6 +120,9 @@ class AvklarHelseinstitusjonLøser(
                         faarFriKostOgLosji = it.faarFriKostOgLosji,
                         forsoergerEktefelle = it.forsoergerEktefelle,
                         harFasteUtgifter = it.harFasteUtgifter,
+                        vurdertIBehandling = behandlingId,
+                        vurdertAv = vurdertAv,
+                        vurdertTidspunkt = LocalDateTime.now()
                     )
                 )
             }).komprimer()
