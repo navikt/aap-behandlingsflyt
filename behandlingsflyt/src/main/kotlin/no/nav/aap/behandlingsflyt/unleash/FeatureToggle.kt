@@ -10,7 +10,6 @@ enum class BehandlingsflytFeature : FeatureToggle {
     NyBrevtype11_17,
     NyBrevbyggerV3,
     LagreVedtakIFatteVedtak,
-    PeriodisertSykepengeErstatningNyAvklaringsbehovService,
     Under18,
     MigrerMeldepliktFritak,
     SosialRefusjon,
