@@ -2,13 +2,18 @@ package no.nav.aap.behandlingsflyt.behandling.underveis
 
 import no.nav.aap.behandlingsflyt.behandling.rettighetstype.KvoteOk
 import no.nav.aap.behandlingsflyt.behandling.rettighetstype.vurderRettighetstypeOgKvoter
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Avslag
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Kvote
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Oppfylt
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.VarighetVurdering
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.tomUnderveisInput
 import no.nav.aap.behandlingsflyt.behandling.vilkår.kvote.OrdinærKvoteFaktagrunnlag
 import no.nav.aap.behandlingsflyt.behandling.vilkår.kvote.OrdinærKvoteVilkår
 import no.nav.aap.behandlingsflyt.behandling.vilkår.kvote.SykepengeerstatningKvoteFaktagrunnlag
 import no.nav.aap.behandlingsflyt.behandling.vilkår.kvote.SykepengeerstatningKvoteVilkår
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.rettighetstype.RettighetstypeGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkår
@@ -182,8 +187,8 @@ class UnderveisServiceTest {
                     fiktiveKvoter
                 )
             )
-            
-            // Genrer bare underveisperioder ett år frem i tid
+
+            // Generer bare underveisperioder ett år frem i tid
             val underveisPeriode = Periode(rettighetsperiode.fom, rettighetsperiode.fom.plusYears(1))
 
             val input1 = tomUnderveisInput(
@@ -208,7 +213,9 @@ class UnderveisServiceTest {
             val vurderingTidslinje2 = underveisService.vurderRegler(input2)
 
             assertThat(vurderingTidslinje1.segmenter()).isNotEmpty()
-            assertTidslinjeEquals(vurderingTidslinje1.map{it.fårAapEtter}, vurderingTidslinje2.map{it.fårAapEtter})
+            assertTidslinjeEquals(
+                vurderingTidslinje1.map { it.fårAapEtter },
+                vurderingTidslinje2.map { it.fårAapEtter })
         }
     }
 
@@ -227,11 +234,26 @@ class UnderveisServiceTest {
             val speOppfylt =
                 Periode(8 januar 2024, 14 januar 2024) // Bruker 5 dager av sykepengeerstatning-kvote
             val periodeBistandOppfylt = Periode(15 januar 2024, Tid.MAKS) // Bruker gjenværende dager av ordinær kvote
+            val samordningAvslag =
+                Periode(15 januar 2024, 17 januar 2024) // Tre dager med avskag skal ikke bruke av kvote
 
 
-            val periode = Periode(søknadsdato, Tid.MAKS)
+            val rettighetsperiode = Periode(søknadsdato, Tid.MAKS)
             val vilkårsresultat = genererVilkårsresultat(
-                periode,
+                rettighetsperiode,
+                samordningVilkår = Vilkår(
+                    Vilkårtype.SAMORDNING,
+                    setOf(
+                        Vilkårsperiode(
+                            samordningAvslag,
+                            Utfall.IKKE_OPPFYLT,
+                            false,
+                            null,
+                            faktagrunnlag = null,
+                            avslagsårsak = Avslagsårsak.ANNEN_FULL_YTELSE
+                        )
+                    )
+                ),
                 studentVilkår = Vilkår(
                     Vilkårtype.STUDENT,
                     setOf(
@@ -292,8 +314,8 @@ class UnderveisServiceTest {
                 )
             )
 
-            val underveisPeriode = Periode(periode.fom, periode.fom.plusYears(1))
-            
+            val underveisPeriode = Periode(rettighetsperiode.fom, rettighetsperiode.fom.plusYears(1))
+
             val input = tomUnderveisInput(
                 rettighetsperiode = underveisPeriode,
                 vilkårsresultat = vilkårsresultat,
@@ -304,24 +326,46 @@ class UnderveisServiceTest {
 
             val vurderingTidslinje = underveisService.vurderRegler(input)
 
-
             val forventetPeriodeOppfyltOrdinær = Periode(
-                periodeBistandOppfylt.fom,
-                21 januar 2024 // Siste dag med kvote
+                samordningAvslag.tom.plusDays(1),
+                24 januar 2024 // Siste dag med kvote
             )
 
             val forventetPeriodeOrdinærKvoteBruktOpp = Periode(
-                22 januar 2024,
+                25 januar 2024, // Samordning skal ikke bruke av kvoten. Derfor 22 januar + to dager
                 underveisPeriode.tom
             )
-
 
             assertTidslinje(
                 vurderingTidslinje,
                 studentOppfylt to { assertThat(it.fårAapEtter).isEqualTo(RettighetsType.STUDENT) },
-                speOppfylt to { assertThat(it.fårAapEtter).isEqualTo(RettighetsType.SYKEPENGEERSTATNING) },
-                forventetPeriodeOppfyltOrdinær to { assertThat(it.fårAapEtter).isEqualTo(RettighetsType.BISTANDSBEHOV) },
-                forventetPeriodeOrdinærKvoteBruktOpp to { assertThat(it.fårAapEtter).isEqualTo(null) },
+                speOppfylt to {
+                    assertThat(it.fårAapEtter).isEqualTo(RettighetsType.SYKEPENGEERSTATNING)
+                    assertThat(it.varighetVurdering)
+                        .isEqualTo(Oppfylt(brukerAvKvoter = setOf(Kvote.SYKEPENGEERSTATNING)))
+                },
+                samordningAvslag to {
+                    assertThat(it.fårAapEtter).isEqualTo(null)
+                    assertThat(it.varighetVurdering?.brukerAvKvoter)
+                        .describedAs { "Skal ikke bruke av kvote ved avslag" }
+                        .isEmpty()
+                },
+                forventetPeriodeOppfyltOrdinær to {
+                    assertThat(it.fårAapEtter).isEqualTo(RettighetsType.BISTANDSBEHOV)
+                    assertThat(it.varighetVurdering)
+                        .isEqualTo(Oppfylt(brukerAvKvoter = setOf(Kvote.ORDINÆR)))
+                },
+                forventetPeriodeOrdinærKvoteBruktOpp to {
+                    assertThat(it.fårAapEtter).isEqualTo(null)
+                    assertThat(it.varighetVurdering)
+                        .isEqualTo(
+                            Avslag(
+                                brukerAvKvoter = setOf(Kvote.ORDINÆR), avslagsårsaker = setOf(
+                                    VarighetVurdering.Avslagsårsak.ORDINÆRKVOTE_BRUKT_OPP
+                                )
+                            )
+                        )
+                },
             )
         }
     }
