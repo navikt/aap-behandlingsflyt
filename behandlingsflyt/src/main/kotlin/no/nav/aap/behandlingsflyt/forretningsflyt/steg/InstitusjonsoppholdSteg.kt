@@ -171,9 +171,9 @@ class InstitusjonsoppholdSteg(
 
     private fun institusjonsoppholdUtlederServiceUtlederResultat(behandlingId: BehandlingId, begrensetTilRettighetsperiode: Boolean = true) =
         if (unleashGateway.isEnabled(BehandlingsflytFeature.PeriodiseringHelseinstitusjonOpphold)) {
-            institusjonsoppholdUtlederServiceNy.utled(behandlingId, begrensetTilRettighetsperiode)
+            institusjonsoppholdUtlederServiceNy.utled(behandlingId, begrensetTilRettighetsperiode = begrensetTilRettighetsperiode)
         } else {
-            institusjonsoppholdUtlederService.utled(behandlingId, begrensetTilRettighetsperiode)
+            institusjonsoppholdUtlederService.utled(behandlingId,  begrensetTilRettighetsperiode = begrensetTilRettighetsperiode)
         }
 
     companion object : FlytSteg {
