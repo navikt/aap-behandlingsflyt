@@ -111,7 +111,7 @@ fun NormalOpenAPIRoute.institusjonApi(
         }
     }
     route("/api/behandling") {
-        route("/{referanse}/grunnlag/institusjon/helseGammel") {
+        route("/{referanse}/grunnlag/institusjon/helse") {
             getGrunnlag<BehandlingReferanse, HelseinstitusjonGrunnlagDto>(
                 relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
                 behandlingPathParam = BehandlingPathParam("referanse"),
@@ -191,7 +191,7 @@ fun NormalOpenAPIRoute.institusjonApi(
         }
     }
     route("/api/behandling") {
-        route("/{referanse}/grunnlag/institusjon/helse") {
+        route("/{referanse}/grunnlag/institusjon/helseny") {
             getGrunnlag<BehandlingReferanse, HelseinstitusjonGrunnlagDto>(
                 relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
                 behandlingPathParam = BehandlingPathParam("referanse"),
