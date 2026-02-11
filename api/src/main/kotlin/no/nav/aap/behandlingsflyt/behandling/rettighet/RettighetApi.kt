@@ -4,13 +4,14 @@ import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.response.respondWithStatus
 import com.papsign.ktor.openapigen.route.route
-import io.ktor.http.HttpStatusCode
-import no.nav.aap.behandlingsflyt.behandling.rettighetstype.avslagsårsakerVedTapAvRettPåAAP
+import io.ktor.http.*
+import no.nav.aap.behandlingsflyt.behandling.rettighetstype.utledStansEllerOpphør
 import no.nav.aap.behandlingsflyt.behandling.underveis.RettighetsperiodeService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagstype
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Opphør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Stans
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
@@ -21,11 +22,10 @@ import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForSakResolver
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.httpklient.exception.VerdiIkkeFunnetException
 import no.nav.aap.komponenter.repository.RepositoryRegistry
-import no.nav.aap.komponenter.tidslinje.Tidslinje
-import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.SakPathParam
 import no.nav.aap.tilgang.authorizedGet
+import java.time.LocalDate
 import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.rettighetApi(
@@ -64,15 +64,16 @@ fun NormalOpenAPIRoute.rettighetApi(
 
                 val vilkårsresultatRepository = repositoryProvider.provide<VilkårsresultatRepository>()
                 val vilkårsresultat = vilkårsresultatRepository.hent(sisteVedtatteYtelsesbehandling.id)
-                val avslagForTapAvAAP = avslagsårsakerVedTapAvRettPåAAP(vilkårsresultat)
+                val now = LocalDate.now()
+                val stansEllerOpphør = utledStansEllerOpphør(vilkårsresultat)
+                    .filterKeys { it <= now }
+                    .maxByOrNull { it.key }
                 val rettighetstyper = underveisgrunnlag.perioder.mapNotNull { it.rettighetsType }.distinct()
 
                 val rettighetDtoListe = rettighetstyper.map { rettighet ->
                     val rettighetKvoter = underveisgrunnlag.utledKvoterForRettighetstype(rettighet)
                     val startdato = underveisgrunnlag.utledStartdatoForRettighet(rettighet)
                     val gjenværendeKvote = rettighetKvoter.gjenværendeKvote
-                    val perioderForOpphør = hentPerioderForAvslag(avslagForTapAvAAP, Avslagstype.OPPHØR)
-                    val perioderForStans = hentPerioderForAvslag(avslagForTapAvAAP, Avslagstype.STANS)
 
                     val maksDato =
                         when (rettighet) {
@@ -83,17 +84,11 @@ fun NormalOpenAPIRoute.rettighetApi(
                                 -> RettighetsperiodeService().utledMaksdatoForRettighet(rettighet, startdato)
                         }
 
-                    val avslagÅrsak = if (perioderForOpphør.isNotEmpty()) {
-                        Avslagstype.OPPHØR
-                    } else if (perioderForStans.isNotEmpty()) {
-                        Avslagstype.STANS
-                    } else null
-
-                    val avslagDato = if (avslagÅrsak == Avslagstype.OPPHØR) {
-                        perioderForOpphør.first().fom
-                    } else if (avslagÅrsak == Avslagstype.STANS) {
-                        perioderForStans.first().fom
-                    } else null
+                    val avslagÅrsak = when (stansEllerOpphør?.value) {
+                        null -> null
+                        is Opphør -> Avslagstype.OPPHØR
+                        is Stans -> Avslagstype.STANS
+                    }
 
                     RettighetDto(
                         type = rettighet,
@@ -103,7 +98,7 @@ fun NormalOpenAPIRoute.rettighetApi(
                         periodeKvoter = rettighetKvoter.periodeKvoter,
                         startDato = startdato,
                         maksDato = maksDato,
-                        avslagDato = avslagDato,
+                        avslagDato = stansEllerOpphør?.key,
                         avslagÅrsak = avslagÅrsak
                     )
                 }
@@ -117,8 +112,4 @@ fun NormalOpenAPIRoute.rettighetApi(
             }
         }
     }
-}
-
-fun hentPerioderForAvslag(tidslinje: Tidslinje<Set<Avslagsårsak>>, avslag: Avslagstype): List<Periode> {
-    return tidslinje.filter { it.verdi.any { it.avslagstype == avslag } }.perioder().toList()
 }
