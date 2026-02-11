@@ -36,6 +36,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.tilgang.TilgangGateway
@@ -159,7 +160,7 @@ fun NormalOpenAPIRoute.flytApi(
 
                     BehandlingFlytOgTilstandDto(
                         flyt = stegGrupper.map { (gruppe, steg) ->
-                            erFullført = erFullført && gruppe != aktivtSteg.gruppe
+                            erFullført = erFullført && erStegGruppeFullført(gruppe, aktivtSteg, behandling)
                             FlytGruppe(
                                 stegGruppe = gruppe,
                                 skalVises = gruppeVisningService.skalVises(gruppe, behandling.id),
@@ -325,6 +326,17 @@ fun NormalOpenAPIRoute.flytApi(
             }
         }
     }
+}
+
+private fun erStegGruppeFullført(
+    gruppe: StegGruppe,
+    aktivtSteg: StegType,
+    behandling: Behandling
+): Boolean {
+    if (gruppe == aktivtSteg.gruppe) {
+        return behandling.aktivtStegTilstand().status() == StegStatus.AVSLUTTER
+    }
+    return true
 }
 
 private fun sjekkTilgangTilSettPåVent(
