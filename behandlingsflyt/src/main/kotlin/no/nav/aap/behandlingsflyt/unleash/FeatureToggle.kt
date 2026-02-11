@@ -17,7 +17,6 @@ enum class BehandlingsflytFeature : FeatureToggle {
     SosialRefusjon,
     MigrerRettighetsperiode,
     SendBrevVedMottattKlage,
-    PeriodisertSykdom,
     ForlengelseIManuellBehandling,
     UtvidVedtakslengdeJobb,
     InstitusjonsoppholdJobb,
