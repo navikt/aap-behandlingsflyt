@@ -18,18 +18,11 @@ data class SykdomGrunnlagResponse(
     val skalVurdereYrkesskade: Boolean,
     val erÅrsakssammenhengYrkesskade: Boolean,
     val opplysninger: InnhentetSykdomsOpplysninger,
-    @Deprecated("Bruk nyeVurderinger")
-    val sykdomsvurderinger: List<SykdomsvurderingResponse>,
     override val nyeVurderinger: List<SykdomsvurderingResponse>,
-    val historikkSykdomsvurderinger: List<SykdomsvurderingResponse>,
-    @Deprecated("Bruk sisteVedtatteVurderinger")
-    val gjeldendeVedtatteSykdomsvurderinger: List<SykdomsvurderingResponse>,
     override val sisteVedtatteVurderinger: List<SykdomsvurderingResponse>,
-    @Deprecated("Ligger på vurderingsnivå")
     val kvalitetssikretAv: VurdertAvResponse?,
     override val kanVurderes: List<Periode>,
     override val behøverVurderinger: List<Periode>,
-    val perioderSomIkkeErTilstrekkeligVurdert: List<Periode>
     ): PeriodiserteVurderingerDto<SykdomsvurderingResponse>
 
 data class SykdomsvurderingResponse(

@@ -85,13 +85,7 @@ fun NormalOpenAPIRoute.sykdomsgrunnlagApi(
                         skalVurdereYrkesskade = innhentedeYrkesskader.isNotEmpty(),
                         erÅrsakssammenhengYrkesskade = sistVedtatteSykdomGrunnlag?.yrkesskadevurdering?.erÅrsakssammenheng
                             ?: false,
-                        sykdomsvurderinger = nyeVurderinger, // TODO: Fjern
                         nyeVurderinger = nyeVurderinger,
-                        historikkSykdomsvurderinger = sykdomGrunnlag
-                            ?.historiskeSykdomsvurderinger(behandling.id).orEmpty()
-                            .sortedBy { it.opprettet }
-                            .map { SykdomsvurderingResponse.fraDomene(it, vurdertAvService) },
-                        gjeldendeVedtatteSykdomsvurderinger = sisteVedtatte, // TODO: Fjern
                         sisteVedtatteVurderinger = sisteVedtatte,
                         harTilgangTilÅSaksbehandle = harTilgangOgKanSaksbehandle(kanSaksbehandle(), avklaringsbehovene),
                         kvalitetssikretAv = vurdertAvService.kvalitetssikretAv(
@@ -100,8 +94,6 @@ fun NormalOpenAPIRoute.sykdomsgrunnlagApi(
                         ),
                         kanVurderes = listOf(sak.rettighetsperiode),
                         behøverVurderinger = avklaringsbehov?.perioderVedtaketBehøverVurdering().orEmpty().toList(),
-                        perioderSomIkkeErTilstrekkeligVurdert = avklaringsbehov?.perioderSomIkkeErTilstrekkeligVurdert()
-                            .orEmpty().toList()
                     )
                 }
 
