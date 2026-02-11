@@ -202,23 +202,23 @@ fun NormalOpenAPIRoute.institusjonApi(
                     val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
                     val sakRepository = repositoryProvider.provide<SakRepository>()
                     val behandling = BehandlingReferanseService(behandlingRepository).behandling(req)
-                    val institusjonsoppholdRepositoryNy = repositoryProvider.provide<InstitusjonsoppholdRepository>()
+                    val institusjonsoppholdRepository = repositoryProvider.provide<InstitusjonsoppholdRepository>()
                     val barnetilleggRepository = repositoryProvider.provide<BarnetilleggRepository>()
 
                     val utlederService = InstitusjonsoppholdUtlederServiceNy(
                         barnetilleggRepository,
-                        institusjonsoppholdRepositoryNy,
+                        institusjonsoppholdRepository,
                         sakRepository,
                         behandlingRepository
                     )
                     val behov = utlederService.utled(behandling.id)
 
-                    val grunnlag = institusjonsoppholdRepositoryNy.hentHvisEksisterer(behandling.id)
+                    val grunnlag = institusjonsoppholdRepository.hentHvisEksisterer(behandling.id)
                     val oppholdInfo = byggTidslinjeAvTypeNy(grunnlag, Institusjonstype.HS)
 
                     // Hent alle vurderinger gruppert per opphold fra repository
                     val vurderingerGruppertPerOpphold =
-                        institusjonsoppholdRepositoryNy.hentVurderingerGruppertPerOpphold(behandling.id)
+                        institusjonsoppholdRepository.hentVurderingerGruppertPerOpphold(behandling.id)
 
                     val nyeVurderingerForOpphold =
                         vurderingerGruppertPerOpphold.mapValues { (_, vurderinger) ->
@@ -226,7 +226,7 @@ fun NormalOpenAPIRoute.institusjonApi(
                         }.filterValues { it.isNotEmpty() }
 
                     val vedtatteVurderingerForOpphold = behandling.forrigeBehandlingId?.let {
-                        institusjonsoppholdRepositoryNy.hentVurderingerGruppertPerOpphold(it)
+                        institusjonsoppholdRepository.hentVurderingerGruppertPerOpphold(it)
                     } ?: emptyMap()
 
                     val helseoppholdPerioder = behov.perioderTilVurdering.mapValue { it.helse }.komprimer()
