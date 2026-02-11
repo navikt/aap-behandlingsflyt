@@ -20,7 +20,6 @@ data class SykdomGrunnlagResponse(
     val opplysninger: InnhentetSykdomsOpplysninger,
     override val nyeVurderinger: List<SykdomsvurderingResponse>,
     override val sisteVedtatteVurderinger: List<SykdomsvurderingResponse>,
-    val kvalitetssikretAv: VurdertAvResponse?,
     override val kanVurderes: List<Periode>,
     override val behøverVurderinger: List<Periode>,
     ): PeriodiserteVurderingerDto<SykdomsvurderingResponse>

@@ -88,10 +88,6 @@ fun NormalOpenAPIRoute.sykdomsgrunnlagApi(
                         nyeVurderinger = nyeVurderinger,
                         sisteVedtatteVurderinger = sisteVedtatte,
                         harTilgangTilÅSaksbehandle = harTilgangOgKanSaksbehandle(kanSaksbehandle(), avklaringsbehovene),
-                        kvalitetssikretAv = vurdertAvService.kvalitetssikretAv(
-                            definisjon = Definisjon.AVKLAR_SYKDOM,
-                            behandlingId = behandling.id,
-                        ),
                         kanVurderes = listOf(sak.rettighetsperiode),
                         behøverVurderinger = avklaringsbehov?.perioderVedtaketBehøverVurdering().orEmpty().toList(),
                     )
