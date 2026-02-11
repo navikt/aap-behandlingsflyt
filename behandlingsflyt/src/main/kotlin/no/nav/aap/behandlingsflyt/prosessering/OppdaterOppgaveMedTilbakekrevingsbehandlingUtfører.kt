@@ -31,16 +31,16 @@ class OppdaterOppgaveMedTilbakekrevingsbehandlingUtfører(
     private val log = LoggerFactory.getLogger(javaClass)
 
     override fun utfør(input: JobbInput) {
-        if (!unleashGateway.isEnabled(BehandlingsflytFeature.tilbakekrevingsOppgaverTilOppgave)){
-            log.info("Feature toggle for tilbakekrevingsOppgaverTilOppgave er ikke aktivert, sender ikke melding til oppgavestyring")
-            return
-        }
-        log.info("Mottatt melding om oppdatering av oppgave med tilbakekrevingsbehandling, input: $input")
         val tilbakekrevingSakId = SakId(input.sakId())
         val sak = sakRepository.hent(tilbakekrevingSakId)
         val tilbakekrevingBehandlingId = input.parameter("tilbakekrevingBehandlingId")
         val tilbakekrevingsbehandling = tilbakekrevingsbehandlingRepository.hent(tilbakekrevingsBehandlingId = tilbakekrevingBehandlingId)
-        val tilbakekrevingsbehandlingOppdatertHendelse = TilbakekrevingsbehandlingOppdatertHendelse(
+        if (!unleashGateway.isEnabled(BehandlingsflytFeature.tilbakekrevingsOppgaverTilOppgave)){
+            log.info("Feature toggle for tilbakekrevingsOppgaverTilOppgave er ikke aktivert, sender ikke melding til oppgavestyring for sak: ${tilbakekrevingsbehandling.eksternFagsakId}")
+            return
+        }
+        log.info("Mottatt melding om oppdatering av oppgave med tilbakekrevingsbehandling, input: ${tilbakekrevingsbehandling.eksternFagsakId}")
+         val tilbakekrevingsbehandlingOppdatertHendelse = TilbakekrevingsbehandlingOppdatertHendelse(
             personIdent = sak.person.aktivIdent().identifikator,
             saksnummer = sak.saksnummer,
             behandlingref = BehandlingReferanse(
