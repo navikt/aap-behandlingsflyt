@@ -42,9 +42,9 @@ class UføreBeregning(
             .groupingBy { it.årMåned }
             .fold(Beløp(0)) { acc, curr -> acc.pluss(curr.beløp) }
 
-        val inntektPerMåned = generateSequence(relevanteÅr.min().atMonth(1), { it.plusMonths(1) })
+        val inntektPerMåned = generateSequence(relevanteÅr.min().atMonth(1)) { it.plusMonths(1) }
             .takeWhile { Year.of(it.year) in relevanteÅr }
-            .associateWith( { Beløp(0) })
+            .associateWith { Beløp(0) }
             .mapValues { (årMåned,beløp) -> inntektPerMånedUtenDefaults[årMåned] ?: beløp }
 
         val oppjusterteInntekter =
@@ -121,6 +121,7 @@ class UføreBeregning(
             }.values.toList()
     }
 
+    @Suppress("FunctionName")
     private fun beregn11_19Grunnlag(
         oppjusterteInntekter: List<UføreInntekt>
     ): Grunnlag11_19 {
