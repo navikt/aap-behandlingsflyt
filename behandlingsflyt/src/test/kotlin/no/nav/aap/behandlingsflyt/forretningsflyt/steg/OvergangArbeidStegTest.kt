@@ -34,8 +34,6 @@ import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryVilkårsresultatRepo
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryProvider
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.behandlingsflyt.test.modell.genererIdent
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
@@ -86,7 +84,6 @@ class OvergangArbeidStegTest {
             sykdomRepository = sykdomMock,
             tidligereVurderinger = FakeTidligereVurderinger(),
             bistandRepository = bistandMock,
-            behandlingRepository = behandlingRepository,
             avklaringsbehovService = AvklaringsbehovService(inMemoryRepositoryProvider),
             studentRepository = mockk<StudentRepository> {
                 every { hentHvisEksisterer(any()) } returns null
@@ -94,9 +91,6 @@ class OvergangArbeidStegTest {
             overgangUføreRepository = mockk<OvergangUføreRepository> {
                 every { hentHvisEksisterer(any()) } returns null
             },
-            unleashGateway = mockk<UnleashGateway> {
-                every { isDisabled(BehandlingsflytFeature.OvergangArbeid) } returns false
-            }
         )
 
         steg.utfør(kontekstMedPerioder)

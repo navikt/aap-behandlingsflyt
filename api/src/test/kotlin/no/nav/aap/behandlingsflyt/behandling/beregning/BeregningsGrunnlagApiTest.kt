@@ -158,7 +158,7 @@ class BeregningsGrunnlagApiTest {
         assertThat(grunnlagYrkesskadeUføre.yrkesskadeGrunnlag.grunnlag).isEqualByComparingTo(
             BigDecimal(6)
         )
-        assertThat(grunnlagYrkesskadeUføre.uføreGrunnlag.uføreInntekter.first().inntektsPerioder).hasSize(1).first()
+        assertThat(grunnlagYrkesskadeUføre.uføreGrunnlag.uføreInntekter.last().inntektsPerioder).hasSize(1).first()
             .extracting { it.periode }
             .isEqualTo(Periode(YearMonth.of(2022, 1).atDay(1), YearMonth.of(2022, 12).atEndOfMonth()))
     }

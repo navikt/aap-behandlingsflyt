@@ -32,8 +32,10 @@ class OppdaterOppgaveMedTilbakekrevingsbehandlingUtfører(
 
     override fun utfør(input: JobbInput) {
         if (!unleashGateway.isEnabled(BehandlingsflytFeature.tilbakekrevingsOppgaverTilOppgave)){
+            log.info("Feature toggle for tilbakekrevingsOppgaverTilOppgave er ikke aktivert, sender ikke melding til oppgavestyring")
             return
         }
+        log.info("Mottatt melding om oppdatering av oppgave med tilbakekrevingsbehandling, input: $input")
         val tilbakekrevingSakId = SakId(input.sakId())
         val sak = sakRepository.hent(tilbakekrevingSakId)
         val tilbakekrevingBehandlingId = input.parameter("tilbakekrevingBehandlingId")

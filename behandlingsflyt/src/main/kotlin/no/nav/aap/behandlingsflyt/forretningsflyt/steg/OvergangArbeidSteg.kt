@@ -20,11 +20,8 @@ import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.orEmpty
@@ -40,11 +37,9 @@ class OvergangArbeidSteg internal constructor(
     private val sykdomRepository: SykdomRepository,
     private val tidligereVurderinger: TidligereVurderinger,
     private val bistandRepository: BistandRepository,
-    private val behandlingRepository: BehandlingRepository,
     private val avklaringsbehovService: AvklaringsbehovService,
     private val studentRepository: StudentRepository,
     private val overgangUføreRepository: OvergangUføreRepository,
-    private val unleashGateway: UnleashGateway,
 ) : BehandlingSteg {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         vilkårsresultatRepository = repositoryProvider.provide(),
@@ -53,17 +48,12 @@ class OvergangArbeidSteg internal constructor(
         sykdomRepository = repositoryProvider.provide(),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
         bistandRepository = repositoryProvider.provide(),
-        behandlingRepository = repositoryProvider.provide(),
         avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
         studentRepository = repositoryProvider.provide(),
         overgangUføreRepository = repositoryProvider.provide(),
-        unleashGateway = gatewayProvider.provide(),
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        if (unleashGateway.isDisabled(BehandlingsflytFeature.OvergangArbeid)) {
-            return Fullført
-        }
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
 
         avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(

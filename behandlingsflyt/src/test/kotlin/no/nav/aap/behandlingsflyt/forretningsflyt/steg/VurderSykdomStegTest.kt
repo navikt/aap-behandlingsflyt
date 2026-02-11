@@ -28,7 +28,6 @@ import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryVilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryProvider
 import no.nav.aap.behandlingsflyt.test.januar
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Tid
 import org.assertj.core.api.Assertions.assertThat
@@ -107,9 +106,6 @@ class VurderSykdomStegTest {
             sykdomRepository,
             FakeTidligereVurderinger(),
             avklaringsbehovService,
-            unleashGateway = mockk {
-                every { isDisabled(BehandlingsflytFeature.PeriodisertSykdom) } returns false
-            },
         )
 
         lagreNedAlder(vilkårsresultatRepository, behandlingId)
