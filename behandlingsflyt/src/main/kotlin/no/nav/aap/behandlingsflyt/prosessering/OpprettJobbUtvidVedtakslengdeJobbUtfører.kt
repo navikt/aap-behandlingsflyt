@@ -20,6 +20,11 @@ import java.time.Clock
 import java.time.LocalDate
 import java.time.LocalDate.now
 
+/**
+ * Forlenger vedtaket på alle saker som har oppfylt ett år med rettighetstype bistandsbehov fra forrige sluttdato.
+ * På sikt vil denne jobben også utvide andre vedtak hvor utvidelsen kan automatiseres slik som overgang alder,
+ * utløp av kvote osv.
+ */
 class OpprettJobbUtvidVedtakslengdeJobbUtfører(
     private val sakOgBehandlingService: SakOgBehandlingService,
     private val vedtakslengdeService: VedtakslengdeService,
@@ -31,21 +36,14 @@ class OpprettJobbUtvidVedtakslengdeJobbUtfører(
     private val log = LoggerFactory.getLogger(javaClass)
 
     override fun utfør(input: JobbInput) {
-        // Forlenger saker når det er 28 dager igjen til sluttdato
+        // Forlenger saker når det er 28 dager igjen til sluttdato (Tilsvarende Arena)
         val datoForUtvidelse = now(clock).plusDays(28)
         val saker = hentKandidaterForUtvidelseAvVedtakslengde(datoForUtvidelse)
 
         log.info("Fant ${saker.size} kandidater for utvidelse av vedtakslengde per $datoForUtvidelse")
         if (unleashGateway.isEnabled(BehandlingsflytFeature.UtvidVedtakslengdeJobb)) {
             saker
-                // TODO fjerne dette filteret når vi har fått verifisert at jobben fungerer som forventet i dev/prod
-                .filter {
-                    if (erDev()) it.id == 4243L
-                    else if (erProd()) it.id == 50L
-                    else if (erLokal()) true
-                    else false
-                }
-                .also { log.info("Oppretter jobber for alle saker som er aktuelle kandidator for utvidelse av vedtakslengde. Antall = ${it.size}") }
+                .also { log.info("Oppretter jobber for alle saker som er aktuelle kandidator for utvidelse av vedtakslengde. Antall = ${it.size}, Saker = $it") }
                 .forEach {
                     flytJobbRepository.leggTil(JobbInput(OpprettBehandlingUtvidVedtakslengdeJobbUtfører).forSak(it.toLong()))
                 }
@@ -55,7 +53,13 @@ class OpprettJobbUtvidVedtakslengdeJobbUtfører(
     // TODO: Må filtrere vekk de som allerede har blitt kjørt, men ikke kvalifiserte til reell utvidelse av vedtakslengde
     private fun hentKandidaterForUtvidelseAvVedtakslengde(datoForUtvidelse: LocalDate): Set<SakId> {
         return vedtakslengdeService.hentSakerAktuelleForUtvidelseAvVedtakslengde(datoForUtvidelse)
-            .filter { kunSakerMedBehovForUtvidelseAvVedtakslengde(it, datoForUtvidelse) }
+            .partition { kunSakerMedBehovForUtvidelseAvVedtakslengde(it, datoForUtvidelse) }
+            .let { (sakerSomUtvides, sakerSomIkkeUtvides) ->
+                if (sakerSomIkkeUtvides.isNotEmpty()) {
+                    log.info("Følgende saker utvides ikke (ha et øye på disse inntil vi støtter manuell behandling): $sakerSomIkkeUtvides")
+                }
+                sakerSomUtvides
+            }
             .toSet()
     }
 

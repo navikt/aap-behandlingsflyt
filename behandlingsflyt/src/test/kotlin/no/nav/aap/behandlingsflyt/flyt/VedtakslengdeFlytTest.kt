@@ -34,7 +34,6 @@ import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.motor.FlytJobbRepositoryImpl
 import no.nav.aap.motor.JobbInput
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -42,18 +41,13 @@ import java.time.LocalDateTime
 object VedtakslengdeUnleash : FakeUnleashBaseWithDefaultDisabled(
     enabledFlags = listOf(
         BehandlingsflytFeature.UtvidVedtakslengdeJobb,
+        BehandlingsflytFeature.ForenkletKvote
     )
 )
 
 class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(VedtakslengdeUnleash::class) {
 
     private val clock = fixedClock(1 desember 2025)
-
-    // TODO kan fjernes når vi ikke lenger har miljøspesifikke filter i OpprettJobbUtvidVedtakslengdeJobbUtfører
-    @BeforeEach
-    fun setup() {
-        System.setProperty("NAIS_CLUSTER_NAME", "LOCAL")
-    }
 
     @Test
     fun `forleng vedtak med passert slutt uten eksplisitt sluttdato`() {
@@ -144,6 +138,55 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(VedtakslengdeUnleash::
             assertThat(rettighetstypeTidslinje.perioder().maxOfOrNull { it.tom }).isEqualTo(
                 aldersvilkåret.tidslinje().segmenter().filter { it.verdi.utfall == Utfall.OPPFYLT }
                     .maxOfOrNull { it.periode.tom })
+        }
+    }
+
+    @Test
+    fun `forlenger ikke vedtak med avslag`() {
+        val søknadstidspunkt = LocalDateTime.now(clock).minusYears(1)
+        val (sak, førstegangsbehandling) = sendInnFørsteSøknad(søknad = SØKNAD_INGEN_MEDLEMSKAP, mottattTidspunkt = søknadstidspunkt)
+        val rettighetsperiode = sak.rettighetsperiode
+
+        førstegangsbehandling
+            .løsLovvalg(rettighetsperiode.fom, medlem = false)
+            .løsAvklaringsBehov(ForeslåVedtakLøsning())
+            .fattVedtak()
+            .løsVedtaksbrev(TypeBrev.VEDTAK_AVSLAG)
+
+
+       dataSource.transaction { connection ->
+            val førstegangsbehandling = BehandlingRepositoryImpl(connection).finnFørstegangsbehandling(sak.id)!!
+
+            val underveisGrunnlag = UnderveisRepositoryImpl(connection).hentHvisEksisterer(førstegangsbehandling.id)
+            val sisteUnderveisperiode = underveisGrunnlag?.perioder?.maxBy { it.periode.fom }!!
+            assertThat(sisteUnderveisperiode.periode.tom).isEqualTo(rettighetsperiode.fom.plussEtÅrMedHverdager(ÅrMedHverdager.FØRSTE_ÅR))
+            assertThat(sisteUnderveisperiode.utfall).isEqualTo(Utfall.IKKE_OPPFYLT)
+            assertThat(sisteUnderveisperiode.rettighetsType).isEqualTo(null)
+        }
+
+        dataSource.transaction { connection ->
+            val repositoryProvider = postgresRepositoryRegistry.provider(connection)
+
+            val opprettJobbUtvidVedtakslengdeJobbUtfører = `OpprettJobbUtvidVedtakslengdeJobbUtfører`(
+                sakOgBehandlingService = SakOgBehandlingService(repositoryProvider, gatewayProvider),
+                vedtakslengdeService = VedtakslengdeService(repositoryProvider, gatewayProvider),
+                flytJobbRepository = FlytJobbRepositoryImpl(connection),
+                unleashGateway = VedtakslengdeUnleash,
+                clock = clock,
+            )
+
+            opprettJobbUtvidVedtakslengdeJobbUtfører.utfør(JobbInput(OpprettJobbUtvidVedtakslengdeJobbUtfører))
+        }
+
+        motor.kjørJobber()
+
+        dataSource.transaction { connection ->
+            val behandlingMedSisteFattedeVedtak = SakOgBehandlingService(
+                postgresRepositoryRegistry.provider(connection),
+                gatewayProvider
+            ).finnBehandlingMedSisteFattedeVedtak(sak.id)!!
+
+            assertThat(behandlingMedSisteFattedeVedtak.id).isEqualTo(førstegangsbehandling.id)
         }
     }
 
@@ -251,6 +294,7 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(VedtakslengdeUnleash::
             assertThat(sisteUnderveisperiode.periode.tom).isEqualTo(sluttdatoFørstegangsbehandling)
         }
     }
+
 
     @Test
     fun `forleng også vedtak i åpen behandling dersom vedtaksutvidelse-jobb kjører`() {
