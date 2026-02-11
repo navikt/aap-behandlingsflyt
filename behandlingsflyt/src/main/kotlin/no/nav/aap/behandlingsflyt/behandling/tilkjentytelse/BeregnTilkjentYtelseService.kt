@@ -66,10 +66,12 @@ class BeregnTilkjentYtelseService(private val grunnlag: TilkjentYtelseGrunnlag) 
             Grunnbeløp.tilTidslinje(),
             BARNETILLEGGSATS_TIDSLINJE,
             grunnlag.barnetilleggGrunnlag.perioder.tilTidslinje(),
-        ) { underveisperiode, dagsatsG, graderingGrunnlag, grunnbeløp, barnetilleggsats, rettTilBarnetillegg ->
-            if (underveisperiode == null || dagsatsG == null || graderingGrunnlag == null || grunnbeløp == null) {
+        ) { underveisperiode, dagsats, graderingGrunnlag, grunnbeløp, barnetilleggsats, rettTilBarnetillegg ->
+            if (underveisperiode == null || dagsats == null || graderingGrunnlag == null || grunnbeløp == null) {
                 return@map6 null
             }
+
+            val (dagsatsG, minstesats) = dagsats
 
             val barnetillegg = utledBarnetillegg(
                 underveisperiode = underveisperiode,
@@ -90,7 +92,9 @@ class BeregnTilkjentYtelseService(private val grunnlag: TilkjentYtelseGrunnlag) 
                 grunnlagsfaktor = dagsatsG,
                 grunnbeløp = grunnbeløp,
                 utbetalingsdato = utledUtbetalingsdato(underveisperiode),
-            )
+                minsteSats = minstesats,
+                redusertDagsats = null
+            ).run { copy(redusertDagsats = redusertDagsats()) }
         }
             .filterNotNull()
     }
@@ -153,6 +157,11 @@ class BeregnTilkjentYtelseService(private val grunnlag: TilkjentYtelseGrunnlag) 
     }
         .filterNotNull()
 
+    private data class Dagsats(
+        val dagsats: GUnit,
+        val minstesats: Minstesats
+    )
+
     /** Utregning av dagsats, beregnet per dag.
      * Følgende legges til grunn:
      * - [Grunnlaget fra § 11-19][no.nav.aap.behandlingsflyt.behandling.beregning.BeregningService.beregnGrunnlag] i G (10 desimaler)
@@ -166,7 +175,7 @@ class BeregnTilkjentYtelseService(private val grunnlag: TilkjentYtelseGrunnlag) 
      *
      * @return Minstesatsjustert dagsats, per dag, i G (10 desimaler)
      */
-    private fun beregnDagsatsTidslinje(): Tidslinje<GUnit> {
+    private fun beregnDagsatsTidslinje(): Tidslinje<Dagsats> {
         /** § 11-19 Grunnlaget for beregningen av arbeidsavklaringspenger. */
         val grunnlagsfaktor = grunnlag.beregningsgrunnlag ?: GUnit(0)
 
@@ -177,15 +186,21 @@ class BeregnTilkjentYtelseService(private val grunnlag: TilkjentYtelseGrunnlag) 
                  * > Minste årlige ytelse er 2,041 ganger grunnbeløpet.
                  * > For medlem under 25 år er minste årlige ytelse 2/3 av 2,041 ganger grunnbeløpet
                  */
+                val minsteYtelse = aldersjustering.apply(minsteYtelse)
+
+                val årligYtelseFørMax = grunnlagsfaktor.multiplisert(`66_PROSENT`)
+
                 /** § 11-20 første avsnitt:
                  * > Arbeidsavklaringspenger gis med 66 prosent av grunnlaget, se § 11-19.
                  * > Minste årlige ytelse er 2,041 ganger grunnbeløpet.
                  * > For medlem under 25 år er minste årlige ytelse 2/3 av 2,041 ganger grunnbeløpet
                  */
-                val årligYtelse = maxOf(
-                    aldersjustering(minsteYtelse),
-                    grunnlagsfaktor.multiplisert(`66_PROSENT`)
-                )
+                val årligYtelse = maxOf(minsteYtelse, årligYtelseFørMax)
+
+                val minstesats = if (årligYtelseFørMax < årligYtelse) when (aldersjustering) {
+                    AldersStrategi.Under25 -> Minstesats.MINSTESATS_UNDER_25
+                    AldersStrategi.Over25 -> Minstesats.MINSTESATS_OVER_25
+                } else Minstesats.IKKE_MINSTESATS
 
                 /** § 11-20 andre avsnitt andre setning:
                  * > Dagsatsen er den årlige ytelsen delt på 260
@@ -194,7 +209,7 @@ class BeregnTilkjentYtelseService(private val grunnlag: TilkjentYtelseGrunnlag) 
                 /** § 11-20 andre avsnitt andre setning:
                  * > Dagsatsen er den årlige ytelsen delt på 260
                  */
-                årligYtelse.dividert(ANTALL_ÅRLIGE_ARBEIDSDAGER)
+                Dagsats(årligYtelse.dividert(ANTALL_ÅRLIGE_ARBEIDSDAGER), minstesats)
             }
     }
 
@@ -227,7 +242,7 @@ class BeregnTilkjentYtelseService(private val grunnlag: TilkjentYtelseGrunnlag) 
 
         val unntakFastsattMeldedag =
         // `meldeperiode` svarer til perioden det ble skrevet meldekort for (på dato `opplysningerMottatt`).
-        // For å finne unntakts-meldepliktperiode, må vi flytte denne to uker fram.
+            // For å finne unntakts-meldepliktperiode, må vi flytte denne to uker fram.
             unntakFastsattMeldedag[meldeperiode.flytt(14).fom]
 
         val sisteMeldedagForMeldeperiode = meldeperiode.tom.plusDays(9)

@@ -3,9 +3,10 @@ package no.nav.aap.behandlingsflyt.behandling.utbetaling
 import io.mockk.every
 import io.mockk.mockk
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
+import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.GraderingGrunnlag
+import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Minstesats
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Reduksjon11_9Repository
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Tilkjent
-import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.GraderingGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelsePeriode
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
 import no.nav.aap.behandlingsflyt.behandling.vedtak.Vedtak
@@ -84,15 +85,26 @@ class UtbetalingServiceTest {
         every { tilkjentYtelseRepository.hentHvisEksisterer(førstegangsbehandling.id) } returns tilkjentYtelseForFørstegangsbehandling()
         every { tilkjentYtelseRepository.hentHvisEksisterer(revurdering.id) } returns tilkjentYtelseForRevurdering()
 
-        val tilkjentYtelseDtoFørstegangsbehandling = utbetalingService.lagTilkjentYtelseForUtbetaling(sak.id, førstegangsbehandling.id)
+        val tilkjentYtelseDtoFørstegangsbehandling =
+            utbetalingService.lagTilkjentYtelseForUtbetaling(sak.id, førstegangsbehandling.id)
         assertThat(tilkjentYtelseDtoFørstegangsbehandling).isNotNull
         assertThat(tilkjentYtelseDtoFørstegangsbehandling?.nyMeldeperiode).isNotNull
-        assertThat(tilkjentYtelseDtoFørstegangsbehandling?.nyMeldeperiode).isEqualTo(MeldeperiodeDto(førsteTilkjentYtelsePeriode.fom, andreTilkjentYtelsePeriode.tom))
+        assertThat(tilkjentYtelseDtoFørstegangsbehandling?.nyMeldeperiode).isEqualTo(
+            MeldeperiodeDto(
+                førsteTilkjentYtelsePeriode.fom,
+                andreTilkjentYtelsePeriode.tom
+            )
+        )
 
         val tilkjentYtelseDtoRevurdering = utbetalingService.lagTilkjentYtelseForUtbetaling(sak.id, revurdering.id)
         assertThat(tilkjentYtelseDtoRevurdering).isNotNull
         assertThat(tilkjentYtelseDtoRevurdering?.nyMeldeperiode).isNotNull
-        assertThat(tilkjentYtelseDtoRevurdering?.nyMeldeperiode).isEqualTo(MeldeperiodeDto(tredjeTilkjentYtelsePeriode.fom, tredjeTilkjentYtelsePeriode.tom))
+        assertThat(tilkjentYtelseDtoRevurdering?.nyMeldeperiode).isEqualTo(
+            MeldeperiodeDto(
+                tredjeTilkjentYtelsePeriode.fom,
+                tredjeTilkjentYtelsePeriode.tom
+            )
+        )
     }
 
     @Test
@@ -232,7 +244,8 @@ class UtbetalingServiceTest {
             antallBarn = 0,
             barnetilleggsats = Beløp(40),
             barnetillegg = Beløp(0),
-            utbetalingsdato = utbetalingsdato
+            utbetalingsdato = utbetalingsdato,
+            minsteSats = Minstesats.IKKE_MINSTESATS
         )
     }
 

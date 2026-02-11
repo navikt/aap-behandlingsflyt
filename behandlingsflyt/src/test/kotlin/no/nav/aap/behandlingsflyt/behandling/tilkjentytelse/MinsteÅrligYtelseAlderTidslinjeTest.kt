@@ -19,11 +19,11 @@ class MinsteÅrligYtelseAlderTidslinjeTest {
         assertThat(tidslinje.segmenter()).containsExactly(
             Segment(
                 periode = Periode(LocalDate.MIN, LocalDate.of(2015, 1, 1)),
-                verdi = Under25
+                verdi = AldersStrategi.Under25
             ),
             Segment(
                 periode = Periode(LocalDate.of(2015, 1, 2), Tid.MAKS),
-                verdi = Over25
+                verdi = AldersStrategi.Over25
             ),
         )
     }
@@ -36,11 +36,11 @@ class MinsteÅrligYtelseAlderTidslinjeTest {
         assertThat(tidslinje.segmenter()).containsExactly(
             Segment(
                 periode = Periode(LocalDate.MIN, LocalDate.of(2021, 2, 27)),
-                verdi = Under25
+                verdi = AldersStrategi.Under25
             ),
             Segment(
                 periode = Periode(LocalDate.of(2021, 2, 28), Tid.MAKS),
-                verdi = Over25
+                verdi = AldersStrategi.Over25
             ),
         )
     }
@@ -52,9 +52,10 @@ class MinsteÅrligYtelseAlderTidslinjeTest {
 
         val minsteÅrligYtelseTidslinje = MINSTE_ÅRLIG_YTELSE_TIDSLINJE
 
-        val tidslinje = minsteÅrligYtelseAlderTidslinje.innerJoin(minsteÅrligYtelseTidslinje) { alderjustering, årligYtelse ->
-            alderjustering(årligYtelse)
-        }
+        val tidslinje =
+            minsteÅrligYtelseAlderTidslinje.innerJoin(minsteÅrligYtelseTidslinje) { alderjustering, årligYtelse ->
+                alderjustering.apply(årligYtelse)
+            }
 
         assertThat(tidslinje.segmenter()).containsExactly(
             Segment(
