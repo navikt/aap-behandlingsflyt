@@ -41,7 +41,7 @@ class OpprettJobbUtvidVedtakslengdeJobbUtfører(
                 // TODO fjerne dette filteret når vi har fått verifisert at jobben fungerer som forventet i dev/prod
                 .filter {
                     if (erDev()) it.id == 4243L
-                    else if (erProd()) it.id == 1100L
+                    else if (erProd()) it.id == 50L
                     else if (erLokal()) true
                     else false
                 }
