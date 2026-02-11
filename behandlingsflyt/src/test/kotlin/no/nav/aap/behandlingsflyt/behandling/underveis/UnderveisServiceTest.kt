@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.behandling.rettighetstype.vurderRettighetstype
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Avslag
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Kvote
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktVurdering
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Oppfylt
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.VarighetVurdering
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.tomUnderveisInput
@@ -21,7 +22,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.help.assertTidslinje
-import no.nav.aap.behandlingsflyt.help.assertTidslinjeEquals
 import no.nav.aap.behandlingsflyt.help.genererVilkårsresultat
 import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
@@ -188,8 +188,8 @@ class UnderveisServiceTest {
                 )
             )
 
-            // Generer bare underveisperioder ett år frem i tid
-            val underveisPeriode = Periode(rettighetsperiode.fom, rettighetsperiode.fom.plusYears(1))
+            // Generer bare underveisperioder én måned frem i tid
+            val underveisPeriode = Periode(rettighetsperiode.fom, rettighetsperiode.fom.plusMonths(1))
 
             val input1 = tomUnderveisInput(
                 rettighetsperiode = underveisPeriode,
@@ -212,10 +212,35 @@ class UnderveisServiceTest {
             val vurderingTidslinje1 = underveisService.vurderRegler(input1)
             val vurderingTidslinje2 = underveisService.vurderRegler(input2)
 
-            assertThat(vurderingTidslinje1.segmenter()).isNotEmpty()
-            assertTidslinjeEquals(
-                vurderingTidslinje1.map { it.fårAapEtter },
-                vurderingTidslinje2.map { it.fårAapEtter })
+
+            val forventetPeriodeOppfyltOrdinær = Periode(
+                periodeBistandOppfylt.fom,
+                21 januar 2024 // Siste dag med kvote
+            )
+
+            val forventetPeriodeOrdinærKvoteBruktOpp = Periode(
+                22 januar 2024,
+                underveisPeriode.tom
+            )
+
+            assertTidslinje(
+                vurderingTidslinje1.outerJoin(vurderingTidslinje2) { v1, v2 ->
+                    Pair(v1, v2)
+                },
+                studentOppfylt to { assertThat(it.first).isEqualTo(it.second) },
+                speOppfylt to { assertThat(it.first).isEqualTo(it.second) },
+                forventetPeriodeOppfyltOrdinær to { assertThat(it.first).isEqualTo(it.second) }, // Her får vi UtenRett fordi meldeperioden ender 28. januar, altså overlapper med periode uten rett
+                forventetPeriodeOrdinærKvoteBruktOpp to {
+                    assertThat(it.first!!.fårAapEtter).isEqualTo(RettighetsType.BISTANDSBEHOV)
+                    assertThat(it.second!!.fårAapEtter)
+                        .describedAs { "Forventer at persistert rettighetstype er justert for kvote" }
+                        .isNull()
+                    assertThat(it.first!!.meldepliktVurdering is MeldepliktVurdering.IkkeMeldtSeg)
+                    assertThat(it.second!!.meldepliktVurdering is MeldepliktVurdering.UtenRett)
+                    assertThat(it.first!!.utfall()).isEqualTo(it.second!!.utfall())
+                    assertThat(it.first!!.avslagsårsak()).isEqualTo(it.second!!.avslagsårsak())
+                },
+            )
         }
     }
 
@@ -332,7 +357,7 @@ class UnderveisServiceTest {
             )
 
             val forventetPeriodeOrdinærKvoteBruktOpp = Periode(
-                25 januar 2024, // Samordning skal ikke bruke av kvoten. Derfor 22 januar + to dager
+                25 januar 2024, // Samordning skal ikke bruke av kvoten. Derfor 22 januar + tre dager
                 underveisPeriode.tom
             )
 
