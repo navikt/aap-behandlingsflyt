@@ -65,7 +65,7 @@ class EtableringEgenVirksomhetRepositoryImpl(private val connection: DBConnectio
                 setBoolean(4, it.brukerEierVirksomheten)
                 setBoolean(5, it.kanFøreTilSelvforsørget)
                 setString(6, it.virksomhetNavn)
-                setLong(7, it.orgNr)
+                setString(7, it.orgNr)
                 setLong(8, lagreUtviklingsperiode(it.utviklingsPerioder))
                 setLong(9, lagreOppstartsperiode(it.oppstartsPerioder))
                 setLong(10, vurderingerId)
@@ -127,7 +127,7 @@ class EtableringEgenVirksomhetRepositoryImpl(private val connection: DBConnectio
                 EtableringEgenVirksomhetVurdering(
                     begrunnelse = row.getString("BEGRUNNELSE"),
                     virksomhetNavn = row.getString("VIRKSOMHET_NAVN"),
-                    orgNr = row.getLongOrNull("ORG_NR"),
+                    orgNr = row.getStringOrNull("ORG_NR"),
                     foreliggerFagligVurdering = row.getBoolean("FORELIGGER_FAGLIG_VURDERING"),
                     virksomhetErNy = row.getBoolean("VIRKSOMHET_ER_NY"),
                     brukerEierVirksomheten = row.getBoolean("BRUKER_EIER_VIRKSOMHET"),
@@ -237,13 +237,14 @@ class EtableringEgenVirksomhetRepositoryImpl(private val connection: DBConnectio
         hentHvisEksisterer(fraBehandling) ?: return
 
         val query = """
-            INSERT INTO ETABLERING_EGEN_VIRKSOMHET_GRUNNLAG (behandling_id, vurderinger_id)
-            SELECT ?, vurderinger_id from ETABLERING_EGEN_VIRKSOMHET_GRUNNLAG where behandling_id = ? and aktiv
+            INSERT INTO ETABLERING_EGEN_VIRKSOMHET_GRUNNLAG (behandling_id, vurderinger_id, opprettet_tid)
+            SELECT ?, vurderinger_id, ? from ETABLERING_EGEN_VIRKSOMHET_GRUNNLAG where behandling_id = ? and aktiv
         """.trimIndent()
         connection.execute(query) {
             setParams {
                 setLong(1, tilBehandling.id)
-                setLong(2, fraBehandling.id)
+                setInstant(2, Instant.now())
+                setLong(3, fraBehandling.id)
             }
         }
     }

@@ -12,7 +12,7 @@ data class EtableringEgenVirksomhetLøsningDto(
     override val fom: LocalDate,
     override val tom: LocalDate?,
     val virksomhetNavn: String,
-    val orgNr: Long? = null,
+    val orgNr: String? = null,
     val foreliggerFagligVurdering: Boolean,
     val virksomhetErNy: Boolean,
     val brukerEierVirksomheten: Boolean,

@@ -29,8 +29,7 @@ data class EtableringEgenVirksomhetVurderingResponse(
 
     val begrunnelse: String,
     val virksomhetNavn: String,
-    val orgNr: Long?,
-    val vurderingenGjelderFra: LocalDate,
+    val orgNr: String?,
     val foreliggerFagligVurdering: Boolean,
     val virksomhetErNy: Boolean,
     val brukerEierVirksomheten: Boolean,
@@ -49,7 +48,7 @@ data class EtableringEgenVirksomhetVurderingResponse(
                     fraDomene(
                         etableringEgenVirksomhetVurdering = segment.verdi,
                         vurdertAvService = vurdertAvService,
-                        fom = segment.fom(),
+                        fom = segment.verdi.vurderingenGjelderFra,
                         tom = if (index == segmenter.size - 1)
                             segment.verdi.vurderingenGjelderTil
                         else
@@ -67,7 +66,6 @@ data class EtableringEgenVirksomhetVurderingResponse(
             begrunnelse = etableringEgenVirksomhetVurdering.begrunnelse,
             virksomhetNavn = etableringEgenVirksomhetVurdering.virksomhetNavn,
             orgNr = etableringEgenVirksomhetVurdering.orgNr,
-            vurderingenGjelderFra = etableringEgenVirksomhetVurdering.vurderingenGjelderFra,
             foreliggerFagligVurdering = etableringEgenVirksomhetVurdering.foreliggerFagligVurdering,
             virksomhetErNy = etableringEgenVirksomhetVurdering.virksomhetErNy,
             brukerEierVirksomheten = etableringEgenVirksomhetVurdering.brukerEierVirksomheten,
