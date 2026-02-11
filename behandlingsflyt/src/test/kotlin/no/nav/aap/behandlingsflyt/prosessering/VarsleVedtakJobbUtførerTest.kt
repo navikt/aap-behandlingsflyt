@@ -72,6 +72,7 @@ class VarsleVedtakJobbUtførerTest {
             barnetillegg = Beløp(0),
             utbetalingsdato = LocalDate.now(),
             minsteSats = Minstesats.MINSTESATS_UNDER_25,
+            redusertDagsats = Beløp(100),
         )
 
         val periode = Periode(LocalDate.now(), LocalDate.now())

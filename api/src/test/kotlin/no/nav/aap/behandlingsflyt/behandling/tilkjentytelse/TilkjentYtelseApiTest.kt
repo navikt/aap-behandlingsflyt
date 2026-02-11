@@ -70,7 +70,8 @@ class TilkjentYtelseApiTest : BaseApiTest() {
                 barnetilleggsats = Beløp(36),
                 barnetillegg = Beløp(72),
                 utbetalingsdato = rettighetsperiode.fom,
-                minsteSats = Minstesats.MINSTESATS_UNDER_25
+                minsteSats = Minstesats.MINSTESATS_UNDER_25,
+                redusertDagsats = Beløp(250)
             )
 
             val tilkjentYtelsePerioder = perioder.mapIndexed { index, periode ->

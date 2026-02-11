@@ -245,7 +245,8 @@ class UtbetalingServiceTest {
             barnetilleggsats = Beløp(40),
             barnetillegg = Beløp(0),
             utbetalingsdato = utbetalingsdato,
-            minsteSats = Minstesats.IKKE_MINSTESATS
+            minsteSats = Minstesats.IKKE_MINSTESATS,
+            redusertDagsats = Beløp(100)
         )
     }
 
