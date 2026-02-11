@@ -36,15 +36,16 @@ class UføreBeregning(
         // og at vi får inntekt fra inntektskomponenten per måned
         val uføreTidslinje = uføregrader.tilTidslinje()
 
-        require(inntektsPerioder
-            .filter { Year.of(it.årMåned.year) in relevanteÅr }
-            .groupingBy { it.årMåned.year }
-            .eachCount().values.all { it == 12 }) { "Krever inntekter for alle måneder i relevante år." }
 
-        val inntektPerMåned = inntektsPerioder
+        val inntektPerMånedUtenDefaults = inntektsPerioder
             .filter { Year.of(it.årMåned.year) in relevanteÅr }
             .groupingBy { it.årMåned }
             .fold(Beløp(0)) { acc, curr -> acc.pluss(curr.beløp) }
+
+        val inntektPerMåned = generateSequence(relevanteÅr.min().atMonth(1)) { it.plusMonths(1) }
+            .takeWhile { Year.of(it.year) in relevanteÅr }
+            .associateWith { Beløp(0) }
+            .mapValues { (årMåned,beløp) -> inntektPerMånedUtenDefaults[årMåned] ?: beløp }
 
         val oppjusterteInntekter =
             oppjusterMhpUføregradPeriodisertInntekt(
@@ -120,6 +121,7 @@ class UføreBeregning(
             }.values.toList()
     }
 
+    @Suppress("FunctionName")
     private fun beregn11_19Grunnlag(
         oppjusterteInntekter: List<UføreInntekt>
     ): Grunnlag11_19 {
@@ -134,6 +136,4 @@ class UføreBeregning(
 
     private fun gUnit(år: Year, beløp: Beløp): Grunnbeløp.BenyttetGjennomsnittsbeløp =
         Grunnbeløp.finnGUnit(år, beløp)
-
-
 }
