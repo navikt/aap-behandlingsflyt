@@ -115,11 +115,12 @@ data class Vurdering(
             return null
         }
 
-        if (fårAapEtter == null) {
-            return UnderveisÅrsak.IKKE_GRUNNLEGGENDE_RETT
-        } else if (!varighetsvurderingOppfylt()) {
+        if (!varighetsvurderingOppfylt()) {
             return UnderveisÅrsak.VARIGHETSKVOTE_BRUKT_OPP
+        } else if (fårAapEtter == null) {
+            return UnderveisÅrsak.IKKE_GRUNNLEGGENDE_RETT
         }
+
         throw IllegalStateException("Ukjent avslagsårsak")
     }
 

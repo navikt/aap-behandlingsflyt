@@ -32,6 +32,7 @@ import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Tid
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import javax.sql.DataSource
@@ -229,7 +230,17 @@ class UnderveisServiceTest {
                 },
                 studentOppfylt to { assertThat(it.first).isEqualTo(it.second) },
                 speOppfylt to { assertThat(it.first).isEqualTo(it.second) },
-                forventetPeriodeOppfyltOrdinær to { assertThat(it.first).isEqualTo(it.second) }, // Her får vi UtenRett fordi meldeperioden ender 28. januar, altså overlapper med periode uten rett
+                forventetPeriodeOppfyltOrdinær to {
+                    assertThat(it.first!!.copy(meldepliktVurdering = null)).isEqualTo(
+                        it.second!!.copy(
+                            meldepliktVurdering = null
+                        )
+                    )
+                    assertTrue(it.first!!.meldepliktVurdering is MeldepliktVurdering.IkkeMeldtSeg)
+                    assertThat(it.second!!.meldepliktVurdering is MeldepliktVurdering.UtenRett)
+                        .describedAs{"Overlapper med meldeperiode uten rett, så forventer UtenRett"}
+                        .isTrue()
+                },
                 forventetPeriodeOrdinærKvoteBruktOpp to {
                     assertThat(it.first!!.fårAapEtter).isEqualTo(RettighetsType.BISTANDSBEHOV)
                     assertThat(it.second!!.fårAapEtter)
