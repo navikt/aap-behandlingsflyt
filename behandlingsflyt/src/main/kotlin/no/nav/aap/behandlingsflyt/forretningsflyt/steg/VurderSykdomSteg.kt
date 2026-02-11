@@ -26,36 +26,30 @@ class VurderSykdomSteg(
     private val sykdomRepository: SykdomRepository,
     private val tidligereVurderinger: TidligereVurderinger,
     private val avklaringsbehovService: AvklaringsbehovService,
-    private val unleashGateway: UnleashGateway,
 ) : BehandlingSteg {
     constructor(repositoryProvider: RepositoryProvider, gstewayProvider: GatewayProvider) : this(
         studentRepository = repositoryProvider.provide(),
         sykdomRepository = repositoryProvider.provide(),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
         avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
-        unleashGateway = gstewayProvider.provide(),
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        return if (unleashGateway.isDisabled(BehandlingsflytFeature.PeriodisertSykdom)) {
-            utførGammel(kontekst)
-        } else {
-            avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
-                definisjon = Definisjon.AVKLAR_SYKDOM,
-                tvingerAvklaringsbehov = kontekst.vurderingsbehovRelevanteForSteg,
-                nårVurderingErRelevant = ::perioderHvorSykdomsvurderingErRelevant,
-                nårVurderingErGyldig = { tilstrekkeligVurdert(kontekst) },
-                kontekst,
-                tilbakestillGrunnlag = {
-                    val vedtatteSykdomsvurderinger = kontekst.forrigeBehandlingId
-                        ?.let { sykdomRepository.hentHvisEksisterer(it) }
-                        ?.sykdomsvurderinger
-                        ?: emptyList()
-                    sykdomRepository.lagre(kontekst.behandlingId, vedtatteSykdomsvurderinger)
-                },
-            )
-            Fullført
-        }
+        avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
+            definisjon = Definisjon.AVKLAR_SYKDOM,
+            tvingerAvklaringsbehov = kontekst.vurderingsbehovRelevanteForSteg,
+            nårVurderingErRelevant = ::perioderHvorSykdomsvurderingErRelevant,
+            nårVurderingErGyldig = { tilstrekkeligVurdert(kontekst) },
+            kontekst,
+            tilbakestillGrunnlag = {
+                val vedtatteSykdomsvurderinger = kontekst.forrigeBehandlingId
+                    ?.let { sykdomRepository.hentHvisEksisterer(it) }
+                    ?.sykdomsvurderinger
+                    ?: emptyList()
+                sykdomRepository.lagre(kontekst.behandlingId, vedtatteSykdomsvurderinger)
+            },
+        )
+        return Fullført
     }
 
     private fun perioderHvorSykdomsvurderingErRelevant(kontekst: FlytKontekstMedPerioder): Tidslinje<Boolean> {
@@ -117,9 +111,11 @@ class VurderSykdomSteg(
                         studentGrunnlag.harPeriodeSomIkkeErOppfylt() &&
                         kontekst.vurderingsbehovRelevanteForSteg.isNotEmpty()
             }
+
             VurderingType.UTVID_VEDTAKSLENGDE,
             VurderingType.MIGRER_RETTIGHETSPERIODE,
             VurderingType.MELDEKORT -> false
+
             VurderingType.AUTOMATISK_BREV -> false
             VurderingType.IKKE_RELEVANT -> false
             VurderingType.EFFEKTUER_AKTIVITETSPLIKT -> false

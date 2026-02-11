@@ -42,7 +42,6 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.MigrerMeldepliktFritak to true,
         BehandlingsflytFeature.SosialRefusjon to true,
         BehandlingsflytFeature.SendBrevVedMottattKlage to true,
-        BehandlingsflytFeature.PeriodisertSykdom to true,
         BehandlingsflytFeature.ForlengelseIManuellBehandling to true,
         BehandlingsflytFeature.UtvidVedtakslengdeJobb to true,
         BehandlingsflytFeature.InstitusjonsoppholdJobb to true,
