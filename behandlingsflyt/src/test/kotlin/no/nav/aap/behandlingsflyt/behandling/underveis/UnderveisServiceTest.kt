@@ -238,7 +238,7 @@ class UnderveisServiceTest {
                     )
                     assertTrue(it.first!!.meldepliktVurdering is MeldepliktVurdering.IkkeMeldtSeg)
                     assertThat(it.second!!.meldepliktVurdering is MeldepliktVurdering.UtenRett)
-                        .describedAs{"Overlapper med meldeperiode uten rett, så forventer UtenRett"}
+                        .describedAs { "Overlapper med meldeperiode uten rett, så forventer UtenRett" }
                         .isTrue()
                 },
                 forventetPeriodeOrdinærKvoteBruktOpp to {
@@ -266,9 +266,15 @@ class UnderveisServiceTest {
             )
             val søknadsdato = 1 januar 2024
 
+            val fiktiveKvoter = Kvoter(
+                ordinærkvote = Hverdager(10),
+                sykepengeerstatningkvote = Hverdager(4)
+            )
+
+
             val studentOppfylt = Periode(søknadsdato, 7 januar 2024) // Bruker 5 dager av ordinær kvote
             val speOppfylt =
-                Periode(8 januar 2024, 14 januar 2024) // Bruker 5 dager av sykepengeerstatning-kvote
+                Periode(8 januar 2024, 14 januar 2024) // Bruker alle 4 dager av sykepengeerstatning-kvote
             val periodeBistandOppfylt = Periode(15 januar 2024, Tid.MAKS) // Bruker gjenværende dager av ordinær kvote
             val samordningAvslag =
                 Periode(15 januar 2024, 17 januar 2024) // Tre dager med avskag skal ikke bruke av kvote
@@ -331,11 +337,6 @@ class UnderveisServiceTest {
                 ),
             )
 
-            val fiktiveKvoter = Kvoter(
-                ordinærkvote = Hverdager(10),
-                sykepengeerstatningkvote = Hverdager(5)
-            )
-
             // Gjøres i RettighetstypeSteg
             val kvotevurdering = vurderRettighetstypeOgKvoter(vilkårsresultat, fiktiveKvoter)
             val rettighetstypeTidslinje =
@@ -362,6 +363,15 @@ class UnderveisServiceTest {
 
             val vurderingTidslinje = underveisService.vurderRegler(input)
 
+            val forventetSpeOppfylt = Periode(
+                speOppfylt.fom,
+                speOppfylt.fom.plusDays(3)
+            )
+            val forventetPeriodeSpeKvoteBruktOpp = Periode(
+                forventetSpeOppfylt.tom.plusDays(1),
+                speOppfylt.tom
+            )
+
             val forventetPeriodeOppfyltOrdinær = Periode(
                 samordningAvslag.tom.plusDays(1),
                 24 januar 2024 // Siste dag med kvote
@@ -375,10 +385,21 @@ class UnderveisServiceTest {
             assertTidslinje(
                 vurderingTidslinje,
                 studentOppfylt to { assertThat(it.fårAapEtter).isEqualTo(RettighetsType.STUDENT) },
-                speOppfylt to {
+                forventetSpeOppfylt to {
                     assertThat(it.fårAapEtter).isEqualTo(RettighetsType.SYKEPENGEERSTATNING)
                     assertThat(it.varighetVurdering)
                         .isEqualTo(Oppfylt(brukerAvKvoter = setOf(Kvote.SYKEPENGEERSTATNING)))
+                },
+                forventetPeriodeSpeKvoteBruktOpp to {
+                    assertThat(it.fårAapEtter).isNull()
+                    assertThat(it.varighetVurdering)
+                        .isEqualTo(
+                            Avslag(
+                                brukerAvKvoter = setOf(Kvote.SYKEPENGEERSTATNING), avslagsårsaker = setOf(
+                                    VarighetVurdering.Avslagsårsak.SYKEPENGEERSTATNINGKVOTE_BRUKT_OPP
+                                )
+                            )
+                        )
                 },
                 samordningAvslag to {
                     assertThat(it.fårAapEtter).isEqualTo(null)
