@@ -91,7 +91,6 @@ fun NormalOpenAPIRoute.refusjonGrunnlagApi(
                             RefusjonkravGrunnlagResponse(
                                 nåværendeVirkningsTidspunkt = virkningstidspunkt,
                                 harTilgangTilÅSaksbehandle = harTilgangOgKanSaksbehandle(kanSaksbehandle(), avklaringsbehovene),
-                                gjeldendeVurdering = gjeldendeVurdering,
                                 gjeldendeVurderinger = gjeldendeVurderinger,
                                 økonomiskSosialHjelp = økonomiskSosialHjelp,
                                 historiskeVurderinger = null
@@ -122,7 +121,6 @@ fun NormalOpenAPIRoute.refusjonGrunnlagApi(
 
                         RefusjonkravGrunnlagResponse(
                             harTilgangTilÅSaksbehandle = harTilgangOgKanSaksbehandle(kanSaksbehandle(), avklaringsbehovene),
-                            gjeldendeVurdering = gjeldendeVurdering,
                             gjeldendeVurderinger = gjeldendeVurderinger,
                             historiskeVurderinger = historiskeVurderinger,
                             økonomiskSosialHjelp = null,
