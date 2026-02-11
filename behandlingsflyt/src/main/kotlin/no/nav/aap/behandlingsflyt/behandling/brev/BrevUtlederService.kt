@@ -203,8 +203,19 @@ class BrevUtlederService(
     }
 
     private fun brevBehovUtvidVedtakslengde(behandling: Behandling): UtvidVedtakslengde {
+        checkNotNull(behandling.forrigeBehandlingId) {
+            "UtvidelsesVedtak mangler forrigeBehandlingId for ${behandling.id}"
+        }
+        val underveisGrunnlagVedForrigeBehandling = underveisRepository.hent(behandling.forrigeBehandlingId)
+        val utvidetAapFomDato = underveisGrunnlagVedForrigeBehandling.sisteDagMedYtelse().plusDays(1)
+        checkNotNull(utvidetAapFomDato) {
+            "UtvidelsesVedtak mangler utvidetAapFomDato"
+        }
         val underveisGrunnlag = underveisRepository.hent(behandling.id)
-        return UtvidVedtakslengde(sisteDagMedYtelse = underveisGrunnlag.sisteDagMedYtelse())
+        return UtvidVedtakslengde(
+            utvidetAapFomDato = utvidetAapFomDato,
+            sisteDagMedYtelse = underveisGrunnlag.sisteDagMedYtelse()
+        )
     }
 
     private fun brevBehovArbeidssøker(behandling: Behandling): Arbeidssøker {

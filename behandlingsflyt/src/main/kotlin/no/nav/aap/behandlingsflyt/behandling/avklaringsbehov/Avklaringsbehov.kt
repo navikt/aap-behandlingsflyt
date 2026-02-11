@@ -126,7 +126,7 @@ class Avklaringsbehov(
     internal fun oppdaterPerioder(
         perioderSomIkkeErTilstrekkeligVurdert: Set<Periode>?,
         perioderVedtaketBehøverVurdering: Set<Periode>?
-    ) {
+    ): Boolean {
         val siste = historikk.last()
         require(siste.status.erÅpent()) {
             "Prøvde å oppdatere perioder på et lukket avklaringsbehov"
@@ -137,7 +137,9 @@ class Avklaringsbehov(
                 perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering,
                 tidsstempel = LocalDateTime.now()
             )
+            return true
         }
+        return false
     }
 
     fun erÅpent(): Boolean {
@@ -169,13 +171,13 @@ class Avklaringsbehov(
         )
     }
 
-    internal fun avslutt() {
+    internal fun avslutt(begrunnelse: String) {
         check(historikk.any { it.status == Status.AVSLUTTET }) {
             "Et steg burde vel ha vært løst minst en gang for å kunne regnes som avsluttet?"
         }
 
         historikk += Endring(
-            status = Status.AVSLUTTET, begrunnelse = "", endretAv = SYSTEMBRUKER.ident
+            status = Status.AVSLUTTET, begrunnelse = begrunnelse, endretAv = SYSTEMBRUKER.ident
         )
     }
 

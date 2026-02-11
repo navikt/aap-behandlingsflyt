@@ -18,6 +18,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Re
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.UføreSøknadVedtakResultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.flate.OvergangUføreLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerGrunn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.SykdomsvurderingLøsningDto
@@ -47,7 +48,8 @@ import kotlin.reflect.KClass
 
 @ParameterizedClass
 @MethodSource("unleashTestDataSource")
-class SykepengeerstatningFlytTest(val unleashGateway: KClass<UnleashGateway>) : AbstraktFlytOrkestratorTest(unleashGateway) {
+class SykepengeerstatningFlytTest(val unleashGateway: KClass<UnleashGateway>) :
+    AbstraktFlytOrkestratorTest(unleashGateway) {
     @Test
     fun `Sykepengeerstatning med yrkesskade`() {
         val fom = 1 april 2025
@@ -163,7 +165,7 @@ class SykepengeerstatningFlytTest(val unleashGateway: KClass<UnleashGateway>) : 
                         OvergangUføreLøsningDto(
                             begrunnelse = "Løsning",
                             brukerHarSøktOmUføretrygd = true,
-                            brukerHarFåttVedtakOmUføretrygd = "NEI",
+                            brukerHarFåttVedtakOmUføretrygd = UføreSøknadVedtakResultat.NEI,
                             brukerRettPåAAP = true,
                             fom = nå,
                             tom = null,
@@ -442,11 +444,7 @@ class SykepengeerstatningFlytTest(val unleashGateway: KClass<UnleashGateway>) : 
             // Nei på 11-6
             .løsBistand(revurdering2Fom, false)
             .løsOvergangUføre()
-            .apply {
-                if (gatewayProvider.provide<UnleashGateway>().isEnabled(BehandlingsflytFeature.OvergangArbeid)) {
-                    løsOvergangArbeid(Utfall.IKKE_OPPFYLT, periode.fom)
-                }
-            }
+            .løsOvergangArbeid(Utfall.IKKE_OPPFYLT, periode.fom)
             .løsSykdomsvurderingBrev()
             .løsAvklaringsBehov(
                 AvklarSykepengerErstatningLøsning(

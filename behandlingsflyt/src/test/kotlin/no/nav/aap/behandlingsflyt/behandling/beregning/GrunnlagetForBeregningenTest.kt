@@ -25,7 +25,7 @@ class GrunnlagetForBeregningenTest {
         val toÅrException = assertThrows<IllegalArgumentException> {
             GrunnlagetForBeregningen(inntekterForToÅr)
         }
-        assertThat(toÅrException).hasMessage("Må oppgi tre inntekter")
+        assertThat(toÅrException).hasMessageMatching("Må oppgi tre inntekter, .*")
 
         val inntekterForTreIkkesammenhengendeÅr = setOf(
             InntektPerÅr(

@@ -15,7 +15,10 @@ class IkkeOppfyltMeldepliktSteg private constructor() : BehandlingSteg {
     }
 
     companion object : FlytSteg {
-        override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): BehandlingSteg {
+        override fun konstruer(
+            repositoryProvider: RepositoryProvider,
+            gatewayProvider: GatewayProvider
+        ): BehandlingSteg {
             return IkkeOppfyltMeldepliktSteg()
         }
 

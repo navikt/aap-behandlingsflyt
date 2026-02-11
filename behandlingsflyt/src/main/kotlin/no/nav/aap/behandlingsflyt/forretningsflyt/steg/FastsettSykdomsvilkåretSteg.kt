@@ -93,7 +93,6 @@ class FastsettSykdomsvilkåretSteg private constructor(
             bistandGrunnlag,
             studentGrunnlag?.vurderinger?.single(),
             vilkårResultat.optionalVilkår(Vilkårtype.SYKEPENGEERSTATNING)?.tidslinje().orEmpty(),
-            unleashGateway.isEnabled(BehandlingsflytFeature.Sykestipend),
         )
         Sykdomsvilkår(vilkårResultat).vurder(faktagrunnlag)
 

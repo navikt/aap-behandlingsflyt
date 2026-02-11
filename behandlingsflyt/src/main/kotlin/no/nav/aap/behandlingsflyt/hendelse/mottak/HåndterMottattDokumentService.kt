@@ -334,7 +334,7 @@ class HåndterMottattDokumentService(
             ÅrsakTilOpprettelse.AKTIVITETSPLIKT,
             ÅrsakTilOpprettelse.AKTIVITETSPLIKT_11_9,
             ÅrsakTilOpprettelse.UTVID_VEDTAKSLENGDE,
-            ÅrsakTilOpprettelse.MIGRER_RETTIGHETSPERIODE-> FagsysteminfoSvarHendelse.RevurderingDto.Årsak.NYE_OPPLYSNINGER
+            ÅrsakTilOpprettelse.MIGRER_RETTIGHETSPERIODE -> FagsysteminfoSvarHendelse.RevurderingDto.Årsak.NYE_OPPLYSNINGER
 
             ÅrsakTilOpprettelse.MELDEKORT,
             ÅrsakTilOpprettelse.MANUELL_OPPRETTELSE -> FagsysteminfoSvarHendelse.RevurderingDto.Årsak.KORRIGERING
