@@ -71,6 +71,7 @@ class RettighetstypeSteg(
                 kvoter
             )
         )
+        vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
         
         return Fullført
     }
