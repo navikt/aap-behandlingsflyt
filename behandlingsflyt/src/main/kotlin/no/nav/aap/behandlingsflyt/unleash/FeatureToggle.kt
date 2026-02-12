@@ -13,7 +13,6 @@ enum class BehandlingsflytFeature : FeatureToggle {
     Under18,
     MigrerMeldepliktFritak,
     SosialRefusjon,
-    MigrerRettighetsperiode,
     SendBrevVedMottattKlage,
     ForlengelseIManuellBehandling,
     UtvidVedtakslengdeJobb,
