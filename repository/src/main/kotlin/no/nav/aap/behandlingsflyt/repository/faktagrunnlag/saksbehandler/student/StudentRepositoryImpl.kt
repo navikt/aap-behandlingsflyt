@@ -162,7 +162,7 @@ class StudentRepositoryImpl(private val connection: DBConnection) : StudentRepos
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """.trimIndent()
 
-        val vurderingId = connection.executeBatch(query, studentvurderinger) {
+        connection.executeBatch(query, studentvurderinger) {
             setParams { studentvurdering ->
                 setString(1, studentvurdering.begrunnelse)
                 setBoolean(2, studentvurdering.harAvbruttStudie)
