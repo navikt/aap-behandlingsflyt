@@ -184,7 +184,7 @@ class OvergangUføreFlytTest: AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::c
             }
 
         var resultat =
-            dataSource.transaction { ResultatUtleder(postgresRepositoryRegistry.provider(it)).utledResultat(behandling.id) }
+            dataSource.transaction { ResultatUtleder(postgresRepositoryRegistry.provider(it)).utledResultatFørstegangsBehandling(behandling.id) }
         assertThat(resultat).isEqualTo(Resultat.INNVILGELSE)
 
         behandling = behandling.løsVedtaksbrev(typeBrev = TypeBrev.VEDTAK_11_18)
@@ -208,7 +208,7 @@ class OvergangUføreFlytTest: AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::c
             })
 
         resultat =
-            dataSource.transaction { ResultatUtleder(postgresRepositoryRegistry.provider(it)).utledResultat(behandling.id) }
+            dataSource.transaction { ResultatUtleder(postgresRepositoryRegistry.provider(it)).utledResultatFørstegangsBehandling(behandling.id) }
 
         assertThat(resultat).isEqualTo(Resultat.INNVILGELSE)
 

@@ -49,7 +49,7 @@ class ResultatUtlederTest {
             input = object : Faktagrunnlag {}
         )
 
-        val resultat = resultatUtleder.utledResultat(behandling.id)
+        val resultat = resultatUtleder.utledResultatFørstegangsBehandling(behandling.id)
 
         assertThat(resultat).isEqualTo(Resultat.INNVILGELSE)
     }
@@ -68,7 +68,7 @@ class ResultatUtlederTest {
             input = object : Faktagrunnlag {}
         )
 
-        val resultat = resultatUtleder.utledResultat(behandling.id)
+        val resultat = resultatUtleder.utledResultatFørstegangsBehandling(behandling.id)
 
         assertThat(resultat).isEqualTo(Resultat.AVSLAG)
     }
@@ -118,7 +118,7 @@ class ResultatUtlederTest {
         )
 
         assertThrows<IllegalArgumentException> {
-            resultatUtleder.utledResultat(klage.id)
+            resultatUtleder.utledResultatFørstegangsBehandling(klage.id)
         }
     }
 

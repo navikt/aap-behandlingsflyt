@@ -44,6 +44,7 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Dagsatser
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.lookup.repository.RepositoryProvider
+import org.slf4j.LoggerFactory
 import java.time.LocalDate
 import kotlin.reflect.KClass
 
@@ -79,6 +80,8 @@ class UnderveisService(
         behandlingRepository = repositoryProvider.provide(),
         unleashGateway = gatewayProvider.provide(),
     )
+
+    private val log = LoggerFactory.getLogger(javaClass)
 
     private val kvoteService = KvoteService()
 
@@ -233,6 +236,12 @@ class UnderveisService(
          */
         val sluttdatoForBakoverkompabilitet = minOf(sak.rettighetsperiode.tom, sluttDatoForBehandlingen)
 
+        log.info("Behandling $behandlingId " +
+                "Utledet sluttdato: $sluttdatoForBakoverkompabilitet " +
+                "Sluttdato uten bakoverkompabilitet: $sluttDatoForBehandlingen " +
+                "Sist vedtatte underveisperiode: $sistVedtatteUnderveisperiode " +
+                "Kalkulert sluttdato: $kalkulertSluttdatoForBehandlingen " +
+                "Startdato: $startdatoForBehandlingen")
         return Periode(sak.rettighetsperiode.fom, sluttdatoForBakoverkompabilitet)
     }
 

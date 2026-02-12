@@ -7,10 +7,10 @@ import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companio
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Kvote
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.StansEllerOpphør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
-import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.tidslinjeOf
 import no.nav.aap.komponenter.tidslinje.tidslinjeOfNotNullPeriode
@@ -169,24 +169,24 @@ fun vurderRettighetstypeOgKvoter(
 /** Identifiserer hva som er avslagsårsakene som fører til at medlemmet mister retten
  * til AAP. Her ser vi på overgangen fra å ha rett til AAP en dag til å ikke ha rett til AAP den neste dagen.
  *
- * NB. funksjonen sier ikke hvorfor vi ikke innvilger AAP.
+ * NB1. Funksjonen handler kun om stans og opphør, ikke om avslag.
  *
  * NB2. Det skjer ytterligere vilkårsvurdering i Underveissteget. Disse opplysningene er ikke tilgjengelig her,
  * så for å helt korrekt svar, må denne vurderingen brukes som et ledd i underveissteget. Ideelt sett hadde
  * vi greid å hente ut alle vilkårsvurderingen som fører til stans eller opphør ut fra underveissteget og inn
  * i egne vilkår, slik at vi ikke trenger å splitte utregningen i to.
  *
- * @return Tidslinjen forteller hvilke(t) avslagsårsak(er) som er grunnen til at medlemmet går fra å ha rett til AAP en dag til ikke å ha rett til AAP dagen umiddelbart etterpå.
+ * @return Map over hvilke avslagsårsaker som er grunnen til at medlemmet går fra å ha rett til AAP en dag til ikke å ha rett til AAP dagen umiddelbart etterpå.
  * Dette er egentlig ikke en egenskap knyttet til en dag, men til overgangen mellom to dager. Avslagsårsakene vil derfor ikke være oppgitt for perioden uten rett, men for
- * siste dag med rett.
+ * første dag uten rett.
  *
  * I perioden etter en stans eller et opphør kan det være varierende grunner til at medlemmet ikke har rett til AAP. Når disse varierer etter stans eller opphør,
  * så er ikke dette nye opphør eller stans – for meldemmet har ikke AAP å stanse eller opphøre.
  */
-fun avslagsårsakerVedTapAvRettPåAAP(
+fun utledStansEllerOpphør(
     vilkårsresultat: Vilkårsresultat,
     kvoter: Kvoter = KvoteService().beregn(),
-): Tidslinje<Set<Avslagsårsak>> {
+): Map<LocalDate, StansEllerOpphør> {
     val rettighetstypeVurderingTidslinje = utledRettighetstypevurderinger(vilkårsresultat)
         .let {
             /* Fyll "tomrom" i tidslinjen. Body til [windowed]-kallet forutsetter at segmenter
@@ -202,7 +202,7 @@ fun avslagsårsakerVedTapAvRettPåAAP(
         }
     return vurderKvoter(kvoter, rettighetstypeVurderingTidslinje)
         .segmenter().windowed(2)
-        .flatMap { (vurderingSegment, nesteVurderingSegment) ->
+        .mapNotNull { (vurderingSegment, nesteVurderingSegment) ->
             require(vurderingSegment.tom().plusDays(1) == nesteVurderingSegment.fom()) {
                 """Korrektheten av koden under er avhengig av en sammenhengende tidslinje
                     |for å oppdage perioder uten AAP.
@@ -221,10 +221,10 @@ fun avslagsårsakerVedTapAvRettPåAAP(
                 val avslagsårsaker =
                     innvilgendeKravspesifikasjon.avslagsårsaker(nesteKvotevurdering.rettighetstypeVurdering.vilkårsvurderinger) +
                             nesteKvotevurdering.avslagsårsaker()
-                listOf(Segment(Periode(sisteDagMedRett, sisteDagMedRett), avslagsårsaker))
+                sisteDagMedRett.plusDays(1) to StansEllerOpphør.fraÅrsaker(avslagsårsaker)
             } else {
-                listOf()
+                null
             }
         }
-        .let(::Tidslinje)
+        .toMap()
 }

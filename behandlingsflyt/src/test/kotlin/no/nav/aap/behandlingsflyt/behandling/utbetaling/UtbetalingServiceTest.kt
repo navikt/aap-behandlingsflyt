@@ -11,6 +11,7 @@ import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelsePeriod
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
 import no.nav.aap.behandlingsflyt.behandling.vedtak.Vedtak
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.meldeperiode.MeldeperiodeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
@@ -43,6 +44,7 @@ class UtbetalingServiceTest {
     val førsteTilkjentYtelsePeriode = Periode(LocalDate.of(2025, 1, 1), LocalDate.of(2025, 1, 13))
     val andreTilkjentYtelsePeriode = Periode(LocalDate.of(2025, 1, 14), LocalDate.of(2025, 1, 28))
     val tredjeTilkjentYtelsePeriode = Periode(LocalDate.of(2025, 1, 29), LocalDate.of(2025, 2, 9))
+    val meldeperioderSomDekker2025 = listOf(Periode(LocalDate.of(2025, 1, 1), LocalDate.of(2025, 12, 31)))
 
     val sakRepository = mockk<SakRepository>()
     val behandlingRepository = mockk<BehandlingRepository>()
@@ -52,6 +54,7 @@ class UtbetalingServiceTest {
     val vedtakRepository = mockk<VedtakRepository>()
     val underveisRepository = mockk<UnderveisRepository>()
     val reduksjon11_9Repository = mockk<Reduksjon11_9Repository>(relaxed = true)
+    val meldeperiodeRepository = mockk<MeldeperiodeRepository>()
 
     val utbetalingService = UtbetalingService(
         sakRepository = sakRepository,
@@ -61,7 +64,8 @@ class UtbetalingServiceTest {
         avklaringsbehovRepository = avklaringsbehovRepository,
         vedtakRepository = vedtakRepository,
         underveisRepository = underveisRepository,
-        reduksjon11_9Repository = reduksjon11_9Repository
+        reduksjon11_9Repository = reduksjon11_9Repository,
+        meldeperiodeRepository = meldeperiodeRepository
     )
 
     @Test
@@ -71,6 +75,7 @@ class UtbetalingServiceTest {
         every { behandlingRepository.hent(førstegangsbehandling.id) } returns førstegangsbehandling
         every { behandlingRepository.hent(revurdering.id) } returns revurdering
         every { behandlingRepository.hentAlleFor(any<SakId>()) } returns emptyList()
+        every { meldeperiodeRepository.hentMeldeperioder(any<BehandlingId>(), any<Periode>()) } returns meldeperioderSomDekker2025
 
         every { vedtakRepository.hent(førstegangsbehandling.id) } returns Vedtak(
             førstegangsbehandling.id,
@@ -114,6 +119,7 @@ class UtbetalingServiceTest {
         every { behandlingRepository.hent(førstegangsbehandling.id) } returns førstegangsbehandling
         every { behandlingRepository.hent(revurdering.id) } returns revurdering
         every { behandlingRepository.hentAlleFor(any<SakId>()) } returns emptyList()
+        every { meldeperiodeRepository.hentMeldeperioder(any<BehandlingId>(), any<Periode>()) } returns meldeperioderSomDekker2025
 
         every { vedtakRepository.hent(førstegangsbehandling.id) } returns Vedtak(
             førstegangsbehandling.id,
@@ -151,6 +157,7 @@ class UtbetalingServiceTest {
         every { behandlingRepository.hent(førstegangsbehandling.id) } returns førstegangsbehandling
         every { behandlingRepository.hent(revurdering.id) } returns revurdering
         every { behandlingRepository.hentAlleFor(any<SakId>()) } returns listOf(revurdering, førstegangsbehandling)
+        every { meldeperiodeRepository.hentMeldeperioder(any<BehandlingId>(), any<Periode>()) } returns meldeperioderSomDekker2025
         every { underveisRepository.hentHvisEksisterer(revurdering.id) } returns UnderveisGrunnlag(
             id = 0L,
             perioder = emptyList()

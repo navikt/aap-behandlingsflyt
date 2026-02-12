@@ -68,10 +68,11 @@ class InstitusjonsoppholdInformasjonskrav private constructor(
         val eksisterendeGrunnlag = hentHvisEksisterer(kontekst.behandlingId)
         val institusjonsopphold = registerdata.opphold
 
-        // TODO: lagre kun hvis forskjell!
-        institusjonsoppholdRepository.lagreOpphold(kontekst.behandlingId, institusjonsopphold)
-
-        return if (erEndret(eksisterendeGrunnlag, institusjonsopphold)) ENDRET else IKKE_ENDRET
+        val institusjonsoppholdErEndret = erEndret(eksisterendeGrunnlag, institusjonsopphold)
+        if (institusjonsoppholdErEndret) {
+            institusjonsoppholdRepository.lagreOpphold(kontekst.behandlingId, institusjonsopphold)
+        }
+        return if (institusjonsoppholdErEndret) ENDRET else IKKE_ENDRET
     }
 
     private fun hentInstitusjonsopphold(sak: Sak): List<Institusjonsopphold> {
