@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarOvergangUføreEnkelLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarOvergangUføreLøsning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreRepository
@@ -11,8 +11,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepos
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.behandlingsflyt.utils.toHumanReadable
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
@@ -27,22 +25,20 @@ class AvklarOvergangUføreLøser(
     private val sakRepository: SakRepository,
     private val sykdomRepository: SykdomRepository,
     private val bistandRepository: BistandRepository,
-    private val unleashGateway: UnleashGateway
-) : AvklaringsbehovsLøser<AvklarOvergangUføreEnkelLøsning> {
+) : AvklaringsbehovsLøser<AvklarOvergangUføreLøsning> {
 
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         overgangUforeRepository = repositoryProvider.provide(),
         sakRepository = repositoryProvider.provide(),
         sykdomRepository = repositoryProvider.provide(),
         bistandRepository = repositoryProvider.provide(),
-        unleashGateway = gatewayProvider.provide()
     )
 
     override fun løs(
         kontekst: AvklaringsbehovKontekst,
-        løsning: AvklarOvergangUføreEnkelLøsning
+        løsning: AvklarOvergangUføreLøsning
     ): LøsningsResultat {
-        val løsninger = løsning.løsningerForPerioder ?: listOf(requireNotNull(løsning.overgangUføreVurdering))
+        val løsninger = løsning.løsningerForPerioder
 
         val (behandlingId, sakId, forrigeBehandlingId) = kontekst.kontekst.let {
             Triple(
@@ -62,18 +58,15 @@ class AvklarOvergangUføreLøser(
         val nyeVurderinger = løsninger.map {
             it.tilOvergangUføreVurdering(
                 kontekst.bruker,
-                rettighetsperiode.fom,
                 behandlingId
             )
         }
-        
-        if (unleashGateway.isEnabled(BehandlingsflytFeature.ValiderOvergangUfore)) {
-            val nyTidslinje = OvergangUføreGrunnlag(
-                vurderinger = nyeVurderinger + vedtatteVurderinger
-            ).somOvergangUforevurderingstidslinje()
-            valider(behandlingId, rettighetsperiode.fom, nyTidslinje)
-        }
-        
+
+        val nyTidslinje = OvergangUføreGrunnlag(
+            vurderinger = nyeVurderinger + vedtatteVurderinger
+        ).somOvergangUforevurderingstidslinje()
+        valider(behandlingId, rettighetsperiode.fom, nyTidslinje)
+
         overgangUforeRepository.lagre(
             behandlingId = behandlingId,
             overgangUføreVurderinger = nyeVurderinger + vedtatteVurderinger

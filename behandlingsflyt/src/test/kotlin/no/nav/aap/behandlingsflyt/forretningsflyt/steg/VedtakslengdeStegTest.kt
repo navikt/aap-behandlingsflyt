@@ -127,7 +127,6 @@ class VedtakslengdeStegTest {
         steg.utfør(kontekst)
         
         assertThat(vedtakslengdeRepository.hentHvisEksisterer(inneværendeBehandling.id)).isNotNull
-        
     }
 
     private fun revurdering(

@@ -33,6 +33,22 @@ For macOS og Linux anbefaler vi Colima. Det kan være nødvendig med et par tilp
 - `export DOCKER_HOST=unix://$TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE`
 - `export TESTCONTAINERS_RYUK_DISABLED=true`
 
+### Code quality
+
+Prosjektet bruker [detekt](https://detekt.dev/) for statisk kodeanalyse. Detekt er automatisk aktivert på alle moduler.
+
+Kjør detekt på alle moduler:
+```bash
+./gradlew detekt
+```
+
+Eller på en spesifikk modul:
+```bash
+./gradlew kontrakt:detekt
+```
+
+Detekt-konfigurasjonen finnes i `config/detekt/detekt.yml`.
+
 ### Laste ned private pakker
 
 For at Gradle skal finne private pakker på Github, legg dette i `~/.gradle/gradle.properties`

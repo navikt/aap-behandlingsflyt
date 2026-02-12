@@ -121,7 +121,7 @@ public data class FagsysteminfoBehovV0(
     val hendelseOpprettet: LocalDateTime,
 ) : TilbakekrevingHendelse
 
-data class TilbakekrevingKafkaDto(
+public data class TilbakekrevingKafkaDto(
     val behandlingId: UUID,
     val sakOpprettet: LocalDateTime,
     val varselSendt: LocalDate?,

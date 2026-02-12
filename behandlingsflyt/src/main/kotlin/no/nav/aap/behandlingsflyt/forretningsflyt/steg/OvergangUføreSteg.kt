@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
@@ -19,12 +18,9 @@ import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.orEmpty
@@ -33,36 +29,25 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 
 class OvergangUføreSteg private constructor(
     private val vilkårsresultatRepository: VilkårsresultatRepository,
-    private val avklaringsbehovRepository: AvklaringsbehovRepository,
     private val sykdomRepository: SykdomRepository,
     private val overgangUføreRepository: OvergangUføreRepository,
     private val tidligereVurderinger: TidligereVurderinger,
     private val bistandRepository: BistandRepository,
-    private val behandlingRepository: BehandlingRepository,
     private val avklaringsbehovService: AvklaringsbehovService,
-    private val unleashGateway: UnleashGateway,
 ) : BehandlingSteg {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         vilkårsresultatRepository = repositoryProvider.provide(),
-        avklaringsbehovRepository = repositoryProvider.provide(),
         overgangUføreRepository = repositoryProvider.provide(),
         sykdomRepository = repositoryProvider.provide(),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
         bistandRepository = repositoryProvider.provide(),
-        behandlingRepository = repositoryProvider.provide(),
         avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
-        unleashGateway = gatewayProvider.provide(),
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val perioderSomIkkeErTilstrekkeligVurdert: () -> Set<Periode> =
-            if (unleashGateway.isEnabled(BehandlingsflytFeature.ValiderOvergangUfore)) {
-                { perioderSomIkkeErTilstrekkeligVurdert(kontekst) }
-            } else {
-                { emptySet() }
-            }
-
-        val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
+            { perioderSomIkkeErTilstrekkeligVurdert(kontekst) }
+        
         avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkårTilstrekkeligVurdert(
             kontekst = kontekst,
             definisjon = Definisjon.AVKLAR_OVERGANG_UFORE,
@@ -96,7 +81,7 @@ class OvergangUføreSteg private constructor(
 
             else -> {} // Do nothing
         }
-        
+
         return Fullført
     }
 

@@ -32,9 +32,17 @@ class ResultatUtleder(
         avbrytRevurderingService = AvbrytRevurderingService(repositoryProvider)
     )
 
-    fun utledResultat(behandlingId: BehandlingId): Resultat {
-        val behandling = behandlingRepository.hent(behandlingId)
-        return utledResultatFørstegangsBehandling(behandling)
+    fun utledResultat(behandling: Behandling): Resultat? {
+        return when (behandling.typeBehandling()) {
+            TypeBehandling.Førstegangsbehandling ->
+                utledResultatFørstegangsBehandling(behandling)
+
+            TypeBehandling.Revurdering ->
+                utledResultatRevurderingsBehandling(behandling)
+
+            else ->
+                error("Kan kun utlede resultat for ytelsesbehandlinger")
+        }
     }
 
     fun utledRevurderingResultat(behandlingId: BehandlingId): Resultat? {
@@ -52,6 +60,11 @@ class ResultatUtleder(
         }
 
         return null
+    }
+
+    fun utledResultatFørstegangsBehandling(behandlingId: BehandlingId): Resultat {
+        val behandling = behandlingRepository.hent(behandlingId)
+        return utledResultatFørstegangsBehandling(behandling)
     }
 
     @WithSpan

@@ -23,7 +23,7 @@ class GrunnlagetForBeregningen(
         inntekter.toSortedSet().reversed()
 
     init {
-        require(this.inntekter.size == 3) { "Må oppgi tre inntekter" }
+        require(this.inntekter.size == 3) { "Må oppgi tre inntekter, fikk ${this.inntekter.size}." }
         require(this.inntekter.first().år == this.inntekter.last().år.plusYears(2)) { "Inntektene må representere tre sammenhengende år" }
     }
 

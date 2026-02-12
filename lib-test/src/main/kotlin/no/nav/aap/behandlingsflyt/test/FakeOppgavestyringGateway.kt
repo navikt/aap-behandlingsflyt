@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.test
 
 import no.nav.aap.behandlingsflyt.hendelse.oppgavestyring.OppgavestyringGateway
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.BehandlingFlytStoppetHendelse
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.TilbakekrevingsbehandlingOppdatertHendelse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.TilbakekrevingHendelseKafkaMelding
 import no.nav.aap.behandlingsflyt.kontrakt.oppgave.EnhetNrDto
 import no.nav.aap.komponenter.gateway.Factory
@@ -13,7 +14,7 @@ class FakeOppgavestyringGateway : OppgavestyringGateway {
          */
     }
 
-    override fun varsleTilbakekrevingHendelse(hendelse: TilbakekrevingHendelseKafkaMelding) {
+    override fun varsleTilbakekrevingHendelse(hendelse: TilbakekrevingsbehandlingOppdatertHendelse) {
         /**
          * Noop
          */

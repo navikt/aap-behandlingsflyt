@@ -2,10 +2,10 @@ package no.nav.aap.behandlingsflyt.behandling.rettighetstype
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak.BRUKER_OVER_67
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak.HAR_RETT_TIL_FULLT_UTTAK_ALDERSPENSJON
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak.IKKE_BEHOV_FOR_OPPFOLGING
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak.VARIGHET_OVERSKREDET_OVERGANG_UFORE
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Innvilgelsesårsak
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Opphør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsperiode
@@ -15,7 +15,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype.ALDERSVILKÅRET
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype.BISTANDSVILKÅRET
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype.GRUNNLAGET
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype.INNTEKTSBORTFALL
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype.LOVVALG
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype.MEDLEMSKAP
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype.OVERGANGUFØREVILKÅRET
@@ -25,6 +24,7 @@ import no.nav.aap.behandlingsflyt.test.desember
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 
 class KravForRettighetsTypeTest {
@@ -54,46 +54,11 @@ class KravForRettighetsTypeTest {
             },
         )
 
-        assertTidslinje(
-            avslagsårsakerVedTapAvRettPåAAP(vilkårsresultat),
-            Periode(sisteDagAldersvilkåretOppfylt, sisteDagAldersvilkåretOppfylt) to {
-                assertThat(it).isEqualTo(setOf(BRUKER_OVER_67))
-            }
-        )
-    }
-
-    @Test
-    fun `ordinær AAP, hvor INNTEKTSBORTFALL ikke er oppfylt`() {
-        val kravdato = 1 januar 2025
-        val sisteVurdering = 17 desember 2026
-        val sisteDagInntektsbortfallVilkåretErOppfylt = 5 desember 2026
-        val rettighetsperiode = Periode(kravdato, sisteVurdering)
-
-        val vilkårsresultat = Vilkårsresultat()
-        vilkårsresultat.vurdertOppfylt(LOVVALG, rettighetsperiode)
-        vilkårsresultat.vurdertOppfylt(SYKDOMSVILKÅRET, rettighetsperiode)
-        vilkårsresultat.vurdertOppfylt(BISTANDSVILKÅRET, rettighetsperiode)
-        vilkårsresultat.vurdertOppfylt(MEDLEMSKAP, rettighetsperiode)
-        vilkårsresultat.vurdertOppfylt(GRUNNLAGET, rettighetsperiode)
-        vilkårsresultat.vurdertOppfylt(ALDERSVILKÅRET, rettighetsperiode)
-        vilkårsresultat.vurdertOppfylt(INNTEKTSBORTFALL, Periode(kravdato, sisteDagInntektsbortfallVilkåretErOppfylt))
-        vilkårsresultat.vurdertIkkeOppfylt(
-            INNTEKTSBORTFALL, Periode(sisteDagInntektsbortfallVilkåretErOppfylt.plusDays(1), sisteVurdering),
-            HAR_RETT_TIL_FULLT_UTTAK_ALDERSPENSJON
-        )
-
-        assertTidslinje(
-            vurderRettighetsType(vilkårsresultat),
-            Periode(kravdato, sisteDagInntektsbortfallVilkåretErOppfylt) to {
-                assertThat(it).isEqualTo(RettighetsType.BISTANDSBEHOV)
-            },
-        )
-
-        assertTidslinje(
-            avslagsårsakerVedTapAvRettPåAAP(vilkårsresultat),
-            Periode(sisteDagInntektsbortfallVilkåretErOppfylt, sisteDagInntektsbortfallVilkåretErOppfylt) to {
-                assertThat(it).isEqualTo(setOf(HAR_RETT_TIL_FULLT_UTTAK_ALDERSPENSJON))
-            }
+        assertEquals(
+            utledStansEllerOpphør(vilkårsresultat),
+            mapOf(
+                sisteDagAldersvilkåretOppfylt.plusDays(1) to Opphør(setOf(BRUKER_OVER_67))
+            )
         )
     }
 
@@ -129,15 +94,16 @@ class KravForRettighetsTypeTest {
             },
         )
 
-        assertTidslinje(
-            avslagsårsakerVedTapAvRettPåAAP(vilkårsresultat),
-            Periode(sisteDagOvergangUføre, sisteDagOvergangUføre) to {
-                /* Legg spesielt merke til at IKKE_BEHOV_FOR_OPPFOLGING
-                 * (bistandsbehovet) ikke er med her, selv om det
-                * vilkåret ikke er oppfylt. Det er fordi det vilkåret ikke var
-                * årsaken til at brukeren gikk fra å ha rett til å ikke ha rett.*/
-                assertThat(it).isEqualTo(setOf(VARIGHET_OVERSKREDET_OVERGANG_UFORE))
-            }
+        assertEquals(
+            utledStansEllerOpphør(vilkårsresultat),
+            mapOf(
+                sisteDagOvergangUføre.plusDays(1) to
+                        /* Legg spesielt merke til at IKKE_BEHOV_FOR_OPPFOLGING
+                         * (bistandsbehovet) ikke er med her, selv om det
+                        * vilkåret ikke er oppfylt. Det er fordi det vilkåret ikke var
+                        * årsaken til at brukeren gikk fra å ha rett til å ikke ha rett.*/
+                        Opphør(setOf(VARIGHET_OVERSKREDET_OVERGANG_UFORE))
+            )
         )
     }
 

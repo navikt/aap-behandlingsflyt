@@ -4,7 +4,6 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovServ
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.harPeriodeSomIkkeErOppfylt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
@@ -13,9 +12,6 @@ import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.orEmpty
@@ -26,36 +22,30 @@ class VurderSykdomSteg(
     private val sykdomRepository: SykdomRepository,
     private val tidligereVurderinger: TidligereVurderinger,
     private val avklaringsbehovService: AvklaringsbehovService,
-    private val unleashGateway: UnleashGateway,
 ) : BehandlingSteg {
     constructor(repositoryProvider: RepositoryProvider, gstewayProvider: GatewayProvider) : this(
         studentRepository = repositoryProvider.provide(),
         sykdomRepository = repositoryProvider.provide(),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
         avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
-        unleashGateway = gstewayProvider.provide(),
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        return if (unleashGateway.isDisabled(BehandlingsflytFeature.PeriodisertSykdom)) {
-            utførGammel(kontekst)
-        } else {
-            avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
-                definisjon = Definisjon.AVKLAR_SYKDOM,
-                tvingerAvklaringsbehov = kontekst.vurderingsbehovRelevanteForSteg,
-                nårVurderingErRelevant = ::perioderHvorSykdomsvurderingErRelevant,
-                nårVurderingErGyldig = { tilstrekkeligVurdert(kontekst) },
-                kontekst,
-                tilbakestillGrunnlag = {
-                    val vedtatteSykdomsvurderinger = kontekst.forrigeBehandlingId
-                        ?.let { sykdomRepository.hentHvisEksisterer(it) }
-                        ?.sykdomsvurderinger
-                        ?: emptyList()
-                    sykdomRepository.lagre(kontekst.behandlingId, vedtatteSykdomsvurderinger)
-                },
-            )
-            Fullført
-        }
+        avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
+            definisjon = Definisjon.AVKLAR_SYKDOM,
+            tvingerAvklaringsbehov = kontekst.vurderingsbehovRelevanteForSteg,
+            nårVurderingErRelevant = ::perioderHvorSykdomsvurderingErRelevant,
+            nårVurderingErGyldig = { tilstrekkeligVurdert(kontekst) },
+            kontekst,
+            tilbakestillGrunnlag = {
+                val vedtatteSykdomsvurderinger = kontekst.forrigeBehandlingId
+                    ?.let { sykdomRepository.hentHvisEksisterer(it) }
+                    ?.sykdomsvurderinger
+                    ?: emptyList()
+                sykdomRepository.lagre(kontekst.behandlingId, vedtatteSykdomsvurderinger)
+            },
+        )
+        return Fullført
     }
 
     private fun perioderHvorSykdomsvurderingErRelevant(kontekst: FlytKontekstMedPerioder): Tidslinje<Boolean> {
@@ -87,59 +77,6 @@ class VurderSykdomSteg(
         return sykdomGrunnlag?.somSykdomsvurderingstidslinje().orEmpty()
             .mapValue { it.vurderingenGjelderFra <= kontekst.rettighetsperiode.tom }
     }
-
-    fun utførGammel(kontekst: FlytKontekstMedPerioder): StegResultat {
-        avklaringsbehovService.oppdaterAvklaringsbehov(
-            definisjon = Definisjon.AVKLAR_SYKDOM,
-            vedtakBehøverVurdering = { vedtakBehøverVurderingGammel(kontekst) },
-            erTilstrekkeligVurdert = { tilstrekkeligVurdertGammel(kontekst) },
-            tilbakestillGrunnlag = {
-                val vedtatteSykdomsvurderinger = kontekst.forrigeBehandlingId
-                    ?.let { sykdomRepository.hentHvisEksisterer(it) }
-                    ?.sykdomsvurderinger.orEmpty()
-
-                sykdomRepository.lagre(kontekst.behandlingId, vedtatteSykdomsvurderinger)
-            },
-            kontekst
-        )
-        return Fullført
-    }
-
-    fun vedtakBehøverVurderingGammel(kontekst: FlytKontekstMedPerioder): Boolean {
-
-        return when (kontekst.vurderingType) {
-            VurderingType.FØRSTEGANGSBEHANDLING,
-            VurderingType.REVURDERING -> {
-                /* Hvordan håndtere periodisering av studentGrunnlag? */
-                val studentGrunnlag = studentRepository.hentHvisEksisterer(kontekst.behandlingId)
-
-                tidligereVurderinger.muligMedRettTilAAP(kontekst, type()) &&
-                        studentGrunnlag.harPeriodeSomIkkeErOppfylt() &&
-                        kontekst.vurderingsbehovRelevanteForSteg.isNotEmpty()
-            }
-            VurderingType.UTVID_VEDTAKSLENGDE,
-            VurderingType.MIGRER_RETTIGHETSPERIODE,
-            VurderingType.MELDEKORT -> false
-            VurderingType.AUTOMATISK_BREV -> false
-            VurderingType.IKKE_RELEVANT -> false
-            VurderingType.EFFEKTUER_AKTIVITETSPLIKT -> false
-            VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9 -> false
-        }
-    }
-
-    fun tilstrekkeligVurdertGammel(kontekst: FlytKontekstMedPerioder): Boolean {
-        val sykdomGrunnlag = sykdomRepository.hentHvisEksisterer(kontekst.behandlingId) ?: return false
-
-        val alleVurderingerErInnenforRettighetsperioden =
-            sykdomGrunnlag.sykdomsvurderingerVurdertIBehandling(kontekst.behandlingId)
-                .all { it.vurderingenGjelderFra <= kontekst.rettighetsperiode.tom }
-
-        return sykdomGrunnlag.sykdomsvurderinger.isNotEmpty()
-                && sykdomGrunnlag.somSykdomsvurderingstidslinje().helePerioden()
-            .inneholder(kontekst.rettighetsperiode)
-                && alleVurderingerErInnenforRettighetsperioden
-    }
-
 
     companion object : FlytSteg {
         override fun konstruer(

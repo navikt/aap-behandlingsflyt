@@ -1,16 +1,22 @@
 package no.nav.aap.behandlingsflyt.flyt
 
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarPeriodisertLovvalgMedlemskapLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.ForeslåVedtakLøsning
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companion.plussEtÅrMedHverdager
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.ÅrMedHverdager
 import no.nav.aap.behandlingsflyt.behandling.vedtakslengde.VedtakslengdeService
+import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.EØSLandEllerLandMedAvtale
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
+import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.LovvalgDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.MedlemskapDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.PeriodisertManuellVurderingForLovvalgMedlemskapDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeRepository
+import no.nav.aap.behandlingsflyt.flyt.TestSøknader.SØKNAD_INGEN_MEDLEMSKAP
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.prosessering.OpprettJobbUtvidVedtakslengdeJobbUtfører
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
@@ -28,7 +34,6 @@ import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.motor.FlytJobbRepositoryImpl
 import no.nav.aap.motor.JobbInput
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -36,18 +41,13 @@ import java.time.LocalDateTime
 object VedtakslengdeUnleash : FakeUnleashBaseWithDefaultDisabled(
     enabledFlags = listOf(
         BehandlingsflytFeature.UtvidVedtakslengdeJobb,
+        BehandlingsflytFeature.ForenkletKvote
     )
 )
 
 class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(VedtakslengdeUnleash::class) {
 
     private val clock = fixedClock(1 desember 2025)
-
-    // TODO kan fjernes når vi ikke lenger har miljøspesifikke filter i OpprettJobbUtvidVedtakslengdeJobbUtfører
-    @BeforeEach
-    fun setup() {
-        System.setProperty("NAIS_CLUSTER_NAME", "LOCAL")
-    }
 
     @Test
     fun `forleng vedtak med passert slutt uten eksplisitt sluttdato`() {
@@ -139,8 +139,162 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(VedtakslengdeUnleash::
                 aldersvilkåret.tidslinje().segmenter().filter { it.verdi.utfall == Utfall.OPPFYLT }
                     .maxOfOrNull { it.periode.tom })
         }
-
     }
+
+    @Test
+    fun `forlenger ikke vedtak med avslag`() {
+        val søknadstidspunkt = LocalDateTime.now(clock).minusYears(1)
+        val (sak, førstegangsbehandling) = sendInnFørsteSøknad(søknad = SØKNAD_INGEN_MEDLEMSKAP, mottattTidspunkt = søknadstidspunkt)
+        val rettighetsperiode = sak.rettighetsperiode
+
+        førstegangsbehandling
+            .løsLovvalg(rettighetsperiode.fom, medlem = false)
+            .løsAvklaringsBehov(ForeslåVedtakLøsning())
+            .fattVedtak()
+            .løsVedtaksbrev(TypeBrev.VEDTAK_AVSLAG)
+
+
+       dataSource.transaction { connection ->
+            val førstegangsbehandling = BehandlingRepositoryImpl(connection).finnFørstegangsbehandling(sak.id)!!
+
+            val underveisGrunnlag = UnderveisRepositoryImpl(connection).hentHvisEksisterer(førstegangsbehandling.id)
+            val sisteUnderveisperiode = underveisGrunnlag?.perioder?.maxBy { it.periode.fom }!!
+            assertThat(sisteUnderveisperiode.periode.tom).isEqualTo(rettighetsperiode.fom.plussEtÅrMedHverdager(ÅrMedHverdager.FØRSTE_ÅR))
+            assertThat(sisteUnderveisperiode.utfall).isEqualTo(Utfall.IKKE_OPPFYLT)
+            assertThat(sisteUnderveisperiode.rettighetsType).isEqualTo(null)
+        }
+
+        dataSource.transaction { connection ->
+            val repositoryProvider = postgresRepositoryRegistry.provider(connection)
+
+            val opprettJobbUtvidVedtakslengdeJobbUtfører = `OpprettJobbUtvidVedtakslengdeJobbUtfører`(
+                sakOgBehandlingService = SakOgBehandlingService(repositoryProvider, gatewayProvider),
+                vedtakslengdeService = VedtakslengdeService(repositoryProvider, gatewayProvider),
+                flytJobbRepository = FlytJobbRepositoryImpl(connection),
+                unleashGateway = VedtakslengdeUnleash,
+                clock = clock,
+            )
+
+            opprettJobbUtvidVedtakslengdeJobbUtfører.utfør(JobbInput(OpprettJobbUtvidVedtakslengdeJobbUtfører))
+        }
+
+        motor.kjørJobber()
+
+        dataSource.transaction { connection ->
+            val behandlingMedSisteFattedeVedtak = SakOgBehandlingService(
+                postgresRepositoryRegistry.provider(connection),
+                gatewayProvider
+            ).finnBehandlingMedSisteFattedeVedtak(sak.id)!!
+
+            assertThat(behandlingMedSisteFattedeVedtak.id).isEqualTo(førstegangsbehandling.id)
+        }
+    }
+
+    @Test
+    fun `forlenger ikke vedtak med passert slutt hvor rettighetstype bistand ikke er oppfylt hele neste forlengelsesperiode`() {
+        val søknadstidspunkt = LocalDateTime.now(clock).minusYears(1)
+        val (sak, førstegangsbehandling) = sendInnFørsteSøknad(søknad = SØKNAD_INGEN_MEDLEMSKAP, mottattTidspunkt = søknadstidspunkt)
+        val rettighetsperiode = sak.rettighetsperiode
+        val startDato = sak.rettighetsperiode.fom
+        val datoMedlemskapIkkeOppfyltFra = sak.rettighetsperiode.fom.plusYears(1).plusMonths(6)
+        val datoMedlemskapIkkeOppfyltTil = sak.rettighetsperiode.fom.plusYears(1).plusMonths(7).minusDays(1)
+
+        førstegangsbehandling
+            .løsAvklaringsBehov(
+                AvklarPeriodisertLovvalgMedlemskapLøsning(
+                    løsningerForPerioder = listOf(
+                        PeriodisertManuellVurderingForLovvalgMedlemskapDto(
+                            fom = sak.rettighetsperiode.fom,
+                            tom = datoMedlemskapIkkeOppfyltFra.minusDays(1),
+                            begrunnelse = "lovvalg ok",
+                            lovvalg = LovvalgDto("begrunnelse", EØSLandEllerLandMedAvtale.NOR),
+                            medlemskap = MedlemskapDto("begrunnelse", true),
+                        ),
+                        PeriodisertManuellVurderingForLovvalgMedlemskapDto(
+                            fom = datoMedlemskapIkkeOppfyltFra,
+                            tom = datoMedlemskapIkkeOppfyltTil,
+                            begrunnelse = "ikke lenger oppfylt",
+                            lovvalg = LovvalgDto("begrunnelse", EØSLandEllerLandMedAvtale.NOR),
+                            medlemskap = MedlemskapDto("begrunnelse", false),
+                        ),
+                        PeriodisertManuellVurderingForLovvalgMedlemskapDto(
+                            fom = datoMedlemskapIkkeOppfyltTil.plusDays(1),
+                            tom = rettighetsperiode.tom,
+                            begrunnelse = "lovvalg ok",
+                            lovvalg = LovvalgDto("begrunnelse", EØSLandEllerLandMedAvtale.NOR),
+                            medlemskap = MedlemskapDto("begrunnelse", false),
+                        )
+                    )
+                )
+            )
+            .løsSykdom(startDato)
+            .løsBistand(startDato)
+            .løsRefusjonskrav()
+            .løsSykdomsvurderingBrev()
+            .kvalitetssikreOk()
+            .løsBeregningstidspunkt(startDato)
+            .løsForutgåendeMedlemskap(startDato, medlem = true)
+            .løsOppholdskrav(startDato)
+            .løsAndreStatligeYtelser()
+            .løsAvklaringsBehov(ForeslåVedtakLøsning())
+            .fattVedtak()
+            .løsVedtaksbrev(TypeBrev.VEDTAK_INNVILGELSE)
+
+
+        val sluttdatoFørstegangsbehandling = dataSource.transaction { connection ->
+            val førstegangsbehandling = BehandlingRepositoryImpl(connection).finnFørstegangsbehandling(sak.id)!!
+
+            val underveisGrunnlag = UnderveisRepositoryImpl(connection).hentHvisEksisterer(førstegangsbehandling.id)
+            val sisteUnderveisperiode = underveisGrunnlag?.perioder?.maxBy { it.periode.fom }!!
+            assertThat(sisteUnderveisperiode.periode.tom).isEqualTo(rettighetsperiode.fom.plussEtÅrMedHverdager(ÅrMedHverdager.FØRSTE_ÅR))
+            assertThat(sisteUnderveisperiode.utfall).isEqualTo(Utfall.OPPFYLT)
+            assertThat(sisteUnderveisperiode.rettighetsType).isEqualTo(RettighetsType.BISTANDSBEHOV)
+
+            val rettighetstypeTidslinje =
+                VilkårsresultatRepositoryImpl(connection).hent(førstegangsbehandling.id).rettighetstypeTidslinje()
+
+            // Rettighetstidslinjen begrenses av lovvalgsvilkåret
+            val lovvalgsvilkåret = VilkårsresultatRepositoryImpl(connection).hent(førstegangsbehandling.id)
+                .finnVilkår(Vilkårtype.LOVVALG)
+
+            assertThat(rettighetstypeTidslinje.perioder().maxOfOrNull { it.tom }).isEqualTo(
+                lovvalgsvilkåret.tidslinje().segmenter().filter { it.verdi.utfall == Utfall.OPPFYLT }
+                    .maxOfOrNull { it.periode.tom })
+
+            sisteUnderveisperiode.periode.tom
+        }
+
+        dataSource.transaction { connection ->
+            val repositoryProvider = postgresRepositoryRegistry.provider(connection)
+
+            val opprettJobbUtvidVedtakslengdeJobbUtfører = `OpprettJobbUtvidVedtakslengdeJobbUtfører`(
+                sakOgBehandlingService = SakOgBehandlingService(repositoryProvider, gatewayProvider),
+                vedtakslengdeService = VedtakslengdeService(repositoryProvider, gatewayProvider),
+                flytJobbRepository = FlytJobbRepositoryImpl(connection),
+                unleashGateway = VedtakslengdeUnleash,
+                clock = clock,
+            )
+
+            opprettJobbUtvidVedtakslengdeJobbUtfører.utfør(JobbInput(OpprettJobbUtvidVedtakslengdeJobbUtfører))
+        }
+
+        motor.kjørJobber()
+
+        dataSource.transaction { connection ->
+            val behandlingMedSisteFattedeVedtak = SakOgBehandlingService(
+                postgresRepositoryRegistry.provider(connection),
+                gatewayProvider
+            ).finnBehandlingMedSisteFattedeVedtak(sak.id)!!
+
+            val vedtakslengdeVurdering = VedtakslengdeRepositoryImpl(connection).hentHvisEksisterer(behandlingMedSisteFattedeVedtak.id)
+            assertThat(vedtakslengdeVurdering).isNull()
+
+            val underveisGrunnlag = UnderveisRepositoryImpl(connection).hentHvisEksisterer(behandlingMedSisteFattedeVedtak.id)
+            val sisteUnderveisperiode = underveisGrunnlag?.perioder?.maxBy { it.periode.fom }!!
+            assertThat(sisteUnderveisperiode.periode.tom).isEqualTo(sluttdatoFørstegangsbehandling)
+        }
+    }
+
 
     @Test
     fun `forleng også vedtak i åpen behandling dersom vedtaksutvidelse-jobb kjører`() {

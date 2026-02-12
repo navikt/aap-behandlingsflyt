@@ -7,6 +7,7 @@ import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurdering
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.GraderingGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.MINSTE_ÅRLIG_YTELSE_TIDSLINJE
+import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Minstesats
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Tilkjent
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelsePeriode
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
@@ -39,6 +40,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdomsvurderingbr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.UføreSøknadVedtakResultat
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
@@ -283,7 +285,7 @@ class BrevUtlederServiceTest {
                     OvergangUføreVurdering(
                         begrunnelse = "test",
                         brukerHarSøktOmUføretrygd = true,
-                        brukerHarFåttVedtakOmUføretrygd = "nei",
+                        brukerHarFåttVedtakOmUføretrygd = UføreSøknadVedtakResultat.NEI,
                         brukerRettPåAAP = true,
                         fom = kravdatoUføretrygd,
                         tom = sisteDagMedYtelse,
@@ -357,7 +359,7 @@ class BrevUtlederServiceTest {
                     OvergangUføreVurdering(
                         begrunnelse = "test",
                         brukerHarSøktOmUføretrygd = true,
-                        brukerHarFåttVedtakOmUføretrygd = "nei",
+                        brukerHarFåttVedtakOmUføretrygd = UføreSøknadVedtakResultat.NEI,
                         brukerRettPåAAP = true,
                         fom = kravdatoUføretrygd,
                         tom = sisteDagMedYtelse,
@@ -964,7 +966,9 @@ class BrevUtlederServiceTest {
             antallBarn = 0,
             barnetilleggsats = Beløp(0),
             barnetillegg = Beløp(0),
-            utbetalingsdato = utbetalingsdato
+            utbetalingsdato = utbetalingsdato,
+            minsteSats = Minstesats.IKKE_MINSTESATS,
+            redusertDagsats = dagsats
         )
     }
 }

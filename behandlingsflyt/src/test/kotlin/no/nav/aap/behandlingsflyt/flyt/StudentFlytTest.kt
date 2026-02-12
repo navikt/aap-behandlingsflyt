@@ -15,7 +15,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.test.november
 import no.nav.aap.behandlingsflyt.test.oktober
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.type.Periode
@@ -100,18 +99,7 @@ class StudentFlytTest(val unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             )
 
         // Revurdering
-        val relevanteVurderingsbehov =
-            unleashGateway.objectInstance!!.isDisabled(BehandlingsflytFeature.PeriodisertSykdom)
-                .let {
-                    if (it) {
-                        listOf(
-                            Vurderingsbehov.REVURDER_STUDENT,
-                            Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND
-                        ) // Vi kan ikke detektere behovet for ikke-perodisert sykdom, og må derfor eksplisitt revurdere på sykdom også
-                    } else {
-                        listOf(Vurderingsbehov.REVURDER_STUDENT)
-                    }
-                }
+        val relevanteVurderingsbehov = listOf(Vurderingsbehov.REVURDER_STUDENT)
 
         sak.opprettManuellRevurdering(
             relevanteVurderingsbehov,

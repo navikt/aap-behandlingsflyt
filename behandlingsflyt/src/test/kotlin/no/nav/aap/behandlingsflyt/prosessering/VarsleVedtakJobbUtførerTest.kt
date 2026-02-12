@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.GraderingGrunnlag
+import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Minstesats
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Tilkjent
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
@@ -70,6 +71,8 @@ class VarsleVedtakJobbUtførerTest {
             barnetilleggsats = Beløp(0),
             barnetillegg = Beløp(0),
             utbetalingsdato = LocalDate.now(),
+            minsteSats = Minstesats.MINSTESATS_UNDER_25,
+            redusertDagsats = Beløp(100),
         )
 
         val periode = Periode(LocalDate.now(), LocalDate.now())

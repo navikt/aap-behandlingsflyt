@@ -8,18 +8,12 @@ enum class BehandlingsflytFeature : FeatureToggle {
     // Se: https://aap-unleash-web.iap.nav.cloud.nais.io/projects/default
     IngenValidering,
     NyBrevtype11_17,
-    OvergangArbeid,
     NyBrevbyggerV3,
     LagreVedtakIFatteVedtak,
-    PeriodisertSykepengeErstatningNyAvklaringsbehovService,
     Under18,
-    ValiderOvergangUfore,
     MigrerMeldepliktFritak,
     SosialRefusjon,
-    MigrerRettighetsperiode,
-    HentSykepengerVedOverlapp,
     SendBrevVedMottattKlage,
-    PeriodisertSykdom,
     ForlengelseIManuellBehandling,
     UtvidVedtakslengdeJobb,
     InstitusjonsoppholdJobb,
@@ -29,7 +23,9 @@ enum class BehandlingsflytFeature : FeatureToggle {
     PapirMeldekortFraBehandingsflyt,
     RettighetstypeSteg,
     VirksomhetsEtablering,
-    KvalitetssikringVed2213
+    KvalitetssikringVed2213,
+    tilbakekrevingsOppgaverTilOppgave,
+    PeriodiseringHelseinstitusjonOpphold
     ;
 
     override fun key(): String = name
