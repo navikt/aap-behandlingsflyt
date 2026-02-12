@@ -1,12 +1,14 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis
 
 import no.nav.aap.behandlingsflyt.behandling.institusjonsopphold.InstitusjonsoppholdUtlederService
+import no.nav.aap.behandlingsflyt.behandling.institusjonsopphold.InstitusjonsoppholdUtlederServiceNy
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.VirkningstidspunktUtleder
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.AapEtterRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FastsettGrenseverdiArbeidRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.GraderingArbeidRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companion.plussEtÅrMedHverdager
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.InstitusjonRegel
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.InstitusjonRegelNy
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MapInstitusjonoppholdTilRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.UnderveisInput
@@ -16,6 +18,7 @@ import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Vurdering
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.ÅrMedHverdager
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.meldeperiode.MeldeperiodeRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.rettighetstype.RettighetstypeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
@@ -54,6 +57,7 @@ class UnderveisService(
     private val meldekortRepository: MeldekortRepository,
     private val underveisRepository: UnderveisRepository,
     private val institusjonsoppholdUtlederService: InstitusjonsoppholdUtlederService,
+    private val institusjonsoppholdUtlederServiceNy: InstitusjonsoppholdUtlederServiceNy,
     private val arbeidsevneRepository: ArbeidsevneRepository,
     private val meldepliktRepository: MeldepliktRepository,
     private val overstyringMeldepliktRepository: OverstyringMeldepliktRepository,
@@ -62,7 +66,8 @@ class UnderveisService(
     private val vedtakService: VedtakService,
     private val vedtakslengdeRepository: VedtakslengdeRepository,
     private val behandlingRepository: BehandlingRepository,
-    private val unleashGateway: UnleashGateway
+    private val unleashGateway: UnleashGateway,
+    private val rettighetstypeRepository: RettighetstypeRepository
 ) {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         sakService = SakService(repositoryProvider),
@@ -70,6 +75,7 @@ class UnderveisService(
         meldekortRepository = repositoryProvider.provide(),
         underveisRepository = repositoryProvider.provide(),
         institusjonsoppholdUtlederService = InstitusjonsoppholdUtlederService(repositoryProvider),
+        institusjonsoppholdUtlederServiceNy = InstitusjonsoppholdUtlederServiceNy(repositoryProvider),
         arbeidsevneRepository = repositoryProvider.provide(),
         meldepliktRepository = repositoryProvider.provide(),
         meldeperiodeRepository = repositoryProvider.provide(),
@@ -79,6 +85,7 @@ class UnderveisService(
         vedtakslengdeRepository = repositoryProvider.provide(),
         behandlingRepository = repositoryProvider.provide(),
         unleashGateway = gatewayProvider.provide(),
+        rettighetstypeRepository = repositoryProvider.provide()
     )
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -86,35 +93,6 @@ class UnderveisService(
     private val kvoteService = KvoteService()
 
     companion object {
-        private val regelset = listOf(
-            AapEtterRegel(),
-            UtledMeldeperiodeRegel(),
-            InstitusjonRegel(),
-            MeldepliktRegel(),
-            FastsettGrenseverdiArbeidRegel(),
-            GraderingArbeidRegel(),
-            VarighetRegel(),
-        )
-
-        init {
-            fun sjekkAvhengighet(forventetFør: KClass<*>, forventetEtter: KClass<*>) {
-                val offset1 = regelset.indexOfFirst { it::class == forventetFør }
-                val offset2 = regelset.indexOfFirst { it::class == forventetEtter }
-                check(offset1 != -1) { "Regel ${forventetFør.qualifiedName} er ikke med" }
-                check(offset2 != -1) { "Regel ${forventetEtter.qualifiedName} er ikke med" }
-                check(offset1 < offset2) {
-                    "Regel ${forventetFør.qualifiedName} må ha kjørt før ${forventetEtter.qualifiedName}, men er kjørt etter"
-                }
-            }
-
-            sjekkAvhengighet(forventetFør = UtledMeldeperiodeRegel::class, forventetEtter = MeldepliktRegel::class)
-            sjekkAvhengighet(forventetFør = UtledMeldeperiodeRegel::class, forventetEtter = GraderingArbeidRegel::class)
-            sjekkAvhengighet(
-                forventetFør = FastsettGrenseverdiArbeidRegel::class,
-                forventetEtter = GraderingArbeidRegel::class
-            )
-        }
-
         fun tilUnderveisperioder(vurderRegler: Tidslinje<Vurdering>): List<Underveisperiode> = vurderRegler.segmenter()
             .map {
                 Underveisperiode(
@@ -135,7 +113,39 @@ class UnderveisService(
                         Prosent.`100_PROSENT`
                 )
             }
+    }
 
+    private val regelset = listOf(
+        AapEtterRegel(),
+        UtledMeldeperiodeRegel(),
+        if (unleashGateway.isEnabled(BehandlingsflytFeature.PeriodiseringHelseinstitusjonOpphold)) {
+            InstitusjonRegelNy()
+        } else {
+            InstitusjonRegel()
+        },
+        MeldepliktRegel(),
+        FastsettGrenseverdiArbeidRegel(),
+        GraderingArbeidRegel(),
+        VarighetRegel(),
+    )
+
+    init {
+        fun sjekkAvhengighet(forventetFør: KClass<*>, forventetEtter: KClass<*>) {
+            val offset1 = regelset.indexOfFirst { it::class == forventetFør }
+            val offset2 = regelset.indexOfFirst { it::class == forventetEtter }
+            check(offset1 != -1) { "Regel ${forventetFør.qualifiedName} er ikke med" }
+            check(offset2 != -1) { "Regel ${forventetEtter.qualifiedName} er ikke med" }
+            check(offset1 < offset2) {
+                "Regel ${forventetFør.qualifiedName} må ha kjørt før ${forventetEtter.qualifiedName}, men er kjørt etter"
+            }
+        }
+
+        sjekkAvhengighet(forventetFør = UtledMeldeperiodeRegel::class, forventetEtter = MeldepliktRegel::class)
+        sjekkAvhengighet(forventetFør = UtledMeldeperiodeRegel::class, forventetEtter = GraderingArbeidRegel::class)
+        sjekkAvhengighet(
+            forventetFør = FastsettGrenseverdiArbeidRegel::class,
+            forventetEtter = GraderingArbeidRegel::class
+        )
     }
 
     fun vurder(sakId: SakId, behandlingId: BehandlingId): Tidslinje<Vurdering> {
@@ -165,7 +175,11 @@ class UnderveisService(
         val innsendingsTidspunkt = meldekortGrunnlag?.innsendingsdatoPerMelding().orEmpty()
         val kvote = kvoteService.beregn()
         val utlederResultat =
-            institusjonsoppholdUtlederService.utled(behandlingId, begrensetTilRettighetsperiode = false)
+            if (unleashGateway.isEnabled(BehandlingsflytFeature.PeriodiseringHelseinstitusjonOpphold)) {
+                institusjonsoppholdUtlederServiceNy.utled(behandlingId, begrensetTilRettighetsperiode = false)
+            } else {
+                institusjonsoppholdUtlederService.utled(behandlingId, begrensetTilRettighetsperiode = false)
+            }
 
         val institusjonsopphold = MapInstitusjonoppholdTilRegel.map(utlederResultat)
 
@@ -186,6 +200,7 @@ class UnderveisService(
 
         val vedtaksdatoFørstegangsbehandling = vedtakService.vedtakstidspunktFørstegangsbehandling(sakId)
 
+        val rettighetstypeGrunnlag = rettighetstypeRepository.hentHvisEksisterer(behandlingId)
 
         return UnderveisInput(
             periodeForVurdering = periodeForVurdering,
@@ -200,6 +215,7 @@ class UnderveisService(
             overstyringMeldepliktGrunnlag = overstyringMeldepliktGrunnlag,
             meldeperioder = meldeperioder,
             vedtaksdatoFørstegangsbehandling = vedtaksdatoFørstegangsbehandling?.toLocalDate(),
+            rettighetstypeGrunnlag = rettighetstypeGrunnlag,
             forenkletKvoteFeature = unleashGateway.isEnabled(BehandlingsflytFeature.ForenkletKvote),
         )
     }
@@ -225,7 +241,7 @@ class UnderveisService(
         val kalkulertSluttdatoForBehandlingen = maxOf(sak.rettighetsperiode.fom, startdatoForBehandlingen)
             .plussEtÅrMedHverdager(ÅrMedHverdager.FØRSTE_ÅR)
 
-        val sistVedtatteUnderveisperiode = if (behandlingId.toLong() == 29634L) null else sistVedtatteUnderveisperiode(behandlingId)
+        val sistVedtatteUnderveisperiode = sistVedtatteUnderveisperiode(behandlingId)
         val sluttDatoForBehandlingen =
             listOfNotNull(sistVedtatteUnderveisperiode, kalkulertSluttdatoForBehandlingen).max()
 

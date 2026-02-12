@@ -24,7 +24,6 @@ import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.JobbInput
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import java.time.LocalDate
@@ -36,7 +35,6 @@ object VedtakslengdeUnleash : FakeUnleashBaseWithDefaultDisabled(
     )
 )
 
-@ExtendWith(MockKExtension::class)
 class OpprettJobbUtvidVedtakslengdeJobbUtførerTest {
 
     private val dagensDato = 1 desember 2025
@@ -56,12 +54,6 @@ class OpprettJobbUtvidVedtakslengdeJobbUtførerTest {
             unleashGateway = VedtakslengdeUnleash,
             clock = clock
         )
-
-    // TODO kan fjernes når vi ikke lenger har miljøspesifikke filter i OpprettJobbUtvidVedtakslengdeJobbUtfører
-    @BeforeEach
-    fun setup() {
-        System.setProperty("NAIS_CLUSTER_NAME", "LOCAL")
-    }
 
     @Test
     fun `skal opprette jobber for behandlinger hvor vedtakslengde skal forlenges`() {
@@ -85,6 +77,17 @@ class OpprettJobbUtvidVedtakslengdeJobbUtførerTest {
     @Test
     fun `skal ikke opprette jobber hvis ingen saker returneres`() {
         every { vedtakslengdeService.hentSakerAktuelleForUtvidelseAvVedtakslengde(any()) } returns emptySet()
+
+        opprettJobbUtvidVedtakslengdeJobbUtfører.utfør(jobbInput)
+
+        verify(exactly = 0) { flytJobbRepository.leggTil(any()) }
+    }
+
+    @Test
+    fun `skal ikke opprette jobber hvis skalUtvideSluttdato er false`() {
+        every { vedtakslengdeService.hentSakerAktuelleForUtvidelseAvVedtakslengde(any()) } returns setOf(sakId)
+        every { vedtakslengdeService.skalUtvideSluttdato(behandlingId, behandlingId, any<LocalDate>())} returns false
+        every { sakOgBehandlingService.finnBehandlingMedSisteFattedeVedtak(sakId) } returns behandlingMedVedtak()
 
         opprettJobbUtvidVedtakslengdeJobbUtfører.utfør(jobbInput)
 

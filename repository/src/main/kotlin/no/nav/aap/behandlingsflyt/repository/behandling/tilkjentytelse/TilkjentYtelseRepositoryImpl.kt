@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.repository.behandling.tilkjentytelse
 
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.GraderingGrunnlag
+import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Minstesats
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Tilkjent
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelsePeriode
@@ -61,6 +62,8 @@ class TilkjentYtelseRepositoryImpl(private val connection: DBConnection) :
                         barnetilleggsats = Beløp(it.getInt("BARNETILLEGGSATS")),
                         grunnbeløp = Beløp(it.getInt("GRUNNBELOP")),
                         utbetalingsdato = it.getLocalDate("UTBETALINGSDATO"),
+                        minsteSats = it.getStringOrNull("MINSTESATS")?.let { Minstesats.valueOf(it) } ?: Minstesats.IKKE_MINSTESATS, // Hva skal være verdi her?
+                        redusertDagsats = it.getBigDecimalOrNull("redusert_dagsats")?.let(::Beløp)
                     )
                 )
             }
@@ -147,8 +150,8 @@ class TilkjentYtelseRepositoryImpl(private val connection: DBConnection) :
                                           GRUNNLAGSFAKTOR, GRUNNLAG, ANTALL_BARN, BARNETILLEGGSATS, GRUNNBELOP, 
                                           UTBETALINGSDATO, SAMORDNING_GRADERING, INSTITUSJON_GRADERING, ARBEID_GRADERING,
                                            SAMORDNING_UFORE_GRADERING, SAMORDNING_ARBEIDSGIVER_GRADERING, 
-                                           MELDEPLIKT_GRADERING)
-            VALUES (?, ?::daterange, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                                           MELDEPLIKT_GRADERING, MINSTESATS, REDUSERT_DAGSATS)
+            VALUES (?, ?::daterange, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """.trimIndent()
         ) {
             setParams {
@@ -169,6 +172,8 @@ class TilkjentYtelseRepositoryImpl(private val connection: DBConnection) :
                 setInt(15, tilkjent.graderingGrunnlag.samordningUføregradering.prosentverdi())
                 setInt(16, tilkjent.graderingGrunnlag.samordningArbeidsgiverGradering.prosentverdi())
                 setInt(17, tilkjent.graderingGrunnlag.meldepliktGradering.prosentverdi())
+                setEnumName(18, tilkjent.minsteSats)
+                setBigDecimal(19, tilkjent.redusertDagsats().verdi())
             }
         }
     }

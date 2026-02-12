@@ -37,7 +37,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedP
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
-import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.tidslinje.somTidslinje
@@ -47,10 +47,15 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import org.junit.jupiter.params.ParameterizedClass
+import org.junit.jupiter.params.provider.MethodSource
 import java.time.LocalDate
+import kotlin.reflect.KClass
 
 
-class RettighetsperiodeFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class){
+@ParameterizedClass
+@MethodSource("unleashTestDataSource")
+class RettighetsperiodeFlytTest(val unleashGateway: KClass<UnleashGateway>) : AbstraktFlytOrkestratorTest(unleashGateway) {
 
     @Test
     fun `Skal ikke kunne overstyre rettighetsperioden på en revurdering ved å innskrenke fra søknadsdato`() {
@@ -112,9 +117,6 @@ class RettighetsperiodeFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleas
                 assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
             }
             .løsRettighetsperiode(andreOverstyring)
-            .løsSykdom(sak.rettighetsperiode.fom)
-            .løsBistand(sak.rettighetsperiode.fom)
-            .løsSykdomsvurderingBrev()
             .løsBeregningstidspunkt(LocalDate.now())
             .løsUtenSamordning()
             .løsAndreStatligeYtelser()

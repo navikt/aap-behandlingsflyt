@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.behandling.institusjonsopphold.Institusjonsopp
 import no.nav.aap.behandlingsflyt.behandling.underveis.Kvoter
 import no.nav.aap.behandlingsflyt.behandling.underveis.tomKvoter
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.meldeperiode.MeldeperiodeUtleder
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.rettighetstype.RettighetstypeGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkår
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsperiode
@@ -42,6 +43,8 @@ fun tomUnderveisInput(
     overstyringMeldepliktGrunnlag: OverstyringMeldepliktGrunnlag = OverstyringMeldepliktGrunnlag(emptyList()),
     meldeperioder: List<Periode> = MeldeperiodeUtleder.utledMeldeperiode(null, rettighetsperiode),
     vedtaksdatoFørstegangsbehandling: LocalDate? = rettighetsperiode.fom,
+    rettighetstypeGrunnlag: RettighetstypeGrunnlag? = null,
+    forenkletKvoteFeature: Boolean = false
 ): UnderveisInput {
     return UnderveisInput(
         periodeForVurdering = rettighetsperiode,
@@ -56,6 +59,8 @@ fun tomUnderveisInput(
         overstyringMeldepliktGrunnlag = overstyringMeldepliktGrunnlag,
         meldeperioder = meldeperioder,
         vedtaksdatoFørstegangsbehandling = vedtaksdatoFørstegangsbehandling,
+        rettighetstypeGrunnlag = rettighetstypeGrunnlag,
+        forenkletKvoteFeature = forenkletKvoteFeature
     )
 }
 

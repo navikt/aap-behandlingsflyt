@@ -81,7 +81,7 @@ complexity:
     allowedComplexity: 15
   ComplexCondition:
     active: true
-    allowedConditions: 3
+    allowedConditions: 4
   ComplexInterface:
     active: false
     allowedDefinitions: 10

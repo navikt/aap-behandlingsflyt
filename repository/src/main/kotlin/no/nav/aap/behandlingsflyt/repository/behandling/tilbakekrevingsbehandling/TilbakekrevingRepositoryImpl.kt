@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.repository.behandling.tilbakekrevingsbehandling
 
-import no.nav.aap.behandlingsflyt.behandling.tilbakekrevingsbehandling.Tilbakekrevingsbehandling
 import no.nav.aap.behandlingsflyt.behandling.tilbakekrevingsbehandling.TilbakekrevingRepository
+import no.nav.aap.behandlingsflyt.behandling.tilbakekrevingsbehandling.Tilbakekrevingsbehandling
 import no.nav.aap.behandlingsflyt.behandling.tilbakekrevingsbehandling.Tilbakekrevingshendelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
@@ -9,6 +9,7 @@ import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.lookup.repository.Factory
 import java.net.URI
+import java.util.*
 
 class TilbakekrevingRepositoryImpl(private val connection: DBConnection) : TilbakekrevingRepository {
 
@@ -128,7 +129,7 @@ class TilbakekrevingRepositoryImpl(private val connection: DBConnection) : Tilba
 
         }
     }
-    override fun hent(tilbakekrevingsBehandlingId: String): Tilbakekrevingsbehandling{
+    override fun hent(tilbakekrevingsBehandlingId: UUID): Tilbakekrevingsbehandling{
         val sql = """
             SELECT
                 TILBAKEKREVING_BEHANDLING_ID,
@@ -147,7 +148,7 @@ class TilbakekrevingRepositoryImpl(private val connection: DBConnection) : Tilba
 
         return connection.queryFirst(sql) {
             setParams {
-                setString(1, tilbakekrevingsBehandlingId)
+                setUUID(1, tilbakekrevingsBehandlingId)
             }
             setRowMapper { row ->
                 Tilbakekrevingsbehandling(

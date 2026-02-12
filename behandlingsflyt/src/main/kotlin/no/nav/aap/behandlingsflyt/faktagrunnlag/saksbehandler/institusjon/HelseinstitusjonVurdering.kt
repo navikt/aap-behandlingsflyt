@@ -1,6 +1,8 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon
 
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.type.Periode
+import java.time.LocalDateTime
 
 data class HelseinstitusjonVurdering(
     val begrunnelse: String,
@@ -8,4 +10,7 @@ data class HelseinstitusjonVurdering(
     val forsoergerEktefelle: Boolean? = null,
     val harFasteUtgifter: Boolean? = null,
     val periode: Periode,
+    val vurdertIBehandling: BehandlingId? = null,
+    val vurdertAv: String? = null,
+    val vurdertTidspunkt: LocalDateTime?
 )

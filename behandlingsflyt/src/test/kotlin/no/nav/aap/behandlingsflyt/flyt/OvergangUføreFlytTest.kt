@@ -3,11 +3,10 @@ package no.nav.aap.behandlingsflyt.flyt
 import no.nav.aap.behandlingsflyt.behandling.Resultat
 import no.nav.aap.behandlingsflyt.behandling.ResultatUtleder
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarBistandsbehovLøsning
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarOvergangUføreEnkelLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarOvergangUføreLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSykdomLøsning
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSykepengerErstatningLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.ForeslåVedtakLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.PeriodisertAvklarSykepengerErstatningLøsning
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
@@ -15,9 +14,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.BistandLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.UføreSøknadVedtakResultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.flate.OvergangUføreLøsningDto
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.flate.OvergangUføreVurderingLøsningDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.PeriodisertSykepengerVurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.SykdomsvurderingLøsningDto
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.SykepengerVurderingDto
 import no.nav.aap.behandlingsflyt.help.assertTidslinje
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
@@ -34,7 +32,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
-class OvergangUføreFlytTest: AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
+class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
 
     @Test
     fun `11-18 uføre underveis i en behandling`() {
@@ -119,16 +117,17 @@ class OvergangUføreFlytTest: AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::c
                     }
             }
             .løsAvklaringsBehov(
-                AvklarOvergangUføreEnkelLøsning(
-                    OvergangUføreVurderingLøsningDto(
-                        begrunnelse = "Løsning",
-                        brukerHarSøktOmUføretrygd = true,
-                        brukerHarFåttVedtakOmUføretrygd = UføreSøknadVedtakResultat.NEI,
-                        brukerRettPåAAP = true,
-                        virkningsdato = virkningsdatoAndreLøsningOvergangUføre,
-                        fom = virkningsdatoAndreLøsningOvergangUføre,
-                        tom = null,
-                        overgangBegrunnelse = null
+                AvklarOvergangUføreLøsning(
+                    listOf(
+                        OvergangUføreLøsningDto(
+                            begrunnelse = "Løsning",
+                            brukerHarSøktOmUføretrygd = true,
+                            brukerHarFåttVedtakOmUføretrygd = UføreSøknadVedtakResultat.NEI,
+                            brukerRettPåAAP = true,
+                            fom = virkningsdatoAndreLøsningOvergangUføre,
+                            tom = null,
+                            overgangBegrunnelse = null
+                        )
                     )
                 )
             )
@@ -155,13 +154,16 @@ class OvergangUføreFlytTest: AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::c
                 assertThat(åpneAvklaringsbehov).anySatisfy { assertThat(it.definisjon).isEqualTo(Definisjon.AVKLAR_SYKEPENGEERSTATNING) }
             }
             .løsAvklaringsBehov(
-                AvklarSykepengerErstatningLøsning(
-                    sykepengeerstatningVurdering = SykepengerVurderingDto(
-                        begrunnelse = "...",
-                        dokumenterBruktIVurdering = emptyList(),
-                        harRettPå = false,
-                        grunn = null,
-                        gjelderFra = LocalDate.now()
+                PeriodisertAvklarSykepengerErstatningLøsning(
+                    løsningerForPerioder = listOf(
+                        PeriodisertSykepengerVurderingDto(
+                            begrunnelse = "...",
+                            dokumenterBruktIVurdering = emptyList(),
+                            harRettPå = false,
+                            grunn = null,
+                            fom = LocalDate.now(),
+                            tom = null
+                        )
                     ),
                 )
             )
@@ -184,7 +186,11 @@ class OvergangUføreFlytTest: AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::c
             }
 
         var resultat =
-            dataSource.transaction { ResultatUtleder(postgresRepositoryRegistry.provider(it)).utledResultat(behandling.id) }
+            dataSource.transaction {
+                ResultatUtleder(postgresRepositoryRegistry.provider(it)).utledResultatFørstegangsBehandling(
+                    behandling.id
+                )
+            }
         assertThat(resultat).isEqualTo(Resultat.INNVILGELSE)
 
         behandling = behandling.løsVedtaksbrev(typeBrev = TypeBrev.VEDTAK_11_18)
@@ -208,7 +214,11 @@ class OvergangUføreFlytTest: AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::c
             })
 
         resultat =
-            dataSource.transaction { ResultatUtleder(postgresRepositoryRegistry.provider(it)).utledResultat(behandling.id) }
+            dataSource.transaction {
+                ResultatUtleder(postgresRepositoryRegistry.provider(it)).utledResultatFørstegangsBehandling(
+                    behandling.id
+                )
+            }
 
         assertThat(resultat).isEqualTo(Resultat.INNVILGELSE)
 
@@ -275,13 +285,15 @@ class OvergangUføreFlytTest: AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::c
             .løsSykdomsvurderingBrev()
             .kvalitetssikreOk()
             .løsAvklaringsBehov(
-                AvklarSykepengerErstatningLøsning(
-                    sykepengeerstatningVurdering = SykepengerVurderingDto(
-                        begrunnelse = "...",
-                        dokumenterBruktIVurdering = emptyList(),
-                        harRettPå = false,
-                        grunn = null,
-                        gjelderFra = LocalDate.now()
+                PeriodisertAvklarSykepengerErstatningLøsning(
+                    løsningerForPerioder = listOf(
+                        PeriodisertSykepengerVurderingDto(
+                            begrunnelse = "...",
+                            dokumenterBruktIVurdering = emptyList(),
+                            harRettPå = false,
+                            grunn = null,
+                            fom = LocalDate.now()
+                        )
                     ),
                 )
             )

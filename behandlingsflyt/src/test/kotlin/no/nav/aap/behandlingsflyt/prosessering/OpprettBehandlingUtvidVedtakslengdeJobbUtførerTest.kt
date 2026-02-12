@@ -43,7 +43,6 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID.randomUUID
 
-@ExtendWith(MockKExtension::class)
 class OpprettBehandlingUtvidVedtakslengdeJobbUtførerTest {
 
     private val dagensDato = 1 desember 2025
@@ -132,15 +131,6 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtførerTest {
 
         verify(exactly = 0) { prosesserBehandlingService.triggProsesserBehandling(any<SakOgBehandlingService.OpprettetBehandling>()) }
     }
-
-    private fun vedtakslengdeVurdering(sluttdato: LocalDate) =
-        no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeVurdering(
-            sluttdato = sluttdato,
-            utvidetMed = ÅrMedHverdager.FØRSTE_ÅR,
-            vurdertAv = SYSTEMBRUKER,
-            vurdertIBehandling = behandlingId,
-            opprettet = java.time.Instant.now()
-        )
 
     private fun behandling(status: Status = Status.IVERKSETTES) =
         Behandling(
