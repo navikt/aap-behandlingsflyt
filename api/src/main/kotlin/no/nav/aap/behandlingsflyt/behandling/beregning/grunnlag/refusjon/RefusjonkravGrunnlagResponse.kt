@@ -8,7 +8,6 @@ import java.time.LocalDate
 
 data class RefusjonkravGrunnlagResponse(
     val harTilgangTilÅSaksbehandle: Boolean,
-    val gjeldendeVurdering: RefusjonkravVurderingResponse?,
     val gjeldendeVurderinger: List<RefusjonkravVurderingResponse>?,
     val økonomiskSosialHjelp: Boolean?,
     val nåværendeVirkningsTidspunkt: LocalDate?,
