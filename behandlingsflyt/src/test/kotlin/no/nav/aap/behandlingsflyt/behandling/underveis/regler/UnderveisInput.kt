@@ -44,7 +44,6 @@ fun tomUnderveisInput(
     meldeperioder: List<Periode> = MeldeperiodeUtleder.utledMeldeperiode(null, rettighetsperiode),
     vedtaksdatoFørstegangsbehandling: LocalDate? = rettighetsperiode.fom,
     rettighetstypeGrunnlag: RettighetstypeGrunnlag? = null,
-    forenkletKvoteFeature: Boolean = false
 ): UnderveisInput {
     return UnderveisInput(
         periodeForVurdering = rettighetsperiode,
@@ -60,7 +59,6 @@ fun tomUnderveisInput(
         meldeperioder = meldeperioder,
         vedtaksdatoFørstegangsbehandling = vedtaksdatoFørstegangsbehandling,
         rettighetstypeGrunnlag = rettighetstypeGrunnlag,
-        forenkletKvoteFeature = forenkletKvoteFeature
     )
 }
 

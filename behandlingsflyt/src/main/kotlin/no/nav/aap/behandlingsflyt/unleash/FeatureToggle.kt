@@ -19,7 +19,6 @@ enum class BehandlingsflytFeature : FeatureToggle {
     InstitusjonsoppholdJobb,
     TrekkSoeknadOpprettetFraLegeerklaering,
     UbehandledeMeldekortJobb,
-    ForenkletKvote,
     PapirMeldekortFraBehandingsflyt,
     RettighetstypeSteg,
     VirksomhetsEtablering,

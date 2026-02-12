@@ -28,5 +28,4 @@ data class UnderveisInput(
     val meldeperioder: List<Periode>,
     val vedtaksdatoFørstegangsbehandling: LocalDate?,
     val rettighetstypeGrunnlag: RettighetstypeGrunnlag?,
-    val forenkletKvoteFeature: Boolean = false,
 ) : Faktagrunnlag
