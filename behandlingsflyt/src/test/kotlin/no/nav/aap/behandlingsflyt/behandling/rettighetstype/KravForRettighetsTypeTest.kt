@@ -7,27 +7,67 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Av
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Innvilgelsesårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Opphør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.StansEllerOpphør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype.AKTIVITETSPLIKT
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype.ALDERSVILKÅRET
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype.BISTANDSVILKÅRET
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype.GRUNNLAGET
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype.INNTEKTSBORTFALL
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype.LOVVALG
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype.MEDLEMSKAP
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype.OPPHOLDSKRAV
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype.OVERGANGARBEIDVILKÅRET
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype.OVERGANGUFØREVILKÅRET
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype.SAMORDNING
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype.SAMORDNING_ANNEN_LOVGIVNING
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype.STRAFFEGJENNOMFØRING
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype.STUDENT
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype.SYKDOMSVILKÅRET
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype.SYKEPENGEERSTATNING
 import no.nav.aap.behandlingsflyt.help.assertTidslinje
 import no.nav.aap.behandlingsflyt.test.desember
 import no.nav.aap.behandlingsflyt.test.januar
+import no.nav.aap.behandlingsflyt.test.november
+import no.nav.aap.behandlingsflyt.test.september
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Tid
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
+import java.time.LocalDate
 
 class KravForRettighetsTypeTest {
+    @Test
+    fun `gjenskap fra prod-case, samordning så ordinær aap`() {
+        /* Behandlingen har en blanding av vilkårsvurderinger som går
+         * til `Tid.MAKS` og som går til ett år senere. */
+        val vilkårsresultat = Vilkårsresultat()
+        vilkårsresultat.vurdertOppfylt(AKTIVITETSPLIKT, Periode(22 september 2025, Tid.MAKS))
+        vilkårsresultat.vurdertOppfylt(ALDERSVILKÅRET, Periode(22 september 2025, 21 september 2026))
+        vilkårsresultat.vurdertOppfylt(BISTANDSVILKÅRET, Periode(22 september 2025, 21 september 2026))
+        vilkårsresultat.vurdertOppfylt(GRUNNLAGET, Periode(22 september 2025, 21 september 2026))
+        vilkårsresultat.vurdertOppfylt(INNTEKTSBORTFALL, Periode(22 september 2025, 21 september 2026))
+        vilkårsresultat.vurdertOppfylt(LOVVALG, Periode(22 september 2025, 21 september 2026))
+        vilkårsresultat.vurdertOppfylt(MEDLEMSKAP, Periode(22 september 2025, 21 september 2026))
+        vilkårsresultat.vurdertOppfylt(OPPHOLDSKRAV, Periode(22 september 2025, Tid.MAKS))
+        vilkårsresultat.ikkeVurdert(OVERGANGARBEIDVILKÅRET, Periode(22 september 2025, 21 september 2026))
+        vilkårsresultat.ikkeVurdert(OVERGANGUFØREVILKÅRET, Periode(22 september 2025, 21 september 2026))
+        vilkårsresultat.vurdertIkkeOppfylt(SAMORDNING, Periode(22 september 2025, 11 november 2025), Avslagsårsak.ANNEN_FULL_YTELSE)
+        vilkårsresultat.ikkeVurdert(SAMORDNING_ANNEN_LOVGIVNING, Periode(22 september 2025, 21 september 2026))
+        vilkårsresultat.vurdertOppfylt(STRAFFEGJENNOMFØRING, Periode(22 september 2025, Tid.MAKS))
+        vilkårsresultat.ikkeVurdert(STUDENT, Periode(22 september 2025, 21 september 2026))
+        vilkårsresultat.vurdertOppfylt(SYKDOMSVILKÅRET, Periode(22 september 2025, 21 september 2026))
+        vilkårsresultat.vurdertIkkeOppfylt(SYKEPENGEERSTATNING, Periode(22 september 2025, 21 september 2026), Avslagsårsak.IKKE_RETT_PA_SYKEPENGEERSTATNING)
+
+        assertThat(utledStansEllerOpphør(vilkårsresultat, rettighetsperiode = Periode(22 september 2025, 21 september 2026)))
+            .isEqualTo(mapOf<LocalDate, StansEllerOpphør>())
+    }
+
     @Test
     fun `ordinær AAP-sak hvor medlemmet blir for gammel`() {
         val kravdato = 1 januar 2025
@@ -55,7 +95,7 @@ class KravForRettighetsTypeTest {
         )
 
         assertEquals(
-            utledStansEllerOpphør(vilkårsresultat),
+            utledStansEllerOpphør(vilkårsresultat, rettighetsperiode = Periode(kravdato, Tid.MAKS)),
             mapOf(
                 sisteDagAldersvilkåretOppfylt.plusDays(1) to Opphør(setOf(BRUKER_OVER_67))
             )
@@ -95,7 +135,7 @@ class KravForRettighetsTypeTest {
         )
 
         assertEquals(
-            utledStansEllerOpphør(vilkårsresultat),
+            utledStansEllerOpphør(vilkårsresultat, rettighetsperiode = Periode(kravdato, Tid.MAKS)),
             mapOf(
                 sisteDagOvergangUføre.plusDays(1) to
                         /* Legg spesielt merke til at IKKE_BEHOV_FOR_OPPFOLGING
@@ -139,6 +179,25 @@ class KravForRettighetsTypeTest {
                     vilkårsvurdering = Vilkårsvurdering(
                         utfall = Utfall.IKKE_OPPFYLT,
                         avslagsårsak = avslagsårsak,
+                        manuellVurdering = false,
+                        begrunnelse = ".",
+                        faktagrunnlag = null,
+                    ),
+                )
+            )
+    }
+
+    private fun Vilkårsresultat.ikkeVurdert(
+        vilkårtype: Vilkårtype,
+        periode: Periode,
+    ) {
+        this.leggTilHvisIkkeEksisterer(vilkårtype)
+            .leggTilVurdering(
+                Vilkårsperiode(
+                    periode = periode,
+                    vilkårsvurdering = Vilkårsvurdering(
+                        utfall = Utfall.IKKE_VURDERT,
+                        innvilgelsesårsak = null,
                         manuellVurdering = false,
                         begrunnelse = ".",
                         faktagrunnlag = null,
