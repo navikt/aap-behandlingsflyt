@@ -282,7 +282,7 @@ class StatistikkMetoder(
             log.info("Ingen søknader funnet for behandling ${behandling.referanse} av type ${behandling.typeBehandling()}.")
             return behandling.opprettetTidspunkt
         }
-        return mottattTidspunkt
+        return minOf(mottattTidspunkt, behandling.opprettetTidspunkt)
     }
 
     private fun hentRelevanteDokumenterForBehandling(behandling: Behandling): Set<MottattDokument> {
@@ -392,7 +392,7 @@ class StatistikkMetoder(
     private fun hentResultat(behandling: Behandling): ResultatKode? {
         return when (behandling.typeBehandling()) {
             TypeBehandling.Førstegangsbehandling -> {
-                resultatUtleder.utledResultat(behandling.id).let {
+                resultatUtleder.utledResultatFørstegangsBehandling(behandling.id).let {
                     when (it) {
                         Resultat.INNVILGELSE -> ResultatKode.INNVILGET
                         Resultat.AVSLAG -> ResultatKode.AVSLAG

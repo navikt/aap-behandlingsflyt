@@ -1,7 +1,8 @@
 package no.nav.aap.behandlingsflyt.repository.behandling.tilkjentytelse
 
-import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Tilkjent
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.GraderingGrunnlag
+import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Minstesats
+import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Tilkjent
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelsePeriode
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.help.sak
@@ -65,7 +66,9 @@ class TilkjentYtelseRepositoryImplTest {
                             antallBarn = 1,
                             barnetilleggsats = Beløp(999),
                             grunnbeløp = Beløp(1000),
-                            utbetalingsdato = LocalDate.now().plusDays(14)
+                            utbetalingsdato = LocalDate.now().plusDays(14),
+                            minsteSats = Minstesats.IKKE_MINSTESATS,
+                            redusertDagsats = null
                         )
                     ),
                     TilkjentYtelsePeriode(
@@ -89,7 +92,9 @@ class TilkjentYtelseRepositoryImplTest {
                             antallBarn = 1,
                             barnetilleggsats = Beløp(1000),
                             grunnbeløp = Beløp(1000),
-                            utbetalingsdato = LocalDate.now().plusDays(14)
+                            utbetalingsdato = LocalDate.now().plusDays(14),
+                            minsteSats = Minstesats.IKKE_MINSTESATS,
+                            redusertDagsats = Beløp(63)
                         )
                     ),
                 )
@@ -97,7 +102,10 @@ class TilkjentYtelseRepositoryImplTest {
             tilkjentYtelseRepository.lagre(behandling.id, tilkjentYtelse, tomtTilkjentYtelseGrunnlag, "")
             val tilkjentYtelseHentet = tilkjentYtelseRepository.hentHvisEksisterer(behandling.id)
             assertNotNull(tilkjentYtelseHentet)
-            assertThat(tilkjentYtelseHentet).isEqualTo(tilkjentYtelse)
+            assertThat(tilkjentYtelseHentet)
+                .usingRecursiveComparison()
+                .ignoringExpectedNullFields()
+                .isEqualTo(tilkjentYtelse)
             // Dobbeltsjekke at vi avrunder redusert dagsats til nærmeste heltall
             assertThat(tilkjentYtelse.first().tilkjent.redusertDagsats()).isEqualTo(Beløp(BigDecimal("1319")))
         }
@@ -145,7 +153,9 @@ class TilkjentYtelseRepositoryImplTest {
                             antallBarn = 1,
                             barnetilleggsats = Beløp(999),
                             grunnbeløp = Beløp(1000),
-                            utbetalingsdato = LocalDate.now().plusDays(14)
+                            utbetalingsdato = LocalDate.now().plusDays(14),
+                            minsteSats = Minstesats.MINSTESATS_UNDER_25,
+                            redusertDagsats = Beløp(643)
                         )
                     ),
                     TilkjentYtelsePeriode(
@@ -169,7 +179,9 @@ class TilkjentYtelseRepositoryImplTest {
                             antallBarn = 1,
                             barnetilleggsats = Beløp(1000),
                             grunnbeløp = Beløp(1000),
-                            utbetalingsdato = LocalDate.now().plusDays(14)
+                            utbetalingsdato = LocalDate.now().plusDays(14),
+                            minsteSats = Minstesats.MINSTESATS_OVER_25,
+                            redusertDagsats = null
                         )
                     ),
                 ),
@@ -199,7 +211,9 @@ class TilkjentYtelseRepositoryImplTest {
                             antallBarn = 1,
                             barnetilleggsats = Beløp(999),
                             grunnbeløp = Beløp(1000),
-                            utbetalingsdato = LocalDate.now().plusDays(14)
+                            utbetalingsdato = LocalDate.now().plusDays(14),
+                            minsteSats = Minstesats.MINSTESATS_UNDER_25,
+                            redusertDagsats = null
                         )
                     ),
                     TilkjentYtelsePeriode(
@@ -223,7 +237,9 @@ class TilkjentYtelseRepositoryImplTest {
                             antallBarn = 1,
                             barnetilleggsats = Beløp(1000),
                             grunnbeløp = Beløp(1000),
-                            utbetalingsdato = LocalDate.now().plusDays(14)
+                            utbetalingsdato = LocalDate.now().plusDays(14),
+                            minsteSats = Minstesats.IKKE_MINSTESATS,
+                            redusertDagsats = Beløp(65432)
                         )
                     ),
                 ),
@@ -231,6 +247,7 @@ class TilkjentYtelseRepositoryImplTest {
                 ""
             )
             assertDoesNotThrow { tilkjentYtelseRepository.slett(behandling.id) }
+            assertThat(tilkjentYtelseRepository.hentHvisEksisterer(behandling.id)).isNull()
         }
     }
 }

@@ -234,7 +234,6 @@ class RettighetsperiodeStegTest {
             null
         )
         avklaringsbehovene.løsAvklaringsbehov(Definisjon.VURDER_RETTIGHETSPERIODE, "begrunnelse", "saksbehandler")
-        avklaringsbehovene.avslutt(Definisjon.VURDER_RETTIGHETSPERIODE)
     }
 
     private fun flytKontekstMedPerioder(

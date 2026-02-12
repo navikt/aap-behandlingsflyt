@@ -12,13 +12,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentVurderingDTO
 import no.nav.aap.behandlingsflyt.help.assertTidslinje
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
-import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
-import no.nav.aap.behandlingsflyt.test.FakeUnleashBase
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov
-import no.nav.aap.behandlingsflyt.test.LokalUnleash
 import no.nav.aap.behandlingsflyt.test.november
 import no.nav.aap.behandlingsflyt.test.oktober
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.type.Periode
@@ -26,7 +22,6 @@ import no.nav.aap.komponenter.verdityper.Tid
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedClass
-import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
 import kotlin.reflect.KClass
 
@@ -82,14 +77,11 @@ class StudentFlytTest(val unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             .løsRefusjonskrav()
             .løsBeregningstidspunkt()
             .løsOppholdskrav(fom)
+            .løsSykestipend(listOf(sykestipendPeriode))
             .medKontekst {
-                if (unleashGateway.objectInstance!!.isEnabled(BehandlingsflytFeature.Sykestipend)) {
-                    this.behandling.løsSykestipend(listOf(sykestipendPeriode))
-
-                    val vilkår = repositoryProvider.provide<VilkårsresultatRepository>().hent(this.behandling.id)
-                    val syksetipendVilkår = vilkår.finnVilkår(Vilkårtype.SAMORDNING_ANNEN_LOVGIVNING)
-                    assertThat(syksetipendVilkår.harPerioderMedIkkeOppfylt()).isTrue
-                }
+                val vilkår = repositoryProvider.provide<VilkårsresultatRepository>().hent(this.behandling.id)
+                val syksetipendVilkår = vilkår.finnVilkår(Vilkårtype.SAMORDNING_ANNEN_LOVGIVNING)
+                assertThat(syksetipendVilkår.harPerioderMedIkkeOppfylt()).isTrue
             }
             .løsAndreStatligeYtelser()
             .løsAvklaringsBehov(ForeslåVedtakLøsning())
@@ -100,30 +92,14 @@ class StudentFlytTest(val unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                 assertThat(v.harPerioderSomErOppfylt()).isFalse
             }
             .assertRettighetstype(
-                if (unleashGateway.objectInstance!!.isEnabled(BehandlingsflytFeature.Sykestipend)) {
-                    val virkningstidspunkt = sykestipendPeriode.tom.plusDays(1)
-                    Periode(
-                        virkningstidspunkt,
-                        avbruttStudieDato.plusMonths(6).minusDays(1)
-                    ) to RettighetsType.STUDENT
-                } else {
-                    Periode(fom, avbruttStudieDato.plusMonths(6).minusDays(1)) to RettighetsType.STUDENT
-                }
+                Periode(
+                    sykestipendPeriode.tom.plusDays(1), // Virkningstidspunkt
+                    avbruttStudieDato.plusMonths(6).minusDays(1)
+                ) to RettighetsType.STUDENT
             )
 
         // Revurdering
-        val relevanteVurderingsbehov =
-            unleashGateway.objectInstance!!.isDisabled(BehandlingsflytFeature.PeriodisertSykdom)
-                .let {
-                    if (it) {
-                        listOf(
-                            Vurderingsbehov.REVURDER_STUDENT,
-                            Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND
-                        ) // Vi kan ikke detektere behovet for ikke-perodisert sykdom, og må derfor eksplisitt revurdere på sykdom også
-                    } else {
-                        listOf(Vurderingsbehov.REVURDER_STUDENT)
-                    }
-                }
+        val relevanteVurderingsbehov = listOf(Vurderingsbehov.REVURDER_STUDENT)
 
         sak.opprettManuellRevurdering(
             relevanteVurderingsbehov,
@@ -166,14 +142,11 @@ class StudentFlytTest(val unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             }
             .løsBistand(sak.rettighetsperiode.fom)
             .løsSykdomsvurderingBrev()
+            .løsSykestipend()
             .medKontekst {
-                if (unleashGateway.objectInstance!!.isEnabled(BehandlingsflytFeature.Sykestipend)) {
-                    this.behandling.løsSykestipend()
-
-                    val vilkår = repositoryProvider.provide<VilkårsresultatRepository>().hent(this.behandling.id)
-                    val v = vilkår.finnVilkår(Vilkårtype.SAMORDNING_ANNEN_LOVGIVNING)
-                    assertThat(v.harPerioderMedIkkeOppfylt()).isFalse
-                }
+                val vilkår = repositoryProvider.provide<VilkårsresultatRepository>().hent(this.behandling.id)
+                val v = vilkår.finnVilkår(Vilkårtype.SAMORDNING_ANNEN_LOVGIVNING)
+                assertThat(v.harPerioderMedIkkeOppfylt()).isFalse
             }
             .foreslåVedtak()
             .medKontekst {
@@ -187,21 +160,11 @@ class StudentFlytTest(val unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                 assertThat(v.harPerioderSomErOppfylt()).isTrue
             }
             .assertRettighetstype(
-                if (unleashGateway.objectInstance!!.isEnabled(BehandlingsflytFeature.Sykestipend)) {
-                    val gammeltVirkningstidspunkt = fom.plusDays(15)
-                    Periode(
-                        fom,
-                        gammeltVirkningstidspunkt.plussEtÅrMedHverdager(ÅrMedHverdager.FØRSTE_ÅR)
-                    ) to RettighetsType.BISTANDSBEHOV
-                } else {
-                    Periode(
-                        fom,
-                        fom.plussEtÅrMedHverdager(ÅrMedHverdager.FØRSTE_ÅR)
-                    ) to RettighetsType.BISTANDSBEHOV
-                }
-
+                Periode(
+                    fom,
+                    fom.plusDays(15).plussEtÅrMedHverdager(ÅrMedHverdager.FØRSTE_ÅR)
+                ) to RettighetsType.BISTANDSBEHOV
             )
-
     }
 }
 

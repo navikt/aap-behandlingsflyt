@@ -35,20 +35,30 @@ data class UnderveisGrunnlag(
         if (gjenværendeKvote == 0) {
             return utledInnfriddePerioderForRettighet(type).last().periode.tom
         }
-        return Hverdager(utledKvoterForRettighetstype(type).gjenværendeKvote).fraOgMed(LocalDate.now())
+        return Hverdager(gjenværendeKvote).fraOgMed(LocalDate.now())
     }
 
     fun utledKvoterForRettighetstype(rettighetsType: RettighetsType): RettighetKvoter {
-        val bruktKvote = utledInnfriddePerioderForRettighet(rettighetsType)
-            .somTidslinje { it.periode }.begrensetTil(Periode(Tid.MIN, LocalDate.now())).segmenter()
-            .sumOf { it.periode.antallHverdager().asInt }
         val totalKvote = KvoteService().beregn().hentKvoteForRettighetstype(rettighetsType)?.asInt
-        val gjenværendeKvote = totalKvote?.minus(bruktKvote) ?: 0
+        val perioderForRettighet = utledInnfriddePerioderForRettighet(rettighetsType)
+        val periodeKvoter = perioderForRettighet.map {
+            val bruktKvote = perioderForRettighet
+                .somTidslinje { it.periode }.begrensetTil(Periode(Tid.MIN, it.periode.tom)).segmenter()
+                .sumOf { it.periode.antallHverdager().asInt}
+
+            PeriodeKvote(
+                periode = it.periode,
+                bruktKvote = bruktKvote,
+                gjenværendeKvote = totalKvote?.minus(bruktKvote)
+            )
+        }
+        val senestePeriodeKvote = periodeKvoter.lastOrNull()
 
         return RettighetKvoter(
             totalKvote = totalKvote,
-            bruktKvote = bruktKvote,
-            gjenværendeKvote = gjenværendeKvote
+            bruktKvote = senestePeriodeKvote?.bruktKvote ?: 0,
+            gjenværendeKvote = senestePeriodeKvote?.gjenværendeKvote ?: totalKvote ?: 0,
+            periodeKvoter = periodeKvoter
         )
     }
 }

@@ -6,6 +6,8 @@ import io.mockk.junit5.MockKExtension
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.verify
+import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.ÅrMedHverdager
 import no.nav.aap.behandlingsflyt.behandling.vedtakslengde.VedtakslengdeService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
@@ -18,6 +20,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeRepository
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
@@ -29,7 +32,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettels
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
-import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.test.desember
 import no.nav.aap.behandlingsflyt.test.fixedClock
 import no.nav.aap.komponenter.type.Periode
@@ -41,7 +43,6 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID.randomUUID
 
-@ExtendWith(MockKExtension::class)
 class OpprettBehandlingUtvidVedtakslengdeJobbUtførerTest {
 
     private val dagensDato = 1 desember 2025
@@ -51,6 +52,7 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtførerTest {
     private val jobbInput = JobbInput(OpprettBehandlingUtvidVedtakslengdeJobbUtfører).forSak(sakId.id)
 
     private val prosesserBehandlingService = mockk<ProsesserBehandlingService>()
+    private val vedtakslengdeRepository = mockk<VedtakslengdeRepository>()
     private val underveisRepository = mockk<UnderveisRepository>()
     private val sakOgBehandlingService = mockk<SakOgBehandlingService>()
     private val vilkårsresultatRepository = mockk<VilkårsresultatRepository>()
@@ -59,12 +61,13 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtførerTest {
             prosesserBehandlingService = prosesserBehandlingService,
             sakOgBehandlingService = sakOgBehandlingService,
             vedtakslengdeService = VedtakslengdeService(
-                underveisRepository,
-                vilkårsresultatRepository,
-                AlleAvskruddUnleash,
-                fixedClock(dagensDato)
+                vedtakslengdeRepository = vedtakslengdeRepository,
+                underveisRepository = underveisRepository,
+                vilkårsresultatRepository = vilkårsresultatRepository,
+                unleashGateway = VedtakslengdeUnleash,
+                clock = clock
             ),
-            clock = fixedClock(dagensDato)
+            clock = clock
         )
 
 
@@ -78,6 +81,7 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtførerTest {
         every { sakOgBehandlingService.finnEllerOpprettBehandling(sak.id, any()) } returns opprettetBehandling()
         every { prosesserBehandlingService.triggProsesserBehandling(any<SakOgBehandlingService.OpprettetBehandling>()) } just Runs
         every { vilkårsresultatRepository.hent(behandlingId) } returns genererVilkårsresultat(sak.rettighetsperiode)
+        every { vedtakslengdeRepository.hentHvisEksisterer(behandling.id) } returns null
 
         opprettBehandlingUtvidVedtakslengdeJobbUtfører.utfør(jobbInput)
 
@@ -121,6 +125,7 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtførerTest {
         every { sakOgBehandlingService.finnEllerOpprettBehandling(sak.id, any()) } returns opprettetBehandling()
         every { prosesserBehandlingService.triggProsesserBehandling(any<SakOgBehandlingService.OpprettetBehandling>()) } just Runs
         every { vilkårsresultatRepository.hent(behandlingId) } returns genererVilkårsresultat(sak.rettighetsperiode, oppfyltBistand = false)
+        every { vedtakslengdeRepository.hentHvisEksisterer(behandling.id) } returns null
 
         opprettBehandlingUtvidVedtakslengdeJobbUtfører.utfør(jobbInput)
 

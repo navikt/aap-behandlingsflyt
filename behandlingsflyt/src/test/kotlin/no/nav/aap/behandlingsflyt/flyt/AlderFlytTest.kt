@@ -111,7 +111,7 @@ class AlderFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
             }
             .løsForeslåVedtak()
             .medKontekst {
-                val resultat = ResultatUtleder(repositoryProvider).utledResultat(behandling.id)
+                val resultat = ResultatUtleder(repositoryProvider).utledResultatFørstegangsBehandling(behandling.id)
                 assertThat(resultat).isEqualTo(Resultat.AVSLAG)
             }
     }

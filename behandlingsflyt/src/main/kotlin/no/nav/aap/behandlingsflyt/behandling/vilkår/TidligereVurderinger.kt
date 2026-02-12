@@ -5,10 +5,14 @@ import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger.Behandlingsutfall.IKKE_BEHANDLINGSGRUNNLAG
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger.Behandlingsutfall.UKJENT
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger.Behandlingsutfall.UUNGÅELIG_AVSLAG
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall.IKKE_OPPFYLT
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.Yrkesskader
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
@@ -17,10 +21,14 @@ import no.nav.aap.behandlingsflyt.forretningsflyt.behandlingstyper.Revurdering
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.komponenter.tidslinje.outerJoin
 import no.nav.aap.komponenter.tidslinje.tidslinjeOf
+import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
 
@@ -61,17 +69,23 @@ class TidligereVurderingerImpl(
     private val avbrytRevurderingService: AvbrytRevurderingService,
     private val sykdomRepository: SykdomRepository,
     private val studentRepository: StudentRepository,
+    private val bistandRepository: BistandRepository,
+    private val yrkesskadeRepository: YrkesskadeRepository,
 ) : TidligereVurderinger {
 
     private val log = LoggerFactory.getLogger(javaClass)
 
 
-    constructor(repositoryProvider: RepositoryProvider) : this(
+    constructor(
+        repositoryProvider: RepositoryProvider,
+    ) : this(
         trukketSøknadService = TrukketSøknadService(repositoryProvider),
         vilkårsresultatRepository = repositoryProvider.provide(),
         avbrytRevurderingService = AvbrytRevurderingService(repositoryProvider),
         sykdomRepository = repositoryProvider.provide(),
-        studentRepository = repositoryProvider.provide()
+        studentRepository = repositoryProvider.provide(),
+        bistandRepository = repositoryProvider.provide(),
+        yrkesskadeRepository = repositoryProvider.provide(),
     )
 
     data class Sjekk(
@@ -116,7 +130,7 @@ class TidligereVurderingerImpl(
             Sjekk(StegType.VURDER_ALDER) { vilkårsresultat, _ ->
                 ikkeOppfyltFørerTilAvslag(Vilkårtype.ALDERSVILKÅRET, vilkårsresultat)
             },
-            
+
             Sjekk(StegType.VURDER_BISTANDSBEHOV) { _, kontekst ->
                 /* TODO: Tror ikke dette er riktig. Sykdomsvilkåret er ikke satt når
                 *   man er i steget VURDER_BiSTANDSBEHOV. */
@@ -129,7 +143,17 @@ class TidligereVurderingerImpl(
                 sykdomstidslinje.outerJoin(studenttidslinje) { segmentPeriode, sykdomsvurdering, studentVurdering ->
                     if (studentVurdering != null && studentVurdering.erOppfylt()) return@outerJoin UKJENT
 
-                    if (!Sykdomsvurdering.erFørsteVurdering(kontekst.rettighetsperiode.fom, segmentPeriode)) {
+                    val erIkkeFørsteSykdomsvurdering =
+                        !Sykdomsvurdering.erFørsteVurdering(kontekst.rettighetsperiode.fom, segmentPeriode)
+
+                    val harTidligereInnvilgetSykdomsvurdering by lazy {
+                        sykdomstidslinje
+                            .begrensetTil(Periode(Tid.MIN, segmentPeriode.fom.minusDays(1)))
+                            .segmenter()
+                            .any { it.verdi.erOppfyltForYrkesskadeSettBortIfraÅrsakssammenhengOgVissVarighet() }
+                    }
+
+                    if (erIkkeFørsteSykdomsvurdering && harTidligereInnvilgetSykdomsvurdering) {
                         return@outerJoin UKJENT
                     }
 
@@ -142,6 +166,79 @@ class TidligereVurderingerImpl(
                     }
 
                     return@outerJoin UKJENT
+                }
+            },
+
+
+            Sjekk(StegType.VURDER_SYKEPENGEERSTATNING) { vilkårsresultat, kontekst ->
+
+                val sykdomVurdering = sykdomRepository.hentHvisEksisterer(kontekst.behandlingId)
+                val sykdomstidslinje = sykdomVurdering?.somSykdomsvurderingstidslinje().orEmpty()
+                val yrkesskaderTidslinje =
+                    sykdomVurdering?.yrkesskadevurdringTidslinje(kontekst.rettighetsperiode).orEmpty()
+                val bistandTidslinje =
+                    bistandRepository.hentHvisEksisterer(kontekst.behandlingId)?.somBistandsvurderingstidslinje()
+                        .orEmpty()
+                val overgangUføre1118 = vilkårsresultat.tidslinjeFor(Vilkårtype.OVERGANGUFØREVILKÅRET)
+                val overgangArbeid1117 = vilkårsresultat.tidslinjeFor(Vilkårtype.OVERGANGARBEIDVILKÅRET)
+                val sykdomErstating1113 = vilkårsresultat.tidslinjeFor(Vilkårtype.SYKEPENGEERSTATNING)
+
+                Tidslinje.map6(
+                    sykdomstidslinje,
+                    yrkesskaderTidslinje,
+                    bistandTidslinje,
+                    overgangUføre1118,
+                    overgangArbeid1117,
+                    sykdomErstating1113
+                ) { sykdomVurdering115Segment,
+                    yrkesskaderVudering1122Segment,
+                    bistandsVurdering116Segment,
+                    overgangUføre1118VilkårsSegment,
+                    overgangArbeid1117VilkårSegment,
+                    sykdomErstating1113VilkårSegment ->
+
+                    val sykdomOppfylt = (sykdomVurdering115Segment?.harSkadeSykdomEllerLyte == true
+                            && sykdomVurdering115Segment.erArbeidsevnenNedsatt == true
+                            && (sykdomVurdering115Segment.erNedsettelseIArbeidsevneMerEnnHalvparten == true
+                            || sykdomVurdering115Segment.erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense == true)
+                            && sykdomVurdering115Segment.erSkadeSykdomEllerLyteVesentligdel == true
+                            && (sykdomVurdering115Segment.erNedsettelseIArbeidsevneAvEnVissVarighet == true
+                            || sykdomVurdering115Segment.erNedsettelseIArbeidsevneAvEnVissVarighet == null))
+
+                    val bistandOppfylt = (bistandsVurdering116Segment?.erBehovForAktivBehandling == true
+                            || bistandsVurdering116Segment?.erBehovForArbeidsrettetTiltak == true) ||
+                            (bistandsVurdering116Segment?.erBehovForAnnenOppfølging == true)
+
+                    val førerTilAvslag = when {
+                        // ja 115, nei 116, nei 1118, nei/ikke vudert 1117, nei 1113
+                        sykdomOppfylt
+                                && !bistandOppfylt
+                                && overgangUføre1118VilkårsSegment?.utfall == IKKE_OPPFYLT
+                                && overgangArbeid1117VilkårSegment?.utfall != Utfall.OPPFYLT
+                                && sykdomErstating1113VilkårSegment?.utfall == IKKE_OPPFYLT -> true
+
+                        //nei,vis varigghet
+                        sykdomVurdering115Segment?.harSkadeSykdomEllerLyte == true
+                                && sykdomVurdering115Segment.erArbeidsevnenNedsatt == true
+                                && sykdomVurdering115Segment.erNedsettelseIArbeidsevneMerEnnHalvparten == true
+                                && sykdomVurdering115Segment.erSkadeSykdomEllerLyteVesentligdel == true
+                                && sykdomVurdering115Segment.erNedsettelseIArbeidsevneAvEnVissVarighet == false
+                                && sykdomErstating1113VilkårSegment?.utfall == IKKE_OPPFYLT -> true
+
+                        //YS 11-22 veien til avslag
+                        sykdomOppfylt && sykdomVurdering115Segment.erNedsettelseIArbeidsevneMerEnnHalvparten == false
+                                && sykdomVurdering115Segment.erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense == true
+                                && bistandOppfylt && yrkesskaderTidslinje.filter { it.verdi.erÅrsakssammenheng }
+                            .isEmpty()
+                            -> true
+                        // nei 115, ikke vurdert/ikke oppfylt1117, nei 1113
+                        !sykdomOppfylt
+                                && sykdomErstating1113VilkårSegment?.utfall == IKKE_OPPFYLT
+                                && overgangArbeid1117VilkårSegment?.utfall != Utfall.OPPFYLT -> true
+
+                        else -> false
+                    }
+                    if (førerTilAvslag) UUNGÅELIG_AVSLAG else UKJENT
                 }
             },
 
@@ -166,12 +263,11 @@ class TidligereVurderingerImpl(
             Sjekk(StegType.SAMORDNING_AVSLAG) { vilkårsresultat, _ ->
                 ikkeOppfyltFørerTilAvslag(Vilkårtype.SAMORDNING, vilkårsresultat)
             },
-            
+
             Sjekk(StegType.SAMORDNING_SYKESTIPEND) { vilkårsresultat, _ ->
                 ikkeOppfyltFørerTilAvslag(Vilkårtype.SAMORDNING_ANNEN_LOVGIVNING, vilkårsresultat)
             },
         )
-
         return spesifikkeSjekker + fellesSjekker
     }
 
