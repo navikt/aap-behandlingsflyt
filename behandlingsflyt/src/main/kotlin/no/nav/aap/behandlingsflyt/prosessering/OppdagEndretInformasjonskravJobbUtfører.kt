@@ -48,45 +48,48 @@ class OppdagEndretInformasjonskravJobbUtfører(
             InstitusjonsoppholdInformasjonskrav.konstruer(repositoryProvider, gatewayProvider),
             PersonopplysningInformasjonskrav.konstruer(repositoryProvider, gatewayProvider),
         )
-        val sisteFattedeYtelsesbehandling = sakOgBehandlingService.finnBehandlingMedSisteFattedeVedtak(sakId)
-            ?: error("Fant ikke siste behandling med fattet vedtak for sak $sakId")
+        val sisteBehandling = sakOgBehandlingService.finnSisteYtelsesbehandlingFor(sakId)
+            ?: error("Fant ikke ytelsesbehandling for sak $sakId")
 
-        val harNyligEllerFremtidigRett = rettighetstypeService.harRettInnenforPeriode(
-            sisteFattedeYtelsesbehandling.id, Periode(
-                LocalDate.now(klokke).minusWeeks(2),
-                Tid.MAKS
-            )
-        )
-
-        if (!harNyligEllerFremtidigRett) {
-            log.info("Sak $sakId har ikke nylig eller fremtidig rettighet. Hopper over sjekk for endret informasjonskrav.")
+        if (sisteBehandling.status().erÅpen()) {
+            log.info("Siste behandling for sak $sakId er åpen. Hopper over sjekk for endret informasjonskrav.")
         } else {
-            val vurderingsbehov = relevanteInformasjonskrav
-                .flatMap {
-                    it.behovForRevurdering(sisteFattedeYtelsesbehandling.id)
-                        .also { behov -> if (behov.isNotEmpty()) log.info("Fant endringer i ${it.javaClass.simpleName}") }
-                }
-                .toSet().toList() // Fjern duplikater
-
-            if (vurderingsbehov.isNotEmpty()) {
-                val revurdering = this.sakOgBehandlingService.finnEllerOpprettOrdinærBehandling(
-                    sakId,
-                    VurderingsbehovOgÅrsak(vurderingsbehov, ÅrsakTilOpprettelse.ENDRING_I_REGISTERDATA)
+            val harNyligEllerFremtidigRett = rettighetstypeService.harRettInnenforPeriode(
+                sisteBehandling.id, Periode(
+                    LocalDate.now(klokke).minusWeeks(2),
+                    Tid.MAKS
                 )
-                log.info("Fant endringer i $sakId med behov $vurderingsbehov. Behandling: ${revurdering.referanse}.")
-                secureLogger.info("" + vurderingsbehov)
-                prosesserBehandlingService.triggProsesserBehandling(
-                    revurdering,
-                    vurderingsbehov = vurderingsbehov.map { it.type },
-                )
+            )
+            if (!harNyligEllerFremtidigRett) {
+                log.info("Sak $sakId har ikke nylig eller fremtidig rettighet. Hopper over sjekk for endret informasjonskrav.")
             } else {
-                log.info("Lar være å opprette revurdering for sak $sakId med behov $vurderingsbehov da opplysningene er registrert fra før. ")
+                val vurderingsbehov = relevanteInformasjonskrav
+                    .flatMap {
+                        it.behovForRevurdering(sisteBehandling.id)
+                            .also { behov -> if (behov.isNotEmpty()) log.info("Fant endringer i ${it.javaClass.simpleName}") }
+                    }
+                    .toSet().toList() // Fjern duplikater
+
+                if (vurderingsbehov.isNotEmpty()) {
+                    val revurdering = this.sakOgBehandlingService.finnEllerOpprettOrdinærBehandling(
+                        sakId,
+                        VurderingsbehovOgÅrsak(vurderingsbehov, ÅrsakTilOpprettelse.ENDRING_I_REGISTERDATA)
+                    )
+                    log.info("Fant endringer i $sakId med behov $vurderingsbehov. Behandling: ${revurdering.referanse}.")
+                    secureLogger.info("" + vurderingsbehov)
+                    prosesserBehandlingService.triggProsesserBehandling(
+                        revurdering,
+                        vurderingsbehov = vurderingsbehov.map { it.type },
+                    )
+                } else {
+                    log.info("Lar være å opprette revurdering for sak $sakId med behov $vurderingsbehov da opplysningene er registrert fra før. ")
+                }
             }
         }
 
         låsRepository.verifiserSkrivelås(sakSkrivelås)
     }
-    
+
 
     companion object : ProvidersJobbSpesifikasjon {
         override val type = "flyt.informasjonskrav"
