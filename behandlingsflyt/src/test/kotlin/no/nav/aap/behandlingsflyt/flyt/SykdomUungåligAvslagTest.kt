@@ -6,9 +6,9 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarBist
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarOvergangArbeidLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarOvergangUføreLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSykdomLøsning
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSykepengerErstatningLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarYrkesskadeLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.ForeslåVedtakLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.PeriodisertAvklarSykepengerErstatningLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.YrkesskadeSakDto
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.YrkesskadevurderingDto
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
@@ -19,8 +19,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.Bist
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangarbeid.flate.OvergangArbeidVurderingLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.flate.OvergangUføreLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerGrunn
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.PeriodisertSykepengerVurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.SykdomsvurderingLøsningDto
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.SykepengerVurderingDto
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
@@ -147,13 +147,15 @@ class SykdomUungåligAvslagTest : AbstraktFlytOrkestratorTest(LokalUnleash::clas
                 ).containsExactly(Definisjon.AVKLAR_SYKEPENGEERSTATNING)
             }
             .løsAvklaringsBehov(
-                AvklarSykepengerErstatningLøsning(
-                    sykepengeerstatningVurdering = SykepengerVurderingDto(
-                        begrunnelse = "...",
-                        dokumenterBruktIVurdering = emptyList(),
-                        harRettPå = false,
-                        grunn = SykepengerGrunn.SYKEPENGER_IGJEN_ARBEIDSUFOR,
-                        gjelderFra = periode.fom
+                PeriodisertAvklarSykepengerErstatningLøsning(
+                    løsningerForPerioder = listOf(
+                        PeriodisertSykepengerVurderingDto(
+                            begrunnelse = "...",
+                            dokumenterBruktIVurdering = emptyList(),
+                            harRettPå = false,
+                            grunn = SykepengerGrunn.SYKEPENGER_IGJEN_ARBEIDSUFOR,
+                            fom = periode.fom
+                        )
                     ),
                 )
             ).medKontekst {
@@ -350,13 +352,15 @@ class SykdomUungåligAvslagTest : AbstraktFlytOrkestratorTest(LokalUnleash::clas
                 assertThat(åpneAvklaringsbehov).anySatisfy { assertThat(it.definisjon).isEqualTo(Definisjon.AVKLAR_SYKEPENGEERSTATNING) }
             }
             .løsAvklaringsBehov(
-                AvklarSykepengerErstatningLøsning(
-                    sykepengeerstatningVurdering = SykepengerVurderingDto(
-                        begrunnelse = "...",
-                        dokumenterBruktIVurdering = emptyList(),
-                        harRettPå = false,
-                        grunn = null,
-                        gjelderFra = LocalDate.now()
+                PeriodisertAvklarSykepengerErstatningLøsning(
+                    løsningerForPerioder = listOf(
+                        PeriodisertSykepengerVurderingDto(
+                            begrunnelse = "...",
+                            dokumenterBruktIVurdering = emptyList(),
+                            harRettPå = false,
+                            grunn = null,
+                            fom = LocalDate.now()
+                        )
                     ),
                 )
             ).medKontekst {
