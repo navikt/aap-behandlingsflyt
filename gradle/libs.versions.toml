@@ -2,7 +2,7 @@
 ktor = "3.3.3"
 komponenter = "1.0.936"
 tilgang = "1.0.178"
-utbetaling = "0.0.75"
+utbetaling = "0.0.76"
 brev = "0.0.228"
 meldekort = "0.0.179"
 apiIntern = "0.0.25"
