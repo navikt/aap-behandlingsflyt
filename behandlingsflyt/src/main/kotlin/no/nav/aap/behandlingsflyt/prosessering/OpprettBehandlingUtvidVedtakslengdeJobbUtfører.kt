@@ -33,7 +33,7 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtfører(
         if (sisteGjeldendeBehandling != null) {
             log.info("Gjeldende behandling for sak $sakId er ${sisteGjeldendeBehandling.id}")
             // Bruker sisteGjeldendeBehandling.id både for behandlingId og forrigeBehandlingId fordi vi ser på gjeldende behandling
-            if (vedtakslengdeService.skalUtvideVedtakslengde(sisteGjeldendeBehandling.id, sisteGjeldendeBehandling.id, datoForUtvidelse)) {
+            if (vedtakslengdeService.skalUtvideSluttdato(sisteGjeldendeBehandling.id, sisteGjeldendeBehandling.id, datoForUtvidelse)) {
                 log.info("Oppretter behandling for utvidelse av vedtakslengde for sak $sakId")
                 val utvidVedtakslengdeBehandling = opprettNyBehandling(sakId)
                 prosesserBehandlingService.triggProsesserBehandling(utvidVedtakslengdeBehandling)

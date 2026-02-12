@@ -21,7 +21,7 @@ data class BeregningInput(
     val nedsettelsesDato: LocalDate,
     val årsInntekter: Set<InntektPerÅr>,
     val inntektsPerioder: Set<Månedsinntekt>,
-    val uføregrad: Set<Uføre>, // TODO: ta hensyn til stopp av uføre?
+    val uføregrad: Set<Uføre>,
     val yrkesskadevurdering: Yrkesskadevurdering?,
     val registrerteYrkesskader: Yrkesskader?,
     val beregningGrunnlag: BeregningGrunnlag?,

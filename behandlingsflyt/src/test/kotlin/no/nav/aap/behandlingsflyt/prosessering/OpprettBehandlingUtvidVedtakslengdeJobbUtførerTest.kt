@@ -6,6 +6,8 @@ import io.mockk.junit5.MockKExtension
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.verify
+import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.ÅrMedHverdager
 import no.nav.aap.behandlingsflyt.behandling.vedtakslengde.VedtakslengdeService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
@@ -41,7 +43,6 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID.randomUUID
 
-@ExtendWith(MockKExtension::class)
 class OpprettBehandlingUtvidVedtakslengdeJobbUtførerTest {
 
     private val dagensDato = 1 desember 2025
@@ -80,6 +81,7 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtførerTest {
         every { sakOgBehandlingService.finnEllerOpprettBehandling(sak.id, any()) } returns opprettetBehandling()
         every { prosesserBehandlingService.triggProsesserBehandling(any<SakOgBehandlingService.OpprettetBehandling>()) } just Runs
         every { vilkårsresultatRepository.hent(behandlingId) } returns genererVilkårsresultat(sak.rettighetsperiode)
+        every { vedtakslengdeRepository.hentHvisEksisterer(behandling.id) } returns null
 
         opprettBehandlingUtvidVedtakslengdeJobbUtfører.utfør(jobbInput)
 
@@ -123,6 +125,7 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtførerTest {
         every { sakOgBehandlingService.finnEllerOpprettBehandling(sak.id, any()) } returns opprettetBehandling()
         every { prosesserBehandlingService.triggProsesserBehandling(any<SakOgBehandlingService.OpprettetBehandling>()) } just Runs
         every { vilkårsresultatRepository.hent(behandlingId) } returns genererVilkårsresultat(sak.rettighetsperiode, oppfyltBistand = false)
+        every { vedtakslengdeRepository.hentHvisEksisterer(behandling.id) } returns null
 
         opprettBehandlingUtvidVedtakslengdeJobbUtfører.utfør(jobbInput)
 

@@ -6,8 +6,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Re
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
-import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
@@ -22,10 +20,6 @@ import kotlin.reflect.KClass
 class OvergangArbeidFlytTest(val unleashGateway: KClass<UnleashGateway>) : AbstraktFlytOrkestratorTest(unleashGateway) {
     @Test
     fun `Vurdering av 11-17`() {
-        if (gatewayProvider.provide<UnleashGateway>().isDisabled(BehandlingsflytFeature.OvergangArbeid)) {
-            return
-        }
-
         val sak = happyCaseFørstegangsbehandling(LocalDate.now())
         val endringsdato = sak.rettighetsperiode.fom.plusDays(7)
         val sluttdato = endringsdato.plusMonths(6).minusDays(1)
@@ -66,10 +60,6 @@ class OvergangArbeidFlytTest(val unleashGateway: KClass<UnleashGateway>) : Abstr
 
     @Test
     fun `Endrer sykdomsvurdering slik at 11-17-vurdering ikke lenger er nødvendig`() {
-        if (gatewayProvider.provide<UnleashGateway>().isDisabled(BehandlingsflytFeature.OvergangArbeid)) {
-            return
-        }
-
         val sak = happyCaseFørstegangsbehandling(LocalDate.now())
         val periodeEttAar = Periode(fom = sak.rettighetsperiode.fom, tom = sak.rettighetsperiode.fom.plussEtÅrMedHverdager(ÅrMedHverdager.FØRSTE_ÅR))
 

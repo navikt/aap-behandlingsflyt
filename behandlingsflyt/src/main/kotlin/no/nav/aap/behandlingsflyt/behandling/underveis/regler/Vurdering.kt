@@ -23,6 +23,7 @@ data class Vurdering(
     internal val institusjonVurdering: InstitusjonVurdering? = null,
     private val meldeperiode: Periode? = null,
     val varighetVurdering: VarighetVurdering? = null,
+    val kvoteVurdering: KvoteVurdering? = null,
 ) {
     fun leggTilRettighetstype(rettighetstype: RettighetsType): Vurdering {
         return copy(fårAapEtter = rettighetstype)
@@ -114,11 +115,12 @@ data class Vurdering(
             return null
         }
 
-        if (fårAapEtter == null) {
-            return UnderveisÅrsak.IKKE_GRUNNLEGGENDE_RETT
-        } else if (!varighetsvurderingOppfylt()) {
+        if (!varighetsvurderingOppfylt()) {
             return UnderveisÅrsak.VARIGHETSKVOTE_BRUKT_OPP
+        } else if (fårAapEtter == null) {
+            return UnderveisÅrsak.IKKE_GRUNNLEGGENDE_RETT
         }
+
         throw IllegalStateException("Ukjent avslagsårsak")
     }
 

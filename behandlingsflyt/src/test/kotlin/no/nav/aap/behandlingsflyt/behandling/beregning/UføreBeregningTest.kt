@@ -1,5 +1,3 @@
-@file:Suppress("IDENTITY_SENSITIVE_OPERATIONS_WITH_VALUE_TYPE")
-
 package no.nav.aap.behandlingsflyt.behandling.beregning
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag11_19
@@ -170,7 +168,30 @@ class UføreBeregningTest {
         assertThat(uføreInntekt2022.inntektIKroner.verdi.toDouble()).isEqualTo(10_000 * 12.0)
         // Halve året skal oppjusteres med uføregraden
         assertThat(uføreInntekt2022.inntektJustertForUføregrad.verdi.toDouble()).isEqualTo(10_000 * 6 + 10_000 * 6 / 0.5)
+    }
 
+    @Test
+    fun `manglende inntekt fra A-inntekt tolkes som null kroner`() {
+        // https://nav-it.slack.com/archives/C08PX5Z14ER/p1770790411910569?thread_ts=1770729919.721449&cid=C08PX5Z14ER
+        val uføreBeregning = UføreBeregning(
+            grunnlag = elleveNittenGrunnlag(0),
+            uføregrader = uføreGrader(
+                LocalDate.of(2020, 1, 1) to Prosent.`0_PROSENT`,
+                LocalDate.of(2022, 7, 1) to Prosent.`50_PROSENT`
+            ),
+            relevanteÅr = relevanteÅr(2020, 2021, 2022),
+            inntektsPerioder = emptySet()
+        )
+
+        val grunnlag = uføreBeregning.beregnUføre(Year.of(2023))
+
+        assertThat(grunnlag.grunnlaget()).isEqualTo(GUnit(0))
+
+        val uføreInntekt2022 = grunnlag.uføreInntekterFraForegåendeÅr().first { it.år == Year.of(2022) }
+
+        assertThat(uføreInntekt2022.inntektIKroner.verdi.toDouble()).isEqualTo(0.0)
+        // Halve året skal oppjusteres med uføregraden
+        assertThat(uføreInntekt2022.inntektJustertForUføregrad.verdi.toDouble()).isEqualTo(0.0)
     }
 
     private fun relevanteÅr(vararg år: Int): Set<Year> = år.map(Year::of).toSet()
@@ -192,8 +213,8 @@ class UføreBeregningTest {
     )
 
     private fun genererInntektsPerioder(vararg månedsInntektPerÅr: Pair<Int, Number>): Set<Månedsinntekt> {
-        return månedsInntektPerÅr.toList().map { (år, beløp) -> oppsplittetInntekt(år, Beløp(beløp.toDouble().toBigDecimal())) }
-            .flatten().toSet()
+        return månedsInntektPerÅr.toList()
+            .flatMap { (år, beløp) -> oppsplittetInntekt(år, Beløp(beløp.toDouble().toBigDecimal())) }.toSet()
     }
 
     private fun oppsplittetInntekt(år: Int, månedsInntekt: Beløp): List<Månedsinntekt> {

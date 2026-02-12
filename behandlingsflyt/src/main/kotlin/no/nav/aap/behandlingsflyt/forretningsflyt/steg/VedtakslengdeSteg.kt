@@ -47,7 +47,7 @@ class VedtakslengdeSteg(
             }
 
             VurderingType.UTVID_VEDTAKSLENGDE -> {
-                if (vedtakslengdeService.skalUtvideVedtakslengde(kontekst.behandlingId, kontekst.forrigeBehandlingId)) {
+                if (vedtakslengdeService.skalUtvideSluttdato(kontekst.behandlingId, kontekst.forrigeBehandlingId)) {
                     vedtakslengdeService.utvidSluttdato(
                         behandlingId = kontekst.behandlingId,
                         forrigeBehandlingId = kontekst.forrigeBehandlingId,

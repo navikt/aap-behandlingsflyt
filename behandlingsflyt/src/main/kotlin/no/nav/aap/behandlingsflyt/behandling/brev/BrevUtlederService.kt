@@ -100,7 +100,7 @@ class BrevUtlederService(
                     return VedtakArbeidsopptrapping11_23_sjette_ledd
                 }
 
-                val resultat = resultatUtleder.utledResultat(behandlingId)
+                val resultat = resultatUtleder.utledResultatFørstegangsBehandling(behandlingId)
 
                 return when (resultat) {
                     Resultat.INNVILGELSE -> {

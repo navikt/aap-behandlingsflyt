@@ -103,6 +103,17 @@ fun genererVilkårsresultat(
                 faktagrunnlag = null
             )
         )
+    ),
+    samordningVilkår: Vilkår = Vilkår(
+        Vilkårtype.SAMORDNING, setOf(
+            Vilkårsperiode(
+                periode,
+                Utfall.IKKE_VURDERT,
+                false,
+                null,
+                faktagrunnlag = null
+            )
+        )
     )
 ): Vilkårsresultat {
     return Vilkårsresultat(
@@ -114,7 +125,8 @@ fun genererVilkårsresultat(
             bistandVilkåret,
             grunnlagVilkåret,
             sykepengeerstatningVilkåret,
-            studentVilkår
+            studentVilkår,
+            samordningVilkår
         )
     )
 }

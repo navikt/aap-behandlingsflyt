@@ -27,6 +27,6 @@ class AvklarHelseinstitusjonLøsning(
 ) :
     EnkeltAvklaringsbehovLøsning {
     override fun løs(repositoryProvider: RepositoryProvider, kontekst: AvklaringsbehovKontekst, gatewayProvider: GatewayProvider): LøsningsResultat {
-        return AvklarHelseinstitusjonLøser(repositoryProvider).løs(kontekst, this)
+        return AvklarHelseinstitusjonLøser(repositoryProvider, gatewayProvider).løs(kontekst, this)
     }
 }

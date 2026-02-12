@@ -392,7 +392,7 @@ class StatistikkMetoder(
     private fun hentResultat(behandling: Behandling): ResultatKode? {
         return when (behandling.typeBehandling()) {
             TypeBehandling.Førstegangsbehandling -> {
-                resultatUtleder.utledResultat(behandling.id).let {
+                resultatUtleder.utledResultatFørstegangsBehandling(behandling.id).let {
                     when (it) {
                         Resultat.INNVILGELSE -> ResultatKode.INNVILGET
                         Resultat.AVSLAG -> ResultatKode.AVSLAG

@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 import no.nav.aap.behandlingsflyt.behandling.institusjonsopphold.Institusjonsopphold
 import no.nav.aap.behandlingsflyt.behandling.underveis.Kvoter
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Faktagrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.rettighetstype.RettighetstypeGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Meldekort
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneGrunnlag
@@ -26,5 +27,6 @@ data class UnderveisInput(
     val overstyringMeldepliktGrunnlag: OverstyringMeldepliktGrunnlag,
     val meldeperioder: List<Periode>,
     val vedtaksdatoFørstegangsbehandling: LocalDate?,
+    val rettighetstypeGrunnlag: RettighetstypeGrunnlag?,
     val forenkletKvoteFeature: Boolean = false,
 ) : Faktagrunnlag

@@ -39,7 +39,6 @@ class OpprettBehandlingMigrereRettighetsperiodeJobbUtfører(
     private val tilkjentYtelseRepository: TilkjentYtelseRepository,
     private val underveisRepository: UnderveisRepository,
     private val vilkårsresultatRepository: VilkårsresultatRepository,
-    private val unleashGateway: UnleashGateway,
 ) : JobbUtfører {
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -52,25 +51,22 @@ class OpprettBehandlingMigrereRettighetsperiodeJobbUtfører(
         log.info("Migrerer rettighetsperiode for sak $sakId")
 
 
-        if (unleashGateway.isEnabled(BehandlingsflytFeature.MigrerRettighetsperiode)) {
-            if (sak.rettighetsperiode.tom == Tid.MAKS) {
-                log.info("Har allerede tid maks som rettighetsperiode - lager ikke en ny behandling")
-                return
-            }
-            val behandlingFørMigrering = sakOgBehandlingService.finnSisteYtelsesbehandlingFor(sak.id)
-                ?: error("Fant ikke behandling for sak=${sakId}")
-            if (behandlingFørMigrering.status().erÅpen()) {
-                throw IllegalArgumentException("Kan ikke migrere sak når det finnes en åpen behandling")
-            }
-            sakOgBehandlingService.overstyrRettighetsperioden(sak.id, sak.rettighetsperiode.fom, Tid.MAKS)
-            val utvidVedtakslengdeBehandling = opprettNyBehandling(sak)
-            prosesserBehandlingService.triggProsesserBehandling(utvidVedtakslengdeBehandling)
-            validerTilstandEtterMigrering(sak, sakId, behandlingFørMigrering)
-
-            log.info("Jobb for migrering av rettighetsperiode fullført for sak ${sakId}")
-        } else {
-            log.info("Featuretoggle er skrudd av - migrerer ikke")
+        if (sak.rettighetsperiode.tom == Tid.MAKS) {
+            log.info("Har allerede tid maks som rettighetsperiode - lager ikke en ny behandling")
+            return
         }
+        val behandlingFørMigrering = sakOgBehandlingService.finnSisteYtelsesbehandlingFor(sak.id)
+            ?: error("Fant ikke behandling for sak=${sakId}")
+        if (behandlingFørMigrering.status().erÅpen()) {
+            throw IllegalArgumentException("Kan ikke migrere sak når det finnes en åpen behandling")
+        }
+        sakOgBehandlingService.overstyrRettighetsperioden(sak.id, sak.rettighetsperiode.fom, Tid.MAKS)
+        val utvidVedtakslengdeBehandling = opprettNyBehandling(sak)
+        prosesserBehandlingService.triggProsesserBehandling(utvidVedtakslengdeBehandling)
+        validerTilstandEtterMigrering(sak, sakId, behandlingFørMigrering)
+
+        log.info("Jobb for migrering av rettighetsperiode fullført for sak ${sakId}")
+
     }
 
     private fun validerTilstandEtterMigrering(
@@ -78,6 +74,10 @@ class OpprettBehandlingMigrereRettighetsperiodeJobbUtfører(
         sakId: Long,
         behandlingFørMigrering: Behandling
     ) {
+        // Kan ikke validere alle sakene i dev ettersom ekstremt mange er i en ugyldig tilstand
+        if (Miljø.erDev()) {
+            return
+        }
         val behandlingEtterMigrering = sakOgBehandlingService.finnSisteYtelsesbehandlingFor(sak.id)
             ?: error("Fant ikke behandling for sak=${sakId}")
         validerBehandlingerErUlike(behandlingFørMigrering, behandlingEtterMigrering)
@@ -300,7 +300,6 @@ class OpprettBehandlingMigrereRettighetsperiodeJobbUtfører(
                 tilkjentYtelseRepository = repositoryProvider.provide(),
                 vilkårsresultatRepository = repositoryProvider.provide(),
                 sakOgBehandlingService = SakOgBehandlingService(repositoryProvider, gatewayProvider),
-                unleashGateway = gatewayProvider.provide(),
             )
         }
 
