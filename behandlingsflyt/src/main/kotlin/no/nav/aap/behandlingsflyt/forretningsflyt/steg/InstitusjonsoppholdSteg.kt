@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.institusjonsopphold.InstitusjonsoppholdUtlederService
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MapInstitusjonoppholdTilRegel
@@ -16,7 +15,6 @@ import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
@@ -26,26 +24,21 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
 
 class InstitusjonsoppholdSteg(
-    private val avklaringsbehovRepository: AvklaringsbehovRepository,
     private val institusjonsoppholdUtlederService: InstitusjonsoppholdUtlederService,
     private val institusjonsoppholdRepository: InstitusjonsoppholdRepository,
     private val tidligereVurderinger: TidligereVurderinger,
     private val avklaringsbehovService: AvklaringsbehovService,
-    private val vilkårsresultatRepository: VilkårsresultatRepository,
-    private val behandlingRepository: BehandlingRepository
+    private val vilkårsresultatRepository: VilkårsresultatRepository
 ) : BehandlingSteg {
     constructor(repositoryProvider: RepositoryProvider) : this(
-        avklaringsbehovRepository = repositoryProvider.provide(),
         institusjonsoppholdRepository = repositoryProvider.provide(),
         institusjonsoppholdUtlederService = InstitusjonsoppholdUtlederService(repositoryProvider),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
         avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
-        vilkårsresultatRepository = repositoryProvider.provide(),
-        behandlingRepository = repositoryProvider.provide(),
+        vilkårsresultatRepository = repositoryProvider.provide()
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
 
         avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkårTilstrekkeligVurdert(
             perioderSomIkkeErTilstrekkeligVurdert = { perioderHelseoppholdIkkeErTilstrekkeligVurdert(kontekst) },
@@ -60,13 +53,13 @@ class InstitusjonsoppholdSteg(
                 } else if (vedtatteVurderinger != null && vedtatteVurderinger.vurderinger.toSet() != aktiveVurderinger.toSet()) {
                     institusjonsoppholdRepository.lagreHelseVurdering(
                         kontekst.behandlingId,
-                        vedtatteVurderinger.vurdertAv,
+                        vedtatteVurderinger.vurderinger.firstOrNull()!!.vurdertAv,
                         vedtatteVurderinger.vurderinger
                     )
                 }
             },
             definisjon = Definisjon.AVKLAR_HELSEINSTITUSJON,
-            tvingerAvklaringsbehov = setOf<Vurderingsbehov>(Vurderingsbehov.INSTITUSJONSOPPHOLD),
+            tvingerAvklaringsbehov = setOf(Vurderingsbehov.INSTITUSJONSOPPHOLD),
             nårVurderingErRelevant = ::perioderMedVurderingsbehovHelse
         )
 

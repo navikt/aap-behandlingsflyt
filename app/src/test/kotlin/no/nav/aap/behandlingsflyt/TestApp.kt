@@ -193,13 +193,23 @@ private fun genererFengselsopphold() = InstitusjonsoppholdJSON(
     institusjonsnavn = "Azkaban"
 )
 
-private fun genererSykehusopphold() = InstitusjonsoppholdJSON(
-    organisasjonsnummer = "12345",
-    kategori = Oppholdstype.H.name,
-    institusjonstype = Institusjonstype.HS.name,
-    forventetSluttdato = LocalDate.now().plusYears(1),
-    startdato = LocalDate.now().minusYears(2),
-    institusjonsnavn = "St. Mungos Hospital"
+private fun genererSykehusopphold() = listOf(
+    InstitusjonsoppholdJSON(
+        organisasjonsnummer = "12345",
+        kategori = Oppholdstype. H. name,
+        institusjonstype = Institusjonstype. HS.name,
+        startdato = LocalDate.of(2025, 1, 1),
+        forventetSluttdato = LocalDate.of(2025, 8, 1),
+        institusjonsnavn = "St. Mungos Hospital"
+    ),
+    InstitusjonsoppholdJSON(
+        organisasjonsnummer = "67890",
+        kategori = Oppholdstype.D.name,
+        institusjonstype = Institusjonstype.HS.name,
+        startdato = LocalDate.of(2025, 8, 2),
+        forventetSluttdato = LocalDate.of(2026, 6, 1),
+        institusjonsnavn = "Helgelandssykehus Dialyse, Sandnessjøen"
+    )
 )
 
 private fun genererBarn(dto: TestBarn): TestPerson {
@@ -270,10 +280,10 @@ private fun sendInnSøknad(dto: OpprettTestcaseDTO, gatewayProvider: GatewayProv
                 )
             },
             barn = barn,
-            institusjonsopphold = listOfNotNull(
-                if (dto.institusjoner.fengsel == true) genererFengselsopphold() else null,
-                if (dto.institusjoner.sykehus == true) genererSykehusopphold() else null,
-            ),
+            institusjonsopphold = buildList {
+                if (dto.institusjoner.fengsel == true) add(genererFengselsopphold())
+                if (dto.institusjoner.sykehus == true) addAll(genererSykehusopphold())
+            },
             inntekter = dto.inntekterPerAr.orEmpty().map { inn -> inn.to() },
             sykepenger = dto.sykepenger.map {
                 TestPerson.Sykepenger(
@@ -305,7 +315,7 @@ private fun sendInnSøknad(dto: OpprettTestcaseDTO, gatewayProvider: GatewayProv
         )
     )
     val periode = Periode(
-        LocalDate.now(),
+        LocalDate.of(2025, 1, 1),  // <- Start samme dag som første opphold
         Tid.MAKS
     )
     val sak = datasource.transaction { connection ->
@@ -352,7 +362,7 @@ private fun opprettNySakOgBehandling(dto: OpprettTestcaseDTO, gatewayProvider: G
             if (dto.steg == StegType.AVKLAR_SYKDOM) return sak
             løsSykdom(
                 behandling = behandling,
-                vurderingGjelderFra = dto.søknadsdato ?: sak.rettighetsperiode.fom,
+                vurderingGjelderFra = sak.rettighetsperiode.fom,
                 erArbeidsevnenNedsatt = dto.erArbeidsevnenNedsatt,
                 erNedsettelseIArbeidsevneMerEnnHalvparten = dto.erNedsettelseIArbeidsevneMerEnnHalvparten
             )
@@ -362,7 +372,7 @@ private fun opprettNySakOgBehandling(dto: OpprettTestcaseDTO, gatewayProvider: G
 
         if (harBehandlingsgrunnlag) {
             if (dto.steg == StegType.VURDER_BISTANDSBEHOV) return sak
-            løsBistand(behandling, dto.søknadsdato ?: sak.rettighetsperiode.fom)
+            løsBistand(behandling, sak.rettighetsperiode.fom)
 
             // Vurderinger i sykdom
             if (dto.steg == StegType.REFUSJON_KRAV) return sak
@@ -401,7 +411,7 @@ private fun opprettNySakOgBehandling(dto: OpprettTestcaseDTO, gatewayProvider: G
 
             // Oppholdskrav
             if (dto.steg == StegType.VURDER_OPPHOLDSKRAV) return sak
-            løsOppholdskrav(behandling)
+            løsOppholdskrav(behandling, sak.rettighetsperiode.fom)
 
             // Institusjonsopphold
             if (dto.steg == StegType.DU_ER_ET_ANNET_STED) return sak

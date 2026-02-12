@@ -7,5 +7,5 @@ data class HelseinstitusjonVurderingDto(
     val begrunnelse: String,
     val faarFriKostOgLosji: Boolean,
     val forsoergerEktefelle: Boolean? = null,
-    val harFasteUtgifter: Boolean? = null,
+    val harFasteUtgifter: Boolean? = null
 )
