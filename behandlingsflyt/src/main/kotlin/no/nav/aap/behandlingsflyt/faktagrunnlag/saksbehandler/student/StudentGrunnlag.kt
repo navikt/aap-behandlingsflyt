@@ -43,8 +43,8 @@ data class StudentGrunnlag(
             .groupBy { it.vurdertIBehandling }
             .values
             .sortedBy { it[0].vurdertTidspunkt }
-            .flatMap { it.sortedBy { it.fom ?: rettighetsperiode.fom } }
-            .somTidslinje { Periode(it.fom ?: rettighetsperiode.fom, rettighetsperiode.tom) }
+            .flatMap { it.sortedBy { it.fom } }
+            .somTidslinje { Periode(it.fom, rettighetsperiode.tom) }
     }
 }
 
