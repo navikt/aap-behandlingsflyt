@@ -19,11 +19,11 @@ class MinsteÅrligYtelseAlderTidslinjeTest {
         assertThat(tidslinje.segmenter()).containsExactly(
             Segment(
                 periode = Periode(LocalDate.MIN, LocalDate.of(2015, 1, 1)),
-                verdi = AldersStrategi.Under25
+                verdi = Under25
             ),
             Segment(
                 periode = Periode(LocalDate.of(2015, 1, 2), Tid.MAKS),
-                verdi = AldersStrategi.Over25
+                verdi = Over25
             ),
         )
     }
@@ -36,11 +36,11 @@ class MinsteÅrligYtelseAlderTidslinjeTest {
         assertThat(tidslinje.segmenter()).containsExactly(
             Segment(
                 periode = Periode(LocalDate.MIN, LocalDate.of(2021, 2, 27)),
-                verdi = AldersStrategi.Under25
+                verdi = Under25
             ),
             Segment(
                 periode = Periode(LocalDate.of(2021, 2, 28), Tid.MAKS),
-                verdi = AldersStrategi.Over25
+                verdi = Over25
             ),
         )
     }
@@ -52,23 +52,22 @@ class MinsteÅrligYtelseAlderTidslinjeTest {
 
         val minsteÅrligYtelseTidslinje = MINSTE_ÅRLIG_YTELSE_TIDSLINJE
 
-        val tidslinje =
-            minsteÅrligYtelseAlderTidslinje.innerJoin(minsteÅrligYtelseTidslinje) { alderjustering, årligYtelse ->
-                alderjustering.apply(årligYtelse)
-            }
+        val tidslinje = minsteÅrligYtelseAlderTidslinje.innerJoin(minsteÅrligYtelseTidslinje) { alderjustering, årligYtelse ->
+            alderjustering(årligYtelse, GUnit("2.041"))
+        }
 
         assertThat(tidslinje.segmenter()).containsExactly(
             Segment(
                 periode = Periode(LocalDate.MIN, LocalDate.of(2021, 2, 27)),
-                verdi = GUnit(2).multiplisert(2).dividert(3)
+                verdi = ÅrligYtelse(GUnit(2).multiplisert(2).dividert(3), Minstesats.IKKE_MINSTESATS)
             ),
             Segment(
                 periode = Periode(LocalDate.of(2021, 2, 28), LocalDate.of(2024, 6, 30)),
-                verdi = GUnit(2)
+                verdi = ÅrligYtelse(GUnit(2), Minstesats.IKKE_MINSTESATS)
             ),
             Segment(
                 periode = Periode(LocalDate.of(2024, 7, 1), Tid.MAKS),
-                verdi = GUnit("2.041")
+                verdi = ÅrligYtelse(GUnit("2.041"), Minstesats.IKKE_MINSTESATS)
             )
         )
     }

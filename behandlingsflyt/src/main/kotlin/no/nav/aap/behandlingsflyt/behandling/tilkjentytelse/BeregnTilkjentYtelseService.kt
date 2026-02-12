@@ -178,6 +178,12 @@ class BeregnTilkjentYtelseService(private val grunnlag: TilkjentYtelseGrunnlag) 
     private fun beregnDagsatsTidslinje(): Tidslinje<Dagsats> {
         /** § 11-19 Grunnlaget for beregningen av arbeidsavklaringspenger. */
         val grunnlagsfaktor = grunnlag.beregningsgrunnlag ?: GUnit(0)
+        /** § 11-20 første avsnitt:
+         * > Arbeidsavklaringspenger gis med 66 prosent av grunnlaget, se § 11-19.
+         * > Minste årlige ytelse er 2,041 ganger grunnbeløpet.
+         * > For medlem under 25 år er minste årlige ytelse 2/3 av 2,041 ganger grunnbeløpet
+         */
+        val årligYtelseFørMax = grunnlagsfaktor.multiplisert(`66_PROSENT`)
 
         return aldersjusteringAvMinsteÅrligeYtelse(grunnlag.fødselsdato)
             .innerJoin(grunnlag.minsteÅrligeYtelse) { aldersjustering, minsteYtelse ->
@@ -186,30 +192,12 @@ class BeregnTilkjentYtelseService(private val grunnlag: TilkjentYtelseGrunnlag) 
                  * > Minste årlige ytelse er 2,041 ganger grunnbeløpet.
                  * > For medlem under 25 år er minste årlige ytelse 2/3 av 2,041 ganger grunnbeløpet
                  */
-                val minsteYtelse = aldersjustering.apply(minsteYtelse)
-
-                val årligYtelseFørMax = grunnlagsfaktor.multiplisert(`66_PROSENT`)
-
-                /** § 11-20 første avsnitt:
-                 * > Arbeidsavklaringspenger gis med 66 prosent av grunnlaget, se § 11-19.
-                 * > Minste årlige ytelse er 2,041 ganger grunnbeløpet.
-                 * > For medlem under 25 år er minste årlige ytelse 2/3 av 2,041 ganger grunnbeløpet
-                 */
-                val årligYtelse = maxOf(minsteYtelse, årligYtelseFørMax)
-
-                val minstesats = if (årligYtelseFørMax < årligYtelse) when (aldersjustering) {
-                    AldersStrategi.Under25 -> Minstesats.MINSTESATS_UNDER_25
-                    AldersStrategi.Over25 -> Minstesats.MINSTESATS_OVER_25
-                } else Minstesats.IKKE_MINSTESATS
+                val årligYtelse = aldersjustering(minsteYtelse, årligYtelseFørMax)
 
                 /** § 11-20 andre avsnitt andre setning:
                  * > Dagsatsen er den årlige ytelsen delt på 260
                  */
-
-                /** § 11-20 andre avsnitt andre setning:
-                 * > Dagsatsen er den årlige ytelsen delt på 260
-                 */
-                Dagsats(årligYtelse.dividert(ANTALL_ÅRLIGE_ARBEIDSDAGER), minstesats)
+                Dagsats(årligYtelse.årligYtelse.dividert(ANTALL_ÅRLIGE_ARBEIDSDAGER), årligYtelse.minstesats)
             }
     }
 
