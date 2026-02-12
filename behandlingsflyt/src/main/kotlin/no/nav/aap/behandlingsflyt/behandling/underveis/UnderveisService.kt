@@ -16,6 +16,7 @@ import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Vurdering
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.ÅrMedHverdager
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.meldeperiode.MeldeperiodeRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.rettighetstype.RettighetstypeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
@@ -62,7 +63,8 @@ class UnderveisService(
     private val vedtakService: VedtakService,
     private val vedtakslengdeRepository: VedtakslengdeRepository,
     private val behandlingRepository: BehandlingRepository,
-    private val unleashGateway: UnleashGateway
+    private val unleashGateway: UnleashGateway,
+    private val rettighetstypeRepository: RettighetstypeRepository
 ) {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         sakService = SakService(repositoryProvider),
@@ -79,6 +81,7 @@ class UnderveisService(
         vedtakslengdeRepository = repositoryProvider.provide(),
         behandlingRepository = repositoryProvider.provide(),
         unleashGateway = gatewayProvider.provide(),
+        rettighetstypeRepository = repositoryProvider.provide()
     )
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -186,6 +189,7 @@ class UnderveisService(
 
         val vedtaksdatoFørstegangsbehandling = vedtakService.vedtakstidspunktFørstegangsbehandling(sakId)
 
+        val rettighetstypeGrunnlag = rettighetstypeRepository.hentHvisEksisterer(behandlingId)
 
         return UnderveisInput(
             periodeForVurdering = periodeForVurdering,
@@ -200,6 +204,7 @@ class UnderveisService(
             overstyringMeldepliktGrunnlag = overstyringMeldepliktGrunnlag,
             meldeperioder = meldeperioder,
             vedtaksdatoFørstegangsbehandling = vedtaksdatoFørstegangsbehandling?.toLocalDate(),
+            rettighetstypeGrunnlag = rettighetstypeGrunnlag,
             forenkletKvoteFeature = unleashGateway.isEnabled(BehandlingsflytFeature.ForenkletKvote),
         )
     }
