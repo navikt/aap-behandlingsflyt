@@ -55,7 +55,7 @@ class VurderSykdomSteg(
         )
 
         val studentvurderinger = studentRepository.hentHvisEksisterer(kontekst.behandlingId)
-            ?.somStudenttidslinje(kontekst.rettighetsperiode)
+            ?.somStudenttidslinje(kontekst.rettighetsperiode.tom)
             .orEmpty()
 
         return Tidslinje.map2(tidligereVurderingsutfall, studentvurderinger)
