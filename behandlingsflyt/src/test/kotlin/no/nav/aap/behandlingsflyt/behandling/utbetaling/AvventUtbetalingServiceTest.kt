@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.utbetaling
 
+import io.mockk.clearAllMocks
 import io.mockk.every
 import io.mockk.junit5.MockKExtension
 import io.mockk.mockk
@@ -28,6 +29,7 @@ import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.utbetal.kodeverk.AvventÅrsak
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.BeforeEach
@@ -92,6 +94,10 @@ class AvventUtbetalingServiceTest {
     }
 
 
+    @AfterEach
+    fun tearDown() {
+        clearAllMocks()
+    }
 
     @Test
     fun `Ingen refusjonskrav skal føre til ingen avvent utbetaling`() {

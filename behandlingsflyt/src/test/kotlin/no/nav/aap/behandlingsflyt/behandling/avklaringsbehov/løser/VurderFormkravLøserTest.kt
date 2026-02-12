@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser
 
+import io.mockk.clearAllMocks
 import io.mockk.every
 import io.mockk.junit5.MockKExtension
 import io.mockk.mockk
@@ -16,6 +17,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
@@ -28,6 +30,10 @@ class VurderFormkravLøserTest {
     private val avklaringsbehovRepositoryMock = mockk<AvklaringsbehovRepository>()
     private val avklaringsbehoveneMock = mockk<Avklaringsbehovene>()
 
+    @AfterEach
+    fun tearDown() {
+        clearAllMocks()
+    }
 
     @Test
     fun `løs skal returnere et løsningsresultat om alle verdier er satt`() {
