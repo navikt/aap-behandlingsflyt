@@ -21,26 +21,34 @@ data class Tilkjent(
     val antallBarn: Int,
     val barnetilleggsats: Beløp,
     val barnetillegg: Beløp,
-    val utbetalingsdato: LocalDate
+    val utbetalingsdato: LocalDate,
+    val minsteSats: Minstesats,
+    private val redusertDagsats: Beløp?
 ) {
 
     /**
      * Hent ut full dagsats etter reduksjon.
      */
     fun redusertDagsats(): Beløp {
+        if (redusertDagsats != null) return redusertDagsats
+
         return Beløp(
             dagsats.multiplisert(gradering)
                 .pluss(barnetillegg.multiplisert(gradering)).verdi().setScale(0, RoundingMode.HALF_UP)
         )
     }
 
+    @Suppress("FunctionName")
     fun dagsatsFor11_9Reduksjon(): Beløp {
         return Beløp(
             dagsats.multiplisert(graderingGrunnlag.graderingForDagsats11_9Reduksjon())
-                .pluss(barnetillegg.multiplisert(graderingGrunnlag.graderingForDagsats11_9Reduksjon())).verdi().setScale(0, RoundingMode.HALF_UP)
+                .pluss(barnetillegg.multiplisert(graderingGrunnlag.graderingForDagsats11_9Reduksjon())).verdi()
+                .setScale(0, RoundingMode.HALF_UP)
         )
     }
 }
+
+enum class Minstesats { IKKE_MINSTESATS, MINSTESATS_OVER_25, MINSTESATS_UNDER_25 }
 
 data class GraderingGrunnlag(
     val samordningGradering: Prosent,
@@ -50,6 +58,7 @@ data class GraderingGrunnlag(
     val samordningArbeidsgiverGradering: Prosent,
     val meldepliktGradering: Prosent,
 ) {
+    @Suppress("FunctionName")
     fun graderingForDagsats11_9Reduksjon() = `100_PROSENT`
         .minus(samordningGradering)
         .minus(samordningArbeidsgiverGradering)

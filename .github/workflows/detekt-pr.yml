@@ -96,16 +96,7 @@ jobs:
             comment += `| ❌ Error | ${severityCounts.error || 0} |\n`;
             comment += `| ⚠️ Warning | ${severityCounts.warning || 0} |\n`;
             comment += `| ℹ️ Note | ${severityCounts.note || 0} |\n\n`;
-            
-            if (sortedRules.length > 0) {
-              comment += `### Top Issues\n\n`;
-              comment += `| Rule | Count | Description |\n`;
-              comment += `|------|-------|-------------|\n`;
-              sortedRules.forEach(([rule, data]) => {
-                comment += `| \`${rule}\` | ${data.count} | ${data.message} |\n`;
-              });
-            }
-            
+                        
             comment += `\n📊 [View detailed report in Security > Code scanning alerts](${context.payload.repository.html_url}/security/code-scanning)`;
             
             const { data: comments } = await github.rest.issues.listComments({

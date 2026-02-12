@@ -10,7 +10,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.type.Periode
@@ -108,18 +107,6 @@ class OppholdskravGrunnlagRepositoryImplTest {
             OppholdskravGrunnlagRepositoryImpl(connection).hentHvisEksisterer(behandlingId)
         }
         assertThat(ikkeGrunnlag).isNull()
-    }
-
-    @Test
-    fun `periodisering av tidslinje`() {
-
-    }
-
-
-    @Test
-    fun `hent historiske oppholdskravene i db`() {
-
-
     }
 
 

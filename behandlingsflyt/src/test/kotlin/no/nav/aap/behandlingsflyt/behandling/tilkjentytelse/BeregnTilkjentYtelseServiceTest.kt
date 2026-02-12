@@ -53,6 +53,7 @@ class BeregnTilkjentYtelseServiceTest {
             gjennomsnittligInntektIG = GUnit(0),
             inntekter = emptyList()
         )
+
         val periode = Periode(LocalDate.of(2023, 4, 30), LocalDate.of(2023, 5, 1))
 
         val underveisgrunnlag = underveisgrunnlag(periode)
@@ -100,7 +101,9 @@ class BeregnTilkjentYtelseServiceTest {
                     antallBarn = 0,
                     barnetilleggsats = Beløp("35.00"),
                     barnetillegg = Beløp("0"),
-                    utbetalingsdato = periode.tom.plusDays(9)
+                    utbetalingsdato = periode.tom.plusDays(9),
+                    minsteSats = Minstesats.IKKE_MINSTESATS,
+                    redusertDagsats = Beløp(1132)
                 )
             ), Segment(
                 periode = Periode(LocalDate.of(2023, 5, 1), LocalDate.of(2023, 5, 1)), verdi = Tilkjent(
@@ -119,7 +122,9 @@ class BeregnTilkjentYtelseServiceTest {
                     antallBarn = 0,
                     barnetilleggsats = Beløp("35.00"),
                     barnetillegg = Beløp("0"),
-                    utbetalingsdato = periode.tom.plusDays(9)
+                    utbetalingsdato = periode.tom.plusDays(9),
+                    minsteSats = Minstesats.IKKE_MINSTESATS,
+                    redusertDagsats = Beløp(1204)
                 )
             )
         )
@@ -187,7 +192,9 @@ class BeregnTilkjentYtelseServiceTest {
                     antallBarn = 1,
                     barnetilleggsats = Beløp("36"),
                     barnetillegg = Beløp("36"),
-                    utbetalingsdato = periode.tom.plusDays(9)
+                    utbetalingsdato = periode.tom.plusDays(9),
+                    minsteSats = Minstesats.IKKE_MINSTESATS,
+                    redusertDagsats = Beløp(1240)
                 )
             )
         )
@@ -369,7 +376,9 @@ class BeregnTilkjentYtelseServiceTest {
                     antallBarn = 1,
                     barnetilleggsats = Beløp("35"),
                     barnetillegg = Beløp("35"),
-                    utbetalingsdato = periode.tom.plusDays(9)
+                    utbetalingsdato = periode.tom.plusDays(9),
+                    minsteSats = Minstesats.IKKE_MINSTESATS,
+                    redusertDagsats = Beløp(1239)
                 )
             ), Segment(
                 periode = Periode(LocalDate.of(2024, 1, 1), LocalDate.of(2024, 1, 1)), verdi = Tilkjent(
@@ -388,7 +397,9 @@ class BeregnTilkjentYtelseServiceTest {
                     antallBarn = 1,
                     barnetilleggsats = Beløp("36"),
                     barnetillegg = Beløp("36"),
-                    utbetalingsdato = periode.tom.plusDays(9)
+                    utbetalingsdato = periode.tom.plusDays(9),
+                    minsteSats = Minstesats.IKKE_MINSTESATS,
+                    redusertDagsats = Beløp(1240)
                 )
             )
         )
@@ -449,8 +460,9 @@ class BeregnTilkjentYtelseServiceTest {
                     antallBarn = 0,
                     barnetilleggsats = Beløp("36.00"),
                     barnetillegg = Beløp("0"),
-                    utbetalingsdato = periode.tom.plusDays(9)
-
+                    utbetalingsdato = periode.tom.plusDays(9),
+                    minsteSats = Minstesats.MINSTESATS_OVER_25,
+                    redusertDagsats = Beløp(954)
                 )
             ), Segment(
                 periode = Periode(LocalDate.of(2024, 7, 1), LocalDate.of(2024, 7, 1)), verdi = Tilkjent(
@@ -469,7 +481,9 @@ class BeregnTilkjentYtelseServiceTest {
                     antallBarn = 0,
                     barnetilleggsats = Beløp("36.00"),
                     barnetillegg = Beløp("0"),
-                    utbetalingsdato = periode.tom.plusDays(9)
+                    utbetalingsdato = periode.tom.plusDays(9),
+                    minsteSats = Minstesats.MINSTESATS_OVER_25,
+                    redusertDagsats = Beløp(974)
                 )
             )
         )
@@ -530,8 +544,9 @@ class BeregnTilkjentYtelseServiceTest {
                     antallBarn = 0,
                     barnetilleggsats = Beløp("27.00"),
                     barnetillegg = Beløp("0"),
-                    utbetalingsdato = periode.tom.plusDays(9)
-
+                    utbetalingsdato = periode.tom.plusDays(9),
+                    minsteSats = Minstesats.MINSTESATS_UNDER_25,
+                    redusertDagsats = Beløp(512)
                 )
             ), Segment(
                 periode = Periode(LocalDate.of(2020, 4, 1), LocalDate.of(2020, 4, 1)), verdi = Tilkjent(
@@ -550,7 +565,9 @@ class BeregnTilkjentYtelseServiceTest {
                     antallBarn = 0,
                     barnetilleggsats = Beløp("27.00"),
                     barnetillegg = Beløp("0"),
-                    utbetalingsdato = periode.tom.plusDays(9)
+                    utbetalingsdato = periode.tom.plusDays(9),
+                    minsteSats = Minstesats.MINSTESATS_OVER_25,
+                    redusertDagsats = Beløp(768)
                 )
             )
         )
@@ -610,6 +627,8 @@ class BeregnTilkjentYtelseServiceTest {
                     barnetilleggsats = Beløp("35.00"),
                     barnetillegg = Beløp("0"),
                     utbetalingsdato = periode.tom.plusDays(9),
+                    minsteSats = Minstesats.IKKE_MINSTESATS,
+                    redusertDagsats = Beløp(602)
                 )
             ),
         )
@@ -692,7 +711,9 @@ class BeregnTilkjentYtelseServiceTest {
                     antallBarn = 0,
                     barnetilleggsats = Beløp("35.00"),
                     barnetillegg = Beløp("0"),
-                    utbetalingsdato = periode.tom.plusDays(9)
+                    utbetalingsdato = periode.tom.plusDays(9),
+                    minsteSats = Minstesats.IKKE_MINSTESATS,
+                    redusertDagsats = Beløp(361)
                 )
             ),
             Segment(
@@ -712,7 +733,9 @@ class BeregnTilkjentYtelseServiceTest {
                     antallBarn = 0,
                     barnetilleggsats = Beløp("35.00"),
                     barnetillegg = Beløp("0"),
-                    utbetalingsdato = periode.tom.plusDays(9)
+                    utbetalingsdato = periode.tom.plusDays(9),
+                    minsteSats = Minstesats.IKKE_MINSTESATS,
+                    redusertDagsats = Beløp(0)
                 )
             ), Segment(
                 periode = Periode(2 august 2023, 1 september 2023), verdi = Tilkjent(
@@ -731,7 +754,9 @@ class BeregnTilkjentYtelseServiceTest {
                     antallBarn = 0,
                     barnetilleggsats = Beløp("35.00"),
                     barnetillegg = Beløp("0"),
-                    utbetalingsdato = periode.tom.plusDays(9)
+                    utbetalingsdato = periode.tom.plusDays(9),
+                    minsteSats = Minstesats.IKKE_MINSTESATS,
+                    redusertDagsats = Beløp(1204)
                 )
             )
         )
@@ -810,7 +835,9 @@ class BeregnTilkjentYtelseServiceTest {
                     antallBarn = 0,
                     barnetilleggsats = Beløp("35.00"),
                     barnetillegg = Beløp("0"),
-                    utbetalingsdato = periode.tom.plusDays(9)
+                    utbetalingsdato = periode.tom.plusDays(9),
+                    minsteSats = Minstesats.IKKE_MINSTESATS,
+                    redusertDagsats = Beløp(602)
                 )
             ), Segment(
                 periode = Periode(1 juli 2023, 1 august 2023), verdi = Tilkjent(
@@ -829,7 +856,9 @@ class BeregnTilkjentYtelseServiceTest {
                     antallBarn = 0,
                     barnetilleggsats = Beløp("35.00"),
                     barnetillegg = Beløp("0"),
-                    utbetalingsdato = periode.tom.plusDays(9)
+                    utbetalingsdato = periode.tom.plusDays(9),
+                    minsteSats = Minstesats.IKKE_MINSTESATS,
+                    redusertDagsats = Beløp(361)
                 )
             )
         )
@@ -889,7 +918,9 @@ class BeregnTilkjentYtelseServiceTest {
                     antallBarn = 0,
                     barnetilleggsats = Beløp("35.00"),
                     barnetillegg = Beløp("0"),
-                    utbetalingsdato = periode.tom.plusDays(9)
+                    utbetalingsdato = periode.tom.plusDays(9),
+                    minsteSats = Minstesats.IKKE_MINSTESATS,
+                    redusertDagsats = Beløp(843)
                 )
             )
         )
@@ -956,7 +987,9 @@ class BeregnTilkjentYtelseServiceTest {
                     antallBarn = 0,
                     barnetilleggsats = Beløp("35.00"),
                     barnetillegg = Beløp("0"),
-                    utbetalingsdato = periode.tom.plusDays(9)
+                    utbetalingsdato = periode.tom.plusDays(9),
+                    minsteSats = Minstesats.IKKE_MINSTESATS,
+                    redusertDagsats = Beløp(241)
                 )
             )
         )
@@ -1054,7 +1087,9 @@ class BeregnTilkjentYtelseServiceTest {
                     antallBarn = 0,
                     barnetilleggsats = Beløp("35.00"),
                     barnetillegg = Beløp("0"),
-                    utbetalingsdato = periode.tom.plusDays(9)
+                    utbetalingsdato = periode.tom.plusDays(9),
+                    minsteSats = Minstesats.IKKE_MINSTESATS,
+                    redusertDagsats = Beløp(0)
                 )
             )
         )
@@ -1128,6 +1163,8 @@ class BeregnTilkjentYtelseServiceTest {
                     barnetilleggsats = Beløp("35.00"),
                     barnetillegg = Beløp("0"),
                     utbetalingsdato = periode.tom.plusDays(9),
+                    minsteSats = Minstesats.IKKE_MINSTESATS,
+                    redusertDagsats = Beløp(361)
                 )
             ),
         )
@@ -1207,28 +1244,35 @@ class BeregnTilkjentYtelseServiceTest {
             )
         ).beregnTilkjentYtelse()
 
-        assertThat(beregnTilkjentYtelseService.segmenter()).containsExactly(
-            Segment(
-                periode = Periode(1 juni 2023, 1 august 2023), verdi = Tilkjent(
-                    dagsats = Beløp("1204.45"), //4*0.66*111477/260
-                    gradering = Prosent(effektivGradering.toInt()),
-                    graderingGrunnlag = GraderingGrunnlag(
-                        samordningGradering = Prosent(sykepengegrad),
-                        institusjonGradering = Prosent(institusjon),
-                        arbeidGradering = Prosent(arbeidsgrad).komplement(),
-                        samordningUføregradering = Prosent(uforegrad),
-                        samordningArbeidsgiverGradering = Prosent.`0_PROSENT`,
-                        meldepliktGradering = Prosent.`0_PROSENT`,
-                    ),
-                    grunnlagsfaktor = GUnit("0.0101538462"),
-                    grunnbeløp = Beløp("118620"),
-                    antallBarn = 0,
-                    barnetilleggsats = Beløp("35.00"),
-                    barnetillegg = Beløp("0"),
-                    utbetalingsdato = periode.tom.plusDays(9),
+        assertThat(beregnTilkjentYtelseService.segmenter())
+            .usingRecursiveComparison()
+            .ignoringFields("verdi.redusertDagsats")
+            .isEqualTo(
+                listOf(
+                    Segment(
+                        periode = Periode(1 juni 2023, 1 august 2023), verdi = Tilkjent(
+                            dagsats = Beløp("1204.45"), //4*0.66*111477/260
+                            gradering = Prosent(effektivGradering.toInt()),
+                            graderingGrunnlag = GraderingGrunnlag(
+                                samordningGradering = Prosent(sykepengegrad),
+                                institusjonGradering = Prosent(institusjon),
+                                arbeidGradering = Prosent(arbeidsgrad).komplement(),
+                                samordningUføregradering = Prosent(uforegrad),
+                                samordningArbeidsgiverGradering = Prosent.`0_PROSENT`,
+                                meldepliktGradering = Prosent.`0_PROSENT`,
+                            ),
+                            grunnlagsfaktor = GUnit("0.0101538462"),
+                            grunnbeløp = Beløp("118620"),
+                            antallBarn = 0,
+                            barnetilleggsats = Beløp("35.00"),
+                            barnetillegg = Beløp("0"),
+                            utbetalingsdato = periode.tom.plusDays(9),
+                            minsteSats = Minstesats.IKKE_MINSTESATS,
+                            redusertDagsats = null
+                        )
+                    )
                 )
-            ),
-        )
+            )
     }
 
 
@@ -1297,7 +1341,9 @@ class BeregnTilkjentYtelseServiceTest {
             antallBarn = 0,
             barnetilleggsats = Beløp("27.00"),
             barnetillegg = Beløp("0"),
-            utbetalingsdato = LocalDate.now()
+            utbetalingsdato = LocalDate.now(),
+            minsteSats = Minstesats.IKKE_MINSTESATS,
+            redusertDagsats = Beløp(1132)
         )
         assertThat(beregnTilkjentYtelseService.segmenter()).usingRecursiveComparison().isEqualTo(
             listOf(

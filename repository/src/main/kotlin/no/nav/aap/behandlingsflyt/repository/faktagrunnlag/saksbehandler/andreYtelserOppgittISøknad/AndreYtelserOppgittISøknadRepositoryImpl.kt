@@ -96,21 +96,6 @@ class AndreYtelserOppgittISøknadRepositoryImpl(private val connection: DBConnec
     }
 
 
-    private fun hentAktivYtelserGrunnlagId(behandlingId: BehandlingId): Long? = connection.queryFirstOrNull(
-        """
-                SELECT id
-                FROM ANDRE_YTELSER_OPPGITT_I_SOKNAD_GRUNNLAG
-                WHERE behandling_id = ? and aktiv is true
-                 
-                """.trimIndent()
-    ) {
-        setParams { setLong(1, behandlingId.id) }
-        setRowMapper { row ->
-            row.getLong("behandling_id")
-        }
-    }
-
-
     private fun hentAlleGrunnlagIdPåAndreYtelseId(andreYtelserId: Long): List<Long> {
 
         val query = """
@@ -127,12 +112,11 @@ class AndreYtelserOppgittISøknadRepositoryImpl(private val connection: DBConnec
 
     override fun slett(behandlingId: BehandlingId) {
 
-        val ytelserId = hentYtelseIderPÅBehandlingId(behandlingId)
-        if (ytelserId == null) return
+        val ytelserId = hentYtelseIderPÅBehandlingId(behandlingId) ?: return
         // er det flere grunnlag på samme ytelse id ?
         val alleGrunnlagPåYtelseId = hentAlleGrunnlagIdPåAndreYtelseId(ytelserId)
 
-        val kunEtGrunnlagPåDetteSvaret = if (alleGrunnlagPåYtelseId.size == 1) true else false
+        val kunEttGrunnlagPåDetteSvaret = alleGrunnlagPåYtelseId.size == 1
 
         connection.execute(
             """
@@ -144,8 +128,8 @@ class AndreYtelserOppgittISøknadRepositoryImpl(private val connection: DBConnec
             }
         }
 
-        //La de andre ytelsene bli vis de linker til andre grunnlag
-        if (kunEtGrunnlagPåDetteSvaret) {
+        // La de andre ytelsene bli hvis de linker til andre grunnlag
+        if (kunEttGrunnlagPåDetteSvaret) {
             connection.execute(
                 """
             delete from ANNEN_YTELSE_OPPGITT_I_SOKNAD where andre_ytelser_id = ?; 
@@ -187,8 +171,7 @@ class AndreYtelserOppgittISøknadRepositoryImpl(private val connection: DBConnec
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
         require(fraBehandling != tilBehandling)
 
-        val fraYtelserId = hentYtelseIderPÅBehandlingId(fraBehandling)
-        if (fraYtelserId == null) return
+        val fraYtelserId = hentYtelseIderPÅBehandlingId(fraBehandling) ?: return
         val insertGrunnlagQuery = """
         INSERT INTO ANDRE_YTELSER_OPPGITT_I_SOKNAD_GRUNNLAG (behandling_id, andre_ytelser_id)
         VALUES (?,?)
