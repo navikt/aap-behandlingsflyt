@@ -3,13 +3,15 @@ package no.nav.aap.behandlingsflyt.behandling.utbetaling
 import io.mockk.every
 import io.mockk.mockk
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
+import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.GraderingGrunnlag
+import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Minstesats
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Reduksjon11_9Repository
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Tilkjent
-import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.GraderingGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelsePeriode
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
 import no.nav.aap.behandlingsflyt.behandling.vedtak.Vedtak
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.meldeperiode.MeldeperiodeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
@@ -42,6 +44,7 @@ class UtbetalingServiceTest {
     val førsteTilkjentYtelsePeriode = Periode(LocalDate.of(2025, 1, 1), LocalDate.of(2025, 1, 13))
     val andreTilkjentYtelsePeriode = Periode(LocalDate.of(2025, 1, 14), LocalDate.of(2025, 1, 28))
     val tredjeTilkjentYtelsePeriode = Periode(LocalDate.of(2025, 1, 29), LocalDate.of(2025, 2, 9))
+    val meldeperioderSomDekker2025 = listOf(Periode(LocalDate.of(2025, 1, 1), LocalDate.of(2025, 12, 31)))
 
     val sakRepository = mockk<SakRepository>()
     val behandlingRepository = mockk<BehandlingRepository>()
@@ -51,6 +54,7 @@ class UtbetalingServiceTest {
     val vedtakRepository = mockk<VedtakRepository>()
     val underveisRepository = mockk<UnderveisRepository>()
     val reduksjon11_9Repository = mockk<Reduksjon11_9Repository>(relaxed = true)
+    val meldeperiodeRepository = mockk<MeldeperiodeRepository>()
 
     val utbetalingService = UtbetalingService(
         sakRepository = sakRepository,
@@ -60,7 +64,8 @@ class UtbetalingServiceTest {
         avklaringsbehovRepository = avklaringsbehovRepository,
         vedtakRepository = vedtakRepository,
         underveisRepository = underveisRepository,
-        reduksjon11_9Repository = reduksjon11_9Repository
+        reduksjon11_9Repository = reduksjon11_9Repository,
+        meldeperiodeRepository = meldeperiodeRepository
     )
 
     @Test
@@ -70,6 +75,7 @@ class UtbetalingServiceTest {
         every { behandlingRepository.hent(førstegangsbehandling.id) } returns førstegangsbehandling
         every { behandlingRepository.hent(revurdering.id) } returns revurdering
         every { behandlingRepository.hentAlleFor(any<SakId>()) } returns emptyList()
+        every { meldeperiodeRepository.hentMeldeperioder(any<BehandlingId>(), any<Periode>()) } returns meldeperioderSomDekker2025
 
         every { vedtakRepository.hent(førstegangsbehandling.id) } returns Vedtak(
             førstegangsbehandling.id,
@@ -84,15 +90,26 @@ class UtbetalingServiceTest {
         every { tilkjentYtelseRepository.hentHvisEksisterer(førstegangsbehandling.id) } returns tilkjentYtelseForFørstegangsbehandling()
         every { tilkjentYtelseRepository.hentHvisEksisterer(revurdering.id) } returns tilkjentYtelseForRevurdering()
 
-        val tilkjentYtelseDtoFørstegangsbehandling = utbetalingService.lagTilkjentYtelseForUtbetaling(sak.id, førstegangsbehandling.id)
+        val tilkjentYtelseDtoFørstegangsbehandling =
+            utbetalingService.lagTilkjentYtelseForUtbetaling(sak.id, førstegangsbehandling.id)
         assertThat(tilkjentYtelseDtoFørstegangsbehandling).isNotNull
         assertThat(tilkjentYtelseDtoFørstegangsbehandling?.nyMeldeperiode).isNotNull
-        assertThat(tilkjentYtelseDtoFørstegangsbehandling?.nyMeldeperiode).isEqualTo(MeldeperiodeDto(førsteTilkjentYtelsePeriode.fom, andreTilkjentYtelsePeriode.tom))
+        assertThat(tilkjentYtelseDtoFørstegangsbehandling?.nyMeldeperiode).isEqualTo(
+            MeldeperiodeDto(
+                førsteTilkjentYtelsePeriode.fom,
+                andreTilkjentYtelsePeriode.tom
+            )
+        )
 
         val tilkjentYtelseDtoRevurdering = utbetalingService.lagTilkjentYtelseForUtbetaling(sak.id, revurdering.id)
         assertThat(tilkjentYtelseDtoRevurdering).isNotNull
         assertThat(tilkjentYtelseDtoRevurdering?.nyMeldeperiode).isNotNull
-        assertThat(tilkjentYtelseDtoRevurdering?.nyMeldeperiode).isEqualTo(MeldeperiodeDto(tredjeTilkjentYtelsePeriode.fom, tredjeTilkjentYtelsePeriode.tom))
+        assertThat(tilkjentYtelseDtoRevurdering?.nyMeldeperiode).isEqualTo(
+            MeldeperiodeDto(
+                tredjeTilkjentYtelsePeriode.fom,
+                tredjeTilkjentYtelsePeriode.tom
+            )
+        )
     }
 
     @Test
@@ -102,6 +119,7 @@ class UtbetalingServiceTest {
         every { behandlingRepository.hent(førstegangsbehandling.id) } returns førstegangsbehandling
         every { behandlingRepository.hent(revurdering.id) } returns revurdering
         every { behandlingRepository.hentAlleFor(any<SakId>()) } returns emptyList()
+        every { meldeperiodeRepository.hentMeldeperioder(any<BehandlingId>(), any<Periode>()) } returns meldeperioderSomDekker2025
 
         every { vedtakRepository.hent(førstegangsbehandling.id) } returns Vedtak(
             førstegangsbehandling.id,
@@ -139,6 +157,7 @@ class UtbetalingServiceTest {
         every { behandlingRepository.hent(førstegangsbehandling.id) } returns førstegangsbehandling
         every { behandlingRepository.hent(revurdering.id) } returns revurdering
         every { behandlingRepository.hentAlleFor(any<SakId>()) } returns listOf(revurdering, førstegangsbehandling)
+        every { meldeperiodeRepository.hentMeldeperioder(any<BehandlingId>(), any<Periode>()) } returns meldeperioderSomDekker2025
         every { underveisRepository.hentHvisEksisterer(revurdering.id) } returns UnderveisGrunnlag(
             id = 0L,
             perioder = emptyList()
@@ -232,7 +251,9 @@ class UtbetalingServiceTest {
             antallBarn = 0,
             barnetilleggsats = Beløp(40),
             barnetillegg = Beløp(0),
-            utbetalingsdato = utbetalingsdato
+            utbetalingsdato = utbetalingsdato,
+            minsteSats = Minstesats.IKKE_MINSTESATS,
+            redusertDagsats = Beløp(100)
         )
     }
 

@@ -29,7 +29,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.underveis.UnderveisRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
-import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.test.april
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
@@ -120,7 +119,7 @@ class SykepengeerstatningFlytTest(val unleashGateway: KClass<UnleashGateway>) :
             .medKontekst {
                 assertThat(this.behandling.status()).isEqualTo(Status.IVERKSETTES)
 
-                val resultat = ResultatUtleder(repositoryProvider).utledResultat(behandling.id)
+                val resultat = ResultatUtleder(repositoryProvider).utledResultatFørstegangsBehandling(behandling.id)
                 assertThat(resultat).isEqualTo(Resultat.INNVILGELSE)
             }
 
@@ -213,7 +212,7 @@ class SykepengeerstatningFlytTest(val unleashGateway: KClass<UnleashGateway>) :
             .fattVedtak()
             .medKontekst {
                 assertThat(this.behandling.status()).isEqualTo(Status.IVERKSETTES)
-                val resultat = ResultatUtleder(repositoryProvider).utledResultat(behandling.id)
+                val resultat = ResultatUtleder(repositoryProvider).utledResultatFørstegangsBehandling(behandling.id)
                 assertThat(resultat).isEqualTo(Resultat.INNVILGELSE)
             }
 
@@ -234,7 +233,7 @@ class SykepengeerstatningFlytTest(val unleashGateway: KClass<UnleashGateway>) :
             })
 
         val resultat =
-            dataSource.transaction { ResultatUtleder(postgresRepositoryRegistry.provider(it)).utledResultat(behandling.id) }
+            dataSource.transaction { ResultatUtleder(postgresRepositoryRegistry.provider(it)).utledResultatFørstegangsBehandling(behandling.id) }
 
         assertThat(resultat).isEqualTo(Resultat.INNVILGELSE)
         val underveisPeriode = dataSource.transaction {
@@ -344,7 +343,7 @@ class SykepengeerstatningFlytTest(val unleashGateway: KClass<UnleashGateway>) :
             .medKontekst {
                 assertThat(this.behandling.status()).isEqualTo(Status.IVERKSETTES)
 
-                val resultat = ResultatUtleder(repositoryProvider).utledResultat(behandling.id)
+                val resultat = ResultatUtleder(repositoryProvider).utledResultatFørstegangsBehandling(behandling.id)
                 assertThat(resultat).isEqualTo(Resultat.INNVILGELSE)
             }
             .løsVedtaksbrev()
@@ -358,7 +357,7 @@ class SykepengeerstatningFlytTest(val unleashGateway: KClass<UnleashGateway>) :
                     .extracting(Vilkårsperiode::erOppfylt, Vilkårsperiode::innvilgelsesårsak)
                     .containsExactly(true, null)
 
-                val resultat = ResultatUtleder(repositoryProvider).utledResultat(behandling.id)
+                val resultat = ResultatUtleder(repositoryProvider).utledResultatFørstegangsBehandling(behandling.id)
 
                 val underveisGrunnlag = repositoryProvider.provide<UnderveisRepository>().hent(behandling.id)
 
