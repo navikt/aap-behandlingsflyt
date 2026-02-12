@@ -6,17 +6,18 @@ import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.komponenter.tidslinje.somTidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Tid
+import java.time.LocalDate
 
 data class StudentGrunnlag(
     val vurderinger: Set<StudentVurdering>?,
     val oppgittStudent: OppgittStudent?
 ) {
-    fun somStudenttidslinje(rettighetsperiode: Periode): Tidslinje<StudentVurdering> {
-        return filtrertStudenttidslinje(rettighetsperiode) { true }
+    fun somStudenttidslinje(maksDato: LocalDate = Tid.MAKS): Tidslinje<StudentVurdering> {
+        return filtrertStudenttidslinje(maksDato) { true }
     }
 
-    fun gjeldendeStudentvurderinger(rettighetsperiode: Periode): List<StudentVurdering> {
-        return somStudenttidslinje(rettighetsperiode).segmenter().map { it.verdi }
+    fun gjeldendeStudentvurderinger(maksDato: LocalDate = Tid.MAKS): List<StudentVurdering> {
+        return somStudenttidslinje(maksDato).segmenter().map { it.verdi }
     }
 
     fun studentvurderingerVurdertIBehandling(behandlingId: BehandlingId): List<StudentVurdering> {
@@ -28,14 +29,14 @@ data class StudentGrunnlag(
     }
 
     fun vedtattStudenttidslinje(
-        rettighetsperiode: Periode,
-        behandlingId: BehandlingId
+        behandlingId: BehandlingId,
+        maksDato: LocalDate = Tid.MAKS,
     ): Tidslinje<StudentVurdering> {
-        return filtrertStudenttidslinje(rettighetsperiode) { it.vurdertIBehandling != behandlingId }
+        return filtrertStudenttidslinje(maksDato) { it.vurdertIBehandling != behandlingId }
     }
 
     private fun filtrertStudenttidslinje(
-        rettighetsperiode: Periode,
+        maksDato: LocalDate = Tid.MAKS,
         filter: (studentvurdering: StudentVurdering) -> Boolean
     ): Tidslinje<StudentVurdering> {
         return vurderinger.orEmpty()
@@ -44,12 +45,12 @@ data class StudentGrunnlag(
             .values
             .sortedBy { it[0].vurdertTidspunkt }
             .flatMap { it.sortedBy { it.fom } }
-            .somTidslinje { Periode(it.fom, rettighetsperiode.tom) }
+            .somTidslinje { Periode(it.fom, it.tom ?: maksDato) }
     }
 }
 
-fun StudentGrunnlag?.harPeriodeSomIkkeErOppfylt(): Boolean {
-    val tidslinje = this?.somStudenttidslinje(Periode(Tid.MIN, Tid.MAKS)).orEmpty()
+fun StudentGrunnlag?.harPeriodeSomIkkeErOppfylt(maksDato: LocalDate = Tid.MAKS): Boolean {
+    val tidslinje = this?.somStudenttidslinje(maksDato).orEmpty()
     if (tidslinje.isEmpty()) {
         return true
     }
