@@ -53,7 +53,7 @@ class MinsteÅrligYtelseAlderTidslinjeTest {
         val minsteÅrligYtelseTidslinje = MINSTE_ÅRLIG_YTELSE_TIDSLINJE
 
         val tidslinje = minsteÅrligYtelseAlderTidslinje.innerJoin(minsteÅrligYtelseTidslinje) { alderjustering, årligYtelse ->
-            alderjustering(årligYtelse, GUnit("2.041"))
+            alderjustering(årligYtelse, GUnit("1.5"))
         }
 
         assertThat(tidslinje.segmenter()).containsExactly(
@@ -63,11 +63,11 @@ class MinsteÅrligYtelseAlderTidslinjeTest {
             ),
             Segment(
                 periode = Periode(LocalDate.of(2021, 2, 28), LocalDate.of(2024, 6, 30)),
-                verdi = ÅrligYtelse(GUnit(2), Minstesats.IKKE_MINSTESATS)
+                verdi = ÅrligYtelse(GUnit(2), Minstesats.MINSTESATS_OVER_25)
             ),
             Segment(
                 periode = Periode(LocalDate.of(2024, 7, 1), Tid.MAKS),
-                verdi = ÅrligYtelse(GUnit("2.041"), Minstesats.IKKE_MINSTESATS)
+                verdi = ÅrligYtelse(GUnit("2.041"), Minstesats.MINSTESATS_OVER_25)
             )
         )
     }

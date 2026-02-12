@@ -43,6 +43,6 @@ internal val Over25: AlderStrategi = object : AlderStrategi {
     override fun invoke(minsteÅrligYtelse: GUnit, årligYtelse: GUnit): ÅrligYtelse {
         if (minsteÅrligYtelse > årligYtelse) return ÅrligYtelse(minsteÅrligYtelse, Minstesats.MINSTESATS_OVER_25)
 
-        return ÅrligYtelse(minsteÅrligYtelse, Minstesats.IKKE_MINSTESATS)
+        return ÅrligYtelse(årligYtelse, Minstesats.IKKE_MINSTESATS)
     }
 }
