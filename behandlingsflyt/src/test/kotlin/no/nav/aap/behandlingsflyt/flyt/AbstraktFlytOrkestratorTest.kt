@@ -7,7 +7,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovOrke
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.LøsAvklaringsbehovHendelse
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.vedtak.TotrinnsVurdering
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarBarnetilleggLøsning
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarBistandsbehovEnkelLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarBistandsbehovLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarManuellInntektVurderingLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarOppholdskravLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarOvergangArbeidLøsning
@@ -405,20 +405,7 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
                 }
             }
             .løsSykdom(rettighetsPeriodeFrom)
-            .løsAvklaringsBehov(
-                AvklarBistandsbehovEnkelLøsning(
-                    bistandsVurdering = BistandLøsningDto(
-                        begrunnelse = "Trenger hjelp fra nav",
-                        erBehovForAktivBehandling = true,
-                        erBehovForArbeidsrettetTiltak = false,
-                        erBehovForAnnenOppfølging = null,
-                        skalVurdereAapIOvergangTilArbeid = null,
-                        overgangBegrunnelse = null,
-                        fom = rettighetsPeriodeFrom,
-                        tom = null
-                    ),
-                ),
-            )
+            .løsBistand(rettighetsPeriodeFrom)
             .løsAvklaringsBehov(
                 RefusjonkravLøsning(
                     listOf(
@@ -485,16 +472,18 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
 
     protected fun Behandling.løsBistand(fom: LocalDate, erOppfylt: Boolean = true): Behandling {
         return this.løsAvklaringsBehov(
-            AvklarBistandsbehovEnkelLøsning(
-                BistandLøsningDto(
-                    begrunnelse = "Trenger hjelp fra nav",
-                    erBehovForAktivBehandling = erOppfylt,
-                    erBehovForArbeidsrettetTiltak = false,
-                    erBehovForAnnenOppfølging = false.takeUnless { erOppfylt },
-                    skalVurdereAapIOvergangTilArbeid = null,
-                    overgangBegrunnelse = null,
-                    fom = fom,
-                    tom = null
+            AvklarBistandsbehovLøsning(
+                listOf(
+                    BistandLøsningDto(
+                        begrunnelse = "Trenger hjelp fra nav",
+                        erBehovForAktivBehandling = erOppfylt,
+                        erBehovForArbeidsrettetTiltak = false,
+                        erBehovForAnnenOppfølging = false.takeUnless { erOppfylt },
+                        skalVurdereAapIOvergangTilArbeid = null,
+                        overgangBegrunnelse = null,
+                        fom = fom,
+                        tom = null
+                    )
                 )
             )
         )
