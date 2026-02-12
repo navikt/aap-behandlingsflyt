@@ -3,7 +3,6 @@ package no.nav.aap.behandlingsflyt.flyt
 import no.nav.aap.behandlingsflyt.behandling.Resultat
 import no.nav.aap.behandlingsflyt.behandling.ResultatUtleder
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarBistandsbehovLøsning
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarOvergangUføreEnkelLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarOvergangUføreLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSykdomLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSykepengerErstatningLøsning
@@ -15,7 +14,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.BistandLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.UføreSøknadVedtakResultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.flate.OvergangUføreLøsningDto
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.flate.OvergangUføreVurderingLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.SykdomsvurderingLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.SykepengerVurderingDto
 import no.nav.aap.behandlingsflyt.help.assertTidslinje
@@ -119,17 +117,16 @@ class OvergangUføreFlytTest: AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::c
                     }
             }
             .løsAvklaringsBehov(
-                AvklarOvergangUføreEnkelLøsning(
-                    OvergangUføreVurderingLøsningDto(
+                AvklarOvergangUføreLøsning(
+                    listOf(OvergangUføreLøsningDto(
                         begrunnelse = "Løsning",
                         brukerHarSøktOmUføretrygd = true,
                         brukerHarFåttVedtakOmUføretrygd = UføreSøknadVedtakResultat.NEI,
                         brukerRettPåAAP = true,
-                        virkningsdato = virkningsdatoAndreLøsningOvergangUføre,
                         fom = virkningsdatoAndreLøsningOvergangUføre,
                         tom = null,
                         overgangBegrunnelse = null
-                    )
+                    ))
                 )
             )
             .medKontekst {

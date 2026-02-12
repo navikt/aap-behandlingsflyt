@@ -11,7 +11,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarBist
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarManuellInntektVurderingLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarOppholdskravLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarOvergangArbeidLøsning
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarOvergangUføreEnkelLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarOvergangUføreLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarPeriodisertForutgåendeMedlemskapLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarPeriodisertLovvalgMedlemskapLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarPeriodisertOverstyrtLovvalgMedlemskapLøsning
@@ -67,7 +67,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.ÅrsVurd
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.BistandLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.flate.FritaksvurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangarbeid.flate.OvergangArbeidVurderingLøsningDto
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.flate.OvergangUføreVurderingLøsningDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.flate.OvergangUføreLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravVurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.rettighetsperiode.RettighetsperiodeHarRett
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.rettighetsperiode.RettighetsperiodeVurderingDTO
@@ -132,7 +132,6 @@ import no.nav.aap.behandlingsflyt.test.modell.TestYrkesskade
 import no.nav.aap.behandlingsflyt.test.modell.defaultInntekt
 import no.nav.aap.behandlingsflyt.test.testGatewayProvider
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
-import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.tidslinje.orEmpty
@@ -513,26 +512,26 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
     }
 
     @JvmName("løsOvergangUføreExt")
-    protected fun Behandling.løsOvergangUføre(): Behandling {
-        return løsOvergangUføre(this)
+    protected fun Behandling.løsOvergangUføre(fom: LocalDate, tom: LocalDate? = null): Behandling {
+        return løsOvergangUføre(this, fom, tom)
     }
 
-    protected fun løsOvergangUføre(behandling: Behandling): Behandling {
+    protected fun løsOvergangUføre(behandling: Behandling, fom: LocalDate, tom: LocalDate? = null): Behandling {
         return løsAvklaringsBehov(
             behandling = behandling,
             avklaringsBehovLøsning =
-                AvklarOvergangUføreEnkelLøsning(
-                    OvergangUføreVurderingLøsningDto(
-                        begrunnelse = "Løsning",
-                        brukerHarSøktOmUføretrygd = false,
-                        brukerHarFåttVedtakOmUføretrygd = null,
-                        brukerRettPåAAP = false,
-                        virkningsdato = null,
-                        fom = null,
-                        tom = null,
-                        overgangBegrunnelse = null
-                    )
-                )
+                AvklarOvergangUføreLøsning(
+                    listOf(
+                        OvergangUføreLøsningDto(
+                            begrunnelse = "Løsning",
+                            brukerHarSøktOmUføretrygd = false,
+                            brukerHarFåttVedtakOmUføretrygd = null,
+                            brukerRettPåAAP = false,
+                            fom = fom,
+                            tom = tom,
+                            overgangBegrunnelse = null
+                        )
+                ))
         )
     }
 

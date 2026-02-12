@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarOvergangUføreEnkelLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarOvergangUføreLøsning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreRepository
@@ -25,7 +25,7 @@ class AvklarOvergangUføreLøser(
     private val sakRepository: SakRepository,
     private val sykdomRepository: SykdomRepository,
     private val bistandRepository: BistandRepository,
-) : AvklaringsbehovsLøser<AvklarOvergangUføreEnkelLøsning> {
+) : AvklaringsbehovsLøser<AvklarOvergangUføreLøsning> {
 
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         overgangUforeRepository = repositoryProvider.provide(),
@@ -36,9 +36,9 @@ class AvklarOvergangUføreLøser(
 
     override fun løs(
         kontekst: AvklaringsbehovKontekst,
-        løsning: AvklarOvergangUføreEnkelLøsning
+        løsning: AvklarOvergangUføreLøsning
     ): LøsningsResultat {
-        val løsninger = løsning.løsningerForPerioder ?: listOf(requireNotNull(løsning.overgangUføreVurdering))
+        val løsninger = løsning.løsningerForPerioder
 
         val (behandlingId, sakId, forrigeBehandlingId) = kontekst.kontekst.let {
             Triple(
@@ -58,7 +58,6 @@ class AvklarOvergangUføreLøser(
         val nyeVurderinger = løsninger.map {
             it.tilOvergangUføreVurdering(
                 kontekst.bruker,
-                rettighetsperiode.fom,
                 behandlingId
             )
         }

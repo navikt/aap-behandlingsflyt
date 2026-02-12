@@ -442,7 +442,7 @@ class SykepengeerstatningFlytTest(val unleashGateway: KClass<UnleashGateway>) :
             )
             // Nei på 11-6
             .løsBistand(revurdering2Fom, false)
-            .løsOvergangUføre()
+            .løsOvergangUføre(revurdering2Fom)
             .løsOvergangArbeid(Utfall.IKKE_OPPFYLT, periode.fom)
             .løsSykdomsvurderingBrev()
             .løsAvklaringsBehov(
