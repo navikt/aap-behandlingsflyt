@@ -17,7 +17,7 @@ import org.junit.jupiter.api.assertDoesNotThrow
 import java.time.LocalDate
 
 
-internal class MedlemskapRepositoryTest {
+internal class MedlemskapRepositoryImplTest {
 
     companion object {
         private lateinit var dataSource: TestDataSource
