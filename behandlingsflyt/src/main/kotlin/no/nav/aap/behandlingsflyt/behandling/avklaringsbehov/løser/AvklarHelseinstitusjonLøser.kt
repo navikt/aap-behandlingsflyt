@@ -24,7 +24,6 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
-import java.util.NavigableSet
 
 class AvklarHelseinstitusjonLøser(
     private val behandlingRepository: BehandlingRepository,
@@ -42,10 +41,10 @@ class AvklarHelseinstitusjonLøser(
         kontekst: AvklaringsbehovKontekst,
         løsning: AvklarHelseinstitusjonLøsning
     ): LøsningsResultat {
-        if (unleashGateway.isEnabled(BehandlingsflytFeature.PeriodiseringHelseinstitusjonOpphold)) {
-            return løsNy(løsning, kontekst)
+        return if (unleashGateway.isEnabled(BehandlingsflytFeature.PeriodiseringHelseinstitusjonOpphold)) {
+            løsNy(løsning, kontekst)
         } else {
-            return løsGammel(løsning, kontekst)
+            løsGammel(løsning, kontekst)
         }
     }
 
@@ -78,7 +77,7 @@ class AvklarHelseinstitusjonLøser(
         validerReduksjonsdatoForInstitusjonsopphold(
             behandling,
             løsning.helseinstitusjonVurdering.vurderinger
-        ).throwOnInvalid() {
+        ).throwOnInvalid {
             UgyldigForespørselException(it.errorMessage)
         }
 
@@ -185,10 +184,7 @@ class AvklarHelseinstitusjonLøser(
     }
 
     private fun byggTidslinjeForHelseoppholdvurderinger(grunnlag: InstitusjonsoppholdGrunnlag?): Tidslinje<HelseoppholdVurderingData> {
-        if (grunnlag == null) {
-            return Tidslinje()
-        }
-        return grunnlag.helseoppholdvurderinger?.tilTidslinje()
+        return grunnlag?.helseoppholdvurderinger?.tilTidslinje()
             ?.mapValue {
                 HelseoppholdVurderingData(
                     begrunnelse = it.begrunnelse,
@@ -211,26 +207,25 @@ class AvklarHelseinstitusjonLøser(
         if (opphold.isEmpty() || nyeVurderinger.isEmpty()) return Validation.Valid(nyeVurderinger)
 
         val vedtatteGrunnlag =
-            behandling.forrigeBehandlingId?.let { helseinstitusjonRepository.hentHvisEksisterer(it)}
-
-        var vurderingerPerOpphold: Map<Segment<Institusjon>, List<HelseinstitusjonVurderingDto>>
+            behandling.forrigeBehandlingId?.let { helseinstitusjonRepository.hentHvisEksisterer(it) }
 
         // Håndterer når vedtatte vurderinger finnes. Dette skjer i revurdering
-        if (vedtatteGrunnlag?.helseoppholdvurderinger?.vurderinger != null) {
-            vurderingerPerOpphold = opphold.associateWith { o ->
-                slåSammenMedNyeVurderingerNy(vedtatteGrunnlag, nyeVurderinger, behandling, "")
-                    .tilDto()
-                    .filter { v -> v.periode.fom >= o.periode.fom && v.periode.tom <= o.periode.tom }
-                    .sortedBy { it.periode }
+        val vurderingerPerOpphold: Map<Segment<Institusjon>, List<HelseinstitusjonVurderingDto>> =
+            if (vedtatteGrunnlag?.helseoppholdvurderinger?.vurderinger != null) {
+                opphold.associateWith { o ->
+                    slåSammenMedNyeVurderingerNy(vedtatteGrunnlag, nyeVurderinger, behandling, "")
+                        .tilDto()
+                        .filter { v -> v.periode.fom >= o.periode.fom && v.periode.tom <= o.periode.tom }
+                        .sortedBy { it.periode }
+                }
+            } else {
+                // Finn vurderinger per opphold ved å bruke overlapp
+                opphold.associateWith { o ->
+                    nyeVurderinger
+                        .filter { v -> v.periode.fom >= o.periode.fom && v.periode.tom <= o.periode.tom }
+                        .sortedBy { it.periode }
+                }
             }
-        } else {
-            // Finn vurderinger per opphold ved å bruke overlapp
-            vurderingerPerOpphold = opphold.associateWith { o ->
-                nyeVurderinger
-                    .filter { v -> v.periode.fom >= o.periode.fom && v.periode.tom <= o.periode.tom }
-                    .sortedBy { it.periode }
-            }
-        }
 
         // Valider første opphold: Ingen reduksjon første 4 måneder (innleggelsesmåned + 3 måneder)
         vurderingerPerOpphold.entries.firstOrNull()?.let { (opphold, vurderinger) ->
