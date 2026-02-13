@@ -32,7 +32,7 @@ data class KildesystemMedl(
     val kildeNavn: String
 )
 
-enum class KildesystemKode{
+enum class KildesystemKode {
     APPBRK,
     AVGSYS,
     E500,

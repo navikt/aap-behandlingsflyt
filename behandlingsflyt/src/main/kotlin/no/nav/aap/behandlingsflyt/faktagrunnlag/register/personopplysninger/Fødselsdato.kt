@@ -14,6 +14,7 @@ data class Fødselsdato(val dato: LocalDate) {
         return dato.until(gittDato, ChronoUnit.YEARS).toInt()
     }
 
+    @Suppress("FunctionNaming")
     fun `25årsDagen`(): LocalDate {
         return dato.plusYears(25)
     }
