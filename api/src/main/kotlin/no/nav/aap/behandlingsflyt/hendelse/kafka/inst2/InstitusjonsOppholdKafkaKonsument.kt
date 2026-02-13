@@ -75,7 +75,7 @@ class InstitusjonsOppholdKafkaKonsument(
                     val varighetOverTreeMaaneder = institusjonsopphold.startdato
                         .withDayOfMonth(1)
                         .plusMonths(4)
-                    if (sluttdato != null && sluttdato > varighetOverTreeMaaneder) {
+                    if (sluttdato == null || sluttdato > varighetOverTreeMaaneder) {
                         hendelseService.registrerMottattHendelse(
                             dto = meldingVerdi.tilInnsending(
                                 meldingKey,
