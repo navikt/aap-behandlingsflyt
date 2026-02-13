@@ -72,5 +72,90 @@ class MinsteÅrligYtelseAlderTidslinjeTest {
         )
     }
 
+    @Test
+    fun `minstesats under og over 25 år`() {
+        val fødelsdato = Fødselsdato(LocalDate.of(1996, 2, 29))
+        val minsteÅrligYtelseAlderTidslinje = aldersjusteringAvMinsteÅrligeYtelse(fødelsdato)
+        val minsteÅrligYtelseTidslinje = MINSTE_ÅRLIG_YTELSE_TIDSLINJE
 
+        val beregningsgrunnlag = GUnit("0")
+        val tidslinje =
+            minsteÅrligYtelseAlderTidslinje.innerJoin(minsteÅrligYtelseTidslinje) { alderjustering, årligYtelse ->
+                alderjustering(årligYtelse, beregningsgrunnlag)
+            }
+
+
+        assertThat(tidslinje.segmenter()).containsExactly(
+            Segment(
+                periode = Periode(LocalDate.MIN, LocalDate.of(2021, 2, 27)),
+                verdi = ÅrligYtelse(GUnit(4).dividert(3), Minstesats.MINSTESATS_UNDER_25)
+            ),
+            Segment(
+                periode = Periode(LocalDate.of(2021, 2, 28), LocalDate.of(2024, 6, 30)),
+                verdi = ÅrligYtelse(GUnit(2), Minstesats.MINSTESATS_OVER_25)
+            ),
+            Segment(
+                periode = Periode(LocalDate.of(2024, 7, 1), Tid.MAKS),
+                verdi = ÅrligYtelse(GUnit("2.041"), Minstesats.MINSTESATS_OVER_25)
+            )
+        )
+    }
+
+    @Test
+    fun `ikke minstesats under og over 25 år`() {
+        val fødelsdato = Fødselsdato(LocalDate.of(1996, 2, 29))
+        val minsteÅrligYtelseAlderTidslinje = aldersjusteringAvMinsteÅrligeYtelse(fødelsdato)
+        val minsteÅrligYtelseTidslinje = MINSTE_ÅRLIG_YTELSE_TIDSLINJE
+
+        val beregningsgrunnlag = GUnit("100")
+        val tidslinje =
+            minsteÅrligYtelseAlderTidslinje.innerJoin(minsteÅrligYtelseTidslinje) { alderjustering, årligYtelse ->
+                alderjustering(årligYtelse, beregningsgrunnlag)
+            }
+
+
+        assertThat(tidslinje.segmenter()).containsExactly(
+            Segment(
+                periode = Periode(LocalDate.MIN, LocalDate.of(2021, 2, 27)),
+                verdi = ÅrligYtelse(GUnit(100), Minstesats.IKKE_MINSTESATS)
+            ),
+            Segment(
+                periode = Periode(LocalDate.of(2021, 2, 28), LocalDate.of(2024, 6, 30)),
+                verdi = ÅrligYtelse(GUnit(100), Minstesats.IKKE_MINSTESATS)
+            ),
+            Segment(
+                periode = Periode(LocalDate.of(2024, 7, 1), Tid.MAKS),
+                verdi = ÅrligYtelse(GUnit("100"), Minstesats.IKKE_MINSTESATS)
+            )
+        )
+    }
+
+    @Test
+    fun `grunnlag like under 2G gir minstesats for de over 25 år`() {
+        val fødelsdato = Fødselsdato(LocalDate.of(1996, 2, 29))
+        val minsteÅrligYtelseAlderTidslinje = aldersjusteringAvMinsteÅrligeYtelse(fødelsdato)
+        val minsteÅrligYtelseTidslinje = MINSTE_ÅRLIG_YTELSE_TIDSLINJE
+
+        val beregningsgrunnlag = GUnit("1.99")
+        val tidslinje =
+            minsteÅrligYtelseAlderTidslinje.innerJoin(minsteÅrligYtelseTidslinje) { alderjustering, årligYtelse ->
+                alderjustering(årligYtelse, beregningsgrunnlag)
+            }
+
+
+        assertThat(tidslinje.segmenter()).containsExactly(
+            Segment(
+                periode = Periode(LocalDate.MIN, LocalDate.of(2021, 2, 27)),
+                verdi = ÅrligYtelse(GUnit("1.99"), Minstesats.IKKE_MINSTESATS)
+            ),
+            Segment(
+                periode = Periode(LocalDate.of(2021, 2, 28), LocalDate.of(2024, 6, 30)),
+                verdi = ÅrligYtelse(GUnit("2"), Minstesats.MINSTESATS_OVER_25)
+            ),
+            Segment(
+                periode = Periode(LocalDate.of(2024, 7, 1), Tid.MAKS),
+                verdi = ÅrligYtelse(GUnit("2.041"), Minstesats.MINSTESATS_OVER_25)
+            )
+        )
+    }
 }
