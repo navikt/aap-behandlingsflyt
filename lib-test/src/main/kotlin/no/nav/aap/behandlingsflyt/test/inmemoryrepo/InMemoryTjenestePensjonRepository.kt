@@ -33,7 +33,6 @@ object InMemoryTjenestePensjonRepository : TjenestePensjonRepository {
     }
 
     override fun slett(behandlingId: BehandlingId) {
+        tjenestePensjon.remove(behandlingId)
     }
-
-
 }

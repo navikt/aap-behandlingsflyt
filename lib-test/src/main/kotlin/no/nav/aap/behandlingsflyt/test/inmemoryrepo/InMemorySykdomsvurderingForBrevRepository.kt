@@ -32,5 +32,6 @@ object InMemorySykdomsvurderingForBrevRepository : SykdomsvurderingForBrevReposi
     }
 
     override fun slett(behandlingId: BehandlingId) {
+        grunnlag.remove(behandlingId)
     }
 }

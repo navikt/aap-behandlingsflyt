@@ -34,5 +34,8 @@ object InMemoryVilkårsresultatRepository : VilkårsresultatRepository {
     }
 
     override fun slett(behandlingId: BehandlingId) {
+        synchronized(lock) {
+            memory.remove(behandlingId)
+        }
     }
 }

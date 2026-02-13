@@ -38,5 +38,8 @@ object InMemorySamordningVurderingRepository : SamordningVurderingRepository {
     }
 
     override fun slett(behandlingId: BehandlingId) {
+        synchronized(lock) {
+            vurderinger.remove(behandlingId)
+        }
     }
 }

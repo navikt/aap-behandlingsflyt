@@ -28,6 +28,9 @@ object InMemoryTilkjentYtelseRepository : TilkjentYtelseRepository {
     }
 
     override fun slett(behandlingId: BehandlingId) {
+        synchronized(lock) {
+            tilkjentYtelse.remove(behandlingId)
+        }
     }
 
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {

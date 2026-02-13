@@ -85,6 +85,7 @@ object InMemorySakRepository : SakRepository {
     }
 
     override fun slett(behandlingId: BehandlingId) {
+        // Sletter ikke saker.
     }
 
     override fun oppdaterSakStatus(

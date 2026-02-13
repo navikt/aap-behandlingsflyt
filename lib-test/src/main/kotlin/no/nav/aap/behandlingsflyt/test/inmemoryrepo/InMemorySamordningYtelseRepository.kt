@@ -71,5 +71,8 @@ object InMemorySamordningYtelseRepository : SamordningYtelseRepository {
     }
 
     override fun slett(behandlingId: BehandlingId) {
+        synchronized(lock) {
+            ytelser.remove(behandlingId)
+        }
     }
 }

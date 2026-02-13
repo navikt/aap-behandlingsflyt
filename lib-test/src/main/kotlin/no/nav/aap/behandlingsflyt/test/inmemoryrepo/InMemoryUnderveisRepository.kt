@@ -1,9 +1,9 @@
 package no.nav.aap.behandlingsflyt.test.inmemoryrepo
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.Faktagrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
-import no.nav.aap.behandlingsflyt.faktagrunnlag.Faktagrunnlag
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import java.time.LocalDate
@@ -29,7 +29,7 @@ object InMemoryUnderveisRepository : UnderveisRepository {
         )
     }
 
-    override fun `hentSakerMedSisteUnderveisperiodeFørDato`(sisteUnderveisDato: LocalDate): Set<SakId> {
+    override fun hentSakerMedSisteUnderveisperiodeFørDato(sisteUnderveisDato: LocalDate): Set<SakId> {
         TODO("Not yet implemented")
     }
 
@@ -38,5 +38,6 @@ object InMemoryUnderveisRepository : UnderveisRepository {
     }
 
     override fun slett(behandlingId: BehandlingId) {
+        grunnlag.remove(behandlingId)
     }
 }
