@@ -126,9 +126,11 @@ class VedtakslengdeService(
         val sisteRettighetstypeSegment = rettighetstypeTidslinje?.segmenter()?.lastOrNull()
 
         val sluttdatoForBehandlingen = when (sisteRettighetstypeSegment?.verdi) {
-            RettighetsType.BISTANDSBEHOV, null ->
-                utledInitiellSluttdato(behandlingId, rettighetsperiode).tom
-
+            RettighetsType.BISTANDSBEHOV, null -> {
+                // Returnere til og med kvote-slutt dersom denne datoen kommer før utledet sluttdato
+                val sisteDatoMedKvoteOppfylt = sisteRettighetstypeSegment?.periode?.tom
+                listOfNotNull(sisteDatoMedKvoteOppfylt, utledInitiellSluttdato(behandlingId, rettighetsperiode).tom).min()
+            }
             RettighetsType.SYKEPENGEERSTATNING,
             RettighetsType.STUDENT,
             RettighetsType.VURDERES_FOR_UFØRETRYGD,
