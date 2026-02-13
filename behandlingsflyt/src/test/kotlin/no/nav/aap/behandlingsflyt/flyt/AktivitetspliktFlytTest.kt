@@ -348,12 +348,12 @@ class AktivitetspliktFlytTest :
             val repositoryProvider = postgresRepositoryRegistry.provider(connection)
 
             val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
-            val Aktivitetsplikt11_7Repository = repositoryProvider.provide<Aktivitetsplikt11_7Repository>()
+            val aktivitetsplikt11_7Repository = repositoryProvider.provide<Aktivitetsplikt11_7Repository>()
 
             val behandling =
                 opprettAktivitetspliktBehandling(Vurderingsbehov.AKTIVITETSPLIKT_11_7, repositoryProvider, sak)
 
-            Aktivitetsplikt11_7Repository.lagre(
+            aktivitetsplikt11_7Repository.lagre(
                 behandling.id, listOf(vurdering(behandling.id))
             )
             behandlingRepository.oppdaterBehandlingStatus(behandling.id, status)
