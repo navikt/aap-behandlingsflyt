@@ -13,7 +13,7 @@ data class InstitusjonsoppholdDto(
     val oppholdstype: String,
     val status: String,
     val oppholdFra: LocalDate,
-    val avsluttetDato: LocalDate?,
+    val avsluttetDato: LocalDate,
     val kildeinstitusjon: String
 ) {
     companion object {
