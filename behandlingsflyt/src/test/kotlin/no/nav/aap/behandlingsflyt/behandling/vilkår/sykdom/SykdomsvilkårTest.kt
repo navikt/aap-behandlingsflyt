@@ -40,7 +40,6 @@ class SykdomsvilkårTest {
                 sykdomsvurderinger = listOf(
                     sykdomsvurdering(vurderingenGjelderFra = kravdato)
                 ),
-                studentvurdering = null,
                 sykepengerErstatningFaktagrunnlag = null,
                 bistandvurderingFaktagrunnlag = bistandGrunnlag(LocalDate.now()),
                 sykepengeerstatningVilkår = Tidslinje()
@@ -58,7 +57,6 @@ class SykdomsvilkårTest {
                 sykdomsvurderinger = listOf(
                     sykdomsvurdering(vurderingenGjelderFra = kravdato, erNedsettelseIArbeidsevneMerEnnHalvparten = false)
                 ),
-                studentvurdering = null,
                 sykepengerErstatningFaktagrunnlag = null,
                 bistandvurderingFaktagrunnlag = null,
                 sykepengeerstatningVilkår = Tidslinje()
@@ -87,7 +85,6 @@ class SykdomsvilkårTest {
                         opprettet = opprettet.plusSeconds(50)
                     )
                 ),
-                studentvurdering = null,
                 sykepengerErstatningFaktagrunnlag = null,
                 bistandvurderingFaktagrunnlag = bistandGrunnlag(startDato),
                 sykepengeerstatningVilkår = Tidslinje()
@@ -145,7 +142,6 @@ class SykdomsvilkårTest {
                         opprettet = opprettet.plusSeconds(50)
                     )
                 ),
-                studentvurdering = null,
                 sykepengerErstatningFaktagrunnlag = null,
                 bistandvurderingFaktagrunnlag = bistandGrunnlag(startDato),
                 sykepengeerstatningVilkår = Tidslinje()
@@ -182,7 +178,6 @@ class SykdomsvilkårTest {
                         opprettet = opprettet.plusSeconds(50)
                     )
                 ),
-                studentvurdering = null,
                 sykepengerErstatningFaktagrunnlag = null,
                 bistandvurderingFaktagrunnlag = bistandGrunnlag(startDato),
                 sykepengeerstatningVilkår = Tidslinje()
