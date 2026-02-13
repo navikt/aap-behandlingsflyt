@@ -9,6 +9,7 @@ import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companio
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Kvote
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.ÅrMedHverdager
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeRepository
@@ -90,6 +91,77 @@ class VedtakslengdeService(
         }
     }
 
+    fun lagreGjeldendeSluttdato(
+        behandlingId: BehandlingId,
+        forrigeBehandlingId: BehandlingId?,
+        rettighetsperiode: Periode,
+    ) {
+        val vedtattVedtakslengdeGrunnlag =
+            forrigeBehandlingId?.let { vedtakslengdeRepository.hentHvisEksisterer(it) }
+        val sluttdato = utledSluttdato(behandlingId, vedtattVedtakslengdeGrunnlag, rettighetsperiode)
+        val nyEllerEndretSluttdato = vedtattVedtakslengdeGrunnlag == null || vedtattVedtakslengdeGrunnlag.vurdering.sluttdato != sluttdato
+
+        if (nyEllerEndretSluttdato) {
+            vedtakslengdeRepository.lagre(
+                behandlingId, VedtakslengdeVurdering(
+                    sluttdato = sluttdato,
+                    utvidetMed = ÅrMedHverdager.FØRSTE_ÅR, // TODO gir denne mening for annet enn jobben som utvider ordinær?
+                    vurdertAv = SYSTEMBRUKER,
+                    vurdertIBehandling = behandlingId,
+                    opprettet = Instant.now()
+                )
+            )
+        }
+    }
+
+    private fun utledSluttdato(
+        behandlingId: BehandlingId,
+        vedtakslengdeGrunnlag: VedtakslengdeGrunnlag?,
+        rettighetsperiode: Periode,
+    ): LocalDate {
+        val rettighetstypeTidslinjeForInneværendeBehandling = vurderRettighetstypeOgKvoter(
+            vilkårsresultat = vilkårsresultatRepository.hent(behandlingId),
+            kvoter = KvoteService().beregn()
+        )
+
+        val sisteSegmentMedKvoteOk =
+            rettighetstypeTidslinjeForInneværendeBehandling
+                .segmenter()
+                .lastOrNull { it.verdi.rettighetsType != null && it.verdi is KvoteOk }
+
+        val sluttdatoForBehandlingen = when (sisteSegmentMedKvoteOk?.verdi?.rettighetsType) {
+            RettighetsType.BISTANDSBEHOV ->
+                if (vedtakslengdeGrunnlag != null) {
+                    vedtakslengdeGrunnlag.vurdering.sluttdato
+                } else {
+                    val startdatoForBehandlingen =
+                        VirkningstidspunktUtleder(vilkårsresultatRepository).utledVirkningsTidspunkt(behandlingId)
+                            ?: rettighetsperiode.fom
+
+                    // Denne settes initielt til ett år fra startdato for behandlingen - bumpes 28 dager før utløp av jobb
+                    startdatoForBehandlingen.plussEtÅrMedHverdager(ÅrMedHverdager.FØRSTE_ÅR)
+                }
+
+            // TODO blir neppe riktig med sykepengeerstatning her?
+            RettighetsType.SYKEPENGEERSTATNING,
+            RettighetsType.STUDENT,
+            RettighetsType.VURDERES_FOR_UFØRETRYGD,
+            RettighetsType.ARBEIDSSØKER ->
+                sisteSegmentMedKvoteOk.periode.tom
+
+            else -> throw IllegalStateException("Ugyldig rettighetstype for behandling $behandlingId")
+        }
+
+        /**
+         * For behandlinger som har passert alle vilkår og vurderinger med kortere rettighetsperiode
+         * enn "sluttdatoForBehandlingen" så vil det bli feil å vurdere underveis lenger enn faktisk rettighetsperiode.
+         */
+        val sluttdatoForBakoverkompabilitet = minOf(rettighetsperiode.tom, sluttdatoForBehandlingen)
+
+        return sluttdatoForBakoverkompabilitet
+    }
+
+    @Deprecated("Den første varianten - denne vil utvide med ett år")
     fun lagreGjeldendeSluttdatoHvisIkkeEksisterer(
         behandlingId: BehandlingId,
         forrigeBehandlingId: BehandlingId?,

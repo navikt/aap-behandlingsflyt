@@ -31,7 +31,7 @@ class VedtakslengdeSteg(
                 if (unleashGateway.isDisabled(BehandlingsflytFeature.ForlengelseIManuellBehandling)) {
                     return Fullført
                 }
-                vedtakslengdeService.lagreGjeldendeSluttdatoHvisIkkeEksisterer(
+                vedtakslengdeService.lagreGjeldendeSluttdato(
                     behandlingId = kontekst.behandlingId,
                     forrigeBehandlingId = kontekst.forrigeBehandlingId,
                     rettighetsperiode = kontekst.rettighetsperiode
