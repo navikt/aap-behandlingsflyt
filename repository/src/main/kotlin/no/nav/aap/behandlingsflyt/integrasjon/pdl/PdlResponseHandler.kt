@@ -9,7 +9,7 @@ import java.net.http.HttpHeaders
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
 
-class PdlResponseHandler() : RestResponseHandler<InputStream> {
+class PdlResponseHandler : RestResponseHandler<InputStream> {
 
     private val defaultErrorHandler = DefaultResponseHandler()
 

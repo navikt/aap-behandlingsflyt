@@ -17,7 +17,7 @@ import no.nav.aap.tilgang.authorizedGet
 import javax.sql.DataSource
 
 
-class TrekkKlageGrunnlagDto(
+data class TrekkKlageGrunnlagDto(
     val vurdering: TrekkKlageVurderingDto?
 )
 
