@@ -92,7 +92,7 @@ complexity:
     active: true
     allowedComplexity: 14
     ignoreSingleWhenExpression: false
-    ignoreSimpleWhenEntries: false
+    ignoreSimpleWhenEntries: true
     ignoreNestingFunctions: false
     ignoreLocalFunctions: false
     nestingFunctions:
