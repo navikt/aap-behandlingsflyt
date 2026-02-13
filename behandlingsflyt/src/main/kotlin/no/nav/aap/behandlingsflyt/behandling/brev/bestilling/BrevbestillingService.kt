@@ -25,11 +25,11 @@ class BrevbestillingService(
     private val sakRepository: SakRepository,
 ) {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
-        signaturService = SignaturService(repositoryProvider),
+        signaturService = SignaturService(repositoryProvider, gatewayProvider),
         brevbestillingGateway = gatewayProvider.provide(),
         brevbestillingRepository = repositoryProvider.provide(),
         behandlingRepository = repositoryProvider.provide(),
-        sakRepository = repositoryProvider.provide(),
+        sakRepository = repositoryProvider.provide()
     )
 
     fun harBestillingOmVedtak(behandlingId: BehandlingId): Boolean {

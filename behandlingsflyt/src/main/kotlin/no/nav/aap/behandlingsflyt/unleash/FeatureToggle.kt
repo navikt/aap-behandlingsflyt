@@ -23,7 +23,8 @@ enum class BehandlingsflytFeature : FeatureToggle {
     VirksomhetsEtablering,
     KvalitetssikringVed2213,
     tilbakekrevingsOppgaverTilOppgave,
-    PeriodiseringHelseinstitusjonOpphold
+    PeriodiseringHelseinstitusjonOpphold,
+    SignaturEnhetFraOppgave,
     ;
 
     override fun key(): String = name

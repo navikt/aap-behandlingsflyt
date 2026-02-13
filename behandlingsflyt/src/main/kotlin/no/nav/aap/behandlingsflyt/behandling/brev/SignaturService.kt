@@ -5,8 +5,13 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Brevbestilling
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Status
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
+import no.nav.aap.behandlingsflyt.hendelse.oppgavestyring.OppgavestyringGateway
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.brev.kontrakt.SignaturGrunnlag
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.tilgang.Rolle
@@ -14,13 +19,36 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status as Avklaringsb
 import no.nav.aap.brev.kontrakt.Rolle as SignaturRolle
 
 class SignaturService(
+    private val unleashGateway: UnleashGateway,
+    private val oppgavestyringGateway: OppgavestyringGateway,
+    private val behandlingRepository: BehandlingRepository,
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
 ) {
-    constructor(repositoryProvider: RepositoryProvider) : this(
-        avklaringsbehovRepository = repositoryProvider.provide(),
+    constructor(
+        repositoryProvider: RepositoryProvider,
+        gatewayProvider: GatewayProvider
+    ) : this(
+        unleashGateway = gatewayProvider.provide(),
+        oppgavestyringGateway = gatewayProvider.provide(),
+        behandlingRepository = repositoryProvider.provide(),
+        avklaringsbehovRepository = repositoryProvider.provide()
     )
 
     fun finnSignaturGrunnlag(brevbestilling: Brevbestilling, bruker: Bruker): List<SignaturGrunnlag> {
+        return if (unleashGateway.isEnabled(BehandlingsflytFeature.SignaturEnhetFraOppgave)) {
+            finnSignaturGrunnlagV2(brevbestilling, bruker).map {
+                SignaturGrunnlag(it.navIdent, it.rolle)
+            }
+        } else {
+            finnSignaturGrunnlagV1(brevbestilling, bruker)
+        }
+    }
+
+    fun finnSignaturGrunnlagV2(brevbestilling: Brevbestilling, bruker: Bruker): List<SignaturGrunnlag> {
+        TODO("Not yet implemented")
+    }
+
+    fun finnSignaturGrunnlagV1(brevbestilling: Brevbestilling, bruker: Bruker): List<SignaturGrunnlag> {
         require(brevbestilling.status == Status.FORHÅNDSVISNING_KLAR) {
             "Kan ikke utlede signaturer på brev i status ${brevbestilling.status}"
         }

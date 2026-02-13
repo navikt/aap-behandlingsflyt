@@ -1,44 +1,23 @@
 package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivBrevAvklaringsbehovLøsning
-import no.nav.aap.behandlingsflyt.behandling.brev.SignaturService
-import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingGateway
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingReferanse
-import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingRepository
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingService
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 
 class SkrivBrevAvklaringsbehovLøser(
-    private val behandlingRepository: BehandlingRepository,
-    private val sakRepository: SakRepository,
-    private val brevbestillingRepository: BrevbestillingRepository,
-    private val avklaringsbehovRepository: AvklaringsbehovRepository,
-    private val brevbestillingGateway: BrevbestillingGateway
+    private val brevbestillingService: BrevbestillingService
 ) {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
-        behandlingRepository = repositoryProvider.provide(),
-        sakRepository = repositoryProvider.provide(),
-        brevbestillingRepository = repositoryProvider.provide(),
-        avklaringsbehovRepository = repositoryProvider.provide(),
-        brevbestillingGateway = gatewayProvider.provide()
+        brevbestillingService = BrevbestillingService(repositoryProvider, gatewayProvider)
     )
 
     fun løs(
         kontekst: AvklaringsbehovKontekst,
         løsning: SkrivBrevAvklaringsbehovLøsning
     ): LøsningsResultat {
-        val brevbestillingService = BrevbestillingService(
-            signaturService = SignaturService(avklaringsbehovRepository = avklaringsbehovRepository),
-            brevbestillingGateway = brevbestillingGateway,
-            brevbestillingRepository = brevbestillingRepository,
-            behandlingRepository = behandlingRepository,
-            sakRepository = sakRepository
-        )
         val brevbestillingReferanse = BrevbestillingReferanse(løsning.brevbestillingReferanse)
 
         val begrunnelse = løsning.begrunnelse?.let { ".\n $it" } ?: ""
@@ -51,7 +30,7 @@ class SkrivBrevAvklaringsbehovLøser(
                     kontekst.bruker,
                     løsning.mottakere
                 )
-                
+
                 LøsningsResultat("Brev ferdig${begrunnelse}")
             }
 
