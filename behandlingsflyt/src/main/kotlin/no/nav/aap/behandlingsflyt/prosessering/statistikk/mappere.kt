@@ -37,7 +37,7 @@ internal fun VurderingsbehovMedPeriode.tilKontraktVurderingsbehov(): no.nav.aap.
         Vurderingsbehov.REVURDER_SAMORDNING_TJENESTEPENSJON -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.REVURDER_SAMORDNING_TJENESTEPENSJON
         Vurderingsbehov.REFUSJONSKRAV -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.REFUSJONSKRAV
         Vurderingsbehov.UTENLANDSOPPHOLD_FOR_SOKNADSTIDSPUNKT -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.UTENLANDSOPPHOLD_FOR_SOKNADSTIDSPUNKT
-        Vurderingsbehov.FASTSATT_PERIODE_PASSERT -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.MELDEKORT /* TODO: mer spesifikk? er pga fravær av meldekort */
+        Vurderingsbehov.FASTSATT_PERIODE_PASSERT -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.MELDEKORT
         Vurderingsbehov.VURDER_RETTIGHETSPERIODE -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.VURDER_RETTIGHETSPERIODE
         Vurderingsbehov.SØKNAD_TRUKKET -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.SØKNAD_TRUKKET
         Vurderingsbehov.REVURDERING_AVBRUTT -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.REVURDERING_AVBRUTT
