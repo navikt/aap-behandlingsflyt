@@ -24,6 +24,7 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import java.util.NavigableSet
 
 class AvklarHelseinstitusjonLøser(
     private val behandlingRepository: BehandlingRepository,
@@ -71,13 +72,11 @@ class AvklarHelseinstitusjonLøser(
     }
 
     private fun løsNy(løsning: AvklarHelseinstitusjonLøsning, kontekst: AvklaringsbehovKontekst): LøsningsResultat {
-        val grunnlag = helseinstitusjonRepository.hentHvisEksisterer(kontekst.kontekst.behandlingId)
-        val oppholdSegmenter = grunnlag?.oppholdene?.opphold ?: emptyList()
         val behandling = behandlingRepository.hent(kontekst.behandlingId())
         val vurdertAv = kontekst.bruker.ident
 
         validerReduksjonsdatoForInstitusjonsopphold(
-            oppholdSegmenter,
+            behandling,
             løsning.helseinstitusjonVurdering.vurderinger
         ).throwOnInvalid() {
             UgyldigForespørselException(it.errorMessage)
@@ -204,16 +203,33 @@ class AvklarHelseinstitusjonLøser(
     }
 
     private fun validerReduksjonsdatoForInstitusjonsopphold(
-        opphold: List<Segment<Institusjon>>,
-        vurderinger: List<HelseinstitusjonVurderingDto>
+        behandling: Behandling,
+        nyeVurderinger: List<HelseinstitusjonVurderingDto>
     ): Validation<List<HelseinstitusjonVurderingDto>> {
-        if (opphold.isEmpty() || vurderinger.isEmpty()) return Validation.Valid(vurderinger)
+        val grunnlag = helseinstitusjonRepository.hentHvisEksisterer(behandling.id)
+        val opphold = grunnlag?.oppholdene?.opphold ?: emptyList()
+        if (opphold.isEmpty() || nyeVurderinger.isEmpty()) return Validation.Valid(nyeVurderinger)
 
-        // Finn vurderinger per opphold ved å bruke overlapp
-        val vurderingerPerOpphold = opphold.associateWith { o ->
-            vurderinger
-                .filter { v -> v.periode.fom >= o.periode.fom && v.periode.tom <= o.periode.tom }
-                .sortedBy { it.periode }
+        val vedtatteGrunnlag =
+            behandling.forrigeBehandlingId?.let { helseinstitusjonRepository.hentHvisEksisterer(it)}
+
+        var vurderingerPerOpphold: Map<Segment<Institusjon>, List<HelseinstitusjonVurderingDto>>
+
+        // Håndterer når vedtatte vurderinger finnes. Dette skjer i revurdering
+        if (vedtatteGrunnlag?.helseoppholdvurderinger?.vurderinger != null) {
+            vurderingerPerOpphold = opphold.associateWith { o ->
+                slåSammenMedNyeVurderingerNy(vedtatteGrunnlag, nyeVurderinger, behandling, "")
+                    .tilDto()
+                    .filter { v -> v.periode.fom >= o.periode.fom && v.periode.tom <= o.periode.tom }
+                    .sortedBy { it.periode }
+            }
+        } else {
+            // Finn vurderinger per opphold ved å bruke overlapp
+            vurderingerPerOpphold = opphold.associateWith { o ->
+                nyeVurderinger
+                    .filter { v -> v.periode.fom >= o.periode.fom && v.periode.tom <= o.periode.tom }
+                    .sortedBy { it.periode }
+            }
         }
 
         // Valider første opphold: Ingen reduksjon første 4 måneder (innleggelsesmåned + 3 måneder)
@@ -241,7 +257,9 @@ class AvklarHelseinstitusjonLøser(
                 val treMånederEtterUtskrivelse = forrigeOpphold.periode.tom.plusMonths(3)
                 val erInnenTreMåneder = !nåværendeOpphold.periode.fom.isAfter(treMånederEtterUtskrivelse)
                 val første = førsteReduksjonsvurdering(vurderingerNåværende)
-                val haddeReduksjonForrige = førsteReduksjonsvurdering(vurderingerForrige) != null
+                val haddeReduksjonForrige = sisteVurdering(vurderingerForrige)?.let {
+                    it.faarFriKostOgLosji && it.forsoergerEktefelle == false && it.harFasteUtgifter == false
+                } ?: false
 
                 if (erInnenTreMåneder && haddeReduksjonForrige) {
                     // Reduksjon skal starte fra måneden etter nytt opphold
@@ -266,7 +284,12 @@ class AvklarHelseinstitusjonLøser(
                 }
             }
         }
-        return Validation.Valid(vurderinger)
+
+        return Validation.Valid(nyeVurderinger)
+    }
+
+    private fun sisteVurdering(vurderinger: List<HelseinstitusjonVurderingDto>): HelseinstitusjonVurderingDto? {
+        return vurderinger.maxByOrNull { it.periode.tom }
     }
 
     private fun førsteReduksjonsvurdering(vurderinger: List<HelseinstitusjonVurderingDto>): HelseinstitusjonVurderingDto? {
@@ -284,9 +307,11 @@ class AvklarHelseinstitusjonLøser(
         if (førsteReduksjonsvurdering != null && førsteReduksjonsvurdering.periode.fom.isBefore(tidligsteReduksjonsdato)) {
             val tidligsteReduksjonsdatoFormatert =
                 tidligsteReduksjonsdato.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"))
+            val faktiskReduksjonsdatoFormatert =
+                førsteReduksjonsvurdering.periode.fom.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"))
             return Validation.Invalid(
                 vurderinger,
-                "$feilmelding $tidligsteReduksjonsdatoFormatert"
+                "$feilmelding $tidligsteReduksjonsdatoFormatert (faktisk: $faktiskReduksjonsdatoFormatert)"
             )
         }
         return null
@@ -295,6 +320,18 @@ class AvklarHelseinstitusjonLøser(
     override fun forBehov(): Definisjon {
         return Definisjon.AVKLAR_HELSEINSTITUSJON
     }
+
+    private fun List<HelseinstitusjonVurdering>.tilDto(): List<HelseinstitusjonVurderingDto> =
+        this.map {
+            HelseinstitusjonVurderingDto(
+                begrunnelse = it.begrunnelse,
+                faarFriKostOgLosji = it.faarFriKostOgLosji,
+                forsoergerEktefelle = it.forsoergerEktefelle,
+                harFasteUtgifter = it.harFasteUtgifter,
+                periode = it.periode
+            )
+        }
+
 
     internal data class HelseoppholdVurderingData(
         val begrunnelse: String,
