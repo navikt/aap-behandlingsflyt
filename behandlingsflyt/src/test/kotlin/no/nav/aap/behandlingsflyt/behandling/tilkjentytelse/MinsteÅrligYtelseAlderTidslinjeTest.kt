@@ -59,7 +59,7 @@ class MinsteÅrligYtelseAlderTidslinjeTest {
         assertThat(tidslinje.segmenter()).containsExactly(
             Segment(
                 periode = Periode(LocalDate.MIN, LocalDate.of(2021, 2, 27)),
-                verdi = ÅrligYtelse(GUnit(2).multiplisert(2).dividert(3), Minstesats.IKKE_MINSTESATS)
+                verdi = ÅrligYtelse(GUnit(3).dividert(2), Minstesats.IKKE_MINSTESATS)
             ),
             Segment(
                 periode = Periode(LocalDate.of(2021, 2, 28), LocalDate.of(2024, 6, 30)),
