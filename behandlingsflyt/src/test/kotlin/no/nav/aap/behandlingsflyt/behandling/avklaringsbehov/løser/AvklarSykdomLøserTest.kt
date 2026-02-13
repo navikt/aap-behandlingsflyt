@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser
 
+import io.mockk.clearAllMocks
 import io.mockk.junit5.MockKExtension
 import io.mockk.mockk
 import io.mockk.every
@@ -20,6 +21,7 @@ import no.nav.aap.behandlingsflyt.test.februar
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import java.time.LocalDate
@@ -35,6 +37,11 @@ class AvklarSykdomLøserTest {
     private val sykdomMock = mockk<SykdomRepository>(relaxed = true)
     private val yrkesskadeMock = mockk<YrkesskadeRepository>()
 
+    @AfterEach
+    fun tearDown() {
+        clearAllMocks()
+    }
+    
     @Test
     fun `Skal lagre iverksatte vurderinger + nye`() {
         every { behandlingMock.hent(BehandlingId(2L)) } returns mockk {
