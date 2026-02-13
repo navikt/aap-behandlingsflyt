@@ -57,17 +57,7 @@ class InntektsbehovTest {
     @Test
     fun `skal utlede de tre forutgående kalenderårene fra nedsettelsesdato`() {
         val nedsettelsesDato = LocalDate.now().minusYears(3)
-        val relevanteÅr = Inntektsbehov(
-            BeregningInput(
-                nedsettelsesDato,
-                årsInntekter = emptySet(),
-                uføregrad = setOf(Uføre(LocalDate.now(), Prosent.`0_PROSENT`)),
-                yrkesskadevurdering = null,
-                beregningGrunnlag = null,
-                registrerteYrkesskader = null,
-                inntektsPerioder = inntektsPerioder(emptySet())
-            )
-        ).utledAlleRelevanteÅr()
+        val relevanteÅr = Inntektsbehov.utledAlleRelevanteÅr(nedsettelsesDato, null)
 
         val nedsattYear = Year.of(nedsettelsesDato.year)
 
@@ -81,25 +71,7 @@ class InntektsbehovTest {
     fun `skal utlede de tre forutgående kalenderårene fra nedsettelsesdato og tre forutgående kalenderårene fra ytterligere nedsattdato`() {
         val nedsettelsesDato = LocalDate.now().minusYears(6)
         val ytterligereNedsattDato = LocalDate.now().minusYears(2)
-        val relevanteÅr = Inntektsbehov(
-            BeregningInput(
-                nedsettelsesDato = nedsettelsesDato,
-                årsInntekter = emptySet(),
-                uføregrad = setOf(Uføre(LocalDate.now(), Prosent.`0_PROSENT`)),
-                inntektsPerioder = inntektsPerioder(emptySet()),
-                beregningGrunnlag = BeregningGrunnlag(
-                    tidspunktVurdering = BeregningstidspunktVurdering(
-                        begrunnelse = "asdf",
-                        ytterligereNedsattArbeidsevneDato = ytterligereNedsattDato,
-                        nedsattArbeidsevneEllerStudieevneDato = nedsettelsesDato,
-                        ytterligereNedsattBegrunnelse = "asdf",
-                        vurdertAv = "saksbehandler"
-                    ), yrkesskadeBeløpVurdering = null
-                ),
-                yrkesskadevurdering = null,
-                registrerteYrkesskader = null,
-            )
-        ).utledAlleRelevanteÅr()
+        val relevanteÅr = Inntektsbehov.utledAlleRelevanteÅr(nedsettelsesDato, ytterligereNedsattDato)
 
         val nedsattYear = Year.of(nedsettelsesDato.year)
         val ytterligereNedsattYear = Year.of(ytterligereNedsattDato.year)
@@ -244,11 +216,13 @@ class InntektsbehovTest {
                 ), yrkesskadeBeløpVurdering = null
             ),
             registrerteYrkesskader = null,
-            inntektsPerioder = inntektsPerioder(setOf(
-                InntektPerÅr(2022, Beløp(500002)),
-                InntektPerÅr(2021, Beløp(400000)),
-                InntektPerÅr(2020, Beløp(300000))
-            ))
+            inntektsPerioder = inntektsPerioder(
+                setOf(
+                    InntektPerÅr(2022, Beløp(500002)),
+                    InntektPerÅr(2021, Beløp(400000)),
+                    InntektPerÅr(2020, Beløp(300000))
+                )
+            )
         )
 
         // 2kr forskjell, da skal feil kastes
@@ -269,11 +243,13 @@ class InntektsbehovTest {
                 ), yrkesskadeBeløpVurdering = null
             ),
             registrerteYrkesskader = null,
-            inntektsPerioder = inntektsPerioder(setOf(
-                InntektPerÅr(2022, Beløp(BigDecimal(499999.5))),
-                InntektPerÅr(2021, Beløp(400000)),
-                InntektPerÅr(2020, Beløp(300000))
-            ))
+            inntektsPerioder = inntektsPerioder(
+                setOf(
+                    InntektPerÅr(2022, Beløp(BigDecimal(499999.5))),
+                    InntektPerÅr(2021, Beløp(400000)),
+                    InntektPerÅr(2020, Beløp(300000))
+                )
+            )
         )
 
         // 0.5kr forskjell, skal ikke feile
