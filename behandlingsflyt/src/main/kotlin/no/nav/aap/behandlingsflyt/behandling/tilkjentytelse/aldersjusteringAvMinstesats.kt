@@ -35,7 +35,7 @@ internal val Under25: AlderStrategi = object : AlderStrategi {
 
         if (aldersjustert > årligYtelse) return ÅrligYtelse(aldersjustert, Minstesats.MINSTESATS_UNDER_25)
 
-        return ÅrligYtelse(aldersjustert, Minstesats.IKKE_MINSTESATS)
+        return ÅrligYtelse(årligYtelse, Minstesats.IKKE_MINSTESATS)
     }
 }
 
