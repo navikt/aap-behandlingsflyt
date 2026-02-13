@@ -127,8 +127,7 @@ class VedtakslengdeService(
 
         val sluttdatoForBehandlingen = when (sisteRettighetstypeSegment?.verdi) {
             RettighetsType.BISTANDSBEHOV, null ->
-                // Tillater ikke innskrenkelse av vedtakslengde da forrige vedtak kan ha generert meldeperioder
-                listOfNotNull(utledInitiellSluttdato(behandlingId, rettighetsperiode).tom, vedtattSluttdato).max()
+                utledInitiellSluttdato(behandlingId, rettighetsperiode).tom
 
             RettighetsType.SYKEPENGEERSTATNING,
             RettighetsType.STUDENT,
@@ -137,7 +136,8 @@ class VedtakslengdeService(
                 sisteRettighetstypeSegment.periode.tom
         }
 
-        return sluttdatoForBehandlingen
+        // Tillater ikke innskrenkelse av vedtakslengde da forrige vedtak kan ha generert meldeperioder
+        return listOfNotNull(sluttdatoForBehandlingen, vedtattSluttdato).max()
     }
 
     @Deprecated("Den første varianten - denne vil utvide med ett år uavhengig av rettighetstype")

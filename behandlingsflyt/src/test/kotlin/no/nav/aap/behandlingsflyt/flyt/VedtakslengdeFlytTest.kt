@@ -43,6 +43,7 @@ import no.nav.aap.behandlingsflyt.test.fixedClock
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
+import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.motor.FlytJobbRepositoryImpl
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.verdityper.dokument.JournalpostId
@@ -133,9 +134,17 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(VedtakslengdeFlytUnlea
                 val vedtakslengdeGrunnlag = vedtasklengdeRepository.hentHvisEksisterer(this.behandling.id)
                 val underveisGrunnlag = underveisRepository.hentHvisEksisterer(behandling.id)
                 val sisteUnderveisperiode = underveisGrunnlag?.perioder?.maxByOrNull { it.periode.tom }
-                assertThat(sisteUnderveisperiode?.periode?.tom).isEqualTo(sak.rettighetsperiode.fom.plusMonths(12).minusDays(1))
-                assertThat(vedtakslengdeGrunnlag?.vurdering?.sluttdato).isEqualTo(endringsdato.plusMonths(6).minusDays(1))
+                assertThat(sisteUnderveisperiode?.periode?.tom).isEqualTo(sak.rettighetsperiode.fom.plussEtÅrMedHverdager(ÅrMedHverdager.FØRSTE_ÅR))
+                assertThat(vedtakslengdeGrunnlag?.vurdering?.sluttdato).isEqualTo(sak.rettighetsperiode.fom.plussEtÅrMedHverdager(ÅrMedHverdager.FØRSTE_ÅR))
             }
+            .assertRettighetstype(
+                Periode(
+                    sak.rettighetsperiode.fom, endringsdato.minusDays(1)
+                ) to RettighetsType.BISTANDSBEHOV,
+                Periode(
+                    endringsdato, endringsdato.plusMonths(6).minusDays(1)
+                ) to RettighetsType.ARBEIDSSØKER
+            )
     }
 
     @Test
@@ -402,8 +411,16 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(VedtakslengdeFlytUnlea
             .medKontekst {
                 val vedtasklengdeRepository: VedtakslengdeRepository = repositoryProvider.provide()
                 val vedtakslengdeGrunnlag = vedtasklengdeRepository.hentHvisEksisterer(this.behandling.id)
-                assertThat(vedtakslengdeGrunnlag?.vurdering?.sluttdato).isEqualTo(endringsdato.plusMonths(6).minusDays(1))
+                assertThat(vedtakslengdeGrunnlag?.vurdering?.sluttdato).isEqualTo(sak.rettighetsperiode.fom.plussEtÅrMedHverdager(ÅrMedHverdager.FØRSTE_ÅR))
             }
+            .assertRettighetstype(
+                Periode(
+                    sak.rettighetsperiode.fom, endringsdato.minusDays(1)
+                ) to RettighetsType.BISTANDSBEHOV,
+                Periode(
+                    endringsdato, endringsdato.plusMonths(6).minusDays(1)
+                ) to RettighetsType.ARBEIDSSØKER
+            )
     }
 
     @Test
