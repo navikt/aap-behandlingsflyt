@@ -97,7 +97,7 @@ class BrevUtlederService(
         when (behandling.typeBehandling()) {
             TypeBehandling.Førstegangsbehandling -> {
                 if (skalSendeVedtakForArbeidsopptrapping) {
-                    return VedtakArbeidsopptrapping11_23_sjette_ledd
+                    return VedtakArbeidsopptrapping11_23SjetteLedd
                 }
 
                 val resultat = resultatUtleder.utledResultatFørstegangsBehandling(behandlingId)
@@ -122,7 +122,7 @@ class BrevUtlederService(
 
             TypeBehandling.Revurdering -> {
                 if (skalSendeVedtakForArbeidsopptrapping) {
-                    return VedtakArbeidsopptrapping11_23_sjette_ledd
+                    return VedtakArbeidsopptrapping11_23SjetteLedd
                 }
 
                 val resultat = resultatUtleder.utledRevurderingResultat(behandlingId)

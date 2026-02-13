@@ -646,7 +646,7 @@ class BrevUtlederServiceTest {
 
 
     @Nested
-    inner class TestGruppe_VedtakArbeidsopptrapping11_23_sjette_ledd {
+    inner class TestGruppe_VedtakArbeidsopptrapping11_23_sjetteLedd {
 
         @Test
         fun `skal utlede brev for § 11-23 sjette ledd ved arbeidsopptrapping på gjeldende behandling og ikke på forrige behandling`() {
@@ -673,7 +673,7 @@ class BrevUtlederServiceTest {
             )
 
             assertThat(brevUtlederService.utledBehovForMeldingOmVedtak(revurdering.id))
-                .isEqualTo(VedtakArbeidsopptrapping11_23_sjette_ledd)
+                .isEqualTo(VedtakArbeidsopptrapping11_23SjetteLedd)
         }
 
         @Test
@@ -712,7 +712,7 @@ class BrevUtlederServiceTest {
             )
 
             assertThat(brevUtlederService.utledBehovForMeldingOmVedtak(revurdering.id))
-                .isNotEqualTo(VedtakArbeidsopptrapping11_23_sjette_ledd)
+                .isNotEqualTo(VedtakArbeidsopptrapping11_23SjetteLedd)
         }
     }
 
