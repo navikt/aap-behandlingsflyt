@@ -69,9 +69,7 @@ class InstitusjonsoppholdInformasjonskrav private constructor(
         val institusjonsopphold = registerdata.opphold
 
         val institusjonsoppholdErEndret = erEndret(eksisterendeGrunnlag, institusjonsopphold)
-        if (institusjonsoppholdErEndret) {
             institusjonsoppholdRepository.lagreOpphold(kontekst.behandlingId, institusjonsopphold)
-        }
         return if (institusjonsoppholdErEndret) ENDRET else IKKE_ENDRET
     }
 
