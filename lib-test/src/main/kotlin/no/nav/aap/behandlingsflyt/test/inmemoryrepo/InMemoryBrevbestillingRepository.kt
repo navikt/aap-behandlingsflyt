@@ -11,7 +11,7 @@ import java.util.concurrent.atomic.AtomicLong
 object InMemoryBrevbestillingRepository: BrevbestillingRepository {
     private val bestilling = CopyOnWriteArrayList<Brevbestilling>()
     private val id = AtomicLong()
-    private val lock = Object()
+    private val lock = Any()
 
     override fun hent(
         sakId: SakId,

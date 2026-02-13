@@ -195,7 +195,7 @@ class InntektsbehovTest {
     }
 
     @Test
-    fun `skal feile når forskjellen mellom inntekt fra A-inntekt og PESYS er mer enn 1kr`() {
+    fun `skal feile når forskjellen mellom inntekt fra A-inntekt og PESYS er mer enn 100kr`() {
         val årsInntekter = setOf(
             InntektPerÅr(2022, Beløp(500000)),
             InntektPerÅr(2021, Beløp(400000)),
@@ -218,7 +218,7 @@ class InntektsbehovTest {
             registrerteYrkesskader = null,
             inntektsPerioder = inntektsPerioder(
                 setOf(
-                    InntektPerÅr(2022, Beløp(500002)),
+                    InntektPerÅr(2022, Beløp(500102)),
                     InntektPerÅr(2021, Beløp(400000)),
                     InntektPerÅr(2020, Beløp(300000))
                 )

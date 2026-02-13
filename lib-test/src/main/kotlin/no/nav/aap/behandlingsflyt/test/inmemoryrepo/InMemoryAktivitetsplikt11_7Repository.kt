@@ -12,7 +12,7 @@ object InMemoryAktivitetsplikt11_7Repository : Aktivitetsplikt11_7Repository {
 
     private val memory = HashMap<BehandlingId, List<Aktivitetsplikt11_7Vurdering>>()
     private val varselMemory = HashMap<BehandlingId, Aktivitetsplikt11_7Varsel>()
-    private val lock = Object()
+    private val lock = Any()
 
     override fun lagre(
         behandlingId: BehandlingId,

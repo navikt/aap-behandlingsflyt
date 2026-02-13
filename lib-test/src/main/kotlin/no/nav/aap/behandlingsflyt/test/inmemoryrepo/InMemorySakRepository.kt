@@ -16,7 +16,7 @@ object InMemorySakRepository : SakRepository {
 
     private val idSeq = AtomicLong(10000)
     private val memory = HashMap<SakId, Sak>()
-    private val lock = Object()
+    private val lock = Any()
 
     override fun finnEllerOpprett(
         person: Person,

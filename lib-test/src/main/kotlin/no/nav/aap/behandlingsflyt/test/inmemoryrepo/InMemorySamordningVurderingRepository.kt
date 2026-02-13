@@ -8,7 +8,7 @@ import java.util.concurrent.ConcurrentHashMap
 
 object InMemorySamordningVurderingRepository : SamordningVurderingRepository {
     private val vurderinger = ConcurrentHashMap<BehandlingId, SamordningVurderingGrunnlag>()
-    private val lock = Object()
+    private val lock = Any()
 
     override fun hentHvisEksisterer(behandlingId: BehandlingId): SamordningVurderingGrunnlag? {
         synchronized(lock) { return vurderinger[behandlingId] }
