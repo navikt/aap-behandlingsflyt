@@ -221,7 +221,6 @@ class UnderveisService(
         behandlingId: BehandlingId,
         sak: Sak
     ): Periode {
-        val sistVedtatteUnderveisperiode = sistVedtatteUnderveisperiode(behandlingId)
         val vedtakslengdeGrunnlag = vedtakslengdeRepository.hentHvisEksisterer(behandlingId)
         if (vedtakslengdeGrunnlag != null) {
             return Periode(sak.rettighetsperiode.fom, vedtakslengdeGrunnlag.vurdering.sluttdato)
@@ -239,6 +238,7 @@ class UnderveisService(
         val kalkulertSluttdatoForBehandlingen = maxOf(sak.rettighetsperiode.fom, startdatoForBehandlingen)
             .plussEtÅrMedHverdager(ÅrMedHverdager.FØRSTE_ÅR)
 
+        val sistVedtatteUnderveisperiode = sistVedtatteUnderveisperiode(behandlingId)
         val sluttDatoForBehandlingen =
             listOfNotNull(sistVedtatteUnderveisperiode, kalkulertSluttdatoForBehandlingen).max()
 
