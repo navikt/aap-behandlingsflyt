@@ -224,10 +224,7 @@ class UnderveisService(
         val sistVedtatteUnderveisperiode = sistVedtatteUnderveisperiode(behandlingId)
         val vedtakslengdeGrunnlag = vedtakslengdeRepository.hentHvisEksisterer(behandlingId)
         if (vedtakslengdeGrunnlag != null) {
-            // For å sikre at vedtatte underveisperioder ikke blir kortere enn utledet sluttdato, da dette kan føre til at
-            // utbetalte underveisperioder ikke blir sendt over til økonomi
-            val sluttdato = listOfNotNull(sistVedtatteUnderveisperiode, vedtakslengdeGrunnlag.vurdering.sluttdato).max()
-            return Periode(sak.rettighetsperiode.fom, sluttdato)
+            return Periode(sak.rettighetsperiode.fom, vedtakslengdeGrunnlag.vurdering.sluttdato)
         }
 
         val startdatoForBehandlingen =

@@ -7,6 +7,8 @@ import io.mockk.mockk
 import io.mockk.verify
 import no.nav.aap.behandlingsflyt.behandling.vedtakslengde.VedtakslengdeService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.rettighetstype.RettighetstypeGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.rettighetstype.RettighetstypeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
@@ -52,6 +54,7 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtførerTest {
     private val underveisRepository = mockk<UnderveisRepository>()
     private val sakOgBehandlingService = mockk<SakOgBehandlingService>()
     private val vilkårsresultatRepository = mockk<VilkårsresultatRepository>()
+    private val rettighetestypeRepository = mockk<RettighetstypeRepository>()
     private val opprettBehandlingUtvidVedtakslengdeJobbUtfører =
         OpprettBehandlingUtvidVedtakslengdeJobbUtfører(
             prosesserBehandlingService = prosesserBehandlingService,
@@ -60,6 +63,7 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtførerTest {
                 vedtakslengdeRepository = vedtakslengdeRepository,
                 underveisRepository = underveisRepository,
                 vilkårsresultatRepository = vilkårsresultatRepository,
+                rettighetstypeRepository = rettighetestypeRepository,
                 clock = clock
             ),
             clock = clock
@@ -70,13 +74,15 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtførerTest {
     fun `skal opprette og sette i gang prosessering av behandling hvis sluttdato er innenfor dagens dato + 28 dager`() {
         val sak = sak()
         val behandling = behandlingMedVedtak()
+        val vilkårsresultat = genererVilkårsresultat(sak.rettighetsperiode)
 
         every { underveisRepository.hentHvisEksisterer(behandling.id)} returns underveisGrunnlag()
         every { sakOgBehandlingService.finnBehandlingMedSisteFattedeVedtak(sakId) } returns behandlingMedVedtak()
         every { sakOgBehandlingService.finnEllerOpprettBehandling(sak.id, any()) } returns opprettetBehandling()
         every { prosesserBehandlingService.triggProsesserBehandling(any<SakOgBehandlingService.OpprettetBehandling>()) } just Runs
-        every { vilkårsresultatRepository.hent(behandlingId) } returns genererVilkårsresultat(sak.rettighetsperiode)
+        every { vilkårsresultatRepository.hent(behandlingId) } returns vilkårsresultat
         every { vedtakslengdeRepository.hentHvisEksisterer(behandling.id) } returns null
+        every { rettighetestypeRepository.hentHvisEksisterer(behandling.id) } returns rettighetstypeGrunnlag(vilkårsresultat)
 
         opprettBehandlingUtvidVedtakslengdeJobbUtfører.utfør(jobbInput)
 
@@ -114,13 +120,15 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtførerTest {
     fun `skal ikke opprette og sette i gang prosessering av behandling bistandsvilkåret ikke er oppfylt frem i tid`() {
         val sak = sak()
         val behandling = behandlingMedVedtak()
+        val vilkårsresultat = genererVilkårsresultat(sak.rettighetsperiode, oppfyltBistand = false)
 
         every { underveisRepository.hentHvisEksisterer(behandling.id)} returns underveisGrunnlag()
         every { sakOgBehandlingService.finnBehandlingMedSisteFattedeVedtak(sakId) } returns behandlingMedVedtak()
         every { sakOgBehandlingService.finnEllerOpprettBehandling(sak.id, any()) } returns opprettetBehandling()
         every { prosesserBehandlingService.triggProsesserBehandling(any<SakOgBehandlingService.OpprettetBehandling>()) } just Runs
-        every { vilkårsresultatRepository.hent(behandlingId) } returns genererVilkårsresultat(sak.rettighetsperiode, oppfyltBistand = false)
+        every { vilkårsresultatRepository.hent(behandlingId) } returns vilkårsresultat
         every { vedtakslengdeRepository.hentHvisEksisterer(behandling.id) } returns null
+        every { rettighetestypeRepository.hentHvisEksisterer(behandling.id) } returns rettighetstypeGrunnlag(vilkårsresultat)
 
         opprettBehandlingUtvidVedtakslengdeJobbUtfører.utfør(jobbInput)
 
@@ -199,6 +207,12 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtførerTest {
                 )
             },
         )
+
+    private fun rettighetstypeGrunnlag(vilkårsresultat: Vilkårsresultat) =
+        RettighetstypeGrunnlag(
+            rettighetstypeTidslinje = vilkårsresultat.rettighetstypeTidslinje()
+        )
+
 
     private fun opprettetBehandling() =
         SakOgBehandlingService.MåBehandlesAtomært(

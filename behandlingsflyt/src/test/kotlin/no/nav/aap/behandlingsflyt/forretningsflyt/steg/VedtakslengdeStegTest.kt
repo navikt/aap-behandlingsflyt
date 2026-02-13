@@ -1,9 +1,11 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
+import io.mockk.mockk
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Kvote
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus
 import no.nav.aap.behandlingsflyt.behandling.vedtakslengde.VedtakslengdeService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Faktagrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.rettighetstype.RettighetstypeFaktagrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.ArbeidsGradering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisÅrsak
@@ -30,15 +32,18 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
+import no.nav.aap.behandlingsflyt.test.FakeUnleashBaseWithDefaultDisabled
 import no.nav.aap.behandlingsflyt.test.desember
 import no.nav.aap.behandlingsflyt.test.fixedClock
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryRettighetstypeRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryUnderveisRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryVedtakslengdeRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryVilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.behandlingsflyt.test.modell.genererIdent
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Dagsatser
 import no.nav.aap.komponenter.verdityper.Prosent
@@ -99,6 +104,13 @@ class VedtakslengdeStegTest {
             vedtattVilkårsresultat
         )
 
+        InMemoryRettighetstypeRepository.lagre(
+            behandlingId = inneværendeBehandling.id,
+            rettighetstypeTidslinje = vedtattVilkårsresultat.rettighetstypeTidslinje(),
+            faktagrunnlag = RettighetstypeFaktagrunnlag(vedtattVilkårsresultat),
+            versjon = "1",
+        )
+
         val kontekst =
             FlytKontekstMedPeriodeService(SakService(sakRepository, behandlingRepository), behandlingRepository)
                 .utled(
@@ -117,6 +129,7 @@ class VedtakslengdeStegTest {
                 vedtakslengdeRepository = InMemoryVedtakslengdeRepository,
                 underveisRepository = InMemoryUnderveisRepository,
                 vilkårsresultatRepository = InMemoryVilkårsresultatRepository,
+                rettighetstypeRepository = InMemoryRettighetstypeRepository,
                 clock = fixedClock(dagensDato),
             ),
             unleashGateway = AlleAvskruddUnleash,

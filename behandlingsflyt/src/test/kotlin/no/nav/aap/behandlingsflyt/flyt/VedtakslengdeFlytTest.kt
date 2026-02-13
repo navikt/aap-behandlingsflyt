@@ -55,6 +55,7 @@ object VedtakslengdeFlytUnleash : FakeUnleashBaseWithDefaultDisabled(
     enabledFlags = listOf(
         BehandlingsflytFeature.UtvidVedtakslengdeJobb,
         BehandlingsflytFeature.ForlengelseIManuellBehandling,
+        BehandlingsflytFeature.RettighetstypeSteg
     )
 )
 
