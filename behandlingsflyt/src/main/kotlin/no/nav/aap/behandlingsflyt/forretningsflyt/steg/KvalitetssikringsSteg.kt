@@ -165,10 +165,7 @@ class KvalitetssikringsSteg(
                             endringer.size >= 2 && endringer[endringer.size - 2].status == Status.SENDT_TILBAKE_FRA_BESLUTTER
                         }
 
-                    if (sendtTilbakeFraBeslutter) {
-                        return true
-                    }
-                    return false
+                    return sendtTilbakeFraBeslutter
                 }
             }
         }
