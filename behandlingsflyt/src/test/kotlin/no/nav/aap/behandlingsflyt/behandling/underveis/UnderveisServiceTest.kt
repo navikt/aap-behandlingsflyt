@@ -99,7 +99,6 @@ class UnderveisServiceTest {
                 vilkårsresultat = vilkårsresultat,
                 opptrappingPerioder = listOf(Periode(søknadsdato.plusYears(2), søknadsdato.plusYears(3))),
                 kvoter = kvoter,
-                forenkletKvoteFeature = true
             )
 
             val vurderingTidslinje = underveisService.vurderRegler(input)
@@ -197,7 +196,6 @@ class UnderveisServiceTest {
                 vilkårsresultat = vilkårsresultat,
                 opptrappingPerioder = listOf(Periode(søknadsdato.plusYears(2), søknadsdato.plusYears(3))),
                 kvoter = fiktiveKvoter,
-                forenkletKvoteFeature = true,
                 rettighetstypeGrunnlag = null
             )
 
@@ -206,7 +204,6 @@ class UnderveisServiceTest {
                 vilkårsresultat = vilkårsresultat2,
                 opptrappingPerioder = listOf(Periode(søknadsdato.plusYears(2), søknadsdato.plusYears(3))),
                 kvoter = fiktiveKvoter,
-                forenkletKvoteFeature = true,
                 rettighetstypeGrunnlag = RettighetstypeGrunnlag(rettighetstypeTidslinje)
             )
 
@@ -357,7 +354,6 @@ class UnderveisServiceTest {
                 rettighetsperiode = underveisPeriode,
                 vilkårsresultat = vilkårsresultat,
                 kvoter = fiktiveKvoter,
-                forenkletKvoteFeature = true,
                 rettighetstypeGrunnlag = RettighetstypeGrunnlag(rettighetstypeTidslinje)
             )
 

@@ -114,7 +114,7 @@ data class KvoteBruktOpp(
     val kvoteBruktOpp: Kvote,
     override val rettighetstypeVurdering: RettighetstypeVurdering,
 ) : KvoteVurdering {
-    override fun avslagsårsaker() = setOf(kvoteBruktOpp.nyAvslagsårsak)
+    override fun avslagsårsaker() = setOf(kvoteBruktOpp.avslagsårsak)
     override fun brukerAvKvoter() = emptySet<Kvote>()
 }
 

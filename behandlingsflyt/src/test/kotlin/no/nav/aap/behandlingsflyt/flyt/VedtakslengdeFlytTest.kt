@@ -41,7 +41,6 @@ import java.time.LocalDateTime
 object VedtakslengdeUnleash : FakeUnleashBaseWithDefaultDisabled(
     enabledFlags = listOf(
         BehandlingsflytFeature.UtvidVedtakslengdeJobb,
-        BehandlingsflytFeature.ForenkletKvote
     )
 )
 
