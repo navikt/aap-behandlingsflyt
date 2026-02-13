@@ -8,7 +8,7 @@ import java.util.concurrent.ConcurrentHashMap
 
 object InMemoryMellomlagretVurderingRepository : MellomlagretVurderingRepository {
     private val vurderinger = ConcurrentHashMap<Pair<BehandlingId, AvklaringsbehovKode>, MellomlagretVurdering>()
-    private val lock = Object()
+    private val lock = Any()
 
     override fun hentHvisEksisterer(
         behandlingId: BehandlingId,
