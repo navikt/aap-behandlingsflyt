@@ -52,7 +52,9 @@ class SignaturService(
             "Kan ikke utlede signaturer på brev i status ${brevbestilling.status}"
         }
 
-        val signaturer = if (brevbestilling.typeBrev.erVedtak()) {
+        return if (brevbestilling.typeBrev.erAutomatiskBrev()) {
+            emptyList()
+        } else if (brevbestilling.typeBrev.erVedtak()) {
             val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(brevbestilling.behandlingId)
             val signaturBeslutter = utledSignatur(Rolle.BESLUTTER, avklaringsbehovene)
             val signaturSaksbehandlerNasjonal = utledSignatur(Rolle.SAKSBEHANDLER_NASJONAL, avklaringsbehovene)
@@ -75,14 +77,10 @@ class SignaturService(
                 } else {
                     signaturBeslutter?.let { addFirst(it) }
                 }
-            }
-        } else if (brevbestilling.typeBrev.erAutomatiskBrev()) {
-            emptyList()
+            }.distinctBy { it.navIdent }
         } else {
             listOf(SignaturGrunnlag(bruker.ident, null))
         }
-
-        return signaturer.distinctBy { it.navIdent }
     }
 
     private val rolleTilAvklaringsbehov: Map<Rolle, List<Definisjon>> = buildMap {
