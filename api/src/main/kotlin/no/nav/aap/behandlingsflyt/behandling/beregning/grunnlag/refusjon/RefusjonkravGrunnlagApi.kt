@@ -55,14 +55,13 @@ fun NormalOpenAPIRoute.refusjonGrunnlagApi(
                     val vilkårsresultatRepository =
                         repositoryProvider.provide<VilkårsresultatRepository>()
 
-                    //TODO: Skal fikses etter prodsetting slik at det bare er gjeldendeVurderinger man skal forholde seg til
                     val gjeldendeVurderinger = refusjonkravRepository.hentHvisEksisterer(behandling.id)?.map {
                         it.tilResponse(ansattInfoService)
                     }
 
                     val andreYtelserRepository = repositoryProvider.provide<AndreYtelserOppgittISøknadRepository>()
                     val andreUtbetalinger = andreYtelserRepository.hentHvisEksisterer(behandling.id)
-                    
+
                     val virkningstidspunkt = try {
                         if (behandling.erYtelsesbehandling()) {
                             VirkningstidspunktUtleder(
@@ -71,7 +70,8 @@ fun NormalOpenAPIRoute.refusjonGrunnlagApi(
                         } else {
                             null
                         }
-                    } catch (e: Exception) {
+                    } catch (_: Exception) {
+                        // TODO: Undersøk hvorfor vi forventer at denne kan feile, og erstatt i så fall med en metode som håndterer dette mer eksplisitt
                         null
                     }
 
