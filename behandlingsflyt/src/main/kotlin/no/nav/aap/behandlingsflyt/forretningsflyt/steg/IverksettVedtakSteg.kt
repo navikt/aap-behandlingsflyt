@@ -18,6 +18,7 @@ import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
+import no.nav.aap.behandlingsflyt.prosessering.HåndterUbehandledeMeldekortForSakJobbUtfører
 import no.nav.aap.behandlingsflyt.prosessering.IverksettUtbetalingJobbUtfører
 import no.nav.aap.behandlingsflyt.prosessering.VarsleVedtakJobbUtfører
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
@@ -52,7 +53,7 @@ class IverksettVedtakSteg private constructor(
     private val unleashGateway: UnleashGateway,
 ) : BehandlingSteg {
     private val log = LoggerFactory.getLogger(javaClass)
-    
+
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         if (harTrukketSøknadIBehandlingen(kontekst) || harAvbruttRevurderingIBehandlingen(kontekst)) {
             return Fullført
@@ -81,6 +82,13 @@ class IverksettVedtakSteg private constructor(
                 .forSak(kontekst.sakId.id)
         )
         mellomlagretVurderingRepository.slett(kontekst.behandlingId)
+
+        if (kontekst.vurderingType == VurderingType.FØRSTEGANGSBEHANDLING) {
+            flytJobbRepository.leggTil(
+                HåndterUbehandledeMeldekortForSakJobbUtfører.nyJobb(kontekst.sakId)
+            )
+        }
+
         return Fullført
     }
 
