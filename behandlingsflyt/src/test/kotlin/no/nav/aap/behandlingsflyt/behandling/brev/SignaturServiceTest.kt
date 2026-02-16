@@ -134,9 +134,19 @@ class SignaturServiceTest {
             endretAv = saksbehandlerIdent,
             AvklaringsbehovStatus.AVSLUTTET
         )
+
+        // definisjon som ikke skal tas høyde for
         leggTilEndring(
             behandlingId,
             Definisjon.MANUELT_SATT_PÅ_VENT,
+            endretAv = saksbehandlerIdent,
+            AvklaringsbehovStatus.AVSLUTTET
+        )
+
+        // definisjon som ikke skal tas høyde for
+        leggTilEndring(
+            behandlingId,
+            Definisjon.VURDER_TREKK_AV_SØKNAD,
             endretAv = saksbehandlerIdent,
             AvklaringsbehovStatus.AVSLUTTET
         )
