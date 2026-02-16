@@ -17,6 +17,5 @@ class SykdomsFaktagrunnlag(
     val sykepengerErstatningFaktagrunnlag: SykepengerErstatningGrunnlag?,
     val sykdomsvurderinger: List<Sykdomsvurdering>,
     val bistandvurderingFaktagrunnlag: BistandGrunnlag?,
-    val studentvurdering: StudentVurdering?,
     val sykepengeerstatningVilkår: Tidslinje<Vilkårsvurdering>,
 ) : Faktagrunnlag

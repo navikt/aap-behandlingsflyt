@@ -65,7 +65,7 @@ fun NormalOpenAPIRoute.rettighetApi(
                 val vilkårsresultatRepository = repositoryProvider.provide<VilkårsresultatRepository>()
                 val vilkårsresultat = vilkårsresultatRepository.hent(sisteVedtatteYtelsesbehandling.id)
                 val now = LocalDate.now()
-                val stansEllerOpphør = utledStansEllerOpphør(vilkårsresultat)
+                val stansEllerOpphør = utledStansEllerOpphør(vilkårsresultat, rettighetsperiode = sak.rettighetsperiode)
                     .filterKeys { it <= now }
                     .maxByOrNull { it.key }
                 val rettighetstyper = underveisgrunnlag.perioder.mapNotNull { it.rettighetsType }.distinct()

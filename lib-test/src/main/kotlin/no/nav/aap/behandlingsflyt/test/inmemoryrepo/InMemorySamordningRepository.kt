@@ -6,11 +6,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.Samordni
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.atomic.AtomicLong
 
 object InMemorySamordningRepository : SamordningRepository {
     private val grunnlag = ConcurrentHashMap<BehandlingId, SamordningGrunnlag>()
-    private val id = AtomicLong(0)
 
     override fun hentHvisEksisterer(behandlingId: BehandlingId): SamordningGrunnlag? {
         return grunnlag[behandlingId]
@@ -27,5 +25,6 @@ object InMemorySamordningRepository : SamordningRepository {
     }
 
     override fun slett(behandlingId: BehandlingId) {
+        grunnlag.remove(behandlingId)
     }
 }

@@ -8,7 +8,7 @@ import java.util.concurrent.ConcurrentHashMap
 
 object InMemoryVedtakslengdeRepository: VedtakslengdeRepository {
     private val grunnlag = ConcurrentHashMap<BehandlingId, VedtakslengdeGrunnlag>()
-    private val lock = Object()
+    private val lock = Any()
     
     override fun lagre(
         behandlingId: BehandlingId,

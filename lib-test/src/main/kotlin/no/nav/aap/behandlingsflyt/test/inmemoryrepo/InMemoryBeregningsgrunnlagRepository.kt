@@ -7,7 +7,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 object InMemoryBeregningsgrunnlagRepository : BeregningsgrunnlagRepository {
 
     private val memory = HashMap<BehandlingId, Beregningsgrunnlag>()
-    private val lock = Object()
+    private val lock = Any()
 
     override fun hentHvisEksisterer(behandlingId: BehandlingId): Beregningsgrunnlag? {
         synchronized(lock) {

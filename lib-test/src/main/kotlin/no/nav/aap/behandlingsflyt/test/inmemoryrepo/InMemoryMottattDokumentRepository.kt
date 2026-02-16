@@ -11,7 +11,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 
 object InMemoryMottattDokumentRepository : MottattDokumentRepository {
     private val memory = mutableListOf<MottattDokument>()
-    private val lock = Object()
+    private val lock = Any()
 
 
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {

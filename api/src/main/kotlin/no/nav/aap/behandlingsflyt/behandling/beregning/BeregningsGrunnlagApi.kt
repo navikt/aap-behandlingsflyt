@@ -124,7 +124,7 @@ internal fun beregningDTO(beregning: Beregningsgrunnlag, behandlingOpprettet: Lo
         is Grunnlag11_19 -> {
             BeregningDTO(
                 beregningstypeDTO = BeregningstypeDTO.STANDARD,
-                grunnlag11_19 = grunnlag11_19_to_DTO(beregning),
+                grunnlag11_19 = grunnlag11_19tilDTO(beregning),
                 gjeldendeGrunnbeløp = gjeldendeGrunnbeløp
             )
         }
@@ -138,7 +138,7 @@ private fun hentGjeldendeGrunnbeløp(behandlingOpprettet: LocalDate): GjeldendeG
     )
 }
 
-private fun grunnlag11_19_to_DTO(grunnlag: Grunnlag11_19): Grunnlag11_19DTO {
+private fun grunnlag11_19tilDTO(grunnlag: Grunnlag11_19): Grunnlag11_19DTO {
     val inntekter = inntekterTilDTO(grunnlag.inntekter())
     return Grunnlag11_19DTO(
         inntekter = inntekter,

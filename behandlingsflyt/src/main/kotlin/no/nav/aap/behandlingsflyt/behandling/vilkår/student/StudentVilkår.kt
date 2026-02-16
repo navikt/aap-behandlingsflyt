@@ -20,12 +20,12 @@ class StudentVilkår(vilkårsresultat: Vilkårsresultat) : Vilkårsvurderer<Stud
     private val vilkår: Vilkår = vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.STUDENT)
 
     override fun vurder(grunnlag: StudentFaktagrunnlag) {
-        val studentTidslinje = grunnlag.studentGrunnlag?.somStudenttidslinje(grunnlag.rettighetsperiode).orEmpty()
+        val studentTidslinje = grunnlag.studentGrunnlag?.somStudenttidslinje(grunnlag.rettighetsperiode.tom).orEmpty()
 
         // Varighet er utelukkende bestemt av datoen studiet ble avbrutt + 6 måneder
         // Overlappende varighetsperioder vil dermed kunne gi en sammenhengende varighet på mer enn 6 måneder
         val varighetsTidslinje =
-            grunnlag.studentGrunnlag?.gjeldendeStudentvurderinger(grunnlag.rettighetsperiode).orEmpty()
+            grunnlag.studentGrunnlag?.gjeldendeStudentvurderinger(grunnlag.rettighetsperiode.tom).orEmpty()
                 .filter { it.avbruttStudieDato != null }.sortedBy { it.avbruttStudieDato }
                 .somTidslinje { Periode(it.avbruttStudieDato!!, utledVarighetSluttdato(it.avbruttStudieDato)) }
                 .mapValue { true }

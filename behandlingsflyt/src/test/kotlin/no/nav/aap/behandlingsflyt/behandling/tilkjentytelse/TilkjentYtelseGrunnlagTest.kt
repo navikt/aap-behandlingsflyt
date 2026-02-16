@@ -67,24 +67,24 @@ class TilkjentYtelseGrunnlagTest {
 
         assertTidslinje(
             førsteTilkjentYtelse,
-            førsteUke to { it: Tilkjent ->
-                assertThat(it.redusertDagsats()).isEqualTo(Beløp(1000))
+            førsteUke to { tilkjent: Tilkjent ->
+                assertThat(tilkjent.redusertDagsats()).isEqualTo(Beløp(1000))
             },
-            andreUke to { it: Tilkjent ->
-                assertThat(it.redusertDagsats()).isEqualTo(Beløp(1100))
+            andreUke to { tilkjent: Tilkjent ->
+                assertThat(tilkjent.redusertDagsats()).isEqualTo(Beløp(1100))
             }
         )
 
         assertTidslinje(
             andreTilkjentYtelse,
-            Periode(1 desember 2025, 2 desember 2025) to { it: Tilkjent ->
-                assertThat(it.redusertDagsats()).isEqualTo(Beløp(0))
+            Periode(1 desember 2025, 2 desember 2025) to { tilkjent: Tilkjent ->
+                assertThat(tilkjent.redusertDagsats()).isEqualTo(Beløp(0))
             },
-            Periode(3 desember 2025, 7 desember 2025) to { it: Tilkjent ->
-                assertThat(it.redusertDagsats()).isEqualTo(Beløp(1000))
+            Periode(3 desember 2025, 7 desember 2025) to { tilkjent: Tilkjent ->
+                assertThat(tilkjent.redusertDagsats()).isEqualTo(Beløp(1000))
             },
-            andreUke to { it: Tilkjent ->
-                assertThat(it.redusertDagsats()).isEqualTo(Beløp(1100))
+            andreUke to { tilkjent: Tilkjent ->
+                assertThat(tilkjent.redusertDagsats()).isEqualTo(Beløp(1100))
             }
         )
         assertThat(sumFeilutbetaling(førsteTilkjentYtelse, andreTilkjentYtelse))
@@ -110,21 +110,21 @@ class TilkjentYtelseGrunnlagTest {
 
         assertTidslinje(
             førsteTilkjentYtelse,
-            førsteUke to { it: Tilkjent ->
-                assertThat(it.redusertDagsats()).isEqualTo(Beløp(1000))
+            førsteUke to { tilkjent: Tilkjent ->
+                assertThat(tilkjent.redusertDagsats()).isEqualTo(Beløp(1000))
             },
-            andreUke to { it: Tilkjent ->
-                assertThat(it.redusertDagsats()).isEqualTo(Beløp(1100))
+            andreUke to { tilkjent: Tilkjent ->
+                assertThat(tilkjent.redusertDagsats()).isEqualTo(Beløp(1100))
             }
         )
 
         assertTidslinje(
             andreTilkjentYtelse,
-            førsteUke to { it: Tilkjent ->
-                assertThat(it.redusertDagsats()).isEqualTo(Beløp(1000))
+            førsteUke to { tilkjent: Tilkjent ->
+                assertThat(tilkjent.redusertDagsats()).isEqualTo(Beløp(1000))
             },
-            andreUke to { it: Tilkjent ->
-                assertThat(it.redusertDagsats()).isEqualTo(Beløp(0))
+            andreUke to { tilkjent: Tilkjent ->
+                assertThat(tilkjent.redusertDagsats()).isEqualTo(Beløp(0))
             }
         )
         assertThat(sumFeilutbetaling(førsteTilkjentYtelse, andreTilkjentYtelse))
@@ -146,11 +146,11 @@ class TilkjentYtelseGrunnlagTest {
 
         assertTidslinje(
             førsteTilkjentYtelse,
-            førsteUke to { it: Tilkjent ->
-                assertThat(it.redusertDagsats()).isEqualTo(Beløp(500))
+            førsteUke to { tilkjent: Tilkjent ->
+                assertThat(tilkjent.redusertDagsats()).isEqualTo(Beløp(500))
             },
-            andreUke to { it: Tilkjent ->
-                assertThat(it.redusertDagsats()).isEqualTo(Beløp(550))
+            andreUke to { tilkjent: Tilkjent ->
+                assertThat(tilkjent.redusertDagsats()).isEqualTo(Beløp(550))
             }
         )
 

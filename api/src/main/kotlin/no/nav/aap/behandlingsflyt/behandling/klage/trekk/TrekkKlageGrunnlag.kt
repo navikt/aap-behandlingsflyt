@@ -3,7 +3,6 @@ import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.behandling.trekkklage.TrekkKlageRepository
-import no.nav.aap.behandlingsflyt.behandling.trekkklage.flate.TrekkKlageVurderingDto
 import no.nav.aap.behandlingsflyt.behandling.trekkklage.tilDto
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
@@ -16,10 +15,6 @@ import no.nav.aap.tilgang.Operasjon
 import no.nav.aap.tilgang.authorizedGet
 import javax.sql.DataSource
 
-
-class TrekkKlageGrunnlagDto(
-    val vurdering: TrekkKlageVurderingDto?
-)
 
 fun NormalOpenAPIRoute.trekkKlageGrunnlagApi(dataSource: DataSource, repositoryRegistry: RepositoryRegistry) {
     route("/api/klage/{referanse}/grunnlag/trekk-klage").authorizedGet<BehandlingReferanse, TrekkKlageGrunnlagDto>(

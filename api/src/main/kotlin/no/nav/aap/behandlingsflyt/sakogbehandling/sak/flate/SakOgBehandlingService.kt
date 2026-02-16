@@ -30,6 +30,7 @@ class SakOgBehandlingService(private val repositoryProvider: RepositoryProvider)
                 BehandlinginfoDTO(
                     referanse = behandling.referanse.referanse,
                     type = behandling.typeBehandling().identifikator(),
+                    typeBehandling = behandling.typeBehandling(),
                     status = behandling.status(),
                     vurderingsbehov = vurderingsbehov,
                     årsakTilOpprettelse = behandling.årsakTilOpprettelse,
@@ -42,6 +43,7 @@ class SakOgBehandlingService(private val repositoryProvider: RepositoryProvider)
             BehandlinginfoDTO(
                 referanse = tilbakekrevingBehandling.tilbakekrevingBehandlingId,
                 type = TypeBehandling.Tilbakekreving.identifikator(),
+                typeBehandling = TypeBehandling.Tilbakekreving,
                 status = when (tilbakekrevingBehandling.behandlingsstatus) {
                     TilbakekrevingBehandlingsstatus.OPPRETTET -> no.nav.aap.behandlingsflyt.kontrakt.behandling.Status.OPPRETTET
                     TilbakekrevingBehandlingsstatus.TIL_BEHANDLING -> no.nav.aap.behandlingsflyt.kontrakt.behandling.Status.UTREDES

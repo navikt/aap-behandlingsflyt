@@ -13,7 +13,6 @@ import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MapInstitusjonopph
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.UnderveisInput
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.UtledMeldeperiodeRegel
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.VarighetRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Vurdering
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.ÅrMedHverdager
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakService
@@ -126,7 +125,6 @@ class UnderveisService(
         MeldepliktRegel(),
         FastsettGrenseverdiArbeidRegel(),
         GraderingArbeidRegel(),
-        VarighetRegel(),
     )
 
     init {
@@ -216,7 +214,6 @@ class UnderveisService(
             meldeperioder = meldeperioder,
             vedtaksdatoFørstegangsbehandling = vedtaksdatoFørstegangsbehandling?.toLocalDate(),
             rettighetstypeGrunnlag = rettighetstypeGrunnlag,
-            forenkletKvoteFeature = unleashGateway.isEnabled(BehandlingsflytFeature.ForenkletKvote),
         )
     }
 

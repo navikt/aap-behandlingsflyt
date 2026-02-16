@@ -11,7 +11,7 @@ import kotlin.collections.joinToString
 import kotlin.text.format
 
 
-class GraphQLResponseHandler() : RestResponseHandler<InputStream> {
+class GraphQLResponseHandler : RestResponseHandler<InputStream> {
 
     private val defaultResponseHandler = DefaultResponseHandler()
 

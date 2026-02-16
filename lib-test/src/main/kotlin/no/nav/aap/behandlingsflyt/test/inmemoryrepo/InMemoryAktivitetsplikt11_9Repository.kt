@@ -9,7 +9,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 object InMemoryAktivitetsplikt11_9Repository : Aktivitetsplikt11_9Repository {
 
     private val memory = HashMap<BehandlingId, Aktivitetsplikt11_9Grunnlag>()
-    private val lock = Object()
+    private val lock = Any()
     override fun hentHvisEksisterer(behandlingId: BehandlingId): Aktivitetsplikt11_9Grunnlag? {
         return synchronized(lock) {
             memory[behandlingId]

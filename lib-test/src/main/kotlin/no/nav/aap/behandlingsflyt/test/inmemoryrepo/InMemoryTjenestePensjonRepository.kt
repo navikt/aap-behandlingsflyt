@@ -6,7 +6,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 
 object InMemoryTjenestePensjonRepository : TjenestePensjonRepository {
     private val tjenestePensjon = mutableMapOf<BehandlingId, List<TjenestePensjonForhold>>()
-    private val lock = Object()
+    private val lock = Any()
     override fun hentHvisEksisterer(behandlingId: BehandlingId): List<TjenestePensjonForhold>? {
         synchronized(lock) {
             return tjenestePensjon[behandlingId]
@@ -33,7 +33,6 @@ object InMemoryTjenestePensjonRepository : TjenestePensjonRepository {
     }
 
     override fun slett(behandlingId: BehandlingId) {
+        tjenestePensjon.remove(behandlingId)
     }
-
-
 }

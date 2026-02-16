@@ -71,8 +71,11 @@ public data class TilkjentYtelsePeriodeDTO(
     val antallBarn: Int,
     val barnetilleggSats: Double,
     val barnetillegg: Double,
-    val utbetalingsdato: LocalDate
+    val utbetalingsdato: LocalDate,
+    val minsteSats: Minstesats,
 )
+
+public enum class Minstesats { IKKE_MINSTESATS, MINSTESATS_OVER_25, MINSTESATS_UNDER_25 }
 
 public data class VilkårsResultatDTO(
     val typeBehandling: TypeBehandling, val vilkår: List<VilkårDTO>

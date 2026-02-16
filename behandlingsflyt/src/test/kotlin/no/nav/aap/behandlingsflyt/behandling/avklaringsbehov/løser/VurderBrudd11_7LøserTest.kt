@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser
 
+import io.mockk.clearAllMocks
 import io.mockk.every
 import io.mockk.junit5.MockKExtension
 import io.mockk.mockk
@@ -19,6 +20,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.params.ParameterizedTest
@@ -33,6 +35,11 @@ class VurderBrudd11_7LøserTest {
     private val behandlingRepository = mockk<BehandlingRepository>()
     private val avklaringsbehovRepository = mockk<AvklaringsbehovRepository>()
     private val avklaringsbehovOperasjonerRepository = mockk<AvklaringsbehovOperasjonerRepository>()
+
+    @AfterEach
+    fun tearDown() {
+        clearAllMocks()
+    }
 
     @ParameterizedTest
     @MethodSource("ugyldigeLøsninger")

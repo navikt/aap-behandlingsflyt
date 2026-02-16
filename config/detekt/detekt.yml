@@ -92,7 +92,7 @@ complexity:
     active: true
     allowedComplexity: 14
     ignoreSingleWhenExpression: false
-    ignoreSimpleWhenEntries: false
+    ignoreSimpleWhenEntries: true
     ignoreNestingFunctions: false
     ignoreLocalFunctions: false
     nestingFunctions:
@@ -307,11 +307,11 @@ naming:
   ClassNaming:
     active: true
     aliases: ['ClassName']
-    classPattern: '[A-ZÆØÅ][a-zæøåÆØÅA-Z0-9]*'
+    classPattern: '[A-ZÆØÅ]([a-zæøåÆØÅA-Z0-9](11_[0-9]+)?)*'
   ConstructorParameterNaming:
     active: true
-    parameterPattern: '[a-zæøå][A-ZÆØÅæøåa-z0-9]*'
-    privateParameterPattern: '[a-zæøå][A-ZÆØÅæøåa-z0-9]*'
+    parameterPattern: '[a-zæøå]([A-ZÆØÅæøåa-z0-9](11_[1-9]+)?)*'
+    privateParameterPattern: '[a-zæøå]([A-ZÆØÅæøåa-z0-9](11_[1-9]+)?)*'
     excludeClassPattern: '$^'
   EnumNaming:
     active: true
@@ -332,7 +332,7 @@ naming:
     active: true
     aliases: ['FunctionName']
     excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/jvmTest/**', '**/androidUnitTest/**', '**/androidInstrumentedTest/**', '**/jsTest/**', '**/iosTest/**']
-    functionPattern: '[a-zæøå][æøåa-zÆØÅA-Z0-9]*'
+    functionPattern: '[a-zæøå]([æøåa-zÆØÅA-Z0-9](11_[1-9]+)?)*'
     excludeClassPattern: '$^'
   FunctionParameterNaming:
     active: true
@@ -376,7 +376,7 @@ naming:
   PackageNaming:
     active: true
     aliases: ['PackageName']
-    packagePattern: '[a-zæøå]+(\.[a-zæøå][A-ZÆØÅæøåa-z0-9]*)*'
+    packagePattern: '[a-zæøå]+(\.[a-zæøå][A-ZÆØÅæøåa-z0-9]*(_?11_[1-9]+)?)*'
   TopLevelPropertyNaming:
     active: true
     constantPattern: '[A-ZÆØÅ][_ÆØÅA-Z0-9]*'
@@ -391,8 +391,8 @@ naming:
   VariableNaming:
     active: true
     aliases: ['PropertyName', 'LocalVariableName']
-    variablePattern: '[a-zæøå][A-ZÆØÅæøåa-z0-9]*'
-    privateVariablePattern: '(_)?[a-zæøå][A-ZÆØÅæøåa-z0-9]*'
+    variablePattern: '[a-zæøå][A-ZÆØÅæøåa-z0-9(11_[1-9]+)?]*'
+    privateVariablePattern: '(_)?[a-zæøå][A-ZÆØÅæøåa-z0-9(11_[1-9]+)?]*'
     excludeClassPattern: '$^'
 
 performance:

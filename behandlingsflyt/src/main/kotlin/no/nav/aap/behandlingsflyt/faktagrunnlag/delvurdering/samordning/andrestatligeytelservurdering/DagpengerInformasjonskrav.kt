@@ -19,14 +19,13 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
-import org.slf4j.LoggerFactory
 
 class DagpengerInformasjonskrav(
     private val tidligereVurderinger: TidligereVurderinger,
     private val dagpengerGateway: DagpengerGateway,
     private val dagpengerRepository: DagpengerRepository,
     private val sakService: SakService,
-): Informasjonskrav<DagpengerInformasjonskrav.DagpengerInput, DagpengerInformasjonskrav.DagpengerRegisterdata> {
+) : Informasjonskrav<DagpengerInformasjonskrav.DagpengerInput, DagpengerInformasjonskrav.DagpengerRegisterdata> {
     override val navn = Companion.navn
 
     override fun erRelevant(
@@ -96,18 +95,17 @@ class DagpengerInformasjonskrav(
     ) : InformasjonskravInput
 
     data class DagpengerRegisterdata(
-        val DagpengerPerioder: Set<DagpengerPeriode>
+        val dagpengerPerioder: Set<DagpengerPeriode>
     ) : InformasjonskravRegisterdata
 
 
-    companion object : Informasjonskravkonstruktør{
+    companion object : Informasjonskravkonstruktør {
 
-        private val secureLogger = LoggerFactory.getLogger("team-logs")
         override val navn = InformasjonskravNavn.DAGPENGER
 
         override fun konstruer(
             repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider
-        ): DagpengerInformasjonskrav{
+        ): DagpengerInformasjonskrav {
             return DagpengerInformasjonskrav(
                 TidligereVurderingerImpl(repositoryProvider),
                 gatewayProvider.provide(),
