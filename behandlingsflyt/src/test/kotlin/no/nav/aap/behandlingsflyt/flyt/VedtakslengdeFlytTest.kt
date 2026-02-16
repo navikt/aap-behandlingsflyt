@@ -106,19 +106,179 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(VedtakslengdeFlytUnlea
     }
 
     @Test
-    fun `skal beholde vedtatte underveisperioder dersom vedtakslengde innskrenkes pga endret rettighetstype ved revurdering`() {
-        val sak = happyCaseFørstegangsbehandling(LocalDate.now(clock))
-        val endringsdato = sak.rettighetsperiode.fom.plusMonths(2)
+    fun `skal sette sluttdato 6 måneder frem i tid når siste oppfylte rettighetstype er overgang arbeid ved førstegangsbehandling`() {
+        val søknadstidspunkt = LocalDateTime.now(clock)
+        val (sak, førstegangsbehandling) = sendInnFørsteSøknad(mottattTidspunkt = søknadstidspunkt)
+        val startDato = sak.rettighetsperiode.fom
+        val overgangDato = startDato.plusMonths(1)
 
-        dataSource.transaction { connection ->
-            val underveisRepository = UnderveisRepositoryImpl(connection)
-            val behandlingRepository = BehandlingRepositoryImpl(connection)
-            val vedtakslengdeRepository = VedtakslengdeRepositoryImpl(connection)
-            val behandling = behandlingRepository.finnSisteOpprettedeBehandlingFor(sak.id, listOf(TypeBehandling.Førstegangsbehandling))
-            val underveisGrunnlag = underveisRepository.hentHvisEksisterer(behandling!!.id)
-            val sisteUnderveisperiode = underveisGrunnlag?.perioder?.maxByOrNull { it.periode.tom }
-            assertThat(sisteUnderveisperiode?.periode?.tom).isEqualTo(vedtakslengdeRepository.hentHvisEksisterer(behandling.id)!!.vurdering.sluttdato)
-        }
+        førstegangsbehandling
+            .løsAvklaringsBehov(
+                AvklarSykdomLøsning(
+                    løsningerForPerioder = listOf(
+                        SykdomsvurderingLøsningDto(
+                            begrunnelse = "Er syk nok",
+                            dokumenterBruktIVurdering = listOf(JournalpostId("123128")),
+                            harSkadeSykdomEllerLyte = true,
+                            erSkadeSykdomEllerLyteVesentligdel = true,
+                            erNedsettelseIArbeidsevneMerEnnHalvparten = true,
+                            erNedsettelseIArbeidsevneAvEnVissVarighet = true,
+                            erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
+                            erArbeidsevnenNedsatt = true,
+                            yrkesskadeBegrunnelse = null,
+                            fom = startDato,
+                            tom = overgangDato.minusDays(1)
+                        ),
+                        SykdomsvurderingLøsningDto(
+                            begrunnelse = "Ikke syk",
+                            dokumenterBruktIVurdering = listOf(JournalpostId("123128")),
+                            harSkadeSykdomEllerLyte = false,
+                            erSkadeSykdomEllerLyteVesentligdel = false,
+                            erNedsettelseIArbeidsevneMerEnnHalvparten = false,
+                            erNedsettelseIArbeidsevneAvEnVissVarighet = false,
+                            erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
+                            erArbeidsevnenNedsatt = false,
+                            yrkesskadeBegrunnelse = null,
+                            fom = overgangDato,
+                            tom = null
+                        ),
+                    )
+                )
+
+            )
+            .løsAvklaringsBehov(
+                AvklarBistandsbehovLøsning(
+                    løsningerForPerioder = listOf(
+                        BistandLøsningDto(
+                            begrunnelse = "Trenger hjelp fra nav",
+                            erBehovForAktivBehandling = true,
+                            erBehovForArbeidsrettetTiltak = false,
+                            erBehovForAnnenOppfølging = null,
+                            skalVurdereAapIOvergangTilArbeid = null,
+                            overgangBegrunnelse = null,
+                            fom = startDato,
+                            tom = overgangDato.minusDays(1)
+                        ),
+                        BistandLøsningDto(
+                            fom = overgangDato,
+                            begrunnelse = "Trenger hjelp fra nav",
+                            erBehovForAktivBehandling = false,
+                            erBehovForArbeidsrettetTiltak = false,
+                            erBehovForAnnenOppfølging = false,
+                            skalVurdereAapIOvergangTilArbeid = null,
+                            overgangBegrunnelse = "Skal over i arbeid",
+                            tom = null
+                        ),
+                    )
+                )
+            )
+            .løsOvergangArbeid(Utfall.OPPFYLT, fom = overgangDato)
+            .løsRefusjonskrav()
+            .løsSykdomsvurderingBrev()
+            .kvalitetssikreOk()
+            .løsBeregningstidspunkt(startDato)
+            .løsOppholdskrav(startDato)
+            .løsAndreStatligeYtelser()
+            .medKontekst {
+                val vedtasklengdeRepository: VedtakslengdeRepository = repositoryProvider.provide()
+                val vedtakslengdeGrunnlag = vedtasklengdeRepository.hentHvisEksisterer(this.behandling.id)
+                assertThat(vedtakslengdeGrunnlag?.vurdering?.sluttdato).isEqualTo(overgangDato.plusMonths(6).minusDays(1))
+            }
+    }
+
+    @Test
+    fun `skal sette sluttdato 14 måneder frem i tid når siste oppfylte rettighetstype er overgang arbeid ved førstegangsbehandlin og overgang er 8 måneder frem i tid`() {
+        val søknadstidspunkt = LocalDateTime.now(clock)
+        val (sak, førstegangsbehandling) = sendInnFørsteSøknad(mottattTidspunkt = søknadstidspunkt)
+        val startDato = sak.rettighetsperiode.fom
+        val overgangDato = startDato.plusMonths(8)
+
+        førstegangsbehandling
+            .løsAvklaringsBehov(
+                AvklarSykdomLøsning(
+                    løsningerForPerioder = listOf(
+                        SykdomsvurderingLøsningDto(
+                            begrunnelse = "Er syk nok",
+                            dokumenterBruktIVurdering = listOf(JournalpostId("123128")),
+                            harSkadeSykdomEllerLyte = true,
+                            erSkadeSykdomEllerLyteVesentligdel = true,
+                            erNedsettelseIArbeidsevneMerEnnHalvparten = true,
+                            erNedsettelseIArbeidsevneAvEnVissVarighet = true,
+                            erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
+                            erArbeidsevnenNedsatt = true,
+                            yrkesskadeBegrunnelse = null,
+                            fom = startDato,
+                            tom = overgangDato.minusDays(1)
+                        ),
+                        SykdomsvurderingLøsningDto(
+                            begrunnelse = "Ikke syk",
+                            dokumenterBruktIVurdering = listOf(JournalpostId("123128")),
+                            harSkadeSykdomEllerLyte = false,
+                            erSkadeSykdomEllerLyteVesentligdel = false,
+                            erNedsettelseIArbeidsevneMerEnnHalvparten = false,
+                            erNedsettelseIArbeidsevneAvEnVissVarighet = false,
+                            erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
+                            erArbeidsevnenNedsatt = false,
+                            yrkesskadeBegrunnelse = null,
+                            fom = overgangDato,
+                            tom = null
+                        ),
+                    )
+                )
+
+            )
+            .løsAvklaringsBehov(
+                AvklarBistandsbehovLøsning(
+                    løsningerForPerioder = listOf(
+                        BistandLøsningDto(
+                            begrunnelse = "Trenger hjelp fra nav",
+                            erBehovForAktivBehandling = true,
+                            erBehovForArbeidsrettetTiltak = false,
+                            erBehovForAnnenOppfølging = null,
+                            skalVurdereAapIOvergangTilArbeid = null,
+                            overgangBegrunnelse = null,
+                            fom = startDato,
+                            tom = overgangDato.minusDays(1)
+                        ),
+                        BistandLøsningDto(
+                            fom = overgangDato,
+                            begrunnelse = "Trenger hjelp fra nav",
+                            erBehovForAktivBehandling = false,
+                            erBehovForArbeidsrettetTiltak = false,
+                            erBehovForAnnenOppfølging = false,
+                            skalVurdereAapIOvergangTilArbeid = null,
+                            overgangBegrunnelse = "Skal over i arbeid",
+                            tom = null
+                        ),
+                    )
+                )
+            )
+            .løsOvergangArbeid(Utfall.OPPFYLT, fom = overgangDato)
+            .løsRefusjonskrav()
+            .løsSykdomsvurderingBrev()
+            .kvalitetssikreOk()
+            .løsBeregningstidspunkt(startDato)
+            .løsOppholdskrav(startDato)
+            .løsAndreStatligeYtelser()
+            .medKontekst {
+                val vedtasklengdeRepository: VedtakslengdeRepository = repositoryProvider.provide()
+                val vedtakslengdeGrunnlag = vedtasklengdeRepository.hentHvisEksisterer(this.behandling.id)
+                assertThat(vedtakslengdeGrunnlag?.vurdering?.sluttdato).isEqualTo(overgangDato.plusMonths(6).minusDays(1))
+            }
+            .assertRettighetstype(
+                Periode(
+                    startDato, overgangDato.minusDays(1),
+                ) to RettighetsType.BISTANDSBEHOV,
+                Periode(
+                    overgangDato, overgangDato.plusMonths(6).minusDays(1)
+                ) to RettighetsType.ARBEIDSSØKER,
+            )
+    }
+
+    @Test
+    fun `skal sette sluttdato 14 måneder frem i tid ved overgang arbeid som siste oppfylte rettighetstype ved revurdering`() {
+        val sak = happyCaseFørstegangsbehandling(LocalDate.now(clock))
+        val endringsdato = sak.rettighetsperiode.fom.plusMonths(8)
 
         /* Gir AAP som arbeidssøker. */
         sak.opprettManuellRevurdering(
@@ -130,21 +290,9 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(VedtakslengdeFlytUnlea
             .løsSykdomsvurderingBrev()
             .medKontekst {
                 val vedtasklengdeRepository: VedtakslengdeRepository = repositoryProvider.provide()
-                val underveisRepository: UnderveisRepository = repositoryProvider.provide()
                 val vedtakslengdeGrunnlag = vedtasklengdeRepository.hentHvisEksisterer(this.behandling.id)
-                val underveisGrunnlag = underveisRepository.hentHvisEksisterer(behandling.id)
-                val sisteUnderveisperiode = underveisGrunnlag?.perioder?.maxByOrNull { it.periode.tom }
-                assertThat(sisteUnderveisperiode?.periode?.tom).isEqualTo(sak.rettighetsperiode.fom.plussEtÅrMedHverdager(ÅrMedHverdager.FØRSTE_ÅR))
-                assertThat(vedtakslengdeGrunnlag?.vurdering?.sluttdato).isEqualTo(sak.rettighetsperiode.fom.plussEtÅrMedHverdager(ÅrMedHverdager.FØRSTE_ÅR))
+                assertThat(vedtakslengdeGrunnlag?.vurdering?.sluttdato).isEqualTo(endringsdato.plusMonths(6).minusDays(1))
             }
-            .assertRettighetstype(
-                Periode(
-                    sak.rettighetsperiode.fom, endringsdato.minusDays(1)
-                ) to RettighetsType.BISTANDSBEHOV,
-                Periode(
-                    endringsdato, endringsdato.plusMonths(6).minusDays(1)
-                ) to RettighetsType.ARBEIDSSØKER
-            )
     }
 
     @Test
@@ -234,171 +382,19 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(VedtakslengdeFlytUnlea
     }
 
     @Test
-    fun `skal sette sluttdato 6 måneder frem i tid når siste oppfylte rettighetstype er overgang arbeid ved førstegangsbehandling`() {
-        val søknadstidspunkt = LocalDateTime.now(clock)
-        val (sak, førstegangsbehandling) = sendInnFørsteSøknad(mottattTidspunkt = søknadstidspunkt)
-        val startDato = sak.rettighetsperiode.fom
-        val overgangDato = startDato.plusMonths(1)
-
-        førstegangsbehandling
-            .løsAvklaringsBehov(
-                AvklarSykdomLøsning(
-                    løsningerForPerioder = listOf(
-                        SykdomsvurderingLøsningDto(
-                            begrunnelse = "Er syk nok",
-                            dokumenterBruktIVurdering = listOf(JournalpostId("123128")),
-                            harSkadeSykdomEllerLyte = true,
-                            erSkadeSykdomEllerLyteVesentligdel = true,
-                            erNedsettelseIArbeidsevneMerEnnHalvparten = true,
-                            erNedsettelseIArbeidsevneAvEnVissVarighet = true,
-                            erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
-                            erArbeidsevnenNedsatt = true,
-                            yrkesskadeBegrunnelse = null,
-                            fom = startDato,
-                            tom = overgangDato.minusDays(1)
-                        ),
-                        SykdomsvurderingLøsningDto(
-                            begrunnelse = "Ikke syk",
-                            dokumenterBruktIVurdering = listOf(JournalpostId("123128")),
-                            harSkadeSykdomEllerLyte = false,
-                            erSkadeSykdomEllerLyteVesentligdel = false,
-                            erNedsettelseIArbeidsevneMerEnnHalvparten = false,
-                            erNedsettelseIArbeidsevneAvEnVissVarighet = false,
-                            erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
-                            erArbeidsevnenNedsatt = false,
-                            yrkesskadeBegrunnelse = null,
-                            fom = overgangDato,
-                            tom = null
-                        ),
-                    )
-                )
-
-            )
-            .løsAvklaringsBehov(
-                AvklarBistandsbehovLøsning(
-                    løsningerForPerioder = listOf(
-                        BistandLøsningDto(
-                            begrunnelse = "Trenger hjelp fra nav",
-                            erBehovForAktivBehandling = true,
-                            erBehovForArbeidsrettetTiltak = false,
-                            erBehovForAnnenOppfølging = null,
-                            skalVurdereAapIOvergangTilArbeid = null,
-                            overgangBegrunnelse = null,
-                            fom = startDato,
-                            tom = overgangDato.minusDays(1)
-                        ),
-                        BistandLøsningDto(
-                            fom = overgangDato,
-                            begrunnelse = "Trenger hjelp fra nav",
-                            erBehovForAktivBehandling = false,
-                            erBehovForArbeidsrettetTiltak = false,
-                            erBehovForAnnenOppfølging = false,
-                            skalVurdereAapIOvergangTilArbeid = null,
-                            overgangBegrunnelse = "Skal over i arbeid",
-                            tom = null
-                        ),
-                    )
-                )
-            )
-            .løsOvergangArbeid(Utfall.OPPFYLT, fom = overgangDato)
-            .løsRefusjonskrav()
-            .løsSykdomsvurderingBrev()
-            .kvalitetssikreOk()
-            .løsBeregningstidspunkt(startDato)
-            .løsOppholdskrav(startDato)
-            .løsAndreStatligeYtelser()
-            .medKontekst {
-                val vedtasklengdeRepository: VedtakslengdeRepository = repositoryProvider.provide()
-                val vedtakslengdeGrunnlag = vedtasklengdeRepository.hentHvisEksisterer(this.behandling.id)
-                assertThat(vedtakslengdeGrunnlag?.vurdering?.sluttdato).isEqualTo(overgangDato.plusMonths(6).minusDays(1))
-            }
-    }
-
-    @Test
-    fun `skal sette sluttdato 14 måneder frem i tid når siste oppfylte rettighetstype er overgang arbeid ved førstegangsbehandling`() {
-        val søknadstidspunkt = LocalDateTime.now(clock)
-        val (sak, førstegangsbehandling) = sendInnFørsteSøknad(mottattTidspunkt = søknadstidspunkt)
-        val startDato = sak.rettighetsperiode.fom
-        val overgangDato = startDato.plusMonths(8)
-
-        førstegangsbehandling
-            .løsAvklaringsBehov(
-                AvklarSykdomLøsning(
-                    løsningerForPerioder = listOf(
-                        SykdomsvurderingLøsningDto(
-                            begrunnelse = "Er syk nok",
-                            dokumenterBruktIVurdering = listOf(JournalpostId("123128")),
-                            harSkadeSykdomEllerLyte = true,
-                            erSkadeSykdomEllerLyteVesentligdel = true,
-                            erNedsettelseIArbeidsevneMerEnnHalvparten = true,
-                            erNedsettelseIArbeidsevneAvEnVissVarighet = true,
-                            erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
-                            erArbeidsevnenNedsatt = true,
-                            yrkesskadeBegrunnelse = null,
-                            fom = startDato,
-                            tom = overgangDato.minusDays(1)
-                        ),
-                        SykdomsvurderingLøsningDto(
-                            begrunnelse = "Ikke syk",
-                            dokumenterBruktIVurdering = listOf(JournalpostId("123128")),
-                            harSkadeSykdomEllerLyte = false,
-                            erSkadeSykdomEllerLyteVesentligdel = false,
-                            erNedsettelseIArbeidsevneMerEnnHalvparten = false,
-                            erNedsettelseIArbeidsevneAvEnVissVarighet = false,
-                            erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
-                            erArbeidsevnenNedsatt = false,
-                            yrkesskadeBegrunnelse = null,
-                            fom = overgangDato,
-                            tom = null
-                        ),
-                    )
-                )
-
-            )
-            .løsAvklaringsBehov(
-                AvklarBistandsbehovLøsning(
-                    løsningerForPerioder = listOf(
-                        BistandLøsningDto(
-                            begrunnelse = "Trenger hjelp fra nav",
-                            erBehovForAktivBehandling = true,
-                            erBehovForArbeidsrettetTiltak = false,
-                            erBehovForAnnenOppfølging = null,
-                            skalVurdereAapIOvergangTilArbeid = null,
-                            overgangBegrunnelse = null,
-                            fom = startDato,
-                            tom = overgangDato.minusDays(1)
-                        ),
-                        BistandLøsningDto(
-                            fom = overgangDato,
-                            begrunnelse = "Trenger hjelp fra nav",
-                            erBehovForAktivBehandling = false,
-                            erBehovForArbeidsrettetTiltak = false,
-                            erBehovForAnnenOppfølging = false,
-                            skalVurdereAapIOvergangTilArbeid = null,
-                            overgangBegrunnelse = "Skal over i arbeid",
-                            tom = null
-                        ),
-                    )
-                )
-            )
-            .løsOvergangArbeid(Utfall.OPPFYLT, fom = overgangDato)
-            .løsRefusjonskrav()
-            .løsSykdomsvurderingBrev()
-            .kvalitetssikreOk()
-            .løsBeregningstidspunkt(startDato)
-            .løsOppholdskrav(startDato)
-            .løsAndreStatligeYtelser()
-            .medKontekst {
-                val vedtasklengdeRepository: VedtakslengdeRepository = repositoryProvider.provide()
-                val vedtakslengdeGrunnlag = vedtasklengdeRepository.hentHvisEksisterer(this.behandling.id)
-                assertThat(vedtakslengdeGrunnlag?.vurdering?.sluttdato).isEqualTo(overgangDato.plusMonths(6).minusDays(1))
-            }
-    }
-
-    @Test
-    fun `skal sette sluttdato 6 måneder frem i tid ved overgang arbeid som siste oppfylte rettighetstype`() {
+    fun `skal beholde vedtatte underveisperioder dersom vedtakslengde innskrenkes pga endret rettighetstype ved revurdering`() {
         val sak = happyCaseFørstegangsbehandling(LocalDate.now(clock))
-        val endringsdato = sak.rettighetsperiode.fom.plusDays(7)
+        val endringsdato = sak.rettighetsperiode.fom.plusMonths(2)
+
+        dataSource.transaction { connection ->
+            val underveisRepository = UnderveisRepositoryImpl(connection)
+            val behandlingRepository = BehandlingRepositoryImpl(connection)
+            val vedtakslengdeRepository = VedtakslengdeRepositoryImpl(connection)
+            val behandling = behandlingRepository.finnSisteOpprettedeBehandlingFor(sak.id, listOf(TypeBehandling.Førstegangsbehandling))
+            val underveisGrunnlag = underveisRepository.hentHvisEksisterer(behandling!!.id)
+            val sisteUnderveisperiode = underveisGrunnlag?.perioder?.maxByOrNull { it.periode.tom }
+            assertThat(sisteUnderveisperiode?.periode?.tom).isEqualTo(vedtakslengdeRepository.hentHvisEksisterer(behandling.id)!!.vurdering.sluttdato)
+        }
 
         /* Gir AAP som arbeidssøker. */
         sak.opprettManuellRevurdering(
@@ -410,21 +406,17 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(VedtakslengdeFlytUnlea
             .løsSykdomsvurderingBrev()
             .medKontekst {
                 val vedtasklengdeRepository: VedtakslengdeRepository = repositoryProvider.provide()
+                val underveisRepository: UnderveisRepository = repositoryProvider.provide()
                 val vedtakslengdeGrunnlag = vedtasklengdeRepository.hentHvisEksisterer(this.behandling.id)
+                val underveisGrunnlag = underveisRepository.hentHvisEksisterer(behandling.id)
+                val sisteUnderveisperiode = underveisGrunnlag?.perioder?.maxByOrNull { it.periode.tom }
+                assertThat(sisteUnderveisperiode?.periode?.tom).isEqualTo(sak.rettighetsperiode.fom.plussEtÅrMedHverdager(ÅrMedHverdager.FØRSTE_ÅR))
                 assertThat(vedtakslengdeGrunnlag?.vurdering?.sluttdato).isEqualTo(sak.rettighetsperiode.fom.plussEtÅrMedHverdager(ÅrMedHverdager.FØRSTE_ÅR))
             }
-            .assertRettighetstype(
-                Periode(
-                    sak.rettighetsperiode.fom, endringsdato.minusDays(1)
-                ) to RettighetsType.BISTANDSBEHOV,
-                Periode(
-                    endringsdato, endringsdato.plusMonths(6).minusDays(1)
-                ) to RettighetsType.ARBEIDSSØKER
-            )
     }
 
     @Test
-    fun `forleng vedtak med passert slutt uten eksplisitt sluttdato`() {
+    fun `forleng vedtak med passert slutt`() {
         val søknadstidspunkt = LocalDateTime.now(clock).minusYears(1)
         val (sak, førstegangsbehandling) = sendInnFørsteSøknad(mottattTidspunkt = søknadstidspunkt)
         val rettighetsperiode = sak.rettighetsperiode
@@ -776,6 +768,93 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(VedtakslengdeFlytUnlea
         assertThat(rettighetstypeTidslinje.perioder().maxOfOrNull { it.tom }).isEqualTo(
             aldersvilkåret.tidslinje().segmenter().filter { it.verdi.utfall == Utfall.OPPFYLT }
                 .maxOfOrNull { it.periode.tom })
+    }
+
+    @Test
+    fun `forleng vedtak med passert slutt og gjør så en revurdering hvor sluttdato utvides pga overgang arbeid`() {
+        val søknadstidspunkt = LocalDateTime.now(clock).minusYears(1)
+        val (sak, førstegangsbehandling) = sendInnFørsteSøknad(mottattTidspunkt = søknadstidspunkt)
+        val startDato = sak.rettighetsperiode.fom
+
+        førstegangsbehandling
+            .løsSykdom(startDato)
+            .løsBistand(startDato)
+            .løsRefusjonskrav()
+            .løsSykdomsvurderingBrev()
+            .kvalitetssikreOk()
+            .løsBeregningstidspunkt(startDato)
+            .løsOppholdskrav(startDato)
+            .løsAndreStatligeYtelser()
+            .løsAvklaringsBehov(ForeslåVedtakLøsning())
+            .fattVedtak()
+            .løsVedtaksbrev(TypeBrev.VEDTAK_INNVILGELSE)
+
+
+        val sluttdatoFørstegangsbehandling = dataSource.transaction { connection ->
+            val førstegangsbehandling = BehandlingRepositoryImpl(connection).finnFørstegangsbehandling(sak.id)
+            val vedtakslengdeVurdering = VedtakslengdeRepositoryImpl(connection).hentHvisEksisterer(førstegangsbehandling.id)
+            vedtakslengdeVurdering!!.vurdering.sluttdato
+        }
+
+        dataSource.transaction { connection ->
+            val repositoryProvider = postgresRepositoryRegistry.provider(connection)
+
+            val opprettJobbUtvidVedtakslengdeJobbUtfører = `OpprettJobbUtvidVedtakslengdeJobbUtfører`(
+                sakOgBehandlingService = SakOgBehandlingService(repositoryProvider, gatewayProvider),
+                vedtakslengdeService = VedtakslengdeService(repositoryProvider, gatewayProvider),
+                flytJobbRepository = FlytJobbRepositoryImpl(connection),
+                unleashGateway = VedtakslengdeFlytUnleash,
+                clock = clock,
+            )
+
+            opprettJobbUtvidVedtakslengdeJobbUtfører.utfør(JobbInput(OpprettJobbUtvidVedtakslengdeJobbUtfører))
+        }
+
+        motor.kjørJobber()
+
+        dataSource.transaction { connection ->
+            val automatiskBehandling = SakOgBehandlingService(
+                postgresRepositoryRegistry.provider(connection),
+                gatewayProvider
+            ).finnBehandlingMedSisteFattedeVedtak(sak.id)!!
+
+            val vedtakslengdeVurdering = VedtakslengdeRepositoryImpl(connection).hentHvisEksisterer(automatiskBehandling.id)
+            assertThat(vedtakslengdeVurdering?.vurdering?.sluttdato).isEqualTo(sluttdatoFørstegangsbehandling.plussEtÅrMedHverdager(ÅrMedHverdager.ANDRE_ÅR))
+            assertThat(vedtakslengdeVurdering?.vurdering?.utvidetMed).isEqualTo(ÅrMedHverdager.ANDRE_ÅR)
+        }
+
+        // Gjør endring som kommer to måneder etter forlengelsen har gått ut - dette skal gi ny sluttdato pga rettighetstype
+        val endringsdato = LocalDate.now(clock).plusYears(1).plusMonths(2)
+
+        sak.opprettManuellRevurdering(
+            no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND
+        )
+            .løsSykdom(vurderingGjelderFra = endringsdato, erOppfylt = false)
+            .løsBistand(endringsdato, erOppfylt = false)
+            .løsOvergangArbeid(Utfall.OPPFYLT, fom = endringsdato)
+            .løsSykdomsvurderingBrev()
+            .medKontekst {
+                val vedtasklengdeRepository: VedtakslengdeRepository = repositoryProvider.provide()
+                val vedtakslengdeGrunnlag = vedtasklengdeRepository.hentHvisEksisterer(this.behandling.id)
+                assertThat(vedtakslengdeGrunnlag?.vurdering?.sluttdato).isEqualTo(endringsdato.plusMonths(6).minusDays(1))
+                assertThat(vedtakslengdeGrunnlag?.vurdering?.utvidetMed).isEqualTo(ÅrMedHverdager.ANDRE_ÅR)
+            }
+            .fattVedtak()
+            .løsVedtaksbrev(TypeBrev.VEDTAK_ENDRING)
+
+        // Gjør om fra arbeidssøker tilbake til bistandsbehov - skal behoholde sluttdatoen
+        sak.opprettManuellRevurdering(
+            no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND
+        )
+            .løsSykdom(vurderingGjelderFra = endringsdato, erOppfylt = true)
+            .løsBistand(endringsdato, erOppfylt = true)
+            .løsSykdomsvurderingBrev()
+            .medKontekst {
+                val vedtasklengdeRepository: VedtakslengdeRepository = repositoryProvider.provide()
+                val vedtakslengdeGrunnlag = vedtasklengdeRepository.hentHvisEksisterer(this.behandling.id)
+                assertThat(vedtakslengdeGrunnlag?.vurdering?.sluttdato).isEqualTo(endringsdato.plusMonths(6).minusDays(1))
+                assertThat(vedtakslengdeGrunnlag?.vurdering?.utvidetMed).isEqualTo(ÅrMedHverdager.ANDRE_ÅR)
+            }
     }
 
 }
