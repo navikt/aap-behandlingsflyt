@@ -90,6 +90,10 @@ class SignaturService(
         put(Rolle.BESLUTTER, listOf(Definisjon.FATTE_VEDTAK))
     }
 
+    /**
+     * Roller kan ha overlappende definisjoner siden en definisjon kan løses av flere roller. Derfor er noen
+     * definisjoner filtrert ut der det har ført til feil i signaturer.
+     */
     private fun definisjonerSomLøsesAv(rolle: Rolle): List<Definisjon> {
         return Definisjon.entries.filter { it.løsesAv.contains(rolle) }
             .filterNot {
