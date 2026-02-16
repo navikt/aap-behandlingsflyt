@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov
 
-import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderSykdomSteg.Companion.type
 import no.nav.aap.behandlingsflyt.periodisering.FlytKontekstMedPeriodeService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.komponenter.gateway.GatewayProvider
@@ -19,7 +18,7 @@ class AvklaringsbehovMetadataService(
         avklaringsbehovMetadataUtleder: AvklaringsbehovMetadataUtleder,
         behandling: Behandling,
     ): List<Periode> {
-        val kontekst = flytKontekstMedPeriodeService.utled(behandling.flytKontekst(), type())
+        val kontekst = flytKontekstMedPeriodeService.utled(behandling.flytKontekst(), avklaringsbehovMetadataUtleder.stegType)
         return avklaringsbehovMetadataUtleder.nårVurderingErRelevant(kontekst)
             .filter { it.verdi }
             .komplement(kontekst.rettighetsperiode) {}
