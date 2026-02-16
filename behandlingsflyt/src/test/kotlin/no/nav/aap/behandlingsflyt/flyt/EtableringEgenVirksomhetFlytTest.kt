@@ -114,12 +114,6 @@ class EtableringEgenVirksomhetFlytTest : AbstraktFlytOrkestratorTest(AlleAvskrud
     }
 
     @Test
-    fun `Kan revurdere med nye perioder`() {
-        // asserts på når kvoten trekkes
-        TODO()
-    }
-
-    @Test
     fun `Ikke oppfylt om ikke 11-5 & 11-6b er oppfylt`() {
         val (sak, behandling) = sendInnFørsteSøknad(person = TestPersoner.STANDARD_PERSON())
 

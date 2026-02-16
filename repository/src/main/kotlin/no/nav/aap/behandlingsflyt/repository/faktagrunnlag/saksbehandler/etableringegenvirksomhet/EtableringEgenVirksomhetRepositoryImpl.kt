@@ -129,9 +129,9 @@ class EtableringEgenVirksomhetRepositoryImpl(private val connection: DBConnectio
                     virksomhetNavn = row.getString("VIRKSOMHET_NAVN"),
                     orgNr = row.getStringOrNull("ORG_NR"),
                     foreliggerFagligVurdering = row.getBoolean("FORELIGGER_FAGLIG_VURDERING"),
-                    virksomhetErNy = row.getBoolean("VIRKSOMHET_ER_NY"),
-                    brukerEierVirksomheten = row.getEnum("BRUKER_EIER_VIRKSOMHET"),
-                    kanFøreTilSelvforsørget = row.getBoolean("KAN_BLI_SELVFORSORGET"),
+                    virksomhetErNy = row.getBooleanOrNull("VIRKSOMHET_ER_NY"),
+                    brukerEierVirksomheten = row.getEnumOrNull("BRUKER_EIER_VIRKSOMHET"),
+                    kanFøreTilSelvforsørget = row.getBooleanOrNull("KAN_BLI_SELVFORSORGET"),
                     utviklingsPerioder = row.getLongOrNull("EGEN_VIRKSOMHET_UTVIKLING_PERIODER_ID")
                         .let(::hentVirksomhetUtviklingsperioder),
                     oppstartsPerioder = row.getLongOrNull("EGEN_VIRKSOMHET_OPPSTART_PERIODER_ID")

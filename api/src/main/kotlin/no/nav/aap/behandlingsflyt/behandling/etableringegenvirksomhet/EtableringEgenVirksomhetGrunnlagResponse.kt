@@ -32,9 +32,9 @@ data class EtableringEgenVirksomhetVurderingResponse(
     val virksomhetNavn: String,
     val orgNr: String?,
     val foreliggerFagligVurdering: Boolean,
-    val virksomhetErNy: Boolean,
-    val brukerEierVirksomheten: EierVirksomhet,
-    val kanFøreTilSelvforsørget: Boolean,
+    val virksomhetErNy: Boolean?,
+    val brukerEierVirksomheten: EierVirksomhet?,
+    val kanFøreTilSelvforsørget: Boolean?,
     val utviklingsPeriode: List<Periode>,
     val oppstartsPeriode: List<Periode>,
     val oppfylt: Boolean

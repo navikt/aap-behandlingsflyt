@@ -102,7 +102,10 @@ class EtableringEgenVirksomhetService(
     }
 
     fun evaluerVirksomhetVurdering(vurdering: EtableringEgenVirksomhetVurdering): Boolean {
-        return vurdering.virksomhetErNy && vurdering.kanFøreTilSelvforsørget && vurdering.foreliggerFagligVurdering && vurdering.brukerEierVirksomheten != EierVirksomhet.NEI
+        return vurdering.virksomhetErNy == true && vurdering.kanFøreTilSelvforsørget == true && vurdering.foreliggerFagligVurdering && listOf(
+            EierVirksomhet.EIER_MINST_50_PROSENT,
+            EierVirksomhet.EIER_MINST_50_PROSENT_MED_FLER
+        ).contains(vurdering.brukerEierVirksomheten)
     }
 
     fun utledGyldighetsPeriode(
