@@ -9,7 +9,7 @@ import java.time.LocalDate
 data class EtableringEgenVirksomhetGrunnlag(
     val vurderinger: List<EtableringEgenVirksomhetVurdering>
 ) {
-    fun gjeldendeVurderinger(maksDato: LocalDate = Tid.MAKS): Tidslinje<EtableringEgenVirksomhetVurdering> {
+    fun gjeldendeVurderingerSomTidslinje(maksDato: LocalDate = Tid.MAKS): Tidslinje<EtableringEgenVirksomhetVurdering> {
         return vurderinger
             .groupBy { it.vurdertIBehandling }
             .values

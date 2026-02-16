@@ -62,7 +62,7 @@ class EtableringEgenVirksomhetRepositoryImpl(private val connection: DBConnectio
                 setString(1, it.begrunnelse)
                 setBoolean(2, it.foreliggerFagligVurdering)
                 setBoolean(3, it.virksomhetErNy)
-                setBoolean(4, it.brukerEierVirksomheten)
+                setEnumName(4, it.brukerEierVirksomheten)
                 setBoolean(5, it.kanFøreTilSelvforsørget)
                 setString(6, it.virksomhetNavn)
                 setString(7, it.orgNr)
@@ -130,7 +130,7 @@ class EtableringEgenVirksomhetRepositoryImpl(private val connection: DBConnectio
                     orgNr = row.getStringOrNull("ORG_NR"),
                     foreliggerFagligVurdering = row.getBoolean("FORELIGGER_FAGLIG_VURDERING"),
                     virksomhetErNy = row.getBoolean("VIRKSOMHET_ER_NY"),
-                    brukerEierVirksomheten = row.getBoolean("BRUKER_EIER_VIRKSOMHET"),
+                    brukerEierVirksomheten = row.getEnum("BRUKER_EIER_VIRKSOMHET"),
                     kanFøreTilSelvforsørget = row.getBoolean("KAN_BLI_SELVFORSORGET"),
                     utviklingsPerioder = row.getLongOrNull("EGEN_VIRKSOMHET_UTVIKLING_PERIODER_ID")
                         .let(::hentVirksomhetUtviklingsperioder),

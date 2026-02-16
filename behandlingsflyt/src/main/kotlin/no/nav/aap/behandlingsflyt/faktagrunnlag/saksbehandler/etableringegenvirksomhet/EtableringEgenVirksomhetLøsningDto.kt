@@ -15,7 +15,7 @@ data class EtableringEgenVirksomhetLøsningDto(
     val orgNr: String? = null,
     val foreliggerFagligVurdering: Boolean,
     val virksomhetErNy: Boolean,
-    val brukerEierVirksomheten: Boolean,
+    val brukerEierVirksomheten: EierVirksomhet,
     val kanFøreTilSelvforsørget: Boolean,
     val utviklingsPerioder: List<Periode>,
     val oppstartsPerioder: List<Periode>

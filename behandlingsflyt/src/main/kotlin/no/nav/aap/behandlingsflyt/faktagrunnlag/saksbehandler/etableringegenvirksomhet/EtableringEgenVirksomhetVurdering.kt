@@ -12,7 +12,7 @@ data class EtableringEgenVirksomhetVurdering(
     val orgNr: String? = null,
     val foreliggerFagligVurdering: Boolean,
     val virksomhetErNy: Boolean,
-    val brukerEierVirksomheten: Boolean,
+    val brukerEierVirksomheten: EierVirksomhet,
     val kanFøreTilSelvforsørget: Boolean,
     val utviklingsPerioder: List<Periode>,
     val oppstartsPerioder: List<Periode>,
@@ -22,3 +22,9 @@ data class EtableringEgenVirksomhetVurdering(
     val vurderingenGjelderFra: LocalDate,
     val vurderingenGjelderTil: LocalDate?
 )
+
+enum class EierVirksomhet{
+    EIER_MINST_50_PROSENT,
+    EIER_MINST_50_PROSENT_MED_FLER,
+    NEI
+}

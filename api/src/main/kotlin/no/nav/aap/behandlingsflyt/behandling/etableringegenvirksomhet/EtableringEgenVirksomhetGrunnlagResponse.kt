@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.PeriodiserteVurderingerDto
 import no.nav.aap.behandlingsflyt.VurderingDto
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EierVirksomhet
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetVurdering
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.komponenter.tidslinje.Tidslinje
@@ -32,15 +33,17 @@ data class EtableringEgenVirksomhetVurderingResponse(
     val orgNr: String?,
     val foreliggerFagligVurdering: Boolean,
     val virksomhetErNy: Boolean,
-    val brukerEierVirksomheten: Boolean,
+    val brukerEierVirksomheten: EierVirksomhet,
     val kanFøreTilSelvforsørget: Boolean,
     val utviklingsPeriode: List<Periode>,
-    val oppstartsPeriode: List<Periode>
+    val oppstartsPeriode: List<Periode>,
+    val oppfylt: Boolean
 ) : VurderingDto {
     companion object {
         fun fraDomene(
             tidslinje: Tidslinje<EtableringEgenVirksomhetVurdering>,
             vurdertAvService: VurdertAvService,
+            etableringEgenVirksomhetService: EtableringEgenVirksomhetService,
         ): List<EtableringEgenVirksomhetVurderingResponse> {
             val segmenter = tidslinje.segmenter().toList()
             return segmenter
@@ -48,6 +51,7 @@ data class EtableringEgenVirksomhetVurderingResponse(
                     fraDomene(
                         etableringEgenVirksomhetVurdering = segment.verdi,
                         vurdertAvService = vurdertAvService,
+                        etableringEgenVirksomhetService = etableringEgenVirksomhetService,
                         fom = segment.verdi.vurderingenGjelderFra,
                         tom = if (index == segmenter.size - 1)
                             segment.verdi.vurderingenGjelderTil
@@ -60,6 +64,7 @@ data class EtableringEgenVirksomhetVurderingResponse(
         fun fraDomene(
             etableringEgenVirksomhetVurdering: EtableringEgenVirksomhetVurdering,
             vurdertAvService: VurdertAvService,
+            etableringEgenVirksomhetService: EtableringEgenVirksomhetService,
             fom: LocalDate = etableringEgenVirksomhetVurdering.vurderingenGjelderFra,
             tom: LocalDate? = etableringEgenVirksomhetVurdering.vurderingenGjelderTil
         ) = EtableringEgenVirksomhetVurderingResponse(
@@ -85,7 +90,8 @@ data class EtableringEgenVirksomhetVurderingResponse(
             besluttetAv = vurdertAvService.besluttetAv(
                 definisjon = Definisjon.ETABLERING_EGEN_VIRKSOMHET,
                 behandlingId = etableringEgenVirksomhetVurdering.vurdertIBehandling
-            )
+            ),
+            oppfylt = etableringEgenVirksomhetService.evaluerVirksomhetVurdering(etableringEgenVirksomhetVurdering)
         )
     }
 }

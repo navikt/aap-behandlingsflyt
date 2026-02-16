@@ -42,6 +42,6 @@ class EtableringEgenVirksomhetLøsning(
         repositoryProvider: RepositoryProvider
     ): Tidslinje<*> {
         val repository = repositoryProvider.provide<EtableringEgenVirksomhetRepository>()
-        return repository.hentHvisEksisterer(behandlingId)?.gjeldendeVurderinger() ?: Tidslinje<Unit>()
+        return repository.hentHvisEksisterer(behandlingId)?.gjeldendeVurderingerSomTidslinje() ?: Tidslinje<Unit>()
     }
 }

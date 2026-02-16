@@ -32,7 +32,7 @@ CREATE TABLE ETABLERING_EGEN_VIRKSOMHET_VURDERING
     BEGRUNNELSE                           TEXT                                   NOT NULL,
     FORELIGGER_FAGLIG_VURDERING           BOOLEAN                                NOT NULL,
     VIRKSOMHET_ER_NY                      BOOLEAN                                NOT NULL,
-    BRUKER_EIER_VIRKSOMHET                BOOLEAN                                NOT NULL,
+    BRUKER_EIER_VIRKSOMHET                TEXT                                   NOT NULL,
     KAN_BLI_SELVFORSORGET                 BOOLEAN                                NOT NULL,
     VIRKSOMHET_NAVN                       TEXT                                   NOT NULL,
     ORG_NR                                TEXT   NULL,

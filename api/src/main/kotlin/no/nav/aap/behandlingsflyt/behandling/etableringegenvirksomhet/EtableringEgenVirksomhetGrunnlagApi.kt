@@ -54,6 +54,7 @@ fun NormalOpenAPIRoute.etableringEgenVirksomhetApi(
                     val bistandRepository = repositoryProvider.provide<BistandRepository>()
 
                     val vurdertAvService = VurdertAvService(repositoryProvider, gatewayProvider)
+                    val etableringEgenVirksomhetService = EtableringEgenVirksomhetService(repositoryProvider)
 
                     val behandling: Behandling =
                         BehandlingReferanseService(behandlingRepository).behandling(behandlingReferanse)
@@ -78,12 +79,20 @@ fun NormalOpenAPIRoute.etableringEgenVirksomhetApi(
                             avklaringsbehovene = avklaringsbehovene
                         ),
                         sisteVedtatteVurderinger = EtableringEgenVirksomhetVurderingResponse.fraDomene(
-                            tidslinje = forrigeGrunnlag.gjeldendeVurderinger(),
-                            vurdertAvService = vurdertAvService
+                            tidslinje = forrigeGrunnlag.gjeldendeVurderingerSomTidslinje(),
+                            vurdertAvService = vurdertAvService,
+                            etableringEgenVirksomhetService = etableringEgenVirksomhetService
+
                         ),
                         nyeVurderinger = etableringEgenVirksomhetGrunnlag?.vurderinger.orEmpty()
                             .filter { it.vurdertIBehandling == behandling.id }
-                            .map { EtableringEgenVirksomhetVurderingResponse.fraDomene(it, vurdertAvService) },
+                            .map {
+                                EtableringEgenVirksomhetVurderingResponse.fraDomene(
+                                    it,
+                                    vurdertAvService,
+                                    etableringEgenVirksomhetService
+                                )
+                            },
                         kanVurderes = listOf(sak.rettighetsperiode),
                         behøverVurderinger = listOf(),
                         kvalitetssikretAv = vurdertAvService.kvalitetssikretAv(
