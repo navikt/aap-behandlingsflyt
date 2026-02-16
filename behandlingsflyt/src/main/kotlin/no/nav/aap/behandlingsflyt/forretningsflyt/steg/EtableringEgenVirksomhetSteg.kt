@@ -63,13 +63,16 @@ class EtableringEgenVirksomhetSteg(
         val relevantPeriode =
             etableringEgenVirksomhetService.utledGyldighetsPeriode(kontekst.behandlingId, LocalDate.now().plusDays(1))
                 .somTidslinje { it }
+        val grunnlag = etableringEgenVirksomhetRepository.hentHvisEksisterer(kontekst.behandlingId)
 
         return Tidslinje.map2(tidligereVurderingsutfall, relevantPeriode) { utfall, relevantPeriode ->
             when (utfall) {
                 null -> false
                 TidligereVurderinger.Behandlingsutfall.IKKE_BEHANDLINGSGRUNNLAG -> false
                 TidligereVurderinger.Behandlingsutfall.UUNGÅELIG_AVSLAG -> false
-                TidligereVurderinger.Behandlingsutfall.UKJENT -> true
+                TidligereVurderinger.Behandlingsutfall.UKJENT -> {
+                    return@map2 relevantPeriode != null && !grunnlag?.vurderinger.isNullOrEmpty()
+                }
             }
         }
     }
