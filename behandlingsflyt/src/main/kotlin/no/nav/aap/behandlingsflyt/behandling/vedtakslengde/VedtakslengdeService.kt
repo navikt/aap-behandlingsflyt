@@ -30,6 +30,9 @@ class VedtakslengdeService(
     private val vilkårsresultatRepository: VilkårsresultatRepository,
     private val clock: Clock = Clock.systemDefaultZone()
 ) {
+    companion object {
+        const val ANTALL_DAGER_FØR_UTVIDELSE = 28L
+    }
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         vedtakslengdeRepository =  repositoryProvider.provide(),
         underveisRepository = repositoryProvider.provide(),
@@ -45,7 +48,7 @@ class VedtakslengdeService(
     fun skalUtvideSluttdato(
         behandlingId: BehandlingId,
         forrigeBehandlingId: BehandlingId?,
-        datoForUtvidelse: LocalDate = LocalDate.now(clock).plusDays(28)
+        datoForUtvidelse: LocalDate = LocalDate.now(clock).plusDays(ANTALL_DAGER_FØR_UTVIDELSE)
     ): Boolean {
         val vedtakslengdeGrunnlag = forrigeBehandlingId?.let { vedtakslengdeRepository.hentHvisEksisterer(forrigeBehandlingId) }
         val vedtattSluttdato = hentVedtattSluttdato(forrigeBehandlingId, vedtakslengdeGrunnlag)

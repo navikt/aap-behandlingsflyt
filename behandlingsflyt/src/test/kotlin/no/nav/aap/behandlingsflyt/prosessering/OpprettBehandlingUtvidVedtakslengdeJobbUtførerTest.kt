@@ -6,6 +6,7 @@ import io.mockk.just
 import io.mockk.mockk
 import io.mockk.verify
 import no.nav.aap.behandlingsflyt.behandling.vedtakslengde.VedtakslengdeService
+import no.nav.aap.behandlingsflyt.behandling.vedtakslengde.VedtakslengdeService.Companion.ANTALL_DAGER_FØR_UTVIDELSE
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
@@ -189,7 +190,7 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtførerTest {
             mockk<Underveisperiode> {
                 every { periode } returns Periode(
                     fom = dagensDato,
-                    tom = dagensDato.plusDays(28)
+                    tom = dagensDato.plusDays(ANTALL_DAGER_FØR_UTVIDELSE)
                 )
             },
             mockk<Underveisperiode> {
