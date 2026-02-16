@@ -68,7 +68,6 @@ class AvventUtbetalingServiceTest {
     private lateinit var vedtakServiceMock: VedtakService
     private lateinit var behandlingRepositoryMock: BehandlingRepository
     private lateinit var service: AvventUtbetalingService
-    private lateinit var unleashMock: UnleashGateway
 
     @BeforeEach
     fun setup() {
@@ -78,7 +77,6 @@ class AvventUtbetalingServiceTest {
         samordningArbeidsgiverRepositoryMock = mockk<SamordningArbeidsgiverRepository>()
         vedtakServiceMock = mockk<VedtakService>()
         behandlingRepositoryMock = mockk<BehandlingRepository>()
-        unleashMock = mockk<UnleashGateway>()
 
         service = AvventUtbetalingService(
             refusjonkravRepositoryMock,
@@ -87,10 +85,7 @@ class AvventUtbetalingServiceTest {
             samordningArbeidsgiverRepositoryMock,
             vedtakServiceMock,
             behandlingRepositoryMock,
-            unleashMock
         )
-
-        every { unleashMock.isEnabled(any()) } returns true
     }
 
 

@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovMetadataUtleder
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
@@ -34,7 +35,7 @@ class OvergangUføreSteg private constructor(
     private val tidligereVurderinger: TidligereVurderinger,
     private val bistandRepository: BistandRepository,
     private val avklaringsbehovService: AvklaringsbehovService,
-) : BehandlingSteg {
+) : BehandlingSteg, AvklaringsbehovMetadataUtleder {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         vilkårsresultatRepository = repositoryProvider.provide(),
         overgangUføreRepository = repositoryProvider.provide(),
@@ -54,7 +55,7 @@ class OvergangUføreSteg private constructor(
             tvingerAvklaringsbehov = setOf(
                 Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND,
             ),
-            nårVurderingErRelevant = ::perioderOvergangUføreErRelevant,
+            nårVurderingErRelevant = ::nårVurderingErRelevant,
             perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert,
             tilbakestillGrunnlag = {
                 val vedtatteVurderinger =
@@ -85,7 +86,7 @@ class OvergangUføreSteg private constructor(
         return Fullført
     }
 
-    private fun perioderOvergangUføreErRelevant(kontekst: FlytKontekstMedPerioder): Tidslinje<Boolean> {
+    override fun nårVurderingErRelevant(kontekst: FlytKontekstMedPerioder): Tidslinje<Boolean> {
         val utfall = tidligereVurderinger.behandlingsutfall(kontekst, type())
         val sykdomsvurderinger =
             sykdomRepository.hentHvisEksisterer(kontekst.behandlingId)?.somSykdomsvurderingstidslinje().orEmpty()
@@ -129,7 +130,7 @@ class OvergangUføreSteg private constructor(
         )
 
         val nårPåkrevdVurderingMangler =
-            perioderOvergangUføreErRelevant(kontekst).leftJoin(overgangUføreTidslinje) { erRelevant, overgangUføreVurdering ->
+            nårVurderingErRelevant(kontekst).leftJoin(overgangUføreTidslinje) { erRelevant, overgangUføreVurdering ->
                 erRelevant && overgangUføreVurdering == null
             }
 

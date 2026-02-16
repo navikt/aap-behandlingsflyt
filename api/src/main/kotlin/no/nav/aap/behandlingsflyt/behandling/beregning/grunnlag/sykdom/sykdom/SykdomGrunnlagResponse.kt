@@ -9,7 +9,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.Innhe
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
-import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.verdityper.dokument.JournalpostId
 import java.time.LocalDate
 
@@ -21,6 +20,7 @@ data class SykdomGrunnlagResponse(
     override val nyeVurderinger: List<SykdomsvurderingResponse>,
     override val sisteVedtatteVurderinger: List<SykdomsvurderingResponse>,
     override val kanVurderes: List<Periode>,
+    override val ikkeRelevantePerioder: List<Periode>,
     override val behøverVurderinger: List<Periode>,
     ): PeriodiserteVurderingerDto<SykdomsvurderingResponse>
 

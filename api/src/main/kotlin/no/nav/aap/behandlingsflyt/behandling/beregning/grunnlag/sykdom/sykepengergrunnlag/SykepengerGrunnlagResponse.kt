@@ -17,6 +17,7 @@ data class SykepengerGrunnlagResponse(
     override val sisteVedtatteVurderinger: List<SykepengerVurderingResponse>,
     override val nyeVurderinger: List<SykepengerVurderingResponse>,
     override val kanVurderes: List<Periode>,
+    override val ikkeRelevantePerioder: List<Periode>,
     override val behøverVurderinger: List<Periode>
 ): PeriodiserteVurderingerDto<SykepengerVurderingResponse>
 

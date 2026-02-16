@@ -89,15 +89,29 @@ class HåndterUbehandledeDokumenterJobbUtførerTest {
             val ubehandledeMeldekort = mottattDokumentRepository.hentAlleUbehandledeDokumenter()
             assertThat(ubehandledeMeldekort).hasSize(1)
 
+            // TODO: Slett denne etter at den er kjørt; erstattes av jobben under
             HåndterUbehandledeDokumenterJobbUtfører
                 .konstruer(repoprovider, gatewayProvider)
                 .utfør(JobbInput(HåndterUbehandledeDokumenterJobbUtfører))
 
+            HåndterUbehandledeMeldekortForSakJobbUtfører
+                .konstruer(repoprovider, gatewayProvider)
+                .utfør(HåndterUbehandledeMeldekortForSakJobbUtfører.nyJobb(førstegangsbehandlingen.sakId))
+
             val jobber = hentJobber(connection)
-            assertThat(jobber).hasSize(1)
-            assertThat(jobber.first().sakId).isEqualTo(førstegangsbehandlingen.sakId)
-            assertThat(jobber.first().type).isEqualTo(HåndterUbehandletDokumentJobbUtfører.type)
-            assertThat(jobber.first().parameters.trimIndent()).isEqualTo(
+            assertThat(jobber).hasSize(2)
+            assertThat(jobber[0].sakId).isEqualTo(førstegangsbehandlingen.sakId)
+            assertThat(jobber[0].type).isEqualTo(HåndterUbehandletDokumentJobbUtfører.type)
+            assertThat(jobber[0].parameters.trimIndent()).isEqualTo(
+                """
+                innsendingsreferanse_verdi=101
+                innsendingsreferanse_type=JOURNALPOST
+                """.trimIndent()
+            )
+
+            assertThat(jobber[1].sakId).isEqualTo(førstegangsbehandlingen.sakId)
+            assertThat(jobber[1].type).isEqualTo(HåndterUbehandletDokumentJobbUtfører.type)
+            assertThat(jobber[1].parameters.trimIndent()).isEqualTo(
                 """
                 innsendingsreferanse_verdi=101
                 innsendingsreferanse_type=JOURNALPOST

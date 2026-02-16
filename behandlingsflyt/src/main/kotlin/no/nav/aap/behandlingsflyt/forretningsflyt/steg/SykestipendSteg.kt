@@ -28,7 +28,6 @@ class SykestipendSteg private constructor(
     private val studentRepository: StudentRepository,
     private val sykestipendRepository: SykestipendRepository,
     private val tidligereVurderinger: TidligereVurderinger,
-    private val avklaringsbehovRepository: AvklaringsbehovRepository,
     private val avklaringsbehovService: AvklaringsbehovService,
     private val vilkårsresultatRepository: VilkårsresultatRepository,
     private val unleashGateway: UnleashGateway
@@ -37,7 +36,6 @@ class SykestipendSteg private constructor(
         studentRepository = repositoryProvider.provide(),
         sykestipendRepository = repositoryProvider.provide(),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
-        avklaringsbehovRepository = repositoryProvider.provide(),
         avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
         vilkårsresultatRepository = repositoryProvider.provide(),
         unleashGateway = gatewayProvider.provide()
@@ -58,7 +56,7 @@ class SykestipendSteg private constructor(
 
                     VurderingType.REVURDERING ->
                         tidligereVurderinger.muligMedRettTilAAP(kontekst, type())
-                                && (studentGrunnlag?.vurderinger?.any { it.erOppfylt() } == true
+                                && (studentGrunnlag?.gjeldendeStudentvurderinger()?.any { it.erOppfylt() } == true
                                 || sykestipendRepository.hentHvisEksisterer(kontekst.behandlingId) != null)
                                 && kontekst.vurderingsbehovRelevanteForSteg.isNotEmpty()
 

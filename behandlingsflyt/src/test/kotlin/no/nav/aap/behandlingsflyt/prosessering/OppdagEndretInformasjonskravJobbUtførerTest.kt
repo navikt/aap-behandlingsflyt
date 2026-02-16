@@ -13,6 +13,12 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevu
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.SykepengerGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.SykepengerResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.UtbetaltePerioder
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkår
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsperiode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnInformasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.adapter.BarnInnhentingRespons
@@ -32,6 +38,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreInformasjo
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreRegisterGateway
 import no.nav.aap.behandlingsflyt.help.FakePdlGateway
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
+import no.nav.aap.behandlingsflyt.help.genererVilkårsresultat
 import no.nav.aap.behandlingsflyt.help.flytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.help.sak
 import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
@@ -44,12 +51,15 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
+import no.nav.aap.behandlingsflyt.test.fixedClock
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
+import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.JobbType
 import org.assertj.core.api.Assertions.assertThat
@@ -154,7 +164,7 @@ class OppdagEndretInformasjonskravJobbUtførerTest {
 
     @Test
     fun `endring i register fører til revurdering og deduplisering av vurderingsbehov`() {
-        val førstegangsbehandlingen = settOppFørstegangsvurdering()
+        val (sak, førstegangsbehandlingen) = settOppFørstegangsvurdering()
 
         dataSource.transaction { connection ->
             val repositoryProvider = postgresRepositoryRegistry.provider(connection)
@@ -187,7 +197,9 @@ class OppdagEndretInformasjonskravJobbUtførerTest {
                 )
             )
 
-            OppdagEndretInformasjonskravJobbUtfører.konstruer(repositoryProvider, gatewayProvider)
+            val klokke = fixedClock(sak.rettighetsperiode.fom.plusWeeks(2))
+
+            OppdagEndretInformasjonskravJobbUtfører.konstruerMedKlokke(repositoryProvider, gatewayProvider, klokke)
                 .utfør(førstegangsbehandlingen.sakId)
 
             val sisteYtelsesbehandling = SakOgBehandlingService(repositoryProvider, gatewayProvider)
@@ -218,14 +230,16 @@ class OppdagEndretInformasjonskravJobbUtførerTest {
 
     @Test
     fun `ingen endring i register fører til ingen ny revurdering`() {
-        val førstegangsbehandlingen = settOppFørstegangsvurdering()
+        val (sak, førstegangsbehandlingen) = settOppFørstegangsvurdering()
+        val klokke = fixedClock(sak.rettighetsperiode.fom.plusWeeks(2))
 
         dataSource.transaction { connection ->
             val repositoryProvider = postgresRepositoryRegistry.provider(connection)
 
-            val oppdagEndretInformasjonskravJobbUtfører = OppdagEndretInformasjonskravJobbUtfører.konstruer(
+            val oppdagEndretInformasjonskravJobbUtfører = OppdagEndretInformasjonskravJobbUtfører.konstruerMedKlokke(
                 repositoryProvider = repositoryProvider,
                 gatewayProvider = gatewayProvider,
+                klokke = klokke
             )
 
             oppdagEndretInformasjonskravJobbUtfører.utfør(førstegangsbehandlingen.sakId)
@@ -237,7 +251,7 @@ class OppdagEndretInformasjonskravJobbUtførerTest {
         }
     }
 
-    private fun settOppFørstegangsvurdering(): Behandling {
+    private fun settOppFørstegangsvurdering(): Pair<Sak, Behandling> {
         return dataSource.transaction { connection ->
             val repositoryProvider = postgresRepositoryRegistry.provider(connection)
             val sak = sak(connection, periode)
@@ -268,10 +282,16 @@ class OppdagEndretInformasjonskravJobbUtførerTest {
             ).let(::klargjørInformasjonskrav)
 
 
-            repositoryProvider.provide<VedtakRepository>().lagre(førstegangsbehandlingen.id, LocalDateTime.now(), LocalDate.now())
+            repositoryProvider.provide<VilkårsresultatRepository>().lagre(
+                førstegangsbehandlingen.id,
+                genererVilkårsresultat(Periode(sak.rettighetsperiode.fom, Tid.MAKS))
+
+            )
+            repositoryProvider.provide<VedtakRepository>()
+                .lagre(førstegangsbehandlingen.id, LocalDateTime.now(), LocalDate.now())
             repositoryProvider.provide<BehandlingRepository>()
                 .oppdaterBehandlingStatus(førstegangsbehandlingen.id, Status.AVSLUTTET)
-            førstegangsbehandlingen
+            Pair(sak, førstegangsbehandlingen)
         }
     }
 }

@@ -7,7 +7,6 @@ import no.nav.aap.behandlingsflyt.behandling.vilkår.student.StudentFaktagrunnla
 import no.nav.aap.behandlingsflyt.behandling.vilkår.student.StudentVilkår
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.søkerOppgirStudentstatus
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
