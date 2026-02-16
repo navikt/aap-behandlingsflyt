@@ -68,7 +68,6 @@ class UtbetalingService(
             tjenestepensjonRefusjonsKravVurderingRepository = repositoryProvider.provide<TjenestepensjonRefusjonsKravVurderingRepository>(),
             samordningAndreStatligeYtelserRepository = repositoryProvider.provide<SamordningAndreStatligeYtelserRepository>(),
             samordningArbeidsgiverYtelserRepository = repositoryProvider.provide<SamordningArbeidsgiverRepository>(),
-            unleashGateway = gatewayProvider.provide<UnleashGateway>(),
             vedtakService = VedtakService(repositoryProvider),
             behandlingRepository = repositoryProvider.provide<BehandlingRepository>(),
         ),
