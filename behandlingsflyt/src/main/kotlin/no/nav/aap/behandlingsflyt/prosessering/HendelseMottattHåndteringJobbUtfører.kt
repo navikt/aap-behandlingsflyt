@@ -133,6 +133,12 @@ class HendelseMottattHåndteringJobbUtfører(
                     melding = parsedMelding as OmgjøringKlageRevurdering,
                 )
             }
+            InnsendingType.SYKEPENGE_VEDTAK_HENDELSE -> {
+                håndterMottattDokumentService.håndterMottattSykepengevedtakHendelse(
+                    sakId = sakId,
+                    referanse = referanse,
+                )
+            }
 
             else -> {
                 håndterMottattDokumentService.håndterMottatteDokumenter(
