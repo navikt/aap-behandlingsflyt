@@ -20,7 +20,7 @@ import javax.sql.DataSource
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
-val SYKEPENGEVEDTAK_EVENT_TOPIC = "tbd.boo"
+const val SYKEPENGEVEDTAK_EVENT_TOPIC = "tbd.boo"
 
 /**
  * Kun innvilgede
