@@ -36,20 +36,12 @@ class SignaturService(
         avklaringsbehovRepository = repositoryProvider.provide()
     )
 
-    data class SignaturGrunnlagV2(
-        val navIdent: String,
-        val enhet: String?,
-        val rolle: SignaturRolle?
-    ) // TODO brev-kontrakt
-
     fun finnSignaturGrunnlag(brevbestilling: Brevbestilling, bruker: Bruker): List<SignaturGrunnlag> {
         require(brevbestilling.status == Status.FORHÅNDSVISNING_KLAR) {
             "Kan ikke utlede signaturer på brev i status ${brevbestilling.status}"
         }
         return if (unleashGateway.isEnabled(BehandlingsflytFeature.SignaturEnhetFraOppgave)) {
-            finnSignaturGrunnlagV2(brevbestilling, bruker).map {// TODO oppdater etter endring i brev-kontrakt
-                SignaturGrunnlag(it.navIdent, it.rolle)
-            }
+            finnSignaturGrunnlagV2(brevbestilling, bruker)
         } else {
             finnSignaturGrunnlagV1(brevbestilling, bruker)
         }
@@ -75,7 +67,8 @@ class SignaturService(
                     addFirst(
                         SignaturGrunnlag(
                             navIdent = bruker.ident,
-                            rolle = null
+                            rolle = null,
+                            enhet = null
                         )
                     )
                 } else {
@@ -83,11 +76,11 @@ class SignaturService(
                 }
             }.distinctBy { it.navIdent }
         } else {
-            listOf(SignaturGrunnlag(bruker.ident, null))
+            listOf(SignaturGrunnlag(navIdent = bruker.ident, rolle = null, enhet = null))
         }
     }
 
-    fun finnSignaturGrunnlagV2(brevbestilling: Brevbestilling, innloggetBruker: Bruker): List<SignaturGrunnlagV2> {
+    fun finnSignaturGrunnlagV2(brevbestilling: Brevbestilling, innloggetBruker: Bruker): List<SignaturGrunnlag> {
         return if (brevbestilling.typeBrev.erAutomatiskBrev()) {
             emptyList()
         } else if (brevbestilling.typeBrev.erVedtak()) {
@@ -123,14 +116,14 @@ class SignaturService(
         return avklaringsbehovene.hentBehovForDefinisjon(definisjoner).mapNotNull {
             it.historikk.filter { it.endretAv.erNavIdent() && it.status == AvklaringsbehovStatus.AVSLUTTET }.maxOrNull()
         }.maxOrNull()?.let {
-            SignaturGrunnlag(it.endretAv, mapRolle(rolle))
+            SignaturGrunnlag(navIdent = it.endretAv, rolle = mapRolle(rolle), enhet = null)
         }
     }
 
     private fun utledSignaturerForVedtak(
         brevbestilling: Brevbestilling,
         innloggetBruker: Bruker
-    ): List<SignaturGrunnlagV2> {
+    ): List<SignaturGrunnlag> {
         val behandling = behandlingRepository.hent(brevbestilling.behandlingId)
         val oppgaveEnhetListe = oppgavestyringGateway.hentOppgaveEnhet(behandling.referanse).oppgaver
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(brevbestilling.behandlingId)
@@ -140,13 +133,27 @@ class SignaturService(
             utledSignaturV2(Rolle.SAKSBEHANDLER_NASJONAL, avklaringsbehovene, oppgaveEnhetListe, innloggetBruker),
             utledSignaturV2(Rolle.KVALITETSSIKRER, avklaringsbehovene, oppgaveEnhetListe, innloggetBruker),
             utledSignaturV2(Rolle.SAKSBEHANDLER_OPPFOLGING, avklaringsbehovene, oppgaveEnhetListe, innloggetBruker),
-        ).distinctBy { it.navIdent }
+        )
+            .groupingBy { it.navIdent }
+            .reduce { _, s1, s2 -> if (s1.harLøstAvklaringsbehov) s1 else s2 }
+            .map { it.value.tilGrunnlag() }
+            .sortedWith(signaturComparator)
+    }
+
+    private val signaturComparator: Comparator<SignaturGrunnlag> by lazy {
+        val rekkefølge = mapOf(
+            SignaturRolle.BESLUTTER to 0,
+            SignaturRolle.SAKSBEHANDLER_NASJONAL to 1,
+            SignaturRolle.KVALITETSSIKRER to 2,
+            SignaturRolle.SAKSBEHANDLER_OPPFOLGING to 3
+        )
+        compareBy { signaturGrunnlag -> signaturGrunnlag.rolle?.let { rekkefølge[it] } ?: rekkefølge.size }
     }
 
     private fun utledSignaturMedInnloggetBruker(
         brevbestilling: Brevbestilling,
         innloggetBruker: Bruker
-    ): SignaturGrunnlagV2 {
+    ): SignaturGrunnlag {
         val behandling = behandlingRepository.hent(brevbestilling.behandlingId)
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(brevbestilling.behandlingId)
         val avklaringsbehov = avklaringsbehovene.åpne().sistEndret()
@@ -156,7 +163,7 @@ class SignaturService(
         } else {
             null
         }
-        return SignaturGrunnlagV2(innloggetBruker.ident, enhet, null)
+        return SignaturGrunnlag(navIdent = innloggetBruker.ident, rolle = null, enhet = enhet)
     }
 
     private fun utledSignaturV2(
@@ -164,49 +171,68 @@ class SignaturService(
         avklaringsbehovene: Avklaringsbehovene,
         oppgaveEnhetListe: List<OppgaveEnhetDto>,
         innloggetBruker: Bruker
-
-    ): SignaturGrunnlagV2? {
-        val definisjoner = rolleTilAvklaringsbehov.getValue(rolle)
-        val avklaringsbehovForRolle = avklaringsbehovene.hentBehovForDefinisjon(definisjoner)
-        val definisjonTilNavIdent = sisteDefinisjonLøstAvPerson(avklaringsbehovForRolle)
+    ): UtledetSignatur? {
+        return signaturFraLøstAvklaringsbehov(avklaringsbehovene, rolle, oppgaveEnhetListe)
         // hvis ingen avklaringsbehov er løst av rolle tidligere antar vi eventuelt åpent avklaringsbehov skal løses
         // av innlogget bruker
-            ?: åpenDefinisjonMedInnloggetBruker(avklaringsbehovForRolle, innloggetBruker)
-            ?: return null
-
-        val enhet = enhetForDefinisjon(definisjonTilNavIdent.definisjon, oppgaveEnhetListe)
-
-        return SignaturGrunnlagV2(
-            navIdent = definisjonTilNavIdent.navIdent,
-            enhet = enhet,
-            rolle = mapRolle(rolle)
-        )
+            ?: signaturFraÅpentAvklaringsbehov(avklaringsbehovene, rolle, oppgaveEnhetListe, innloggetBruker)
     }
 
-    private data class DefinisjonTilNavIdent(val definisjon: Definisjon, val navIdent: String)
+    private data class UtledetSignatur(
+        val definisjon: Definisjon,
+        val navIdent: String,
+        val rolle: Rolle,
+        val enhet: String?,
+        val harLøstAvklaringsbehov: Boolean,
+    ) {
+        fun tilGrunnlag(): SignaturGrunnlag {
+            return SignaturGrunnlag(
+                navIdent = navIdent,
+                rolle = mapRolle(rolle),
+                enhet = enhet,
+            )
+        }
+    }
 
-    private fun sisteDefinisjonLøstAvPerson(
-        avklaringsbehov: List<Avklaringsbehov>,
-    ): DefinisjonTilNavIdent? {
-        return avklaringsbehov.mapNotNull { avklaringsbehov ->
+    private fun signaturFraLøstAvklaringsbehov(
+        avklaringsbehovene: Avklaringsbehovene,
+        rolle: Rolle,
+        oppgaveEnhetListe: List<OppgaveEnhetDto>,
+    ): UtledetSignatur? {
+        return avklaringsbehovForRolle(avklaringsbehovene, rolle).mapNotNull { avklaringsbehov ->
             val endring = sisteEndringAvPerson(avklaringsbehov) ?: return@mapNotNull null
-            endring.tidsstempel to DefinisjonTilNavIdent(
+            val enhet = enhetForDefinisjon(avklaringsbehov.definisjon, oppgaveEnhetListe)
+            endring.tidsstempel to UtledetSignatur(
                 definisjon = avklaringsbehov.definisjon,
                 navIdent = endring.endretAv,
+                rolle = rolle,
+                enhet = enhet,
+                harLøstAvklaringsbehov = true,
             )
         }.maxByOrNull { it.first }?.second
     }
 
-    private fun åpenDefinisjonMedInnloggetBruker(
-        avklaringsbehov: List<Avklaringsbehov>,
+    private fun avklaringsbehovForRolle(avklaringsbehovene: Avklaringsbehovene, rolle: Rolle): List<Avklaringsbehov> {
+        val definisjoner = rolleTilAvklaringsbehov.getValue(rolle)
+        return avklaringsbehovene.hentBehovForDefinisjon(definisjoner)
+    }
+
+    private fun signaturFraÅpentAvklaringsbehov(
+        avklaringsbehovene: Avklaringsbehovene,
+        rolle: Rolle,
+        oppgaveEnhetListe: List<OppgaveEnhetDto>,
         innloggetBruker: Bruker
-    ): DefinisjonTilNavIdent? {
-        return avklaringsbehov.filter { it.erÅpent() }
+    ): UtledetSignatur? {
+        return avklaringsbehovForRolle(avklaringsbehovene, rolle).filter { it.erÅpent() }
             .sistEndret()
             ?.let { avklaringsbehov ->
-                DefinisjonTilNavIdent(
+                val enhet = enhetForDefinisjon(avklaringsbehov.definisjon, oppgaveEnhetListe)
+                UtledetSignatur(
                     definisjon = avklaringsbehov.definisjon,
                     navIdent = innloggetBruker.ident,
+                    rolle = rolle,
+                    enhet = enhet,
+                    harLøstAvklaringsbehov = false,
                 )
             }
     }
@@ -228,14 +254,15 @@ class SignaturService(
         return oppgaveEnhetListe.find { it.avklaringsbehovKode == definisjon.kode.name }?.enhet
     }
 
-    private fun mapRolle(rolle: Rolle): SignaturRolle? {
-        return when (rolle) {
-            Rolle.SAKSBEHANDLER_OPPFOLGING -> SignaturRolle.SAKSBEHANDLER_OPPFOLGING
-            Rolle.SAKSBEHANDLER_NASJONAL -> SignaturRolle.SAKSBEHANDLER_NASJONAL
-            Rolle.KVALITETSSIKRER -> SignaturRolle.KVALITETSSIKRER
-            Rolle.BESLUTTER -> SignaturRolle.BESLUTTER
-            else -> null
-        }
+}
+
+private fun mapRolle(rolle: Rolle): SignaturRolle? {
+    return when (rolle) {
+        Rolle.SAKSBEHANDLER_OPPFOLGING -> SignaturRolle.SAKSBEHANDLER_OPPFOLGING
+        Rolle.SAKSBEHANDLER_NASJONAL -> SignaturRolle.SAKSBEHANDLER_NASJONAL
+        Rolle.KVALITETSSIKRER -> SignaturRolle.KVALITETSSIKRER
+        Rolle.BESLUTTER -> SignaturRolle.BESLUTTER
+        else -> null
     }
 }
 

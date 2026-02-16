@@ -16,6 +16,7 @@ import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Status
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.hendelse.oppgavestyring.OppgavestyringGateway
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
@@ -44,7 +45,10 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status as Avklaringsb
 @MockKExtension.RequireParallelTesting
 @ParameterizedClass
 @ValueSource(booleans = [true, false])
-class SignaturServiceTest(val hentEnhetFraOppgave: Boolean) {
+class SignaturServiceTest(
+    // Midlertidig i overgang til ny implementasjon bak feature-toggle
+    val hentEnhetFraOppgave: Boolean
+) {
 
 
     private val unleashGateway = mockk<UnleashGateway>()
@@ -56,6 +60,7 @@ class SignaturServiceTest(val hentEnhetFraOppgave: Boolean) {
         SignaturService(unleashGateway, oppgavestyringGateway, behandlingRepository, avklaringsbehovRepository)
 
     private val behandlingTilAvklaringsbehovene = mutableMapOf<BehandlingId, List<Avklaringsbehov>>()
+    private val behandlingTilOppgaveEnhet = mutableMapOf<BehandlingReferanse, List<OppgaveEnhetDto>>()
 
     @BeforeEach
     fun setup() {
@@ -70,12 +75,16 @@ class SignaturServiceTest(val hentEnhetFraOppgave: Boolean) {
                 behandlingId.captured
             )
         }
+
+        val behandlingReferanse = slot<BehandlingReferanse>()
+        every { oppgavestyringGateway.hentOppgaveEnhet(capture(behandlingReferanse)) } answers {
+            OppgaveEnhetResponse(behandlingTilOppgaveEnhet[behandlingReferanse.captured] ?: emptyList())
+        }
     }
 
     @Test
     fun `den som står i signatur for en gitt rolle er den som utførte siste avklaringsbehovet for rollen (status AVSLUTTET)`() {
         val behandling = gittBehandling()
-        every { oppgavestyringGateway.hentOppgaveEnhet(behandling.referanse) } returns OppgaveEnhetResponse(listOf())
         val brevbestilling = Brevbestilling(
             id = 0,
             behandlingId = behandling.id,
@@ -91,96 +100,112 @@ class SignaturServiceTest(val hentEnhetFraOppgave: Boolean) {
 
         // SAKSBEHANDLER_OPPFOLGING
         leggTilEndring(
-            behandling.id,
-            Definisjon.FRITAK_MELDEPLIKT,
+            behandling = behandling,
+            definisjon = Definisjon.FRITAK_MELDEPLIKT,
             endretAv = veilederIdent,
-            AvklaringsbehovStatus.AVSLUTTET
+            status = AvklaringsbehovStatus.AVSLUTTET,
+            oppgaveEnhet = "1234"
         )
         leggTilEndring(
-            behandling.id,
-            Definisjon.AVKLAR_SYKDOM,
+            behandling = behandling,
+            definisjon = Definisjon.AVKLAR_SYKDOM,
             endretAv = SYSTEMBRUKER.ident,
-            AvklaringsbehovStatus.OPPRETTET
+            status = AvklaringsbehovStatus.OPPRETTET,
+            oppgaveEnhet = "2345"
         )
         leggTilEndring(
-            behandling.id,
-            Definisjon.AVKLAR_SYKDOM,
+            behandling = behandling,
+            definisjon = Definisjon.AVKLAR_SYKDOM,
             endretAv = veilederIdent,
-            AvklaringsbehovStatus.AVSLUTTET
+            status = AvklaringsbehovStatus.AVSLUTTET
         )
         leggTilEndring(
-            behandling.id,
-            Definisjon.AVKLAR_SYKDOM,
+            behandling = behandling,
+            definisjon = Definisjon.AVKLAR_SYKDOM,
             endretAv = kvalitetssikrerIdent,
-            AvklaringsbehovStatus.KVALITETSSIKRET
+            status = AvklaringsbehovStatus.KVALITETSSIKRET
         )
         leggTilEndring(
-            behandling.id,
-            Definisjon.AVKLAR_SYKDOM,
+            behandling = behandling,
+            definisjon = Definisjon.AVKLAR_SYKDOM,
             endretAv = beslutterIdent,
-            AvklaringsbehovStatus.TOTRINNS_VURDERT
+            status = AvklaringsbehovStatus.TOTRINNS_VURDERT
         )
 
         // KVALITETSSIKRER
         leggTilEndring(
-            behandling.id,
-            Definisjon.KVALITETSSIKRING,
+            behandling = behandling,
+            definisjon = Definisjon.KVALITETSSIKRING,
             endretAv = kvalitetssikrerIdent,
-            AvklaringsbehovStatus.AVSLUTTET
+            status = AvklaringsbehovStatus.AVSLUTTET,
+            oppgaveEnhet = "3456"
         )
 
         // SAKSBEHANDLER_NASJONAL
         leggTilEndring(
-            behandling.id,
-            Definisjon.AVKLAR_STUDENT,
+            behandling = behandling,
+            definisjon = Definisjon.AVKLAR_STUDENT,
             endretAv = saksbehandlerIdent,
-            AvklaringsbehovStatus.AVSLUTTET
+            status = AvklaringsbehovStatus.AVSLUTTET,
+            oppgaveEnhet = "4567"
         )
         leggTilEndring(
-            behandling.id,
-            Definisjon.FASTSETT_BEREGNINGSTIDSPUNKT,
+            behandling = behandling,
+            definisjon = Definisjon.FASTSETT_BEREGNINGSTIDSPUNKT,
             endretAv = saksbehandlerIdent,
-            AvklaringsbehovStatus.AVSLUTTET
-        )
-
-        // definisjon som ikke skal tas høyde for
-        leggTilEndring(
-            behandling.id,
-            Definisjon.MANUELT_SATT_PÅ_VENT,
-            endretAv = saksbehandlerIdent,
-            AvklaringsbehovStatus.AVSLUTTET
+            status = AvklaringsbehovStatus.AVSLUTTET,
+            oppgaveEnhet = "5678"
         )
 
         // definisjon som ikke skal tas høyde for
         leggTilEndring(
-            behandling.id,
-            Definisjon.VURDER_TREKK_AV_SØKNAD,
+            behandling = behandling,
+            definisjon = Definisjon.MANUELT_SATT_PÅ_VENT,
             endretAv = saksbehandlerIdent,
-            AvklaringsbehovStatus.AVSLUTTET
+            status = AvklaringsbehovStatus.AVSLUTTET,
+            oppgaveEnhet = "6789"
+        )
+
+        // definisjon som ikke skal tas høyde for
+        leggTilEndring(
+            behandling = behandling,
+            definisjon = Definisjon.VURDER_TREKK_AV_SØKNAD,
+            endretAv = saksbehandlerIdent,
+            status = AvklaringsbehovStatus.AVSLUTTET,
+            oppgaveEnhet = "7890"
         )
 
         // BESLUTTER
         leggTilEndring(
-            behandling.id,
-            Definisjon.FATTE_VEDTAK,
+            behandling = behandling,
+            definisjon = Definisjon.FATTE_VEDTAK,
             endretAv = beslutterIdent,
-            AvklaringsbehovStatus.AVSLUTTET
+            status = AvklaringsbehovStatus.AVSLUTTET,
+            oppgaveEnhet = "8901"
         )
 
         val signaturer = signaturService.finnSignaturGrunnlag(brevbestilling, Bruker(""))
 
-        assertThat(signaturer).containsExactly( // NB: Tester også rekkefølge.
-            SignaturGrunnlag(navIdent = beslutterIdent, rolle = Rolle.BESLUTTER),
-            SignaturGrunnlag(navIdent = saksbehandlerIdent, rolle = Rolle.SAKSBEHANDLER_NASJONAL),
-            SignaturGrunnlag(navIdent = kvalitetssikrerIdent, rolle = Rolle.KVALITETSSIKRER),
-            SignaturGrunnlag(navIdent = veilederIdent, rolle = Rolle.SAKSBEHANDLER_OPPFOLGING)
-        )
+        if (hentEnhetFraOppgave) { // Identisk assert i tillegg til å sjekke enhet
+            assertThat(signaturer).containsExactly( // NB: Tester også rekkefølge.
+                SignaturGrunnlag(navIdent = beslutterIdent, rolle = Rolle.BESLUTTER, enhet = "8901"),
+                SignaturGrunnlag(navIdent = saksbehandlerIdent, rolle = Rolle.SAKSBEHANDLER_NASJONAL, enhet = "5678"),
+                SignaturGrunnlag(navIdent = kvalitetssikrerIdent, rolle = Rolle.KVALITETSSIKRER, enhet = "3456"),
+                SignaturGrunnlag(navIdent = veilederIdent, rolle = Rolle.SAKSBEHANDLER_OPPFOLGING, enhet = "2345")
+            )
+        } else {
+            assertThat(signaturer).containsExactly( // NB: Tester også rekkefølge.
+                SignaturGrunnlag(navIdent = beslutterIdent, rolle = Rolle.BESLUTTER, enhet = null),
+                SignaturGrunnlag(navIdent = saksbehandlerIdent, rolle = Rolle.SAKSBEHANDLER_NASJONAL, enhet = null),
+                SignaturGrunnlag(navIdent = kvalitetssikrerIdent, rolle = Rolle.KVALITETSSIKRER, enhet = null),
+                SignaturGrunnlag(navIdent = veilederIdent, rolle = Rolle.SAKSBEHANDLER_OPPFOLGING, enhet = null)
+            )
+        }
     }
 
     @Test
     fun `skal fjerne duplikater om samme person har løst avklaringsbehov som er knytte til ulike roller – eksempel samme person på lokalkontor og NAY`() {
         val behandling = gittBehandling()
-        every { oppgavestyringGateway.hentOppgaveEnhet(behandling.referanse) } returns OppgaveEnhetResponse(listOf())
         val brevbestilling = Brevbestilling(
             id = 0,
             behandlingId = behandling.id,
@@ -195,80 +220,93 @@ class SignaturServiceTest(val hentEnhetFraOppgave: Boolean) {
 
         // SAKSBEHANDLER_OPPFOLGING
         leggTilEndring(
-            behandling.id,
-            Definisjon.FRITAK_MELDEPLIKT,
+            behandling = behandling,
+            definisjon = Definisjon.FRITAK_MELDEPLIKT,
             endretAv = veilederIdent,
-            AvklaringsbehovStatus.AVSLUTTET
+            status = AvklaringsbehovStatus.AVSLUTTET,
+            oppgaveEnhet = "1234"
         )
         leggTilEndring(
-            behandling.id,
-            Definisjon.AVKLAR_SYKDOM,
+            behandling = behandling,
+            definisjon = Definisjon.AVKLAR_SYKDOM,
             endretAv = SYSTEMBRUKER.ident,
-            AvklaringsbehovStatus.OPPRETTET
+            status = AvklaringsbehovStatus.OPPRETTET,
+            oppgaveEnhet = "2345"
         )
         leggTilEndring(
-            behandling.id,
-            Definisjon.AVKLAR_SYKDOM,
+            behandling = behandling,
+            definisjon = Definisjon.AVKLAR_SYKDOM,
             endretAv = veilederIdent,
-            AvklaringsbehovStatus.AVSLUTTET
+            status = AvklaringsbehovStatus.AVSLUTTET
         )
         leggTilEndring(
-            behandling.id,
-            Definisjon.AVKLAR_SYKDOM,
+            behandling = behandling,
+            definisjon = Definisjon.AVKLAR_SYKDOM,
             endretAv = kvalitetssikrerIdent,
-            AvklaringsbehovStatus.KVALITETSSIKRET
+            status = AvklaringsbehovStatus.KVALITETSSIKRET
         )
         leggTilEndring(
-            behandling.id,
-            Definisjon.AVKLAR_SYKDOM,
+            behandling = behandling,
+            definisjon = Definisjon.AVKLAR_SYKDOM,
             endretAv = beslutterIdent,
-            AvklaringsbehovStatus.TOTRINNS_VURDERT
+            status = AvklaringsbehovStatus.TOTRINNS_VURDERT
         )
 
         // SAKSBEHANDLER_NASJONAL
         leggTilEndring(
-            behandling.id,
-            Definisjon.AVKLAR_STUDENT,
+            behandling = behandling,
+            definisjon = Definisjon.AVKLAR_STUDENT,
             endretAv = veilederIdent,
-            AvklaringsbehovStatus.AVSLUTTET
+            status = AvklaringsbehovStatus.AVSLUTTET,
+            oppgaveEnhet = "3456"
         )
         leggTilEndring(
-            behandling.id,
-            Definisjon.FASTSETT_BEREGNINGSTIDSPUNKT,
+            behandling = behandling,
+            definisjon = Definisjon.FASTSETT_BEREGNINGSTIDSPUNKT,
             endretAv = veilederIdent,
-            AvklaringsbehovStatus.AVSLUTTET
+            status = AvklaringsbehovStatus.AVSLUTTET,
+            oppgaveEnhet = "4567"
         )
 
         // KVALITETSSIKRER
         leggTilEndring(
-            behandling.id,
-            Definisjon.KVALITETSSIKRING,
+            behandling = behandling,
+            definisjon = Definisjon.KVALITETSSIKRING,
             endretAv = kvalitetssikrerIdent,
-            AvklaringsbehovStatus.AVSLUTTET
+            status = AvklaringsbehovStatus.AVSLUTTET,
+            oppgaveEnhet = "5678"
         )
 
         // BESLUTTER
         leggTilEndring(
-            behandling.id,
-            Definisjon.FATTE_VEDTAK,
+            behandling = behandling,
+            definisjon = Definisjon.FATTE_VEDTAK,
             endretAv = beslutterIdent,
-            AvklaringsbehovStatus.AVSLUTTET
+            status = AvklaringsbehovStatus.AVSLUTTET,
+            oppgaveEnhet = "6789"
         )
 
         val signaturer = signaturService.finnSignaturGrunnlag(brevbestilling, Bruker(""))
 
         assertThat(signaturer).hasSize(3)
-        assertThat(signaturer).containsExactlyInAnyOrder(
-            SignaturGrunnlag(navIdent = beslutterIdent, rolle = Rolle.BESLUTTER),
-            SignaturGrunnlag(navIdent = kvalitetssikrerIdent, rolle = Rolle.KVALITETSSIKRER),
-            SignaturGrunnlag(navIdent = veilederIdent, rolle = Rolle.SAKSBEHANDLER_NASJONAL)
-        )
+        if (hentEnhetFraOppgave) { // Identisk assert i tillegg til å sjekke enhet
+            assertThat(signaturer).containsExactlyInAnyOrder(
+                SignaturGrunnlag(navIdent = beslutterIdent, rolle = Rolle.BESLUTTER, enhet = "6789"),
+                SignaturGrunnlag(navIdent = kvalitetssikrerIdent, rolle = Rolle.KVALITETSSIKRER, enhet = "5678"),
+                SignaturGrunnlag(navIdent = veilederIdent, rolle = Rolle.SAKSBEHANDLER_NASJONAL, enhet = "4567")
+            )
+        } else {
+            assertThat(signaturer).containsExactlyInAnyOrder(
+                SignaturGrunnlag(navIdent = beslutterIdent, rolle = Rolle.BESLUTTER, enhet = null),
+                SignaturGrunnlag(navIdent = kvalitetssikrerIdent, rolle = Rolle.KVALITETSSIKRER, enhet = null),
+                SignaturGrunnlag(navIdent = veilederIdent, rolle = Rolle.SAKSBEHANDLER_NASJONAL, enhet = null)
+            )
+        }
     }
 
     @Test
     fun `tar med innlogget bruker i signatur for vedtaksbrev dersom beslutter ikke har saksbehandlet`() {
         val behandling = gittBehandling()
-        every { oppgavestyringGateway.hentOppgaveEnhet(behandling.referanse) } returns OppgaveEnhetResponse(listOf())
         val brevbestilling = Brevbestilling(
             id = 0,
             behandlingId = behandling.id,
@@ -281,31 +319,33 @@ class SignaturServiceTest(val hentEnhetFraOppgave: Boolean) {
         val innloggetBrukerIdent = "i000000"
 
         leggTilEndring(
-            behandling.id,
-            Definisjon.FASTSETT_BEREGNINGSTIDSPUNKT,
+            behandling = behandling,
+            definisjon = Definisjon.FASTSETT_BEREGNINGSTIDSPUNKT,
             endretAv = saksbehandlerIdent,
-            AvklaringsbehovStatus.AVSLUTTET
+            status = AvklaringsbehovStatus.AVSLUTTET,
+            oppgaveEnhet = "1234"
         )
 
         // BESLUTTER
         leggTilEndring(
-            behandling.id,
-            Definisjon.SKRIV_VEDTAKSBREV,
+            behandling = behandling,
+            definisjon = Definisjon.SKRIV_VEDTAKSBREV,
             endretAv = SYSTEMBRUKER.ident,
-            AvklaringsbehovStatus.OPPRETTET
+            status = AvklaringsbehovStatus.OPPRETTET,
+            oppgaveEnhet = "2345"
         )
 
         val signaturer = signaturService.finnSignaturGrunnlag(brevbestilling, Bruker(innloggetBrukerIdent))
 
         if (hentEnhetFraOppgave) {
             assertThat(signaturer).containsExactlyInAnyOrder(
-                SignaturGrunnlag(navIdent = innloggetBrukerIdent, rolle = Rolle.BESLUTTER),
-                SignaturGrunnlag(navIdent = saksbehandlerIdent, rolle = Rolle.SAKSBEHANDLER_NASJONAL)
+                SignaturGrunnlag(navIdent = innloggetBrukerIdent, rolle = Rolle.BESLUTTER, enhet = "2345"),
+                SignaturGrunnlag(navIdent = saksbehandlerIdent, rolle = Rolle.SAKSBEHANDLER_NASJONAL, enhet = "1234")
             )
         } else {
             assertThat(signaturer).containsExactlyInAnyOrder(
-                SignaturGrunnlag(navIdent = innloggetBrukerIdent, rolle = null),
-                SignaturGrunnlag(navIdent = saksbehandlerIdent, rolle = Rolle.SAKSBEHANDLER_NASJONAL)
+                SignaturGrunnlag(navIdent = innloggetBrukerIdent, rolle = null, enhet = null),
+                SignaturGrunnlag(navIdent = saksbehandlerIdent, rolle = Rolle.SAKSBEHANDLER_NASJONAL, enhet = null)
             )
         }
     }
@@ -313,7 +353,6 @@ class SignaturServiceTest(val hentEnhetFraOppgave: Boolean) {
     @Test
     fun `dersom beslutter ikke har saksbehandlet og innlogget bruker har saksbehandlet beholdes rollen til innlogget bruker`() {
         val behandling = gittBehandling()
-        every { oppgavestyringGateway.hentOppgaveEnhet(behandling.referanse) } returns OppgaveEnhetResponse(listOf())
         val brevbestilling = Brevbestilling(
             id = 0,
             behandlingId = behandling.id,
@@ -327,78 +366,98 @@ class SignaturServiceTest(val hentEnhetFraOppgave: Boolean) {
         val saksbehandlerIdent = "s000000"
 
         leggTilEndring(
-            behandling.id,
-            Definisjon.FASTSETT_PÅKLAGET_BEHANDLING,
+            behandling = behandling,
+            definisjon = Definisjon.FASTSETT_PÅKLAGET_BEHANDLING,
             endretAv = saksbehandlerIdent,
-            AvklaringsbehovStatus.AVSLUTTET
+            status = AvklaringsbehovStatus.AVSLUTTET,
+            oppgaveEnhet = "1234"
         )
         leggTilEndring(
-            behandling.id,
-            Definisjon.FASTSETT_FULLMEKTIG,
+            behandling = behandling,
+            definisjon = Definisjon.FASTSETT_FULLMEKTIG,
             endretAv = saksbehandlerIdent,
-            AvklaringsbehovStatus.AVSLUTTET
+            status = AvklaringsbehovStatus.AVSLUTTET,
+            oppgaveEnhet = "1234"
         )
         leggTilEndring(
-            behandling.id,
-            Definisjon.VURDER_FORMKRAV,
+            behandling = behandling,
+            definisjon = Definisjon.VURDER_FORMKRAV,
             endretAv = saksbehandlerIdent,
-            AvklaringsbehovStatus.AVSLUTTET
+            status = AvklaringsbehovStatus.AVSLUTTET,
+            oppgaveEnhet = "1234"
         )
         leggTilEndring(
-            behandling.id,
-            Definisjon.FASTSETT_BEHANDLENDE_ENHET,
+            behandling = behandling,
+            definisjon = Definisjon.FASTSETT_BEHANDLENDE_ENHET,
             endretAv = saksbehandlerIdent,
-            AvklaringsbehovStatus.AVSLUTTET
+            status = AvklaringsbehovStatus.AVSLUTTET,
+            oppgaveEnhet = "1234"
         )
         leggTilEndring(
-            behandling.id,
-            Definisjon.VURDER_KLAGE_KONTOR,
+            behandling = behandling,
+            definisjon = Definisjon.VURDER_KLAGE_KONTOR,
             endretAv = veilederIdent,
-            AvklaringsbehovStatus.AVSLUTTET
+            status = AvklaringsbehovStatus.AVSLUTTET,
+            oppgaveEnhet = "2345"
         )
         leggTilEndring(
-            behandling.id,
-            Definisjon.KVALITETSSIKRING,
+            behandling = behandling,
+            definisjon = Definisjon.KVALITETSSIKRING,
             endretAv = kvalitetssikrerIdent,
-            AvklaringsbehovStatus.AVSLUTTET
+            status = AvklaringsbehovStatus.AVSLUTTET,
+            oppgaveEnhet = "3456"
         )
         leggTilEndring(
-            behandling.id,
-            Definisjon.VURDER_KLAGE_KONTOR,
+            behandling = behandling,
+            definisjon = Definisjon.VURDER_KLAGE_KONTOR,
             endretAv = veilederIdent,
-            AvklaringsbehovStatus.AVSLUTTET
+            status = AvklaringsbehovStatus.AVSLUTTET,
+            oppgaveEnhet = "2345"
         )
         leggTilEndring(
-            behandling.id,
-            Definisjon.KVALITETSSIKRING,
+            behandling = behandling,
+            definisjon = Definisjon.KVALITETSSIKRING,
             endretAv = kvalitetssikrerIdent,
-            AvklaringsbehovStatus.AVSLUTTET
+            status = AvklaringsbehovStatus.AVSLUTTET,
+            oppgaveEnhet = "3456"
         )
-
+        leggTilEndring(
+            behandling = behandling,
+            definisjon = Definisjon.SKRIV_VEDTAKSBREV,
+            endretAv = SYSTEMBRUKER.ident,
+            status = AvklaringsbehovStatus.OPPRETTET,
+            oppgaveEnhet = "4567"
+        )
         val signaturer = signaturService.finnSignaturGrunnlag(brevbestilling, Bruker(kvalitetssikrerIdent))
-
-        assertThat(signaturer).containsExactly(
-            SignaturGrunnlag(navIdent = saksbehandlerIdent, rolle = Rolle.SAKSBEHANDLER_NASJONAL),
-            SignaturGrunnlag(navIdent = kvalitetssikrerIdent, rolle = Rolle.KVALITETSSIKRER),
-            SignaturGrunnlag(navIdent = veilederIdent, rolle = Rolle.SAKSBEHANDLER_OPPFOLGING),
-        )
+        if (hentEnhetFraOppgave) { // Identisk assert i tillegg til å sjekke enhet
+            assertThat(signaturer).containsExactly(
+                SignaturGrunnlag(navIdent = saksbehandlerIdent, rolle = Rolle.SAKSBEHANDLER_NASJONAL, enhet = "1234"),
+                SignaturGrunnlag(navIdent = kvalitetssikrerIdent, rolle = Rolle.KVALITETSSIKRER, enhet = "3456"),
+                SignaturGrunnlag(navIdent = veilederIdent, rolle = Rolle.SAKSBEHANDLER_OPPFOLGING, enhet = "2345"),
+            )
+        } else {
+            assertThat(signaturer).containsExactly(
+                SignaturGrunnlag(navIdent = saksbehandlerIdent, rolle = Rolle.SAKSBEHANDLER_NASJONAL, enhet = null),
+                SignaturGrunnlag(navIdent = kvalitetssikrerIdent, rolle = Rolle.KVALITETSSIKRER, enhet = null),
+                SignaturGrunnlag(navIdent = veilederIdent, rolle = Rolle.SAKSBEHANDLER_OPPFOLGING, enhet = null),
+            )
+        }
     }
 
-    private val avklaringsbehovene = mutableListOf<Avklaringsbehov>()
-
     private fun leggTilEndring(
-        behandlingId: BehandlingId,
+        behandling: Behandling,
         definisjon: Definisjon,
         endretAv: String,
-        status: AvklaringsbehovStatus
+        status: AvklaringsbehovStatus,
+        oppgaveEnhet: String? = null,
     ) {
-        val avklaringsbehovene = behandlingTilAvklaringsbehovene[behandlingId]?.toMutableList() ?: mutableListOf()
+        val avklaringsbehovene = behandlingTilAvklaringsbehovene[behandling.id]?.toMutableList() ?: mutableListOf()
         val avklaringsbehov = avklaringsbehovene.find { it.definisjon == definisjon } ?: Avklaringsbehov(
             -1, definisjon, mutableListOf(), StegType.UDEFINERT, false
         ).also {
             avklaringsbehovene.add(it)
         }
-        behandlingTilAvklaringsbehovene.set(behandlingId, avklaringsbehovene)
+        behandlingTilAvklaringsbehovene.set(behandling.id, avklaringsbehovene)
         val tidsstempel =
             avklaringsbehovene.flatMap { it.historikk }.maxOrNull()?.tidsstempel?.plusMinutes(1) ?: LocalDateTime.now()
 
@@ -410,6 +469,14 @@ class SignaturServiceTest(val hentEnhetFraOppgave: Boolean) {
                 endretAv = endretAv
             )
         )
+
+        if (oppgaveEnhet != null) {
+            val eksistende = behandlingTilOppgaveEnhet[behandling.referanse] ?: emptyList()
+            behandlingTilOppgaveEnhet[behandling.referanse] =
+                eksistende
+                    .filterNot { it.avklaringsbehovKode == definisjon.kode.name }
+                    .plus(OppgaveEnhetDto(definisjon.kode.name, oppgaveEnhet))
+        }
     }
 
     fun gittBehandling(): Behandling {
