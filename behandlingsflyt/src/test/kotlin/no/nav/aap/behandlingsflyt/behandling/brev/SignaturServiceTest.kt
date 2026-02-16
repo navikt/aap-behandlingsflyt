@@ -22,6 +22,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.brev.kontrakt.Rolle
 import no.nav.aap.brev.kontrakt.SignaturGrunnlag
@@ -32,15 +33,20 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
+import org.junit.jupiter.params.ParameterizedClass
+import org.junit.jupiter.params.provider.ValueSource
 import java.time.LocalDateTime
 import java.util.*
 import kotlin.random.Random
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status as AvklaringsbehovStatus
 
 @ExtendWith(MockKExtension::class)
-@MockKExtension.CheckUnnecessaryStub
 @MockKExtension.RequireParallelTesting
-class SignaturServiceTest {
+@ParameterizedClass
+@ValueSource(booleans = [true, false])
+class SignaturServiceTest(val hentEnhetFraOppgave: Boolean) {
+
+
     private val unleashGateway = mockk<UnleashGateway>()
     private val oppgavestyringGateway = mockk<OppgavestyringGateway>()
     private val behandlingRepository = mockk<BehandlingRepository>()
@@ -53,6 +59,7 @@ class SignaturServiceTest {
 
     @BeforeEach
     fun setup() {
+        every { unleashGateway.isEnabled(BehandlingsflytFeature.SignaturEnhetFraOppgave) } returns hentEnhetFraOppgave
         val behandlingId = slot<BehandlingId>()
         every { avklaringsbehovOperasjonerRepository.hent(capture(behandlingId)) } answers {
             behandlingTilAvklaringsbehovene.getValue(behandlingId.captured)
@@ -67,10 +74,11 @@ class SignaturServiceTest {
 
     @Test
     fun `den som står i signatur for en gitt rolle er den som utførte siste avklaringsbehovet for rollen (status AVSLUTTET)`() {
-        val behandlingId = BehandlingId(Random.nextLong())
+        val behandling = gittBehandling()
+        every { oppgavestyringGateway.hentOppgaveEnhet(behandling.referanse) } returns OppgaveEnhetResponse(listOf())
         val brevbestilling = Brevbestilling(
             id = 0,
-            behandlingId = behandlingId,
+            behandlingId = behandling.id,
             typeBrev = TypeBrev.VEDTAK_INNVILGELSE,
             referanse = BrevbestillingReferanse(UUID.randomUUID()),
             status = Status.FORHÅNDSVISNING_KLAR,
@@ -83,31 +91,31 @@ class SignaturServiceTest {
 
         // SAKSBEHANDLER_OPPFOLGING
         leggTilEndring(
-            behandlingId,
+            behandling.id,
             Definisjon.FRITAK_MELDEPLIKT,
             endretAv = veilederIdent,
             AvklaringsbehovStatus.AVSLUTTET
         )
         leggTilEndring(
-            behandlingId,
+            behandling.id,
             Definisjon.AVKLAR_SYKDOM,
             endretAv = SYSTEMBRUKER.ident,
             AvklaringsbehovStatus.OPPRETTET
         )
         leggTilEndring(
-            behandlingId,
+            behandling.id,
             Definisjon.AVKLAR_SYKDOM,
             endretAv = veilederIdent,
             AvklaringsbehovStatus.AVSLUTTET
         )
         leggTilEndring(
-            behandlingId,
+            behandling.id,
             Definisjon.AVKLAR_SYKDOM,
             endretAv = kvalitetssikrerIdent,
             AvklaringsbehovStatus.KVALITETSSIKRET
         )
         leggTilEndring(
-            behandlingId,
+            behandling.id,
             Definisjon.AVKLAR_SYKDOM,
             endretAv = beslutterIdent,
             AvklaringsbehovStatus.TOTRINNS_VURDERT
@@ -115,7 +123,7 @@ class SignaturServiceTest {
 
         // KVALITETSSIKRER
         leggTilEndring(
-            behandlingId,
+            behandling.id,
             Definisjon.KVALITETSSIKRING,
             endretAv = kvalitetssikrerIdent,
             AvklaringsbehovStatus.AVSLUTTET
@@ -123,13 +131,13 @@ class SignaturServiceTest {
 
         // SAKSBEHANDLER_NASJONAL
         leggTilEndring(
-            behandlingId,
+            behandling.id,
             Definisjon.AVKLAR_STUDENT,
             endretAv = saksbehandlerIdent,
             AvklaringsbehovStatus.AVSLUTTET
         )
         leggTilEndring(
-            behandlingId,
+            behandling.id,
             Definisjon.FASTSETT_BEREGNINGSTIDSPUNKT,
             endretAv = saksbehandlerIdent,
             AvklaringsbehovStatus.AVSLUTTET
@@ -137,7 +145,7 @@ class SignaturServiceTest {
 
         // definisjon som ikke skal tas høyde for
         leggTilEndring(
-            behandlingId,
+            behandling.id,
             Definisjon.MANUELT_SATT_PÅ_VENT,
             endretAv = saksbehandlerIdent,
             AvklaringsbehovStatus.AVSLUTTET
@@ -145,7 +153,7 @@ class SignaturServiceTest {
 
         // definisjon som ikke skal tas høyde for
         leggTilEndring(
-            behandlingId,
+            behandling.id,
             Definisjon.VURDER_TREKK_AV_SØKNAD,
             endretAv = saksbehandlerIdent,
             AvklaringsbehovStatus.AVSLUTTET
@@ -153,13 +161,13 @@ class SignaturServiceTest {
 
         // BESLUTTER
         leggTilEndring(
-            behandlingId,
+            behandling.id,
             Definisjon.FATTE_VEDTAK,
             endretAv = beslutterIdent,
             AvklaringsbehovStatus.AVSLUTTET
         )
 
-        val signaturer = signaturService.finnSignaturGrunnlagV1(brevbestilling, Bruker(""))
+        val signaturer = signaturService.finnSignaturGrunnlag(brevbestilling, Bruker(""))
 
         assertThat(signaturer).containsExactly( // NB: Tester også rekkefølge.
             SignaturGrunnlag(navIdent = beslutterIdent, rolle = Rolle.BESLUTTER),
@@ -171,10 +179,11 @@ class SignaturServiceTest {
 
     @Test
     fun `skal fjerne duplikater om samme person har løst avklaringsbehov som er knytte til ulike roller – eksempel samme person på lokalkontor og NAY`() {
-        val behandlingId = BehandlingId(Random.nextLong())
+        val behandling = gittBehandling()
+        every { oppgavestyringGateway.hentOppgaveEnhet(behandling.referanse) } returns OppgaveEnhetResponse(listOf())
         val brevbestilling = Brevbestilling(
             id = 0,
-            behandlingId = behandlingId,
+            behandlingId = behandling.id,
             typeBrev = TypeBrev.VEDTAK_INNVILGELSE,
             referanse = BrevbestillingReferanse(UUID.randomUUID()),
             status = Status.FORHÅNDSVISNING_KLAR,
@@ -186,31 +195,31 @@ class SignaturServiceTest {
 
         // SAKSBEHANDLER_OPPFOLGING
         leggTilEndring(
-            behandlingId,
+            behandling.id,
             Definisjon.FRITAK_MELDEPLIKT,
             endretAv = veilederIdent,
             AvklaringsbehovStatus.AVSLUTTET
         )
         leggTilEndring(
-            behandlingId,
+            behandling.id,
             Definisjon.AVKLAR_SYKDOM,
             endretAv = SYSTEMBRUKER.ident,
             AvklaringsbehovStatus.OPPRETTET
         )
         leggTilEndring(
-            behandlingId,
+            behandling.id,
             Definisjon.AVKLAR_SYKDOM,
             endretAv = veilederIdent,
             AvklaringsbehovStatus.AVSLUTTET
         )
         leggTilEndring(
-            behandlingId,
+            behandling.id,
             Definisjon.AVKLAR_SYKDOM,
             endretAv = kvalitetssikrerIdent,
             AvklaringsbehovStatus.KVALITETSSIKRET
         )
         leggTilEndring(
-            behandlingId,
+            behandling.id,
             Definisjon.AVKLAR_SYKDOM,
             endretAv = beslutterIdent,
             AvklaringsbehovStatus.TOTRINNS_VURDERT
@@ -218,13 +227,13 @@ class SignaturServiceTest {
 
         // SAKSBEHANDLER_NASJONAL
         leggTilEndring(
-            behandlingId,
+            behandling.id,
             Definisjon.AVKLAR_STUDENT,
             endretAv = veilederIdent,
             AvklaringsbehovStatus.AVSLUTTET
         )
         leggTilEndring(
-            behandlingId,
+            behandling.id,
             Definisjon.FASTSETT_BEREGNINGSTIDSPUNKT,
             endretAv = veilederIdent,
             AvklaringsbehovStatus.AVSLUTTET
@@ -232,7 +241,7 @@ class SignaturServiceTest {
 
         // KVALITETSSIKRER
         leggTilEndring(
-            behandlingId,
+            behandling.id,
             Definisjon.KVALITETSSIKRING,
             endretAv = kvalitetssikrerIdent,
             AvklaringsbehovStatus.AVSLUTTET
@@ -240,13 +249,13 @@ class SignaturServiceTest {
 
         // BESLUTTER
         leggTilEndring(
-            behandlingId,
+            behandling.id,
             Definisjon.FATTE_VEDTAK,
             endretAv = beslutterIdent,
             AvklaringsbehovStatus.AVSLUTTET
         )
 
-        val signaturer = signaturService.finnSignaturGrunnlagV1(brevbestilling, Bruker(""))
+        val signaturer = signaturService.finnSignaturGrunnlag(brevbestilling, Bruker(""))
 
         assertThat(signaturer).hasSize(3)
         assertThat(signaturer).containsExactlyInAnyOrder(
@@ -258,10 +267,11 @@ class SignaturServiceTest {
 
     @Test
     fun `tar med innlogget bruker i signatur for vedtaksbrev dersom beslutter ikke har saksbehandlet`() {
-        val behandlingId = BehandlingId(Random.nextLong())
+        val behandling = gittBehandling()
+        every { oppgavestyringGateway.hentOppgaveEnhet(behandling.referanse) } returns OppgaveEnhetResponse(listOf())
         val brevbestilling = Brevbestilling(
             id = 0,
-            behandlingId = behandlingId,
+            behandlingId = behandling.id,
             typeBrev = TypeBrev.VEDTAK_INNVILGELSE,
             referanse = BrevbestillingReferanse(UUID.randomUUID()),
             status = Status.FORHÅNDSVISNING_KLAR,
@@ -271,26 +281,42 @@ class SignaturServiceTest {
         val innloggetBrukerIdent = "i000000"
 
         leggTilEndring(
-            behandlingId,
+            behandling.id,
             Definisjon.FASTSETT_BEREGNINGSTIDSPUNKT,
             endretAv = saksbehandlerIdent,
             AvklaringsbehovStatus.AVSLUTTET
         )
 
-        val signaturer = signaturService.finnSignaturGrunnlagV1(brevbestilling, Bruker(innloggetBrukerIdent))
-
-        assertThat(signaturer).containsExactlyInAnyOrder(
-            SignaturGrunnlag(navIdent = innloggetBrukerIdent, rolle = null),
-            SignaturGrunnlag(navIdent = saksbehandlerIdent, rolle = Rolle.SAKSBEHANDLER_NASJONAL)
+        // BESLUTTER
+        leggTilEndring(
+            behandling.id,
+            Definisjon.SKRIV_VEDTAKSBREV,
+            endretAv = SYSTEMBRUKER.ident,
+            AvklaringsbehovStatus.OPPRETTET
         )
+
+        val signaturer = signaturService.finnSignaturGrunnlag(brevbestilling, Bruker(innloggetBrukerIdent))
+
+        if (hentEnhetFraOppgave) {
+            assertThat(signaturer).containsExactlyInAnyOrder(
+                SignaturGrunnlag(navIdent = innloggetBrukerIdent, rolle = Rolle.BESLUTTER),
+                SignaturGrunnlag(navIdent = saksbehandlerIdent, rolle = Rolle.SAKSBEHANDLER_NASJONAL)
+            )
+        } else {
+            assertThat(signaturer).containsExactlyInAnyOrder(
+                SignaturGrunnlag(navIdent = innloggetBrukerIdent, rolle = null),
+                SignaturGrunnlag(navIdent = saksbehandlerIdent, rolle = Rolle.SAKSBEHANDLER_NASJONAL)
+            )
+        }
     }
 
     @Test
     fun `dersom beslutter ikke har saksbehandlet og innlogget bruker har saksbehandlet beholdes rollen til innlogget bruker`() {
-        val behandlingId = BehandlingId(Random.nextLong())
+        val behandling = gittBehandling()
+        every { oppgavestyringGateway.hentOppgaveEnhet(behandling.referanse) } returns OppgaveEnhetResponse(listOf())
         val brevbestilling = Brevbestilling(
             id = 0,
-            behandlingId = behandlingId,
+            behandlingId = behandling.id,
             typeBrev = TypeBrev.KLAGE_OPPRETTHOLDELSE,
             referanse = BrevbestillingReferanse(UUID.randomUUID()),
             status = Status.FORHÅNDSVISNING_KLAR,
@@ -301,55 +327,55 @@ class SignaturServiceTest {
         val saksbehandlerIdent = "s000000"
 
         leggTilEndring(
-            behandlingId,
+            behandling.id,
             Definisjon.FASTSETT_PÅKLAGET_BEHANDLING,
             endretAv = saksbehandlerIdent,
             AvklaringsbehovStatus.AVSLUTTET
         )
         leggTilEndring(
-            behandlingId,
+            behandling.id,
             Definisjon.FASTSETT_FULLMEKTIG,
             endretAv = saksbehandlerIdent,
             AvklaringsbehovStatus.AVSLUTTET
         )
         leggTilEndring(
-            behandlingId,
+            behandling.id,
             Definisjon.VURDER_FORMKRAV,
             endretAv = saksbehandlerIdent,
             AvklaringsbehovStatus.AVSLUTTET
         )
         leggTilEndring(
-            behandlingId,
+            behandling.id,
             Definisjon.FASTSETT_BEHANDLENDE_ENHET,
             endretAv = saksbehandlerIdent,
             AvklaringsbehovStatus.AVSLUTTET
         )
         leggTilEndring(
-            behandlingId,
+            behandling.id,
             Definisjon.VURDER_KLAGE_KONTOR,
             endretAv = veilederIdent,
             AvklaringsbehovStatus.AVSLUTTET
         )
         leggTilEndring(
-            behandlingId,
+            behandling.id,
             Definisjon.KVALITETSSIKRING,
             endretAv = kvalitetssikrerIdent,
             AvklaringsbehovStatus.AVSLUTTET
         )
         leggTilEndring(
-            behandlingId,
+            behandling.id,
             Definisjon.VURDER_KLAGE_KONTOR,
             endretAv = veilederIdent,
             AvklaringsbehovStatus.AVSLUTTET
         )
         leggTilEndring(
-            behandlingId,
+            behandling.id,
             Definisjon.KVALITETSSIKRING,
             endretAv = kvalitetssikrerIdent,
             AvklaringsbehovStatus.AVSLUTTET
         )
 
-        val signaturer = signaturService.finnSignaturGrunnlagV1(brevbestilling, Bruker(kvalitetssikrerIdent))
+        val signaturer = signaturService.finnSignaturGrunnlag(brevbestilling, Bruker(kvalitetssikrerIdent))
 
         assertThat(signaturer).containsExactly(
             SignaturGrunnlag(navIdent = saksbehandlerIdent, rolle = Rolle.SAKSBEHANDLER_NASJONAL),
@@ -384,5 +410,22 @@ class SignaturServiceTest {
                 endretAv = endretAv
             )
         )
+    }
+
+    fun gittBehandling(): Behandling {
+        val behandlingId = BehandlingId(Random.nextLong())
+        val behandling = Behandling(
+            id = behandlingId,
+            forrigeBehandlingId = null,
+            sakId = SakId(Random.nextLong()),
+            status = no.nav.aap.behandlingsflyt.kontrakt.behandling.Status.IVERKSETTES,
+            typeBehandling = TypeBehandling.Førstegangsbehandling,
+            årsakTilOpprettelse = null,
+            versjon = 1,
+        )
+
+        every { behandlingRepository.hent(behandlingId) } returns behandling
+
+        return behandling
     }
 }

@@ -101,7 +101,7 @@ class SignaturService(
         put(Rolle.SAKSBEHANDLER_OPPFOLGING, definisjonerSomLøsesAv(Rolle.SAKSBEHANDLER_OPPFOLGING))
         put(Rolle.SAKSBEHANDLER_NASJONAL, definisjonerSomLøsesAv(Rolle.SAKSBEHANDLER_NASJONAL))
         put(Rolle.KVALITETSSIKRER, listOf(Definisjon.KVALITETSSIKRING))
-        put(Rolle.BESLUTTER, listOf(Definisjon.FATTE_VEDTAK))
+        put(Rolle.BESLUTTER, listOf(Definisjon.FATTE_VEDTAK, Definisjon.SKRIV_VEDTAKSBREV))
     }
 
     /**
