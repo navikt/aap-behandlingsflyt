@@ -9,8 +9,6 @@ import java.util.*
 
 data class BehandlinginfoDTO(
     val referanse: UUID,
-    @Deprecated("Bruk typeBehandling")
-    val type: String,
     val typeBehandling: TypeBehandling,
     val status: Status,
     val vurderingsbehov: List<Vurderingsbehov>,
