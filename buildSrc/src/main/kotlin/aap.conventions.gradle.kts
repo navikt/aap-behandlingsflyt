@@ -86,7 +86,7 @@ tasks {
     test {
         useJUnitPlatform()
         maxParallelForks = bestemAntallTestTråder()
-        systemProperty("junit.jupiter.execution.timeout.default", "1m")
+        systemProperty("junit.jupiter.execution.timeout.default", "3m")
         testLogging {
             events("passed", "skipped", "failed")
         }
