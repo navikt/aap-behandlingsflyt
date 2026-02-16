@@ -5,10 +5,8 @@ import no.nav.aap.behandlingsflyt.behandling.rettighetstype.KvoteOk
 import no.nav.aap.behandlingsflyt.behandling.rettighetstype.vurderRettighetstypeOgKvoter
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.VirkningstidspunktUtleder
 import no.nav.aap.behandlingsflyt.behandling.underveis.KvoteService
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Avslag
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companion.plussEtÅrMedHverdager
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Kvote
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.VarighetRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.ÅrMedHverdager
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
@@ -17,8 +15,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.Vedt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeVurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
@@ -32,14 +28,12 @@ class VedtakslengdeService(
     private val vedtakslengdeRepository: VedtakslengdeRepository,
     private val underveisRepository: UnderveisRepository,
     private val vilkårsresultatRepository: VilkårsresultatRepository,
-    private val unleashGateway: UnleashGateway,
     private val clock: Clock = Clock.systemDefaultZone()
 ) {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         vedtakslengdeRepository =  repositoryProvider.provide(),
         underveisRepository = repositoryProvider.provide(),
         vilkårsresultatRepository = repositoryProvider.provide(),
-        unleashGateway = gatewayProvider.provide(),
     )
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -175,22 +169,11 @@ class VedtakslengdeService(
         val nyUtvidetVedtaksperiode = Periode(vedtattSluttdato.plusDays(1), utvidetSluttdato)
         val nyUtvidetVedtaksperiodeTidslinje = Tidslinje(nyUtvidetVedtaksperiode, true)
 
-        if (unleashGateway.isEnabled(BehandlingsflytFeature.ForenkletKvote)) {
-            return vurderRettighetstypeOgKvoter(vilkårsresultatRepository.hent(behandlingId), KvoteService().beregn())
-                .rightJoin(nyUtvidetVedtaksperiodeTidslinje) { vurdering, _ ->
-                    vurdering != null && vurdering is KvoteOk && Kvote.ORDINÆR in vurdering.brukerAvKvoter()
-                }
-                .segmenter()
-                .all { it.verdi }
-
-        } else {
-            val rettighetstypeTidslinjeForInneværendeBehandling = vilkårsresultatRepository.hent(behandlingId).rettighetstypeTidslinje()
-            return VarighetRegel().simuler(rettighetstypeTidslinjeForInneværendeBehandling)
-                .rightJoin(nyUtvidetVedtaksperiodeTidslinje) { vurdering, _ ->
-                    vurdering != null && vurdering !is Avslag && vurdering.brukerAvKvoter.any { kvote -> kvote == Kvote.ORDINÆR }
-                }
-                .segmenter()
-                .all { it.verdi }
-        }
+        return vurderRettighetstypeOgKvoter(vilkårsresultatRepository.hent(behandlingId), KvoteService().beregn())
+            .rightJoin(nyUtvidetVedtaksperiodeTidslinje) { vurdering, _ ->
+                vurdering != null && vurdering is KvoteOk && Kvote.ORDINÆR in vurdering.brukerAvKvoter()
+            }
+            .segmenter()
+            .all { it.verdi }
     }
 }

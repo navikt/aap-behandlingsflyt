@@ -16,6 +16,7 @@ import org.slf4j.LoggerFactory
 import java.time.Year
 import java.time.YearMonth
 
+// TODO: ta inn både månedsinntekt og årsinntekt, og velg basert på uføre-grad
 class UføreBeregning(
     private val grunnlag: Grunnlag11_19,
     private val uføregrader: Set<Uføre>,

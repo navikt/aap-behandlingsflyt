@@ -8,7 +8,7 @@ import java.util.concurrent.ConcurrentHashMap
 
 object InMemoryTilkjentYtelseRepository : TilkjentYtelseRepository {
     private val tilkjentYtelse = ConcurrentHashMap<BehandlingId, List<TilkjentYtelsePeriode>>()
-    private val lock = Object()
+    private val lock = Any()
 
     override fun hentHvisEksisterer(behandlingId: BehandlingId): List<TilkjentYtelsePeriode>? {
         synchronized(lock) {
@@ -28,6 +28,9 @@ object InMemoryTilkjentYtelseRepository : TilkjentYtelseRepository {
     }
 
     override fun slett(behandlingId: BehandlingId) {
+        synchronized(lock) {
+            tilkjentYtelse.remove(behandlingId)
+        }
     }
 
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {

@@ -35,7 +35,7 @@ import java.net.URI
 import java.time.Duration
 import java.time.LocalDate
 
-class ApiInternGatewayImpl() : ApiInternGateway {
+class ApiInternGatewayImpl : ApiInternGateway {
 
     companion object : Factory<ApiInternGateway> {
         override fun konstruer(): ApiInternGateway {

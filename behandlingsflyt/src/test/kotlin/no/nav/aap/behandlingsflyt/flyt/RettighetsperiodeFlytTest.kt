@@ -37,6 +37,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedP
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.FeatureToggle
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
@@ -55,7 +57,8 @@ import kotlin.reflect.KClass
 
 @ParameterizedClass
 @MethodSource("unleashTestDataSource")
-class RettighetsperiodeFlytTest(val unleashGateway: KClass<UnleashGateway>) : AbstraktFlytOrkestratorTest(unleashGateway) {
+class RettighetsperiodeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
+    AbstraktFlytOrkestratorTest(unleashGateway) {
 
     @Test
     fun `Skal ikke kunne overstyre rettighetsperioden på en revurdering ved å innskrenke fra søknadsdato`() {
@@ -315,7 +318,27 @@ class RettighetsperiodeFlytTest(val unleashGateway: KClass<UnleashGateway>) : Ab
             }
             .løsSykdom(nyStartDato)
             .løsBistand(nyStartDato)
+            .medKontekst {
+                val åpneAvklaringsbehov = hentÅpneAvklaringsbehov(oppdatertBehandling.id)
+                assertThat(åpneAvklaringsbehov).hasSize(2)
+                assertThat(åpneAvklaringsbehov).anySatisfy {
+                    assertThat(it.definisjon).isEqualTo(Definisjon.SKRIV_SYKDOMSVURDERING_BREV)
+                }
+
+            }
             .løsSykdomsvurderingBrev()
+            .medKontekst {
+                val åpneAvklaringsbehov = hentÅpneAvklaringsbehov(oppdatertBehandling.id)
+                if (unleashGateway.objectInstance?.isEnabled(BehandlingsflytFeature.KvalitetssikringVed2213) == true) {
+                    assertThat(åpneAvklaringsbehov).hasSize(2)
+                    assertThat(åpneAvklaringsbehov).anySatisfy {
+                        assertThat(it.definisjon).isEqualTo(Definisjon.KVALITETSSIKRING)
+                    }
+                } else {
+                    assertThat(åpneAvklaringsbehov).hasSize(1)
+                    assertThat(åpneAvklaringsbehov.first().definisjon).isEqualTo(Definisjon.FASTSETT_BEREGNINGSTIDSPUNKT)
+                }
+            }
             .kvalitetssikreOk()
             .løsBeregningstidspunkt(nyStartDato)
             .løsOppholdskrav(nyStartDato)

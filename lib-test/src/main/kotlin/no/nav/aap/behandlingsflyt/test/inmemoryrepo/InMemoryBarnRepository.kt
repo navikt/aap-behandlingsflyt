@@ -20,7 +20,7 @@ object InMemoryBarnRepository : BarnRepository {
     private val saksbehandlerOppgitteBarn = ConcurrentHashMap<BehandlingId, SaksbehandlerOppgitteBarn>()
     private val registerBarn = ConcurrentHashMap<BehandlingId, List<Barn>>()
     private val vurdertBarn = ConcurrentHashMap<BehandlingId, List<VurdertBarn>>()
-    private val lock = Object()
+    private val lock = Any()
 
     override fun hentHvisEksisterer(behandlingId: BehandlingId): BarnGrunnlag? {
         synchronized(lock) {

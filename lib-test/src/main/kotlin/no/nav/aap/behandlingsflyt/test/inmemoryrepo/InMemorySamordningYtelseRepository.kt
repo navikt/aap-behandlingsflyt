@@ -10,7 +10,7 @@ import java.util.concurrent.atomic.AtomicLong
 
 object InMemorySamordningYtelseRepository : SamordningYtelseRepository {
     private val ytelser = ConcurrentHashMap<BehandlingId, List<Pair<SamordningYtelseGrunnlag, Instant>>>()
-    private val lock = Object()
+    private val lock = Any()
     private val idSeq = AtomicLong(10000)
 
 
@@ -71,5 +71,8 @@ object InMemorySamordningYtelseRepository : SamordningYtelseRepository {
     }
 
     override fun slett(behandlingId: BehandlingId) {
+        synchronized(lock) {
+            ytelser.remove(behandlingId)
+        }
     }
 }

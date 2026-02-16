@@ -23,7 +23,7 @@ object InMemoryBehandlingRepository : BehandlingRepository {
     private val idSeq = AtomicLong(10000)
     private val memory = HashMap<BehandlingId, Behandling>()
     private val memoryStegHistorikk = HashMap<BehandlingId, List<StegTilstand>>()
-    private val lock = Object()
+    private val lock = Any()
 
     override fun opprettBehandling(
         sakId: SakId,

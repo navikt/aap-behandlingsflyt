@@ -7,7 +7,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 object InMemoryVilkårsresultatRepository : VilkårsresultatRepository {
 
     private val memory = HashMap<BehandlingId, Vilkårsresultat>()
-    private val lock = Object()
+    private val lock = Any()
 
     override fun lagre(
         behandlingId: BehandlingId,
@@ -34,5 +34,8 @@ object InMemoryVilkårsresultatRepository : VilkårsresultatRepository {
     }
 
     override fun slett(behandlingId: BehandlingId) {
+        synchronized(lock) {
+            memory.remove(behandlingId)
+        }
     }
 }

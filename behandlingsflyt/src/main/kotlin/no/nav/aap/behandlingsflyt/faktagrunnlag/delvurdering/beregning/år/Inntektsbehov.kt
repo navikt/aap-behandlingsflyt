@@ -13,22 +13,11 @@ import org.slf4j.LoggerFactory
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.Year
-import java.util.SortedSet
+import java.util.*
 
 class Inntektsbehov(private val beregningInput: BeregningInput) {
 
     private val log = LoggerFactory.getLogger(javaClass)
-
-    /**
-     * Returnerer en mengde av de tre foregående årene fra nedsettelsesdatoen og
-     * dato for ytterligere nedsatt arbeidsevne.
-     */
-    fun utledAlleRelevanteÅr(): Set<Year> {
-        val ytterligereNedsattArbeidsevneDato =
-            beregningInput.beregningGrunnlag?.tidspunktVurdering?.ytterligereNedsattArbeidsevneDato
-        val nedsettelsesDato = beregningInput.nedsettelsesDato
-        return utledAlleRelevanteÅr(nedsettelsesDato, ytterligereNedsattArbeidsevneDato)
-    }
 
     fun hentYtterligereNedsattArbeidsevneDato(): LocalDate? {
         return beregningInput.beregningGrunnlag?.tidspunktVurdering?.ytterligereNedsattArbeidsevneDato
@@ -51,10 +40,14 @@ class Inntektsbehov(private val beregningInput: BeregningInput) {
             .mapValues { (_, value) -> value.sumOf { it.beløp.verdi }.let(::Beløp) }
 
         inntektPerÅrFraPerioder.forEach { (år, sum) ->
-            // Forskjell på inntektene kan ikke være større enn 1 kr
-            val differanse = (beregningInput.årsInntekter.first { it.år == år }.beløp.verdi.stripTrailingZeros() - sum.verdi.stripTrailingZeros()).abs()
+            // Forskjell på inntektene kan ikke være større enn 100 kr
+            // Mest for sanity - denne sjekken kan nok fjernes, men helst etter at vi har blitt litt smartere
+            // i når vi bruker A-Inntekt som kilde. Om uføregraden er konstant et år, bør POPP brukes, for da trengs ikke
+            // månedsinntekter.
+            val differanse =
+                (beregningInput.årsInntekter.first { it.år == år }.beløp.verdi.stripTrailingZeros() - sum.verdi.stripTrailingZeros()).abs()
             require(
-                differanse < BigDecimal.ONE
+                differanse < BigDecimal(100)
             )
             { "Håndterer ikke å støtte forskjellig inntekt fra A-Inntekt og PESYS. Fikk $sum for år $år, men fant ${beregningInput.årsInntekter.filter { it.år == år }}" }
         }

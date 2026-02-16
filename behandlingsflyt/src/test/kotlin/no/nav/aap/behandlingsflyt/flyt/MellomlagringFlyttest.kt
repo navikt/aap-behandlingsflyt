@@ -14,7 +14,7 @@ import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
 @Tag("motor")
-class MellomlagringFlyttest() : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
+class MellomlagringFlyttest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
 
     @Test
     fun `skal nullstille mellomlagret verdi når avklaringsbehov løses - og nullstille hengende mellomlagrede verdier ved iverksettelse`() {

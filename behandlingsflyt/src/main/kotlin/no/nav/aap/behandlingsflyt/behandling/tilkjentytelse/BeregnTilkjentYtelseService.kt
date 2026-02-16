@@ -79,13 +79,12 @@ class BeregnTilkjentYtelseService(private val grunnlag: TilkjentYtelseGrunnlag) 
                 rettTilBarnetillegg = rettTilBarnetillegg
             )
 
+            val ikkeOppfylt = underveisperiode.utfall == Utfall.IKKE_OPPFYLT
+
             Tilkjent(
                 dagsats = grunnbeløp.multiplisert(dagsatsG),
-                gradering = if (underveisperiode.utfall == Utfall.IKKE_OPPFYLT)
-                    `0_PROSENT`
-                else
-                    graderingGrunnlag.gradering(),
-                graderingGrunnlag = graderingGrunnlag,
+                gradering = if (ikkeOppfylt) `0_PROSENT` else graderingGrunnlag.gradering(),
+                graderingGrunnlag = if (ikkeOppfylt) graderingGrunnlag.copy(institusjonGradering = `0_PROSENT`) else graderingGrunnlag,
                 barnetillegg = barnetillegg.barnetillegg,
                 antallBarn = barnetillegg.antallBarn,
                 barnetilleggsats = barnetillegg.barnetilleggsats,
@@ -178,6 +177,7 @@ class BeregnTilkjentYtelseService(private val grunnlag: TilkjentYtelseGrunnlag) 
     private fun beregnDagsatsTidslinje(): Tidslinje<Dagsats> {
         /** § 11-19 Grunnlaget for beregningen av arbeidsavklaringspenger. */
         val grunnlagsfaktor = grunnlag.beregningsgrunnlag ?: GUnit(0)
+
         /** § 11-20 første avsnitt:
          * > Arbeidsavklaringspenger gis med 66 prosent av grunnlaget, se § 11-19.
          * > Minste årlige ytelse er 2,041 ganger grunnbeløpet.
