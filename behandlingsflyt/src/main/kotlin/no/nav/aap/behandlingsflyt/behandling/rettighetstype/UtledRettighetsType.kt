@@ -245,3 +245,4 @@ fun utledStansEllerOpphør(
         }
         .toMap()
 }
+
