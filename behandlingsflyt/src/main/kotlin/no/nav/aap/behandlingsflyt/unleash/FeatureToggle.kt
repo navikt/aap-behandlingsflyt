@@ -11,7 +11,6 @@ enum class BehandlingsflytFeature : FeatureToggle {
     NyBrevbyggerV3,
     LagreVedtakIFatteVedtak,
     Under18,
-    SosialRefusjon,
     SendBrevVedMottattKlage,
     ForlengelseIManuellBehandling,
     UtvidVedtakslengdeJobb,
