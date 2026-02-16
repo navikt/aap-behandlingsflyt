@@ -43,7 +43,7 @@ class HåndterUbehandledeMeldekortForSakJobbUtfører(
 
     companion object : ProvidersJobbSpesifikasjon {
         override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): JobbUtfører {
-            return HåndterUbehandledeDokumenterJobbUtfører(
+            return HåndterUbehandledeMeldekortForSakJobbUtfører(
                 mottattDokumentRepository = repositoryProvider.provide(),
                 flytJobbRepository = repositoryProvider.provide(),
                 unleashGateway = gatewayProvider.provide()
