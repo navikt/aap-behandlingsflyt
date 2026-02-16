@@ -67,7 +67,7 @@ class SignaturServiceTest(
         every { unleashGateway.isEnabled(BehandlingsflytFeature.SignaturEnhetFraOppgave) } returns hentEnhetFraOppgave
         val behandlingId = slot<BehandlingId>()
         every { avklaringsbehovOperasjonerRepository.hent(capture(behandlingId)) } answers {
-            behandlingTilAvklaringsbehovene.getValue(behandlingId.captured)
+            behandlingTilAvklaringsbehovene[behandlingId.captured] ?: emptyList()
         }
         every { avklaringsbehovRepository.hentAvklaringsbehovene(capture(behandlingId)) } answers {
             Avklaringsbehovene(
@@ -442,6 +442,68 @@ class SignaturServiceTest(
                 SignaturGrunnlag(navIdent = veilederIdent, rolle = Rolle.SAKSBEHANDLER_OPPFOLGING, enhet = null),
             )
         }
+    }
+
+    @Test
+    fun `innlogget bruker i signatur dersom det ikke er et vedtaksbrev`() {
+        val behandling = gittBehandling()
+        val brevbestilling = Brevbestilling(
+            id = 0,
+            behandlingId = behandling.id,
+            typeBrev = TypeBrev.FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT,
+            referanse = BrevbestillingReferanse(UUID.randomUUID()),
+            status = Status.FORHÅNDSVISNING_KLAR,
+            opprettet = LocalDateTime.now()
+        )
+        val innloggetBrukerIdent = "i000000"
+
+        leggTilEndring(
+            behandling = behandling,
+            definisjon = Definisjon.SKRIV_VEDTAKSBREV,
+            endretAv = SYSTEMBRUKER.ident,
+            status = AvklaringsbehovStatus.OPPRETTET,
+            oppgaveEnhet = "1234"
+        )
+
+        val signaturer = signaturService.finnSignaturGrunnlag(brevbestilling, Bruker(innloggetBrukerIdent))
+
+        if (hentEnhetFraOppgave) { // Identisk assert i tillegg til å sjekke enhet
+            assertThat(signaturer).containsExactly(
+                SignaturGrunnlag(navIdent = innloggetBrukerIdent, rolle = null, enhet = "1234")
+            )
+        } else {
+            assertThat(signaturer).containsExactly(
+                SignaturGrunnlag(navIdent = innloggetBrukerIdent, rolle = null, enhet = null)
+            )
+        }
+    }
+
+    @Test
+    fun `gir signatur men uten enhet dersom oppgave ikke har enhet for definisjon på avklaringsbehovet`() {
+        val behandling = gittBehandling()
+        val brevbestilling = Brevbestilling(
+            id = 0,
+            behandlingId = behandling.id,
+            typeBrev = TypeBrev.VEDTAK_11_17,
+            referanse = BrevbestillingReferanse(UUID.randomUUID()),
+            status = Status.FORHÅNDSVISNING_KLAR,
+            opprettet = LocalDateTime.now()
+        )
+        val beslutterIdent = "b000000"
+
+        leggTilEndring(
+            behandling = behandling,
+            definisjon = Definisjon.FATTE_VEDTAK,
+            endretAv = beslutterIdent,
+            status = AvklaringsbehovStatus.AVSLUTTET,
+            oppgaveEnhet = null
+        )
+
+        val signaturer = signaturService.finnSignaturGrunnlag(brevbestilling, Bruker(""))
+
+        assertThat(signaturer).containsExactly(
+            SignaturGrunnlag(navIdent = beslutterIdent, rolle = Rolle.BESLUTTER, enhet = null)
+        )
     }
 
     private fun leggTilEndring(
