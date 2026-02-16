@@ -105,6 +105,8 @@ class VedtakslengdeService(
         val nyEllerEndretSluttdato = vedtattVedtakslengdeGrunnlag == null || vedtattVedtakslengdeGrunnlag.vurdering.sluttdato != sluttdato
 
         if (nyEllerEndretSluttdato) {
+            log.info("Sluttdato endret fra $vedtattSluttdato til $sluttdato for behandling $behandlingId")
+
             vedtakslengdeRepository.lagre(
                 behandlingId, VedtakslengdeVurdering(
                     sluttdato = sluttdato,
@@ -127,19 +129,26 @@ class VedtakslengdeService(
 
         val sluttdatoForBehandlingen = when (sisteRettighetstypeSegment?.verdi) {
             RettighetsType.BISTANDSBEHOV, null -> {
-                // Returnere til og med kvote-slutt dersom denne datoen kommer før utledet sluttdato
+                val initiellSluttdato = utledInitiellSluttdato(behandlingId, rettighetsperiode).tom
+                val gjeldendeSluttdato = listOfNotNull(initiellSluttdato, vedtattSluttdato).max()
                 val sisteDatoMedKvoteOppfylt = sisteRettighetstypeSegment?.periode?.tom
-                listOfNotNull(sisteDatoMedKvoteOppfylt, utledInitiellSluttdato(behandlingId, rettighetsperiode).tom).min()
+
+                // Returnere til og med kvote-slutt dersom denne datoen kommer før gjeldende sluttdato
+                listOfNotNull(sisteDatoMedKvoteOppfylt, gjeldendeSluttdato).min()
             }
             RettighetsType.SYKEPENGEERSTATNING,
             RettighetsType.STUDENT,
             RettighetsType.VURDERES_FOR_UFØRETRYGD,
-            RettighetsType.ARBEIDSSØKER ->
+            RettighetsType.ARBEIDSSØKER -> {
                 sisteRettighetstypeSegment.periode.tom
+            }
         }
 
-        // Tillater ikke innskrenkelse av vedtakslengde da forrige vedtak kan ha generert meldeperioder
-        return listOfNotNull(sluttdatoForBehandlingen, vedtattSluttdato).max()
+        // Tillater ikke innskrenkelse av vedtakslengde da forrige vedtak kan ha sendt over perioder til utbetaling
+        val endeligSluttdato = listOfNotNull(sluttdatoForBehandlingen, vedtattSluttdato).max()
+
+        log.info("Setter sluttdato $endeligSluttdato basert på rettighetstype ${sisteRettighetstypeSegment?.verdi}")
+        return endeligSluttdato
     }
 
     @Deprecated("Den første varianten - denne vil utvide med ett år uavhengig av rettighetstype")
