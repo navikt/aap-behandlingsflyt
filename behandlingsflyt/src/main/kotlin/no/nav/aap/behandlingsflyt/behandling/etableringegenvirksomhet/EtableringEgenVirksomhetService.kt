@@ -55,6 +55,16 @@ class EtableringEgenVirksomhetService(
                 "11-5 & 11-6b må være oppfylt i minst én periode"
             )
         }
+
+        if (nyeVurderinger.any { vurdering ->
+                gyldighetPeriode.none { gyldighetPeriode -> gyldighetPeriode.inneholder(vurdering.vurderingenGjelderFra) }
+            }
+        ) {
+            return VirksomhetEtableringGyldig(
+                false,
+                "Vurderte perioder må falle innen en periode med oppfylt 11-5 & 11-6b")
+        }
+
         val førsteMuligeDato = gyldighetPeriode.first().fom
 
         if (nyeVurderinger.any { evaluerVirksomhetVurdering(it) && it.utviklingsPerioder.isEmpty() && it.oppstartsPerioder.isEmpty() }) {
@@ -106,10 +116,10 @@ class EtableringEgenVirksomhetService(
     }
 
     fun evaluerVirksomhetVurdering(vurdering: EtableringEgenVirksomhetVurdering): Boolean {
-        return vurdering.virksomhetErNy == true && vurdering.kanFøreTilSelvforsørget == true && vurdering.foreliggerFagligVurdering && listOf(
+        return vurdering.virksomhetErNy == true && vurdering.kanFøreTilSelvforsørget == true && vurdering.foreliggerFagligVurdering && vurdering.brukerEierVirksomheten in listOf(
             EierVirksomhet.EIER_MINST_50_PROSENT,
             EierVirksomhet.EIER_MINST_50_PROSENT_MED_FLER
-        ).contains(vurdering.brukerEierVirksomheten)
+        )
     }
 
     fun utledGyldighetsPeriode(

@@ -99,7 +99,7 @@ fun NormalOpenAPIRoute.etableringEgenVirksomhetApi(
                             definisjon = Definisjon.ETABLERING_EGEN_VIRKSOMHET,
                             behandlingId = behandling.id
                         ),
-                        ikkeVurderbarePerioder = ikkeVurderbarePerioder
+                        ikkeRelevantePerioder = ikkeVurderbarePerioder,
                     )
                 }
             respond(

@@ -162,13 +162,7 @@ object Revurdering : BehandlingType {
             .medSteg(
                 steg = EtableringEgenVirksomhetSteg, vurderingsbehovRelevanteForSteg = listOf(
                     Vurderingsbehov.MOTTATT_SØKNAD,
-                    Vurderingsbehov.MOTTATT_DIALOGMELDING,
-                    Vurderingsbehov.MOTTATT_LEGEERKLÆRING,
-                    Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND,
-                    Vurderingsbehov.VURDER_RETTIGHETSPERIODE,
                     Vurderingsbehov.HELHETLIG_VURDERING,
-                    Vurderingsbehov.REVURDER_LOVVALG,
-                    Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP,
                     Vurderingsbehov.ETABLERING_EGEN_VIRKSOMHET
                 )
             )

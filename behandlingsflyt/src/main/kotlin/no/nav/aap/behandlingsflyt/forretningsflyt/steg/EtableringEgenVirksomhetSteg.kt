@@ -18,6 +18,7 @@ import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.somTidslinje
+import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
 
 class EtableringEgenVirksomhetSteg(
@@ -61,18 +62,18 @@ class EtableringEgenVirksomhetSteg(
     }
 
     private fun nårVurderingErRelevant(kontekst: FlytKontekstMedPerioder): Tidslinje<Boolean> {
-        if (Vurderingsbehov.ETABLERING_EGEN_VIRKSOMHET in kontekst.vurderingsbehovRelevanteForSteg) {
-            return Tidslinje(kontekst.rettighetsperiode, true)
-        }
         val tidligereVurderingsutfall = tidligereVurderinger.behandlingsutfall(kontekst, type())
         val relevantPeriode =
             etableringEgenVirksomhetService.utledGyldighetsPeriode(
                 kontekst.behandlingId,
                 kontekst.rettighetsperiode.fom.plusDays(1)
-            )
-                .somTidslinje { it }
-        val grunnlag = etableringEgenVirksomhetRepository.hentHvisEksisterer(kontekst.behandlingId)
+            ).somTidslinje { it }
 
+        if (Vurderingsbehov.ETABLERING_EGEN_VIRKSOMHET in kontekst.vurderingsbehovRelevanteForSteg) {
+            return Tidslinje(Periode(kontekst.rettighetsperiode.fom.plusDays(1), kontekst.rettighetsperiode.tom), true)
+        }
+
+        val grunnlag = etableringEgenVirksomhetRepository.hentHvisEksisterer(kontekst.behandlingId)
 
         return Tidslinje.map2(tidligereVurderingsutfall, relevantPeriode) { utfall, relevantPeriode ->
             when (utfall) {

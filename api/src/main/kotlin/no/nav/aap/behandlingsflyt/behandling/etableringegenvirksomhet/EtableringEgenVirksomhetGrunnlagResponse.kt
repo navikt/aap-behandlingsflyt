@@ -17,8 +17,8 @@ data class EtableringEgenVirksomhetGrunnlagResponse(
     override val nyeVurderinger: List<EtableringEgenVirksomhetVurderingResponse>,
     override val kanVurderes: List<Periode>,
     override val behøverVurderinger: List<Periode>,
-    val kvalitetssikretAv: VurdertAvResponse?,
-    val ikkeVurderbarePerioder: List<Periode>
+    override val ikkeRelevantePerioder: List<Periode>,
+    val kvalitetssikretAv: VurdertAvResponse?
 ) : PeriodiserteVurderingerDto<EtableringEgenVirksomhetVurderingResponse>
 
 data class EtableringEgenVirksomhetVurderingResponse(
