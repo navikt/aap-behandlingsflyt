@@ -24,6 +24,7 @@ import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.gateway.Factory
 import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
 import no.nav.aap.komponenter.httpklient.httpclient.RestClient
+import no.nav.aap.komponenter.httpklient.httpclient.post
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
 import no.nav.aap.komponenter.json.DefaultJsonMapper
@@ -119,6 +120,7 @@ class ApiInternGatewayImpl : ApiInternGateway {
                             tilkjentFom = tilkjentPeriode.periode.fom,
                             tilkjentTom = tilkjentPeriode.periode.tom,
                             dagsats = tilkjentPeriode.tilkjent.dagsats.verdi.toInt(),
+                            // legg til redusert dagsats
                             gradering = tilkjentPeriode.tilkjent.gradering.prosentverdi(),
                             samordningUføregradering = tilkjentPeriode.tilkjent.graderingGrunnlag.samordningUføregradering.prosentverdi(),
                             // TODO: fjern
@@ -152,24 +154,16 @@ class ApiInternGatewayImpl : ApiInternGateway {
     ) {
         log.info("Sender meldekort-detaljer for sakId=${sakId}, behandlingId=${behandlingId}")
 
-        try {
-            restClient.post(
-                uri.resolve("/api/insert/meldekort-detaljer"),
-                PostRequest(body = detaljertMeldekortListe),
-                mapper = { _, _ -> }
-            )
-        } catch (e: Exception) {
-            log.warn("Klarte ikke sende meldekort-detaljer for sakId=${sakId}, behandlingId=${behandlingId}", e)
-            throw e
-        }
-
+        restClient.post<List<DetaljertMeldekortDTO>, Unit>(
+            uri.resolve("/api/insert/meldekort-detaljer"),
+            PostRequest(body = detaljertMeldekortListe)
+        )
     }
 
     override fun hentArenaStatus(personidentifikatorer: Set<String>): ArenaStatusResponse {
-        val cacheKey = personidentifikatorer
         // Kalles ofte fra saksbehandling, så cache den
-        return arenaStatusCache.get(cacheKey, {
-            val sakerRequest = SakerRequest(personidentifikatorer = cacheKey.toList())
+        return arenaStatusCache.get(personidentifikatorer, {
+            val sakerRequest = SakerRequest(personidentifikatorer = personidentifikatorer.toList())
             doHentArenaStatus(sakerRequest)
         })
     }
