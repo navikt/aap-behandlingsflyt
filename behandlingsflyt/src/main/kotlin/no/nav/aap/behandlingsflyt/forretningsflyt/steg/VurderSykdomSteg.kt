@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovMetadataUtleder
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
@@ -22,8 +23,8 @@ class VurderSykdomSteg(
     private val sykdomRepository: SykdomRepository,
     private val tidligereVurderinger: TidligereVurderinger,
     private val avklaringsbehovService: AvklaringsbehovService,
-) : BehandlingSteg {
-    constructor(repositoryProvider: RepositoryProvider, gstewayProvider: GatewayProvider) : this(
+) : BehandlingSteg, AvklaringsbehovMetadataUtleder {
+    constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         studentRepository = repositoryProvider.provide(),
         sykdomRepository = repositoryProvider.provide(),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
@@ -34,7 +35,7 @@ class VurderSykdomSteg(
         avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
             definisjon = Definisjon.AVKLAR_SYKDOM,
             tvingerAvklaringsbehov = kontekst.vurderingsbehovRelevanteForSteg,
-            nårVurderingErRelevant = ::perioderHvorSykdomsvurderingErRelevant,
+            nårVurderingErRelevant = ::nårVurderingErRelevant,
             nårVurderingErGyldig = { tilstrekkeligVurdert(kontekst) },
             kontekst,
             tilbakestillGrunnlag = {
@@ -48,7 +49,7 @@ class VurderSykdomSteg(
         return Fullført
     }
 
-    private fun perioderHvorSykdomsvurderingErRelevant(kontekst: FlytKontekstMedPerioder): Tidslinje<Boolean> {
+    override fun nårVurderingErRelevant(kontekst: FlytKontekstMedPerioder): Tidslinje<Boolean> {
         val tidligereVurderingsutfall = tidligereVurderinger.behandlingsutfall(
             kontekst,
             type()

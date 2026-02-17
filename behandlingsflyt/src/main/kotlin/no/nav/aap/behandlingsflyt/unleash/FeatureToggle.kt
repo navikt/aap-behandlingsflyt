@@ -11,7 +11,6 @@ enum class BehandlingsflytFeature : FeatureToggle {
     NyBrevbyggerV3,
     LagreVedtakIFatteVedtak,
     Under18,
-    SosialRefusjon,
     SendBrevVedMottattKlage,
     ForlengelseIManuellBehandling,
     UtvidVedtakslengdeJobb,
@@ -23,7 +22,8 @@ enum class BehandlingsflytFeature : FeatureToggle {
     VirksomhetsEtablering,
     KvalitetssikringVed2213,
     tilbakekrevingsOppgaverTilOppgave,
-    PeriodiseringHelseinstitusjonOpphold
+    PeriodiseringHelseinstitusjonOpphold,
+    HentingAvInstitusjonsOpphold
     ;
 
     override fun key(): String = name

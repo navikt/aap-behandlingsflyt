@@ -65,6 +65,7 @@ class LovvalgOgMedlemskapFlytTest: AbstraktFlytOrkestratorTest(AlleAvskruddUnlea
                 )
             )
             .medKontekst {
+                assertThat(åpneAvklaringsbehov.size).isEqualTo(1)
                 assertThat(åpneAvklaringsbehov.first().definisjon).isEqualTo(Definisjon.VENTE_PÅ_UTENLANDSK_VIDEREFØRING_AVKLARING)
             }
 

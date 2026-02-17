@@ -3,11 +3,13 @@ package no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.overgang
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovMetadataService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.sykdom.SykdomsvurderingResponse
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
+import no.nav.aap.behandlingsflyt.forretningsflyt.steg.OvergangUføreSteg
 import no.nav.aap.behandlingsflyt.harTilgangOgKanSaksbehandle
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
@@ -44,6 +46,8 @@ fun NormalOpenAPIRoute.overgangUforeGrunnlagApi(
                     val sykdomRepository = repositoryProvider.provide<SykdomRepository>()
                     val vurdertAvService = VurdertAvService(repositoryProvider, gatewayProvider)
                     val sakRepository = repositoryProvider.provide<SakRepository>()
+                    val overgangUføreSteg = OvergangUføreSteg(repositoryProvider, gatewayProvider)
+                    val avklaringsbehovMetadataService = AvklaringsbehovMetadataService(repositoryProvider, gatewayProvider)
 
                     val behandling: Behandling =
                         BehandlingReferanseService(behandlingRepository).behandling(req)
@@ -91,6 +95,10 @@ fun NormalOpenAPIRoute.overgangUforeGrunnlagApi(
                                 sak.rettighetsperiode.fom.minusMonths(8),
                                 sak.rettighetsperiode.tom
                             )
+                        ),
+                        ikkeRelevantePerioder = avklaringsbehovMetadataService.perioderSomSkalFremhevesSomIkkeRelevant(
+                            overgangUføreSteg,
+                            behandling,
                         ),
                         behøverVurderinger = avklaringsbehov?.perioderVedtaketBehøverVurdering().orEmpty().toList(),
                         perioderSomIkkeErTilstrekkeligVurdert = avklaringsbehov?.perioderSomIkkeErTilstrekkeligVurdert()

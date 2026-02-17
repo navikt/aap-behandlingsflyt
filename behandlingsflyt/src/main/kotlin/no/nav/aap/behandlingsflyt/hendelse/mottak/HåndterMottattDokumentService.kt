@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.hendelse.mottak
 
+import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.behandling.tilbakekrevingsbehandling.TilbakekrevingBehandlingsstatus
 import no.nav.aap.behandlingsflyt.behandling.tilbakekrevingsbehandling.TilbakekrevingService
 import no.nav.aap.behandlingsflyt.behandling.tilbakekrevingsbehandling.Tilbakekrevingshendelse
@@ -33,6 +34,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.PdlHendelseV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.TilbakekrevingHendelse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.TilbakekrevingHendelseV0
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
+import no.nav.aap.behandlingsflyt.prosessering.OppdagEndretInformasjonskravJobbUtfører
 import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingService
 import no.nav.aap.behandlingsflyt.prosessering.tilbakekreving.FagsysteminfoSvarHendelse
 import no.nav.aap.behandlingsflyt.prosessering.tilbakekreving.MottakerDto
@@ -50,6 +52,8 @@ import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.lookup.repository.RepositoryProvider
+import no.nav.aap.motor.FlytJobbRepository
+import no.nav.aap.motor.JobbInput
 import no.nav.aap.utbetaling.helved.base64ToUUID
 import org.slf4j.LoggerFactory
 import java.net.URI
@@ -65,6 +69,8 @@ class HåndterMottattDokumentService(
     private val behandlingRepository: BehandlingRepository,
     private val vedtakRepository: VedtakRepository,
     private val tilbakekrevingService: TilbakekrevingService,
+    private val trukketSøknadService: TrukketSøknadService,
+    private val flytJobbRepository: FlytJobbRepository,
 ) {
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -78,7 +84,9 @@ class HåndterMottattDokumentService(
         behandlingRepository = repositoryProvider.provide<BehandlingRepository>(),
         vedtakRepository = repositoryProvider.provide<VedtakRepository>(),
         tilbakekrevingService = TilbakekrevingService(repositoryProvider, gatewayProvider),
-    )
+        trukketSøknadService = TrukketSøknadService(repositoryProvider),
+        flytJobbRepository = repositoryProvider.provide<FlytJobbRepository>(),
+        )
 
     fun håndterMottatteKlage(
         sakId: SakId,
@@ -316,6 +324,20 @@ class HåndterMottattDokumentService(
         }
     }
 
+    fun håndterMottattSykepengevedtakHendelse(
+        sakId: SakId,
+        referanse: InnsendingReferanse,
+    ) {
+        val sisteYtelsesBehandling = sakOgBehandlingService.finnSisteYtelsesbehandlingFor(sakId)
+            ?: error("Finnes ingen ytelsesbehandling for sakId $sakId")
+        if (!trukketSøknadService.søknadErTrukket(sisteYtelsesBehandling.id)) {
+            flytJobbRepository.leggTil(
+                JobbInput(jobb = OppdagEndretInformasjonskravJobbUtfører).forSak(sakId.toLong()).medCallId()
+            )
+        }
+        mottaDokumentService.markerSomBehandlet(sakId, sisteYtelsesBehandling.id, referanse)
+    }
+
 
     private fun FagsysteminfoBehovV0.tilFagsysteminfoSvarHendelse(sakId: SakId): FagsysteminfoSvarHendelse {
         val sak = sakService.hent(sakId)
@@ -453,6 +475,7 @@ class HåndterMottattDokumentService(
             InnsendingType.TILBAKEKREVING_HENDELSE -> ÅrsakTilOpprettelse.TILBAKEKREVING_HENDELSE
             InnsendingType.INSTITUSJONSOPPHOLD -> ÅrsakTilOpprettelse.ENDRING_I_REGISTERDATA
             InnsendingType.FAGSYSTEMINFO_BEHOV_HENDELSE -> ÅrsakTilOpprettelse.FAGSYSTEMINFO_BEHOV_HENDELSE
+            InnsendingType.SYKEPENGE_VEDTAK_HENDELSE -> throw IllegalArgumentException("Sykepengevedtakhendelser skal trigge sjekk av informasjonskrav og ikke opprette en behandling direkte")
         }
     }
 
@@ -535,6 +558,7 @@ class HåndterMottattDokumentService(
             InnsendingType.TILBAKEKREVING_HENDELSE -> emptyList()
             InnsendingType.INSTITUSJONSOPPHOLD -> listOf(VurderingsbehovMedPeriode(Vurderingsbehov.INSTITUSJONSOPPHOLD))
             InnsendingType.FAGSYSTEMINFO_BEHOV_HENDELSE -> emptyList()
+            InnsendingType.SYKEPENGE_VEDTAK_HENDELSE -> emptyList()
         }
     }
 
@@ -568,4 +592,5 @@ class HåndterMottattDokumentService(
             else -> null
         }
     }
+
 }

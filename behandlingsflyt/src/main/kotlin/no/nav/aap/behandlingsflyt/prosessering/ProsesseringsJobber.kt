@@ -40,7 +40,8 @@ object ProsesseringsJobber {
             SjekkInstitusjonsOppholdJobbUtfører,
             HåndterUbehandledeDokumenterJobbUtfører,
             HåndterUbehandletDokumentJobbUtfører,
-            DigitaliserteMeldekortTilMeldekortBackendJobbUtfører
+            DigitaliserteMeldekortTilMeldekortBackendJobbUtfører,
+            HåndterUbehandledeMeldekortForSakJobbUtfører
         )
     }
 }

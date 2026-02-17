@@ -246,8 +246,6 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
                     listOf(
                         RefusjonkravVurderingDto(
                             harKrav = true,
-                            fom = LocalDate.now(),
-                            tom = null,
                             navKontor = "",
                         )
                     )
@@ -411,8 +409,6 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
                     listOf(
                         RefusjonkravVurderingDto(
                             harKrav = true,
-                            fom = LocalDate.now(),
-                            tom = null,
                             navKontor = "",
                         )
                     )
@@ -1086,8 +1082,6 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
                     listOf(
                         RefusjonkravVurderingDto(
                             harKrav = true,
-                            fom = LocalDate.now(),
-                            tom = null,
                             navKontor = "",
                         )
                     )
@@ -1272,8 +1266,6 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
                 listOf(
                     RefusjonkravVurderingDto(
                         harKrav = true,
-                        fom = fom,
-                        tom = null,
                         navKontor = "",
                     )
                 )

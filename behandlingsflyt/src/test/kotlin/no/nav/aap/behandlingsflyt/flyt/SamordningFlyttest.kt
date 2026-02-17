@@ -360,7 +360,7 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::clas
                 RefusjonkravLøsning(
                     listOf(
                         RefusjonkravVurderingDto(
-                            harKrav = true, fom = LocalDate.now(), tom = null, navKontor = "",
+                            harKrav = true, navKontor = "",
                         )
                     )
                 )
