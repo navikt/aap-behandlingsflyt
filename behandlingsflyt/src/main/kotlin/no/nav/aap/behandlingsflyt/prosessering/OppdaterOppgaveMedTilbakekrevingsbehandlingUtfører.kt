@@ -1,9 +1,13 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
 import no.nav.aap.behandlingsflyt.behandling.tilbakekrevingsbehandling.TilbakekrevingRepository
+import no.nav.aap.behandlingsflyt.behandling.tilbakekrevingsbehandling.tilAvklaringsBehov
 import no.nav.aap.behandlingsflyt.behandling.tilbakekrevingsbehandling.tilKontrakt
 import no.nav.aap.behandlingsflyt.hendelse.oppgavestyring.OppgavestyringGateway
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.AvklaringsbehovHendelseDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.TilbakekrevingsbehandlingOppdatertHendelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
@@ -46,7 +50,7 @@ class OppdaterOppgaveMedTilbakekrevingsbehandlingUtfører(
             ),
             behandlingStatus = tilbakekrevingsbehandling.behandlingsstatus.tilKontrakt(),
             sakOpprettet = tilbakekrevingsbehandling.sakOpprettet,
-            avklaringsbehov = emptyList(),
+            avklaringsbehov = tilbakekrevingsbehandling.behandlingsstatus.tilAvklaringsBehov(),
             totaltFeilutbetaltBeløp = tilbakekrevingsbehandling.totaltFeilutbetaltBeløp.verdi,
             saksbehandlingURL = tilbakekrevingsbehandling.saksbehandlingURL.toString()
         )

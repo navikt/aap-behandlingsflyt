@@ -549,7 +549,20 @@ public enum class Definisjon(
         løsesISteg = StegType.VURDER_AKTIVITETSPLIKT_11_7,
         løsesAv = listOf(Rolle.SAKSBEHANDLER_OPPFOLGING),
         defaultFrist = Period.ofWeeks(3),
-    );
+    ),
+    VURDER_TILBAKEKREVING(
+        kode = AvklaringsbehovKode.`9082`,
+        type = BehovType.MANUELT_PÅKREVD,
+        løsesISteg = StegType.UDEFINERT,
+        løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL)
+    ),
+    VURDER_TILBAKEKREVING_BESLUTTER(
+        kode = AvklaringsbehovKode.`9083`,
+        type = BehovType.MANUELT_PÅKREVD,
+        løsesISteg = StegType.UDEFINERT,
+        løsesAv = listOf(Rolle.BESLUTTER)
+    )
+    ;
 
     public companion object {
         public fun forKode(definisjon: String): Definisjon {
