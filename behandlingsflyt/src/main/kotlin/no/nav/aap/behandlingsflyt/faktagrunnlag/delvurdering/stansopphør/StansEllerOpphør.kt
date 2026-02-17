@@ -1,4 +1,7 @@
-package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat
+package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør
+
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagstype
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 
 sealed interface StansEllerOpphør {
     val årsaker: Set<Avslagsårsak>
