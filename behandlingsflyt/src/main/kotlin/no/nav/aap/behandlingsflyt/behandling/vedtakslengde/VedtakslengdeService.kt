@@ -102,9 +102,9 @@ class VedtakslengdeService(
         val vedtattUtvidelse = vedtattVedtakslengdeGrunnlag?.vurdering?.utvidetMed
         val sluttdato = utledSluttdato(behandlingId, rettighetsperiode, vedtattSluttdato)
 
-        val nyEllerEndretSluttdato = vedtattVedtakslengdeGrunnlag == null || vedtattVedtakslengdeGrunnlag.vurdering.sluttdato != sluttdato
+        val erSluttdatoEndret = vedtattVedtakslengdeGrunnlag == null || vedtattVedtakslengdeGrunnlag.vurdering.sluttdato != sluttdato
 
-        if (nyEllerEndretSluttdato) {
+        if (erSluttdatoEndret) {
             log.info("Sluttdato endret fra $vedtattSluttdato til $sluttdato for behandling $behandlingId")
 
             vedtakslengdeRepository.lagre(
