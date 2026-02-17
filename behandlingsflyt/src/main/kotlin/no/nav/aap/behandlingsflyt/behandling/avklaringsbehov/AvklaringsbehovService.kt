@@ -344,8 +344,6 @@ class AvklaringsbehovService(
      * Hvis vurderingsbehovene relevant for steget er i [tvingerAvklaringsbehov], så åpnes avklaringsbehovet
      * også hvis det ikke er en endring i periodene som behøver vurdering, gitt at det er noen perioder som
      * behøver vurdering.
-     *
-     * Vurder å skrive om til service, slik at man slipper å injecte inn alle repositoriesene?
      */
     fun oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
         definisjon: Definisjon,
