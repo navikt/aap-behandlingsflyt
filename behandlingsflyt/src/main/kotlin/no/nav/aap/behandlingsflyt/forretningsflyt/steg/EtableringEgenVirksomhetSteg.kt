@@ -19,7 +19,6 @@ import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.somTidslinje
 import no.nav.aap.lookup.repository.RepositoryProvider
-import java.time.LocalDate
 
 class EtableringEgenVirksomhetSteg(
     private val etableringEgenVirksomhetRepository: EtableringEgenVirksomhetRepository,
@@ -43,7 +42,10 @@ class EtableringEgenVirksomhetSteg(
 
         avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
             definisjon = Definisjon.ETABLERING_EGEN_VIRKSOMHET,
-            tvingerAvklaringsbehov = setOf(Vurderingsbehov.ETABLERING_EGEN_VIRKSOMHET),
+            tvingerAvklaringsbehov = setOf(
+                Vurderingsbehov.ETABLERING_EGEN_VIRKSOMHET,
+                Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND,
+            ),
             nårVurderingErRelevant = ::nårVurderingErRelevant,
             nårVurderingErGyldig = { tilstrekkeligVurdert(kontekst) },
             kontekst = kontekst,
@@ -59,11 +61,18 @@ class EtableringEgenVirksomhetSteg(
     }
 
     private fun nårVurderingErRelevant(kontekst: FlytKontekstMedPerioder): Tidslinje<Boolean> {
+        if (Vurderingsbehov.ETABLERING_EGEN_VIRKSOMHET in kontekst.vurderingsbehovRelevanteForSteg) {
+            return Tidslinje(kontekst.rettighetsperiode, true)
+        }
         val tidligereVurderingsutfall = tidligereVurderinger.behandlingsutfall(kontekst, type())
         val relevantPeriode =
-            etableringEgenVirksomhetService.utledGyldighetsPeriode(kontekst.behandlingId, LocalDate.now().plusDays(1))
+            etableringEgenVirksomhetService.utledGyldighetsPeriode(
+                kontekst.behandlingId,
+                kontekst.rettighetsperiode.fom.plusDays(1)
+            )
                 .somTidslinje { it }
         val grunnlag = etableringEgenVirksomhetRepository.hentHvisEksisterer(kontekst.behandlingId)
+
 
         return Tidslinje.map2(tidligereVurderingsutfall, relevantPeriode) { utfall, relevantPeriode ->
             when (utfall) {

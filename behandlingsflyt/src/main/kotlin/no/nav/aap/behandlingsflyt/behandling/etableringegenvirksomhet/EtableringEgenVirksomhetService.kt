@@ -8,6 +8,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirk
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.komponenter.tidslinje.somTidslinje
@@ -21,13 +22,15 @@ class EtableringEgenVirksomhetService(
     private val etableringEgenVirksomhetRepository: EtableringEgenVirksomhetRepository,
     private val behandlingRepository: BehandlingRepository,
     private val bistandRepository: BistandRepository,
-    private val sykdomRepository: SykdomRepository
+    private val sykdomRepository: SykdomRepository,
+    private val sakRepository: SakRepository,
 ) {
     constructor(repositoryProvider: RepositoryProvider) : this(
         etableringEgenVirksomhetRepository = repositoryProvider.provide(),
         behandlingRepository = repositoryProvider.provide(),
         bistandRepository = repositoryProvider.provide(),
-        sykdomRepository = repositoryProvider.provide()
+        sykdomRepository = repositoryProvider.provide(),
+        sakRepository = repositoryProvider.provide()
     )
 
     private val maksUtviklingsdager = 131
@@ -42,9 +45,10 @@ class EtableringEgenVirksomhetService(
         val gamleVurderinger =
             behandling.forrigeBehandlingId?.let { etableringEgenVirksomhetRepository.hentHvisEksisterer(it) }?.vurderinger.orEmpty()
         val alleVurderinger = gamleVurderinger + nyeVurderinger
+        val rettighetsperiode = sakRepository.hent(behandling.sakId).rettighetsperiode
 
         val gyldighetPeriode =
-            utledGyldighetsPeriode(behandlingId, LocalDate.now().plusDays(1))
+            utledGyldighetsPeriode(behandlingId, rettighetsperiode.fom.plusDays(1))
         if (gyldighetPeriode.isEmpty()) {
             return VirksomhetEtableringGyldig(
                 false,
@@ -53,7 +57,7 @@ class EtableringEgenVirksomhetService(
         }
         val førsteMuligeDato = gyldighetPeriode.first().fom
 
-        if (nyeVurderinger.none { it.utviklingsPerioder.isNotEmpty() || it.oppstartsPerioder.isNotEmpty() }) {
+        if (nyeVurderinger.any { evaluerVirksomhetVurdering(it) && it.utviklingsPerioder.isEmpty() && it.oppstartsPerioder.isEmpty() }) {
             return VirksomhetEtableringGyldig(
                 false,
                 "Må ha definert minst én periode i tidsplanen dersom vilkåret er oppfylt for en periode"
@@ -70,7 +74,7 @@ class EtableringEgenVirksomhetService(
         val alleUtviklingsPerioder = alleVurderinger.flatMap { it.utviklingsPerioder }
         val alleOppstartsPerioder = alleVurderinger.flatMap { it.oppstartsPerioder }
 
-        alleUtviklingsPerioder.maxOf { uPeriode -> uPeriode.tom }.let {
+        alleUtviklingsPerioder.maxOfOrNull { uPeriode -> uPeriode.tom }.let {
             if (alleOppstartsPerioder.any { oPeriode -> oPeriode.fom.isBefore(it) }) {
                 return VirksomhetEtableringGyldig(
                     false,
