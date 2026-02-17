@@ -84,7 +84,7 @@ data class Sykdomsvurdering(
             erNedsettelseIArbeidsevneAvEnVissVarighet == true
         else true
     }
-
+    
     fun erOppfyltOrdinærSettBortIfraVissVarighet(): Boolean {
         return harSkadeSykdomEllerLyte
                 && erArbeidsevnenNedsatt == true

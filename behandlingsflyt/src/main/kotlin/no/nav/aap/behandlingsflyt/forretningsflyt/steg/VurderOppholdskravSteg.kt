@@ -87,9 +87,9 @@ class VurderOppholdskravSteg private constructor(
         val tidligereVurderingsutfall = tidligereVurderinger.behandlingsutfall(kontekst, type())
         return tidligereVurderingsutfall.mapValue { behandlingsutfall ->
             when (behandlingsutfall) {
-                TidligereVurderinger.Behandlingsutfall.IKKE_BEHANDLINGSGRUNNLAG -> false
-                TidligereVurderinger.Behandlingsutfall.UUNGÅELIG_AVSLAG -> false
-                TidligereVurderinger.Behandlingsutfall.UKJENT -> true
+                TidligereVurderinger.IkkeBehandlingsgrunnlag -> false
+                TidligereVurderinger.UunngåeligAvslag -> false
+                is TidligereVurderinger.PotensieltOppfylt -> true
             }
         }
     }

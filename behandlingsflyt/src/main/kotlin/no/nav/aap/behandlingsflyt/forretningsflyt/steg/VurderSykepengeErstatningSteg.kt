@@ -125,9 +125,9 @@ class VurderSykepengeErstatningSteg private constructor(
         ) { segmentPeriode, behandlingsutfall, sykdomsvurdering, bistandvurdering, yrkesskadevurdering, overgangUføreVilkårsvurdering, overgangarbeidVilkår ->
             when (behandlingsutfall) {
                 null -> false
-                TidligereVurderinger.Behandlingsutfall.IKKE_BEHANDLINGSGRUNNLAG -> false
-                TidligereVurderinger.Behandlingsutfall.UUNGÅELIG_AVSLAG -> false
-                TidligereVurderinger.Behandlingsutfall.UKJENT -> {
+                is TidligereVurderinger.IkkeBehandlingsgrunnlag -> false
+                is TidligereVurderinger.UunngåeligAvslag -> false
+                is TidligereVurderinger.PotensieltOppfylt -> {
                     when {
                         sykdomsvurdering?.erOppfyltOrdinær(kravDato, segmentPeriode) == true
                                 && bistandvurdering?.erBehovForBistand() != true

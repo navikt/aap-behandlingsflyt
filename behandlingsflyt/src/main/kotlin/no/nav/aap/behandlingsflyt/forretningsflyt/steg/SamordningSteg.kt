@@ -110,9 +110,9 @@ class SamordningSteg(
             vurderingtidslinje
         ) { utfall, samordningYtelser, vurdering ->
             when (utfall) {
-                TidligereVurderinger.Behandlingsutfall.IKKE_BEHANDLINGSGRUNNLAG -> false
-                TidligereVurderinger.Behandlingsutfall.UUNGÅELIG_AVSLAG -> false
-                TidligereVurderinger.Behandlingsutfall.UKJENT -> {
+                TidligereVurderinger.IkkeBehandlingsgrunnlag -> false
+                TidligereVurderinger.UunngåeligAvslag -> false
+                is TidligereVurderinger.PotensieltOppfylt -> {
                     !samordningYtelser.isNullOrEmpty() || !vurdering.isNullOrEmpty()
                 }
 

@@ -139,9 +139,9 @@ class OvergangArbeidSteg internal constructor(
         ) { segmentPeriode, utfall, sykdomsvurdering, bistandsvurdering, studentvurdering, uførevurdering, forutgåendeOrdinærAap ->
             when (utfall) {
                 null -> false
-                TidligereVurderinger.Behandlingsutfall.IKKE_BEHANDLINGSGRUNNLAG -> false
-                TidligereVurderinger.Behandlingsutfall.UUNGÅELIG_AVSLAG -> false
-                TidligereVurderinger.Behandlingsutfall.UKJENT -> {
+                TidligereVurderinger.IkkeBehandlingsgrunnlag -> false
+                TidligereVurderinger.UunngåeligAvslag -> false
+                is TidligereVurderinger.PotensieltOppfylt -> {
                     if (studentvurdering?.erOppfylt() == true) {
                         return@map6 false
                     }

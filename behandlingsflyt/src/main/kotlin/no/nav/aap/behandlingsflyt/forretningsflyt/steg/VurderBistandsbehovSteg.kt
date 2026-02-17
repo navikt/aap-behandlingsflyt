@@ -122,9 +122,9 @@ class VurderBistandsbehovSteg(
         { segmentPeriode, behandlingsutfall, sykdomsvurdering, studentvurdering ->
             when (behandlingsutfall) {
                 null -> false
-                TidligereVurderinger.Behandlingsutfall.IKKE_BEHANDLINGSGRUNNLAG -> false
-                TidligereVurderinger.Behandlingsutfall.UUNGÅELIG_AVSLAG -> false
-                TidligereVurderinger.Behandlingsutfall.UKJENT -> {
+                TidligereVurderinger.IkkeBehandlingsgrunnlag -> false
+                TidligereVurderinger.UunngåeligAvslag -> false
+                is TidligereVurderinger.PotensieltOppfylt -> {
                     studentvurdering?.erOppfylt() != true &&
                             (sykdomsvurdering?.erOppfyltOrdinær(
                                 kravdato = kontekst.rettighetsperiode.fom,

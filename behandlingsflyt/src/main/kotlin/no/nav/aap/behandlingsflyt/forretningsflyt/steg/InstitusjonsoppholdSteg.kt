@@ -99,8 +99,12 @@ class InstitusjonsoppholdSteg(
         when (kontekst.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING,
             VurderingType.MIGRER_RETTIGHETSPERIODE,
-            VurderingType.REVURDERING,  -> {
-                val utlederResultat = institusjonsoppholdUtlederServiceUtlederResultat(kontekst.behandlingId, begrensetTilRettighetsperiode = false)
+            VurderingType.REVURDERING,
+                -> {
+                val utlederResultat = institusjonsoppholdUtlederServiceUtlederResultat(
+                    kontekst.behandlingId,
+                    begrensetTilRettighetsperiode = false
+                )
 
                 val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
                 StraffegjennomføringVilkår(vilkårsresultat).vurder(
@@ -146,9 +150,9 @@ class InstitusjonsoppholdSteg(
             .mapValue { (behandlingsutfall, denneBehandling) ->
                 when (behandlingsutfall) {
                     null -> false
-                    TidligereVurderinger.Behandlingsutfall.IKKE_BEHANDLINGSGRUNNLAG -> false
-                    TidligereVurderinger.Behandlingsutfall.UUNGÅELIG_AVSLAG -> false
-                    TidligereVurderinger.Behandlingsutfall.UKJENT -> denneBehandling?.helse != null // Enten er helse vurdert, eller så skal det vurderes
+                    TidligereVurderinger.IkkeBehandlingsgrunnlag -> false
+                    TidligereVurderinger.UunngåeligAvslag -> false
+                    is TidligereVurderinger.PotensieltOppfylt -> denneBehandling?.helse != null // Enten er helse vurdert, eller så skal det vurderes
                 }
             }
     }
@@ -162,18 +166,27 @@ class InstitusjonsoppholdSteg(
             .mapValue { (behandlingsutfall, denneBehandling) ->
                 when (behandlingsutfall) {
                     null -> false
-                    TidligereVurderinger.Behandlingsutfall.IKKE_BEHANDLINGSGRUNNLAG -> false
-                    TidligereVurderinger.Behandlingsutfall.UUNGÅELIG_AVSLAG -> false
-                    TidligereVurderinger.Behandlingsutfall.UKJENT -> denneBehandling?.soning != null // Enten er soning vurdert, eller så skal det vurderes
+                    TidligereVurderinger.IkkeBehandlingsgrunnlag -> false
+                    TidligereVurderinger.UunngåeligAvslag -> false
+                    is TidligereVurderinger.PotensieltOppfylt -> denneBehandling?.soning != null // Enten er soning vurdert, eller så skal det vurderes
                 }
             }
     }
 
-    private fun institusjonsoppholdUtlederServiceUtlederResultat(behandlingId: BehandlingId, begrensetTilRettighetsperiode: Boolean = true) =
+    private fun institusjonsoppholdUtlederServiceUtlederResultat(
+        behandlingId: BehandlingId,
+        begrensetTilRettighetsperiode: Boolean = true
+    ) =
         if (unleashGateway.isEnabled(BehandlingsflytFeature.PeriodiseringHelseinstitusjonOpphold)) {
-            institusjonsoppholdUtlederServiceNy.utled(behandlingId, begrensetTilRettighetsperiode = begrensetTilRettighetsperiode)
+            institusjonsoppholdUtlederServiceNy.utled(
+                behandlingId,
+                begrensetTilRettighetsperiode = begrensetTilRettighetsperiode
+            )
         } else {
-            institusjonsoppholdUtlederService.utled(behandlingId,  begrensetTilRettighetsperiode = begrensetTilRettighetsperiode)
+            institusjonsoppholdUtlederService.utled(
+                behandlingId,
+                begrensetTilRettighetsperiode = begrensetTilRettighetsperiode
+            )
         }
 
     companion object : FlytSteg {
