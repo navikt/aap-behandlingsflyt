@@ -56,12 +56,8 @@ class InntektkomponentenGatewayImpl : InntektkomponentenGateway {
             ident = Ident(fnr)
         )
 
-        try {
-            val response = query(request)
-            return mapFraRespons(response)
-        } catch (e: Exception) {
-            throw RuntimeException("Feil ved henting av data i Inntektskomponenten: ${e.message}, $e")
-        }
+        val response = query(request)
+        return mapFraRespons(response)
     }
 }
 

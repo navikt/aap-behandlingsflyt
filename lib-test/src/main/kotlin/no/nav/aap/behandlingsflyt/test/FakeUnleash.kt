@@ -49,6 +49,7 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.KvalitetssikringVed2213 to true,
         BehandlingsflytFeature.tilbakekrevingsOppgaverTilOppgave to true,
         BehandlingsflytFeature.PeriodiseringHelseinstitusjonOpphold to true,
+        BehandlingsflytFeature.HentingAvInstitusjonsOpphold to true,
         )
 )
 

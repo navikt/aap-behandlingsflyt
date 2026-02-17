@@ -75,10 +75,7 @@ class SamordningStegTest {
             samordningYtelseRepository = InMemorySamordningYtelseRepository,
         ),
         samordningRepository = InMemorySamordningRepository,
-        avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
         tidligereVurderinger = tidligereVurderinger,
-        vilkårsresultatRepository = InMemoryVilkårsresultatRepository,
-        behandlingRepository = InMemoryBehandlingRepository,
         avklaringsbehovService = AvklaringsbehovService(
             AvbrytRevurderingService(
                 avbrytRevurderingRepository
