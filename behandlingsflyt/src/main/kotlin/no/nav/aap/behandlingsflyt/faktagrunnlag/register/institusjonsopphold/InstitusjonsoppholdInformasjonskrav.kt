@@ -51,7 +51,6 @@ class InstitusjonsoppholdInformasjonskrav private constructor(
         {
             return kontekst.erFørstegangsbehandlingEllerRevurdering()
                     && !tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, steg)
-                    && kontekst.rettighetsperiode != oppdatert?.rettighetsperiode
         }
         else {
             return kontekst.erFørstegangsbehandlingEllerRevurdering()
