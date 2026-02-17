@@ -19,6 +19,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
@@ -29,6 +31,7 @@ class InstitusjonsoppholdInformasjonskrav private constructor(
     private val institusjonsoppholdRepository: InstitusjonsoppholdRepository,
     private val institusjonsoppholdRegisterGateway: IInstitusjonsoppholdGateway,
     private val tidligereVurderinger: TidligereVurderinger,
+    private val unleashGateway: UnleashGateway
 ) : Informasjonskrav<InstitusjonsoppholdInformasjonskrav.Input, InstitusjonsoppholdInformasjonskrav.InstitusjonsoppholdRegisterdata>,
     KanTriggeRevurdering {
 
@@ -41,9 +44,18 @@ class InstitusjonsoppholdInformasjonskrav private constructor(
         steg: StegType,
         oppdatert: InformasjonskravOppdatert?
     ): Boolean {
-        return kontekst.erFørstegangsbehandlingEllerRevurdering()
-                && !tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, steg)
-                && (oppdatert.ikkeKjørtSisteKalenderdag() || kontekst.rettighetsperiode != oppdatert?.rettighetsperiode)
+        if (unleashGateway.isEnabled(BehandlingsflytFeature.HentingAvInstitusjonsOpphold))
+        {
+            return kontekst.erFørstegangsbehandlingEllerRevurdering()
+                    && !tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, steg)
+                    && kontekst.rettighetsperiode != oppdatert?.rettighetsperiode
+        }
+        else {
+            return kontekst.erFørstegangsbehandlingEllerRevurdering()
+                    && !tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, steg)
+                    && (oppdatert.ikkeKjørtSisteKalenderdag() || kontekst.rettighetsperiode != oppdatert?.rettighetsperiode)
+        }
+
     }
 
     data class Input(val sak: Sak) : InformasjonskravInput
@@ -119,6 +131,7 @@ class InstitusjonsoppholdInformasjonskrav private constructor(
                 repositoryProvider.provide(),
                 gatewayProvider.provide(),
                 TidligereVurderingerImpl(repositoryProvider),
+                gatewayProvider.provide<UnleashGateway>()
             )
         }
 
