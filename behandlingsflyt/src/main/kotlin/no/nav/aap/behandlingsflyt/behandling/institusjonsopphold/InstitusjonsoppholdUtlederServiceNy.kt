@@ -352,11 +352,11 @@ class InstitusjonsoppholdUtlederServiceNy(
             oppholdUtenBarnetillegg.segmenter()
                 .filter { segment -> segment.verdi }
                 .filter { segment ->
-                    harOppholdSomVarerMerEnnFireMånederOgErMinstToMånederInnIOppholdet(segment)
+                    harOppholdSomVarerMerEnnFireMåneder(segment)
                 })
     }
 
-    private fun harOppholdSomVarerMerEnnFireMånederOgErMinstToMånederInnIOppholdet(
+    private fun harOppholdSomVarerMerEnnFireMåneder(
         segment: Segment<Boolean>
     ): Boolean {
         val fom = segment.fom().withDayOfMonth(1).plusMonths(1)
@@ -366,7 +366,7 @@ class InstitusjonsoppholdUtlederServiceNy(
         }
         val førsteDagMedMuligReduksjon = fom.plusMonths(3)
         val justertPeriode = Periode(fom, segment.tom())
-        return justertPeriode.inneholder(førsteDagMedMuligReduksjon) && (fom.plusMonths(2) <= LocalDate.now())
+        return justertPeriode.inneholder(førsteDagMedMuligReduksjon)
     }
 
     private fun <T> opprettTidslinje(segmenter: List<Segment<T>>): Tidslinje<Boolean> {
