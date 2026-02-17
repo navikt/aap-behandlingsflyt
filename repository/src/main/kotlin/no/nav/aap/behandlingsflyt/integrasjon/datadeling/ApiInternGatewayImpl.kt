@@ -24,7 +24,6 @@ import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.gateway.Factory
 import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
 import no.nav.aap.komponenter.httpklient.httpclient.RestClient
-import no.nav.aap.komponenter.httpklient.httpclient.post
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
 import no.nav.aap.komponenter.json.DefaultJsonMapper
@@ -154,9 +153,10 @@ class ApiInternGatewayImpl : ApiInternGateway {
     ) {
         log.info("Sender meldekort-detaljer for sakId=${sakId}, behandlingId=${behandlingId}")
 
-        restClient.post<List<DetaljertMeldekortDTO>, Unit>(
+        restClient.post(
             uri.resolve("/api/insert/meldekort-detaljer"),
-            PostRequest(body = detaljertMeldekortListe)
+            PostRequest(body = detaljertMeldekortListe),
+            mapper = { _, _ -> }
         )
     }
 
