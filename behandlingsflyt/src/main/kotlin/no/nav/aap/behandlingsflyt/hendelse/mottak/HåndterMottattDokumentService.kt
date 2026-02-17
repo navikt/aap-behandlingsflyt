@@ -330,11 +330,9 @@ class HåndterMottattDokumentService(
     ) {
         val sisteYtelsesBehandling = sakOgBehandlingService.finnSisteYtelsesbehandlingFor(sakId)
             ?: error("Finnes ingen ytelsesbehandling for sakId $sakId")
-        if (trukketSøknadService.søknadErTrukket(sisteYtelsesBehandling.id)) {
+        if (!trukketSøknadService.søknadErTrukket(sisteYtelsesBehandling.id)) {
             flytJobbRepository.leggTil(
-                JobbInput(jobb = OppdagEndretInformasjonskravJobbUtfører).forSak(
-                    sakId = sakId.toLong(),
-                ).medCallId()
+                JobbInput(jobb = OppdagEndretInformasjonskravJobbUtfører).forSak(sakId.toLong()).medCallId()
             )
         }
         mottaDokumentService.markerSomBehandlet(sakId, sisteYtelsesBehandling.id, referanse)
