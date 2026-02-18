@@ -30,6 +30,7 @@ import no.nav.aap.behandlingsflyt.forretningsflyt.steg.BarnetilleggSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.BeregnTilkjentYtelseSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.BeregningAvklarFaktaSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.Effektuer11_7Steg
+import no.nav.aap.behandlingsflyt.forretningsflyt.steg.EtableringEgenVirksomhetSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.FastsettArbeidsevneSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.FastsettGrunnlagSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.FastsettMeldeperiodeSteg
@@ -156,6 +157,13 @@ object Revurdering : BehandlingType {
                     Vurderingsbehov.DØDSFALL_BRUKER,
                     Vurderingsbehov.REVURDER_LOVVALG,
                     Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP,
+                )
+            )
+            .medSteg(
+                steg = EtableringEgenVirksomhetSteg, vurderingsbehovRelevanteForSteg = listOf(
+                    Vurderingsbehov.MOTTATT_SØKNAD,
+                    Vurderingsbehov.HELHETLIG_VURDERING,
+                    Vurderingsbehov.ETABLERING_EGEN_VIRKSOMHET
                 )
             )
             .medSteg(
@@ -383,7 +391,6 @@ object Revurdering : BehandlingType {
                     Vurderingsbehov.REVURDER_SYKESTIPEND
                 )
             )
-            .medSteg(steg = RettighetstypeSteg)
             .medSteg(
                 steg = SamordningAndreStatligeYtelserSteg,
                 informasjonskrav = listOf(DagpengerInformasjonskrav),
@@ -403,6 +410,7 @@ object Revurdering : BehandlingType {
                 informasjonskrav = listOf(MeldekortInformasjonskrav, Aktivitetsplikt11_7Informasjonskrav)
             )
             .medSteg(steg = Effektuer11_7Steg)
+            .medSteg(steg = RettighetstypeSteg)
             .medSteg(steg = VedtakslengdeSteg, informasjonskrav = listOf(VedtakslengdeInformasjonskrav))
             .medSteg(steg = UnderveisSteg)
             .medSteg(

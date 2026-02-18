@@ -466,14 +466,14 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
         )
     }
 
-    protected fun Behandling.løsBistand(fom: LocalDate, erOppfylt: Boolean = true): Behandling {
+    protected fun Behandling.løsBistand(fom: LocalDate, erOppfylt: Boolean = true, erBehovForArbeidsrettetTiltak: Boolean = false): Behandling {
         return this.løsAvklaringsBehov(
             AvklarBistandsbehovLøsning(
                 listOf(
                     BistandLøsningDto(
                         begrunnelse = "Trenger hjelp fra nav",
                         erBehovForAktivBehandling = erOppfylt,
-                        erBehovForArbeidsrettetTiltak = false,
+                        erBehovForArbeidsrettetTiltak = erBehovForArbeidsrettetTiltak,
                         erBehovForAnnenOppfølging = false.takeUnless { erOppfylt },
                         skalVurdereAapIOvergangTilArbeid = null,
                         overgangBegrunnelse = null,
