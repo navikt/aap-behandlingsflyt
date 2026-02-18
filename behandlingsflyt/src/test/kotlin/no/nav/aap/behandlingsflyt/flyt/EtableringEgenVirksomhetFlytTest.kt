@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirk
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetLøsningDto
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
+import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.test.FakeUnleashBaseWithDefaultDisabled
@@ -110,6 +111,88 @@ class EtableringEgenVirksomhetFlytTest : AbstraktFlytOrkestratorTest(VirksomhetU
             assertThat(oppfylt).isEqualTo(true)
             assertThat(ikkeOppfyltVurdering).isEqualTo(false)
         }
+    }
+
+    @Test
+    fun `Skal kunne revurdere uten tidligere vurdering`() {
+        val (sak, behandling) = sendInnFørsteSøknad(person = TestPersoner.STANDARD_PERSON())
+
+        behandling
+            .løsSykdom(vurderingGjelderFra = sak.rettighetsperiode.fom, erOppfylt = true)
+            .løsBistand(fom = sak.rettighetsperiode.fom, erOppfylt = true, erBehovForArbeidsrettetTiltak = true)
+            .løsRefusjonskrav()
+            .løsSykdomsvurderingBrev()
+            .kvalitetssikreOk()
+            .løsBeregningstidspunkt()
+            .løsOppholdskrav(sak.rettighetsperiode.fom)
+            .løsAndreStatligeYtelser()
+            .løsForeslåVedtak()
+            .fattVedtak()
+            .løsVedtaksbrev()
+
+        val revurdering = sak.opprettManuellRevurdering(
+            listOf(Vurderingsbehov.ETABLERING_EGEN_VIRKSOMHET)
+        )
+            .løsAvklaringsBehov(
+                EtableringEgenVirksomhetLøsning(
+                    listOf(
+                        EtableringEgenVirksomhetLøsningDto(
+                            begrunnelse = "meee",
+                            fom = sak.rettighetsperiode.fom.plusDays(1),
+                            tom = null,
+                            virksomhetNavn = "peppas peppers",
+                            orgNr = null,
+                            foreliggerFagligVurdering = true,
+                            virksomhetErNy = true,
+                            brukerEierVirksomheten = EierVirksomhet.EIER_MINST_50_PROSENT,
+                            kanFøreTilSelvforsørget = true,
+                            utviklingsPerioder = listOf(
+                                Periode(
+                                    sak.rettighetsperiode.fom.plusDays(1),
+                                    sak.rettighetsperiode.fom.plusDays(4)
+                                )
+                            ),
+                            oppstartsPerioder = listOf(
+                                Periode(
+                                    sak.rettighetsperiode.fom.plusMonths(5),
+                                    sak.rettighetsperiode.fom.plusMonths(6)
+                                )
+                            )
+                        ),
+                        EtableringEgenVirksomhetLøsningDto(
+                            begrunnelse = "meee",
+                            fom = sak.rettighetsperiode.fom.plusMonths(1),
+                            tom = null,
+                            virksomhetNavn = "peppas peppers",
+                            orgNr = null,
+                            foreliggerFagligVurdering = true,
+                            virksomhetErNy = false,
+                            brukerEierVirksomheten = EierVirksomhet.EIER_MINST_50_PROSENT,
+                            kanFøreTilSelvforsørget = true,
+                            utviklingsPerioder = listOf(
+                                Periode(
+                                    sak.rettighetsperiode.fom.plusMonths(1),
+                                    sak.rettighetsperiode.fom.plusMonths(2)
+                                )
+                            ),
+                            oppstartsPerioder = listOf(
+                                Periode(
+                                    sak.rettighetsperiode.fom.plusMonths(3),
+                                    sak.rettighetsperiode.fom.plusMonths(4)
+                                )
+                            )
+                        )
+                    )
+                )
+            )
+            .fattVedtak()
+
+        val etableringGrunnlag = dataSource.transaction {
+            EtableringEgenVirksomhetRepositoryImpl(it).hentHvisEksisterer(revurdering.id)
+        }
+
+        assertThat(etableringGrunnlag?.vurderinger?.size).isEqualTo(2)
+        assertThat(revurdering.status()).isEqualTo(Status.IVERKSETTES)
     }
 
     @Test

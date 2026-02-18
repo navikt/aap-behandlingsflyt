@@ -135,7 +135,7 @@ class EtableringEgenVirksomhetService(
 
         val mapped = Tidslinje.zip2(sykdomsvurderinger, bistandsvurderinger)
             .filter {
-                it.verdi.first?.erOppfyltOrdinær(
+                it.verdi.first?.erOppfyltForYrkesskadeSettBortIfraÅrsakssammenheng(
                     fom,
                     it.periode
                 ) == true && it.verdi.second?.erBehovForArbeidsrettetTiltak == true
