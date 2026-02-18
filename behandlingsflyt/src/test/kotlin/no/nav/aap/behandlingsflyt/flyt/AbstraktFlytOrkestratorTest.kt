@@ -139,7 +139,6 @@ import no.nav.aap.komponenter.tidslinje.tidslinjeOf
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.Bruker
-import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.testutil.ManuellMotorImpl
 import no.nav.aap.verdityper.dokument.JournalpostId
@@ -224,14 +223,12 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
     fun happyCaseFørstegangsbehandling(
         fom: LocalDate = LocalDate.now().minusMonths(3),
         person: TestPerson = TestPersoner.STANDARD_PERSON(),
-        periode: Periode = Periode(fom, Tid.MAKS),
         sendMeldekort: Boolean = true,
     ): Sak {
         // Sender inn en søknad
         var (sak, behandling) = sendInnFørsteSøknad(
             person = person,
             mottattTidspunkt = fom.atStartOfDay(),
-            periode = periode,
         )
 
         assertThat(behandling.typeBehandling()).isEqualTo(TypeBehandling.Førstegangsbehandling)
@@ -813,7 +810,27 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
         søknad: Søknad = TestSøknader.STANDARD_SØKNAD,
         person: TestPerson = TestPersoner.STANDARD_PERSON(),
         mottattTidspunkt: LocalDateTime? = null,
-        periode: Periode? = null,
+        journalpostId: JournalpostId = journalpostId(),
+    ): Pair<Sak, Behandling> {
+        val mottattTidspunkt = mottattTidspunkt ?: LocalDateTime.now().minusMonths(3)
+        val periode = Periode(mottattTidspunkt.toLocalDate(), mottattTidspunkt.toLocalDate().plusYears(1))
+        val sak = dataSource.transaction { connection ->
+            SakRepositoryImpl(connection).finnEllerOpprett(
+                PersonRepositoryImpl(connection).finnEllerOpprett(listOf(person.aktivIdent())),
+                periode
+            )
+        }
+        val behandling = sak.sendInnSøknad(søknad, mottattTidspunkt, journalpostId)
+
+        return Pair(sak, behandling)
+    }
+
+    @Deprecated("Sluttdato for rettighetesperiode er alltid Tid.MAKS for nye/migrerte saker. Send kun med søknadsdato, med mindre du tester koden din for ikke-migrerte saker.")
+    protected fun sendInnFørsteSøknad(
+        søknad: Søknad = TestSøknader.STANDARD_SØKNAD,
+        person: TestPerson = TestPersoner.STANDARD_PERSON(),
+        mottattTidspunkt: LocalDateTime? = null,
+        periode: Periode?,
         journalpostId: JournalpostId = journalpostId(),
     ): Pair<Sak, Behandling> {
         val mottattTidspunkt = mottattTidspunkt ?: periode?.fom?.atStartOfDay() ?: LocalDateTime.now().minusMonths(3)
