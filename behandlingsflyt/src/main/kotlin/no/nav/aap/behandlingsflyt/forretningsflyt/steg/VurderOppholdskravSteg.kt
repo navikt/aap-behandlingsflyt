@@ -89,7 +89,7 @@ class VurderOppholdskravSteg private constructor(
             when (behandlingsutfall) {
                 TidligereVurderinger.IkkeBehandlingsgrunnlag -> false
                 TidligereVurderinger.UunngåeligAvslag -> false
-                is TidligereVurderinger.PotensieltOppfylt -> true
+                is TidligereVurderinger.PotensieltOppfylt, TidligereVurderinger.Ukjent -> true
             }
         }
     }

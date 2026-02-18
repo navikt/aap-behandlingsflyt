@@ -90,8 +90,10 @@ class OvergangUføreSteg private constructor(
         val utfall = tidligereVurderinger.behandlingsutfall(kontekst, type())
         return utfall.map { utfall ->
             when (utfall) {
-                TidligereVurderinger.IkkeBehandlingsgrunnlag -> false
-                TidligereVurderinger.UunngåeligAvslag -> false
+                TidligereVurderinger.IkkeBehandlingsgrunnlag,
+                TidligereVurderinger.UunngåeligAvslag, 
+                TidligereVurderinger.Ukjent -> false
+                
                 is TidligereVurderinger.PotensieltOppfylt -> {
                     utfall.rettighetstyper.contains(RettighetsType.VURDERES_FOR_UFØRETRYGD)
                 }

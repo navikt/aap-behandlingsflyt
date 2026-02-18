@@ -152,7 +152,7 @@ class InstitusjonsoppholdSteg(
                     null -> false
                     TidligereVurderinger.IkkeBehandlingsgrunnlag -> false
                     TidligereVurderinger.UunngåeligAvslag -> false
-                    is TidligereVurderinger.PotensieltOppfylt -> denneBehandling?.helse != null // Enten er helse vurdert, eller så skal det vurderes
+                    is TidligereVurderinger.PotensieltOppfylt, TidligereVurderinger.Ukjent -> denneBehandling?.helse != null // Enten er helse vurdert, eller så skal det vurderes
                 }
             }
     }
@@ -168,7 +168,7 @@ class InstitusjonsoppholdSteg(
                     null -> false
                     TidligereVurderinger.IkkeBehandlingsgrunnlag -> false
                     TidligereVurderinger.UunngåeligAvslag -> false
-                    is TidligereVurderinger.PotensieltOppfylt -> denneBehandling?.soning != null // Enten er soning vurdert, eller så skal det vurderes
+                    is TidligereVurderinger.PotensieltOppfylt, TidligereVurderinger.Ukjent -> denneBehandling?.soning != null // Enten er soning vurdert, eller så skal det vurderes
                 }
             }
     }

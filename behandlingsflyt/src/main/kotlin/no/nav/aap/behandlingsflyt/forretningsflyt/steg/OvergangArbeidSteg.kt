@@ -141,7 +141,7 @@ class OvergangArbeidSteg internal constructor(
                 null -> false
                 TidligereVurderinger.IkkeBehandlingsgrunnlag -> false
                 TidligereVurderinger.UunngåeligAvslag -> false
-                is TidligereVurderinger.PotensieltOppfylt -> {
+                is TidligereVurderinger.PotensieltOppfylt, TidligereVurderinger.Ukjent -> {
                     if (studentvurdering?.erOppfylt() == true) {
                         return@map6 false
                     }

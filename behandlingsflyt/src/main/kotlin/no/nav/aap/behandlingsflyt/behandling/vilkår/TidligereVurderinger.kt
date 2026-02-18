@@ -51,27 +51,11 @@ interface TidligereVurderinger {
         return !girAvslagEllerIngenBehandlingsgrunnlag(kontekst, førSteg)
     }
 
-    enum class BehandlingsutfallType {
-        IKKE_BEHANDLINGSGRUNNLAG,
-        UUNGÅELIG_AVSLAG,
-        POTENSIELT_OPPFYLT,
-    }
-
-    sealed interface Behandlingsutfall {
-        val type: BehandlingsutfallType
-    }
-
-    object IkkeBehandlingsgrunnlag : Behandlingsutfall {
-        override val type = BehandlingsutfallType.IKKE_BEHANDLINGSGRUNNLAG
-    }
-
-    object UunngåeligAvslag : Behandlingsutfall {
-        override val type = BehandlingsutfallType.UUNGÅELIG_AVSLAG
-    }
-
-    data class PotensieltOppfylt(val rettighetstyper: List<RettighetsType>) : Behandlingsutfall {
-        override val type = BehandlingsutfallType.POTENSIELT_OPPFYLT
-    }
+    sealed interface Behandlingsutfall
+    object IkkeBehandlingsgrunnlag : Behandlingsutfall
+    object UunngåeligAvslag : Behandlingsutfall
+    object Ukjent : Behandlingsutfall
+    data class PotensieltOppfylt(val rettighetstyper: List<RettighetsType>) : Behandlingsutfall
 
     fun behandlingsutfall(kontekst: FlytKontekstMedPerioder, førSteg: StegType): Tidslinje<Behandlingsutfall>
 }
@@ -113,7 +97,7 @@ class TidligereVurderingerImpl(
                     if (avbrytRevurderingService.revurderingErAvbrutt(kontekst.behandlingId))
                         TidligereVurderinger.IkkeBehandlingsgrunnlag
                     else
-                        TidligereVurderinger.PotensieltOppfylt(emptyList())
+                        TidligereVurderinger.Ukjent
                 )
             },
 
@@ -123,7 +107,7 @@ class TidligereVurderingerImpl(
                     if (trukketSøknadService.søknadErTrukket(kontekst.behandlingId))
                         TidligereVurderinger.IkkeBehandlingsgrunnlag
                     else
-                        TidligereVurderinger.PotensieltOppfylt(emptyList())
+                        TidligereVurderinger.Ukjent
                 )
             },
 
@@ -139,23 +123,36 @@ class TidligereVurderingerImpl(
                 sykdomssjekk(kontekst)
             },
 
-            Sjekk(StegType.ARBEIDSOPPTRAPPING) { vilkårsresultat, kontekst ->
+            Sjekk(StegType.ARBEIDSOPPTRAPPING) { _, kontekst ->
                 val bistandTidslinje =
                     bistandRepository.hentHvisEksisterer(kontekst.behandlingId)?.somBistandsvurderingstidslinje()
                         .orEmpty()
 
-                sykdomssjekk(kontekst).leftJoin(bistandTidslinje) { left, right ->
-                    val erBistandOppfylt = right?.erBehovForBistand() == true
-                    when (left) {
-                        is TidligereVurderinger.PotensieltOppfylt -> if (!erBistandOppfylt) TidligereVurderinger.PotensieltOppfylt(
-                            left.rettighetstyper.filter {
-                                it !in listOf(
+                sykdomssjekk(kontekst).leftJoin(bistandTidslinje) { sykdomsjekk, bistandvurdering ->
+                    val erBistandOppfylt = bistandvurdering?.erBehovForBistand() == true
+                    when (sykdomsjekk) {
+                        is TidligereVurderinger.PotensieltOppfylt -> {
+                            val utelukkedeRettighetstyper = if (!erBistandOppfylt) {
+                                listOf(
                                     RettighetsType.BISTANDSBEHOV,
                                     RettighetsType.ARBEIDSSØKER
                                 )
-                            }) else TidligereVurderinger.PotensieltOppfylt(left.rettighetstyper.filter { it != RettighetsType.VURDERES_FOR_UFØRETRYGD })
+                            } else {
+                                listOf(RettighetsType.VURDERES_FOR_UFØRETRYGD)
+                            }
 
-                        else -> left
+                            val rettighetstyper =
+                                sykdomsjekk.rettighetstyper.filterNot { it in utelukkedeRettighetstyper }
+
+                            if (rettighetstyper.isEmpty()) {
+                                TidligereVurderinger.UunngåeligAvslag
+                            } else {
+                                TidligereVurderinger.PotensieltOppfylt(rettighetstyper)
+                            }
+
+                        }
+
+                        else -> sykdomsjekk
                     }
                 }
             },
@@ -292,10 +289,8 @@ class TidligereVurderingerImpl(
     ): TidligereVurderinger.Behandlingsutfall {
         val utfall = behandlingsutfall(kontekst, førSteg)
         return when {
-            utfall.isEmpty() || !utfall.erSammenhengende() -> TidligereVurderinger.PotensieltOppfylt(emptyList())
-            utfall.helePerioden() != kontekst.rettighetsperiode -> TidligereVurderinger.PotensieltOppfylt(
-                emptyList()
-            )
+            utfall.isEmpty() || !utfall.erSammenhengende() -> TidligereVurderinger.Ukjent
+            utfall.helePerioden() != kontekst.rettighetsperiode -> TidligereVurderinger.Ukjent
 
             utfall.segmenter()
                 .any { it.verdi == TidligereVurderinger.IkkeBehandlingsgrunnlag } -> TidligereVurderinger.IkkeBehandlingsgrunnlag.also {
@@ -311,7 +306,7 @@ class TidligereVurderingerImpl(
                 )
             }
 
-            else -> TidligereVurderinger.PotensieltOppfylt(emptyList())
+            else -> TidligereVurderinger.Ukjent
         }
     }
 
@@ -325,9 +320,7 @@ class TidligereVurderingerImpl(
             TypeBehandling.Revurdering -> sjekker
 
             else -> return tidslinjeOf(
-                kontekst.rettighetsperiode to TidligereVurderinger.PotensieltOppfylt(
-                    emptyList()
-                )
+                kontekst.rettighetsperiode to TidligereVurderinger.Ukjent
             )
         }
 
@@ -335,7 +328,7 @@ class TidligereVurderingerImpl(
         return listOf(
             tidslinjeOf(
                 kontekst.rettighetsperiode
-                        to TidligereVurderinger.PotensieltOppfylt(emptyList()) as TidligereVurderinger.Behandlingsutfall
+                        to TidligereVurderinger.Ukjent as TidligereVurderinger.Behandlingsutfall
             )
 
         ).asSequence().plus(
@@ -344,15 +337,13 @@ class TidligereVurderingerImpl(
                 .takeWhile { it.steg != førSteg }
                 .map { it.sjekk(vilkårsresultat, kontekst) }
         ).asIterable().outerJoin { listeMedUtfall ->
-            val prioritertUtfall = listeMedUtfall.minByOrNull { utfall -> utfall.type }
-                ?: TidligereVurderinger.PotensieltOppfylt(emptyList())
-
-            if (prioritertUtfall is TidligereVurderinger.PotensieltOppfylt) {
-                listeMedUtfall.lastOrNull { it is TidligereVurderinger.PotensieltOppfylt && it.rettighetstyper.isNotEmpty() }
+            return@outerJoin when {
+                listeMedUtfall.any { it is TidligereVurderinger.IkkeBehandlingsgrunnlag } -> TidligereVurderinger.IkkeBehandlingsgrunnlag
+                listeMedUtfall.any { it is TidligereVurderinger.UunngåeligAvslag } -> TidligereVurderinger.UunngåeligAvslag
+                else -> listeMedUtfall.lastOrNull { it is TidligereVurderinger.PotensieltOppfylt }
                     ?: listeMedUtfall.last()
-            } else prioritertUtfall
-        }
-            .begrensetTil(kontekst.rettighetsperiode)
+            }
+        }.begrensetTil(kontekst.rettighetsperiode)
     }
 
     override fun girAvslagEllerIngenBehandlingsgrunnlag(
@@ -388,7 +379,7 @@ class TidligereVurderingerImpl(
             .mapValue {
                 when (it.utfall) {
                     IKKE_OPPFYLT -> TidligereVurderinger.UunngåeligAvslag
-                    else -> TidligereVurderinger.PotensieltOppfylt(emptyList())
+                    else -> TidligereVurderinger.Ukjent
                 }
             }
     }
