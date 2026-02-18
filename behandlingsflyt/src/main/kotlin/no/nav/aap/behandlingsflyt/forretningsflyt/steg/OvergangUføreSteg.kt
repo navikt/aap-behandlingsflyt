@@ -6,12 +6,12 @@ import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.behandling.vilkår.overganguføre.OvergangUføreFaktagrunnlag
 import no.nav.aap.behandlingsflyt.behandling.vilkår.overganguføre.OvergangUføreVilkår
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreValidering.nårVurderingErKonsistentMedSykdomOgBistand
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreValidering.sykdomErOppfyltOgBistandErIkkeOppfylt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
@@ -48,7 +48,7 @@ class OvergangUføreSteg private constructor(
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val perioderSomIkkeErTilstrekkeligVurdert: () -> Set<Periode> =
             { perioderSomIkkeErTilstrekkeligVurdert(kontekst) }
-        
+
         avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkårTilstrekkeligVurdert(
             kontekst = kontekst,
             definisjon = Definisjon.AVKLAR_OVERGANG_UFORE,
@@ -88,24 +88,12 @@ class OvergangUføreSteg private constructor(
 
     override fun nårVurderingErRelevant(kontekst: FlytKontekstMedPerioder): Tidslinje<Boolean> {
         val utfall = tidligereVurderinger.behandlingsutfall(kontekst, type())
-        val sykdomsvurderinger =
-            sykdomRepository.hentHvisEksisterer(kontekst.behandlingId)?.somSykdomsvurderingstidslinje().orEmpty()
-        val bistandsvurderinger =
-            bistandRepository.hentHvisEksisterer(kontekst.behandlingId)?.somBistandsvurderingstidslinje().orEmpty()
-
-        return Tidslinje.map3(
-            utfall,
-            sykdomsvurderinger,
-            bistandsvurderinger
-        ) { segmentPeriode, utfall, sykdomsvurdering, bistandsvurdering ->
+        return utfall.map { utfall ->
             when (utfall) {
-                null -> false
                 TidligereVurderinger.IkkeBehandlingsgrunnlag -> false
                 TidligereVurderinger.UunngåeligAvslag -> false
                 is TidligereVurderinger.PotensieltOppfylt -> {
-                    sykdomErOppfyltOgBistandErIkkeOppfylt(
-                        kontekst.rettighetsperiode.fom, segmentPeriode, sykdomsvurdering, bistandsvurdering
-                    )
+                    utfall.rettighetstyper.contains(RettighetsType.VURDERES_FOR_UFØRETRYGD)
                 }
             }
         }
