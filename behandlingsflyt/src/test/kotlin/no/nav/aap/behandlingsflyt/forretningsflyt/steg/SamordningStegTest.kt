@@ -102,8 +102,9 @@ class SamordningStegTest {
             )
         } answers {
             tidslinjeOf(
-                firstArg<FlytKontekstMedPerioder>().rettighetsperiode to TidligereVurderinger.PotensieltOppfylt(emptyList())
+                firstArg<FlytKontekstMedPerioder>().rettighetsperiode to TidligereVurderinger.Ukjent
             )
+            
         }
         every { avbrytRevurderingRepository.hentHvisEksisterer(any()) } returns null
     }
