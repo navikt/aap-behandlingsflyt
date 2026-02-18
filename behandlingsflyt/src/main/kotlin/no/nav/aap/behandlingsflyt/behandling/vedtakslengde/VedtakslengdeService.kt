@@ -125,31 +125,45 @@ class VedtakslengdeService(
         vedtattSluttdato: LocalDate?,
     ): LocalDate {
         val rettighetstypeTidslinje = rettighetstypeRepository.hentHvisEksisterer(behandlingId)?.rettighetstypeTidslinje
-        val sisteRettighetstypeSegment = rettighetstypeTidslinje?.segmenter()?.lastOrNull()
+        val initiellSluttdato = utledInitiellSluttdato(behandlingId, rettighetsperiode).tom
 
-        val sluttdatoForBehandlingen = when (sisteRettighetstypeSegment?.verdi) {
-            RettighetsType.BISTANDSBEHOV, null -> {
-                val initiellSluttdato = utledInitiellSluttdato(behandlingId, rettighetsperiode).tom
-                val gjeldendeSluttdato = listOfNotNull(initiellSluttdato, vedtattSluttdato).max()
-                val sisteDatoMedKvoteOppfylt = sisteRettighetstypeSegment?.periode?.tom
-
-                // Returnere til og med kvote-slutt dersom denne datoen kommer før gjeldende sluttdato
-                listOfNotNull(sisteDatoMedKvoteOppfylt, gjeldendeSluttdato).min()
-            }
-            RettighetsType.SYKEPENGEERSTATNING,
-            RettighetsType.STUDENT,
-            RettighetsType.VURDERES_FOR_UFØRETRYGD,
-            RettighetsType.ARBEIDSSØKER -> {
-                sisteRettighetstypeSegment.periode.tom
-            }
+        // Ved avslag sett inntil ett år slik det var gjort tidligere
+        if (rettighetstypeTidslinje?.isEmpty() == true) {
+            return initiellSluttdato
         }
 
-        // Tillater ikke innskrenkelse av vedtakslengde da forrige vedtak kan ha sendt over perioder til utbetaling
-        val endeligSluttdato = listOfNotNull(sluttdatoForBehandlingen, vedtattSluttdato).max()
+        val sluttdatoSisteUnntaksrettighet = rettighetstypeTidslinje?.segmenter()
+            ?.findLast { it.verdi in unntaksrettighetstyper() }
+            ?.periode?.tom
 
-        log.info("Setter sluttdato $endeligSluttdato basert på rettighetstype ${sisteRettighetstypeSegment?.verdi}")
-        return endeligSluttdato
+        log.info("Sluttdato for siste unntaksrettighet: $sluttdatoSisteUnntaksrettighet")
+
+        val sluttdatoSisteBistandsbehov = rettighetstypeTidslinje?.segmenter()
+            ?.findLast { it.verdi == RettighetsType.BISTANDSBEHOV }
+            ?.periode?.tom
+
+        log.info("Sluttdato for siste bistandsbehov: $sluttdatoSisteBistandsbehov")
+
+        // På sikt gi opp til ett år frem i tid fra vedtakstidspunkt her (ved feks omgjøring / behandling bakover i tid)
+        val sluttdatoBistandsbehov = if (sluttdatoSisteBistandsbehov != null) {
+            // Returnere til og med kvote-slutt dersom denne datoen kommer før utledet sluttdato
+            listOfNotNull(sluttdatoSisteBistandsbehov, initiellSluttdato).min()
+        } else null
+
+        // Tillater ikke innskrenkelse av vedtakslengde da forrige vedtak kan ha sendt over perioder til utbetaling
+        val kandidaterForSluttdato =  listOfNotNull(sluttdatoSisteUnntaksrettighet, sluttdatoBistandsbehov, vedtattSluttdato)
+        val sluttdatoForBehandlingen = kandidaterForSluttdato.max()
+
+        log.info("Setter sluttdato: $sluttdatoForBehandlingen")
+        return sluttdatoForBehandlingen
     }
+
+    private fun unntaksrettighetstyper(): List<RettighetsType> = listOf(
+        RettighetsType.SYKEPENGEERSTATNING,
+        RettighetsType.STUDENT,
+        RettighetsType.VURDERES_FOR_UFØRETRYGD,
+        RettighetsType.ARBEIDSSØKER
+    )
 
     @Deprecated("Den første varianten - denne vil utvide med ett år uavhengig av rettighetstype")
     fun lagreGjeldendeSluttdatoHvisIkkeEksisterer(

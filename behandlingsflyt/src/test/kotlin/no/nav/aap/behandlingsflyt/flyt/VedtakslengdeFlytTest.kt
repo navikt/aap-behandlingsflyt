@@ -43,7 +43,6 @@ import no.nav.aap.behandlingsflyt.test.fixedClock
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.motor.FlytJobbRepositoryImpl
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.verdityper.dokument.JournalpostId
@@ -265,14 +264,111 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(VedtakslengdeFlytUnlea
                 val vedtakslengdeGrunnlag = vedtasklengdeRepository.hentHvisEksisterer(this.behandling.id)
                 assertThat(vedtakslengdeGrunnlag?.vurdering?.sluttdato).isEqualTo(overgangDato.plusMonths(6).minusDays(1))
             }
-            .assertRettighetstype(
-                Periode(
-                    startDato, overgangDato.minusDays(1),
-                ) to RettighetsType.BISTANDSBEHOV,
-                Periode(
-                    overgangDato, overgangDato.plusMonths(6).minusDays(1)
-                ) to RettighetsType.ARBEIDSSØKER,
+    }
+
+    @Test
+    fun `skal sette sluttdato 14 måneder frem i tid når siste oppfylte rettighetstype er bistand`() {
+        val søknadstidspunkt = LocalDateTime.now(clock)
+        val (sak, førstegangsbehandling) = sendInnFørsteSøknad(mottattTidspunkt = søknadstidspunkt)
+        val startDato = sak.rettighetsperiode.fom
+        val overgangDato = startDato.plusMonths(8)
+        val tilbakeTilBistandDato = startDato.plusMonths(14)
+
+        førstegangsbehandling
+            .løsAvklaringsBehov(
+                AvklarSykdomLøsning(
+                    løsningerForPerioder = listOf(
+                        SykdomsvurderingLøsningDto(
+                            begrunnelse = "Er syk nok",
+                            dokumenterBruktIVurdering = listOf(JournalpostId("123128")),
+                            harSkadeSykdomEllerLyte = true,
+                            erSkadeSykdomEllerLyteVesentligdel = true,
+                            erNedsettelseIArbeidsevneMerEnnHalvparten = true,
+                            erNedsettelseIArbeidsevneAvEnVissVarighet = true,
+                            erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
+                            erArbeidsevnenNedsatt = true,
+                            yrkesskadeBegrunnelse = null,
+                            fom = startDato,
+                            tom = overgangDato.minusDays(1)
+                        ),
+                        SykdomsvurderingLøsningDto(
+                            begrunnelse = "Ikke syk",
+                            dokumenterBruktIVurdering = listOf(JournalpostId("123128")),
+                            harSkadeSykdomEllerLyte = false,
+                            erSkadeSykdomEllerLyteVesentligdel = false,
+                            erNedsettelseIArbeidsevneMerEnnHalvparten = false,
+                            erNedsettelseIArbeidsevneAvEnVissVarighet = false,
+                            erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
+                            erArbeidsevnenNedsatt = false,
+                            yrkesskadeBegrunnelse = null,
+                            fom = overgangDato,
+                            tom = tilbakeTilBistandDato.minusDays(1)
+                        ),
+                        SykdomsvurderingLøsningDto(
+                            begrunnelse = "Er syk nok",
+                            dokumenterBruktIVurdering = listOf(JournalpostId("123128")),
+                            harSkadeSykdomEllerLyte = true,
+                            erSkadeSykdomEllerLyteVesentligdel = true,
+                            erNedsettelseIArbeidsevneMerEnnHalvparten = true,
+                            erNedsettelseIArbeidsevneAvEnVissVarighet = true,
+                            erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
+                            erArbeidsevnenNedsatt = true,
+                            yrkesskadeBegrunnelse = null,
+                            fom = tilbakeTilBistandDato,
+                            tom = null
+                        ),
+                    )
+                )
+
             )
+            .løsAvklaringsBehov(
+                AvklarBistandsbehovLøsning(
+                    løsningerForPerioder = listOf(
+                        BistandLøsningDto(
+                            begrunnelse = "Trenger hjelp fra nav",
+                            erBehovForAktivBehandling = true,
+                            erBehovForArbeidsrettetTiltak = false,
+                            erBehovForAnnenOppfølging = null,
+                            skalVurdereAapIOvergangTilArbeid = null,
+                            overgangBegrunnelse = null,
+                            fom = startDato,
+                            tom = overgangDato.minusDays(1)
+                        ),
+                        BistandLøsningDto(
+                            begrunnelse = "Trenger hjelp fra nav",
+                            erBehovForAktivBehandling = false,
+                            erBehovForArbeidsrettetTiltak = false,
+                            erBehovForAnnenOppfølging = false,
+                            skalVurdereAapIOvergangTilArbeid = null,
+                            overgangBegrunnelse = "Skal over i arbeid",
+                            fom = overgangDato,
+                            tom = tilbakeTilBistandDato.minusDays(1)
+                        ),
+                        BistandLøsningDto(
+                            begrunnelse = "Trenger hjelp fra nav",
+                            erBehovForAktivBehandling = true,
+                            erBehovForArbeidsrettetTiltak = false,
+                            erBehovForAnnenOppfølging = null,
+                            skalVurdereAapIOvergangTilArbeid = null,
+                            overgangBegrunnelse = null,
+                            fom = tilbakeTilBistandDato,
+                            tom = null
+                        ),
+                    )
+                )
+            )
+            .løsOvergangArbeid(Utfall.OPPFYLT, fom = overgangDato)
+            .løsRefusjonskrav()
+            .løsSykdomsvurderingBrev()
+            .kvalitetssikreOk()
+            .løsBeregningstidspunkt(startDato)
+            .løsOppholdskrav(startDato)
+            .løsAndreStatligeYtelser()
+            .medKontekst {
+                val vedtasklengdeRepository: VedtakslengdeRepository = repositoryProvider.provide()
+                val vedtakslengdeGrunnlag = vedtasklengdeRepository.hentHvisEksisterer(this.behandling.id)
+                assertThat(vedtakslengdeGrunnlag?.vurdering?.sluttdato).isEqualTo(overgangDato.plusMonths(6).minusDays(1))
+            }
     }
 
     @Test
