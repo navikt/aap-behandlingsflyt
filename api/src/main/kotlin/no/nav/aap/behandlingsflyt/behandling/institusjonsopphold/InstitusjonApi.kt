@@ -22,6 +22,7 @@ import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
+import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.komponenter.type.Periode
@@ -340,13 +341,61 @@ private fun mapVurderingerToDto(
     }
 
 private fun byggTidslinjeAvTypeNy(
-    soningsopphold: InstitusjonsoppholdGrunnlag?, institusjonstype: Institusjonstype
+    institusjonsoppholdgrunnlag: InstitusjonsoppholdGrunnlag?,
+    institusjonstype: Institusjonstype
 ): Tidslinje<Institusjon> {
-    return Tidslinje(soningsopphold?.oppholdene?.opphold?.filter { it.verdi.type == institusjonstype }.orEmpty())
+
+    val segments = institusjonsoppholdgrunnlag
+        ?.oppholdene
+        ?.opphold
+        ?.filter { it.verdi.type == institusjonstype }
+        ?.sortedBy { it.periode.fom }
+        .orEmpty()
+
+    return Tidslinje(justerSammenhengendePerioder(segments))
 }
 
 private fun byggTidslinjeAvType(
     soningsopphold: InstitusjonsoppholdGrunnlag?, institusjonstype: Institusjonstype
 ): Tidslinje<Institusjon> {
     return Tidslinje(soningsopphold?.oppholdene?.opphold?.filter { it.verdi.type == institusjonstype }.orEmpty())
+}
+
+private fun justerSammenhengendePerioder(
+    segments: List<Segment<Institusjon>>
+): List<Segment<Institusjon>> {
+
+    if (segments.size < 2) return segments
+    val resultat = mutableListOf<Segment<Institusjon>>()
+
+    for (i in segments.indices) {
+        val current = segments[i]
+
+        if (i == segments.lastIndex) {
+            resultat.add(current)
+            break
+        }
+        val next = segments[i + 1]
+        resultat.add(justerHvisStarterSammeDag(current, next))
+    }
+    return resultat
+}
+
+private fun justerHvisStarterSammeDag(
+    current: Segment<Institusjon>,
+    next: Segment<Institusjon>
+): Segment<Institusjon> {
+
+    val currentTom = current.periode.tom
+    val nextFom = next.periode.fom
+
+    if (currentTom == nextFom) {
+        val nyPeriode = Periode(
+            fom = current.periode.fom,
+            tom = currentTom.minusDays(1)
+        )
+        return current.copy(periode = nyPeriode)
+    }
+
+    return current
 }
