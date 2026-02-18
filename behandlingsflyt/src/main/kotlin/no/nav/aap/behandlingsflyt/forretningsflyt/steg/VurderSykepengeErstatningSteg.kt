@@ -127,7 +127,7 @@ class VurderSykepengeErstatningSteg private constructor(
                 null -> false
                 is TidligereVurderinger.IkkeBehandlingsgrunnlag -> false
                 is TidligereVurderinger.UunngåeligAvslag -> false
-                is TidligereVurderinger.PotensieltOppfylt, TidligereVurderinger.Ukjent -> {
+                is TidligereVurderinger.PotensieltOppfylt -> {
                     when {
                         sykdomsvurdering?.erOppfyltOrdinær(kravDato, segmentPeriode) == true
                                 && bistandvurdering?.erBehovForBistand() != true

@@ -65,7 +65,7 @@ class VurderSykdomSteg(
                 null -> false
                 TidligereVurderinger.IkkeBehandlingsgrunnlag -> false
                 TidligereVurderinger.UunngåeligAvslag -> false
-                is TidligereVurderinger.PotensieltOppfylt, TidligereVurderinger.Ukjent -> {
+                is TidligereVurderinger.PotensieltOppfylt -> {
                     studentvurdering?.erOppfylt() != true
                 }
             }

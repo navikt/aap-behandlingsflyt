@@ -102,7 +102,7 @@ class SamordningStegTest {
             )
         } answers {
             tidslinjeOf(
-                firstArg<FlytKontekstMedPerioder>().rettighetsperiode to TidligereVurderinger.Ukjent
+                firstArg<FlytKontekstMedPerioder>().rettighetsperiode to TidligereVurderinger.PotensieltOppfylt(null)
             )
             
         }

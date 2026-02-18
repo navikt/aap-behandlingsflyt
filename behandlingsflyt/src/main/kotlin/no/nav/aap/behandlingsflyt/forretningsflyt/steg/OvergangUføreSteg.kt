@@ -6,7 +6,6 @@ import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.behandling.vilkår.overganguføre.OvergangUføreFaktagrunnlag
 import no.nav.aap.behandlingsflyt.behandling.vilkår.overganguføre.OvergangUføreVilkår
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandRepository
@@ -88,15 +87,28 @@ class OvergangUføreSteg private constructor(
 
     override fun nårVurderingErRelevant(kontekst: FlytKontekstMedPerioder): Tidslinje<Boolean> {
         val utfall = tidligereVurderinger.behandlingsutfall(kontekst, type())
-        return utfall.map { utfall ->
+        val sykdomsvurderinger =
+            sykdomRepository.hentHvisEksisterer(kontekst.behandlingId)?.somSykdomsvurderingstidslinje().orEmpty()
+ 
+        return Tidslinje.map2(
+            utfall,
+            sykdomsvurderinger
+        ) { segmentPeriode, utfall, sykdomsvurering ->
             when (utfall) {
-                TidligereVurderinger.IkkeBehandlingsgrunnlag,
-                TidligereVurderinger.UunngåeligAvslag, 
-                TidligereVurderinger.Ukjent -> false
-                
+                TidligereVurderinger.IkkeBehandlingsgrunnlag, TidligereVurderinger.UunngåeligAvslag -> false
                 is TidligereVurderinger.PotensieltOppfylt -> {
-                    utfall.rettighetstyper.contains(RettighetsType.VURDERES_FOR_UFØRETRYGD)
+                    val erSykdomOppfyltOrdinærEllerPotensieltYrkesskade =
+                        sykdomsvurering?.erOppfyltForYrkesskadeSettBortIfraÅrsakssammenheng(
+                            kontekst.rettighetsperiode.fom,
+                            segmentPeriode
+                        ) == true || sykdomsvurering?.erOppfyltOrdinær(
+                            kontekst.rettighetsperiode.fom,
+                            segmentPeriode
+                        ) == true
+
+                   erSykdomOppfyltOrdinærEllerPotensieltYrkesskade && utfall.rettighetstype == null
                 }
+                else -> false
             }
         }
     }

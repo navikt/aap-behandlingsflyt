@@ -58,7 +58,7 @@ fun NormalOpenAPIRoute.tidligereVurderingerApi(
                         periode = it.periode,
                         utfall = BehandlingsutfallType.fraBehandlingsutfall(verdi),
                         rettighetstyper = when (verdi) {
-                            is TidligereVurderinger.PotensieltOppfylt -> verdi.rettighetstyper
+                            is TidligereVurderinger.PotensieltOppfylt -> verdi.rettighetstype
                             else -> emptyList()
                         }
                     )

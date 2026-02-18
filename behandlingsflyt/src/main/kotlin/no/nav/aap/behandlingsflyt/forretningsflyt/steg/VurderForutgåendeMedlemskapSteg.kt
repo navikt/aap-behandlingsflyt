@@ -139,7 +139,7 @@ class VurderForutgåendeMedlemskapSteg private constructor(
                     null -> false
                     TidligereVurderinger.IkkeBehandlingsgrunnlag -> false
                     TidligereVurderinger.UunngåeligAvslag -> false
-                    is TidligereVurderinger.PotensieltOppfylt, TidligereVurderinger.Ukjent -> {
+                    is TidligereVurderinger.PotensieltOppfylt -> {
                         val automatiskVilkårsvurderingForutgåendeMedlemskapIkkeOppfylt =
                             automatiskVilkårsvurderingLovvalg?.erOppfylt() == false
 
