@@ -79,6 +79,8 @@ class VurderSykdomSteg(
             .mapValue { it.vurderingenGjelderFra <= kontekst.rettighetsperiode.tom }
     }
 
+    override val stegType = type()
+
     companion object : FlytSteg {
         override fun konstruer(
             repositoryProvider: RepositoryProvider,
