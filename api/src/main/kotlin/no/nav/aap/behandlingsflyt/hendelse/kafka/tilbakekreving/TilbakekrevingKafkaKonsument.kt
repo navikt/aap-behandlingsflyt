@@ -9,6 +9,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.json.DefaultJsonMapper
+import no.nav.aap.komponenter.json.DeserializationException
 import no.nav.aap.komponenter.miljo.Miljø
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import org.apache.kafka.clients.consumer.ConsumerRecord
@@ -60,7 +61,7 @@ class TilbakekrevingKafkaKonsument(
             "behandling_endret" -> {
                 val hendelse = try {
                     DefaultJsonMapper.fromJson<TilbakekrevingHendelseKafkaMelding>(meldingVerdi)
-                } catch (exception: Exception) {
+                } catch (exception: DeserializationException) {
                     log.error("Kunne ikke parse melding fra tilbakekreving: $meldingKey", exception)
                     secureLogger.error("Kunne ikke parse melding fra tilbakekreving: $meldingKey med verdi: $meldingVerdi", exception)
                     throw exception
@@ -71,7 +72,7 @@ class TilbakekrevingKafkaKonsument(
             "fagsysteminfo_behov" -> {
                 val hendelse = try {
                     DefaultJsonMapper.fromJson<FagsysteminfoBehovKafkaMelding>(meldingVerdi)
-                } catch (exception: Exception) {
+                } catch (exception: DeserializationException) {
                     log.error("Kunne ikke parse melding fra tilbakekreving: $meldingKey", exception)
                     secureLogger.error("Kunne ikke parse melding fra tilbakekreving: $meldingKey med verdi: $meldingVerdi", exception)
                     throw exception

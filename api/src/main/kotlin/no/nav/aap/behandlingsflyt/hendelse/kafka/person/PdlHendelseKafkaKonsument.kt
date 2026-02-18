@@ -29,7 +29,6 @@ import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.person.pdl.leesah.Personhendelse
 
-import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.apache.kafka.clients.consumer.ConsumerRecords
 import org.slf4j.LoggerFactory
 import javax.sql.DataSource
@@ -58,12 +57,12 @@ class PdlHendelseKafkaKonsument(
     override fun håndter(meldinger: ConsumerRecords<String, Personhendelse>) {
         meldinger.forEach { record ->
             val personHendelse = record.value().tilDomain()
-            håndter(record, personHendelse)
+            håndter(personHendelse)
         }
 
     }
 
-    fun håndter(melding: ConsumerRecord<String, Personhendelse>, personHendelse: PdlPersonHendelse) {
+    fun håndter(personHendelse: PdlPersonHendelse) {
         dataSource.transaction {
             val repositoryProvider = repositoryRegistry.provider(it)
             val sakRepository: SakRepository = repositoryProvider.provide()

@@ -64,7 +64,7 @@ class KabalKafkaKonsument(
                 val saksnummer =
                     try {
                         behandlingRepository.finnSaksnummer(BehandlingReferanse(UUID.fromString(hendelsekilde.kildeReferanse)))
-                    } catch (e: Exception) {
+                    } catch (e: NoSuchElementException) {
                         log.info(
                             "Kunne ikke finne saksnummer for klagehendelse med id ${hendelsekilde.eventId}, oppretter feiljobb",
                             e
