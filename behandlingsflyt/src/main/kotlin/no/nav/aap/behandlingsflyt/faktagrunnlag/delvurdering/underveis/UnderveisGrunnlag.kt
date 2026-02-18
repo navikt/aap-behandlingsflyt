@@ -52,7 +52,7 @@ data class UnderveisGrunnlag(
                 gjenværendeKvote = totalKvote?.minus(bruktKvote)
             )
         }
-        val senestePeriodeKvote = periodeKvoter.lastOrNull()
+        val senestePeriodeKvote = periodeKvoter.lastOrNull { it.periode.fom <= LocalDate.now() }
 
         return RettighetKvoter(
             totalKvote = totalKvote,
