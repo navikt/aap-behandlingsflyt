@@ -1,5 +1,5 @@
 [versions]
-ktor = "3.3.3"
+ktor = "3.4.0"
 komponenter = "2.0.1"
 tilgang = "1.0.179"
 utbetaling = "0.0.77"
