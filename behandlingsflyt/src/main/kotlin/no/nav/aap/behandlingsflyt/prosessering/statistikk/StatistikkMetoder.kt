@@ -421,7 +421,7 @@ class StatistikkMetoder(
                 beregningsgrunnlag = when (grunnlag.underliggende()) {
                     is Grunnlag11_19 -> beregningsgrunnlagDTO(grunnlag.underliggende())
                     is GrunnlagUføre -> beregningsgrunnlagDTO(grunnlag.underliggende())
-                    is GrunnlagYrkesskade -> throw RuntimeException("Grunnlagyrkesskade kan ikke ha grunnlag yrkesskade")
+                    is GrunnlagYrkesskade -> error("Grunnlagyrkesskade kan ikke ha grunnlag yrkesskade")
                 },
                 andelYrkesskade = grunnlag.andelYrkesskade().prosentverdi(),
                 andelSomSkyldesYrkesskade = grunnlag.andelSomSkyldesYrkesskade().verdi(),
