@@ -13,7 +13,7 @@ import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 import java.util.UUID
 
-class LegeerklæringFlytTest: AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
+class LegeerklæringFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
     @Test
     fun `Fjerner legeerklæring ventebehov ved mottak av avvist legeerklæring`() {
         // Oppretter vanlig søknad
@@ -24,12 +24,11 @@ class LegeerklæringFlytTest: AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::c
         }
 
         // Oppretter bestilling av legeerklæring
-        bestillLegeerklæring(behandling.id)
-        motor.kjørJobber()
-
-        behandling.medKontekst {
-            assertThat(åpneAvklaringsbehov.all { it.definisjon == Definisjon.BESTILL_LEGEERKLÆRING })
-        }
+        behandling
+            .bestillLegeerklæring()
+            .medKontekst {
+                assertThat(åpneAvklaringsbehov.all { it.definisjon == Definisjon.BESTILL_LEGEERKLÆRING })
+            }
 
         // Send inn avvist legeerklæring
         val avvistLegeerklæringId = UUID.randomUUID().toString()
@@ -64,19 +63,17 @@ class LegeerklæringFlytTest: AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::c
         val (sak, behandling) = sendInnFørsteSøknad()
 
         // Validér avklaring
-        var åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling)
-        assertThat(åpneAvklaringsbehov).anySatisfy { assertThat(it.definisjon).isEqualTo(Definisjon.AVKLAR_SYKDOM) }
-
-        // Oppretter bestilling av legeerklæring
-        bestillLegeerklæring(behandling.id)
-        motor.kjørJobber()
-
-        åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling)
-        assertThat(åpneAvklaringsbehov).anySatisfy { assertThat(it.definisjon).isEqualTo(Definisjon.BESTILL_LEGEERKLÆRING) }
-
-        // Validér avklaring
-        åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling.id)
-        assertThat(åpneAvklaringsbehov.all { it.definisjon == Definisjon.BESTILL_LEGEERKLÆRING })
+        behandling.medKontekst {
+            assertThat(åpneAvklaringsbehov).anySatisfy { assertThat(it.definisjon).isEqualTo(Definisjon.AVKLAR_SYKDOM) }
+        } // Oppretter bestilling av legeerklæring
+            .bestillLegeerklæring()
+            .medKontekst {
+                // Både ventebehovet og avklaringsbehovet er åpent
+                assertThat(åpneAvklaringsbehov.map { it.definisjon }).contains(
+                    Definisjon.BESTILL_LEGEERKLÆRING,
+                    Definisjon.AVKLAR_SYKDOM
+                )
+            }
 
         // Mottar legeerklæring
         val journalpostId = UUID.randomUUID().toString()
@@ -98,12 +95,11 @@ class LegeerklæringFlytTest: AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::c
         motor.kjørJobber()
 
         // Validér avklaring
-        åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling.id)
-
-        val legeerklæringBestillingVenteBehov =
-            åpneAvklaringsbehov.filter { it.definisjon == Definisjon.BESTILL_LEGEERKLÆRING }
-        assertThat(legeerklæringBestillingVenteBehov).isEmpty()
-
+        behandling.medKontekst {
+            val legeerklæringBestillingVenteBehov =
+                åpneAvklaringsbehov.filter { it.definisjon == Definisjon.BESTILL_LEGEERKLÆRING }
+            assertThat(legeerklæringBestillingVenteBehov).isEmpty()
+        }
     }
 
     @Test
@@ -112,17 +108,15 @@ class LegeerklæringFlytTest: AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::c
         val (sak, behandling) = sendInnFørsteSøknad()
 
         // Validér avklaring
-        var åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling)
-        assertThat(åpneAvklaringsbehov).anySatisfy { assertThat(it.definisjon).isEqualTo(Definisjon.AVKLAR_SYKDOM) }
+        behandling.medKontekst {
+            assertThat(åpneAvklaringsbehov).anySatisfy { assertThat(it.definisjon).isEqualTo(Definisjon.AVKLAR_SYKDOM) }
+        }
+            // Oppretter bestilling av legeerklæring
+            .bestillLegeerklæring()
+            .medKontekst {
+                assertThat(åpneAvklaringsbehov).anySatisfy { assertThat(it.definisjon).isEqualTo(Definisjon.BESTILL_LEGEERKLÆRING) }
 
-        // Oppretter bestilling av legeerklæring
-        bestillLegeerklæring(behandling.id)
-
-        assertThat(hentÅpneAvklaringsbehov(behandling)).anySatisfy { assertThat(it.definisjon).isEqualTo(Definisjon.BESTILL_LEGEERKLÆRING) }
-
-        // Validér avklaring
-        åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling)
-        assertThat(åpneAvklaringsbehov.all { it.definisjon == Definisjon.BESTILL_LEGEERKLÆRING })
+            }
 
         // Mottar dialogmelding
         val journalpostId = UUID.randomUUID().toString()
@@ -144,10 +138,11 @@ class LegeerklæringFlytTest: AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::c
         motor.kjørJobber()
 
         // Validér avklaring
-        åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling.id)
-        val legeerklæringBestillingVenteBehov =
-            åpneAvklaringsbehov.filter { it.definisjon == Definisjon.BESTILL_LEGEERKLÆRING }
-        assertThat(legeerklæringBestillingVenteBehov).isEmpty()
+        behandling.medKontekst {
+            val legeerklæringBestillingVenteBehov =
+                åpneAvklaringsbehov.filter { it.definisjon == Definisjon.BESTILL_LEGEERKLÆRING }
+            assertThat(legeerklæringBestillingVenteBehov).isEmpty()
+        }
     }
 
 }

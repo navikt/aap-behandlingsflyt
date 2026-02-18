@@ -208,7 +208,7 @@ class PdlHendelseKafkaKonsument(
         personHendelse: PdlPersonHendelse,
         hendelseService: MottattHendelseService
     ) {
-        saksbehandlersOppgitteBarn?.let { barn ->
+        saksbehandlersOppgitteBarn?.let { _ ->
             val behandlingIdsForSaksbehandlerOppgitteBarn =
                 barnRepository.hentBehandlingIdForSakSomFårBarnetilleggForSaksbehandlerOppgitteBarn(
                     funnetIdent!!
@@ -332,7 +332,7 @@ class PdlHendelseKafkaKonsument(
             opprettet = this.opprettet,
             opplysningstype = try {
                 Opplysningstype.valueOf(this.opplysningstype)
-            } catch (e: IllegalArgumentException) {
+            } catch (_: IllegalArgumentException) {
                 log.info("Fant ukjent opplysningstype fra PDL: ${this.opplysningstype}")
                 Opplysningstype.UNKNOWN
             },

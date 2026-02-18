@@ -1015,11 +1015,12 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
         }
     }
 
-    fun bestillLegeerklæring(key: BehandlingId) {
+    fun Behandling.bestillLegeerklæring(): Behandling {
         dataSource.transaction { connection ->
             AvklaringsbehovOrkestrator(postgresRepositoryRegistry.provider(connection), gatewayProvider)
-                .settPåVentMensVentePåMedisinskeOpplysninger(key, SYSTEMBRUKER)
+                .settPåVentMensVentePåMedisinskeOpplysninger(this.id, SYSTEMBRUKER)
         }
+        return prosesserBehandling(this)
     }
 
     protected fun hentBrevAvTypeForSak(sak: Sak, typeBrev: TypeBrev): List<Brevbestilling> {
