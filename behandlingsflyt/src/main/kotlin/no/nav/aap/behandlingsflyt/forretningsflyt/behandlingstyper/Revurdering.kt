@@ -383,7 +383,6 @@ object Revurdering : BehandlingType {
                     Vurderingsbehov.REVURDER_SYKESTIPEND
                 )
             )
-            .medSteg(steg = RettighetstypeSteg)
             .medSteg(
                 steg = SamordningAndreStatligeYtelserSteg,
                 informasjonskrav = listOf(DagpengerInformasjonskrav),
@@ -403,6 +402,7 @@ object Revurdering : BehandlingType {
                 informasjonskrav = listOf(MeldekortInformasjonskrav, Aktivitetsplikt11_7Informasjonskrav)
             )
             .medSteg(steg = Effektuer11_7Steg)
+            .medSteg(steg = RettighetstypeSteg)
             .medSteg(steg = VedtakslengdeSteg, informasjonskrav = listOf(VedtakslengdeInformasjonskrav))
             .medSteg(steg = UnderveisSteg)
             .medSteg(
