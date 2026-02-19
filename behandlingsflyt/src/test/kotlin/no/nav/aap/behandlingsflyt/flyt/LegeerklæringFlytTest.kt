@@ -1,17 +1,20 @@
 package no.nav.aap.behandlingsflyt.flyt
 
+import no.nav.aap.behandlingsflyt.flyt.TestPersoner.PERSON_62
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.prosessering.HendelseMottattHåndteringJobbUtfører
 import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.komponenter.dbconnect.transaction
+import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.verdityper.dokument.Kanal
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import java.time.LocalDate
 import java.time.LocalDateTime
-import java.util.UUID
+import java.util.*
 
 class LegeerklæringFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
     @Test
@@ -100,6 +103,42 @@ class LegeerklæringFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::
                 åpneAvklaringsbehov.filter { it.definisjon == Definisjon.BESTILL_LEGEERKLÆRING }
             assertThat(legeerklæringBestillingVenteBehov).isEmpty()
         }
+    }
+
+
+    @Test
+    fun `Ventebehov gjør at behandling ikke kommer videre før fristen er gått ut`() {
+        val fom = LocalDate.now()
+        val periode = Periode(fom, fom.plusYears(3))
+        val person = PERSON_62().medInntekter(emptyList())
+
+        val (sak, behandling) = sendInnFørsteSøknad(
+            person = person,
+            mottattTidspunkt = fom.atStartOfDay(),
+            periode = periode,
+        )
+
+        // Validér avklaring
+        behandling
+            .løsLovvalg(sak.rettighetsperiode.fom)
+            .medKontekst {
+                assertThat(åpneAvklaringsbehov).anySatisfy { assertThat(it.definisjon).isEqualTo(Definisjon.AVKLAR_SYKDOM) }
+            } // Oppretter bestilling av legeerklæring
+            .bestillLegeerklæring()
+            .medKontekst {
+                // Både ventebehovet og avklaringsbehovet er åpent
+                assertThat(åpneAvklaringsbehov.map { it.definisjon }).contains(
+                    Definisjon.BESTILL_LEGEERKLÆRING,
+                    Definisjon.AVKLAR_SYKDOM
+                )
+            }
+            .løsLovvalg(sak.rettighetsperiode.fom, false)
+            .medKontekst {
+                // Ønsker å dra rett til foreslå vedtak!
+                assertThat(åpneAvklaringsbehov.map { it.definisjon }).contains(
+                    Definisjon.BESTILL_LEGEERKLÆRING,
+                )
+            }
     }
 
     @Test
