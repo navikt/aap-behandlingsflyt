@@ -240,7 +240,9 @@ class HåndterMottattDokumentService(
         sakOgBehandlingService.oppdaterRettighetsperioden(sakId, brevkategori, mottattTidspunkt.toLocalDate())
 
         if (skalMarkereDokumentSomBehandlet(melding)) {
-            require(opprettetBehandling is SakOgBehandlingService.Ordinær)
+            require(opprettetBehandling is SakOgBehandlingService.Ordinær) {
+                "Forventet ordinær behandling ved mottak av dokumenter som skal markeres som behandlet"
+            }
             mottaDokumentService.markerSomBehandlet(sakId, opprettetBehandling.åpenBehandling.id, referanse)
         } else {
             when (opprettetBehandling) {
