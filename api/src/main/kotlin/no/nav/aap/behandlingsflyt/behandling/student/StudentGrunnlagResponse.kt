@@ -17,6 +17,7 @@ open class StudentGrunnlagResponse(
     override val nyeVurderinger: List<StudentVurderingResponse>,
     override val sisteVedtatteVurderinger: List<StudentVurderingResponse>,
     override val kanVurderes: List<Periode>,
+    override val ikkeRelevantePerioder: List<Periode>,
     override val behøverVurderinger: List<Periode>,
     @Deprecated("Bruk nyeVurderinger")
     val studentvurdering: StudentVurderingResponse?,

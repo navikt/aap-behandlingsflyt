@@ -27,20 +27,14 @@ class RettighetstypeSteg(
     val rettighetstypeRepository: RettighetstypeRepository,
     val vilkårsresultatRepository: VilkårsresultatRepository,
     val kvoteService: KvoteService,
-    val unleashGateway: UnleashGateway
 ) : BehandlingSteg {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         rettighetstypeRepository = repositoryProvider.provide(),
         vilkårsresultatRepository = repositoryProvider.provide(),
         kvoteService = KvoteService(),
-        unleashGateway = gatewayProvider.provide()
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        if (unleashGateway.isDisabled(BehandlingsflytFeature.RettighetstypeSteg)) {
-            return Fullført
-        }
-        
         val behandlingId = kontekst.behandlingId
 
         val vilkårsresultat = vilkårsresultatRepository.hent(behandlingId)

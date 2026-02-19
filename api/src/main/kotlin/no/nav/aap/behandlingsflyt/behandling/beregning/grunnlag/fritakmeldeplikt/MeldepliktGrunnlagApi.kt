@@ -60,6 +60,7 @@ fun NormalOpenAPIRoute.meldepliktsgrunnlagApi(
                         nyeVurderinger = nyeVurderinger.map { it.toResponse(vurdertAvService) },
                         sisteVedtatteVurderinger = forrigeGrunnlag?.gjeldendeVurderinger().orEmpty()
                             .toResponse(vurdertAvService),
+                        ikkeRelevantePerioder = emptyList(/* Dette avklaringsbehovet er frivillig, og vi har per nå ikke disse opplysningene lett tilgjengelig. */),
                     )
                 }
 

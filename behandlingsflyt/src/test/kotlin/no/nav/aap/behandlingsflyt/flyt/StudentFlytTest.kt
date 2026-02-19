@@ -233,7 +233,7 @@ class StudentFlytTest(val unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             .løsSykdom(vurderingGjelderFra = 1 januar 2026, erOppfylt = false) // Må løse sykdom allerede nå
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
-            .kvalitetssikreOk()
+            .kvalitetssikre()
             .løsBeregningstidspunkt()
             .løsOppholdskrav(fom)
             .løsSykestipend(listOf(sykestipendPeriode))

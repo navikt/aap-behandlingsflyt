@@ -3,10 +3,12 @@ package no.nav.aap.behandlingsflyt.behandling.lovvalgmedlemskap.grunnlag
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovMetadataService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.tilTidslinje
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapArbeidInntektRepository
+import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderLovvalgSteg
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
@@ -22,7 +24,6 @@ import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.getGrunnlag
 import javax.sql.DataSource
-import kotlin.collections.orEmpty
 
 fun NormalOpenAPIRoute.lovvalgMedlemskapGrunnlagApi(
     dataSource: DataSource,
@@ -48,11 +49,15 @@ fun NormalOpenAPIRoute.lovvalgMedlemskapGrunnlagApi(
                         val sak = sakRepository.hent(behandling.sakId)
                         val vurdertAvService = VurdertAvService(repositoryProvider, gatewayProvider)
                         val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
+                        val vurderLovvalgSteg = VurderLovvalgSteg.konstruer(repositoryProvider, gatewayProvider)
+                        val avklaringsbehovMetadataService =
+                            AvklaringsbehovMetadataService(repositoryProvider, gatewayProvider)
 
                         val grunnlag = lovvalgMedlemskapRepository.hentHvisEksisterer(behandling.id)
                         val nyeVurderinger = grunnlag?.vurderinger?.filter { it.vurdertIBehandling == behandling.id }
                         val gjeldendeVedtatteVurderinger =
-                            grunnlag?.vurderinger?.filter { it.vurdertIBehandling != behandling.id }?.tilTidslinje() ?: Tidslinje()
+                            grunnlag?.vurderinger?.filter { it.vurdertIBehandling != behandling.id }?.tilTidslinje()
+                                ?: Tidslinje()
 
                         val avklaringsbehov = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
                         val behøverVurderinger =
@@ -79,7 +84,11 @@ fun NormalOpenAPIRoute.lovvalgMedlemskapGrunnlagApi(
                                         fom = segment.fom(),
                                         tom = if (segment.tom().isEqual(Tid.MAKS)) null else segment.tom()
                                     )
-                                }
+                                },
+                            ikkeRelevantePerioder = avklaringsbehovMetadataService.perioderSomSkalFremhevesSomIkkeRelevant(
+                                vurderLovvalgSteg,
+                                behandling,
+                            ),
                         )
                     }
 

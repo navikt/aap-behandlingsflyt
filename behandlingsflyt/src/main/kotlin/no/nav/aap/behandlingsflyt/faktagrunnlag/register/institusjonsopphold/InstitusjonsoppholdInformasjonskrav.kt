@@ -44,11 +44,13 @@ class InstitusjonsoppholdInformasjonskrav private constructor(
         steg: StegType,
         oppdatert: InformasjonskravOppdatert?
     ): Boolean {
+        logger.info("Skal oppdatere institusjonsopphold? ${kontekst.erFørstegangsbehandlingEllerRevurdering()} og " +
+                "${tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, steg)} og ${kontekst.rettighetsperiode} og ${oppdatert?.rettighetsperiode} og" +
+                " ${unleashGateway.isEnabled(BehandlingsflytFeature.HentingAvInstitusjonsOpphold)}")
         if (unleashGateway.isEnabled(BehandlingsflytFeature.HentingAvInstitusjonsOpphold))
         {
             return kontekst.erFørstegangsbehandlingEllerRevurdering()
                     && !tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, steg)
-                    && kontekst.rettighetsperiode != oppdatert?.rettighetsperiode
         }
         else {
             return kontekst.erFørstegangsbehandlingEllerRevurdering()

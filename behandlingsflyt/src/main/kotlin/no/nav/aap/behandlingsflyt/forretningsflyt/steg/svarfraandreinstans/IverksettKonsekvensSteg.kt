@@ -12,21 +12,23 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingId
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.OmgjøringKlageRevurdering
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.OmgjøringKlageRevurderingV0
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.OmgjøringKlageRevurderingV1
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Omgjøringskilde
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.prosessering.HendelseMottattHåndteringJobbUtfører
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.verdityper.dokument.Kanal
 import java.time.LocalDateTime
-import java.util.UUID
+import java.util.*
 
 class IverksettKonsekvensSteg private constructor(
     private val svarFraAndreinstansRepository: SvarFraAndreinstansRepository,
     private val flytJobbRepository: FlytJobbRepository,
+    private val behandlingRepository: BehandlingRepository
 ) : BehandlingSteg {
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
@@ -40,16 +42,21 @@ class IverksettKonsekvensSteg private constructor(
             SvarFraAndreinstansKonsekvens.INGENTING -> {}
             SvarFraAndreinstansKonsekvens.OMGJØRING -> opprettRevurdering(kontekst, vurdering)
             // TODO: automatisk opprette ny klagebehandling
-            SvarFraAndreinstansKonsekvens.BEHANDLE_PÅ_NYTT -> { /* Saksbehandler må opprette ny klagebehandling manuelt */ }
+            SvarFraAndreinstansKonsekvens.BEHANDLE_PÅ_NYTT -> { /* Saksbehandler må opprette ny klagebehandling manuelt */
+            }
         }
         return Fullført
     }
 
     companion object : FlytSteg {
-        override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): BehandlingSteg {
+        override fun konstruer(
+            repositoryProvider: RepositoryProvider,
+            gatewayProvider: GatewayProvider
+        ): BehandlingSteg {
             return IverksettKonsekvensSteg(
                 repositoryProvider.provide(),
                 repositoryProvider.provide(),
+                behandlingRepository = repositoryProvider.provide()
             )
         }
 
@@ -67,13 +74,16 @@ class IverksettKonsekvensSteg private constructor(
                 ),
                 brevkategori = InnsendingType.OMGJØRING_KLAGE_REVURDERING,
                 kanal = Kanal.DIGITAL,
-                melding = konstruerMelding(vurdering),
+                melding = konstruerMelding(vurdering, kontekst),
                 mottattTidspunkt = LocalDateTime.now()
             ),
         )
     }
 
-    private fun konstruerMelding(vurdering: SvarFraAndreinstansVurdering): OmgjøringKlageRevurdering {
+    private fun konstruerMelding(
+        vurdering: SvarFraAndreinstansVurdering,
+        kontekst: FlytKontekstMedPerioder
+    ): OmgjøringKlageRevurdering {
         require(vurdering.vilkårSomOmgjøres.isNotEmpty()) {
             "For å opprette en ManuellRevurdering må det være minst ett vilkår som skal omgjøres"
         }
@@ -81,10 +91,11 @@ class IverksettKonsekvensSteg private constructor(
         val beskrivelse = konstruerBegrunnelse(hjemler)
         val vurderingsbehov = hjemler.map { it.tilVurderingsbehov() }.flatten().distinct()
 
-        return OmgjøringKlageRevurderingV0(
+        return OmgjøringKlageRevurderingV1(
             vurderingsbehov = vurderingsbehov,
             beskrivelse = beskrivelse,
-            kilde = Omgjøringskilde.KLAGEINSTANS
+            kilde = Omgjøringskilde.KLAGEINSTANS,
+            kildeReferanse = behandlingRepository.hent(kontekst.behandlingId).referanse.referanse
         )
     }
 

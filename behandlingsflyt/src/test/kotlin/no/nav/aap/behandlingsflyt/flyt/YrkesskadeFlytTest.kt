@@ -77,7 +77,7 @@ class YrkesskadeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
                 )
             )
             .løsSykdomsvurderingBrev()
-            .kvalitetssikreOk()
+            .kvalitetssikre()
             .fattVedtak()
             .løsVedtaksbrev(typeBrev = TypeBrev.VEDTAK_AVSLAG)
 
@@ -100,7 +100,7 @@ class YrkesskadeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
             .løsBistand(periode.fom)
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
-            .kvalitetssikreOk()
+            .kvalitetssikre()
             .løsAvklaringsBehov(
                 AvklarYrkesskadeLøsning(
                     yrkesskadesvurdering = YrkesskadevurderingDto(
@@ -156,7 +156,7 @@ class YrkesskadeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
             .løsBistand(periode.fom)
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
-            .kvalitetssikreOk()
+            .kvalitetssikre()
             .løsAvklaringsBehov(
                 AvklarYrkesskadeLøsning(
                     yrkesskadesvurdering = YrkesskadevurderingDto(
@@ -228,7 +228,7 @@ class YrkesskadeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
             .løsBistand(periode.fom)
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
-            .kvalitetssikreOk()
+            .kvalitetssikre()
             .løsAvklaringsBehov(
                 AvklarYrkesskadeLøsning(
                     yrkesskadesvurdering = YrkesskadevurderingDto(
@@ -309,7 +309,7 @@ class YrkesskadeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
                 )
             )
             .løsSykdomsvurderingBrev()
-            .kvalitetssikreOk()
+            .kvalitetssikre()
             .løsAvklaringsBehov(
                 AvklarYrkesskadeLøsning(
                     yrkesskadesvurdering = YrkesskadevurderingDto(
@@ -435,7 +435,7 @@ class YrkesskadeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
                 .associateWith { 0.0 }
         )
 
-        behandling = behandling.kvalitetssikreOk()
+        behandling = behandling.kvalitetssikre()
             .løsAvklaringsBehov(
                 AvklarYrkesskadeLøsning(
                     yrkesskadesvurdering = YrkesskadevurderingDto(
@@ -523,7 +523,7 @@ class YrkesskadeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
                 .associateWith { 0.0 }
         )
 
-        behandling = behandling.kvalitetssikreOk()
+        behandling = behandling.kvalitetssikre()
             .løsAvklaringsBehov(
                 AvklarYrkesskadeLøsning(
                     yrkesskadesvurdering = YrkesskadevurderingDto(
@@ -557,12 +557,12 @@ class YrkesskadeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
                 assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
             }
             .løsAvklaringsBehov(ForeslåVedtakLøsning())
-            .beslutterGodkjennerIkke(returVed = Definisjon.AVKLAR_SYKDOM)
+            .beslutterGodkjennerIkke(underkjennVurderinger = listOf(Definisjon.AVKLAR_SYKDOM))
             .løsSykdom(sak.rettighetsperiode.fom)
             .løsBistand(sak.rettighetsperiode.fom)
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
-            .kvalitetssikreOk()
+            .kvalitetssikre()
             .løsAvklaringsBehov(
                 AvklarYrkesskadeLøsning(
                     yrkesskadesvurdering = YrkesskadevurderingDto(
@@ -731,7 +731,7 @@ class YrkesskadeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
             ),
         )
             .løsSykdomsvurderingBrev()
-            .kvalitetssikreOk()
+            .kvalitetssikre()
             .medKontekst {
                 // Saken står til To-trinnskontroll hos beslutter
                 assertThat(åpneAvklaringsbehov.map { it.definisjon }).containsOnly(Definisjon.FATTE_VEDTAK)

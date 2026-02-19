@@ -102,9 +102,7 @@ class VurderBistandsbehovStegTest {
                 )
             },
             vilkårsresultatRepository = InMemoryVilkårsresultatRepository,
-            avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
             tidligereVurderinger = FakeTidligereVurderinger(),
-            behandlingRepository = behandlingRepository,
             avklaringsbehovService = AvklaringsbehovService(inMemoryRepositoryProvider),
         )
 
