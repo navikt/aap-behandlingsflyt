@@ -175,6 +175,9 @@ class SignaturServiceTest(
             oppgaveEnhet = "7890"
         )
 
+        // definisjon som ikke skal tas høyde for
+        leggTilEndring(Definisjon.VURDER_TREKK_AV_SØKNAD, endretAv = saksbehandlerIdent, AvklaringsbehovStatus.AVSLUTTET)
+
         // BESLUTTER
         leggTilEndring(
             behandling = behandling,

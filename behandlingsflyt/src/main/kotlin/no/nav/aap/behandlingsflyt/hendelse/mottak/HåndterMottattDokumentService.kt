@@ -13,7 +13,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Aktivitetskort
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.AktivitetskortV0
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.AnnetRelevantDokumentV0
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.AnnetRelevantDokument
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.FagsysteminfoBehovV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.KabalHendelse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Klage
@@ -85,7 +85,7 @@ class HåndterMottattDokumentService(
         tilbakekrevingService = TilbakekrevingService(repositoryProvider, gatewayProvider),
         trukketSøknadService = TrukketSøknadService(repositoryProvider),
         flytJobbRepository = repositoryProvider.provide<FlytJobbRepository>(),
-        )
+    )
 
     fun håndterMottatteKlage(
         sakId: SakId,
@@ -228,6 +228,7 @@ class HåndterMottattDokumentService(
                     is OmgjøringKlageRevurdering -> melding.beskrivelse
                     is PdlHendelseV0 -> melding.beskrivelse
                     is NyÅrsakTilBehandlingV0 -> melding.årsakerTilBehandling.joinToString(", ")
+                    is AnnetRelevantDokument -> melding.begrunnelse
                     else -> null
                 }
             )
@@ -437,7 +438,7 @@ class HåndterMottattDokumentService(
         låsRepository.withLåstBehandling(behandling.id) {
             val vurderingsbehov =
                 melding.årsakerTilBehandling.map { VurderingsbehovMedPeriode(it.tilVurderingsbehov()) }
-            sakOgBehandlingService.oppdaterVurderingsbehovTilBehandling(
+            sakOgBehandlingService.oppdaterVurderingsbehovOgÅrsak(
                 behandling,
                 VurderingsbehovOgÅrsak(vurderingsbehov, årsakTilOpprettelse, beskrivelse = melding.beskrivelse)
             )
@@ -536,7 +537,7 @@ class HåndterMottattDokumentService(
             InnsendingType.DIALOGMELDING -> listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_DIALOGMELDING))
             InnsendingType.ANNET_RELEVANT_DOKUMENT ->
                 when (melding) {
-                    is AnnetRelevantDokumentV0 -> melding.årsakerTilBehandling.map { VurderingsbehovMedPeriode(it.tilVurderingsbehov()) }
+                    is AnnetRelevantDokument -> melding.årsakerTilBehandling.map { VurderingsbehovMedPeriode(it.tilVurderingsbehov()) }
                     else -> error("Melding må være AnnetRelevantDokumentV0")
                 }
 
