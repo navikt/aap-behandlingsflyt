@@ -48,9 +48,10 @@ class StansOpphørRepositoryImplTest {
     @Test
     fun `får tilbake det man skriver`() {
         dataSource.transaction { connection ->
-            val sak = sak(connection)
-            val b1 = finnEllerOpprettBehandling(connection, sak)
-            val b2 = finnEllerOpprettBehandling(connection, sak)
+            val s1 = sak(connection)
+            val s2 = sak(connection)
+            val b1 = finnEllerOpprettBehandling(connection, s1)
+            val b2 = finnEllerOpprettBehandling(connection, s2)
             val repo = StansOpphørRepositoryImpl(connection)
 
             val grunnlag1 = StansOpphørGrunnlag(

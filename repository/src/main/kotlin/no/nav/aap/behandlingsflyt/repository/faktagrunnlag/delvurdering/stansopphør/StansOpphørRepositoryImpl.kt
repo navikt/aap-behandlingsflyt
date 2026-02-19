@@ -12,15 +12,19 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.repository.RepositoryFactory
 import java.time.Instant
+import java.time.LocalDate
+import java.time.LocalDateTime
 
 class StansOpphørRepositoryImpl(
     private val connection: DBConnection,
-): StansOpphørRepository {
+) : StansOpphørRepository {
     override fun hentHvisEksisterer(behandlingId: BehandlingId): StansOpphørGrunnlag? {
-        val vurderingerId: Long = connection.queryFirstOrNull("""
+        val vurderingerId: Long = connection.queryFirstOrNull(
+            """
             select vurderinger_id from stans_opphor_grunnlag
             where behandling_id = ? and aktiv
-        """) {
+        """
+        ) {
             setParams {
                 setLong(1, behandlingId.id)
             }
@@ -36,15 +40,17 @@ class StansOpphørRepositoryImpl(
     }
 
     private fun hentVurderinger(vurderingerId: Long): Set<StansEllerOpphørVurdering> {
-        return connection.querySet("""
+        return connection.querySet(
+            """
             select * from stans_opphor_vurdering
             where stans_opphor_vurdering.vurderinger_id = ?
-        """) {
+        """
+        ) {
             setParams {
                 setLong(1, vurderingerId)
             }
             setRowMapper { row ->
-                val type = row.getEnum<Vedtaksstatus>("type")
+                val type = row.getEnum<Vedtaksstatus>("vedtaksstatus")
                 when (type) {
                     Vedtaksstatus.GJELDENDE -> GjeldendeStansEllerOpphør(
                         dato = row.getLocalDate("fom"),
@@ -52,13 +58,15 @@ class StansOpphørRepositoryImpl(
                         vurdertIBehandling = BehandlingId(row.getLong("vurdert_i_behandling")),
                         vurdering = when (row.getEnum<Vedtakstype>("vedtakstype")) {
                             Vedtakstype.STANS -> Stans(
-                                row.getArray("avslagsaarsaker", Avslagsårsak::class).toSet()
+                                row.getArray("avslagsaarsaker", String::class).map { Avslagsårsak.valueOf(it) }.toSet()
                             )
+
                             Vedtakstype.OPPHØR -> Opphør(
-                                row.getArray("avslagsaarsaker", Avslagsårsak::class).toSet()
+                                row.getArray("avslagsaarsaker", String::class).map { Avslagsårsak.valueOf(it) }.toSet()
                             )
                         }
                     )
+
                     Vedtaksstatus.OPPHEVET -> OpphevetStansEllerOpphør(
                         dato = row.getLocalDate("fom"),
                         opprettet = row.getInstant("opprettet_tid"),
@@ -76,26 +84,32 @@ class StansOpphørRepositoryImpl(
         behandlingId: BehandlingId,
         grunnlag: StansOpphørGrunnlag
     ) {
-        val vurderingerId = connection.executeReturnKey("""
+        val vurderingerId = connection.executeReturnKey(
+            """
             insert into stans_opphor_vurderinger (opprettet_tid)  values (?)
-        """) {
+        """
+        ) {
             setParams {
                 setInstant(1, Instant.now())
             }
         }
-        connection.execute("""
+        connection.execute(
+            """
             update stans_opphor_grunnlag
             set aktiv = false
             where behandling_id = ?
-        """) {
+        """
+        ) {
             setParams {
                 setLong(1, behandlingId.id)
             }
         }
 
-        connection.execute("""
+        connection.execute(
+            """
             insert into stans_opphor_grunnlag (behandling_id, vurderinger_id, opprettet_tid, aktiv) values (?, ?, ?, true)
-        """) {
+        """
+        ) {
             setParams {
                 setLong(1, behandlingId.id)
                 setLong(2, vurderingerId)
@@ -103,10 +117,40 @@ class StansOpphørRepositoryImpl(
             }
         }
 
-        connection.executeBatch("""
-            insert into stans_opphor_vurdering default values
-        """, grunnlag.stansOgOpphør) {
+        connection.executeBatch(
+            """
+            insert into stans_opphor_vurdering (vurderinger_id, opprettet_tid, fom, vurdert_i_behandling, vedtaksstatus, vedtakstype, avslagsaarsaker) values (
+                ?, ?, ?, ?, ?, ?, ?
+            )
+        """, grunnlag.stansOgOpphør
+        ) {
             setParams {
+                setLong(1, vurderingerId)
+                setInstant(2, it.opprettet)
+                setLocalDate(3, it.dato)
+                setLong(4, it.vurdertIBehandling.id)
+                when (it) {
+                    is GjeldendeStansEllerOpphør -> {
+                        setEnumName(5, Vedtaksstatus.GJELDENDE)
+                        when (it.vurdering) {
+                            is Stans -> {
+                                setEnumName(6, Vedtakstype.STANS)
+                                setArray(7, it.vurdering.årsaker.map { it.name })
+                            }
+
+                            is Opphør -> {
+                                setEnumName(6, Vedtakstype.OPPHØR)
+                                setArray(7, it.vurdering.årsaker.map { it.name })
+                            }
+                        }
+                    }
+
+                    is OpphevetStansEllerOpphør -> {
+                        setEnumName(5, Vedtaksstatus.OPPHEVET)
+                        setString(6, null)
+                        setString(7, null)
+                    }
+                }
             }
         }
     }
@@ -124,7 +168,7 @@ class StansOpphørRepositoryImpl(
         TODO("Not yet implemented")
     }
 
-    companion object: RepositoryFactory<StansOpphørRepository> {
+    companion object : RepositoryFactory<StansOpphørRepository> {
         override fun konstruer(connection: DBConnection) = StansOpphørRepositoryImpl(connection)
     }
 }

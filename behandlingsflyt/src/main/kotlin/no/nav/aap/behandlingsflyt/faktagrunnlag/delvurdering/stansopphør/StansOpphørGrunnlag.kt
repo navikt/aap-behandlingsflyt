@@ -3,6 +3,8 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import java.time.Instant
 import java.time.LocalDate
+import java.time.temporal.ChronoUnit
+import java.util.Objects
 
 data class StansOpphørGrunnlag(
     val stansOgOpphør: Set<StansEllerOpphørVurdering>
@@ -72,13 +74,36 @@ data class GjeldendeStansEllerOpphør(
     override val opprettet: Instant,
     override val vurdertIBehandling: BehandlingId,
     val vurdering: StansEllerOpphør,
-) : StansEllerOpphørVurdering
+) : StansEllerOpphørVurdering {
+    override fun equals(other: Any?): Boolean {
+        return ( other is GjeldendeStansEllerOpphør
+            && other.vurdertIBehandling == vurdertIBehandling
+            && other.vurdering == vurdering
+            && other.dato == dato
+            && other.opprettet.truncatedTo(ChronoUnit.MILLIS) == other.opprettet.truncatedTo(ChronoUnit.MILLIS))
+    }
+
+    override fun hashCode(): Int {
+        return Objects.hash(dato, opprettet.truncatedTo(ChronoUnit.MILLIS), vurdertIBehandling, vurdering)
+    }
+}
 
 data class OpphevetStansEllerOpphør(
     override val dato: LocalDate,
     override val vurdertIBehandling: BehandlingId,
     override val opprettet: Instant,
-) : StansEllerOpphørVurdering
+) : StansEllerOpphørVurdering {
+    override fun equals(other: Any?): Boolean {
+        return ( other is OpphevetStansEllerOpphør
+                && other.vurdertIBehandling == vurdertIBehandling
+                && other.dato == dato
+                && other.opprettet.truncatedTo(ChronoUnit.MILLIS) == other.opprettet.truncatedTo(ChronoUnit.MILLIS))
+    }
+
+    override fun hashCode(): Int {
+        return Objects.hash(dato, opprettet.truncatedTo(ChronoUnit.MILLIS), vurdertIBehandling)
+    }
+}
 
 private fun <K, V1 : Any, V2 : Any, V3> mergeNotNull(
     map1: Map<K, V1>,
