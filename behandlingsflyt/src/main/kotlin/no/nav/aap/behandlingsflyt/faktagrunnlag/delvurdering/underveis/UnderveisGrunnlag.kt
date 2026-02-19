@@ -11,8 +11,6 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Tid
 import java.time.LocalDate
 
-val dagensDato = LocalDate.now()
-
 data class UnderveisGrunnlag(
     val id: Long,
     val perioder: List<Underveisperiode>
@@ -31,16 +29,16 @@ data class UnderveisGrunnlag(
         return utledInnfriddePerioderForRettighet(rettighetsType).firstOrNull()?.periode?.fom
     }
 
-    fun utledMaksdatoForRettighet(type: RettighetsType): LocalDate {
-        val gjenværendeKvote = utledKvoterForRettighetstype(type).gjenværendeKvote
+    fun utledMaksdatoForRettighet(type: RettighetsType, gjeldendeDato: LocalDate): LocalDate? {
+        val gjenværendeKvote = utledKvoterForRettighetstype(type, gjeldendeDato).gjenværendeKvote
 
         if (gjenværendeKvote == 0) {
             return utledInnfriddePerioderForRettighet(type).last().periode.tom
         }
-        return Hverdager(gjenværendeKvote).fraOgMed(dagensDato)
+        return Hverdager(gjenværendeKvote).fraOgMed(gjeldendeDato)
     }
 
-    fun utledKvoterForRettighetstype(rettighetsType: RettighetsType): RettighetKvoter {
+    fun utledKvoterForRettighetstype(rettighetsType: RettighetsType, gjeldendeDato: LocalDate): RettighetKvoter {
         val totalKvote = KvoteService().beregn().hentKvoteForRettighetstype(rettighetsType)?.asInt
         val perioderForRettighet = utledInnfriddePerioderForRettighet(rettighetsType)
         val periodeKvoter = perioderForRettighet.map {
@@ -54,12 +52,12 @@ data class UnderveisGrunnlag(
                 gjenværendeKvote = totalKvote?.minus(bruktKvote)
             )
         }
-        val senesteInnfriddePeriode = periodeKvoter.lastOrNull { it.periode.fom <= dagensDato }
+        val senesteInnfriddePeriode = periodeKvoter.lastOrNull { it.periode.fom <= gjeldendeDato }
         val periodeSluttdato = senesteInnfriddePeriode?.periode?.tom
         val ubruktKvoteIPeriode =
-            if (periodeSluttdato != null && periodeSluttdato.isAfter(dagensDato)) {
+            if (periodeSluttdato != null && periodeSluttdato.isAfter(gjeldendeDato)) {
                 Periode(
-                    dagensDato.plusDays(1),
+                    gjeldendeDato.plusDays(1),
                     periodeSluttdato
                 ).antallHverdager().asInt
             } else 0
