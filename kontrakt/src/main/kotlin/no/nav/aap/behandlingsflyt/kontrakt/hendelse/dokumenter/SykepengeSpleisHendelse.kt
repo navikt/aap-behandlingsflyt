@@ -27,7 +27,7 @@ public data class SykepengevedtakKafkaMelding(
     public fun tilInnsending(meldingKey: String, saksnummer: Saksnummer): Innsending {
         return Innsending(
             saksnummer = saksnummer,
-            referanse = InnsendingReferanse(SykepengevedtakReferanse.ny("${meldingKey}_${tidspunkt}")),
+            referanse = InnsendingReferanse(SykepengevedtakReferanse.ny("${meldingKey}_${tidspunkt.toLocalDate()}")),
             type = InnsendingType.SYKEPENGE_VEDTAK_HENDELSE,
             kanal = Kanal.DIGITAL,
             mottattTidspunkt = LocalDateTime.now(),

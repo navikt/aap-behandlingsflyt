@@ -65,6 +65,7 @@ class LovvalgOgMedlemskapFlytTest: AbstraktFlytOrkestratorTest(AlleAvskruddUnlea
                 )
             )
             .medKontekst {
+                assertThat(åpneAvklaringsbehov.size).isEqualTo(1)
                 assertThat(åpneAvklaringsbehov.first().definisjon).isEqualTo(Definisjon.VENTE_PÅ_UTENLANDSK_VIDEREFØRING_AVKLARING)
             }
 
@@ -117,7 +118,7 @@ class LovvalgOgMedlemskapFlytTest: AbstraktFlytOrkestratorTest(AlleAvskruddUnlea
             .løsBistand(sak.rettighetsperiode.fom)
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
-            .kvalitetssikreOk()
+            .kvalitetssikre()
             .løsBeregningstidspunkt()
             .løsForutgåendeMedlemskap(sak.rettighetsperiode.fom)
             .løsOppholdskrav(sak.rettighetsperiode.fom)
@@ -163,7 +164,7 @@ class LovvalgOgMedlemskapFlytTest: AbstraktFlytOrkestratorTest(AlleAvskruddUnlea
             .løsBistand(sak.rettighetsperiode.fom)
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
-            .kvalitetssikreOk()
+            .kvalitetssikre()
             .løsBeregningstidspunkt()
             .løsForutgåendeMedlemskap(sak.rettighetsperiode.fom)
             .løsOppholdskrav(sak.rettighetsperiode.fom)

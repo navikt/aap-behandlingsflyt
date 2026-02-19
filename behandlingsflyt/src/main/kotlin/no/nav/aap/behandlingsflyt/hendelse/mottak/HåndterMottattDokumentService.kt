@@ -26,7 +26,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Melding
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.NyÅrsakTilBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.NyÅrsakTilBehandlingV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.OmgjøringKlageRevurdering
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.OmgjøringKlageRevurderingV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Omgjøringskilde
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Oppfølgingsoppgave
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.OppfølgingsoppgaveV0
@@ -156,9 +155,7 @@ class HåndterMottattDokumentService(
         val opprettedeAktivitetspliktBehandlinger = vurderingsbehovForAktivitetsplikt
             .map { it.type }.toSet()
             .map {
-                val beskrivelse = when (melding) {
-                    is OmgjøringKlageRevurderingV0 -> melding.beskrivelse
-                }
+                val beskrivelse = melding.beskrivelse
                 val opprettet = sakOgBehandlingService.opprettAktivitetspliktBehandling(
                     sakId,
                     årsakTilOpprettelse,
@@ -182,10 +179,7 @@ class HåndterMottattDokumentService(
                 årsak = årsakTilOpprettelse,
                 vurderingsbehov = vurderingsbehovForYtelsesbehandling,
                 opprettet = mottattTidspunkt,
-                beskrivelse =
-                    when (melding) {
-                        is OmgjøringKlageRevurderingV0 -> melding.beskrivelse
-                    }
+                beskrivelse = melding.beskrivelse
             )
         )
 
@@ -231,7 +225,7 @@ class HåndterMottattDokumentService(
                 opprettet = mottattTidspunkt,
                 beskrivelse = when (melding) {
                     is ManuellRevurderingV0 -> melding.beskrivelse
-                    is OmgjøringKlageRevurderingV0 -> melding.beskrivelse
+                    is OmgjøringKlageRevurdering -> melding.beskrivelse
                     is PdlHendelseV0 -> melding.beskrivelse
                     is NyÅrsakTilBehandlingV0 -> melding.årsakerTilBehandling.joinToString(", ")
                     else -> null
@@ -330,11 +324,9 @@ class HåndterMottattDokumentService(
     ) {
         val sisteYtelsesBehandling = sakOgBehandlingService.finnSisteYtelsesbehandlingFor(sakId)
             ?: error("Finnes ingen ytelsesbehandling for sakId $sakId")
-        if (trukketSøknadService.søknadErTrukket(sisteYtelsesBehandling.id)) {
+        if (!trukketSøknadService.søknadErTrukket(sisteYtelsesBehandling.id)) {
             flytJobbRepository.leggTil(
-                JobbInput(jobb = OppdagEndretInformasjonskravJobbUtfører).forSak(
-                    sakId = sakId.toLong(),
-                ).medCallId()
+                JobbInput(jobb = OppdagEndretInformasjonskravJobbUtfører).forSak(sakId.toLong()).medCallId()
             )
         }
         mottaDokumentService.markerSomBehandlet(sakId, sisteYtelsesBehandling.id, referanse)
@@ -497,7 +489,7 @@ class HåndterMottattDokumentService(
     }
 
     private fun utledÅrsakEtterOmgjøringAvKlage(melding: Melding?): ÅrsakTilOpprettelse = when (melding) {
-        is OmgjøringKlageRevurderingV0 -> when (melding.kilde) {
+        is OmgjøringKlageRevurdering -> when (melding.kilde) {
             Omgjøringskilde.KLAGEINSTANS -> ÅrsakTilOpprettelse.OMGJØRING_ETTER_SVAR_FRA_KLAGEINSTANS
             Omgjøringskilde.KELVIN -> ÅrsakTilOpprettelse.OMGJØRING_ETTER_KLAGE
         }
@@ -518,7 +510,7 @@ class HåndterMottattDokumentService(
             }
 
             InnsendingType.OMGJØRING_KLAGE_REVURDERING -> when (melding) {
-                is OmgjøringKlageRevurderingV0 -> melding.vurderingsbehov.map { VurderingsbehovMedPeriode(it.tilVurderingsbehov()) }
+                is OmgjøringKlageRevurdering -> melding.vurderingsbehov.map { VurderingsbehovMedPeriode(it.tilVurderingsbehov()) }
                 else -> error("Melding må være OmgjøringKlageRevurderingV0")
             }
 

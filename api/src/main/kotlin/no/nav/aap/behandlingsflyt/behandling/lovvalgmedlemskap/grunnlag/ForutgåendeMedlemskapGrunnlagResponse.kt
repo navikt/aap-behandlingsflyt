@@ -15,6 +15,7 @@ data class PeriodisertForutgåendeMedlemskapGrunnlagResponse(
     override val sisteVedtatteVurderinger: List<PeriodisertManuellVurderingForForutgåendeMedlemskapResponse>,
     override val nyeVurderinger: List<PeriodisertManuellVurderingForForutgåendeMedlemskapResponse>,
     override val kanVurderes: List<Periode>,
+    override val ikkeRelevantePerioder: List<Periode>,
     override val behøverVurderinger: List<Periode>,
     val overstyrt: Boolean = false
 ): PeriodiserteVurderingerDto<PeriodisertManuellVurderingForForutgåendeMedlemskapResponse>

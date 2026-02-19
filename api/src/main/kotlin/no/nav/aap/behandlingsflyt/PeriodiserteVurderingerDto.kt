@@ -55,8 +55,6 @@ interface PeriodiserteVurderingerDto<T: VurderingDto> {
      * Periodene er sortert på [fom] og overlapper ikke.
      **/
     val ikkeRelevantePerioder: List<Periode>
-        // fjern default når alle grunnlag har implementert feltet
-        get() = emptyList()
 
     /** Nye perioder for denne behandlingen i forhold til forrige behandling hvor
      * Kelvin må ha vurderinger for å fatte et vedtak. Hvis Kelvin mottar nye vurderinger

@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovMetadataUtleder
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.OppholdskravGrunnlagRepository
 import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.tilTidslinje
@@ -15,7 +15,6 @@ import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
@@ -27,18 +26,14 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 class VurderOppholdskravSteg private constructor(
     private val oppholdskravGrunnlagRepository: OppholdskravGrunnlagRepository,
     private val avklaringsbehovService: AvklaringsbehovService,
-    private val avklaringsbehovRepository: AvklaringsbehovRepository,
     private val tidligereVurderinger: TidligereVurderinger,
-    private val behandlingRepository: BehandlingRepository,
     private val vilkårsresultatRepository: VilkårsresultatRepository
-) : BehandlingSteg {
+) : BehandlingSteg, AvklaringsbehovMetadataUtleder {
 
     constructor(repositoryProvider: RepositoryProvider) : this(
         oppholdskravGrunnlagRepository = repositoryProvider.provide(),
         avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
-        avklaringsbehovRepository = repositoryProvider.provide(),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
-        behandlingRepository = repositoryProvider.provide(),
         vilkårsresultatRepository = repositoryProvider.provide(),
     )
 
@@ -81,7 +76,7 @@ class VurderOppholdskravSteg private constructor(
         return Fullført
     }
 
-    private fun nårVurderingErRelevant(
+    override fun nårVurderingErRelevant(
         kontekst: FlytKontekstMedPerioder,
     ): Tidslinje<Boolean> {
         val tidligereVurderingsutfall = tidligereVurderinger.behandlingsutfall(kontekst, type())
@@ -101,11 +96,13 @@ class VurderOppholdskravSteg private constructor(
         return grunnlag?.vurderinger?.tilTidslinje().orEmpty().mapValue { true }
     }
 
+    override val stegType = type()
+
     companion object : FlytSteg {
         override fun konstruer(
             repositoryProvider: RepositoryProvider,
             gatewayProvider: GatewayProvider
-        ): BehandlingSteg {
+        ): VurderOppholdskravSteg {
             return VurderOppholdskravSteg(repositoryProvider)
         }
 

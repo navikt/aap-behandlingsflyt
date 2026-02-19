@@ -145,6 +145,8 @@ class VurderSykepengeErstatningSteg private constructor(
         }
     }
 
+    override val stegType = type()
+
     companion object : FlytSteg {
         override fun konstruer(
             repositoryProvider: RepositoryProvider,

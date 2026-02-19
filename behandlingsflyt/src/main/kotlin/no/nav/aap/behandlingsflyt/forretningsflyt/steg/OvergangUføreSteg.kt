@@ -136,6 +136,8 @@ class OvergangUføreSteg private constructor(
         }.komprimer().filter { erUtilstrekkelig -> erUtilstrekkelig.verdi }.perioder().toSet()
     }
 
+    override val stegType = type()
+
     companion object : FlytSteg {
         override fun konstruer(
             repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider

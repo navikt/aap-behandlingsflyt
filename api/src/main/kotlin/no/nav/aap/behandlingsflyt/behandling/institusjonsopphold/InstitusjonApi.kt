@@ -22,6 +22,7 @@ import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
+import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.komponenter.type.Periode
@@ -29,6 +30,7 @@ import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.getGrunnlag
 import java.time.LocalDate
 import javax.sql.DataSource
+import kotlin.collections.fold
 
 fun NormalOpenAPIRoute.institusjonApi(
     dataSource: DataSource,
@@ -214,7 +216,7 @@ fun NormalOpenAPIRoute.institusjonApi(
                     val behov = utlederService.utled(behandling.id)
 
                     val grunnlag = institusjonsoppholdRepository.hentHvisEksisterer(behandling.id)
-                    val oppholdInfo = byggTidslinjeAvTypeNy(grunnlag, Institusjonstype.HS)
+                    val oppholdInfo = byggTidslinjeForInstitusjonsopphold(grunnlag, Institusjonstype.HS)
 
                     // Hent alle vurderinger gruppert per opphold fra repository
                     val vurderingerGruppertPerOpphold =
@@ -339,10 +341,25 @@ private fun mapVurderingerToDto(
         }
     }
 
-private fun byggTidslinjeAvTypeNy(
-    soningsopphold: InstitusjonsoppholdGrunnlag?, institusjonstype: Institusjonstype
+// Public for testing
+fun byggTidslinjeForInstitusjonsopphold(
+    grunnlag: InstitusjonsoppholdGrunnlag?,
+    type: Institusjonstype
 ): Tidslinje<Institusjon> {
-    return Tidslinje(soningsopphold?.oppholdene?.opphold?.filter { it.verdi.type == institusjonstype }.orEmpty())
+    val segments = grunnlag
+        ?.oppholdene
+        ?.opphold
+        ?.filter { it.verdi.type == type }
+        ?.sortedBy { it.periode.fom }
+        .orEmpty()
+
+    if (segments.size < 2) return Tidslinje(segments)
+
+    return segments
+        .map { Tidslinje(it.periode, it.verdi) }
+        .fold(Tidslinje<Institusjon>()) { eksisterende, tidslinje ->
+            eksisterende.kombiner(tidslinje, StandardSammenslåere.prioriterHøyreSideCrossJoin())
+        }.komprimer()
 }
 
 private fun byggTidslinjeAvType(
