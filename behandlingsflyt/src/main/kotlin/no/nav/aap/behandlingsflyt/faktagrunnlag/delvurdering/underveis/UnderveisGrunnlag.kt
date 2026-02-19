@@ -55,15 +55,15 @@ data class UnderveisGrunnlag(
             )
         }
         val senesteInnfriddePeriode = periodeKvoter.lastOrNull { it.periode.fom <= dagensDato }
-        val kvoteSluttdato = senesteInnfriddePeriode?.periode?.tom
-        val ubruktKvoteISenestePeriode =
-            if (kvoteSluttdato != null && kvoteSluttdato.isAfter(dagensDato)) {
+        val periodeSluttdato = senesteInnfriddePeriode?.periode?.tom
+        val ubruktKvoteIPeriode =
+            if (periodeSluttdato != null && periodeSluttdato.isAfter(dagensDato)) {
                 Periode(
                     dagensDato.plusDays(1),
-                    kvoteSluttdato
+                    periodeSluttdato
                 ).antallHverdager().asInt
             } else 0
-        val gjenværendeKvote = senesteInnfriddePeriode?.gjenværendeKvote?.plus(ubruktKvoteISenestePeriode) ?: 0
+        val gjenværendeKvote = senesteInnfriddePeriode?.gjenværendeKvote?.plus(ubruktKvoteIPeriode) ?: 0
 
         return RettighetKvoter(
             totalKvote = totalKvote,
