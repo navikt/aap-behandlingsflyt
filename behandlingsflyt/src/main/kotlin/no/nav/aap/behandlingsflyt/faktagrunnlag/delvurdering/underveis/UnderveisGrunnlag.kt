@@ -31,7 +31,7 @@ data class UnderveisGrunnlag(
         return utledInnfriddePerioderForRettighet(rettighetsType).firstOrNull()?.periode?.fom
     }
 
-    fun utledMaksdatoForRettighet(type: RettighetsType): LocalDate? {
+    fun utledMaksdatoForRettighet(type: RettighetsType): LocalDate {
         val gjenværendeKvote = utledKvoterForRettighetstype(type).gjenværendeKvote
 
         if (gjenværendeKvote == 0) {
