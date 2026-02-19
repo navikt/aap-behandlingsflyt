@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.stansopphør
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.GjeldendeStansEllerOpphør
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.OpphevetStansEllerOpphør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.Opphør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.Stans
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.StansOpphørGrunnlag
@@ -84,6 +85,70 @@ class StansOpphørRepositoryImplTest {
 
         }
     }
+
+    @Test
+    fun `Overskriver med ny vurdering ved lagring`(){
+        dataSource.transaction { connection ->
+            val s1 = sak(connection)
+            val b1 = finnEllerOpprettBehandling(connection, s1)
+            val repo = StansOpphørRepositoryImpl(connection)
+
+            val gjeldendeOpphør = StansOpphørGrunnlag(
+                setOf(
+                    GjeldendeStansEllerOpphør(
+                        dato = 1 januar 2020,
+                        opprettet = Instant.now(),
+                        vurdertIBehandling = b1.id,
+                        vurdering = Opphør(setOf(Avslagsårsak.BRUDD_PÅ_AKTIVITETSPLIKT_OPPHØR))
+                    )
+                )
+            )
+
+            repo.lagre(b1.id, gjeldendeOpphør)
+
+            assertThat(repo.hentHvisEksisterer(b1.id)).isEqualTo(gjeldendeOpphør)
+
+            val opphevet = StansOpphørGrunnlag(
+                setOf(
+                    OpphevetStansEllerOpphør(
+                        dato = 2 januar 2020,
+                        opprettet = Instant.now(),
+                        vurdertIBehandling = b1.id,
+                    )
+                )
+            )
+
+            repo.lagre(b1.id, opphevet)
+
+            assertThat(repo.hentHvisEksisterer(b1.id)).isEqualTo(opphevet)
+
+            val gjeldendeStans = StansOpphørGrunnlag(
+                setOf(
+                    GjeldendeStansEllerOpphør(
+                        dato = 1 januar 2020,
+                        opprettet = Instant.now(),
+                        vurdertIBehandling = b1.id,
+                        vurdering = Stans(setOf(Avslagsårsak.BRUDD_PÅ_AKTIVITETSPLIKT_STANS))
+                    )
+                )
+            )
+
+            repo.lagre(b1.id, gjeldendeStans)
+
+            assertThat(repo.hentHvisEksisterer(b1.id)).isEqualTo(gjeldendeStans)
+
+            val sammensatt = StansOpphørGrunnlag(
+                gjeldendeStans.stansOgOpphør+opphevet.stansOgOpphør+ gjeldendeOpphør.stansOgOpphør
+            )
+
+            repo.lagre(b1.id, sammensatt)
+
+            assertThat(repo.hentHvisEksisterer(b1.id)).isEqualTo(sammensatt)
+
+
+        }
+    }
+
 
     private fun <R> medRepository(body: StansOpphørRepository.() -> R): R {
         return dataSource.transaction { connection ->

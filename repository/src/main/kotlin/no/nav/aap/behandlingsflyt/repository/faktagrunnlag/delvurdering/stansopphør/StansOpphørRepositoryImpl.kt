@@ -14,6 +14,7 @@ import no.nav.aap.komponenter.repository.RepositoryFactory
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.temporal.ChronoUnit
 
 class StansOpphørRepositoryImpl(
     private val connection: DBConnection,
@@ -126,7 +127,7 @@ class StansOpphørRepositoryImpl(
         ) {
             setParams {
                 setLong(1, vurderingerId)
-                setInstant(2, it.opprettet)
+                setInstant(2, it.opprettet.truncatedTo(ChronoUnit.MILLIS))
                 setLocalDate(3, it.dato)
                 setLong(4, it.vurdertIBehandling.id)
                 when (it) {
@@ -148,7 +149,7 @@ class StansOpphørRepositoryImpl(
                     is OpphevetStansEllerOpphør -> {
                         setEnumName(5, Vedtaksstatus.OPPHEVET)
                         setString(6, null)
-                        setString(7, null)
+                        setArray(7, emptyList())
                     }
                 }
             }

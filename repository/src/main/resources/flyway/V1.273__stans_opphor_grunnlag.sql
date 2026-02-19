@@ -25,5 +25,5 @@ create table stans_opphor_vurdering
 
     -- Kun for 'GJELDENDE'
     vedtakstype          text         null check (vedtaksstatus <> 'GJELDENDE' or vedtakstype in ('STANS', 'OPPHØR')),
-    avslagsaarsaker      text[]       null check (vedtaksstatus <> 'GJELDENDE' or avslagsaarsaker is not null)
+    avslagsaarsaker      text[]       not null
 );
