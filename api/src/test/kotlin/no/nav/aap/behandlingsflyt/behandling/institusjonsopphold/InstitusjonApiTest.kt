@@ -117,6 +117,33 @@ class InstitusjonApiTest {
         }
 
         @Test
+        fun `byggTidslinjeForInstitusjonsopphold justerer også perioder som har mer enn en dags overlapp`() {
+            val opphold1 = lagSegment(
+                fom = LocalDate.of(2024, 1, 1),
+                tom = LocalDate.of(2024, 1, 15),
+                type = Institusjonstype.HS,
+            )
+            val opphold2 = lagSegment(
+                fom = LocalDate.of(2024, 1, 11),
+                tom = LocalDate.of(2024, 1, 31),
+                type = Institusjonstype.HS,
+            )
+            val grunnlag = InstitusjonsoppholdGrunnlag(
+                oppholdene = Oppholdene(id = 1L, opphold = listOf(opphold1, opphold2))
+            )
+
+            val tidslinje = byggTidslinjeForInstitusjonsopphold(grunnlag, Institusjonstype.HS)
+            val segmenter = tidslinje.segmenter().toList()
+
+            assertThat(segmenter).hasSize(2)
+            assertThat(segmenter[0].periode.fom).isEqualTo(opphold1.fom())
+            // Første opphold skal få tom justert til dagen før neste starter selv om det er over flere dager
+            assertThat(segmenter[0].periode.tom).isEqualTo(opphold1.tom().minusDays(5))
+            assertThat(segmenter[1].periode.fom).isEqualTo(opphold2.fom())
+            assertThat(segmenter[1].periode.tom).isEqualTo(opphold2.tom())
+        }
+
+        @Test
         fun `byggTidslinjeForInstitusjonsopphold håndterer flere sammenhengende perioder`() {
             val opphold1 = lagSegment(
                 fom = LocalDate.of(2024, 1, 1),
