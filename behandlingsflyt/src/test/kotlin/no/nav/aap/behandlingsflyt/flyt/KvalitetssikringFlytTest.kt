@@ -1,21 +1,19 @@
 package no.nav.aap.behandlingsflyt.flyt
 
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.vedtak.TotrinnsVurdering
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FatteVedtakLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.ForeslåVedtakLøsning
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
+import no.nav.aap.behandlingsflyt.test.LokalUnleash
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.type.Periode
-import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status as AvklaringsbehovStatus
 
-class KvalitetssikringFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
+class KvalitetssikringFlytTest : AbstraktFlytOrkestratorTest(LokalUnleash::class) {
     @Test
     fun `Kvalitetssikrer godkjenner alle avklaringsbehov`() {
         val fom = LocalDate.now().minusMonths(3)
