@@ -137,8 +137,7 @@ fun NormalOpenAPIRoute.institusjonApi(
 
                     // Hent ut rå fakta fra grunnlaget
                     val grunnlag = institusjonsoppholdRepository.hentHvisEksisterer(behandling.id)
-                    val oppholdInfo =
-                        byggTidslinjeAvType(grunnlag, Institusjonstype.HS)
+                    val oppholdInfo = byggTidslinjeForInstitusjonsopphold(grunnlag, Institusjonstype.HS)
 
                     val perioderMedHelseopphold = behov.perioderTilVurdering.mapValue { it.helse }.komprimer()
                     val vurderinger = grunnlag?.helseoppholdvurderinger?.tilTidslinje().orEmpty()
