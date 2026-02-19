@@ -49,7 +49,6 @@ fun NormalOpenAPIRoute.avklaringsbehovApi(
                     behandlingReferanse = BehandlingReferanse(request.referanse),
                     hendelse = LøsAvklaringsbehovHendelse(
                         løsning = request.behov,
-                        ingenEndringIGruppe = request.ingenEndringIGruppe == true,
                         behandlingVersjon = request.behandlingVersjon,
                         bruker = bruker()
                     )
@@ -71,7 +70,6 @@ fun NormalOpenAPIRoute.avklaringsbehovApi(
                     behandlingReferanse = BehandlingReferanse(request.referanse),
                     hendelse = LøsAvklaringsbehovHendelse(
                         løsning = request.behov,
-                        ingenEndringIGruppe = request.ingenEndringIGruppe == true,
                         behandlingVersjon = request.behandlingVersjon,
                         bruker = bruker()
                     )

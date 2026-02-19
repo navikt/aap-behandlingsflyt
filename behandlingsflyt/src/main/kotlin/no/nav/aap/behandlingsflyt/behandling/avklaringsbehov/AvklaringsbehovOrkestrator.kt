@@ -44,7 +44,6 @@ class AvklaringsbehovOrkestrator(
     fun løsAvklaringsbehovOgFortsettProsessering(
         kontekst: FlytKontekst,
         avklaringsbehov: AvklaringsbehovLøsning,
-        ingenEndringIGruppe: Boolean,
         bruker: Bruker
     ) {
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
@@ -52,34 +51,12 @@ class AvklaringsbehovOrkestrator(
         løsAvklaringsbehov(
             kontekst, avklaringsbehovene, avklaringsbehov, bruker, behandling
         )
-        markerAvklaringsbehovISammeGruppeForLøst(
-            kontekst, ingenEndringIGruppe, avklaringsbehovene, bruker
-        )
 
         fortsettProsessering(kontekst)
     }
 
     private fun fortsettProsessering(kontekst: FlytKontekst) {
         prosesserBehandling.triggProsesserBehandling(kontekst.sakId, kontekst.behandlingId)
-    }
-
-    private fun markerAvklaringsbehovISammeGruppeForLøst(
-        kontekst: FlytKontekst, ingenEndringIGruppe: Boolean, avklaringsbehovene: Avklaringsbehovene, bruker: Bruker
-    ) {
-        val behandling = behandlingRepository.hent(kontekst.behandlingId)
-
-        if (ingenEndringIGruppe && avklaringsbehovene.harVærtSendtTilbakeFraBeslutterTidligere()) {
-            val flyt = behandling.flyt()
-
-            flyt.forberedFlyt(behandling.aktivtSteg())
-            val gjenståendeStegIGruppe = flyt.gjenståendeStegIAktivGruppe()
-
-            val behovSomSkalSettesTilAvsluttet = avklaringsbehovene.alle()
-                .filter { behov -> gjenståendeStegIGruppe.any { stegType -> behov.løsesISteg() == stegType } }
-            log.info("Markerer påfølgende avklaringsbehov[${behovSomSkalSettesTilAvsluttet}] på behandling[${behandling.referanse}] som avsluttet")
-
-            behovSomSkalSettesTilAvsluttet.forEach { avklaringsbehovene.ingenEndring(it, bruker.ident) }
-        }
     }
 
     private fun løsAvklaringsbehov(

@@ -33,7 +33,6 @@ class AvklaringsbehovHendelseHåndterer(
         avklaringsbehovOrkestrator.løsAvklaringsbehovOgFortsettProsessering(
             kontekst = behandling.flytKontekst(),
             avklaringsbehov = hendelse.behov(),
-            ingenEndringIGruppe = hendelse.ingenEndringIGruppe,
             bruker = hendelse.bruker
         )
         mellomlagretVurderingRepository.slett(key, hendelse.behov().definisjon().kode)
