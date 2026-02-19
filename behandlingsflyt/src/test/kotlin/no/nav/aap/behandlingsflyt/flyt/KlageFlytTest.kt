@@ -47,6 +47,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.KabalHendelseV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.KlageUtfall
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.KlageV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.KlagebehandlingAvsluttetDetaljer
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.OmgjøringKlageRevurdering
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.OmgjøringKlageRevurderingV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.StudentStatus
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadMedlemskapDto
@@ -498,7 +499,7 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
                 .extracting(MottattDokument::strukturertDokument)
                 .isNotNull
             assertThat(
-                omgjøringKlageRevurdering.first().strukturerteData<OmgjøringKlageRevurderingV0>()?.data?.beskrivelse
+                omgjøringKlageRevurdering.first().strukturerteData<OmgjøringKlageRevurdering>()?.data?.beskrivelse
             ).isEqualTo("Revurdering etter klage som tas til følge. Følgende vilkår omgjøres: Kapittel 2")
         }
 
@@ -714,7 +715,7 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
                 .extracting(MottattDokument::strukturertDokument)
                 .isNotNull
             assertThat(
-                omgjøringKlageRevurdering.first().strukturerteData<OmgjøringKlageRevurderingV0>()?.data?.beskrivelse
+                omgjøringKlageRevurdering.first().strukturerteData<OmgjøringKlageRevurdering>()?.data?.beskrivelse
             ).isEqualTo("Revurdering etter klage som tas til følge. Følgende vilkår omgjøres: § 11-5")
         }
 
