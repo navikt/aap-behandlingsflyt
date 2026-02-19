@@ -333,6 +333,6 @@ private fun utledHarTilgangTilÅSendeBrev(
         Definisjon.SKRIV_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT_BREV,
         Definisjon.SKRIV_FORHÅNDSVARSEL_KLAGE_FORMKRAV_BREV -> harTilgang(definisjon)
 
-        else -> harTilgang(Definisjon.SKRIV_BREV)
+        else -> error("Skal ikke skje: $definisjon")
     }
 }

@@ -140,16 +140,6 @@ class AvklaringsbehovRepositoryImpl(private val connection: DBConnection) : Avkl
         )
     }
 
-    override fun endreSkrivBrev(
-        avklaringsbehovId: Long, endring: Endring, funnetISteg: StegType
-    ) {
-        oppdaterFunnetISteg(avklaringsbehovId, funnetISteg)
-        endreAvklaringsbehov(
-            avklaringsbehovId,
-            endring
-        )
-    }
-
     private fun oppdaterFunnetISteg(avklaringsbehovId: Long, funnetISteg: StegType) {
         val query = """
                     UPDATE AVKLARINGSBEHOV 
@@ -352,7 +342,7 @@ class AvklaringsbehovRepositoryImpl(private val connection: DBConnection) : Avkl
     }
 
     private fun mapAvklaringsbehov(row: Row): AvklaringsbehovInternal {
-        val definisjon = Definisjon.Companion.forKode(row.getEnum<AvklaringsbehovKode>("definisjon"))
+        val definisjon = Definisjon.forKode(row.getEnum<AvklaringsbehovKode>("definisjon"))
         val id = row.getLong("id")
         return AvklaringsbehovInternal(
             id = id,

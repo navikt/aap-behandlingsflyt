@@ -57,11 +57,8 @@ class KvalitetssikringsSteg(
     private fun vedtakBehøverVurdering(
         kontekst: FlytKontekstMedPerioder, avklaringsbehovene: Avklaringsbehovene
     ): Boolean {
-        if (tidligereVurderinger.girIngenBehandlingsgrunnlag(
-                kontekst, type()
-            ) || trekkKlageService.klageErTrukket(
-                kontekst.behandlingId
-            )
+        if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())
+            || trekkKlageService.klageErTrukket(kontekst.behandlingId)
         ) {
             return false
         }
@@ -136,6 +133,7 @@ class KvalitetssikringsSteg(
                 val erKvalitetssikretFørRetur = avsluttedeBehov
                     .any {
                         val aktivHistorikk = it.aktivHistorikk
+
                         /**
                          * De tre siste statusene i historikken skal være følgende etter reåpning:
                          * "KVALITETSSIKRET"
