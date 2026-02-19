@@ -104,7 +104,7 @@ class StansOpphørRepositoryImpl(
         }
 
         connection.executeBatch("""
-            insert into stans_opphor_vurdering () values ()
+            insert into stans_opphor_vurdering default values
         """, grunnlag.stansOgOpphør) {
             setParams {
             }

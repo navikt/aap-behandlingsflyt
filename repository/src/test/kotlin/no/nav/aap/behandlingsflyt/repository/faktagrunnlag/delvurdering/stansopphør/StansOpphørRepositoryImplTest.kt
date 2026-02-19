@@ -6,6 +6,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.Stans
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.StansOpphørGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.StansOpphørRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
+import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
+import no.nav.aap.behandlingsflyt.help.sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -45,37 +47,40 @@ class StansOpphørRepositoryImplTest {
 
     @Test
     fun `får tilbake det man skriver`() {
-        val b1 = behandlingsIder.next()
-        val b2 = behandlingsIder.next()
+        dataSource.transaction { connection ->
+            val sak = sak(connection)
+            val b1 = finnEllerOpprettBehandling(connection, sak)
+            val b2 = finnEllerOpprettBehandling(connection, sak)
+            val repo = StansOpphørRepositoryImpl(connection)
 
-        val grunnlag1 = StansOpphørGrunnlag(
-            setOf(
-                GjeldendeStansEllerOpphør(
-                    dato = 1 januar 2020,
-                    opprettet = Instant.now(),
-                    vurdertIBehandling = b1,
-                    vurdering = Stans(setOf(Avslagsårsak.BRUDD_PÅ_AKTIVITETSPLIKT_STANS))
+            val grunnlag1 = StansOpphørGrunnlag(
+                setOf(
+                    GjeldendeStansEllerOpphør(
+                        dato = 1 januar 2020,
+                        opprettet = Instant.now(),
+                        vurdertIBehandling = b1.id,
+                        vurdering = Stans(setOf(Avslagsårsak.BRUDD_PÅ_AKTIVITETSPLIKT_STANS))
+                    )
                 )
             )
-        )
 
-        val grunnlag2 = StansOpphørGrunnlag(
-            setOf(
-                GjeldendeStansEllerOpphør(
-                    dato = 2 januar 2020,
-                    opprettet = Instant.now(),
-                    vurdertIBehandling = b2,
-                    vurdering = Opphør(setOf(Avslagsårsak.BRUDD_PÅ_AKTIVITETSPLIKT_OPPHØR))
+            val grunnlag2 = StansOpphørGrunnlag(
+                setOf(
+                    GjeldendeStansEllerOpphør(
+                        dato = 2 januar 2020,
+                        opprettet = Instant.now(),
+                        vurdertIBehandling = b2.id,
+                        vurdering = Opphør(setOf(Avslagsårsak.BRUDD_PÅ_AKTIVITETSPLIKT_OPPHØR))
+                    )
                 )
             )
-        )
 
-        medRepository {
-            lagre(b1, grunnlag1)
-            lagre(b2, grunnlag2)
+                StansOpphørRepositoryImpl(connection).lagre(b1.id, grunnlag1)
+                StansOpphørRepositoryImpl(connection).lagre(b2.id, grunnlag2)
 
-            assertThat(hentHvisEksisterer(b1)).isEqualTo(grunnlag1)
-            assertThat(hentHvisEksisterer(b2)).isEqualTo(grunnlag2)
+                assertThat(repo.hentHvisEksisterer(b1.id)).isEqualTo(grunnlag1)
+                assertThat(repo.hentHvisEksisterer(b2.id)).isEqualTo(grunnlag2)
+
         }
     }
 
