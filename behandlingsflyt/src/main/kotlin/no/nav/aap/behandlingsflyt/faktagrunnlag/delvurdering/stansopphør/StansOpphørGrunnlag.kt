@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør
 
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import java.time.Clock
 import java.time.Instant
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
@@ -25,6 +26,7 @@ data class StansOpphørGrunnlag(
     fun utledNyttGrunnlag(
         utlededeStansOgOpphør: Map<LocalDate, StansEllerOpphør>,
         behandlingId: BehandlingId,
+        clock: Clock = Clock.systemDefaultZone(),
     ): StansOpphørGrunnlag {
         val endringer = mergeNotNull(
             gjeldendeStansOgOpphør().associate { it.dato to  it.vurdering},
@@ -33,21 +35,21 @@ data class StansOpphørGrunnlag(
             if (vedtattStans == null && utledetStans != null) {
                 GjeldendeStansEllerOpphør(
                     dato = dato,
-                    opprettet = Instant.now(),
+                    opprettet = Instant.now(clock),
                     vurdertIBehandling = behandlingId,
                     vurdering = utledetStans,
                 )
             } else if (vedtattStans != null && utledetStans != null && vedtattStans != utledetStans) {
                 GjeldendeStansEllerOpphør(
                     dato = dato,
-                    opprettet = Instant.now(),
+                    opprettet = Instant.now(clock),
                     vurdertIBehandling = behandlingId,
                     vurdering = utledetStans,
                 )
             } else if (vedtattStans != null && utledetStans == null) {
                 OpphevetStansEllerOpphør(
                     dato = dato,
-                    opprettet = Instant.now(),
+                    opprettet = Instant.now(clock),
                     vurdertIBehandling = behandlingId,
                 )
             } else {

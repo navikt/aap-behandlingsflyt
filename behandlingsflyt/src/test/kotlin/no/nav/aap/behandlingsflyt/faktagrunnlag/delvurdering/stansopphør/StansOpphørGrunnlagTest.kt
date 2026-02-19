@@ -1,11 +1,15 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør
 
+import net.bytebuddy.agent.Installer
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import java.time.Clock
 import java.time.Instant
 import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.ZoneId
 
 class StansOpphørGrunnlagTest {
     @Test
@@ -41,7 +45,7 @@ class StansOpphørGrunnlagTest {
             dato = LocalDate.now(),
             opprettet = Instant.now().minusSeconds(3000),
             vurdertIBehandling = BehandlingId(1L),
-            )
+        )
 
 
         assertThat(StansOpphørGrunnlag(setOf(gjeldendeStans)).gjeldendeStansOgOpphør()).isEqualTo(setOf(gjeldendeStans))
@@ -57,13 +61,16 @@ class StansOpphørGrunnlagTest {
         )
 
 
-
         val stansOgOpphør2ForskjelligTid = setOf(
             gammeltOpphør,
             gjeldendeStans
         )
 
-        assertThat(StansOpphørGrunnlag(stansOgOpphør2ForskjelligTid).gjeldendeStansOgOpphør()).isEqualTo(setOf(gjeldendeStans))
+        assertThat(StansOpphørGrunnlag(stansOgOpphør2ForskjelligTid).gjeldendeStansOgOpphør()).isEqualTo(
+            setOf(
+                gjeldendeStans
+            )
+        )
 
 
         val stansOgOpphørOppheving = setOf(
@@ -72,7 +79,6 @@ class StansOpphørGrunnlagTest {
         )
 
         assertThat(StansOpphørGrunnlag(stansOgOpphørOppheving).gjeldendeStansOgOpphør()).isEqualTo(emptySet<GjeldendeStansEllerOpphør>())
-
 
 
         val stansOpphevingStans = setOf(
@@ -85,4 +91,155 @@ class StansOpphørGrunnlagTest {
 
     }
 
+    @Test
+    fun `legger ikke på stans og opphør ved ingen endring`() {
+        val t0 = Instant.now().minusSeconds(300)
+        val t1 = t0.plusSeconds(300)
+        val stansOpphørGrunnlag = StansOpphørGrunnlag(
+            emptySet()
+        )
+        val utledetStansOgOpphør = mapOf(
+            LocalDate.now() to Stans(
+                setOf(Avslagsårsak.BRUDD_PÅ_AKTIVITETSPLIKT_STANS),
+            )
+        )
+        val oppdatertGrunnlag = stansOpphørGrunnlag.utledNyttGrunnlag(
+            utledetStansOgOpphør,
+            BehandlingId(0L),
+            Clock.fixed(t0, ZoneId.systemDefault())
+        )
+
+        assertThat(oppdatertGrunnlag).isEqualTo(
+            StansOpphørGrunnlag(
+                setOf(
+                    GjeldendeStansEllerOpphør(
+                        dato = LocalDate.now(),
+                        opprettet = t0,
+                        vurdertIBehandling = BehandlingId(0L),
+                        vurdering = Stans(
+                            setOf(Avslagsårsak.BRUDD_PÅ_AKTIVITETSPLIKT_STANS),
+                        )
+                    )
+                )
+            )
+        )
+
+        val rekjørtGrunnlag = oppdatertGrunnlag.utledNyttGrunnlag(
+            utledetStansOgOpphør,
+            BehandlingId(2L),
+            Clock.fixed(t1, ZoneId.systemDefault())
+        )
+
+        assertThat(rekjørtGrunnlag).isEqualTo(
+            StansOpphørGrunnlag(
+                setOf(
+                    GjeldendeStansEllerOpphør(
+                        dato = LocalDate.now(),
+                        opprettet = t0,
+                        vurdertIBehandling = BehandlingId(0L),
+                        vurdering = Stans(
+                            setOf(Avslagsårsak.BRUDD_PÅ_AKTIVITETSPLIKT_STANS),
+                        )
+                    )
+                )
+            )
+        )
+    }
+
+    @Test
+    fun `legger på opphevet ved fjerning`() {
+        val t0 = Instant.now().minusSeconds(300)
+        val t1 = t0.plusSeconds(300)
+        val stansOpphørGrunnlag = StansOpphørGrunnlag(
+            emptySet()
+        )
+        val utledetStansOgOpphør = mapOf(
+            LocalDate.now() to Stans(
+                setOf(Avslagsårsak.BRUDD_PÅ_AKTIVITETSPLIKT_STANS),
+            )
+        )
+
+        val grunnlag = stansOpphørGrunnlag.utledNyttGrunnlag(
+            utledetStansOgOpphør,
+            BehandlingId(0L),
+            Clock.fixed(t0, ZoneId.systemDefault())
+        )
+
+        val oppdatertGrunnlag =
+            grunnlag.utledNyttGrunnlag(emptyMap(), BehandlingId(1L), Clock.fixed(t1, ZoneId.systemDefault()))
+
+        assertThat(oppdatertGrunnlag).isEqualTo(
+            StansOpphørGrunnlag(
+                setOf(
+                    GjeldendeStansEllerOpphør(
+                        dato = LocalDate.now(),
+                        opprettet = t0,
+                        vurdertIBehandling = BehandlingId(0L),
+                        vurdering = Stans(
+                            setOf(Avslagsårsak.BRUDD_PÅ_AKTIVITETSPLIKT_STANS),
+                        )
+                    ),
+                    OpphevetStansEllerOpphør(
+                        dato = LocalDate.now(),
+                        opprettet = t1,
+                        vurdertIBehandling = BehandlingId(1L),
+                    )
+                )
+            )
+        )
+    }
+
+    @Test
+    fun `endrer stans til opphør`() {
+        val t0 = Instant.now().minusSeconds(300)
+        val t1 = t0.plusSeconds(300)
+        val stansOpphørGrunnlag = StansOpphørGrunnlag(
+            emptySet()
+        )
+        val utledetStansOgOpphør = mapOf(
+            LocalDate.now() to Stans(
+                setOf(Avslagsårsak.BRUDD_PÅ_AKTIVITETSPLIKT_STANS),
+            )
+        )
+
+        val grunnlag = stansOpphørGrunnlag.utledNyttGrunnlag(
+            utledetStansOgOpphør,
+            BehandlingId(0L),
+            Clock.fixed(t0, ZoneId.systemDefault())
+        )
+
+        val oppdatertGrunnlag = grunnlag.utledNyttGrunnlag(
+            mapOf(
+                LocalDate.now() to Opphør(
+                    setOf(Avslagsårsak.BRUDD_PÅ_AKTIVITETSPLIKT_OPPHØR)
+                )
+            ), BehandlingId(1L), Clock.fixed(
+                t1, ZoneId.systemDefault()
+            )
+        )
+
+
+        assertThat(oppdatertGrunnlag).isEqualTo(
+            StansOpphørGrunnlag(
+                setOf(
+                    GjeldendeStansEllerOpphør(
+                        dato = LocalDate.now(),
+                        opprettet = t0,
+                        vurdertIBehandling = BehandlingId(0L),
+                        vurdering = Stans(
+                            setOf(Avslagsårsak.BRUDD_PÅ_AKTIVITETSPLIKT_STANS),
+                        )
+                    ),
+                    GjeldendeStansEllerOpphør(
+                        dato = LocalDate.now(),
+                        opprettet = t1,
+                        vurdertIBehandling = BehandlingId(1L),
+                        vurdering = Opphør(
+                            setOf(Avslagsårsak.BRUDD_PÅ_AKTIVITETSPLIKT_OPPHØR)
+                        )
+                    )
+                )
+            )
+        )
+    }
 }
