@@ -418,8 +418,10 @@ class TidligereVurderingerImpl(
             val sykdomDefinitivtAvslag =
                 sykdomsvurdering?.erOppfyltOrdinærSettBortIfraVissVarighet() == false
                         && !sykdomsvurdering.erOppfyltForYrkesskadeSettBortIfraÅrsakssammenhengOgVissVarighet()
+            
+            val potensieltOvergangArbeid = erIkkeFørsteSykdomsvurdering && harTidligereInnvilgetSykdomsvurdering
 
-            if (sykdomDefinitivtAvslag && (erIkkeFørsteSykdomsvurdering && harTidligereInnvilgetSykdomsvurdering)) {
+            if (sykdomDefinitivtAvslag && !potensieltOvergangArbeid) {
                 return@outerJoin TidligereVurderinger.UunngåeligAvslag
 
             }

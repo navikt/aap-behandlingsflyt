@@ -57,9 +57,9 @@ fun NormalOpenAPIRoute.tidligereVurderingerApi(
                     TidligereVurderingDto(
                         periode = it.periode,
                         utfall = BehandlingsutfallType.fraBehandlingsutfall(verdi),
-                        rettighetstyper = when (verdi) {
+                        rettighetstype = when (verdi) {
                             is TidligereVurderinger.PotensieltOppfylt -> verdi.rettighetstype
-                            else -> emptyList()
+                            else -> null
                         }
                     )
                 })
@@ -83,7 +83,7 @@ data class TidligereVurderingerDto(
 data class TidligereVurderingDto(
     val periode: Periode,
     val utfall: BehandlingsutfallType,
-    val rettighetstyper: List<RettighetsType>
+    val rettighetstype: RettighetsType?
 )
 
 enum class BehandlingsutfallType {
@@ -97,7 +97,6 @@ enum class BehandlingsutfallType {
             when (behandlingsutfall) {
                 TidligereVurderinger.IkkeBehandlingsgrunnlag -> IKKE_BEHANDLINGSGRUNNLAG
                 TidligereVurderinger.UunngåeligAvslag -> UUNGÅELIG_AVSLAG
-                TidligereVurderinger.Ukjent -> UKJENT
                 is TidligereVurderinger.PotensieltOppfylt -> POTENSIELT_OPPFYLT
             }
     }
