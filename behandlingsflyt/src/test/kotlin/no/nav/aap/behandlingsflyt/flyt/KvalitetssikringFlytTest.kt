@@ -3,7 +3,6 @@ package no.nav.aap.behandlingsflyt.flyt
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.vedtak.TotrinnsVurdering
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FatteVedtakLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.ForeslåVedtakLøsning
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.KvalitetssikringLøsning
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
@@ -33,18 +32,7 @@ class KvalitetssikringFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash
             .løsBistand(fom)
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
-
-        val alleAvklaringsbehov = hentAlleAvklaringsbehov(behandling)
-        løsAvklaringsBehov(
-            behandling,
-            KvalitetssikringLøsning(alleAvklaringsbehov.filter { behov -> behov.erTotrinn() || behov.kreverKvalitetssikring() }
-                .map { behov ->
-                    TotrinnsVurdering(
-                        behov.definisjon.kode, true, "begrunnelse", emptyList()
-                    )
-                }),
-            Bruker("KVALITETSSIKRER"),
-        )
+            .kvalitetssikre()
 
         val avklaringsbehovSomKreverKvalitetssikring = hentAlleAvklaringsbehov(behandling)
             .filter { behov -> behov.kreverKvalitetssikring() }
@@ -67,18 +55,7 @@ class KvalitetssikringFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash
             .løsBistand(fom)
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
-
-        val alleAvklaringsbehov = hentAlleAvklaringsbehov(behandling)
-        løsAvklaringsBehov(
-            behandling,
-            KvalitetssikringLøsning(alleAvklaringsbehov.filter { behov -> behov.erTotrinn() || behov.kreverKvalitetssikring() }
-                .map { behov ->
-                    TotrinnsVurdering(
-                        behov.definisjon.kode, false, "begrunnelse", emptyList()
-                    )
-                }),
-            Bruker("KVALITETSSIKRER"),
-        )
+            .kvalitetssikre(underkjennVurderinger = Definisjon.entries)
 
         val avklaringsbehovSomKreverKvalitetssikring = hentAlleAvklaringsbehov(behandling)
             .filter { behov -> behov.kreverKvalitetssikring() }
@@ -101,21 +78,7 @@ class KvalitetssikringFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash
             .løsBistand(fom)
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
-
-        val alleAvklaringsbehov = hentAlleAvklaringsbehov(behandling)
-        løsAvklaringsBehov(
-            behandling,
-            KvalitetssikringLøsning(alleAvklaringsbehov.filter { behov -> behov.erTotrinn() || behov.kreverKvalitetssikring() }
-                .map { behov ->
-                    TotrinnsVurdering(
-                        behov.definisjon.kode,
-                        if (behov.definisjon == Definisjon.AVKLAR_SYKDOM) false else true,
-                        "begrunnelse",
-                        emptyList()
-                    )
-                }),
-            Bruker("KVALITETSSIKRER"),
-        )
+            .kvalitetssikre(underkjennVurderinger = listOf(Definisjon.AVKLAR_SYKDOM))
 
         val avklaringsbehovSomKreverKvalitetssikring = hentAlleAvklaringsbehov(behandling)
             .filter { behov -> behov.kreverKvalitetssikring() }
@@ -147,34 +110,18 @@ class KvalitetssikringFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash
             .løsBistand(fom)
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
-
-        val avklarBistandsbehov = hentAlleAvklaringsbehov(behandling)
-            .filter { behov -> behov.definisjon == Definisjon.AVKLAR_BISTANDSBEHOV }
-            .filter { behov -> behov.erTotrinn() || behov.kreverKvalitetssikring() }
-        assertThat(avklarBistandsbehov).hasSize(1)
-        løsAvklaringsBehov(
-            behandling,
-            KvalitetssikringLøsning(
-                avklarBistandsbehov
-                    .map { behov ->
-                        TotrinnsVurdering(
-                            behov.definisjon.kode,
-                            false,
-                            "begrunnelse",
-                            emptyList()
-                        )
-                    }),
-            Bruker("KVALITETSSIKRER"),
-        )
+            .kvalitetssikre(
+                behovÅKvalitetssikre = listOf(Definisjon.AVKLAR_BISTANDSBEHOV),
+                underkjennVurderinger = listOf(Definisjon.AVKLAR_BISTANDSBEHOV)
+            )
 
         val avklaringsbehovSomKreverKvalitetssikring = hentAlleAvklaringsbehov(behandling)
             .filter { behov -> behov.kreverKvalitetssikring() }
-        assertThat(avklaringsbehovSomKreverKvalitetssikring.any { it.definisjon == Definisjon.AVKLAR_BISTANDSBEHOV && it.status() == AvklaringsbehovStatus.SENDT_TILBAKE_FRA_KVALITETSSIKRER }).isTrue()
-        assertThat(
-            avklaringsbehovSomKreverKvalitetssikring
-                .filter { it.definisjon != Definisjon.AVKLAR_BISTANDSBEHOV }
-                .all { it.status() == AvklaringsbehovStatus.AVSLUTTET }
-        ).isTrue()
+
+        assertThat(avklaringsbehovSomKreverKvalitetssikring)
+            .anyMatch { it.definisjon == Definisjon.AVKLAR_BISTANDSBEHOV && it.status() == AvklaringsbehovStatus.SENDT_TILBAKE_FRA_KVALITETSSIKRER }
+        assertThat(avklaringsbehovSomKreverKvalitetssikring.filter { it.definisjon != Definisjon.AVKLAR_BISTANDSBEHOV })
+            .allMatch { it.status() == AvklaringsbehovStatus.AVSLUTTET }
     }
 
     @Test
@@ -193,30 +140,15 @@ class KvalitetssikringFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash
             .løsBistand(fom)
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
-
-        val alleAvklaringsbehov = hentAlleAvklaringsbehov(behandling)
-        løsAvklaringsBehov(
-            behandling,
-            KvalitetssikringLøsning(alleAvklaringsbehov.filter { behov -> behov.erTotrinn() || behov.kreverKvalitetssikring() }
-                .map { behov ->
-                    TotrinnsVurdering(
-                        behov.definisjon.kode,
-                        if (behov.definisjon == Definisjon.AVKLAR_BISTANDSBEHOV) false else true,
-                        "begrunnelse",
-                        emptyList()
-                    )
-                }),
-            Bruker("KVALITETSSIKRER"),
-        )
+            .kvalitetssikre(underkjennVurderinger = listOf(Definisjon.AVKLAR_BISTANDSBEHOV))
 
         val avklaringsbehovSomKreverKvalitetssikring = hentAlleAvklaringsbehov(behandling)
             .filter { behov -> behov.kreverKvalitetssikring() }
-        assertThat(avklaringsbehovSomKreverKvalitetssikring.any { it.definisjon == Definisjon.AVKLAR_BISTANDSBEHOV && it.status() == AvklaringsbehovStatus.SENDT_TILBAKE_FRA_KVALITETSSIKRER }).isTrue()
-        assertThat(
-            avklaringsbehovSomKreverKvalitetssikring
-                .filter { it.definisjon != Definisjon.AVKLAR_BISTANDSBEHOV }
-                .all { it.status() == AvklaringsbehovStatus.KVALITETSSIKRET }
-        ).isTrue()
+        assertThat(avklaringsbehovSomKreverKvalitetssikring)
+            .anyMatch { it.definisjon == Definisjon.AVKLAR_BISTANDSBEHOV && it.status() == AvklaringsbehovStatus.SENDT_TILBAKE_FRA_KVALITETSSIKRER }
+
+        assertThat(avklaringsbehovSomKreverKvalitetssikring.filter { it.definisjon != Definisjon.AVKLAR_BISTANDSBEHOV })
+            .allMatch { it.status() == AvklaringsbehovStatus.KVALITETSSIKRET }
     }
 
 
@@ -236,30 +168,15 @@ class KvalitetssikringFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash
             .løsBistand(fom)
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
-
-        val alleAvklaringsbehov = hentAlleAvklaringsbehov(behandling)
-        løsAvklaringsBehov(
-            behandling,
-            KvalitetssikringLøsning(alleAvklaringsbehov.filter { behov -> behov.erTotrinn() || behov.kreverKvalitetssikring() }
-                .map { behov ->
-                    TotrinnsVurdering(
-                        behov.definisjon.kode,
-                        if (behov.definisjon == Definisjon.SKRIV_SYKDOMSVURDERING_BREV) false else true,
-                        "begrunnelse",
-                        emptyList()
-                    )
-                }),
-            Bruker("KVALITETSSIKRER"),
-        )
+            .kvalitetssikre(underkjennVurderinger = listOf(Definisjon.SKRIV_SYKDOMSVURDERING_BREV))
 
         val avklaringsbehovSomKreverKvalitetssikring = hentAlleAvklaringsbehov(behandling)
             .filter { behov -> behov.kreverKvalitetssikring() }
-        assertThat(avklaringsbehovSomKreverKvalitetssikring.any { it.definisjon == Definisjon.SKRIV_SYKDOMSVURDERING_BREV && it.status() == AvklaringsbehovStatus.SENDT_TILBAKE_FRA_KVALITETSSIKRER }).isTrue()
-        assertThat(
-            avklaringsbehovSomKreverKvalitetssikring
-                .filter { it.definisjon != Definisjon.SKRIV_SYKDOMSVURDERING_BREV }
-                .all { it.status() == AvklaringsbehovStatus.KVALITETSSIKRET }
-        ).isTrue()
+        assertThat(avklaringsbehovSomKreverKvalitetssikring)
+            .anyMatch { it.definisjon == Definisjon.SKRIV_SYKDOMSVURDERING_BREV && it.status() == AvklaringsbehovStatus.SENDT_TILBAKE_FRA_KVALITETSSIKRER }
+        assertThat(avklaringsbehovSomKreverKvalitetssikring.filter { it.definisjon != Definisjon.SKRIV_SYKDOMSVURDERING_BREV })
+            .allMatch { it.status() == AvklaringsbehovStatus.KVALITETSSIKRET }
+
     }
 
     @Test
@@ -279,25 +196,24 @@ class KvalitetssikringFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash
             .løsBistand(fom)
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
-            .kvalitetssikreOk()
+            .kvalitetssikre()
             .løsBeregningstidspunkt()
             .løsOppholdskrav(fom)
             .løsAndreStatligeYtelser()
             .løsAvklaringsBehov(ForeslåVedtakLøsning())
-            .beslutterGodkjennerIkke(returVed = Definisjon.AVKLAR_SYKDOM)
+            .beslutterGodkjennerIkke(underkjennVurderinger = listOf(Definisjon.AVKLAR_SYKDOM))
             .løsSykdom(fom)
-
-        motor.kjørJobber()
-        var åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling)
-        assertThat(åpneAvklaringsbehov.firstOrNull { it.definisjon == Definisjon.KVALITETSSIKRING }).isNotNull()
-
-        behandling.kvalitetssikreOk()
+            .medKontekst {
+                assertThat(åpneAvklaringsbehov)
+                    .anyMatch { it.definisjon == Definisjon.KVALITETSSIKRING }
+            }
+            .kvalitetssikre()
             .foreslåVedtak()
             .fattVedtak()
-
-        åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling)
-        assertThat(åpneAvklaringsbehov).hasSize(1)
-        assertThat(åpneAvklaringsbehov.first().definisjon).isEqualTo(Definisjon.SKRIV_VEDTAKSBREV)
+            .medKontekst {
+                assertThat(åpneAvklaringsbehov).hasSize(1)
+                    .first().extracting("definisjon").isEqualTo(Definisjon.SKRIV_VEDTAKSBREV)
+            }
     }
 
     @Test
@@ -320,20 +236,20 @@ class KvalitetssikringFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash
             .løsBistand(fom)
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
-            .kvalitetssikreOk()
+            .kvalitetssikre()
             .løsBeregningstidspunkt()
             .løsOppholdskrav(fom)
             .løsAndreStatligeYtelser()
             .løsAvklaringsBehov(ForeslåVedtakLøsning())
-            .beslutterGodkjennerIkke(returVed = Definisjon.VURDER_RETTIGHETSPERIODE)
-
-        behandling.løsRettighetsperiodeIngenEndring()
+            .beslutterGodkjennerIkke(underkjennVurderinger = listOf(Definisjon.VURDER_RETTIGHETSPERIODE))
+            // Ingen endring
+            .løsRettighetsperiodeIngenEndring()
             .løsAvklaringsBehov(ForeslåVedtakLøsning())
             .fattVedtak()
-
-        val åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling)
-        assertThat(åpneAvklaringsbehov).hasSize(1)
-        assertThat(åpneAvklaringsbehov.first().definisjon).isEqualTo(Definisjon.SKRIV_VEDTAKSBREV)
+            .medKontekst {
+                assertThat(åpneAvklaringsbehov).hasSize(1)
+                assertThat(åpneAvklaringsbehov.first().definisjon).isEqualTo(Definisjon.SKRIV_VEDTAKSBREV)
+            }
     }
 
     @Test
@@ -356,30 +272,13 @@ class KvalitetssikringFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash
             .løsBistand(fom)
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
-            .kvalitetssikreOk()
+            .kvalitetssikre()
             .løsBeregningstidspunkt()
             .løsOppholdskrav(fom)
             .løsAndreStatligeYtelser()
             .løsAvklaringsBehov(ForeslåVedtakLøsning())
-
-        løsAvklaringsBehov(
-            behandling,
-            FatteVedtakLøsning(
-                hentAlleAvklaringsbehov(behandling)
-                    .filter { behov -> behov.erTotrinn() }
-                    .map { behov ->
-                        TotrinnsVurdering(
-                            behov.definisjon.kode,
-                            behov.definisjon !in listOf(Definisjon.VURDER_RETTIGHETSPERIODE, Definisjon.AVKLAR_SYKDOM),
-                            "begrunnelse",
-                            emptyList()
-                        )
-                    }),
-            Bruker("BESLUTTER")
-        )
-
-        motor.kjørJobber()
-        behandling.løsRettighetsperiodeIngenEndring()
+            .beslutterGodkjennerIkke(underkjennVurderinger = listOf(Definisjon.VURDER_RETTIGHETSPERIODE, Definisjon.AVKLAR_SYKDOM))
+            .løsRettighetsperiodeIngenEndring()
             .løsSykdom(fom)
 
         val stegetsEgetBehov = hentAlleAvklaringsbehov(behandling)
@@ -407,7 +306,7 @@ class KvalitetssikringFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash
             .løsBistand(fom)
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
-            .kvalitetssikreOk()
+            .kvalitetssikre()
 
         val oppdatertBehandling = sak.opprettManuellRevurdering(listOf(Vurderingsbehov.VURDER_RETTIGHETSPERIODE))
         val nyStartdato = LocalDate.now().minusMonths(5)
@@ -438,7 +337,7 @@ class KvalitetssikringFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash
             .løsBistand(fom)
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
-            .kvalitetssikreOk()
+            .kvalitetssikre()
 
         val oppdatertBehandling = sak.opprettManuellRevurdering(listOf(Vurderingsbehov.VURDER_RETTIGHETSPERIODE))
         oppdatertBehandling
