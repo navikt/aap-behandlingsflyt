@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.behandlingstyper
 
-import no.nav.aap.behandlingsflyt.behandling.trekkklage.TrekkKlageInformasjonskrav
 import no.nav.aap.behandlingsflyt.flyt.BehandlingFlyt
 import no.nav.aap.behandlingsflyt.flyt.BehandlingFlytBuilder
 import no.nav.aap.behandlingsflyt.flyt.BehandlingType
@@ -27,7 +26,6 @@ object Klage : BehandlingType {
             .medSteg(
                 steg = TrekkKlageSteg,
                 vurderingsbehovRelevanteForSteg = listOf(Vurderingsbehov.KLAGE_TRUKKET),
-                informasjonskrav = listOf(TrekkKlageInformasjonskrav)
             )
             .medSteg(
                 steg = SendForvaltningsmeldingSteg,

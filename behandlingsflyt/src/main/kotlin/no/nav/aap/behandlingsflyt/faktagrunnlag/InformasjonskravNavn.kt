@@ -17,10 +17,14 @@ enum class InformasjonskravNavn {
     PERSONOPPLYSNING_FORUTGÅENDE,
     PERSONOPPLYSNING,
     UFØRE,
-    RETTIGHETSPERIODE,
-    TRUKKET_SØKNAD,
-    TRUKKET_KLAGE,
     AVBRYT_REVURDERING,
     DAGPENGER,
-    VEDTAKSLENGDE
+    VEDTAKSLENGDE,
+
+    @Deprecated("Ikke i bruk, men finnes i databasen.")
+    RETTIGHETSPERIODE,
+    @Deprecated("Ikke i bruk, men finnes i databasen.")
+    TRUKKET_SØKNAD,
+    @Deprecated("Ikke i bruk, men finnes i databasen.")
+    TRUKKET_KLAGE,
 }
