@@ -12,8 +12,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.repository.RepositoryFactory
 import java.time.Instant
-import java.time.LocalDate
-import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 
 class StansOpphørRepositoryImpl(
@@ -54,7 +52,7 @@ class StansOpphørRepositoryImpl(
                 val type = row.getEnum<Vedtaksstatus>("vedtaksstatus")
                 when (type) {
                     Vedtaksstatus.GJELDENDE -> GjeldendeStansEllerOpphør(
-                        dato = row.getLocalDate("fom"),
+                        fom = row.getLocalDate("fom"),
                         opprettet = row.getInstant("opprettet_tid"),
                         vurdertIBehandling = BehandlingId(row.getLong("vurdert_i_behandling")),
                         vurdering = when (row.getEnum<Vedtakstype>("vedtakstype")) {
@@ -69,7 +67,7 @@ class StansOpphørRepositoryImpl(
                     )
 
                     Vedtaksstatus.OPPHEVET -> OpphevetStansEllerOpphør(
-                        dato = row.getLocalDate("fom"),
+                        fom = row.getLocalDate("fom"),
                         opprettet = row.getInstant("opprettet_tid"),
                         vurdertIBehandling = BehandlingId(row.getLong("vurdert_i_behandling")),
                     )
@@ -128,7 +126,7 @@ class StansOpphørRepositoryImpl(
             setParams {
                 setLong(1, vurderingerId)
                 setInstant(2, it.opprettet.truncatedTo(ChronoUnit.MILLIS))
-                setLocalDate(3, it.dato)
+                setLocalDate(3, it.fom)
                 setLong(4, it.vurdertIBehandling.id)
                 when (it) {
                     is GjeldendeStansEllerOpphør -> {

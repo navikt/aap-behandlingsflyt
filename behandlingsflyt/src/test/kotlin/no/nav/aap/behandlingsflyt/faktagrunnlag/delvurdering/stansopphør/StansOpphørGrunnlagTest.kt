@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør
 
-import net.bytebuddy.agent.Installer
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import org.assertj.core.api.Assertions.assertThat
@@ -8,14 +7,14 @@ import org.junit.jupiter.api.Test
 import java.time.Clock
 import java.time.Instant
 import java.time.LocalDate
-import java.time.LocalDateTime
 import java.time.ZoneId
+import java.time.temporal.ChronoUnit
 
 class StansOpphørGrunnlagTest {
     @Test
     fun `returnerer gjeldende stans og opphør`() {
         val gjeldendeAnnenDato = GjeldendeStansEllerOpphør(
-            dato = LocalDate.now().minusMonths(1),
+            fom = LocalDate.now().minusMonths(1),
             opprettet = Instant.now().minusSeconds(36000 * 60 * 30),
             vurdertIBehandling = BehandlingId(1L),
             vurdering = Opphør(
@@ -23,7 +22,7 @@ class StansOpphørGrunnlagTest {
             )
         )
         val gjeldendeStans = GjeldendeStansEllerOpphør(
-            dato = LocalDate.now(),
+            fom = LocalDate.now(),
             opprettet = Instant.now(),
             vurdertIBehandling = BehandlingId(1L),
             vurdering = Stans(
@@ -33,7 +32,7 @@ class StansOpphørGrunnlagTest {
 
 
         val gammeltOpphør = GjeldendeStansEllerOpphør(
-            dato = LocalDate.now(),
+            fom = LocalDate.now(),
             opprettet = Instant.now().minusSeconds(5000),
             vurdertIBehandling = BehandlingId(1L),
             vurdering = Opphør(
@@ -42,7 +41,7 @@ class StansOpphørGrunnlagTest {
         )
 
         val opphevet = OpphevetStansEllerOpphør(
-            dato = LocalDate.now(),
+            fom = LocalDate.now(),
             opprettet = Instant.now().minusSeconds(3000),
             vurdertIBehandling = BehandlingId(1L),
         )
@@ -93,7 +92,7 @@ class StansOpphørGrunnlagTest {
 
     @Test
     fun `legger ikke på stans og opphør ved ingen endring`() {
-        val t0 = Instant.now().minusSeconds(300)
+        val t0 = Instant.now().minusSeconds(300).truncatedTo(ChronoUnit.MILLIS)
         val t1 = t0.plusSeconds(300)
         val stansOpphørGrunnlag = StansOpphørGrunnlag(
             emptySet()
@@ -113,7 +112,7 @@ class StansOpphørGrunnlagTest {
             StansOpphørGrunnlag(
                 setOf(
                     GjeldendeStansEllerOpphør(
-                        dato = LocalDate.now(),
+                        fom = LocalDate.now(),
                         opprettet = t0,
                         vurdertIBehandling = BehandlingId(0L),
                         vurdering = Stans(
@@ -134,7 +133,7 @@ class StansOpphørGrunnlagTest {
             StansOpphørGrunnlag(
                 setOf(
                     GjeldendeStansEllerOpphør(
-                        dato = LocalDate.now(),
+                        fom = LocalDate.now(),
                         opprettet = t0,
                         vurdertIBehandling = BehandlingId(0L),
                         vurdering = Stans(
@@ -148,7 +147,7 @@ class StansOpphørGrunnlagTest {
 
     @Test
     fun `legger på opphevet ved fjerning`() {
-        val t0 = Instant.now().minusSeconds(300)
+        val t0 = Instant.now().minusSeconds(300).truncatedTo(ChronoUnit.MILLIS)
         val t1 = t0.plusSeconds(300)
         val stansOpphørGrunnlag = StansOpphørGrunnlag(
             emptySet()
@@ -172,7 +171,7 @@ class StansOpphørGrunnlagTest {
             StansOpphørGrunnlag(
                 setOf(
                     GjeldendeStansEllerOpphør(
-                        dato = LocalDate.now(),
+                        fom = LocalDate.now(),
                         opprettet = t0,
                         vurdertIBehandling = BehandlingId(0L),
                         vurdering = Stans(
@@ -180,7 +179,7 @@ class StansOpphørGrunnlagTest {
                         )
                     ),
                     OpphevetStansEllerOpphør(
-                        dato = LocalDate.now(),
+                        fom = LocalDate.now(),
                         opprettet = t1,
                         vurdertIBehandling = BehandlingId(1L),
                     )
@@ -191,7 +190,7 @@ class StansOpphørGrunnlagTest {
 
     @Test
     fun `endrer stans til opphør`() {
-        val t0 = Instant.now().minusSeconds(300)
+        val t0 = Instant.now().minusSeconds(300).truncatedTo(ChronoUnit.MILLIS)
         val t1 = t0.plusSeconds(300)
         val stansOpphørGrunnlag = StansOpphørGrunnlag(
             emptySet()
@@ -223,7 +222,7 @@ class StansOpphørGrunnlagTest {
             StansOpphørGrunnlag(
                 setOf(
                     GjeldendeStansEllerOpphør(
-                        dato = LocalDate.now(),
+                        fom = LocalDate.now(),
                         opprettet = t0,
                         vurdertIBehandling = BehandlingId(0L),
                         vurdering = Stans(
@@ -231,7 +230,7 @@ class StansOpphørGrunnlagTest {
                         )
                     ),
                     GjeldendeStansEllerOpphør(
-                        dato = LocalDate.now(),
+                        fom = LocalDate.now(),
                         opprettet = t1,
                         vurdertIBehandling = BehandlingId(1L),
                         vurdering = Opphør(

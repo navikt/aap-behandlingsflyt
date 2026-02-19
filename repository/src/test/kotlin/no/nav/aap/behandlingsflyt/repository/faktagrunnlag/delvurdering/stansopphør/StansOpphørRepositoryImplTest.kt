@@ -5,11 +5,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.Opphev
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.Opphør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.Stans
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.StansOpphørGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.StansOpphørRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.help.sak
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
@@ -18,6 +16,7 @@ import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import java.time.Instant
+import java.time.temporal.ChronoUnit
 
 class StansOpphørRepositoryImplTest {
     companion object {
@@ -34,14 +33,12 @@ class StansOpphørRepositoryImplTest {
         fun afterAll() = dataSource.close()
     }
 
-    private val behandlingsIder = generateSequence(0L) { it + 1 }.map(::BehandlingId).iterator()
-
     @Test
     fun `får null hvis grunnlag mangler`() {
-        val behandlingsId = behandlingsIder.next()
-
-        medRepository {
-            assertThat(hentHvisEksisterer(behandlingsId))
+        dataSource.transaction { connection ->
+            val behandlingId = finnEllerOpprettBehandling(connection, sak(connection)).id
+            val repo = StansOpphørRepositoryImpl(connection)
+            assertThat(repo.hentHvisEksisterer(behandlingId))
                 .isNull()
         }
     }
@@ -58,8 +55,8 @@ class StansOpphørRepositoryImplTest {
             val grunnlag1 = StansOpphørGrunnlag(
                 setOf(
                     GjeldendeStansEllerOpphør(
-                        dato = 1 januar 2020,
-                        opprettet = Instant.now(),
+                        fom = 1 januar 2020,
+                        opprettet = Instant.now().truncatedTo(ChronoUnit.MILLIS),
                         vurdertIBehandling = b1.id,
                         vurdering = Stans(setOf(Avslagsårsak.BRUDD_PÅ_AKTIVITETSPLIKT_STANS))
                     )
@@ -69,8 +66,8 @@ class StansOpphørRepositoryImplTest {
             val grunnlag2 = StansOpphørGrunnlag(
                 setOf(
                     GjeldendeStansEllerOpphør(
-                        dato = 2 januar 2020,
-                        opprettet = Instant.now(),
+                        fom = 2 januar 2020,
+                        opprettet = Instant.now().truncatedTo(ChronoUnit.MILLIS),
                         vurdertIBehandling = b2.id,
                         vurdering = Opphør(setOf(Avslagsårsak.BRUDD_PÅ_AKTIVITETSPLIKT_OPPHØR))
                     )
@@ -96,8 +93,8 @@ class StansOpphørRepositoryImplTest {
             val gjeldendeOpphør = StansOpphørGrunnlag(
                 setOf(
                     GjeldendeStansEllerOpphør(
-                        dato = 1 januar 2020,
-                        opprettet = Instant.now(),
+                        fom = 1 januar 2020,
+                        opprettet = Instant.now().truncatedTo(ChronoUnit.MILLIS),
                         vurdertIBehandling = b1.id,
                         vurdering = Opphør(setOf(Avslagsårsak.BRUDD_PÅ_AKTIVITETSPLIKT_OPPHØR))
                     )
@@ -111,8 +108,8 @@ class StansOpphørRepositoryImplTest {
             val opphevet = StansOpphørGrunnlag(
                 setOf(
                     OpphevetStansEllerOpphør(
-                        dato = 2 januar 2020,
-                        opprettet = Instant.now(),
+                        fom = 2 januar 2020,
+                        opprettet = Instant.now().truncatedTo(ChronoUnit.MILLIS),
                         vurdertIBehandling = b1.id,
                     )
                 )
@@ -125,8 +122,8 @@ class StansOpphørRepositoryImplTest {
             val gjeldendeStans = StansOpphørGrunnlag(
                 setOf(
                     GjeldendeStansEllerOpphør(
-                        dato = 1 januar 2020,
-                        opprettet = Instant.now(),
+                        fom = 1 januar 2020,
+                        opprettet = Instant.now().truncatedTo(ChronoUnit.MILLIS),
                         vurdertIBehandling = b1.id,
                         vurdering = Stans(setOf(Avslagsårsak.BRUDD_PÅ_AKTIVITETSPLIKT_STANS))
                     )
@@ -144,15 +141,6 @@ class StansOpphørRepositoryImplTest {
             repo.lagre(b1.id, sammensatt)
 
             assertThat(repo.hentHvisEksisterer(b1.id)).isEqualTo(sammensatt)
-
-
-        }
-    }
-
-
-    private fun <R> medRepository(body: StansOpphørRepository.() -> R): R {
-        return dataSource.transaction { connection ->
-            StansOpphørRepositoryImpl(connection).body()
         }
     }
 }

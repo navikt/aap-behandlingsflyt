@@ -5,14 +5,13 @@ import java.time.Clock
 import java.time.Instant
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
-import java.util.Objects
 
 data class StansOpphørGrunnlag(
     val stansOgOpphør: Set<StansEllerOpphørVurdering>
 ) {
     fun gjeldendeStansOgOpphør(): Set<GjeldendeStansEllerOpphør> {
         return stansOgOpphør
-            .groupBy { it.dato }
+            .groupBy { it.fom }
             .mapNotNull { (_, vedtak) -> vedtak.maxByOrNull { it.opprettet }!! }
             .mapNotNull {
                 when (it) {
@@ -29,27 +28,20 @@ data class StansOpphørGrunnlag(
         clock: Clock = Clock.systemDefaultZone(),
     ): StansOpphørGrunnlag {
         val endringer = mergeNotNull(
-            gjeldendeStansOgOpphør().associate { it.dato to  it.vurdering},
+            gjeldendeStansOgOpphør().associate { it.fom to  it.vurdering},
             utlededeStansOgOpphør,
         ) { dato, vedtattStans, utledetStans ->
-            if (vedtattStans == null && utledetStans != null) {
+            if (utledetStans != null && vedtattStans != utledetStans) {
                 GjeldendeStansEllerOpphør(
-                    dato = dato,
-                    opprettet = Instant.now(clock),
-                    vurdertIBehandling = behandlingId,
-                    vurdering = utledetStans,
-                )
-            } else if (vedtattStans != null && utledetStans != null && vedtattStans != utledetStans) {
-                GjeldendeStansEllerOpphør(
-                    dato = dato,
-                    opprettet = Instant.now(clock),
+                    fom = dato,
+                    opprettet = Instant.now(clock).truncatedTo(ChronoUnit.MILLIS),
                     vurdertIBehandling = behandlingId,
                     vurdering = utledetStans,
                 )
             } else if (vedtattStans != null && utledetStans == null) {
                 OpphevetStansEllerOpphør(
-                    dato = dato,
-                    opprettet = Instant.now(clock),
+                    fom = dato,
+                    opprettet = Instant.now(clock).truncatedTo(ChronoUnit.MILLIS),
                     vurdertIBehandling = behandlingId,
                 )
             } else {
@@ -64,7 +56,7 @@ data class StansOpphørGrunnlag(
 
 sealed interface StansEllerOpphørVurdering {
     /* Stans/opphør gjelder fra og med [dato]. */
-    val dato: LocalDate
+    val fom: LocalDate
 
     val vurdertIBehandling: BehandlingId
 
@@ -72,40 +64,17 @@ sealed interface StansEllerOpphørVurdering {
 }
 
 data class GjeldendeStansEllerOpphør(
-    override val dato: LocalDate,
+    override val fom: LocalDate,
     override val opprettet: Instant,
     override val vurdertIBehandling: BehandlingId,
     val vurdering: StansEllerOpphør,
-) : StansEllerOpphørVurdering {
-    override fun equals(other: Any?): Boolean {
-        return ( other is GjeldendeStansEllerOpphør
-            && other.vurdertIBehandling == vurdertIBehandling
-            && other.vurdering == vurdering
-            && other.dato == dato
-            && other.opprettet.truncatedTo(ChronoUnit.MILLIS) == other.opprettet.truncatedTo(ChronoUnit.MILLIS))
-    }
-
-    override fun hashCode(): Int {
-        return Objects.hash(dato, opprettet.truncatedTo(ChronoUnit.MILLIS), vurdertIBehandling, vurdering)
-    }
-}
+) : StansEllerOpphørVurdering
 
 data class OpphevetStansEllerOpphør(
-    override val dato: LocalDate,
+    override val fom: LocalDate,
     override val vurdertIBehandling: BehandlingId,
     override val opprettet: Instant,
-) : StansEllerOpphørVurdering {
-    override fun equals(other: Any?): Boolean {
-        return ( other is OpphevetStansEllerOpphør
-                && other.vurdertIBehandling == vurdertIBehandling
-                && other.dato == dato
-                && other.opprettet.truncatedTo(ChronoUnit.MILLIS) == other.opprettet.truncatedTo(ChronoUnit.MILLIS))
-    }
-
-    override fun hashCode(): Int {
-        return Objects.hash(dato, opprettet.truncatedTo(ChronoUnit.MILLIS), vurdertIBehandling)
-    }
-}
+) : StansEllerOpphørVurdering
 
 private fun <K, V1 : Any, V2 : Any, V3> mergeNotNull(
     map1: Map<K, V1>,
