@@ -63,7 +63,7 @@ data class UnderveisGrunnlag(
                     periodeSluttdato
                 ).antallHverdager().asInt
             } else 0
-        val gjenværendeKvote = senesteInnfriddePeriode?.gjenværendeKvote?.plus(ubruktKvoteIPeriode) ?: 0
+        val gjenværendeKvote = senesteInnfriddePeriode?.gjenværendeKvote?.plus(ubruktKvoteIPeriode) ?: totalKvote ?: 0
 
         return RettighetKvoter(
             totalKvote = totalKvote,
