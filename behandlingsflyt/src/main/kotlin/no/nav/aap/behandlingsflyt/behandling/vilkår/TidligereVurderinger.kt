@@ -2,7 +2,6 @@ package no.nav.aap.behandlingsflyt.behandling.vilkår
 
 import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingService
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Innvilgelsesårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall.IKKE_OPPFYLT
@@ -135,10 +134,7 @@ class TidligereVurderingerImpl(
                 ) { segmentPeriode, sykdomvurdering, bistandvurdering ->
                     val erBistandOppfylt = bistandvurdering?.erBehovForBistand() == true
                     val erSykdomOppfyltOrdinærEllerPotensieltYrkesskade =
-                        sykdomvurdering?.erOppfyltForYrkesskadeSettBortIfraÅrsakssammenheng(
-                            kontekst.rettighetsperiode.fom,
-                            segmentPeriode
-                        ) == true || sykdomvurdering?.erOppfyltOrdinær(
+                        sykdomvurdering?.erOppfyltOrdinærEllerYrkesskadeSettBortIfraÅrsakssammenheng(
                             kontekst.rettighetsperiode.fom,
                             segmentPeriode
                         ) == true
@@ -418,7 +414,7 @@ class TidligereVurderingerImpl(
             val sykdomDefinitivtAvslag =
                 sykdomsvurdering?.erOppfyltOrdinærSettBortIfraVissVarighet() == false
                         && !sykdomsvurdering.erOppfyltForYrkesskadeSettBortIfraÅrsakssammenhengOgVissVarighet()
-            
+
             val potensieltOvergangArbeid = erIkkeFørsteSykdomsvurdering && harTidligereInnvilgetSykdomsvurdering
 
             if (sykdomDefinitivtAvslag && !potensieltOvergangArbeid) {

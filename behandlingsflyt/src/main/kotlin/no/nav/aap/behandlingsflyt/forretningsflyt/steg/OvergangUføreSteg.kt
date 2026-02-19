@@ -89,7 +89,7 @@ class OvergangUføreSteg private constructor(
         val utfall = tidligereVurderinger.behandlingsutfall(kontekst, type())
         val sykdomsvurderinger =
             sykdomRepository.hentHvisEksisterer(kontekst.behandlingId)?.somSykdomsvurderingstidslinje().orEmpty()
- 
+
         return Tidslinje.map2(
             utfall,
             sykdomsvurderinger
@@ -97,17 +97,12 @@ class OvergangUføreSteg private constructor(
             when (utfall) {
                 TidligereVurderinger.IkkeBehandlingsgrunnlag, TidligereVurderinger.UunngåeligAvslag -> false
                 is TidligereVurderinger.PotensieltOppfylt -> {
-                    val erSykdomOppfyltOrdinærEllerPotensieltYrkesskade =
-                        sykdomsvurering?.erOppfyltForYrkesskadeSettBortIfraÅrsakssammenheng(
-                            kontekst.rettighetsperiode.fom,
-                            segmentPeriode
-                        ) == true || sykdomsvurering?.erOppfyltOrdinær(
-                            kontekst.rettighetsperiode.fom,
-                            segmentPeriode
-                        ) == true
-
-                   erSykdomOppfyltOrdinærEllerPotensieltYrkesskade && utfall.rettighetstype == null
+                    utfall.rettighetstype == null && sykdomsvurering?.erOppfyltOrdinærEllerYrkesskadeSettBortIfraÅrsakssammenheng(
+                        kontekst.rettighetsperiode.fom,
+                        segmentPeriode
+                    ) == true
                 }
+
                 else -> false
             }
         }

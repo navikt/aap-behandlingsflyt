@@ -68,6 +68,17 @@ data class Sykdomsvurdering(
                 && erTilstrekkeligNedsattArbeidsevne
                 && erVissVarighetOmRelevant(kravdato, periodenVurderingenGjelderFor)
     }
+    
+    fun erOppfyltOrdinærEllerYrkesskadeSettBortIfraÅrsakssammenheng(kravDato: LocalDate, periodenVurderingenGjelderFor: Periode): Boolean {
+        return erOppfyltForYrkesskadeSettBortIfraÅrsakssammenheng(
+            kravDato,
+            periodenVurderingenGjelderFor
+        ) || erOppfyltOrdinær(
+            kravDato,
+            periodenVurderingenGjelderFor
+        )
+    }
+
 
     fun erOppfyltForYrkesskadeSettBortIfraÅrsakssammenhengOgVissVarighet(): Boolean {
         val erTilstrekkeligNedsattArbeidsevne = erNedsettelseIArbeidsevneMerEnnHalvparten == true
@@ -78,7 +89,7 @@ data class Sykdomsvurdering(
                 && erSkadeSykdomEllerLyteVesentligdel == true
                 && erTilstrekkeligNedsattArbeidsevne
     }
-
+    
     private fun erVissVarighetOmRelevant(kravdato: LocalDate, periodenVurderingenGjelderFor: Periode): Boolean {
         return if (erFørsteVurdering(kravdato, periodenVurderingenGjelderFor))
             erNedsettelseIArbeidsevneAvEnVissVarighet == true
