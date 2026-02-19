@@ -19,13 +19,15 @@ import java.time.Year
 class GrunnbeløpTest {
 
     @Test
-    fun `Genererer tidslinje for gjennomsnittlig grunnbeløp`() {
-        val gjennomSnittSluttenAv2009 = Grunnbeløp.gjennomsnittGrunnbeløp(31 desember 2009)
-        val gjennomsnittFørsteJanuar = Grunnbeløp.gjennomsnittGrunnbeløp(1 januar 2010)
-
-        assertThat(gjennomSnittSluttenAv2009)
+    fun `gjennomsnittsverdien er lik gjennom hele året`() {
+        assertThat(Grunnbeløp.gjennomsnittGrunnbeløp(1 januar  2009))
             .isEqualTo(Beløp(72006))
-        assertThat(gjennomsnittFørsteJanuar)
+        assertThat(Grunnbeløp.gjennomsnittGrunnbeløp(31 desember 2009))
+            .isEqualTo(Beløp(72006))
+
+        assertThat(Grunnbeløp.gjennomsnittGrunnbeløp(1 januar 2010))
+            .isEqualTo(Beløp(74721))
+        assertThat(Grunnbeløp.gjennomsnittGrunnbeløp(31 desember 2010))
             .isEqualTo(Beløp(74721))
     }
 
