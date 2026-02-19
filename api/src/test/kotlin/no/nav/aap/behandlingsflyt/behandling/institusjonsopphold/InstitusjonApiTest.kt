@@ -11,8 +11,9 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import java.time.LocalDate
-import java.util.UUID
+import java.util.*
 
 class InstitusjonApiTest {
 
@@ -117,10 +118,10 @@ class InstitusjonApiTest {
         }
 
         @Test
-        fun `byggTidslinjeForInstitusjonsopphold justerer også perioder som har mer enn en dags overlapp`() {
+        fun `byggTidslinjeForInstitusjonsopphold kaster feil på perioder som har mer enn en dags overlapp`() {
             val opphold1 = lagSegment(
                 fom = LocalDate.of(2024, 1, 1),
-                tom = LocalDate.of(2024, 1, 15),
+                tom = LocalDate.of(2024, 1, 12),
                 type = Institusjonstype.HS,
             )
             val opphold2 = lagSegment(
@@ -132,15 +133,9 @@ class InstitusjonApiTest {
                 oppholdene = Oppholdene(id = 1L, opphold = listOf(opphold1, opphold2))
             )
 
-            val tidslinje = byggTidslinjeForInstitusjonsopphold(grunnlag, Institusjonstype.HS)
-            val segmenter = tidslinje.segmenter().toList()
-
-            assertThat(segmenter).hasSize(2)
-            assertThat(segmenter[0].periode.fom).isEqualTo(opphold1.fom())
-            // Første opphold skal få tom justert til dagen før neste starter selv om det er over flere dager
-            assertThat(segmenter[0].periode.tom).isEqualTo(opphold1.tom().minusDays(5))
-            assertThat(segmenter[1].periode.fom).isEqualTo(opphold2.fom())
-            assertThat(segmenter[1].periode.tom).isEqualTo(opphold2.tom())
+            assertThrows<IllegalArgumentException> {
+                byggTidslinjeForInstitusjonsopphold(grunnlag, Institusjonstype.HS)
+            }
         }
 
         @Test
