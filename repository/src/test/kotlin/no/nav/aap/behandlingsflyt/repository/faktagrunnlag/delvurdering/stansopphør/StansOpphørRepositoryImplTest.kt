@@ -75,8 +75,8 @@ class StansOpphørRepositoryImplTest {
                 )
             )
 
-                StansOpphørRepositoryImpl(connection).lagre(b1.id, grunnlag1)
-                StansOpphørRepositoryImpl(connection).lagre(b2.id, grunnlag2)
+                repo.lagre(b1.id, grunnlag1)
+                repo.lagre(b2.id, grunnlag2)
 
                 assertThat(repo.hentHvisEksisterer(b1.id)).isEqualTo(grunnlag1)
                 assertThat(repo.hentHvisEksisterer(b2.id)).isEqualTo(grunnlag2)
