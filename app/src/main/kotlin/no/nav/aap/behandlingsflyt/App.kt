@@ -40,6 +40,7 @@ import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.sykepenge
 import no.nav.aap.behandlingsflyt.behandling.beregning.manuellinntekt.manglendeGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.beregning.tidspunkt.beregningVurderingApi
 import no.nav.aap.behandlingsflyt.behandling.brev.sykdomsvurderingForBrevApi
+import no.nav.aap.behandlingsflyt.behandling.etableringegenvirksomhet.etableringEgenVirksomhetApi
 import no.nav.aap.behandlingsflyt.behandling.foreslåvedtak.foreslaaVedtakApi
 import no.nav.aap.behandlingsflyt.behandling.grunnlag.medlemskap.medlemskapsgrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.grunnlag.samordning.samordningGrunnlag
@@ -85,6 +86,8 @@ import no.nav.aap.behandlingsflyt.hendelse.kafka.klage.KABAL_EVENT_TOPIC
 import no.nav.aap.behandlingsflyt.hendelse.kafka.klage.KabalKafkaKonsument
 import no.nav.aap.behandlingsflyt.hendelse.kafka.person.PDL_HENDELSE_TOPIC
 import no.nav.aap.behandlingsflyt.hendelse.kafka.person.PdlHendelseKafkaKonsument
+import no.nav.aap.behandlingsflyt.hendelse.kafka.sykepenger.SYKEPENGEVEDTAK_EVENT_TOPIC
+import no.nav.aap.behandlingsflyt.hendelse.kafka.sykepenger.SykepengevedtakKafkaKonsument
 import no.nav.aap.behandlingsflyt.hendelse.kafka.tilbakekreving.TILBAKEKREVING_EVENT_TOPIC
 import no.nav.aap.behandlingsflyt.hendelse.kafka.tilbakekreving.TilbakekrevingKafkaKonsument
 import no.nav.aap.behandlingsflyt.hendelse.mottattHendelseApi
@@ -234,6 +237,10 @@ internal fun Application.server(
         startInstitusjonsOppholdKonsument(dataSource, repositoryRegistry)
     }
 
+    if (!Miljø.erLokal() && !Miljø.erProd()) {
+        startSykepengevedtakKonsument(dataSource, repositoryRegistry, gatewayProvider)
+    }
+
     monitor.subscribe(ApplicationStopPreparing) { environment ->
         environment.log.info("ktor forbereder seg på å stoppe.")
     }
@@ -268,6 +275,7 @@ internal fun Application.server(
                 meldepliktOverstyringGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
                 arbeidsevneGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
                 arbeidsopptrappingGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
+                etableringEgenVirksomhetApi(dataSource, repositoryRegistry, gatewayProvider)
                 overgangUforeGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
                 medlemskapsgrunnlagApi(dataSource, repositoryRegistry)
                 studentgrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
@@ -499,7 +507,7 @@ fun Application.startInstitusjonsOppholdKonsument(
     val konsument = InstitusjonsOppholdKafkaKonsument(
         config = KafkaConsumerConfig(
             keyDeserializer = StringDeserializer::class.java,
-            valueDeserializer = JsonDeserializer::class.java,
+            valueDeserializer = JsonDeserializerInstitusjonsOppholdHendelse::class.java,
         ),
         closeTimeout = AppConfig.stansArbeidTimeout,
         dataSource = dataSource,
@@ -517,6 +525,44 @@ fun Application.startInstitusjonsOppholdKonsument(
     }
     monitor.subscribe(ApplicationStopping) { env ->
         env.log.info("Forbereder stopp av applikasjon, lukker InstitusjonKonsument.")
+
+        // ktor sine eventer kjøres synkront, så vi må kjøre dette asynkront for ikke å blokkere nedstengings-sekvensen
+        env.launch(Dispatchers.IO) {
+            konsument.lukk()
+        }
+    }
+
+    return konsument
+}
+
+
+fun Application.startSykepengevedtakKonsument(
+    dataSource: DataSource,
+    repositoryRegistry: RepositoryRegistry,
+    gatewayProvider: GatewayProvider,
+): KafkaKonsument<String, String> {
+
+    val konsument = SykepengevedtakKafkaKonsument(
+        config = KafkaConsumerConfig(
+            keyDeserializer = StringDeserializer::class.java,
+            valueDeserializer = StringDeserializer::class.java,
+        ),
+        closeTimeout = AppConfig.stansArbeidTimeout,
+        dataSource = dataSource,
+        repositoryRegistry = repositoryRegistry,
+        gatewayProvider = gatewayProvider
+    )
+    monitor.subscribe(ApplicationStarted) {
+        val t = Thread {
+            konsument.konsumer()
+        }
+        t.uncaughtExceptionHandler = Thread.UncaughtExceptionHandler { _, e ->
+            log.error("Konsumering av $SYKEPENGEVEDTAK_EVENT_TOPIC ble lukket pga uhåndtert feil", e)
+        }
+        t.start()
+    }
+    monitor.subscribe(ApplicationStopping) { env ->
+        env.log.info("Forbereder stopp av applikasjon, lukker SykepengevedtakKonsument.")
 
         // ktor sine eventer kjøres synkront, så vi må kjøre dette asynkront for ikke å blokkere nedstengings-sekvensen
         env.launch(Dispatchers.IO) {
@@ -558,7 +604,7 @@ fun initDatasource(dbConfig: DbConfig): HikariDataSource = HikariDataSource(Hika
     metricRegistry = prometheus
 })
 
-class JsonDeserializer : Deserializer<InstitusjonsOppholdHendelseKafkaMelding> {
+class JsonDeserializerInstitusjonsOppholdHendelse : Deserializer<InstitusjonsOppholdHendelseKafkaMelding> {
     private val mapper = jacksonObjectMapper()
 
     override fun deserialize(

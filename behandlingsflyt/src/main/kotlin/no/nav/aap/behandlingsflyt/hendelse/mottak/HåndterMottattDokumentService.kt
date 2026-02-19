@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.hendelse.mottak
 
+import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.behandling.tilbakekrevingsbehandling.TilbakekrevingBehandlingsstatus
 import no.nav.aap.behandlingsflyt.behandling.tilbakekrevingsbehandling.TilbakekrevingService
 import no.nav.aap.behandlingsflyt.behandling.tilbakekrevingsbehandling.Tilbakekrevingshendelse
@@ -25,7 +26,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Melding
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.NyÅrsakTilBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.NyÅrsakTilBehandlingV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.OmgjøringKlageRevurdering
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.OmgjøringKlageRevurderingV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Omgjøringskilde
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Oppfølgingsoppgave
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.OppfølgingsoppgaveV0
@@ -33,6 +33,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.PdlHendelseV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.TilbakekrevingHendelse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.TilbakekrevingHendelseV0
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
+import no.nav.aap.behandlingsflyt.prosessering.OppdagEndretInformasjonskravJobbUtfører
 import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingService
 import no.nav.aap.behandlingsflyt.prosessering.tilbakekreving.FagsysteminfoSvarHendelse
 import no.nav.aap.behandlingsflyt.prosessering.tilbakekreving.MottakerDto
@@ -50,6 +51,8 @@ import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.lookup.repository.RepositoryProvider
+import no.nav.aap.motor.FlytJobbRepository
+import no.nav.aap.motor.JobbInput
 import no.nav.aap.utbetaling.helved.base64ToUUID
 import org.slf4j.LoggerFactory
 import java.net.URI
@@ -65,6 +68,8 @@ class HåndterMottattDokumentService(
     private val behandlingRepository: BehandlingRepository,
     private val vedtakRepository: VedtakRepository,
     private val tilbakekrevingService: TilbakekrevingService,
+    private val trukketSøknadService: TrukketSøknadService,
+    private val flytJobbRepository: FlytJobbRepository,
 ) {
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -78,7 +83,9 @@ class HåndterMottattDokumentService(
         behandlingRepository = repositoryProvider.provide<BehandlingRepository>(),
         vedtakRepository = repositoryProvider.provide<VedtakRepository>(),
         tilbakekrevingService = TilbakekrevingService(repositoryProvider, gatewayProvider),
-    )
+        trukketSøknadService = TrukketSøknadService(repositoryProvider),
+        flytJobbRepository = repositoryProvider.provide<FlytJobbRepository>(),
+        )
 
     fun håndterMottatteKlage(
         sakId: SakId,
@@ -148,9 +155,7 @@ class HåndterMottattDokumentService(
         val opprettedeAktivitetspliktBehandlinger = vurderingsbehovForAktivitetsplikt
             .map { it.type }.toSet()
             .map {
-                val beskrivelse = when (melding) {
-                    is OmgjøringKlageRevurderingV0 -> melding.beskrivelse
-                }
+                val beskrivelse = melding.beskrivelse
                 val opprettet = sakOgBehandlingService.opprettAktivitetspliktBehandling(
                     sakId,
                     årsakTilOpprettelse,
@@ -174,10 +179,7 @@ class HåndterMottattDokumentService(
                 årsak = årsakTilOpprettelse,
                 vurderingsbehov = vurderingsbehovForYtelsesbehandling,
                 opprettet = mottattTidspunkt,
-                beskrivelse =
-                    when (melding) {
-                        is OmgjøringKlageRevurderingV0 -> melding.beskrivelse
-                    }
+                beskrivelse = melding.beskrivelse
             )
         )
 
@@ -223,7 +225,7 @@ class HåndterMottattDokumentService(
                 opprettet = mottattTidspunkt,
                 beskrivelse = when (melding) {
                     is ManuellRevurderingV0 -> melding.beskrivelse
-                    is OmgjøringKlageRevurderingV0 -> melding.beskrivelse
+                    is OmgjøringKlageRevurdering -> melding.beskrivelse
                     is PdlHendelseV0 -> melding.beskrivelse
                     is NyÅrsakTilBehandlingV0 -> melding.årsakerTilBehandling.joinToString(", ")
                     else -> null
@@ -238,7 +240,9 @@ class HåndterMottattDokumentService(
         sakOgBehandlingService.oppdaterRettighetsperioden(sakId, brevkategori, mottattTidspunkt.toLocalDate())
 
         if (skalMarkereDokumentSomBehandlet(melding)) {
-            require(opprettetBehandling is SakOgBehandlingService.Ordinær)
+            require(opprettetBehandling is SakOgBehandlingService.Ordinær) {
+                "Forventet ordinær behandling ved mottak av dokumenter som skal markeres som behandlet"
+            }
             mottaDokumentService.markerSomBehandlet(sakId, opprettetBehandling.åpenBehandling.id, referanse)
         } else {
             when (opprettetBehandling) {
@@ -314,6 +318,20 @@ class HåndterMottattDokumentService(
                 mottaDokumentService.markerSomBehandlet(sakId, behandlingId, referanse)
             }
         }
+    }
+
+    fun håndterMottattSykepengevedtakHendelse(
+        sakId: SakId,
+        referanse: InnsendingReferanse,
+    ) {
+        val sisteYtelsesBehandling = sakOgBehandlingService.finnSisteYtelsesbehandlingFor(sakId)
+            ?: error("Finnes ingen ytelsesbehandling for sakId $sakId")
+        if (!trukketSøknadService.søknadErTrukket(sisteYtelsesBehandling.id)) {
+            flytJobbRepository.leggTil(
+                JobbInput(jobb = OppdagEndretInformasjonskravJobbUtfører).forSak(sakId.toLong()).medCallId()
+            )
+        }
+        mottaDokumentService.markerSomBehandlet(sakId, sisteYtelsesBehandling.id, referanse)
     }
 
 
@@ -453,6 +471,7 @@ class HåndterMottattDokumentService(
             InnsendingType.TILBAKEKREVING_HENDELSE -> ÅrsakTilOpprettelse.TILBAKEKREVING_HENDELSE
             InnsendingType.INSTITUSJONSOPPHOLD -> ÅrsakTilOpprettelse.ENDRING_I_REGISTERDATA
             InnsendingType.FAGSYSTEMINFO_BEHOV_HENDELSE -> ÅrsakTilOpprettelse.FAGSYSTEMINFO_BEHOV_HENDELSE
+            InnsendingType.SYKEPENGE_VEDTAK_HENDELSE -> throw IllegalArgumentException("Sykepengevedtakhendelser skal trigge sjekk av informasjonskrav og ikke opprette en behandling direkte")
         }
     }
 
@@ -472,7 +491,7 @@ class HåndterMottattDokumentService(
     }
 
     private fun utledÅrsakEtterOmgjøringAvKlage(melding: Melding?): ÅrsakTilOpprettelse = when (melding) {
-        is OmgjøringKlageRevurderingV0 -> when (melding.kilde) {
+        is OmgjøringKlageRevurdering -> when (melding.kilde) {
             Omgjøringskilde.KLAGEINSTANS -> ÅrsakTilOpprettelse.OMGJØRING_ETTER_SVAR_FRA_KLAGEINSTANS
             Omgjøringskilde.KELVIN -> ÅrsakTilOpprettelse.OMGJØRING_ETTER_KLAGE
         }
@@ -493,7 +512,7 @@ class HåndterMottattDokumentService(
             }
 
             InnsendingType.OMGJØRING_KLAGE_REVURDERING -> when (melding) {
-                is OmgjøringKlageRevurderingV0 -> melding.vurderingsbehov.map { VurderingsbehovMedPeriode(it.tilVurderingsbehov()) }
+                is OmgjøringKlageRevurdering -> melding.vurderingsbehov.map { VurderingsbehovMedPeriode(it.tilVurderingsbehov()) }
                 else -> error("Melding må være OmgjøringKlageRevurderingV0")
             }
 
@@ -535,6 +554,7 @@ class HåndterMottattDokumentService(
             InnsendingType.TILBAKEKREVING_HENDELSE -> emptyList()
             InnsendingType.INSTITUSJONSOPPHOLD -> listOf(VurderingsbehovMedPeriode(Vurderingsbehov.INSTITUSJONSOPPHOLD))
             InnsendingType.FAGSYSTEMINFO_BEHOV_HENDELSE -> emptyList()
+            InnsendingType.SYKEPENGE_VEDTAK_HENDELSE -> emptyList()
         }
     }
 
@@ -568,4 +588,5 @@ class HåndterMottattDokumentService(
             else -> null
         }
     }
+
 }

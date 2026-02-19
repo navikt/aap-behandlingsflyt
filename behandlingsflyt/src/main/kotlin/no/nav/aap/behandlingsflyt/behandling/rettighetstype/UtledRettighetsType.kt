@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.behandling.underveis.Kvoter
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companion.antallHverdager
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Kvote
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagstype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.StansEllerOpphør
@@ -176,6 +177,11 @@ fun vurderRettighetstypeOgKvoter(
  * vi greid å hente ut alle vilkårsvurderingen som fører til stans eller opphør ut fra underveissteget og inn
  * i egne vilkår, slik at vi ikke trenger å splitte utregningen i to.
  *
+ * @param rettighetsperiode Noen behandlinger har ikke Tid.MAKS som tom i rettighetsperioden, men noen
+ *      av  vilkårene er vurdert til Tid.MAKS. Tar derfor inn rettighetsperiode, slik at vi kan begrense gamle saker
+ *      til perioden de er veldefinert for. Burde egentlig ikke være nødvendig for nye saker, siden slutt på
+ *      rettighetsperioden uansett er Tid.MAKS.
+ *
  * @return Map over hvilke avslagsårsaker som er grunnen til at medlemmet går fra å ha rett til AAP en dag til ikke å ha rett til AAP dagen umiddelbart etterpå.
  * Dette er egentlig ikke en egenskap knyttet til en dag, men til overgangen mellom to dager. Avslagsårsakene vil derfor ikke være oppgitt for perioden uten rett, men for
  * første dag uten rett.
@@ -186,21 +192,26 @@ fun vurderRettighetstypeOgKvoter(
 fun utledStansEllerOpphør(
     vilkårsresultat: Vilkårsresultat,
     kvoter: Kvoter = KvoteService().beregn(),
+    rettighetsperiode: Periode,
 ): Map<LocalDate, StansEllerOpphør> {
     val rettighetstypeVurderingTidslinje = utledRettighetstypevurderinger(vilkårsresultat)
         .let {
             /* Fyll "tomrom" i tidslinjen. Body til [windowed]-kallet forutsetter at segmenter
              * ligger inntil hverandre. */
             it.mergePrioriterVenstre(
-                tidslinjeOf(
-                    it.helePerioden() to RettighetstypeVurdering(
-                        kravspesifikasjonForRettighetsType = null,
-                        vilkårsvurderinger = emptyMap(),
+                if (it.isEmpty())
+                    Tidslinje.empty()
+                else
+                    tidslinjeOf(
+                        it.helePerioden() to RettighetstypeVurdering(
+                            kravspesifikasjonForRettighetsType = null,
+                            vilkårsvurderinger = emptyMap(),
+                        )
                     )
-                )
             )
         }
     return vurderKvoter(kvoter, rettighetstypeVurderingTidslinje)
+        .begrensetTil(rettighetsperiode)
         .segmenter().windowed(2)
         .mapNotNull { (vurderingSegment, nesteVurderingSegment) ->
             require(vurderingSegment.tom().plusDays(1) == nesteVurderingSegment.fom()) {
@@ -219,12 +230,19 @@ fun utledStansEllerOpphør(
             if (haddeRettTilAAP && misterRettTilAAP) {
                 val sisteDagMedRett = vurderingSegment.periode.tom
                 val avslagsårsaker =
-                    innvilgendeKravspesifikasjon.avslagsårsaker(nesteKvotevurdering.rettighetstypeVurdering.vilkårsvurderinger) +
-                            nesteKvotevurdering.avslagsårsaker()
-                sisteDagMedRett.plusDays(1) to StansEllerOpphør.fraÅrsaker(avslagsårsaker)
+                    (innvilgendeKravspesifikasjon.avslagsårsaker(nesteKvotevurdering.rettighetstypeVurdering.vilkårsvurderinger) +
+                            nesteKvotevurdering.avslagsårsaker())
+                        .filter { it.avslagstype in setOf(Avslagstype.STANS, Avslagstype.OPPHØR) }
+                        .toSet()
+
+                if (avslagsårsaker.isEmpty())
+                    null
+                else
+                    sisteDagMedRett.plusDays(1) to StansEllerOpphør.fraÅrsaker(avslagsårsaker)
             } else {
                 null
             }
         }
         .toMap()
 }
+

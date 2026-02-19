@@ -45,11 +45,16 @@ interface PeriodiserteVurderingerDto<T: VurderingDto> {
      **/
     val nyeVurderinger: List<T>
 
-    /** Perioder hvor vurderinger kan ha en effekt.
+    /** Perioder hvor nye vurderinger er tillatt.
      *
      * Periodene er sortert på [fom] og overlapper ikke.
      **/
     val kanVurderes: List<Periode>
+
+    /** Perioder som det ikke er relevant å vurdere.
+     * Periodene er sortert på [fom] og overlapper ikke.
+     **/
+    val ikkeRelevantePerioder: List<Periode>
 
     /** Nye perioder for denne behandlingen i forhold til forrige behandling hvor
      * Kelvin må ha vurderinger for å fatte et vedtak. Hvis Kelvin mottar nye vurderinger

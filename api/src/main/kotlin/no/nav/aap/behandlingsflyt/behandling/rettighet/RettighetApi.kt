@@ -13,7 +13,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Op
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Stans
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
-import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
@@ -45,27 +44,23 @@ fun NormalOpenAPIRoute.rettighetApi(
                 val sak = sakRepository.hentHvisFinnes(Saksnummer(saksnummer.saksnummer))
                     ?: throw VerdiIkkeFunnetException("Sak med saksnummer ${saksnummer.saksnummer} finnes ikke")
                 val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
-
-                val sisteVedtatteYtelsesbehandling = behandlingRepository.hentAlleFor(
-                    sak.id,
-                    listOf(TypeBehandling.Førstegangsbehandling, TypeBehandling.Revurdering)
-                ).filter { it.status().erVedtatt() }.maxByOrNull { it.opprettetTidspunkt }
+                val sisteVedtatteYtelsesbehandling = behandlingRepository.finnGjeldendeVedtattBehandlingForSak(sak.id)
 
                 if (sisteVedtatteYtelsesbehandling == null) {
                     return@transaction null
                 }
 
                 val underveisgrunnlagRepository = repositoryProvider.provide<UnderveisRepository>()
-                val underveisgrunnlag = underveisgrunnlagRepository.hentHvisEksisterer(sisteVedtatteYtelsesbehandling.id)
+                val underveisgrunnlag = underveisgrunnlagRepository.hentHvisEksisterer(sisteVedtatteYtelsesbehandling.behandlingId)
 
                 if (underveisgrunnlag == null) {
                     return@transaction null
                 }
 
                 val vilkårsresultatRepository = repositoryProvider.provide<VilkårsresultatRepository>()
-                val vilkårsresultat = vilkårsresultatRepository.hent(sisteVedtatteYtelsesbehandling.id)
+                val vilkårsresultat = vilkårsresultatRepository.hent(sisteVedtatteYtelsesbehandling.behandlingId)
                 val now = LocalDate.now()
-                val stansEllerOpphør = utledStansEllerOpphør(vilkårsresultat)
+                val stansEllerOpphør = utledStansEllerOpphør(vilkårsresultat, rettighetsperiode = sak.rettighetsperiode)
                     .filterKeys { it <= now }
                     .maxByOrNull { it.key }
                 val rettighetstyper = underveisgrunnlag.perioder.mapNotNull { it.rettighetsType }.distinct()

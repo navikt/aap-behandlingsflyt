@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovMetadataUtleder
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
@@ -33,7 +34,7 @@ class VurderSykepengeErstatningSteg private constructor(
     private val bistandRepository: BistandRepository,
     private val tidligereVurderinger: TidligereVurderinger,
     private val avklaringsbehovService: AvklaringsbehovService,
-) : BehandlingSteg {
+) : BehandlingSteg, AvklaringsbehovMetadataUtleder {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         vilkårsresultatRepository = repositoryProvider.provide(),
         sykepengerErstatningRepository = repositoryProvider.provide(),
@@ -41,7 +42,6 @@ class VurderSykepengeErstatningSteg private constructor(
         bistandRepository = repositoryProvider.provide(),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
         avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
-
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
@@ -56,7 +56,7 @@ class VurderSykepengeErstatningSteg private constructor(
         avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
             definisjon = Definisjon.AVKLAR_SYKEPENGEERSTATNING,
             tvingerAvklaringsbehov = setOf(Vurderingsbehov.REVURDER_SYKEPENGEERSTATNING),
-            nårVurderingErRelevant = ::perioderMedVurderingsbehov,
+            nårVurderingErRelevant = ::nårVurderingErRelevant,
             kontekst = kontekst,
             nårVurderingErGyldig = { aktiveVurderinger.somTidslinje().mapValue { true } },
             tilbakestillGrunnlag = {
@@ -92,7 +92,7 @@ class VurderSykepengeErstatningSteg private constructor(
         return Fullført
     }
 
-    private fun perioderMedVurderingsbehov(kontekst: FlytKontekstMedPerioder): Tidslinje<Boolean> {
+    override fun nårVurderingErRelevant(kontekst: FlytKontekstMedPerioder): Tidslinje<Boolean> {
         val tidligereVurderingsutfall = tidligereVurderinger.behandlingsutfall(kontekst, type())
 
         val kravDato = kontekst.rettighetsperiode.fom
@@ -144,6 +144,8 @@ class VurderSykepengeErstatningSteg private constructor(
             }
         }
     }
+
+    override val stegType = type()
 
     companion object : FlytSteg {
         override fun konstruer(

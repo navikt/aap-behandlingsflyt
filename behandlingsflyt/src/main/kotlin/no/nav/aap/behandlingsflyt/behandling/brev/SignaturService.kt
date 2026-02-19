@@ -68,7 +68,7 @@ class SignaturService(
                         SignaturGrunnlag(
                             navIdent = bruker.ident,
                             rolle = null,
-                            enhet = null
+                        enhet = null
                         )
                     )
                 } else {

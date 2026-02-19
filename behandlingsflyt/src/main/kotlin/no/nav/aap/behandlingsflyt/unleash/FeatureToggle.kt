@@ -11,7 +11,6 @@ enum class BehandlingsflytFeature : FeatureToggle {
     NyBrevbyggerV3,
     LagreVedtakIFatteVedtak,
     Under18,
-    SosialRefusjon,
     SendBrevVedMottattKlage,
     ForlengelseIManuellBehandling,
     UtvidVedtakslengdeJobb,
@@ -19,11 +18,12 @@ enum class BehandlingsflytFeature : FeatureToggle {
     TrekkSoeknadOpprettetFraLegeerklaering,
     UbehandledeMeldekortJobb,
     PapirMeldekortFraBehandingsflyt,
-    RettighetstypeSteg,
     VirksomhetsEtablering,
     KvalitetssikringVed2213,
     tilbakekrevingsOppgaverTilOppgave,
     PeriodiseringHelseinstitusjonOpphold,
+    HentingAvInstitusjonsOpphold,
+    VisIkkeRelevantPeriode,
     SignaturEnhetFraOppgave,
     ;
 

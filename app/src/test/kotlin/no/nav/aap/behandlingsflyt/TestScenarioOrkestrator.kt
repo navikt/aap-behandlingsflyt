@@ -179,8 +179,6 @@ class TestScenarioOrkestrator(
                 listOf(
                     RefusjonkravVurderingDto(
                         harKrav = true,
-                        fom = LocalDate.now(),
-                        tom = null,
                         navKontor = "",
                     )
                 )

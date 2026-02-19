@@ -111,6 +111,11 @@ public class Innsending(
                 requireNotNull(melding)
             }
 
+            InnsendingType.SYKEPENGE_VEDTAK_HENDELSE -> {
+                require(referanse.type == InnsendingReferanse.Type.SYKEPENGEVEDTAK_HENDELSE_ID)
+                requireNotNull(melding) {"Melding fra sykepengevedtakhendelse kan ikke være null"}
+                require(melding is SykepengevedtakV0)
+            }
 
             InnsendingType.PDL_HENDELSE_DODSFALL_BRUKER, InnsendingType.PDL_HENDELSE_DODSFALL_BARN -> {
                 require(referanse.type == InnsendingReferanse.Type.PDL_HENDELSE_ID)

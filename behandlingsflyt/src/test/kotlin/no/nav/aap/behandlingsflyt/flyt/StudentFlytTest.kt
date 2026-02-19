@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.flyt
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarStudentEnkelLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarStudentLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.ForeslåVedtakLøsning
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companion.plussEtÅrMedHverdager
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.ÅrMedHverdager
@@ -9,10 +10,13 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Re
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.PeriodisertStudentDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentVurderingDTO
 import no.nav.aap.behandlingsflyt.help.assertTidslinje
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov
+import no.nav.aap.behandlingsflyt.test.desember
+import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.behandlingsflyt.test.november
 import no.nav.aap.behandlingsflyt.test.oktober
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
@@ -164,6 +168,93 @@ class StudentFlytTest(val unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                     fom,
                     fom.plusDays(15).plussEtÅrMedHverdager(ÅrMedHverdager.FØRSTE_ÅR)
                 ) to RettighetsType.BISTANDSBEHOV
+            )
+    }
+
+    @Test
+    fun `Periodisering - skal kunne avslutte student i samme behandling`() {
+        val fom = 24 november 2025
+        val periode = Periode(fom, fom.plusYears(3))
+
+        val sykestipendPeriode = Periode(fom, fom.plusDays(14))
+
+        val person = TestPersoner.STANDARD_PERSON()
+
+        var (sak, behandling) = sendInnFørsteSøknad(
+            person = person,
+            mottattTidspunkt = fom.atStartOfDay(),
+            periode = periode,
+            søknad = TestSøknader.SØKNAD_STUDENT
+        )
+
+        val avbruttStudieDato = 1 oktober 2025
+
+        behandling = behandling
+            .løsAvklaringsBehov(
+                AvklarStudentLøsning(
+                    løsningerForPerioder = listOf(
+                        PeriodisertStudentDto(
+                            fom = fom,
+                            begrunnelse = "...",
+                            harAvbruttStudie = true,
+                            godkjentStudieAvLånekassen = true,
+                            avbruttPgaSykdomEllerSkade = true,
+                            harBehovForBehandling = true,
+                            avbruttStudieDato = avbruttStudieDato,
+                            avbruddMerEnn6Måneder = true
+                        ),
+                        PeriodisertStudentDto(
+                            fom = 1 januar 2026,
+                            begrunnelse = "Ikke lenger",
+                            harAvbruttStudie = false,
+                            godkjentStudieAvLånekassen = null,
+                            avbruttPgaSykdomEllerSkade = null,
+                            harBehovForBehandling = null,
+                            avbruttStudieDato = null,
+                            avbruddMerEnn6Måneder = null
+                        ),
+                    ),
+                )
+            )
+            .medKontekst {
+                val vilkår = repositoryProvider.provide<VilkårsresultatRepository>().hent(this.behandling.id)
+
+                val studentVilkår = vilkår.finnVilkår(Vilkårtype.STUDENT)
+                studentVilkår.tidslinje().assertTidslinje(
+                    Segment(Periode(fom, 31 desember 2025)) { vurdering ->
+                        assertThat(vurdering.utfall).isEqualTo(Utfall.OPPFYLT)
+                    },
+                    Segment(Periode(1 januar 2026, Tid.MAKS)) { vurdering ->
+                        assertThat(vurdering.utfall).isEqualTo(Utfall.IKKE_OPPFYLT)
+                        assertThat(vurdering.avslagsårsak).isEqualTo(Avslagsårsak.IKKE_RETT_PA_STUDENT)
+                    }
+                )
+            }
+            .løsSykdom(vurderingGjelderFra = 1 januar 2026, erOppfylt = false) // Må løse sykdom allerede nå
+            .løsRefusjonskrav()
+            .løsSykdomsvurderingBrev()
+            .kvalitetssikre()
+            .løsBeregningstidspunkt()
+            .løsOppholdskrav(fom)
+            .løsSykestipend(listOf(sykestipendPeriode))
+            .medKontekst {
+                val vilkår = repositoryProvider.provide<VilkårsresultatRepository>().hent(this.behandling.id)
+                val syksetipendVilkår = vilkår.finnVilkår(Vilkårtype.SAMORDNING_ANNEN_LOVGIVNING)
+                assertThat(syksetipendVilkår.harPerioderMedIkkeOppfylt()).isTrue
+            }
+            .løsAndreStatligeYtelser()
+            .løsAvklaringsBehov(ForeslåVedtakLøsning())
+            .fattVedtak()
+            .medKontekst {
+                val vilkår = repositoryProvider.provide<VilkårsresultatRepository>().hent(behandling.id)
+                val v = vilkår.finnVilkår(Vilkårtype.SYKDOMSVILKÅRET)
+                assertThat(v.harPerioderSomErOppfylt()).isFalse
+            }
+            .assertRettighetstype(
+                Periode(
+                    sykestipendPeriode.tom.plusDays(1), // Virkningstidspunkt
+                    31 desember 2025
+                ) to RettighetsType.STUDENT
             )
     }
 }
