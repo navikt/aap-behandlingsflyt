@@ -281,7 +281,7 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
                 .extracting(MottattDokument::strukturertDokument)
                 .isNotNull
             assertThat(
-                omgjøringKlageRevurdering.first().strukturerteData<OmgjøringKlageRevurderingV0>()?.data?.beskrivelse
+                omgjøringKlageRevurdering.first().strukturerteData<OmgjøringKlageRevurdering>()?.data?.beskrivelse
             ).isEqualTo("Revurdering etter klage som tas til følge. Følgende vilkår omgjøres: § 22-13")
         }
 
