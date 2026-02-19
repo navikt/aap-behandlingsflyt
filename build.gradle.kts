@@ -22,15 +22,14 @@ tasks {
     }
 }
 
-// cyclonedxDirectBom tasks resolve classpaths across subprojects but don't
-// declare task dependencies on the compile tasks that produce those classes.
-subprojects {
-    tasks.configureEach {
-        if (name == "cyclonedxDirectBom") {
-            rootProject.subprojects.forEach { sub ->
-                dependsOn(sub.tasks.matching { it.name == "compileKotlin" || it.name == "compileJava" })
-            }
-        }
+// cyclonedxDirectBom-tasker resolver classpaths på tvers av subprojects, men
+// deklarerer ikke task-avhengigheter til kompileringstaskene som produserer disse klassene.
+val allCompileTasks = subprojects.flatMap { sub ->
+    sub.tasks.matching { it.name == "compileKotlin" || it.name == "compileJava" }
+}
+subprojects.forEach { sub ->
+    sub.tasks.matching { it.name == "cyclonedxDirectBom" }.configureEach {
+        dependsOn(allCompileTasks)
     }
 }
 
@@ -60,41 +59,7 @@ publishing {
 // Call the tasks of the subprojects
 for (taskName in listOf<String>("clean", "build", "check")) {
     tasks.named(taskName) {
-        dependsOn(subprojects.map { it.path + ":$taskName" })
-    }
-}
-
-// Emit a JSON-formatted list of check tasks to be run in CI
-abstract class TestMatrixTask : DefaultTask() {
-    @get:Input
-    abstract val checkTaskPaths: ListProperty<String>
-
-    @TaskAction
-    fun printMatrix() {
-        val json = checkTaskPaths.get().joinToString(separator = ",", prefix = "[", postfix = "]") { "\"$it\"" }
-        println(json)
-    }
-}
-
-tasks.register<TestMatrixTask>("testMatrix") {
-    checkTaskPaths.set(provider {
-        subprojects
-            .filter { it.name != "docs" }
-            .map { it.path + ":check" }
-    })
-}
-
-// If we're executing the `testMatrix` task, disable tests and other slow tasks
-// so that we can get a result quickly.
-gradle.taskGraph.whenReady {
-    if (hasTask(tasks.named("testMatrix").get())) {
-        subprojects.forEach { subproject ->
-            subproject.tasks.withType<Test>().configureEach {
-                enabled = false
-            }
-            subproject.tasks.findByName("shadowJar")?.enabled = false
-            subproject.tasks.findByName("javadoc")?.enabled = false
-        }
+        dependsOn(subprojects.map { it.tasks.named(taskName) })
     }
 }
 
