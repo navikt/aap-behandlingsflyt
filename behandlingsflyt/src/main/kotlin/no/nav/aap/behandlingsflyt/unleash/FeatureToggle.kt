@@ -24,6 +24,7 @@ enum class BehandlingsflytFeature : FeatureToggle {
     PeriodiseringHelseinstitusjonOpphold,
     HentingAvInstitusjonsOpphold,
     VisIkkeRelevantPeriode,
+    SignaturEnhetFraOppgave,
     ;
 
     override fun key(): String = name

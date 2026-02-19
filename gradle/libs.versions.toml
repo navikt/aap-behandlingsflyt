@@ -3,7 +3,8 @@ ktor = "3.4.0"
 komponenter = "2.0.2"
 tilgang = "1.0.179"
 utbetaling = "0.0.78"
-brev = "0.0.231"
+brev = "unspecified"
+oppgave = "0.0.147"
 meldekort = "0.0.183"
 apiIntern = "0.0.25"
 junit = "6.0.1"
@@ -36,6 +37,7 @@ tilgangKontrakt = { module = "no.nav.aap.tilgang:api-kontrakt", version.ref = "t
 tilgangPlugin = { module = "no.nav.aap.tilgang:plugin", version.ref = "tilgang" }
 utbetalKontrakt = { module = "no.nav.aap.utbetal:api-kontrakt", version.ref = "utbetaling" }
 brevKontrakt = { module = "no.nav.aap.brev:kontrakt", version.ref = "brev" }
+oppgaveKontrakt = { module = "no.nav.aap.oppgave:api-kontrakt", version.ref = "oppgave" }
 meldekortKontrakt = { module = "no.nav.aap.meldekort:kontrakt", version.ref = "meldekort" }
 apiInternKontrakt = { module = "no.nav.aap.api.intern:kontrakt", version.ref = "apiIntern"}
 

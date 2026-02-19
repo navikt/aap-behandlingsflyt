@@ -24,7 +24,6 @@ import no.nav.aap.behandlingsflyt.mdc.LogKontekst
 import no.nav.aap.behandlingsflyt.mdc.LoggingKontekst
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersoninfoGateway
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.DokumentResponsDTO
 import no.nav.aap.behandlingsflyt.tilgang.TilgangGateway
@@ -100,17 +99,9 @@ fun NormalOpenAPIRoute.brevApi(
                     val brevGrunnlag = dataSource.transaction(readOnly = true) { connection ->
                         val repositoryProvider = repositoryRegistry.provider(connection)
                         val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
-                        val sakRepository = repositoryProvider.provide<SakRepository>()
-                        val brevbestillingRepository = repositoryProvider.provide<BrevbestillingRepository>()
                         val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
-                        val signaturService = SignaturService(avklaringsbehovRepository = avklaringsbehovRepository)
-                        val brevbestillingService = BrevbestillingService(
-                            signaturService = signaturService,
-                            brevbestillingGateway = brevbestillingGateway,
-                            brevbestillingRepository = brevbestillingRepository,
-                            behandlingRepository = behandlingRepository,
-                            sakRepository = sakRepository
-                        )
+                        val signaturService = SignaturService(repositoryProvider, gatewayProvider)
+                        val brevbestillingService = BrevbestillingService(repositoryProvider, gatewayProvider)
                         val brevbestillinger = brevbestillingService.hentBrevbestillinger(behandlingReferanse)
 
                         val behandling = behandlingRepository.hent(behandlingReferanse)
@@ -270,12 +261,11 @@ fun NormalOpenAPIRoute.brevApi(
                         val repositoryProvider = repositoryRegistry.provider(connection)
                         val brevbestillingRepository =
                             repositoryProvider.provide<BrevbestillingRepository>()
-                        val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
 
                         val brevbestilling = brevbestillingRepository.hent(brevbestillingReferanse)
                             ?: throw VerdiIkkeFunnetException("Fant ikke brevbestilling med referanse $brevbestillingReferanse")
 
-                        val signaturService = SignaturService(avklaringsbehovRepository = avklaringsbehovRepository)
+                        val signaturService = SignaturService(repositoryProvider, gatewayProvider)
                         brevbestillingGateway.forhåndsvis(
                             bestillingReferanse = brevbestillingReferanse,
                             signaturer = signaturService.finnSignaturGrunnlag(brevbestilling, bruker()),
