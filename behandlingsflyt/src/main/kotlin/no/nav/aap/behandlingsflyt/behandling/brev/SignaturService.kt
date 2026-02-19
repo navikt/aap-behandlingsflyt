@@ -63,7 +63,12 @@ class SignaturService(
 
     private fun definisjonerSomLøsesAv(rolle: Rolle): List<Definisjon> {
         return Definisjon.entries.filter { it.løsesAv.contains(rolle) }
-            .filterNot { it == Definisjon.MANUELT_SATT_PÅ_VENT }
+            .filterNot {
+                listOf(
+                    Definisjon.MANUELT_SATT_PÅ_VENT,
+                    Definisjon.VURDER_TREKK_AV_SØKNAD
+                ).contains(it)
+            }
     }
 
     private fun utledSignatur(rolle: Rolle, avklaringsbehovene: Avklaringsbehovene): SignaturGrunnlag? {
