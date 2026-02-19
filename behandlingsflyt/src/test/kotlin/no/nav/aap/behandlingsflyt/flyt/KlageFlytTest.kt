@@ -48,7 +48,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.KlageUtfall
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.KlageV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.KlagebehandlingAvsluttetDetaljer
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.OmgjøringKlageRevurdering
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.OmgjøringKlageRevurderingV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.StudentStatus
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadMedlemskapDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadStudentDto
@@ -61,7 +60,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.SØKNAD
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.VURDER_RETTIGHETSPERIODE
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.klage.FormkravRepositoryImpl
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
@@ -202,7 +200,7 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
         assertThat(åpneAvklaringsbehov).hasSize(1)
         assertThat(åpneAvklaringsbehov.first().definisjon).isEqualTo(Definisjon.KVALITETSSIKRING)
 
-        kvalitetssikreOk(klagebehandling)
+        klagebehandling.kvalitetssikre()
 
         // KlagebehandlingNaySteg
         åpneAvklaringsbehov = hentÅpneAvklaringsbehov(klagebehandling.id)
@@ -430,7 +428,7 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
                 assertThat(åpneAvklaringsbehov).hasSize(1)
                 assertThat(åpneAvklaringsbehov.first().definisjon).isEqualTo(Definisjon.KVALITETSSIKRING)
             }
-            .kvalitetssikreOk()
+            .kvalitetssikre()
             .medKontekst {
                 // KlagebehandlingNaySteg
                 assertThat(åpneAvklaringsbehov).hasSize(1)
@@ -637,7 +635,7 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
         assertThat(åpneAvklaringsbehov).hasSize(1)
         assertThat(åpneAvklaringsbehov.first().definisjon).isEqualTo(Definisjon.KVALITETSSIKRING)
 
-        kvalitetssikreOk(klagebehandling)
+        klagebehandling.kvalitetssikre()
 
         // KlagebehandlingNaySteg
         åpneAvklaringsbehov = hentÅpneAvklaringsbehov(klagebehandling.id)
@@ -1162,7 +1160,7 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
         assertThat(åpneAvklaringsbehov).hasSize(1)
         assertThat(åpneAvklaringsbehov.first().definisjon).isEqualTo(Definisjon.KVALITETSSIKRING)
 
-        kvalitetssikreOk(klagebehandling)
+        klagebehandling.kvalitetssikre()
 
         // KlagebehandlingNaySteg
         åpneAvklaringsbehov = hentÅpneAvklaringsbehov(klagebehandling.id)
