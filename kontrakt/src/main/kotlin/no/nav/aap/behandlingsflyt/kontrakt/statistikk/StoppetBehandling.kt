@@ -19,6 +19,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.sak.Status as SakStatus
  * @param saksnummer Saksnummer.
  * @param behandlingReferanse Behandlingsreferanse
  * @param relatertBehandling Hvis behandlingen har oppsått med bakgrunn i en annen, skal den foregående behandlingen refereres til her. Dette er tolket som forrige behandling på samme sak.
+ * @param relatertFagsystem Stort sett Kelvin, men om behandlingen har oppstått f.eks fra en klagebehandling i Kabal, skal dette refereres her.
  * @param mottattTid Dato for første søknad mottatt for behandlingen.
  * @param behandlingStatus Behandlingstatus. Ikke det samme som sakstatus.
  * @param identerForSak Identer på sak. Brukes for å filtrere kode 6-personer.
