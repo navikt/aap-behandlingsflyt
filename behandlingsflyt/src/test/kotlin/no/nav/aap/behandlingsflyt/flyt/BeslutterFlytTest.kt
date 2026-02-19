@@ -81,7 +81,7 @@ class BeslutterFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class
                 assertThat(åpneAvklaringsbehov).anySatisfy { behov -> assertThat(behov.definisjon).isEqualTo(Definisjon.KVALITETSSIKRING) }
                 assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
             }
-            .kvalitetssikreOk()
+            .kvalitetssikre()
             .løsAvklaringsBehov(
                 FastsettBeregningstidspunktLøsning(
                     beregningVurdering = BeregningstidspunktVurderingDto(
@@ -100,7 +100,7 @@ class BeslutterFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class
                 assertThat(åpneAvklaringsbehov).anySatisfy { assertThat(it.definisjon).isEqualTo(Definisjon.FATTE_VEDTAK) }
                 assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
             }
-            .beslutterGodkjennerIkke(returVed = Definisjon.AVKLAR_SYKDOM)
+            .beslutterGodkjennerIkke(underkjennVurderinger = listOf(Definisjon.AVKLAR_SYKDOM))
             .medKontekst {
                 assertThat(behandling.status()).isEqualTo(Status.UTREDES)
                 assertThat(åpneAvklaringsbehov).anySatisfy { assertThat(it.definisjon).isEqualTo(Definisjon.AVKLAR_SYKDOM) }
@@ -125,7 +125,7 @@ class BeslutterFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class
                 ingenEndringIGruppe = true,
                 bruker = Bruker("SAKSBEHANDLER")
             )
-            .kvalitetssikreOk()
+            .kvalitetssikre()
             .løsAvklaringsBehov(
                 FastsettBeregningstidspunktLøsning(
                     beregningVurdering = BeregningstidspunktVurderingDto(
@@ -194,7 +194,7 @@ class BeslutterFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class
                 assertThat(åpneAvklaringsbehov.map { it.definisjon }).containsExactly(Definisjon.KVALITETSSIKRING)
                 assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
             }
-            .kvalitetssikreOk()
+            .kvalitetssikre()
             .løsBeregningstidspunkt()
             .løsOppholdskrav(periode.fom)
             .løsAndreStatligeYtelser()
@@ -222,8 +222,6 @@ class BeslutterFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class
         // Sender inn en søknad
         val (_, behandling) = sendInnFørsteSøknad(periode = periode)
 
-        val alleAvklaringsbehov = hentAlleAvklaringsbehov(behandling)
-        assertThat(alleAvklaringsbehov).isNotEmpty()
         assertThat(behandling.status()).isEqualTo(Status.UTREDES)
 
         behandling.løsAvklaringsBehov(
@@ -247,7 +245,7 @@ class BeslutterFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class
         ).løsBistand(periode.fom)
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
-            .kvalitetssikreOk()
+            .kvalitetssikre()
             .løsBeregningstidspunkt()
             .løsOppholdskrav(periode.fom)
             .løsAvklaringsBehov(
@@ -272,7 +270,7 @@ class BeslutterFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class
             )
             .løsAndreStatligeYtelser()
             .løsAvklaringsBehov(ForeslåVedtakLøsning())
-            .beslutterGodkjennerIkke(returVed = Definisjon.AVKLAR_SAMORDNING_GRADERING)
+            .beslutterGodkjennerIkke(underkjennVurderinger = listOf(Definisjon.AVKLAR_SAMORDNING_GRADERING))
             .medKontekst {
                 assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
                 // Avklar samordning gradering gjenåpnes, behandlingen står i samordning-steget

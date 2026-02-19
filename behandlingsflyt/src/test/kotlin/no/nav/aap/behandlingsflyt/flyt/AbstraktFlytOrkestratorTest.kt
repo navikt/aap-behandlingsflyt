@@ -264,7 +264,7 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
             )
         }
 
-        behandling = behandling.kvalitetssikreOk()
+        behandling = behandling.kvalitetssikre()
             .løsAvklaringsBehov(
                 FastsettBeregningstidspunktLøsning(
                     beregningVurdering = BeregningstidspunktVurderingDto(
@@ -415,7 +415,7 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
                 )
             )
             .løsSykdomsvurderingBrev()
-            .kvalitetssikreOk()
+            .kvalitetssikre()
     }
 
     protected fun mellomlagreSykdom(behandling: Behandling): Behandling {
@@ -466,7 +466,11 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
         )
     }
 
-    protected fun Behandling.løsBistand(fom: LocalDate, erOppfylt: Boolean = true, erBehovForArbeidsrettetTiltak: Boolean = false): Behandling {
+    protected fun Behandling.løsBistand(
+        fom: LocalDate,
+        erOppfylt: Boolean = true,
+        erBehovForArbeidsrettetTiltak: Boolean = false
+    ): Behandling {
         return this.løsAvklaringsBehov(
             AvklarBistandsbehovLøsning(
                 listOf(
@@ -516,7 +520,8 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
                             tom = tom,
                             overgangBegrunnelse = null
                         )
-                ))
+                    )
+                )
         )
     }
 
@@ -798,13 +803,9 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
     }
 
     protected fun hentAlleAvklaringsbehov(behandling: Behandling): List<Avklaringsbehov> {
-        return hentAlleAvklaringsbehov(behandling.id)
-    }
-
-    protected fun hentAlleAvklaringsbehov(behandlingId: BehandlingId): List<Avklaringsbehov> {
         return dataSource.transaction(readOnly = true) {
             AvklaringsbehovRepositoryImpl(it).hentAvklaringsbehovene(
-                behandlingId
+                behandling.id
             ).alle()
         }
     }
@@ -1088,7 +1089,7 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
                 )
             )
             .løsSykdomsvurderingBrev()
-            .kvalitetssikreOk()
+            .kvalitetssikre()
 
         if (harYrkesskade) {
             behandling = løsAvklaringsBehov(
@@ -1206,41 +1207,25 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
         )
     }
 
-    protected fun kvalitetssikreOk(
-        behandling: Behandling,
-        bruker: Bruker = Bruker("KVALITETSSIKRER")
+    @JvmName("kvalitetssikreOkExt")
+    protected fun Behandling.kvalitetssikre(
+        bruker: Bruker = Bruker("KVALITETSSIKRER"),
+        behovÅKvalitetssikre: List<Definisjon> = Definisjon.entries,
+        underkjennVurderinger: List<Definisjon> = emptyList()
     ): Behandling {
-        val alleAvklaringsbehov = hentAlleAvklaringsbehov(behandling)
+        val alleAvklaringsbehov =
+            hentAlleAvklaringsbehov(this).filter { behov -> behov.definisjon in behovÅKvalitetssikre }
         return løsAvklaringsBehov(
-            behandling,
+            this,
             KvalitetssikringLøsning(alleAvklaringsbehov.filter { behov -> behov.erTotrinn() || behov.kreverKvalitetssikring() }
                 .map { behov ->
                     TotrinnsVurdering(
-                        behov.definisjon.kode, true, "begrunnelse", emptyList()
+                        behov.definisjon.kode, behov.definisjon !in underkjennVurderinger, "begrunnelse", emptyList()
                     )
                 }),
             bruker,
         )
     }
-
-    @JvmName("kvalitetssikreOkExt")
-    protected fun Behandling.kvalitetssikreOk(bruker: Bruker = Bruker("KVALITETSSIKRER")): Behandling {
-        return kvalitetssikreOk(this, bruker)
-    }
-
-    private fun løsFatteVedtak(behandling: Behandling, returVed: Definisjon? = null): Behandling =
-        løsAvklaringsBehov(
-            behandling,
-            FatteVedtakLøsning(
-                hentAlleAvklaringsbehov(behandling)
-                    .filter { behov -> behov.erTotrinn() }
-                    .map { behov ->
-                        TotrinnsVurdering(
-                            behov.definisjon.kode, behov.definisjon != returVed, "begrunnelse", emptyList()
-                        )
-                    }),
-            Bruker("BESLUTTER")
-        )
 
     protected fun Behandling.løsFritakMeldeplikt(fom: LocalDate): Behandling {
         return løsAvklaringsBehov(
@@ -1307,7 +1292,7 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
 
     @JvmName("fattVedtakExt")
     protected fun Behandling.fattVedtak(): Behandling {
-        return løsFatteVedtak(this, null)
+        return this.beslutterGodkjennerIkke(underkjennVurderinger = emptyList())
     }
 
     @JvmName("foreslåVedtakExt")
@@ -1316,8 +1301,25 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
     }
 
     @JvmName("sendReturExt")
-    protected fun Behandling.beslutterGodkjennerIkke(returVed: Definisjon?): Behandling {
-        return løsFatteVedtak(this, returVed)
+    protected fun Behandling.beslutterGodkjennerIkke(
+        behovÅKontrollere: List<Definisjon> = Definisjon.entries,
+        underkjennVurderinger: List<Definisjon> = emptyList()
+    ): Behandling {
+        return this.løsAvklaringsBehov(
+            FatteVedtakLøsning(
+                hentAlleAvklaringsbehov(this)
+                    .filter { behov -> behov.definisjon in behovÅKontrollere }
+                    .filter { behov -> behov.erTotrinn() }
+                    .map { behov ->
+                        TotrinnsVurdering(
+                            behov.definisjon.kode,
+                            behov.definisjon !in underkjennVurderinger,
+                            "begrunnelse",
+                            emptyList()
+                        )
+                    }),
+            Bruker("BESLUTTER")
+        )
     }
 
     class BehandlingInfo(
