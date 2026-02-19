@@ -184,7 +184,7 @@ object Grunnbeløp {
             fun finnGUnit(dato: LocalDate, beløp: Beløp): BenyttetGjennomsnittsbeløp {
                 val grunnbeløp =
                     priv_tilTidslinjeGjennomsnitt().segment(dato)?.verdi
-                        ?: throw RuntimeException("Finner ikke gjennomsnittsbeløp for dato: $dato.")
+                        ?: error("Finner ikke gjennomsnittsbeløp for dato: $dato.")
 
                 return BenyttetGjennomsnittsbeløp(
                     år = Year.of(dato.year),
@@ -229,6 +229,12 @@ object Grunnbeløp {
         }
     }
 
+    fun gjennomsnittGrunnbeløp(dato: LocalDate): Beløp {
+        return checkNotNull(GjennomsnittElement.tilTidslinjeGjennomsnitt().segment(dato)?.verdi) {
+            "Fant ikke gjennomsnittlig grunnbeløp for dato $dato."
+        }
+    }
+
     fun finnGUnit(år: Year, beløp: Beløp): BenyttetGjennomsnittsbeløp {
         return GjennomsnittElement.finnGUnit(år, beløp)
     }
@@ -239,9 +245,5 @@ object Grunnbeløp {
 
     fun tilTidslinje(): Tidslinje<Beløp> {
         return Element.tilTidslinje()
-    }
-
-    fun tilTidslinjeGjennomsnitt(): Tidslinje<Beløp> {
-        return GjennomsnittElement.tilTidslinjeGjennomsnitt()
     }
 }

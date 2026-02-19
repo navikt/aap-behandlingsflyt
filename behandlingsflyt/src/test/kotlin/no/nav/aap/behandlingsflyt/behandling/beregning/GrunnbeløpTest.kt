@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.beregning
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Grunn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
 import no.nav.aap.behandlingsflyt.test.april
 import no.nav.aap.behandlingsflyt.test.desember
@@ -19,19 +20,13 @@ class GrunnbeløpTest {
 
     @Test
     fun `Genererer tidslinje for gjennomsnittlig grunnbeløp`() {
-        val tidslinjeGjennomsnitt = Grunnbeløp.tilTidslinjeGjennomsnitt()
+        val gjennomSnittSluttenAv2009 = Grunnbeløp.gjennomsnittGrunnbeløp(31 desember 2009)
+        val gjennomsnittFørsteJanuar = Grunnbeløp.gjennomsnittGrunnbeløp(1 januar 2010)
 
-        val periodeForGjennomsnitt: Tidslinje<Any?> = Tidslinje(Periode(31 desember 2009, 1 januar 2010), null)
-        val utregnetTidslinjeGjennomsnitt = periodeForGjennomsnitt.kombiner(
-            other = tidslinjeGjennomsnitt,
-            joinStyle = StandardSammenslåere.kunHøyre()
-        )
-
-        assertThat(utregnetTidslinjeGjennomsnitt.segmenter())
-            .containsExactly(
-                Segment(Periode(31 desember 2009, 31 desember 2009), Beløp(72006)),
-                Segment(Periode(1 januar 2010, 1 januar 2010), Beløp(74721))
-            )
+        assertThat(gjennomSnittSluttenAv2009)
+            .isEqualTo(Beløp(72006))
+        assertThat(gjennomsnittFørsteJanuar)
+            .isEqualTo(Beløp(74721))
     }
 
     @Test
@@ -49,6 +44,13 @@ class GrunnbeløpTest {
                 Segment(Periode(30 april 2010, 30 april 2010), Beløp(72881)),
                 Segment(Periode(1 mai 2010, 1 mai 2010), Beløp(75641))
             )
+    }
+
+    @Test
+    fun `gjennomsnitt i 1981`() {
+        // I 1981 var det tre G-justeringer, men gjennomsnittet ble tilgjengelig først på den siste.
+        assertThat(Grunnbeløp.gjennomsnittGrunnbeløp(1 januar 1981))
+            .isEqualTo(Beløp(18658))
     }
 
     @Test
