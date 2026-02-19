@@ -206,23 +206,27 @@ class TidligereVurderingerImpl(
             },
 
             Sjekk(StegType.VURDER_SYKEPENGEERSTATNING) { vilkårsresultat, _, tidligereVurderinger ->
-                vilkårsresultat.tidslinjeFor(Vilkårtype.SYKEPENGEERSTATNING).leftJoin(tidligereVurderinger) { speVilkår, akkumulertUtfall ->
-                    when {
-                        speVilkår.utfall == Utfall.OPPFYLT -> TidligereVurderinger.PotensieltOppfylt(
-                            RettighetsType.SYKEPENGEERSTATNING
-                        )
-                        // Siste mulige rettighetstype
-                        akkumulertUtfall is TidligereVurderinger.PotensieltOppfylt && akkumulertUtfall.rettighetstype == null -> TidligereVurderinger.UunngåeligAvslag
+                vilkårsresultat.tidslinjeFor(Vilkårtype.SYKEPENGEERSTATNING)
+                    .leftJoin(tidligereVurderinger) { speVilkår, akkumulertUtfall ->
+                        when {
+                            speVilkår.utfall == Utfall.OPPFYLT -> TidligereVurderinger.PotensieltOppfylt(
+                                RettighetsType.SYKEPENGEERSTATNING
+                            )
+                            // Siste mulige rettighetstype
+                            akkumulertUtfall is TidligereVurderinger.PotensieltOppfylt && akkumulertUtfall.rettighetstype == null -> TidligereVurderinger.UunngåeligAvslag
 
+                            else -> TidligereVurderinger.PotensieltOppfylt(null)
+                        }
+                    }
+            },
+
+            Sjekk(StegType.FASTSETT_SYKDOMSVILKÅRET) { vilkårsresultat, _, tidligereVurderinger ->
+                tidligereVurderinger.leftJoin(vilkårsresultat.tidslinjeFor(Vilkårtype.SYKDOMSVILKÅRET)) { akkumulertUtfall, sykdomsvilkåret ->
+                    when {
+                        akkumulertUtfall is TidligereVurderinger.PotensieltOppfylt && akkumulertUtfall.rettighetstype == RettighetsType.BISTANDSBEHOV && sykdomsvilkåret?.utfall == IKKE_OPPFYLT -> TidligereVurderinger.UunngåeligAvslag
                         else -> TidligereVurderinger.PotensieltOppfylt(null)
                     }
                 }
-            },
-
-            Sjekk(StegType.FASTSETT_SYKDOMSVILKÅRET) { _, _, _ ->
-                /* Det finnes unntak til sykdomsvilkåret, så selv om vilkåret ikke er oppfylt, så
-                 * vet vi ikke her om det blir avslag eller ei. */
-                Tidslinje()
             },
 
             Sjekk(StegType.FASTSETT_GRUNNLAG) { vilkårsresultat, _, _ ->
