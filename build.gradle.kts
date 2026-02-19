@@ -22,6 +22,18 @@ tasks {
     }
 }
 
+// cyclonedxDirectBom tasks resolve classpaths across subprojects but don't
+// declare task dependencies on the compile tasks that produce those classes.
+subprojects {
+    tasks.configureEach {
+        if (name == "cyclonedxDirectBom") {
+            rootProject.subprojects.forEach { sub ->
+                dependsOn(sub.tasks.matching { it.name == "compileKotlin" || it.name == "compileJava" })
+            }
+        }
+    }
+}
+
 publishing {
     publications {
         create<MavenPublication>("bomXml") {
