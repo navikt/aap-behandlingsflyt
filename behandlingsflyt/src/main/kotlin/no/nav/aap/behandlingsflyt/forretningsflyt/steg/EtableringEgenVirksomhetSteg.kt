@@ -32,7 +32,7 @@ class EtableringEgenVirksomhetSteg(
         etableringEgenVirksomhetRepository = repositoryProvider.provide(),
         avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
         etableringEgenVirksomhetService = EtableringEgenVirksomhetService(repositoryProvider),
-        tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
+        tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
         unleashGateway = gatewayProvider.provide()
     )
 
@@ -78,9 +78,9 @@ class EtableringEgenVirksomhetSteg(
         return Tidslinje.map2(tidligereVurderingsutfall, relevantPeriode) { utfall, relevantPeriode ->
             when (utfall) {
                 null -> false
-                TidligereVurderinger.Behandlingsutfall.IKKE_BEHANDLINGSGRUNNLAG -> false
-                TidligereVurderinger.Behandlingsutfall.UUNGÅELIG_AVSLAG -> false
-                TidligereVurderinger.Behandlingsutfall.UKJENT -> {
+                TidligereVurderinger.IkkeBehandlingsgrunnlag -> false
+                TidligereVurderinger.UunngåeligAvslag -> false
+                is TidligereVurderinger.PotensieltOppfylt -> {
                     return@map2 relevantPeriode != null && !grunnlag?.vurderinger.isNullOrEmpty()
                 }
             }

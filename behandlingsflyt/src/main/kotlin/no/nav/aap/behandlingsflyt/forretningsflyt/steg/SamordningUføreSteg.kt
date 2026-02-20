@@ -25,10 +25,10 @@ class SamordningUføreSteg(
     private val tidligereVurderinger: TidligereVurderinger,
     private val avklaringsbehovService: AvklaringsbehovService
 ) : BehandlingSteg {
-    constructor(repositoryProvider: RepositoryProvider) : this(
+    constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         samordningUføreRepository = repositoryProvider.provide(),
         uføreRepository = repositoryProvider.provide(),
-        tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
+        tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
         avklaringsbehovService = AvklaringsbehovService(repositoryProvider)
     )
 
@@ -110,7 +110,7 @@ class SamordningUføreSteg(
             repositoryProvider: RepositoryProvider,
             gatewayProvider: GatewayProvider
         ): BehandlingSteg {
-            return SamordningUføreSteg(repositoryProvider)
+            return SamordningUføreSteg(repositoryProvider, gatewayProvider)
         }
 
         override fun type(): StegType {

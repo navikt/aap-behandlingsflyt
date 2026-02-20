@@ -47,7 +47,7 @@ class VurderLovvalgSteg private constructor(
         personopplysningRepository = repositoryProvider.provide(),
         medlemskapArbeidInntektRepository = repositoryProvider.provide(),
         avklaringsbehovRepository = repositoryProvider.provide(),
-        tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
+        tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
         avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
     )
 
@@ -124,9 +124,9 @@ class VurderLovvalgSteg private constructor(
             .mapValue { (behandlingsutfall, automatiskVilkårsvurderingLovvalg) ->
                 when (behandlingsutfall) {
                     null -> false
-                    TidligereVurderinger.Behandlingsutfall.IKKE_BEHANDLINGSGRUNNLAG -> false
-                    TidligereVurderinger.Behandlingsutfall.UUNGÅELIG_AVSLAG -> false
-                    TidligereVurderinger.Behandlingsutfall.UKJENT -> {
+                    TidligereVurderinger.IkkeBehandlingsgrunnlag -> false
+                    TidligereVurderinger.UunngåeligAvslag -> false
+                    is TidligereVurderinger.PotensieltOppfylt -> {
                         val automatiskVilkårsvurderinglovvalgIkkeOppfylt =
                             automatiskVilkårsvurderingLovvalg?.erOppfylt() == false
 

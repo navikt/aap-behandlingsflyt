@@ -41,7 +41,7 @@ class TjenestePensjonInformasjonskrav(
         ): TjenestePensjonInformasjonskrav {
             return TjenestePensjonInformasjonskrav(
                 tjenestePensjonRepository = repositoryProvider.provide(),
-                tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
+                tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
                 tpGateway = gatewayProvider.provide(),
                 sakService = SakService(repositoryProvider),
             )

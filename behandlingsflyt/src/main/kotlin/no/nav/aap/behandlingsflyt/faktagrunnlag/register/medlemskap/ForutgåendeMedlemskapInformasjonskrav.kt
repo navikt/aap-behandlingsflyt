@@ -181,7 +181,7 @@ class ForutgåendeMedlemskapInformasjonskrav private constructor(
                 SakService(repositoryProvider),
                 repositoryProvider.provide(),
                 grunnlagRepository,
-                TidligereVurderingerImpl(repositoryProvider),
+                TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
                 gatewayProvider.provide(),
                 gatewayProvider.provide(),
                 gatewayProvider.provide(),

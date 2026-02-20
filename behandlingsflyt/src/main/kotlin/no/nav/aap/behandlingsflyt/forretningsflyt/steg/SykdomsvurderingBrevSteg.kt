@@ -24,11 +24,11 @@ class SykdomsvurderingBrevSteg internal constructor(
     private val tidligereVurderinger: TidligereVurderinger
 ) : BehandlingSteg {
 
-    constructor(repositoryProvider: RepositoryProvider) : this(
+    constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         sykdomsvurderingForBrevRepository = repositoryProvider.provide(),
         avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
         avklaringsbehovRepository = repositoryProvider.provide(),
-        tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider)
+        tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider)
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
@@ -71,7 +71,7 @@ class SykdomsvurderingBrevSteg internal constructor(
             repositoryProvider: RepositoryProvider,
             gatewayProvider: GatewayProvider
         ): BehandlingSteg {
-            return SykdomsvurderingBrevSteg(repositoryProvider)
+            return SykdomsvurderingBrevSteg(repositoryProvider, gatewayProvider)
         }
 
         override fun type(): StegType {

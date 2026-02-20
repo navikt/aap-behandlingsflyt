@@ -38,11 +38,11 @@ class SamordningAvslagSteg(
     private val vilkårsresultatRepository: VilkårsresultatRepository,
     private val tidligereVurderinger: TidligereVurderinger,
 ) : BehandlingSteg {
-    constructor(repositoryProvider: RepositoryProvider) : this(
+    constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         samordningService = SamordningService(repositoryProvider),
         uføreService = UføreService(repositoryProvider.provide(), repositoryProvider.provide()),
         vilkårsresultatRepository = repositoryProvider.provide(),
-        tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
+        tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
@@ -124,7 +124,7 @@ class SamordningAvslagSteg(
             repositoryProvider: RepositoryProvider,
             gatewayProvider: GatewayProvider
         ): BehandlingSteg {
-            return SamordningAvslagSteg(repositoryProvider)
+            return SamordningAvslagSteg(repositoryProvider, gatewayProvider)
         }
 
         override fun type(): StegType {

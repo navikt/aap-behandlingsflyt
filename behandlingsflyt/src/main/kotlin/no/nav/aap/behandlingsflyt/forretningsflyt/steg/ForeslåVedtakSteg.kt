@@ -25,9 +25,9 @@ class ForeslåVedtakSteg internal constructor(
 
     private val log = LoggerFactory.getLogger(javaClass)
 
-    constructor(repositoryProvider: RepositoryProvider) : this(
+    constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         avklaringsbehovRepository = repositoryProvider.provide(),
-        tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
+        tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
         avklaringsbehovService = AvklaringsbehovService(repositoryProvider)
     )
 
@@ -92,7 +92,7 @@ class ForeslåVedtakSteg internal constructor(
             repositoryProvider: RepositoryProvider,
             gatewayProvider: GatewayProvider
         ): BehandlingSteg {
-            return ForeslåVedtakSteg(repositoryProvider)
+            return ForeslåVedtakSteg(repositoryProvider, gatewayProvider)
         }
 
         override fun type(): StegType {
