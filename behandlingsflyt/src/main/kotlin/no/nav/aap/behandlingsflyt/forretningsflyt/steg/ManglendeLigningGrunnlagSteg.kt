@@ -36,11 +36,11 @@ class ManglendeLigningGrunnlagSteg internal constructor(
     private val beregningService: BeregningService,
     private val avklaringsbehovService: AvklaringsbehovService
 ) : BehandlingSteg {
-    constructor(repositoryProvider: RepositoryProvider) : this(
+    constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         avklaringsbehovRepository = repositoryProvider.provide(),
         inntektGrunnlagRepository = repositoryProvider.provide(),
         manuellInntektGrunnlagRepository = repositoryProvider.provide(),
-        tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
+        tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
         beregningService = BeregningService(repositoryProvider),
         avklaringsbehovService = AvklaringsbehovService(repositoryProvider)
     )
@@ -154,7 +154,7 @@ class ManglendeLigningGrunnlagSteg internal constructor(
             repositoryProvider: RepositoryProvider,
             gatewayProvider: GatewayProvider
         ): BehandlingSteg {
-            return ManglendeLigningGrunnlagSteg(repositoryProvider)
+            return ManglendeLigningGrunnlagSteg(repositoryProvider, gatewayProvider)
         }
 
         override fun type(): StegType {

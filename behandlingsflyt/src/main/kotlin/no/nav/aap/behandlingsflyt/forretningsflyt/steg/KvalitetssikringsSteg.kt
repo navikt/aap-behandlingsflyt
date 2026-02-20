@@ -31,7 +31,7 @@ class KvalitetssikringsSteg(
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         avklaringsbehovRepository = repositoryProvider.provide(),
         avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
-        tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
+        tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
         trekkKlageService = TrekkKlageService(repositoryProvider),
         unleashGateway = gatewayProvider.provide()
     )

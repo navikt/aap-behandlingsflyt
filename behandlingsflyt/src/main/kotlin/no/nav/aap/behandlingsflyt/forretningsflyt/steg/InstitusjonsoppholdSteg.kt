@@ -40,7 +40,7 @@ class InstitusjonsoppholdSteg(
         institusjonsoppholdRepository = repositoryProvider.provide(),
         institusjonsoppholdUtlederService = InstitusjonsoppholdUtlederService(repositoryProvider),
         institusjonsoppholdUtlederServiceNy = InstitusjonsoppholdUtlederServiceNy(repositoryProvider),
-        tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
+        tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
         avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
         vilkårsresultatRepository = repositoryProvider.provide(),
         unleashGateway = gatewayProvider.provide()

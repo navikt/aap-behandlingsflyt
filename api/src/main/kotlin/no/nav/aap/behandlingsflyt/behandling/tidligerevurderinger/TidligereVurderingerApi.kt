@@ -51,7 +51,7 @@ fun NormalOpenAPIRoute.tidligereVurderingerApi(
                     req.stegType
                 )
 
-                val tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider)
+                val tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider)
                 TidligereVurderingerDto(tidligereVurderinger.behandlingsutfall(kontekst, req.stegType).segmenter().map {
                     val verdi = it.verdi
                     TidligereVurderingDto(

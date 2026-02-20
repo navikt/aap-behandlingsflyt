@@ -34,7 +34,7 @@ class Aktivitetsplikt11_9Informasjonskrav(
             gatewayProvider: GatewayProvider
         ): Aktivitetsplikt11_9Informasjonskrav {
             return Aktivitetsplikt11_9Informasjonskrav(
-                TidligereVurderingerImpl(repositoryProvider),
+                TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
                 repositoryProvider.provide(),
                 repositoryProvider.provide(),
             )

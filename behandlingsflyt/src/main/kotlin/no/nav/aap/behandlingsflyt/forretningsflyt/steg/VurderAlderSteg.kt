@@ -32,7 +32,7 @@ class VurderAlderSteg private constructor(
         vilkårsresultatRepository = repositoryProvider.provide(),
         vilkårService = VilkårService(repositoryProvider),
         personopplysningRepository = repositoryProvider.provide(),
-        tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
+        tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
         unleashGateway = gatewayProvider.provide()
     )
 

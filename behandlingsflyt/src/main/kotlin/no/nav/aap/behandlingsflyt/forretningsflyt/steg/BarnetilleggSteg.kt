@@ -37,7 +37,7 @@ class BarnetilleggSteg(
         barnetilleggRepository = repositoryProvider.provide(),
         barnRepository = repositoryProvider.provide(),
         avklaringsbehovRepository = repositoryProvider.provide(),
-        tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
+        tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
         avklaringsbehovService = AvklaringsbehovService(repositoryProvider)
     )
 

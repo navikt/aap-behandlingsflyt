@@ -32,7 +32,7 @@ class EtableringEgenVirksomhetSteg(
         etableringEgenVirksomhetRepository = repositoryProvider.provide(),
         avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
         etableringEgenVirksomhetService = EtableringEgenVirksomhetService(repositoryProvider),
-        tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
+        tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
         unleashGateway = gatewayProvider.provide()
     )
 

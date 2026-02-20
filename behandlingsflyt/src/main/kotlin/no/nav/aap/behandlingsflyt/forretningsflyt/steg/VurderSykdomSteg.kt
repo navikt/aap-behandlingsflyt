@@ -13,6 +13,8 @@ import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.orEmpty
@@ -23,12 +25,14 @@ class VurderSykdomSteg(
     private val sykdomRepository: SykdomRepository,
     private val tidligereVurderinger: TidligereVurderinger,
     private val avklaringsbehovService: AvklaringsbehovService,
+    private val unleashGateway: UnleashGateway
 ) : BehandlingSteg, AvklaringsbehovMetadataUtleder {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         studentRepository = repositoryProvider.provide(),
         sykdomRepository = repositoryProvider.provide(),
-        tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
+        tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
         avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
+        unleashGateway = gatewayProvider.provide()
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
@@ -55,18 +59,31 @@ class VurderSykdomSteg(
             type()
         )
 
-        val studentvurderinger = studentRepository.hentHvisEksisterer(kontekst.behandlingId)
-            ?.somStudenttidslinje(kontekst.rettighetsperiode.tom)
-            .orEmpty()
+        return if (unleashGateway.isEnabled(BehandlingsflytFeature.NyTidligereVurderinger)) {
+            tidligereVurderingsutfall.mapValue { behandlingsutfall ->
+                when (behandlingsutfall) {
+                    TidligereVurderinger.IkkeBehandlingsgrunnlag -> false
+                    TidligereVurderinger.UunngåeligAvslag -> false
+                    is TidligereVurderinger.PotensieltOppfylt -> {
+                        behandlingsutfall.rettighetstype == null
+                    }
+                }
+            }
+        } else {
+            // Det riktige her er egentlig å sjekke på vilkåret
+            val studentvurderinger = studentRepository.hentHvisEksisterer(kontekst.behandlingId)
+                ?.somStudenttidslinje(kontekst.rettighetsperiode.tom)
+                .orEmpty()
 
-        return Tidslinje.map2(tidligereVurderingsutfall, studentvurderinger)
-        { behandlingsutfall, studentvurdering ->
-            when (behandlingsutfall) {
-                null -> false
-                TidligereVurderinger.IkkeBehandlingsgrunnlag -> false
-                TidligereVurderinger.UunngåeligAvslag -> false
-                is TidligereVurderinger.PotensieltOppfylt -> {
-                    studentvurdering?.erOppfylt() != true
+            return Tidslinje.map2(tidligereVurderingsutfall, studentvurderinger)
+            { behandlingsutfall, studentvurdering ->
+                when (behandlingsutfall) {
+                    null -> false
+                    TidligereVurderinger.IkkeBehandlingsgrunnlag -> false
+                    TidligereVurderinger.UunngåeligAvslag -> false
+                    is TidligereVurderinger.PotensieltOppfylt -> {
+                        studentvurdering?.erOppfylt() != true
+                    }
                 }
             }
         }

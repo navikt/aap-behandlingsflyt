@@ -60,7 +60,7 @@ class SamordningArbeidsgiverSteg(
             return SamordningArbeidsgiverSteg(
                 avklaringsbehovRepository = repositoryProvider.provide(),
                 avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
-                tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider)
+                tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider)
             )
         }
 

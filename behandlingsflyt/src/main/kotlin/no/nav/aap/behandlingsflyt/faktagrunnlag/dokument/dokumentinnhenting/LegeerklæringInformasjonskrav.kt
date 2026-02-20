@@ -30,7 +30,7 @@ class LegeerklæringInformasjonskrav private constructor(
         ): LegeerklæringInformasjonskrav {
             return LegeerklæringInformasjonskrav(
                 MottaDokumentService(repositoryProvider),
-                TidligereVurderingerImpl(repositoryProvider)
+                TidligereVurderingerImpl(repositoryProvider, gatewayProvider)
             )
         }
     }

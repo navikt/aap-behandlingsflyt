@@ -47,7 +47,7 @@ class OvergangArbeidSteg internal constructor(
         avklaringsbehovRepository = repositoryProvider.provide(),
         overgangArbeidRepository = repositoryProvider.provide(),
         sykdomRepository = repositoryProvider.provide(),
-        tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
+        tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
         bistandRepository = repositoryProvider.provide(),
         avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
         studentRepository = repositoryProvider.provide(),

@@ -47,7 +47,7 @@ class VurderForutgåendeMedlemskapSteg private constructor(
         medlemskapArbeidInntektRepository = repositoryProvider.provide(),
         personopplysningForutgåendeRepository = repositoryProvider.provide(),
         sykdomRepository = repositoryProvider.provide(),
-        tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
+        tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
         avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
     )
 

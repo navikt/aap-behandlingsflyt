@@ -24,17 +24,22 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.Sykdo
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
-import no.nav.aap.behandlingsflyt.test.LokalUnleash
 import no.nav.aap.behandlingsflyt.test.april
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.verdityper.dokument.JournalpostId
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedClass
+import org.junit.jupiter.params.provider.MethodSource
 import java.time.LocalDate
+import kotlin.reflect.KClass
 
-class SykdomUungåligAvslagTest : AbstraktFlytOrkestratorTest(LokalUnleash::class) {
-
+@ParameterizedClass
+@MethodSource("unleashTestDataSource")
+class SykdomUungåligAvslagTest(val unleashGateway: KClass<UnleashGateway>) :
+    AbstraktFlytOrkestratorTest(unleashGateway) {
 
     @Test
     fun `Oppfyller ikke 11-5`() {

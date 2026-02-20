@@ -182,7 +182,7 @@ class InntektInformasjonskrav(
                 beregningVurderingRepository = beregningVurderingRepository,
                 inntektRegisterGateway = gatewayProvider.provide(),
                 inntektkomponentenGateway = gatewayProvider.provide(),
-                tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
+                tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
             )
         }
     }
