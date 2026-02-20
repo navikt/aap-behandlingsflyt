@@ -28,7 +28,7 @@ spec:
   gcp:
     sqlInstances:
       - type: POSTGRES_16
-        tier: db-custom-1-3840
+        tier: db-custom-2-8192
         diskAutoresize: true
         highAvailability: true
         pointInTimeRecovery: true
