@@ -96,7 +96,7 @@ class IverksettUtbetalingJobbUtførerTest {
         vedtakstidspunkt = LocalDateTime.now(),
         virkningstidspunkt = null,
         vurderingsbehov = setOf(),
-        årsakTilOpprettelse = ÅrsakTilOpprettelse.SØKNAD
-
+        årsakTilOpprettelse = ÅrsakTilOpprettelse.SØKNAD,
+        forrigeBehandlingId = null,
     )
 }
