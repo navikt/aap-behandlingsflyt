@@ -89,9 +89,8 @@ data class TidligereVurderingDto(
 enum class BehandlingsutfallType {
     IKKE_BEHANDLINGSGRUNNLAG,
     UUNGÅELIG_AVSLAG,
-    POTENSIELT_OPPFYLT,
-    UKJENT;
-
+    POTENSIELT_OPPFYLT;
+    
     companion object {
         fun fraBehandlingsutfall(behandlingsutfall: TidligereVurderinger.Behandlingsutfall): BehandlingsutfallType =
             when (behandlingsutfall) {
