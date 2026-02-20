@@ -215,19 +215,31 @@ class AvklarHelseinstitusjonLøser(
                     .sortedBy { it.periode }
             }
 
+        val resultatFørste = validerFørsteOpphold(vurderingerPerOpphold)
+        if (resultatFørste != null) return resultatFørste
+
+        val resultatPåfølgende = validerPåfølgendeOpphold(vurderingerPerOpphold)
+        if (resultatPåfølgende != null) return resultatPåfølgende
+
+        return Validation.Valid(nyeVurderinger)
+    }
+
+    private fun validerFørsteOpphold(vurderingerPerOpphold: Map<Segment<Institusjon>, List<HelseinstitusjonVurderingDto>>): Validation<List<HelseinstitusjonVurderingDto>>? {
         // Valider første opphold: Ingen reduksjon første 4 måneder (innleggelsesmåned + 3 måneder)
         vurderingerPerOpphold.entries.firstOrNull()?.let { (opphold, vurderinger) ->
             val første = førsteReduksjonsvurdering(vurderinger)
             val tidligsteReduksjonsdato = opphold.periode.fom.withDayOfMonth(1).plusMonths(4)
-            val resultat = validerReduksjonsdato(
+            return validerReduksjonsdato(
                 vurderinger, første, tidligsteReduksjonsdato,
                 "Første reduksjonsvurdering starter for tidlig. Skal ikke starte før"
             )
-
-            if (resultat != null) return resultat
         }
+        return null
+    }
 
-        // Valider påfølgende opphold
+    private fun validerPåfølgendeOpphold(
+        vurderingerPerOpphold: Map<Segment<Institusjon>, List<HelseinstitusjonVurderingDto>>
+    ): Validation<List<HelseinstitusjonVurderingDto>>? {
         if (vurderingerPerOpphold.size > 1) {
             vurderingerPerOpphold.entries.toList()
                 .windowed(2)
@@ -241,20 +253,16 @@ class AvklarHelseinstitusjonLøser(
                     val første = førsteReduksjonsvurdering(vurderingerNåværende)
 
                     if (!erInnenTreMåneder) {
-                        // Nytt opphold behandles som første opphold (4 måneders karantene)
-                        // Dette gjelder hvis oppholdet er mer enn 3 måneder etter forrige.
                         val tidligsteReduksjonsdato = nåværendeOpphold.periode.fom.withDayOfMonth(1).plusMonths(4)
                         val resultat = validerReduksjonsdato(
                             vurderingerNåværende, første, tidligsteReduksjonsdato,
                             "Reduksjon ved nytt opphold starter for tidlig. Skal ikke starte før"
                         )
-
                         if (resultat != null) return resultat
                     }
                 }
         }
-
-        return Validation.Valid(nyeVurderinger)
+        return null
     }
 
     private fun førsteReduksjonsvurdering(vurderinger: List<HelseinstitusjonVurderingDto>): HelseinstitusjonVurderingDto? {
