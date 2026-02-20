@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.behandling.tilbakekrevingsbehandling.Tilbakekr
 import no.nav.aap.behandlingsflyt.behandling.tilbakekrevingsbehandling.TilbakekrevingRepository
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
+import no.nav.aap.behandlingsflyt.prosessering.statistikk.tilKontraktVurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
@@ -32,6 +33,7 @@ class SakOgBehandlingService(private val repositoryProvider: RepositoryProvider)
                     typeBehandling = behandling.typeBehandling(),
                     status = behandling.status(),
                     vurderingsbehov = vurderingsbehov,
+                    vurderingsbehovKontrakt = vurderingsbehov.map { it.tilKontraktVurderingsbehov() },
                     årsakTilOpprettelse = behandling.årsakTilOpprettelse,
                     opprettet = behandling.opprettetTidspunkt,
                     eksternSaksbehandlingsløsningUrl = null,
@@ -50,6 +52,7 @@ class SakOgBehandlingService(private val repositoryProvider: RepositoryProvider)
                     TilbakekrevingBehandlingsstatus.AVSLUTTET -> no.nav.aap.behandlingsflyt.kontrakt.behandling.Status.AVSLUTTET
                 },
                 vurderingsbehov = emptyList(),
+                vurderingsbehovKontrakt = emptyList(),
                 årsakTilOpprettelse = ÅrsakTilOpprettelse.TILBAKEKREVING_HENDELSE,
                 opprettet = tilbakekrevingBehandling.sakOpprettet,
                 eksternSaksbehandlingsløsningUrl = tilbakekrevingBehandling.saksbehandlingURL.toString(),
