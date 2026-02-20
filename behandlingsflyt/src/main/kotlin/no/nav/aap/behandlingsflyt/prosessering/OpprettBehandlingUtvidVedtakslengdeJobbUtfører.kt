@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
 import no.nav.aap.behandlingsflyt.behandling.vedtakslengde.VedtakslengdeService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
@@ -18,7 +18,7 @@ import java.time.LocalDate.now
 
 class OpprettBehandlingUtvidVedtakslengdeJobbUtfører(
     private val prosesserBehandlingService: ProsesserBehandlingService,
-    private val sakOgBehandlingService: SakOgBehandlingService,
+    private val behandlingService: BehandlingService,
     private val vedtakslengdeService: VedtakslengdeService,
     private val clock: Clock = Clock.systemDefaultZone()
 ) : JobbUtfører {
@@ -29,7 +29,7 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtfører(
         val datoForUtvidelse = now(clock).plusDays(28)
         val sakId = SakId(input.sakId())
 
-        val sisteGjeldendeBehandling = sakOgBehandlingService.finnBehandlingMedSisteFattedeVedtak(sakId)
+        val sisteGjeldendeBehandling = behandlingService.finnBehandlingMedSisteFattedeVedtak(sakId)
         if (sisteGjeldendeBehandling != null) {
             log.info("Gjeldende behandling for sak $sakId er ${sisteGjeldendeBehandling.id}")
             // Bruker sisteGjeldendeBehandling.id både for behandlingId og forrigeBehandlingId fordi vi ser på gjeldende behandling
@@ -45,8 +45,8 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtfører(
         }
     }
 
-    private fun opprettNyBehandling(sakId: SakId): SakOgBehandlingService.OpprettetBehandling =
-        sakOgBehandlingService.finnEllerOpprettBehandling(
+    private fun opprettNyBehandling(sakId: SakId): BehandlingService.OpprettetBehandling =
+        behandlingService.finnEllerOpprettBehandling(
             sakId = sakId,
             vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
                 årsak = ÅrsakTilOpprettelse.UTVID_VEDTAKSLENGDE,
@@ -58,7 +58,7 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtfører(
         override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): JobbUtfører {
             return OpprettBehandlingUtvidVedtakslengdeJobbUtfører(
                 prosesserBehandlingService = ProsesserBehandlingService(repositoryProvider, gatewayProvider),
-                sakOgBehandlingService = SakOgBehandlingService(repositoryProvider, gatewayProvider),
+                behandlingService = BehandlingService(repositoryProvider, gatewayProvider),
                 vedtakslengdeService = VedtakslengdeService(repositoryProvider, gatewayProvider),
             )
         }

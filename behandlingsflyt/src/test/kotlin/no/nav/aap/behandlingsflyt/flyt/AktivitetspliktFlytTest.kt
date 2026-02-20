@@ -8,7 +8,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VentePåFr
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VurderBrudd11_7Løsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VurderBrudd11_9Løsning
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
-import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7LøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Repository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Vurdering
@@ -279,7 +279,7 @@ class AktivitetspliktFlytTest :
 
         val effektueringsbehandling = dataSource.transaction { connection ->
             val repositoryProvider = postgresRepositoryRegistry.provider(connection)
-            SakOgBehandlingService(repositoryProvider, gatewayProvider).finnEllerOpprettBehandling(
+            BehandlingService(repositoryProvider, gatewayProvider).finnEllerOpprettBehandling(
                 sak.id,
                 VurderingsbehovOgÅrsak(
                     årsak = ÅrsakTilOpprettelse.AKTIVITETSPLIKT, vurderingsbehov = listOf(
@@ -292,7 +292,7 @@ class AktivitetspliktFlytTest :
             )
         }
 
-        assertThat(effektueringsbehandling is SakOgBehandlingService.MåBehandlesAtomært)
+        assertThat(effektueringsbehandling is BehandlingService.MåBehandlesAtomært)
         dataSource.transaction { connection ->
             ProsesserBehandlingService(
                 postgresRepositoryRegistry.provider(connection),
@@ -487,7 +487,7 @@ class AktivitetspliktFlytTest :
         repositoryProvider: RepositoryProvider,
         sak: Sak,
     ): Behandling {
-        return SakOgBehandlingService(repositoryProvider, gatewayProvider).opprettAktivitetspliktBehandling(
+        return BehandlingService(repositoryProvider, gatewayProvider).opprettAktivitetspliktBehandling(
             sak.id, ÅrsakTilOpprettelse.MANUELL_OPPRETTELSE, vurderingsbehov
         )
     }

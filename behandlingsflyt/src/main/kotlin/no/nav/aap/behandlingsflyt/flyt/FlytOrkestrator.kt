@@ -5,7 +5,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepo
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravGrunnlagImpl
-import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.StegOrkestrator
 import no.nav.aap.behandlingsflyt.flyt.steg.TilbakeførtFraBeslutter
@@ -50,7 +50,7 @@ import org.slf4j.LoggerFactory
  */
 class FlytOrkestrator(
     private val flytKontekstMedPeriodeService: FlytKontekstMedPeriodeService,
-    private val sakOgBehandlingService: SakOgBehandlingService,
+    private val behandlingService: BehandlingService,
     private val informasjonskravGrunnlag: InformasjonskravGrunnlag,
     private val sakRepository: SakRepository,
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
@@ -72,8 +72,8 @@ class FlytOrkestrator(
         informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(repositoryProvider, gatewayProvider),
         sakRepository = repositoryProvider.provide(),
         flytKontekstMedPeriodeService = FlytKontekstMedPeriodeService(repositoryProvider, gatewayProvider),
-        sakOgBehandlingService = SakOgBehandlingService(repositoryProvider, gatewayProvider),
-        behandlingHendelseService = BehandlingHendelseServiceImpl(repositoryProvider),
+        behandlingService = BehandlingService(repositoryProvider, gatewayProvider),
+        behandlingHendelseService = BehandlingHendelseServiceImpl(repositoryProvider, gatewayProvider),
         stegOrkestrator = StegOrkestrator(repositoryProvider, gatewayProvider, markSavepointAt),
         stoppNårStatus = stoppNårStatus,
     )
@@ -260,7 +260,7 @@ class FlytOrkestrator(
                 if (neste == null) {
                     log.info("Behandlingen har nådd slutten, avslutter behandling")
 
-                    sakOgBehandlingService.lukkBehandling(behandling.id)
+                    behandlingService.lukkBehandling(behandling.id)
 
                     validerAtAvklaringsBehovErLukkede(avklaringsbehovene)
                 } else {

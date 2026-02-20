@@ -2,7 +2,7 @@ package no.nav.aap.behandlingsflyt.prosessering
 
 import no.nav.aap.behandlingsflyt.behandling.utbetaling.UtbetalingGateway
 import no.nav.aap.behandlingsflyt.behandling.utbetaling.UtbetalingService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.gateway.GatewayProvider
@@ -16,7 +16,7 @@ import java.time.Duration
 class IverksettUtbetalingJobbUtfører(
     private val utbetalingGateway: UtbetalingGateway,
     private val utbetalingService: UtbetalingService,
-    private val sakOgBehandlingService: SakOgBehandlingService
+    private val behandlingService: BehandlingService
 ) : JobbUtfører {
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -24,7 +24,7 @@ class IverksettUtbetalingJobbUtfører(
     override fun utfør(input: JobbInput) {
         val behandlingId = input.payload<BehandlingId>()
         val sakId = SakId(input.sakId())
-        val sisteFattedeVedtakBehandling = sakOgBehandlingService.finnBehandlingMedSisteFattedeVedtak(sakId)
+        val sisteFattedeVedtakBehandling = behandlingService.finnBehandlingMedSisteFattedeVedtak(sakId)
             ?: error("Finner ingen fattede vedtaksbehandlinger for sak med id $sakId")
 
         if (sisteFattedeVedtakBehandling.id != behandlingId) {
@@ -43,11 +43,11 @@ class IverksettUtbetalingJobbUtfører(
         override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): JobbUtfører {
             val utbetalingGateway = gatewayProvider.provide<UtbetalingGateway>()
             val utbetalingService = UtbetalingService(repositoryProvider, gatewayProvider)
-            val sakOgBehandlingService = SakOgBehandlingService(repositoryProvider, gatewayProvider)
+            val behandlingService = BehandlingService(repositoryProvider, gatewayProvider)
             return IverksettUtbetalingJobbUtfører(
                 utbetalingGateway = utbetalingGateway,
                 utbetalingService = utbetalingService,
-                sakOgBehandlingService = sakOgBehandlingService
+                behandlingService = behandlingService
             )
         }
 
