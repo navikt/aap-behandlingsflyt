@@ -2,7 +2,6 @@ package no.nav.aap.behandlingsflyt.drift
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovHendelseHåndterer
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.LøsAvklaringsbehovHendelse
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivBrevAvklaringsbehovLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivVedtaksbrevLøsning
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingReferanse
@@ -88,18 +87,15 @@ class Driftfunksjoner(
         val behandling = behandlingRepository.hent(bestilling.behandlingId)
         taSkriveLåsRepository.withLåstBehandling(behandling.id) {
             avklaringsbehovHendelseHåndterer.håndtere(
-                key = behandling.id,
-                hendelse = LøsAvklaringsbehovHendelse(
-                    løsning = SkrivVedtaksbrevLøsning(
-                        brevbestillingReferanse = brevbestillingReferanse.brevbestillingReferanse,
-                        handling = SkrivBrevAvklaringsbehovLøsning.Handling.AVBRYT,
-                        mottakere = emptyList(),
-                        behovstype = Definisjon.SKRIV_VEDTAKSBREV.kode,
-                        begrunnelse = begrunnelse
-                    ),
-                    behandlingVersjon = 0L, // Ikke i bruk - gir ikke mening å validere behandlingsversjon da vi ikke står i en behandlingskontekst
-                    bruker = bruker,
+                behandlingId = behandling.id,
+                avklaringsbehovLøsning = SkrivVedtaksbrevLøsning(
+                    brevbestillingReferanse = brevbestillingReferanse.brevbestillingReferanse,
+                    handling = SkrivBrevAvklaringsbehovLøsning.Handling.AVBRYT,
+                    mottakere = emptyList(),
+                    behovstype = Definisjon.SKRIV_VEDTAKSBREV.kode,
+                    begrunnelse = begrunnelse
                 ),
+                bruker = bruker,
             )
         }
     }
