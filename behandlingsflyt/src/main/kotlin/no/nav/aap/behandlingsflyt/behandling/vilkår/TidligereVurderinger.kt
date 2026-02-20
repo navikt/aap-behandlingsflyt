@@ -10,7 +10,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.forretningsflyt.behandlingstyper.Førstegangsbehandling
@@ -63,9 +62,7 @@ class TidligereVurderingerImpl(
     private val vilkårsresultatRepository: VilkårsresultatRepository,
     private val avbrytRevurderingService: AvbrytRevurderingService,
     private val sykdomRepository: SykdomRepository,
-    private val studentRepository: StudentRepository,
     private val bistandRepository: BistandRepository,
-    private val yrkesskadeRepository: YrkesskadeRepository,
 ) : TidligereVurderinger {
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -77,9 +74,7 @@ class TidligereVurderingerImpl(
         vilkårsresultatRepository = repositoryProvider.provide(),
         avbrytRevurderingService = AvbrytRevurderingService(repositoryProvider),
         sykdomRepository = repositoryProvider.provide(),
-        studentRepository = repositoryProvider.provide(),
         bistandRepository = repositoryProvider.provide(),
-        yrkesskadeRepository = repositoryProvider.provide(),
     )
 
     data class Sjekk(
@@ -117,41 +112,42 @@ class TidligereVurderingerImpl(
                 ikkeOppfyltFørerTilAvslag(Vilkårtype.ALDERSVILKÅRET, vilkårsresultat)
             },
 
-            Sjekk(StegType.AVKLAR_SYKDOM) { _, kontekst, _ ->
-                val periode = kontekst.rettighetsperiode
+            Sjekk(StegType.AVKLAR_STUDENT) { vilkårsresultat, _, _ ->
+                vilkårsresultat.tidslinjeFor(Vilkårtype.STUDENT).map {
+                    TidligereVurderinger.PotensieltOppfylt(
+                        when {
+                            it.utfall == Utfall.OPPFYLT -> RettighetsType.STUDENT
+                            else -> null
+                        }
+                    )
+                }
+            },
+
+            Sjekk(StegType.AVKLAR_SYKDOM) { _, kontekst, tidligereVurderinger ->
                 val sykdomstidslinje = sykdomRepository.hentHvisEksisterer(kontekst.behandlingId)
                     ?.somSykdomsvurderingstidslinje().orEmpty()
-                val studenttidslinje =
-                    studentRepository.hentHvisEksisterer(kontekst.behandlingId)?.somStudenttidslinje(periode.tom)
-                        .orEmpty()
 
-                sykdomstidslinje.outerJoin(studenttidslinje) { segmentPeriode, sykdomsvurdering, studentVurdering ->
-                    if (studentVurdering != null && studentVurdering.erOppfylt()) return@outerJoin TidligereVurderinger.PotensieltOppfylt(
-                        RettighetsType.STUDENT
-                    )
-
-                    val erIkkeFørsteSykdomsvurdering =
-                        !Sykdomsvurdering.erFørsteVurdering(kontekst.rettighetsperiode.fom, segmentPeriode)
-
-                    val harTidligereInnvilgetSykdomsvurdering by lazy {
-                        sykdomstidslinje
-                            .begrensetTil(Periode(Tid.MIN, segmentPeriode.fom.minusDays(1)))
-                            .segmenter()
-                            .any { it.verdi.erOppfyltForYrkesskadeSettBortIfraÅrsakssammenhengOgVissVarighet() }
-                    }
-
+                tidligereVurderinger.leftJoin(sykdomstidslinje) { segmentPeriode, foreløpigUtfall, sykdomsvurdering ->
                     val sykdomDefinitivtAvslag =
                         sykdomsvurdering?.erOppfyltOrdinærSettBortIfraVissVarighet() == false
                                 && !sykdomsvurdering.erOppfyltForYrkesskadeSettBortIfraÅrsakssammenhengOgVissVarighet()
 
-                    val potensieltOvergangArbeid = erIkkeFørsteSykdomsvurdering && harTidligereInnvilgetSykdomsvurdering
+                    val foreløpigRettighetstype = when (foreløpigUtfall) {
+                        is TidligereVurderinger.PotensieltOppfylt -> foreløpigUtfall.rettighetstype
+                        else -> null
+                    }
 
-                    if (sykdomDefinitivtAvslag && !potensieltOvergangArbeid) {
-                        return@outerJoin TidligereVurderinger.UunngåeligAvslag
+                    if (foreløpigRettighetstype == null && sykdomDefinitivtAvslag && !potensieltOppfyltOvergangArbeid(
+                            kontekst.rettighetsperiode,
+                            segmentPeriode,
+                            sykdomstidslinje
+                        )
+                    ) {
+                        return@leftJoin TidligereVurderinger.UunngåeligAvslag
 
                     }
 
-                    return@outerJoin TidligereVurderinger.PotensieltOppfylt(null)
+                    return@leftJoin TidligereVurderinger.PotensieltOppfylt(null)
                 }
             },
 
@@ -386,4 +382,19 @@ class TidligereVurderingerImpl(
             }
     }
 
+    private fun potensieltOppfyltOvergangArbeid(
+        rettighetsperiode: Periode,
+        segmentPeriode: Periode,
+        sykdomstidslinje: Tidslinje<Sykdomsvurdering>
+    ): Boolean {
+        val harTidligereInnvilgetSykdomsvurdering =
+            sykdomstidslinje
+                .begrensetTil(Periode(Tid.MIN, segmentPeriode.fom.minusDays(1)))
+                .segmenter()
+                .any { it.verdi.erOppfyltForYrkesskadeSettBortIfraÅrsakssammenhengOgVissVarighet() }
+
+        val erIkkeFørsteSykdomsvurdering =
+            !Sykdomsvurdering.erFørsteVurdering(rettighetsperiode.fom, segmentPeriode)
+        return erIkkeFørsteSykdomsvurdering && harTidligereInnvilgetSykdomsvurdering
+    }
 }
