@@ -206,25 +206,13 @@ class AvklarHelseinstitusjonLøser(
         val opphold = grunnlag?.oppholdene?.opphold ?: emptyList()
         if (opphold.isEmpty() || nyeVurderinger.isEmpty()) return Validation.Valid(nyeVurderinger)
 
-        val vedtatteGrunnlag =
-            behandling.forrigeBehandlingId?.let { helseinstitusjonRepository.hentHvisEksisterer(it) }
-
         // Håndterer når vedtatte vurderinger finnes. Dette skjer i revurdering
         val vurderingerPerOpphold: Map<Segment<Institusjon>, List<HelseinstitusjonVurderingDto>> =
-            if (vedtatteGrunnlag?.helseoppholdvurderinger?.vurderinger != null) {
-                opphold.associateWith { o ->
-                    slåSammenMedNyeVurderingerNy(vedtatteGrunnlag, nyeVurderinger, behandling, "")
-                        .tilDto()
-                        .filter { v -> v.periode.fom >= o.periode.fom && v.periode.tom <= o.periode.tom }
-                        .sortedBy { it.periode }
-                }
-            } else {
-                // Finn vurderinger per opphold ved å bruke overlapp
-                opphold.associateWith { o ->
-                    nyeVurderinger
-                        .filter { v -> v.periode.fom >= o.periode.fom && v.periode.tom <= o.periode.tom }
-                        .sortedBy { it.periode }
-                }
+            // Finn vurderinger per opphold ved å matche oppholdets periode med vurderingenes periode.
+            opphold.associateWith { o ->
+                nyeVurderinger
+                    .filter { v -> v.periode.fom >= o.periode.fom && v.periode.tom <= o.periode.tom }
+                    .sortedBy { it.periode }
             }
 
         // Valider første opphold: Ingen reduksjon første 4 måneder (innleggelsesmåned + 3 måneder)
@@ -239,52 +227,34 @@ class AvklarHelseinstitusjonLøser(
             if (resultat != null) return resultat
         }
 
-        // Valider påfølgende opphold: Hvis nytt opphold innen 3 måneder etter utskrivelse
+        // Valider påfølgende opphold
         if (vurderingerPerOpphold.size > 1) {
-            val oppholdsliste = vurderingerPerOpphold.entries.toList()
+            vurderingerPerOpphold.entries.toList()
+                .windowed(2)
+                .forEach { (forrige, nåværende) ->
+                    val forrigeOpphold = forrige.key
+                    val nåværendeOpphold = nåværende.key
+                    val vurderingerNåværende = nåværende.value
 
-            for (i in 1 until oppholdsliste.size) {
-                val forrigeOpphold = oppholdsliste[i - 1].key
-                val nåværendeOpphold = oppholdsliste[i].key
-                val vurderingerForrige = oppholdsliste[i - 1].value
-                val vurderingerNåværende = oppholdsliste[i].value
+                    val treMånederEtterUtskrivelse = forrigeOpphold.periode.tom.plusMonths(3)
+                    val erInnenTreMåneder = !nåværendeOpphold.periode.fom.isAfter(treMånederEtterUtskrivelse)
+                    val første = førsteReduksjonsvurdering(vurderingerNåværende)
 
-                val treMånederEtterUtskrivelse = forrigeOpphold.periode.tom.plusMonths(3)
-                val erInnenTreMåneder = !nåværendeOpphold.periode.fom.isAfter(treMånederEtterUtskrivelse)
-                val første = førsteReduksjonsvurdering(vurderingerNåværende)
-                val haddeReduksjonForrige = sisteVurdering(vurderingerForrige)?.let {
-                    it.faarFriKostOgLosji && it.forsoergerEktefelle == false && it.harFasteUtgifter == false
-                } ?: false
+                    if (!erInnenTreMåneder) {
+                        // Nytt opphold behandles som første opphold (4 måneders karantene)
+                        // Dette gjelder hvis oppholdet er mer enn 3 måneder etter forrige.
+                        val tidligsteReduksjonsdato = nåværendeOpphold.periode.fom.withDayOfMonth(1).plusMonths(4)
+                        val resultat = validerReduksjonsdato(
+                            vurderingerNåværende, første, tidligsteReduksjonsdato,
+                            "Reduksjon ved nytt opphold starter for tidlig. Skal ikke starte før"
+                        )
 
-                if (erInnenTreMåneder && haddeReduksjonForrige) {
-                    // Reduksjon skal starte fra måneden etter nytt opphold
-                    val tidligsteReduksjonsdato = nåværendeOpphold.periode.fom.withDayOfMonth(1).plusMonths(1)
-                    val resultat = validerReduksjonsdato(
-                        vurderingerNåværende, første, tidligsteReduksjonsdato,
-                        "Reduksjon ved nytt opphold innen 3 måneder starter for tidlig. Skal starte fra"
-                    )
-
-                    if (resultat != null) return resultat
-                } else {
-                    // Nytt opphold behandles som første opphold (4 måneders karantene)
-                    // Dette gjelder hvis oppholdet er mer enn 3 måneder etter forrige,
-                    // eller hvis forrige opphold ikke førte til reduksjon
-                    val tidligsteReduksjonsdato = nåværendeOpphold.periode.fom.withDayOfMonth(1).plusMonths(4)
-                    val resultat = validerReduksjonsdato(
-                        vurderingerNåværende, første, tidligsteReduksjonsdato,
-                        "Reduksjon ved nytt opphold starter for tidlig. Skal ikke starte før"
-                    )
-
-                    if (resultat != null) return resultat
+                        if (resultat != null) return resultat
+                    }
                 }
-            }
         }
 
         return Validation.Valid(nyeVurderinger)
-    }
-
-    private fun sisteVurdering(vurderinger: List<HelseinstitusjonVurderingDto>): HelseinstitusjonVurderingDto? {
-        return vurderinger.maxByOrNull { it.periode.tom }
     }
 
     private fun førsteReduksjonsvurdering(vurderinger: List<HelseinstitusjonVurderingDto>): HelseinstitusjonVurderingDto? {
@@ -302,11 +272,9 @@ class AvklarHelseinstitusjonLøser(
         if (førsteReduksjonsvurdering != null && førsteReduksjonsvurdering.periode.fom.isBefore(tidligsteReduksjonsdato)) {
             val tidligsteReduksjonsdatoFormatert =
                 tidligsteReduksjonsdato.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"))
-            val faktiskReduksjonsdatoFormatert =
-                førsteReduksjonsvurdering.periode.fom.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"))
             return Validation.Invalid(
                 vurderinger,
-                "$feilmelding $tidligsteReduksjonsdatoFormatert (faktisk: $faktiskReduksjonsdatoFormatert)"
+                "$feilmelding $tidligsteReduksjonsdatoFormatert"
             )
         }
         return null
@@ -315,18 +283,6 @@ class AvklarHelseinstitusjonLøser(
     override fun forBehov(): Definisjon {
         return Definisjon.AVKLAR_HELSEINSTITUSJON
     }
-
-    private fun List<HelseinstitusjonVurdering>.tilDto(): List<HelseinstitusjonVurderingDto> =
-        this.map {
-            HelseinstitusjonVurderingDto(
-                begrunnelse = it.begrunnelse,
-                faarFriKostOgLosji = it.faarFriKostOgLosji,
-                forsoergerEktefelle = it.forsoergerEktefelle,
-                harFasteUtgifter = it.harFasteUtgifter,
-                periode = it.periode
-            )
-        }
-
 
     internal data class HelseoppholdVurderingData(
         val begrunnelse: String,
