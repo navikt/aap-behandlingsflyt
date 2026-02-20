@@ -122,7 +122,6 @@ class BeslutterFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class
                         )
                     )
                 ),
-                ingenEndringIGruppe = true,
                 bruker = Bruker("SAKSBEHANDLER")
             )
             .kvalitetssikre()

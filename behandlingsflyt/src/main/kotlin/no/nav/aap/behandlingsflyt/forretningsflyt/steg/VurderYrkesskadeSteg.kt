@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
@@ -21,21 +20,17 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 class VurderYrkesskadeSteg private constructor(
     private val sykdomRepository: SykdomRepository,
     private val yrkesskadeRepository: YrkesskadeRepository,
-    private val avklaringsbehovRepository: AvklaringsbehovRepository,
     private val tidligereVurderinger: TidligereVurderinger,
     private val avklaringsbehovService: AvklaringsbehovService
 ) : BehandlingSteg {
-    constructor(repositoryProvider: RepositoryProvider) : this(
+    constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         sykdomRepository = repositoryProvider.provide(),
         yrkesskadeRepository = repositoryProvider.provide(),
-        avklaringsbehovRepository = repositoryProvider.provide(),
-        tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
+        tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
         avklaringsbehovService = AvklaringsbehovService(repositoryProvider)
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
-
         val behandlingId = kontekst.behandlingId
         val yrkesskader = yrkesskadeRepository.hentHvisEksisterer(behandlingId)
         val sykdomsgrunnlag = sykdomRepository.hentHvisEksisterer(behandlingId)
@@ -86,7 +81,7 @@ class VurderYrkesskadeSteg private constructor(
         override fun konstruer(
             repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider
         ): BehandlingSteg {
-            return VurderYrkesskadeSteg(repositoryProvider)
+            return VurderYrkesskadeSteg(repositoryProvider, gatewayProvider)
         }
 
         override fun type(): StegType {

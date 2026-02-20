@@ -22,6 +22,8 @@ import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.orEmpty
@@ -35,20 +37,22 @@ class OvergangUføreSteg private constructor(
     private val tidligereVurderinger: TidligereVurderinger,
     private val bistandRepository: BistandRepository,
     private val avklaringsbehovService: AvklaringsbehovService,
+    private val unleashGateway: UnleashGateway,
 ) : BehandlingSteg, AvklaringsbehovMetadataUtleder {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         vilkårsresultatRepository = repositoryProvider.provide(),
         overgangUføreRepository = repositoryProvider.provide(),
         sykdomRepository = repositoryProvider.provide(),
-        tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
+        tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
         bistandRepository = repositoryProvider.provide(),
         avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
+        unleashGateway = gatewayProvider.provide()
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val perioderSomIkkeErTilstrekkeligVurdert: () -> Set<Periode> =
             { perioderSomIkkeErTilstrekkeligVurdert(kontekst) }
-        
+
         avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkårTilstrekkeligVurdert(
             kontekst = kontekst,
             definisjon = Definisjon.AVKLAR_OVERGANG_UFORE,
@@ -90,22 +94,41 @@ class OvergangUføreSteg private constructor(
         val utfall = tidligereVurderinger.behandlingsutfall(kontekst, type())
         val sykdomsvurderinger =
             sykdomRepository.hentHvisEksisterer(kontekst.behandlingId)?.somSykdomsvurderingstidslinje().orEmpty()
-        val bistandsvurderinger =
-            bistandRepository.hentHvisEksisterer(kontekst.behandlingId)?.somBistandsvurderingstidslinje().orEmpty()
 
-        return Tidslinje.map3(
-            utfall,
-            sykdomsvurderinger,
-            bistandsvurderinger
-        ) { segmentPeriode, utfall, sykdomsvurdering, bistandsvurdering ->
-            when (utfall) {
-                null -> false
-                TidligereVurderinger.Behandlingsutfall.IKKE_BEHANDLINGSGRUNNLAG -> false
-                TidligereVurderinger.Behandlingsutfall.UUNGÅELIG_AVSLAG -> false
-                TidligereVurderinger.Behandlingsutfall.UKJENT -> {
-                    sykdomErOppfyltOgBistandErIkkeOppfylt(
-                        kontekst.rettighetsperiode.fom, segmentPeriode, sykdomsvurdering, bistandsvurdering
-                    )
+        return if (unleashGateway.isEnabled(BehandlingsflytFeature.NyTidligereVurderinger)) {
+            Tidslinje.map2(
+                utfall,
+                sykdomsvurderinger
+            ) { segmentPeriode, utfall, sykdomsvurering ->
+                when (utfall) {
+                    TidligereVurderinger.IkkeBehandlingsgrunnlag, TidligereVurderinger.UunngåeligAvslag -> false
+                    is TidligereVurderinger.PotensieltOppfylt -> {
+                        utfall.rettighetstype == null && sykdomsvurering?.erOppfyltOrdinærEllerYrkesskadeSettBortIfraÅrsakssammenheng(
+                            kontekst.rettighetsperiode.fom,
+                            segmentPeriode
+                        ) == true
+                    }
+
+                    else -> false
+                }
+            }
+        } else {
+            val bistandsvurderinger =
+                bistandRepository.hentHvisEksisterer(kontekst.behandlingId)?.somBistandsvurderingstidslinje().orEmpty()
+
+            Tidslinje.map3(
+                utfall,
+                sykdomsvurderinger,
+                bistandsvurderinger
+            ) { segmentPeriode, utfall, sykdomsvurdering, bistandsvurdering ->
+                when (utfall) {
+                    null -> false
+                    TidligereVurderinger.IkkeBehandlingsgrunnlag -> false
+                    TidligereVurderinger.UunngåeligAvslag -> false
+                    is TidligereVurderinger.PotensieltOppfylt ->
+                        sykdomErOppfyltOgBistandErIkkeOppfylt(
+                            kontekst.rettighetsperiode.fom, segmentPeriode, sykdomsvurdering, bistandsvurdering
+                        )
                 }
             }
         }

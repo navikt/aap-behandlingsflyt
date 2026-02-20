@@ -99,8 +99,9 @@ class SamordningStegTest {
             )
         } answers {
             tidslinjeOf(
-                firstArg<FlytKontekstMedPerioder>().rettighetsperiode to TidligereVurderinger.Behandlingsutfall.UKJENT
+                firstArg<FlytKontekstMedPerioder>().rettighetsperiode to TidligereVurderinger.PotensieltOppfylt(null)
             )
+            
         }
         every { avbrytRevurderingRepository.hentHvisEksisterer(any()) } returns null
     }
@@ -267,7 +268,7 @@ class SamordningStegTest {
             )
         } answers {
             tidslinjeOf(
-                firstArg<FlytKontekstMedPerioder>().rettighetsperiode to TidligereVurderinger.Behandlingsutfall.IKKE_BEHANDLINGSGRUNNLAG
+                firstArg<FlytKontekstMedPerioder>().rettighetsperiode to TidligereVurderinger.IkkeBehandlingsgrunnlag
             )
         }
     }

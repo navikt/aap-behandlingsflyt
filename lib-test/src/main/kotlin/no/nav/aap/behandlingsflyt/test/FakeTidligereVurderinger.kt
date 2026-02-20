@@ -23,6 +23,6 @@ class FakeTidligereVurderinger: TidligereVurderinger {
         kontekst: FlytKontekstMedPerioder,
         førSteg: StegType
     ): Tidslinje<TidligereVurderinger.Behandlingsutfall> {
-        return tidslinjeOf(kontekst.rettighetsperiode to TidligereVurderinger.Behandlingsutfall.UKJENT)
+        return tidslinjeOf(kontekst.rettighetsperiode to TidligereVurderinger.PotensieltOppfylt(null))
     }
 }

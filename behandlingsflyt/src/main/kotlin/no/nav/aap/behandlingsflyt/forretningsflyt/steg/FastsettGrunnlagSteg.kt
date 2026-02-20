@@ -28,10 +28,10 @@ class FastsettGrunnlagSteg(
     private val tidligereVurderinger: TidligereVurderinger,
     private val vilkårService: VilkårService,
 ) : BehandlingSteg {
-    constructor(repositoryProvider: RepositoryProvider) : this(
+    constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         beregningService = BeregningService(repositoryProvider),
         vilkårsresultatRepository = repositoryProvider.provide(),
-        tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
+        tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
         vilkårService = VilkårService(repositoryProvider),
     )
 
@@ -110,7 +110,7 @@ class FastsettGrunnlagSteg(
             repositoryProvider: RepositoryProvider,
             gatewayProvider: GatewayProvider
         ): BehandlingSteg {
-            return FastsettGrunnlagSteg(repositoryProvider)
+            return FastsettGrunnlagSteg(repositoryProvider, gatewayProvider)
         }
 
         override fun type(): StegType {
