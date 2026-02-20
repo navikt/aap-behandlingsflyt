@@ -198,7 +198,7 @@ class StatistikkMetoder(
     }
 
     private fun utledVurderingsbehovForBehandling(behandling: Behandling): List<Vurderingsbehov> =
-        behandling.vurderingsbehov().map { it.tilKontraktVurderingsbehov() }.distinct()
+        behandling.vurderingsbehov().map { it.type.tilKontraktVurderingsbehov() }.distinct()
 
     private fun hentIdenterPåSak(saksnummer: Saksnummer): List<String> {
         return pipService.finnIdenterPåSak(saksnummer).map { it.ident }

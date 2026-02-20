@@ -12,6 +12,7 @@ data class BehandlinginfoDTO(
     val typeBehandling: TypeBehandling,
     val status: Status,
     val vurderingsbehov: List<Vurderingsbehov>,
+    val vurderingsbehovKontrakt: List<no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov>,
     val årsakTilOpprettelse: ÅrsakTilOpprettelse?,
     val opprettet: LocalDateTime,
     val eksternSaksbehandlingsløsningUrl: String?,
