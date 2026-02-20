@@ -428,7 +428,6 @@ class TestScenarioOrkestrator(
         behandling: Behandling,
         avklaringsBehovLøsning: AvklaringsbehovLøsning,
         bruker: Bruker = Bruker("SAKSBEHANDLER"),
-        ingenEndringIGruppe: Boolean = false,
     ): Behandling {
         datasource.transaction {
             AvklaringsbehovHendelseHåndterer(
@@ -441,7 +440,6 @@ class TestScenarioOrkestrator(
                     løsning = avklaringsBehovLøsning,
                     behandlingVersjon = behandling.versjon,
                     bruker = bruker,
-                    ingenEndringIGruppe = ingenEndringIGruppe
                 )
             )
         }

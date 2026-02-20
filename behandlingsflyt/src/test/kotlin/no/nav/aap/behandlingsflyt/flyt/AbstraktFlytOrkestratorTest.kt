@@ -330,7 +330,6 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
         behandling: Behandling,
         avklaringsBehovLøsning: AvklaringsbehovLøsning,
         bruker: Bruker = Bruker("SAKSBEHANDLER"),
-        ingenEndringIGruppe: Boolean = false
     ): Behandling {
         dataSource.transaction {
             AvklaringsbehovHendelseHåndterer(
@@ -343,7 +342,6 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
                     løsning = avklaringsBehovLøsning,
                     behandlingVersjon = behandling.versjon,
                     bruker = bruker,
-                    ingenEndringIGruppe = ingenEndringIGruppe
                 )
             )
 
@@ -356,13 +354,11 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
     protected fun Behandling.løsAvklaringsBehov(
         avklaringsBehovLøsning: AvklaringsbehovLøsning,
         bruker: Bruker = Bruker("SAKSBEHANDLER"),
-        ingenEndringIGruppe: Boolean = false
     ): Behandling {
         return løsAvklaringsBehov(
             this,
             avklaringsBehovLøsning = avklaringsBehovLøsning,
             bruker = bruker,
-            ingenEndringIGruppe = ingenEndringIGruppe
         )
     }
 
