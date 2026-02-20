@@ -81,7 +81,7 @@ class InstitusjonsoppholdUtlederService(
         val oppholdSomKanGiReduksjon = harOppholdSomKreverAvklaring(oppholdUtenBarnetillegg)
 
         perioderSomTrengerVurdering = perioderSomTrengerVurdering.kombiner(oppholdSomKanGiReduksjon.mapValue {
-            InstitusjonsoppholdVurdering(helse = HelseOpphold(vurdering = OppholdVurdering.UAVKLART))
+            InstitusjonsoppholdVurdering(helse = HelseOpphold(oppholdId = null, vurdering = OppholdVurdering.UAVKLART))
         }, sammenslåer()).kombiner(helsevurderingerTidslinje, helsevurderingSammenslåer()).komprimer()
 
         // Hvis det er mindre en 3 måneder siden sist opphold og bruker er nå innlagt
@@ -136,13 +136,13 @@ class InstitusjonsoppholdUtlederService(
                     helseoppholdUtenBarnetillegg, perioderSomTrengerVurdering
                 ).segmenter().mapNotNull {
                     val fom = it.fom().withDayOfMonth(1).plusMonths(1)
-
                     if (fom.isAfter(it.tom())) {
                         null
                     } else {
                         Segment(
                             it.periode, InstitusjonsoppholdVurdering(
                                 helse = HelseOpphold(
+                                    oppholdId =  it.fom().toString(),
                                     vurdering = OppholdVurdering.UAVKLART,
                                     umiddelbarReduksjon = true
                                 )
@@ -185,6 +185,7 @@ class InstitusjonsoppholdUtlederService(
         return Tidslinje(helsevurderinger.sortedBy { it.periode }.map {
             Segment(
                 it.periode, HelseOpphold(
+                    oppholdId = it.periode.fom.toString(),
                     if (it.faarFriKostOgLosji && it.harFasteUtgifter == false && it.forsoergerEktefelle == false) {
                         OppholdVurdering.AVSLÅTT
                     } else {
@@ -240,6 +241,7 @@ class InstitusjonsoppholdUtlederService(
         }
 
         return HelseOpphold(
+            oppholdId = høyreopphold.oppholdId,
             vurdering = høyreopphold.vurdering.prioritertVerdi(venstreopphold.vurdering),
             umiddelbarReduksjon = høyreopphold.umiddelbarReduksjon || venstreopphold.umiddelbarReduksjon
         )

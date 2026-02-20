@@ -60,7 +60,8 @@ class InstitusjonsoppholdUtlederServiceNy(
 
         val helsevurderingerTidslinje = byggHelsevurderingTidslinje(
             helseoppholdvurderinger,
-            helseoppholdPerioder
+            helseoppholdPerioder,
+            helseopphold
         )
 
         var perioderSomTrengerVurdering =
@@ -90,7 +91,7 @@ class InstitusjonsoppholdUtlederServiceNy(
             val oppholdSomKanGiReduksjon = harOppholdSomKreverAvklaring(oppholdUtenBarnetillegg)
 
             perioderSomTrengerVurdering = perioderSomTrengerVurdering.kombiner(oppholdSomKanGiReduksjon.mapValue {
-                InstitusjonsoppholdVurdering(helse = HelseOpphold(vurdering = OppholdVurdering.UAVKLART))
+                InstitusjonsoppholdVurdering(helse = HelseOpphold(oppholdId = null, vurdering = OppholdVurdering.UAVKLART))
             }, sammenslåer()).kombiner(helsevurderingerTidslinje, helsevurderingSammenslåer()).komprimer()
 
             // Hvis det er mindre en 3 måneder siden sist opphold og bruker er nå innlagt
@@ -153,6 +154,7 @@ class InstitusjonsoppholdUtlederServiceNy(
                         Segment(
                             it.periode, InstitusjonsoppholdVurdering(
                                 helse = HelseOpphold(
+                                    oppholdId = null,
                                     vurdering = OppholdVurdering.UAVKLART,
                                     umiddelbarReduksjon = true
                                 )
@@ -191,12 +193,13 @@ class InstitusjonsoppholdUtlederServiceNy(
 
     private fun byggHelsevurderingTidslinje(
         helsevurderinger: List<HelseinstitusjonVurdering>,
-        oppholdPerioder: List<Periode>
+        oppholdPerioder: List<Periode>,
     ): Tidslinje<HelseOpphold> {
         // Første lag tidslinje fra saksbehandlers vurderinger
         val vurderingTidslinje = Tidslinje(helsevurderinger.sortedBy { it.periode }.map {
             Segment(
                 it.periode, HelseOpphold(
+                    oppholdId = "helseopphold.",
                     if (it.faarFriKostOgLosji && it.harFasteUtgifter == false && it.forsoergerEktefelle == false) {
                         OppholdVurdering.AVSLÅTT
                     } else {
@@ -253,6 +256,7 @@ class InstitusjonsoppholdUtlederServiceNy(
                     Segment(
                         gapPeriode,
                         HelseOpphold(
+                            oppholdId = null,
                             vurdering = OppholdVurdering.GODKJENT, // Automatisk godkjent
                             umiddelbarReduksjon = false
                         )
@@ -268,7 +272,7 @@ class InstitusjonsoppholdUtlederServiceNy(
                 Tidslinje(gapSegmenter),
                 JoinStyle.OUTER_JOIN { periode, vurdering, gap ->
                     // Prioriter eksisterende vurderinger over gaps
-                    val verdi = vurdering?.verdi ?: gap?.verdi ?: HelseOpphold(OppholdVurdering.UAVKLART)
+                    val verdi = vurdering?.verdi ?: gap?.verdi ?: HelseOpphold(oppholdId = null,OppholdVurdering.UAVKLART)
                     Segment(periode, verdi)
                 }
             )
@@ -320,6 +324,7 @@ class InstitusjonsoppholdUtlederServiceNy(
         }
 
         return HelseOpphold(
+            oppholdId = høyreopphold.oppholdId,
             vurdering = høyreopphold.vurdering.prioritertVerdi(venstreopphold.vurdering),
             umiddelbarReduksjon = høyreopphold.umiddelbarReduksjon || venstreopphold.umiddelbarReduksjon
         )

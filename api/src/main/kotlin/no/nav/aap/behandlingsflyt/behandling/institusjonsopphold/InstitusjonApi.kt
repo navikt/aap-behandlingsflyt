@@ -233,12 +233,43 @@ fun NormalOpenAPIRoute.institusjonApi(
                     val vedtatteVurderingerDto =
                         mapVurderingerToDto(vedtatteVurderingerForOpphold, oppholdInfo, ansattInfoService)
 
-                    val vurderingerDto = if (nyeVurderingerForOpphold.isEmpty()) {
-                        helseoppholdPerioder.segmenter()
-                            .mapNotNull { segment ->
-                                val verdi = segment.verdi
-                                if (verdi != null && verdi.vurdering == OppholdVurdering.UAVKLART) {
-                                    oppholdInfo.begrensetTil(segment.periode).segmenter().map { oppholdSegment ->
+                    val vurderingerDto =
+                        if (nyeVurderingerForOpphold.isEmpty()) {
+                            helseoppholdPerioder.segmenter()
+                                .mapNotNull { segment ->
+
+                                    val verdi = segment.verdi
+                                    if (verdi != null && verdi.vurdering == OppholdVurdering.UAVKLART) {
+
+                                        oppholdInfo
+                                            .filter {
+                                                lagOppholdId(it.verdi.navn, it.fom()) == verdi.oppholdId
+                                            }
+                                            .begrensetTil(segment.periode)
+                                            .segmenter()
+                                            .map { oppholdSegment ->
+                                                HelseoppholdDto(
+                                                    periode = oppholdSegment.periode,
+                                                    oppholdId = lagOppholdId(
+                                                        oppholdSegment.verdi.navn,
+                                                        oppholdSegment.periode.fom
+                                                    ),
+                                                    vurderinger = emptyList(),
+                                                    status = OppholdVurderingDto.UAVKLART
+                                                )
+                                            }
+
+                                    } else null
+                                }
+                                .flatten()
+                        } else {
+                            val uavklarteDto = helseoppholdPerioder.segmenter()
+                                .filter { it.verdi != null && it.verdi?.vurdering == OppholdVurdering.UAVKLART }
+                                .flatMap { segment ->
+                                    oppholdInfo.filter {
+                                        lagOppholdId(it.verdi.navn, it.fom()) == segment.verdi?.oppholdId
+                                    }
+                                        .begrensetTil(segment.periode).segmenter().map { oppholdSegment ->
                                         HelseoppholdDto(
                                             periode = oppholdSegment.periode,
                                             oppholdId = lagOppholdId(
@@ -249,27 +280,10 @@ fun NormalOpenAPIRoute.institusjonApi(
                                             status = OppholdVurderingDto.UAVKLART
                                         )
                                     }
-                                } else null
-                            }.flatten()
-                    } else {
-                        val uavklarteDto = helseoppholdPerioder.segmenter()
-                            .filter { it.verdi != null && it.verdi?.vurdering == OppholdVurdering.UAVKLART }
-                            .flatMap { segment ->
-                                oppholdInfo.begrensetTil(segment.periode).segmenter().map { oppholdSegment ->
-                                    HelseoppholdDto(
-                                        periode = oppholdSegment.periode,
-                                        oppholdId = lagOppholdId(
-                                            oppholdSegment.verdi.navn,
-                                            oppholdSegment.periode.fom
-                                        ),
-                                        vurderinger = emptyList(),
-                                        status = OppholdVurderingDto.UAVKLART
-                                    )
                                 }
-                            }
 
-                        mapVurderingerToDto(nyeVurderingerForOpphold, oppholdInfo, ansattInfoService) + uavklarteDto
-                    }
+                            mapVurderingerToDto(nyeVurderingerForOpphold, oppholdInfo, ansattInfoService) + uavklarteDto
+                        }
 
                     val ansattNavnOgEnhet =
                         grunnlag?.helseoppholdvurderinger?.let {
