@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.rettighetsperiode.VurderRettighetsperiodeRepository
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
@@ -24,7 +23,6 @@ import org.slf4j.LoggerFactory
 class RettighetsperiodeSteg(
     private val vilkårsresultatRepository: VilkårsresultatRepository,
     private val sakService: SakService,
-    private val avklaringsbehovRepository: AvklaringsbehovRepository,
     private val avklaringsbehovService: AvklaringsbehovService,
     private val tidligereVurderinger: TidligereVurderinger,
     private val rettighetsperiodeRepository: VurderRettighetsperiodeRepository,
@@ -35,7 +33,6 @@ class RettighetsperiodeSteg(
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         logger.info("Utfører rettighetsperiodesteg for behandling=${kontekst.behandlingId}")
 
-        val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
         val rettighetsperiodeVurdering = rettighetsperiodeRepository.hentVurdering(kontekst.behandlingId)
 
         avklaringsbehovService.oppdaterAvklaringsbehov(
@@ -134,7 +131,6 @@ class RettighetsperiodeSteg(
             return RettighetsperiodeSteg(
                 vilkårsresultatRepository = repositoryProvider.provide(),
                 sakService = SakService(repositoryProvider),
-                avklaringsbehovRepository = repositoryProvider.provide(),
                 tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
                 rettighetsperiodeRepository = repositoryProvider.provide(),
                 avklaringsbehovService = AvklaringsbehovService(repositoryProvider),

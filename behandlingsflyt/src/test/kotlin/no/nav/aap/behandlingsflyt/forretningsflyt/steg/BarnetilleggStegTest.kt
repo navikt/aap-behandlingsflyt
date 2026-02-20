@@ -68,7 +68,6 @@ class BarnetilleggStegTest {
             barnetilleggService = mockk(),
             barnetilleggRepository = mockk(),
             barnRepository = barnRepository,
-            avklaringsbehovRepository = mockk(),
             tidligereVurderinger = tidligereVurderinger,
             avklaringsbehovService = mockk()
         )
@@ -136,7 +135,6 @@ class BarnetilleggStegTest {
             barnetilleggService = mockk(),
             barnetilleggRepository = mockk(),
             barnRepository = barnRepository,
-            avklaringsbehovRepository = mockk(),
             tidligereVurderinger = tidligereVurderinger,
             avklaringsbehovService = mockk()
         )
@@ -157,7 +155,6 @@ class BarnetilleggStegTest {
             barnetilleggService = mockk(),
             barnetilleggRepository = mockk(),
             barnRepository = barnRepository,
-            avklaringsbehovRepository = mockk(),
             tidligereVurderinger = tidligereVurderinger,
             avklaringsbehovService = mockk()
         )

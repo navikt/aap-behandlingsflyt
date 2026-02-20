@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.barnetillegg.BarnetilleggService
 import no.nav.aap.behandlingsflyt.behandling.barnetillegg.RettTilBarnetillegg
@@ -28,7 +27,6 @@ class BarnetilleggSteg(
     private val barnetilleggService: BarnetilleggService,
     private val barnetilleggRepository: BarnetilleggRepository,
     private val barnRepository: BarnRepository,
-    private val avklaringsbehovRepository: AvklaringsbehovRepository,
     private val tidligereVurderinger: TidligereVurderinger,
     private val avklaringsbehovService: AvklaringsbehovService
 ) : BehandlingSteg {
@@ -36,7 +34,6 @@ class BarnetilleggSteg(
         barnetilleggService = BarnetilleggService(repositoryProvider, gatewayProvider),
         barnetilleggRepository = repositoryProvider.provide(),
         barnRepository = repositoryProvider.provide(),
-        avklaringsbehovRepository = repositoryProvider.provide(),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
         avklaringsbehovService = AvklaringsbehovService(repositoryProvider)
     )
@@ -44,7 +41,6 @@ class BarnetilleggSteg(
     private val log = LoggerFactory.getLogger(javaClass)
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
         val barnetilgangTidslinje = beregnOgOppdaterBarnetilleggTidslinje(kontekst)
 
         avklaringsbehovService.oppdaterAvklaringsbehov(
