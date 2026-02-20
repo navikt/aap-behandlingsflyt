@@ -115,12 +115,12 @@ class FlytKontekstMedPeriodeService(
             Vurderingsbehov.OVERGANG_ARBEID,
             Vurderingsbehov.OPPHOLDSKRAV,
             Vurderingsbehov.ETABLERING_EGEN_VIRKSOMHET,
-            Vurderingsbehov.FRITAK_MELDEPLIKT,
             Vurderingsbehov.UTENLANDSOPPHOLD_FOR_SOKNADSTIDSPUNKT ->
                 REVURDERING
 
             Vurderingsbehov.MOTTATT_MELDEKORT,
-            Vurderingsbehov.FASTSATT_PERIODE_PASSERT -> MELDEKORT
+            Vurderingsbehov.FASTSATT_PERIODE_PASSERT,
+            Vurderingsbehov.FRITAK_MELDEPLIKT -> MELDEKORT
 
             Vurderingsbehov.MOTATT_KLAGE,
             Vurderingsbehov.KLAGE_TRUKKET, Vurderingsbehov.MOTTATT_KABAL_HENDELSE,
