@@ -42,6 +42,7 @@ enum class Vurderingsbehov {
     UTENLANDSOPPHOLD_FOR_SOKNADSTIDSPUNKT, // Utenlandsopphold før søknadstidspunkt
     FASTSATT_PERIODE_PASSERT,
     FRITAK_MELDEPLIKT,
+    REVURDER_FRITAK_MELDEPLIKT, // Manuell revurdering av § 11-10 tredje ledd unntak fra meldeplikt
     VURDER_RETTIGHETSPERIODE,
     MOTTATT_KABAL_HENDELSE,
     OPPFØLGINGSOPPGAVE,
@@ -140,4 +141,5 @@ fun EksponertÅrsak.tilVurderingsbehov() =
         EksponertÅrsak.BARNETILLEGG_SATS_REGULERING -> Vurderingsbehov.BARNETILLEGG_SATS_REGULERING
         EksponertÅrsak.REVURDER_SYKESTIPEND -> Vurderingsbehov.REVURDER_SYKESTIPEND
         EksponertÅrsak.ETABLERING_EGEN_VIRKSOMHET -> Vurderingsbehov.ETABLERING_EGEN_VIRKSOMHET
+        EksponertÅrsak.REVURDER_FRITAK_MELDEPLIKT -> Vurderingsbehov.REVURDER_FRITAK_MELDEPLIKT
     }

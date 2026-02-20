@@ -98,6 +98,7 @@ public enum class Vurderingsbehov {
     SØKNAD_TRUKKET,
     REVURDERING_AVBRUTT,
     FRITAK_MELDEPLIKT,
+    REVURDER_FRITAK_MELDEPLIKT,
     KLAGE_TRUKKET,
     REVURDER_MANUELL_INNTEKT,   // Manuell inntekt
     MOTTATT_KABAL_HENDELSE, // Hendelser fra klage andreinstans

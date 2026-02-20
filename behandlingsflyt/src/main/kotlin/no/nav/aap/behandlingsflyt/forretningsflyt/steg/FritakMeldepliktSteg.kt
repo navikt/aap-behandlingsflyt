@@ -34,7 +34,7 @@ class FritakMeldepliktSteg(
         avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
             definisjon = Definisjon.FRITAK_MELDEPLIKT,
             tvingerAvklaringsbehov = setOf(
-                Vurderingsbehov.FRITAK_MELDEPLIKT
+                Vurderingsbehov.REVURDER_FRITAK_MELDEPLIKT
             ),
             nårVurderingErRelevant = { nårVurderingErRelevant(kontekst) },
             kontekst = kontekst,
@@ -45,7 +45,7 @@ class FritakMeldepliktSteg(
     }
 
     fun nårVurderingErRelevant(kontekst: FlytKontekstMedPerioder): Tidslinje<Boolean> {
-        if (Vurderingsbehov.FRITAK_MELDEPLIKT in kontekst.vurderingsbehovRelevanteForSteg) {
+        if (Vurderingsbehov.REVURDER_FRITAK_MELDEPLIKT in kontekst.vurderingsbehovRelevanteForSteg) {
             return Tidslinje(kontekst.rettighetsperiode, true)
         }
         return Tidslinje()
