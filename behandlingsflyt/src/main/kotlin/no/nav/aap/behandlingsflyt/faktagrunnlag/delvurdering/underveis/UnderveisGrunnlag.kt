@@ -29,22 +29,22 @@ data class UnderveisGrunnlag(
         return utledInnfriddePerioderForRettighet(rettighetsType).firstOrNull()?.periode?.fom
     }
 
-    fun utledMaksdatoForRettighet(type: RettighetsType): LocalDate? {
-        val gjenværendeKvote = utledKvoterForRettighetstype(type).gjenværendeKvote
+    fun utledMaksdatoForRettighet(type: RettighetsType, gjeldendeDato: LocalDate): LocalDate? {
+        val gjenværendeKvote = utledKvoterForRettighetstype(type, gjeldendeDato).gjenværendeKvote
 
         if (gjenværendeKvote == 0) {
             return utledInnfriddePerioderForRettighet(type).last().periode.tom
         }
-        return Hverdager(gjenværendeKvote).fraOgMed(LocalDate.now())
+        return Hverdager(gjenværendeKvote).fraOgMed(gjeldendeDato)
     }
 
-    fun utledKvoterForRettighetstype(rettighetsType: RettighetsType): RettighetKvoter {
+    fun utledKvoterForRettighetstype(rettighetsType: RettighetsType, gjeldendeDato: LocalDate): RettighetKvoter {
         val totalKvote = KvoteService().beregn().hentKvoteForRettighetstype(rettighetsType)?.asInt
         val perioderForRettighet = utledInnfriddePerioderForRettighet(rettighetsType)
         val periodeKvoter = perioderForRettighet.map {
             val bruktKvote = perioderForRettighet
                 .somTidslinje { it.periode }.begrensetTil(Periode(Tid.MIN, it.periode.tom)).segmenter()
-                .sumOf { it.periode.antallHverdager().asInt}
+                .sumOf { it.periode.antallHverdager().asInt }
 
             PeriodeKvote(
                 periode = it.periode,
@@ -52,12 +52,21 @@ data class UnderveisGrunnlag(
                 gjenværendeKvote = totalKvote?.minus(bruktKvote)
             )
         }
-        val senestePeriodeKvote = periodeKvoter.lastOrNull { it.periode.fom <= LocalDate.now() }
+        val senesteInnfriddePeriode = periodeKvoter.lastOrNull { it.periode.fom <= gjeldendeDato }
+        val periodeSluttdato = senesteInnfriddePeriode?.periode?.tom
+        val ubruktKvoteIPeriode =
+            if (periodeSluttdato != null && periodeSluttdato.isAfter(gjeldendeDato)) {
+                Periode(
+                    gjeldendeDato.plusDays(1),
+                    periodeSluttdato
+                ).antallHverdager().asInt
+            } else 0
+        val gjenværendeKvote = senesteInnfriddePeriode?.gjenværendeKvote?.plus(ubruktKvoteIPeriode) ?: totalKvote ?: 0
 
         return RettighetKvoter(
             totalKvote = totalKvote,
-            bruktKvote = senestePeriodeKvote?.bruktKvote ?: 0,
-            gjenværendeKvote = senestePeriodeKvote?.gjenværendeKvote ?: totalKvote ?: 0,
+            bruktKvote = totalKvote?.minus(gjenværendeKvote) ?: 0,
+            gjenværendeKvote = gjenværendeKvote,
             periodeKvoter = periodeKvoter
         )
     }

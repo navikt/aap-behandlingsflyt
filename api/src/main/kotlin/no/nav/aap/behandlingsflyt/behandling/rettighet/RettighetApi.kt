@@ -66,14 +66,15 @@ fun NormalOpenAPIRoute.rettighetApi(
                 val rettighetstyper = underveisgrunnlag.perioder.mapNotNull { it.rettighetsType }.distinct()
 
                 val rettighetDtoListe = rettighetstyper.map { rettighet ->
-                    val rettighetKvoter = underveisgrunnlag.utledKvoterForRettighetstype(rettighet)
+                    val dagensDato = LocalDate.now()
+                    val rettighetKvoter = underveisgrunnlag.utledKvoterForRettighetstype(rettighet, dagensDato)
                     val startdato = underveisgrunnlag.utledStartdatoForRettighet(rettighet)
                     val gjenværendeKvote = rettighetKvoter.gjenværendeKvote
 
                     val maksDato =
                         when (rettighet) {
                             RettighetsType.BISTANDSBEHOV, RettighetsType.SYKEPENGEERSTATNING
-                                -> underveisgrunnlag.utledMaksdatoForRettighet(rettighet)
+                                -> underveisgrunnlag.utledMaksdatoForRettighet(rettighet, dagensDato)
 
                             RettighetsType.STUDENT, RettighetsType.ARBEIDSSØKER, RettighetsType.VURDERES_FOR_UFØRETRYGD
                                 -> RettighetsperiodeService().utledMaksdatoForRettighet(rettighet, startdato)

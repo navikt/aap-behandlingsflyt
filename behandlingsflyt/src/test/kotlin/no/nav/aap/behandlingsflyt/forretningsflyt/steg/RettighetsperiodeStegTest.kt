@@ -71,7 +71,6 @@ class RettighetsperiodeStegTest {
         steg = RettighetsperiodeSteg(
             vilkårsresultatRepository,
             sakService,
-            avklaringsbehovRepository,
             AvklaringsbehovService(
                 avbrytRevurderingService,
                 avklaringsbehovRepository,

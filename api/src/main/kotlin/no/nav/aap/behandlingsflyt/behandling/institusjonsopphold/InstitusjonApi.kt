@@ -22,7 +22,6 @@ import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
-import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.komponenter.type.Periode
@@ -30,7 +29,6 @@ import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.getGrunnlag
 import java.time.LocalDate
 import javax.sql.DataSource
-import kotlin.collections.fold
 
 fun NormalOpenAPIRoute.institusjonApi(
     dataSource: DataSource,
@@ -137,8 +135,7 @@ fun NormalOpenAPIRoute.institusjonApi(
 
                     // Hent ut rå fakta fra grunnlaget
                     val grunnlag = institusjonsoppholdRepository.hentHvisEksisterer(behandling.id)
-                    val oppholdInfo =
-                        byggTidslinjeAvType(grunnlag, Institusjonstype.HS)
+                    val oppholdInfo = byggTidslinjeForInstitusjonsopphold(grunnlag, Institusjonstype.HS)
 
                     val perioderMedHelseopphold = behov.perioderTilVurdering.mapValue { it.helse }.komprimer()
                     val vurderinger = grunnlag?.helseoppholdvurderinger?.tilTidslinje().orEmpty()
@@ -355,11 +352,19 @@ fun byggTidslinjeForInstitusjonsopphold(
 
     if (segments.size < 2) return Tidslinje(segments)
 
-    return segments
-        .map { Tidslinje(it.periode, it.verdi) }
-        .fold(Tidslinje<Institusjon>()) { eksisterende, tidslinje ->
-            eksisterende.kombiner(tidslinje, StandardSammenslåere.prioriterHøyreSideCrossJoin())
-        }.komprimer()
+    val håndterOverlapp = segments.zipWithNext { current, next ->
+        require(current.periode.tom <= next.periode.fom) {
+            "For stort overlapp mellom periodene ${current.periode} og ${next.periode}"
+        }
+
+        if (current.periode.tom == next.periode.fom) {
+            current.copy(periode = Periode(current.periode.fom, current.periode.tom.minusDays(1)))
+        } else {
+            current
+        }
+    } + segments.last()
+
+    return Tidslinje(håndterOverlapp)
 }
 
 private fun byggTidslinjeAvType(

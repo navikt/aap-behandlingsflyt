@@ -3,7 +3,7 @@ package no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.TilbakekrevingHendelseId
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InstitusjonsOppholdHendelseId
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.verdityper.dokument.Kanal
 import java.time.LocalDate
@@ -32,7 +32,7 @@ public data class InstitusjonsOppholdHendelseKafkaMelding(
     public fun tilInnsending(meldingKey: String, saksnummer: Saksnummer): Innsending {
         return Innsending(
             saksnummer = saksnummer,
-            referanse = InnsendingReferanse(TilbakekrevingHendelseId.ny(meldingKey)),
+            referanse = InnsendingReferanse(InstitusjonsOppholdHendelseId.ny()),
             type = InnsendingType.INSTITUSJONSOPPHOLD,
             kanal = Kanal.DIGITAL,
             mottattTidspunkt = LocalDateTime.now(),

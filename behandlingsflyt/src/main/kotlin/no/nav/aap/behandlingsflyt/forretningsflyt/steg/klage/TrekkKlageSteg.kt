@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg.klage
 
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.trekkklage.TrekkKlageRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
@@ -17,7 +16,6 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
 
 class TrekkKlageSteg private constructor(
-    private val avklaringsbehovRepository: AvklaringsbehovRepository,
     private val trekkKlageRepository: TrekkKlageRepository,
     private val repositoryProvider: RepositoryProvider,
 ): BehandlingSteg {
@@ -25,7 +23,6 @@ class TrekkKlageSteg private constructor(
     private val avklaringsbehovService = AvklaringsbehovService(repositoryProvider)
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        val avklaringsbehov = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
         val trekkKlageGrunnlag = trekkKlageRepository.hentTrekkKlageGrunnlag(kontekst.behandlingId)
 
         avklaringsbehovService.oppdaterAvklaringsbehov(
@@ -55,7 +52,6 @@ class TrekkKlageSteg private constructor(
     companion object : FlytSteg {
         override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): BehandlingSteg {
             return TrekkKlageSteg (
-                avklaringsbehovRepository = repositoryProvider.provide(),
                 trekkKlageRepository = repositoryProvider.provide(),
                 repositoryProvider = repositoryProvider
             )

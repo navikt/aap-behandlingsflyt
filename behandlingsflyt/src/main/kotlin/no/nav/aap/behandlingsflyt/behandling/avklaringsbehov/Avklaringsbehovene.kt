@@ -30,14 +30,6 @@ class Avklaringsbehovene(
     private val avklaringsbehovene: List<Avklaringsbehov>
         get() = repository.hent(behandlingId)
 
-    fun ingenEndring(avklaringsbehov: Avklaringsbehov, bruker: String) {
-        løsAvklaringsbehov(
-            avklaringsbehov.definisjon,
-            "Ingen endring fra forrige vurdering",
-            bruker
-        )
-    }
-
     fun løsAvklaringsbehov(
         definisjon: Definisjon,
         begrunnelse: String,
@@ -113,9 +105,6 @@ class Avklaringsbehovene(
                 if (avklaringsbehov.erVentepunkt() || avklaringsbehov.erBrevVentebehov() || avklaringsbehov.erAutomatisk()) {
                     // TODO: Vurdere om funnet steg bør ligge på endringen...
                     repository.endreVentepunkt(avklaringsbehov.id, avklaringsbehov.historikk.last(), funnetISteg)
-                } else if (avklaringsbehov.definisjon == Definisjon.SKRIV_BREV) {
-                    // Midlertidig fiks så lenge vi bruker Definisjon.SKRIV_BREV
-                    repository.endreSkrivBrev(avklaringsbehov.id, avklaringsbehov.historikk.last(), funnetISteg)
                 } else {
                     repository.endre(avklaringsbehov.id, avklaringsbehov.historikk.last())
                 }
@@ -203,7 +192,7 @@ class Avklaringsbehovene(
         repository.endre(avklaringsbehov.id, avklaringsbehov.historikk.last())
     }
 
-    fun oppdaterPerioder(
+    internal fun oppdaterPerioder(
         definisjon: Definisjon,
         perioderSomIkkeErTilstrekkeligVurdert: Set<Periode>?,
         perioderVedtaketBehøverVurdering: Set<Periode>?

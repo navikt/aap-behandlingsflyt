@@ -5,7 +5,6 @@ import no.nav.aap.komponenter.verdityper.Bruker
 
 class LøsAvklaringsbehovHendelse(
     private val løsning: AvklaringsbehovLøsning,
-    val ingenEndringIGruppe: Boolean = false,
     val behandlingVersjon: Long,
     val bruker: Bruker
 ) {
