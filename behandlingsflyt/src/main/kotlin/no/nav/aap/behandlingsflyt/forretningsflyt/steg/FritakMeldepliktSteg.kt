@@ -52,16 +52,7 @@ class FritakMeldepliktSteg(
     }
 
     fun nårVurderingErGyldig(kontekst: FlytKontekstMedPerioder): Tidslinje<Boolean> {
-        val grunnlag = meldepliktRepository.hentHvisEksisterer(kontekst.behandlingId)
-
-        if(grunnlag == null || grunnlag.vurderinger.isEmpty()) {
-            return Tidslinje(kontekst.rettighetsperiode, true)
-        }
-//        val evaluering = grunnlag.vurderinger.let {
-
-//        }
         return Tidslinje(kontekst.rettighetsperiode, true)
-
     }
 
     companion object : FlytSteg {
