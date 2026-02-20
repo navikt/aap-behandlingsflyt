@@ -340,7 +340,7 @@ class BeregningTest {
         fun parseInntektPerÅr(map: Map<String, Double>): Set<InntektPerÅr> {
             return map.entries.map { (år, gVerdi) ->
                 val g =
-                    Grunnbeløp.tilTidslinjeGjennomsnitt().segment(Year.of(år.toInt()).atDay(250))?.verdi!!.multiplisert(
+                    Grunnbeløp.gjennomsnittGrunnbeløp(Year.of(år.toInt()).atDay(250)).multiplisert(
                         GUnit(gVerdi.toString())
                     )
                 InntektPerÅr(år.toInt(), g)
