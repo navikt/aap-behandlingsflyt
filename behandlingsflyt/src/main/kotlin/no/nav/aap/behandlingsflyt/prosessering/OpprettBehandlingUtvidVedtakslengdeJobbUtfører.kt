@@ -26,7 +26,7 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtfører(
     private val log = LoggerFactory.getLogger(javaClass)
 
     override fun utfør(input: JobbInput) {
-        val datoForUtvidelse = now(clock).plusDays(28)
+        val datoForUtvidelse = now(clock).plusDays(VedtakslengdeService.ANTALL_DAGER_FØR_UTVIDELSE)
         val sakId = SakId(input.sakId())
 
         val sisteGjeldendeBehandling = sakOgBehandlingService.finnBehandlingMedSisteFattedeVedtak(sakId)

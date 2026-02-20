@@ -37,7 +37,7 @@ class OpprettJobbUtvidVedtakslengdeJobbUtfører(
 
     override fun utfør(input: JobbInput) {
         // Forlenger saker når det er 28 dager igjen til sluttdato (Tilsvarende Arena)
-        val datoForUtvidelse = now(clock).plusDays(28)
+        val datoForUtvidelse = now(clock).plusDays(VedtakslengdeService.ANTALL_DAGER_FØR_UTVIDELSE)
         val saker = hentKandidaterForUtvidelseAvVedtakslengde(datoForUtvidelse)
 
         log.info("Fant ${saker.size} kandidater for utvidelse av vedtakslengde per $datoForUtvidelse")
