@@ -95,7 +95,7 @@ class Driftfunksjoner(
                 )
             )
 
-            flytOrkestrator.prosesserBehandling(flytOrkestrator.opprettKontekst(behandling))
+            flytOrkestrator.prosesserBehandling(behandling.flytKontekst())
         }
     }
 
@@ -141,7 +141,7 @@ class Driftfunksjoner(
                 )
             )
 
-            flytOrkestratorUtenSavepoints.prosesserBehandling(flytOrkestratorUtenSavepoints.opprettKontekst(behandling))
+            flytOrkestratorUtenSavepoints.prosesserBehandling(behandling.flytKontekst())
 
             val nyttAktivtSteg = behandlingRepository.hent(behandling.id).aktivtSteg()
             val avklaringsbehovEtterEndring = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id).åpne()
