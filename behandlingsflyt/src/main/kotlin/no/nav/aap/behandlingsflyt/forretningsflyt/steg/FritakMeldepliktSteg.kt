@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
@@ -15,10 +16,12 @@ import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.lookup.repository.RepositoryProvider
 
 class FritakMeldepliktSteg(
+    private val meldepliktRepository: MeldepliktRepository,
     private val avklaringsbehovService: AvklaringsbehovService,
     private val unleashGateway: UnleashGateway
 ) : BehandlingSteg {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
+        meldepliktRepository = repositoryProvider.provide(),
         avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
         unleashGateway = gatewayProvider.provide()
     )
@@ -49,7 +52,16 @@ class FritakMeldepliktSteg(
     }
 
     fun nårVurderingErGyldig(kontekst: FlytKontekstMedPerioder): Tidslinje<Boolean> {
-        return Tidslinje(kontekst.rettighetsperiode, false)
+        val grunnlag = meldepliktRepository.hentHvisEksisterer(kontekst.behandlingId)
+
+        if(grunnlag == null || grunnlag.vurderinger.isEmpty()) {
+            return Tidslinje(kontekst.rettighetsperiode, true)
+        }
+//        val evaluering = grunnlag.vurderinger.let {
+
+//        }
+        return Tidslinje(kontekst.rettighetsperiode, true)
+
     }
 
     companion object : FlytSteg {
