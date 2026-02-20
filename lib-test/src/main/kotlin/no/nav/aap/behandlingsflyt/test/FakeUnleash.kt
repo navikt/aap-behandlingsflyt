@@ -49,6 +49,7 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.PeriodiseringHelseinstitusjonOpphold to true,
         BehandlingsflytFeature.HentingAvInstitusjonsOpphold to true,
         BehandlingsflytFeature.VisIkkeRelevantPeriode to true,
+        BehandlingsflytFeature.RevurderFritakMeldeplikt to true,
         BehandlingsflytFeature.NyTidligereVurderinger to true,
         )
 )

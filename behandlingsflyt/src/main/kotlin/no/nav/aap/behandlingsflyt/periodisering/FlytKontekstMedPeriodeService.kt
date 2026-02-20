@@ -106,6 +106,7 @@ class FlytKontekstMedPeriodeService(
             Vurderingsbehov.SØKNAD_TRUKKET,
             Vurderingsbehov.DØDSFALL_BRUKER,
             Vurderingsbehov.DØDSFALL_BARN,
+            Vurderingsbehov.REVURDER_FRITAK_MELDEPLIKT,
             Vurderingsbehov.REVURDERING_AVBRUTT ->
                 REVURDERING
 

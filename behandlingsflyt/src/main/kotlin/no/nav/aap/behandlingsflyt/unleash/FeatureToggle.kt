@@ -23,6 +23,7 @@ enum class BehandlingsflytFeature : FeatureToggle {
     PeriodiseringHelseinstitusjonOpphold,
     HentingAvInstitusjonsOpphold,
     VisIkkeRelevantPeriode,
+    RevurderFritakMeldeplikt,
     NyTidligereVurderinger,
     ;
 
