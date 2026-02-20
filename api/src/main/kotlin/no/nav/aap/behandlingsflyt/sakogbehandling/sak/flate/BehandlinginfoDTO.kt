@@ -11,6 +11,7 @@ data class BehandlinginfoDTO(
     val referanse: UUID,
     val typeBehandling: TypeBehandling,
     val status: Status,
+    @Deprecated("Bruk vurderingsbehovKontrakt.")
     val vurderingsbehov: List<Vurderingsbehov>,
     val vurderingsbehovKontrakt: List<no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov>,
     val årsakTilOpprettelse: ÅrsakTilOpprettelse?,
