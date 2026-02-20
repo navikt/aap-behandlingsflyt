@@ -10,6 +10,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Tidslinje
@@ -28,9 +29,10 @@ class FritakMeldepliktSteg(
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         // Todo: unleash toggle isDisabled --> return Fullført
-//        if (unleashGateway.isDisabled()) {
-//            return Fullført
-//        }
+        if (unleashGateway.isDisabled(BehandlingsflytFeature.RevurderFritakMeldeplikt)) {
+            return Fullført
+        }
+
         avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
             definisjon = Definisjon.FRITAK_MELDEPLIKT,
             tvingerAvklaringsbehov = setOf(
