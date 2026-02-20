@@ -1,9 +1,6 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.behandlingstyper
 
-import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingInformasjonskrav
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.LovvalgInformasjonskrav
-import no.nav.aap.behandlingsflyt.behandling.rettighetsperiode.VurderRettighetsperiodeInformasjonskrav
-import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadInformasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.DagpengerInformasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjonInformasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseVurderingInformasjonskrav
@@ -93,16 +90,13 @@ object Revurdering : BehandlingType {
             .medSteg(
                 steg = AvbrytRevurderingSteg,
                 vurderingsbehovRelevanteForSteg = listOf(Vurderingsbehov.REVURDERING_AVBRUTT),
-                informasjonskrav = listOf(AvbrytRevurderingInformasjonskrav)
             )
             .medSteg(
                 steg = SøknadSteg,
                 vurderingsbehovRelevanteForSteg = listOf(Vurderingsbehov.SØKNAD_TRUKKET),
-                informasjonskrav = listOf(TrukketSøknadInformasjonskrav),
             )
             .medSteg(
                 steg = RettighetsperiodeSteg,
-                informasjonskrav = listOf(VurderRettighetsperiodeInformasjonskrav),
                 vurderingsbehovRelevanteForSteg = listOf(
                     Vurderingsbehov.VURDER_RETTIGHETSPERIODE,
                     Vurderingsbehov.HELHETLIG_VURDERING,
