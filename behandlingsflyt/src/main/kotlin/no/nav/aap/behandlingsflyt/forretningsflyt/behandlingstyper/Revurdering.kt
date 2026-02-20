@@ -186,6 +186,7 @@ object Revurdering : BehandlingType {
                     Vurderingsbehov.HELHETLIG_VURDERING,
                     Vurderingsbehov.REVURDER_LOVVALG,
                     Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP,
+                    Vurderingsbehov.FRITAK_MELDEPLIKT,
                 )
             )
             .medSteg(
