@@ -2,7 +2,6 @@ package no.nav.aap.behandlingsflyt.flyt
 
 import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovHendelseHåndterer
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovOrkestrator
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.vedtak.TotrinnsVurdering
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarBarnetilleggLøsning
@@ -331,8 +330,8 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
         bruker: Bruker = Bruker("SAKSBEHANDLER"),
     ): Behandling {
         dataSource.transaction {
-            AvklaringsbehovHendelseHåndterer(postgresRepositoryRegistry.provider(it), gatewayProvider)
-                .håndtere(behandling.id, avklaringsBehovLøsning, bruker)
+            AvklaringsbehovOrkestrator(postgresRepositoryRegistry.provider(it), gatewayProvider)
+                .løsAvklaringsbehovOgFortsettProsessering(behandling.id, avklaringsBehovLøsning, bruker)
 
         }
         motor.kjørJobber()

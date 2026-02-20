@@ -56,7 +56,7 @@ fun NormalOpenAPIRoute.avklaringsbehovApi(
                     flytJobbRepository
                 ).validerTilstand(behandlingReferanse, behandlingVersjon)
 
-                AvklaringsbehovHendelseHåndterer(repositoryProvider, gatewayProvider).håndtere(
+                AvklaringsbehovOrkestrator(repositoryProvider, gatewayProvider).løsAvklaringsbehovOgFortsettProsessering(
                     behandlingId = lås.behandlingSkrivelås.id,
                     avklaringsbehovLøsning = avklaringsbehovLøsning,
                     bruker = bruker(),

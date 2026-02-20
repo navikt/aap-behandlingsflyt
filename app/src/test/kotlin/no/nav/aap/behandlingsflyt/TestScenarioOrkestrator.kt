@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovHendelseHåndterer
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovOrkestrator
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.vedtak.TotrinnsVurdering
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarBarnetilleggLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarBistandsbehovLøsning
@@ -427,8 +427,8 @@ class TestScenarioOrkestrator(
         bruker: Bruker = Bruker("SAKSBEHANDLER"),
     ): Behandling {
         datasource.transaction {
-            AvklaringsbehovHendelseHåndterer(postgresRepositoryRegistry.provider(it), gatewayProvider)
-                .håndtere(behandling.id, avklaringsBehovLøsning, bruker)
+            AvklaringsbehovOrkestrator(postgresRepositoryRegistry.provider(it), gatewayProvider)
+                .løsAvklaringsbehovOgFortsettProsessering(behandling.id, avklaringsBehovLøsning, bruker)
         }
         motor.kjørJobber()
         return hentBehandling(behandling.referanse, datasource)
