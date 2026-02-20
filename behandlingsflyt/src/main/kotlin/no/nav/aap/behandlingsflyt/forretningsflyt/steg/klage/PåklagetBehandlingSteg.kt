@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg.klage
 
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.trekkklage.TrekkKlageService
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
@@ -14,13 +13,10 @@ import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 
 class PåklagetBehandlingSteg private constructor(
-    private val avklaringsbehovRepository: AvklaringsbehovRepository,
     private val trekkKlageService: TrekkKlageService,
     private val avklaringsbehovService: AvklaringsbehovService,
 ) : BehandlingSteg {
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        val avklaringsbehov = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
-
         avklaringsbehovService.oppdaterAvklaringsbehov(
             definisjon = Definisjon.FASTSETT_PÅKLAGET_BEHANDLING,
             vedtakBehøverVurdering = { !trekkKlageService.klageErTrukket(kontekst.behandlingId)},
@@ -34,7 +30,6 @@ class PåklagetBehandlingSteg private constructor(
     companion object : FlytSteg {
         override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): BehandlingSteg {
             return PåklagetBehandlingSteg(
-                avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>(),
                 trekkKlageService = TrekkKlageService(repositoryProvider),
                 avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
             )

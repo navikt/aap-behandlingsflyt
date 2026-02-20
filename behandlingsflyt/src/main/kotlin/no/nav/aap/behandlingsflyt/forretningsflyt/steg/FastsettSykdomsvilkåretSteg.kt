@@ -36,7 +36,7 @@ class FastsettSykdomsvilkåretSteg private constructor(
         sykdomRepository = repositoryProvider.provide(),
         bistandRepository = repositoryProvider.provide(),
         sykepengerErstatningRepository = repositoryProvider.provide(),
-        tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
+        tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
         vilkårService = VilkårService(repositoryProvider),
         unleashGateway = gatewayProvider.provide(),
     )

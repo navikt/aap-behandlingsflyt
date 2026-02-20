@@ -22,7 +22,6 @@ import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.IdentGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersoninfoGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
@@ -55,7 +54,6 @@ fun NormalOpenAPIRoute.saksApi(
     gatewayProvider: GatewayProvider,
 ) {
     val tilgangGateway = gatewayProvider.provide<TilgangGateway>()
-    val identGateway = gatewayProvider.provide(IdentGateway::class)
     val personinfoGateway = gatewayProvider.provide(PersoninfoGateway::class)
     val ansattInfoService = AnsattInfoService(gatewayProvider)
 
@@ -131,7 +129,6 @@ fun NormalOpenAPIRoute.saksApi(
             ) { _, dto ->
                 val behandlinger: SakOgBehandlingDTO? = dataSource.transaction(readOnly = true) { connection ->
                     val repositoryProvider = repositoryRegistry.provider(connection)
-                    val sakOgBehandlingService = SakOgBehandlingService(repositoryProvider, gatewayProvider)
                     val ident = Ident(dto.ident)
                     val person = repositoryProvider.provide<PersonRepository>().finn(ident)
 
@@ -150,13 +147,8 @@ fun NormalOpenAPIRoute.saksApi(
                             log.info("Fant ingen aktive saker for person. Rettighetsperioder: ${sakerForPerson.map { it.rettighetsperiode }}")
                             null
                         } else {
-                            val behandling = sakOgBehandlingService.finnSisteYtelsesbehandlingFor(sak.id)
-
                             SakOgBehandlingDTO(
-                                personIdent = sak.person.aktivIdent().toString(),
                                 saksnummer = sak.saksnummer.toString(),
-                                status = sak.status().toString(),
-                                sisteBehandlingStatus = behandling?.status().toString()
                             )
                         }
                     }

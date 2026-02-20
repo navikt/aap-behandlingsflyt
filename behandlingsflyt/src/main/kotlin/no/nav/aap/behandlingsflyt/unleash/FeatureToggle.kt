@@ -17,7 +17,6 @@ enum class BehandlingsflytFeature : FeatureToggle {
     InstitusjonsoppholdJobb,
     TrekkSoeknadOpprettetFraLegeerklaering,
     UbehandledeMeldekortJobb,
-    PapirMeldekortFraBehandingsflyt,
     VirksomhetsEtablering,
     KvalitetssikringVed2213,
     tilbakekrevingsOppgaverTilOppgave,
@@ -25,6 +24,7 @@ enum class BehandlingsflytFeature : FeatureToggle {
     HentingAvInstitusjonsOpphold,
     VisIkkeRelevantPeriode,
     RevurderFritakMeldeplikt,
+    NyTidligereVurderinger,
     ;
 
     override fun key(): String = name

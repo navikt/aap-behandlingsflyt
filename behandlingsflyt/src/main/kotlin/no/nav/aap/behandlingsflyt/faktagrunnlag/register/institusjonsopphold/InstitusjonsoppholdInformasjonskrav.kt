@@ -132,7 +132,7 @@ class InstitusjonsoppholdInformasjonskrav private constructor(
                 SakService(repositoryProvider),
                 repositoryProvider.provide(),
                 gatewayProvider.provide(),
-                TidligereVurderingerImpl(repositoryProvider),
+                TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
                 gatewayProvider.provide<UnleashGateway>()
             )
         }

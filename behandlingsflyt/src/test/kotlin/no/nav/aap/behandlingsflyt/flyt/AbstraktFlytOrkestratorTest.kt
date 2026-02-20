@@ -2,9 +2,7 @@ package no.nav.aap.behandlingsflyt.flyt
 
 import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovHendelseHåndterer
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovOrkestrator
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.LøsAvklaringsbehovHendelse
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.vedtak.TotrinnsVurdering
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarBarnetilleggLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarBistandsbehovLøsning
@@ -330,22 +328,10 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
         behandling: Behandling,
         avklaringsBehovLøsning: AvklaringsbehovLøsning,
         bruker: Bruker = Bruker("SAKSBEHANDLER"),
-        ingenEndringIGruppe: Boolean = false
     ): Behandling {
         dataSource.transaction {
-            AvklaringsbehovHendelseHåndterer(
-                AvklaringsbehovOrkestrator(postgresRepositoryRegistry.provider(it), gatewayProvider),
-                AvklaringsbehovRepositoryImpl(it),
-                BehandlingRepositoryImpl(it),
-                MellomlagretVurderingRepositoryImpl(it),
-            ).håndtere(
-                behandling.id, LøsAvklaringsbehovHendelse(
-                    løsning = avklaringsBehovLøsning,
-                    behandlingVersjon = behandling.versjon,
-                    bruker = bruker,
-                    ingenEndringIGruppe = ingenEndringIGruppe
-                )
-            )
+            AvklaringsbehovOrkestrator(postgresRepositoryRegistry.provider(it), gatewayProvider)
+                .løsAvklaringsbehovOgFortsettProsessering(behandling.id, avklaringsBehovLøsning, bruker)
 
         }
         motor.kjørJobber()
@@ -356,13 +342,11 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
     protected fun Behandling.løsAvklaringsBehov(
         avklaringsBehovLøsning: AvklaringsbehovLøsning,
         bruker: Bruker = Bruker("SAKSBEHANDLER"),
-        ingenEndringIGruppe: Boolean = false
     ): Behandling {
         return løsAvklaringsBehov(
             this,
             avklaringsBehovLøsning = avklaringsBehovLøsning,
             bruker = bruker,
-            ingenEndringIGruppe = ingenEndringIGruppe
         )
     }
 

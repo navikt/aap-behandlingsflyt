@@ -62,7 +62,7 @@ class BeregnTilkjentYtelseSteg private constructor(
         samordningRepository = repositoryProvider.provide(),
         samordningUføreRepository = repositoryProvider.provide(),
         samordningArbeidsgiverRepository = repositoryProvider.provide(),
-        tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
+        tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
         reduksjon11_9Repository = repositoryProvider.provide(),
         aktivitetsplikt11_9repository = repositoryProvider.provide(),
         unleashGateway = gatewayProvider.provide(),

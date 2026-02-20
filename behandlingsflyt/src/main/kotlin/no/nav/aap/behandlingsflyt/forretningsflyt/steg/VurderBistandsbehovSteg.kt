@@ -33,12 +33,12 @@ class VurderBistandsbehovSteg(
     private val tidligereVurderinger: TidligereVurderinger,
     private val avklaringsbehovService: AvklaringsbehovService
 ) : BehandlingSteg, AvklaringsbehovMetadataUtleder {
-    constructor(repositoryProvider: RepositoryProvider) : this(
+    constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         bistandRepository = repositoryProvider.provide(),
         studentRepository = repositoryProvider.provide(),
         sykdomsRepository = repositoryProvider.provide(),
         vilkårsresultatRepository = repositoryProvider.provide(),
-        tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
+        tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
         avklaringsbehovService = AvklaringsbehovService(repositoryProvider)
     )
 
@@ -116,9 +116,9 @@ class VurderBistandsbehovSteg(
         { segmentPeriode, behandlingsutfall, sykdomsvurdering, studentvurdering ->
             when (behandlingsutfall) {
                 null -> false
-                TidligereVurderinger.Behandlingsutfall.IKKE_BEHANDLINGSGRUNNLAG -> false
-                TidligereVurderinger.Behandlingsutfall.UUNGÅELIG_AVSLAG -> false
-                TidligereVurderinger.Behandlingsutfall.UKJENT -> {
+                TidligereVurderinger.IkkeBehandlingsgrunnlag -> false
+                TidligereVurderinger.UunngåeligAvslag -> false
+                is TidligereVurderinger.PotensieltOppfylt -> {
                     studentvurdering?.erOppfylt() != true &&
                             (sykdomsvurdering?.erOppfyltOrdinær(
                                 kravdato = kontekst.rettighetsperiode.fom,
@@ -141,7 +141,7 @@ class VurderBistandsbehovSteg(
             repositoryProvider: RepositoryProvider,
             gatewayProvider: GatewayProvider
         ): VurderBistandsbehovSteg {
-            return VurderBistandsbehovSteg(repositoryProvider)
+            return VurderBistandsbehovSteg(repositoryProvider, gatewayProvider)
         }
 
         override fun type(): StegType {
