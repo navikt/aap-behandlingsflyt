@@ -360,7 +360,7 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
             bidiagnoser = hentBidiagnoser(vurderingId = sykdomsvurderingId),
             opprettet = row.getInstant("OPPRETTET_TID"),
             vurdertAv = Bruker(row.getString("VURDERT_AV_IDENT")),
-            vurdertIBehandling = row.getLong("VURDERT_I_BEHANDLING").let { BehandlingId(it) },
+            vurdertIBehandling = BehandlingId(row.getLong("VURDERT_I_BEHANDLING")),
             vurderingenGjelderTil = row.getLocalDateOrNull("VURDERINGEN_GJELDER_TIL")
         )
     }

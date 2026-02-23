@@ -33,13 +33,13 @@ data class AvklaringsbehovDTO(
                 ?.let { relevantTidslinje ->
                     val rettighetsperiode = Periode(kravdato, Tid.MAKS)
                     relevantTidslinje.mergePrioriterHøyre(
-                        relevantTidslinje.komplement(rettighetsperiode) { Unit }
-                            .map { periode, _ -> AvklaringsbehovPeriodeDTO(periode, RelevansDTO.IKKE_RELEVANT)}
+                        relevantTidslinje.komplement(rettighetsperiode) { }
+                            .map { periode, _ -> AvklaringsbehovPeriodeDTO(periode, RelevansDTO.IKKE_RELEVANT) }
                     )
                         .komprimer()
                         .segmenter()
                         .map { it.verdi }
-            }
+                }
     )
 }
 

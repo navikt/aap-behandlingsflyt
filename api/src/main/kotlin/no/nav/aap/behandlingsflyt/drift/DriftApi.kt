@@ -98,7 +98,7 @@ fun NormalOpenAPIRoute.driftApi(
 
                     driftsfunksjoner.avbrytVedtsaksbrevBestilling(bruker(), param, req.begrunnelse)
 
-                    log.info("Brevbestilling med referanse ${param} er avbrutt av ${bruker()}.")
+                    log.info("Brevbestilling med referanse $param er avbrutt av ${bruker()}.")
                 }
                 respondWithStatus(HttpStatusCode.NoContent)
             }
