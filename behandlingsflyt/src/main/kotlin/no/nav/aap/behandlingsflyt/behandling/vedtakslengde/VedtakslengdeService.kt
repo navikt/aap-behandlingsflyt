@@ -2,10 +2,10 @@ package no.nav.aap.behandlingsflyt.behandling.vedtakslengde
 
 import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.VirkningstidspunktUtleder
+import no.nav.aap.behandlingsflyt.behandling.underveis.RettighetstypeService
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companion.plussEtÅrMedHverdager
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Kvote
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.ÅrMedHverdager
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.rettighetstype.RettighetstypeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
@@ -27,14 +27,14 @@ class VedtakslengdeService(
     private val vedtakslengdeRepository: VedtakslengdeRepository,
     private val underveisRepository: UnderveisRepository,
     private val vilkårsresultatRepository: VilkårsresultatRepository,
-    private val rettighetstypeRepository: RettighetstypeRepository,
+    private val rettighetstypeService: RettighetstypeService,
     private val clock: Clock = Clock.systemDefaultZone()
 ) {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         vedtakslengdeRepository =  repositoryProvider.provide(),
         underveisRepository = repositoryProvider.provide(),
         vilkårsresultatRepository = repositoryProvider.provide(),
-        rettighetstypeRepository = repositoryProvider.provide(),
+        rettighetstypeService = RettighetstypeService(repositoryProvider, gatewayProvider)
     )
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -124,7 +124,7 @@ class VedtakslengdeService(
         rettighetsperiode: Periode,
         vedtattSluttdato: LocalDate?,
     ): LocalDate {
-        val rettighetstypeTidslinje = rettighetstypeRepository.hentHvisEksisterer(behandlingId)?.rettighetstypeTidslinje
+        val rettighetstypeTidslinje = rettighetstypeService.rettighetstypeTidslinjeBakoverkompatibel(behandlingId)
         val initiellSluttdato = utledInitiellSluttdato(behandlingId, rettighetsperiode).tom
 
         // Ved avslag sett inntil ett år slik det var gjort tidligere - gå opp hva som er riktig å gjøre her
@@ -243,9 +243,7 @@ class VedtakslengdeService(
     ): Boolean {
         val nyUtvidetVedtaksperiode = Periode(vedtattSluttdato.plusDays(1), utvidetSluttdato)
         val nyUtvidetVedtaksperiodeTidslinje = Tidslinje(nyUtvidetVedtaksperiode, true)
-
-        val rettighetstypeTidslinje =
-            rettighetstypeRepository.hentHvisEksisterer(behandlingId)?.rettighetstypeTidslinje ?: return false
+        val rettighetstypeTidslinje = rettighetstypeService.rettighetstypeTidslinjeBakoverkompatibel(behandlingId)
 
         return rettighetstypeTidslinje
             .rightJoin(nyUtvidetVedtaksperiodeTidslinje) { rettighetstype, _ ->

@@ -32,6 +32,15 @@ class RettighetstypeService(
     }
 
     /**
+     * Henter rettighetstypetidslinje for en behandling, og utleder denne dersom den ikke er lagret. Dette vil typisk
+     * kunne skje i gamle behandlinger som ikke har kjørt RettighetstypeSteg.
+     */
+    fun rettighetstypeTidslinjeBakoverkompatibel(behandlingId: BehandlingId): Tidslinje<RettighetsType> {
+        return rettighetstypeRepository.hentHvisEksisterer(behandlingId)?.rettighetstypeTidslinje
+            ?: utledRettighetstidslinjeBakoverkompatibel(behandlingId)
+    }
+
+    /**
      * Denne utleder rettighetstype og kvote basert på lagret vilkårsresultat.
      * Bør bruke nedlagret rettighetstype med kvote, men dette finnes ikke for eldre behandlinger.
      * Underveis er avgrenset i fremtiden, og kan derfor ikke brukes alene,
