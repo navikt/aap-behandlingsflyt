@@ -133,7 +133,7 @@ class VurderForutgåendeMedlemskapSteg private constructor(
                 when (behandlingsutfall) {
                     null -> false
                     TidligereVurderinger.IkkeBehandlingsgrunnlag -> false
-                    TidligereVurderinger.UunngåeligAvslag -> false
+                    is TidligereVurderinger.UunngåeligAvslag -> false
                     is TidligereVurderinger.PotensieltOppfylt -> {
                         val automatiskVilkårsvurderingForutgåendeMedlemskapIkkeOppfylt =
                             automatiskVilkårsvurderingLovvalg?.erOppfylt() == false

@@ -101,7 +101,7 @@ class OvergangUføreSteg private constructor(
                 sykdomsvurderinger
             ) { segmentPeriode, utfall, sykdomsvurering ->
                 when (utfall) {
-                    TidligereVurderinger.IkkeBehandlingsgrunnlag, TidligereVurderinger.UunngåeligAvslag -> false
+                    TidligereVurderinger.IkkeBehandlingsgrunnlag, is TidligereVurderinger.UunngåeligAvslag -> false
                     is TidligereVurderinger.PotensieltOppfylt -> {
                         utfall.rettighetstype == null && sykdomsvurering?.erOppfyltOrdinærEllerYrkesskadeSettBortIfraÅrsakssammenheng(
                             kontekst.rettighetsperiode.fom,
@@ -124,7 +124,7 @@ class OvergangUføreSteg private constructor(
                 when (utfall) {
                     null -> false
                     TidligereVurderinger.IkkeBehandlingsgrunnlag -> false
-                    TidligereVurderinger.UunngåeligAvslag -> false
+                    is TidligereVurderinger.UunngåeligAvslag -> false
                     is TidligereVurderinger.PotensieltOppfylt ->
                         sykdomErOppfyltOgBistandErIkkeOppfylt(
                             kontekst.rettighetsperiode.fom, segmentPeriode, sykdomsvurdering, bistandsvurdering

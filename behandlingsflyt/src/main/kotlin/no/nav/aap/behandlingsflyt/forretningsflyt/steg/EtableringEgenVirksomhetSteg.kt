@@ -79,7 +79,7 @@ class EtableringEgenVirksomhetSteg(
             when (utfall) {
                 null -> false
                 TidligereVurderinger.IkkeBehandlingsgrunnlag -> false
-                TidligereVurderinger.UunngåeligAvslag -> false
+                is TidligereVurderinger.UunngåeligAvslag -> false
                 is TidligereVurderinger.PotensieltOppfylt -> {
                     return@map2 relevantPeriode != null && !grunnlag?.vurderinger.isNullOrEmpty()
                 }

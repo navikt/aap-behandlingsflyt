@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.behandling.vilkår
 
 import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingService
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall.IKKE_OPPFYLT
@@ -54,7 +55,7 @@ interface TidligereVurderinger {
 
     sealed interface Behandlingsutfall
     data object IkkeBehandlingsgrunnlag : Behandlingsutfall
-    data object UunngåeligAvslag : Behandlingsutfall
+    data class UunngåeligAvslag(val avslagsårsak: Avslagsårsak?) : Behandlingsutfall
     data class PotensieltOppfylt(val rettighetstype: RettighetsType?) : Behandlingsutfall
 
     fun behandlingsutfall(kontekst: FlytKontekstMedPerioder, førSteg: StegType): Tidslinje<Behandlingsutfall>
@@ -136,22 +137,18 @@ class TidligereVurderingerImpl(
                     ?.somSykdomsvurderingstidslinje().orEmpty()
 
                 tidligereVurderinger.leftJoin(sykdomstidslinje) { segmentPeriode, foreløpigUtfall, sykdomsvurdering ->
-                    val sykdomDefinitivtAvslag =
-                        sykdomsvurdering?.erOppfyltOrdinærSettBortIfraVissVarighet() == false
-                                && !sykdomsvurdering.erOppfyltForYrkesskadeSettBortIfraÅrsakssammenhengOgVissVarighet()
-
                     val foreløpigRettighetstype = when (foreløpigUtfall) {
                         is TidligereVurderinger.PotensieltOppfylt -> foreløpigUtfall.rettighetstype
                         else -> null
                     }
 
-                    if (foreløpigRettighetstype == null && sykdomDefinitivtAvslag && !potensieltOppfyltOvergangArbeid(
+                    if (foreløpigRettighetstype == null && sykdomsvurdering?.potensieltSykepengeerstatning() == false && !potensieltOppfyltOvergangArbeid(
                             kontekst.rettighetsperiode,
                             segmentPeriode,
                             sykdomstidslinje
                         )
                     ) {
-                        return@leftJoin TidligereVurderinger.UunngåeligAvslag
+                        return@leftJoin TidligereVurderinger.UunngåeligAvslag(null)
 
                     }
 
@@ -198,14 +195,25 @@ class TidligereVurderingerImpl(
                 }
             },
 
-            Sjekk(StegType.OVERGANG_ARBEID) { vilkårsresultat, _, _ ->
-                vilkårsresultat.tidslinjeFor(Vilkårtype.OVERGANGARBEIDVILKÅRET).map {
-                    TidligereVurderinger.PotensieltOppfylt(
-                        when {
-                            it.utfall == Utfall.OPPFYLT -> RettighetsType.ARBEIDSSØKER
-                            else -> null
-                        }
-                    )
+            Sjekk(StegType.OVERGANG_ARBEID) { vilkårsresultat, kontekst, tidligereVurderinger ->
+                val sykdomstidlinje = sykdomRepository.hentHvisEksisterer(kontekst.behandlingId)
+                    ?.somSykdomsvurderingstidslinje().orEmpty()
+                Tidslinje.map3(
+                    tidligereVurderinger,
+                    vilkårsresultat.tidslinjeFor(Vilkårtype.OVERGANGARBEIDVILKÅRET),
+                    sykdomstidlinje
+                ) { foreløpigUtfall, overgangArbeidVilkåret, sykdomsvurdering ->
+                    when {
+                        overgangArbeidVilkåret?.utfall == Utfall.OPPFYLT -> TidligereVurderinger.PotensieltOppfylt(
+                            RettighetsType.ARBEIDSSØKER
+                        )
+
+                        foreløpigUtfall is TidligereVurderinger.PotensieltOppfylt && foreløpigUtfall.rettighetstype == null && sykdomsvurdering?.potensieltSykepengeerstatning() == false ->
+                            TidligereVurderinger.UunngåeligAvslag(
+                                null
+                            )
+                        else -> TidligereVurderinger.PotensieltOppfylt(null)
+                    }
                 }
             },
 
@@ -217,7 +225,9 @@ class TidligereVurderingerImpl(
                                 RettighetsType.SYKEPENGEERSTATNING
                             )
                             // Siste mulige rettighetstype
-                            akkumulertUtfall is TidligereVurderinger.PotensieltOppfylt && akkumulertUtfall.rettighetstype == null -> TidligereVurderinger.UunngåeligAvslag
+                            akkumulertUtfall is TidligereVurderinger.PotensieltOppfylt && akkumulertUtfall.rettighetstype == null -> TidligereVurderinger.UunngåeligAvslag(
+                                null
+                            )
 
                             else -> TidligereVurderinger.PotensieltOppfylt(null)
                         }
@@ -227,7 +237,10 @@ class TidligereVurderingerImpl(
             Sjekk(StegType.FASTSETT_SYKDOMSVILKÅRET) { vilkårsresultat, _, tidligereVurderinger ->
                 tidligereVurderinger.leftJoin(vilkårsresultat.tidslinjeFor(Vilkårtype.SYKDOMSVILKÅRET)) { akkumulertUtfall, sykdomsvilkåret ->
                     when {
-                        akkumulertUtfall is TidligereVurderinger.PotensieltOppfylt && akkumulertUtfall.rettighetstype == RettighetsType.BISTANDSBEHOV && sykdomsvilkåret?.utfall == IKKE_OPPFYLT -> TidligereVurderinger.UunngåeligAvslag
+                        akkumulertUtfall is TidligereVurderinger.PotensieltOppfylt && akkumulertUtfall.rettighetstype == RettighetsType.BISTANDSBEHOV && sykdomsvilkåret?.utfall == IKKE_OPPFYLT -> TidligereVurderinger.UunngåeligAvslag(
+                            sykdomsvilkåret.avslagsårsak
+                        )
+
                         else -> TidligereVurderinger.PotensieltOppfylt(null)
                     }
                 }
@@ -319,7 +332,7 @@ class TidligereVurderingerImpl(
                                 && !sykdomsvurdering.erOppfyltForYrkesskadeSettBortIfraÅrsakssammenhengOgVissVarighet()
 
                     if (sykdomDefinitivtAvslag) {
-                        return@outerJoin TidligereVurderinger.UunngåeligAvslag
+                        return@outerJoin TidligereVurderinger.UunngåeligAvslag(null)
                     }
 
                     return@outerJoin TidligereVurderinger.PotensieltOppfylt(null)
@@ -395,7 +408,7 @@ class TidligereVurderingerImpl(
 
                         else -> false
                     }
-                    if (førerTilAvslag) TidligereVurderinger.UunngåeligAvslag else TidligereVurderinger.PotensieltOppfylt(
+                    if (førerTilAvslag) TidligereVurderinger.UunngåeligAvslag(null) else TidligereVurderinger.PotensieltOppfylt(
                         null
                     )
                 }
@@ -470,11 +483,12 @@ class TidligereVurderingerImpl(
             }
 
             utfall.segmenter()
-                .all { it.verdi == TidligereVurderinger.UunngåeligAvslag } -> TidligereVurderinger.UunngåeligAvslag.also {
-                log.info(
-                    "Gir avslag for TidligereVurderinger.UunngåeligAvslag i steg: $førSteg."
-                )
-            }
+                .all { it.verdi is TidligereVurderinger.UunngåeligAvslag } -> TidligereVurderinger.UunngåeligAvslag(null)
+                .also {
+                    log.info(
+                        "Gir avslag for TidligereVurderinger.UunngåeligAvslag i steg: $førSteg."
+                    )
+                }
 
             else -> TidligereVurderinger.PotensieltOppfylt(null)
         }
@@ -515,7 +529,8 @@ class TidligereVurderingerImpl(
                     when {
                         nesteUtfall == null -> foreløpigUtfall
                         foreløpigUtfall is TidligereVurderinger.IkkeBehandlingsgrunnlag || nesteUtfall is TidligereVurderinger.IkkeBehandlingsgrunnlag -> TidligereVurderinger.IkkeBehandlingsgrunnlag
-                        foreløpigUtfall is TidligereVurderinger.UunngåeligAvslag || nesteUtfall is TidligereVurderinger.UunngåeligAvslag -> TidligereVurderinger.UunngåeligAvslag
+                        foreløpigUtfall is TidligereVurderinger.UunngåeligAvslag -> foreløpigUtfall
+                        nesteUtfall is TidligereVurderinger.UunngåeligAvslag -> nesteUtfall
                         foreløpigUtfall is TidligereVurderinger.PotensieltOppfylt && nesteUtfall is TidligereVurderinger.PotensieltOppfylt -> TidligereVurderinger.PotensieltOppfylt(
                             foreløpigUtfall.rettighetstype ?: nesteUtfall.rettighetstype
                         )
@@ -535,12 +550,12 @@ class TidligereVurderingerImpl(
     ): Boolean {
         return (gir(kontekst, førSteg) in listOf(
             TidligereVurderinger.IkkeBehandlingsgrunnlag,
-            TidligereVurderinger.UunngåeligAvslag
+            TidligereVurderinger.UunngåeligAvslag(null)
         ))
     }
 
     override fun girAvslag(kontekst: FlytKontekstMedPerioder, førSteg: StegType): Boolean {
-        return (gir(kontekst, førSteg) == TidligereVurderinger.UunngåeligAvslag)
+        return (gir(kontekst, førSteg) == TidligereVurderinger.UunngåeligAvslag(null))
     }
 
 
@@ -561,7 +576,7 @@ class TidligereVurderingerImpl(
         return vilkårsresultat.tidslinjeFor(vilkårtype)
             .mapValue {
                 when (it.utfall) {
-                    IKKE_OPPFYLT -> TidligereVurderinger.UunngåeligAvslag
+                    IKKE_OPPFYLT -> TidligereVurderinger.UunngåeligAvslag(it.avslagsårsak)
                     else -> TidligereVurderinger.PotensieltOppfylt(null)
                 }
             }
@@ -581,5 +596,9 @@ class TidligereVurderingerImpl(
         val erIkkeFørsteSykdomsvurdering =
             !Sykdomsvurdering.erFørsteVurdering(rettighetsperiode.fom, segmentPeriode)
         return erIkkeFørsteSykdomsvurdering && harTidligereInnvilgetSykdomsvurdering
+    }
+
+    private fun Sykdomsvurdering.potensieltSykepengeerstatning(): Boolean {
+        return this.erOppfyltOrdinærSettBortIfraVissVarighet() || this.erOppfyltForYrkesskadeSettBortIfraÅrsakssammenhengOgVissVarighet()
     }
 }

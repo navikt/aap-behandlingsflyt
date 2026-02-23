@@ -151,7 +151,7 @@ class InstitusjonsoppholdSteg(
                 when (behandlingsutfall) {
                     null -> false
                     TidligereVurderinger.IkkeBehandlingsgrunnlag -> false
-                    TidligereVurderinger.UunngåeligAvslag -> false
+                    is TidligereVurderinger.UunngåeligAvslag -> false
                     is TidligereVurderinger.PotensieltOppfylt -> denneBehandling?.helse != null // Enten er helse vurdert, eller så skal det vurderes
                 }
             }
@@ -167,7 +167,7 @@ class InstitusjonsoppholdSteg(
                 when (behandlingsutfall) {
                     null -> false
                     TidligereVurderinger.IkkeBehandlingsgrunnlag -> false
-                    TidligereVurderinger.UunngåeligAvslag -> false
+                    is TidligereVurderinger.UunngåeligAvslag -> false
                     is TidligereVurderinger.PotensieltOppfylt -> denneBehandling?.soning != null // Enten er soning vurdert, eller så skal det vurderes
                 }
             }

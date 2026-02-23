@@ -102,7 +102,7 @@ class SamordningSteg(
         ) { utfall, samordningYtelser, vurdering ->
             when (utfall) {
                 TidligereVurderinger.IkkeBehandlingsgrunnlag -> false
-                TidligereVurderinger.UunngåeligAvslag -> false
+                is TidligereVurderinger.UunngåeligAvslag -> false
                 is TidligereVurderinger.PotensieltOppfylt -> {
                     !samordningYtelser.isNullOrEmpty() || !vurdering.isNullOrEmpty()
                 }

@@ -63,7 +63,7 @@ class VurderSykdomSteg(
             tidligereVurderingsutfall.mapValue { behandlingsutfall ->
                 when (behandlingsutfall) {
                     TidligereVurderinger.IkkeBehandlingsgrunnlag -> false
-                    TidligereVurderinger.UunngåeligAvslag -> false
+                    is TidligereVurderinger.UunngåeligAvslag -> false
                     is TidligereVurderinger.PotensieltOppfylt -> {
                         behandlingsutfall.rettighetstype == null
                     }
@@ -80,7 +80,7 @@ class VurderSykdomSteg(
                 when (behandlingsutfall) {
                     null -> false
                     TidligereVurderinger.IkkeBehandlingsgrunnlag -> false
-                    TidligereVurderinger.UunngåeligAvslag -> false
+                    is TidligereVurderinger.UunngåeligAvslag -> false
                     is TidligereVurderinger.PotensieltOppfylt -> {
                         studentvurdering?.erOppfylt() != true
                     }

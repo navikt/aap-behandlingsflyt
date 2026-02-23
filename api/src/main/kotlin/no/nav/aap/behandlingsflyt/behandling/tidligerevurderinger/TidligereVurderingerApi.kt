@@ -8,6 +8,7 @@ import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
@@ -60,6 +61,10 @@ fun NormalOpenAPIRoute.tidligereVurderingerApi(
                         rettighetstype = when (verdi) {
                             is TidligereVurderinger.PotensieltOppfylt -> verdi.rettighetstype
                             else -> null
+                        },
+                        avslagsårsak = when (verdi) {
+                            is TidligereVurderinger.UunngåeligAvslag -> verdi.avslagsårsak
+                            else -> null
                         }
                     )
                 })
@@ -83,7 +88,8 @@ data class TidligereVurderingerDto(
 data class TidligereVurderingDto(
     val periode: Periode,
     val utfall: BehandlingsutfallType,
-    val rettighetstype: RettighetsType?
+    val rettighetstype: RettighetsType?,
+    val avslagsårsak: Avslagsårsak?
 )
 
 enum class BehandlingsutfallType {
@@ -95,7 +101,7 @@ enum class BehandlingsutfallType {
         fun fraBehandlingsutfall(behandlingsutfall: TidligereVurderinger.Behandlingsutfall): BehandlingsutfallType =
             when (behandlingsutfall) {
                 TidligereVurderinger.IkkeBehandlingsgrunnlag -> IKKE_BEHANDLINGSGRUNNLAG
-                TidligereVurderinger.UunngåeligAvslag -> UUNGÅELIG_AVSLAG
+                is TidligereVurderinger.UunngåeligAvslag -> UUNGÅELIG_AVSLAG
                 is TidligereVurderinger.PotensieltOppfylt -> POTENSIELT_OPPFYLT
             }
     }
