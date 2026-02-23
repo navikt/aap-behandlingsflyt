@@ -238,7 +238,7 @@ internal fun Application.server(
         startInstitusjonsOppholdKonsument(dataSource, repositoryRegistry)
     }
 
-    if (!Miljø.erLokal()) {
+    if (!Miljø.erLokal() && !Miljø.erProd()) {
         startSykepengevedtakKonsument(dataSource, repositoryRegistry, gatewayProvider)
     }
 
