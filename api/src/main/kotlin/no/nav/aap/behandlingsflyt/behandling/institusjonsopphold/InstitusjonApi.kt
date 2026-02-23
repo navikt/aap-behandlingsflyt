@@ -306,14 +306,26 @@ private fun mapVurderingerToDto(
     ansattInfoService: AnsattInfoService
 ): List<HelseoppholdDto> =
     vurderingerPerOpphold.entries.flatMap { (vurderingPeriode, vurderingerForPeriode) ->
-        oppholdInfo.begrensetTil(vurderingPeriode).segmenter().map { oppholdSegment ->
+
+        val oppholdSegment = oppholdInfo.segmenter()
+            .firstOrNull { segment ->
+                segment.periode.fom <= vurderingPeriode.tom &&
+                        segment.periode.tom >= vurderingPeriode.fom
+            } ?: return@flatMap emptyList()
+
+        listOf(
             HelseoppholdDto(
                 periode = vurderingPeriode,
-                oppholdId = lagOppholdId(oppholdSegment.verdi.navn, oppholdSegment.periode.fom),
+                oppholdId = lagOppholdId(
+                    oppholdSegment.verdi.navn,
+                    oppholdSegment.periode.fom
+                ),
                 vurderinger = vurderingerForPeriode.map { vurdering ->
-                    val navnOgEnhet = vurdering.let {
-                        ansattInfoService.hentAnsattNavnOgEnhet(it.vurdertAv ?: "ukjent")
-                    }
+
+                    val navnOgEnhet =
+                        ansattInfoService.hentAnsattNavnOgEnhet(
+                            vurdering.vurdertAv ?: "ukjent"
+                        )
 
                     HelseinstitusjonVurderingDto(
                         oppholdId = lagOppholdId(
@@ -327,7 +339,8 @@ private fun mapVurderingerToDto(
                         periode = vurdering.periode,
                         vurdertAv = VurdertAvResponse(
                             ident = vurdering.vurdertAv ?: "ukjent",
-                            dato = vurdering.vurdertTidspunkt?.toLocalDate() ?: LocalDate.now(),
+                            dato = vurdering.vurdertTidspunkt?.toLocalDate()
+                                ?: LocalDate.now(),
                             ansattnavn = navnOgEnhet?.navn,
                             enhetsnavn = navnOgEnhet?.enhet
                         )
@@ -335,7 +348,7 @@ private fun mapVurderingerToDto(
                 },
                 status = OppholdVurderingDto.UAVKLART
             )
-        }
+        )
     }
 
 // Public for testing
