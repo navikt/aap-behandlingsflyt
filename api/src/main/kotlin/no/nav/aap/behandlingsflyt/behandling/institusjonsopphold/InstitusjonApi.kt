@@ -307,11 +307,11 @@ private fun mapVurderingerToDto(
 ): List<HelseoppholdDto> =
     vurderingerPerOpphold.entries.flatMap { (vurderingPeriode, vurderingerForPeriode) ->
 
-        val oppholdSegment = oppholdInfo.segmenter()
-            .firstOrNull { segment ->
-                segment.periode.fom <= vurderingPeriode.tom &&
-                        segment.periode.tom >= vurderingPeriode.fom
-            } ?: return@flatMap emptyList()
+        val matchingSegments = oppholdInfo.filter { segment ->
+            segment.periode.fom <= vurderingPeriode.tom &&
+                    segment.periode.tom >= vurderingPeriode.fom
+        }.segmenter()
+        val oppholdSegment = matchingSegments.firstOrNull() ?: return@flatMap emptyList()
 
         listOf(
             HelseoppholdDto(
