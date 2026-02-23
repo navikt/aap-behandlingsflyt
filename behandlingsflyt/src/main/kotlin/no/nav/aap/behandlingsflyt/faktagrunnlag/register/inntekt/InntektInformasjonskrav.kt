@@ -177,12 +177,12 @@ class InntektInformasjonskrav(
             val beregningVurderingRepository = repositoryProvider.provide<BeregningVurderingRepository>()
 
             return InntektInformasjonskrav(
-                sakService = SakService(repositoryProvider),
+                sakService = SakService(repositoryProvider, gatewayProvider),
                 inntektGrunnlagRepository = repositoryProvider.provide(),
                 beregningVurderingRepository = beregningVurderingRepository,
                 inntektRegisterGateway = gatewayProvider.provide(),
                 inntektkomponentenGateway = gatewayProvider.provide(),
-                tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
+                tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
             )
         }
     }

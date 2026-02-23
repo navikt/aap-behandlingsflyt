@@ -12,27 +12,17 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedP
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
-import no.nav.aap.behandlingsflyt.test.FakeUnleashBaseWithDefaultDisabled
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryRettighetstypeRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryVilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.test.januar
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Tid
 import org.assertj.core.api.Assertions.assertThat
 import kotlin.test.Test
 
 class RettighetstypeStegTest {
-    companion object {
-        object RettighetstypeStegEnabledUnleash : FakeUnleashBaseWithDefaultDisabled(
-            enabledFlags = listOf(
-                BehandlingsflytFeature.RettighetstypeSteg
-            )
-        )
-    }
-
     private val sakRepository = InMemorySakRepository
     private val behandlingRepository = InMemoryBehandlingRepository
     private val rettighetstypeRepository = InMemoryRettighetstypeRepository
@@ -43,7 +33,6 @@ class RettighetstypeStegTest {
         rettighetstypeRepository = rettighetstypeRepository,
         vilkårsresultatRepository = vilkårsresultatRepository,
         kvoteService = kvoteService,
-        unleashGateway = RettighetstypeStegEnabledUnleash
     )
 
     @Test

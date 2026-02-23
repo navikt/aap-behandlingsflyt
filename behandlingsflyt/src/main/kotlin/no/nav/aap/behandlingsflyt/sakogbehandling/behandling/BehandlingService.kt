@@ -1,18 +1,15 @@
-package no.nav.aap.behandlingsflyt.faktagrunnlag
+package no.nav.aap.behandlingsflyt.sakogbehandling.behandling
 
+import java.time.LocalDate
+import java.time.LocalDateTime
 import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingService
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
+import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopierer
+import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopiererImpl
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingMedVedtak
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
@@ -23,14 +20,12 @@ import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.lookup.repository.RepositoryProvider
-import java.time.LocalDate
-import java.time.LocalDateTime
 
-class SakOgBehandlingService(
+class BehandlingService(
     private val grunnlagKopierer: GrunnlagKopierer,
     private val sakRepository: SakRepository,
     private val behandlingRepository: BehandlingRepository,
-    private val trukketSøknadService: TrukketSøknadService,
+    private val trukketSøknadService: `TrukketSøknadService`,
     private val avbrytRevurderingService: AvbrytRevurderingService,
     private val unleashGateway: UnleashGateway
 ) {
@@ -41,7 +36,7 @@ class SakOgBehandlingService(
         grunnlagKopierer = GrunnlagKopiererImpl(repositoryProvider),
         sakRepository = repositoryProvider.provide(),
         behandlingRepository = repositoryProvider.provide(),
-        trukketSøknadService = TrukketSøknadService(repositoryProvider),
+        trukketSøknadService = `TrukketSøknadService`(repositoryProvider),
         avbrytRevurderingService = AvbrytRevurderingService(repositoryProvider),
         unleashGateway = gatewayProvider.provide()
     )
@@ -337,17 +332,17 @@ class SakOgBehandlingService(
         }
     }
 
-    private fun oppdaterVurderingsbehovOgÅrsak(
-        sisteYtelsesbehandling: Behandling,
+    fun oppdaterVurderingsbehovOgÅrsak(
+        behandling: Behandling,
         vurderingsbehovOgÅrsak: VurderingsbehovOgÅrsak
     ): Behandling {
-        check(!trukketSøknadService.søknadErTrukket(sisteYtelsesbehandling.id)) {
-            "ikke lov å oppdatere behandling for trukket søknad ${sisteYtelsesbehandling.sakId}"
+        check(!trukketSøknadService.søknadErTrukket(behandling.id)) {
+            "ikke lov å oppdatere behandling for trukket søknad ${behandling.sakId}"
         }
         // Valider at behandlingen står i et sted hvor den kan data
-        validerStegStatus(sisteYtelsesbehandling)
-        behandlingRepository.oppdaterVurderingsbehovOgÅrsak(sisteYtelsesbehandling, vurderingsbehovOgÅrsak)
-        return sisteYtelsesbehandling
+        validerStegStatus(behandling)
+        behandlingRepository.oppdaterVurderingsbehovOgÅrsak(behandling, vurderingsbehovOgÅrsak)
+        return behandling
     }
 
     fun finnEllerOpprettBehandling(
@@ -373,39 +368,6 @@ class SakOgBehandlingService(
         val oppdatertBehandling = behandlingRepository.hent(behandlingId)
         val sisteSteg = oppdatertBehandling.aktivtStegTilstand()
         require(sisteSteg.status() == StegStatus.AVSLUTTER)
-    }
-
-    fun oppdaterRettighetsperioden(sakId: SakId, brevkategori: InnsendingType, mottattDato: LocalDate) {
-        if (brevkategori == InnsendingType.SØKNAD) {
-            val rettighetsperiode = sakRepository.hent(sakId).rettighetsperiode
-            val fom = if (rettighetsperiode.fom.isAfter(mottattDato)) {
-                mottattDato
-            } else {
-                rettighetsperiode.fom
-            }
-            val periode = Periode(
-                fom,
-                Tid.MAKS
-            )
-            if (periode != rettighetsperiode) {
-                sakRepository.oppdaterRettighetsperiode(sakId, periode)
-            }
-        }
-    }
-
-    fun oppdaterVurderingsbehovTilBehandling(behandling: Behandling, vurderingsbehovOgÅrsak: VurderingsbehovOgÅrsak) {
-        behandlingRepository.oppdaterVurderingsbehovOgÅrsak(behandling, vurderingsbehovOgÅrsak)
-    }
-
-    fun overstyrRettighetsperioden(sakId: SakId, startDato: LocalDate, sluttDato: LocalDate) {
-        val rettighetsperiode = sakRepository.hent(sakId).rettighetsperiode
-        val periode = Periode(
-            startDato,
-            sluttDato
-        )
-        if (periode != rettighetsperiode) {
-            sakRepository.oppdaterRettighetsperiode(sakId, periode)
-        }
     }
 
 

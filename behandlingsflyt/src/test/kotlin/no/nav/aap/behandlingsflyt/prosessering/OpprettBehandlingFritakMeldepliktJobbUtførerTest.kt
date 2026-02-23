@@ -4,7 +4,7 @@ import io.mockk.every
 import io.mockk.junit5.MockKExtension
 import io.mockk.mockk
 import io.mockk.verify
-import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.meldeperiode.MeldeperiodeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.Fritaksvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktGrunnlag
@@ -30,8 +30,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.motor.JobbInput
-import org.junit.jupiter.api.BeforeAll
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.extension.ExtendWith
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -45,40 +43,40 @@ class OpprettBehandlingFritakMeldepliktJobbUtførerTest {
 
     @Test
     fun `Skal opprette revurdering pga fritak meldeplikt`() {
-        val sakOgBehandlingServiceMock = mockk<SakOgBehandlingService>()
-        val utfører = mockAvhengigheterForOpprettBehandlingFritakMeldepliktJobbUtfører(sakOgBehandlingServiceMock)
+        val behandlingServiceMock = mockk<BehandlingService>()
+        val utfører = mockAvhengigheterForOpprettBehandlingFritakMeldepliktJobbUtfører(behandlingServiceMock)
 
         utfører.utfør(JobbInput(OpprettBehandlingFritakMeldepliktJobbUtfører).forSak(sakId.id))
 
-        verify { sakOgBehandlingServiceMock.finnEllerOpprettBehandling(any<SakId>(), any()) }
+        verify { behandlingServiceMock.finnEllerOpprettBehandling(any<SakId>(), any()) }
     }
 
     @Test
     fun `Skal ikke opprette revurdering dersom det ikke finnes fritak for meldeplikt`() {
-        val sakOgBehandlingServiceMock = mockk<SakOgBehandlingService>()
+        val behandlingServiceMock = mockk<BehandlingService>()
         val utfører =
-            mockAvhengigheterForOpprettBehandlingFritakMeldepliktJobbUtfører(sakOgBehandlingServiceMock, fritak = false)
+            mockAvhengigheterForOpprettBehandlingFritakMeldepliktJobbUtfører(behandlingServiceMock, fritak = false)
 
         utfører.utfør(JobbInput(OpprettBehandlingFritakMeldepliktJobbUtfører).forSak(sakId.id))
 
-        verify(exactly = 0) { sakOgBehandlingServiceMock.finnEllerOpprettBehandling(any<SakId>(), any()) }
+        verify(exactly = 0) { behandlingServiceMock.finnEllerOpprettBehandling(any<SakId>(), any()) }
     }
 
     @Test
     fun `Skal ikke opprette revurdering dersom det finnes andre åpne behandlinger med årsak fritak meldeplikt`() {
-        val sakOgBehandlingServiceMock = mockk<SakOgBehandlingService>()
+        val behandlingServiceMock = mockk<BehandlingService>()
         val utfører = mockAvhengigheterForOpprettBehandlingFritakMeldepliktJobbUtfører(
-            sakOgBehandlingServiceMock,
+            behandlingServiceMock,
             årsakerPåTidligereBehandling = listOf(VurderingsbehovMedPeriode(Vurderingsbehov.FRITAK_MELDEPLIKT))
         )
 
         utfører.utfør(JobbInput(OpprettBehandlingFritakMeldepliktJobbUtfører).forSak(sakId.id))
 
-        verify(exactly = 0) { sakOgBehandlingServiceMock.finnEllerOpprettOrdinærBehandling(any<SakId>(), any()) }
+        verify(exactly = 0) { behandlingServiceMock.finnEllerOpprettOrdinærBehandling(any<SakId>(), any()) }
     }
 
     private fun mockAvhengigheterForOpprettBehandlingFritakMeldepliktJobbUtfører(
-        sakOgBehandlingServiceMock: SakOgBehandlingService,
+        behandlingServiceMock: BehandlingService,
         fritak: Boolean = true,
         årsakerPåTidligereBehandling: List<VurderingsbehovMedPeriode> = emptyList(),
     ): OpprettBehandlingFritakMeldepliktJobbUtfører {
@@ -135,18 +133,18 @@ class OpprettBehandlingFritakMeldepliktJobbUtførerTest {
             versjon = 0L
         )
 
-        every { sakOgBehandlingServiceMock.finnSisteYtelsesbehandlingFor(sakId) } returns fakeBehandling
+        every { behandlingServiceMock.finnSisteYtelsesbehandlingFor(sakId) } returns fakeBehandling
         every {
-            sakOgBehandlingServiceMock.finnEllerOpprettBehandling(
+            behandlingServiceMock.finnEllerOpprettBehandling(
                 sakId,
                 any()
             )
-        } returns SakOgBehandlingService.Ordinær(fakeBehandling)
+        } returns BehandlingService.Ordinær(fakeBehandling)
 
-        every { sakOgBehandlingServiceMock.finnEllerOpprettOrdinærBehandling(any<SakId>(), any()) } returns fakeBehandling
+        every { behandlingServiceMock.finnEllerOpprettOrdinærBehandling(any<SakId>(), any()) } returns fakeBehandling
 
 
-        every { sakOgBehandlingServiceMock.finnBehandlingMedSisteFattedeVedtak(any()) } returns BehandlingMedVedtak(
+        every { behandlingServiceMock.finnBehandlingMedSisteFattedeVedtak(any()) } returns BehandlingMedVedtak(
             saksnummer = Saksnummer("123"),
             id = BehandlingId(456L),
             referanse = BehandlingReferanse(UUID.randomUUID()),
@@ -181,7 +179,7 @@ class OpprettBehandlingFritakMeldepliktJobbUtførerTest {
             behandlingRepository = behandlingRepositoryMock,
             meldeperiodeRepository = meldeperiodeRepositoryMock,
             meldepliktRepository = meldepliktRepositoryMock,
-            sakOgBehandlingService = sakOgBehandlingServiceMock,
+            behandlingService = behandlingServiceMock,
             prosesserBehandlingService = mockk<ProsesserBehandlingService>(relaxed = true),
             underveisRepository = mockk(relaxed = true),
         )

@@ -17,6 +17,7 @@ data class ArbeidsevneGrunnlagDto(
     override val nyeVurderinger: List<PeriodisertArbeidsevneVurderingDto>,
     override val kanVurderes: List<Periode>,
     override val behøverVurderinger: List<Periode>,
+    override val ikkeRelevantePerioder: List<Periode>,
 ) : PeriodiserteVurderingerDto<PeriodisertArbeidsevneVurderingDto>
 
 data class PeriodisertArbeidsevneVurderingDto(

@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg.klage
 
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.trekkklage.TrekkKlageService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.behandlendeenhet.BehandlendeEnhetRepository
@@ -17,15 +16,12 @@ import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 
 class KlagebehandlingNayOppsummeringSteg private constructor(
-    private val avklaringsbehovRepository: AvklaringsbehovRepository,
     private val behandlendeEnhetRepository: BehandlendeEnhetRepository,
     private val trekkKlageService: TrekkKlageService,
     private val klageresultatUtleder: KlageresultatUtleder,
     private val avklaringsbehovService: AvklaringsbehovService
 ) : BehandlingSteg {
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
-
         avklaringsbehovService.oppdaterAvklaringsbehov(
             definisjon = Definisjon.BEKREFT_TOTALVURDERING_KLAGE,
             vedtakBehøverVurdering = { vedtakBehøverVurdering(kontekst) },
@@ -61,11 +57,10 @@ class KlagebehandlingNayOppsummeringSteg private constructor(
             gatewayProvider: GatewayProvider
         ): BehandlingSteg {
             return KlagebehandlingNayOppsummeringSteg(
-                repositoryProvider.provide(),
-                repositoryProvider.provide(),
-                TrekkKlageService(repositoryProvider),
-                KlageresultatUtleder(repositoryProvider),
-                AvklaringsbehovService(repositoryProvider)
+                behandlendeEnhetRepository = repositoryProvider.provide(),
+                trekkKlageService = TrekkKlageService(repositoryProvider),
+                klageresultatUtleder = KlageresultatUtleder(repositoryProvider),
+                avklaringsbehovService = AvklaringsbehovService(repositoryProvider)
             )
         }
 

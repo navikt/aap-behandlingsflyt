@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.hendelse.kafka.person
 
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.SaksbehandlerOppgitteBarn
@@ -29,7 +29,6 @@ import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.person.pdl.leesah.Personhendelse
 
-import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.apache.kafka.clients.consumer.ConsumerRecords
 import org.slf4j.LoggerFactory
 import javax.sql.DataSource
@@ -58,12 +57,12 @@ class PdlHendelseKafkaKonsument(
     override fun håndter(meldinger: ConsumerRecords<String, Personhendelse>) {
         meldinger.forEach { record ->
             val personHendelse = record.value().tilDomain()
-            håndter(record, personHendelse)
+            håndter(personHendelse)
         }
 
     }
 
-    fun håndter(melding: ConsumerRecord<String, Personhendelse>, personHendelse: PdlPersonHendelse) {
+    fun håndter(personHendelse: PdlPersonHendelse) {
         dataSource.transaction {
             val repositoryProvider = repositoryRegistry.provider(it)
             val sakRepository: SakRepository = repositoryProvider.provide()
@@ -73,7 +72,7 @@ class PdlHendelseKafkaKonsument(
             val underveisRepository: UnderveisRepository = repositoryProvider.provide()
             val hendelseService = MottattHendelseService(repositoryProvider)
             val trukketSøknadService = TrukketSøknadService(repositoryProvider)
-            val sakOgBehandlingService = SakOgBehandlingService(repositoryProvider, gatewayProvider)
+            val behandlingService = BehandlingService(repositoryProvider, gatewayProvider)
             if (personHendelse.opplysningstype == Opplysningstype.DOEDSFALL_V1 && personHendelse.endringstype == Endringstype.OPPRETTET) {
                 log.info("Håndterer hendelse med ${personHendelse.opplysningstype} og ${personHendelse.endringstype}")
                 var person: Person? = null
@@ -97,7 +96,7 @@ class PdlHendelseKafkaKonsument(
                     funnetIdent,
                     behandlingRepository,
                     sakRepository,
-                    sakOgBehandlingService,
+                    behandlingService,
                     underveisRepository,
                     trukketSøknadService,
                     personHendelse,
@@ -111,7 +110,7 @@ class PdlHendelseKafkaKonsument(
                     funnetIdent,
                     behandlingRepository,
                     sakRepository,
-                    sakOgBehandlingService,
+                    behandlingService,
                     underveisRepository,
                     trukketSøknadService,
                     personHendelse,
@@ -129,7 +128,7 @@ class PdlHendelseKafkaKonsument(
         funnetIdent: Ident?,
         behandlingRepository: BehandlingRepository,
         sakRepository: SakRepository,
-        sakOgBehandlingService: SakOgBehandlingService,
+        behandlingService: BehandlingService,
         underveisRepository: UnderveisRepository,
         trukketSøknadService: TrukketSøknadService,
         personHendelse: PdlPersonHendelse,
@@ -151,7 +150,7 @@ class PdlHendelseKafkaKonsument(
                     .map { sakRepository.hent(it) }
                     .forEach { sak ->
                         val behandlingMedSistFattedeVedtak =
-                            sakOgBehandlingService.finnBehandlingMedSisteFattedeVedtak(sakId = sak.id)
+                            behandlingService.finnBehandlingMedSisteFattedeVedtak(sakId = sak.id)
                         val sisteOpprettedeBehandling = behandlingRepository.finnSisteOpprettedeBehandlingFor(
                             sak.id,
                             listOf(TypeBehandling.Førstegangsbehandling, TypeBehandling.Revurdering)
@@ -181,7 +180,7 @@ class PdlHendelseKafkaKonsument(
                 )
 
                 val behandlingMedSistFattedeVedtak =
-                    sakOgBehandlingService.finnBehandlingMedSisteFattedeVedtak(sakId = sak.id)
+                    behandlingService.finnBehandlingMedSisteFattedeVedtak(sakId = sak.id)
 
                 sendDødsHendelseHvisRelevant(
                     behandlingMedSistFattedeVedtak,
@@ -203,13 +202,13 @@ class PdlHendelseKafkaKonsument(
         funnetIdent: Ident?,
         behandlingRepository: BehandlingRepository,
         sakRepository: SakRepository,
-        sakOgBehandlingService: SakOgBehandlingService,
+        behandlingService: BehandlingService,
         underveisRepository: UnderveisRepository,
         trukketSøknadService: TrukketSøknadService,
         personHendelse: PdlPersonHendelse,
         hendelseService: MottattHendelseService
     ) {
-        saksbehandlersOppgitteBarn?.let { barn ->
+        saksbehandlersOppgitteBarn?.let { _ ->
             val behandlingIdsForSaksbehandlerOppgitteBarn =
                 barnRepository.hentBehandlingIdForSakSomFårBarnetilleggForSaksbehandlerOppgitteBarn(
                     funnetIdent!!
@@ -222,7 +221,7 @@ class PdlHendelseKafkaKonsument(
                     .map { sakRepository.hent(it) }
                     .forEach { sak ->
                         val behandlingMedSistFattedeVedtak =
-                            sakOgBehandlingService.finnBehandlingMedSisteFattedeVedtak(sakId = sak.id)
+                            behandlingService.finnBehandlingMedSisteFattedeVedtak(sakId = sak.id)
                         val sisteOpprettedeBehandling =
                             behandlingRepository.finnSisteOpprettedeBehandlingFor(
                                 sak.id,
@@ -333,7 +332,7 @@ class PdlHendelseKafkaKonsument(
             opprettet = this.opprettet,
             opplysningstype = try {
                 Opplysningstype.valueOf(this.opplysningstype)
-            } catch (e: IllegalArgumentException) {
+            } catch (_: IllegalArgumentException) {
                 log.info("Fant ukjent opplysningstype fra PDL: ${this.opplysningstype}")
                 Opplysningstype.UNKNOWN
             },

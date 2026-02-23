@@ -7,11 +7,15 @@ import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadVurdering
 import no.nav.aap.behandlingsflyt.help.flytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon.AVKLAR_BISTANDSBEHOV
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvbrytRevurderingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
@@ -19,6 +23,7 @@ import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryTrukketSøknadReposi
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryVilkårsresultatRepository
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.tidslinje.tidslinjeOf
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.verdityper.Tid
@@ -605,5 +610,73 @@ class AvklaringsbehovServiceTest {
         val avklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(definisjon)
         assertThat(avklaringsbehov?.status()).isEqualTo(Status.AVBRUTT)
         verify(exactly = 1) { tilbakestillGrunnlag() }
+    }
+
+    @Test
+    fun `løfter avbrutt avklaringsbehov hvis det blir relevant igjen`() {
+        val rettighetsperiode = Periode(LocalDate.now(), Tid.MAKS)
+        val behandlingId = BehandlingId(1004)
+        val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, behandlingId)
+        val kontekst = FlytKontekstMedPerioder(
+            sakId = SakId(1),
+            behandlingId = behandlingId,
+            forrigeBehandlingId = null,
+            behandlingType = TypeBehandling.Førstegangsbehandling,
+            vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
+            rettighetsperiode = rettighetsperiode,
+            vurderingsbehovRelevanteForStegMedPerioder = emptySet()
+        )
+
+        // Løfter avklaringsbehov når det er relevant å vurdere bistandsbehov
+        avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
+            definisjon = AVKLAR_BISTANDSBEHOV,
+            tvingerAvklaringsbehov = setOf(),
+            nårVurderingErRelevant = {
+                if (kontekst.behandlingId == behandlingId) {
+                    tidslinjeOf(rettighetsperiode to true)
+                } else {
+                    tidslinjeOf()
+                }
+            },
+            nårVurderingErGyldig = { Tidslinje() },
+            tilbakestillGrunnlag = { },
+            kontekst = kontekst
+        )
+        avklaringsbehovene.hentBehovForDefinisjon(AVKLAR_BISTANDSBEHOV).also {
+            assertThat(it?.status()).isEqualTo(Status.OPPRETTET)
+        }
+
+        // Avbryter avklaringsbehovet hvis bistandsbehov ikke er relevant
+        avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
+            definisjon = AVKLAR_BISTANDSBEHOV,
+            tvingerAvklaringsbehov = setOf(),
+            nårVurderingErRelevant = { tidslinjeOf() },
+            nårVurderingErGyldig = { Tidslinje() },
+            tilbakestillGrunnlag = { },
+            kontekst = kontekst
+        )
+        avklaringsbehovene.hentBehovForDefinisjon(AVKLAR_BISTANDSBEHOV).also {
+            assertThat(it?.status()).isEqualTo(Status.AVBRUTT)
+        }
+
+        // Relevansen for bistandsbehov er tilbake (i samme behandling), og avklaringsbehov løftes
+        avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
+            definisjon = AVKLAR_BISTANDSBEHOV,
+            tvingerAvklaringsbehov = setOf(),
+            nårVurderingErRelevant = {
+                if (kontekst.behandlingId == behandlingId) {
+                    tidslinjeOf(rettighetsperiode to true)
+                } else {
+                    tidslinjeOf()
+                }
+            },
+            nårVurderingErGyldig = { Tidslinje() },
+            tilbakestillGrunnlag = { },
+            kontekst = kontekst
+        )
+
+        avklaringsbehovene.hentBehovForDefinisjon(AVKLAR_BISTANDSBEHOV).also {
+            assertThat(it?.status()).isEqualTo(Status.OPPRETTET)
+        }
     }
 }

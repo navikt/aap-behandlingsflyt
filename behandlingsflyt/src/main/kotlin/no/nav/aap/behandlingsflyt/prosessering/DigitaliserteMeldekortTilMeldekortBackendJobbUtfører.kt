@@ -34,6 +34,7 @@ class DigitaliserteMeldekortTilMeldekortBackendJobbUtfører(
         val request = BehandslingsflytUtfyllingRequest(
             saksnummer = sak.saksnummer.toString(),
             ident = sak.person.aktivIdent().identifikator,
+            sakenGjelderFor = sak.rettighetsperiode.somKontraktperiode,
             periode = Periode(
                 fom = ubehandletMeldekort.timerArbeidPerPeriode.minOf { it.periode.fom },
                 tom = ubehandletMeldekort.timerArbeidPerPeriode.maxOf { it.periode.tom }
@@ -73,4 +74,7 @@ class DigitaliserteMeldekortTilMeldekortBackendJobbUtfører(
             forBehandling(sakId.toLong(), behandlingId.toLong())
         }
     }
+
+    private val no.nav.aap.komponenter.type.Periode.somKontraktperiode: Periode
+        get() = Periode(fom, tom)
 }

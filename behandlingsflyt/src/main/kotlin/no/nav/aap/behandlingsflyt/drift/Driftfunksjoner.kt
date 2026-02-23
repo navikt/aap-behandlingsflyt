@@ -1,18 +1,14 @@
 package no.nav.aap.behandlingsflyt.drift
 
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovHendelseHåndterer
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.LøsAvklaringsbehovHendelse
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovOrkestrator
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivBrevAvklaringsbehovLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivVedtaksbrevLøsning
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingReferanse
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingRepository
-import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingService
 import no.nav.aap.behandlingsflyt.flyt.FlytOrkestrator
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
-import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.StegTilstand
@@ -31,21 +27,15 @@ class Driftfunksjoner(
     private val behandlingRepository: BehandlingRepository,
     private val taSkriveLåsRepository: TaSkriveLåsRepository,
     private val flytOrkestrator: FlytOrkestrator,
-    private val brevbestillingService: BrevbestillingService,
     private val brevbestillingRepository: BrevbestillingRepository,
-    private val prosesserBehandlingService: ProsesserBehandlingService,
-    private val avklaringsbehovRepository: AvklaringsbehovRepository,
-    private val avklaringsbehovHendelseHåndterer: AvklaringsbehovHendelseHåndterer
+    private val avklaringsbehovOrkestrator: AvklaringsbehovOrkestrator
 ) {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         behandlingRepository = repositoryProvider.provide(),
         taSkriveLåsRepository = repositoryProvider.provide(),
         flytOrkestrator = FlytOrkestrator(repositoryProvider, gatewayProvider),
-        brevbestillingService = BrevbestillingService(repositoryProvider, gatewayProvider),
         brevbestillingRepository = repositoryProvider.provide(),
-        prosesserBehandlingService = ProsesserBehandlingService(repositoryProvider, gatewayProvider),
-        avklaringsbehovRepository = repositoryProvider.provide(),
-        avklaringsbehovHendelseHåndterer = AvklaringsbehovHendelseHåndterer(repositoryProvider, gatewayProvider)
+        avklaringsbehovOrkestrator = AvklaringsbehovOrkestrator(repositoryProvider, gatewayProvider)
     )
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -87,19 +77,16 @@ class Driftfunksjoner(
 
         val behandling = behandlingRepository.hent(bestilling.behandlingId)
         taSkriveLåsRepository.withLåstBehandling(behandling.id) {
-            avklaringsbehovHendelseHåndterer.håndtere(
-                key = behandling.id,
-                hendelse = LøsAvklaringsbehovHendelse(
-                    løsning = SkrivVedtaksbrevLøsning(
-                        brevbestillingReferanse = brevbestillingReferanse.brevbestillingReferanse,
-                        handling = SkrivBrevAvklaringsbehovLøsning.Handling.AVBRYT,
-                        mottakere = emptyList(),
-                        behovstype = Definisjon.SKRIV_VEDTAKSBREV.kode,
-                        begrunnelse = begrunnelse
-                    ),
-                    behandlingVersjon = 0L, // Ikke i bruk - gir ikke mening å validere behandlingsversjon da vi ikke står i en behandlingskontekst
-                    bruker = bruker,
+            avklaringsbehovOrkestrator.løsAvklaringsbehovOgFortsettProsessering(
+                behandlingId = behandling.id,
+                avklaringsbehovLøsning = SkrivVedtaksbrevLøsning(
+                    brevbestillingReferanse = brevbestillingReferanse.brevbestillingReferanse,
+                    handling = SkrivBrevAvklaringsbehovLøsning.Handling.AVBRYT,
+                    mottakere = emptyList(),
+                    behovstype = Definisjon.SKRIV_VEDTAKSBREV.kode,
+                    begrunnelse = begrunnelse
                 ),
+                bruker = bruker,
             )
         }
     }

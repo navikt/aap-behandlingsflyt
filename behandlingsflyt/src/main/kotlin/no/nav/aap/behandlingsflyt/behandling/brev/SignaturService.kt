@@ -4,7 +4,6 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepo
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Brevbestilling
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Status
-import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.brev.kontrakt.SignaturGrunnlag
 import no.nav.aap.komponenter.verdityper.Bruker
@@ -24,45 +23,35 @@ class SignaturService(
         require(brevbestilling.status == Status.FORHÅNDSVISNING_KLAR) {
             "Kan ikke utlede signaturer på brev i status ${brevbestilling.status}"
         }
+        return if (brevbestilling.typeBrev.erAutomatiskBrev()) {
+            emptyList()
+        } else if (brevbestilling.typeBrev.erVedtak()) {
+            val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(brevbestilling.behandlingId)
+            val signaturBeslutter = utledSignatur(Rolle.BESLUTTER, avklaringsbehovene)
+            val signaturSaksbehandlerNasjonal = utledSignatur(Rolle.SAKSBEHANDLER_NASJONAL, avklaringsbehovene)
+            val signaturKvalitetssikrer = utledSignatur(Rolle.KVALITETSSIKRER, avklaringsbehovene)
+            val signaturSaksbehandlerOppfolging = utledSignatur(Rolle.SAKSBEHANDLER_OPPFOLGING, avklaringsbehovene)
 
-        return when (brevbestilling.typeBrev) {
-            TypeBrev.VEDTAK_AVSLAG, TypeBrev.VEDTAK_INNVILGELSE, TypeBrev.VEDTAK_ENDRING, TypeBrev.KLAGE_AVVIST,
-            TypeBrev.KLAGE_OPPRETTHOLDELSE, TypeBrev.KLAGE_TRUKKET, TypeBrev.VEDTAK_11_17, TypeBrev.VEDTAK_11_18,
-            TypeBrev.VEDTAK_11_7, TypeBrev.VEDTAK_11_9, TypeBrev.VEDTAK_11_23_SJETTE_LEDD,
-            TypeBrev.VEDTAK_UTVID_VEDTAKSLENGDE -> {
-
-                val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(brevbestilling.behandlingId)
-                val signaturBeslutter = utledSignatur(Rolle.BESLUTTER, avklaringsbehovene)
-                val signaturSaksbehandlerNasjonal = utledSignatur(Rolle.SAKSBEHANDLER_NASJONAL, avklaringsbehovene)
-                val signaturKvalitetssikrer = utledSignatur(Rolle.KVALITETSSIKRER, avklaringsbehovene)
-                val signaturSaksbehandlerOppfolging = utledSignatur(Rolle.SAKSBEHANDLER_OPPFOLGING, avklaringsbehovene)
-
-                buildList {
-                    signaturSaksbehandlerNasjonal?.let { add(it) }
-                    signaturKvalitetssikrer?.let { add(it) }
-                    signaturSaksbehandlerOppfolging?.let { add(it) }
-                    if (signaturBeslutter == null && none { it.navIdent == bruker.ident }) {
-                        // Dersom ingen har saksbehandlet med rollen beslutter så tas innlogget bruker med i signatur.
-                        // Dette fordi det er beslutter som skriver vedtaksbrev.
-                        addFirst(
-                            SignaturGrunnlag(
-                                navIdent = bruker.ident,
-                                rolle = null
-                            )
+            buildList {
+                signaturSaksbehandlerNasjonal?.let { add(it) }
+                signaturKvalitetssikrer?.let { add(it) }
+                signaturSaksbehandlerOppfolging?.let { add(it) }
+                if (signaturBeslutter == null && none { it.navIdent == bruker.ident }) {
+                    // Dersom ingen har saksbehandlet med rollen beslutter så tas innlogget bruker med i signatur.
+                    // Dette fordi det er beslutter som skriver vedtaksbrev.
+                    addFirst(
+                        SignaturGrunnlag(
+                            navIdent = bruker.ident,
+                            rolle = null
                         )
-                    } else {
-                        signaturBeslutter?.let { addFirst(it) }
-                    }
+                    )
+                } else {
+                    signaturBeslutter?.let { addFirst(it) }
                 }
-            }
-
-            TypeBrev.FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT, TypeBrev.FORHÅNDSVARSEL_KLAGE_FORMKRAV -> {
-                listOf(SignaturGrunnlag(bruker.ident, null))
-            }
-
-            // Automatiske brev
-            TypeBrev.KLAGE_MOTTATT, TypeBrev.VARSEL_OM_BESTILLING, TypeBrev.FORVALTNINGSMELDING, TypeBrev.BARNETILLEGG_SATS_REGULERING -> emptyList()
-        }.distinctBy { it.navIdent }
+            }.distinctBy { it.navIdent }
+        } else {
+            listOf(SignaturGrunnlag(bruker.ident, null))
+        }
     }
 
     private val rolleTilAvklaringsbehov: Map<Rolle, List<Definisjon>> = buildMap {
@@ -74,7 +63,12 @@ class SignaturService(
 
     private fun definisjonerSomLøsesAv(rolle: Rolle): List<Definisjon> {
         return Definisjon.entries.filter { it.løsesAv.contains(rolle) }
-            .filterNot { it == Definisjon.MANUELT_SATT_PÅ_VENT }
+            .filterNot {
+                listOf(
+                    Definisjon.MANUELT_SATT_PÅ_VENT,
+                    Definisjon.VURDER_TREKK_AV_SØKNAD
+                ).contains(it)
+            }
     }
 
     private fun utledSignatur(rolle: Rolle, avklaringsbehovene: Avklaringsbehovene): SignaturGrunnlag? {

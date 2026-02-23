@@ -100,10 +100,10 @@ class PersonopplysningInformasjonskrav private constructor(
             val personopplysningRepository =
                 repositoryProvider.provide<PersonopplysningRepository>()
             return PersonopplysningInformasjonskrav(
-                SakService(repositoryProvider),
-                personopplysningRepository,
-                gatewayProvider.provide(),
-                TidligereVurderingerImpl(repositoryProvider),
+                sakService = SakService(repositoryProvider, gatewayProvider),
+                personopplysningRepository = personopplysningRepository,
+                personopplysningGateway = gatewayProvider.provide(),
+                tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
             )
         }
     }

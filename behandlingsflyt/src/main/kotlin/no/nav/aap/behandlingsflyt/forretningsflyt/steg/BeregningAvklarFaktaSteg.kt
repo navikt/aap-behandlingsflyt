@@ -28,11 +28,11 @@ class BeregningAvklarFaktaSteg private constructor(
     private val tidligereVurderinger: TidligereVurderinger,
     private val avklaringsbehovService: AvklaringsbehovService,
 ) : BehandlingSteg {
-    constructor(repositoryProvider: RepositoryProvider) : this(
+    constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         beregningVurderingRepository = repositoryProvider.provide(),
         sykdomRepository = repositoryProvider.provide(),
         yrkesskadeRepository = repositoryProvider.provide(),
-        tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
+        tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
         avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
     )
 
@@ -180,7 +180,7 @@ class BeregningAvklarFaktaSteg private constructor(
             repositoryProvider: RepositoryProvider,
             gatewayProvider: GatewayProvider
         ): BehandlingSteg {
-            return BeregningAvklarFaktaSteg(repositoryProvider)
+            return BeregningAvklarFaktaSteg(repositoryProvider, gatewayProvider)
         }
 
         override val rekkefølge: List<Definisjon> = listOf(

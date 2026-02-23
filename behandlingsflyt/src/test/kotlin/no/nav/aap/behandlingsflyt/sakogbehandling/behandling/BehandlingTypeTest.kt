@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Test
 class BehandlingTypeTest {
     @Test
     fun name() {
-        val utledType = TypeBehandling.Companion.from(TypeBehandling.Revurdering.identifikator())
+        val utledType = TypeBehandling.from(TypeBehandling.Revurdering.identifikator())
 
         Assertions.assertThat(utledType).isEqualTo(TypeBehandling.Revurdering)
     }

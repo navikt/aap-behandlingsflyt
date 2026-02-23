@@ -99,6 +99,10 @@ public enum class StegType(
         gruppe = StegGruppe.SYKDOM,
         status = Status.UTREDES,
     ),
+    ETABLERING_EGEN_VIRKSOMHET(
+        gruppe = StegGruppe.SYKDOM,
+        status = Status.UTREDES,
+    ),
     REFUSJON_KRAV(
         gruppe = StegGruppe.SYKDOM,
         status = Status.UTREDES

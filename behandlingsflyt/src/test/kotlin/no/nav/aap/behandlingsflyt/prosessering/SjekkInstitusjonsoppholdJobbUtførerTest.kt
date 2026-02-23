@@ -7,7 +7,7 @@ import io.mockk.just
 import io.mockk.mockk
 import io.mockk.verify
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.ArbeidsGradering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
@@ -89,9 +89,9 @@ class SjekkInstitusjonsoppholdJobbUtførerTest {
     private fun mockAvhengigheterForInstitusjonsoppholdJobbUtfører(
         årsakerPåTidligereBehandling: List<VurderingsbehovMedPeriode> = emptyList(),
         hentInstitusjonsoppholdReturn: InstitusjonsoppholdGrunnlag
-    ): Pair<SjekkInstitusjonsOppholdJobbUtfører, SakOgBehandlingService> {
+    ): Pair<SjekkInstitusjonsOppholdJobbUtfører, BehandlingService> {
         val sakServiceMock = mockk<SakService>()
-        val sakOgBehandlingServiceMock = mockk<SakOgBehandlingService>()
+        val behandlingServiceMock = mockk<BehandlingService>()
         val trukketSøknadServiceMock = mockk<TrukketSøknadService>()
         val sakRepositoryMock = mockk<SakRepository>()
         val behandlingRepositoryMock = mockk<BehandlingRepository>()
@@ -188,12 +188,12 @@ class SjekkInstitusjonsoppholdJobbUtførerTest {
             versjon = 0L
         )
 
-        every { sakOgBehandlingServiceMock.finnSisteYtelsesbehandlingFor(sakId) } returns fakeBehandling
+        every { behandlingServiceMock.finnSisteYtelsesbehandlingFor(sakId) } returns fakeBehandling
 
         every { trukketSøknadServiceMock.søknadErTrukket(any()) } returns false
 
         every {
-            sakOgBehandlingServiceMock.finnEllerOpprettOrdinærBehandling(
+            behandlingServiceMock.finnEllerOpprettOrdinærBehandling(
                 any<SakId>(),
                 any()
             )
@@ -219,7 +219,7 @@ class SjekkInstitusjonsoppholdJobbUtførerTest {
             )
         } just Runs
 
-        every { sakOgBehandlingServiceMock.finnBehandlingMedSisteFattedeVedtak(any()) } returns BehandlingMedVedtak(
+        every { behandlingServiceMock.finnBehandlingMedSisteFattedeVedtak(any()) } returns BehandlingMedVedtak(
             saksnummer = Saksnummer("DUMMYSAKSNR"),
             id = BehandlingId(456L),
             referanse = BehandlingReferanse(UUID.randomUUID()),
@@ -266,12 +266,12 @@ class SjekkInstitusjonsoppholdJobbUtførerTest {
             prosesserBehandlingService = prosesserBehandlingServiceMock,
             sakRepository = sakRepositoryMock,
             institusjonsOppholdRepository = institusjonsoppholdRepositoryMock,
-            sakOgBehandlingService = sakOgBehandlingServiceMock,
+            behandlingService = behandlingServiceMock,
             trukketSøknadService = trukketSøknadServiceMock,
             behandlingRepository = behandlingRepositoryMock,
             underveisgrunnlagRepository = underveisgrunnlagRepositoryMock,
             unleashGateway = unleashGateway,
-        ) to sakOgBehandlingServiceMock
+        ) to behandlingServiceMock
     }
 
 

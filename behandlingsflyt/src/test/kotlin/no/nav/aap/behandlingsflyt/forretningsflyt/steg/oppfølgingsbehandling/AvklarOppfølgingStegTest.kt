@@ -13,7 +13,7 @@ import no.nav.aap.behandlingsflyt.behandling.oppfølgingsbehandling.KonsekvensAv
 import no.nav.aap.behandlingsflyt.behandling.oppfølgingsbehandling.OppfølgingsBehandlingRepository
 import no.nav.aap.behandlingsflyt.behandling.oppfølgingsbehandling.OppfølgingsoppgaveGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.BehandletOppfølgingsOppgave
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
@@ -60,7 +60,7 @@ class AvklarOppfølgingStegTest {
     lateinit var prosesserBehandling: ProsesserBehandlingService
 
     @MockK
-    lateinit var sakOgBehandlingService: SakOgBehandlingService
+    lateinit var behandlingService: BehandlingService
 
     @MockK
     lateinit var mottaDokumentService: MottaDokumentService
@@ -97,7 +97,7 @@ class AvklarOppfølgingStegTest {
 
     @BeforeEach
     fun setup() {
-        every { sakOgBehandlingService.finnEllerOpprettOrdinærBehandling(any<SakId>(), any()) } returns behandling
+        every { behandlingService.finnEllerOpprettOrdinærBehandling(any<SakId>(), any()) } returns behandling
 
         every { mottaDokumentService.hentOppfølgingsBehandlingDokument(any()) } returns BehandletOppfølgingsOppgave(
             datoForOppfølging = LocalDate.now(),
@@ -138,7 +138,7 @@ class AvklarOppfølgingStegTest {
 
         verify {
             prosesserBehandling.triggProsesserBehandling(behandling.sakId, behandling.id)
-            sakOgBehandlingService.finnEllerOpprettOrdinærBehandling(
+            behandlingService.finnEllerOpprettOrdinærBehandling(
                 behandling.sakId,
                 match {
                     it.vurderingsbehov.map { it.type } == listOf(VurderingsbehovMedPeriode(Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND).type) &&
@@ -164,7 +164,7 @@ class AvklarOppfølgingStegTest {
 
         verify(exactly = 0) {
             prosesserBehandling.triggProsesserBehandling(behandling.sakId, behandling.id)
-            sakOgBehandlingService.finnEllerOpprettOrdinærBehandling(
+            behandlingService.finnEllerOpprettOrdinærBehandling(
                 behandling.sakId,
                 VurderingsbehovOgÅrsak(
                     listOf(VurderingsbehovMedPeriode(Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND)),
@@ -186,7 +186,7 @@ class AvklarOppfølgingStegTest {
 
         verify(exactly = 0) {
             prosesserBehandling.triggProsesserBehandling(behandling.sakId, behandling.id)
-            sakOgBehandlingService.finnEllerOpprettOrdinærBehandling(
+            behandlingService.finnEllerOpprettOrdinærBehandling(
                 behandling.sakId,
                 VurderingsbehovOgÅrsak(
                     listOf(VurderingsbehovMedPeriode(Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND)),
@@ -203,12 +203,11 @@ class AvklarOppfølgingStegTest {
 
         val steg = AvklarOppfølgingSteg(
             oppfølgingsBehandlingRepository = oppfølgingsBehandlingRepository,
-            sakOgBehandlingService = sakOgBehandlingService,
+            behandlingService = behandlingService,
             låsRepository = låsRepository,
             prosesserBehandling = prosesserBehandling,
             mottaDokumentService = mottaDokumentService,
             avklaringsbehovService = avklaringsbehovService,
-            avklaringsbehovRepository = avklaringsbehovRepository,
         )
 
         val kontekst = flytKontekstMedPerioder {

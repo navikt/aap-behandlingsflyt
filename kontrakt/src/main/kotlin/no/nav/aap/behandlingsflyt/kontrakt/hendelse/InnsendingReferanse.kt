@@ -20,6 +20,7 @@ public data class InnsendingReferanse(
         MANUELL_OPPRETTELSE,
         KABAL_HENDELSE_ID,
         TILBAKEKREVING_HENDELSE_ID,
+        INSTITUSJONSOPPHOLD_HENDELSE_ID,
         SYKEPENGEVEDTAK_HENDELSE_ID,
         FAGSYSTEMINFO_BEHOV_HENDELSE_ID,
         PDL_HENDELSE_ID
@@ -54,6 +55,7 @@ public data class InnsendingReferanse(
     public constructor(id: AvvistLegeerklæringId) : this(Type.AVVIST_LEGEERKLÆRING_ID, id.asString)
     public constructor(id: KabalHendelseId) : this(Type.KABAL_HENDELSE_ID, id.asString)
     public constructor(id: TilbakekrevingHendelseId) : this(Type.TILBAKEKREVING_HENDELSE_ID, id.asString)
+    public constructor(id: InstitusjonsOppholdHendelseId) : this(Type.INSTITUSJONSOPPHOLD_HENDELSE_ID, id.asString)
     public constructor(id: SykepengevedtakReferanse) : this(Type.SYKEPENGEVEDTAK_HENDELSE_ID, id.asString)
     public constructor(id: TilbakekrevingFagsysteminfoBehovHendelseId) : this(Type.FAGSYSTEMINFO_BEHOV_HENDELSE_ID, id.asString)
     public constructor(id: PdlHendelseId) : this(Type.PDL_HENDELSE_ID, id.asString)
@@ -120,6 +122,16 @@ public data class PdlHendelseId(@JsonValue val value: UUID) {
 
     public companion object {
         public fun ny(): PdlHendelseId = PdlHendelseId(UUID.randomUUID())
+    }
+}
+
+public data class InstitusjonsOppholdHendelseId(@JsonValue val value: UUID) {
+    val asString: String get() = value.toString()
+
+    public constructor(value: String) : this(UUID.fromString(value))
+
+    public companion object {
+        public fun ny(): InstitusjonsOppholdHendelseId = InstitusjonsOppholdHendelseId(UUID.randomUUID())
     }
 }
 

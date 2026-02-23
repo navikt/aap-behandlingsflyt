@@ -1,11 +1,7 @@
 package no.nav.aap.behandlingsflyt.flyt.steg
 
-object TilbakeføresFraBeslutter : StegResultat {
+data object TilbakeføresFraBeslutter : StegResultat {
     override fun transisjon(): Transisjon {
         return TilbakeførtFraBeslutter
-    }
-
-    override fun toString(): String {
-        return "TilbakeføresFraBeslutter()"
     }
 }

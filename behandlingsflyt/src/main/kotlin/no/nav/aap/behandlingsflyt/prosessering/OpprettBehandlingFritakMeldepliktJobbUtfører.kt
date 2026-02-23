@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.meldeperiode.MeldeperiodeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktRepository
@@ -25,7 +25,7 @@ class OpprettBehandlingFritakMeldepliktJobbUtfører(
     private val behandlingRepository: BehandlingRepository,
     private val meldeperiodeRepository: MeldeperiodeRepository,
     private val meldepliktRepository: MeldepliktRepository,
-    private val sakOgBehandlingService: SakOgBehandlingService,
+    private val behandlingService: BehandlingService,
     private val prosesserBehandlingService: ProsesserBehandlingService,
     private val underveisRepository: UnderveisRepository,
 ) : JobbUtfører {
@@ -34,7 +34,7 @@ class OpprettBehandlingFritakMeldepliktJobbUtfører(
         val sak = sakService.hent(SakId(input.sakId()))
 
         if (skalHaFritakForPassertMeldeperiode(sak)) {
-            val fritakMeldepliktBehandling = sakOgBehandlingService.finnEllerOpprettBehandling(
+            val fritakMeldepliktBehandling = behandlingService.finnEllerOpprettBehandling(
                 sakId = sak.id,
                 vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
                     årsak = ÅrsakTilOpprettelse.FRITAK_MELDEPLIKT,
@@ -54,7 +54,7 @@ class OpprettBehandlingFritakMeldepliktJobbUtfører(
         if (sisteBehandling.status().erÅpen() && Vurderingsbehov.FRITAK_MELDEPLIKT in sisteBehandling.vurderingsbehov().map { it.type }) {
             return false
         }
-        val sisteIverksatteBehandling = sakOgBehandlingService.finnBehandlingMedSisteFattedeVedtak(sak.id) ?: return false
+        val sisteIverksatteBehandling = behandlingService.finnBehandlingMedSisteFattedeVedtak(sak.id) ?: return false
         val underveisPerioder = underveisRepository.hentHvisEksisterer(sisteIverksatteBehandling.id) ?: return false
         val aktuellPeriode = underveisPerioder.somTidslinje().helePerioden()
 
@@ -70,11 +70,11 @@ class OpprettBehandlingFritakMeldepliktJobbUtfører(
     companion object : ProvidersJobbSpesifikasjon {
         override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): JobbUtfører {
             return OpprettBehandlingFritakMeldepliktJobbUtfører(
-                sakService = SakService(repositoryProvider),
+                sakService = SakService(repositoryProvider, gatewayProvider),
                 behandlingRepository = repositoryProvider.provide(),
                 meldeperiodeRepository = repositoryProvider.provide(),
                 meldepliktRepository = repositoryProvider.provide(),
-                sakOgBehandlingService = SakOgBehandlingService(repositoryProvider, gatewayProvider),
+                behandlingService = BehandlingService(repositoryProvider, gatewayProvider),
                 prosesserBehandlingService = ProsesserBehandlingService(repositoryProvider, gatewayProvider),
                 underveisRepository = repositoryProvider.provide(),
             )

@@ -49,7 +49,7 @@ object FiktivtNavnGenerator {
                     ?: Navnelager::class.java.classLoader.getResourceAsStream(resourceName)
                     ?: FiktivtNavnGenerator::class.java.classLoader.getResourceAsStream(resourceName)
                     ?: FiktivtNavnGenerator::class.java.getResourceAsStream(resourceName)
-                    ?: throw RuntimeException("Resource not found: $resourceName")
+                    ?: error("Resource not found: $resourceName")
 
                 BufferedReader(InputStreamReader(resourceStream)).use { br ->
                     val resultat: MutableList<String> =
@@ -62,7 +62,7 @@ object FiktivtNavnGenerator {
                     return resultat
                 }
             } catch (e: IOException) {
-                throw RuntimeException(e)
+                error(e)
             }
         }
     }

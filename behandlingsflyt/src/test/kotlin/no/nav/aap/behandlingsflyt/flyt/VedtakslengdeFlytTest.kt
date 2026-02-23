@@ -7,7 +7,7 @@ import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companio
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.ÅrMedHverdager
 import no.nav.aap.behandlingsflyt.behandling.vedtakslengde.VedtakslengdeService
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.EØSLandEllerLandMedAvtale
-import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
@@ -60,7 +60,7 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(VedtakslengdeUnleash::
             .løsBistand(startDato)
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
-            .kvalitetssikreOk()
+            .kvalitetssikre()
             .løsBeregningstidspunkt(startDato)
             .løsOppholdskrav(startDato)
             .løsAndreStatligeYtelser()
@@ -96,7 +96,7 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(VedtakslengdeUnleash::
             val repositoryProvider = postgresRepositoryRegistry.provider(connection)
 
             val opprettJobbUtvidVedtakslengdeJobbUtfører = `OpprettJobbUtvidVedtakslengdeJobbUtfører`(
-                sakOgBehandlingService = SakOgBehandlingService(repositoryProvider, gatewayProvider),
+                behandlingService = BehandlingService(repositoryProvider, gatewayProvider),
                 vedtakslengdeService = VedtakslengdeService(repositoryProvider, gatewayProvider),
                 flytJobbRepository = FlytJobbRepositoryImpl(connection),
                 unleashGateway = VedtakslengdeUnleash,
@@ -109,7 +109,7 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(VedtakslengdeUnleash::
         motor.kjørJobber()
 
         dataSource.transaction { connection ->
-            val automatiskBehandling = SakOgBehandlingService(
+            val automatiskBehandling = BehandlingService(
                 postgresRepositoryRegistry.provider(connection),
                 gatewayProvider
             ).finnBehandlingMedSisteFattedeVedtak(sak.id)!!
@@ -167,7 +167,7 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(VedtakslengdeUnleash::
             val repositoryProvider = postgresRepositoryRegistry.provider(connection)
 
             val opprettJobbUtvidVedtakslengdeJobbUtfører = `OpprettJobbUtvidVedtakslengdeJobbUtfører`(
-                sakOgBehandlingService = SakOgBehandlingService(repositoryProvider, gatewayProvider),
+                behandlingService = BehandlingService(repositoryProvider, gatewayProvider),
                 vedtakslengdeService = VedtakslengdeService(repositoryProvider, gatewayProvider),
                 flytJobbRepository = FlytJobbRepositoryImpl(connection),
                 unleashGateway = VedtakslengdeUnleash,
@@ -180,7 +180,7 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(VedtakslengdeUnleash::
         motor.kjørJobber()
 
         dataSource.transaction { connection ->
-            val behandlingMedSisteFattedeVedtak = SakOgBehandlingService(
+            val behandlingMedSisteFattedeVedtak = BehandlingService(
                 postgresRepositoryRegistry.provider(connection),
                 gatewayProvider
             ).finnBehandlingMedSisteFattedeVedtak(sak.id)!!
@@ -230,7 +230,7 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(VedtakslengdeUnleash::
             .løsBistand(startDato)
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
-            .kvalitetssikreOk()
+            .kvalitetssikre()
             .løsBeregningstidspunkt(startDato)
             .løsForutgåendeMedlemskap(startDato, medlem = true)
             .løsOppholdskrav(startDato)
@@ -267,7 +267,7 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(VedtakslengdeUnleash::
             val repositoryProvider = postgresRepositoryRegistry.provider(connection)
 
             val opprettJobbUtvidVedtakslengdeJobbUtfører = `OpprettJobbUtvidVedtakslengdeJobbUtfører`(
-                sakOgBehandlingService = SakOgBehandlingService(repositoryProvider, gatewayProvider),
+                behandlingService = BehandlingService(repositoryProvider, gatewayProvider),
                 vedtakslengdeService = VedtakslengdeService(repositoryProvider, gatewayProvider),
                 flytJobbRepository = FlytJobbRepositoryImpl(connection),
                 unleashGateway = VedtakslengdeUnleash,
@@ -280,7 +280,7 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(VedtakslengdeUnleash::
         motor.kjørJobber()
 
         dataSource.transaction { connection ->
-            val behandlingMedSisteFattedeVedtak = SakOgBehandlingService(
+            val behandlingMedSisteFattedeVedtak = BehandlingService(
                 postgresRepositoryRegistry.provider(connection),
                 gatewayProvider
             ).finnBehandlingMedSisteFattedeVedtak(sak.id)!!
@@ -307,7 +307,7 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(VedtakslengdeUnleash::
             .løsBistand(startDato)
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
-            .kvalitetssikreOk()
+            .kvalitetssikre()
             .løsBeregningstidspunkt(startDato)
             .løsOppholdskrav(startDato)
             .løsAndreStatligeYtelser()
@@ -351,7 +351,7 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(VedtakslengdeUnleash::
             val repositoryProvider = postgresRepositoryRegistry.provider(connection)
 
             val opprettJobbUtvidVedtakslengdeJobbUtfører = `OpprettJobbUtvidVedtakslengdeJobbUtfører`(
-                sakOgBehandlingService = SakOgBehandlingService(repositoryProvider, gatewayProvider),
+                behandlingService = BehandlingService(repositoryProvider, gatewayProvider),
                 vedtakslengdeService = VedtakslengdeService(repositoryProvider, gatewayProvider),
                 flytJobbRepository = FlytJobbRepositoryImpl(connection),
                 unleashGateway = VedtakslengdeUnleash,
@@ -364,7 +364,7 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(VedtakslengdeUnleash::
         motor.kjørJobber()
 
         dataSource.transaction { connection ->
-            val automatiskBehandling = SakOgBehandlingService(
+            val automatiskBehandling = BehandlingService(
                 postgresRepositoryRegistry.provider(connection),
                 gatewayProvider
             ).finnBehandlingMedSisteFattedeVedtak(sak.id)!!

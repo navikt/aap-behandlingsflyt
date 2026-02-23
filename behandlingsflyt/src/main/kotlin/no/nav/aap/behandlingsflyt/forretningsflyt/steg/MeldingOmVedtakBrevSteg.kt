@@ -97,11 +97,11 @@ class MeldingOmVedtakBrevSteg(
     }
 
     private fun vedtakBehøverVurdering(klageErTrukket: Boolean, brevBehov: BrevBehov?): Boolean {
-        return !klageErTrukket && brevBehov != null && !erAutomatiskBrev(brevBehov)
+        return !klageErTrukket && brevBehov != null && !brevBehov.typeBrev.erAutomatiskBrev()
     }
 
     private fun bestillBrev(kontekst: FlytKontekstMedPerioder, brevBehov: BrevBehov) {
-        val automatisk = erAutomatiskBrev(brevBehov)
+        val automatisk = brevBehov.typeBrev.erAutomatiskBrev()
         log.info("Bestiller${if (automatisk) " automatisk" else ""} brev for behandling ${kontekst.behandlingId}.")
         brevbestillingService.bestill(
             behandlingId = kontekst.behandlingId,
@@ -110,15 +110,6 @@ class MeldingOmVedtakBrevSteg(
             ferdigstillAutomatisk = automatisk,
             brukApiV3 = brukApiV3(kontekst.behandlingId, brevBehov.typeBrev)
         )
-    }
-
-    private fun erAutomatiskBrev(brevBehov: BrevBehov): Boolean {
-        return when (brevBehov.typeBrev) {
-            TypeBrev.BARNETILLEGG_SATS_REGULERING,
-            TypeBrev.VEDTAK_UTVID_VEDTAKSLENGDE -> true
-
-            else -> false
-        }
     }
 
     private fun unikReferanse(brevBehov: BrevBehov, kontekst: FlytKontekstMedPerioder): String {

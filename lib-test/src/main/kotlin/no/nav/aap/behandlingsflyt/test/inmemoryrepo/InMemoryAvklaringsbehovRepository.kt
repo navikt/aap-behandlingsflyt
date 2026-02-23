@@ -106,15 +106,6 @@ object InMemoryAvklaringsbehovRepository : AvklaringsbehovRepository,
         endreAvklaringsbehov(avklaringsbehovId, endring)
     }
 
-    override fun endreSkrivBrev(
-        avklaringsbehovId: Long,
-        endring: Endring,
-        funnetISteg: StegType
-    ) {
-        oppdaterFunnetISteg(avklaringsbehovId, funnetISteg)
-        endreAvklaringsbehov(avklaringsbehovId, endring)
-    }
-
     fun clearMemory() {
         memory.clear()
     }

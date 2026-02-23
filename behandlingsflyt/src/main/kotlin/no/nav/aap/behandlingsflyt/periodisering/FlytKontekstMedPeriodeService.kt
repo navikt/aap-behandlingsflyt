@@ -25,7 +25,7 @@ class FlytKontekstMedPeriodeService(
     private val behandlingRepository: BehandlingRepository,
 ) {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
-        sakService = SakService(repositoryProvider),
+        sakService = SakService(repositoryProvider, gatewayProvider),
         behandlingRepository = repositoryProvider.provide(),
     )
 
@@ -114,6 +114,7 @@ class FlytKontekstMedPeriodeService(
             Vurderingsbehov.OVERGANG_UFORE,
             Vurderingsbehov.OVERGANG_ARBEID,
             Vurderingsbehov.OPPHOLDSKRAV,
+            Vurderingsbehov.ETABLERING_EGEN_VIRKSOMHET,
             Vurderingsbehov.UTENLANDSOPPHOLD_FOR_SOKNADSTIDSPUNKT ->
                 REVURDERING
 

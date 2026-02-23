@@ -40,6 +40,7 @@ import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.sykepenge
 import no.nav.aap.behandlingsflyt.behandling.beregning.manuellinntekt.manglendeGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.beregning.tidspunkt.beregningVurderingApi
 import no.nav.aap.behandlingsflyt.behandling.brev.sykdomsvurderingForBrevApi
+import no.nav.aap.behandlingsflyt.behandling.etableringegenvirksomhet.etableringEgenVirksomhetApi
 import no.nav.aap.behandlingsflyt.behandling.foreslåvedtak.foreslaaVedtakApi
 import no.nav.aap.behandlingsflyt.behandling.grunnlag.medlemskap.medlemskapsgrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.grunnlag.samordning.samordningGrunnlag
@@ -70,6 +71,7 @@ import no.nav.aap.behandlingsflyt.behandling.student.studentgrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.student.sykestipend.sykestipendGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.svarfraandreinstans.svarfraandreinstans.svarFraAndreinstansGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.søknad.trukketSøknadGrunnlagApi
+import no.nav.aap.behandlingsflyt.behandling.tidligerevurderinger.tidligereVurderingerApi
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.tilkjentYtelseApi
 import no.nav.aap.behandlingsflyt.behandling.underveis.meldepliktOverstyringGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.underveis.underveisVurderingerApi
@@ -236,7 +238,7 @@ internal fun Application.server(
         startInstitusjonsOppholdKonsument(dataSource, repositoryRegistry)
     }
 
-    if (!Miljø.erLokal() && !Miljø.erProd()) {
+    if (!Miljø.erLokal()) {
         startSykepengevedtakKonsument(dataSource, repositoryRegistry, gatewayProvider)
     }
 
@@ -274,6 +276,7 @@ internal fun Application.server(
                 meldepliktOverstyringGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
                 arbeidsevneGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
                 arbeidsopptrappingGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
+                etableringEgenVirksomhetApi(dataSource, repositoryRegistry, gatewayProvider)
                 overgangUforeGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
                 medlemskapsgrunnlagApi(dataSource, repositoryRegistry)
                 studentgrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
@@ -302,6 +305,7 @@ internal fun Application.server(
                 manglendeGrunnlagApi(dataSource, repositoryRegistry)
                 mellomlagretVurderingApi(dataSource, repositoryRegistry, gatewayProvider)
                 rettighetApi(dataSource, repositoryRegistry)
+                tidligereVurderingerApi(dataSource, repositoryRegistry, gatewayProvider)
                 // Klage
                 påklagetBehandlingGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
                 fullmektigGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)

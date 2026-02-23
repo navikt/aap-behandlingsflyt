@@ -37,4 +37,14 @@ enum class TypeBrev {
             KLAGE_TRUKKET
         ).contains(this)
     }
+
+    fun erAutomatiskBrev(): Boolean {
+        return setOf(
+            KLAGE_MOTTATT,
+            VARSEL_OM_BESTILLING,
+            FORVALTNINGSMELDING,
+            BARNETILLEGG_SATS_REGULERING,
+            VEDTAK_UTVID_VEDTAKSLENGDE
+        ).contains(this)
+    }
 }

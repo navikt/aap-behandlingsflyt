@@ -36,11 +36,11 @@ class UføreInformasjonskrav(
     private val tidligereVurderinger: TidligereVurderinger,
 ) : Informasjonskrav<UføreInformasjonskrav.UføreInput, UføreRegisterdata>, KanTriggeRevurdering {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
-        sakService = SakService(repositoryProvider),
+        sakService = SakService(repositoryProvider, gatewayProvider),
         uføreRepository = repositoryProvider.provide(),
         beregningVurderingRepository = repositoryProvider.provide(),
         uføreRegisterGateway = gatewayProvider.provide(),
-        tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
+        tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
     )
 
     override val navn = Companion.navn

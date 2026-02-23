@@ -69,7 +69,6 @@ class SamordningAvslagStegTest {
         var capturedVilkår: Vilkårsresultat? = null
         every { vilkårsresultatRepository.lagre(any(), any()) } answers {
             capturedVilkår = secondArg()
-            Unit
         }
         steg.utfør(kontekst = kontekst)
         val vilkårTidslinje = capturedVilkår!!.finnVilkår(Vilkårtype.SAMORDNING).tidslinje()
@@ -85,7 +84,6 @@ class SamordningAvslagStegTest {
         var capturedVilkår: Vilkårsresultat? = null
         every { vilkårsresultatRepository.lagre(any(), any()) } answers {
             capturedVilkår = secondArg()
-            Unit
         }
         steg.utfør(kontekst = kontekst)
         val vilkårTidslinje = capturedVilkår!!.finnVilkår(Vilkårtype.SAMORDNING).tidslinje()
@@ -106,7 +104,6 @@ class SamordningAvslagStegTest {
         var capturedVilkår: Vilkårsresultat? = null
         every { vilkårsresultatRepository.lagre(any(), any()) } answers {
             capturedVilkår = secondArg()
-            Unit
         }
         steg.utfør(kontekst = kontekst)
         val vilkårTidslinje = capturedVilkår!!.finnVilkår(Vilkårtype.SAMORDNING).tidslinje()

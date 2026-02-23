@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.ArbeidsGradering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
@@ -16,8 +16,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.miljo.Miljø
 import no.nav.aap.komponenter.tidslinje.somTidslinje
@@ -35,7 +34,8 @@ import java.time.LocalDate
 class OpprettBehandlingMigrereRettighetsperiodeJobbUtfører(
     private val prosesserBehandlingService: ProsesserBehandlingService,
     private val sakRepository: SakRepository,
-    private val sakOgBehandlingService: SakOgBehandlingService,
+    private val sakService: SakService,
+    private val behandlingService: BehandlingService,
     private val tilkjentYtelseRepository: TilkjentYtelseRepository,
     private val underveisRepository: UnderveisRepository,
     private val vilkårsresultatRepository: VilkårsresultatRepository,
@@ -55,17 +55,17 @@ class OpprettBehandlingMigrereRettighetsperiodeJobbUtfører(
             log.info("Har allerede tid maks som rettighetsperiode - lager ikke en ny behandling")
             return
         }
-        val behandlingFørMigrering = sakOgBehandlingService.finnSisteYtelsesbehandlingFor(sak.id)
+        val behandlingFørMigrering = behandlingService.finnSisteYtelsesbehandlingFor(sak.id)
             ?: error("Fant ikke behandling for sak=${sakId}")
         if (behandlingFørMigrering.status().erÅpen()) {
             throw IllegalArgumentException("Kan ikke migrere sak når det finnes en åpen behandling")
         }
-        sakOgBehandlingService.overstyrRettighetsperioden(sak.id, sak.rettighetsperiode.fom, Tid.MAKS)
+        sakService.overstyrRettighetsperioden(sak.id, sak.rettighetsperiode.fom, Tid.MAKS)
         val utvidVedtakslengdeBehandling = opprettNyBehandling(sak)
         prosesserBehandlingService.triggProsesserBehandling(utvidVedtakslengdeBehandling)
         validerTilstandEtterMigrering(sak, sakId, behandlingFørMigrering)
 
-        log.info("Jobb for migrering av rettighetsperiode fullført for sak ${sakId}")
+        log.info("Jobb for migrering av rettighetsperiode fullført for sak $sakId")
 
     }
 
@@ -78,7 +78,7 @@ class OpprettBehandlingMigrereRettighetsperiodeJobbUtfører(
         if (Miljø.erDev()) {
             return
         }
-        val behandlingEtterMigrering = sakOgBehandlingService.finnSisteYtelsesbehandlingFor(sak.id)
+        val behandlingEtterMigrering = behandlingService.finnSisteYtelsesbehandlingFor(sak.id)
             ?: error("Fant ikke behandling for sak=${sakId}")
         validerBehandlingerErUlike(behandlingFørMigrering, behandlingEtterMigrering)
         validerRettighetstype(behandlingFørMigrering, behandlingEtterMigrering, sak)
@@ -153,7 +153,7 @@ class OpprettBehandlingMigrereRettighetsperiodeJobbUtfører(
             }
             underveisFør.forEachIndexed { index, periodeFør ->
                 val periodeEtter = underveisEtter.find { it.periode == periodeFør.periode }
-                    ?: error("Fant ikke underveisperiode for ny behandling for indeks: ${index}")
+                    ?: error("Fant ikke underveisperiode for ny behandling for indeks: $index")
                 val verdiFør = periodeFør.verdi
                 val verdiEtter = periodeEtter.verdi
                 if (verdiFør.meldePeriode != verdiEtter.meldePeriode
@@ -171,7 +171,7 @@ class OpprettBehandlingMigrereRettighetsperiodeJobbUtfører(
                 ) {
                     // Spesialsjekk på meldeplitstatus, gradering,
                     secureLogger.info("Migrering underveis før=$periodeFør og etter=$periodeEtter")
-                    throw IllegalStateException("Ulike underveisperioder mellom ny og gammel behandling for indeks: ${index}")
+                    throw IllegalStateException("Ulike underveisperioder mellom ny og gammel behandling for indeks: $index")
                 }
             }
         }
@@ -186,7 +186,7 @@ class OpprettBehandlingMigrereRettighetsperiodeJobbUtfører(
     private fun skalValidereUnderveis(sak: Sak, behandlingFørMigrering: Behandling): Boolean {
         val erForrigeBehandlingFastsattPeriodePassert =
             behandlingFørMigrering.vurderingsbehov().map { it.type }.contains(Vurderingsbehov.FASTSATT_PERIODE_PASSERT)
-        val forhåndsgodkjenteSaksnummerMedPotensiellEndringIUnderveis = listOf<String>(
+        val forhåndsgodkjenteSaksnummerMedPotensiellEndringIUnderveis = listOf(
             "4MD3UPS",
             "4oAoCR4",
             "4LDZA0W"
@@ -262,7 +262,7 @@ class OpprettBehandlingMigrereRettighetsperiodeJobbUtfører(
         tilkjentYtelseEffektivDagsatsFør.forEachIndexed { index, periodeFør ->
             val periodeEtter = tilkjentYtelseEffektivDagsatsEtter.find { it.periode == periodeFør.periode }
             if (periodeEtter == null) {
-                throw IllegalStateException("Mangler periode ${periodeFør} med tilkjent ytelse i ny behandling - indeks: $index")
+                throw IllegalStateException("Mangler periode $periodeFør med tilkjent ytelse i ny behandling - indeks: $index")
             } else if (periodeEtter != periodeFør) {
                 secureLogger.info("Migrering tilkjent ytelse før=$periodeFør og etter=$periodeEtter")
                 log.warn("Ulik tilkjent ytelseperiode ved migrering - godtas i dev pga gammel data")
@@ -282,8 +282,8 @@ class OpprettBehandlingMigrereRettighetsperiodeJobbUtfører(
         }
     }
 
-    private fun opprettNyBehandling(sak: Sak): SakOgBehandlingService.OpprettetBehandling =
-        sakOgBehandlingService.finnEllerOpprettBehandling(
+    private fun opprettNyBehandling(sak: Sak): BehandlingService.OpprettetBehandling =
+        behandlingService.finnEllerOpprettBehandling(
             sakId = sak.id,
             vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
                 årsak = ÅrsakTilOpprettelse.MIGRER_RETTIGHETSPERIODE,
@@ -299,7 +299,8 @@ class OpprettBehandlingMigrereRettighetsperiodeJobbUtfører(
                 underveisRepository = repositoryProvider.provide(),
                 tilkjentYtelseRepository = repositoryProvider.provide(),
                 vilkårsresultatRepository = repositoryProvider.provide(),
-                sakOgBehandlingService = SakOgBehandlingService(repositoryProvider, gatewayProvider),
+                behandlingService = BehandlingService(repositoryProvider, gatewayProvider),
+                sakService = SakService(repositoryProvider, gatewayProvider),
             )
         }
 

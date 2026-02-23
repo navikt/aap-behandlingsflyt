@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus
-import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
@@ -21,7 +21,7 @@ import java.time.LocalDateTime
 class OpprettBehandlingFastsattPeriodePassertJobbUtfører(
     private val sakService: SakService,
     private val underveisRepository: UnderveisRepository,
-    private val sakOgBehandlingService: SakOgBehandlingService,
+    private val behandlingService: BehandlingService,
     private val prosesserBehandlingService: ProsesserBehandlingService,
 ) : JobbUtfører {
 
@@ -34,7 +34,7 @@ class OpprettBehandlingFastsattPeriodePassertJobbUtfører(
             return
         }
 
-        val behandling = sakOgBehandlingService.finnSisteYtelsesbehandlingFor(sak.id) ?: return
+        val behandling = behandlingService.finnSisteYtelsesbehandlingFor(sak.id) ?: return
 
         if (behandling.status().erÅpen() && Vurderingsbehov.FASTSATT_PERIODE_PASSERT in behandling.vurderingsbehov()
                 .map { it.type }
@@ -68,7 +68,7 @@ class OpprettBehandlingFastsattPeriodePassertJobbUtfører(
             return
         }
 
-        val fastsattPeriodePassertBehandling = sakOgBehandlingService.finnEllerOpprettBehandling(
+        val fastsattPeriodePassertBehandling = behandlingService.finnEllerOpprettBehandling(
             sakId = sak.id,
             vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
                 årsak = ÅrsakTilOpprettelse.FASTSATT_PERIODE_PASSERT,
@@ -82,9 +82,9 @@ class OpprettBehandlingFastsattPeriodePassertJobbUtfører(
     companion object : ProvidersJobbSpesifikasjon {
         override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): JobbUtfører {
             return OpprettBehandlingFastsattPeriodePassertJobbUtfører(
-                sakService = SakService(repositoryProvider),
+                sakService = SakService(repositoryProvider, gatewayProvider),
                 underveisRepository = repositoryProvider.provide(),
-                sakOgBehandlingService = SakOgBehandlingService(repositoryProvider, gatewayProvider),
+                behandlingService = BehandlingService(repositoryProvider, gatewayProvider),
                 prosesserBehandlingService = ProsesserBehandlingService(repositoryProvider, gatewayProvider),
             )
         }

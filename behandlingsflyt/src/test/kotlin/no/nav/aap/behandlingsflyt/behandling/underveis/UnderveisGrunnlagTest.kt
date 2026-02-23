@@ -29,7 +29,7 @@ class UnderveisGrunnlagTest {
         )
 
         val underveisGrunnlag = UnderveisGrunnlag(1234, perioder)
-        val kvoter = underveisGrunnlag.utledKvoterForRettighetstype(RettighetsType.BISTANDSBEHOV)
+        val kvoter = underveisGrunnlag.utledKvoterForRettighetstype(RettighetsType.BISTANDSBEHOV, dagensDato)
         val totalKvoteForBistandsbehov = 784
 
         assertThat(kvoter.bruktKvote).isEqualTo(0)
@@ -47,7 +47,7 @@ class UnderveisGrunnlagTest {
 
         val perioder = listOf(historiskPeriode, gjeldendePeriode)
         val underveisGrunnlag = UnderveisGrunnlag(1234, perioder)
-        val kvoter = underveisGrunnlag.utledKvoterForRettighetstype(RettighetsType.SYKEPENGEERSTATNING)
+        val kvoter = underveisGrunnlag.utledKvoterForRettighetstype(RettighetsType.SYKEPENGEERSTATNING, dagensDato)
         val totalKvoteForSykepengeErstatning = 130
         val forventetBruktKvote = 14
 
@@ -64,7 +64,7 @@ class UnderveisGrunnlagTest {
         )
 
         val underveisGrunnlag = UnderveisGrunnlag(1234, perioder)
-        val maksdato = underveisGrunnlag.utledMaksdatoForRettighet(RettighetsType.BISTANDSBEHOV)
+        val maksdato = underveisGrunnlag.utledMaksdatoForRettighet(RettighetsType.BISTANDSBEHOV, dagensDato)
         val forventetMaksdato = Hverdager(773).fraOgMed(dagensDato)
 
         assertThat(maksdato).isEqualTo(forventetMaksdato)
@@ -79,7 +79,7 @@ class UnderveisGrunnlagTest {
         )
 
         val underveisGrunnlag = UnderveisGrunnlag(1234, perioder)
-        val maksdato = underveisGrunnlag.utledMaksdatoForRettighet(RettighetsType.SYKEPENGEERSTATNING)
+        val maksdato = underveisGrunnlag.utledMaksdatoForRettighet(RettighetsType.SYKEPENGEERSTATNING, dagensDato)
         val forventetMaksdato = Hverdager(115).fraOgMed(dagensDato)
 
         assertThat(maksdato).isEqualTo(forventetMaksdato)

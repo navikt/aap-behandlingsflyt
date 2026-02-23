@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovMetadataUtleder
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
@@ -24,7 +25,6 @@ import no.nav.aap.behandlingsflyt.flyt.steg.Ventebehov
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
@@ -36,20 +36,18 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 
 class VurderLovvalgSteg private constructor(
     private val vilkårsresultatRepository: VilkårsresultatRepository,
-    private val behandlingRepository: BehandlingRepository,
     private val personopplysningRepository: PersonopplysningRepository,
     private val medlemskapArbeidInntektRepository: MedlemskapArbeidInntektRepository,
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
     private val tidligereVurderinger: TidligereVurderinger,
     private val avklaringsbehovService: AvklaringsbehovService,
-) : BehandlingSteg {
+) : BehandlingSteg, AvklaringsbehovMetadataUtleder {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         vilkårsresultatRepository = repositoryProvider.provide(),
-        behandlingRepository = repositoryProvider.provide(),
         personopplysningRepository = repositoryProvider.provide(),
         medlemskapArbeidInntektRepository = repositoryProvider.provide(),
         avklaringsbehovRepository = repositoryProvider.provide(),
-        tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
+        tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
         avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
     )
 
@@ -66,7 +64,7 @@ class VurderLovvalgSteg private constructor(
             kontekst = kontekst,
             definisjon = Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP,
             tvingerAvklaringsbehov = vurderingsbehovSomTvingerAvklaringsbehov(),
-            nårVurderingErRelevant = ::perioderVurderingErRelevant,
+            nårVurderingErRelevant = ::nårVurderingErRelevant,
             nårVurderingErGyldig = { perioderVurderingErGyldig(kontekst, grunnlag.value) },
             tilbakestillGrunnlag = { tilbakestillVurderinger(kontekst, grunnlag.value) },
         )
@@ -117,9 +115,7 @@ class VurderLovvalgSteg private constructor(
         return grunnlag.medlemskapArbeidInntektGrunnlag?.gjeldendeVurderinger().orEmpty().mapValue { true }
     }
 
-    private fun perioderVurderingErRelevant(
-        kontekst: FlytKontekstMedPerioder,
-    ): Tidslinje<Boolean> {
+    override fun nårVurderingErRelevant(kontekst: FlytKontekstMedPerioder): Tidslinje<Boolean> {
         val grunnlag = hentGrunnlag(kontekst.sakId, kontekst.behandlingId)
         val tidligereVurderingsutfall = tidligereVurderinger.behandlingsutfall(kontekst, type())
         val automatiskVilkårsvurderingLovvalg = vilkårsvurderingLovvalgUtenManuelleVurderinger(kontekst, grunnlag)
@@ -128,9 +124,9 @@ class VurderLovvalgSteg private constructor(
             .mapValue { (behandlingsutfall, automatiskVilkårsvurderingLovvalg) ->
                 when (behandlingsutfall) {
                     null -> false
-                    TidligereVurderinger.Behandlingsutfall.IKKE_BEHANDLINGSGRUNNLAG -> false
-                    TidligereVurderinger.Behandlingsutfall.UUNGÅELIG_AVSLAG -> false
-                    TidligereVurderinger.Behandlingsutfall.UKJENT -> {
+                    TidligereVurderinger.IkkeBehandlingsgrunnlag -> false
+                    TidligereVurderinger.UunngåeligAvslag -> false
+                    is TidligereVurderinger.PotensieltOppfylt -> {
                         val automatiskVilkårsvurderinglovvalgIkkeOppfylt =
                             automatiskVilkårsvurderingLovvalg?.erOppfylt() == false
 
@@ -222,11 +218,13 @@ class VurderLovvalgSteg private constructor(
         return grunnlag
     }
 
+    override val stegType = type()
+
     companion object : FlytSteg {
         override fun konstruer(
             repositoryProvider: RepositoryProvider,
             gatewayProvider: GatewayProvider
-        ): BehandlingSteg {
+        ): VurderLovvalgSteg {
             return VurderLovvalgSteg(repositoryProvider, gatewayProvider)
         }
 

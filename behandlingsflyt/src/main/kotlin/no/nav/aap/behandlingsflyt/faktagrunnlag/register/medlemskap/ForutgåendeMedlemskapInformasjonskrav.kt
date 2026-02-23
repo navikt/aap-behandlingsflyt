@@ -178,14 +178,14 @@ class ForutgåendeMedlemskapInformasjonskrav private constructor(
         ): ForutgåendeMedlemskapInformasjonskrav {
             val grunnlagRepository = repositoryProvider.provide<MedlemskapArbeidInntektForutgåendeRepository>()
             return ForutgåendeMedlemskapInformasjonskrav(
-                SakService(repositoryProvider),
-                repositoryProvider.provide(),
-                grunnlagRepository,
-                TidligereVurderingerImpl(repositoryProvider),
-                gatewayProvider.provide(),
-                gatewayProvider.provide(),
-                gatewayProvider.provide(),
-                gatewayProvider.provide()
+                sakService = SakService(repositoryProvider, gatewayProvider),
+                medlemskapForutgåendeRepository = repositoryProvider.provide(),
+                grunnlagRepository = grunnlagRepository,
+                tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
+                medlemskapGateway = gatewayProvider.provide(),
+                arbeidsforholdGateway = gatewayProvider.provide(),
+                inntektkomponentenGateway = gatewayProvider.provide(),
+                enhetsregisteretGateway = gatewayProvider.provide()
             )
         }
     }

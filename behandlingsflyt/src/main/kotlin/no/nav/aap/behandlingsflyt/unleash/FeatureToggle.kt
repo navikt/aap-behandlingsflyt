@@ -17,12 +17,13 @@ enum class BehandlingsflytFeature : FeatureToggle {
     InstitusjonsoppholdJobb,
     TrekkSoeknadOpprettetFraLegeerklaering,
     UbehandledeMeldekortJobb,
-    PapirMeldekortFraBehandingsflyt,
-    RettighetstypeSteg,
     VirksomhetsEtablering,
     KvalitetssikringVed2213,
     tilbakekrevingsOppgaverTilOppgave,
-    PeriodiseringHelseinstitusjonOpphold
+    PeriodiseringHelseinstitusjonOpphold,
+    HentingAvInstitusjonsOpphold,
+    VisIkkeRelevantPeriode,
+    NyTidligereVurderinger,
     ;
 
     override fun key(): String = name

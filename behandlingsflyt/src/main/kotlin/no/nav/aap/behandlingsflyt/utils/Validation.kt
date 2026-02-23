@@ -52,7 +52,7 @@ sealed class Validation<VALIDATEDCLASS>(
 
     fun get(): VALIDATEDCLASS = when(this) {
         is Valid -> this.validatedObject
-        is Invalid -> throw RuntimeException("Kan ikke hente et validert objekt når objektet ikke er validert som gyldig")
+        is Invalid -> error("Kan ikke hente et validert objekt når objektet ikke er validert som gyldig")
     }
 
     fun getOrNull(): VALIDATEDCLASS? = when(this) {
