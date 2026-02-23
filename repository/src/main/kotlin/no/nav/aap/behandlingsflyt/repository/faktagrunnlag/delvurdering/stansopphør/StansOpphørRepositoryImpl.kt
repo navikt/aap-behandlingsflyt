@@ -164,7 +164,41 @@ class StansOpphørRepositoryImpl(
     }
 
     override fun slett(behandlingId: BehandlingId) {
-        TODO("Not yet implemented")
+        val grunnlagId = connection.querySet<Long>(
+            """
+            SELECT ID, VURDERINGER_ID FROM STANS_OPPHOR_GRUNNLAG
+            WHERE BEHANDLING_ID = ?
+        """.trimIndent()
+        ) {
+            setParams { setLong(1, behandlingId.id) }
+            setRowMapper { row ->
+                slettVurderinger(row.getLong("VURDERINGER_ID"))
+                row.getLong("id")
+            }
+        }
+        connection.execute(
+            """
+            DELETE FROM STANS_OPPHOR_GRUNNLAG
+            WHERE behandling_id = ?
+        """.trimIndent()
+        ) {
+            setParams { setLong(1, behandlingId.id) }
+        }
+    }
+
+    private fun slettVurderinger(vurderingerId: Long) {
+        connection.execute(
+            """
+            DELETE FROM STANS_OPPHOR_VURDERING
+            WHERE vurderinger_id = ?
+        """.trimIndent()
+        ) {
+            setParams { setLong(1, vurderingerId) }
+        }
+
+        connection.execute("""DELETE FROM stans_opphor_vurdering WHERE vurderinger_id = ?""".trimIndent()) {
+            setParams { setLong(1, vurderingerId) }
+        }
     }
 
     companion object : RepositoryFactory<StansOpphørRepository> {

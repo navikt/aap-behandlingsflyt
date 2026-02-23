@@ -141,6 +141,62 @@ class StansOpphørRepositoryImplTest {
             repo.lagre(b1.id, sammensatt)
 
             assertThat(repo.hentHvisEksisterer(b1.id)).isEqualTo(sammensatt)
+
+
+        }
+    }
+
+    @Test
+    fun `kan slette aktive og ikke aktive grunnlag for behandling`(){
+        dataSource.transaction { connection ->
+            val s1 = sak(connection)
+            val s2 = sak(connection)
+            val b1 = finnEllerOpprettBehandling(connection, s1)
+            val b2 = finnEllerOpprettBehandling(connection, s2)
+            val repo = StansOpphørRepositoryImpl(connection)
+
+            val gjeldendeOpphør = StansOpphørGrunnlag(
+                setOf(
+                    GjeldendeStansEllerOpphør(
+                        dato = 1 januar 2020,
+                        opprettet = Instant.now(),
+                        vurdertIBehandling = b1.id,
+                        vurdering = Opphør(setOf(Avslagsårsak.BRUDD_PÅ_AKTIVITETSPLIKT_OPPHØR))
+                    )
+                )
+            )
+
+            val gjeldendeOpphørNy = StansOpphørGrunnlag(
+                setOf(
+                    GjeldendeStansEllerOpphør(
+                        dato = 1 januar 2021,
+                        opprettet = Instant.now(),
+                        vurdertIBehandling = b1.id,
+                        vurdering = Opphør(setOf(Avslagsårsak.BRUDD_PÅ_AKTIVITETSPLIKT_OPPHØR))
+                    )
+                )
+            )
+
+            repo.lagre(b1.id, gjeldendeOpphør)
+            repo.kopier(b1.id, b2.id)
+
+
+            assertThat(repo.hentHvisEksisterer(b1.id)).isEqualTo(gjeldendeOpphør)
+
+            repo.lagre(b1.id, gjeldendeOpphørNy)
+            assertThat(repo.hentHvisEksisterer(b1.id)).isEqualTo(gjeldendeOpphørNy)
+
+            repo.slett(b1.id)
+            assertThat(repo.hentHvisEksisterer(b1.id)).isNull()
+
+            assertThat(repo.hentHvisEksisterer(b2.id)).isEqualTo(gjeldendeOpphør)
+        }
+    }
+
+
+    private fun <R> medRepository(body: StansOpphørRepository.() -> R): R {
+        return dataSource.transaction { connection ->
+            StansOpphørRepositoryImpl(connection).body()
         }
     }
 }
