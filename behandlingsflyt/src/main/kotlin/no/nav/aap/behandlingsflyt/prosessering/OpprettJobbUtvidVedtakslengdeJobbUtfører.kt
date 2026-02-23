@@ -3,12 +3,7 @@ package no.nav.aap.behandlingsflyt.prosessering
 import no.nav.aap.behandlingsflyt.behandling.vedtakslengde.VedtakslengdeService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
-import no.nav.aap.komponenter.miljo.Miljø.erDev
-import no.nav.aap.komponenter.miljo.Miljø.erLokal
-import no.nav.aap.komponenter.miljo.Miljø.erProd
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.JobbInput
@@ -29,7 +24,6 @@ class OpprettJobbUtvidVedtakslengdeJobbUtfører(
     private val sakOgBehandlingService: SakOgBehandlingService,
     private val vedtakslengdeService: VedtakslengdeService,
     private val flytJobbRepository: FlytJobbRepository,
-    private val unleashGateway: UnleashGateway,
     private val clock: Clock = Clock.systemDefaultZone()
 ) : JobbUtfører {
 
@@ -41,13 +35,11 @@ class OpprettJobbUtvidVedtakslengdeJobbUtfører(
         val saker = hentKandidaterForUtvidelseAvVedtakslengde(datoForUtvidelse)
 
         log.info("Fant ${saker.size} kandidater for utvidelse av vedtakslengde per $datoForUtvidelse")
-        if (unleashGateway.isEnabled(BehandlingsflytFeature.UtvidVedtakslengdeJobb)) {
-            saker
-                .also { log.info("Oppretter jobber for alle saker som er aktuelle kandidator for utvidelse av vedtakslengde. Antall = ${it.size}, Saker = $it") }
-                .forEach {
-                    flytJobbRepository.leggTil(JobbInput(OpprettBehandlingUtvidVedtakslengdeJobbUtfører).forSak(it.toLong()))
-                }
-        }
+        saker
+            .also { log.info("Oppretter jobber for alle saker som er aktuelle kandidator for utvidelse av vedtakslengde. Antall = ${it.size}, Saker = $it") }
+            .forEach {
+                flytJobbRepository.leggTil(JobbInput(OpprettBehandlingUtvidVedtakslengdeJobbUtfører).forSak(it.toLong()))
+            }
     }
 
     // TODO: Må filtrere vekk de som allerede har blitt kjørt, men ikke kvalifiserte til reell utvidelse av vedtakslengde
@@ -78,7 +70,6 @@ class OpprettJobbUtvidVedtakslengdeJobbUtfører(
                 sakOgBehandlingService = SakOgBehandlingService(repositoryProvider, gatewayProvider),
                 vedtakslengdeService = VedtakslengdeService(repositoryProvider, gatewayProvider),
                 flytJobbRepository = repositoryProvider.provide(),
-                unleashGateway = gatewayProvider.provide(),
             )
         }
 

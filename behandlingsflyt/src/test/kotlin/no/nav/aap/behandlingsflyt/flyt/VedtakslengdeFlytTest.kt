@@ -28,7 +28,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.test.FakeUnleashBaseWithDefaultDisabled
 import no.nav.aap.behandlingsflyt.test.desember
 import no.nav.aap.behandlingsflyt.test.fixedClock
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.motor.FlytJobbRepositoryImpl
@@ -39,9 +38,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 
 object VedtakslengdeUnleash : FakeUnleashBaseWithDefaultDisabled(
-    enabledFlags = listOf(
-        BehandlingsflytFeature.UtvidVedtakslengdeJobb,
-    )
+    enabledFlags = listOf()
 )
 
 class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(VedtakslengdeUnleash::class) {
@@ -99,7 +96,6 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(VedtakslengdeUnleash::
                 sakOgBehandlingService = SakOgBehandlingService(repositoryProvider, gatewayProvider),
                 vedtakslengdeService = VedtakslengdeService(repositoryProvider, gatewayProvider),
                 flytJobbRepository = FlytJobbRepositoryImpl(connection),
-                unleashGateway = VedtakslengdeUnleash,
                 clock = clock,
             )
 
@@ -170,7 +166,6 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(VedtakslengdeUnleash::
                 sakOgBehandlingService = SakOgBehandlingService(repositoryProvider, gatewayProvider),
                 vedtakslengdeService = VedtakslengdeService(repositoryProvider, gatewayProvider),
                 flytJobbRepository = FlytJobbRepositoryImpl(connection),
-                unleashGateway = VedtakslengdeUnleash,
                 clock = clock,
             )
 
@@ -270,7 +265,6 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(VedtakslengdeUnleash::
                 sakOgBehandlingService = SakOgBehandlingService(repositoryProvider, gatewayProvider),
                 vedtakslengdeService = VedtakslengdeService(repositoryProvider, gatewayProvider),
                 flytJobbRepository = FlytJobbRepositoryImpl(connection),
-                unleashGateway = VedtakslengdeUnleash,
                 clock = clock,
             )
 
@@ -354,7 +348,6 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(VedtakslengdeUnleash::
                 sakOgBehandlingService = SakOgBehandlingService(repositoryProvider, gatewayProvider),
                 vedtakslengdeService = VedtakslengdeService(repositoryProvider, gatewayProvider),
                 flytJobbRepository = FlytJobbRepositoryImpl(connection),
-                unleashGateway = VedtakslengdeUnleash,
                 clock = clock,
             )
 

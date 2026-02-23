@@ -13,7 +13,6 @@ enum class BehandlingsflytFeature : FeatureToggle {
     Under18,
     SendBrevVedMottattKlage,
     ForlengelseIManuellBehandling,
-    UtvidVedtakslengdeJobb,
     InstitusjonsoppholdJobb,
     TrekkSoeknadOpprettetFraLegeerklaering,
     UbehandledeMeldekortJobb,
