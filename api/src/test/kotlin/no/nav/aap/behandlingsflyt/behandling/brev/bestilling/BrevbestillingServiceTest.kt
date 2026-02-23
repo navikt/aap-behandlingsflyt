@@ -185,7 +185,7 @@ class BrevbestillingServiceTest {
     }
 
     @Test
-    fun `erAlleBestillingerOmVedtak I endetilstand returnerer true hvis ingen brevbestillinger finnes`() {
+    fun `erAlleBestillingerOmVedtakIEndeTilstand returnerer true hvis ingen brevbestillinger finnes`() {
         val behandlingId = BehandlingId(Random.nextLong())
 
         val resultat = brevbestillingService.erAlleBestillingerOmVedtakIEndeTilstand(behandlingId)
@@ -194,7 +194,7 @@ class BrevbestillingServiceTest {
     }
 
     @Test
-    fun `erAlleBestillingerOmVedtak I endetilstand returnerer false hvis ingen vedtaksbrev har ende-tilstand`() {
+    fun `erAlleBestillingerOmVedtakIEndeTilstand returnerer false hvis ingen vedtaksbrev har ende-tilstand`() {
         val behandlingId = BehandlingId(Random.nextLong())
         lagreBrevbestillingerMedStatus(behandlingId, TypeBrev.entries, Status.FORHÅNDSVISNING_KLAR)
 
@@ -204,7 +204,7 @@ class BrevbestillingServiceTest {
     }
 
     @Test
-    fun `erAlleBestillingerOmVedtak I endetilstand returnerer false hvis ikke vedtakbrev har endetilstand men andre har fullført`() {
+    fun `erAlleBestillingerOmVedtakIEndeTilstand returnerer false hvis ikke vedtakbrev har endetilstand men andre har fullført`() {
         val behandlingId = BehandlingId(Random.nextLong())
         lagreBrevbestillingerMedStatus(behandlingId, TypeBrev.entries, Status.FORHÅNDSVISNING_KLAR)
         val brevBestillinger = InMemoryBrevbestillingRepository.hent(behandlingId = behandlingId)
@@ -219,7 +219,7 @@ class BrevbestillingServiceTest {
     }
 
     @Test
-    fun `erAlleBestillingerOmVedtak I endetilstand returnerer false  hvis ikke vedtakbrev har endetilstand men andre har sendt`() {
+    fun `erAlleBestillingerOmVedtakIEndeTilstand returnerer false hvis ikke vedtakbrev har endetilstand men andre har sendt`() {
         val behandlingId = BehandlingId(Random.nextLong())
         lagreBrevbestillingerMedStatus(behandlingId, TypeBrev.entries, Status.FORHÅNDSVISNING_KLAR)
         val brevBestillinger = InMemoryBrevbestillingRepository.hent(behandlingId = behandlingId)
@@ -233,7 +233,7 @@ class BrevbestillingServiceTest {
     }
 
     @Test
-    fun `erAlleBestillingerOmVedtakI endetilstand returnerer false  hvis ikke vedtakbrev har endetilstand men andre har avbrutt`() {
+    fun `erAlleBestillingerOmVedtakIEndeTilstand returnerer false hvis ikke vedtakbrev har endetilstand men andre har avbrutt`() {
         val behandlingId = BehandlingId(Random.nextLong())
         lagreBrevbestillingerMedStatus(behandlingId, TypeBrev.entries, Status.FORHÅNDSVISNING_KLAR)
         val brevBestillinger = InMemoryBrevbestillingRepository.hent(behandlingId = behandlingId)
@@ -247,7 +247,7 @@ class BrevbestillingServiceTest {
     }
 
     @Test
-    fun `erAlleBestillingerOmVedtakI endetilstand returnerer false hvis ett vedtakbrev har endetilstand fullført`() {
+    fun `erAlleBestillingerOmVedtakIEndeTilstand returnerer false hvis ett vedtakbrev har endetilstand fullført`() {
         val behandlingId = BehandlingId(Random.nextLong())
         lagreBrevbestillingerMedStatus(behandlingId, TypeBrev.entries, Status.FORHÅNDSVISNING_KLAR)
         val brevBestillinger = InMemoryBrevbestillingRepository.hent(behandlingId = behandlingId)
@@ -260,7 +260,7 @@ class BrevbestillingServiceTest {
     }
 
     @Test
-    fun `erAlleBestillingerOmVedtakI endetilstand returnerer false hvis ett vedtakbrev har endetilstand sendt`() {
+    fun `erAlleBestillingerOmVedtakIEndeTilstand returnerer false hvis ett vedtakbrev har endetilstand sendt`() {
         val behandlingId = BehandlingId(Random.nextLong())
         lagreBrevbestillingerMedStatus(behandlingId, TypeBrev.entries, Status.FORHÅNDSVISNING_KLAR)
         val brevBestillinger = InMemoryBrevbestillingRepository.hent(behandlingId = behandlingId)
@@ -273,7 +273,7 @@ class BrevbestillingServiceTest {
     }
 
     @Test
-    fun `erAlleBestillingerOmVedtakI endetilstand returnerer false hvis ett vedtakbrev har endetilstand avbrutt`() {
+    fun `erAlleBestillingerOmVedtakIEndeTilstand returnerer false hvis ett vedtakbrev har endetilstand avbrutt`() {
         val behandlingId = BehandlingId(Random.nextLong())
         lagreBrevbestillingerMedStatus(behandlingId, TypeBrev.entries, Status.FORHÅNDSVISNING_KLAR)
         val brevBestillinger = InMemoryBrevbestillingRepository.hent(behandlingId = behandlingId)
@@ -286,7 +286,7 @@ class BrevbestillingServiceTest {
     }
 
     @Test
-    fun `erAlleBestillingerOmVedtakI endetilstand returnerer true hvis alle vedtakbrev har endetilstand fullført`() {
+    fun `erAlleBestillingerOmVedtakIEndeTilstand returnerer true hvis alle vedtakbrev har endetilstand fullført`() {
         val behandlingId = BehandlingId(Random.nextLong())
         val brevBestillinger = InMemoryBrevbestillingRepository.hent(behandlingId = behandlingId)
         for (brevBestilling in brevBestillinger.filter { it.typeBrev.erVedtak() }) {
@@ -299,7 +299,7 @@ class BrevbestillingServiceTest {
     }
 
     @Test
-    fun `erAlleBestillingerOmVedtakI endetilstand returnerer false hvis alle vedtakbrev har endetilstand sendt`() {
+    fun `erAlleBestillingerOmVedtakIEndeTilstand returnerer false hvis alle vedtakbrev har endetilstand sendt`() {
         val behandlingId = BehandlingId(Random.nextLong())
         lagreBrevbestillingerMedStatus(behandlingId, TypeBrev.entries, Status.FORHÅNDSVISNING_KLAR)
         val brevBestillinger = InMemoryBrevbestillingRepository.hent(behandlingId = behandlingId)
@@ -313,7 +313,7 @@ class BrevbestillingServiceTest {
     }
 
     @Test
-    fun `er AlleBestillinger OmVedtak I endetilstand return true hvis alle vedtakbrev har endetilstand avbrutt`() {
+    fun `erAlleBestillingerOmVedtakIEndeTilstand returnerer true hvis alle vedtakbrev har endetilstand avbrutt`() {
         val behandlingId = BehandlingId(Random.nextLong())
         val brevBestillinger = InMemoryBrevbestillingRepository.hent(behandlingId = behandlingId)
         for (brevBestilling in brevBestillinger.filter { it.typeBrev.erVedtak() }) {
@@ -326,7 +326,7 @@ class BrevbestillingServiceTest {
     }
 
     @Test
-    fun `er alle bestillinger om vedtak i endetilstand returnerer true hvis ingen vedtaksbrev finnes`() {
+    fun `erAlleBestillingerOmVedtakIEndeTilstand returnerer true hvis ingen vedtaksbrev finnes`() {
         val behandlingId = BehandlingId(Random.nextLong())
         InMemoryBrevbestillingRepository.lagre(
             behandlingId = behandlingId,
