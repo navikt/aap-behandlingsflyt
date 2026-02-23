@@ -101,7 +101,7 @@ private fun opprettBarnetilleggDto(
 
     return BarnetilleggDto(
         harTilgangTilÅSaksbehandle = harTilgangTilÅSaksbehandle,
-        søknadstidspunkt = SakService(repositoryProvider).hentSakFor(behandling.id).rettighetsperiode.fom,
+        søknadstidspunkt = SakService(repositoryProvider, gatewayProvider).hentSakFor(behandling.id).rettighetsperiode.fom,
         folkeregisterbarn = folkeregister.map { hentBarn(it.ident, barnGrunnlag) },
         saksbehandlerOppgitteBarn = saksbehandlerOppgittBarn.map { hentBarn(it.identifikator(), barnGrunnlag) },
         vurderteBarn = vurderteOppgittBarnDto,

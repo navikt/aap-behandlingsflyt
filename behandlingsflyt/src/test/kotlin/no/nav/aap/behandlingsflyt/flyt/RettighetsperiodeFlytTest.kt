@@ -11,7 +11,7 @@ import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companio
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.ÅrMedHverdager
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.EØSLandEllerLandMedAvtale
 import no.nav.aap.behandlingsflyt.drift.Driftfunksjoner
-import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
@@ -573,9 +573,9 @@ class RettighetsperiodeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
     private fun opprettAtomærAutomatiskOppdaterVilkårBehandling(sak: Sak) {
         dataSource.transaction { connection ->
             val repositoryProvider = postgresRepositoryRegistry.provider(connection)
-            val sakOgBehandlingService = SakOgBehandlingService(repositoryProvider, gatewayProvider)
+            val behandlingService = BehandlingService(repositoryProvider, gatewayProvider)
             val prosesserBehandlingService = ProsesserBehandlingService(repositoryProvider, gatewayProvider)
-            val behandling = sakOgBehandlingService.finnEllerOpprettBehandling(
+            val behandling = behandlingService.finnEllerOpprettBehandling(
                 sakId = sak.id,
                 vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
                     årsak = ÅrsakTilOpprettelse.MIGRER_RETTIGHETSPERIODE,

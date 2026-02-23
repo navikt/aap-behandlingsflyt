@@ -212,12 +212,12 @@ class SamordningYtelseVurderingInformasjonskrav(
             repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider
         ): SamordningYtelseVurderingInformasjonskrav {
             return SamordningYtelseVurderingInformasjonskrav(
-                repositoryProvider.provide(),
-                repositoryProvider.provide(),
-                TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
-                gatewayProvider.provide(),
-                gatewayProvider.provide(),
-                SakService(repositoryProvider),
+                samordningYtelseRepository = repositoryProvider.provide(),
+                samordningVurderingRepository = repositoryProvider.provide(),
+                tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
+                fpGateway = gatewayProvider.provide(),
+                spGateway = gatewayProvider.provide(),
+                sakService = SakService(repositoryProvider, gatewayProvider),
             )
         }
 

@@ -43,7 +43,7 @@ class TjenestePensjonInformasjonskrav(
                 tjenestePensjonRepository = repositoryProvider.provide(),
                 tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
                 tpGateway = gatewayProvider.provide(),
-                sakService = SakService(repositoryProvider),
+                sakService = SakService(repositoryProvider, gatewayProvider),
             )
         }
 

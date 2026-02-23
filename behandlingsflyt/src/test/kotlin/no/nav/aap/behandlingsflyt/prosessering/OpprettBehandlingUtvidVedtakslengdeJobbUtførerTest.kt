@@ -7,7 +7,7 @@ import io.mockk.mockk
 import io.mockk.verify
 import no.nav.aap.behandlingsflyt.behandling.underveis.RettighetstypeService
 import no.nav.aap.behandlingsflyt.behandling.vedtakslengde.VedtakslengdeService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
+import no.nav.aap.behandlingsflyt.behandling.vedtakslengde.VedtakslengdeService.Companion.ANTALL_DAGER_FØR_UTVIDELSE
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.rettighetstype.RettighetstypeGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.rettighetstype.RettighetstypeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
@@ -28,6 +28,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingMedVedtak
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
@@ -53,13 +54,13 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtførerTest {
     private val prosesserBehandlingService = mockk<ProsesserBehandlingService>()
     private val vedtakslengdeRepository = mockk<VedtakslengdeRepository>()
     private val underveisRepository = mockk<UnderveisRepository>()
-    private val sakOgBehandlingService = mockk<SakOgBehandlingService>()
+    private val behandlingService = mockk<BehandlingService>()
     private val vilkårsresultatRepository = mockk<VilkårsresultatRepository>()
     private val rettighetestypeRepository = mockk<RettighetstypeRepository>()
     private val opprettBehandlingUtvidVedtakslengdeJobbUtfører =
         OpprettBehandlingUtvidVedtakslengdeJobbUtfører(
             prosesserBehandlingService = prosesserBehandlingService,
-            sakOgBehandlingService = sakOgBehandlingService,
+            behandlingService = behandlingService,
             vedtakslengdeService = VedtakslengdeService(
                 vedtakslengdeRepository = vedtakslengdeRepository,
                 underveisRepository = underveisRepository,
@@ -78,16 +79,16 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtførerTest {
         val vilkårsresultat = genererVilkårsresultat(sak.rettighetsperiode)
 
         every { underveisRepository.hentHvisEksisterer(behandling.id)} returns underveisGrunnlag()
-        every { sakOgBehandlingService.finnBehandlingMedSisteFattedeVedtak(sakId) } returns behandlingMedVedtak()
-        every { sakOgBehandlingService.finnEllerOpprettBehandling(sak.id, any()) } returns opprettetBehandling()
-        every { prosesserBehandlingService.triggProsesserBehandling(any<SakOgBehandlingService.OpprettetBehandling>()) } just Runs
+        every { behandlingService.finnBehandlingMedSisteFattedeVedtak(sakId) } returns behandlingMedVedtak()
+        every { behandlingService.finnEllerOpprettBehandling(sak.id, any()) } returns opprettetBehandling()
+        every { prosesserBehandlingService.triggProsesserBehandling(any<BehandlingService.OpprettetBehandling>()) } just Runs
         every { vilkårsresultatRepository.hent(behandlingId) } returns vilkårsresultat
         every { vedtakslengdeRepository.hentHvisEksisterer(behandling.id) } returns null
         every { rettighetestypeRepository.hentHvisEksisterer(behandling.id) } returns rettighetstypeGrunnlag(vilkårsresultat)
 
         opprettBehandlingUtvidVedtakslengdeJobbUtfører.utfør(jobbInput)
 
-        verify(exactly = 1) { prosesserBehandlingService.triggProsesserBehandling(any<SakOgBehandlingService.OpprettetBehandling>()) }
+        verify(exactly = 1) { prosesserBehandlingService.triggProsesserBehandling(any<BehandlingService.OpprettetBehandling>()) }
     }
 
     @Test
@@ -95,11 +96,11 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtførerTest {
         val behandling = behandlingMedVedtak()
 
         every { underveisRepository.hentHvisEksisterer(behandling.id)} returns underveisGrunnlag()
-        every { sakOgBehandlingService.finnBehandlingMedSisteFattedeVedtak(sakId) } returns null
+        every { behandlingService.finnBehandlingMedSisteFattedeVedtak(sakId) } returns null
 
         opprettBehandlingUtvidVedtakslengdeJobbUtfører.utfør(jobbInput)
 
-        verify(exactly = 0) { prosesserBehandlingService.triggProsesserBehandling(any<SakOgBehandlingService.OpprettetBehandling>()) }
+        verify(exactly = 0) { prosesserBehandlingService.triggProsesserBehandling(any<BehandlingService.OpprettetBehandling>()) }
     }
 
     @Test
@@ -108,13 +109,13 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtførerTest {
         val behandling = behandlingMedVedtak()
 
         every { underveisRepository.hentHvisEksisterer(behandling.id)} returns underveisGrunnlag(perioder = underveisPerioderIkkeUtløpt())
-        every { sakOgBehandlingService.finnBehandlingMedSisteFattedeVedtak(sakId) } returns null
-        every { sakOgBehandlingService.finnEllerOpprettBehandling(sak.id, any()) } returns opprettetBehandling()
+        every { behandlingService.finnBehandlingMedSisteFattedeVedtak(sakId) } returns null
+        every { behandlingService.finnEllerOpprettBehandling(sak.id, any()) } returns opprettetBehandling()
         every { vilkårsresultatRepository.hent(behandlingId) } returns genererVilkårsresultat(sak.rettighetsperiode)
 
         opprettBehandlingUtvidVedtakslengdeJobbUtfører.utfør(jobbInput)
 
-        verify(exactly = 0) { prosesserBehandlingService.triggProsesserBehandling(any<SakOgBehandlingService.OpprettetBehandling>()) }
+        verify(exactly = 0) { prosesserBehandlingService.triggProsesserBehandling(any<BehandlingService.OpprettetBehandling>()) }
     }
 
     @Test
@@ -124,16 +125,16 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtførerTest {
         val vilkårsresultat = genererVilkårsresultat(sak.rettighetsperiode, oppfyltBistand = false)
 
         every { underveisRepository.hentHvisEksisterer(behandling.id)} returns underveisGrunnlag()
-        every { sakOgBehandlingService.finnBehandlingMedSisteFattedeVedtak(sakId) } returns behandlingMedVedtak()
-        every { sakOgBehandlingService.finnEllerOpprettBehandling(sak.id, any()) } returns opprettetBehandling()
-        every { prosesserBehandlingService.triggProsesserBehandling(any<SakOgBehandlingService.OpprettetBehandling>()) } just Runs
+        every { behandlingService.finnBehandlingMedSisteFattedeVedtak(sakId) } returns behandlingMedVedtak()
+        every { behandlingService.finnEllerOpprettBehandling(sak.id, any()) } returns opprettetBehandling()
+        every { prosesserBehandlingService.triggProsesserBehandling(any<BehandlingService.OpprettetBehandling>()) } just Runs
         every { vilkårsresultatRepository.hent(behandlingId) } returns vilkårsresultat
         every { vedtakslengdeRepository.hentHvisEksisterer(behandling.id) } returns null
         every { rettighetestypeRepository.hentHvisEksisterer(behandling.id) } returns rettighetstypeGrunnlag(vilkårsresultat)
 
         opprettBehandlingUtvidVedtakslengdeJobbUtfører.utfør(jobbInput)
 
-        verify(exactly = 0) { prosesserBehandlingService.triggProsesserBehandling(any<SakOgBehandlingService.OpprettetBehandling>()) }
+        verify(exactly = 0) { prosesserBehandlingService.triggProsesserBehandling(any<BehandlingService.OpprettetBehandling>()) }
     }
 
     private fun behandling(status: Status = Status.IVERKSETTES) =
@@ -198,7 +199,7 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtførerTest {
             mockk<Underveisperiode> {
                 every { periode } returns Periode(
                     fom = dagensDato,
-                    tom = dagensDato.plusDays(28)
+                    tom = dagensDato.plusDays(ANTALL_DAGER_FØR_UTVIDELSE)
                 )
             },
             mockk<Underveisperiode> {
@@ -216,7 +217,7 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtførerTest {
 
 
     private fun opprettetBehandling() =
-        SakOgBehandlingService.MåBehandlesAtomært(
+        BehandlingService.MåBehandlesAtomært(
             nyBehandling = behandling(),
             åpenBehandling = null
         )

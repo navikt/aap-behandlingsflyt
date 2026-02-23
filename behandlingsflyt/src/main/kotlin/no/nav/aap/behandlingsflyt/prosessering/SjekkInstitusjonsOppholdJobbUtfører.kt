@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdRepository
@@ -31,7 +31,7 @@ class SjekkInstitusjonsOppholdJobbUtfører(
     private val prosesserBehandlingService: ProsesserBehandlingService,
     private val sakRepository: SakRepository,
     private val institusjonsOppholdRepository: InstitusjonsoppholdRepository,
-    private val sakOgBehandlingService: SakOgBehandlingService,
+    private val behandlingService: BehandlingService,
     private val trukketSøknadService: TrukketSøknadService,
     private val behandlingRepository: BehandlingRepository,
     private val underveisgrunnlagRepository: UnderveisRepository,
@@ -52,7 +52,7 @@ class SjekkInstitusjonsOppholdJobbUtfører(
             val resultat = sakerMedInstitusjonsOpphold
                 .map { sak ->
 
-                    val sisteYtelsesBehandling = sakOgBehandlingService.finnSisteYtelsesbehandlingFor(sak.id)
+                    val sisteYtelsesBehandling = behandlingService.finnSisteYtelsesbehandlingFor(sak.id)
 
                     if (sisteYtelsesBehandling != null) {
                         val sak = sakRepository.hent(sak.id)
@@ -126,7 +126,7 @@ class SjekkInstitusjonsOppholdJobbUtfører(
     }
 
     private fun opprettNyBehandling(sak: Sak): Behandling =
-        sakOgBehandlingService.finnEllerOpprettOrdinærBehandling(
+        behandlingService.finnEllerOpprettOrdinærBehandling(
             sakId = sak.id,
             vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
                 årsak = ÅrsakTilOpprettelse.ENDRING_I_REGISTERDATA,
@@ -140,7 +140,7 @@ class SjekkInstitusjonsOppholdJobbUtfører(
                 prosesserBehandlingService = ProsesserBehandlingService(repositoryProvider, gatewayProvider),
                 sakRepository = repositoryProvider.provide(),
                 institusjonsOppholdRepository = repositoryProvider.provide(),
-                sakOgBehandlingService = SakOgBehandlingService(repositoryProvider, gatewayProvider),
+                behandlingService = BehandlingService(repositoryProvider, gatewayProvider),
                 trukketSøknadService = TrukketSøknadService(repositoryProvider),
                 behandlingRepository = repositoryProvider.provide(),
                 underveisgrunnlagRepository = repositoryProvider.provide(),

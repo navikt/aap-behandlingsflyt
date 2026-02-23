@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
@@ -18,7 +18,7 @@ class OpprettJobbForMigrereRettighetsperiodeJobbUtfører(
     private val flytJobbRepository: FlytJobbRepository,
     private val sakRepository: SakRepository,
     private val trukketSøknadService: TrukketSøknadService,
-    private val sakOgBehandlingService: SakOgBehandlingService,
+    private val behandlingService: BehandlingService,
 ) : JobbUtfører {
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -28,7 +28,7 @@ class OpprettJobbForMigrereRettighetsperiodeJobbUtfører(
         val saker = sakRepository.finnSakerMedAvsluttedeBehandlingerUtenRiktigSluttdatoPåRettighetsperiode()
         val sakerForMigrering = saker
             .filter { sak ->
-                val sisteYtelsesbehandling = sakOgBehandlingService.finnSisteYtelsesbehandlingFor(sak.id)
+                val sisteYtelsesbehandling = behandlingService.finnSisteYtelsesbehandlingFor(sak.id)
                 if (sisteYtelsesbehandling != null) {
                     erAktuellForMigrering(sisteYtelsesbehandling)
                 } else {
@@ -75,7 +75,7 @@ class OpprettJobbForMigrereRettighetsperiodeJobbUtfører(
                 flytJobbRepository = repositoryProvider.provide(),
                 sakRepository = repositoryProvider.provide(),
                 trukketSøknadService = TrukketSøknadService(repositoryProvider),
-                sakOgBehandlingService = SakOgBehandlingService(repositoryProvider, gatewayProvider),
+                behandlingService = BehandlingService(repositoryProvider, gatewayProvider),
             )
         }
 

@@ -31,7 +31,7 @@ class AvklaringsbehovOrkestrator(
 ) {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         repositoryProvider = repositoryProvider,
-        behandlingHendelseService = BehandlingHendelseServiceImpl(repositoryProvider),
+        behandlingHendelseService = BehandlingHendelseServiceImpl(repositoryProvider, gatewayProvider),
         flytOrkestrator = FlytOrkestrator(repositoryProvider, gatewayProvider),
         avklaringsbehovRepository = repositoryProvider.provide(),
         behandlingRepository = repositoryProvider.provide(),

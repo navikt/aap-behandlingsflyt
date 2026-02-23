@@ -12,7 +12,7 @@ import no.nav.aap.behandlingsflyt.Tags
 import no.nav.aap.behandlingsflyt.behandling.Resultat
 import no.nav.aap.behandlingsflyt.behandling.ResultatUtleder
 import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Status
@@ -78,9 +78,9 @@ fun NormalOpenAPIRoute.saksApi(
                     val sakRepository = repositoryProvider.provide<SakRepository>()
                     val sakId = sakRepository.hent(Saksnummer(req.saksnummer)).id
 
-                    val sakOgBehandlingService = SakOgBehandlingService(repositoryProvider, gatewayProvider)
+                    val behandlingService = BehandlingService(repositoryProvider, gatewayProvider)
 
-                    val behandling = sakOgBehandlingService.opprettAktivitetspliktBehandling(
+                    val behandling = behandlingService.opprettAktivitetspliktBehandling(
                         sakId, ÅrsakTilOpprettelse.MANUELL_OPPRETTELSE, body.vurderingsbehov.tilVurderingsbehov()
                     )
 

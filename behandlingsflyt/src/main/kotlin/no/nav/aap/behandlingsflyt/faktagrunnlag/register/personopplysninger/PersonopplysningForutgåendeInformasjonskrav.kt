@@ -88,11 +88,11 @@ class PersonopplysningForutgåendeInformasjonskrav private constructor(
             val personopplysningRepository = repositoryProvider.provide<PersonopplysningForutgåendeRepository>()
             val vilkårsresultatRepository = repositoryProvider.provide<VilkårsresultatRepository>()
             return PersonopplysningForutgåendeInformasjonskrav(
-                SakService(repositoryProvider),
-                personopplysningRepository,
-                gatewayProvider.provide(),
-                vilkårsresultatRepository,
-                TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
+                sakService = SakService(repositoryProvider, gatewayProvider),
+                personopplysningForutgåendeRepository = personopplysningRepository,
+                personopplysningGateway = gatewayProvider.provide(),
+                vilkårsresultatRepository = vilkårsresultatRepository,
+                tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
             )
         }
     }

@@ -202,7 +202,7 @@ object FakeServers : AutoCloseable {
                 val åpneBehov = received.avklaringsbehov.filter { it.status.erÅpent() }
                     .map { Pair(it.avklaringsbehovDefinisjon.name, it.status) }
                 FakeServers.log.info("Åpne behov $åpneBehov")
-                FakeServers.log.info("Fikk oppgave-oppdatering: ${received}")
+                FakeServers.log.info("Fikk oppgave-oppdatering: $received")
                 call.respond(HttpStatusCode.NoContent)
             }
         }

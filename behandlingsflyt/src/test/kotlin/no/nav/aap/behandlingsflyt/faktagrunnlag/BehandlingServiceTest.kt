@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
@@ -19,7 +20,7 @@ import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import kotlin.test.Test
 
-class SakOgBehandlingServiceTest {
+class BehandlingServiceTest {
     companion object {
         private lateinit var dataSource: TestDataSource
 
@@ -40,13 +41,13 @@ class SakOgBehandlingServiceTest {
     @Test
     fun `gjenbruker åpen behandling hvis vi prøver å opprette enda en ny behandling etter et meldekort`() {
         dataSource.transaction { connection ->
-            val sakOgBehandlingService =
-                SakOgBehandlingService(postgresRepositoryRegistry.provider(connection), gatewayProvider)
+            val behandlingService =
+                BehandlingService(postgresRepositoryRegistry.provider(connection), gatewayProvider)
             val behandlingRepository = BehandlingRepositoryImpl(connection)
             val sak = opprettSak(connection, Periode(1 januar 2020, 1 januar 2021))
 
             /* Førstegangsbehandling */
-            sakOgBehandlingService.finnEllerOpprettBehandling(
+            behandlingService.finnEllerOpprettBehandling(
                 sak.id,
                 VurderingsbehovOgÅrsak(
                     listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_SØKNAD)),
@@ -57,7 +58,7 @@ class SakOgBehandlingServiceTest {
             }
 
             /* Åpen revurdering */
-            sakOgBehandlingService.finnEllerOpprettBehandling(
+            behandlingService.finnEllerOpprettBehandling(
                 sak.id,
                 VurderingsbehovOgÅrsak(
                     listOf(VurderingsbehovMedPeriode(Vurderingsbehov.REVURDER_SAMORDNING)),
@@ -66,17 +67,17 @@ class SakOgBehandlingServiceTest {
             )
 
             /* Send inn meldekort */
-            val meldekortbehandling = (sakOgBehandlingService.finnEllerOpprettBehandling(
+            val meldekortbehandling = (behandlingService.finnEllerOpprettBehandling(
                 sak.id,
                 VurderingsbehovOgÅrsak(
                     listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_MELDEKORT)),
                     ÅrsakTilOpprettelse.MELDEKORT,
                 )
-            ) as SakOgBehandlingService.MåBehandlesAtomært).nyBehandling
+            ) as BehandlingService.MåBehandlesAtomært).nyBehandling
             behandlingRepository.oppdaterBehandlingStatus(meldekortbehandling.id, Status.AVSLUTTET)
 
             /* Forsøk å opprett en til revurdering (f.eks. nye opplysninger fra register). */
-            sakOgBehandlingService.finnEllerOpprettBehandling(
+            behandlingService.finnEllerOpprettBehandling(
                 sak.id,
                 VurderingsbehovOgÅrsak(
                     listOf(VurderingsbehovMedPeriode(Vurderingsbehov.INSTITUSJONSOPPHOLD)),

@@ -20,7 +20,7 @@ import no.nav.aap.behandlingsflyt.test.desember
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryUnderveisRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryProvider
-import no.nav.aap.behandlingsflyt.test.inmemoryservice.InMemorySakOgBehandlingService
+import no.nav.aap.behandlingsflyt.test.inmemoryservice.InMemoryBehandlingService
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Dagsatser
@@ -98,7 +98,7 @@ class ResultatUtlederTest {
         val behandling = opprettBehandling(sak)
         InMemoryBehandlingRepository.oppdaterBehandlingStatus(behandling.id, Status.AVSLUTTET)
 
-        val klage = InMemorySakOgBehandlingService.finnEllerOpprettOrdinærBehandling(
+        val klage = InMemoryBehandlingService.finnEllerOpprettOrdinærBehandling(
             sak.id,
             vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
                 vurderingsbehov = listOf(VurderingsbehovMedPeriode(type = Vurderingsbehov.MOTATT_KLAGE)),
@@ -152,7 +152,7 @@ class ResultatUtlederTest {
     }
 
     private fun opprettBehandling(sak: Sak): Behandling {
-        return InMemorySakOgBehandlingService.finnEllerOpprettOrdinærBehandling(
+        return InMemoryBehandlingService.finnEllerOpprettOrdinærBehandling(
             sak.id,
             VurderingsbehovOgÅrsak(
                 listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_SØKNAD)),
