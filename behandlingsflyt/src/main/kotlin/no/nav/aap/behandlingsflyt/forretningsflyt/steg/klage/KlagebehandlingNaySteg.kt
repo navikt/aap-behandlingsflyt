@@ -41,7 +41,7 @@ class KlagebehandlingNaySteg private constructor(
             definisjon = Definisjon.VURDER_KLAGE_NAY,
             kontekst = kontekst,
             vedtakBehøverVurdering = {
-                if (klageErTrukket || erKlageResultatAvslått || !skalBehandlesAvNay) false else true
+                !(klageErTrukket || erKlageResultatAvslått || !skalBehandlesAvNay)
             },
             erTilstrekkeligVurdert = {
                 vurderingHosNay
