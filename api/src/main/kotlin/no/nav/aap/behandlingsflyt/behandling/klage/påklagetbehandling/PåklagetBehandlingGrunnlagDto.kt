@@ -4,12 +4,13 @@ import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.påklagetbehandling.PåklagetVedtakType
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
+import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov
+import no.nav.aap.behandlingsflyt.prosessering.statistikk.tilKontraktVurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingMedVedtak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import java.time.LocalDate
 import java.time.LocalDateTime
-import java.util.UUID
+import java.util.*
 
 data class PåklagetBehandlingGrunnlagDto(
     val behandlinger: List<BehandlingMedVedtakDto>,
@@ -44,7 +45,7 @@ internal fun BehandlingMedVedtak.tilBehandlingMedVedtakDto() =
         opprettetTidspunkt = opprettetTidspunkt,
         vedtakstidspunkt = vedtakstidspunkt,
         virkningstidspunkt = virkningstidspunkt,
-        vurderingsbehov = vurderingsbehov,
+        vurderingsbehov = vurderingsbehov.tilKontraktVurderingsbehov(),
         årsakTilOpprettelse = årsakTilOpprettelse
     )
 

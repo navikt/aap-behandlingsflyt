@@ -36,7 +36,7 @@ fun Vurderingsbehov.tilKontraktVurderingsbehov(): no.nav.aap.behandlingsflyt.kon
         Vurderingsbehov.REVURDER_SAMORDNING_TJENESTEPENSJON -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.REVURDER_SAMORDNING_TJENESTEPENSJON
         Vurderingsbehov.REFUSJONSKRAV -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.REFUSJONSKRAV
         Vurderingsbehov.UTENLANDSOPPHOLD_FOR_SOKNADSTIDSPUNKT -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.UTENLANDSOPPHOLD_FOR_SOKNADSTIDSPUNKT
-        Vurderingsbehov.FASTSATT_PERIODE_PASSERT -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.MELDEKORT
+        Vurderingsbehov.FASTSATT_PERIODE_PASSERT -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.FASTSATT_PERIODE_PASSERT
         Vurderingsbehov.VURDER_RETTIGHETSPERIODE -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.VURDER_RETTIGHETSPERIODE
         Vurderingsbehov.SØKNAD_TRUKKET -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.SØKNAD_TRUKKET
         Vurderingsbehov.REVURDERING_AVBRUTT -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.REVURDERING_AVBRUTT
@@ -62,6 +62,8 @@ fun Vurderingsbehov.tilKontraktVurderingsbehov(): no.nav.aap.behandlingsflyt.kon
         Vurderingsbehov.ETABLERING_EGEN_VIRKSOMHET -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.ETABLERING_EGEN_VIRKSOMHET
     }
 
+fun Set<Vurderingsbehov>.tilKontraktVurderingsbehov(): Set<no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov> =
+    map { vurderingsbehov -> vurderingsbehov.tilKontraktVurderingsbehov() }.toSet()
 
 internal fun Tilkjent.tilKontrakt(): no.nav.aap.behandlingsflyt.kontrakt.statistikk.Minstesats =
     when (this.minsteSats) {
