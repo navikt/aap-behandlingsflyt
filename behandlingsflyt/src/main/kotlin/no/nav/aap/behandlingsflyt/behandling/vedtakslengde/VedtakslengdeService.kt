@@ -128,18 +128,18 @@ class VedtakslengdeService(
         val initiellSluttdato = utledInitiellSluttdato(behandlingId, rettighetsperiode).tom
 
         // Ved avslag sett inntil ett år slik det var gjort tidligere - gå opp hva som er riktig å gjøre her
-        if (rettighetstypeTidslinje?.isEmpty() == true) {
+        if (rettighetstypeTidslinje.isEmpty()) {
             return initiellSluttdato
         }
 
-        val sluttdatoSisteUnntaksrettighet = rettighetstypeTidslinje?.segmenter()
-            ?.findLast { it.verdi in unntaksrettighetstyper() }
+        val sluttdatoSisteUnntaksrettighet = rettighetstypeTidslinje.segmenter()
+            .findLast { it.verdi in unntaksrettighetstyper() }
             ?.periode?.tom
 
         log.info("Sluttdato for siste unntaksrettighet: $sluttdatoSisteUnntaksrettighet")
 
-        val sluttdatoSisteBistandsbehov = rettighetstypeTidslinje?.segmenter()
-            ?.findLast { it.verdi == RettighetsType.BISTANDSBEHOV }
+        val sluttdatoSisteBistandsbehov = rettighetstypeTidslinje.segmenter()
+            .findLast { it.verdi == RettighetsType.BISTANDSBEHOV }
             ?.periode?.tom
 
         log.info("Sluttdato for siste bistandsbehov: $sluttdatoSisteBistandsbehov")
