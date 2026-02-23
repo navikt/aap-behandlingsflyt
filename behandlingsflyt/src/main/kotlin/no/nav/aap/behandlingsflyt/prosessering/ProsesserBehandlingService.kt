@@ -1,12 +1,11 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.flyt.FlytOrkestrator
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.gateway.GatewayProvider
@@ -35,17 +34,17 @@ class ProsesserBehandlingService(
     private val log = LoggerFactory.getLogger(javaClass)
 
     fun triggProsesserBehandling(
-        opprettetBehandling: SakOgBehandlingService.OpprettetBehandling,
+        opprettetBehandling: BehandlingService.OpprettetBehandling,
         vurderingsbehov: List<Vurderingsbehov> = emptyList(),
         parameters: List<Pair<String, String>> = emptyList()
     ) {
 
         when (opprettetBehandling) {
-            is SakOgBehandlingService.Ordinær -> triggProsesserBehandling(
+            is BehandlingService.Ordinær -> triggProsesserBehandling(
                 opprettetBehandling.åpenBehandling, vurderingsbehov, parameters
             )
 
-            is SakOgBehandlingService.MåBehandlesAtomært -> kjørAtomærBehandling(opprettetBehandling)
+            is BehandlingService.MåBehandlesAtomært -> kjørAtomærBehandling(opprettetBehandling)
         }
     }
 
@@ -86,7 +85,7 @@ class ProsesserBehandlingService(
         flytJobbRepository.leggTil(jobbInput)
     }
 
-    private fun kjørAtomærBehandling(opprettetBehandling: SakOgBehandlingService.MåBehandlesAtomært) {
+    private fun kjørAtomærBehandling(opprettetBehandling: BehandlingService.MåBehandlesAtomært) {
         val behandling = opprettetBehandling.nyBehandling
 
         val kontekst = atomærFlytOrkestrator.opprettKontekst(behandling.sakId, behandling.id)

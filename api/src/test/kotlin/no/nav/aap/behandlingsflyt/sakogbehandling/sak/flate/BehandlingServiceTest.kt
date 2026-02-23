@@ -28,7 +28,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
 
-class SakOgBehandlingServiceTest {
+class BehandlingServiceTest {
 
     @Test
     fun `sak uten behandlinger`() {

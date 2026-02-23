@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg.aktivitetsplikt
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
@@ -17,13 +17,13 @@ import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 
 class IverksettBruddSteg private constructor(
-    private val sakOgBehandlingService: SakOgBehandlingService,
+    private val behandlingService: BehandlingService,
     private val prosesserBehandlingService: ProsesserBehandlingService
 ) : BehandlingSteg {
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val effektueringsbehandling = when (kontekst.behandlingType) {
             TypeBehandling.Aktivitetsplikt -> {
-                sakOgBehandlingService.finnEllerOpprettBehandling(
+                behandlingService.finnEllerOpprettBehandling(
                     kontekst.sakId,
                     VurderingsbehovOgÅrsak(
                         årsak = ÅrsakTilOpprettelse.AKTIVITETSPLIKT, vurderingsbehov = listOf(
@@ -36,7 +36,7 @@ class IverksettBruddSteg private constructor(
             }
 
             TypeBehandling.Aktivitetsplikt11_9 -> {
-                sakOgBehandlingService.finnEllerOpprettBehandling(
+                behandlingService.finnEllerOpprettBehandling(
                     kontekst.sakId,
                     VurderingsbehovOgÅrsak(
                         årsak = ÅrsakTilOpprettelse.AKTIVITETSPLIKT_11_9, vurderingsbehov = listOf(
@@ -61,7 +61,7 @@ class IverksettBruddSteg private constructor(
             gatewayProvider: GatewayProvider
         ): BehandlingSteg {
             return IverksettBruddSteg(
-                SakOgBehandlingService(repositoryProvider, gatewayProvider),
+                BehandlingService(repositoryProvider, gatewayProvider),
                 ProsesserBehandlingService(repositoryProvider, gatewayProvider)
             )
         }

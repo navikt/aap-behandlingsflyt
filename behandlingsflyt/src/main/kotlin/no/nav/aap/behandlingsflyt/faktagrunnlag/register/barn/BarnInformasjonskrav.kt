@@ -169,12 +169,12 @@ class BarnInformasjonskrav private constructor(
             gatewayProvider: GatewayProvider
         ): Informasjonskrav<BarnInput, Registerdata> {
             return BarnInformasjonskrav(
-                repositoryProvider.provide(),
-                repositoryProvider.provide(),
-                gatewayProvider.provide(),
-                gatewayProvider.provide(),
-                TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
-                SakService(repositoryProvider)
+                barnRepository = repositoryProvider.provide(),
+                personRepository = repositoryProvider.provide(),
+                barnGateway = gatewayProvider.provide(),
+                identGateway = gatewayProvider.provide(),
+                tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
+                sakService = SakService(repositoryProvider, gatewayProvider)
             )
         }
     }

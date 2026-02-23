@@ -37,7 +37,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
-import no.nav.aap.behandlingsflyt.test.inmemoryservice.InMemorySakOgBehandlingService
+import no.nav.aap.behandlingsflyt.test.inmemoryservice.InMemoryBehandlingService
 import no.nav.aap.behandlingsflyt.test.modell.genererIdent
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
@@ -57,7 +57,7 @@ class EnklereFlytOrkestratorTest {
             sakService = sakService,
             behandlingRepository = behandlingRepository,
         ),
-        sakOgBehandlingService = InMemorySakOgBehandlingService,
+        behandlingService = InMemoryBehandlingService,
         informasjonskravGrunnlag = DummyInformasjonskravGrunnlag(),
         sakRepository = sakRepository,
         avklaringsbehovRepository = avklaringsbehovRepository,
@@ -77,7 +77,7 @@ class EnklereFlytOrkestratorTest {
             sakService = sakService,
             behandlingRepository = behandlingRepository,
         ),
-        sakOgBehandlingService = InMemorySakOgBehandlingService,
+        behandlingService = InMemoryBehandlingService,
         informasjonskravGrunnlag = DummyInformasjonskravGrunnlag(),
         sakRepository = sakRepository,
         avklaringsbehovRepository = avklaringsbehovRepository,
@@ -233,7 +233,7 @@ class EnklereFlytOrkestratorTest {
             sakRepository = sakRepository,
             avklaringsbehovRepository = avklaringsbehovRepository,
             behandlingHendelseService = behandlingHendelseService,
-            sakOgBehandlingService = InMemorySakOgBehandlingService,
+            behandlingService = InMemoryBehandlingService,
             stegOrkestrator = StegOrkestrator(
                 informasjonskravGrunnlag = DummyInformasjonskravGrunnlag(),
                 behandlingRepository = behandlingRepository,

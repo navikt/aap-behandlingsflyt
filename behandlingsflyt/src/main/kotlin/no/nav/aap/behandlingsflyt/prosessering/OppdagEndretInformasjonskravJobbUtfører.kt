@@ -2,7 +2,7 @@ package no.nav.aap.behandlingsflyt.prosessering
 
 import no.nav.aap.behandlingsflyt.behandling.underveis.RettighetstypeService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.KanTriggeRevurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseVurderingInformasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdInformasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningInformasjonskrav
@@ -26,7 +26,7 @@ class OppdagEndretInformasjonskravJobbUtfører(
     private val repositoryProvider: RepositoryProvider,
     private val gatewayProvider: GatewayProvider,
     private val prosesserBehandlingService: ProsesserBehandlingService,
-    private val sakOgBehandlingService: SakOgBehandlingService,
+    private val behandlingService: BehandlingService,
     private val låsRepository: TaSkriveLåsRepository,
     private val rettighetstypeService: RettighetstypeService,
     private val klokke: Clock = Clock.systemDefaultZone(),
@@ -48,7 +48,7 @@ class OppdagEndretInformasjonskravJobbUtfører(
             InstitusjonsoppholdInformasjonskrav.konstruer(repositoryProvider, gatewayProvider),
             PersonopplysningInformasjonskrav.konstruer(repositoryProvider, gatewayProvider),
         )
-        val sisteBehandling = sakOgBehandlingService.finnSisteYtelsesbehandlingFor(sakId)
+        val sisteBehandling = behandlingService.finnSisteYtelsesbehandlingFor(sakId)
             ?: error("Fant ikke ytelsesbehandling for sak $sakId")
 
         if (sisteBehandling.status().erÅpen()) {
@@ -71,7 +71,7 @@ class OppdagEndretInformasjonskravJobbUtfører(
                     .toSet().toList() // Fjern duplikater
 
                 if (vurderingsbehov.isNotEmpty()) {
-                    val revurdering = this.sakOgBehandlingService.finnEllerOpprettOrdinærBehandling(
+                    val revurdering = this.behandlingService.finnEllerOpprettOrdinærBehandling(
                         sakId,
                         VurderingsbehovOgÅrsak(vurderingsbehov, ÅrsakTilOpprettelse.ENDRING_I_REGISTERDATA)
                     )
@@ -104,7 +104,7 @@ class OppdagEndretInformasjonskravJobbUtfører(
                 repositoryProvider = repositoryProvider,
                 gatewayProvider = gatewayProvider,
                 prosesserBehandlingService = ProsesserBehandlingService(repositoryProvider, gatewayProvider),
-                sakOgBehandlingService = SakOgBehandlingService(repositoryProvider, gatewayProvider),
+                behandlingService = BehandlingService(repositoryProvider, gatewayProvider),
                 låsRepository = repositoryProvider.provide(),
                 rettighetstypeService = RettighetstypeService(repositoryProvider, gatewayProvider)
             )
@@ -119,7 +119,7 @@ class OppdagEndretInformasjonskravJobbUtfører(
                 repositoryProvider = repositoryProvider,
                 gatewayProvider = gatewayProvider,
                 prosesserBehandlingService = ProsesserBehandlingService(repositoryProvider, gatewayProvider),
-                sakOgBehandlingService = SakOgBehandlingService(repositoryProvider, gatewayProvider),
+                behandlingService = BehandlingService(repositoryProvider, gatewayProvider),
                 låsRepository = repositoryProvider.provide(),
                 rettighetstypeService = RettighetstypeService(repositoryProvider, gatewayProvider),
                 klokke = klokke,

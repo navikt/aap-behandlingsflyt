@@ -115,7 +115,7 @@ fun NormalOpenAPIRoute.brevApi(
 
                         val behandling = behandlingRepository.hent(behandlingReferanse)
                         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
-                        val sak = SakService(repositoryProvider).hent(behandling.sakId)
+                        val sak = SakService(repositoryProvider, gatewayProvider).hent(behandling.sakId)
                         val personIdent = sak.person.aktivIdent()
                         val personinfo = personinfoGateway.hentPersoninfoForIdent(personIdent, token())
 

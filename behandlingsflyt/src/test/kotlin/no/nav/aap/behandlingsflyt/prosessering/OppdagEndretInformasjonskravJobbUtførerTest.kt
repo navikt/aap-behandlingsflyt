@@ -2,7 +2,7 @@ package no.nav.aap.behandlingsflyt.prosessering
 
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
-import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjonForhold
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjonInformasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.gateway.TjenestePensjonGateway
@@ -13,12 +13,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevu
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.SykepengerGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.SykepengerResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.UtbetaltePerioder
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkår
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnInformasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.adapter.BarnInnhentingRespons
@@ -202,7 +197,7 @@ class OppdagEndretInformasjonskravJobbUtførerTest {
             OppdagEndretInformasjonskravJobbUtfører.konstruerMedKlokke(repositoryProvider, gatewayProvider, klokke)
                 .utfør(førstegangsbehandlingen.sakId)
 
-            val sisteYtelsesbehandling = SakOgBehandlingService(repositoryProvider, gatewayProvider)
+            val sisteYtelsesbehandling = BehandlingService(repositoryProvider, gatewayProvider)
                 .finnSisteYtelsesbehandlingFor(førstegangsbehandlingen.sakId)!!
             assertThat(sisteYtelsesbehandling.id)
                 .isNotEqualTo(førstegangsbehandlingen.id)
@@ -244,7 +239,7 @@ class OppdagEndretInformasjonskravJobbUtførerTest {
 
             oppdagEndretInformasjonskravJobbUtfører.utfør(førstegangsbehandlingen.sakId)
 
-            val sisteYtelsesbehandling = SakOgBehandlingService(repositoryProvider, gatewayProvider)
+            val sisteYtelsesbehandling = BehandlingService(repositoryProvider, gatewayProvider)
                 .finnSisteYtelsesbehandlingFor(førstegangsbehandlingen.sakId)
             assertThat(sisteYtelsesbehandling?.id)
                 .isEqualTo(førstegangsbehandlingen.id)

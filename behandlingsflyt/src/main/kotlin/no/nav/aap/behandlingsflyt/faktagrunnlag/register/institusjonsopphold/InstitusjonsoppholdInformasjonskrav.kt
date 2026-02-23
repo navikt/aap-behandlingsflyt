@@ -129,11 +129,11 @@ class InstitusjonsoppholdInformasjonskrav private constructor(
             gatewayProvider: GatewayProvider
         ): InstitusjonsoppholdInformasjonskrav {
             return InstitusjonsoppholdInformasjonskrav(
-                SakService(repositoryProvider),
-                repositoryProvider.provide(),
-                gatewayProvider.provide(),
-                TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
-                gatewayProvider.provide<UnleashGateway>()
+                sakService = SakService(repositoryProvider, gatewayProvider),
+                institusjonsoppholdRepository = repositoryProvider.provide(),
+                institusjonsoppholdRegisterGateway = gatewayProvider.provide(),
+                tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
+                unleashGateway = gatewayProvider.provide<UnleashGateway>()
             )
         }
 
