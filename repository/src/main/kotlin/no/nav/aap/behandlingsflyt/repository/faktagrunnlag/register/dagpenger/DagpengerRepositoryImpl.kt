@@ -55,7 +55,7 @@ class DagpengerRepositoryImpl(private val connection: DBConnection) : DagpengerR
 
         connection.execute("""
             DELETE FROM DAGPENGER_GRUNNLAG WHERE BEHANDLING_ID = ?;
-            DELETE FROM DAGPENGER_PERIODE WHERE DAGPENGER_PERIODER_ID IN ANY(?::BigInt[]);
+            DELETE FROM DAGPENGER_PERIODE WHERE DAGPENGER_PERIODER_ID = ANY(?::BigInt[]);
             DELETE FROM DAGPENGER_PERIODER WHERE ID = ANY(?::BigInt[]);
             """.trimIndent()){
             setParams {
