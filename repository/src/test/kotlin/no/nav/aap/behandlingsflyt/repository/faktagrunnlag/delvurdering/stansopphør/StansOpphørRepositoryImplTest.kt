@@ -158,8 +158,8 @@ class StansOpphørRepositoryImplTest {
             val gjeldendeOpphør = StansOpphørGrunnlag(
                 setOf(
                     GjeldendeStansEllerOpphør(
-                        dato = 1 januar 2020,
-                        opprettet = Instant.now(),
+                        fom = 1 januar 2020,
+                        opprettet = Instant.now().truncatedTo(ChronoUnit.MILLIS).minusSeconds(5000),
                         vurdertIBehandling = b1.id,
                         vurdering = Opphør(setOf(Avslagsårsak.BRUDD_PÅ_AKTIVITETSPLIKT_OPPHØR))
                     )
@@ -169,8 +169,8 @@ class StansOpphørRepositoryImplTest {
             val gjeldendeOpphørNy = StansOpphørGrunnlag(
                 setOf(
                     GjeldendeStansEllerOpphør(
-                        dato = 1 januar 2021,
-                        opprettet = Instant.now(),
+                        fom = 1 januar 2021,
+                        opprettet = Instant.now().truncatedTo(ChronoUnit.MILLIS),
                         vurdertIBehandling = b1.id,
                         vurdering = Opphør(setOf(Avslagsårsak.BRUDD_PÅ_AKTIVITETSPLIKT_OPPHØR))
                     )
@@ -190,13 +190,6 @@ class StansOpphørRepositoryImplTest {
             assertThat(repo.hentHvisEksisterer(b1.id)).isNull()
 
             assertThat(repo.hentHvisEksisterer(b2.id)).isEqualTo(gjeldendeOpphør)
-        }
-    }
-
-
-    private fun <R> medRepository(body: StansOpphørRepository.() -> R): R {
-        return dataSource.transaction { connection ->
-            StansOpphørRepositoryImpl(connection).body()
         }
     }
 }
