@@ -107,10 +107,10 @@ class DagpengerInformasjonskrav(
             repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider
         ): DagpengerInformasjonskrav {
             return DagpengerInformasjonskrav(
-                TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
-                gatewayProvider.provide(),
-                repositoryProvider.provide(),
-                SakService(repositoryProvider),
+                tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
+                dagpengerGateway = gatewayProvider.provide(),
+                dagpengerRepository = repositoryProvider.provide(),
+                sakService = SakService(repositoryProvider, gatewayProvider),
             )
         }
     }

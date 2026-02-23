@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
@@ -16,7 +16,7 @@ import org.slf4j.LoggerFactory
 
 class TriggBarnetilleggSatsJobbUtfører(
     val sakRepository: SakRepository,
-    private val sakOgBehandlingService: SakOgBehandlingService,
+    private val behandlingService: BehandlingService,
     private val prosesserBehandlingService: ProsesserBehandlingService,
 ) : JobbUtfører {
 
@@ -30,7 +30,7 @@ class TriggBarnetilleggSatsJobbUtfører(
         if (OpprettJobbForTriggBarnetilleggSatsJobbUtfører.jobbKonfigurasjon.erAktiv) {
             log.info("Trigger behandlinger for barnetillegg sats regulering.")
 
-            val behandling = sakOgBehandlingService.finnEllerOpprettBehandling(
+            val behandling = behandlingService.finnEllerOpprettBehandling(
                 sakId, VurderingsbehovOgÅrsak(
                     vurderingsbehov = listOf(VurderingsbehovMedPeriode(Vurderingsbehov.BARNETILLEGG_SATS_REGULERING)),
                     årsak = ÅrsakTilOpprettelse.BARNETILLEGG_SATSENDRING
@@ -54,7 +54,7 @@ class TriggBarnetilleggSatsJobbUtfører(
         ): TriggBarnetilleggSatsJobbUtfører {
             return TriggBarnetilleggSatsJobbUtfører(
                 sakRepository = repositoryProvider.provide(),
-                sakOgBehandlingService = SakOgBehandlingService(repositoryProvider, gatewayProvider),
+                behandlingService = BehandlingService(repositoryProvider, gatewayProvider),
                 prosesserBehandlingService = ProsesserBehandlingService(repositoryProvider, gatewayProvider),
             )
         }

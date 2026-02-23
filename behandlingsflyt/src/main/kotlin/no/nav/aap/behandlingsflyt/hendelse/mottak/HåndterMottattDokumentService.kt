@@ -5,7 +5,7 @@ import no.nav.aap.behandlingsflyt.behandling.tilbakekrevingsbehandling.Tilbakekr
 import no.nav.aap.behandlingsflyt.behandling.tilbakekrevingsbehandling.TilbakekrevingService
 import no.nav.aap.behandlingsflyt.behandling.tilbakekrevingsbehandling.Tilbakekrevingshendelse
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
@@ -61,7 +61,7 @@ import java.util.*
 
 class HåndterMottattDokumentService(
     private val sakService: SakService,
-    private val sakOgBehandlingService: SakOgBehandlingService,
+    private val behandlingService: BehandlingService,
     private val låsRepository: TaSkriveLåsRepository,
     private val prosesserBehandling: ProsesserBehandlingService,
     private val mottaDokumentService: MottaDokumentService,
@@ -75,8 +75,8 @@ class HåndterMottattDokumentService(
     private val log = LoggerFactory.getLogger(javaClass)
 
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
-        sakService = SakService(repositoryProvider),
-        sakOgBehandlingService = SakOgBehandlingService(repositoryProvider, gatewayProvider),
+        sakService = SakService(repositoryProvider, gatewayProvider),
+        behandlingService = BehandlingService(repositoryProvider, gatewayProvider),
         låsRepository = repositoryProvider.provide(),
         prosesserBehandling = ProsesserBehandlingService(repositoryProvider, gatewayProvider),
         mottaDokumentService = MottaDokumentService(repositoryProvider),
@@ -103,7 +103,7 @@ class HåndterMottattDokumentService(
                 val behandling = if (melding.behandlingReferanse != null) {
                     behandlingRepository.hent(BehandlingReferanse(UUID.fromString(melding.behandlingReferanse)))
                 } else {
-                    sakOgBehandlingService.finnEllerOpprettBehandling(
+                    behandlingService.finnEllerOpprettBehandling(
                         sak.saksnummer,
                         VurderingsbehovOgÅrsak(
                             årsak = ÅrsakTilOpprettelse.KLAGE,
@@ -118,7 +118,7 @@ class HåndterMottattDokumentService(
                     låsRepository.låsBehandling(it.id)
                 }
 
-                sakOgBehandlingService.oppdaterRettighetsperioden(sakId, brevkategori, mottattTidspunkt.toLocalDate())
+                sakService.oppdaterRettighetsperioden(sakId, brevkategori, mottattTidspunkt.toLocalDate())
 
                 mottaDokumentService.markerSomBehandlet(sakId, behandling!!.id, referanse)
 
@@ -156,7 +156,7 @@ class HåndterMottattDokumentService(
             .map { it.type }.toSet()
             .map {
                 val beskrivelse = melding.beskrivelse
-                val opprettet = sakOgBehandlingService.opprettAktivitetspliktBehandling(
+                val opprettet = behandlingService.opprettAktivitetspliktBehandling(
                     sakId,
                     årsakTilOpprettelse,
                     it,
@@ -173,7 +173,7 @@ class HåndterMottattDokumentService(
             return
         }
 
-        val opprettetBehandling = sakOgBehandlingService.finnEllerOpprettBehandling(
+        val opprettetBehandling = behandlingService.finnEllerOpprettBehandling(
             sak.saksnummer,
             VurderingsbehovOgÅrsak(
                 årsak = årsakTilOpprettelse,
@@ -188,7 +188,7 @@ class HåndterMottattDokumentService(
         }
 
         when (opprettetBehandling) {
-            is SakOgBehandlingService.Ordinær ->
+            is BehandlingService.Ordinær ->
                 mottaDokumentService.oppdaterMedBehandlingId(sakId, opprettetBehandling.åpenBehandling.id, referanse)
 
             else -> throw IllegalStateException("Forventet ordinær behandling ved omgjøring etter klage")
@@ -217,7 +217,7 @@ class HåndterMottattDokumentService(
         val vurderingsbehov = utledVurderingsbehov(brevkategori, melding, periode)
         val årsakTilOpprettelse = utledÅrsakTilOpprettelse(brevkategori, melding)
 
-        val opprettetBehandling = sakOgBehandlingService.finnEllerOpprettBehandling(
+        val opprettetBehandling = behandlingService.finnEllerOpprettBehandling(
             sak.saksnummer,
             VurderingsbehovOgÅrsak(
                 årsak = årsakTilOpprettelse,
@@ -238,22 +238,22 @@ class HåndterMottattDokumentService(
             låsRepository.låsBehandling(it.id)
         }
 
-        sakOgBehandlingService.oppdaterRettighetsperioden(sakId, brevkategori, mottattTidspunkt.toLocalDate())
+        sakService.oppdaterRettighetsperioden(sakId, brevkategori, mottattTidspunkt.toLocalDate())
 
         if (skalMarkereDokumentSomBehandlet(melding)) {
-            require(opprettetBehandling is SakOgBehandlingService.Ordinær) {
+            require(opprettetBehandling is BehandlingService.Ordinær) {
                 "Forventet ordinær behandling ved mottak av dokumenter som skal markeres som behandlet"
             }
             mottaDokumentService.markerSomBehandlet(sakId, opprettetBehandling.åpenBehandling.id, referanse)
         } else {
             when (opprettetBehandling) {
-                is SakOgBehandlingService.Ordinær -> mottaDokumentService.oppdaterMedBehandlingId(
+                is BehandlingService.Ordinær -> mottaDokumentService.oppdaterMedBehandlingId(
                     sakId,
                     opprettetBehandling.åpenBehandling.id,
                     referanse
                 )
 
-                is SakOgBehandlingService.MåBehandlesAtomært -> mottaDokumentService.oppdaterMedBehandlingId(
+                is BehandlingService.MåBehandlesAtomært -> mottaDokumentService.oppdaterMedBehandlingId(
                     sakId,
                     opprettetBehandling.nyBehandling.id,
                     referanse
@@ -282,7 +282,7 @@ class HåndterMottattDokumentService(
         val periode = utledPeriode(brevkategori, mottattTidspunkt, melding)
         val vurderingsbehov = utledVurderingsbehov(brevkategori, melding, periode)
         log.info("Håndterer dialogmelding for ${sak.id}")
-        val sisteYtelsesBehandling = sakOgBehandlingService.finnSisteYtelsesbehandlingFor(sak.id)
+        val sisteYtelsesBehandling = behandlingService.finnSisteYtelsesbehandlingFor(sak.id)
 
         if (sisteYtelsesBehandling != null) {
             mottaDokumentService.markerSomBehandlet(sakId, sisteYtelsesBehandling.id, referanse)
@@ -325,7 +325,7 @@ class HåndterMottattDokumentService(
         sakId: SakId,
         referanse: InnsendingReferanse,
     ) {
-        val sisteYtelsesBehandling = sakOgBehandlingService.finnSisteYtelsesbehandlingFor(sakId)
+        val sisteYtelsesBehandling = behandlingService.finnSisteYtelsesbehandlingFor(sakId)
             ?: error("Finnes ingen ytelsesbehandling for sakId $sakId")
         if (!trukketSøknadService.søknadErTrukket(sisteYtelsesBehandling.id)) {
             flytJobbRepository.leggTil(
@@ -438,7 +438,7 @@ class HåndterMottattDokumentService(
         låsRepository.withLåstBehandling(behandling.id) {
             val vurderingsbehov =
                 melding.årsakerTilBehandling.map { VurderingsbehovMedPeriode(it.tilVurderingsbehov()) }
-            sakOgBehandlingService.oppdaterVurderingsbehovOgÅrsak(
+            behandlingService.oppdaterVurderingsbehovOgÅrsak(
                 behandling,
                 VurderingsbehovOgÅrsak(vurderingsbehov, årsakTilOpprettelse, beskrivelse = melding.beskrivelse)
             )
