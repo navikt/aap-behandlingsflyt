@@ -211,7 +211,7 @@ class TidligereVurderingerImpl(
                             RettighetsType.ARBEIDSSØKER
                         )
 
-                        foreløpigUtfall is TidligereVurderinger.PotensieltOppfylt && foreløpigUtfall.rettighetstype == null && sykdomsvurdering?.potensieltOppfyltSykepengeerstatning() == false ->
+                        foreløpigUtfall is TidligereVurderinger.PotensieltOppfylt && foreløpigUtfall.rettighetstype == null && sykdomsvurdering?.potensieltOppfyltSykepengeerstatning() != true ->
                             TidligereVurderinger.UunngåeligAvslag
 
                         else -> TidligereVurderinger.PotensieltOppfylt(null)
