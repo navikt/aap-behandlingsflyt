@@ -43,13 +43,13 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.InstitusjonsoppholdJobb to true,
         BehandlingsflytFeature.TrekkSoeknadOpprettetFraLegeerklaering to true,
         BehandlingsflytFeature.UbehandledeMeldekortJobb to true,
-        BehandlingsflytFeature.PapirMeldekortFraBehandingsflyt to true,
-        BehandlingsflytFeature.RettighetstypeSteg to true,
         BehandlingsflytFeature.VirksomhetsEtablering to true,
         BehandlingsflytFeature.KvalitetssikringVed2213 to true,
         BehandlingsflytFeature.tilbakekrevingsOppgaverTilOppgave to true,
         BehandlingsflytFeature.PeriodiseringHelseinstitusjonOpphold to true,
         BehandlingsflytFeature.HentingAvInstitusjonsOpphold to true,
+        BehandlingsflytFeature.VisIkkeRelevantPeriode to true,
+        BehandlingsflytFeature.NyTidligereVurderinger to true,
         )
 )
 

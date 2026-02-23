@@ -3,10 +3,12 @@ package no.nav.aap.behandlingsflyt.behandling.lovvalgmedlemskap.grunnlag
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovMetadataService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.tilTidslinje
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapArbeidInntektForutgåendeRepository
+import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderForutgåendeMedlemskapSteg
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
@@ -43,6 +45,8 @@ fun NormalOpenAPIRoute.forutgåendeMedlemskapApi(
                             .provide<MedlemskapArbeidInntektForutgåendeRepository>()
                     val sakRepository = repositoryProvider.provide<SakRepository>()
                     val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
+                    val vurderForutgåendeMedlemskapSteg = VurderForutgåendeMedlemskapSteg.konstruer(repositoryProvider, gatewayProvider)
+                    val avklaringsbehovMetadataService = AvklaringsbehovMetadataService(repositoryProvider, gatewayProvider)
 
                     val behandling = BehandlingReferanseService(behandlingRepository).behandling(req)
                     val sak = sakRepository.hent(behandling.sakId)
@@ -78,7 +82,8 @@ fun NormalOpenAPIRoute.forutgåendeMedlemskapApi(
                                     fom = segment.fom(),
                                     tom = if (segment.tom().isEqual(Tid.MAKS)) null else segment.tom()
                                 )
-                            }
+                            },
+                        ikkeRelevantePerioder = avklaringsbehovMetadataService.perioderSomSkalFremhevesSomIkkeRelevant(vurderForutgåendeMedlemskapSteg, behandling)
                     )
                 }
 

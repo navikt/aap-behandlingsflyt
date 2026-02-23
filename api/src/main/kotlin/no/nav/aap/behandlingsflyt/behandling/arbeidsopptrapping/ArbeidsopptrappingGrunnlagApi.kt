@@ -84,7 +84,8 @@ fun NormalOpenAPIRoute.arbeidsopptrappingGrunnlagApi(
                         kvalitetssikretAv = vurdertAvService.kvalitetssikretAv(
                             Definisjon.ARBEIDSOPPTRAPPING,
                             behandling.id
-                        )
+                        ),
+                        ikkeRelevantePerioder = emptyList(/* Avklaringsbehovet er frivillig, så vi har ikke denne opplysningen lett tilgjengelig. */),
                     )
                 }
 

@@ -173,7 +173,7 @@ class BarnInformasjonskrav private constructor(
                 repositoryProvider.provide(),
                 gatewayProvider.provide(),
                 gatewayProvider.provide(),
-                TidligereVurderingerImpl(repositoryProvider),
+                TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
                 SakService(repositoryProvider)
             )
         }

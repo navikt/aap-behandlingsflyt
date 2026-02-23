@@ -114,6 +114,7 @@ class FlytKontekstMedPeriodeService(
             Vurderingsbehov.OVERGANG_UFORE,
             Vurderingsbehov.OVERGANG_ARBEID,
             Vurderingsbehov.OPPHOLDSKRAV,
+            Vurderingsbehov.ETABLERING_EGEN_VIRKSOMHET,
             Vurderingsbehov.UTENLANDSOPPHOLD_FOR_SOKNADSTIDSPUNKT ->
                 REVURDERING
 

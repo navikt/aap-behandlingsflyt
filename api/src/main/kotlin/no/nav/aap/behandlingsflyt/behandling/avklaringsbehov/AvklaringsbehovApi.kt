@@ -9,6 +9,7 @@ import io.ktor.http.*
 import no.nav.aap.behandlingsflyt.Tags
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.flate.LøsAvklaringsbehovPåBehandling
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.flate.LøsPeriodisertAvklaringsbehovPåBehandling
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklaringsbehovLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.LøsningForPeriode
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.mdc.LogKontekst
@@ -34,6 +35,38 @@ fun NormalOpenAPIRoute.avklaringsbehovApi(
     repositoryRegistry: RepositoryRegistry,
     gatewayProvider: GatewayProvider,
 ) {
+    suspend fun OpenAPIPipelineResponseContext<Unit>.løsAvklaringsbehov(
+        behandlingReferanse: BehandlingReferanse,
+        avklaringsbehovLøsning: AvklaringsbehovLøsning,
+        behandlingVersjon: Long,
+    ) {
+        dataSource.transaction { connection ->
+            val repositoryProvider = repositoryRegistry.provider(connection)
+            val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+            val taSkriveLåsRepository = repositoryProvider.provide<TaSkriveLåsRepository>()
+            val flytJobbRepository = repositoryProvider.provide<FlytJobbRepository>()
+
+            LoggingKontekst(
+                repositoryProvider,
+                LogKontekst(referanse = behandlingReferanse)
+            ).use {
+                val lås = taSkriveLåsRepository.lås(behandlingReferanse.referanse)
+                BehandlingTilstandValidator(
+                    BehandlingReferanseService(behandlingRepository),
+                    flytJobbRepository
+                ).validerTilstand(behandlingReferanse, behandlingVersjon)
+
+                AvklaringsbehovOrkestrator(repositoryProvider, gatewayProvider).løsAvklaringsbehovOgFortsettProsessering(
+                    behandlingId = lås.behandlingSkrivelås.id,
+                    avklaringsbehovLøsning = avklaringsbehovLøsning,
+                    bruker = bruker(),
+                )
+                taSkriveLåsRepository.verifiserSkrivelås(lås)
+            }
+        }
+        respondWithStatus(HttpStatusCode.Accepted)
+    }
+
     route("/api/behandling").tag(Tags.Behandling) {
         route("/løs-behov") {
             authorizedPost<Unit, Unit, LøsAvklaringsbehovPåBehandling>(
@@ -43,16 +76,9 @@ fun NormalOpenAPIRoute.avklaringsbehovApi(
                 )
             ) { _, request ->
                 løsAvklaringsbehov(
-                    dataSource = dataSource,
-                    repositoryRegistry = repositoryRegistry,
-                    gatewayProvider = gatewayProvider,
                     behandlingReferanse = BehandlingReferanse(request.referanse),
-                    hendelse = LøsAvklaringsbehovHendelse(
-                        løsning = request.behov,
-                        ingenEndringIGruppe = request.ingenEndringIGruppe == true,
-                        behandlingVersjon = request.behandlingVersjon,
-                        bruker = bruker()
-                    )
+                    avklaringsbehovLøsning = request.behov,
+                    behandlingVersjon = request.behandlingVersjon,
                 )
             }
         }
@@ -65,16 +91,9 @@ fun NormalOpenAPIRoute.avklaringsbehovApi(
             ) { _, request ->
                 validerPerioder(request.behov.løsningerForPerioder)
                 løsAvklaringsbehov(
-                    dataSource = dataSource,
-                    repositoryRegistry = repositoryRegistry,
-                    gatewayProvider = gatewayProvider,
                     behandlingReferanse = BehandlingReferanse(request.referanse),
-                    hendelse = LøsAvklaringsbehovHendelse(
-                        løsning = request.behov,
-                        ingenEndringIGruppe = request.ingenEndringIGruppe == true,
-                        behandlingVersjon = request.behandlingVersjon,
-                        bruker = bruker()
-                    )
+                    avklaringsbehovLøsning = request.behov,
+                    behandlingVersjon = request.behandlingVersjon,
                 )
             }
         }
@@ -108,39 +127,4 @@ fun validerPerioder(løsninger: List<LøsningForPeriode>) {
     if (overlapp.isNotEmpty()) {
         throw UgyldigForespørselException("Vurderinger har overlappende perioder: ${overlapp.joinToString()}")
     }
-}
-
-private suspend fun OpenAPIPipelineResponseContext<Unit>.løsAvklaringsbehov(
-    dataSource: DataSource,
-    repositoryRegistry: RepositoryRegistry,
-    gatewayProvider: GatewayProvider,
-    behandlingReferanse: BehandlingReferanse,
-    hendelse: LøsAvklaringsbehovHendelse
-) {
-    dataSource.transaction { connection ->
-        val repositoryProvider = repositoryRegistry.provider(connection)
-        val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
-        val taSkriveLåsRepository = repositoryProvider.provide<TaSkriveLåsRepository>()
-        val flytJobbRepository = repositoryProvider.provide<FlytJobbRepository>()
-
-        LoggingKontekst(
-            repositoryProvider,
-            LogKontekst(referanse = behandlingReferanse)
-        ).use {
-            val lås = taSkriveLåsRepository.lås(behandlingReferanse.referanse)
-            BehandlingTilstandValidator(
-                BehandlingReferanseService(behandlingRepository),
-                flytJobbRepository
-            ).validerTilstand(
-                behandlingReferanse, hendelse.behandlingVersjon
-            )
-
-            AvklaringsbehovHendelseHåndterer(repositoryProvider, gatewayProvider).håndtere(
-                key = lås.behandlingSkrivelås.id,
-                hendelse = hendelse
-            )
-            taSkriveLåsRepository.verifiserSkrivelås(lås)
-        }
-    }
-    respondWithStatus(HttpStatusCode.Accepted)
 }

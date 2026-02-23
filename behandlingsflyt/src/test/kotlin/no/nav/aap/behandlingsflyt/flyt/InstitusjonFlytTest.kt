@@ -44,7 +44,7 @@ class InstitusjonFlytTest: AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::clas
             .løsBistand(periode.fom)
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
-            .kvalitetssikreOk()
+            .kvalitetssikre()
             .løsBeregningstidspunkt()
             .løsOppholdskrav(fom)
             .medKontekst {

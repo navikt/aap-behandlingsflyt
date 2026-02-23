@@ -1,9 +1,6 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.behandlingstyper
 
-import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingInformasjonskrav
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.LovvalgInformasjonskrav
-import no.nav.aap.behandlingsflyt.behandling.rettighetsperiode.VurderRettighetsperiodeInformasjonskrav
-import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadInformasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.DagpengerInformasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjonInformasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseVurderingInformasjonskrav
@@ -30,6 +27,7 @@ import no.nav.aap.behandlingsflyt.forretningsflyt.steg.BarnetilleggSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.BeregnTilkjentYtelseSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.BeregningAvklarFaktaSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.Effektuer11_7Steg
+import no.nav.aap.behandlingsflyt.forretningsflyt.steg.EtableringEgenVirksomhetSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.FastsettArbeidsevneSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.FastsettGrunnlagSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.FastsettMeldeperiodeSteg
@@ -92,16 +90,13 @@ object Revurdering : BehandlingType {
             .medSteg(
                 steg = AvbrytRevurderingSteg,
                 vurderingsbehovRelevanteForSteg = listOf(Vurderingsbehov.REVURDERING_AVBRUTT),
-                informasjonskrav = listOf(AvbrytRevurderingInformasjonskrav)
             )
             .medSteg(
                 steg = SøknadSteg,
                 vurderingsbehovRelevanteForSteg = listOf(Vurderingsbehov.SØKNAD_TRUKKET),
-                informasjonskrav = listOf(TrukketSøknadInformasjonskrav),
             )
             .medSteg(
                 steg = RettighetsperiodeSteg,
-                informasjonskrav = listOf(VurderRettighetsperiodeInformasjonskrav),
                 vurderingsbehovRelevanteForSteg = listOf(
                     Vurderingsbehov.VURDER_RETTIGHETSPERIODE,
                     Vurderingsbehov.HELHETLIG_VURDERING,
@@ -156,6 +151,13 @@ object Revurdering : BehandlingType {
                     Vurderingsbehov.DØDSFALL_BRUKER,
                     Vurderingsbehov.REVURDER_LOVVALG,
                     Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP,
+                )
+            )
+            .medSteg(
+                steg = EtableringEgenVirksomhetSteg, vurderingsbehovRelevanteForSteg = listOf(
+                    Vurderingsbehov.MOTTATT_SØKNAD,
+                    Vurderingsbehov.HELHETLIG_VURDERING,
+                    Vurderingsbehov.ETABLERING_EGEN_VIRKSOMHET
                 )
             )
             .medSteg(
@@ -383,7 +385,6 @@ object Revurdering : BehandlingType {
                     Vurderingsbehov.REVURDER_SYKESTIPEND
                 )
             )
-            .medSteg(steg = RettighetstypeSteg)
             .medSteg(
                 steg = SamordningAndreStatligeYtelserSteg,
                 informasjonskrav = listOf(DagpengerInformasjonskrav),
@@ -403,6 +404,7 @@ object Revurdering : BehandlingType {
                 informasjonskrav = listOf(MeldekortInformasjonskrav, Aktivitetsplikt11_7Informasjonskrav)
             )
             .medSteg(steg = Effektuer11_7Steg)
+            .medSteg(steg = RettighetstypeSteg)
             .medSteg(steg = VedtakslengdeSteg, informasjonskrav = listOf(VedtakslengdeInformasjonskrav))
             .medSteg(steg = UnderveisSteg)
             .medSteg(

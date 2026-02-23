@@ -127,7 +127,7 @@ class VedtakslengdeService(
         val rettighetstypeTidslinje = rettighetstypeRepository.hentHvisEksisterer(behandlingId)?.rettighetstypeTidslinje
         val initiellSluttdato = utledInitiellSluttdato(behandlingId, rettighetsperiode).tom
 
-        // Ved avslag sett inntil ett år slik det var gjort tidligere
+        // Ved avslag sett inntil ett år slik det var gjort tidligere - gå opp hva som er riktig å gjøre her
         if (rettighetstypeTidslinje?.isEmpty() == true) {
             return initiellSluttdato
         }
@@ -144,14 +144,16 @@ class VedtakslengdeService(
 
         log.info("Sluttdato for siste bistandsbehov: $sluttdatoSisteBistandsbehov")
 
-        // På sikt gi opp til ett år frem i tid fra vedtakstidspunkt her (ved feks omgjøring / behandling bakover i tid)
+        // Logikken rundt sluttdato når det ligger et bistandsbehov til slutt, må gåes opp. Inntil videre gis det
+        // opp til initiell sluttdato / vedtatt sluttdato.
         val sluttdatoBistandsbehov = if (sluttdatoSisteBistandsbehov != null) {
             // Returnere til og med kvote-slutt dersom denne datoen kommer før utledet sluttdato
             listOfNotNull(sluttdatoSisteBistandsbehov, initiellSluttdato).min()
         } else null
 
-        // Tillater ikke innskrenkelse av vedtakslengde da forrige vedtak kan ha sendt over perioder til utbetaling
         val kandidaterForSluttdato =  listOfNotNull(sluttdatoSisteUnntaksrettighet, sluttdatoBistandsbehov, vedtattSluttdato)
+
+        // Tillater ikke innskrenkelse av vedtakslengde da forrige vedtak kan ha sendt over perioder til utbetaling
         val sluttdatoForBehandlingen = kandidaterForSluttdato.max()
 
         log.info("Setter sluttdato: $sluttdatoForBehandlingen")

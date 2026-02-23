@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg.klage
 
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.trekkklage.TrekkKlageService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.behandlendeenhet.BehandlendeEnhetRepository
@@ -18,7 +17,6 @@ import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 
 class KlagebehandlingNaySteg private constructor(
-    private val avklaringsbehovRepository: AvklaringsbehovRepository,
     private val behandlendeEnhetRepository: BehandlendeEnhetRepository,
     private val klageresultatUtleder: KlageresultatUtleder,
     private val trekkKlageService: TrekkKlageService,
@@ -29,7 +27,6 @@ class KlagebehandlingNaySteg private constructor(
         val resultat = klageresultatUtleder.utledKlagebehandlingResultat(kontekst.behandlingId)
         val erKlageResultatAvslått = resultat is Avslått
 
-        val avklaringsbehov = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
         val vurderingHosNay = klagebehandlingNayRepository.hentHvisEksisterer(kontekst.behandlingId) != null
 
         val klageErTrukket = trekkKlageService.klageErTrukket(kontekst.behandlingId)
@@ -61,12 +58,11 @@ class KlagebehandlingNaySteg private constructor(
             gatewayProvider: GatewayProvider
         ): BehandlingSteg {
             return KlagebehandlingNaySteg(
-                repositoryProvider.provide(),
-                repositoryProvider.provide(),
-                KlageresultatUtleder(repositoryProvider),
-                TrekkKlageService(repositoryProvider),
-                AvklaringsbehovService(repositoryProvider),
-                repositoryProvider.provide(),
+                behandlendeEnhetRepository = repositoryProvider.provide(),
+                klageresultatUtleder = KlageresultatUtleder(repositoryProvider),
+                trekkKlageService = TrekkKlageService(repositoryProvider),
+                avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
+                klagebehandlingNayRepository = repositoryProvider.provide(),
             )
         }
 

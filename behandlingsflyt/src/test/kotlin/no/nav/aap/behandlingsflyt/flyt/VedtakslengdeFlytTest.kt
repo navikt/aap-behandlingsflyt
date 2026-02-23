@@ -55,7 +55,6 @@ object VedtakslengdeFlytUnleash : FakeUnleashBaseWithDefaultDisabled(
     enabledFlags = listOf(
         BehandlingsflytFeature.UtvidVedtakslengdeJobb,
         BehandlingsflytFeature.ForlengelseIManuellBehandling,
-        BehandlingsflytFeature.RettighetstypeSteg
     )
 )
 
@@ -74,7 +73,7 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(VedtakslengdeFlytUnlea
             .løsBistand(startDato, erOppfylt = true)
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
-            .kvalitetssikreOk()
+            .kvalitetssikre()
             .løsBeregningstidspunkt(startDato)
             .løsOppholdskrav(startDato)
             .løsAndreStatligeYtelser()
@@ -174,7 +173,7 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(VedtakslengdeFlytUnlea
             .løsOvergangArbeid(Utfall.OPPFYLT, fom = overgangDato)
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
-            .kvalitetssikreOk()
+            .kvalitetssikre()
             .løsBeregningstidspunkt(startDato)
             .løsOppholdskrav(startDato)
             .løsAndreStatligeYtelser()
@@ -255,7 +254,7 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(VedtakslengdeFlytUnlea
             .løsOvergangArbeid(Utfall.OPPFYLT, fom = overgangDato)
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
-            .kvalitetssikreOk()
+            .kvalitetssikre()
             .løsBeregningstidspunkt(startDato)
             .løsOppholdskrav(startDato)
             .løsAndreStatligeYtelser()
@@ -267,7 +266,7 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(VedtakslengdeFlytUnlea
     }
 
     @Test
-    fun `skal sette sluttdato 14 måneder frem i tid når siste oppfylte rettighetstype er bistand`() {
+    fun `skal sette sluttdato til og med unntaksvilkåret, også når siste oppfylte rettighetstype er bistand`() {
         val søknadstidspunkt = LocalDateTime.now(clock)
         val (sak, førstegangsbehandling) = sendInnFørsteSøknad(mottattTidspunkt = søknadstidspunkt)
         val startDato = sak.rettighetsperiode.fom
@@ -360,7 +359,7 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(VedtakslengdeFlytUnlea
             .løsOvergangArbeid(Utfall.OPPFYLT, fom = overgangDato)
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
-            .kvalitetssikreOk()
+            .kvalitetssikre()
             .løsBeregningstidspunkt(startDato)
             .løsOppholdskrav(startDato)
             .løsAndreStatligeYtelser()
@@ -417,7 +416,7 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(VedtakslengdeFlytUnlea
             )
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
-            .kvalitetssikreOk()
+            .kvalitetssikre()
             .løsAvklaringsBehov(
                 PeriodisertAvklarSykepengerErstatningLøsning(
                     løsningerForPerioder = listOf(
@@ -523,7 +522,7 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(VedtakslengdeFlytUnlea
             .løsBistand(startDato)
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
-            .kvalitetssikreOk()
+            .kvalitetssikre()
             .løsBeregningstidspunkt(startDato)
             .løsOppholdskrav(startDato)
             .løsAndreStatligeYtelser()
@@ -693,7 +692,7 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(VedtakslengdeFlytUnlea
             .løsBistand(startDato)
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
-            .kvalitetssikreOk()
+            .kvalitetssikre()
             .løsBeregningstidspunkt(startDato)
             .løsForutgåendeMedlemskap(startDato, medlem = true)
             .løsOppholdskrav(startDato)
@@ -769,7 +768,7 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(VedtakslengdeFlytUnlea
             .løsBistand(startDato)
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
-            .kvalitetssikreOk()
+            .kvalitetssikre()
             .løsBeregningstidspunkt(startDato)
             .løsOppholdskrav(startDato)
             .løsAndreStatligeYtelser()
@@ -877,7 +876,7 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(VedtakslengdeFlytUnlea
             .løsBistand(startDato)
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
-            .kvalitetssikreOk()
+            .kvalitetssikre()
             .løsBeregningstidspunkt(startDato)
             .løsOppholdskrav(startDato)
             .løsAndreStatligeYtelser()

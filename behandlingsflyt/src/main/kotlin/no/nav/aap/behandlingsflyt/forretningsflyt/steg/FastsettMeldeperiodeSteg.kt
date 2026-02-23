@@ -22,9 +22,9 @@ class FastsettMeldeperiodeSteg(
     private val tidligereVurderinger: TidligereVurderinger,
     private val sakRepository: SakRepository,
 ) : BehandlingSteg {
-    constructor(repositoryProvider: RepositoryProvider) : this(
+    constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         meldeperiodeRepository = repositoryProvider.provide(),
-        tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
+        tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
         sakRepository = repositoryProvider.provide(),
     )
 
@@ -68,7 +68,7 @@ class FastsettMeldeperiodeSteg(
             repositoryProvider: RepositoryProvider,
             gatewayProvider: GatewayProvider
         ): BehandlingSteg {
-            return FastsettMeldeperiodeSteg(repositoryProvider)
+            return FastsettMeldeperiodeSteg(repositoryProvider, gatewayProvider)
         }
 
         override fun type(): StegType {

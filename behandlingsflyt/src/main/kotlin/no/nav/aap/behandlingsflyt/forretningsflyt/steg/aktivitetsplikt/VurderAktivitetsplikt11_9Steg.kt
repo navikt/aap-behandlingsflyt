@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg.aktivitetsplikt
 
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_9Repository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
@@ -15,13 +14,11 @@ import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 
 class VurderAktivitetsplikt11_9Steg(
-    private val avklaringsbehovRepository: AvklaringsbehovRepository,
     private val aktivitetsplikt11_9Repository: Aktivitetsplikt11_9Repository,
     private val avklaringsbehovService: AvklaringsbehovService,
 ) : BehandlingSteg {
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
         avklaringsbehovService.oppdaterAvklaringsbehov(
             kontekst = kontekst,
             definisjon = Definisjon.VURDER_BRUDD_11_9,
@@ -55,9 +52,8 @@ class VurderAktivitetsplikt11_9Steg(
             repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider
         ): BehandlingSteg {
             return VurderAktivitetsplikt11_9Steg(
-                repositoryProvider.provide(),
                 aktivitetsplikt11_9Repository = repositoryProvider.provide(),
-                AvklaringsbehovService(repositoryProvider),
+                avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
             )
         }
 

@@ -92,7 +92,7 @@ class PersonopplysningForutgåendeInformasjonskrav private constructor(
                 personopplysningRepository,
                 gatewayProvider.provide(),
                 vilkårsresultatRepository,
-                TidligereVurderingerImpl(repositoryProvider),
+                TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
             )
         }
     }

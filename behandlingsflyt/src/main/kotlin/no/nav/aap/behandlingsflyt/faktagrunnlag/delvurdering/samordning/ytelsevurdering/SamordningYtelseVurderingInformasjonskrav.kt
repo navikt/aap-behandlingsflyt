@@ -214,7 +214,7 @@ class SamordningYtelseVurderingInformasjonskrav(
             return SamordningYtelseVurderingInformasjonskrav(
                 repositoryProvider.provide(),
                 repositoryProvider.provide(),
-                TidligereVurderingerImpl(repositoryProvider),
+                TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
                 gatewayProvider.provide(),
                 gatewayProvider.provide(),
                 SakService(repositoryProvider),

@@ -37,16 +37,11 @@ class DatadelingMeldekortJobbUtfører(
 
         val kontraktObjekter = service.opprettKontraktObjekter(sakId, behandlingId)
 
-        try {
-            if (kontraktObjekter.isEmpty()) {
-                log.info("Ingen meldekort-detaljer å sende, tom liste mottatt for sakId=${sakId}, behandlingId=${behandlingId}")
-                return
-            }
-            apiInternGateway.sendDetaljertMeldekortListe(kontraktObjekter, sakId, behandlingId)
-        } catch (e: Exception) {
-            log.error("Feil ved sending av meldekort til API-intern for sak=${sakId}, behandling=${behandlingId}", e)
-            throw e
+        if (kontraktObjekter.isEmpty()) {
+            log.info("Ingen meldekort-detaljer å sende, tom liste mottatt for sakId=${sakId}, behandlingId=${behandlingId}")
+            return
         }
+        apiInternGateway.sendDetaljertMeldekortListe(kontraktObjekter, sakId, behandlingId)
     }
 
     companion object : ProvidersJobbSpesifikasjon {

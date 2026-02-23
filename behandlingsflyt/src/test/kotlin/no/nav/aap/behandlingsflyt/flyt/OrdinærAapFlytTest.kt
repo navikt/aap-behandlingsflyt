@@ -114,7 +114,7 @@ class OrdinærAapFlytTest(val unleashGateway: KClass<UnleashGateway>) : Abstrakt
             ),
         )
             .løsSykdomsvurderingBrev()
-            .kvalitetssikreOk()
+            .kvalitetssikre()
             .medKontekst {
                 // Saken står til To-trinnskontroll hos beslutter
                 assertThat(åpneAvklaringsbehov.map { it.definisjon }).containsOnly(Definisjon.FATTE_VEDTAK)
@@ -168,7 +168,7 @@ class OrdinærAapFlytTest(val unleashGateway: KClass<UnleashGateway>) : Abstrakt
                 }
             }
             .løsSykdomsvurderingBrev()
-            .kvalitetssikreOk()
+            .kvalitetssikre()
             .løsBeregningstidspunkt()
             .løsOppholdskrav(sak.rettighetsperiode.fom)
             .løsAndreStatligeYtelser()

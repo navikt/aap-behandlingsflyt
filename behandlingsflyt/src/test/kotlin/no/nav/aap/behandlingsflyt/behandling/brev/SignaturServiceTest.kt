@@ -68,7 +68,12 @@ class SignaturServiceTest {
         leggTilEndring(
             Definisjon.FASTSETT_BEREGNINGSTIDSPUNKT, endretAv = saksbehandlerIdent, AvklaringsbehovStatus.AVSLUTTET
         )
+
+        // definisjon som ikke skal tas høyde for
         leggTilEndring(Definisjon.MANUELT_SATT_PÅ_VENT, endretAv = saksbehandlerIdent, AvklaringsbehovStatus.AVSLUTTET)
+
+        // definisjon som ikke skal tas høyde for
+        leggTilEndring(Definisjon.VURDER_TREKK_AV_SØKNAD, endretAv = saksbehandlerIdent, AvklaringsbehovStatus.AVSLUTTET)
 
         // BESLUTTER
         leggTilEndring(Definisjon.FATTE_VEDTAK, endretAv = beslutterIdent, AvklaringsbehovStatus.AVSLUTTET)

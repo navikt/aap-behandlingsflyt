@@ -39,6 +39,7 @@ import java.math.BigDecimal
 /**
  * Eksemplene er hentet fra https://navno.sharepoint.com/:w:/r/sites/POAAP/Shared%20Documents/Regelverk/Regelverksavklaringer/Juridiske%20avklaringer/Beregningscaser.docx?web=1
  */
+@Suppress("PropertyName")
 class TilkjentYtelseGrunnlagTest {
     val `1000 kroner i G` = GUnit(BigDecimal("1.99755"))
     val `1100 kroner i G` = GUnit(BigDecimal("2.1973"))
@@ -444,7 +445,6 @@ class TilkjentYtelseGrunnlagTest {
 
         assertThat(sumRettTilAAP(førsteTilkjentYtelse)).isEqualTo(BigDecimal("16090.00"))
     }
-
 
 
     private fun sumRettTilAAP(tilkjentYtelse: Tidslinje<Tilkjent>): BigDecimal {

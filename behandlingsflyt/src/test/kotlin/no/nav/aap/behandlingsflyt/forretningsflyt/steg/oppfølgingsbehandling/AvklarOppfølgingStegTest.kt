@@ -208,7 +208,6 @@ class AvklarOppfølgingStegTest {
             prosesserBehandling = prosesserBehandling,
             mottaDokumentService = mottaDokumentService,
             avklaringsbehovService = avklaringsbehovService,
-            avklaringsbehovRepository = avklaringsbehovRepository,
         )
 
         val kontekst = flytKontekstMedPerioder {

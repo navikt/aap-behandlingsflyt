@@ -9,6 +9,7 @@ data class OvergangArbeidGrunnlagResponse(
     override val sisteVedtatteVurderinger: List<OvergangArbeidVurderingResponse>,
     override val nyeVurderinger: List<OvergangArbeidVurderingResponse>,
     override val kanVurderes: List<Periode>,
+    override val ikkeRelevantePerioder: List<Periode>,
     override val behøverVurderinger: List<Periode>,
 
     val gjeldendeSykdsomsvurderinger: List<SykdomsvurderingResponse>,

@@ -17,6 +17,7 @@ data class FritakMeldepliktGrunnlagResponse(
     override val nyeVurderinger: List<PeriodisertFritakMeldepliktVurderingResponse>,
     override val kanVurderes: List<Periode>,
     override val behøverVurderinger: List<Periode>,
+    override val ikkeRelevantePerioder: List<Periode>,
 ) : PeriodiserteVurderingerDto<PeriodisertFritakMeldepliktVurderingResponse>
 
 data class PeriodisertFritakMeldepliktVurderingResponse(

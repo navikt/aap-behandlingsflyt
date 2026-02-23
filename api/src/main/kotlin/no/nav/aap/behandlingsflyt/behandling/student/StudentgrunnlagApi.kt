@@ -75,6 +75,7 @@ fun NormalOpenAPIRoute.studentgrunnlagApi(
                         sisteVedtatteVurderinger = sisteVedtatte,
                         kanVurderes = listOf(sak.rettighetsperiode),
                         behøverVurderinger = avklaringsbehov?.perioderVedtaketBehøverVurdering().orEmpty().toList(),
+                        ikkeRelevantePerioder = emptyList(/* Steget bruker ikke periodsert avkalringsbehov, så opplysningene er ikke lett tilgjengelig.*/),
                     )
                 }
 

@@ -135,8 +135,7 @@ fun NormalOpenAPIRoute.institusjonApi(
 
                     // Hent ut rå fakta fra grunnlaget
                     val grunnlag = institusjonsoppholdRepository.hentHvisEksisterer(behandling.id)
-                    val oppholdInfo =
-                        byggTidslinjeAvType(grunnlag, Institusjonstype.HS)
+                    val oppholdInfo = byggTidslinjeForInstitusjonsopphold(grunnlag, Institusjonstype.HS)
 
                     val perioderMedHelseopphold = behov.perioderTilVurdering.mapValue { it.helse }.komprimer()
                     val vurderinger = grunnlag?.helseoppholdvurderinger?.tilTidslinje().orEmpty()
@@ -214,7 +213,7 @@ fun NormalOpenAPIRoute.institusjonApi(
                     val behov = utlederService.utled(behandling.id)
 
                     val grunnlag = institusjonsoppholdRepository.hentHvisEksisterer(behandling.id)
-                    val oppholdInfo = byggTidslinjeAvTypeNy(grunnlag, Institusjonstype.HS)
+                    val oppholdInfo = byggTidslinjeForInstitusjonsopphold(grunnlag, Institusjonstype.HS)
 
                     // Hent alle vurderinger gruppert per opphold fra repository
                     val vurderingerGruppertPerOpphold =
@@ -339,10 +338,33 @@ private fun mapVurderingerToDto(
         }
     }
 
-private fun byggTidslinjeAvTypeNy(
-    soningsopphold: InstitusjonsoppholdGrunnlag?, institusjonstype: Institusjonstype
+// Public for testing
+fun byggTidslinjeForInstitusjonsopphold(
+    grunnlag: InstitusjonsoppholdGrunnlag?,
+    type: Institusjonstype
 ): Tidslinje<Institusjon> {
-    return Tidslinje(soningsopphold?.oppholdene?.opphold?.filter { it.verdi.type == institusjonstype }.orEmpty())
+    val segments = grunnlag
+        ?.oppholdene
+        ?.opphold
+        ?.filter { it.verdi.type == type }
+        ?.sortedBy { it.periode.fom }
+        .orEmpty()
+
+    if (segments.size < 2) return Tidslinje(segments)
+
+    val håndterOverlapp = segments.zipWithNext { current, next ->
+        require(current.periode.tom <= next.periode.fom) {
+            "For stort overlapp mellom periodene ${current.periode} og ${next.periode}"
+        }
+
+        if (current.periode.tom == next.periode.fom) {
+            current.copy(periode = Periode(current.periode.fom, current.periode.tom.minusDays(1)))
+        } else {
+            current
+        }
+    } + segments.last()
+
+    return Tidslinje(håndterOverlapp)
 }
 
 private fun byggTidslinjeAvType(

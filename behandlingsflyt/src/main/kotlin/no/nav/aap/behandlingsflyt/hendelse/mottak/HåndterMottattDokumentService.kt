@@ -13,7 +13,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Aktivitetskort
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.AktivitetskortV0
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.AnnetRelevantDokumentV0
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.AnnetRelevantDokument
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.FagsysteminfoBehovV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.KabalHendelse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Klage
@@ -26,7 +26,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Melding
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.NyÅrsakTilBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.NyÅrsakTilBehandlingV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.OmgjøringKlageRevurdering
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.OmgjøringKlageRevurderingV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Omgjøringskilde
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Oppfølgingsoppgave
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.OppfølgingsoppgaveV0
@@ -86,7 +85,7 @@ class HåndterMottattDokumentService(
         tilbakekrevingService = TilbakekrevingService(repositoryProvider, gatewayProvider),
         trukketSøknadService = TrukketSøknadService(repositoryProvider),
         flytJobbRepository = repositoryProvider.provide<FlytJobbRepository>(),
-        )
+    )
 
     fun håndterMottatteKlage(
         sakId: SakId,
@@ -156,9 +155,7 @@ class HåndterMottattDokumentService(
         val opprettedeAktivitetspliktBehandlinger = vurderingsbehovForAktivitetsplikt
             .map { it.type }.toSet()
             .map {
-                val beskrivelse = when (melding) {
-                    is OmgjøringKlageRevurderingV0 -> melding.beskrivelse
-                }
+                val beskrivelse = melding.beskrivelse
                 val opprettet = sakOgBehandlingService.opprettAktivitetspliktBehandling(
                     sakId,
                     årsakTilOpprettelse,
@@ -182,10 +179,7 @@ class HåndterMottattDokumentService(
                 årsak = årsakTilOpprettelse,
                 vurderingsbehov = vurderingsbehovForYtelsesbehandling,
                 opprettet = mottattTidspunkt,
-                beskrivelse =
-                    when (melding) {
-                        is OmgjøringKlageRevurderingV0 -> melding.beskrivelse
-                    }
+                beskrivelse = melding.beskrivelse
             )
         )
 
@@ -231,9 +225,10 @@ class HåndterMottattDokumentService(
                 opprettet = mottattTidspunkt,
                 beskrivelse = when (melding) {
                     is ManuellRevurderingV0 -> melding.beskrivelse
-                    is OmgjøringKlageRevurderingV0 -> melding.beskrivelse
+                    is OmgjøringKlageRevurdering -> melding.beskrivelse
                     is PdlHendelseV0 -> melding.beskrivelse
                     is NyÅrsakTilBehandlingV0 -> melding.årsakerTilBehandling.joinToString(", ")
+                    is AnnetRelevantDokument -> melding.begrunnelse
                     else -> null
                 }
             )
@@ -246,7 +241,9 @@ class HåndterMottattDokumentService(
         sakOgBehandlingService.oppdaterRettighetsperioden(sakId, brevkategori, mottattTidspunkt.toLocalDate())
 
         if (skalMarkereDokumentSomBehandlet(melding)) {
-            require(opprettetBehandling is SakOgBehandlingService.Ordinær)
+            require(opprettetBehandling is SakOgBehandlingService.Ordinær) {
+                "Forventet ordinær behandling ved mottak av dokumenter som skal markeres som behandlet"
+            }
             mottaDokumentService.markerSomBehandlet(sakId, opprettetBehandling.åpenBehandling.id, referanse)
         } else {
             when (opprettetBehandling) {
@@ -441,7 +438,7 @@ class HåndterMottattDokumentService(
         låsRepository.withLåstBehandling(behandling.id) {
             val vurderingsbehov =
                 melding.årsakerTilBehandling.map { VurderingsbehovMedPeriode(it.tilVurderingsbehov()) }
-            sakOgBehandlingService.oppdaterVurderingsbehovTilBehandling(
+            sakOgBehandlingService.oppdaterVurderingsbehovOgÅrsak(
                 behandling,
                 VurderingsbehovOgÅrsak(vurderingsbehov, årsakTilOpprettelse, beskrivelse = melding.beskrivelse)
             )
@@ -495,7 +492,7 @@ class HåndterMottattDokumentService(
     }
 
     private fun utledÅrsakEtterOmgjøringAvKlage(melding: Melding?): ÅrsakTilOpprettelse = when (melding) {
-        is OmgjøringKlageRevurderingV0 -> when (melding.kilde) {
+        is OmgjøringKlageRevurdering -> when (melding.kilde) {
             Omgjøringskilde.KLAGEINSTANS -> ÅrsakTilOpprettelse.OMGJØRING_ETTER_SVAR_FRA_KLAGEINSTANS
             Omgjøringskilde.KELVIN -> ÅrsakTilOpprettelse.OMGJØRING_ETTER_KLAGE
         }
@@ -516,7 +513,7 @@ class HåndterMottattDokumentService(
             }
 
             InnsendingType.OMGJØRING_KLAGE_REVURDERING -> when (melding) {
-                is OmgjøringKlageRevurderingV0 -> melding.vurderingsbehov.map { VurderingsbehovMedPeriode(it.tilVurderingsbehov()) }
+                is OmgjøringKlageRevurdering -> melding.vurderingsbehov.map { VurderingsbehovMedPeriode(it.tilVurderingsbehov()) }
                 else -> error("Melding må være OmgjøringKlageRevurderingV0")
             }
 
@@ -540,7 +537,7 @@ class HåndterMottattDokumentService(
             InnsendingType.DIALOGMELDING -> listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_DIALOGMELDING))
             InnsendingType.ANNET_RELEVANT_DOKUMENT ->
                 when (melding) {
-                    is AnnetRelevantDokumentV0 -> melding.årsakerTilBehandling.map { VurderingsbehovMedPeriode(it.tilVurderingsbehov()) }
+                    is AnnetRelevantDokument -> melding.årsakerTilBehandling.map { VurderingsbehovMedPeriode(it.tilVurderingsbehov()) }
                     else -> error("Melding må være AnnetRelevantDokumentV0")
                 }
 

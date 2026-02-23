@@ -23,11 +23,11 @@ class TjenestepensjonRefusjonskravSteg private constructor(
     private val tjenestePensjonRepository: TjenestePensjonRepository,
     private val tidligereVurderinger: TidligereVurderinger,
 ) : BehandlingSteg {
-    constructor(repositoryProvider: RepositoryProvider) : this(
+    constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         tjenestepensjonRefusjonsKravVurderingRepository = repositoryProvider.provide(),
         avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
         tjenestePensjonRepository = repositoryProvider.provide(),
-        tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider)
+        tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider)
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
@@ -73,7 +73,7 @@ class TjenestepensjonRefusjonskravSteg private constructor(
             repositoryProvider: RepositoryProvider,
             gatewayProvider: GatewayProvider
         ): BehandlingSteg {
-            return TjenestepensjonRefusjonskravSteg(repositoryProvider)
+            return TjenestepensjonRefusjonskravSteg(repositoryProvider, gatewayProvider)
         }
 
         override fun type(): StegType {

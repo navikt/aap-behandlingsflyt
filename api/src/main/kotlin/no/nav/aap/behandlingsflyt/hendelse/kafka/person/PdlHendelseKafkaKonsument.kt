@@ -29,7 +29,6 @@ import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.person.pdl.leesah.Personhendelse
 
-import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.apache.kafka.clients.consumer.ConsumerRecords
 import org.slf4j.LoggerFactory
 import javax.sql.DataSource
@@ -58,12 +57,12 @@ class PdlHendelseKafkaKonsument(
     override fun håndter(meldinger: ConsumerRecords<String, Personhendelse>) {
         meldinger.forEach { record ->
             val personHendelse = record.value().tilDomain()
-            håndter(record, personHendelse)
+            håndter(personHendelse)
         }
 
     }
 
-    fun håndter(melding: ConsumerRecord<String, Personhendelse>, personHendelse: PdlPersonHendelse) {
+    fun håndter(personHendelse: PdlPersonHendelse) {
         dataSource.transaction {
             val repositoryProvider = repositoryRegistry.provider(it)
             val sakRepository: SakRepository = repositoryProvider.provide()
@@ -209,7 +208,7 @@ class PdlHendelseKafkaKonsument(
         personHendelse: PdlPersonHendelse,
         hendelseService: MottattHendelseService
     ) {
-        saksbehandlersOppgitteBarn?.let { barn ->
+        saksbehandlersOppgitteBarn?.let { _ ->
             val behandlingIdsForSaksbehandlerOppgitteBarn =
                 barnRepository.hentBehandlingIdForSakSomFårBarnetilleggForSaksbehandlerOppgitteBarn(
                     funnetIdent!!
@@ -333,7 +332,7 @@ class PdlHendelseKafkaKonsument(
             opprettet = this.opprettet,
             opplysningstype = try {
                 Opplysningstype.valueOf(this.opplysningstype)
-            } catch (e: IllegalArgumentException) {
+            } catch (_: IllegalArgumentException) {
                 log.info("Fant ukjent opplysningstype fra PDL: ${this.opplysningstype}")
                 Opplysningstype.UNKNOWN
             },

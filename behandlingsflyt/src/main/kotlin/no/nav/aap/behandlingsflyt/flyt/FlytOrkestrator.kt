@@ -102,12 +102,12 @@ class FlytOrkestrator(
 
         val endredeInformasjonskrav = informasjonskravGrunnlag
             .flettOpplysningerFraAtomærBehandling(kontekst, behandlingFlyt.alleInformasjonskravForÅpneSteg())
-        log.info("Endrede informasjonskrav etter atomær behandling: ${endredeInformasjonskrav}")
+        log.info("Endrede informasjonskrav etter atomær behandling: $endredeInformasjonskrav")
         tilbakefør(
             kontekst = kontekst,
             behandling = behandling,
             behandlingFlyt = behandlingFlyt.tilbakeflytEtterEndringer(endredeInformasjonskrav),
-            avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id),
+            avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
         )
     }
 
@@ -247,7 +247,7 @@ class FlytOrkestrator(
                 log.info(
                     "Tilbakeført fra '${gjeldendeSteg.type()}' til '${tilbakeføringsflyt.stegene().last()}'"
                 )
-                tilbakefør(kontekst, behandling, tilbakeføringsflyt, avklaringsbehovene, false)
+                tilbakefør(kontekst, behandling, tilbakeføringsflyt, avklaringsbehovene)
             }
 
             validerPlassering(behandlingFlyt, avklaringsbehovene.åpne())
@@ -340,9 +340,8 @@ class FlytOrkestrator(
             kontekst,
             behandling,
             tilbakeføringsflyt,
-            avklaringsbehovene,
-            harHeltStoppet = false
-        ) // Setter til false for å ikke trigge unødvendig event
+            avklaringsbehovene
+        )
 
         val skulleVærtISteg = flyt.skalTilStegForBehov(behovForLøsninger)
         // Skal få lov å løse ventebehov overalt i flyten
@@ -363,24 +362,20 @@ class FlytOrkestrator(
         kontekst: FlytKontekst,
         behandling: Behandling,
         behandlingFlyt: BehandlingFlyt,
-        avklaringsbehovene: Avklaringsbehovene,
-        harHeltStoppet: Boolean = true
+        avklaringsbehovene: Avklaringsbehovene
     ) {
         if (behandlingFlyt.erTom()) {
             return
         }
 
         log.info(
-            "Tilbakefører ${behandling.aktivtSteg()} for behandling ${behandling.referanse} med flyt ${behandlingFlyt}"
+            "Tilbakefører ${behandling.aktivtSteg()} for behandling ${behandling.referanse} med flyt $behandlingFlyt"
         )
         var neste: FlytSteg? = behandlingFlyt.aktivtSteg()
         while (true) {
 
             if (neste == null) {
                 loggStopp(behandling, avklaringsbehovene)
-                if (harHeltStoppet) {
-                    behandlingHendelseService.stoppet(behandling, avklaringsbehovene)
-                }
                 return
             }
             stegOrkestrator.utførTilbakefør(
@@ -397,7 +392,7 @@ class FlytOrkestrator(
         avklaringsbehovene: Avklaringsbehovene
     ) {
         log.info(
-            "Stopper opp ved ${behandling.aktivtSteg()} med ${ avklaringsbehovene.åpne()}"
+            "Stopper opp ved ${behandling.aktivtSteg()} med ${avklaringsbehovene.åpne()}"
         )
     }
 

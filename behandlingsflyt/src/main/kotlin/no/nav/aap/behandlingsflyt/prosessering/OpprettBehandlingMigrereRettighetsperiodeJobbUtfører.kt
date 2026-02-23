@@ -16,8 +16,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.miljo.Miljø
 import no.nav.aap.komponenter.tidslinje.somTidslinje
@@ -65,7 +63,7 @@ class OpprettBehandlingMigrereRettighetsperiodeJobbUtfører(
         prosesserBehandlingService.triggProsesserBehandling(utvidVedtakslengdeBehandling)
         validerTilstandEtterMigrering(sak, sakId, behandlingFørMigrering)
 
-        log.info("Jobb for migrering av rettighetsperiode fullført for sak ${sakId}")
+        log.info("Jobb for migrering av rettighetsperiode fullført for sak $sakId")
 
     }
 
@@ -153,7 +151,7 @@ class OpprettBehandlingMigrereRettighetsperiodeJobbUtfører(
             }
             underveisFør.forEachIndexed { index, periodeFør ->
                 val periodeEtter = underveisEtter.find { it.periode == periodeFør.periode }
-                    ?: error("Fant ikke underveisperiode for ny behandling for indeks: ${index}")
+                    ?: error("Fant ikke underveisperiode for ny behandling for indeks: $index")
                 val verdiFør = periodeFør.verdi
                 val verdiEtter = periodeEtter.verdi
                 if (verdiFør.meldePeriode != verdiEtter.meldePeriode
@@ -171,7 +169,7 @@ class OpprettBehandlingMigrereRettighetsperiodeJobbUtfører(
                 ) {
                     // Spesialsjekk på meldeplitstatus, gradering,
                     secureLogger.info("Migrering underveis før=$periodeFør og etter=$periodeEtter")
-                    throw IllegalStateException("Ulike underveisperioder mellom ny og gammel behandling for indeks: ${index}")
+                    throw IllegalStateException("Ulike underveisperioder mellom ny og gammel behandling for indeks: $index")
                 }
             }
         }
@@ -186,7 +184,7 @@ class OpprettBehandlingMigrereRettighetsperiodeJobbUtfører(
     private fun skalValidereUnderveis(sak: Sak, behandlingFørMigrering: Behandling): Boolean {
         val erForrigeBehandlingFastsattPeriodePassert =
             behandlingFørMigrering.vurderingsbehov().map { it.type }.contains(Vurderingsbehov.FASTSATT_PERIODE_PASSERT)
-        val forhåndsgodkjenteSaksnummerMedPotensiellEndringIUnderveis = listOf<String>(
+        val forhåndsgodkjenteSaksnummerMedPotensiellEndringIUnderveis = listOf(
             "4MD3UPS",
             "4oAoCR4",
             "4LDZA0W"
@@ -262,7 +260,7 @@ class OpprettBehandlingMigrereRettighetsperiodeJobbUtfører(
         tilkjentYtelseEffektivDagsatsFør.forEachIndexed { index, periodeFør ->
             val periodeEtter = tilkjentYtelseEffektivDagsatsEtter.find { it.periode == periodeFør.periode }
             if (periodeEtter == null) {
-                throw IllegalStateException("Mangler periode ${periodeFør} med tilkjent ytelse i ny behandling - indeks: $index")
+                throw IllegalStateException("Mangler periode $periodeFør med tilkjent ytelse i ny behandling - indeks: $index")
             } else if (periodeEtter != periodeFør) {
                 secureLogger.info("Migrering tilkjent ytelse før=$periodeFør og etter=$periodeEtter")
                 log.warn("Ulik tilkjent ytelseperiode ved migrering - godtas i dev pga gammel data")

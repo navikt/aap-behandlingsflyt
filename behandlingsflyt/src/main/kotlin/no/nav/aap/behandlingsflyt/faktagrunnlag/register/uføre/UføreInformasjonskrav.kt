@@ -40,7 +40,7 @@ class UføreInformasjonskrav(
         uføreRepository = repositoryProvider.provide(),
         beregningVurderingRepository = repositoryProvider.provide(),
         uføreRegisterGateway = gatewayProvider.provide(),
-        tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
+        tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
     )
 
     override val navn = Companion.navn

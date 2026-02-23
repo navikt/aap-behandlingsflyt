@@ -152,6 +152,14 @@ public enum class Definisjon(
         kvalitetssikres = true,
         løsesAv = listOf(Rolle.SAKSBEHANDLER_OPPFOLGING)
     ),
+    ETABLERING_EGEN_VIRKSOMHET(
+        kode = AvklaringsbehovKode.`5058`,
+        type = BehovType.MANUELT_FRIVILLIG,
+        løsesISteg = StegType.ETABLERING_EGEN_VIRKSOMHET,
+        kreverToTrinn = true,
+        kvalitetssikres = true,
+        løsesAv = listOf(Rolle.SAKSBEHANDLER_OPPFOLGING)
+    ),
     FASTSETT_ARBEIDSEVNE(
         kode = AvklaringsbehovKode.`5004`,
         type = BehovType.MANUELT_FRIVILLIG,

@@ -14,6 +14,7 @@ data class OppholdskravGrunnlagResponse(
     override val sisteVedtatteVurderinger: List<OppholdskravVurderingDto>,
     override val nyeVurderinger: List<OppholdskravVurderingDto>,
     override val kanVurderes: List<Periode>,
+    override val ikkeRelevantePerioder: List<Periode>,
     override val behøverVurderinger: List<Periode>
 ) : PeriodiserteVurderingerDto<OppholdskravVurderingDto>
 

@@ -38,7 +38,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅ
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
-import no.nav.aap.behandlingsflyt.unleash.FeatureToggle
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
@@ -206,7 +205,7 @@ class RettighetsperiodeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
             .løsBistand(sak.rettighetsperiode.fom)
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
-            .kvalitetssikreOk()
+            .kvalitetssikre()
             .løsBeregningstidspunkt()
             .løsForutgåendeMedlemskap(sak.rettighetsperiode.fom)
             .løsOppholdskrav(sak.rettighetsperiode.fom)
@@ -299,7 +298,7 @@ class RettighetsperiodeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
             .løsBistand(sak.rettighetsperiode.fom)
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
-            .kvalitetssikreOk()
+            .kvalitetssikre()
 
         var oppdatertBehandling = sak.opprettManuellRevurdering(
             listOf(Vurderingsbehov.VURDER_RETTIGHETSPERIODE),
@@ -339,7 +338,7 @@ class RettighetsperiodeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
                     assertThat(åpneAvklaringsbehov.first().definisjon).isEqualTo(Definisjon.FASTSETT_BEREGNINGSTIDSPUNKT)
                 }
             }
-            .kvalitetssikreOk()
+            .kvalitetssikre()
             .løsBeregningstidspunkt(nyStartDato)
             .løsOppholdskrav(nyStartDato)
             .løsAndreStatligeYtelser()
@@ -383,7 +382,7 @@ class RettighetsperiodeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
             .løsBistand(startDato)
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
-            .kvalitetssikreOk()
+            .kvalitetssikre()
             .løsBeregningstidspunkt(startDato)
             .løsOppholdskrav(startDato)
             .løsAndreStatligeYtelser()
@@ -442,7 +441,7 @@ class RettighetsperiodeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
             .løsBistand(startDato)
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
-            .kvalitetssikreOk()
+            .kvalitetssikre()
             .løsBeregningstidspunkt(startDato)
             .løsOppholdskrav(startDato)
             .løsAvklaringsBehov(medSamordningSykepenger(startDato, startDatoRettTilYtelse))

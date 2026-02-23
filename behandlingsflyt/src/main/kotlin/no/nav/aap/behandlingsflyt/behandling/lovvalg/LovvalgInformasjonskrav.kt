@@ -204,7 +204,7 @@ class LovvalgInformasjonskrav private constructor(
                 SakService(repositoryProvider),
                 medlemskapArbeidInntektRepository,
                 repositoryProvider.provide<MedlemskapRepository>(),
-                TidligereVurderingerImpl(repositoryProvider),
+                TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
                 gatewayProvider.provide(),
                 gatewayProvider.provide(),
                 gatewayProvider.provide(),

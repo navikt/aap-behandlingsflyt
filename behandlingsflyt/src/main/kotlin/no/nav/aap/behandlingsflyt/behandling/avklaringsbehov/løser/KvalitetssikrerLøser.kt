@@ -7,7 +7,6 @@ import no.nav.aap.behandlingsflyt.exception.KanIkkeVurdereEgneVurderingerExcepti
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.vedtak.TotrinnsVurdering
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.KvalitetssikringLøsning
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
@@ -15,13 +14,11 @@ import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.lookup.repository.RepositoryProvider
 
 class KvalitetssikrerLøser(
-    private val behandlingRepository: BehandlingRepository,
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
     private val unleashGateway: UnleashGateway
 ) : AvklaringsbehovsLøser<KvalitetssikringLøsning> {
 
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
-        behandlingRepository = repositoryProvider.provide(),
         avklaringsbehovRepository = repositoryProvider.provide(),
         unleashGateway = gatewayProvider.provide()
     )
@@ -30,7 +27,6 @@ class KvalitetssikrerLøser(
         kontekst: AvklaringsbehovKontekst,
         løsning: KvalitetssikringLøsning
     ): LøsningsResultat {
-        val behandling = behandlingRepository.hent(kontekst.kontekst.behandlingId)
         val avklaringsbehovene =
             avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId = kontekst.kontekst.behandlingId)
 

@@ -161,7 +161,7 @@ class YrkesskadeInformasjonskrav private constructor(
                 personopplysningRepository,
                 gatewayProvider.provide(),
                 mottattDokumentRepository,
-                TidligereVurderingerImpl(repositoryProvider),
+                TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
             )
         }
     }

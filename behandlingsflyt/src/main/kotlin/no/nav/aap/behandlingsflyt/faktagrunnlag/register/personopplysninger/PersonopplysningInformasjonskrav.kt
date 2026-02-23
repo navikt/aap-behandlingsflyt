@@ -103,7 +103,7 @@ class PersonopplysningInformasjonskrav private constructor(
                 SakService(repositoryProvider),
                 personopplysningRepository,
                 gatewayProvider.provide(),
-                TidligereVurderingerImpl(repositoryProvider),
+                TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
             )
         }
     }

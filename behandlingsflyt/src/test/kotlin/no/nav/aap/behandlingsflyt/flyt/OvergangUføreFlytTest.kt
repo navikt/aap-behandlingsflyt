@@ -149,7 +149,7 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::
             }
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
-            .kvalitetssikreOk()
+            .kvalitetssikre()
             .medKontekst {
                 assertThat(åpneAvklaringsbehov).anySatisfy { assertThat(it.definisjon).isEqualTo(Definisjon.AVKLAR_SYKEPENGEERSTATNING) }
             }
@@ -244,7 +244,7 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::
                 AvklarBistandsbehovLøsning(
                     løsningerForPerioder = listOf(
                         BistandLøsningDto(
-                            begrunnelse = "Overgang uføre",
+                            begrunnelse = "Oppfylt bistand",
                             erBehovForAktivBehandling = true,
                             erBehovForArbeidsrettetTiltak = false,
                             erBehovForAnnenOppfølging = null,
@@ -254,7 +254,7 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::
                             tom = null
                         ),
                         BistandLøsningDto(
-                            begrunnelse = "Overgang uføre2",
+                            begrunnelse = "Ikke oppfylt bistand",
                             erBehovForAktivBehandling = false,
                             erBehovForArbeidsrettetTiltak = false,
                             erBehovForAnnenOppfølging = false,
@@ -283,7 +283,7 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::
             )
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
-            .kvalitetssikreOk()
+            .kvalitetssikre()
             .løsAvklaringsBehov(
                 PeriodisertAvklarSykepengerErstatningLøsning(
                     løsningerForPerioder = listOf(

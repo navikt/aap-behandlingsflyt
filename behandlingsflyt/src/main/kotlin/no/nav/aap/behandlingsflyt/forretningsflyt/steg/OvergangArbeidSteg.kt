@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovMetadataUtleder
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
@@ -40,13 +41,13 @@ class OvergangArbeidSteg internal constructor(
     private val avklaringsbehovService: AvklaringsbehovService,
     private val studentRepository: StudentRepository,
     private val overgangUføreRepository: OvergangUføreRepository,
-) : BehandlingSteg {
+) : BehandlingSteg, AvklaringsbehovMetadataUtleder {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         vilkårsresultatRepository = repositoryProvider.provide(),
         avklaringsbehovRepository = repositoryProvider.provide(),
         overgangArbeidRepository = repositoryProvider.provide(),
         sykdomRepository = repositoryProvider.provide(),
-        tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
+        tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
         bistandRepository = repositoryProvider.provide(),
         avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
         studentRepository = repositoryProvider.provide(),
@@ -62,7 +63,7 @@ class OvergangArbeidSteg internal constructor(
                 Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND,
                 Vurderingsbehov.HELHETLIG_VURDERING,
             ),
-            nårVurderingErRelevant = ::perioderVurderingErRelevant,
+            nårVurderingErRelevant = ::nårVurderingErRelevant,
             kontekst = kontekst,
             nårVurderingErGyldig = {
                 overgangArbeidRepository.hentHvisEksisterer(kontekst.behandlingId)?.gjeldendeVurderinger().orEmpty()
@@ -89,7 +90,7 @@ class OvergangArbeidSteg internal constructor(
         return Fullført
     }
 
-    private fun perioderVurderingErRelevant(kontekst: FlytKontekstMedPerioder): Tidslinje<Boolean> {
+    override fun nårVurderingErRelevant(kontekst: FlytKontekstMedPerioder): Tidslinje<Boolean> {
         val utfall = tidligereVurderinger.behandlingsutfall(kontekst, type())
 
         val sykdomsvurderinger = sykdomRepository.hentHvisEksisterer(kontekst.behandlingId)
@@ -139,9 +140,9 @@ class OvergangArbeidSteg internal constructor(
         ) { segmentPeriode, utfall, sykdomsvurdering, bistandsvurdering, studentvurdering, uførevurdering, forutgåendeOrdinærAap ->
             when (utfall) {
                 null -> false
-                TidligereVurderinger.Behandlingsutfall.IKKE_BEHANDLINGSGRUNNLAG -> false
-                TidligereVurderinger.Behandlingsutfall.UUNGÅELIG_AVSLAG -> false
-                TidligereVurderinger.Behandlingsutfall.UKJENT -> {
+                TidligereVurderinger.IkkeBehandlingsgrunnlag -> false
+                TidligereVurderinger.UunngåeligAvslag -> false
+                is TidligereVurderinger.PotensieltOppfylt -> {
                     if (studentvurdering?.erOppfylt() == true) {
                         return@map6 false
                     }
@@ -188,11 +189,13 @@ class OvergangArbeidSteg internal constructor(
         }
     }
 
+    override val stegType = type()
+
     companion object : FlytSteg {
         override fun konstruer(
             repositoryProvider: RepositoryProvider,
             gatewayProvider: GatewayProvider
-        ): BehandlingSteg {
+        ): OvergangArbeidSteg {
             return OvergangArbeidSteg(repositoryProvider, gatewayProvider)
         }
 

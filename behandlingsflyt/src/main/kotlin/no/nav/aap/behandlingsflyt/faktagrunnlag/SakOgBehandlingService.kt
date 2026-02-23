@@ -337,17 +337,17 @@ class SakOgBehandlingService(
         }
     }
 
-    private fun oppdaterVurderingsbehovOgÅrsak(
-        sisteYtelsesbehandling: Behandling,
+    fun oppdaterVurderingsbehovOgÅrsak(
+        behandling: Behandling,
         vurderingsbehovOgÅrsak: VurderingsbehovOgÅrsak
     ): Behandling {
-        check(!trukketSøknadService.søknadErTrukket(sisteYtelsesbehandling.id)) {
-            "ikke lov å oppdatere behandling for trukket søknad ${sisteYtelsesbehandling.sakId}"
+        check(!trukketSøknadService.søknadErTrukket(behandling.id)) {
+            "ikke lov å oppdatere behandling for trukket søknad ${behandling.sakId}"
         }
         // Valider at behandlingen står i et sted hvor den kan data
-        validerStegStatus(sisteYtelsesbehandling)
-        behandlingRepository.oppdaterVurderingsbehovOgÅrsak(sisteYtelsesbehandling, vurderingsbehovOgÅrsak)
-        return sisteYtelsesbehandling
+        validerStegStatus(behandling)
+        behandlingRepository.oppdaterVurderingsbehovOgÅrsak(behandling, vurderingsbehovOgÅrsak)
+        return behandling
     }
 
     fun finnEllerOpprettBehandling(
@@ -391,10 +391,6 @@ class SakOgBehandlingService(
                 sakRepository.oppdaterRettighetsperiode(sakId, periode)
             }
         }
-    }
-
-    fun oppdaterVurderingsbehovTilBehandling(behandling: Behandling, vurderingsbehovOgÅrsak: VurderingsbehovOgÅrsak) {
-        behandlingRepository.oppdaterVurderingsbehovOgÅrsak(behandling, vurderingsbehovOgÅrsak)
     }
 
     fun overstyrRettighetsperioden(sakId: SakId, startDato: LocalDate, sluttDato: LocalDate) {

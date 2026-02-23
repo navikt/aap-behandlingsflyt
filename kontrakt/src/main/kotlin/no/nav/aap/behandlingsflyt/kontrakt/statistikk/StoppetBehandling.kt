@@ -19,10 +19,12 @@ import no.nav.aap.behandlingsflyt.kontrakt.sak.Status as SakStatus
  * @param saksnummer Saksnummer.
  * @param behandlingReferanse Behandlingsreferanse
  * @param relatertBehandling Hvis behandlingen har oppsått med bakgrunn i en annen, skal den foregående behandlingen refereres til her. Dette er tolket som forrige behandling på samme sak.
+ * @param relatertFagsystem Stort sett Kelvin, men om behandlingen har oppstått f.eks fra en klagebehandling i Kabal, skal dette refereres her.
  * @param mottattTid Dato for første søknad mottatt for behandlingen.
  * @param behandlingStatus Behandlingstatus. Ikke det samme som sakstatus.
  * @param identerForSak Identer på sak. Brukes for å filtrere kode 6-personer.
  * @param tidspunktSisteEndring Brukes i statistikk-appen for å utlede avsluttet-tid for automatiske behandlinger.
+ * @param hendelsesTidspunkt Når denne hendelsen ble opprettet i Behandlingsflyt.
  */
 public data class StoppetBehandling(
     val saksnummer: String,
@@ -113,7 +115,8 @@ public enum class Vurderingsbehov {
     EFFEKTUER_AKTIVITETSPLIKT_11_9,
     UTVID_VEDTAKSLENGDE,
     MIGRER_RETTIGHETSPERIODE,
-    REVURDER_SYKESTIPEND;
+    REVURDER_SYKESTIPEND,
+    ETABLERING_EGEN_VIRKSOMHET;
 }
 
 /**
