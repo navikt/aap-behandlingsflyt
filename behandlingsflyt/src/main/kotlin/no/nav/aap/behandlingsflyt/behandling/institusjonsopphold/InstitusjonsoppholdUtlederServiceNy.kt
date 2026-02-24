@@ -356,10 +356,10 @@ class InstitusjonsoppholdUtlederServiceNy(
                     .filter { it.periode.tom.isBefore(segment.periode.fom) }
                     .maxOfOrNull { it.periode.tom }
 
-                val mindreEnnFireMånederFraForrige = forrigePeriodeTom != null &&
+                val mindreEnnTreMånederFraForrige = forrigePeriodeTom != null &&
                         segment.periode.fom.isBefore(forrigePeriodeTom.plusMonths(3))
 
-                mindreEnnFireMånederFraForrige ||
+                mindreEnnTreMånederFraForrige ||
                         (harOppholdSomVarerMinstFireMånederOgIkkeErForKort(segment) &&
                                 harOppholdSomVarerMerEnnFireMånederOgErMinstToMånederInnIOppholdet(
                                     segment,
