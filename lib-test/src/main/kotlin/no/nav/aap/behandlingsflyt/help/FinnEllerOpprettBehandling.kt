@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.help
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
@@ -61,7 +61,7 @@ fun finnEllerOpprettBehandling(
     årsakTilOpprettelse: ÅrsakTilOpprettelse = ÅrsakTilOpprettelse.SØKNAD,
 ): Behandling {
     val sak = repositoryProvider.provide<SakRepository>().hent(saksnummer)
-    return SakOgBehandlingService(repositoryProvider, gatewayProvider)
+    return BehandlingService(repositoryProvider, gatewayProvider)
         .finnEllerOpprettOrdinærBehandling(sak.id, VurderingsbehovOgÅrsak(vurderingsbehov, årsakTilOpprettelse))
 }
 

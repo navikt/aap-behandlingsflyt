@@ -198,14 +198,24 @@ class TidligereVurderingerImpl(
                 }
             },
 
-            Sjekk(StegType.OVERGANG_ARBEID) { vilkårsresultat, _, _ ->
-                vilkårsresultat.tidslinjeFor(Vilkårtype.OVERGANGARBEIDVILKÅRET).map {
-                    TidligereVurderinger.PotensieltOppfylt(
-                        when {
-                            it.utfall == Utfall.OPPFYLT -> RettighetsType.ARBEIDSSØKER
-                            else -> null
-                        }
-                    )
+            Sjekk(StegType.OVERGANG_ARBEID) { vilkårsresultat, kontekst, tidligereVurderinger ->
+                val sykdomstidlinje = sykdomRepository.hentHvisEksisterer(kontekst.behandlingId)
+                    ?.somSykdomsvurderingstidslinje().orEmpty()
+                Tidslinje.map3(
+                    tidligereVurderinger,
+                    vilkårsresultat.tidslinjeFor(Vilkårtype.OVERGANGARBEIDVILKÅRET),
+                    sykdomstidlinje
+                ) { foreløpigUtfall, overgangArbeidVilkåret, sykdomsvurdering ->
+                    when {
+                        overgangArbeidVilkåret?.utfall == Utfall.OPPFYLT -> TidligereVurderinger.PotensieltOppfylt(
+                            RettighetsType.ARBEIDSSØKER
+                        )
+
+                        foreløpigUtfall is TidligereVurderinger.PotensieltOppfylt && foreløpigUtfall.rettighetstype == null && sykdomsvurdering?.potensieltOppfyltSykepengeerstatning() != true ->
+                            TidligereVurderinger.UunngåeligAvslag
+
+                        else -> TidligereVurderinger.PotensieltOppfylt(null)
+                    }
                 }
             },
 
@@ -581,5 +591,9 @@ class TidligereVurderingerImpl(
         val erIkkeFørsteSykdomsvurdering =
             !Sykdomsvurdering.erFørsteVurdering(rettighetsperiode.fom, segmentPeriode)
         return erIkkeFørsteSykdomsvurdering && harTidligereInnvilgetSykdomsvurdering
+    }
+
+    private fun Sykdomsvurdering.potensieltOppfyltSykepengeerstatning(): Boolean {
+        return this.erOppfyltOrdinærSettBortIfraVissVarighet() || this.erOppfyltForYrkesskadeSettBortIfraÅrsakssammenhengOgVissVarighet()
     }
 }

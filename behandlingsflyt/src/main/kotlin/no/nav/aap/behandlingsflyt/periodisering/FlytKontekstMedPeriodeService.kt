@@ -25,7 +25,7 @@ class FlytKontekstMedPeriodeService(
     private val behandlingRepository: BehandlingRepository,
 ) {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
-        sakService = SakService(repositoryProvider),
+        sakService = SakService(repositoryProvider, gatewayProvider),
         behandlingRepository = repositoryProvider.provide(),
     )
 

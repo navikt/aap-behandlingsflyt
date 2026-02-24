@@ -92,7 +92,7 @@ class MeldeperiodeTilMeldekortBackendJobbUtfører(
 
         override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): JobbUtfører {
             return MeldeperiodeTilMeldekortBackendJobbUtfører(
-                sakService = SakService(repositoryProvider),
+                sakService = SakService(repositoryProvider, gatewayProvider),
                 meldekortGateway = gatewayProvider.provide(),
                 behandlingRepository = repositoryProvider.provide(),
                 meldeperiodeRepository = repositoryProvider.provide(),

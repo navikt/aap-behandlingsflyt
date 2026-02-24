@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
 import no.nav.aap.behandlingsflyt.behandling.vedtakslengde.VedtakslengdeService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
@@ -21,7 +21,7 @@ import java.time.LocalDate.now
  * utløp av kvote osv.
  */
 class OpprettJobbUtvidVedtakslengdeJobbUtfører(
-    private val sakOgBehandlingService: SakOgBehandlingService,
+    private val behandlingService: BehandlingService,
     private val vedtakslengdeService: VedtakslengdeService,
     private val flytJobbRepository: FlytJobbRepository,
     private val clock: Clock = Clock.systemDefaultZone()
@@ -31,7 +31,7 @@ class OpprettJobbUtvidVedtakslengdeJobbUtfører(
 
     override fun utfør(input: JobbInput) {
         // Forlenger saker når det er 28 dager igjen til sluttdato (Tilsvarende Arena)
-        val datoForUtvidelse = now(clock).plusDays(28)
+        val datoForUtvidelse = now(clock).plusDays(VedtakslengdeService.ANTALL_DAGER_FØR_UTVIDELSE)
         val saker = hentKandidaterForUtvidelseAvVedtakslengde(datoForUtvidelse)
 
         log.info("Fant ${saker.size} kandidater for utvidelse av vedtakslengde per $datoForUtvidelse")
@@ -56,7 +56,7 @@ class OpprettJobbUtvidVedtakslengdeJobbUtfører(
     }
 
     private fun kunSakerMedBehovForUtvidelseAvVedtakslengde(id: SakId, dato: LocalDate): Boolean {
-        val sisteGjeldendeBehandling = sakOgBehandlingService.finnBehandlingMedSisteFattedeVedtak(id)
+        val sisteGjeldendeBehandling = behandlingService.finnBehandlingMedSisteFattedeVedtak(id)
         if (sisteGjeldendeBehandling != null) {
             // Bruker sisteGjeldendeBehandling.id både for behandlingId og forrigeBehandlingId fordi vi ser på gjeldende behandling
             return vedtakslengdeService.skalUtvideSluttdato(sisteGjeldendeBehandling.id, sisteGjeldendeBehandling.id, dato)
@@ -67,7 +67,7 @@ class OpprettJobbUtvidVedtakslengdeJobbUtfører(
     companion object : ProvidersJobbSpesifikasjon {
         override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): JobbUtfører {
             return OpprettJobbUtvidVedtakslengdeJobbUtfører(
-                sakOgBehandlingService = SakOgBehandlingService(repositoryProvider, gatewayProvider),
+                behandlingService = BehandlingService(repositoryProvider, gatewayProvider),
                 vedtakslengdeService = VedtakslengdeService(repositoryProvider, gatewayProvider),
                 flytJobbRepository = repositoryProvider.provide(),
             )

@@ -41,7 +41,7 @@ import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.AvklarOppholdkravLøsn
 import no.nav.aap.behandlingsflyt.behandling.vedtak.Vedtak
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.EØSLandEllerLandMedAvtale
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravNavn
-import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.SamordningAndreStatligeYtelserVurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.arbeidsgiver.SamordningArbeidsgiverVurderingerDTO
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
@@ -727,7 +727,7 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
      * Denne må brukes med omhu, da siste opprettede behandling ikke nødvendigvis er siste behandling
      * i den lenkede listen av behandlinger. Ref. fasttrack/atomære behandlinger
      *
-     * Bruk i stedet: [SakOgBehandlingService.finnSisteYtelsesbehandlingFor]
+     * Bruk i stedet: [BehandlingService.finnSisteYtelsesbehandlingFor]
      */
     protected fun hentSisteOpprettedeBehandlingForSak(
         sakId: SakId,
@@ -746,7 +746,7 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
      * Denne må brukes med omhu, da siste opprettede behandling ikke nødvendigvis er siste behandling
      * i den lenkede listen av behandlinger. Ref. fasttrack/atomære behandlinger
      *
-     * Bruk i stedet: [SakOgBehandlingService.finnSisteYtelsesbehandlingFor]
+     * Bruk i stedet: [BehandlingService.finnSisteYtelsesbehandlingFor]
      */
     protected fun hentSisteOpprettedeBehandlingForSak(
         saksnummer: Saksnummer,
