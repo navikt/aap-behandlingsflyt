@@ -22,7 +22,6 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.LocalDateTime
-import kotlin.test.Ignore
 
 internal class InstitusjonsoppholdServiceTest {
     val connection = MockConnection().toDBConnection()
@@ -259,7 +258,6 @@ internal class InstitusjonsoppholdServiceTest {
     }
 
     @Test
-    @Ignore // FIXME Thao
     fun `Opphold mindre enn 3 måneder etter forrige trigger ikke behov før et opphold trigger reduksjon`() {
         val innleggelsesperiode = Periode(
             LocalDate.now().minusMonths(12),
@@ -301,7 +299,7 @@ internal class InstitusjonsoppholdServiceTest {
                     harFasteUtgifter = false,
                     vurdertIBehandling = BehandlingId(1L),
                     vurdertAv = "ident",
-                    vurdertTidspunkt = (25 juni 2025).atStartOfDay()
+                    vurdertTidspunkt = LocalDateTime.now().minusMonths(8)
 
                 )
             ),

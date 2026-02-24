@@ -351,9 +351,18 @@ class InstitusjonsoppholdUtlederServiceNy(
         return Tidslinje(
             oppholdUtenBarnetillegg.segmenter()
                 .filter { segment -> segment.verdi }
-                .filter { segment ->
-                    harOppholdSomVarerMerEnnFireMånederOgErMinstToMånederInnIOppholdet(segment, oppholdUtenBarnetillegg.minDato())
+                .filter { segment -> harOppholdSomVarerMinstFireMånederOgIkkeErForKort(segment) &&
+                    harOppholdSomVarerMerEnnFireMånederOgErMinstToMånederInnIOppholdet(
+                        segment,
+                        oppholdUtenBarnetillegg.minDato()
+                    )
                 })
+    }
+
+    private fun harOppholdSomVarerMinstFireMånederOgIkkeErForKort(segment: Segment<Boolean>): Boolean {
+        val fom = segment.fom().withDayOfMonth(1).plusMonths(1)
+        val førsteDagMedMuligReduksjon = fom.plusMonths(3)
+        return Periode(fom, segment.tom()).inneholder(førsteDagMedMuligReduksjon)
     }
 
     private fun harOppholdSomVarerMerEnnFireMånederOgErMinstToMånederInnIOppholdet(

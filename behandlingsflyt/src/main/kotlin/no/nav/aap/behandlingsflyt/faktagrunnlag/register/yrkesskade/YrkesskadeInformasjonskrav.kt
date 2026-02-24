@@ -156,7 +156,7 @@ class YrkesskadeInformasjonskrav private constructor(
             val mottattDokumentRepository =
                 repositoryProvider.provide<MottattDokumentRepository>()
             return YrkesskadeInformasjonskrav(
-                SakService(repositoryProvider),
+                SakService(repositoryProvider, gatewayProvider),
                 repositoryProvider.provide(),
                 personopplysningRepository,
                 gatewayProvider.provide(),

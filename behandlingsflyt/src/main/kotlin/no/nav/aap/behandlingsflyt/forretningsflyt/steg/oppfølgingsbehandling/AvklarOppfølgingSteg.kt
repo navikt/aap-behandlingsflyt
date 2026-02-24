@@ -3,7 +3,7 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.steg.oppfølgingsbehandling
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.oppfølgingsbehandling.KonsekvensAvOppfølging
 import no.nav.aap.behandlingsflyt.behandling.oppfølgingsbehandling.OppfølgingsBehandlingRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
@@ -24,7 +24,7 @@ import org.slf4j.LoggerFactory
 
 class AvklarOppfølgingSteg(
     private val oppfølgingsBehandlingRepository: OppfølgingsBehandlingRepository,
-    private val sakOgBehandlingService: SakOgBehandlingService,
+    private val behandlingService: BehandlingService,
     private val låsRepository: TaSkriveLåsRepository,
     private val prosesserBehandling: ProsesserBehandlingService,
     private val mottaDokumentService: MottaDokumentService,
@@ -66,7 +66,7 @@ class AvklarOppfølgingSteg(
             KonsekvensAvOppfølging.OPPRETT_VURDERINGSBEHOV -> {
                 val vurderingsbehov = grunnlag.opplysningerTilRevurdering
                 log.info("Oppretter ny behandling med vurderingsbehov $vurderingsbehov for sak ${kontekst.sakId}.")
-                val behandling = sakOgBehandlingService.finnEllerOpprettOrdinærBehandling(
+                val behandling = behandlingService.finnEllerOpprettOrdinærBehandling(
                     sakId = kontekst.sakId,
                     vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
                         årsak = ÅrsakTilOpprettelse.MANUELL_OPPRETTELSE,
@@ -88,7 +88,7 @@ class AvklarOppfølgingSteg(
         override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): BehandlingSteg {
             return AvklarOppfølgingSteg(
                 oppfølgingsBehandlingRepository = repositoryProvider.provide(),
-                sakOgBehandlingService = SakOgBehandlingService(repositoryProvider, gatewayProvider),
+                behandlingService = BehandlingService(repositoryProvider, gatewayProvider),
                 låsRepository = repositoryProvider.provide(),
                 prosesserBehandling = ProsesserBehandlingService(repositoryProvider, gatewayProvider),
                 mottaDokumentService = MottaDokumentService(repositoryProvider.provide()),

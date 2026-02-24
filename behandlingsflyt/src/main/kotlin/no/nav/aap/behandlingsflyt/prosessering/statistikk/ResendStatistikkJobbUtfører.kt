@@ -54,7 +54,7 @@ class ResendStatistikkJobbUtfører(
         ): ResendStatistikkJobbUtfører {
             return ResendStatistikkJobbUtfører(
                 behandlingRepository = repositoryProvider.provide(),
-                sakService = SakService(repositoryProvider),
+                sakService = SakService(repositoryProvider, gatewayProvider),
                 avklaringsbehovRepository = repositoryProvider.provide(),
                 statistikkGateway = gatewayProvider.provide(),
                 statistikkMetoder = StatistikkMetoder(repositoryProvider)

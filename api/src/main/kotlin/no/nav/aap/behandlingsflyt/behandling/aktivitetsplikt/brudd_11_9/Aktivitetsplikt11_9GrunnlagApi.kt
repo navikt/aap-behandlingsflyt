@@ -8,7 +8,7 @@ import no.nav.aap.behandlingsflyt.Tags
 import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
 import no.nav.aap.behandlingsflyt.behandling.utbetaling.UtbetalingGateway
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
-import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_9Grunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_9Repository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_9Vurdering
@@ -96,11 +96,11 @@ fun NormalOpenAPIRoute.aktivitetsplikt11_9GrunnlagApi(
                 val repositoryProvider = repositoryRegistry.provider(connection)
                 val aktivitetsplikt11_9Repository = repositoryProvider.provide<Aktivitetsplikt11_9Repository>()
                 val sak = repositoryProvider.provide<SakRepository>().hent(saksnummer = Saksnummer(req.saksnummer))
-                val sakOgBehandlingService = SakOgBehandlingService(
+                val behandlingService = BehandlingService(
                     repositoryProvider = repositoryProvider,
                     gatewayProvider = gatewayProvider
                 )
-                val sisteFattedeVedtaksBehandling = sakOgBehandlingService.finnBehandlingMedSisteFattedeVedtak(sak.id)
+                val sisteFattedeVedtaksBehandling = behandlingService.finnBehandlingMedSisteFattedeVedtak(sak.id)
 
                 sisteFattedeVedtaksBehandling?.let {
                     val aktivitetspliktGrunnlag = aktivitetsplikt11_9Repository.hentHvisEksisterer(it.id)

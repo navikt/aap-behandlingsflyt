@@ -25,7 +25,6 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.time.LocalDate
-import kotlin.test.Ignore
 
 @Fakes
 class InstitusjonRegelTest {
@@ -40,7 +39,6 @@ class InstitusjonRegelTest {
     val regel = InstitusjonRegel()
 
     @Test
-    @Ignore // FIXME Thao
     fun vurder() {
         val periode = Periode(LocalDate.of(2024, 1, 5), LocalDate.of(2025, 5, 1))
         val vurderingFraTidligereResultat = Vurdering(
