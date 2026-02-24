@@ -28,7 +28,6 @@ class FritakMeldepliktSteg(
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        // Todo: unleash toggle isDisabled --> return Fullført
         if (unleashGateway.isDisabled(BehandlingsflytFeature.RevurderFritakMeldeplikt)) {
             return Fullført
         }
@@ -41,7 +40,7 @@ class FritakMeldepliktSteg(
             nårVurderingErRelevant = { nårVurderingErRelevant(kontekst) },
             kontekst = kontekst,
             nårVurderingErGyldig = { nårVurderingErGyldig(kontekst) },
-            tilbakestillGrunnlag = fun() {}
+            tilbakestillGrunnlag = { tilbakestillGrunnlag(kontekst) },
         )
         return Fullført
     }
@@ -55,6 +54,22 @@ class FritakMeldepliktSteg(
 
     fun nårVurderingErGyldig(kontekst: FlytKontekstMedPerioder): Tidslinje<Boolean> {
         return Tidslinje(kontekst.rettighetsperiode, true)
+    }
+
+    fun tilbakestillGrunnlag(kontekst: FlytKontekstMedPerioder){
+
+        val forrigeVurderinger = kontekst.forrigeBehandlingId?.let { forrigeBehandlingId ->
+            meldepliktRepository.hentHvisEksisterer(forrigeBehandlingId)
+                ?.vurderinger
+        } ?: emptyList()
+        val grunnlag = meldepliktRepository.hentHvisEksisterer(kontekst.behandlingId)
+
+        if (forrigeVurderinger.toSet() != grunnlag?.vurderinger?.toSet()) {
+            meldepliktRepository.lagre(
+                kontekst.behandlingId,
+                forrigeVurderinger,
+            )
+        }
     }
 
     companion object : FlytSteg {
