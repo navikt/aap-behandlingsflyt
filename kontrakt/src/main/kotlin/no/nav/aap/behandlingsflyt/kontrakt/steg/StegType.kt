@@ -15,43 +15,55 @@ public enum class StegType(
         gruppe = StegGruppe.SEND_FORVALTNINGSMELDING,
         status = Status.OPPRETTET
     ),
-    VURDER_RETTIGHETSPERIODE(
-        gruppe = StegGruppe.RETTIGHETSPERIODE,
-        status = Status.UTREDES,
+    AVBRYT_REVURDERING(
+        gruppe = StegGruppe.AVBRYT_REVURDERING,
+        status = Status.UTREDES
     ),
     SØKNAD(
         gruppe = StegGruppe.SØKNAD,
         status = Status.UTREDES,
     ),
-    VURDER_ALDER(
-        gruppe = StegGruppe.ALDER,
+    VURDER_RETTIGHETSPERIODE(
+        gruppe = StegGruppe.RETTIGHETSPERIODE,
         status = Status.UTREDES,
     ),
     VURDER_LOVVALG(
         gruppe = StegGruppe.LOVVALG,
         status = Status.UTREDES
     ),
-    VURDER_MEDLEMSKAP(
-        gruppe = StegGruppe.MEDLEMSKAP,
-        status = Status.UTREDES
-    ),
-    VURDER_OPPHOLDSKRAV(
-        gruppe = StegGruppe.OPPHOLDSKRAV,
-        status = Status.UTREDES,
-    ),
     FASTSETT_MELDEPERIODER(
         gruppe = StegGruppe.UDEFINERT,
         status = Status.UTREDES
+    ),
+    VURDER_ALDER(
+        gruppe = StegGruppe.ALDER,
+        status = Status.UTREDES,
     ),
     AVKLAR_STUDENT(
         gruppe = StegGruppe.STUDENT,
         status = Status.UTREDES
     ),
-    SAMORDNING_SYKESTIPEND(
-        gruppe = StegGruppe.SAMORDNING,
+    AVKLAR_SYKDOM(
+        gruppe = StegGruppe.SYKDOM,
         status = Status.UTREDES
     ),
     VURDER_BISTANDSBEHOV(
+        gruppe = StegGruppe.SYKDOM,
+        status = Status.UTREDES
+    ),
+    ETABLERING_EGEN_VIRKSOMHET(
+        gruppe = StegGruppe.SYKDOM,
+        status = Status.UTREDES,
+    ),
+    ARBEIDSOPPTRAPPING(
+        gruppe = StegGruppe.SYKDOM,
+        status = Status.UTREDES,
+    ),
+    FRITAK_MELDEPLIKT(
+        gruppe = StegGruppe.SYKDOM,
+        status = Status.UTREDES
+    ),
+    FASTSETT_ARBEIDSEVNE(
         gruppe = StegGruppe.SYKDOM,
         status = Status.UTREDES
     ),
@@ -63,19 +75,7 @@ public enum class StegType(
         gruppe = StegGruppe.SYKDOM,
         status = Status.UTREDES
     ),
-    VURDER_SYKEPENGEERSTATNING(
-        gruppe = StegGruppe.SYKDOM,
-        status = Status.UTREDES
-    ),
-    FASTSETT_SYKDOMSVILKÅRET(
-        gruppe = StegGruppe.SYKDOM,
-        status = Status.UTREDES
-    ),
-    VURDER_YRKESSKADE(
-        gruppe = StegGruppe.SYKDOM,
-        status = Status.UTREDES
-    ),
-    FRITAK_MELDEPLIKT(
+    REFUSJON_KRAV(
         gruppe = StegGruppe.SYKDOM,
         status = Status.UTREDES
     ),
@@ -87,35 +87,19 @@ public enum class StegType(
         gruppe = StegGruppe.KVALITETSSIKRING,
         status = Status.UTREDES,
     ),
-    BARNETILLEGG(
-        gruppe = StegGruppe.BARNETILLEGG,
-        status = Status.UTREDES
-    ),
-    AVKLAR_SYKDOM(
+    VURDER_YRKESSKADE(
         gruppe = StegGruppe.SYKDOM,
         status = Status.UTREDES
     ),
-    ARBEIDSOPPTRAPPING(
-        gruppe = StegGruppe.SYKDOM,
-        status = Status.UTREDES,
-    ),
-    ETABLERING_EGEN_VIRKSOMHET(
-        gruppe = StegGruppe.SYKDOM,
-        status = Status.UTREDES,
-    ),
-    REFUSJON_KRAV(
+    VURDER_SYKEPENGEERSTATNING(
         gruppe = StegGruppe.SYKDOM,
         status = Status.UTREDES
     ),
-    FASTSETT_ARBEIDSEVNE(
+    FASTSETT_SYKDOMSVILKÅRET(
         gruppe = StegGruppe.SYKDOM,
         status = Status.UTREDES
     ),
     FASTSETT_BEREGNINGSTIDSPUNKT(
-        gruppe = StegGruppe.GRUNNLAG,
-        status = Status.UTREDES
-    ),
-    FASTSETT_GRUNNLAG(
         gruppe = StegGruppe.GRUNNLAG,
         status = Status.UTREDES
     ),
@@ -127,27 +111,35 @@ public enum class StegType(
         gruppe = StegGruppe.GRUNNLAG,
         status = Status.UTREDES
     ),
+    FASTSETT_GRUNNLAG(
+        gruppe = StegGruppe.GRUNNLAG,
+        status = Status.UTREDES
+    ),
     VURDER_INNTEKTSBORTFALL(
         gruppe = StegGruppe.GRUNNLAG,
         status = Status.UTREDES
     ),
-    SAMORDNING_UFØRE(
-        gruppe = StegGruppe.SAMORDNING,
+    VURDER_MEDLEMSKAP(
+        gruppe = StegGruppe.MEDLEMSKAP,
+        status = Status.UTREDES
+    ),
+    VURDER_OPPHOLDSKRAV(
+        gruppe = StegGruppe.OPPHOLDSKRAV,
+        status = Status.UTREDES,
+    ),
+    BARNETILLEGG(
+        gruppe = StegGruppe.BARNETILLEGG,
+        status = Status.UTREDES
+    ),
+    DU_ER_ET_ANNET_STED(
+        gruppe = StegGruppe.ET_ANNET_STED,
         status = Status.UTREDES
     ),
     SAMORDNING_GRADERING(
         gruppe = StegGruppe.SAMORDNING,
         status = Status.UTREDES
     ),
-    SAMORDNING_AVSLAG(
-        gruppe = StegGruppe.SAMORDNING,
-        status = Status.UTREDES,
-    ),
-    SAMORDNING_ANDRE_STATLIGE_YTELSER(
-        gruppe = StegGruppe.SAMORDNING,
-        status = Status.UTREDES
-    ),
-    SAMORDNING_ARBEIDSGIVER(
+    SAMORDNING_UFØRE(
         gruppe = StegGruppe.SAMORDNING,
         status = Status.UTREDES
     ),
@@ -155,32 +147,44 @@ public enum class StegType(
         gruppe = StegGruppe.SAMORDNING,
         status = Status.UTREDES
     ),
-
-    FASTSETT_RETTIGHETSTYPE(
-        gruppe = StegGruppe.UNDERVEIS,
+    SAMORDNING_ARBEIDSGIVER(
+        gruppe = StegGruppe.SAMORDNING,
         status = Status.UTREDES
     ),
-    
+    SAMORDNING_AVSLAG(
+        gruppe = StegGruppe.SAMORDNING,
+        status = Status.UTREDES,
+    ),
+
+    SAMORDNING_SYKESTIPEND(
+        gruppe = StegGruppe.SAMORDNING,
+        status = Status.UTREDES
+    ),
+
+    SAMORDNING_ANDRE_STATLIGE_YTELSER(
+        gruppe = StegGruppe.SAMORDNING,
+        status = Status.UTREDES
+    ),
+
     IKKE_OPPFYLT_MELDEPLIKT(
         gruppe = StegGruppe.UNDERVEIS,
         status = Status.UTREDES
     ),
 
-    FASTSETT_VEDTAKSLENGDE(
-        gruppe = StegGruppe.UNDERVEIS,
-        status = Status.UTREDES
-    ),
-    
-    FASTSETT_UTTAK(
-        gruppe = StegGruppe.UNDERVEIS,
-        status = Status.UTREDES
-    ),
     EFFEKTUER_11_7(
         gruppe = StegGruppe.UNDERVEIS,
         status = Status.UTREDES
     ),
-    DU_ER_ET_ANNET_STED(
-        gruppe = StegGruppe.ET_ANNET_STED,
+    FASTSETT_RETTIGHETSTYPE(
+        gruppe = StegGruppe.UNDERVEIS,
+        status = Status.UTREDES
+    ),
+    FASTSETT_VEDTAKSLENGDE(
+        gruppe = StegGruppe.UNDERVEIS,
+        status = Status.UTREDES
+    ),
+    FASTSETT_UTTAK(
+        gruppe = StegGruppe.UNDERVEIS,
         status = Status.UTREDES
     ),
     BEREGN_TILKJENT_YTELSE(
@@ -203,17 +207,13 @@ public enum class StegType(
         gruppe = StegGruppe.IVERKSETT_VEDTAK,
         status = Status.IVERKSETTES
     ),
-    OPPRETT_REVURDERING(
-        gruppe = StegGruppe.IVERKSETT_VEDTAK,
-        status = Status.IVERKSETTES
-    ),
-    AVBRYT_REVURDERING(
-        gruppe = StegGruppe.AVBRYT_REVURDERING,
-        status = Status.UTREDES
-    ),
     BREV(
         gruppe = StegGruppe.BREV,
         status = Status.IVERKSETTES,
+    ),
+    OPPRETT_REVURDERING(
+        gruppe = StegGruppe.IVERKSETT_VEDTAK,
+        status = Status.IVERKSETTES
     ),
 
     // Klage start
