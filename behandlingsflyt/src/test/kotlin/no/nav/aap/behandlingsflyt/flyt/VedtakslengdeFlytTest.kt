@@ -12,7 +12,6 @@ import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companio
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.ÅrMedHverdager
 import no.nav.aap.behandlingsflyt.behandling.vedtakslengde.VedtakslengdeService
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.EØSLandEllerLandMedAvtale
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
@@ -37,6 +36,7 @@ import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.vilkårs
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.test.FakeUnleashBaseWithDefaultDisabled
 import no.nav.aap.behandlingsflyt.test.desember
 import no.nav.aap.behandlingsflyt.test.fixedClock
@@ -53,7 +53,6 @@ import java.time.LocalDateTime
 
 object VedtakslengdeFlytUnleash : FakeUnleashBaseWithDefaultDisabled(
     enabledFlags = listOf(
-        BehandlingsflytFeature.UtvidVedtakslengdeJobb,
         BehandlingsflytFeature.ForlengelseIManuellBehandling,
     )
 )
@@ -561,7 +560,6 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(VedtakslengdeFlytUnlea
                 behandlingService = BehandlingService(repositoryProvider, gatewayProvider),
                 vedtakslengdeService = VedtakslengdeService(repositoryProvider, gatewayProvider),
                 flytJobbRepository = FlytJobbRepositoryImpl(connection),
-                unleashGateway = VedtakslengdeFlytUnleash,
                 clock = clock,
             )
 
@@ -632,7 +630,6 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(VedtakslengdeFlytUnlea
                 behandlingService = BehandlingService(repositoryProvider, gatewayProvider),
                 vedtakslengdeService = VedtakslengdeService(repositoryProvider, gatewayProvider),
                 flytJobbRepository = FlytJobbRepositoryImpl(connection),
-                unleashGateway = VedtakslengdeFlytUnleash,
                 clock = clock,
             )
 
@@ -732,7 +729,6 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(VedtakslengdeFlytUnlea
                 behandlingService = BehandlingService(repositoryProvider, gatewayProvider),
                 vedtakslengdeService = VedtakslengdeService(repositoryProvider, gatewayProvider),
                 flytJobbRepository = FlytJobbRepositoryImpl(connection),
-                unleashGateway = VedtakslengdeFlytUnleash,
                 clock = clock,
             )
 
@@ -815,7 +811,6 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(VedtakslengdeFlytUnlea
                 behandlingService = BehandlingService(repositoryProvider, gatewayProvider),
                 vedtakslengdeService = VedtakslengdeService(repositoryProvider, gatewayProvider),
                 flytJobbRepository = FlytJobbRepositoryImpl(connection),
-                unleashGateway = VedtakslengdeFlytUnleash,
                 clock = clock,
             )
 
@@ -898,7 +893,6 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(VedtakslengdeFlytUnlea
                 behandlingService = BehandlingService(repositoryProvider, gatewayProvider),
                 vedtakslengdeService = VedtakslengdeService(repositoryProvider, gatewayProvider),
                 flytJobbRepository = FlytJobbRepositoryImpl(connection),
-                unleashGateway = VedtakslengdeFlytUnleash,
                 clock = clock,
             )
 
