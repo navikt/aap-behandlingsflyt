@@ -712,7 +712,7 @@ class StatistikkJobbUtførerTest {
                 sakStatus = UTREDES,
                 hendelsesTidspunkt = hendelsesTidspunkt,
                 identerForSak = listOf("1234"),
-                årsakTilOpprettelse = "SØKNAD",
+                årsakTilOpprettelse = no.nav.aap.behandlingsflyt.kontrakt.behandling.ÅrsakTilOpprettelse.SØKNAD,
                 vurderingsbehov = listOf(Vurderingsbehov.SØKNAD),
                 søknadIder = listOf(JournalpostId("xxx"), JournalpostId("xxx2"))
             )
