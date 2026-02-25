@@ -164,40 +164,29 @@ class StansOpphørRepositoryImpl(
     }
 
     override fun slett(behandlingId: BehandlingId) {
-        val grunnlagId = connection.querySet<Long>(
-            """
-            SELECT ID, VURDERINGER_ID FROM STANS_OPPHOR_GRUNNLAG
-            WHERE BEHANDLING_ID = ?
-        """.trimIndent()
-        ) {
-            setParams { setLong(1, behandlingId.id) }
-            setRowMapper { row ->
-                slettVurderinger(row.getLong("VURDERINGER_ID"))
-                row.getLong("id")
-            }
-        }
         connection.execute(
             """
-            DELETE FROM STANS_OPPHOR_GRUNNLAG
+        WITH grunnlag AS (
+            SELECT vurderinger_id
+            FROM stans_opphor_grunnlag
             WHERE behandling_id = ?
+        ),
+        deleted_vurdering AS (
+            DELETE FROM stans_opphor_vurdering
+            WHERE vurderinger_id IN (SELECT vurderinger_id FROM grunnlag)
+        ),
+        deleted_grunnlag AS (
+            DELETE FROM stans_opphor_grunnlag
+            WHERE behandling_id = ?
+        )
+        DELETE FROM stans_opphor_vurderinger
+        WHERE id IN (SELECT vurderinger_id FROM grunnlag)
         """.trimIndent()
         ) {
-            setParams { setLong(1, behandlingId.id) }
-        }
-    }
-
-    private fun slettVurderinger(vurderingerId: Long) {
-        connection.execute(
-            """
-            DELETE FROM STANS_OPPHOR_VURDERING
-            WHERE vurderinger_id = ?
-        """.trimIndent()
-        ) {
-            setParams { setLong(1, vurderingerId) }
-        }
-
-        connection.execute("""DELETE FROM stans_opphor_vurdering WHERE vurderinger_id = ?""".trimIndent()) {
-            setParams { setLong(1, vurderingerId) }
+            setParams {
+                setLong(1, behandlingId.id)
+                setLong(2, behandlingId.id)
+            }
         }
     }
 
