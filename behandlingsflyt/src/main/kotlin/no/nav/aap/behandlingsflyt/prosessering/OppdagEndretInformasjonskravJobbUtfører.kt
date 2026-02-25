@@ -2,11 +2,11 @@ package no.nav.aap.behandlingsflyt.prosessering
 
 import no.nav.aap.behandlingsflyt.behandling.underveis.RettighetstypeService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.KanTriggeRevurdering
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseVurderingInformasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdInformasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningInformasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreInformasjonskrav
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
@@ -51,40 +51,39 @@ class OppdagEndretInformasjonskravJobbUtfører(
         val sisteBehandling = behandlingService.finnSisteYtelsesbehandlingFor(sakId)
             ?: error("Fant ikke ytelsesbehandling for sak $sakId")
 
-        if (sisteBehandling.status().erÅpen()) {
-            log.info("Siste behandling for sak $sakId er åpen. Hopper over sjekk for endret informasjonskrav.")
-        } else {
-            val harNyligEllerFremtidigRett = rettighetstypeService.harRettInnenforPeriode(
-                sisteBehandling.id, Periode(
-                    LocalDate.now(klokke).minusWeeks(2),
-                    Tid.MAKS
-                )
-            )
-            if (!harNyligEllerFremtidigRett) {
-                log.info("Sak $sakId har ikke nylig eller fremtidig rettighet. Hopper over sjekk for endret informasjonskrav.")
-            } else {
-                val vurderingsbehov = relevanteInformasjonskrav
-                    .flatMap {
-                        it.behovForRevurdering(sisteBehandling.id)
-                            .also { behov -> if (behov.isNotEmpty()) log.info("Fant endringer i ${it.javaClass.simpleName}") }
-                    }
-                    .toSet().toList() // Fjern duplikater
 
-                if (vurderingsbehov.isNotEmpty()) {
-                    val revurdering = this.behandlingService.finnEllerOpprettOrdinærBehandling(
-                        sakId,
-                        VurderingsbehovOgÅrsak(vurderingsbehov, ÅrsakTilOpprettelse.ENDRING_I_REGISTERDATA)
-                    )
-                    log.info("Fant endringer i $sakId med behov $vurderingsbehov. Behandling: ${revurdering.referanse}.")
-                    secureLogger.info("" + vurderingsbehov)
-                    prosesserBehandlingService.triggProsesserBehandling(
-                        revurdering,
-                        vurderingsbehov = vurderingsbehov.map { it.type },
-                    )
-                } else {
-                    log.info("Lar være å opprette revurdering for sak $sakId med behov $vurderingsbehov da opplysningene er registrert fra før. ")
+        val harNyligEllerFremtidigRett = rettighetstypeService.harRettInnenforPeriode(
+            sisteBehandling.id, Periode(
+                LocalDate.now(klokke).minusWeeks(2),
+                Tid.MAKS
+            )
+        )
+
+        if (!harNyligEllerFremtidigRett) {
+            log.info("Sak $sakId har ikke nylig eller fremtidig rettighet. Hopper over sjekk for endret informasjonskrav.")
+        } else {
+            val vurderingsbehov = relevanteInformasjonskrav
+                .flatMap {
+                    it.behovForRevurdering(sisteBehandling.id)
+                        .also { behov -> if (behov.isNotEmpty()) log.info("Fant endringer i ${it.javaClass.simpleName}") }
                 }
+                .toSet().toList() // Fjern duplikater
+
+            if (vurderingsbehov.isNotEmpty()) {
+                val revurdering = this.behandlingService.finnEllerOpprettOrdinærBehandling(
+                    sakId,
+                    VurderingsbehovOgÅrsak(vurderingsbehov, ÅrsakTilOpprettelse.ENDRING_I_REGISTERDATA)
+                )
+                log.info("Fant endringer i $sakId med behov $vurderingsbehov. Behandling: ${revurdering.referanse}.")
+                secureLogger.info("" + vurderingsbehov)
+                prosesserBehandlingService.triggProsesserBehandling(
+                    revurdering,
+                    vurderingsbehov = vurderingsbehov.map { it.type },
+                )
+            } else {
+                log.info("Lar være å opprette revurdering for sak $sakId med behov $vurderingsbehov da opplysningene er registrert fra før. ")
             }
+
         }
 
         låsRepository.verifiserSkrivelås(sakSkrivelås)
