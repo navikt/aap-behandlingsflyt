@@ -29,6 +29,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.Beregnin
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdomsvurderingbrev.SykdomsvurderingForBrevRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeRepository
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
@@ -65,6 +66,7 @@ class BrevUtlederService(
     private val arbeidsopptrappingRepository: ArbeidsopptrappingRepository,
     private val sykdomsvurderingForBrevRepository: SykdomsvurderingForBrevRepository,
     private val overgangUføreRepository: OvergangUføreRepository,
+    private val vedtakslengdeRepository: VedtakslengdeRepository,
     private val unleashGateway: UnleashGateway
 ) {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
@@ -80,6 +82,7 @@ class BrevUtlederService(
         arbeidsopptrappingRepository = repositoryProvider.provide(),
         sykdomsvurderingForBrevRepository = repositoryProvider.provide(),
         overgangUføreRepository = repositoryProvider.provide(),
+        vedtakslengdeRepository = repositoryProvider.provide(),
         unleashGateway = gatewayProvider.provide()
     )
 
@@ -208,13 +211,18 @@ class BrevUtlederService(
         }
         val underveisGrunnlagVedForrigeBehandling = underveisRepository.hent(behandling.forrigeBehandlingId)
         val utvidetAapFomDato = underveisGrunnlagVedForrigeBehandling.sisteDagMedYtelse().plusDays(1)
+
         checkNotNull(utvidetAapFomDato) {
             "UtvidelsesVedtak mangler utvidetAapFomDato"
         }
+
         val underveisGrunnlag = underveisRepository.hent(behandling.id)
+        val vedtakslengdeVurdering = vedtakslengdeRepository.hentHvisEksisterer(behandling.id)
+
         return UtvidVedtakslengde(
             utvidetAapFomDato = utvidetAapFomDato,
-            sisteDagMedYtelse = underveisGrunnlag.sisteDagMedYtelse()
+            sisteDagMedYtelse = underveisGrunnlag.sisteDagMedYtelse(),
+            sisteDagMedYtelseBegrensetAv = vedtakslengdeVurdering?.vurdering?.sluttdatoBegrensetAv ?: emptySet()
         )
     }
 

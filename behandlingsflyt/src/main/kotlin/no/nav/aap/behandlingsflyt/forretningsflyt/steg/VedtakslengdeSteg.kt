@@ -51,6 +51,7 @@ class VedtakslengdeSteg(
                     vedtakslengdeService.utvidSluttdato(
                         behandlingId = kontekst.behandlingId,
                         forrigeBehandlingId = kontekst.forrigeBehandlingId,
+                        rettighetsperiode = kontekst.rettighetsperiode,
                     )
                 } else {
                     log.info("Ingen utvidelse av vedtakslengde nødvendig")

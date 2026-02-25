@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.behandling.brev
 
 import io.mockk.every
 import io.mockk.mockk
+import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.behandling.ResultatUtleder
 import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingService
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
@@ -11,6 +12,7 @@ import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Minstesats
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Tilkjent
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelsePeriode
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.ÅrMedHverdager
 import no.nav.aap.behandlingsflyt.behandling.vedtak.Vedtak
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Grunnlag
@@ -25,6 +27,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveis
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisÅrsak
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageresultatUtleder
@@ -41,6 +44,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.Over
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.UføreSøknadVedtakResultat
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeVurdering
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
@@ -96,6 +102,7 @@ class BrevUtlederServiceTest {
     val underveisRepository = mockk<UnderveisRepository>()
     val overgangUføreRepository = mockk<OvergangUføreRepository>()
     val avbrytRevurderingService = mockk<AvbrytRevurderingService>()
+    val vedtakslengdeRepository = mockk<VedtakslengdeRepository>()
     val unleashGateway = mockk<UnleashGateway>()
     val brevUtlederService = BrevUtlederService(
         resultatUtleder = ResultatUtleder(
@@ -115,6 +122,7 @@ class BrevUtlederServiceTest {
         arbeidsopptrappingRepository = arbeidsopptrappingRepository,
         sykdomsvurderingForBrevRepository = sykdomsvurderingForBrevRepository,
         overgangUføreRepository = overgangUføreRepository,
+        vedtakslengdeRepository = vedtakslengdeRepository,
         unleashGateway = unleashGateway,
     )
     val virkningstidspunkt = 1 januar 2025
@@ -171,6 +179,8 @@ class BrevUtlederServiceTest {
             every { underveisRepository.hent(revurdering.id) } returns revurderingUnderveisGrunnlag
             every { underveisRepository.hentHvisEksisterer(revurdering.id) } returns revurderingUnderveisGrunnlag
             every { avbrytRevurderingService.revurderingErAvbrutt(any<BehandlingId>()) } returns false
+            val vedtakslengdeGrunnlag = stubVedtakslengdeGrunnlag(revurdering.id, revurderingSisteDagMedYtelse)
+            every { vedtakslengdeRepository.hentHvisEksisterer(revurdering.id) } returns vedtakslengdeGrunnlag
             every { unleashGateway.isEnabled(BehandlingsflytFeature.NyBrevtype11_17) } returns true
 
             val resultat = brevUtlederService.utledBehovForMeldingOmVedtak(revurdering.id)
@@ -180,6 +190,7 @@ class BrevUtlederServiceTest {
             // revurderingVirkningstidspunkt og førstegangSisteDagMedYtelse+1 er bevisst ulike for testformål
             val forventetUtvidetAapFomDato = førstegangSisteDagMedYtelse.plusDays(1)
             assertEquals(forventetUtvidetAapFomDato, resultat.utvidetAapFomDato)
+            assertEquals(setOf(Avslagsårsak.ORDINÆRKVOTE_BRUKT_OPP), resultat.sisteDagMedYtelseBegrensetAv)
         }
     }
     
@@ -790,6 +801,22 @@ class BrevUtlederServiceTest {
             årsakTilOpprettelse = årsakTilOpprettelse,
             vurderingsbehov = vurderingsbehov.map { VurderingsbehovMedPeriode(it) },
             versjon = 1
+        )
+    }
+
+    private fun stubVedtakslengdeGrunnlag(
+        behandlingId: BehandlingId,
+        sluttdato: LocalDate,
+    ): VedtakslengdeGrunnlag {
+        return VedtakslengdeGrunnlag(
+            vurdering = VedtakslengdeVurdering(
+                sluttdato = sluttdato,
+                sluttdatoBegrensetAv = setOf(Avslagsårsak.ORDINÆRKVOTE_BRUKT_OPP),
+                utvidetMed = ÅrMedHverdager.ANDRE_ÅR,
+                vurdertAv = SYSTEMBRUKER,
+                opprettet = Instant.now(),
+                vurdertIBehandling = behandlingId
+            )
         )
     }
 

@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
-import io.mockk.mockk
 import no.nav.aap.behandlingsflyt.behandling.underveis.RettighetstypeService
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Kvote
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus
@@ -33,7 +32,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
-import no.nav.aap.behandlingsflyt.test.FakeUnleashBaseWithDefaultDisabled
 import no.nav.aap.behandlingsflyt.test.desember
 import no.nav.aap.behandlingsflyt.test.fixedClock
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
@@ -44,7 +42,6 @@ import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryVedtakslengdeReposit
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryVilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.behandlingsflyt.test.modell.genererIdent
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Dagsatser
 import no.nav.aap.komponenter.verdityper.Prosent
@@ -131,6 +128,7 @@ class VedtakslengdeStegTest {
                 underveisRepository = InMemoryUnderveisRepository,
                 vilkårsresultatRepository = InMemoryVilkårsresultatRepository,
                 rettighetstypeService = RettighetstypeService(InMemoryRettighetstypeRepository, InMemoryVilkårsresultatRepository, InMemoryUnderveisRepository),
+                unleashGateway = AlleAvskruddUnleash,
                 clock = fixedClock(dagensDato),
             ),
             unleashGateway = AlleAvskruddUnleash,

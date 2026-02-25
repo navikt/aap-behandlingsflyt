@@ -33,6 +33,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettels
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
+import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.test.desember
 import no.nav.aap.behandlingsflyt.test.fixedClock
 import no.nav.aap.komponenter.type.Periode
@@ -66,6 +67,7 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtførerTest {
                 underveisRepository = underveisRepository,
                 vilkårsresultatRepository = vilkårsresultatRepository,
                 rettighetstypeService = RettighetstypeService(rettighetestypeRepository, vilkårsresultatRepository, underveisRepository),
+                unleashGateway = AlleAvskruddUnleash,
                 clock = clock
             ),
             clock = clock

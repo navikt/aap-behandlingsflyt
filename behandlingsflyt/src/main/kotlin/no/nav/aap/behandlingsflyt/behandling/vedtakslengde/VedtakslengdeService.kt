@@ -1,12 +1,14 @@
 package no.nav.aap.behandlingsflyt.behandling.vedtakslengde
 
 import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
+import no.nav.aap.behandlingsflyt.behandling.rettighetstype.utledStansEllerOpphør
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.VirkningstidspunktUtleder
 import no.nav.aap.behandlingsflyt.behandling.underveis.RettighetstypeService
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companion.plussEtÅrMedHverdager
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Kvote
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.ÅrMedHverdager
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeGrunnlag
@@ -14,9 +16,12 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.Vedt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeVurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
 import java.time.Clock
@@ -28,6 +33,7 @@ class VedtakslengdeService(
     private val underveisRepository: UnderveisRepository,
     private val vilkårsresultatRepository: VilkårsresultatRepository,
     private val rettighetstypeService: RettighetstypeService,
+    private val unleashGateway: UnleashGateway,
     private val clock: Clock = Clock.systemDefaultZone()
 ) {
     companion object {
@@ -37,7 +43,8 @@ class VedtakslengdeService(
         vedtakslengdeRepository =  repositoryProvider.provide(),
         underveisRepository = repositoryProvider.provide(),
         vilkårsresultatRepository = repositoryProvider.provide(),
-        rettighetstypeService = RettighetstypeService(repositoryProvider, gatewayProvider)
+        rettighetstypeService = RettighetstypeService(repositoryProvider, gatewayProvider),
+        unleashGateway = gatewayProvider.provide()
     )
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -55,6 +62,16 @@ class VedtakslengdeService(
         val vedtattSluttdato = hentVedtattSluttdato(forrigeBehandlingId, vedtakslengdeGrunnlag)
 
         if (vedtattSluttdato != null) {
+            // Sjekker om det finnes en fremtidig perioder med ordinær rettighetstype (uavhengig av lengde)
+            if (unleashGateway.isEnabled(BehandlingsflytFeature.UtvidVedtakslengdeUnderEttAr)) {
+                val periodeMedFremtidigRettOrdinær = hentPeriodeMedFremtidigRettOrdinær(vedtattSluttdato, behandlingId)
+
+                log.info("Behandling $behandlingId har periodeMedFremtidigRettOrdinær=$periodeMedFremtidigRettOrdinær og forrigeSluttdato=${vedtattSluttdato}")
+
+                return datoForUtvidelse >= vedtattSluttdato && periodeMedFremtidigRettOrdinær != null
+            }
+
+            // Sjekker om det finnes en fremtidig periode med ordinær rettighetstype og at denne perioden er et helt år
             val nesteUtvidelse = hentNesteUtvidelse(vedtakslengdeGrunnlag?.vurdering)
             val utvidetSluttdato = vedtattSluttdato.plussEtÅrMedHverdager(nesteUtvidelse)
 
@@ -71,6 +88,7 @@ class VedtakslengdeService(
     fun utvidSluttdato(
         behandlingId: BehandlingId,
         forrigeBehandlingId: BehandlingId?,
+        rettighetsperiode: Periode,
     ) {
         val vedtakslengdeGrunnlag = forrigeBehandlingId?.let { vedtakslengdeRepository.hentHvisEksisterer(forrigeBehandlingId) }
         val vedtattSluttdato = hentVedtattSluttdato(forrigeBehandlingId, vedtakslengdeGrunnlag)
@@ -79,19 +97,58 @@ class VedtakslengdeService(
             val forrigeUtvidelse = vedtakslengdeGrunnlag?.vurdering
             val utvidelse = hentNesteUtvidelse(forrigeUtvidelse)
 
-            val nySluttdato = vedtattSluttdato.plussEtÅrMedHverdager(utvidelse)
-            vedtakslengdeRepository.lagre(
-                behandlingId, VedtakslengdeVurdering(
-                    sluttdato = nySluttdato,
-                    utvidetMed = utvidelse,
-                    vurdertAv = SYSTEMBRUKER,
-                    vurdertIBehandling = behandlingId,
-                    opprettet = Instant.now(clock)
-                )
-            )
+            val nyForventetSluttdato = vedtattSluttdato.plussEtÅrMedHverdager(utvidelse)
+            val periodeMedFremtidigRettOrdinær = hentPeriodeMedFremtidigRettOrdinær(vedtattSluttdato, behandlingId)
+
+            if (unleashGateway.isEnabled(BehandlingsflytFeature.UtvidVedtakslengdeUnderEttAr)
+                && periodeMedFremtidigRettOrdinær != null && periodeMedFremtidigRettOrdinær.tom < nyForventetSluttdato) {
+                // Perioden med fremtidig ordinær rett utfyller ikke et helt år, bruker da siste dato og utleder
+                // årsaken(e) til at ordinær rett ikke oppfylles slik at disse kan brukes for riktig tekst i brevet
+                val avslagsårsaker = hentAvslagsårsaker(behandlingId, rettighetsperiode, periodeMedFremtidigRettOrdinær)
+
+                // Sjekker at alle avslagsårsakene som utledes er gyldige for automatisk behandling
+                verifiserGyldigeAvslagsårsakerForAutomatiskBehandling(avslagsårsaker)
+
+                lagreVedtakslengdeVurdering(behandlingId, periodeMedFremtidigRettOrdinær.tom, utvidelse, avslagsårsaker)
+            } else {
+                // Utvider med ett år
+                lagreVedtakslengdeVurdering(behandlingId, nyForventetSluttdato, utvidelse)
+            }
+
         } else {
             log.info("Behandling $behandlingId har ingen vedtatt sluttdato, ingen utvidelse nødvendig")
         }
+    }
+
+    private fun verifiserGyldigeAvslagsårsakerForAutomatiskBehandling(
+        avslagsårsaker: Set<Avslagsårsak>
+    ) {
+        if (avslagsårsaker.isEmpty()) {
+            throw IllegalArgumentException("Forventer en avslagsårsak når ordinær rett er under ett år")
+        }
+        if (avslagsårsaker.any { it !in gyldigeAvslagsårsakerForAutomatiskBehandling() }) {
+            throw IllegalArgumentException("Har avslagsårsaker $avslagsårsaker som ikke er gyldige for automatisk behandling ved utvidelse av vedtakslengde")
+        }
+    }
+
+    private fun hentAvslagsårsaker(
+        behandlingId: BehandlingId,
+        rettighetsperiode: Periode,
+        periodeMedFremtidigRettOrdinær: Periode
+    ): Set<Avslagsårsak> {
+        val vilkårsresultat = vilkårsresultatRepository.hent(behandlingId)
+        val stansEllerOpphør = utledStansEllerOpphør(
+            vilkårsresultat = vilkårsresultat,
+            rettighetsperiode = rettighetsperiode
+        )
+
+        val stansEllerOpphørFom = periodeMedFremtidigRettOrdinær.tom.plusDays(1)
+        val avslagsårsakerFørsteDagUtenOrdinærRettighet = stansEllerOpphør
+            .filter { (fom, _) -> fom == stansEllerOpphørFom }.values
+            .flatMap { it.årsaker }
+            .toSet()
+
+        return avslagsårsakerFørsteDagUtenOrdinærRettighet
     }
 
     fun lagreGjeldendeSluttdato(
@@ -110,15 +167,7 @@ class VedtakslengdeService(
         if (erSluttdatoEndret) {
             log.info("Sluttdato endret fra $vedtattSluttdato til $sluttdato for behandling $behandlingId")
 
-            vedtakslengdeRepository.lagre(
-                behandlingId, VedtakslengdeVurdering(
-                    sluttdato = sluttdato,
-                    utvidetMed = vedtattUtvidelse ?: ÅrMedHverdager.FØRSTE_ÅR,
-                    vurdertAv = SYSTEMBRUKER,
-                    vurdertIBehandling = behandlingId,
-                    opprettet = Instant.now(clock)
-                )
-            )
+            lagreVedtakslengdeVurdering(behandlingId, sluttdato, vedtattUtvidelse ?: ÅrMedHverdager.FØRSTE_ÅR)
         }
     }
 
@@ -163,13 +212,6 @@ class VedtakslengdeService(
         return sluttdatoForBehandlingen
     }
 
-    private fun unntaksrettighetstyper(): List<RettighetsType> = listOf(
-        RettighetsType.SYKEPENGEERSTATNING,
-        RettighetsType.STUDENT,
-        RettighetsType.VURDERES_FOR_UFØRETRYGD,
-        RettighetsType.ARBEIDSSØKER
-    )
-
     @Deprecated("Den første varianten - denne vil utvide med ett år uavhengig av rettighetstype")
     fun lagreGjeldendeSluttdatoHvisIkkeEksisterer(
         behandlingId: BehandlingId,
@@ -183,16 +225,28 @@ class VedtakslengdeService(
             val sluttdato = vedtattSluttdato ?: utledInitiellSluttdato(behandlingId, rettighetsperiode).tom
 
             // Skal lagre ned vedtakslengde for eksisterende behandlinger som mangler dette
-            vedtakslengdeRepository.lagre(
-                behandlingId, VedtakslengdeVurdering(
-                    sluttdato = sluttdato,
-                    utvidetMed = ÅrMedHverdager.FØRSTE_ÅR,
-                    vurdertAv = SYSTEMBRUKER,
-                    vurdertIBehandling = behandlingId,
-                    opprettet = Instant.now(clock)
-                )
-            )
+            lagreVedtakslengdeVurdering(behandlingId, sluttdato, ÅrMedHverdager.FØRSTE_ÅR)
         }
+    }
+
+    private fun lagreVedtakslengdeVurdering(
+        behandlingId: BehandlingId,
+        sluttdato: LocalDate,
+        utvidelse: ÅrMedHverdager,
+        sluttdatoBegrensetAv: Set<Avslagsårsak> = emptySet()
+    ) {
+        log.info("Lagrer VedtakslengdeVurdering med sluttdato=$sluttdato, utvidelse=$utvidelse og begrensetAv=$sluttdatoBegrensetAv")
+
+        vedtakslengdeRepository.lagre(
+            behandlingId, VedtakslengdeVurdering(
+                sluttdato = sluttdato,
+                sluttdatoBegrensetAv = sluttdatoBegrensetAv,
+                utvidetMed = utvidelse,
+                vurdertAv = SYSTEMBRUKER,
+                vurdertIBehandling = behandlingId,
+                opprettet = Instant.now(clock)
+            )
+        )
     }
 
     /**
@@ -255,4 +309,44 @@ class VedtakslengdeService(
             .segmenter()
             .all { it.verdi }
     }
+
+    /**
+     * Henter neste periode med ordinær rettighetstype fra dagen etter gjeldende sluttdato for vedtaket
+     */
+    private fun hentPeriodeMedFremtidigRettOrdinær(
+        vedtattSluttdato: LocalDate,
+        behandlingId: BehandlingId,
+    ): Periode? {
+        val rettighetstypeTidslinje = rettighetstypeService.rettighetstypeTidslinjeBakoverkompatibel(behandlingId)
+        val dagenEtterVedtattSluttdato = vedtattSluttdato.plusDays(1)
+        val fremtidigPeriodeMedMuligRett = Periode(dagenEtterVedtattSluttdato, Tid.MAKS)
+
+        return rettighetstypeTidslinje
+            .begrensetTil(fremtidigPeriodeMedMuligRett)
+            .filter { rettighetstype -> rettighetstype.verdi.kvote == Kvote.ORDINÆR }
+            .segmenter()
+            .map { it.periode }
+            .firstOrNull { it.fom == dagenEtterVedtattSluttdato }
+    }
+
+    private fun unntaksrettighetstyper() = setOf(
+        RettighetsType.SYKEPENGEERSTATNING,
+        RettighetsType.STUDENT,
+        RettighetsType.VURDERES_FOR_UFØRETRYGD,
+        RettighetsType.ARBEIDSSØKER
+    )
+
+    /**
+     * Følgende avslagsårsaker er støttet ved automatisk behandling av vedtakslengde
+     */
+    private fun gyldigeAvslagsårsakerForAutomatiskBehandling() =
+        setOf(
+            Avslagsårsak.BRUKER_OVER_67,
+            Avslagsårsak.IKKE_MEDLEM, // TODO ikke riktig Avslagstype?
+            Avslagsårsak.IKKE_MEDLEM_FORUTGÅENDE, // TODO ikke riktig Avslagstype?
+            Avslagsårsak.ORDINÆRKVOTE_BRUKT_OPP,
+            Avslagsårsak.BRUDD_PÅ_OPPHOLDSKRAV_STANS,
+            Avslagsårsak.IKKE_RETT_UNDER_STRAFFEGJENNOMFØRING,
+            Avslagsårsak.ANNEN_FULL_YTELSE
+        )
 }
