@@ -224,23 +224,7 @@ internal fun Application.server(
 
     val motor = startMotor(dataSource, repositoryRegistry, gatewayProvider)
 
-    if (!Miljø.erLokal()) {
-        startKabalKonsument(dataSource, repositoryRegistry)
-    }
-    if (!Miljø.erLokal()) {
-        startPDLHendelseKonsument(dataSource, repositoryRegistry, gatewayProvider)
-    }
-    if (!Miljø.erLokal()) {
-        startTilbakekrevingEventKonsument(dataSource, repositoryRegistry)
-    }
-
-    if (!Miljø.erLokal() && !Miljø.erProd()) {
-        startInstitusjonsOppholdKonsument(dataSource, repositoryRegistry)
-    }
-
-    if (!Miljø.erLokal()) {
-        startSykepengevedtakKonsument(dataSource, repositoryRegistry, gatewayProvider)
-    }
+    startKafkakonsumenter(dataSource, repositoryRegistry, gatewayProvider)
 
     monitor.subscribe(ApplicationStopPreparing) { environment ->
         environment.log.info("ktor forbereder seg på å stoppe.")
@@ -344,6 +328,22 @@ internal fun Application.server(
         actuator(prometheus, motor)
     }
 
+}
+
+private fun Application.startKafkakonsumenter(
+    dataSource: HikariDataSource,
+    repositoryRegistry: RepositoryRegistry,
+    gatewayProvider: GatewayProvider
+) {
+    if (!Miljø.erLokal()) {
+        startKabalKonsument(dataSource, repositoryRegistry)
+        startPDLHendelseKonsument(dataSource, repositoryRegistry, gatewayProvider)
+        startTilbakekrevingEventKonsument(dataSource, repositoryRegistry)
+        startSykepengevedtakKonsument(dataSource, repositoryRegistry, gatewayProvider)
+    }
+    if (!Miljø.erLokal() && !Miljø.erProd()) {
+        startInstitusjonsOppholdKonsument(dataSource, repositoryRegistry)
+    }
 }
 
 // Bruker leaderElector for å sikre at kun en pod kjører migreringen og spinner opp en egen tråd for å ikke blokkere.
