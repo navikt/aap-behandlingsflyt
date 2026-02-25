@@ -362,13 +362,13 @@ class AvklaringsbehovService(
         tilbakestillGrunnlag: () -> Unit
     ) {
         oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
-            definisjon,
-            tvingerAvklaringsbehov,
-            nårVurderingErRelevant,
-            kontekst,
-            { null },
-            nårVurderingErGyldig,
-            tilbakestillGrunnlag
+            definisjon = definisjon,
+            tvingerAvklaringsbehov = tvingerAvklaringsbehov,
+            nårVurderingErRelevant = nårVurderingErRelevant,
+            kontekst = kontekst,
+            perioderSomIkkeErTilstrekkeligVurdert = { null },
+            nårVurderingErGyldig = nårVurderingErGyldig,
+            tilbakestillGrunnlag = tilbakestillGrunnlag
         )
     }
 }
