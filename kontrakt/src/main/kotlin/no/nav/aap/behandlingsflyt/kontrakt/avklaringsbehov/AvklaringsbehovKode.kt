@@ -293,6 +293,11 @@ public enum class AvklaringsbehovKode {
     `5053`,
 
     /**
+     * [BEKREFT_VURDERINGER_OPPFØLGING]
+     */
+    `5054`,
+
+    /**
      * [SAMORDNING_REFUSJONS_KRAV]
      * */
     `5056`,
