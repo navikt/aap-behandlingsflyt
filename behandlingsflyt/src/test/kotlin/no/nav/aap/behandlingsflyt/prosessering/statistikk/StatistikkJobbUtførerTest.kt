@@ -219,7 +219,7 @@ class StatistikkJobbUtførerTest {
             årsakerTilBehandling = listOf(Vurderingsbehov.SØKNAD.name),
             vurderingsbehov = listOf(Vurderingsbehov.SØKNAD.name),
             mottattDokumenter = emptyList(),
-            årsakTilOpprettelse = behandling.årsakTilOpprettelse?.name ?: "Ukjent",
+            årsakTilOpprettelse = behandling.årsakTilOpprettelse.tilKontrakt(),
         )
 
         val hendelse2 = DefaultJsonMapper.toJson(payload)
@@ -461,7 +461,7 @@ class StatistikkJobbUtførerTest {
             versjon = "123",
             årsakerTilBehandling = listOf(Vurderingsbehov.VURDER_RETTIGHETSPERIODE.name),
             vurderingsbehov = listOf(Vurderingsbehov.VURDER_RETTIGHETSPERIODE.name),
-            årsakTilOpprettelse = behandling.årsakTilOpprettelse?.name ?: "Ukjent",
+            årsakTilOpprettelse = behandling.årsakTilOpprettelse.tilKontrakt(),
             reserverTil = "meg",
             mottattDokumenter = emptyList()
         )
@@ -680,7 +680,7 @@ class StatistikkJobbUtførerTest {
             versjon = ApplikasjonsVersjon.versjon,
             årsakerTilBehandling = listOf(Vurderingsbehov.VURDER_RETTIGHETSPERIODE.name),
             vurderingsbehov = listOf(Vurderingsbehov.VURDER_RETTIGHETSPERIODE.name),
-            årsakTilOpprettelse = behandling.årsakTilOpprettelse?.name ?: "Ukjent",
+            årsakTilOpprettelse = behandling.årsakTilOpprettelse.tilKontrakt(),
             mottattDokumenter = emptyList(),
             reserverTil = "meg",
         )
@@ -712,7 +712,7 @@ class StatistikkJobbUtførerTest {
                 sakStatus = UTREDES,
                 hendelsesTidspunkt = hendelsesTidspunkt,
                 identerForSak = listOf("1234"),
-                årsakTilOpprettelse = "SØKNAD",
+                årsakTilOpprettelse = no.nav.aap.behandlingsflyt.kontrakt.behandling.ÅrsakTilOpprettelse.SØKNAD,
                 vurderingsbehov = listOf(Vurderingsbehov.SØKNAD),
                 søknadIder = listOf(JournalpostId("xxx"), JournalpostId("xxx2"))
             )

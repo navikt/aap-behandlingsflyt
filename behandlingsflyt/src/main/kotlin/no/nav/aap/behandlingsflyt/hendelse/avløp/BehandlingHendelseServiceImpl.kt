@@ -18,6 +18,7 @@ import no.nav.aap.behandlingsflyt.prosessering.MeldeperiodeTilMeldekortBackendJo
 import no.nav.aap.behandlingsflyt.prosessering.VarsleOppgaveOmHendelseJobbUtFører
 import no.nav.aap.behandlingsflyt.prosessering.statistikk.BehandlingFlytStoppetHendelseTilStatistikk
 import no.nav.aap.behandlingsflyt.prosessering.statistikk.StatistikkJobbUtfører
+import no.nav.aap.behandlingsflyt.prosessering.statistikk.tilKontrakt
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
@@ -64,7 +65,7 @@ class BehandlingHendelseServiceImpl(
             status = behandling.status(),
             årsakerTilBehandling = vurderingsbehov.map { it.type.name },
             vurderingsbehov = vurderingsbehov.map { it.type.name },
-            årsakTilOpprettelse = behandling.årsakTilOpprettelse?.name ?: "Ukjent årsak",
+            årsakTilOpprettelse = behandling.årsakTilOpprettelse.tilKontrakt(),
             avklaringsbehov = sortererteAvklaringsbehov(behandling, avklaringsbehovene.alle()),
             relevanteIdenterPåBehandling = pipService.finnIdenterPåBehandling(behandling.referanse).map { it.ident },
             erPåVent = erPåVent,
