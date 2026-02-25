@@ -51,16 +51,17 @@ class OppdagEndretInformasjonskravJobbUtfører(
         val sisteBehandling = behandlingService.finnSisteYtelsesbehandlingFor(sakId)
             ?: error("Fant ikke ytelsesbehandling for sak $sakId")
 
-        if (sisteBehandling.status().erÅpen()) {
-            log.info("Siste behandling for sak $sakId er åpen. Hopper over sjekk for endret informasjonskrav.")
-        } else {
-            val harNyligEllerFremtidigRett = rettighetstypeService.harRettInnenforPeriode(
-                sisteBehandling.id, Periode(
-                    LocalDate.now(klokke).minusWeeks(2),
-                    Tid.MAKS
-                )
-            )
 
+        val harNyligEllerFremtidigRett = rettighetstypeService.harRettInnenforPeriode(
+            sisteBehandling.id, Periode(
+                LocalDate.now(klokke).minusWeeks(2),
+                Tid.MAKS
+            )
+        )
+
+        if (!harNyligEllerFremtidigRett) {
+            log.info("Sak $sakId har ikke nylig eller fremtidig rettighet. Hopper over sjekk for endret informasjonskrav.")
+        } else {
             val vurderingsbehov = relevanteInformasjonskrav
                 .flatMap {
                     it.behovForRevurdering(sisteBehandling.id)

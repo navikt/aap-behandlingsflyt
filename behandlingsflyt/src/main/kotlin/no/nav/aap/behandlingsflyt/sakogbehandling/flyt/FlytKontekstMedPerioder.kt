@@ -45,6 +45,6 @@ data class FlytKontekstMedPerioder(
 
     fun erVurderingsbehovEndretEtterOppdatertInformasjonskrav(oppdatert: InformasjonskravOppdatert?): Boolean {
         val nyesteVurderingsbehov = vurderingsbehovRelevanteForStegMedPerioder.maxOfOrNull { it.oppdatertTid }
-        return nyesteVurderingsbehov != null && oppdatert != null && nyesteVurderingsbehov > oppdatert.tidOppdatert
+        return nyesteVurderingsbehov != null && (oppdatert == null || nyesteVurderingsbehov > oppdatert.tidOppdatert)
     }
 }
