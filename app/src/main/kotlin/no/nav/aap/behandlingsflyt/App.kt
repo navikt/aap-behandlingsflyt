@@ -56,7 +56,6 @@ import no.nav.aap.behandlingsflyt.behandling.klage.resultat.klageresultatApi
 import no.nav.aap.behandlingsflyt.behandling.klage.trekk.trekkKlageGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.kvalitetssikring.kvalitetssikringApi
 import no.nav.aap.behandlingsflyt.behandling.kvalitetssikring.kvalitetssikringTilgangApi
-import no.nav.aap.behandlingsflyt.behandling.rettighet.rettighetApi
 import no.nav.aap.behandlingsflyt.behandling.lovvalgmedlemskap.grunnlag.forutgåendeMedlemskapApi
 import no.nav.aap.behandlingsflyt.behandling.lovvalgmedlemskap.grunnlag.lovvalgMedlemskapGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.lovvalgmedlemskap.lovvalgMedlemskapApi
@@ -64,6 +63,7 @@ import no.nav.aap.behandlingsflyt.behandling.mellomlagring.mellomlagretVurdering
 import no.nav.aap.behandlingsflyt.behandling.oppfolgingsbehandling.avklarOppfolgingsoppgaveGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.oppfolgingsbehandling.oppfølgingsOppgaveApi
 import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.oppholdskravGrunnlagApi
+import no.nav.aap.behandlingsflyt.behandling.rettighet.rettighetApi
 import no.nav.aap.behandlingsflyt.behandling.rettighetsperiode.rettighetsperiodeGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.revurdering.avbrytRevurderingGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.simulering.simuleringApi
@@ -99,6 +99,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.InstitusjonsOppho
 import no.nav.aap.behandlingsflyt.pip.behandlingsflytPipApi
 import no.nav.aap.behandlingsflyt.prosessering.BehandlingsflytLogInfoProvider
 import no.nav.aap.behandlingsflyt.prosessering.ProsesseringsJobber
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.saksApi
 import no.nav.aap.behandlingsflyt.test.opprettDummySakApi
@@ -158,6 +159,7 @@ internal object AppConfig {
 
     // Vi skrur opp ktor sin default-verdi, som er "antall CPUer", fordi vi har en del venting på IO (db, kafka, http):
     private const val ktorParallellitet = 8
+
     // Vi følger ktor sin metodikk for å regne ut tuning parametre som funksjon av parallellitet
     // https://github.com/ktorio/ktor/blob/3.3.1/ktor-server/ktor-server-core/common/src/io/ktor/server/engine/ApplicationEngine.kt#L30
     const val connectionGroupSize = ktorParallellitet / 2 + 1
@@ -360,6 +362,10 @@ private fun utførMigreringer(
 
         if (isLeader) {
             // kjør migreringer
+            dataSource.transaction { connection ->
+                val repository = InstitusjonsoppholdRepositoryImpl(connection)
+                repository.migrerInstitusjonsopphold()
+            }
         }
 
     }, 9, TimeUnit.MINUTES)
