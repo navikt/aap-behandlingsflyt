@@ -45,7 +45,7 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.VirksomhetsEtablering to true,
         BehandlingsflytFeature.KvalitetssikringVed2213 to true,
         BehandlingsflytFeature.tilbakekrevingsOppgaverTilOppgave to true,
-        BehandlingsflytFeature.PeriodiseringHelseinstitusjonOpphold to false,
+        BehandlingsflytFeature.PeriodiseringHelseinstitusjonOpphold to true,
         BehandlingsflytFeature.HentingAvInstitusjonsOpphold to true,
         BehandlingsflytFeature.VisIkkeRelevantPeriode to true,
         BehandlingsflytFeature.NyTidligereVurderinger to true,
