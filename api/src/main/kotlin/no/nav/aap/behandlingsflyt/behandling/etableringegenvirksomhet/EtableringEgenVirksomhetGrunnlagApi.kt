@@ -122,8 +122,13 @@ private fun utledIkkeVurderbarePerioder(
 
     val førsteDagIOppfyltPeriode = zipped
         .filter {
-            it.verdi.first?.erOppfyltForYrkesskadeSettBortIfraÅrsakssammenheng(fom, it.periode) == true || it.verdi.second?.erBehovForBistand() != true
-        }.perioder().toList().first().fom
+            it.verdi.first?.erOppfyltForYrkesskadeSettBortIfraÅrsakssammenheng(
+                fom,
+                it.periode
+            ) == true || it.verdi.second?.erBehovForBistand() != true
+        }.perioder().toList().firstOrNull()?.fom
+
+    if (førsteDagIOppfyltPeriode == null) return emptyList()
 
     val mapped = zipped
         .filter {
