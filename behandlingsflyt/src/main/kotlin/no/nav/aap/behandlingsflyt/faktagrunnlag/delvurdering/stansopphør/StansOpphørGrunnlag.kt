@@ -55,7 +55,7 @@ data class StansOpphørGrunnlag(
 }
 
 sealed interface StansEllerOpphørVurdering {
-    /* Stans/opphør gjelder fra og med [dato]. */
+    /** Stans/opphør gjelder fra og med [fom]. */
     val fom: LocalDate
 
     val vurdertIBehandling: BehandlingId
