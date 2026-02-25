@@ -17,6 +17,9 @@ import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 
@@ -64,8 +67,20 @@ class RettighetstypeSteg(
             )
         )
         vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
-        
+
+        when (kontekst.vurderingType) {
+            VurderingType.FØRSTEGANGSBEHANDLING,
+            VurderingType.REVURDERING ->
+                lagreStansOgOpphør(kontekst)
+            else -> {
+            }
+        }
+
         return Fullført
+    }
+
+    fun lagreStansOgOpphør(kontekst: FlytKontekstMedPerioder) {
+
     }
 
     companion object : FlytSteg {

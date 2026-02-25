@@ -369,7 +369,7 @@ class FlytOrkestrator(
         }
 
         log.info(
-            "Tilbakefører ${behandling.aktivtSteg()} for behandling ${behandling.referanse} med flyt $behandlingFlyt"
+            "Tilbakefører ${behandling.aktivtSteg()} for behandling ${behandling.referanse}. Vurderingsbehov: ${behandling.vurderingsbehov().map { it.type }}."
         )
         var neste: FlytSteg? = behandlingFlyt.aktivtSteg()
         while (true) {

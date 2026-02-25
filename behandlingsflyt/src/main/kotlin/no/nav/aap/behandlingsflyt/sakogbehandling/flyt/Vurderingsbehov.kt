@@ -63,11 +63,7 @@ enum class Vurderingsbehov {
          * Alle med funksjonell verdi, G-regulering holdes utenfor
          */
         fun alle(): List<Vurderingsbehov> {
-            val alle = Vurderingsbehov.entries.toMutableSet()
-
-            alle.remove(G_REGULERING)
-
-            return alle.toList()
+            return Vurderingsbehov.entries.filter { it != G_REGULERING }.toList()
         }
 
         /**
@@ -76,7 +72,7 @@ enum class Vurderingsbehov {
         fun alleInklusivGRegulering(): List<Vurderingsbehov> {
             return Vurderingsbehov.entries.toList()
         }
-        
+
         fun forAktivitetspliktbehandling(): List<Vurderingsbehov> {
             return listOf(
                 AKTIVITETSPLIKT_11_7,

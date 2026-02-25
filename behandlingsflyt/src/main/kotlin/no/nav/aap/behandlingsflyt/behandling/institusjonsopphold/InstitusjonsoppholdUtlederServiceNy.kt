@@ -348,19 +348,32 @@ class InstitusjonsoppholdUtlederServiceNy(
     private fun harOppholdSomKreverAvklaring(
         oppholdUtenBarnetillegg: Tidslinje<Boolean>
     ): Tidslinje<Boolean> {
+        val segmenter = oppholdUtenBarnetillegg.segmenter()
+
         return Tidslinje(
-            oppholdUtenBarnetillegg.segmenter()
-                .filter { segment -> segment.verdi }
-                .filter { segment -> harOppholdSomVarerMinstFireMånederOgIkkeErForKort(segment) &&
-                    harOppholdSomVarerMerEnnFireMånederOgErMinstToMånederInnIOppholdet(
-                        segment,
-                        oppholdUtenBarnetillegg.minDato()
-                    )
-                })
+            segmenter.filter { segment ->
+                val forrigePeriodeTom = segmenter
+                    .filter { it.periode.tom.isBefore(segment.periode.fom) }
+                    .maxOfOrNull { it.periode.tom }
+
+                val mindreEnnTreMånederFraForrige = forrigePeriodeTom != null &&
+                        segment.periode.fom.isBefore(forrigePeriodeTom.plusMonths(3))
+
+                mindreEnnTreMånederFraForrige ||
+                        (harOppholdSomVarerMinstFireMånederOgIkkeErForKort(segment) &&
+                                harOppholdSomVarerMerEnnFireMånederOgErMinstToMånederInnIOppholdet(
+                                    segment,
+                                    oppholdUtenBarnetillegg.minDato()
+                                ))
+            }
+        )
     }
 
     private fun harOppholdSomVarerMinstFireMånederOgIkkeErForKort(segment: Segment<Boolean>): Boolean {
         val fom = segment.fom().withDayOfMonth(1).plusMonths(1)
+        if (fom.isAfter(segment.tom())) {
+            return false
+        }
         val førsteDagMedMuligReduksjon = fom.plusMonths(3)
         return Periode(fom, segment.tom()).inneholder(førsteDagMedMuligReduksjon)
     }

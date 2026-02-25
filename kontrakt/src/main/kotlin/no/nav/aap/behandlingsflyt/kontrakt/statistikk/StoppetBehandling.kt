@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.kontrakt.statistikk
 
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.AvklaringsbehovHendelseDto
 import no.nav.aap.verdityper.dokument.JournalpostId
 import no.nav.aap.verdityper.dokument.Kanal
@@ -41,7 +42,7 @@ public data class StoppetBehandling(
     val ident: String,
     val versjon: String,
     val vurderingsbehov: List<Vurderingsbehov>,
-    val årsakTilOpprettelse: String,
+    val årsakTilOpprettelse: ÅrsakTilOpprettelse,
     val avklaringsbehov: List<AvklaringsbehovHendelseDto>,
     val hendelsesTidspunkt: LocalDateTime,
     val avsluttetBehandling: AvsluttetBehandlingDTO? = null,
