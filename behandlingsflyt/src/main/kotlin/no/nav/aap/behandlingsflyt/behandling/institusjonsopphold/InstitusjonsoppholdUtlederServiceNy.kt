@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.institusjonsopphold
 
+import no.nav.aap.behandlingsflyt.behandling.barnetillegg.RettTilBarnetillegg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.tilTidslinje
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdRepository
@@ -86,8 +87,24 @@ class InstitusjonsoppholdUtlederServiceNy(
             val oppholdUtenBarnetillegg =
                 helseOppholdTidslinje.disjoint(barnetilleggTidslinje) { p, v -> Segment(p, v.verdi) }
 
+            val helseStart = helseOppholdTidslinje.minDato()
+            val helseEnd = helseOppholdTidslinje.maxDato()
+
+            var oppholdSomKanGiReduksjon = harOppholdSomKreverAvklaring(oppholdUtenBarnetillegg)
+
+            if (barnetilleggTidslinje.isNotEmpty()) {
+                oppholdSomKanGiReduksjon = regnUtTidslinjeVedEventueltStoppIBarnetillegg(
+                    barnetilleggTidslinje,
+                    helseStart,
+                    helseEnd,
+                    helseOppholdTidslinje,
+                    oppholdSomKanGiReduksjon
+                )
+            }
+
+
             // Oppholdet må være lengre enn 3 måneder for å være aktuelt for avklaring og må ha vart i minimum 2 måneder for å være klar for avklaring
-            val oppholdSomKanGiReduksjon = harOppholdSomKreverAvklaring(oppholdUtenBarnetillegg)
+
 
             perioderSomTrengerVurdering = perioderSomTrengerVurdering.kombiner(oppholdSomKanGiReduksjon.mapValue {
                 InstitusjonsoppholdVurdering(helse = HelseOpphold(vurdering = OppholdVurdering.UAVKLART))
@@ -119,6 +136,39 @@ class InstitusjonsoppholdUtlederServiceNy(
             perioderSomTrengerVurdering = perioderSomTrengerVurdering.begrensetTil(input.rettighetsperiode)
         }
         return BehovForAvklaringer(perioderSomTrengerVurdering)
+    }
+
+    private fun regnUtTidslinjeVedEventueltStoppIBarnetillegg(
+        barnetilleggTidslinje: Tidslinje<RettTilBarnetillegg>,
+        helseStart: LocalDate,
+        helseEnd: LocalDate,
+        helseOppholdTidslinje: Tidslinje<Boolean>,
+        oppholdSomKanGiReduksjon: Tidslinje<Boolean>
+    ): Tidslinje<Boolean> {
+        var oppholdSomHarStoppIBarnetillegg = oppholdSomKanGiReduksjon
+        val barnetilleggStart = barnetilleggTidslinje.minDato()
+        val barnetilleggEnd = barnetilleggTidslinje.maxDato()
+
+        val barneTilleggetOpphørerMidtIOpphold =
+            barnetilleggStart >= helseStart &&
+                    barnetilleggEnd <= helseEnd
+        if (barneTilleggetOpphørerMidtIOpphold) {
+            val barneTilleggOpphørtPeriode = Periode(
+                fom = barnetilleggEnd.plusDays(1),
+                tom = helseEnd
+            )
+
+            val helseOppholdVedBarneTilleggOpphørt =
+                helseOppholdTidslinje.begrensetTil(barneTilleggOpphørtPeriode)
+
+            oppholdSomHarStoppIBarnetillegg =
+                harOppholdSomKreverAvklaring(
+                    helseOppholdVedBarneTilleggOpphørt,
+                    ignorerVarighet = true
+                )
+
+        }
+        return oppholdSomHarStoppIBarnetillegg
     }
 
     private fun helsevurderingSammenslåer(): JoinStyle.LEFT_JOIN<InstitusjonsoppholdVurdering, HelseOpphold, InstitusjonsoppholdVurdering> =
@@ -346,7 +396,8 @@ class InstitusjonsoppholdUtlederServiceNy(
     }
 
     private fun harOppholdSomKreverAvklaring(
-        oppholdUtenBarnetillegg: Tidslinje<Boolean>
+        oppholdUtenBarnetillegg: Tidslinje<Boolean>,
+        ignorerVarighet: Boolean? = false
     ): Tidslinje<Boolean> {
         val segmenter = oppholdUtenBarnetillegg.segmenter()
 
@@ -358,16 +409,20 @@ class InstitusjonsoppholdUtlederServiceNy(
 
                 val mindreEnnTreMånederFraForrige = forrigePeriodeTom != null &&
                         segment.periode.fom.isBefore(forrigePeriodeTom.plusMonths(3))
-
-                mindreEnnTreMånederFraForrige ||
-                        (harOppholdSomVarerMinstFireMånederOgIkkeErForKort(segment) &&
-                                harOppholdSomVarerMerEnnFireMånederOgErMinstToMånederInnIOppholdet(
-                                    segment,
-                                    oppholdUtenBarnetillegg.minDato()
-                                ))
+                if (ignorerVarighet == true) {
+                    true
+                } else {
+                    mindreEnnTreMånederFraForrige ||
+                            (harOppholdSomVarerMinstFireMånederOgIkkeErForKort(segment) &&
+                                    harOppholdSomVarerMerEnnFireMånederOgErMinstToMånederInnIOppholdet(
+                                        segment,
+                                        oppholdUtenBarnetillegg.minDato()
+                                    ))
+                }
             }
         )
     }
+
 
     private fun harOppholdSomVarerMinstFireMånederOgIkkeErForKort(segment: Segment<Boolean>): Boolean {
         val fom = segment.fom().withDayOfMonth(1).plusMonths(1)
