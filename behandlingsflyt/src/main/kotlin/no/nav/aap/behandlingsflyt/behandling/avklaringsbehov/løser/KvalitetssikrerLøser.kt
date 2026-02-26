@@ -71,6 +71,15 @@ class KvalitetssikrerLøser(
                 )
             }
 
+            if (vurderingerSomErSendtTilbake.none { it.definisjon == Definisjon.SKRIV_SYKDOMSVURDERING_BREV.kode }) {
+                avklaringsbehovene.vurderKvalitet(
+                    definisjon = Definisjon.SKRIV_SYKDOMSVURDERING_BREV,
+                    godkjent = false,
+                    begrunnelse = "En tidligere vurdering ble ikke godkjent. Brev må skrives på nytt.",
+                    vurdertAv = kontekst.bruker.ident
+                )
+            }
+
             vurderingerSomMåReåpnes.forEach { vurdering ->
                 avklaringsbehovene.reåpne(definisjon = Definisjon.forKode(vurdering.definisjon))
             }
