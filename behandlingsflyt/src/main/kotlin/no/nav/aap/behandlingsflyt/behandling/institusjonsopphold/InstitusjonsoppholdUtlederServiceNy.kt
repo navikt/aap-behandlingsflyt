@@ -107,7 +107,6 @@ class InstitusjonsoppholdUtlederServiceNy(
                         barnetilleggTidslinje,
                         helseEnd,
                         helseOppholdTidslinje,
-                        oppholdSomKanGiReduksjon
                     )
                 }
 
@@ -153,9 +152,8 @@ class InstitusjonsoppholdUtlederServiceNy(
         barnetilleggTidslinje: Tidslinje<RettTilBarnetillegg>,
         helseEnd: LocalDate,
         helseOppholdTidslinje: Tidslinje<Boolean>,
-        oppholdSomKanGiReduksjon: Tidslinje<Boolean>
     ): Tidslinje<Boolean> {
-        var oppholdSomHarStoppIBarnetillegg = oppholdSomKanGiReduksjon
+        var oppholdSomHarStoppIBarnetillegg: Tidslinje<Boolean>
 
         val barnetilleggEnd = barnetilleggTidslinje.maxDato()
 
@@ -171,7 +169,7 @@ class InstitusjonsoppholdUtlederServiceNy(
         oppholdSomHarStoppIBarnetillegg =
             harOppholdSomKreverAvklaring(
                 helseOppholdVedBarneTilleggOpphørt,
-                ignorerVarighet = true
+                ignorerVarighetsBegrensning = true
             )
 
         return oppholdSomHarStoppIBarnetillegg
@@ -403,7 +401,7 @@ class InstitusjonsoppholdUtlederServiceNy(
 
     private fun harOppholdSomKreverAvklaring(
         oppholdUtenBarnetillegg: Tidslinje<Boolean>,
-        ignorerVarighet: Boolean? = false
+        ignorerVarighetsBegrensning: Boolean? = false
     ): Tidslinje<Boolean> {
         val segmenter = oppholdUtenBarnetillegg.segmenter()
 
@@ -415,7 +413,7 @@ class InstitusjonsoppholdUtlederServiceNy(
 
                 val mindreEnnTreMånederFraForrige = forrigePeriodeTom != null &&
                         segment.periode.fom.isBefore(forrigePeriodeTom.plusMonths(3))
-                if (ignorerVarighet == true) {
+                if (ignorerVarighetsBegrensning == true) {
                     true
                 } else {
                     mindreEnnTreMånederFraForrige ||
