@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.flyt
 import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovOrkestrator
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.vedtak.TotrinnsVurdering
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarBarnetilleggLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarBistandsbehovLøsning
@@ -1309,6 +1310,7 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
 
     class BehandlingInfo(
         val åpneAvklaringsbehov: List<Avklaringsbehov>,
+        val avklaringsbehovene: Avklaringsbehovene,
         val behandling: Behandling,
         val ventebehov: List<Avklaringsbehov>,
         val repositoryProvider: RepositoryProvider,
@@ -1323,7 +1325,11 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
                     åpneAvklaringsbehov = åpneAvklaringsbehov,
                     behandling = oppdatertBehandling,
                     ventebehov = åpneAvklaringsbehov.filter { it.erVentepunkt() },
-                    repositoryProvider = postgresRepositoryRegistry.provider(connection)
+                    repositoryProvider = postgresRepositoryRegistry.provider(connection),
+                    avklaringsbehovene = Avklaringsbehovene(
+                        postgresRepositoryRegistry.provider(connection).provide(),
+                        this.id
+                    )
                 )
             )
         }
