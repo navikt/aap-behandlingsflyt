@@ -39,7 +39,7 @@ class EtableringEgenVirksomhetService(
     fun erVurderingerGyldig(
         behandlingId: BehandlingId,
         nyeVurderinger: List<EtableringEgenVirksomhetVurdering>
-    ): VirksomhetEtableringGyldig {
+    ): VirksomhetEtableringResultat {
         val behandling = behandlingRepository.hent(behandlingId)
 
         val gamleVurderinger =
@@ -50,8 +50,7 @@ class EtableringEgenVirksomhetService(
         val gyldighetPeriode =
             utledGyldighetsPeriode(behandlingId, rettighetsperiode.fom.plusDays(1))
         if (gyldighetPeriode.isEmpty()) {
-            return VirksomhetEtableringGyldig(
-                false,
+            return VirksomhetEtableringIkkeGyldig(
                 "11-5 & 11-6b må være oppfylt i minst én periode"
             )
         }
@@ -60,23 +59,20 @@ class EtableringEgenVirksomhetService(
                 gyldighetPeriode.none { gyldighetPeriode -> gyldighetPeriode.inneholder(vurdering.vurderingenGjelderFra) }
             }
         ) {
-            return VirksomhetEtableringGyldig(
-                false,
+            return VirksomhetEtableringIkkeGyldig(
                 "Vurderte perioder må falle innen en periode med oppfylt 11-5 & 11-6b")
         }
 
         val førsteMuligeDato = gyldighetPeriode.first().fom
 
         if (nyeVurderinger.any { evaluerVirksomhetVurdering(it) && it.utviklingsPerioder.isEmpty() && it.oppstartsPerioder.isEmpty() }) {
-            return VirksomhetEtableringGyldig(
-                false,
+            return VirksomhetEtableringIkkeGyldig(
                 "Må ha definert minst én periode i tidsplanen dersom vilkåret er oppfylt for en periode"
             )
         }
 
         if (alleVurderinger.none { it.vurderingenGjelderFra.isAfter(førsteMuligeDato) }) {
-            return VirksomhetEtableringGyldig(
-                false,
+            return VirksomhetEtableringIkkeGyldig(
                 "vurderingenGjelderFra må være minst én dag etter første mulige dag med AAP"
             )
         }
@@ -86,8 +82,7 @@ class EtableringEgenVirksomhetService(
 
         alleUtviklingsPerioder.maxOfOrNull { uPeriode -> uPeriode.tom }.let {
             if (alleOppstartsPerioder.any { oPeriode -> oPeriode.fom.isBefore(it) }) {
-                return VirksomhetEtableringGyldig(
-                    false,
+                return VirksomhetEtableringIkkeGyldig(
                     "Oppstartsperioder kan ikke ligge før en utviklingsperiode"
                 )
             }
@@ -101,14 +96,12 @@ class EtableringEgenVirksomhetService(
                 .sumOf { it.periode.antallHverdager().asInt }
 
         if (bruktUtviklingsDager > maksUtviklingsdager) {
-            return VirksomhetEtableringGyldig(
-                false,
+            return VirksomhetEtableringIkkeGyldig(
                 "Oppsatte utviklingsdager overstiger gjenværende dager: $bruktUtviklingsDager / $maksUtviklingsdager"
             )
         }
         if (bruktOppstartsdager > maksOppstartsdager)
-            return VirksomhetEtableringGyldig(
-                false,
+            return VirksomhetEtableringIkkeGyldig(
                 "Oppsatte oppstartsdager overstiger gjenværende dager: $bruktOppstartsdager / $maksOppstartsdager"
             )
 
@@ -144,7 +137,10 @@ class EtableringEgenVirksomhetService(
     }
 }
 
+sealed interface VirksomhetEtableringResultat
+
+data class VirksomhetEtableringIkkeGyldig(val feilmelding: String) : VirksomhetEtableringResultat
+
 data class VirksomhetEtableringGyldig(
-    val erOppfylt: Boolean,
-    val feilmelding: String? = null
-)
+    val erOppfylt: Boolean
+) : VirksomhetEtableringResultat
