@@ -2,7 +2,6 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.KvalitetssikrerLøser
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.vedtak.TotrinnsVurdering
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.KvalitetssikringLøsning
@@ -36,138 +35,150 @@ import kotlin.random.Random
 
 class KvalitetssikringsStegTest {
 
-    private val steg = KvalitetssikringsSteg(
-        avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
-        avklaringsbehovService = AvklaringsbehovService(
-            inMemoryRepositoryProvider
-        ),
-        tidligereVurderinger = FakeTidligereVurderinger(),
-        trekkKlageService = TrekkKlageService(inMemoryRepositoryProvider),
-        unleashGateway = LokalUnleash,
-    )
-
     @Test
     fun `om sykdom er løst, så kreves kvalitetssikring`() {
-        val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(1))
-        val behandling = opprettBehandling(periode)
+        Scenario().apply {
+            opprettOgLøs(Definisjon.AVKLAR_SYKDOM)
 
-        val avklaringsbehovene = InMemoryAvklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
+            kjørSteg()
 
-        opprettOgLøs(avklaringsbehovene, periode, Definisjon.AVKLAR_SYKDOM)
+            kvalitetssikre(Definisjon.AVKLAR_SYKDOM)
 
+            assertStatus(Definisjon.AVKLAR_SYKDOM, Status.KVALITETSSIKRET)
 
-        val kontekst = flytKontekstMedPerioder { this.behandling = behandling }
+            kjørSteg()
 
-        steg.utfør(kontekst)
-
-        // Kvalitetssikre
-        kvalitetssikre(behandling, avklaringsbehovene)
-
-        assertThat(
-            avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_SYKDOM)?.status()
-        ).isEqualTo(Status.KVALITETSSIKRET)
-
-        steg.utfør(kontekst)
-
-        val behov2 = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.KVALITETSSIKRING)
-        assertThat(behov2?.status()).isEqualTo(Status.AVSLUTTET)
+            assertStatus(Definisjon.KVALITETSSIKRING, Status.AVSLUTTET)
+        }
     }
 
     @Test
     fun `om sykdom løses og bistand, men kun sykdom kvalitetssikres, skal behovet holdes åpent`() {
-        val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(1))
-        val behandling = opprettBehandling(periode)
+        Scenario().apply {
+            opprettOgLøs(Definisjon.AVKLAR_SYKDOM)
+            opprettOgLøs(Definisjon.AVKLAR_BISTANDSBEHOV)
 
-        val avklaringsbehovene = InMemoryAvklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
+            kjørSteg()
 
-        opprettOgLøs(avklaringsbehovene, periode, Definisjon.AVKLAR_SYKDOM)
-        opprettOgLøs(avklaringsbehovene, periode, Definisjon.AVKLAR_BISTANDSBEHOV)
+            // Kvalitetssikrer kun sykdom
+            kvalitetssikre(Definisjon.AVKLAR_SYKDOM)
 
+            assertStatus(Definisjon.AVKLAR_SYKDOM, Status.KVALITETSSIKRET)
+            assertStatus(Definisjon.AVKLAR_BISTANDSBEHOV, Status.AVSLUTTET)
 
-        val kontekst = flytKontekstMedPerioder { this.behandling = behandling }
+            kjørSteg()
+            // Behovet er fremdeles åpent
+            assertStatus(Definisjon.KVALITETSSIKRING, Status.OPPRETTET)
 
-        steg.utfør(kontekst)
+            // Kvalitetssikrer bistand
+            kvalitetssikre(Definisjon.AVKLAR_BISTANDSBEHOV)
 
-        // Kvalitetssikre
-        kvalitetssikre(behandling, avklaringsbehovene)
+            kjørSteg()
 
-        assertThat(
-            avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_SYKDOM)?.status()
-        ).isEqualTo(Status.KVALITETSSIKRET)
-
-        assertThat(
-            avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_BISTANDSBEHOV)?.status()
-        ).isEqualTo(Status.AVSLUTTET)
-
-        steg.utfør(kontekst)
-
-        val behov2 = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.KVALITETSSIKRING)
-        assertThat(behov2?.status()).isEqualTo(Status.OPPRETTET)
+            // Nå er behovet løst
+            assertStatus(Definisjon.KVALITETSSIKRING, Status.AVSLUTTET)
+        }
     }
 
-    private fun kvalitetssikre(
-        behandling: Behandling,
-        avklaringsbehovene: Avklaringsbehovene
-    ) {
-        val resultat = KvalitetssikrerLøser(InMemoryAvklaringsbehovRepository, LokalUnleash).løs(
-            AvklaringsbehovKontekst(
-                bruker = Bruker("KVALIGUY"),
-                kontekst = FlytKontekst(
-                    sakId = behandling.sakId, behandlingId = behandling.id,
-                    forrigeBehandlingId = null,
-                    behandlingType = behandling.typeBehandling(),
-                )
+    private class Scenario {
+        private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(1))
+        private val behandling = opprettBehandling(periode)
+        private val avklaringsbehovene = InMemoryAvklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
+
+        private val steg = KvalitetssikringsSteg(
+            avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
+            avklaringsbehovService = AvklaringsbehovService(
+                inMemoryRepositoryProvider
             ),
-            KvalitetssikringLøsning(
-                vurderinger = listOf(
-                    TotrinnsVurdering(
-                        definisjon = Definisjon.AVKLAR_SYKDOM.kode,
-                        godkjent = true,
-                        begrunnelse = null,
-                        grunner = emptyList()
+            tidligereVurderinger = FakeTidligereVurderinger(),
+            trekkKlageService = TrekkKlageService(inMemoryRepositoryProvider),
+            unleashGateway = LokalUnleash,
+        )
+
+        fun kjørSteg() {
+            val kontekst = flytKontekstMedPerioder { behandling = this@Scenario.behandling }
+            steg.utfør(kontekst)
+        }
+
+        private fun opprettBehandling(periode: Periode): Behandling {
+            val person =
+                Person(
+                    PersonId(Random.nextLong()),
+                    UUID.randomUUID(),
+                    listOf(genererIdent(LocalDate.now().minusYears(23)))
+                )
+            val sak = InMemorySakRepository.finnEllerOpprett(person, periode)
+            val behandling = InMemoryBehandlingRepository.opprettBehandling(
+                sakId = sak.id,
+                typeBehandling = TypeBehandling.Førstegangsbehandling,
+                forrigeBehandlingId = null,
+                vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
+                    vurderingsbehov = listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_SØKNAD)),
+                    årsak = ÅrsakTilOpprettelse.SØKNAD
+                )
+            )
+            return behandling
+        }
+
+        fun opprettOgLøs(
+            definisjon: Definisjon
+        ) {
+            avklaringsbehovene.leggTil(
+                definisjon,
+                funnetISteg = definisjon.løsesISteg,
+                begrunnelse = "faf",
+                bruker = Bruker(VEILEDER),
+                perioderSomIkkeErTilstrekkeligVurdert = setOf(periode),
+                perioderVedtaketBehøverVurdering = setOf(periode)
+            )
+            avklaringsbehovene.løsAvklaringsbehov(definisjon, "fff", VEILEDER)
+
+            assertThat(avklaringsbehovene.hentBehovForDefinisjon(definisjon)?.erÅpent())
+                .`as`("Avklaringsbehov $definisjon skal være lukket etter løsning")
+                .isFalse
+        }
+
+        fun kvalitetssikre(definisjon: Definisjon) {
+            val resultat = KvalitetssikrerLøser(InMemoryAvklaringsbehovRepository, LokalUnleash).løs(
+                AvklaringsbehovKontekst(
+                    bruker = Bruker(KVALITETSSIKRER),
+                    kontekst = FlytKontekst(
+                        sakId = behandling.sakId,
+                        behandlingId = behandling.id,
+                        forrigeBehandlingId = null,
+                        behandlingType = behandling.typeBehandling(),
+                    )
+                ),
+                KvalitetssikringLøsning(
+                    vurderinger = listOf(
+                        TotrinnsVurdering(
+                            definisjon = definisjon.kode,
+                            godkjent = true,
+                            begrunnelse = null,
+                            grunner = emptyList()
+                        )
                     )
                 )
             )
-        )
-        avklaringsbehovene.løsAvklaringsbehov(
-            Definisjon.KVALITETSSIKRING,
-            resultat.begrunnelse,
-            "KVALIGUY",
-            resultat.kreverToTrinn
-        )
-    }
 
-    private fun opprettOgLøs(
-        avklaringsbehovene: Avklaringsbehovene,
-        periode: Periode,
-        definisjon: Definisjon
-    ) {
-        avklaringsbehovene.leggTil(
-            definisjon,
-            funnetISteg = definisjon.løsesISteg,
-            begrunnelse = "faf",
-            bruker = Bruker("VEILEDER"),
-            perioderSomIkkeErTilstrekkeligVurdert = setOf(periode),
-            perioderVedtaketBehøverVurdering = setOf(periode)
-        )
-        avklaringsbehovene.løsAvklaringsbehov(definisjon, "fff", "fff")
-
-        assertThat(avklaringsbehovene.hentBehovForDefinisjon(definisjon)?.erÅpent()).isFalse
-    }
-
-    private fun opprettBehandling(periode: Periode): Behandling {
-        val person =
-            Person(PersonId(Random.nextLong()), UUID.randomUUID(), listOf(genererIdent(LocalDate.now().minusYears(23))))
-        val sak = InMemorySakRepository.finnEllerOpprett(person, periode)
-        val behandling = InMemoryBehandlingRepository.opprettBehandling(
-            sakId = sak.id,
-            typeBehandling = TypeBehandling.Førstegangsbehandling,
-            forrigeBehandlingId = null,
-            vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
-                vurderingsbehov = listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_SØKNAD)),
-                årsak = ÅrsakTilOpprettelse.SØKNAD
+            avklaringsbehovene.løsAvklaringsbehov(
+                Definisjon.KVALITETSSIKRING,
+                resultat.begrunnelse,
+                KVALITETSSIKRER,
+                resultat.kreverToTrinn
             )
-        )
-        return behandling
+        }
+
+        fun assertStatus(definisjon: Definisjon, expected: Status) {
+            val actual = avklaringsbehovene.hentBehovForDefinisjon(definisjon)?.status()
+            assertThat(actual)
+                .`as`("Status på $definisjon")
+                .isEqualTo(expected)
+        }
+    }
+
+    private companion object {
+        const val VEILEDER = "VEILEDER"
+        const val KVALITETSSIKRER = "KVALIGUY"
     }
 }
