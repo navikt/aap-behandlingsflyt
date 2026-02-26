@@ -9,6 +9,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.lookup.repository.RepositoryProvider
 import kotlin.collections.orEmpty
 
@@ -38,8 +39,8 @@ class EtableringEgenVirksomhetLøser(
 
         val evaluering = etableringEgenVirksomhetService.erVurderingerGyldig(behandling.id, nyeVurderinger)
 
-        require(evaluering.erOppfylt) {
-            evaluering.feilmelding!!
+        if (!evaluering.erOppfylt) {
+            throw UgyldigForespørselException(evaluering.feilmelding!!)
         }
 
         val gamleVurderinger =
