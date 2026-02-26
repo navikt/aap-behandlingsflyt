@@ -18,6 +18,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonId
+import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.test.FakeTidligereVurderinger
 import no.nav.aap.behandlingsflyt.test.LokalUnleash
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
@@ -127,7 +128,7 @@ class KvalitetssikringsStegTest {
             ),
             tidligereVurderinger = FakeTidligereVurderinger(),
             trekkKlageService = TrekkKlageService(inMemoryRepositoryProvider),
-            unleashGateway = LokalUnleash,
+            unleashGateway = AlleAvskruddUnleash,
         )
 
         fun kjørSteg() {
