@@ -3,11 +3,12 @@ package no.nav.aap.behandlingsflyt.integrasjon.oppgave
 import no.nav.aap.behandlingsflyt.hendelse.oppgavestyring.OppgavestyringGateway
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.BehandlingFlytStoppetHendelse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.TilbakekrevingsbehandlingOppdatertHendelse
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.TilbakekrevingHendelseKafkaMelding
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.TilbakekrevingHendelseV0
 import no.nav.aap.behandlingsflyt.kontrakt.oppgave.EnhetForPersonRequest
 import no.nav.aap.behandlingsflyt.kontrakt.oppgave.EnhetNrDto
 import no.nav.aap.behandlingsflyt.prometheus
 import no.nav.aap.komponenter.config.requiredConfigForKey
-import no.nav.aap.komponenter.gateway.Factory
 import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
 import no.nav.aap.komponenter.httpklient.httpclient.RestClient
 import no.nav.aap.komponenter.httpklient.httpclient.post
@@ -16,13 +17,7 @@ import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.Client
 import no.nav.aap.komponenter.json.DefaultJsonMapper
 import java.net.URI
 
-class OppgavestyringGatewayImpl : OppgavestyringGateway {
-    companion object : Factory<OppgavestyringGateway> {
-        override fun konstruer(): OppgavestyringGateway {
-            return OppgavestyringGatewayImpl()
-        }
-    }
-
+object OppgavestyringGatewayImpl : OppgavestyringGateway {
     private val url = URI.create(requiredConfigForKey("integrasjon.oppgavestyring.url"))
     private val config = ClientConfig(scope = requiredConfigForKey("integrasjon.oppgavestyring.scope"))
 
@@ -46,12 +41,7 @@ class OppgavestyringGatewayImpl : OppgavestyringGateway {
     ): EnhetNrDto {
         val enhet: EnhetNrDto? = client.post<EnhetForPersonRequest, EnhetNrDto>(
             uri = url.resolve("/enhet/nay/person"),
-            request = PostRequest(
-                body = EnhetForPersonRequest(
-                    personIdent = personIdent,
-                    relevanteIdenter = relevanteIdenter
-                )
-            ),
+            request = PostRequest(body = EnhetForPersonRequest(personIdent = personIdent, relevanteIdenter = relevanteIdenter)),
             mapper = { body, _ ->
                 DefaultJsonMapper.fromJson(body)
             }

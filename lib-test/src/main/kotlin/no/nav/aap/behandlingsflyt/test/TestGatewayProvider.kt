@@ -33,7 +33,7 @@ import no.nav.aap.behandlingsflyt.integrasjon.yrkesskade.YrkesskadeRegisterGatew
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import kotlin.reflect.KClass
 
-fun testGatewayProvider(unleashGateway: KClass<out UnleashGateway> = FakeUnleashBase::class) = createGatewayProvider {
+fun testGatewayProvider(unleashGateway: KClass<out UnleashGateway>) = createGatewayProvider {
     register<PdlBarnGateway>()
     register<PdlIdentGateway>()
     register<PdlPersoninfoBulkGateway>()

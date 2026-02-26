@@ -149,7 +149,9 @@ class StegOrkestrator(
     ): Transisjon {
         val behandlingSteg = stegKonstruktør.konstruer(aktivtSteg)
 
-        log.debug("Behandler steg({}) med status({})", aktivtSteg.type(), gjeldendeStegStatus)
+        log.debug(
+            "Behandler steg(${aktivtSteg.type()}) med status(${gjeldendeStegStatus})"
+        )
 
         val transisjon = when (gjeldendeStegStatus) {
             StegStatus.START -> Fortsett
@@ -197,36 +199,29 @@ class StegOrkestrator(
         @Suppress("RECEIVER_NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
         val resultat = stegResultat.transisjon()
 
-        when (resultat) {
-            is FunnetAvklaringsbehov -> {
-                log.info(
-                    "Fant avklaringsbehov: {}",
-                    resultat.avklaringsbehov()
+        if (resultat is FunnetAvklaringsbehov) {
+            log.info(
+                "Fant avklaringsbehov: {}",
+                resultat.avklaringsbehov()
+            )
+            val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekstMedPerioder.behandlingId)
+            avklaringsbehovene.leggTil(resultat.avklaringsbehov(), funnetISteg = aktivtSteg.type(), null, null)
+        } else if (resultat is FunnetVentebehov) {
+            log.info(
+                "Fant ventebehov: {}",
+                resultat.ventebehov()
+            )
+            val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekstMedPerioder.behandlingId)
+            resultat.ventebehov().let {
+                avklaringsbehovene.leggTil(
+                    definisjon = it.definisjon,
+                    funnetISteg = aktivtSteg.type(),
+                    frist = it.frist,
+                    grunn = it.grunn,
+                    perioderVedtaketBehøverVurdering = null,
+                    perioderSomIkkeErTilstrekkeligVurdert = null,
                 )
-                val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekstMedPerioder.behandlingId)
-                avklaringsbehovene.leggTil(resultat.avklaringsbehov(), funnetISteg = aktivtSteg.type(), null, null)
             }
-            is FunnetVentebehov -> {
-                log.info(
-                    "Fant ventebehov: {}",
-                    resultat.ventebehov()
-                )
-                val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekstMedPerioder.behandlingId)
-                resultat.ventebehov().let {
-                    avklaringsbehovene.leggTil(
-                        definisjon = it.definisjon,
-                        funnetISteg = aktivtSteg.type(),
-                        frist = it.frist,
-                        grunn = it.grunn,
-                        perioderVedtaketBehøverVurdering = null,
-                        perioderSomIkkeErTilstrekkeligVurdert = null,
-                    )
-                }
-            }
-            Fortsett,
-            Stopp,
-            TilbakeførtFraBeslutter,
-            TilbakeførtFraKvalitetssikrer -> {}
         }
 
         return resultat

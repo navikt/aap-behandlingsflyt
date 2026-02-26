@@ -274,7 +274,12 @@ class KvalitetssikringFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash
             .løsOppholdskrav(fom)
             .løsAndreStatligeYtelser()
             .løsAvklaringsBehov(ForeslåVedtakLøsning())
-            .beslutterGodkjennerIkke(underkjennVurderinger = listOf(Definisjon.VURDER_RETTIGHETSPERIODE, Definisjon.AVKLAR_SYKDOM))
+            .beslutterGodkjennerIkke(
+                underkjennVurderinger = listOf(
+                    Definisjon.VURDER_RETTIGHETSPERIODE,
+                    Definisjon.AVKLAR_SYKDOM
+                )
+            )
             .løsRettighetsperiodeIngenEndring()
             .løsSykdom(fom)
 
