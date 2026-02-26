@@ -88,7 +88,7 @@ class KvalitetssikringsSteg(
         /**
          * Aldri tidligere blitt kvalitetssikret
          */
-        if (!aktuelleAvklaringsbehovForKvalitetssikring.any { it.erKvalitetssikretTidligere() }) {
+        if (aktuelleAvklaringsbehovForKvalitetssikring.any { !it.erKvalitetssikretTidligere() }) {
             return false
         }
 
