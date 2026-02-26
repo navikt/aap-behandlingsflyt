@@ -150,7 +150,7 @@ fun NormalOpenAPIRoute.flytApi(
                     }
 
                     LoggingKontekst(
-                        repositoryProvider,
+                        repositoryProvider.provide(),
                         LogKontekst(referanse = BehandlingReferanse(req.referanse))
                     ).use {
                         val behandlingVersjon = behandling.versjon
@@ -246,7 +246,7 @@ fun NormalOpenAPIRoute.flytApi(
                 dataSource.transaction { connection ->
                     val repositoryProvider = repositoryRegistry.provider(connection)
                     LoggingKontekst(
-                        repositoryProvider,
+                        repositoryProvider.provide(),
                         LogKontekst(referanse = BehandlingReferanse(request.referanse))
                     ).use {
                         val behandlingRepository =
