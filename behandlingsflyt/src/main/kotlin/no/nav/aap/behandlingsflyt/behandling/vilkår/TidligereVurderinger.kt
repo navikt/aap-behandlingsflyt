@@ -536,7 +536,7 @@ class TidligereVurderingerImpl(
                 }
             }
             .begrensetTil(kontekst.rettighetsperiode)
-
+            .komprimer()
     }
 
     override fun girAvslagEllerIngenBehandlingsgrunnlag(

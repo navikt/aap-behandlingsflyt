@@ -47,7 +47,7 @@ fun NormalOpenAPIRoute.avklaringsbehovApi(
             val flytJobbRepository = repositoryProvider.provide<FlytJobbRepository>()
 
             LoggingKontekst(
-                repositoryProvider,
+                repositoryProvider.provide(),
                 LogKontekst(referanse = behandlingReferanse)
             ).use {
                 val lås = taSkriveLåsRepository.lås(behandlingReferanse.referanse)
