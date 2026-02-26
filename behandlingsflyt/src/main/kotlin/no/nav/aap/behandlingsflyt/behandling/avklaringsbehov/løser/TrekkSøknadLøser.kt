@@ -96,20 +96,23 @@ class TrekkSøknadLøser(
     ) {
         log.info("Ingen søknad funnet for sak ${kontekst.kontekst.sakId.id}. Forsøker å trekke legeerklæring i stedet for søknad.")
 
-        val vurderingsbehov = behandling.vurderingsbehov().map { it.type }
-        require(
+        val kanTrekkeLegeerklæring =
             behandling.årsakTilOpprettelse == ÅrsakTilOpprettelse.HELSEOPPLYSNINGER
-                    && Vurderingsbehov.MOTTATT_SØKNAD !in vurderingsbehov
-                    && Vurderingsbehov.MOTTATT_LEGEERKLÆRING in vurderingsbehov
-        ) {
-            "Kan kun trekke søknad hvis den er opprettet pga. helseopplysninger og har mottatt legeerklæring som vurderingsbehov"
+                    && Vurderingsbehov.MOTTATT_LEGEERKLÆRING in behandling.vurderingsbehov().map { it.type }
+
+        if (!kanTrekkeLegeerklæring) {
+            log.error(
+                "Kan ikke trekke søknad for (${kontekst.sakId()}). Kan kun trekke søknad hvis den er " +
+                        "opprettet pga. helseopplysninger og har mottatt legeerklæring som vurderingsbehov"
+            )
+            return
         }
 
         val legeerklæring =
             mottattDokumentRepository.hentDokumenterAvType(kontekst.behandlingId(), InnsendingType.LEGEERKLÆRING)
 
         if (legeerklæring.isEmpty()) {
-            log.error("Ingen legeerklæring funnet for søknad som skal trekkes. Sak=${kontekst.kontekst.sakId.id}, behandling=${kontekst.behandlingId().id}")
+            log.error("Ingen legeerklæring funnet for søknad som skal trekkes (${kontekst.sakId()}, ${kontekst.behandlingId()})")
             return
         } else if (legeerklæring.size == 1) {
             val dokument = legeerklæring.single()
