@@ -12,9 +12,12 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedP
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
+import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
+import no.nav.aap.behandlingsflyt.test.FakeUnleashBase
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryRettighetstypeRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryStansOpphørRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryVilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.type.Periode
@@ -27,11 +30,14 @@ class RettighetstypeStegTest {
     private val behandlingRepository = InMemoryBehandlingRepository
     private val rettighetstypeRepository = InMemoryRettighetstypeRepository
     private val vilkårsresultatRepository = InMemoryVilkårsresultatRepository
+    private val stansOpphørRepository = InMemoryStansOpphørRepository
 
     private val kvoteService = KvoteService()
     private val steg = RettighetstypeSteg(
         rettighetstypeRepository = rettighetstypeRepository,
         vilkårsresultatRepository = vilkårsresultatRepository,
+        stansOpphørRepository = stansOpphørRepository,
+        unleashGateway = AlleAvskruddUnleash,
         kvoteService = kvoteService,
     )
 
