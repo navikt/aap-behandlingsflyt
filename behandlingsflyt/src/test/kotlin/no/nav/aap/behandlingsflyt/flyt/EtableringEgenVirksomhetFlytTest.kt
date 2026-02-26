@@ -12,6 +12,7 @@ import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.test.FakeUnleashBaseWithDefaultDisabled
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.komponenter.dbconnect.transaction
+import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
@@ -199,7 +200,7 @@ class EtableringEgenVirksomhetFlytTest : AbstraktFlytOrkestratorTest(VirksomhetU
     fun `Ikke oppfylt om ikke 11-5 & 11-6b er oppfylt`() {
         val (sak, behandling) = sendInnFørsteSøknad(person = TestPersoner.STANDARD_PERSON())
 
-        val feil = assertThrows<IllegalArgumentException> {
+        val feil = assertThrows<UgyldigForespørselException> {
             behandling
                 .løsSykdom(vurderingGjelderFra = sak.rettighetsperiode.fom, erOppfylt = true)
                 .løsBistand(fom = sak.rettighetsperiode.fom, erOppfylt = true, erBehovForArbeidsrettetTiltak = false)
@@ -244,7 +245,7 @@ class EtableringEgenVirksomhetFlytTest : AbstraktFlytOrkestratorTest(VirksomhetU
     fun `Skal ikke kunne overstige utviklingsperiodens kvote på 131 dager`() {
         val (sak, behandling) = sendInnFørsteSøknad(person = TestPersoner.STANDARD_PERSON())
 
-        val feil = assertThrows<IllegalArgumentException> {
+        val feil = assertThrows<UgyldigForespørselException> {
             behandling
                 .løsSykdom(vurderingGjelderFra = sak.rettighetsperiode.fom, erOppfylt = true)
                 .løsBistand(fom = sak.rettighetsperiode.fom, erOppfylt = true, erBehovForArbeidsrettetTiltak = true)
@@ -289,7 +290,7 @@ class EtableringEgenVirksomhetFlytTest : AbstraktFlytOrkestratorTest(VirksomhetU
     fun `Skal ikke kunne overstige oppstartsperiodens kvote på 66 dager`() {
         val (sak, behandling) = sendInnFørsteSøknad(person = TestPersoner.STANDARD_PERSON())
 
-        val feil = assertThrows<IllegalArgumentException> {
+        val feil = assertThrows<UgyldigForespørselException> {
             behandling
                 .løsSykdom(vurderingGjelderFra = sak.rettighetsperiode.fom, erOppfylt = true)
                 .løsBistand(fom = sak.rettighetsperiode.fom, erOppfylt = true, erBehovForArbeidsrettetTiltak = true)
@@ -334,7 +335,7 @@ class EtableringEgenVirksomhetFlytTest : AbstraktFlytOrkestratorTest(VirksomhetU
     fun `Skal ikke kunne legge oppstartsperioder før utviklingsperioden`() {
         val (sak, behandling) = sendInnFørsteSøknad(person = TestPersoner.STANDARD_PERSON())
 
-        val feil = assertThrows<IllegalArgumentException> {
+        val feil = assertThrows<UgyldigForespørselException> {
             behandling
                 .løsSykdom(vurderingGjelderFra = sak.rettighetsperiode.fom, erOppfylt = true)
                 .løsBistand(fom = sak.rettighetsperiode.fom, erOppfylt = true, erBehovForArbeidsrettetTiltak = true)
@@ -375,7 +376,7 @@ class EtableringEgenVirksomhetFlytTest : AbstraktFlytOrkestratorTest(VirksomhetU
     fun `Oppstart må være minst én dag etter første dag med innvilget AAP`() {
         val (sak, behandling) = sendInnFørsteSøknad(person = TestPersoner.STANDARD_PERSON())
 
-        val feil = assertThrows<IllegalArgumentException> {
+        val feil = assertThrows<UgyldigForespørselException> {
             behandling
                 .løsSykdom(vurderingGjelderFra = sak.rettighetsperiode.fom, erOppfylt = true)
                 .løsBistand(fom = sak.rettighetsperiode.fom, erOppfylt = true, erBehovForArbeidsrettetTiltak = true)
@@ -416,7 +417,7 @@ class EtableringEgenVirksomhetFlytTest : AbstraktFlytOrkestratorTest(VirksomhetU
     fun `Må ha definert minst én periode i tidsplanen dersom vilkåret er oppfylt for en periode`() {
         val (sak, behandling) = sendInnFørsteSøknad(person = TestPersoner.STANDARD_PERSON())
 
-        val feil = assertThrows<IllegalArgumentException> {
+        val feil = assertThrows<UgyldigForespørselException> {
             behandling
                 .løsSykdom(vurderingGjelderFra = sak.rettighetsperiode.fom, erOppfylt = true)
                 .løsBistand(fom = sak.rettighetsperiode.fom, erOppfylt = true, erBehovForArbeidsrettetTiltak = true)
