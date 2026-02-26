@@ -151,29 +151,14 @@ class InstitusjonsoppholdUtlederServiceNy(
     private fun regnUtTidslinjeVedEventueltStoppIBarnetillegg(
         barnetilleggTidslinje: Tidslinje<RettTilBarnetillegg>,
         helseEnd: LocalDate,
-        helseOppholdTidslinje: Tidslinje<Boolean>,
-    ): Tidslinje<Boolean> {
-        var oppholdSomHarStoppIBarnetillegg: Tidslinje<Boolean>
-
-        val barnetilleggEnd = barnetilleggTidslinje.maxDato()
-
-
-        val barneTilleggOpphørtPeriode = Periode(
-            fom = barnetilleggEnd.plusDays(1),
-            tom = helseEnd
+        helseOppholdTidslinje: Tidslinje<Boolean>
+    ): Tidslinje<Boolean> =
+        harOppholdSomKreverAvklaring(
+            helseOppholdTidslinje.begrensetTil(
+                Periode(fom = barnetilleggTidslinje.maxDato().plusDays(1), tom = helseEnd)
+            ),
+            ignorerVarighetsBegrensning = true
         )
-
-        val helseOppholdVedBarneTilleggOpphørt =
-            helseOppholdTidslinje.begrensetTil(barneTilleggOpphørtPeriode)
-
-        oppholdSomHarStoppIBarnetillegg =
-            harOppholdSomKreverAvklaring(
-                helseOppholdVedBarneTilleggOpphørt,
-                ignorerVarighetsBegrensning = true
-            )
-
-        return oppholdSomHarStoppIBarnetillegg
-    }
 
     private fun helsevurderingSammenslåer(): JoinStyle.LEFT_JOIN<InstitusjonsoppholdVurdering, HelseOpphold, InstitusjonsoppholdVurdering> =
         JoinStyle.LEFT_JOIN { periode, venstreSegment, høyreSegment ->
