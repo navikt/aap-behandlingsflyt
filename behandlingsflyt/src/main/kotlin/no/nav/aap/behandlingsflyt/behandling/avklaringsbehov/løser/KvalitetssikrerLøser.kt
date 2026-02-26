@@ -46,11 +46,6 @@ class KvalitetssikrerLøser(
             val vurderingerFørRetur = relevanteVurderinger
                 .filter { it.godkjent == true }
 
-            val vurderingerSomMåReåpnes = relevanteVurderinger
-                .filter { vurdering ->
-                    vurderingerSomErSendtTilbake.none { it.definisjon == vurdering.definisjon } &&
-                            vurderingerFørRetur.none { it.definisjon == vurdering.definisjon }
-                }
 
             vurderingerFørRetur.forEach { vurdering ->
                 avklaringsbehovene.vurderKvalitet(
@@ -78,10 +73,6 @@ class KvalitetssikrerLøser(
                     begrunnelse = "En tidligere vurdering ble ikke godkjent. Brev må skrives på nytt.",
                     vurdertAv = kontekst.bruker.ident
                 )
-            }
-
-            vurderingerSomMåReåpnes.forEach { vurdering ->
-                avklaringsbehovene.reåpne(definisjon = Definisjon.forKode(vurdering.definisjon))
             }
         } else {
             relevanteVurderinger.forEach { vurdering ->
