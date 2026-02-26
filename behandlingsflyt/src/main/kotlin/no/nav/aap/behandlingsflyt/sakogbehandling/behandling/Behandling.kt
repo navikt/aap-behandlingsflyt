@@ -18,7 +18,7 @@ class Behandling(
     val sakId: SakId,
     private val typeBehandling: TypeBehandling,
     private var status: Status = Status.OPPRETTET,
-    private var vurderingsbehov: List<VurderingsbehovMedPeriode> = mutableListOf(),
+    private val vurderingsbehov: List<VurderingsbehovMedPeriode> = emptyList(),
     private var stegTilstand: StegTilstand? = null,
     val årsakTilOpprettelse: ÅrsakTilOpprettelse?,
     val opprettetTidspunkt: LocalDateTime = LocalDateTime.now(),
