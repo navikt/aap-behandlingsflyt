@@ -7,6 +7,7 @@ import no.nav.aap.behandlingsflyt.prometheus
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.komponenter.config.requiredConfigForKey
+import no.nav.aap.komponenter.gateway.Factory
 import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
 import no.nav.aap.komponenter.httpklient.httpclient.Header
 import no.nav.aap.komponenter.httpklient.httpclient.RestClient
@@ -18,7 +19,13 @@ import java.net.URI
 /**
  * Se Swagger: https://yrkesskade-saker.intern.dev.nav.no/swagger-ui/index.html#/Saker%20API/hentSaker
  */
-object YrkesskadeRegisterGatewayImpl : YrkesskadeRegisterGateway {
+class YrkesskadeRegisterGatewayImpl : YrkesskadeRegisterGateway {
+    companion object : Factory<YrkesskadeRegisterGateway> {
+        override fun konstruer(): YrkesskadeRegisterGateway {
+            return YrkesskadeRegisterGatewayImpl()
+        }
+    }
+
     private val url = URI.create(requiredConfigForKey("integrasjon.yrkesskade.url")).resolve("/api/v1/saker/")
     private val config = ClientConfig(
         scope = requiredConfigForKey("integrasjon.yrkesskade.scope"),
@@ -56,7 +63,7 @@ object YrkesskadeRegisterGatewayImpl : YrkesskadeRegisterGateway {
 
         return response
             .saker
-            .filter { it.resultat in gyldigeStatuser}
+            .filter { it.resultat in gyldigeStatuser }
             .map { yrkesskade ->
                 Yrkesskade(
                     ref = yrkesskade.saksreferanse,

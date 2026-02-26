@@ -4,6 +4,8 @@ import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.HåndterConflictRes
 import no.nav.aap.behandlingsflyt.behandling.utbetaling.UtbetalingGateway
 import no.nav.aap.behandlingsflyt.prometheus
 import no.nav.aap.komponenter.config.requiredConfigForKey
+import no.nav.aap.komponenter.gateway.Factory
+import no.nav.aap.komponenter.gateway.Gateway
 import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
 import no.nav.aap.komponenter.httpklient.httpclient.Header
 import no.nav.aap.komponenter.httpklient.httpclient.RestClient
@@ -18,7 +20,13 @@ import no.nav.aap.utbetal.trekk.TrekkResponsDto
 import java.net.URI
 
 
-object UtbetalingGatewayImpl : UtbetalingGateway {
+class UtbetalingGatewayImpl : UtbetalingGateway {
+
+    companion object : Factory<UtbetalingGateway> {
+        override fun konstruer(): UtbetalingGateway {
+            return UtbetalingGatewayImpl()
+        }
+    }
 
     private val baseUri = URI.create(requiredConfigForKey("integrasjon.utbetal.url"))
     private val config = ClientConfig(scope = requiredConfigForKey("integrasjon.utbetal.scope"))

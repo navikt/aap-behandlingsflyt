@@ -25,10 +25,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Meldekort
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.dokument.KlagedokumentInformasjonUtleder
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.IKlageresultatUtleder
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageResultat
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Yrkesskadevurdering
 import no.nav.aap.behandlingsflyt.integrasjon.statistikk.StatistikkGatewayImpl
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
@@ -73,7 +70,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.IdentGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.test.FakeApiInternGateway
 import no.nav.aap.behandlingsflyt.test.Fakes
@@ -85,6 +81,7 @@ import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryMeldepliktRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryMottattDokumentRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryPåklagetBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySykdomRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryTilkjentYtelseRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryTrukketSøknadRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryUnderveisRepository
@@ -594,37 +591,6 @@ class StatistikkJobbUtførerTest {
             )
         )
 
-        val sykdomRepository = object : SykdomRepository {
-            override fun lagre(behandlingId: BehandlingId, sykdomsvurderinger: List<Sykdomsvurdering>) {
-                TODO("Not yet implemented")
-            }
-
-            override fun lagre(behandlingId: BehandlingId, yrkesskadevurdering: Yrkesskadevurdering?) {
-                TODO("Not yet implemented")
-            }
-
-            override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
-                TODO("Not yet implemented")
-            }
-
-            override fun hentHvisEksisterer(behandlingId: BehandlingId): SykdomGrunnlag {
-                TODO("Not yet implemented")
-            }
-
-            override fun hent(behandlingId: BehandlingId): SykdomGrunnlag {
-                TODO("Not yet implemented")
-            }
-
-            override fun slett(behandlingId: BehandlingId) {
-            }
-
-            override fun hentHistoriskeSykdomsvurderinger(
-                sakId: SakId, behandlingId: BehandlingId
-            ): List<Sykdomsvurdering> {
-                TODO("Not yet implemented")
-            }
-        }
-
         val utfører = StatistikkJobbUtfører(
             statistikkGateway = StatistikkGatewayImpl(), statistikkMetoder = StatistikkMetoder(
                 vilkårsresultatRepository = vilkårsResultatRepository,
@@ -634,7 +600,7 @@ class StatistikkJobbUtførerTest {
                 beregningsgrunnlagRepository = beregningsgrunnlagRepository,
                 pipService = PipService(inMemoryRepositoryProvider),
                 dokumentRepository = dokumentRepository,
-                sykdomRepository = sykdomRepository,
+                sykdomRepository = InMemorySykdomRepository,
                 underveisRepository = InMemoryUnderveisRepository,
                 trukketSøknadService = TrukketSøknadService(
                     trukketSøknadRepository = InMemoryTrukketSøknadRepository

@@ -7,6 +7,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.adapter.Inntekt
 import no.nav.aap.behandlingsflyt.prometheus
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.komponenter.config.requiredConfigForKey
+import no.nav.aap.komponenter.gateway.Factory
 import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
 import no.nav.aap.komponenter.httpklient.httpclient.Header
 import no.nav.aap.komponenter.httpklient.httpclient.RestClient
@@ -18,7 +19,13 @@ import java.net.URI
 import java.time.Year
 
 
-object InntektGatewayImpl : InntektRegisterGateway {
+class InntektGatewayImpl : InntektRegisterGateway {
+    companion object : Factory<InntektRegisterGateway> {
+        override fun konstruer(): InntektRegisterGateway {
+            return InntektGatewayImpl()
+        }
+    }
+
     private val url = URI.create(requiredConfigForKey("integrasjon.inntekt.url"))
     val config = ClientConfig(scope = requiredConfigForKey("integrasjon.inntekt.scope"))
 

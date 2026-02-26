@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreRegisterGa
 import no.nav.aap.behandlingsflyt.prometheus
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.komponenter.config.requiredConfigForKey
+import no.nav.aap.komponenter.gateway.Factory
 import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
 import no.nav.aap.komponenter.httpklient.httpclient.Header
 import no.nav.aap.komponenter.httpklient.httpclient.RestClient
@@ -35,7 +36,13 @@ data class UføreHistorikkRespons(val uforeperioder: List<UførePeriode>)
 /**
  * Finnes ikke Swagger, men endepunkter er definert [slik](https://github.com/navikt/pensjon-pen/blob/main/pen-app/src/main/java/no/nav/pensjon/pen_app/domain/uforetrygd/ekstern/uf%C3%B8rehistorikk/UforehistorikkController.kt).
  */
-object UføreGateway : UføreRegisterGateway {
+class UføreGateway : UføreRegisterGateway {
+    companion object : Factory<UføreRegisterGateway> {
+        override fun konstruer(): UføreRegisterGateway {
+            return UføreGateway()
+        }
+    }
+
     private val log = LoggerFactory.getLogger(javaClass)
     private val url = URI.create(requiredConfigForKey("integrasjon.pesys.url"))
     private val config = ClientConfig(scope = requiredConfigForKey("integrasjon.pesys.scope"))
