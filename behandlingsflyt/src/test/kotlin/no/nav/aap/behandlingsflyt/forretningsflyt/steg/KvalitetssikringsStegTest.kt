@@ -80,6 +80,25 @@ class KvalitetssikringsStegTest {
         }
     }
 
+    @Test
+    fun `om et behov underkjennes, og løses på nytt, så skal det kvalitetssikres på nytt`() {
+        Scenario().apply {
+            opprettOgLøs(Definisjon.AVKLAR_SYKDOM)
+
+            kjørSteg()
+            assertStatus(Definisjon.KVALITETSSIKRING, Status.OPPRETTET)
+
+            kvalitetssikre(Definisjon.AVKLAR_SYKDOM, godkjent = false)
+            assertStatus(Definisjon.AVKLAR_SYKDOM, Status.SENDT_TILBAKE_FRA_KVALITETSSIKRER)
+
+            opprettOgLøs(Definisjon.AVKLAR_SYKDOM)
+
+            kvalitetssikre(Definisjon.AVKLAR_SYKDOM, godkjent = true)
+            assertStatus(Definisjon.AVKLAR_SYKDOM, Status.KVALITETSSIKRET)
+            assertStatus(Definisjon.KVALITETSSIKRING, Status.AVSLUTTET)
+        }
+    }
+
     private class Scenario {
         private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(1))
         private val behandling = opprettBehandling(periode)
@@ -138,8 +157,9 @@ class KvalitetssikringsStegTest {
                 .isFalse
         }
 
-        fun kvalitetssikre(definisjon: Definisjon) {
-            val resultat = KvalitetssikrerLøser(InMemoryAvklaringsbehovRepository, LokalUnleash).løs(
+        fun kvalitetssikre(definisjon: Definisjon, godkjent: Boolean = true) {
+            val løser = KvalitetssikrerLøser(InMemoryAvklaringsbehovRepository, LokalUnleash)
+            val resultat = løser.løs(
                 AvklaringsbehovKontekst(
                     bruker = Bruker(KVALITETSSIKRER),
                     kontekst = FlytKontekst(
@@ -153,8 +173,8 @@ class KvalitetssikringsStegTest {
                     vurderinger = listOf(
                         TotrinnsVurdering(
                             definisjon = definisjon.kode,
-                            godkjent = true,
-                            begrunnelse = null,
+                            godkjent = godkjent,
+                            begrunnelse = if (godkjent) null else "Ikke godkjent",
                             grunner = emptyList()
                         )
                     )
