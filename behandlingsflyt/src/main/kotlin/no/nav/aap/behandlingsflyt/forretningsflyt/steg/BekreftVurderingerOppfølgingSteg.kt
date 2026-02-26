@@ -85,6 +85,7 @@ class BekreftVurderingerOppfølgingSteg(
         return avklaringsbehovene
             .alle()
             .filter { it.løsesISteg().gruppe == StegGruppe.SYKDOM }
+            .filterNot { it.løsesISteg() == type() }
             .filter { it.definisjon.løsesAv.contains(Rolle.SAKSBEHANDLER_OPPFOLGING) }
             .filter { it.aktivHistorikk.any { it.status == Status.AVSLUTTET } }
     }

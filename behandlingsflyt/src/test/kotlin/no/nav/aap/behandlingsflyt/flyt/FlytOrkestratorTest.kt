@@ -34,6 +34,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
         )
             .løsBistand(sak.rettighetsperiode.fom)
             .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
             .medKontekst {
                 assertThat(this.åpneAvklaringsbehov.map { it.definisjon }).describedAs {
                     "Revurdering av sykdom skal gå rett til beslutter når ingen avklaringsbehov trenger å løses av NAY"
@@ -51,6 +52,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             vissVarighet = false
         )
             .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
             .løsAvklaringsBehov(
                 PeriodisertAvklarSykepengerErstatningLøsning(
                     løsningerForPerioder = listOf(PeriodisertSykepengerVurderingDto(

@@ -29,6 +29,7 @@ class KvalitetssikringFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash
             .løsBistand(fom)
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
             .kvalitetssikre()
 
         val avklaringsbehovSomKreverKvalitetssikring = hentAlleAvklaringsbehov(behandling)
@@ -52,6 +53,7 @@ class KvalitetssikringFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash
             .løsBistand(fom)
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
             .kvalitetssikre(underkjennVurderinger = Definisjon.entries)
 
         val avklaringsbehovSomKreverKvalitetssikring = hentAlleAvklaringsbehov(behandling)
@@ -75,6 +77,7 @@ class KvalitetssikringFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash
             .løsBistand(fom)
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
             .kvalitetssikre(underkjennVurderinger = listOf(Definisjon.AVKLAR_SYKDOM))
 
         val avklaringsbehovSomKreverKvalitetssikring = hentAlleAvklaringsbehov(behandling)
@@ -107,6 +110,7 @@ class KvalitetssikringFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash
             .løsBistand(fom)
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
             .kvalitetssikre(
                 behovÅKvalitetssikre = listOf(Definisjon.AVKLAR_BISTANDSBEHOV),
                 underkjennVurderinger = listOf(Definisjon.AVKLAR_BISTANDSBEHOV)
@@ -137,6 +141,7 @@ class KvalitetssikringFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash
             .løsBistand(fom)
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
             .kvalitetssikre(underkjennVurderinger = listOf(Definisjon.AVKLAR_BISTANDSBEHOV))
 
         val avklaringsbehovSomKreverKvalitetssikring = hentAlleAvklaringsbehov(behandling)
@@ -165,6 +170,7 @@ class KvalitetssikringFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash
             .løsBistand(fom)
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
             .kvalitetssikre(underkjennVurderinger = listOf(Definisjon.SKRIV_SYKDOMSVURDERING_BREV))
 
         val avklaringsbehovSomKreverKvalitetssikring = hentAlleAvklaringsbehov(behandling)
@@ -193,6 +199,7 @@ class KvalitetssikringFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash
             .løsBistand(fom)
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
             .kvalitetssikre()
             .løsBeregningstidspunkt()
             .løsOppholdskrav(fom)
@@ -204,6 +211,7 @@ class KvalitetssikringFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash
                 assertThat(åpneAvklaringsbehov)
                     .anyMatch { it.definisjon == Definisjon.KVALITETSSIKRING }
             }
+            .bekreftVurderinger()
             .kvalitetssikre()
             .foreslåVedtak()
             .fattVedtak()
@@ -233,6 +241,7 @@ class KvalitetssikringFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash
             .løsBistand(fom)
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
             .kvalitetssikre()
             .løsBeregningstidspunkt()
             .løsOppholdskrav(fom)
@@ -269,6 +278,7 @@ class KvalitetssikringFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash
             .løsBistand(fom)
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
             .kvalitetssikre()
             .løsBeregningstidspunkt()
             .løsOppholdskrav(fom)
@@ -303,6 +313,7 @@ class KvalitetssikringFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash
             .løsBistand(fom)
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
             .kvalitetssikre()
 
         val oppdatertBehandling = sak.opprettManuellRevurdering(listOf(Vurderingsbehov.VURDER_RETTIGHETSPERIODE))
@@ -312,6 +323,7 @@ class KvalitetssikringFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash
             .løsSykdom(nyStartdato)
             .løsBistand(nyStartdato)
             .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
 
         val stegetsEgetBehov = hentAlleAvklaringsbehov(oppdatertBehandling)
             .filter { behov -> behov.definisjon == Definisjon.KVALITETSSIKRING }
@@ -334,6 +346,7 @@ class KvalitetssikringFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash
             .løsBistand(fom)
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
             .kvalitetssikre()
 
         val oppdatertBehandling = sak.opprettManuellRevurdering(listOf(Vurderingsbehov.VURDER_RETTIGHETSPERIODE))

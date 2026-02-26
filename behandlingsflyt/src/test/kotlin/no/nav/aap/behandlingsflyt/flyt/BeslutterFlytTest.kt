@@ -81,6 +81,7 @@ class BeslutterFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class
                 assertThat(åpneAvklaringsbehov).anySatisfy { behov -> assertThat(behov.definisjon).isEqualTo(Definisjon.KVALITETSSIKRING) }
                 assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
             }
+            .bekreftVurderinger()
             .kvalitetssikre()
             .løsAvklaringsBehov(
                 FastsettBeregningstidspunktLøsning(
@@ -124,6 +125,7 @@ class BeslutterFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class
                 ),
                 bruker = Bruker("SAKSBEHANDLER")
             )
+            .bekreftVurderinger()
             .kvalitetssikre()
             .løsAvklaringsBehov(
                 FastsettBeregningstidspunktLøsning(
@@ -193,6 +195,7 @@ class BeslutterFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class
                 assertThat(åpneAvklaringsbehov.map { it.definisjon }).containsExactly(Definisjon.KVALITETSSIKRING)
                 assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
             }
+            .bekreftVurderinger()
             .kvalitetssikre()
             .løsBeregningstidspunkt()
             .løsOppholdskrav(periode.fom)
@@ -244,6 +247,7 @@ class BeslutterFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class
         ).løsBistand(periode.fom)
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
             .kvalitetssikre()
             .løsBeregningstidspunkt()
             .løsOppholdskrav(periode.fom)

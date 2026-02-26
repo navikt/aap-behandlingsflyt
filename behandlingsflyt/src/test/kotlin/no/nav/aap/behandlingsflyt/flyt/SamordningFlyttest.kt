@@ -92,6 +92,7 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::clas
                 ),
             )
             .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
             .kvalitetssikre()
             .løsBeregningstidspunkt()
             .løsOppholdskrav(fom)
@@ -377,6 +378,7 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::clas
                 ),
             )
             .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
             .kvalitetssikre()
             .løsAvklaringsBehov(
                 FastsettBeregningstidspunktLøsning(
@@ -467,6 +469,7 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::clas
             .løsBistand(periode.fom)
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
             .kvalitetssikre()
             .løsBeregningstidspunkt()
             .løsOppholdskrav(fom)

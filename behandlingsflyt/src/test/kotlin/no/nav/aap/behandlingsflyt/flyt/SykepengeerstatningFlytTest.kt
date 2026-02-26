@@ -75,6 +75,7 @@ class SykepengeerstatningFlytTest(val unleashGateway: KClass<UnleashGateway>) :
             }
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
             .kvalitetssikre()
             .medKontekst {
                 assertThat(åpneAvklaringsbehov.map { it.definisjon }).describedAs(
@@ -177,6 +178,7 @@ class SykepengeerstatningFlytTest(val unleashGateway: KClass<UnleashGateway>) :
             )
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
             .kvalitetssikre()
             .medKontekst {
                 assertThat(åpneAvklaringsbehov).anySatisfy { assertThat(it.definisjon).isEqualTo(Definisjon.AVKLAR_SYKEPENGEERSTATNING) }
@@ -268,6 +270,7 @@ class SykepengeerstatningFlytTest(val unleashGateway: KClass<UnleashGateway>) :
         revurdereFramTilOgMedSykdom(sak, gjelderFra)
             .løsBistand(gjelderFra)
             .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
             .medKontekst {
                 assertThat(this.åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
                     .describedAs("Siden vurderingenGjelderFra ikke er lik kravdato (rettighetsperiode.fom), så skal man ikke vurdere 11-13")
@@ -316,6 +319,7 @@ class SykepengeerstatningFlytTest(val unleashGateway: KClass<UnleashGateway>) :
         )
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
             .kvalitetssikre()
             .medKontekst {
                 assertThat(åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
@@ -391,6 +395,7 @@ class SykepengeerstatningFlytTest(val unleashGateway: KClass<UnleashGateway>) :
                 assertThat(this.åpneAvklaringsbehov.map { it.definisjon }).containsOnly(Definisjon.SKRIV_SYKDOMSVURDERING_BREV)
             }
             .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
             .medKontekst {
                 assertThat(this.åpneAvklaringsbehov.map { it.definisjon }).containsOnly(Definisjon.FATTE_VEDTAK)
 
@@ -454,6 +459,7 @@ class SykepengeerstatningFlytTest(val unleashGateway: KClass<UnleashGateway>) :
             .løsOvergangUføre(revurdering2Fom)
             .løsOvergangArbeid(Utfall.IKKE_OPPFYLT, periode.fom)
             .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
             .løsAvklaringsBehov(
                 PeriodisertAvklarSykepengerErstatningLøsning(
                     løsningerForPerioder = listOf(
@@ -550,6 +556,7 @@ class SykepengeerstatningFlytTest(val unleashGateway: KClass<UnleashGateway>) :
 
         revurdereFramTilOgMedSykdom(sak, sak.rettighetsperiode.fom, vissVarighet = false)
             .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
             .medKontekst {
                 assertThat(this.åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
                     .describedAs("Siden vurderingenGjelderFra er lik kravdato (rettighetsperiode.fom), så kan man revurdere 11-13")
