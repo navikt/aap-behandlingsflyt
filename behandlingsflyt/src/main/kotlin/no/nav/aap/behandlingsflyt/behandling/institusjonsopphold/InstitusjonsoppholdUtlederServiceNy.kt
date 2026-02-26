@@ -92,14 +92,25 @@ class InstitusjonsoppholdUtlederServiceNy(
 
             var oppholdSomKanGiReduksjon = harOppholdSomKreverAvklaring(oppholdUtenBarnetillegg)
 
+
+            //Håndterer den sære casen ved at forsørgeransvar opphører
             if (barnetilleggTidslinje.isNotEmpty()) {
-                oppholdSomKanGiReduksjon = regnUtTidslinjeVedEventueltStoppIBarnetillegg(
-                    barnetilleggTidslinje,
-                    helseStart,
-                    helseEnd,
-                    helseOppholdTidslinje,
-                    oppholdSomKanGiReduksjon
-                )
+
+                val barnetilleggStart = barnetilleggTidslinje.minDato()
+                val barnetilleggEnd = barnetilleggTidslinje.maxDato()
+
+                val barneTilleggetOpphørerMidtIOpphold =
+                    barnetilleggStart >= helseStart &&
+                            barnetilleggEnd <= helseEnd
+                if (barneTilleggetOpphørerMidtIOpphold) {
+                    oppholdSomKanGiReduksjon = regnUtTidslinjeVedEventueltStoppIBarnetillegg(
+                        barnetilleggTidslinje,
+                        helseEnd,
+                        helseOppholdTidslinje,
+                        oppholdSomKanGiReduksjon
+                    )
+                }
+
             }
 
 
@@ -140,34 +151,29 @@ class InstitusjonsoppholdUtlederServiceNy(
 
     private fun regnUtTidslinjeVedEventueltStoppIBarnetillegg(
         barnetilleggTidslinje: Tidslinje<RettTilBarnetillegg>,
-        helseStart: LocalDate,
         helseEnd: LocalDate,
         helseOppholdTidslinje: Tidslinje<Boolean>,
         oppholdSomKanGiReduksjon: Tidslinje<Boolean>
     ): Tidslinje<Boolean> {
         var oppholdSomHarStoppIBarnetillegg = oppholdSomKanGiReduksjon
-        val barnetilleggStart = barnetilleggTidslinje.minDato()
+
         val barnetilleggEnd = barnetilleggTidslinje.maxDato()
 
-        val barneTilleggetOpphørerMidtIOpphold =
-            barnetilleggStart >= helseStart &&
-                    barnetilleggEnd <= helseEnd
-        if (barneTilleggetOpphørerMidtIOpphold) {
-            val barneTilleggOpphørtPeriode = Periode(
-                fom = barnetilleggEnd.plusDays(1),
-                tom = helseEnd
+
+        val barneTilleggOpphørtPeriode = Periode(
+            fom = barnetilleggEnd.plusDays(1),
+            tom = helseEnd
+        )
+
+        val helseOppholdVedBarneTilleggOpphørt =
+            helseOppholdTidslinje.begrensetTil(barneTilleggOpphørtPeriode)
+
+        oppholdSomHarStoppIBarnetillegg =
+            harOppholdSomKreverAvklaring(
+                helseOppholdVedBarneTilleggOpphørt,
+                ignorerVarighet = true
             )
 
-            val helseOppholdVedBarneTilleggOpphørt =
-                helseOppholdTidslinje.begrensetTil(barneTilleggOpphørtPeriode)
-
-            oppholdSomHarStoppIBarnetillegg =
-                harOppholdSomKreverAvklaring(
-                    helseOppholdVedBarneTilleggOpphørt,
-                    ignorerVarighet = true
-                )
-
-        }
         return oppholdSomHarStoppIBarnetillegg
     }
 
