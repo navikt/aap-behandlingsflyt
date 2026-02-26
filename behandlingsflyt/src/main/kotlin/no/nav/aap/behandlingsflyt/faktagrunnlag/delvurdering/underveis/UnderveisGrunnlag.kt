@@ -23,7 +23,7 @@ data class UnderveisGrunnlag(
     fun sisteDagMedYtelse() = perioder.last { it.utfall == Utfall.OPPFYLT }.periode.tom
 
     fun utledInnfriddePerioderForRettighet(rettighetsType: RettighetsType): List<Underveisperiode> {
-        return perioder.filter { it.rettighetsType == rettighetsType && it.avslagsårsak == null }
+        return perioder.filter { it.rettighetsType == rettighetsType && it.utfall == Utfall.OPPFYLT }
     }
 
     fun utledStartdatoForRettighet(rettighetsType: RettighetsType): LocalDate? {
