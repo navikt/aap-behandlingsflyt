@@ -9,7 +9,10 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
@@ -58,7 +61,7 @@ class TrekkSøknadLøser(
                     kontekst.bruker.ident
                 )
             ) {
-                forsøkTrekkLegeerklæring(kontekst, løsning)
+                forsøkTrekkLegeerklæring(kontekst, løsning, behandling)
             } else {
                 log.error(
                     "Prøver å trekke søknad, men det finnes ingen søknad knyttet til behandlingen. " +
@@ -88,9 +91,19 @@ class TrekkSøknadLøser(
      **/
     private fun forsøkTrekkLegeerklæring(
         kontekst: AvklaringsbehovKontekst,
-        løsning: TrekkSøknadLøsning
+        løsning: TrekkSøknadLøsning,
+        behandling: Behandling
     ) {
         log.info("Ingen søknad funnet for sak ${kontekst.kontekst.sakId.id}. Forsøker å trekke legeerklæring i stedet for søknad.")
+
+        val vurderingsbehov = behandling.vurderingsbehov().map { it.type }
+        require(
+            behandling.årsakTilOpprettelse == ÅrsakTilOpprettelse.HELSEOPPLYSNINGER
+                    && Vurderingsbehov.MOTTATT_SØKNAD !in vurderingsbehov
+                    && Vurderingsbehov.MOTTATT_LEGEERKLÆRING in vurderingsbehov
+        ) {
+            "Kan kun trekke søknad hvis den er opprettet pga. helseopplysninger og har mottatt legeerklæring som vurderingsbehov"
+        }
 
         val legeerklæring =
             mottattDokumentRepository.hentDokumenterAvType(kontekst.behandlingId(), InnsendingType.LEGEERKLÆRING)
