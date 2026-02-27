@@ -6,19 +6,19 @@ import io.mockk.just
 import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
-import no.nav.aap.behandlingsflyt.behandling.vedtakslengde.VedtakslengdeUtvidelse
 import no.nav.aap.behandlingsflyt.behandling.vedtakslengde.VedtakslengdeService
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
+import no.nav.aap.behandlingsflyt.behandling.vedtakslengde.VedtakslengdeUtvidelse
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingMedVedtak
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.desember
 import no.nav.aap.behandlingsflyt.test.fixedClock
 import no.nav.aap.komponenter.type.Periode
@@ -26,7 +26,6 @@ import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.JobbInput
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import java.time.LocalDate
 import java.time.LocalDateTime
 
 class OpprettJobbUtvidVedtakslengdeJobbUtførerTest {
@@ -55,7 +54,7 @@ class OpprettJobbUtvidVedtakslengdeJobbUtførerTest {
         val jobbInputSak = JobbInput(OpprettBehandlingUtvidVedtakslengdeJobbUtfører).forSak(sakId.id)
 
         every { vedtakslengdeService.hentSakerAktuelleForUtvidelseAvVedtakslengde(any()) } returns setOf(sakId)
-        every { vedtakslengdeService.hentNesteVedtakslengdeUtvidelse(behandlingId, behandlingId, any<Periode>(), any<LocalDate>())} returns VedtakslengdeUtvidelse.Automatisk(
+        every { vedtakslengdeService.hentNesteVedtakslengdeUtvidelse(behandlingId, behandlingId, any<Periode>())} returns VedtakslengdeUtvidelse.Automatisk(
             forrigeSluttdato = dagensDato,
             nySluttdato = dagensDato.plusYears(1),
         )
@@ -85,7 +84,7 @@ class OpprettJobbUtvidVedtakslengdeJobbUtførerTest {
     @Test
     fun `skal ikke opprette jobber hvis skalUtvideSluttdato er IKKE_AKTUELL`() {
         every { vedtakslengdeService.hentSakerAktuelleForUtvidelseAvVedtakslengde(any()) } returns setOf(sakId)
-        every { vedtakslengdeService.hentNesteVedtakslengdeUtvidelse(behandlingId, behandlingId, any<Periode>(), any<LocalDate>())} returns VedtakslengdeUtvidelse.IkkeAktuell
+        every { vedtakslengdeService.hentNesteVedtakslengdeUtvidelse(behandlingId, behandlingId, any<Periode>())} returns VedtakslengdeUtvidelse.IkkeAktuell
         every { behandlingService.finnBehandlingMedSisteFattedeVedtak(sakId) } returns behandlingMedVedtak()
         every { sakRepository.hent(sakId) } returns mockk<Sak> { every { rettighetsperiode } returns Periode(dagensDato.minusYears(1), dagensDato.plusYears(1)) }
 

@@ -49,9 +49,11 @@ class VedtakslengdeSteg(
 
             VurderingType.UTVID_VEDTAKSLENGDE -> {
                 val vedtakslengdeUtvidelse = vedtakslengdeService.hentNesteVedtakslengdeUtvidelse(
-                    kontekst.behandlingId,
-                    kontekst.forrigeBehandlingId,
-                    kontekst.rettighetsperiode)
+                    behandlingId = kontekst.behandlingId,
+                    forrigeBehandlingId = kontekst.forrigeBehandlingId,
+                    rettighetsperiode = kontekst.rettighetsperiode
+                )
+
                 if (vedtakslengdeUtvidelse is VedtakslengdeUtvidelse.Automatisk) {
                     vedtakslengdeService.utvidVedtakslengde(
                         behandlingId = kontekst.behandlingId,

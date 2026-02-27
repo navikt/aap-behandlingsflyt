@@ -66,8 +66,7 @@ class OpprettJobbUtvidVedtakslengdeJobbUtfører(
             val vedtakslengdeUtvidelse = vedtakslengdeService.hentNesteVedtakslengdeUtvidelse(
                 behandlingId = sisteGjeldendeBehandling.id,
                 forrigeBehandlingId = sisteGjeldendeBehandling.id,
-                rettighetsperiode = rettighetsperiode,
-                datoForUtvidelse = dato
+                rettighetsperiode = rettighetsperiode
             )
 
             if (vedtakslengdeUtvidelse is VedtakslengdeUtvidelse.Manuell) {

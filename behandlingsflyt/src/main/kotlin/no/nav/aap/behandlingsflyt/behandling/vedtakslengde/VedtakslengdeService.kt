@@ -60,7 +60,6 @@ class VedtakslengdeService(
         behandlingId: BehandlingId,
         forrigeBehandlingId: BehandlingId?,
         rettighetsperiode: Periode,
-        datoForUtvidelse: LocalDate = LocalDate.now(clock).plusDays(ANTALL_DAGER_FØR_UTVIDELSE)
     ): VedtakslengdeUtvidelse {
         val vedtakslengdeGrunnlag = forrigeBehandlingId?.let { vedtakslengdeRepository.hentHvisEksisterer(forrigeBehandlingId) }
         val vedtattSluttdato = hentVedtattSluttdato(forrigeBehandlingId, vedtakslengdeGrunnlag)
@@ -71,19 +70,14 @@ class VedtakslengdeService(
             val periodeMedFremtidigRettOrdinær = hentNestePeriodeMedFremtidigRettOrdinær(vedtattSluttdato, behandlingId)
             val sluttdatoOrdinærRettighet = periodeMedFremtidigRettOrdinær?.tom
 
-            // Under ett år med ordinær rett – sjekk om avslagsårsakene er gyldige for manuell utvidelse
-            if (sluttdatoOrdinærRettighet != null && datoForUtvidelse >= vedtattSluttdato && sluttdatoOrdinærRettighet <= nyForventetSluttdato) {
+            if (sluttdatoOrdinærRettighet != null && sluttdatoOrdinærRettighet <= nyForventetSluttdato) {
+                // Ett år eller mindre med ordinær rettighet og nyForventetSluttdato er mindre eller lik sluttdato rettighet
                 val forventetStansEllerOpphørFom = sluttdatoOrdinærRettighet.plusDays(1)
                 val avslagsårsaker = hentAvslagsårsakerVedStansEllerOpphør(behandlingId, rettighetsperiode, forventetStansEllerOpphørFom)
-                val gyldigForAutomatiskUtvidelseAvVedtakslengde = gyldigForAutomatiskUtvidelseAvVedtakslengde(avslagsårsaker)
-
-                log.info("Behandling $behandlingId har " +
-                        "sluttdatoOrdinærRettighet=$sluttdatoOrdinærRettighet, " +
-                        "forrigeSluttdato=$vedtattSluttdato og " +
-                        "gyldigForAutomatiskUtvidelseAvVedtakslengde=$gyldigForAutomatiskUtvidelseAvVedtakslengde")
 
                 return if (unleashGateway.isEnabled(BehandlingsflytFeature.UtvidVedtakslengdeUnderEttAr)
                     && gyldigForAutomatiskUtvidelseAvVedtakslengde(avslagsårsaker)) {
+
                     VedtakslengdeUtvidelse.Automatisk(
                         forrigeSluttdato = vedtattSluttdato,
                         nySluttdato = sluttdatoOrdinærRettighet,
@@ -98,12 +92,8 @@ class VedtakslengdeService(
                 }
 
             } else {
-                log.info("Behandling $behandlingId har " +
-                        "periodeMedFremtidigRettOrdinær=$periodeMedFremtidigRettOrdinær og " +
-                        "forrigeSluttdato=$vedtattSluttdato")
-
-                return if (datoForUtvidelse >= vedtattSluttdato && periodeMedFremtidigRettOrdinær != null) {
-                    // Helt år med ordinær rett tilgjengelig
+                return if (periodeMedFremtidigRettOrdinær != null) {
+                    // Kan utvide med et helt år ordinær rettighet og ingen avslag påfølgende dato
                     VedtakslengdeUtvidelse.Automatisk(
                         forrigeSluttdato = vedtattSluttdato,
                         nySluttdato = nyForventetSluttdato,
@@ -127,60 +117,6 @@ class VedtakslengdeService(
         val vedtakslengdeGrunnlag = forrigeBehandlingId?.let { vedtakslengdeRepository.hentHvisEksisterer(forrigeBehandlingId) }
         val nesteUtvidelse = hentNesteUtvidelse(vedtakslengdeGrunnlag?.vurdering)
         lagreVedtakslengdeVurdering(behandlingId, vedtakslengdeUtvidelse.nySluttdato, nesteUtvidelse)
-    }
-
-    // TODO utgår
-    fun utvidVedtakslengde(
-        behandlingId: BehandlingId,
-        forrigeBehandlingId: BehandlingId?,
-        rettighetsperiode: Periode,
-    ) {
-        val vedtakslengdeGrunnlag = forrigeBehandlingId?.let { vedtakslengdeRepository.hentHvisEksisterer(forrigeBehandlingId) }
-        val vedtattSluttdato = hentVedtattSluttdato(forrigeBehandlingId, vedtakslengdeGrunnlag)
-
-        if (vedtattSluttdato != null) {
-            val forrigeUtvidelse = vedtakslengdeGrunnlag?.vurdering
-            val utvidelse = hentNesteUtvidelse(forrigeUtvidelse)
-
-            val nyForventetSluttdato = vedtattSluttdato.plussEtÅrMedHverdager(utvidelse)
-            val periodeMedFremtidigRettOrdinær = requireNotNull(hentNestePeriodeMedFremtidigRettOrdinær(vedtattSluttdato, behandlingId)) {
-                "Kan ikke kjøre utvide vedtakslengde dersom det ikke finnes periode med fremtidig ordinær rettighet"
-            }
-
-            if (unleashGateway.isEnabled(BehandlingsflytFeature.UtvidVedtakslengdeUnderEttAr)) {
-                val sluttdatoOrdinærRettighet = periodeMedFremtidigRettOrdinær.tom
-
-                // Gir ett helt år om vi kan, hvis ikke må vi sjekke at årsaken er en av de forventede avslagsårsakene
-                if (sluttdatoOrdinærRettighet <= nyForventetSluttdato) {
-                    val forventetStansEllerOpphørFom = sluttdatoOrdinærRettighet.plusDays(1)
-
-                    // Henter årsakene til at ordinær rett ikke oppfylles for å se om disse er mulig å behandle automatisk
-                    val avslagsårsaker = hentAvslagsårsakerVedStansEllerOpphør(behandlingId, rettighetsperiode, forventetStansEllerOpphørFom)
-
-                    // Sjekker at avslagsårsakene er gyldige for automatisk utvidelse av vedtakslengde
-                    if (gyldigForAutomatiskUtvidelseAvVedtakslengde(avslagsårsaker)) {
-                        lagreVedtakslengdeVurdering(behandlingId, sluttdatoOrdinærRettighet, utvidelse)
-
-                    } else {
-                        // Ingen avslagsårsak eller en årsak som vi ikke har støtte for i brev - bør ikke havne her
-                        throw IllegalArgumentException("Kunne ikke utvide vedtakslengde automatisk for avslagsårsaker " +
-                                "$avslagsårsaker. Forventet minst en eller flere av følgende godkjente avslagsårsaker " +
-                                "${gyldigeAvslagsårsakerForAutomatiskBehandling()}")
-                    }
-
-                } else {
-                    // Utvider med ett år
-                    lagreVedtakslengdeVurdering(behandlingId, nyForventetSluttdato, utvidelse)
-                }
-
-            } else {
-                // Utvider med ett år
-                lagreVedtakslengdeVurdering(behandlingId, nyForventetSluttdato, utvidelse)
-            }
-
-        } else {
-            log.info("Behandling $behandlingId har ingen vedtatt sluttdato, ingen utvidelse nødvendig")
-        }
     }
 
     private fun hentAvslagsårsakerVedStansEllerOpphør(
