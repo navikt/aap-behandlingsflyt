@@ -65,14 +65,37 @@ fun finnEllerOpprettBehandling(
         .finnEllerOpprettOrdinærBehandling(sak.id, VurderingsbehovOgÅrsak(vurderingsbehov, årsakTilOpprettelse))
 }
 
-fun sak(connection: DBConnection, periode: Periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))): Sak {
-    return sak(postgresRepositoryRegistry.provider(connection), periode)
+fun sak(connection: DBConnection, søknadsdato: LocalDate = LocalDate.now()): Sak {
+    return sak(postgresRepositoryRegistry.provider(connection), søknadsdato)
 }
 
 fun sak(
     repositoryProvider: RepositoryProvider,
-    periode: Periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
+    søknadsdato: LocalDate = LocalDate.now(),
 ): Sak {
+    return PersonOgSakService(
+        FakePdlGateway,
+        FakeApiInternGateway.konstruer(),
+        repositoryProvider.provide(),
+        repositoryProvider.provide()
+    ).finnEllerOpprett(ident(), søknadsdato)
+}
+
+@Deprecated("Sluttdato for rettighetesperiode er alltid Tid.MAKS for nye/migrerte saker. Send kun med søknadsdato, med mindre du tester koden din for ikke-migrerte saker.")
+fun sak(
+    connection: DBConnection,
+    periode: Periode,
+): Sak {
+    @Suppress("DEPRECATION")
+    return sak(postgresRepositoryRegistry.provider(connection), periode)
+}
+
+@Deprecated("Sluttdato for rettighetesperiode er alltid Tid.MAKS for nye/migrerte saker. Send kun med søknadsdato, med mindre du tester koden din for ikke-migrerte saker.")
+fun sak(
+    repositoryProvider: RepositoryProvider,
+    periode: Periode,
+): Sak {
+    @Suppress("DEPRECATION")
     return PersonOgSakService(
         FakePdlGateway,
         FakeApiInternGateway.konstruer(),
