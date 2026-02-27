@@ -13,7 +13,6 @@ data class VedtakslengdeGrunnlag(
 
 data class VedtakslengdeVurdering(
     val sluttdato: LocalDate,
-    val sluttdatoBegrensetAv: Set<Avslagsårsak> = emptySet(),
     val utvidetMed: ÅrMedHverdager,
     val vurdertAv: Bruker,
     val vurdertIBehandling: BehandlingId,

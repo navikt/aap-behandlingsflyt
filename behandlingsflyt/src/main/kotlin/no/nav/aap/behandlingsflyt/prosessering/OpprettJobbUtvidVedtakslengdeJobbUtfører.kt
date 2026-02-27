@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.prosessering
 import no.nav.aap.behandlingsflyt.behandling.vedtakslengde.VedtakslengdeService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.FlytJobbRepository
@@ -23,6 +24,7 @@ import java.time.LocalDate.now
 class OpprettJobbUtvidVedtakslengdeJobbUtfører(
     private val behandlingService: BehandlingService,
     private val vedtakslengdeService: VedtakslengdeService,
+    private val sakRepository: SakRepository,
     private val flytJobbRepository: FlytJobbRepository,
     private val clock: Clock = Clock.systemDefaultZone()
 ) : JobbUtfører {
@@ -58,8 +60,9 @@ class OpprettJobbUtvidVedtakslengdeJobbUtfører(
     private fun kunSakerMedBehovForUtvidelseAvVedtakslengde(id: SakId, dato: LocalDate): Boolean {
         val sisteGjeldendeBehandling = behandlingService.finnBehandlingMedSisteFattedeVedtak(id)
         if (sisteGjeldendeBehandling != null) {
+            val rettighetsperiode = sakRepository.hent(id).rettighetsperiode
             // Bruker sisteGjeldendeBehandling.id både for behandlingId og forrigeBehandlingId fordi vi ser på gjeldende behandling
-            return vedtakslengdeService.skalUtvideSluttdato(sisteGjeldendeBehandling.id, sisteGjeldendeBehandling.id, dato)
+            return vedtakslengdeService.skalUtvideSluttdato(sisteGjeldendeBehandling.id, sisteGjeldendeBehandling.id, rettighetsperiode, dato)
         }
         return false
     }
@@ -69,6 +72,7 @@ class OpprettJobbUtvidVedtakslengdeJobbUtfører(
             return OpprettJobbUtvidVedtakslengdeJobbUtfører(
                 behandlingService = BehandlingService(repositoryProvider, gatewayProvider),
                 vedtakslengdeService = VedtakslengdeService(repositoryProvider, gatewayProvider),
+                sakRepository = repositoryProvider.provide(),
                 flytJobbRepository = repositoryProvider.provide(),
             )
         }

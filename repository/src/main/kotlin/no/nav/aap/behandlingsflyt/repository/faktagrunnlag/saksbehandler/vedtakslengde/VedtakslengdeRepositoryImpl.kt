@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.vedtakslengde
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeVurdering
@@ -54,17 +53,16 @@ class VedtakslengdeRepositoryImpl(private val connection: DBConnection) : Vedtak
         return connection.executeReturnKey(
             """
             insert into vedtakslengde_vurdering (
-                sluttdato, sluttdato_begrenset_av, utvidet_med, vurdert_i_behandling, vurdert_av, opprettet
-            ) values (?, ?, ?, ?, ?, ?)
+                sluttdato, utvidet_med, vurdert_i_behandling, vurdert_av, opprettet
+            ) values (?, ?, ?, ?, ?)
             """.trimIndent()
         ) {
             setParams {
                 setLocalDate(1, vurdering.sluttdato)
-                setArray(2, vurdering.sluttdatoBegrensetAv.map { it.name })
-                setEnumName(3, vurdering.utvidetMed)
-                setLong(4, vurdering.vurdertIBehandling.toLong())
-                setString(5, vurdering.vurdertAv.ident)
-                setInstant(6, vurdering.opprettet)
+                setEnumName(2, vurdering.utvidetMed)
+                setLong(3, vurdering.vurdertIBehandling.toLong())
+                setString(4, vurdering.vurdertAv.ident)
+                setInstant(5, vurdering.opprettet)
             }
         }
     }
@@ -74,7 +72,6 @@ class VedtakslengdeRepositoryImpl(private val connection: DBConnection) : Vedtak
             """
             select 
                 v.sluttdato,
-                v.sluttdato_begrenset_av,
                 v.utvidet_med,
                 v.vurdert_i_behandling,
                 v.vurdert_av,
@@ -91,8 +88,6 @@ class VedtakslengdeRepositoryImpl(private val connection: DBConnection) : Vedtak
                 VedtakslengdeGrunnlag(
                     vurdering = VedtakslengdeVurdering(
                         sluttdato = row.getLocalDate("sluttdato"),
-                        sluttdatoBegrensetAv = row.getArray("sluttdato_begrenset_av", String::class)
-                            .map { Avslagsårsak.valueOf(it) }.toSet(),
                         utvidetMed = row.getEnum("utvidet_med"),
                         vurdertIBehandling = BehandlingId(row.getLong("vurdert_i_behandling")),
                         vurdertAv = Bruker(row.getString("vurdert_av")),

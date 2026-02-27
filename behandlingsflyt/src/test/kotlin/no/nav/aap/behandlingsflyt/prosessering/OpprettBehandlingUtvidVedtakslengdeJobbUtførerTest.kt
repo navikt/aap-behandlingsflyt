@@ -10,6 +10,7 @@ import no.nav.aap.behandlingsflyt.behandling.vedtakslengde.VedtakslengdeService
 import no.nav.aap.behandlingsflyt.behandling.vedtakslengde.VedtakslengdeService.Companion.ANTALL_DAGER_FØR_UTVIDELSE
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.rettighetstype.RettighetstypeGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.rettighetstype.RettighetstypeRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.StansOpphørRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
@@ -33,6 +34,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettels
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.test.desember
 import no.nav.aap.behandlingsflyt.test.fixedClock
@@ -58,6 +60,10 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtførerTest {
     private val behandlingService = mockk<BehandlingService>()
     private val vilkårsresultatRepository = mockk<VilkårsresultatRepository>()
     private val rettighetestypeRepository = mockk<RettighetstypeRepository>()
+    private val stansOpphørRepository = mockk<StansOpphørRepository>()
+    private val sakRepository = mockk<SakRepository> {
+        every { hent(sakId) } returns sak()
+    }
     private val opprettBehandlingUtvidVedtakslengdeJobbUtfører =
         OpprettBehandlingUtvidVedtakslengdeJobbUtfører(
             prosesserBehandlingService = prosesserBehandlingService,
@@ -67,9 +73,11 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtførerTest {
                 underveisRepository = underveisRepository,
                 vilkårsresultatRepository = vilkårsresultatRepository,
                 rettighetstypeService = RettighetstypeService(rettighetestypeRepository, vilkårsresultatRepository, underveisRepository),
+                stansOpphørRepository = stansOpphørRepository,
                 unleashGateway = AlleAvskruddUnleash,
                 clock = clock
             ),
+            sakRepository = sakRepository,
             clock = clock
         )
 

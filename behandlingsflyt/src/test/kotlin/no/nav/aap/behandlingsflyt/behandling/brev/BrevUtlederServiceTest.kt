@@ -22,6 +22,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Beregning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag11_19
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagInntekt
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.StansOpphørRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.ArbeidsGradering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
@@ -102,7 +103,7 @@ class BrevUtlederServiceTest {
     val underveisRepository = mockk<UnderveisRepository>()
     val overgangUføreRepository = mockk<OvergangUføreRepository>()
     val avbrytRevurderingService = mockk<AvbrytRevurderingService>()
-    val vedtakslengdeRepository = mockk<VedtakslengdeRepository>()
+    val stansOpphørRepository = mockk<StansOpphørRepository>()
     val unleashGateway = mockk<UnleashGateway>()
     val brevUtlederService = BrevUtlederService(
         resultatUtleder = ResultatUtleder(
@@ -122,7 +123,7 @@ class BrevUtlederServiceTest {
         arbeidsopptrappingRepository = arbeidsopptrappingRepository,
         sykdomsvurderingForBrevRepository = sykdomsvurderingForBrevRepository,
         overgangUføreRepository = overgangUføreRepository,
-        vedtakslengdeRepository = vedtakslengdeRepository,
+        stansOpphørRepository = stansOpphørRepository,
         unleashGateway = unleashGateway,
     )
     val virkningstidspunkt = 1 januar 2025
@@ -179,8 +180,7 @@ class BrevUtlederServiceTest {
             every { underveisRepository.hent(revurdering.id) } returns revurderingUnderveisGrunnlag
             every { underveisRepository.hentHvisEksisterer(revurdering.id) } returns revurderingUnderveisGrunnlag
             every { avbrytRevurderingService.revurderingErAvbrutt(any<BehandlingId>()) } returns false
-            val vedtakslengdeGrunnlag = stubVedtakslengdeGrunnlag(revurdering.id, revurderingSisteDagMedYtelse)
-            every { vedtakslengdeRepository.hentHvisEksisterer(revurdering.id) } returns vedtakslengdeGrunnlag
+            every { stansOpphørRepository.hentHvisEksisterer(revurdering.id) } returns null
             every { unleashGateway.isEnabled(BehandlingsflytFeature.NyBrevtype11_17) } returns true
 
             val resultat = brevUtlederService.utledBehovForMeldingOmVedtak(revurdering.id)
@@ -190,7 +190,6 @@ class BrevUtlederServiceTest {
             // revurderingVirkningstidspunkt og førstegangSisteDagMedYtelse+1 er bevisst ulike for testformål
             val forventetUtvidetAapFomDato = førstegangSisteDagMedYtelse.plusDays(1)
             assertEquals(forventetUtvidetAapFomDato, resultat.utvidetAapFomDato)
-            assertEquals(setOf(Avslagsårsak.ORDINÆRKVOTE_BRUKT_OPP), resultat.sisteDagMedYtelseBegrensetAv)
         }
     }
     
@@ -811,7 +810,6 @@ class BrevUtlederServiceTest {
         return VedtakslengdeGrunnlag(
             vurdering = VedtakslengdeVurdering(
                 sluttdato = sluttdato,
-                sluttdatoBegrensetAv = setOf(Avslagsårsak.ORDINÆRKVOTE_BRUKT_OPP),
                 utvidetMed = ÅrMedHverdager.ANDRE_ÅR,
                 vurdertAv = SYSTEMBRUKER,
                 opprettet = Instant.now(),
