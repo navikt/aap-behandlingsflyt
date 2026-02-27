@@ -20,7 +20,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
-import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.lookup.repository.RepositoryProvider
@@ -62,51 +61,45 @@ class VedtakslengdeService(
         rettighetsperiode: Periode,
     ): VedtakslengdeUtvidelse {
         val vedtakslengdeGrunnlag = forrigeBehandlingId?.let { vedtakslengdeRepository.hentHvisEksisterer(forrigeBehandlingId) }
-        val vedtattSluttdato = hentVedtattSluttdato(forrigeBehandlingId, vedtakslengdeGrunnlag)
+        val vedtattSluttdato = requireNotNull(hentVedtattSluttdato(forrigeBehandlingId, vedtakslengdeGrunnlag)) {
+            "Kan ikke utlede vedtatt sluttdato for behandling $forrigeBehandlingId, som trengs for å vurdere utvidelse av vedtakslengde for behandling $behandlingId"
+        }
 
-        if (vedtattSluttdato != null) {
-            val nesteUtvidelse = hentNesteUtvidelse(vedtakslengdeGrunnlag?.vurdering)
-            val nyForventetSluttdato = vedtattSluttdato.plussEtÅrMedHverdager(nesteUtvidelse)
-            val periodeMedFremtidigRettOrdinær = hentNestePeriodeMedFremtidigRettOrdinær(vedtattSluttdato, behandlingId)
-            val sluttdatoOrdinærRettighet = periodeMedFremtidigRettOrdinær?.tom
+        val nesteÅrligeUtvidelse = hentNesteÅrligeUtvidelse(vedtakslengdeGrunnlag?.vurdering)
+        val vedtattSluttdatoUtvidetMedEttÅr = vedtattSluttdato.plussEtÅrMedHverdager(nesteÅrligeUtvidelse)
+        val periodeMedFremtidigOrdinærRettighet = hentNestePeriodeMedFremtidigOrdinærRettighet(vedtattSluttdato, behandlingId)
 
-            if (sluttdatoOrdinærRettighet != null && sluttdatoOrdinærRettighet <= nyForventetSluttdato) {
-                // Ett år eller mindre med ordinær rettighet og nyForventetSluttdato er mindre eller lik sluttdato rettighet
-                val forventetStansEllerOpphørFom = sluttdatoOrdinærRettighet.plusDays(1)
+        if (periodeMedFremtidigOrdinærRettighet != null) {
+            if (periodeMedFremtidigOrdinærRettighet.tom > vedtattSluttdatoUtvidetMedEttÅr) {
+                // Har over ett år gjenstående med ordinær rettighet, kan utvide med et helt år
+                return VedtakslengdeUtvidelse.Automatisk(
+                    forrigeSluttdato = vedtattSluttdato,
+                    nySluttdato = vedtattSluttdatoUtvidetMedEttÅr,
+                )
+            } else {
+                // Har ett år eller mindre gjenstående med ordinær rettighet
+                val forventetStansEllerOpphørFom = periodeMedFremtidigOrdinærRettighet.tom.plusDays(1)
                 val avslagsårsaker = hentAvslagsårsakerVedStansEllerOpphør(behandlingId, rettighetsperiode, forventetStansEllerOpphørFom)
 
-                return if (unleashGateway.isEnabled(BehandlingsflytFeature.UtvidVedtakslengdeUnderEttAr)
+                if (unleashGateway.isEnabled(BehandlingsflytFeature.UtvidVedtakslengdeUnderEttAr)
                     && gyldigForAutomatiskUtvidelseAvVedtakslengde(avslagsårsaker)) {
-
-                    VedtakslengdeUtvidelse.Automatisk(
+                    // Har avslagsårsaker som er støttet for automatisk utvidelse
+                    return VedtakslengdeUtvidelse.Automatisk(
                         forrigeSluttdato = vedtattSluttdato,
-                        nySluttdato = sluttdatoOrdinærRettighet,
+                        nySluttdato = periodeMedFremtidigOrdinærRettighet.tom,
                         avslagsårsaker = avslagsårsaker,
                     )
                 } else {
-                    VedtakslengdeUtvidelse.Manuell(
+                    return VedtakslengdeUtvidelse.Manuell(
                         forrigeSluttdato = vedtattSluttdato,
-                        nySluttdato = sluttdatoOrdinærRettighet,
+                        nySluttdato = periodeMedFremtidigOrdinærRettighet.tom,
                         avslagsårsaker = avslagsårsaker,
                     )
-                }
-
-            } else {
-                return if (periodeMedFremtidigRettOrdinær != null) {
-                    // Kan utvide med et helt år ordinær rettighet og ingen avslag påfølgende dato
-                    VedtakslengdeUtvidelse.Automatisk(
-                        forrigeSluttdato = vedtattSluttdato,
-                        nySluttdato = nyForventetSluttdato,
-                    )
-                } else {
-                    VedtakslengdeUtvidelse.IkkeAktuell
                 }
             }
-
         } else {
-            log.info("Behandling $behandlingId har ingen vedtatt sluttdato, ingen utvidelse nødvendig")
+            return VedtakslengdeUtvidelse.IngenFremtidigOrdinærRettighet
         }
-        return VedtakslengdeUtvidelse.IkkeAktuell
     }
 
     fun utvidVedtakslengde(
@@ -115,8 +108,9 @@ class VedtakslengdeService(
         vedtakslengdeUtvidelse: VedtakslengdeUtvidelse.Automatisk,
     ) {
         val vedtakslengdeGrunnlag = forrigeBehandlingId?.let { vedtakslengdeRepository.hentHvisEksisterer(forrigeBehandlingId) }
-        val nesteUtvidelse = hentNesteUtvidelse(vedtakslengdeGrunnlag?.vurdering)
-        lagreVedtakslengdeVurdering(behandlingId, vedtakslengdeUtvidelse.nySluttdato, nesteUtvidelse)
+        val nesteÅrligeUtvidelse = hentNesteÅrligeUtvidelse(vedtakslengdeGrunnlag?.vurdering)
+
+        lagreVedtakslengdeVurdering(behandlingId, vedtakslengdeUtvidelse.nySluttdato, nesteÅrligeUtvidelse)
     }
 
     private fun hentAvslagsårsakerVedStansEllerOpphør(
@@ -126,7 +120,6 @@ class VedtakslengdeService(
     ): Set<Avslagsårsak> {
         val stansOpphørGrunnlag = stansOpphørRepository.hentHvisEksisterer(behandlingId)
         if (stansOpphørGrunnlag == null) {
-            // TODO midlertidig inntil stans og opphør er på plass i RettighetstypeSteg
             return hentAvslagsårsakerVedStansEllerOpphørUtledet(behandlingId, rettighetsperiode, stansEllerOpphørFom)
         }
 
@@ -139,6 +132,7 @@ class VedtakslengdeService(
         return avslagsårsakerFørsteDagUtenOrdinærRettighet
     }
 
+    // TODO midlertidig inntil stans og opphør er på plass i RettighetstypeSteg
     private fun hentAvslagsårsakerVedStansEllerOpphørUtledet(
         behandlingId: BehandlingId,
         rettighetsperiode: Periode,
@@ -266,7 +260,7 @@ class VedtakslengdeService(
         return listOfNotNull(sluttdatoSisteVedtatteUnderveis, sluttdatoSisteVedtatteVedtakslengdeVurdering).maxOrNull()
     }
 
-    private fun hentNesteUtvidelse(forrigeUtvidelse: VedtakslengdeVurdering?): ÅrMedHverdager =
+    private fun hentNesteÅrligeUtvidelse(forrigeUtvidelse: VedtakslengdeVurdering?): ÅrMedHverdager =
         when (forrigeUtvidelse?.utvidetMed) {
             null, ÅrMedHverdager.FØRSTE_ÅR -> ÅrMedHverdager.ANDRE_ÅR // Antar at man skal utvide med andre år dersom grunnlag ikke finnes
             ÅrMedHverdager.ANDRE_ÅR -> ÅrMedHverdager.TREDJE_ÅR
@@ -297,41 +291,22 @@ class VedtakslengdeService(
     }
 
     /**
-     * Neste periode (hele året) er av type ordinær med gjenværende kvote
-     */
-    private fun harFremtidigRettOrdinær(
-        vedtattSluttdato: LocalDate,
-        utvidetSluttdato: LocalDate,
-        behandlingId: BehandlingId,
-    ): Boolean {
-        val nyUtvidetVedtaksperiode = Periode(vedtattSluttdato.plusDays(1), utvidetSluttdato)
-        val nyUtvidetVedtaksperiodeTidslinje = Tidslinje(nyUtvidetVedtaksperiode, true)
-        val rettighetstypeTidslinje = rettighetstypeService.rettighetstypeTidslinjeBakoverkompatibel(behandlingId)
-
-        return rettighetstypeTidslinje
-            .rightJoin(nyUtvidetVedtaksperiodeTidslinje) { rettighetstype, _ ->
-                rettighetstype != null && rettighetstype.kvote == Kvote.ORDINÆR
-            }
-            .segmenter()
-            .all { it.verdi }
-    }
-
-    /**
      * Henter neste periode med ordinær rettighetstype fra dagen etter gjeldende sluttdato for vedtaket
      */
-    private fun hentNestePeriodeMedFremtidigRettOrdinær(
+    private fun hentNestePeriodeMedFremtidigOrdinærRettighet(
         vedtattSluttdato: LocalDate,
         behandlingId: BehandlingId,
     ): Periode? {
         val rettighetstypeTidslinje = rettighetstypeService.rettighetstypeTidslinjeBakoverkompatibel(behandlingId)
         val dagenEtterVedtattSluttdato = vedtattSluttdato.plusDays(1)
-        val fremtidigPeriodeMedMuligRett = Periode(dagenEtterVedtattSluttdato, Tid.MAKS)
+        val periodeMedMuligFremtidigOrdinærRettighet = Periode(dagenEtterVedtattSluttdato, Tid.MAKS)
 
         return rettighetstypeTidslinje
-            .begrensetTil(fremtidigPeriodeMedMuligRett)
+            .begrensetTil(periodeMedMuligFremtidigOrdinærRettighet)
             .filter { rettighetstype -> rettighetstype.verdi.kvote == Kvote.ORDINÆR }
             .segmenter()
             .map { it.periode }
+            // Må vi støtte opphør etter forrige sluttdato for så gjeninntreden på senere dato?
             .firstOrNull { it.fom == dagenEtterVedtattSluttdato }
     }
 

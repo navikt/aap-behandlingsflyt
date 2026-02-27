@@ -78,7 +78,6 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtførerTest {
                 clock = clock
             ),
             sakRepository = sakRepository,
-            clock = clock
         )
 
 

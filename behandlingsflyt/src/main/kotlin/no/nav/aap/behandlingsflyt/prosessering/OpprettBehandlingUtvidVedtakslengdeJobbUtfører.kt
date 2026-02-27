@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
-import no.nav.aap.behandlingsflyt.behandling.vedtakslengde.VedtakslengdeUtvidelse
 import no.nav.aap.behandlingsflyt.behandling.vedtakslengde.VedtakslengdeService
+import no.nav.aap.behandlingsflyt.behandling.vedtakslengde.VedtakslengdeUtvidelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
@@ -15,21 +15,17 @@ import no.nav.aap.motor.JobbInput
 import no.nav.aap.motor.JobbUtfører
 import no.nav.aap.motor.ProvidersJobbSpesifikasjon
 import org.slf4j.LoggerFactory
-import java.time.Clock
-import java.time.LocalDate.now
 
 class OpprettBehandlingUtvidVedtakslengdeJobbUtfører(
     private val prosesserBehandlingService: ProsesserBehandlingService,
     private val behandlingService: BehandlingService,
     private val vedtakslengdeService: VedtakslengdeService,
     private val sakRepository: SakRepository,
-    private val clock: Clock = Clock.systemDefaultZone()
 ) : JobbUtfører {
 
     private val log = LoggerFactory.getLogger(javaClass)
 
     override fun utfør(input: JobbInput) {
-        val datoForUtvidelse = now(clock).plusDays(VedtakslengdeService.ANTALL_DAGER_FØR_UTVIDELSE)
         val sakId = SakId(input.sakId())
 
         val sisteGjeldendeBehandling = behandlingService.finnBehandlingMedSisteFattedeVedtak(sakId)
@@ -56,8 +52,8 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtfører(
                 is VedtakslengdeUtvidelse.Manuell -> {
                     log.error("Sak med id $sakId trenger manuell utvidelse av vedtakslengde. Dette er ikke implementert. Må følges opp!")
                 }
-                is VedtakslengdeUtvidelse.IkkeAktuell -> {
-                    log.info("Sak med id $sakId trenger ikke utvidelse av vedtakslengde, hopper over")
+                is VedtakslengdeUtvidelse.`IngenFremtidigOrdinærRettighet` -> {
+                    log.info("Sak med id $sakId har ingen framtidig ordinær rettighet, hopper over")
                 }
             }
         } else {

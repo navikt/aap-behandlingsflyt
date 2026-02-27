@@ -61,7 +61,7 @@ class VedtakslengdeSteg(
                         vedtakslengdeUtvidelse = vedtakslengdeUtvidelse,
                     )
                 } else {
-                    log.info("Ingen automatisk utvidelse av vedtakslengde, resultat=$vedtakslengdeUtvidelse")
+                    log.info("Ingen automatisk utvidelse av vedtakslengde: $vedtakslengdeUtvidelse")
                 }
             }
 

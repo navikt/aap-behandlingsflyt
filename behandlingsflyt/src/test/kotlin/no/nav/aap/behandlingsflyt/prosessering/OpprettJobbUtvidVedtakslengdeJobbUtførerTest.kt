@@ -82,9 +82,9 @@ class OpprettJobbUtvidVedtakslengdeJobbUtførerTest {
     }
 
     @Test
-    fun `skal ikke opprette jobber hvis skalUtvideSluttdato er IKKE_AKTUELL`() {
+    fun `skal ikke opprette jobber hvis skalUtvideSluttdato er IngenFramtidigOrdinærRettighet`() {
         every { vedtakslengdeService.hentSakerAktuelleForUtvidelseAvVedtakslengde(any()) } returns setOf(sakId)
-        every { vedtakslengdeService.hentNesteVedtakslengdeUtvidelse(behandlingId, behandlingId, any<Periode>())} returns VedtakslengdeUtvidelse.IkkeAktuell
+        every { vedtakslengdeService.hentNesteVedtakslengdeUtvidelse(behandlingId, behandlingId, any<Periode>())} returns VedtakslengdeUtvidelse.`IngenFremtidigOrdinærRettighet`
         every { behandlingService.finnBehandlingMedSisteFattedeVedtak(sakId) } returns behandlingMedVedtak()
         every { sakRepository.hent(sakId) } returns mockk<Sak> { every { rettighetsperiode } returns Periode(dagensDato.minusYears(1), dagensDato.plusYears(1)) }
 
