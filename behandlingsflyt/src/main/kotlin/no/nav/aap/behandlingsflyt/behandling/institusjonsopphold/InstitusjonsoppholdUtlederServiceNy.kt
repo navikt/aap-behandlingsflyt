@@ -87,34 +87,16 @@ class InstitusjonsoppholdUtlederServiceNy(
             val oppholdUtenBarnetillegg =
                 helseOppholdTidslinje.disjoint(barnetilleggTidslinje) { p, v -> Segment(p, v.verdi) }
 
-            val helseStart = helseOppholdTidslinje.minDato()
-            val helseEnd = helseOppholdTidslinje.maxDato()
+            val helseOppholdSluttDato = helseOppholdTidslinje.maxDato()
 
             var oppholdSomKanGiReduksjon = harOppholdSomKreverAvklaring(oppholdUtenBarnetillegg)
 
-
-            //Håndterer den sære casen ved at forsørgeransvar opphører
-            if (barnetilleggTidslinje.isNotEmpty()) {
-
-                val barnetilleggStart = barnetilleggTidslinje.minDato()
-                val barnetilleggEnd = barnetilleggTidslinje.maxDato()
-
-                val barneTilleggetOpphørerMidtIOpphold =
-                    barnetilleggStart >= helseStart &&
-                            barnetilleggEnd <= helseEnd
-                if (barneTilleggetOpphørerMidtIOpphold) {
-                    oppholdSomKanGiReduksjon = regnUtTidslinjeVedEventueltStoppIBarnetillegg(
-                        barnetilleggTidslinje,
-                        helseEnd,
-                        helseOppholdTidslinje,
-                    )
-                }
-
-            }
+            //Håndterer den sære casen ved at barnetillegg opphører
+            oppholdSomKanGiReduksjon =
+                giNyTidslinjeHvisBarneTilleggTarSluttUnderOppholdet(barnetilleggTidslinje, helseOppholdSluttDato, oppholdSomKanGiReduksjon, helseOppholdTidslinje)
 
 
             // Oppholdet må være lengre enn 3 måneder for å være aktuelt for avklaring og må ha vart i minimum 2 måneder for å være klar for avklaring
-
 
             perioderSomTrengerVurdering = perioderSomTrengerVurdering.kombiner(oppholdSomKanGiReduksjon.mapValue {
                 InstitusjonsoppholdVurdering(helse = HelseOpphold(vurdering = OppholdVurdering.UAVKLART))
@@ -148,7 +130,32 @@ class InstitusjonsoppholdUtlederServiceNy(
         return BehovForAvklaringer(perioderSomTrengerVurdering)
     }
 
-    private fun regnUtTidslinjeVedEventueltStoppIBarnetillegg(
+    private fun giNyTidslinjeHvisBarneTilleggTarSluttUnderOppholdet(
+        barnetilleggTidslinje: Tidslinje<RettTilBarnetillegg>,
+        helseOppholdSluttDato: LocalDate,
+        oppholdSomKanGiReduksjon: Tidslinje<Boolean>,
+        helseOppholdTidslinje: Tidslinje<Boolean>
+    ): Tidslinje<Boolean> {
+        var oppholdSomKanGiReduksjon1 = oppholdSomKanGiReduksjon
+        if (barnetilleggTidslinje.isNotEmpty()) {
+
+            val barnetilleggEnd = barnetilleggTidslinje.maxDato()
+
+            val barneTilleggetOpphørerMidtIOpphold =
+                barnetilleggEnd <= helseOppholdSluttDato
+            if (barneTilleggetOpphørerMidtIOpphold) {
+                oppholdSomKanGiReduksjon1 = harOppholdSomKreverVurderingEtterStoppIBarneTillegg(
+                    barnetilleggTidslinje,
+                    helseOppholdSluttDato,
+                    helseOppholdTidslinje,
+                )
+            }
+
+        }
+        return oppholdSomKanGiReduksjon1
+    }
+
+    private fun harOppholdSomKreverVurderingEtterStoppIBarneTillegg(
         barnetilleggTidslinje: Tidslinje<RettTilBarnetillegg>,
         helseEnd: LocalDate,
         helseOppholdTidslinje: Tidslinje<Boolean>
