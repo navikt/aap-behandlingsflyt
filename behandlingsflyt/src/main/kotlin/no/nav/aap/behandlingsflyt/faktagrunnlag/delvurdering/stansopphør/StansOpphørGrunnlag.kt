@@ -22,6 +22,13 @@ data class StansOpphørGrunnlag(
             .toSet()
     }
 
+    fun stansOgOpphørMedHistorikk(): Map<LocalDate, List<StansEllerOpphørVurdering>> {
+        return stansOgOpphør
+            .groupBy { it.fom }
+            .mapValues { (_, vurderinger) -> vurderinger.sortedByDescending { it.opprettet } }
+    }
+
+
     fun utledNyttGrunnlag(
         utlededeStansOgOpphør: Map<LocalDate, StansEllerOpphør>,
         behandlingId: BehandlingId,
