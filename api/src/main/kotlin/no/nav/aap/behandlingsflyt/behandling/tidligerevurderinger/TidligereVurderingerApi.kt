@@ -48,21 +48,22 @@ fun NormalOpenAPIRoute.tidligereVurderingerApi(
 
                 val kontekst = FlytKontekstMedPeriodeService(repositoryProvider, gatewayProvider).utled(
                     behandling.flytKontekst(),
-                    req.stegType
+                    req.førSteg
                 )
 
                 val tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider)
-                TidligereVurderingerDto(tidligereVurderinger.behandlingsutfall(kontekst, req.stegType).segmenter().map {
-                    val verdi = it.verdi
-                    TidligereVurderingDto(
-                        periode = it.periode,
-                        utfall = BehandlingsutfallType.fraBehandlingsutfall(verdi),
-                        rettighetstype = when (verdi) {
-                            is TidligereVurderinger.PotensieltOppfylt -> verdi.rettighetstype
-                            else -> null
-                        }
-                    )
-                })
+                TidligereVurderingerDto(
+                    tidligereVurderinger.behandlingsutfall(kontekst, req.førSteg, req.etterSteg).segmenter().map {
+                        val verdi = it.verdi
+                        TidligereVurderingDto(
+                            periode = it.periode,
+                            utfall = BehandlingsutfallType.fraBehandlingsutfall(verdi),
+                            rettighetstype = when (verdi) {
+                                is TidligereVurderinger.PotensieltOppfylt -> verdi.rettighetstype
+                                else -> null
+                            }
+                        )
+                    })
             }
 
             respond(response)
@@ -73,7 +74,8 @@ fun NormalOpenAPIRoute.tidligereVurderingerApi(
 
 data class TidligereVurderingerReq(
     @JsonValue @param:PathParam("referanse") val referanse: UUID = UUID.randomUUID(),
-    @param:QueryParam("Tidligere vurderinger frem til steg") val stegType: StegType
+    @param:QueryParam("Tidligere vurderinger frem til") val førSteg: StegType,
+    @param:QueryParam("Tidligere vurderinger etter") val etterSteg: StegType
 )
 
 data class TidligereVurderingerDto(
@@ -88,14 +90,14 @@ data class TidligereVurderingDto(
 
 enum class BehandlingsutfallType {
     IKKE_BEHANDLINGSGRUNNLAG,
-    UUNGÅELIG_AVSLAG,
+    UUNNGÅELIG_AVSLAG,
     POTENSIELT_OPPFYLT;
-    
+
     companion object {
         fun fraBehandlingsutfall(behandlingsutfall: TidligereVurderinger.Behandlingsutfall): BehandlingsutfallType =
             when (behandlingsutfall) {
                 TidligereVurderinger.IkkeBehandlingsgrunnlag -> IKKE_BEHANDLINGSGRUNNLAG
-                TidligereVurderinger.UunngåeligAvslag -> UUNGÅELIG_AVSLAG
+                TidligereVurderinger.UunngåeligAvslag -> UUNNGÅELIG_AVSLAG
                 is TidligereVurderinger.PotensieltOppfylt -> POTENSIELT_OPPFYLT
             }
     }

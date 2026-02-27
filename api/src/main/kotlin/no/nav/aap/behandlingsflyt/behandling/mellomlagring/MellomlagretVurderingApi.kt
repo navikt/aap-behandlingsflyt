@@ -50,7 +50,7 @@ fun NormalOpenAPIRoute.mellomlagretVurderingApi(
                     val behandling = behandlingRepository.hent(referanse)
 
                     LoggingKontekst(
-                        repositoryProvider,
+                        repositoryProvider.provide(),
                         LogKontekst(referanse = referanse)
                     ).use {
                         if (behandling.status().erAvsluttet()) {
@@ -91,7 +91,7 @@ fun NormalOpenAPIRoute.mellomlagretVurderingApi(
                     val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
                     val behandling = behandlingRepository.hent(behandlingsreferanse)
                     LoggingKontekst(
-                        repositoryProvider,
+                        repositoryProvider.provide(),
                         LogKontekst(referanse = behandlingsreferanse)
                     ).use {
                         val mellomlagretVurdering = mellomlagretVurderingRepository.hentHvisEksisterer(
@@ -122,7 +122,7 @@ fun NormalOpenAPIRoute.mellomlagretVurderingApi(
                     val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
                     val behandling = behandlingRepository.hent(behandlingsreferanse)
                     LoggingKontekst(
-                        repositoryProvider,
+                        repositoryProvider.provide(),
                         LogKontekst(referanse = behandlingsreferanse)
                     ).use {
                         mellomlagretVurderingRepository.slett(

@@ -184,10 +184,12 @@ class VedtakslengdeService(
     ): LocalDate {
         val rettighetstypeTidslinje = rettighetstypeService.rettighetstypeTidslinjeBakoverkompatibel(behandlingId)
         val initiellSluttdato = utledInitiellSluttdato(behandlingId, rettighetsperiode).tom
+        val gjeldendeSluttdato = vedtattSluttdato ?: utledInitiellSluttdato(behandlingId, rettighetsperiode).tom
 
-        // Ved avslag sett inntil ett år slik det var gjort tidligere - gå opp hva som er riktig å gjøre her
+        // Hvis ingen rettighetstyper brukes gjeldende sluttdato
         if (rettighetstypeTidslinje.isEmpty()) {
-            return initiellSluttdato
+            log.info("Ingen rettighetstyper, bruker gjeldende sluttdato: $gjeldendeSluttdato")
+            return gjeldendeSluttdato
         }
 
         val sluttdatoSisteUnntaksrettighet = rettighetstypeTidslinje.segmenter()

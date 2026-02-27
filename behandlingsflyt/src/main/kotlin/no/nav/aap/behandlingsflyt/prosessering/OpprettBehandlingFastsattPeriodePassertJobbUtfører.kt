@@ -34,20 +34,21 @@ class OpprettBehandlingFastsattPeriodePassertJobbUtfører(
             return
         }
 
-        val behandling = behandlingService.finnSisteYtelsesbehandlingFor(sak.id) ?: return
+        val sisteBehandling = behandlingService.finnSisteYtelsesbehandlingFor(sak.id) ?: return
+        val sistVedtatteBehandling = behandlingService.finnBehandlingMedSisteFattedeVedtak(sak.id) ?: return
 
-        if (behandling.status().erÅpen() && Vurderingsbehov.FASTSATT_PERIODE_PASSERT in behandling.vurderingsbehov()
+        if (sisteBehandling.status().erÅpen() && Vurderingsbehov.FASTSATT_PERIODE_PASSERT in sisteBehandling.vurderingsbehov()
                 .map { it.type }
         ) {
             log.info("Det finnes allerede en kjørende jobb av årsak FASTSATT_PERIODE_PASSERT. Avbryter.")
             return
         }
 
-        val underveisperioder = underveisRepository.hentHvisEksisterer(behandling.id)
+        val underveisperioder = underveisRepository.hentHvisEksisterer(sistVedtatteBehandling.id)
             ?.perioder
 
         if (underveisperioder == null) {
-            log.info("Fant ikke underveisperioder for behandling med id ${behandling.id}. Avbryter.")
+            log.info("Fant ikke underveisperioder for behandling med id ${sistVedtatteBehandling.id}. Avbryter.")
             return
         }
 
