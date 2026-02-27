@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
+import no.nav.aap.behandlingsflyt.behandling.vedtakslengde.VedtakslengdeUtvidelse
 import no.nav.aap.behandlingsflyt.behandling.vedtakslengde.VedtakslengdeService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
@@ -62,7 +63,12 @@ class OpprettJobbUtvidVedtakslengdeJobbUtfører(
         if (sisteGjeldendeBehandling != null) {
             val rettighetsperiode = sakRepository.hent(id).rettighetsperiode
             // Bruker sisteGjeldendeBehandling.id både for behandlingId og forrigeBehandlingId fordi vi ser på gjeldende behandling
-            return vedtakslengdeService.skalUtvideSluttdato(sisteGjeldendeBehandling.id, sisteGjeldendeBehandling.id, rettighetsperiode, dato)
+            return vedtakslengdeService.skalUtvideSluttdato(
+                behandlingId = sisteGjeldendeBehandling.id,
+                forrigeBehandlingId = sisteGjeldendeBehandling.id,
+                rettighetsperiode = rettighetsperiode,
+                datoForUtvidelse = dato
+            ) == VedtakslengdeUtvidelse.AUTOMATISK
         }
         return false
     }

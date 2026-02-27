@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
+import no.nav.aap.behandlingsflyt.behandling.vedtakslengde.VedtakslengdeUtvidelse
 import no.nav.aap.behandlingsflyt.behandling.vedtakslengde.VedtakslengdeService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
@@ -36,7 +37,8 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtfører(
             log.info("Gjeldende behandling for sak $sakId er ${sisteGjeldendeBehandling.id}")
             val rettighetsperiode = sakRepository.hent(sakId).rettighetsperiode
             // Bruker sisteGjeldendeBehandling.id både for behandlingId og forrigeBehandlingId fordi vi ser på gjeldende behandling
-            if (vedtakslengdeService.skalUtvideSluttdato(sisteGjeldendeBehandling.id, sisteGjeldendeBehandling.id, rettighetsperiode, datoForUtvidelse)) {
+            val utvidelse = vedtakslengdeService.skalUtvideSluttdato(sisteGjeldendeBehandling.id, sisteGjeldendeBehandling.id, rettighetsperiode, datoForUtvidelse)
+            if (utvidelse == VedtakslengdeUtvidelse.AUTOMATISK) {
                 log.info("Oppretter behandling for utvidelse av vedtakslengde for sak $sakId")
                 val utvidVedtakslengdeBehandling = opprettNyBehandling(sakId)
                 prosesserBehandlingService.triggProsesserBehandling(utvidVedtakslengdeBehandling)

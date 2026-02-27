@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
+import no.nav.aap.behandlingsflyt.behandling.vedtakslengde.VedtakslengdeUtvidelse
 import no.nav.aap.behandlingsflyt.behandling.vedtakslengde.VedtakslengdeService
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
@@ -47,18 +48,18 @@ class VedtakslengdeSteg(
             }
 
             VurderingType.UTVID_VEDTAKSLENGDE -> {
-                if (vedtakslengdeService.skalUtvideSluttdato(
-                        kontekst.behandlingId,
-                        kontekst.forrigeBehandlingId,
-                        kontekst.rettighetsperiode))
-                {
+                val utvidelse = vedtakslengdeService.skalUtvideSluttdato(
+                    kontekst.behandlingId,
+                    kontekst.forrigeBehandlingId,
+                    kontekst.rettighetsperiode)
+                if (utvidelse == VedtakslengdeUtvidelse.AUTOMATISK) {
                     vedtakslengdeService.utvidSluttdato(
                         behandlingId = kontekst.behandlingId,
                         forrigeBehandlingId = kontekst.forrigeBehandlingId,
                         rettighetsperiode = kontekst.rettighetsperiode,
                     )
                 } else {
-                    log.info("Ingen utvidelse av vedtakslengde nødvendig")
+                    log.info("Ingen automatisk utvidelse av vedtakslengde, resultat=$utvidelse")
                 }
             }
 

@@ -61,7 +61,7 @@ class VedtakslengdeService(
         forrigeBehandlingId: BehandlingId?,
         rettighetsperiode: Periode,
         datoForUtvidelse: LocalDate = LocalDate.now(clock).plusDays(ANTALL_DAGER_FØR_UTVIDELSE)
-    ): Boolean {
+    ): VedtakslengdeUtvidelse {
         val vedtakslengdeGrunnlag = forrigeBehandlingId?.let { vedtakslengdeRepository.hentHvisEksisterer(forrigeBehandlingId) }
         val vedtattSluttdato = hentVedtattSluttdato(forrigeBehandlingId, vedtakslengdeGrunnlag)
 
@@ -74,6 +74,7 @@ class VedtakslengdeService(
                 val periodeMedFremtidigRettOrdinær = hentNestePeriodeMedFremtidigRettOrdinær(vedtattSluttdato, behandlingId)
                 val sluttdatoOrdinærRettighet = periodeMedFremtidigRettOrdinær?.tom
 
+                // Under ett år med ordinær rett – sjekk om avslagsårsakene er gyldige for manuell utvidelse
                 if (sluttdatoOrdinærRettighet != null && datoForUtvidelse >= vedtattSluttdato && sluttdatoOrdinærRettighet <= nyForventetSluttdato) {
                     val forventetStansEllerOpphørFom = sluttdatoOrdinærRettighet.plusDays(1)
                     val avslagsårsaker = hentAvslagsårsakerVedStansEllerOpphør(behandlingId, rettighetsperiode, forventetStansEllerOpphørFom)
@@ -83,13 +84,24 @@ class VedtakslengdeService(
                             "sluttdatoOrdinærRettighet=$sluttdatoOrdinærRettighet, " +
                             "forrigeSluttdato=$vedtattSluttdato og " +
                             "gyldigForAutomatiskUtvidelseAvVedtakslengde=$gyldigForAutomatiskUtvidelseAvVedtakslengde")
-                    return gyldigForAutomatiskUtvidelseAvVedtakslengde
+
+                    return if (gyldigForAutomatiskUtvidelseAvVedtakslengde) {
+                        VedtakslengdeUtvidelse.MANUELL
+                    } else {
+                        VedtakslengdeUtvidelse.IKKE_AKTUELL
+                    }
 
                 } else {
+                    // Helt år med ordinær rett tilgjengelig
                     log.info("Behandling $behandlingId har " +
                             "periodeMedFremtidigRettOrdinær=$periodeMedFremtidigRettOrdinær og " +
                             "forrigeSluttdato=$vedtattSluttdato")
-                    return datoForUtvidelse >= vedtattSluttdato && periodeMedFremtidigRettOrdinær != null
+
+                    return if (datoForUtvidelse >= vedtattSluttdato && periodeMedFremtidigRettOrdinær != null) {
+                        VedtakslengdeUtvidelse.AUTOMATISK
+                    } else {
+                        VedtakslengdeUtvidelse.IKKE_AKTUELL
+                    }
                 }
             }
 
@@ -97,11 +109,15 @@ class VedtakslengdeService(
             val harFremtidigRettOrdinær = harFremtidigRettOrdinær(vedtattSluttdato, nyForventetSluttdato, behandlingId)
             log.info("Behandling $behandlingId har harFremtidigRettOrdinær=$harFremtidigRettOrdinær og forrigeSluttdato=${vedtattSluttdato}")
 
-            return datoForUtvidelse >= vedtattSluttdato && harFremtidigRettOrdinær
+            return if (datoForUtvidelse >= vedtattSluttdato && harFremtidigRettOrdinær) {
+                VedtakslengdeUtvidelse.AUTOMATISK
+            } else {
+                VedtakslengdeUtvidelse.IKKE_AKTUELL
+            }
         } else {
             log.info("Behandling $behandlingId har ingen vedtatt sluttdato, ingen utvidelse nødvendig")
         }
-        return false
+        return VedtakslengdeUtvidelse.IKKE_AKTUELL
     }
 
     fun utvidSluttdato(
