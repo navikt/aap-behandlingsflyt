@@ -2,7 +2,7 @@
 
 Kontraktmodulen tilgjengeliggjøres som bibliotek:
 
-```
+```kotlin
 implementation("no.nav.aap.behandlingsflyt:kontrakt:$behandlingsflytVersjon")
 ```
 

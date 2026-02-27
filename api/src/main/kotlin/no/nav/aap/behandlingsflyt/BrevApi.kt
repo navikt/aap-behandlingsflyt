@@ -223,7 +223,7 @@ fun NormalOpenAPIRoute.brevApi(
                         val repositoryProvider = repositoryRegistry.provider(connection)
 
                         LoggingKontekst(
-                            repositoryProvider,
+                            repositoryProvider.provide(),
                             LogKontekst(referanse = req.behandlingsReferanse)
                         ).use {
                             val behandlingRepository =

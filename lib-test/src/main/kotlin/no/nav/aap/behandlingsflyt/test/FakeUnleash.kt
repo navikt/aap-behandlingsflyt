@@ -50,6 +50,8 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.VisIkkeRelevantPeriode to true,
         BehandlingsflytFeature.NyTidligereVurderinger to true,
         BehandlingsflytFeature.BekreftVurderingerOppfolging to true,
+        BehandlingsflytFeature.MigrerInstitusjonsopphold to true,
+        BehandlingsflytFeature.LagreStansOgOpphor to true,
         )
 )
 

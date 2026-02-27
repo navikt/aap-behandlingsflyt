@@ -56,7 +56,6 @@ import no.nav.aap.behandlingsflyt.behandling.klage.resultat.klageresultatApi
 import no.nav.aap.behandlingsflyt.behandling.klage.trekk.trekkKlageGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.kvalitetssikring.kvalitetssikringApi
 import no.nav.aap.behandlingsflyt.behandling.kvalitetssikring.kvalitetssikringTilgangApi
-import no.nav.aap.behandlingsflyt.behandling.rettighet.rettighetApi
 import no.nav.aap.behandlingsflyt.behandling.lovvalgmedlemskap.grunnlag.forutgåendeMedlemskapApi
 import no.nav.aap.behandlingsflyt.behandling.lovvalgmedlemskap.grunnlag.lovvalgMedlemskapGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.lovvalgmedlemskap.lovvalgMedlemskapApi
@@ -64,6 +63,7 @@ import no.nav.aap.behandlingsflyt.behandling.mellomlagring.mellomlagretVurdering
 import no.nav.aap.behandlingsflyt.behandling.oppfolgingsbehandling.avklarOppfolgingsoppgaveGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.oppfolgingsbehandling.oppfølgingsOppgaveApi
 import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.oppholdskravGrunnlagApi
+import no.nav.aap.behandlingsflyt.behandling.rettighet.rettighetApi
 import no.nav.aap.behandlingsflyt.behandling.rettighetsperiode.rettighetsperiodeGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.revurdering.avbrytRevurderingGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.simulering.simuleringApi
@@ -99,9 +99,11 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.InstitusjonsOppho
 import no.nav.aap.behandlingsflyt.pip.behandlingsflytPipApi
 import no.nav.aap.behandlingsflyt.prosessering.BehandlingsflytLogInfoProvider
 import no.nav.aap.behandlingsflyt.prosessering.ProsesseringsJobber
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.saksApi
 import no.nav.aap.behandlingsflyt.test.opprettDummySakApi
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -158,6 +160,7 @@ internal object AppConfig {
 
     // Vi skrur opp ktor sin default-verdi, som er "antall CPUer", fordi vi har en del venting på IO (db, kafka, http):
     private const val ktorParallellitet = 8
+
     // Vi følger ktor sin metodikk for å regne ut tuning parametre som funksjon av parallellitet
     // https://github.com/ktorio/ktor/blob/3.3.1/ktor-server/ktor-server-core/common/src/io/ktor/server/engine/ApplicationEngine.kt#L30
     const val connectionGroupSize = ktorParallellitet / 2 + 1
@@ -224,23 +227,7 @@ internal fun Application.server(
 
     val motor = startMotor(dataSource, repositoryRegistry, gatewayProvider)
 
-    if (!Miljø.erLokal()) {
-        startKabalKonsument(dataSource, repositoryRegistry)
-    }
-    if (!Miljø.erLokal()) {
-        startPDLHendelseKonsument(dataSource, repositoryRegistry, gatewayProvider)
-    }
-    if (!Miljø.erLokal()) {
-        startTilbakekrevingEventKonsument(dataSource, repositoryRegistry)
-    }
-
-    if (!Miljø.erLokal() && !Miljø.erProd()) {
-        startInstitusjonsOppholdKonsument(dataSource, repositoryRegistry)
-    }
-
-    if (!Miljø.erLokal()) {
-        startSykepengevedtakKonsument(dataSource, repositoryRegistry, gatewayProvider)
-    }
+    startKafkakonsumenter(dataSource, repositoryRegistry, gatewayProvider)
 
     monitor.subscribe(ApplicationStopPreparing) { environment ->
         environment.log.info("ktor forbereder seg på å stoppe.")
@@ -346,6 +333,22 @@ internal fun Application.server(
 
 }
 
+private fun Application.startKafkakonsumenter(
+    dataSource: HikariDataSource,
+    repositoryRegistry: RepositoryRegistry,
+    gatewayProvider: GatewayProvider
+) {
+    if (!Miljø.erLokal()) {
+        startKabalKonsument(dataSource, repositoryRegistry)
+        startPDLHendelseKonsument(dataSource, repositoryRegistry, gatewayProvider)
+        startTilbakekrevingEventKonsument(dataSource, repositoryRegistry)
+        startSykepengevedtakKonsument(dataSource, repositoryRegistry, gatewayProvider)
+    }
+    if (!Miljø.erLokal() && !Miljø.erProd()) {
+        startInstitusjonsOppholdKonsument(dataSource, repositoryRegistry)
+    }
+}
+
 // Bruker leaderElector for å sikre at kun en pod kjører migreringen og spinner opp en egen tråd for å ikke blokkere.
 private fun utførMigreringer(
     dataSource: HikariDataSource,
@@ -356,10 +359,17 @@ private fun utførMigreringer(
     scheduler.schedule(Runnable {
         val unleashGateway: UnleashGateway = gatewayProvider.provide()
         val isLeader = isLeader(log)
-        log.info("isLeader = $isLeader")
+        val migrerInstitusjonsoppholdEnabled =
+            unleashGateway.isEnabled(BehandlingsflytFeature.MigrerInstitusjonsopphold)
+        log.info("isLeader = $isLeader, migrerInstitusjonsoppholdEnabled = $migrerInstitusjonsoppholdEnabled")
 
-        if (isLeader) {
+
+        if (migrerInstitusjonsoppholdEnabled && isLeader) {
             // kjør migreringer
+            dataSource.transaction { connection ->
+                val repository = InstitusjonsoppholdRepositoryImpl(connection)
+                repository.migrerInstitusjonsopphold()
+            }
         }
 
     }, 9, TimeUnit.MINUTES)

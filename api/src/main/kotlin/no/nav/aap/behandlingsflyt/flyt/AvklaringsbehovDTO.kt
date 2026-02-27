@@ -13,7 +13,7 @@ data class AvklaringsbehovDTO(
     val definisjon: Definisjon,
     val status: Status,
     val endringer: List<EndringDTO>,
-    /* Periodene er sortert og har ikke overlapp. */
+    /** Periodene er sortert og har ikke overlapp. */
     val perioder: List<AvklaringsbehovPeriodeDTO>?
 ) {
     constructor(avklaringsbehov: Avklaringsbehov, kravdato: LocalDate) : this(
