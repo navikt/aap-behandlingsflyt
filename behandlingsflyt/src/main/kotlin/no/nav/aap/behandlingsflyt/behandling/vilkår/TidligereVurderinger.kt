@@ -57,7 +57,7 @@ interface TidligereVurderinger {
     data object UunngåeligAvslag : Behandlingsutfall
     data class PotensieltOppfylt(val rettighetstype: RettighetsType?) : Behandlingsutfall
 
-    fun behandlingsutfall(kontekst: FlytKontekstMedPerioder, førSteg: StegType): Tidslinje<Behandlingsutfall>
+    fun behandlingsutfall(kontekst: FlytKontekstMedPerioder, førSteg: StegType, etterSteg: StegType? = null): Tidslinje<Behandlingsutfall>
 }
 
 class TidligereVurderingerImpl(
@@ -493,7 +493,8 @@ class TidligereVurderingerImpl(
 
     override fun behandlingsutfall(
         kontekst: FlytKontekstMedPerioder,
-        førSteg: StegType
+        førSteg: StegType,
+        etterSteg: StegType?
     ): Tidslinje<TidligereVurderinger.Behandlingsutfall> {
         val sjekker = when (kontekst.behandlingType) {
             TypeBehandling.Førstegangsbehandling,
@@ -510,8 +511,8 @@ class TidligereVurderingerImpl(
         val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
 
         return sjekker
-            .asSequence()
             .takeWhile { it.steg != førSteg }
+            .takeLastWhile { it.steg != etterSteg}
             .fold(
                 tidslinjeOf(kontekst.rettighetsperiode to TidligereVurderinger.PotensieltOppfylt(null) as TidligereVurderinger.Behandlingsutfall)
             ) { foreløpigTidslinje, sjekk ->
