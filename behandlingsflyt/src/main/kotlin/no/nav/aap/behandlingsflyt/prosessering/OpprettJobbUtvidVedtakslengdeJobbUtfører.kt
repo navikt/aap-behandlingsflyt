@@ -63,12 +63,18 @@ class OpprettJobbUtvidVedtakslengdeJobbUtfører(
         if (sisteGjeldendeBehandling != null) {
             val rettighetsperiode = sakRepository.hent(id).rettighetsperiode
             // Bruker sisteGjeldendeBehandling.id både for behandlingId og forrigeBehandlingId fordi vi ser på gjeldende behandling
-            return vedtakslengdeService.skalUtvideSluttdato(
+            val vedtakslengdeUtvidelse = vedtakslengdeService.hentNesteVedtakslengdeUtvidelse(
                 behandlingId = sisteGjeldendeBehandling.id,
                 forrigeBehandlingId = sisteGjeldendeBehandling.id,
                 rettighetsperiode = rettighetsperiode,
                 datoForUtvidelse = dato
-            ) == VedtakslengdeUtvidelse.AUTOMATISK
+            )
+
+            if (vedtakslengdeUtvidelse is VedtakslengdeUtvidelse.Manuell) {
+                log.error("Sak med id $id trenger manuell utvidelse av vedtakslengde. Dette er ikke implementert. Må følges opp!")
+            }
+
+            return vedtakslengdeUtvidelse is VedtakslengdeUtvidelse.Automatisk
         }
         return false
     }

@@ -48,18 +48,18 @@ class VedtakslengdeSteg(
             }
 
             VurderingType.UTVID_VEDTAKSLENGDE -> {
-                val utvidelse = vedtakslengdeService.skalUtvideSluttdato(
+                val vedtakslengdeUtvidelse = vedtakslengdeService.hentNesteVedtakslengdeUtvidelse(
                     kontekst.behandlingId,
                     kontekst.forrigeBehandlingId,
                     kontekst.rettighetsperiode)
-                if (utvidelse == VedtakslengdeUtvidelse.AUTOMATISK) {
-                    vedtakslengdeService.utvidSluttdato(
+                if (vedtakslengdeUtvidelse is VedtakslengdeUtvidelse.Automatisk) {
+                    vedtakslengdeService.utvidVedtakslengde(
                         behandlingId = kontekst.behandlingId,
                         forrigeBehandlingId = kontekst.forrigeBehandlingId,
-                        rettighetsperiode = kontekst.rettighetsperiode,
+                        vedtakslengdeUtvidelse = vedtakslengdeUtvidelse,
                     )
                 } else {
-                    log.info("Ingen automatisk utvidelse av vedtakslengde, resultat=$utvidelse")
+                    log.info("Ingen automatisk utvidelse av vedtakslengde, resultat=$vedtakslengdeUtvidelse")
                 }
             }
 

@@ -55,7 +55,10 @@ class OpprettJobbUtvidVedtakslengdeJobbUtførerTest {
         val jobbInputSak = JobbInput(OpprettBehandlingUtvidVedtakslengdeJobbUtfører).forSak(sakId.id)
 
         every { vedtakslengdeService.hentSakerAktuelleForUtvidelseAvVedtakslengde(any()) } returns setOf(sakId)
-        every { vedtakslengdeService.skalUtvideSluttdato(behandlingId, behandlingId, any<Periode>(), any<LocalDate>())} returns VedtakslengdeUtvidelse.AUTOMATISK
+        every { vedtakslengdeService.hentNesteVedtakslengdeUtvidelse(behandlingId, behandlingId, any<Periode>(), any<LocalDate>())} returns VedtakslengdeUtvidelse.Automatisk(
+            forrigeSluttdato = dagensDato,
+            nySluttdato = dagensDato.plusYears(1),
+        )
         every { behandlingService.finnBehandlingMedSisteFattedeVedtak(sakId) } returns behandlingMedVedtak()
         every { sakRepository.hent(sakId) } returns mockk<Sak> { every { rettighetsperiode } returns Periode(dagensDato.minusYears(1), dagensDato.plusYears(1)) }
         every { flytJobbRepository.leggTil(match { it.sakId() == sakId.id }) } just Runs
@@ -82,7 +85,7 @@ class OpprettJobbUtvidVedtakslengdeJobbUtførerTest {
     @Test
     fun `skal ikke opprette jobber hvis skalUtvideSluttdato er IKKE_AKTUELL`() {
         every { vedtakslengdeService.hentSakerAktuelleForUtvidelseAvVedtakslengde(any()) } returns setOf(sakId)
-        every { vedtakslengdeService.skalUtvideSluttdato(behandlingId, behandlingId, any<Periode>(), any<LocalDate>())} returns VedtakslengdeUtvidelse.IKKE_AKTUELL
+        every { vedtakslengdeService.hentNesteVedtakslengdeUtvidelse(behandlingId, behandlingId, any<Periode>(), any<LocalDate>())} returns VedtakslengdeUtvidelse.IkkeAktuell
         every { behandlingService.finnBehandlingMedSisteFattedeVedtak(sakId) } returns behandlingMedVedtak()
         every { sakRepository.hent(sakId) } returns mockk<Sak> { every { rettighetsperiode } returns Periode(dagensDato.minusYears(1), dagensDato.plusYears(1)) }
 

@@ -36,14 +36,30 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtfører(
         if (sisteGjeldendeBehandling != null) {
             log.info("Gjeldende behandling for sak $sakId er ${sisteGjeldendeBehandling.id}")
             val rettighetsperiode = sakRepository.hent(sakId).rettighetsperiode
+
             // Bruker sisteGjeldendeBehandling.id både for behandlingId og forrigeBehandlingId fordi vi ser på gjeldende behandling
-            val utvidelse = vedtakslengdeService.skalUtvideSluttdato(sisteGjeldendeBehandling.id, sisteGjeldendeBehandling.id, rettighetsperiode, datoForUtvidelse)
-            if (utvidelse == VedtakslengdeUtvidelse.AUTOMATISK) {
-                log.info("Oppretter behandling for utvidelse av vedtakslengde for sak $sakId")
-                val utvidVedtakslengdeBehandling = opprettNyBehandling(sakId)
-                prosesserBehandlingService.triggProsesserBehandling(utvidVedtakslengdeBehandling)
-            } else {
-                log.info("Sak med id $sakId trenger ikke utvidelse av vedtakslengde, hopper over")
+            val vedtakslengdeUtvidelse = vedtakslengdeService.hentNesteVedtakslengdeUtvidelse(
+                behandlingId = sisteGjeldendeBehandling.id,
+                forrigeBehandlingId = sisteGjeldendeBehandling.id,
+                rettighetsperiode = rettighetsperiode,
+                datoForUtvidelse = datoForUtvidelse
+            )
+
+            when (vedtakslengdeUtvidelse) {
+                is VedtakslengdeUtvidelse.Automatisk -> {
+                    log.info("Oppretter behandling for utvidelse av vedtakslengde fra " +
+                            "forrige sluttdato ${vedtakslengdeUtvidelse.forrigeSluttdato} til " +
+                            "ny sluttdato ${vedtakslengdeUtvidelse.nySluttdato} for sak $sakId")
+
+                    val utvidVedtakslengdeBehandling = opprettNyBehandling(sakId)
+                    prosesserBehandlingService.triggProsesserBehandling(utvidVedtakslengdeBehandling)
+                }
+                is VedtakslengdeUtvidelse.Manuell -> {
+                    log.error("Sak med id $sakId trenger manuell utvidelse av vedtakslengde. Dette er ikke implementert. Må følges opp!")
+                }
+                is VedtakslengdeUtvidelse.IkkeAktuell -> {
+                    log.info("Sak med id $sakId trenger ikke utvidelse av vedtakslengde, hopper over")
+                }
             }
         } else {
             log.info("Sak med id $sakId har ingen gjeldende behandlinger, hopper over")
