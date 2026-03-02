@@ -85,6 +85,7 @@ class KvalitetssikringsStegTest {
     fun `om et behov underkjennes, og løses på nytt, så skal det kvalitetssikres på nytt`() {
         Scenario().apply {
             opprettOgLøs(Definisjon.AVKLAR_SYKDOM)
+            opprettOgLøs(Definisjon.SKRIV_SYKDOMSVURDERING_BREV)
 
             kjørSteg()
             assertStatus(Definisjon.KVALITETSSIKRING, Status.OPPRETTET)
@@ -158,7 +159,7 @@ class KvalitetssikringsStegTest {
                 .isFalse
         }
 
-        fun kvalitetssikre(definisjon: Definisjon, godkjent: Boolean = true) {
+        fun kvalitetssikre(godkjente: List<Definisjon>, underkjente: List<Definisjon> = emptyList()) {
             val løser = KvalitetssikrerLøser(InMemoryAvklaringsbehovRepository, LokalUnleash)
             val resultat = løser.løs(
                 AvklaringsbehovKontekst(
@@ -171,14 +172,14 @@ class KvalitetssikringsStegTest {
                     )
                 ),
                 KvalitetssikringLøsning(
-                    vurderinger = listOf(
+                    vurderinger = (godkjente + underkjente).map {
                         TotrinnsVurdering(
-                            definisjon = definisjon.kode,
-                            godkjent = godkjent,
-                            begrunnelse = if (godkjent) null else "Ikke godkjent",
+                            definisjon = it.kode,
+                            godkjent = it in godkjente,
+                            begrunnelse = if (it in underkjente) "Ikke godkjent" else null,
                             grunner = emptyList()
                         )
-                    )
+                    }
                 )
             )
 
@@ -187,6 +188,13 @@ class KvalitetssikringsStegTest {
                 resultat.begrunnelse,
                 KVALITETSSIKRER,
                 resultat.kreverToTrinn
+            )
+        }
+
+        fun kvalitetssikre(definisjon: Definisjon, godkjent: Boolean = true) {
+            kvalitetssikre(
+                if (godkjent) listOf(definisjon) else emptyList(),
+                if (!godkjent) listOf(definisjon) else emptyList()
             )
         }
 

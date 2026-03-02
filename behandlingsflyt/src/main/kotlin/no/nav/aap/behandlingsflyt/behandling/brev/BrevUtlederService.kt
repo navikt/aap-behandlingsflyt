@@ -27,8 +27,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsopptrapping
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsopptrapping.perioderMedArbeidsopptrapping
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdomsvurderingbrev.SykdomsvurderingForBrevRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdomsvurderingbrev.SykdomsvurderingForBrevRepository
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
@@ -37,10 +37,10 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.BARNETILL
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.EFFEKTUER_AKTIVITETSPLIKT
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.EFFEKTUER_AKTIVITETSPLIKT_11_9
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.FASTSATT_PERIODE_PASSERT
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.UTVID_VEDTAKSLENGDE
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.MIGRER_RETTIGHETSPERIODE
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.FRITAK_MELDEPLIKT
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.MIGRER_RETTIGHETSPERIODE
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.MOTTATT_MELDEKORT
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.UTVID_VEDTAKSLENGDE
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
@@ -115,6 +115,7 @@ class BrevUtlederService(
                     Resultat.AVSLAG -> {
                         brevBehovAvslag(behandling)
                     }
+
                     Resultat.TRUKKET -> null
                     Resultat.AVBRUTT -> null
                 }
@@ -283,7 +284,8 @@ class BrevUtlederService(
         dato: LocalDate?
     ): GrunnlagBeregning {
         val grunnlag = beregningsgrunnlagRepository.hentHvisEksisterer(behandlingId)
-        val beregningsgrunnlag = beregnBeregningsgrunnlagBeløp(grunnlag, dato)
+        val beregningsgrunnlag =
+            if (grunnlag != null && dato != null) beregnBeregningsgrunnlagBeløp(grunnlag, dato) else null
         val beregningstidspunktVurdering =
             beregningVurderingRepository.hentHvisEksisterer(behandlingId)?.tidspunktVurdering
 
@@ -310,7 +312,7 @@ class BrevUtlederService(
                 }
             }
 
-            null -> GrunnlagBeregning(null, emptyList(), beregningsgrunnlag)
+            null -> GrunnlagBeregning(null, emptyList(), null)
         }
     }
 
@@ -437,11 +439,8 @@ class BrevUtlederService(
         return this.map { InntektPerÅr(it.år, it.inntektIKroner.verdi()) }
     }
 
-    private fun beregnBeregningsgrunnlagBeløp(grunnlag: Beregningsgrunnlag?, dato: LocalDate?): Beløp? {
-        if (dato == null) {
-            return null
-        }
-        val grunnlaget = grunnlag?.grunnlaget() ?: return null
+    private fun beregnBeregningsgrunnlagBeløp(grunnlag: Beregningsgrunnlag, dato: LocalDate): Beløp {
+        val grunnlaget = grunnlag.grunnlaget()
         val grunnlagetBeløp = grunnlaget.multiplisert(Grunnbeløp.finnGrunnbeløp(dato))
         return Beløp(grunnlagetBeløp.verdi.setScale(0, RoundingMode.HALF_UP))
     }

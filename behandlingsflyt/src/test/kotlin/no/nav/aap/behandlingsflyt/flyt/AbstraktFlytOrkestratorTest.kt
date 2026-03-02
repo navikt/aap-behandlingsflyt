@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.flyt
 import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovOrkestrator
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.vedtak.TotrinnsVurdering
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarBarnetilleggLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarBistandsbehovLøsning
@@ -20,6 +21,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSamo
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSykdomLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarYrkesskadeLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklaringsbehovLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.BekreftVurderingerOppfølgingLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FastsettBeregningstidspunktLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FastsettYrkesskadeInntektLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FatteVedtakLøsning
@@ -129,6 +131,7 @@ import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.behandlingsflyt.test.modell.TestYrkesskade
 import no.nav.aap.behandlingsflyt.test.modell.defaultInntekt
 import no.nav.aap.behandlingsflyt.test.testGatewayProvider
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
@@ -137,7 +140,6 @@ import no.nav.aap.komponenter.tidslinje.tidslinjeOf
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.Bruker
-import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.testutil.ManuellMotorImpl
 import no.nav.aap.verdityper.dokument.JournalpostId
@@ -222,14 +224,12 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
     fun happyCaseFørstegangsbehandling(
         fom: LocalDate = LocalDate.now().minusMonths(3),
         person: TestPerson = TestPersoner.STANDARD_PERSON(),
-        periode: Periode = Periode(fom, Tid.MAKS),
         sendMeldekort: Boolean = true,
     ): Sak {
         // Sender inn en søknad
         var (sak, behandling) = sendInnFørsteSøknad(
             person = person,
             mottattTidspunkt = fom.atStartOfDay(),
-            periode = periode,
         )
 
         assertThat(behandling.typeBehandling()).isEqualTo(TypeBehandling.Førstegangsbehandling)
@@ -262,7 +262,9 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
             )
         }
 
-        behandling = behandling.kvalitetssikre()
+        behandling = behandling
+            .bekreftVurderinger()
+            .kvalitetssikre()
             .løsAvklaringsBehov(
                 FastsettBeregningstidspunktLøsning(
                     beregningVurdering = BeregningstidspunktVurderingDto(
@@ -399,6 +401,7 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
                 )
             )
             .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
             .kvalitetssikre()
     }
 
@@ -798,7 +801,26 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
         søknad: Søknad = TestSøknader.STANDARD_SØKNAD,
         person: TestPerson = TestPersoner.STANDARD_PERSON(),
         mottattTidspunkt: LocalDateTime? = null,
-        periode: Periode? = null,
+        journalpostId: JournalpostId = journalpostId(),
+    ): Pair<Sak, Behandling> {
+        val mottattTidspunkt = mottattTidspunkt ?: LocalDateTime.now().minusMonths(3)
+        val sak = dataSource.transaction { connection ->
+            SakRepositoryImpl(connection).finnEllerOpprett(
+                PersonRepositoryImpl(connection).finnEllerOpprett(listOf(person.aktivIdent())),
+                mottattTidspunkt.toLocalDate(),
+            )
+        }
+        val behandling = sak.sendInnSøknad(søknad, mottattTidspunkt, journalpostId)
+
+        return Pair(sak, behandling)
+    }
+
+    @Deprecated("Sluttdato for rettighetesperiode er alltid Tid.MAKS for nye/migrerte saker. Send kun med søknadsdato, med mindre du tester koden din for ikke-migrerte saker.")
+    protected fun sendInnFørsteSøknad(
+        søknad: Søknad = TestSøknader.STANDARD_SØKNAD,
+        person: TestPerson = TestPersoner.STANDARD_PERSON(),
+        mottattTidspunkt: LocalDateTime? = null,
+        periode: Periode?,
         journalpostId: JournalpostId = journalpostId(),
     ): Pair<Sak, Behandling> {
         val mottattTidspunkt = mottattTidspunkt ?: periode?.fom?.atStartOfDay() ?: LocalDateTime.now().minusMonths(3)
@@ -1074,6 +1096,7 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
                 )
             )
             .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
             .kvalitetssikre()
 
         if (harYrkesskade) {
@@ -1192,6 +1215,16 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
         )
     }
 
+    @JvmName("bekreftVurderingerExt")
+    protected fun Behandling.bekreftVurderinger(): Behandling {
+        return if (gatewayProvider.provide<UnleashGateway>().isEnabled(BehandlingsflytFeature.BekreftVurderingerOppfolging)) {
+            løsAvklaringsBehov(this, BekreftVurderingerOppfølgingLøsning())
+        } else {
+            this
+        }
+    }
+
+
     @JvmName("kvalitetssikreOkExt")
     protected fun Behandling.kvalitetssikre(
         bruker: Bruker = Bruker("KVALITETSSIKRER"),
@@ -1309,6 +1342,7 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
 
     class BehandlingInfo(
         val åpneAvklaringsbehov: List<Avklaringsbehov>,
+        val avklaringsbehovene: Avklaringsbehovene,
         val behandling: Behandling,
         val ventebehov: List<Avklaringsbehov>,
         val repositoryProvider: RepositoryProvider,
@@ -1323,7 +1357,11 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
                     åpneAvklaringsbehov = åpneAvklaringsbehov,
                     behandling = oppdatertBehandling,
                     ventebehov = åpneAvklaringsbehov.filter { it.erVentepunkt() },
-                    repositoryProvider = postgresRepositoryRegistry.provider(connection)
+                    repositoryProvider = postgresRepositoryRegistry.provider(connection),
+                    avklaringsbehovene = Avklaringsbehovene(
+                        postgresRepositoryRegistry.provider(connection).provide(),
+                        this.id
+                    )
                 )
             )
         }

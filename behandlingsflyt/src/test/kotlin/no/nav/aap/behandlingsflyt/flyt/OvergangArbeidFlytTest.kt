@@ -32,6 +32,7 @@ class OvergangArbeidFlytTest(val unleashGateway: KClass<UnleashGateway>) : Abstr
             .løsBistand(endringsdato, erOppfylt = false)
             .løsOvergangArbeid(Utfall.OPPFYLT, fom = endringsdato)
             .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
             .fattVedtak()
             .also {
                 assertThat(it.status()).isEqualTo(Status.IVERKSETTES)
@@ -49,6 +50,7 @@ class OvergangArbeidFlytTest(val unleashGateway: KClass<UnleashGateway>) : Abstr
             .løsBistand(endringsdato, erOppfylt = false)
             .løsOvergangArbeid(Utfall.IKKE_OPPFYLT, fom = endringsdato)
             .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
             .fattVedtak()
             .also {
                 assertThat(it.status()).isEqualTo(Status.IVERKSETTES)
@@ -74,6 +76,7 @@ class OvergangArbeidFlytTest(val unleashGateway: KClass<UnleashGateway>) : Abstr
             /* Her hopper vi "tilbake" i flyten og endrer sykdom til oppfylt. */
             .løsSykdom(vurderingGjelderFra = endringsdato, erOppfylt = true)
             .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
             .fattVedtak()
             .also {
                 assertThat(it.status()).isEqualTo(Status.IVERKSETTES)
