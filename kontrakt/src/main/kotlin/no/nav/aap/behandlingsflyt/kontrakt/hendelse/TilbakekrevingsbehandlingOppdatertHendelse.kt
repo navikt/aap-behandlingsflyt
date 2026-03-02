@@ -12,7 +12,7 @@ public data class TilbakekrevingsbehandlingOppdatertHendelse(
     val behandlingref: BehandlingReferanse,
     val behandlingStatus: TilbakekrevingBehandlingsstatus,
     val sakOpprettet: LocalDateTime,
-    val avklaringsbehov: List<AvklaringsbehovHendelseDto>,
+    val avklaringsbehov: String?,
     val totaltFeilutbetaltBeløp: BigDecimal,
     val saksbehandlingURL: String,
 )

@@ -432,4 +432,12 @@ public enum class AvklaringsbehovKode {
      * [OPPRETT_HENDELSE_PÅ_SAK_KODE]
      */
     `9004`,
+    /**
+     * [VURDER_TILBAKEKREVING]
+     */
+    `9082`,
+    /**
+     * [VURDER_TILBAKEKREVING_BESLUTTER]
+     */
+    `9083`
 }
