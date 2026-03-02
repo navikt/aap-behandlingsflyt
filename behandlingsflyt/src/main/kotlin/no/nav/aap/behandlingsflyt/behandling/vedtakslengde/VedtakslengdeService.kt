@@ -1,7 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.vedtakslengde
 
 import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
-import no.nav.aap.behandlingsflyt.behandling.rettighetstype.utledStansEllerOpphør
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.VirkningstidspunktUtleder
 import no.nav.aap.behandlingsflyt.behandling.underveis.RettighetstypeService
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companion.plussEtÅrMedHverdager
@@ -57,9 +56,7 @@ class VedtakslengdeService(
 
     fun hentNesteVedtakslengdeUtvidelse(
         behandlingId: BehandlingId,
-        forrigeBehandlingId: BehandlingId?,
-        rettighetsperiode: Periode,
-    ): VedtakslengdeUtvidelse {
+        forrigeBehandlingId: BehandlingId?, ): VedtakslengdeUtvidelse {
         val vedtakslengdeGrunnlag = forrigeBehandlingId?.let { vedtakslengdeRepository.hentHvisEksisterer(forrigeBehandlingId) }
         val vedtattSluttdato = requireNotNull(hentVedtattSluttdato(forrigeBehandlingId, vedtakslengdeGrunnlag)) {
             "Kan ikke utlede vedtatt sluttdato for behandling $forrigeBehandlingId, som trengs for å vurdere utvidelse av vedtakslengde for behandling $behandlingId"
@@ -79,7 +76,7 @@ class VedtakslengdeService(
             } else {
                 // Har ett år eller mindre gjenstående med ordinær rettighet
                 val forventetStansEllerOpphørFom = periodeMedFremtidigOrdinærRettighet.tom.plusDays(1)
-                val avslagsårsaker = hentAvslagsårsakerVedStansEllerOpphør(behandlingId, rettighetsperiode, forventetStansEllerOpphørFom)
+                val avslagsårsaker = hentAvslagsårsakerVedStansEllerOpphør(behandlingId, forventetStansEllerOpphørFom)
 
                 if (unleashGateway.isEnabled(BehandlingsflytFeature.UtvidVedtakslengdeUnderEttAr)
                     && gyldigForAutomatiskUtvidelseAvVedtakslengde(avslagsårsaker)) {
@@ -115,38 +112,14 @@ class VedtakslengdeService(
 
     private fun hentAvslagsårsakerVedStansEllerOpphør(
         behandlingId: BehandlingId,
-        rettighetsperiode: Periode,
         stansEllerOpphørFom: LocalDate
     ): Set<Avslagsårsak> {
         val stansOpphørGrunnlag = stansOpphørRepository.hentHvisEksisterer(behandlingId)
-        if (stansOpphørGrunnlag == null) {
-            return hentAvslagsårsakerVedStansEllerOpphørUtledet(behandlingId, rettighetsperiode, stansEllerOpphørFom)
-        }
-
-        val gjeldendeStansEllerOpphør = stansOpphørGrunnlag.gjeldendeStansOgOpphør()
+        val gjeldendeStansEllerOpphør = stansOpphørGrunnlag?.gjeldendeStansOgOpphør()
         val avslagsårsakerFørsteDagUtenOrdinærRettighet = gjeldendeStansEllerOpphør
-            .filter { it.fom == stansEllerOpphørFom }
-            .flatMap { it.vurdering.årsaker }
-            .toSet()
-
-        return avslagsårsakerFørsteDagUtenOrdinærRettighet
-    }
-
-    // TODO midlertidig inntil stans og opphør er på plass i RettighetstypeSteg
-    private fun hentAvslagsårsakerVedStansEllerOpphørUtledet(
-        behandlingId: BehandlingId,
-        rettighetsperiode: Periode,
-        stansEllerOpphørFom: LocalDate
-    ): Set<Avslagsårsak> {
-        val vilkårsresultat = vilkårsresultatRepository.hent(behandlingId)
-        val stansEllerOpphør = utledStansEllerOpphør(
-            vilkårsresultat = vilkårsresultat,
-            rettighetsperiode = rettighetsperiode
-        )
-        val avslagsårsakerFørsteDagUtenOrdinærRettighet = stansEllerOpphør
-            .filter { (fom, _) -> fom == stansEllerOpphørFom }.values
-            .flatMap { it.årsaker }
-            .toSet()
+            ?.filter { it.fom == stansEllerOpphørFom }
+            ?.flatMap { it.vurdering.årsaker }
+            ?.toSet() ?: emptySet()
 
         return avslagsårsakerFørsteDagUtenOrdinærRettighet
     }

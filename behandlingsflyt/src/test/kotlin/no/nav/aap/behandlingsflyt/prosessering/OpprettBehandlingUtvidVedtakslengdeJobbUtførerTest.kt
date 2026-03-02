@@ -61,9 +61,7 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtførerTest {
     private val vilkårsresultatRepository = mockk<VilkårsresultatRepository>()
     private val rettighetestypeRepository = mockk<RettighetstypeRepository>()
     private val stansOpphørRepository = mockk<StansOpphørRepository>()
-    private val sakRepository = mockk<SakRepository> {
-        every { hent(sakId) } returns sak()
-    }
+
     private val opprettBehandlingUtvidVedtakslengdeJobbUtfører =
         OpprettBehandlingUtvidVedtakslengdeJobbUtfører(
             prosesserBehandlingService = prosesserBehandlingService,
@@ -77,7 +75,6 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtførerTest {
                 unleashGateway = AlleAvskruddUnleash,
                 clock = clock
             ),
-            sakRepository = sakRepository,
         )
 
 
