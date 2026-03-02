@@ -101,11 +101,9 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.InstitusjonsOppho
 import no.nav.aap.behandlingsflyt.pip.behandlingsflytPipApi
 import no.nav.aap.behandlingsflyt.prosessering.BehandlingsflytLogInfoProvider
 import no.nav.aap.behandlingsflyt.prosessering.ProsesseringsJobber
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.saksApi
 import no.nav.aap.behandlingsflyt.test.opprettDummySakApi
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -365,17 +363,11 @@ private fun utførMigreringer(
     scheduler.schedule(Runnable {
         val unleashGateway: UnleashGateway = gatewayProvider.provide()
         val isLeader = isLeader(log)
-        val migrerInstitusjonsoppholdEnabled =
-            unleashGateway.isEnabled(BehandlingsflytFeature.MigrerInstitusjonsopphold)
-        log.info("isLeader = $isLeader, migrerInstitusjonsoppholdEnabled = $migrerInstitusjonsoppholdEnabled")
+        log.info("isLeader = $isLeader")
 
 
-        if (migrerInstitusjonsoppholdEnabled && isLeader) {
+        if (isLeader) {
             // kjør migreringer
-            dataSource.transaction { connection ->
-                val repository = InstitusjonsoppholdRepositoryImpl(connection)
-                repository.migrerInstitusjonsopphold()
-            }
         }
 
     }, 9, TimeUnit.MINUTES)
