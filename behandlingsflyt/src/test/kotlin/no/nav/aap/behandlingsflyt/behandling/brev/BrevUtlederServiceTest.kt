@@ -182,6 +182,7 @@ class BrevUtlederServiceTest {
             every { avbrytRevurderingService.revurderingErAvbrutt(any<BehandlingId>()) } returns false
             every { stansOpphørRepository.hentHvisEksisterer(revurdering.id) } returns null
             every { unleashGateway.isEnabled(BehandlingsflytFeature.NyBrevtype11_17) } returns true
+            every { unleashGateway.isEnabled(BehandlingsflytFeature.UtvidVedtakslengdeUnderEttAr) } returns true
 
             val resultat = brevUtlederService.utledBehovForMeldingOmVedtak(revurdering.id)
 
