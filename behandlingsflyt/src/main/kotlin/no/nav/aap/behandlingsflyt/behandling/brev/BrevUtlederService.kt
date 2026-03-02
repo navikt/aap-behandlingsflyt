@@ -220,13 +220,12 @@ class BrevUtlederService(
         val underveisGrunnlag = underveisRepository.hent(behandling.id)
         val sisteDagMedYtelse = underveisGrunnlag.sisteDagMedYtelse()
 
-        var avslagsårsaker = emptySet<Avslagsårsak>()
-        if (unleashGateway.isEnabled(BehandlingsflytFeature.UtvidVedtakslengdeUnderEttAr)) {
-            avslagsårsaker = vedtakslengdeService.hentAvslagsårsakerVedStansEllerOpphør(
+        val avslagsårsaker = if (unleashGateway.isEnabled(BehandlingsflytFeature.UtvidVedtakslengdeUnderEttAr)) {
+            vedtakslengdeService.hentAvslagsårsakerVedStansEllerOpphør(
                 behandlingId = behandling.id,
                 stansEllerOpphørFom = sisteDagMedYtelse.plusDays(1)
             )
-        }
+        } else emptySet()
 
         return UtvidVedtakslengde(
             utvidetAapFomDato = utvidetAapFomDato,
