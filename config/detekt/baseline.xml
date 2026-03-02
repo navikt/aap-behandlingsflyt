@@ -236,8 +236,8 @@
     <ID>ReturnCount:FødselsnummerGenerator.kt:FødselsnummerGenerator$private fun generate(): String</ID>
     <ID>ReturnCount:InstitusjonsoppholdUtlederService.kt:InstitusjonsoppholdUtlederService$private fun utledHelse( venstreopphold: HelseOpphold?, høyreopphold: HelseOpphold? ): HelseOpphold?</ID>
     <ID>ReturnCount:InstitusjonsoppholdUtlederService.kt:InstitusjonsoppholdUtlederService$private fun utledSoning( venstreopphold: SoningOpphold?, høyreopphold: SoningOpphold? ): SoningOpphold?</ID>
-    <ID>ReturnCount:InstitusjonsoppholdUtlederServiceNy.kt:InstitusjonsoppholdUtlederServiceNy$private fun utledHelse( venstreopphold: HelseOpphold?, høyreopphold: HelseOpphold? ): HelseOpphold?</ID>
-    <ID>ReturnCount:InstitusjonsoppholdUtlederServiceNy.kt:InstitusjonsoppholdUtlederServiceNy$private fun utledSoning( venstreopphold: SoningOpphold?, høyreopphold: SoningOpphold? ): SoningOpphold?</ID>
+    <ID>ReturnCount:InstitusjonsoppholdUtlederService.kt:InstitusjonsoppholdUtlederServiceNy$private fun utledHelse( venstreopphold: HelseOpphold?, høyreopphold: HelseOpphold? ): HelseOpphold?</ID>
+    <ID>ReturnCount:InstitusjonsoppholdUtlederService.kt:InstitusjonsoppholdUtlederServiceNy$private fun utledSoning( venstreopphold: SoningOpphold?, høyreopphold: SoningOpphold? ): SoningOpphold?</ID>
     <ID>ReturnCount:InstitusjonsoppholdVurdering.kt:InstitusjonsoppholdVurdering$fun harNoeUavklart(): Boolean</ID>
     <ID>ReturnCount:KvalitetssikringsSteg.kt:KvalitetssikringsSteg$private fun erTilstrekkeligVurdert(avklaringsbehovene: Avklaringsbehovene): Boolean</ID>
     <ID>ReturnCount:ManuellVurderingForForutgåendeMedlemskap.kt:fun List&lt;PeriodisertManuellVurderingForForutgåendeMedlemskapDto>.validerGyldigVurderinger(): Validation&lt;List&lt;PeriodisertManuellVurderingForForutgåendeMedlemskapDto>></ID>
@@ -323,7 +323,7 @@
     <ID>TooManyFunctions:Inntektsbehov.kt:Inntektsbehov</ID>
     <ID>TooManyFunctions:InstitusjonsoppholdRepositoryImpl.kt:InstitusjonsoppholdRepositoryImpl : InstitusjonsoppholdRepository</ID>
     <ID>TooManyFunctions:InstitusjonsoppholdUtlederService.kt:InstitusjonsoppholdUtlederService</ID>
-    <ID>TooManyFunctions:InstitusjonsoppholdUtlederServiceNy.kt:InstitusjonsoppholdUtlederServiceNy</ID>
+    <ID>TooManyFunctions:InstitusjonsoppholdUtlederService.kt:InstitusjonsoppholdUtlederServiceNy</ID>
     <ID>TooManyFunctions:MedlemskapArbeidInntektForutgåendeRepositoryImpl.kt:MedlemskapArbeidInntektForutgåendeRepositoryImpl : MedlemskapArbeidInntektForutgåendeRepository</ID>
     <ID>TooManyFunctions:MedlemskapArbeidInntektRepositoryImpl.kt:MedlemskapArbeidInntektRepositoryImpl : MedlemskapArbeidInntektRepository</ID>
     <ID>TooManyFunctions:MeldekortRepositoryImpl.kt:MeldekortRepositoryImpl : MeldekortRepository</ID>

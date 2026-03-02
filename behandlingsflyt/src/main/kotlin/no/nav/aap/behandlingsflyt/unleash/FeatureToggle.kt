@@ -19,7 +19,6 @@ enum class BehandlingsflytFeature : FeatureToggle {
     VirksomhetsEtablering,
     KvalitetssikringVed2213,
     tilbakekrevingsOppgaverTilOppgave,
-    PeriodiseringHelseinstitusjonOpphold,
     HentingAvInstitusjonsOpphold,
     VisIkkeRelevantPeriode,
     NyTidligereVurderinger,
