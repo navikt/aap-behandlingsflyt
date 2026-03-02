@@ -21,7 +21,7 @@ import javax.sql.DataSource
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
-private val UFØRE_VEDTAK_TOPIC = requiredConfigForKey("integrasjon.ufore.vedtak.topic")
+val UFØRE_VEDTAK_TOPIC = requiredConfigForKey("integrasjon.ufore.vedtak.topic")
 
 class UførevedtakKafkaKonsument(
     config: KafkaConsumerConfig<String, String>,
@@ -72,11 +72,7 @@ class UførevedtakKafkaKonsument(
             } else {
                 log.info("Hopper over hendelse fordi person ikke finnes i Kelvin")
             }
-
-            // Har 11-18 og fått vedtak på uføre -> Opprett behandling
         }
-
-
     }
 
     private fun finnPersonMedIdenterFraPdl(

@@ -17,9 +17,7 @@ public data class UførevedtakKafkaMelding(
     val virkningsdato: LocalDate,
     val resultat: UførevedtakResultat,
     val avslag12_5: Boolean,
-
-)
-{
+) {
     public fun tilUføreVedtakV0(): Uførevedtak =
         UførevedtakV0(
             personid = personid,
@@ -39,7 +37,6 @@ public data class UførevedtakKafkaMelding(
             melding = this.tilUføreVedtakV0()
         )
     }
-
 }
 
 @JsonIgnoreProperties(ignoreUnknown = true)
