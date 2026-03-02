@@ -92,7 +92,7 @@ class InstitusjonsoppholdUtlederServiceNy(
             var oppholdSomKanGiReduksjon = harOppholdSomKreverAvklaring(oppholdUtenBarnetillegg)
 
             //Håndterer den sære casen ved at barnetillegg opphører
-            oppholdSomKanGiReduksjon =
+           oppholdSomKanGiReduksjon =
                 giNyTidslinjeHvisBarneTilleggTarSluttUnderOppholdet(barnetilleggTidslinje, helseOppholdSluttDato, oppholdSomKanGiReduksjon, helseOppholdTidslinje)
 
 
@@ -136,7 +136,7 @@ class InstitusjonsoppholdUtlederServiceNy(
         oppholdSomKanGiReduksjon: Tidslinje<Boolean>,
         helseOppholdTidslinje: Tidslinje<Boolean>
     ): Tidslinje<Boolean> {
-        var oppholdSomKanGiReduksjon1 = oppholdSomKanGiReduksjon
+        var oppholdSomKanGiReduksjonMedBarnetilleggStopp = oppholdSomKanGiReduksjon
         if (barnetilleggTidslinje.isNotEmpty()) {
 
             val barnetilleggEnd = barnetilleggTidslinje.maxDato()
@@ -144,7 +144,7 @@ class InstitusjonsoppholdUtlederServiceNy(
             val barneTilleggetOpphørerMidtIOpphold =
                 barnetilleggEnd <= helseOppholdSluttDato
             if (barneTilleggetOpphørerMidtIOpphold) {
-                oppholdSomKanGiReduksjon1 = harOppholdSomKreverVurderingEtterStoppIBarneTillegg(
+               oppholdSomKanGiReduksjonMedBarnetilleggStopp = harOppholdSomKreverVurderingEtterStoppIBarneTillegg(
                     barnetilleggTidslinje,
                     helseOppholdSluttDato,
                     helseOppholdTidslinje,
@@ -152,7 +152,7 @@ class InstitusjonsoppholdUtlederServiceNy(
             }
 
         }
-        return oppholdSomKanGiReduksjon1
+        return oppholdSomKanGiReduksjonMedBarnetilleggStopp
     }
 
     private fun harOppholdSomKreverVurderingEtterStoppIBarneTillegg(
