@@ -43,26 +43,15 @@ class KvalitetssikrerLøser(
             val vurderingerSomErSendtTilbake = relevanteVurderinger
                 .filter { it.godkjent == false }
 
-            val vurderingerFørRetur = relevanteVurderinger
-                .filter { it.godkjent == true }
+            val alle = relevanteVurderinger.filter { it.godkjent != null }
 
-
-            vurderingerFørRetur.forEach { vurdering ->
+            alle.forEach { vurdering ->
                 avklaringsbehovene.vurderKvalitet(
                     definisjon = Definisjon.forKode(vurdering.definisjon),
                     godkjent = vurdering.godkjent!!,
                     begrunnelse = vurdering.begrunnelse(),
-                    vurdertAv = kontekst.bruker.ident
-                )
-            }
-
-            vurderingerSomErSendtTilbake.forEach { vurdering ->
-                avklaringsbehovene.vurderKvalitet(
-                    definisjon = Definisjon.forKode(vurdering.definisjon),
-                    begrunnelse = vurdering.begrunnelse(),
-                    godkjent = vurdering.godkjent!!,
+                    vurdertAv = kontekst.bruker.ident,
                     årsakTilRetur = vurdering.grunner.orEmpty(),
-                    vurdertAv = kontekst.bruker.ident
                 )
             }
 
