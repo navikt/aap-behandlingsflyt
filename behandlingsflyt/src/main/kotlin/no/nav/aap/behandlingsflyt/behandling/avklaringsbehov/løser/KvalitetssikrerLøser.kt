@@ -40,27 +40,15 @@ class KvalitetssikrerLøser(
         )
 
         if (skalSendesTilbake(relevanteVurderinger)) {
-            val vurderingerSomErSendtTilbake = relevanteVurderinger
-                .filter { it.godkjent == false }
-
-            val alle = relevanteVurderinger.filter { it.godkjent != null }
-
-            alle.forEach { vurdering ->
+            relevanteVurderinger
+                .filter { it.godkjent != null }
+                .forEach { vurdering ->
                 avklaringsbehovene.vurderKvalitet(
                     definisjon = Definisjon.forKode(vurdering.definisjon),
                     godkjent = vurdering.godkjent!!,
                     begrunnelse = vurdering.begrunnelse(),
                     vurdertAv = kontekst.bruker.ident,
                     årsakTilRetur = vurdering.grunner.orEmpty(),
-                )
-            }
-
-            if (vurderingerSomErSendtTilbake.none { it.definisjon == Definisjon.SKRIV_SYKDOMSVURDERING_BREV.kode }) {
-                avklaringsbehovene.vurderKvalitet(
-                    definisjon = Definisjon.SKRIV_SYKDOMSVURDERING_BREV,
-                    godkjent = false,
-                    begrunnelse = "En tidligere vurdering ble ikke godkjent. Brev må skrives på nytt.",
-                    vurdertAv = kontekst.bruker.ident
                 )
             }
         } else {

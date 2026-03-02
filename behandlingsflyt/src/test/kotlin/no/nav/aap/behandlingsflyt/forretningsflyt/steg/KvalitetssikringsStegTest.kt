@@ -101,21 +101,6 @@ class KvalitetssikringsStegTest {
         }
     }
 
-    @Test
-    fun `om sykdom underkjennes, så skal vedtaksbrevet skrives på nytt`() {
-        Scenario().apply {
-            opprettOgLøs(Definisjon.AVKLAR_SYKDOM)
-            opprettOgLøs(Definisjon.SKRIV_SYKDOMSVURDERING_BREV)
-
-            kjørSteg()
-
-            kvalitetssikre(listOf(Definisjon.SKRIV_SYKDOMSVURDERING_BREV), listOf(Definisjon.AVKLAR_SYKDOM))
-
-            assertStatus(Definisjon.AVKLAR_SYKDOM, Status.SENDT_TILBAKE_FRA_KVALITETSSIKRER)
-            assertStatus(Definisjon.SKRIV_SYKDOMSVURDERING_BREV, Status.SENDT_TILBAKE_FRA_KVALITETSSIKRER)
-        }
-    }
-
     private class Scenario {
         private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(1))
         private val behandling = opprettBehandling(periode)

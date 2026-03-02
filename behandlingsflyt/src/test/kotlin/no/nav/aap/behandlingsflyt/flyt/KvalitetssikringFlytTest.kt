@@ -84,12 +84,11 @@ class KvalitetssikringFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash
                     .filteredOn { it.status() == AvklaringsbehovStatus.SENDT_TILBAKE_FRA_KVALITETSSIKRER }
                     .extracting("definisjon")
                     .containsExactlyInAnyOrder(
-                        Definisjon.AVKLAR_SYKDOM,
-                        Definisjon.SKRIV_SYKDOMSVURDERING_BREV
+                        Definisjon.AVKLAR_SYKDOM
                     )
 
                 assertThat(avklaringsbehovSomKreverKvalitetssikring)
-                    .filteredOn { it.definisjon != Definisjon.AVKLAR_SYKDOM && it.definisjon != Definisjon.SKRIV_SYKDOMSVURDERING_BREV }
+                    .filteredOn { it.definisjon != Definisjon.AVKLAR_SYKDOM }
                     .allMatch { it.status() == AvklaringsbehovStatus.KVALITETSSIKRET }
 
                 assertThat(avklaringsbehovene.hentBehovForDefinisjon(Definisjon.KVALITETSSIKRING))
@@ -129,11 +128,8 @@ class KvalitetssikringFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash
                 assertThat(avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_BISTANDSBEHOV))
                     .matches { it?.status() == AvklaringsbehovStatus.SENDT_TILBAKE_FRA_KVALITETSSIKRER }
 
-                assertThat(avklaringsbehovene.hentBehovForDefinisjon(Definisjon.SKRIV_SYKDOMSVURDERING_BREV))
-                    .matches { it?.status() == AvklaringsbehovStatus.SENDT_TILBAKE_FRA_KVALITETSSIKRER }
-
                 assertThat(avklaringsbehovSomKreverKvalitetssikring)
-                    .filteredOn { !(it.definisjon == Definisjon.AVKLAR_BISTANDSBEHOV || it.definisjon == Definisjon.SKRIV_SYKDOMSVURDERING_BREV) }
+                    .filteredOn { it.definisjon != Definisjon.AVKLAR_BISTANDSBEHOV }
                     .allMatch { it.status() == AvklaringsbehovStatus.AVSLUTTET }
             }
     }
