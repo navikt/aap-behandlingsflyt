@@ -110,7 +110,7 @@ class VedtakslengdeService(
         lagreVedtakslengdeVurdering(behandlingId, vedtakslengdeUtvidelse.nySluttdato, nesteÅrligeUtvidelse)
     }
 
-    private fun hentAvslagsårsakerVedStansEllerOpphør(
+    fun hentAvslagsårsakerVedStansEllerOpphør(
         behandlingId: BehandlingId,
         stansEllerOpphørFom: LocalDate
     ): Set<Avslagsårsak> {

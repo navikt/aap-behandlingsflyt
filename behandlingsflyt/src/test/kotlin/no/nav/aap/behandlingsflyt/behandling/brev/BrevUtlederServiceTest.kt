@@ -22,7 +22,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Beregning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag11_19
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagInntekt
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.StansOpphørRepository
+import no.nav.aap.behandlingsflyt.behandling.vedtakslengde.VedtakslengdeService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.ArbeidsGradering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
@@ -103,7 +103,7 @@ class BrevUtlederServiceTest {
     val underveisRepository = mockk<UnderveisRepository>()
     val overgangUføreRepository = mockk<OvergangUføreRepository>()
     val avbrytRevurderingService = mockk<AvbrytRevurderingService>()
-    val stansOpphørRepository = mockk<StansOpphørRepository>()
+    val vedtakslengdeService = mockk<VedtakslengdeService>()
     val unleashGateway = mockk<UnleashGateway>()
     val brevUtlederService = BrevUtlederService(
         resultatUtleder = ResultatUtleder(
@@ -123,7 +123,7 @@ class BrevUtlederServiceTest {
         arbeidsopptrappingRepository = arbeidsopptrappingRepository,
         sykdomsvurderingForBrevRepository = sykdomsvurderingForBrevRepository,
         overgangUføreRepository = overgangUføreRepository,
-        stansOpphørRepository = stansOpphørRepository,
+        vedtakslengdeService = vedtakslengdeService,
         unleashGateway = unleashGateway,
     )
     val virkningstidspunkt = 1 januar 2025
@@ -180,7 +180,7 @@ class BrevUtlederServiceTest {
             every { underveisRepository.hent(revurdering.id) } returns revurderingUnderveisGrunnlag
             every { underveisRepository.hentHvisEksisterer(revurdering.id) } returns revurderingUnderveisGrunnlag
             every { avbrytRevurderingService.revurderingErAvbrutt(any<BehandlingId>()) } returns false
-            every { stansOpphørRepository.hentHvisEksisterer(revurdering.id) } returns null
+            every { vedtakslengdeService.hentAvslagsårsakerVedStansEllerOpphør(revurdering.id, any()) } returns emptySet()
             every { unleashGateway.isEnabled(BehandlingsflytFeature.NyBrevtype11_17) } returns true
             every { unleashGateway.isEnabled(BehandlingsflytFeature.UtvidVedtakslengdeUnderEttAr) } returns true
 

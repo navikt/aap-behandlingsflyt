@@ -7,6 +7,7 @@ import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.MINSTE_ÅRLIG_YTELSE
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.tilTidslinje
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakRepository
+import no.nav.aap.behandlingsflyt.behandling.vedtakslengde.VedtakslengdeService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Repository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Beregningsgrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepository
@@ -15,7 +16,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagI
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagUføre
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagYrkesskade
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.UføreInntekt
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.StansOpphørRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
@@ -67,7 +67,7 @@ class BrevUtlederService(
     private val arbeidsopptrappingRepository: ArbeidsopptrappingRepository,
     private val sykdomsvurderingForBrevRepository: SykdomsvurderingForBrevRepository,
     private val overgangUføreRepository: OvergangUføreRepository,
-    private val stansOpphørRepository: StansOpphørRepository,
+    private val vedtakslengdeService: VedtakslengdeService,
     private val unleashGateway: UnleashGateway
 ) {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
@@ -83,7 +83,7 @@ class BrevUtlederService(
         arbeidsopptrappingRepository = repositoryProvider.provide(),
         sykdomsvurderingForBrevRepository = repositoryProvider.provide(),
         overgangUføreRepository = repositoryProvider.provide(),
-        stansOpphørRepository = repositoryProvider.provide(),
+        vedtakslengdeService = VedtakslengdeService(repositoryProvider, gatewayProvider),
         unleashGateway = gatewayProvider.provide()
     )
 
@@ -222,13 +222,10 @@ class BrevUtlederService(
 
         var avslagsårsaker = emptySet<Avslagsårsak>()
         if (unleashGateway.isEnabled(BehandlingsflytFeature.UtvidVedtakslengdeUnderEttAr)) {
-            // Utleder årsak hvis stans eller opphør dagen etter sisteDagMedYtelse
-            val stansOpphørGrunnlag = stansOpphørRepository.hentHvisEksisterer(behandling.id)
-            avslagsårsaker = stansOpphørGrunnlag
-                ?.gjeldendeStansOgOpphør()
-                ?.filter { it.fom == sisteDagMedYtelse.plusDays(1) }
-                ?.flatMap { it.vurdering.årsaker }
-                ?.toSet() ?: emptySet()
+            avslagsårsaker = vedtakslengdeService.hentAvslagsårsakerVedStansEllerOpphør(
+                behandlingId = behandling.id,
+                stansEllerOpphørFom = sisteDagMedYtelse.plusDays(1)
+            )
         }
 
         return UtvidVedtakslengde(
