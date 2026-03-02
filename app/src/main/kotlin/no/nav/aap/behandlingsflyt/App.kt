@@ -91,6 +91,8 @@ import no.nav.aap.behandlingsflyt.hendelse.kafka.sykepenger.SYKEPENGEVEDTAK_EVEN
 import no.nav.aap.behandlingsflyt.hendelse.kafka.sykepenger.SykepengevedtakKafkaKonsument
 import no.nav.aap.behandlingsflyt.hendelse.kafka.tilbakekreving.TILBAKEKREVING_EVENT_TOPIC
 import no.nav.aap.behandlingsflyt.hendelse.kafka.tilbakekreving.TilbakekrevingKafkaKonsument
+import no.nav.aap.behandlingsflyt.hendelse.kafka.uføre.UFØRE_VEDTAK_TOPIC
+import no.nav.aap.behandlingsflyt.hendelse.kafka.uføre.UførevedtakKafkaKonsument
 import no.nav.aap.behandlingsflyt.hendelse.mottattHendelseApi
 import no.nav.aap.behandlingsflyt.integrasjon.defaultGatewayProvider
 import no.nav.aap.behandlingsflyt.integrasjon.institusjonsopphold.InstitusjonsoppholdGatewayImpl
@@ -347,6 +349,10 @@ private fun Application.startKafkakonsumenter(
     if (!Miljø.erLokal() && !Miljø.erProd()) {
         startInstitusjonsOppholdKonsument(dataSource, repositoryRegistry)
     }
+
+    if(!Miljø.erLokal() && !Miljø.erProd() && !Miljø.erDev()) {
+        startUføreVedtakEventKonsument(dataSource, repositoryRegistry, gatewayProvider)
+    }
 }
 
 // Bruker leaderElector for å sikre at kun en pod kjører migreringen og spinner opp en egen tråd for å ikke blokkere.
@@ -495,6 +501,40 @@ fun Application.startPDLHendelseKonsument(
         }
         t.uncaughtExceptionHandler = Thread.UncaughtExceptionHandler { _, e ->
             log.error("Konsumering av $PDL_HENDELSE_TOPIC ble lukket pga uhåndtert feil", e)
+        }
+        t.start()
+    }
+    monitor.subscribe(ApplicationStopped) { env ->
+        env.log.info("ktor stopper, lukker PDLHendelseKonsument.")
+
+        // ktor sine eventer kjøres synkront, så vi må kjøre dette asynkront for ikke å blokkere nedstengings-sekvensen
+        env.launch(Dispatchers.IO) {
+            konsument.lukk()
+        }
+    }
+
+    return konsument
+}
+
+
+fun Application.startUføreVedtakEventKonsument(
+    dataSource: DataSource,
+    repositoryRegistry: RepositoryRegistry,
+    gatewayProvider: GatewayProvider,
+): KafkaKonsument<String, String> {
+    val konsument = UførevedtakKafkaKonsument(
+        config = KafkaConsumerConfig(),
+        closeTimeout = AppConfig.stansArbeidTimeout,
+        dataSource = dataSource,
+        repositoryRegistry = repositoryRegistry,
+        gatewayProvider = gatewayProvider
+    )
+    monitor.subscribe(ApplicationStarted) {
+        val t = Thread {
+            konsument.konsumer()
+        }
+        t.uncaughtExceptionHandler = Thread.UncaughtExceptionHandler { _, e ->
+            log.error("Konsumering av $UFØRE_VEDTAK_TOPIC ble lukket pga uhåndtert feil", e)
         }
         t.start()
     }
