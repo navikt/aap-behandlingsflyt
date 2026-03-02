@@ -20,6 +20,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSamo
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSykdomLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarYrkesskadeLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklaringsbehovLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.BekreftVurderingerOppfølgingLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FastsettBeregningstidspunktLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FastsettYrkesskadeInntektLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FatteVedtakLøsning
@@ -129,6 +130,7 @@ import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.behandlingsflyt.test.modell.TestYrkesskade
 import no.nav.aap.behandlingsflyt.test.modell.defaultInntekt
 import no.nav.aap.behandlingsflyt.test.testGatewayProvider
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
@@ -259,7 +261,9 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
             )
         }
 
-        behandling = behandling.kvalitetssikre()
+        behandling = behandling
+            .bekreftVurderinger()
+            .kvalitetssikre()
             .løsAvklaringsBehov(
                 FastsettBeregningstidspunktLøsning(
                     beregningVurdering = BeregningstidspunktVurderingDto(
@@ -396,6 +400,7 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
                 )
             )
             .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
             .kvalitetssikre()
     }
 
@@ -1090,6 +1095,7 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
                 )
             )
             .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
             .kvalitetssikre()
 
         if (harYrkesskade) {
@@ -1207,6 +1213,16 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
             )
         )
     }
+
+    @JvmName("bekreftVurderingerExt")
+    protected fun Behandling.bekreftVurderinger(): Behandling {
+        return if (gatewayProvider.provide<UnleashGateway>().isEnabled(BehandlingsflytFeature.BekreftVurderingerOppfolging)) {
+            løsAvklaringsBehov(this, BekreftVurderingerOppfølgingLøsning())
+        } else {
+            this
+        }
+    }
+
 
     @JvmName("kvalitetssikreOkExt")
     protected fun Behandling.kvalitetssikre(

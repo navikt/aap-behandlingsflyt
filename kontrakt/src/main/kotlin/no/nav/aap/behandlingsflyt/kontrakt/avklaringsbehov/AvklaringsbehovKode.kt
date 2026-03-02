@@ -43,6 +43,7 @@ public const val SKRIV_BREV_KODE: String = "5050"
 public const val SKRIV_VEDTAKSBREV_KODE: String = "5051"
 public const val SKRIV_FORHÅNDSVARSEL_AKTIVITETSPLIKT_BREV_KODE: String = "5052"
 public const val SKRIV_SYKDOMSVURDERING_BREV_KODE: String = "5053"
+public const val BEKREFT_VURDERINGER_OPPFØLGING_KODE: String = "5054"
 public const val SAMORDNING_REFUSJONS_KRAV: String = "5056"
 public const val ARBEIDSOPPTRAPPING_KODE: String = "5057"
 public const val ETABLERING_EGEN_VIRKSOMHET_KODE: String = "5058"
@@ -291,6 +292,11 @@ public enum class AvklaringsbehovKode {
      * [SKRIV_SYKDOMSVURDERING_BREV_KODE]
      */
     `5053`,
+
+    /**
+     * [BEKREFT_VURDERINGER_OPPFØLGING]
+     */
+    `5054`,
 
     /**
      * [SAMORDNING_REFUSJONS_KRAV]
