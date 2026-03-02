@@ -56,7 +56,8 @@ class VedtakslengdeService(
 
     fun hentNesteVedtakslengdeUtvidelse(
         behandlingId: BehandlingId,
-        forrigeBehandlingId: BehandlingId?, ): VedtakslengdeUtvidelse {
+        forrigeBehandlingId: BehandlingId?
+    ): VedtakslengdeUtvidelse {
         val vedtakslengdeGrunnlag = forrigeBehandlingId?.let { vedtakslengdeRepository.hentHvisEksisterer(forrigeBehandlingId) }
         val vedtattSluttdato = requireNotNull(hentVedtattSluttdato(forrigeBehandlingId, vedtakslengdeGrunnlag)) {
             "Kan ikke utlede vedtatt sluttdato for behandling $forrigeBehandlingId, som trengs for å vurdere utvidelse av vedtakslengde for behandling $behandlingId"

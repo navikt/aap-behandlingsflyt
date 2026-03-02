@@ -46,7 +46,7 @@ class OpprettJobbUtvidVedtakslengdeJobbUtfører(
     // TODO: Må filtrere vekk de som allerede har blitt kjørt, men ikke kvalifiserte til reell utvidelse av vedtakslengde
     private fun hentKandidaterForUtvidelseAvVedtakslengde(datoForUtvidelse: LocalDate): Set<SakId> {
         return vedtakslengdeService.hentSakerAktuelleForUtvidelseAvVedtakslengde(datoForUtvidelse)
-            .partition { kunSakerMedBehovForUtvidelseAvVedtakslengde(it, datoForUtvidelse) }
+            .partition { kunSakerMedBehovForUtvidelseAvVedtakslengde(it) }
             .let { (sakerSomUtvides, sakerSomIkkeUtvides) ->
                 if (sakerSomIkkeUtvides.isNotEmpty()) {
                     log.info("Følgende saker utvides ikke (ha et øye på disse inntil vi støtter manuell behandling): $sakerSomIkkeUtvides")
@@ -56,7 +56,7 @@ class OpprettJobbUtvidVedtakslengdeJobbUtfører(
             .toSet()
     }
 
-    private fun kunSakerMedBehovForUtvidelseAvVedtakslengde(id: SakId, dato: LocalDate): Boolean {
+    private fun kunSakerMedBehovForUtvidelseAvVedtakslengde(id: SakId): Boolean {
         val sisteGjeldendeBehandling = behandlingService.finnBehandlingMedSisteFattedeVedtak(id)
         if (sisteGjeldendeBehandling != null) {
             // Bruker sisteGjeldendeBehandling.id både for behandlingId og forrigeBehandlingId fordi vi ser på gjeldende behandling
