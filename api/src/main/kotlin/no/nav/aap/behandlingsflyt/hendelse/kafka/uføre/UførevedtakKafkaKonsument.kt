@@ -10,6 +10,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
 import no.nav.aap.behandlingsflyt.utils.UtfallOppfyltUtils
+import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.json.DefaultJsonMapper
@@ -20,7 +21,7 @@ import javax.sql.DataSource
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
-const val UFØRE_VEDTAK_TOPIC = "pensjon-q2.uforevedtak-aap" // TODO: Miljø-spesifikk!!!
+private val UFØRE_VEDTAK_TOPIC = requiredConfigForKey("integrasjon.ufore.vedtak.topic")
 
 class UførevedtakKafkaKonsument(
     config: KafkaConsumerConfig<String, String>,
