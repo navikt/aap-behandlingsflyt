@@ -70,6 +70,7 @@ class OpprettJobbUtvidVedtakslengdeJobbUtfører(
             )
 
             if (vedtakslengdeUtvidelse is VedtakslengdeUtvidelse.Manuell) {
+                // Skal på sikt tillate manuell utvidelse ved at det opprettes manuell behandling
                 log.error("Sak med id $id trenger manuell utvidelse av vedtakslengde. Dette er ikke implementert. Må følges opp!")
             }
 

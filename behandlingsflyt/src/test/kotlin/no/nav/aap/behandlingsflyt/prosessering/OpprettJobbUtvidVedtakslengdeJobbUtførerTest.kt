@@ -59,7 +59,7 @@ class OpprettJobbUtvidVedtakslengdeJobbUtførerTest {
             nySluttdato = dagensDato.plusYears(1),
         )
         every { behandlingService.finnBehandlingMedSisteFattedeVedtak(sakId) } returns behandlingMedVedtak()
-        every { sakRepository.hent(sakId) } returns mockk<Sak> { every { rettighetsperiode } returns Periode(dagensDato.minusYears(1), dagensDato.plusYears(1)) }
+        every { sakRepository.hent(sakId) } returns mockk<Sak> { every { rettighetsperiode } returns Periode(dagensDato.minusYears(1), dagensDato) }
         every { flytJobbRepository.leggTil(match { it.sakId() == sakId.id }) } just Runs
 
         opprettJobbUtvidVedtakslengdeJobbUtfører.utfør(jobbInput)
@@ -82,11 +82,11 @@ class OpprettJobbUtvidVedtakslengdeJobbUtførerTest {
     }
 
     @Test
-    fun `skal ikke opprette jobber hvis skalUtvideSluttdato er IngenFramtidigOrdinærRettighet`() {
+    fun `skal ikke opprette jobber hvis hentNesteVedtakslengdeUtvidelse gir IngenFramtidigOrdinærRettighet`() {
         every { vedtakslengdeService.hentSakerAktuelleForUtvidelseAvVedtakslengde(any()) } returns setOf(sakId)
-        every { vedtakslengdeService.hentNesteVedtakslengdeUtvidelse(behandlingId, behandlingId, any<Periode>())} returns VedtakslengdeUtvidelse.`IngenFremtidigOrdinærRettighet`
+        every { vedtakslengdeService.hentNesteVedtakslengdeUtvidelse(behandlingId, behandlingId, any<Periode>())} returns VedtakslengdeUtvidelse.IngenFremtidigOrdinærRettighet
         every { behandlingService.finnBehandlingMedSisteFattedeVedtak(sakId) } returns behandlingMedVedtak()
-        every { sakRepository.hent(sakId) } returns mockk<Sak> { every { rettighetsperiode } returns Periode(dagensDato.minusYears(1), dagensDato.plusYears(1)) }
+        every { sakRepository.hent(sakId) } returns mockk<Sak> { every { rettighetsperiode } returns Periode(dagensDato.minusYears(1), dagensDato) }
 
         opprettJobbUtvidVedtakslengdeJobbUtfører.utfør(jobbInput)
 
