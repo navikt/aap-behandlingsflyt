@@ -27,29 +27,5 @@ fun TilbakekrevingBehandlingsstatus.tilAvklaringsBehov(): String? {
         TilbakekrevingBehandlingsstatus.RETUR_FRA_BESLUTTER -> AvklaringsbehovKode.`9082`.name
         TilbakekrevingBehandlingsstatus.TIL_BEHANDLING -> AvklaringsbehovKode.`9082`.name
         TilbakekrevingBehandlingsstatus.TIL_BESLUTTER -> AvklaringsbehovKode.`9083`.name
-   /*     VURDER_TILBAKEKREVING(
-            kode = AvklaringsbehovKode.`9082`,
-            type = BehovType.MANUELT_PÅKREVD,
-            løsesISteg = StegType.UDEFINERT,
-            løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL)
-        ),
-        VURDER_TILBAKEKREVING_BESLUTTER(
-            kode = AvklaringsbehovKode.`9083`,
-            type = BehovType.MANUELT_PÅKREVD,
-            løsesISteg = StegType.UDEFINERT,
-            løsesAv = listOf(Rolle.BESLUTTER)
-        )
-                VURDER_TILBAKEKREVING(
-                kode = AvklaringsbehovKode.`9082`,
-        type = BehovType.MANUELT_PÅKREVD,
-        løsesISteg = StegType.UDEFINERT,
-        løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL)
-            ),
-        VURDER_TILBAKEKREVING_BESLUTTER(
-            kode = AvklaringsbehovKode.`9083`,
-            type = BehovType.MANUELT_PÅKREVD,
-            løsesISteg = StegType.UDEFINERT,
-            løsesAv = listOf(Rolle.BESLUTTER)
-        )(*/
     }
 }
