@@ -43,31 +43,15 @@ class KvalitetssikrerLøser(
             val vurderingerSomErSendtTilbake = relevanteVurderinger
                 .filter { it.godkjent == false }
 
-            val vurderingerFørRetur = relevanteVurderinger
-                .filter { it.godkjent == true }
+            val alle = relevanteVurderinger.filter { it.godkjent != null }
 
-            val vurderingerSomMåReåpnes = relevanteVurderinger
-                .filter { vurdering ->
-                    vurderingerSomErSendtTilbake.none { it.definisjon == vurdering.definisjon } &&
-                            vurderingerFørRetur.none { it.definisjon == vurdering.definisjon }
-                }
-
-            vurderingerFørRetur.forEach { vurdering ->
+            alle.forEach { vurdering ->
                 avklaringsbehovene.vurderKvalitet(
                     definisjon = Definisjon.forKode(vurdering.definisjon),
                     godkjent = vurdering.godkjent!!,
                     begrunnelse = vurdering.begrunnelse(),
-                    vurdertAv = kontekst.bruker.ident
-                )
-            }
-
-            vurderingerSomErSendtTilbake.forEach { vurdering ->
-                avklaringsbehovene.vurderKvalitet(
-                    definisjon = Definisjon.forKode(vurdering.definisjon),
-                    begrunnelse = vurdering.begrunnelse(),
-                    godkjent = vurdering.godkjent!!,
+                    vurdertAv = kontekst.bruker.ident,
                     årsakTilRetur = vurdering.grunner.orEmpty(),
-                    vurdertAv = kontekst.bruker.ident
                 )
             }
 
@@ -78,10 +62,6 @@ class KvalitetssikrerLøser(
                     begrunnelse = "En tidligere vurdering ble ikke godkjent. Brev må skrives på nytt.",
                     vurdertAv = kontekst.bruker.ident
                 )
-            }
-
-            vurderingerSomMåReåpnes.forEach { vurdering ->
-                avklaringsbehovene.reåpne(definisjon = Definisjon.forKode(vurdering.definisjon))
             }
         } else {
             relevanteVurderinger.forEach { vurdering ->
