@@ -23,8 +23,8 @@ fun TilbakekrevingBehandlingsstatus.tilKontrakt(): no.nav.aap.behandlingsflyt.ko
 fun TilbakekrevingBehandlingsstatus.tilAvklaringsBehov(): String? {
     return when(this){
         TilbakekrevingBehandlingsstatus.AVSLUTTET -> null
-        TilbakekrevingBehandlingsstatus.OPPRETTET -> AvklaringsbehovKode.`9082`.name
-        TilbakekrevingBehandlingsstatus.RETUR_FRA_BESLUTTER -> AvklaringsbehovKode.`9082`.name
+        TilbakekrevingBehandlingsstatus.OPPRETTET,
+        TilbakekrevingBehandlingsstatus.RETUR_FRA_BESLUTTER,
         TilbakekrevingBehandlingsstatus.TIL_BEHANDLING -> AvklaringsbehovKode.`9082`.name
         TilbakekrevingBehandlingsstatus.TIL_BESLUTTER -> AvklaringsbehovKode.`9083`.name
     }
