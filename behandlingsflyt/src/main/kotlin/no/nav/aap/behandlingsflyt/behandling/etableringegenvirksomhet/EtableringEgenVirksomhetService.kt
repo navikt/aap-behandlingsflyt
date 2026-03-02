@@ -105,7 +105,7 @@ class EtableringEgenVirksomhetService(
                 "Oppsatte oppstartsdager overstiger gjenværende dager: $bruktOppstartsdager / $maksOppstartsdager"
             )
 
-        return VirksomhetEtableringGyldig(true)
+        return VirksomhetEtableringGyldig
     }
 
     fun evaluerVirksomhetVurdering(vurdering: EtableringEgenVirksomhetVurdering): Boolean {
@@ -141,6 +141,4 @@ sealed interface VirksomhetEtableringResultat
 
 data class VirksomhetEtableringIkkeGyldig(val feilmelding: String) : VirksomhetEtableringResultat
 
-data class VirksomhetEtableringGyldig(
-    val erOppfylt: Boolean
-) : VirksomhetEtableringResultat
+data object VirksomhetEtableringGyldig : VirksomhetEtableringResultat
