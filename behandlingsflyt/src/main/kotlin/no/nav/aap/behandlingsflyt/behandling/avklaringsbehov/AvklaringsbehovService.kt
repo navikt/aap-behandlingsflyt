@@ -298,14 +298,19 @@ class AvklaringsbehovService(
                         if (nårVurderingErGyldigTidslinje == null) {
                             null
                         } else {
-                            nårVurderingErRelevant(kontekst).leftJoin(nårVurderingErGyldigTidslinje) { erRelevant, erGyldig ->
-                                !erRelevant || erGyldig == true
-                            }.komprimer().filter { !it.verdi }.perioder().toSet()
+                            nårVurderingErRelevant(kontekst)
+                                .begrensetTil(kontekst.rettighetsperiode)
+                                .leftJoin(nårVurderingErGyldigTidslinje) { erRelevant, erGyldig ->
+                                    !erRelevant || erGyldig == true
+                                }
+                                .komprimer()
+                                .filter { !it.verdi }
+                                .perioder()
+                                .toSet()
                         }
                     }
                 },
-            erTilstrekkeligVurdert =
-                { false },
+            erTilstrekkeligVurdert = { false },
             tilbakestillGrunnlag = tilbakestillGrunnlag,
             kontekst = kontekst
         )
