@@ -3,14 +3,15 @@ package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.EtableringEgenVirksomhetLøsning
 import no.nav.aap.behandlingsflyt.behandling.etableringegenvirksomhet.EtableringEgenVirksomhetService
+import no.nav.aap.behandlingsflyt.behandling.etableringegenvirksomhet.VirksomhetEtableringIkkeGyldig
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.lookup.repository.RepositoryProvider
-import kotlin.collections.orEmpty
 
 class EtableringEgenVirksomhetLøser(
     private val etableringEgenVirksomhetRepository: EtableringEgenVirksomhetRepository,
@@ -36,10 +37,9 @@ class EtableringEgenVirksomhetLøser(
         val behandling = behandlingRepository.hent(kontekst.kontekst.behandlingId)
         val nyeVurderinger = løsning.løsningerForPerioder.map { it.toEtableringEgenVirksomhetVurdering(kontekst) }
 
-        val evaluering = etableringEgenVirksomhetService.erVurderingerGyldig(behandling.id, nyeVurderinger)
-
-        require(evaluering.erOppfylt) {
-            evaluering.feilmelding!!
+        when (val evaluering = etableringEgenVirksomhetService.erVurderingerGyldig(behandling.id, nyeVurderinger)) {
+            is VirksomhetEtableringIkkeGyldig -> throw UgyldigForespørselException(evaluering.feilmelding)
+            else -> {}
         }
 
         val gamleVurderinger =

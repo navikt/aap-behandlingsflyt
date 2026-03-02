@@ -13,9 +13,12 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.In
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
@@ -40,10 +43,12 @@ import no.nav.aap.tilgang.Operasjon
 import no.nav.aap.tilgang.SakPathParam
 import no.nav.aap.tilgang.authorizedPost
 import no.nav.aap.tilgang.plugin.kontrakt.BehandlingreferanseResolver
+import no.nav.aap.verdityper.dokument.Kanal
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 import java.util.*
 import javax.sql.DataSource
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Status as MottattDokumentStatus
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status as BehandlingStatus
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Status as SakStatus
 
@@ -196,6 +201,41 @@ fun NormalOpenAPIRoute.driftApi(
                 respond(sakDriftsinfoDTO)
             }
         }
+
+        route("/sak/{saksnummer}/mottatte-dokumenter") {
+            authorizedPost<SaksnummerParameter, List<MottattDokumentDriftsinfoDTO>, Unit>(
+                AuthorizationParamPathConfig(
+                    sakPathParam = SakPathParam("saksnummer"),
+                    operasjon = Operasjon.DRIFTE,
+                ),
+            ) { params, _ ->
+                val dokumenter = dataSource.transaction { connection ->
+                    val repositoryProvider = repositoryRegistry.provider(connection)
+
+                    val sakRepository = repositoryProvider.provide<SakRepository>()
+                    val mottattDokumentRepository = repositoryProvider.provide<MottattDokumentRepository>()
+
+                    val sak = sakRepository.hentHvisFinnes(Saksnummer(params.saksnummer))
+                        ?: throw VerdiIkkeFunnetException("Sak med saksnummer ${params.saksnummer} finnes ikke")
+
+                    mottattDokumentRepository.hentDokumenterForSak(sak.id)
+                        .map { dokument ->
+                            MottattDokumentDriftsinfoDTO(
+                                referanse = dokument.referanse,
+                                mottattTidspunkt = dokument.mottattTidspunkt,
+                                type = dokument.type,
+                                kanal = dokument.kanal,
+                                status = dokument.status
+                            )
+                        }
+                        .sortedByDescending { it.mottattTidspunkt }
+                }
+
+                krevDtoErUtenFødselsnummer(dokumenter)
+
+                respond(dokumenter)
+            }
+        }
     }
 }
 
@@ -255,6 +295,14 @@ private data class ForenkletVilkårsperiode(
     val manuellVurdering: Boolean,
     val avslagsårsak: Avslagsårsak?,
     val innvilgelsesårsak: Innvilgelsesårsak?
+)
+
+private data class MottattDokumentDriftsinfoDTO(
+    val referanse: InnsendingReferanse,
+    val mottattTidspunkt: LocalDateTime,
+    val type: InnsendingType,
+    val kanal: Kanal,
+    val status: MottattDokumentStatus = MottattDokumentStatus.MOTTATT,
 )
 
 fun behandlingFraBrevbestilling(

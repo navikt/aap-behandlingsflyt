@@ -22,6 +22,8 @@ enum class BehandlingsflytFeature : FeatureToggle {
     HentingAvInstitusjonsOpphold,
     VisIkkeRelevantPeriode,
     NyTidligereVurderinger,
+    BekreftVurderingerOppfolging,
+    LagreStansOgOpphor,
     ;
 
     override fun key(): String = name

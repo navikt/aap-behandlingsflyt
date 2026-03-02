@@ -376,7 +376,9 @@ class StatistikkMetoder(
     }
 
     private fun hentDiagnose(behandling: Behandling): Diagnoser? {
-        val sykdomsvurdering = sykdomRepository.hentHvisEksisterer(behandling.id)?.sykdomsvurderinger.orEmpty()
+        val sykdomsvurdering = sykdomRepository.hentHvisEksisterer(behandling.id)
+            ?.sykdomsvurderinger.orEmpty()
+            .filter { it.hoveddiagnose != null }
             .maxByOrNull { it.opprettet }
 
         if (sykdomsvurdering == null) {

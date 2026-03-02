@@ -13,6 +13,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.Opphø
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.Stans
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentRepository
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
@@ -50,23 +51,26 @@ fun NormalOpenAPIRoute.rettighetApi(
                     return@transaction null
                 }
 
-                val underveisgrunnlagRepository = repositoryProvider.provide<UnderveisRepository>()
-                val underveisgrunnlag = underveisgrunnlagRepository.hentHvisEksisterer(sisteVedtatteYtelsesbehandling.behandlingId)
+                val sisteVedtatteBehandlingId = sisteVedtatteYtelsesbehandling.behandlingId
+                val underveisRepository = repositoryProvider.provide<UnderveisRepository>()
+                val underveisgrunnlag = underveisRepository.hentHvisEksisterer(sisteVedtatteBehandlingId)
 
                 if (underveisgrunnlag == null) {
                     return@transaction null
                 }
 
                 val vilkårsresultatRepository = repositoryProvider.provide<VilkårsresultatRepository>()
-                val vilkårsresultat = vilkårsresultatRepository.hent(sisteVedtatteYtelsesbehandling.behandlingId)
-                val now = LocalDate.now()
+                val vilkårsresultat = vilkårsresultatRepository.hent(sisteVedtatteBehandlingId)
+                val studentRepository = repositoryProvider.provide<StudentRepository>()
+                val studentgrunnlag = studentRepository.hentHvisEksisterer(sisteVedtatteBehandlingId)
+
+                val dagensDato = LocalDate.now()
                 val stansEllerOpphør = utledStansEllerOpphør(vilkårsresultat, rettighetsperiode = sak.rettighetsperiode)
-                    .filterKeys { it <= now }
+                    .filterKeys { it <= dagensDato }
                     .maxByOrNull { it.key }
                 val rettighetstyper = underveisgrunnlag.perioder.mapNotNull { it.rettighetsType }.distinct()
 
                 val rettighetDtoListe = rettighetstyper.map { rettighet ->
-                    val dagensDato = LocalDate.now()
                     val rettighetKvoter = underveisgrunnlag.utledKvoterForRettighetstype(rettighet, dagensDato)
                     val startdato = underveisgrunnlag.utledStartdatoForRettighet(rettighet)
                     val gjenværendeKvote = rettighetKvoter.gjenværendeKvote
@@ -76,8 +80,14 @@ fun NormalOpenAPIRoute.rettighetApi(
                             RettighetsType.BISTANDSBEHOV, RettighetsType.SYKEPENGEERSTATNING
                                 -> underveisgrunnlag.utledMaksdatoForRettighet(rettighet, dagensDato)
 
-                            RettighetsType.STUDENT, RettighetsType.ARBEIDSSØKER, RettighetsType.VURDERES_FOR_UFØRETRYGD
+                            RettighetsType.ARBEIDSSØKER, RettighetsType.VURDERES_FOR_UFØRETRYGD
                                 -> RettighetsperiodeService().utledMaksdatoForRettighet(rettighet, startdato)
+
+                            RettighetsType.STUDENT
+                                -> RettighetsperiodeService().utledMaksdatoForRettighet(
+                                rettighet,
+                                studentgrunnlag?.vurderinger?.last()?.avbruttStudieDato
+                            )
                         }
 
                     val avslagÅrsak = when (stansEllerOpphør?.value) {

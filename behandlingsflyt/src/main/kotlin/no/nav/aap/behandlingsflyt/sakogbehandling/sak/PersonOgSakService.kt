@@ -7,6 +7,7 @@ import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
+import java.time.LocalDate
 
 class PersonOgSakService(
     private val pdlGateway: IdentGateway,
@@ -25,14 +26,19 @@ class PersonOgSakService(
     )
     private val log = LoggerFactory.getLogger(javaClass)
 
-    fun finnEllerOpprett(ident: Ident, periode: Periode): Sak {
+    fun finnEllerOpprett(ident: Ident, søknadsdato: LocalDate): Sak {
         val identliste = pdlGateway.hentAlleIdenterForPerson(ident)
         require(identliste.isNotEmpty()) { "Fikk ingen treff på ident i PDL" }
 
         rapporterHvisOppretterPersonSomFinnesIArena(identliste)
         val person = personRepository.finnEllerOpprett(identliste)
 
-        return sakRepository.finnEllerOpprett(person, periode)
+        return sakRepository.finnEllerOpprett(person, søknadsdato)
+    }
+
+    @Deprecated("Sluttdato for rettighetesperiode er alltid Tid.MAKS for nye/migrerte saker. Send kun med søknadsdato, med mindre du tester koden din for ikke-migrerte saker.")
+    fun finnEllerOpprett(ident: Ident, periode: Periode): Sak {
+        return finnEllerOpprett(ident, periode.fom)
     }
 
     private fun rapporterHvisOppretterPersonSomFinnesIArena(identliste: List<Ident>) {
