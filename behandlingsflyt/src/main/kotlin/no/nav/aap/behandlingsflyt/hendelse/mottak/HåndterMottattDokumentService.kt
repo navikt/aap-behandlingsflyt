@@ -4,8 +4,8 @@ import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.behandling.tilbakekrevingsbehandling.TilbakekrevingBehandlingsstatus
 import no.nav.aap.behandlingsflyt.behandling.tilbakekrevingsbehandling.TilbakekrevingService
 import no.nav.aap.behandlingsflyt.behandling.tilbakekrevingsbehandling.Tilbakekrevingshendelse
+import no.nav.aap.behandlingsflyt.behandling.underveis.RettighetstypeService
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakRepository
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
@@ -32,6 +32,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Oppfølgingsoppga
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.PdlHendelseV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.TilbakekrevingHendelse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.TilbakekrevingHendelseV0
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.UførevedtakV0
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.prosessering.OppdagEndretInformasjonskravJobbUtfører
 import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingService
@@ -39,6 +40,7 @@ import no.nav.aap.behandlingsflyt.prosessering.tilbakekreving.FagsysteminfoSvarH
 import no.nav.aap.behandlingsflyt.prosessering.tilbakekreving.MottakerDto
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
@@ -70,6 +72,7 @@ class HåndterMottattDokumentService(
     private val tilbakekrevingService: TilbakekrevingService,
     private val trukketSøknadService: TrukketSøknadService,
     private val flytJobbRepository: FlytJobbRepository,
+    private val rettighetstypeService: RettighetstypeService,
 ) {
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -85,6 +88,7 @@ class HåndterMottattDokumentService(
         tilbakekrevingService = TilbakekrevingService(repositoryProvider, gatewayProvider),
         trukketSøknadService = TrukketSøknadService(repositoryProvider),
         flytJobbRepository = repositoryProvider.provide<FlytJobbRepository>(),
+        rettighetstypeService = RettighetstypeService(repositoryProvider, gatewayProvider),
     )
 
     fun håndterMottatteKlage(
@@ -335,6 +339,38 @@ class HåndterMottattDokumentService(
         mottaDokumentService.markerSomBehandlet(sakId, sisteYtelsesBehandling.id, referanse)
     }
 
+    fun håndterMottattUførevedtakHendelse(
+        sakId: SakId,
+        referanse: InnsendingReferanse,
+        uførevedtak: UførevedtakV0,
+        mottattTidspunkt: LocalDateTime
+    ) {
+        val sisteYtelsesBehandling = behandlingService.finnSisteYtelsesbehandlingFor(sakId)
+            ?: error("Finnes ingen ytelsesbehandling for sakId $sakId")
+        if (uførevedtak.resultat.erOpphørEllerEndring()) {
+            log.info("Uførevedtak for sak $sakId er opphør eller endring, gjør ingenting i Kelvin med dette")
+        } else if (trukketSøknadService.søknadErTrukket(sisteYtelsesBehandling.id)) {
+            log.info("Søknad er trukket for sak $sakId, oppretter ikke revurdering ved mottak av uførevedtak")
+        } else {
+            log.info("Oppretter vurderingsbehov for mottatt uførevedtak for sak $sakId")
+            val rettighetstypeTidslinje =
+                rettighetstypeService.rettighetstypeTidslinjeBakoverkompatibel(sisteYtelsesBehandling.id)
+            val harRettPåAapEllerEnÅpenBehandling = rettighetstypeTidslinje.isNotEmpty() || sisteYtelsesBehandling.status().erÅpen()
+            if (harRettPåAapEllerEnÅpenBehandling) {
+                behandlingService.finnEllerOpprettBehandling(
+                    sakId,
+                    VurderingsbehovOgÅrsak(
+                        årsak = ÅrsakTilOpprettelse.ENDRING_I_REGISTERDATA,
+                        vurderingsbehov = listOf(VurderingsbehovMedPeriode(Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND)),
+                        opprettet = mottattTidspunkt,
+                        beskrivelse = uførevedtak.beskrivelseVurderingsbehov()
+                    )
+                )
+            }
+        }
+        mottaDokumentService.markerSomBehandlet(sakId, sisteYtelsesBehandling.id, referanse)
+    }
+
 
     private fun FagsysteminfoBehovV0.tilFagsysteminfoSvarHendelse(sakId: SakId): FagsysteminfoSvarHendelse {
         val sak = sakService.hent(sakId)
@@ -473,6 +509,7 @@ class HåndterMottattDokumentService(
             InnsendingType.INSTITUSJONSOPPHOLD -> ÅrsakTilOpprettelse.ENDRING_I_REGISTERDATA
             InnsendingType.FAGSYSTEMINFO_BEHOV_HENDELSE -> ÅrsakTilOpprettelse.FAGSYSTEMINFO_BEHOV_HENDELSE
             InnsendingType.SYKEPENGE_VEDTAK_HENDELSE -> throw IllegalArgumentException("Sykepengevedtakhendelser skal trigge sjekk av informasjonskrav og ikke opprette en behandling direkte")
+            InnsendingType.UFØRE_VEDTAK_HENDELSE -> ÅrsakTilOpprettelse.ENDRING_I_REGISTERDATA
         }
     }
 
@@ -552,10 +589,12 @@ class HåndterMottattDokumentService(
             InnsendingType.OPPFØLGINGSOPPGAVE -> listOf(VurderingsbehovMedPeriode(Vurderingsbehov.OPPFØLGINGSOPPGAVE))
             InnsendingType.PDL_HENDELSE_DODSFALL_BRUKER -> listOf(VurderingsbehovMedPeriode(Vurderingsbehov.DØDSFALL_BRUKER))
             InnsendingType.PDL_HENDELSE_DODSFALL_BARN -> listOf(VurderingsbehovMedPeriode(Vurderingsbehov.DØDSFALL_BARN))
-            InnsendingType.TILBAKEKREVING_HENDELSE -> emptyList()
             InnsendingType.INSTITUSJONSOPPHOLD -> listOf(VurderingsbehovMedPeriode(Vurderingsbehov.INSTITUSJONSOPPHOLD))
-            InnsendingType.FAGSYSTEMINFO_BEHOV_HENDELSE -> emptyList()
-            InnsendingType.SYKEPENGE_VEDTAK_HENDELSE -> emptyList()
+
+            InnsendingType.TILBAKEKREVING_HENDELSE,
+            InnsendingType.FAGSYSTEMINFO_BEHOV_HENDELSE,
+            InnsendingType.SYKEPENGE_VEDTAK_HENDELSE,
+            InnsendingType.UFØRE_VEDTAK_HENDELSE -> emptyList()
         }
     }
 
