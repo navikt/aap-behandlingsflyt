@@ -166,6 +166,8 @@ spec:
       value: https://pensjon-pen.prod-fss-pub.nais.io
     - name: INTEGRASJON_PESYS_SCOPE
       value: api://prod-fss.pensjondeployer.pensjon-pen/.default
+    - name: INTEGRASJON_UFORE_VEDTAK_TOPIC
+      value: pensjon.uforevedtak-aap
     - name: INTEGRASJON_TILGANG_URL
       value: http://tilgang
     - name: INTEGRASJON_TILGANG_SCOPE

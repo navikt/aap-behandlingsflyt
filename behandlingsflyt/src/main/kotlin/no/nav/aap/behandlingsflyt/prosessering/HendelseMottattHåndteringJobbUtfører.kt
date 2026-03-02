@@ -13,6 +13,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Melding
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.NyÅrsakTilBehandlingV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.OmgjøringKlageRevurdering
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.TilbakekrevingHendelseV0
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.UførevedtakV0
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.gateway.GatewayProvider
@@ -137,6 +138,14 @@ class HendelseMottattHåndteringJobbUtfører(
                 håndterMottattDokumentService.håndterMottattSykepengevedtakHendelse(
                     sakId = sakId,
                     referanse = referanse,
+                )
+            }
+            InnsendingType.UFØRE_VEDTAK_HENDELSE -> {
+                håndterMottattDokumentService.håndterMottattUførevedtakHendelse(
+                    sakId = sakId,
+                    referanse = referanse,
+                    uførevedtak = parsedMelding as UførevedtakV0,
+                    mottattTidspunkt = mottattTidspunkt,
                 )
             }
 
