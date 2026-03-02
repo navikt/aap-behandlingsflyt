@@ -173,6 +173,19 @@ class MottattDokumentRepositoryImpl(private val connection: DBConnection) : Mott
         }
     }
 
+    override fun hentDokumenterForSak(sakId: SakId): Set<MottattDokument> {
+        val query = "SELECT * FROM MOTTATT_DOKUMENT WHERE sak_id = ?"
+
+        return connection.querySet(query) {
+            setParams {
+                setLong(1, sakId.toLong())
+            }
+            setRowMapper { row ->
+                mapMottattDokument(row)
+            }
+        }
+    }
+
     override fun hentDokumenterAvType(sakId: SakId, type: InnsendingType): Set<MottattDokument> {
         val query = """
             SELECT * FROM MOTTATT_DOKUMENT WHERE sak_id = ? AND type = ?

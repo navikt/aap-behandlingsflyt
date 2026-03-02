@@ -26,6 +26,7 @@ interface MottattDokumentRepository : Repository {
 
     fun hentUbehandledeDokumenterAvType(sakId: SakId, dokumentType: InnsendingType): Set<MottattDokument>
     fun hentDokumentRekkefølge(sakId: SakId, type: InnsendingType): Set<DokumentRekkefølge>
+    fun hentDokumenterForSak(sakId: SakId): Set<MottattDokument>
     fun hentDokumenterAvType(sakId: SakId, type: InnsendingType): Set<MottattDokument>
     fun hentDokumenterAvType(behandlingId: BehandlingId, type: InnsendingType): Set<MottattDokument>
     fun hentDokumenterAvType(behandlingId: BehandlingId, typer: List<InnsendingType>): Set<MottattDokument>

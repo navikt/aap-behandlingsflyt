@@ -12,11 +12,16 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Son
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.HelseinstitusjonVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.Soningsvurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.komponenter.dbconnect.Row
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.Factory
 import org.slf4j.LoggerFactory
+import java.time.LocalDate
+import java.time.LocalDateTime
+import kotlin.system.measureTimeMillis
 
 class InstitusjonsoppholdRepositoryImpl(private val connection: DBConnection) :
     InstitusjonsoppholdRepository {
@@ -499,6 +504,191 @@ class InstitusjonsoppholdRepositoryImpl(private val connection: DBConnection) :
         }
         log.info("Slettet $deletedRows rader fra opphold_grunnlag")
     }
+
+    override fun migrerInstitusjonsopphold() {
+        log.info("Starter migrering av institusjonsopphold")
+        // Hent alle koblingstabeller
+        val kandidater = hentKandidater()
+        val kandidaterGruppertPåSak = kandidater.groupBy { it.sakId }
+
+        var migrerteVurderingerCount = 0
+        val totalTid = measureTimeMillis {
+            kandidaterGruppertPåSak.forEach { (sakId, kandidaterForSak) ->
+                log.info("Migrerer institusjonsopphold for sak ${sakId.id} med ${kandidaterForSak.size} kandidater")
+                val sorterteKandidater = kandidaterForSak.sortedBy { it.grunnlagOpprettetTid }
+                val vurderingerMedVurderingerId =
+                    hentVurderinger(kandidaterForSak.mapNotNull { it.helseoppholdVurderingerId }.toSet().toList())
+
+                // Kan skippe grunnlag som peker på vurderinger som allerede er migrert
+                val migrerteVurderingerId = mutableSetOf<Long>()
+
+                // Dette dekker en eksisterende vurdering som er lagret som en del av et nytt grunnlag;
+                // disse har ikke samme id som den originale.
+                // Antar at like vurderinger innenfor samme sak er samme vurdering
+                val nyeVerdierForVurdering =
+                    mutableMapOf<SammenlignbarHelseoppholdvurdering, BehandlingId>()
+
+                sorterteKandidater.filterNot { it.helseoppholdVurderingerId in migrerteVurderingerId }.forEach { kandidat ->
+                    val vurderingerForGrunnlag =
+                        vurderingerMedVurderingerId.filter { it.vurderingerId == kandidat.helseoppholdVurderingerId }
+
+                    vurderingerForGrunnlag.forEach { vurderingMedIder ->
+                        val vurdering = vurderingMedIder.vurdering
+                        val vurderingId = vurderingMedIder.vurderingId
+                        val sammenlignbarVurdering = vurdering.tilSammenlignbar()
+                        val nyeVerdier = if (nyeVerdierForVurdering.containsKey(sammenlignbarVurdering)) {
+                            // Bruk den migrerte versjonen
+                            nyeVerdierForVurdering[sammenlignbarVurdering]!!
+                        } else {
+                            val vurdertIBehandling = kandidat.behandlingId
+                            nyeVerdierForVurdering.put(sammenlignbarVurdering, vurdertIBehandling)
+                            vurdertIBehandling
+                        }
+
+                        connection.execute(
+                            """
+                        UPDATE HELSEOPPHOLD_VURDERING
+                        SET VURDERT_I_BEHANDLING = ?
+                        WHERE ID = ?
+                        """.trimIndent()
+                        ) {
+                            setParams {
+                                setLong(1, nyeVerdier.id)
+                                setLong(2, vurderingId)
+                            }
+                        }
+                        migrerteVurderingerCount = migrerteVurderingerCount + 1
+
+                        kandidat.helseoppholdVurderingerId?.let { migrerteVurderingerId.add(it) }
+                    }
+                }
+            }
+        }
+        log.info("Fullført migrering av institusjonsopphold. Migrerte ${kandidater.size} grunnlag og ${migrerteVurderingerCount} vurderinger på $totalTid ms.")
+    }
+
+    // Vurdering minus opprettet, periode.tom, vurdertIBehandling
+    data class SammenlignbarHelseoppholdvurdering(
+        val begrunnelse: String,
+        val faarFriKostOgLosji: Boolean,
+        val forsoergerEktefelle: Boolean?,
+        val harFasteUtgifter: Boolean?,
+        val fraDato: LocalDate,
+        val vurdertAv: String?,
+    )
+
+    private fun HelseinstitusjonVurdering.tilSammenlignbar(): SammenlignbarHelseoppholdvurdering {
+        return SammenlignbarHelseoppholdvurdering(
+            begrunnelse = this.begrunnelse,
+            faarFriKostOgLosji = this.faarFriKostOgLosji,
+            forsoergerEktefelle = this.forsoergerEktefelle,
+            harFasteUtgifter = this.harFasteUtgifter,
+            fraDato = this.periode.fom,
+            vurdertAv = this.vurdertAv,
+        )
+    }
+
+    private data class VurderingMedVurderingerId(
+        val vurderingerId: Long,
+        val vurderingId: Long,
+        val vurdering: HelseinstitusjonVurdering
+    )
+
+    private fun hentVurderinger(vurderingerIds: List<Long>): List<VurderingMedVurderingerId> {
+        val query = """
+            select * from helseopphold_vurdering
+            where helseopphold_vurderinger_id = ANY(?::bigint[])
+        """.trimIndent()
+        return connection.queryList(query) {
+            setParams {
+                setLongArray(1, vurderingerIds)
+            }
+            setRowMapper {
+                VurderingMedVurderingerId(
+                    vurderingerId = it.getLong("helseopphold_vurderinger_id"),
+                    vurderingId = it.getLong("id"),
+                    vurdering = toHelseoppholdInternal(it).toHelseinstitusjonVurdering()
+                )
+            }
+        }
+    }
+
+    fun toHelseoppholdInternal(row: Row): HelseoppholdInternal = HelseoppholdInternal(
+        helseoppholdVurderingerId = row.getLong("helseopphold_vurderinger_id"),
+        kostOgLosji = row.getBoolean("KOST_OG_LOSJI"),
+        forsoergerEktefelle = row.getBoolean("FORSORGER_EKTEFELLE"),
+        harFasteUtgifter = row.getBoolean("FASTE_UTGIFTER"),
+        begrunnelse = row.getString("BEGRUNNELSE"),
+        periode = row.getPeriode("PERIODE"),
+        opprettetTid = row.getLocalDateTime("OPPRETTET_TID"),
+        oppholdId = row.getLongOrNull("OPPHOLD_ID"),
+        vurdertIBehandling = row.getLongOrNull("VURDERT_I_BEHANDLING")?.let { BehandlingId(it) },
+        vurdertAv = row.getString("VURDERT_AV")
+    )
+
+    data class HelseoppholdInternal(
+        val helseoppholdVurderingerId: Long,
+        val kostOgLosji: Boolean,
+        val forsoergerEktefelle: Boolean,
+        val harFasteUtgifter: Boolean,
+        val begrunnelse: String,
+        val periode: Periode,
+        val opprettetTid: LocalDateTime,
+        val oppholdId: Long?,
+        val vurdertIBehandling: BehandlingId?,
+        val vurdertAv: String
+    ) {
+        fun toHelseinstitusjonVurdering(): HelseinstitusjonVurdering {
+            return HelseinstitusjonVurdering(
+                begrunnelse = begrunnelse,
+                faarFriKostOgLosji = kostOgLosji,
+                forsoergerEktefelle = forsoergerEktefelle,
+                harFasteUtgifter = harFasteUtgifter,
+                periode = periode,
+                vurdertIBehandling = vurdertIBehandling,
+                vurdertAv = vurdertAv,
+                vurdertTidspunkt = opprettetTid
+            )
+        }
+    }
+
+    private fun hentKandidater(): List<Kandidat> {
+        val kandidaterQuery = """
+            select g.id as grunnlag_id,
+                     b.id as behandling_id,
+                     s.id as sak_id,
+                     s.rettighetsperiode,
+                     g.helseopphold_vurderinger_id, 
+                     g.opprettet_tid as grunnlag_opprettet_tid
+            
+            from opphold_grunnlag g 
+            inner join behandling b on g.behandling_id = b.id
+            inner join sak s on b.sak_id = s.id
+            where g.helseopphold_vurderinger_id is not null
+        """.trimIndent()
+
+        return connection.queryList(kandidaterQuery) {
+            setRowMapper {
+                Kandidat(
+                    sakId = SakId(it.getLong("sak_id")),
+                    grunnlagId = it.getLong("grunnlag_id"),
+                    behandlingId = BehandlingId(it.getLong("behandling_id")),
+                    rettighetsperiode = it.getPeriode("rettighetsperiode"), // Denne er teknisk sett feil, men kanskje godt nok. Hvis ikke: join på rettighetsperiode_grunnlag
+                    helseoppholdVurderingerId = it.getLongOrNull("helseopphold_vurderinger_id"),
+                    grunnlagOpprettetTid = it.getLocalDateTime("grunnlag_opprettet_tid"),
+                )
+            }
+        }
+    }
+
+    private data class Kandidat(
+        val sakId: SakId,
+        val grunnlagId: Long,
+        val behandlingId: BehandlingId,
+        val rettighetsperiode: Periode,
+        val helseoppholdVurderingerId: Long?, // samme som vurderinger_id i andre vilkår
+        val grunnlagOpprettetTid: LocalDateTime,
+    )
 
     private fun getOppholdPersonIds(behandlingId: BehandlingId): List<Long> = connection.queryList(
         """

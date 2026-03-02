@@ -29,24 +29,27 @@ class SakRepositoryImpl(private val connection: DBConnection) : SakRepository {
     private val personRepository = PersonRepositoryImpl(connection)
 
     @WithSpan
-    override fun finnEllerOpprett(person: Person, periode: Periode): Sak {
-        val relevantesaker = finnSakerFor(person, periode)
+    override fun finnEllerOpprett(person: Person, søknadsdato: LocalDate): Sak {
+        val relevantesaker = finnRelevanteSaker(person)
 
         if (relevantesaker.isEmpty()) {
-            return opprett(person, Periode(periode.fom, Tid.MAKS))
+            return opprett(person, søknadsdato)
         }
 
-        return relevantesaker.first()
+        return relevantesaker
+            .firstOrNull { it.rettighetsperiode.inneholder(søknadsdato) }
+            ?: relevantesaker.first()
     }
 
     @WithSpan
-    private fun opprett(person: Person, periode: Periode): Sak {
+    private fun opprett(person: Person, søknadsdato: LocalDate): Sak {
         val sakId = connection.queryFirst("SELECT nextval('SEQ_SAKSNUMMER') as nextval") {
             setRowMapper { row ->
                 row.getLong("nextval")
             }
         }
         val saksnummer = Saksnummer.valueOf(sakId)
+        val periode = Periode(søknadsdato, Tid.MAKS)
         val keys = connection.executeReturnKey(
             """INSERT INTO SAK (saksnummer, person_id, rettighetsperiode, status) VALUES (?, ?, ?::daterange, ?)"""
         ) {
@@ -106,13 +109,24 @@ class SakRepositoryImpl(private val connection: DBConnection) : SakRepository {
         }
     }
 
-    private fun finnSakerFor(person: Person, periode: Periode): List<Sak> {
+    private fun finnRelevanteSaker(person: Person): List<Sak> {
         return connection.queryList(
-            """SELECT * FROM SAK WHERE person_id = ? AND rettighetsperiode && ?::daterange"""
+            """
+            select * from sak
+            where person_id = ? 
+            and not exists(
+                select true 
+                from behandling
+                join trukket_soknad_grunnlag on behandling.id = trukket_soknad_grunnlag.behandling_id
+                join trukket_soknad_vurderinger on trukket_soknad_grunnlag.vurderinger_id = trukket_soknad_vurderinger.id
+                join trukket_soknad_vurdering on trukket_soknad_vurderinger.id = trukket_soknad_vurdering.vurderinger_id
+                where trukket_soknad_grunnlag.aktiv
+                and sak.id = behandling.sak_id
+            )
+        """.trimIndent()
         ) {
             setParams {
                 setLong(1, person.id.id)
-                setPeriode(2, periode)
             }
             setRowMapper { row ->
                 mapSak(row)
