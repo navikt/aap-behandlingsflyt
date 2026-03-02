@@ -65,12 +65,17 @@ class OpprettJobbUtvidVedtakslengdeJobbUtfører(
                 forrigeBehandlingId = sisteGjeldendeBehandling.id,
             )
 
-            if (vedtakslengdeUtvidelse is VedtakslengdeUtvidelse.Manuell) {
-                // Skal på sikt tillate manuell utvidelse ved at det opprettes manuell behandling
-                log.error("Sak med id $id trenger manuell utvidelse av vedtakslengde. Dette er ikke implementert. Må følges opp!")
+            return when (vedtakslengdeUtvidelse) {
+                is VedtakslengdeUtvidelse.Automatisk -> true
+                is VedtakslengdeUtvidelse.Manuell -> {
+                    log.error("Sak med id $id trenger manuell utvidelse av vedtakslengde. Dette er ikke implementert. Må følges opp!")
+                    false
+                }
+                is VedtakslengdeUtvidelse.IngenFremtidigOrdinærRettighet -> {
+                    log.info("Sak med id $id har ingen fremtidig ordinær rettighet, hopper over")
+                    false
+                }
             }
-
-            return vedtakslengdeUtvidelse is VedtakslengdeUtvidelse.Automatisk
         }
         return false
     }

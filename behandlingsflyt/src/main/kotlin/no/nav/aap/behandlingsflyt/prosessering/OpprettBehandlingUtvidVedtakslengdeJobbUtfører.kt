@@ -46,10 +46,11 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtfører(
                     prosesserBehandlingService.triggProsesserBehandling(utvidVedtakslengdeBehandling)
                 }
                 is VedtakslengdeUtvidelse.Manuell -> {
+                    // Her skal vi på sikt opprette manuell behandling med eget vurderingsbehov
                     log.error("Sak med id $sakId trenger manuell utvidelse av vedtakslengde. Dette er ikke implementert. Må følges opp!")
                 }
-                is VedtakslengdeUtvidelse.`IngenFremtidigOrdinærRettighet` -> {
-                    log.info("Sak med id $sakId har ingen framtidig ordinær rettighet, hopper over")
+                is VedtakslengdeUtvidelse.IngenFremtidigOrdinærRettighet -> {
+                    log.info("Sak med id $sakId har ingen fremtidig ordinær rettighet, hopper over")
                 }
             }
         } else {

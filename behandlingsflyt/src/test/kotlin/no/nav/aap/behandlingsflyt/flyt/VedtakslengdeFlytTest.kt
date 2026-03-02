@@ -772,7 +772,7 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(VedtakslengdeFlytUnlea
     }
 
     @Test
-    fun `forlenger vedtak hvor bistandsbehov kun er oppfylt for en kort periode`() {
+    fun `forlenger vedtak hvor bistandsbehov kun er oppfylt for en kort periode i andre året`() {
         val søknadstidspunkt = LocalDateTime.now(clock).minusYears(1)
         val (sak, førstegangsbehandling) = sendInnFørsteSøknad(mottattTidspunkt = søknadstidspunkt)
         val rettighetsperiode = sak.rettighetsperiode
