@@ -172,6 +172,8 @@ spec:
       value: https://pensjon-pen-q2.dev-fss-pub.nais.io
     - name: INTEGRASJON_PESYS_SCOPE
       value: api://dev-fss.pensjon-q2.pensjon-pen-q2/.default
+    - name: INTEGRASJON_UFORE_VEDTAK_TOPIC
+      value: pensjon-q2.uforevedtak-aap
     - name: INTEGRASJON_TILGANG_URL
       value: http://tilgang
     - name: INTEGRASJON_TILGANG_SCOPE

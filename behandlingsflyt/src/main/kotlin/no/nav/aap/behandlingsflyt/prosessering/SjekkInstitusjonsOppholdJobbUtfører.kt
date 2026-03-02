@@ -157,6 +157,6 @@ class SjekkInstitusjonsOppholdJobbUtfører(
         /**
          * Kjøres en gang hver dag, slås av og på med Feature Toggle
          */
-        override val cron = CronExpression.createWithoutSeconds("0 3 * * *")
+        override val cron = CronExpression.createWithoutSeconds("0 11 * * *")
     }
 }

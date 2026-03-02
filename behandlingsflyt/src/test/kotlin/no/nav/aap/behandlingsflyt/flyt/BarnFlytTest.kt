@@ -89,6 +89,7 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
             .løsBistand(periode.fom)
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
             .kvalitetssikre()
             .løsBeregningstidspunkt()
             .løsOppholdskrav(fom)
@@ -228,6 +229,7 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
             .løsBistand(periode.fom)
             .løsRefusjonskrav(periode.fom)
             .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
             .kvalitetssikre()
             .løsBeregningstidspunkt()
             .løsOppholdskrav(fom)
@@ -324,6 +326,7 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
             .løsBistand(periode.fom)
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
             .kvalitetssikre()
             .løsBeregningstidspunkt()
             .løsOppholdskrav(fom)
@@ -804,6 +807,7 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
             }
             // Gi avslag på 11-13
             .løsSykdom(vurderingGjelderFra = periode.fom, erOppfylt = false)
+            .bekreftVurderinger()
             .kvalitetssikre()
             .medKontekst {
                 val tilkjentYtelseFraRepo = hentTilkjentYtelse(behandling.id)
@@ -876,6 +880,7 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
             // Gi avslag på 11-13
             .løsSykdom(periode.fom, vissVarighet = false, erOppfylt = false)
             .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
             .fattVedtak()
             .medKontekst {
                 val tilkjentYtelseFraRepo = hentTilkjentYtelse(revurdering.id)
@@ -1160,6 +1165,7 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
             .løsBistand(periode.fom)
             .løsRefusjonskrav(periode.fom)
             .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
             .kvalitetssikre()
             .løsAvklaringsBehov(
                 FastsettBeregningstidspunktLøsning(

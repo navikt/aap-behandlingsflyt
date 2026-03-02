@@ -94,6 +94,7 @@ class RettighetsperiodeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
             .løsSykdom(førsteOverstyring)
             .løsBistand(førsteOverstyring)
             .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
             .løsBeregningstidspunkt(LocalDate.now())
             .løsOppholdskrav(førsteOverstyring)
             .løsUtenSamordning()
@@ -161,6 +162,7 @@ class RettighetsperiodeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
             .løsSykdom(nyStartDato)
             .løsBistand(nyStartDato)
             .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
             .løsBeregningstidspunkt(nyStartDato)
             .løsOppholdskrav(nyStartDato)
             .løsUtenSamordning()
@@ -205,6 +207,7 @@ class RettighetsperiodeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
             .løsBistand(sak.rettighetsperiode.fom)
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
             .kvalitetssikre()
             .løsBeregningstidspunkt()
             .løsForutgåendeMedlemskap(sak.rettighetsperiode.fom)
@@ -241,6 +244,7 @@ class RettighetsperiodeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
             .løsSykdom(nyStartDato)
             .løsBistand(nyStartDato)
             .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
             .løsBeregningstidspunkt()
             .løsForutgåendeMedlemskap(nyStartDato)
             .løsOppholdskrav(nyStartDato)
@@ -298,6 +302,7 @@ class RettighetsperiodeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
             .løsBistand(sak.rettighetsperiode.fom)
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
             .kvalitetssikre()
 
         var oppdatertBehandling = sak.opprettManuellRevurdering(
@@ -326,6 +331,7 @@ class RettighetsperiodeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
 
             }
             .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
             .medKontekst {
                 val åpneAvklaringsbehov = hentÅpneAvklaringsbehov(oppdatertBehandling.id)
                 if (unleashGateway.objectInstance?.isEnabled(BehandlingsflytFeature.KvalitetssikringVed2213) == true) {
@@ -338,6 +344,7 @@ class RettighetsperiodeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
                     assertThat(åpneAvklaringsbehov.first().definisjon).isEqualTo(Definisjon.FASTSETT_BEREGNINGSTIDSPUNKT)
                 }
             }
+            .bekreftVurderinger()
             .kvalitetssikre()
             .løsBeregningstidspunkt(nyStartDato)
             .løsOppholdskrav(nyStartDato)
@@ -382,6 +389,7 @@ class RettighetsperiodeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
             .løsBistand(startDato)
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
             .kvalitetssikre()
             .løsBeregningstidspunkt(startDato)
             .løsOppholdskrav(startDato)
@@ -441,6 +449,7 @@ class RettighetsperiodeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
             .løsBistand(startDato)
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
             .kvalitetssikre()
             .løsBeregningstidspunkt(startDato)
             .løsOppholdskrav(startDato)

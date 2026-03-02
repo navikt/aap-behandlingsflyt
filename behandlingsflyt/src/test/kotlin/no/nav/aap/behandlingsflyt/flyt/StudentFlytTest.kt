@@ -92,6 +92,7 @@ class StudentFlytTest(val unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                 if (unleashGateway.objectInstance!!.isEnabled(BehandlingsflytFeature.NyTidligereVurderinger)) {
                     // Nei på 11-5, må skrive brev
                     this.behandling.løsSykdomsvurderingBrev()
+                    this.behandling.bekreftVurderinger()
                     this.behandling.kvalitetssikre()
                 }
             }
@@ -162,6 +163,7 @@ class StudentFlytTest(val unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             }
             .løsBistand(sak.rettighetsperiode.fom)
             .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
             .medKontekst {
                 if (unleashGateway.objectInstance!!.isEnabled(BehandlingsflytFeature.NyTidligereVurderinger)) {
                     // Kjent bug at dette løftes på nytt ved diff i nårVurderingErRelevant, selv om vurderingen er gjort for hele perioden
@@ -259,6 +261,7 @@ class StudentFlytTest(val unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             .løsSykdom(vurderingGjelderFra = 1 januar 2026, erOppfylt = false) // Må løse sykdom allerede nå
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
             .kvalitetssikre()
             .løsBeregningstidspunkt()
             .løsOppholdskrav(fom)

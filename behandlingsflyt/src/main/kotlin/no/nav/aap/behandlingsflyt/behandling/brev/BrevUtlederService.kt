@@ -119,6 +119,7 @@ class BrevUtlederService(
                     Resultat.AVSLAG -> {
                         brevBehovAvslag(behandling)
                     }
+
                     Resultat.TRUKKET -> null
                     Resultat.AVBRUTT -> null
                 }
@@ -302,7 +303,8 @@ class BrevUtlederService(
         dato: LocalDate?
     ): GrunnlagBeregning {
         val grunnlag = beregningsgrunnlagRepository.hentHvisEksisterer(behandlingId)
-        val beregningsgrunnlag = beregnBeregningsgrunnlagBeløp(grunnlag, dato)
+        val beregningsgrunnlag =
+            if (grunnlag != null && dato != null) beregnBeregningsgrunnlagBeløp(grunnlag, dato) else null
         val beregningstidspunktVurdering =
             beregningVurderingRepository.hentHvisEksisterer(behandlingId)?.tidspunktVurdering
 
@@ -329,7 +331,7 @@ class BrevUtlederService(
                 }
             }
 
-            null -> GrunnlagBeregning(null, emptyList(), beregningsgrunnlag)
+            null -> GrunnlagBeregning(null, emptyList(), null)
         }
     }
 
@@ -456,11 +458,8 @@ class BrevUtlederService(
         return this.map { InntektPerÅr(it.år, it.inntektIKroner.verdi()) }
     }
 
-    private fun beregnBeregningsgrunnlagBeløp(grunnlag: Beregningsgrunnlag?, dato: LocalDate?): Beløp? {
-        if (dato == null) {
-            return null
-        }
-        val grunnlaget = grunnlag?.grunnlaget() ?: return null
+    private fun beregnBeregningsgrunnlagBeløp(grunnlag: Beregningsgrunnlag, dato: LocalDate): Beløp {
+        val grunnlaget = grunnlag.grunnlaget()
         val grunnlagetBeløp = grunnlaget.multiplisert(Grunnbeløp.finnGrunnbeløp(dato))
         return Beløp(grunnlagetBeløp.verdi.setScale(0, RoundingMode.HALF_UP))
     }

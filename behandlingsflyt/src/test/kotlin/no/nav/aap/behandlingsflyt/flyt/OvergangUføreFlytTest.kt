@@ -11,6 +11,7 @@ import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.Uføre
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.BistandLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.UføreSøknadVedtakResultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.flate.OvergangUføreLøsningDto
@@ -19,18 +20,34 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.Sykdo
 import no.nav.aap.behandlingsflyt.help.assertTidslinje
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.ÅrsakTilOpprettelse
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.UførevedtakKafkaMelding
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.UførevedtakResultat
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.UførevedtakV0
+import no.nav.aap.behandlingsflyt.prosessering.HendelseMottattHåndteringJobbUtfører
+import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.underveis.UnderveisRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.utils.toHumanReadable
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Tid
+import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.verdityper.dokument.JournalpostId
+import no.nav.aap.verdityper.dokument.Kanal
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
+import java.time.LocalDateTime
+import java.util.UUID
 
 class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
 
@@ -149,6 +166,8 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::
             }
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
+            .bekreftVurderinger()
             .kvalitetssikre()
             .medKontekst {
                 assertThat(åpneAvklaringsbehov).anySatisfy { assertThat(it.definisjon).isEqualTo(Definisjon.AVKLAR_SYKEPENGEERSTATNING) }
@@ -283,6 +302,7 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::
             )
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
             .kvalitetssikre()
             .løsAvklaringsBehov(
                 PeriodisertAvklarSykepengerErstatningLøsning(
@@ -303,8 +323,17 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::
             .løsAvklaringsBehov(ForeslåVedtakLøsning())
             .fattVedtak()
 
-        val revurdering =
-            sak.opprettManuellRevurdering(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND)
+        val (melding, revurdering) = opprettUførevedtakshendelse(sak, behandling)
+        assertThat(revurdering.årsakTilOpprettelse).isEqualTo(no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse.ENDRING_I_REGISTERDATA)
+
+        dataSource.transaction { connection ->
+            val vurderingsbehovOgÅrsaker = BehandlingRepositoryImpl(connection).hentVurderingsbehovOgÅrsaker(revurdering.id)
+            assertThat(vurderingsbehovOgÅrsaker).hasSize(1)
+            assertThat(vurderingsbehovOgÅrsaker.first().beskrivelse).isEqualTo(melding.beskrivelseVurderingsbehov())
+            assertThat(vurderingsbehovOgÅrsaker.first().vurderingsbehov).hasSize(1)
+            assertThat(vurderingsbehovOgÅrsaker.first().vurderingsbehov.first().type).isEqualTo(Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND)
+        }
+
         revurdering
             .løsAvklaringsBehov(
                 AvklarSykdomLøsning(
@@ -352,9 +381,61 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::
             }
             .løsOvergangArbeid(utfall = Utfall.IKKE_OPPFYLT, fom = ikkeLengerSykDato)
             .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
             .medKontekst {
                 assertThat(åpneAvklaringsbehov).hasSize(1)
                 assertThat(åpneAvklaringsbehov.first().definisjon).isEqualTo(Definisjon.FATTE_VEDTAK)
             }
+    }
+
+    @Test
+    fun `For sak med totalt avslag skal ikke uførehendelse opprette revurdering`() {
+        val fom = LocalDate.of(2026, 1, 1)
+        val (sak, behandling) = sendInnFørsteSøknad(mottattTidspunkt = fom.atStartOfDay())
+        behandling
+            .løsSykdom(fom, erOppfylt = false)
+            .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
+            .kvalitetssikre()
+            .fattVedtak()
+
+        val (_, revurdering) = opprettUførevedtakshendelse(sak, behandling)
+        assertThat(revurdering.årsakTilOpprettelse).isNotEqualTo(no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse.ENDRING_I_REGISTERDATA)
+        assertThat(revurdering.id).isEqualTo(behandling.id)
+    }
+
+    // Send inn hendelse om avslag på uførevedtak
+    private fun opprettUførevedtakshendelse(
+        sak: Sak,
+        behandling: Behandling
+    ): Pair<UførevedtakV0, Behandling> {
+        val avvistLegeerklæringId = UUID.randomUUID().toString()
+        val melding = UførevedtakKafkaMelding(
+            personid = sak.person.aktivIdent().toString(),
+            virkningsdato = LocalDate.now(),
+            resultat = UførevedtakResultat.AVSL,
+            avslag12_5 = true,
+        ).tilUføreVedtakV0() as UførevedtakV0
+        dataSource.transaction { connection ->
+            val flytJobbRepository = FlytJobbRepository(connection)
+            flytJobbRepository.leggTil(
+                HendelseMottattHåndteringJobbUtfører.nyJobb(
+                    sakId = behandling.sakId,
+                    dokumentReferanse = InnsendingReferanse(
+                        InnsendingReferanse.Type.UFØREVEDTAK_HENDELSE_ID,
+                        avvistLegeerklæringId
+                    ),
+                    brevkategori = InnsendingType.UFØRE_VEDTAK_HENDELSE,
+                    kanal = Kanal.DIGITAL,
+                    mottattTidspunkt = LocalDateTime.now(),
+                    melding = melding
+                )
+            )
+        }
+        motor.kjørJobber()
+
+        val revurdering = hentSisteOpprettedeBehandlingForSak(sak.id)
+        prosesserBehandling(revurdering)
+        return Pair(melding, revurdering)
     }
 }

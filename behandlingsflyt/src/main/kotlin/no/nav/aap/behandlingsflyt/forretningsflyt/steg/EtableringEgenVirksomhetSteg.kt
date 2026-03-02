@@ -2,6 +2,8 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.etableringegenvirksomhet.EtableringEgenVirksomhetService
+import no.nav.aap.behandlingsflyt.behandling.etableringegenvirksomhet.VirksomhetEtableringGyldig
+import no.nav.aap.behandlingsflyt.behandling.etableringegenvirksomhet.VirksomhetEtableringIkkeGyldig
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetRepository
@@ -101,7 +103,12 @@ class EtableringEgenVirksomhetSteg(
             )
         }
 
-        return Tidslinje(kontekst.rettighetsperiode, evaluering.erOppfylt)
+        return Tidslinje(
+            kontekst.rettighetsperiode, when (evaluering) {
+                VirksomhetEtableringGyldig -> true
+                is VirksomhetEtableringIkkeGyldig -> false
+            }
+        )
     }
 
     companion object : FlytSteg {

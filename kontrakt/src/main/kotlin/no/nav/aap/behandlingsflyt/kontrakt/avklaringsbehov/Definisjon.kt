@@ -138,6 +138,12 @@ public enum class Definisjon(
         kvalitetssikres = true,
         løsesAv = listOf(Rolle.SAKSBEHANDLER_OPPFOLGING)
     ),
+    BEKREFT_VURDERINGER_OPPFØLGING(
+        kode = AvklaringsbehovKode.`5054`,
+        type = BehovType.MANUELT_PÅKREVD,
+        løsesISteg = StegType.BEKREFT_VURDERINGER_OPPFØLGING,
+        løsesAv = listOf(Rolle.SAKSBEHANDLER_OPPFOLGING)
+    ),
     KVALITETSSIKRING(
         kode = AvklaringsbehovKode.`5097`,
         type = BehovType.MANUELT_PÅKREVD,

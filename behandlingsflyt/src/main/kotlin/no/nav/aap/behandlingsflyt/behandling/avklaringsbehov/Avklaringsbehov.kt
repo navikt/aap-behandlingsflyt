@@ -107,7 +107,7 @@ class Avklaringsbehov(
         perioderVedtaketBehøverVurdering: Set<Periode>?,
         perioderSomIkkeErTilstrekkeligVurdert: Set<Periode>?,
     ) {
-        require(historikk.last().status.erAvsluttet())
+        require(historikk.last().status.erAvsluttet()) { "Krever at status er avsluttet for å reåpne. Var: ${historikk.last().status}." }
         if (definisjon.erVentebehov()) {
             requireNotNull(frist)
             requireNotNull(venteårsak)

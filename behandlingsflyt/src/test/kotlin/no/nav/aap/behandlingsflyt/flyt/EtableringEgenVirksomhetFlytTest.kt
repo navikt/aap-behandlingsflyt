@@ -87,6 +87,7 @@ class EtableringEgenVirksomhetFlytTest : AbstraktFlytOrkestratorTest(VirksomhetU
             }
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
             .kvalitetssikre()
             .løsBeregningstidspunkt()
             .løsOppholdskrav(sak.rettighetsperiode.fom)
@@ -123,6 +124,7 @@ class EtableringEgenVirksomhetFlytTest : AbstraktFlytOrkestratorTest(VirksomhetU
             .løsBistand(fom = sak.rettighetsperiode.fom, erOppfylt = true, erBehovForArbeidsrettetTiltak = true)
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
             .kvalitetssikre()
             .løsBeregningstidspunkt()
             .løsOppholdskrav(sak.rettighetsperiode.fom)
