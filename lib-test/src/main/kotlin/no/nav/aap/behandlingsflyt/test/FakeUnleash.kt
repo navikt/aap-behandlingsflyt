@@ -45,12 +45,10 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.VirksomhetsEtablering to true,
         BehandlingsflytFeature.KvalitetssikringVed2213 to true,
         BehandlingsflytFeature.tilbakekrevingsOppgaverTilOppgave to true,
-        BehandlingsflytFeature.PeriodiseringHelseinstitusjonOpphold to true,
         BehandlingsflytFeature.HentingAvInstitusjonsOpphold to true,
         BehandlingsflytFeature.VisIkkeRelevantPeriode to true,
         BehandlingsflytFeature.NyTidligereVurderinger to true,
         BehandlingsflytFeature.BekreftVurderingerOppfolging to true,
-        BehandlingsflytFeature.MigrerInstitusjonsopphold to true,
         BehandlingsflytFeature.LagreStansOgOpphor to true,
         )
 )
