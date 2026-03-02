@@ -70,11 +70,11 @@ fun NormalOpenAPIRoute.manglendeGrunnlagApi(
                     val mappedNyHistorikk = manglendeInntektGrunnlagService.mapHistoriskeManuelleVurderinger(req)
 
                     // Gjennomsnittlig G-verdi første januar i året vi er interessert i
-                    val gVerdi = Grunnbeløp.tilTidslinjeGjennomsnitt().segment(
+                    val gVerdi = Grunnbeløp.gjennomsnittGrunnbeløp(
                         Year.of(relevanteÅr.max().value).atMonthDay(
                             MonthDay.of(1, 1)
                         )
-                    )!!.verdi
+                    )
 
                     val år = relevanteÅr.max()
                     val gammelVurderingFormat = manuellInntekter?.firstOrNull()

@@ -5,7 +5,6 @@ import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.samid.SamIdRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.ApiInternGateway
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
@@ -68,11 +67,9 @@ class DatadelingBehandlingJobbUtfører(
             beregningsgrunnlagRepository.hentHvisEksisterer(behandling.id)?.grunnlaget()
 
         val startPåRettighetsperiode = sak.rettighetsperiode.fom
-        val grunnbeløpVedSakensStart = requireNotNull(
-            Grunnbeløp.tilTidslinje().begrensetTil(sak.rettighetsperiode).segment(startPåRettighetsperiode)
-        ) { "Fant ikke grunnbeløp på tidspunkt $startPåRettighetsperiode" }
+        val grunnbeløpVedSakensStart = Grunnbeløp.finnGrunnbeløp(startPåRettighetsperiode)
 
-        val beregningsgrunnlagIKroner = beregningsgrunnlagGUnit?.multiplisert(grunnbeløpVedSakensStart.verdi)?.verdi
+        val beregningsgrunnlagIKroner = beregningsgrunnlagGUnit?.multiplisert(grunnbeløpVedSakensStart)?.verdi
 
         apiInternGateway.sendBehandling(
             sak,
