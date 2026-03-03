@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser
 
+import io.mockk.checkUnnecessaryStub
 import io.mockk.every
-import io.mockk.junit5.MockKExtension
 import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
@@ -41,23 +41,24 @@ import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.api.assertThrows
-import org.junit.jupiter.api.extension.ExtendWith
-import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
 
-@ExtendWith(MockKExtension::class)
-@MockKExtension.CheckUnnecessaryStub
-@MockKExtension.RequireParallelTesting
 class AvklarHelseinstitusjonLøserTest {
 
     private val behandlingRepository = mockk<BehandlingRepository>()
     private val helseinstitusjonRepository = mockk<InstitusjonsoppholdRepository>()
     private val løser: AvklarHelseinstitusjonLøser by lazy {
         AvklarHelseinstitusjonLøser(behandlingRepository, helseinstitusjonRepository)
+    }
+
+    @AfterEach
+    fun afterEach() {
+        checkUnnecessaryStub(behandlingRepository, helseinstitusjonRepository)
     }
 
     @Test
@@ -266,7 +267,10 @@ class AvklarHelseinstitusjonLøserTest {
             )
         )
 
-        every { behandlingRepository.hent(nåværendeBehandlingId) } returns opprettBehandling(nåværendeBehandlingId, forrigeBehandlingId)
+        every { behandlingRepository.hent(nåværendeBehandlingId) } returns opprettBehandling(
+            nåværendeBehandlingId,
+            forrigeBehandlingId
+        )
         every { helseinstitusjonRepository.hentHvisEksisterer(nåværendeBehandlingId) } returns null
         every { helseinstitusjonRepository.hentHvisEksisterer(forrigeBehandlingId) } returns eksisterendeGrunnlag
         every { helseinstitusjonRepository.lagreHelseVurdering(any(), any(), capture(vurderingSlot)) } returns Unit

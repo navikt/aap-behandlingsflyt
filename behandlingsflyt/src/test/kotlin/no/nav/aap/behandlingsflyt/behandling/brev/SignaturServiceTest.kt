@@ -1,7 +1,9 @@
 package no.nav.aap.behandlingsflyt.behandling.brev
 
+import io.mockk.checkUnnecessaryStub
+import io.mockk.clearAllMocks
+import io.mockk.clearMocks
 import io.mockk.every
-import io.mockk.junit5.MockKExtension
 import io.mockk.mockk
 import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
@@ -20,22 +22,25 @@ import no.nav.aap.brev.kontrakt.Rolle
 import no.nav.aap.brev.kontrakt.SignaturGrunnlag
 import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.ExtendWith
 import java.time.LocalDateTime
 import java.util.*
 import kotlin.random.Random
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status as AvklaringsbehovStatus
 
-@ExtendWith(MockKExtension::class)
-@MockKExtension.CheckUnnecessaryStub
-@MockKExtension.RequireParallelTesting
 class SignaturServiceTest {
+    private val avklaringsbehovRepository = mockk<AvklaringsbehovRepository>()
+    private val avklaringsbehovOperasjonerRepository = mockk<AvklaringsbehovOperasjonerRepository>()
+
+    @AfterEach
+    fun afterEach() {
+        checkUnnecessaryStub(avklaringsbehovRepository, avklaringsbehovOperasjonerRepository)
+        clearMocks(avklaringsbehovRepository, avklaringsbehovOperasjonerRepository)
+    }
+
     @Test
     fun `den som står i signatur for en gitt rolle er den som utførte siste avklaringsbehovet for rollen (status AVSLUTTET)`() {
-
-        val avklaringsbehovRepository = mockk<AvklaringsbehovRepository>()
-        val avklaringsbehovOperasjonerRepository = mockk<AvklaringsbehovOperasjonerRepository>()
 
         val signaturService = SignaturService(avklaringsbehovRepository)
 
@@ -73,7 +78,11 @@ class SignaturServiceTest {
         leggTilEndring(Definisjon.MANUELT_SATT_PÅ_VENT, endretAv = saksbehandlerIdent, AvklaringsbehovStatus.AVSLUTTET)
 
         // definisjon som ikke skal tas høyde for
-        leggTilEndring(Definisjon.VURDER_TREKK_AV_SØKNAD, endretAv = saksbehandlerIdent, AvklaringsbehovStatus.AVSLUTTET)
+        leggTilEndring(
+            Definisjon.VURDER_TREKK_AV_SØKNAD,
+            endretAv = saksbehandlerIdent,
+            AvklaringsbehovStatus.AVSLUTTET
+        )
 
         // BESLUTTER
         leggTilEndring(Definisjon.FATTE_VEDTAK, endretAv = beslutterIdent, AvklaringsbehovStatus.AVSLUTTET)
@@ -97,9 +106,6 @@ class SignaturServiceTest {
 
     @Test
     fun `skal fjerne duplikater om samme person har løst avklaringsbehov som er knytte til ulike roller – eksempel samme person på lokalkontor og NAY`() {
-
-        val avklaringsbehovRepository = mockk<AvklaringsbehovRepository>()
-        val avklaringsbehovOperasjonerRepository = mockk<AvklaringsbehovOperasjonerRepository>()
 
         val signaturService = SignaturService(avklaringsbehovRepository)
 
@@ -154,9 +160,6 @@ class SignaturServiceTest {
 
     @Test
     fun `tar med innlogget bruker i signatur for vedtaksbrev dersom beslutter ikke har saksbehandlet`() {
-        val avklaringsbehovRepository = mockk<AvklaringsbehovRepository>()
-        val avklaringsbehovOperasjonerRepository = mockk<AvklaringsbehovOperasjonerRepository>()
-
         val signaturService = SignaturService(avklaringsbehovRepository)
 
         val behandlingId = BehandlingId(Random.nextLong())
@@ -191,9 +194,6 @@ class SignaturServiceTest {
 
     @Test
     fun `dersom beslutter ikke har saksbehandlet og innlogget bruker har saksbehandlet beholdes rollen til innlogget bruker`() {
-
-        val avklaringsbehovRepository = mockk<AvklaringsbehovRepository>()
-        val avklaringsbehovOperasjonerRepository = mockk<AvklaringsbehovOperasjonerRepository>()
 
         val signaturService = SignaturService(avklaringsbehovRepository)
 
