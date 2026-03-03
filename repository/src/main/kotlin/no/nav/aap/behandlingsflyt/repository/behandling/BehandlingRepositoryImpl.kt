@@ -18,7 +18,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
-import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.Factory
 import java.time.LocalDateTime
 
@@ -59,18 +58,18 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
             VALUES (?, ?, ?, ?)
         """.trimIndent()
 
-        val behandlingÅrsakId = connection.executeReturnKey(årsakQuery, {
+        val behandlingÅrsakId = connection.executeReturnKey(årsakQuery) {
             setParams {
                 setLong(1, behandlingId)
                 setEnumName(2, vurderingsbehovOgÅrsak.årsak)
                 setString(3, vurderingsbehovOgÅrsak.beskrivelse)
                 setLocalDateTime(4, vurderingsbehovOgÅrsak.opprettet)
             }
-        })
+        }
 
         val vurderingsbehovQuery = """
-            INSERT INTO vurderingsbehov (behandling_id, aarsak, periode, behandling_aarsak_id, opprettet_tid, oppdatert_tid)
-            VALUES (?, ?, ?::daterange, ?, ?, ?)
+            INSERT INTO vurderingsbehov (behandling_id, aarsak, behandling_aarsak_id, opprettet_tid, oppdatert_tid)
+            VALUES (?, ?, ?, ?, ?)
         """.trimIndent()
 
         val opprettetTid = LocalDateTime.now()
@@ -78,10 +77,9 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
             setParams {
                 setLong(1, behandlingId)
                 setEnumName(2, it.type)
-                setPeriode(3, it.periode)
-                setLong(4, behandlingÅrsakId)
+                setLong(3, behandlingÅrsakId)
+                setLocalDateTime(4, opprettetTid)
                 setLocalDateTime(5, opprettetTid)
-                setLocalDateTime(6, opprettetTid)
             }
         }
 
@@ -202,7 +200,6 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
             setRowMapper {
                 VurderingsbehovMedPeriode(
                     it.getEnum("aarsak"),
-                    it.getPeriodeOrNull("periode"),
                     it.getLocalDateTimeOrNull("oppdatert_tid") ?: it.getLocalDateTime("opprettet_tid")
                 )
             }
@@ -218,7 +215,6 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
         data class VurderingsbehovOgÅrsakInternal(
             val id: Long,
             val vurderingsbehovType: Vurderingsbehov,
-            val vurderingsbehovPeriode: Periode?,
             val vurderingsbehovOppdatertTid: LocalDateTime,
             val årsak: ÅrsakTilOpprettelse,
             val opprettet: LocalDateTime,
@@ -227,7 +223,7 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
 
         val query = """
             SELECT ba.id as aarsak_id, ba.aarsak, ba.begrunnelse, ba.opprettet_tid,
-                   vb.aarsak as vurderingsbehov, vb.periode, vb.opprettet_tid as vb_opprettet_Tid, vb.oppdatert_tid as vb_oppdatert_tid
+                   vb.aarsak as vurderingsbehov, vb.opprettet_tid as vb_opprettet_Tid, vb.oppdatert_tid as vb_oppdatert_tid
             FROM behandling_aarsak ba
             INNER JOIN vurderingsbehov vb ON vb.behandling_aarsak_id = ba.id
             WHERE vb.behandling_id = ?
@@ -245,7 +241,6 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
                     beskrivelse = row.getStringOrNull("begrunnelse"),
                     opprettet = row.getLocalDateTime("opprettet_tid"),
                     vurderingsbehovType = row.getEnum("vurderingsbehov"),
-                    vurderingsbehovPeriode = row.getPeriodeOrNull("periode"),
                     vurderingsbehovOppdatertTid = row.getLocalDateTimeOrNull("vb_oppdatert_tid")
                         ?: row.getLocalDateTime("vb_opprettet_Tid")
                 )
@@ -262,7 +257,6 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
                     vurderingsbehov = vurderingsbehovOgÅrsak.map {
                         VurderingsbehovMedPeriode(
                             it.vurderingsbehovType,
-                            it.vurderingsbehovPeriode,
                             it.vurderingsbehovOppdatertTid
                         )
                     }
@@ -498,29 +492,28 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
             VALUES (?, ?, ?, ?)
         """.trimIndent()
 
-        val behandlingÅrsakId = connection.executeReturnKey(årsakQuery, {
+        val behandlingÅrsakId = connection.executeReturnKey(årsakQuery) {
             setParams {
                 setLong(1, behandling.id.toLong())
                 setEnumName(2, vurderingsbehovOgÅrsak.årsak)
                 setString(3, vurderingsbehovOgÅrsak.beskrivelse)
                 setLocalDateTime(4, vurderingsbehovOgÅrsak.opprettet)
             }
-        })
+        }
 
         val vurderingsbehovQuery = """
-            INSERT INTO vurderingsbehov (behandling_id, aarsak, periode, behandling_aarsak_id, oppdatert_tid)
-            VALUES (?, ?, ?::daterange, ?, ?)
-            ON CONFLICT (behandling_id, aarsak, periode) DO UPDATE SET oppdatert_tid = ?
+            INSERT INTO vurderingsbehov (behandling_id, aarsak, behandling_aarsak_id, oppdatert_tid)
+            VALUES (?, ?, ?, ?)
+            ON CONFLICT (behandling_id, aarsak) DO UPDATE SET oppdatert_tid = ?
         """.trimIndent()
 
         connection.executeBatch(vurderingsbehovQuery, vurderingsbehovOgÅrsak.vurderingsbehov) {
             setParams {
                 setLong(1, behandling.id.toLong())
                 setEnumName(2, it.type)
-                setPeriode(3, it.periode)
-                setLong(4, behandlingÅrsakId)
+                setLong(3, behandlingÅrsakId)
+                setLocalDateTime(4, LocalDateTime.now())
                 setLocalDateTime(5, LocalDateTime.now())
-                setLocalDateTime(6, LocalDateTime.now())
             }
         }
     }

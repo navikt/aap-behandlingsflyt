@@ -142,7 +142,6 @@ class SjekkInstitusjonsoppholdJobbUtførerTest {
                 vurderingsbehov = listOf(
                     VurderingsbehovMedPeriode(
                         type = Vurderingsbehov.VURDER_RETTIGHETSPERIODE,
-                        periode = null,
                     )
                 ),
                 årsak = ÅrsakTilOpprettelse.ENDRING_I_REGISTERDATA,

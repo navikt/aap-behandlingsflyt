@@ -75,7 +75,7 @@ class VurderSykdomSteg(
                 ?.somStudenttidslinje(kontekst.rettighetsperiode.tom)
                 .orEmpty()
 
-            return Tidslinje.map2(tidligereVurderingsutfall, studentvurderinger)
+            Tidslinje.map2(tidligereVurderingsutfall, studentvurderinger)
             { behandlingsutfall, studentvurdering ->
                 when (behandlingsutfall) {
                     null -> false

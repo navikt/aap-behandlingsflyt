@@ -99,13 +99,13 @@ class PipTest {
                     Ident("endaeldreident", false)
                 )
             )
-            val sak = SakRepositoryImpl(connection).finnEllerOpprett(person, periode)
+            val sak = SakRepositoryImpl(connection).finnEllerOpprett(person, periode) //
             val behandling = BehandlingRepositoryImpl(connection).opprettBehandling(
                 sakId = sak.id,
                 typeBehandling = TypeBehandling.Førstegangsbehandling,
                 forrigeBehandlingId = null,
                 vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
-                    vurderingsbehov = listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_SØKNAD, periode)),
+                    vurderingsbehov = listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_SØKNAD,)),
                     årsak = ÅrsakTilOpprettelse.SØKNAD,
                 )
             )
@@ -178,13 +178,13 @@ class PipTest {
                     Ident("endaeldreident", false)
                 )
             )
-            val sak = SakRepositoryImpl(connection).finnEllerOpprett(person, periode)
+            val sak = SakRepositoryImpl(connection).finnEllerOpprett(person, periode) //
             val behandling = BehandlingRepositoryImpl(connection).opprettBehandling(
                 sakId = sak.id,
                 typeBehandling = TypeBehandling.Førstegangsbehandling,
                 forrigeBehandlingId = null,
                 vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
-                    vurderingsbehov = listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_SØKNAD, periode)),
+                    vurderingsbehov = listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_SØKNAD)),
                     årsak = ÅrsakTilOpprettelse.SØKNAD,
                 )
             )
@@ -228,13 +228,13 @@ class PipTest {
             )
 
 
-            val periode2 = Periode(LocalDate.now().minusYears(5), LocalDate.now().minusYears(5))
+
             val behandling2 = BehandlingRepositoryImpl(connection).opprettBehandling(
                 sakId = sak.id,
                 typeBehandling = TypeBehandling.Førstegangsbehandling,
                 forrigeBehandlingId = null,
                 vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
-                    vurderingsbehov = listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_SØKNAD, periode2)),
+                    vurderingsbehov = listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_SØKNAD)),
                     årsak = ÅrsakTilOpprettelse.SØKNAD,
                 )
             )

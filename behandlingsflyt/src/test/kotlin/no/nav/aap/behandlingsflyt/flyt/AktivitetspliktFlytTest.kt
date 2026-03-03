@@ -285,7 +285,6 @@ class AktivitetspliktFlytTest :
                     årsak = ÅrsakTilOpprettelse.AKTIVITETSPLIKT, vurderingsbehov = listOf(
                         VurderingsbehovMedPeriode(
                             Vurderingsbehov.EFFEKTUER_AKTIVITETSPLIKT,
-                            periode = sak.rettighetsperiode
                         )
                     )
                 )
