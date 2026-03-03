@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarOver
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarPeriodisertLovvalgMedlemskapLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarStudentEnkelLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSykdomLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarVedtakslengdeLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.ForeslåVedtakLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.PeriodisertAvklarSykepengerErstatningLøsning
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
@@ -26,6 +27,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentVur
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.PeriodisertSykepengerVurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.SykdomsvurderingLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeVurderingDto
 import no.nav.aap.behandlingsflyt.flyt.TestSøknader.SØKNAD_INGEN_MEDLEMSKAP
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
@@ -54,6 +56,13 @@ import java.time.LocalDateTime
 object VedtakslengdeFlytUnleash : FakeUnleashBaseWithDefaultDisabled(
     enabledFlags = listOf(
         BehandlingsflytFeature.ForlengelseIManuellBehandling,
+    )
+)
+
+object AvklarVedtakslengdeFlytUnleash : FakeUnleashBaseWithDefaultDisabled(
+    enabledFlags = listOf(
+        BehandlingsflytFeature.ForlengelseIManuellBehandling,
+        BehandlingsflytFeature.VedtakslengdeAvklaringsbehov,
     )
 )
 
@@ -961,4 +970,112 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(VedtakslengdeFlytUnlea
             }
     }
 
+}
+
+class AvklarVedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(AvklarVedtakslengdeFlytUnleash::class) {
+
+    private val clock = fixedClock(1 desember 2025)
+
+    @Test
+    fun `skal trigge avklaringsbehov for vedtakslengde ved førstegangsbehandling`() {
+        val søknadstidspunkt = LocalDateTime.now().minusMonths(11)
+        val (sak, førstegangsbehandling) = sendInnFørsteSøknad(mottattTidspunkt = søknadstidspunkt)
+        val startDato = sak.rettighetsperiode.fom
+
+        førstegangsbehandling
+            .løsSykdom(startDato, erOppfylt = true)
+            .løsBistand(startDato, erOppfylt = true)
+            .løsRefusjonskrav()
+            .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
+            .kvalitetssikre()
+            .løsBeregningstidspunkt(startDato)
+            .løsOppholdskrav(startDato)
+            .løsAndreStatligeYtelser()
+            .medKontekst {
+                assertThat(åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
+                    .contains(Definisjon.AVKLAR_VEDTAKSLENGDE)
+            }
+            .løsAvklaringsBehov(
+                AvklarVedtakslengdeLøsning(
+                    vedtakslengdeVurdering = VedtakslengdeVurderingDto(
+                        sluttdato = startDato.plusMonths(15),
+                        begrunnelse = "Vurdert vedtakslengde"
+                    )
+                )
+            )
+            .løsAvklaringsBehov(ForeslåVedtakLøsning())
+            .fattVedtak()
+            .løsVedtaksbrev(TypeBrev.VEDTAK_INNVILGELSE)
+
+        dataSource.transaction { connection ->
+            val behandling = BehandlingRepositoryImpl(connection).finnFørstegangsbehandling(sak.id)
+            val vedtakslengdeGrunnlag = VedtakslengdeRepositoryImpl(connection).hentHvisEksisterer(behandling.id)
+            assertThat(vedtakslengdeGrunnlag).isNotNull
+            assertThat(vedtakslengdeGrunnlag?.vurdering?.sluttdato).isEqualTo(startDato.plusMonths(15))
+            assertThat(vedtakslengdeGrunnlag?.vurdering?.vurdertManuelt).isTrue
+        }
+
+        val endringsdato = sak.rettighetsperiode.fom.plusMonths(10)
+
+        /* Gir AAP som arbeidssøker. */
+        sak.opprettManuellRevurdering(
+            no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND
+        )
+            .løsSykdom(vurderingGjelderFra = endringsdato, erOppfylt = false)
+            .løsBistand(endringsdato, erOppfylt = false)
+            .løsOvergangArbeid(Utfall.OPPFYLT, fom = endringsdato)
+            .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
+            .løsAvklaringsBehov(
+                AvklarVedtakslengdeLøsning(
+                    vedtakslengdeVurdering = VedtakslengdeVurderingDto(
+                        sluttdato = endringsdato.plusMonths(6).minusDays(1),
+                        begrunnelse = "Vurdert vedtakslengde til slutten av unntaksvilkåret for overgang til arbeid"
+                    )
+                )
+            )
+            .medKontekst {
+                val vedtasklengdeRepository: VedtakslengdeRepository = repositoryProvider.provide()
+                val vedtakslengdeGrunnlag = vedtasklengdeRepository.hentHvisEksisterer(this.behandling.id)
+                assertThat(vedtakslengdeGrunnlag?.vurdering?.sluttdato).isEqualTo(endringsdato.plusMonths(6).minusDays(1))
+            }
+    }
+
+    @Test
+    fun `skal kunne legge inn manuell vurdering for vedtakslengde ved førstegangsbehandling`() {
+        val søknadstidspunkt = LocalDateTime.now(clock)
+        val (sak, førstegangsbehandling) = sendInnFørsteSøknad(mottattTidspunkt = søknadstidspunkt)
+        val startDato = sak.rettighetsperiode.fom
+
+        førstegangsbehandling
+            .løsSykdom(startDato, erOppfylt = true)
+            .løsBistand(startDato, erOppfylt = true)
+            .løsRefusjonskrav()
+            .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
+            .kvalitetssikre()
+            .løsBeregningstidspunkt(startDato)
+            .løsOppholdskrav(startDato)
+            .løsAndreStatligeYtelser()
+            .løsAvklaringsBehov(
+                AvklarVedtakslengdeLøsning(
+                    vedtakslengdeVurdering = VedtakslengdeVurderingDto(
+                        sluttdato = startDato.plusMonths(15),
+                        begrunnelse = "Vurdert vedtakslengde"
+                    )
+                )
+            )
+            .løsAvklaringsBehov(ForeslåVedtakLøsning())
+            .fattVedtak()
+            .løsVedtaksbrev(TypeBrev.VEDTAK_INNVILGELSE)
+
+        dataSource.transaction { connection ->
+            val behandling = BehandlingRepositoryImpl(connection).finnFørstegangsbehandling(sak.id)
+            val vedtakslengdeGrunnlag = VedtakslengdeRepositoryImpl(connection).hentHvisEksisterer(behandling.id)
+            assertThat(vedtakslengdeGrunnlag).isNotNull
+            assertThat(vedtakslengdeGrunnlag?.vurdering?.sluttdato).isEqualTo(startDato.plusMonths(15))
+            assertThat(vedtakslengdeGrunnlag?.vurdering?.vurdertManuelt).isTrue
+        }
+    }
 }

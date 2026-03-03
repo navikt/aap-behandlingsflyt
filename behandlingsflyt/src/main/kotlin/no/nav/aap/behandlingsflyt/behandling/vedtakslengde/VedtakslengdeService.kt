@@ -98,7 +98,14 @@ class VedtakslengdeService(
         behandlingId: BehandlingId,
         forrigeBehandlingId: BehandlingId?,
         rettighetsperiode: Periode,
-    ) {
+    ): UtledetVedtakslengde {
+        val vedtakslengdeGrunnlag = vedtakslengdeRepository.hentHvisEksisterer(behandlingId)
+
+        // Det finnes en manuell vurdering for denne behandlingen, og vi skal ikke overstyre denne ved å lagre en automatisk utledet sluttdato
+        if (vedtakslengdeGrunnlag?.vurdering?.vurdertManuelt == true) {
+            return UtledetVedtakslengde.Manuell
+        }
+
         val vedtattVedtakslengdeGrunnlag =
             forrigeBehandlingId?.let { vedtakslengdeRepository.hentHvisEksisterer(it) }
         val vedtattSluttdato = hentVedtattSluttdato(forrigeBehandlingId, vedtattVedtakslengdeGrunnlag)
@@ -106,6 +113,9 @@ class VedtakslengdeService(
         val sluttdato = utledSluttdato(behandlingId, rettighetsperiode, vedtattSluttdato)
 
         val erSluttdatoEndret = vedtattVedtakslengdeGrunnlag == null || vedtattVedtakslengdeGrunnlag.vurdering.sluttdato != sluttdato
+
+        // Mindre enn en måned igjen av vedtakslengden - manuell vurdering
+        if (sluttdato < LocalDate.now(clock).plusMonths(1)) return UtledetVedtakslengde.Manuell
 
         if (erSluttdatoEndret) {
             log.info("Sluttdato endret fra $vedtattSluttdato til $sluttdato for behandling $behandlingId")
@@ -120,6 +130,8 @@ class VedtakslengdeService(
                 )
             )
         }
+
+        return UtledetVedtakslengde.Automatisk(sluttdato)
     }
 
     private fun utledSluttdato(

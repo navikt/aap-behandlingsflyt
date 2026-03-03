@@ -1,10 +1,16 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
+import no.nav.aap.behandlingsflyt.behandling.vedtakslengde.UtledetVedtakslengde
 import no.nav.aap.behandlingsflyt.behandling.vedtakslengde.VedtakslengdeService
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeRepository
+import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
+import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
@@ -16,12 +22,18 @@ import org.slf4j.LoggerFactory
 
 class VedtakslengdeSteg(
     private val vedtakslengdeService: VedtakslengdeService,
+    private val vedtakslengdeRepository: VedtakslengdeRepository,
+    private val avklaringsbehovService: AvklaringsbehovService,
+    private val tidligereVurderinger: TidligereVurderinger,
     private val unleashGateway: UnleashGateway,
 ) : BehandlingSteg {
     private val log = LoggerFactory.getLogger(VedtakslengdeSteg::class.java)
 
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         vedtakslengdeService = VedtakslengdeService(repositoryProvider, gatewayProvider),
+        vedtakslengdeRepository = repositoryProvider.provide(),
+        avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
+        tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
         unleashGateway = gatewayProvider.provide()
     )
 
@@ -31,11 +43,31 @@ class VedtakslengdeSteg(
                 if (unleashGateway.isDisabled(BehandlingsflytFeature.ForlengelseIManuellBehandling)) {
                     return Fullført
                 }
-                vedtakslengdeService.lagreGjeldendeSluttdato(
+
+                // Forsøker å utlede vedtakslengde automatisk - hvis resultat er Manuell, opprettes avklaringsbehov
+                val utledetVedtakslengde = vedtakslengdeService.lagreGjeldendeSluttdato(
                     behandlingId = kontekst.behandlingId,
                     forrigeBehandlingId = kontekst.forrigeBehandlingId,
                     rettighetsperiode = kontekst.rettighetsperiode
                 )
+
+                if (unleashGateway.isEnabled(BehandlingsflytFeature.VedtakslengdeAvklaringsbehov)) {
+                    avklaringsbehovService.oppdaterAvklaringsbehov(
+                        definisjon = Definisjon.AVKLAR_VEDTAKSLENGDE,
+                        vedtakBehøverVurdering = {
+                            when {
+                                tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, type()) -> false
+                                kontekst.vurderingsbehovRelevanteForSteg.isEmpty() -> false
+                                else -> {
+                                    utledetVedtakslengde is UtledetVedtakslengde.Manuell
+                                }
+                            }
+                        },
+                        erTilstrekkeligVurdert = { vedtakslengdeRepository.hentHvisEksisterer(kontekst.behandlingId)?.vurdering != null },
+                        tilbakestillGrunnlag = { },
+                        kontekst = kontekst
+                    )
+                }
             }
 
             VurderingType.MIGRER_RETTIGHETSPERIODE -> {
@@ -76,4 +108,3 @@ class VedtakslengdeSteg(
         }
     }
 }
-
