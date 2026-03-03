@@ -54,6 +54,7 @@ class BekreftVurderingerOppfølgingSteg(
         avklaringsbehovene: Avklaringsbehovene
     ): Boolean {
         if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
+            /// Blir kanskje feil?
             return false
         }
 

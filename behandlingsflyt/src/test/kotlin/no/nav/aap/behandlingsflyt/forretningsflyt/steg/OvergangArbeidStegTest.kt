@@ -167,5 +167,6 @@ class OvergangArbeidStegTest {
         vurdertAv = Bruker("Z00000"),
         opprettet = Instant.now(),
         vurdertIBehandling = BehandlingId(1L),
+        diagnose = null
     )
 }

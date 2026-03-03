@@ -24,10 +24,6 @@ data class StudentGrunnlag(
         return vurderinger.orEmpty().filter { it.vurdertIBehandling == behandlingId }
     }
 
-    fun historiskeStudentvurderinger(behandlingIdForGrunnlag: BehandlingId): List<StudentVurdering> {
-        return vurderinger.orEmpty().filterNot { it.vurdertIBehandling == behandlingIdForGrunnlag }
-    }
-
     fun vedtattStudenttidslinje(
         behandlingId: BehandlingId,
         maksDato: LocalDate = Tid.MAKS,
