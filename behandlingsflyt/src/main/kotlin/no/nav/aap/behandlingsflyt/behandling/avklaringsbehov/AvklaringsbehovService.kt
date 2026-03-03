@@ -261,9 +261,15 @@ class AvklaringsbehovService(
                     .orEmpty()
 
                 val perioderSomBehøverVurdering =
-                    perioderVilkåretErRelevant.leftJoin(perioderVilkåretErVurdert) { erRelevant, erVurdert ->
-                        erRelevant && erVurdert != true
-                    }.filter { it.verdi }.komprimer().perioder().toSet()
+                    perioderVilkåretErRelevant
+                        .begrensetTil(kontekst.rettighetsperiode)
+                        .leftJoin(perioderVilkåretErVurdert) { erRelevant, erVurdert ->
+                            erRelevant && erVurdert != true
+                        }
+                        .filter { it.verdi }
+                        .komprimer()
+                        .perioder()
+                        .toSet()
 
                 if (perioderVilkåretErRelevant.segmenter().any { it.verdi }
                     && kontekst.vurderingsbehovRelevanteForSteg.any { it in tvingerAvklaringsbehov }
@@ -298,14 +304,19 @@ class AvklaringsbehovService(
                         if (nårVurderingErGyldigTidslinje == null) {
                             null
                         } else {
-                            nårVurderingErRelevant(kontekst).leftJoin(nårVurderingErGyldigTidslinje) { erRelevant, erGyldig ->
-                                !erRelevant || erGyldig == true
-                            }.komprimer().filter { !it.verdi }.perioder().toSet()
+                            nårVurderingErRelevant(kontekst)
+                                .begrensetTil(kontekst.rettighetsperiode)
+                                .leftJoin(nårVurderingErGyldigTidslinje) { erRelevant, erGyldig ->
+                                    !erRelevant || erGyldig == true
+                                }
+                                .komprimer()
+                                .filter { !it.verdi }
+                                .perioder()
+                                .toSet()
                         }
                     }
                 },
-            erTilstrekkeligVurdert =
-                { false },
+            erTilstrekkeligVurdert = { false },
             tilbakestillGrunnlag = tilbakestillGrunnlag,
             kontekst = kontekst
         )
