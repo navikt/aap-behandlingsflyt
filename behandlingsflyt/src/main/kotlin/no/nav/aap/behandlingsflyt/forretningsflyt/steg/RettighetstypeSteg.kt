@@ -82,12 +82,15 @@ class RettighetstypeSteg(
         when (kontekst.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING,
             VurderingType.REVURDERING ->
-                lagreStansOgOpphør(
-                    behandlingId,
-                    kontekst.forrigeBehandlingId,
-                    kontekst.behandlingType,
-                    kontekst.rettighetsperiode
-                )
+                if (unleashGateway.isEnabled(BehandlingsflytFeature.LagreStansOgOpphor)) {
+                    lagreStansOgOpphør(
+                        behandlingId,
+                        kontekst.forrigeBehandlingId,
+                        kontekst.behandlingType,
+                        kontekst.rettighetsperiode
+                    )
+                }
+
             else -> {
             }
         }
@@ -97,9 +100,7 @@ class RettighetstypeSteg(
 
     fun lagreStansOgOpphør(behandlingId: BehandlingId, forrigeBehandlingId: BehandlingId?, behandlingType: TypeBehandling, rettighetsperiode: Periode) {
 
-        if (unleashGateway.isDisabled(BehandlingsflytFeature.LagreStansOgOpphor)) {
-            return
-        }
+
 
         val forrigeGrunnlag = forrigeBehandlingId?.let { stansOpphørRepository.hentHvisEksisterer(it) }
             ?: when (behandlingType) {
