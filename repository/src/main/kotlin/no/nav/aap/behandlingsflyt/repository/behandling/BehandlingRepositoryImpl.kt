@@ -504,7 +504,7 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
         val vurderingsbehovQuery = """
             INSERT INTO vurderingsbehov (behandling_id, aarsak, behandling_aarsak_id, oppdatert_tid)
             VALUES (?, ?, ?, ?)
-            ON CONFLICT (behandling_id, aarsak) DO UPDATE SET oppdatert_tid = ?
+            ON CONFLICT (behandling_id, aarsak, periode) DO UPDATE SET oppdatert_tid = ?
         """.trimIndent()
 
         connection.executeBatch(vurderingsbehovQuery, vurderingsbehovOgÅrsak.vurderingsbehov) {
