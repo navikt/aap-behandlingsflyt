@@ -5,17 +5,6 @@ import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAkt
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetVurdering.Vilkårsvurdering.UNNTAK_INNTIL_EN_DAG
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetVurdering.Vilkårsvurdering.UNNTAK_STERKE_VELFERDSGRUNNER
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetVurdering.Vilkårsvurdering.UNNTAK_SYKDOM_ELLER_SKADE
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.UtledMeldeperiodeRegel.Companion.groupByMeldeperiode
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktRegistrering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Brudd.Paragraf.PARAGRAF_11_8
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddType.IKKE_MØTT_TIL_ANNEN_AKTIVITET
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddType.IKKE_MØTT_TIL_BEHANDLING_ELLER_UTREDNING
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddType.IKKE_MØTT_TIL_TILTAK
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Grunn.BIDRAR_AKTIVT
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Grunn.INGEN_GYLDIG_GRUNN
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Grunn.RIMELIG_GRUNN
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Grunn.STERKE_VELFERDSGRUNNER
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Grunn.SYKDOM_ELLER_SKADE
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
 import no.nav.aap.komponenter.tidslinje.Tidslinje
@@ -32,14 +21,8 @@ private const val KVOTE_KALENDERÅR = 10
  */
 class FraværFastsattAktivitetRegel : UnderveisRegel {
     companion object {
-//        private val relevanteBrudd = listOf(
-//            IKKE_MØTT_TIL_BEHANDLING_ELLER_UTREDNING,
-//            IKKE_MØTT_TIL_TILTAK,
-//            IKKE_MØTT_TIL_ANNEN_AKTIVITET,
-//        )
-
         private val gyldigeGrunner = listOf(
-            STERKE_VELFERDSGRUNNER, SYKDOM_ELLER_SKADE
+            Grunn.STERKE_VELFERDSGRUNNER, Grunn.SYKDOM_ELLER_SKADE
         )
     }
 
@@ -48,10 +31,7 @@ class FraværFastsattAktivitetRegel : UnderveisRegel {
             "kan ikke vurdere utenfor periode for vurdering fordi meldeperioden ikke er definert"
         }
 
-        val høyerePrioritertVurdering = resultat.filter { it.verdi.aktivitetspliktVurdering != null }
         val tidslinje = input.aktivitetspliktGrunnlag.tidslinje(PARAGRAF_11_8)
-            .kombiner(høyerePrioritertVurdering, StandardSammenslåere.minus())
-
 
         require(tidslinje.segmenter().all { it.verdi.brudd.bruddType in relevanteBrudd }) {
             "11-8 kan bare registreres med bruddtyper ${relevanteBrudd.joinToString(", ")}"
@@ -174,4 +154,11 @@ class FraværFastsattAktivitetRegel : UnderveisRegel {
         val dokument: AktivitetspliktRegistrering,
         val inntilEnDagUnntak: Boolean,
     )
+
+    enum class Grunn {
+        SYKDOM_ELLER_SKADE,
+        STERKE_VELFERDSGRUNNER,
+        RIMELIG_GRUNN,
+        INGEN_GYLDIG_GRUNN,
+    }
 }

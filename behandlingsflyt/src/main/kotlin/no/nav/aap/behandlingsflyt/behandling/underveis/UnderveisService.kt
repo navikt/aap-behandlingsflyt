@@ -36,6 +36,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Tidslinje
@@ -87,57 +88,58 @@ class UnderveisService(
 
     private val kvoteService = KvoteService()
 
-    companion object {
-        private val regelset = listOf(
-            AapEtterRegel(),
-            UtledMeldeperiodeRegel(),
-            InstitusjonRegel(),
-            MeldepliktRegel(),
-            FastsettGrenseverdiArbeidRegel(),
-            GraderingArbeidRegel(),
-            FraværFastsattAktivitetRegel(),
-        )
+    private val regelSett = listOf(
+        AapEtterRegel(),
+        UtledMeldeperiodeRegel(),
+        InstitusjonRegel(),
+        MeldepliktRegel(),
+        FastsettGrenseverdiArbeidRegel(),
+        GraderingArbeidRegel(),
+    ).also { regelSett ->
+        if (unleashGateway.isEnabled(BehandlingsflytFeature.FraværAvtaltAktivitet)) {
+            regelSett + FraværFastsattAktivitetRegel()
+        }
+    }
 
-        init {
-            fun sjekkAvhengighet(forventetFør: KClass<*>, forventetEtter: KClass<*>) {
-                val offset1 = regelset.indexOfFirst { it::class == forventetFør }
-                val offset2 = regelset.indexOfFirst { it::class == forventetEtter }
-                check(offset1 != -1) { "Regel ${forventetFør.qualifiedName} er ikke med" }
-                check(offset2 != -1) { "Regel ${forventetEtter.qualifiedName} er ikke med" }
-                check(offset1 < offset2) {
-                    "Regel ${forventetFør.qualifiedName} må ha kjørt før ${forventetEtter.qualifiedName}, men er kjørt etter"
-                }
+    init {
+        fun sjekkAvhengighet(forventetFør: KClass<*>, forventetEtter: KClass<*>) {
+            val offset1 = regelSett.indexOfFirst { it::class == forventetFør }
+            val offset2 = regelSett.indexOfFirst { it::class == forventetEtter }
+            check(offset1 != -1) { "Regel ${forventetFør.qualifiedName} er ikke med" }
+            check(offset2 != -1) { "Regel ${forventetEtter.qualifiedName} er ikke med" }
+            check(offset1 < offset2) {
+                "Regel ${forventetFør.qualifiedName} må ha kjørt før ${forventetEtter.qualifiedName}, men er kjørt etter"
             }
-
-            sjekkAvhengighet(forventetFør = UtledMeldeperiodeRegel::class, forventetEtter = MeldepliktRegel::class)
-            sjekkAvhengighet(forventetFør = UtledMeldeperiodeRegel::class, forventetEtter = GraderingArbeidRegel::class)
-            sjekkAvhengighet(
-                forventetFør = FastsettGrenseverdiArbeidRegel::class,
-                forventetEtter = GraderingArbeidRegel::class
-            )
         }
 
-        fun tilUnderveisperioder(vurderRegler: Tidslinje<Vurdering>): List<Underveisperiode> = vurderRegler.segmenter()
-            .map {
-                Underveisperiode(
-                    periode = it.periode,
-                    meldePeriode = it.verdi.meldeperiode(),
-                    utfall = it.verdi.utfall(),
-                    rettighetsType = it.verdi.endeligRettighetsType(),
-                    avslagsårsak = it.verdi.avslagsårsak(),
-                    grenseverdi = it.verdi.grenseverdi(),
-                    arbeidsgradering = it.verdi.arbeidsgradering(),
-                    trekk = if (it.verdi.skalReduseresDagsatser()) Dagsatser(1) else Dagsatser(0),
-                    brukerAvKvoter = it.verdi.varighetVurdering?.brukerAvKvoter.orEmpty(),
-                    institusjonsoppholdReduksjon = if (it.verdi.institusjonVurdering?.skalReduseres == true) Prosent.`50_PROSENT` else Prosent.`0_PROSENT`,
-                    meldepliktStatus = it.verdi.meldepliktVurdering?.status,
-                    meldepliktGradering = if (it.verdi.meldepliktVurdering?.utfall == Utfall.OPPFYLT)
-                        Prosent.`0_PROSENT`
-                    else
-                        Prosent.`100_PROSENT`
-                )
-            }
+        sjekkAvhengighet(forventetFør = UtledMeldeperiodeRegel::class, forventetEtter = MeldepliktRegel::class)
+        sjekkAvhengighet(forventetFør = UtledMeldeperiodeRegel::class, forventetEtter = GraderingArbeidRegel::class)
+        sjekkAvhengighet(
+            forventetFør = FastsettGrenseverdiArbeidRegel::class,
+            forventetEtter = GraderingArbeidRegel::class
+        )
     }
+
+    fun tilUnderveisperioder(vurderRegler: Tidslinje<Vurdering>): List<Underveisperiode> = vurderRegler.segmenter()
+        .map {
+            Underveisperiode(
+                periode = it.periode,
+                meldePeriode = it.verdi.meldeperiode(),
+                utfall = it.verdi.utfall(),
+                rettighetsType = it.verdi.endeligRettighetsType(),
+                avslagsårsak = it.verdi.avslagsårsak(),
+                grenseverdi = it.verdi.grenseverdi(),
+                arbeidsgradering = it.verdi.arbeidsgradering(),
+                trekk = if (it.verdi.skalReduseresDagsatser()) Dagsatser(1) else Dagsatser(0),
+                brukerAvKvoter = it.verdi.varighetVurdering?.brukerAvKvoter.orEmpty(),
+                institusjonsoppholdReduksjon = if (it.verdi.institusjonVurdering?.skalReduseres == true) Prosent.`50_PROSENT` else Prosent.`0_PROSENT`,
+                meldepliktStatus = it.verdi.meldepliktVurdering?.status,
+                meldepliktGradering = if (it.verdi.meldepliktVurdering?.utfall == Utfall.OPPFYLT)
+                    Prosent.`0_PROSENT`
+                else
+                    Prosent.`100_PROSENT`
+            )
+        }
 
     fun vurder(sakId: SakId, behandlingId: BehandlingId): Tidslinje<Vurdering> {
         val input = genererInput(sakId, behandlingId)
@@ -152,7 +154,7 @@ class UnderveisService(
     }
 
     internal fun vurderRegler(input: UnderveisInput): Tidslinje<Vurdering> {
-        return regelset.fold(tidslinjeOf(input.periodeForVurdering to Vurdering())) { resultat, regel ->
+        return regelSett.fold(tidslinjeOf(input.periodeForVurdering to Vurdering())) { resultat, regel ->
             regel.vurder(input, resultat).begrensetTil(input.periodeForVurdering)
         }
     }

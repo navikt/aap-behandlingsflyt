@@ -24,7 +24,8 @@ enum class BehandlingsflytFeature : FeatureToggle {
     NyTidligereVurderinger,
     BekreftVurderingerOppfolging,
     LagreStansOgOpphor,
-    RettTilAvslagHvisNorgeIkkeKompetentStat
+    RettTilAvslagHvisNorgeIkkeKompetentStat,
+    FraværAvtaltAktivitet,
     ;
 
     override fun key(): String = name
