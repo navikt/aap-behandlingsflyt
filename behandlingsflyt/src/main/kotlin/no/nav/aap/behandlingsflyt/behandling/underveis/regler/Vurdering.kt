@@ -24,6 +24,7 @@ data class Vurdering(
     private val meldeperiode: Periode? = null,
     val varighetVurdering: VarighetVurdering? = null,
     val kvoteVurdering: KvoteVurdering? = null,
+    val fraværFastsattAktivitetVurdering: FraværFastsattAktivitetVurdering? = null,
 ) {
     fun leggTilRettighetstype(rettighetstype: RettighetsType): Vurdering {
         return copy(fårAapEtter = rettighetstype)

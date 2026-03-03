@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.behandling.institusjonsopphold.Institusjonsopp
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.VirkningstidspunktUtleder
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.AapEtterRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FastsettGrenseverdiArbeidRegel
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.GraderingArbeidRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companion.plussEtÅrMedHverdager
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.InstitusjonRegel
@@ -94,6 +95,7 @@ class UnderveisService(
             MeldepliktRegel(),
             FastsettGrenseverdiArbeidRegel(),
             GraderingArbeidRegel(),
+            FraværFastsattAktivitetRegel(),
         )
 
         init {
