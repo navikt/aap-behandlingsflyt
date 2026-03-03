@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.LøsningForPeriode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Diagnose
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.verdityper.Bruker
 import java.time.LocalDate
@@ -19,6 +20,7 @@ data class StudentVurdering(
     val vurdertAv: String,
     val vurdertTidspunkt: LocalDateTime = LocalDateTime.now(),
     val vurdertIBehandling: BehandlingId,
+    val diagnose: Diagnose?
 ) {
     fun erOppfylt(): Boolean {
         return harAvbruttStudie &&
@@ -39,6 +41,9 @@ data class PeriodisertStudentDto(
     val harBehovForBehandling: Boolean?,
     val avbruttStudieDato: LocalDate?,
     val avbruddMerEnn6Måneder: Boolean?,
+    val kodeverk: String? = null,
+    val hoveddiagnose: String? = null,
+    val bidiagnoser: List<String>? = emptyList(),
 ) : LøsningForPeriode {
     fun tilStudentVurdering(bruker: Bruker, vurdertIBehandling: BehandlingId): StudentVurdering {
         return StudentVurdering(
@@ -53,7 +58,14 @@ data class PeriodisertStudentDto(
             avbruddMerEnn6Måneder = avbruddMerEnn6Måneder,
             vurdertAv = bruker.ident,
             vurdertTidspunkt = LocalDateTime.now(),
-            vurdertIBehandling = vurdertIBehandling
+            vurdertIBehandling = vurdertIBehandling,
+            diagnose = kodeverk?.let {
+                Diagnose(
+                    kodeverk = it,
+                    hoveddiagnose = hoveddiagnose,
+                    bidiagnoser = bidiagnoser
+                )
+            }
         )
     }
 
@@ -82,6 +94,9 @@ data class StudentVurderingDTO(
     val harBehovForBehandling: Boolean?,
     val avbruttStudieDato: LocalDate?,
     val avbruddMerEnn6Måneder: Boolean?,
+    val kodeverk: String? = null,
+    val hoveddiagnose: String? = null,
+    val bidiagnoser: List<String>? = emptyList(),
 ) {
     fun tilStudentVurdering(bruker: Bruker, vurdertIBehandling: BehandlingId, defaultFom: LocalDate): StudentVurdering {
         return StudentVurdering(
@@ -96,7 +111,14 @@ data class StudentVurderingDTO(
             avbruddMerEnn6Måneder = avbruddMerEnn6Måneder,
             vurdertAv = bruker.ident,
             vurdertTidspunkt = LocalDateTime.now(),
-            vurdertIBehandling = vurdertIBehandling
+            vurdertIBehandling = vurdertIBehandling,
+            diagnose = kodeverk?.let {
+                Diagnose(
+                    kodeverk = it,
+                    hoveddiagnose = hoveddiagnose,
+                    bidiagnoser = bidiagnoser
+                )
+            }
         )
     }
 }

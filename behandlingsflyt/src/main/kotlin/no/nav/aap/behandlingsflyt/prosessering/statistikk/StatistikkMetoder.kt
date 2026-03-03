@@ -387,7 +387,7 @@ class StatistikkMetoder(
         }
 
         val diagnose = sykdomsvurdering.diagnose
-        if (diagnose?.hoveddiagnose == null || sykdomsvurdering.diagnose.kodeverk == null) {
+        if (diagnose?.hoveddiagnose == null) {
             log.info("Fant sykdomsvurdering, men ingen diagnose eller kodeverk for behandling ${behandling.referanse} (id: ${behandling.id})")
             return null
         }
