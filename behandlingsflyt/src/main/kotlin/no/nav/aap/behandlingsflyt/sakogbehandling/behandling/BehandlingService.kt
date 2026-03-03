@@ -41,31 +41,8 @@ class BehandlingService(
      * Ytelsesbehandling betyr førstegangsbehandling eller revurdering.
      */
     fun finnSisteYtelsesbehandlingFor(sakId: SakId): Behandling? {
-        /* Finn siste ytelsesbehandling basert på `forrigeBehandlingId`-kjeden.
-         * Behandlingene er i praksis en singly-linked list. Pekerne går "feil vei",
-         * så vi regner ut bakover-pekerne.
-        **/
         val ytelsesbehandlinger = behandlingRepository.hentAlleFor(sakId, TypeBehandling.ytelseBehandlingstyper())
-        val nesteId = mutableMapOf<BehandlingId, BehandlingId>()
-        for (behandling in ytelsesbehandlinger) {
-            // Hopp over hvis behandlingen er avbrutt
-            if (avbrytRevurderingService.revurderingErAvbrutt(behandling.id)) {
-                continue
-            }
-
-            if (behandling.forrigeBehandlingId != null) {
-                nesteId[behandling.forrigeBehandlingId] = behandling.id
-            }
-        }
-
-        var behandling =
-            ytelsesbehandlinger.firstOrNull { !avbrytRevurderingService.revurderingErAvbrutt(it.id) }?.id
-                ?: return null
-
-        while (nesteId[behandling] != null) {
-            behandling = nesteId[behandling]!!
-        }
-        return ytelsesbehandlinger.find { it.id == behandling }
+        return ytelsesbehandlinger.sortedWith(comparator(ytelsesbehandlinger)).lastOrNull()
     }
 
     fun finnBehandlingMedSisteFattedeVedtak(sakId: SakId): BehandlingMedVedtak? {
@@ -371,6 +348,38 @@ class BehandlingService(
         val flyt = behandling.flyt()
         if (!flyt.skalOppdatereFaktagrunnlag()) {
             throw IllegalStateException("Behandlingen[${behandling.referanse}] kan ikke motta opplysinger nå, avventer fullføring av steg som ligger etter at oppdatering av faktagrunnlag opphører.")
+        }
+    }
+
+    fun comparator(ytelsesbehandlinger: List<Behandling>): Comparator<Behandling> {
+        /* Finn siste ytelsesbehandling basert på `forrigeBehandlingId`-kjeden.
+         * Behandlingene er i praksis en singly-linked list. Pekerne går "feil vei",
+         * så vi regner ut bakover-pekerne.
+        **/
+
+        val nesteId = mutableMapOf<BehandlingId, BehandlingId>()
+        for (behandling in ytelsesbehandlinger) {
+            // Hopp over hvis behandlingen er avbrutt
+            if (avbrytRevurderingService.revurderingErAvbrutt(behandling.id)) {
+                continue
+            }
+
+            if (behandling.forrigeBehandlingId != null) {
+                nesteId[behandling.forrigeBehandlingId] = behandling.id
+            }
+        }
+
+        val SortedListOfBehandlingId = mutableListOf<BehandlingId>()
+        var currentBehandlingId = ytelsesbehandlinger.find { it.forrigeBehandlingId==null }?.id
+        while (currentBehandlingId != null) {
+            SortedListOfBehandlingId.add(currentBehandlingId)
+            currentBehandlingId = nesteId[currentBehandlingId]
+        }
+
+        return Comparator { b1, b2 ->
+            val indexB1 = SortedListOfBehandlingId.indexOf(b1.id)
+            val indexB2 = SortedListOfBehandlingId.indexOf(b2.id)
+            indexB1.compareTo(indexB2)
         }
     }
 }
