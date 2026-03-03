@@ -495,7 +495,7 @@ class InstitusjonsoppholdUtlederService(
 
         val kombinertOpphold = oppholdFørBarnetillegg.kombiner(
             oppholdEtterBarnetillegg,
-            joinStyle = StandardSammenslåere.prioriterHøyreSideCrossJoin(),
+            joinStyle = StandardSammenslåere.prioriterVenstreSideCrossJoin(),
         )
 
         return kombinertOpphold
