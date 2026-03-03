@@ -369,16 +369,16 @@ class BehandlingService(
             }
         }
 
-        val SortedListOfBehandlingId = mutableListOf<BehandlingId>()
+        val sortedListOfBehandlingId = mutableListOf<BehandlingId>()
         var currentBehandlingId = ytelsesbehandlinger.find { it.forrigeBehandlingId==null }?.id
         while (currentBehandlingId != null) {
-            SortedListOfBehandlingId.add(currentBehandlingId)
+            sortedListOfBehandlingId.add(currentBehandlingId)
             currentBehandlingId = nesteId[currentBehandlingId]
         }
 
         return Comparator { b1, b2 ->
-            val indexB1 = SortedListOfBehandlingId.indexOf(b1.id)
-            val indexB2 = SortedListOfBehandlingId.indexOf(b2.id)
+            val indexB1 = sortedListOfBehandlingId.indexOf(b1.id)
+            val indexB2 = sortedListOfBehandlingId.indexOf(b2.id)
             indexB1.compareTo(indexB2)
         }
     }
