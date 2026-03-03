@@ -1,7 +1,6 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg.klage
 
 import io.mockk.every
-import io.mockk.junit5.MockKExtension
 import io.mockk.mockk
 import io.mockk.verify
 import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingService
@@ -37,7 +36,6 @@ import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryVilkårsresultatRepo
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.api.parallel.Execution
 import org.junit.jupiter.api.parallel.ExecutionMode
 import java.time.Instant
@@ -45,7 +43,6 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
 
-@ExtendWith(MockKExtension::class)
 @Execution(ExecutionMode.SAME_THREAD)
 class FormkravStegTest {
     val trekkKlageServiceMock = mockk<TrekkKlageService>()

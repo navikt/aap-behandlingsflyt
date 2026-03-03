@@ -1,9 +1,9 @@
 package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser
 
-import io.mockk.clearAllMocks
-import io.mockk.junit5.MockKExtension
-import io.mockk.mockk
+import io.mockk.checkUnnecessaryStub
+import io.mockk.clearMocks
 import io.mockk.every
+import io.mockk.mockk
 import io.mockk.verify
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSykdomLøsning
@@ -23,14 +23,10 @@ import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.ExtendWith
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZoneOffset
 
-@ExtendWith(MockKExtension::class)
-@MockKExtension.CheckUnnecessaryStub
-@MockKExtension.RequireParallelTesting
 class AvklarSykdomLøserTest {
 
     private val behandlingMock = mockk<BehandlingRepository>()
@@ -39,9 +35,10 @@ class AvklarSykdomLøserTest {
 
     @AfterEach
     fun tearDown() {
-        clearAllMocks()
+        checkUnnecessaryStub(behandlingMock, sykdomMock, yrkesskadeMock)
+        clearMocks(behandlingMock, sykdomMock, yrkesskadeMock)
     }
-    
+
     @Test
     fun `Skal lagre iverksatte vurderinger + nye`() {
         every { behandlingMock.hent(BehandlingId(2L)) } returns mockk {
