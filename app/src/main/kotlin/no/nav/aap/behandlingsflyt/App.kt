@@ -346,9 +346,6 @@ private fun Application.startKafkakonsumenter(
     }
     if (!Miljø.erLokal() && !Miljø.erProd()) {
         startInstitusjonsOppholdKonsument(dataSource, repositoryRegistry)
-    }
-
-    if(!Miljø.erLokal() && !Miljø.erProd() && !Miljø.erDev()) {
         startUføreVedtakEventKonsument(dataSource, repositoryRegistry, gatewayProvider)
     }
 }
