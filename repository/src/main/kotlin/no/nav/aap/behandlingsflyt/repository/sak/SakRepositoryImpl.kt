@@ -121,6 +121,7 @@ class SakRepositoryImpl(private val connection: DBConnection) : SakRepository {
                 join trukket_soknad_vurderinger on trukket_soknad_grunnlag.vurderinger_id = trukket_soknad_vurderinger.id
                 join trukket_soknad_vurdering on trukket_soknad_vurderinger.id = trukket_soknad_vurdering.vurderinger_id
                 where trukket_soknad_grunnlag.aktiv
+                and trukket_soknad_vurdering.skal_trekkes
                 and sak.id = behandling.sak_id
             )
         """.trimIndent()
