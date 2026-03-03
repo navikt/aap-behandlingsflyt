@@ -9,7 +9,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.IdentGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
-import no.nav.aap.behandlingsflyt.utils.UtfallOppfyltUtils
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
@@ -56,7 +55,7 @@ class UførevedtakKafkaKonsument(
             val sakRepository: SakRepository = repositoryProvider.provide()
             val personRepository: PersonRepository = repositoryProvider.provide()
             val hendelseService = MottattHendelseService(repositoryProvider)
-            val ident = Ident(uførevedtakMelding.personid)
+            val ident = Ident(uførevedtakMelding.personId)
             val person = personRepository.finn(ident) ?: finnPersonMedIdenterFraPdl(ident, personRepository)
             if (person != null) {
                 val saker = sakRepository.finnSakerFor(person)
