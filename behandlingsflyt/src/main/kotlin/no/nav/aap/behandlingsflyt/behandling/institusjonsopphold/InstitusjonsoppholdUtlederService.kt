@@ -20,7 +20,6 @@ import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.LocalDate
 import java.util.stream.IntStream
-import kotlin.TODO
 import kotlin.math.max
 
 class InstitusjonsoppholdUtlederService(
