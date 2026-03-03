@@ -29,7 +29,8 @@ class SykdomsvurderingTest {
             vurderingenGjelderTil = null,
             vurdertAv = Bruker("Z00000"),
             opprettet = Instant.now(),
-            vurdertIBehandling = BehandlingId(1L)
+            vurdertIBehandling = BehandlingId(1L),
+            diagnose = null
         )
 
         assertThat(
@@ -65,7 +66,8 @@ class SykdomsvurderingTest {
             vurderingenGjelderTil = null,
             vurdertAv = Bruker("Z00000"),
             opprettet = Instant.now(),
-            vurdertIBehandling = BehandlingId(1L)
+            vurdertIBehandling = BehandlingId(1L),
+            diagnose = null
         )
 
         assertThat(vurdering.erOppfyltOrdinær(kravdato, Periode(vurdering.vurderingenGjelderFra, Tid.MAKS))).isTrue
@@ -88,7 +90,8 @@ class SykdomsvurderingTest {
             vurderingenGjelderTil = null,
             vurdertAv = Bruker("Z00000"),
             opprettet = Instant.now(),
-            vurdertIBehandling = BehandlingId(1L)
+            vurdertIBehandling = BehandlingId(1L),
+            diagnose = null
         )
 
         assertThat(vurdering.erOppfyltOrdinær(gjelderFra, Periode(gjelderFra, Tid.MAKS))).isFalse

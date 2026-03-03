@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.sykdom
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Diagnose
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
@@ -228,17 +229,17 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
                     setBoolean(8, vurdering.erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense)
                     setBoolean(9, vurdering.erNedsettelseIArbeidsevneAvEnVissVarighet)
                     setString(10, vurdering.yrkesskadeBegrunnelse)
-                    setString(11, vurdering.kodeverk)
-                    setString(12, vurdering.hoveddiagnose)
+                    setString(11, vurdering.diagnose?.kodeverk)
+                    setString(12, vurdering.diagnose?.hoveddiagnose)
                     setInstant(13, vurdering.opprettet)
                     setString(14, vurdering.vurdertAv.ident)
-                    setLong(15, vurdering.vurdertIBehandling?.id)
+                    setLong(15, vurdering.vurdertIBehandling.id)
                     setLocalDate(16, vurdering.vurderingenGjelderTil)
                 }
             }
 
             lagreSykdomDokumenter(id, vurdering.dokumenterBruktIVurdering)
-            lagreBidiagnose(id, vurdering.bidiagnoser.orEmpty())
+            lagreBidiagnose(id, vurdering.diagnose?.bidiagnoser.orEmpty())
         }
 
         return sykdomsvurderingerId
@@ -355,9 +356,11 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
             erNedsettelseIArbeidsevneAvEnVissVarighet = row.getBooleanOrNull("ER_NEDSETTELSE_AV_EN_VISS_VARIGHET"),
             erArbeidsevnenNedsatt = row.getBooleanOrNull("ER_ARBEIDSEVNE_NEDSATT"),
             yrkesskadeBegrunnelse = row.getStringOrNull("YRKESSKADE_BEGRUNNELSE"),
-            kodeverk = row.getStringOrNull("KODEVERK"),
-            hoveddiagnose = row.getStringOrNull("DIAGNOSE"),
-            bidiagnoser = hentBidiagnoser(vurderingId = sykdomsvurderingId),
+            diagnose = Diagnose(
+                row.getStringOrNull("KODEVERK"),
+                row.getStringOrNull("DIAGNOSE"),
+                hentBidiagnoser(sykdomsvurderingId)
+            ),
             opprettet = row.getInstant("OPPRETTET_TID"),
             vurdertAv = Bruker(row.getString("VURDERT_AV_IDENT")),
             vurdertIBehandling = BehandlingId(row.getLong("VURDERT_I_BEHANDLING")),

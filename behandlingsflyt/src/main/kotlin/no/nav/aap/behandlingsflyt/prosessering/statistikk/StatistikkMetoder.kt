@@ -378,7 +378,7 @@ class StatistikkMetoder(
     private fun hentDiagnose(behandling: Behandling): Diagnoser? {
         val sykdomsvurdering = sykdomRepository.hentHvisEksisterer(behandling.id)
             ?.sykdomsvurderinger.orEmpty()
-            .filter { it.hoveddiagnose != null }
+            .filter { it.diagnose != null }
             .maxByOrNull { it.opprettet }
 
         if (sykdomsvurdering == null) {
@@ -386,15 +386,16 @@ class StatistikkMetoder(
             return null
         }
 
-        if (sykdomsvurdering.hoveddiagnose == null || sykdomsvurdering.kodeverk == null) {
+        val diagnose = sykdomsvurdering.diagnose
+        if (diagnose?.hoveddiagnose == null || sykdomsvurdering.diagnose.kodeverk == null) {
             log.info("Fant sykdomsvurdering, men ingen diagnose eller kodeverk for behandling ${behandling.referanse} (id: ${behandling.id})")
             return null
         }
 
         return Diagnoser(
-            kodeverk = sykdomsvurdering.kodeverk,
-            diagnosekode = sykdomsvurdering.hoveddiagnose,
-            bidiagnoser = sykdomsvurdering.bidiagnoser.orEmpty(),
+            kodeverk = diagnose.kodeverk,
+            diagnosekode = diagnose.hoveddiagnose,
+            bidiagnoser = diagnose.bidiagnoser.orEmpty(),
         )
     }
 

@@ -61,6 +61,7 @@ internal class SykdomRepositoryImplTest {
             erArbeidsevnenNedsatt = true,
             vurdertAv = Bruker("Z00000"),
             opprettet = Instant.now(),
+            diagnose = null,
             vurdertIBehandling = behandlingId,
         )
 
@@ -81,6 +82,7 @@ internal class SykdomRepositoryImplTest {
             erArbeidsevnenNedsatt = true,
             vurdertAv = Bruker("Z00000"),
             opprettet = Instant.now(),
+            diagnose = null,
             vurdertIBehandling = behandlingId,
         )
 
@@ -98,6 +100,7 @@ internal class SykdomRepositoryImplTest {
             erArbeidsevnenNedsatt = true,
             vurdertAv = Bruker("Z00000"),
             opprettet = Instant.now(),
+            diagnose = null,
             vurdertIBehandling = behandlingId,
         )
     }
@@ -269,6 +272,7 @@ internal class SykdomRepositoryImplTest {
                             erArbeidsevnenNedsatt = true,
                             vurdertAv = Bruker("Z00000"),
                             vurdertIBehandling = behandling.id,
+                            diagnose = null,
                             opprettet = Instant.now(),
                         )
                     )
