@@ -358,7 +358,7 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
             yrkesskadeBegrunnelse = row.getStringOrNull("YRKESSKADE_BEGRUNNELSE"),
             diagnose = row.getStringOrNull("KODEVERK")?.let {
                 Diagnose(
-                    it,
+                    kodeverk = it,
                     row.getStringOrNull("DIAGNOSE"),
                     hentBidiagnoser(sykdomsvurderingId)
                 )
