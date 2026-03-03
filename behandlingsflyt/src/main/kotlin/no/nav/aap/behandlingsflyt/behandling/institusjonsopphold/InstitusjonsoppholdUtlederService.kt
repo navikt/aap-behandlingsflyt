@@ -20,6 +20,7 @@ import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.LocalDate
 import java.util.stream.IntStream
+import kotlin.TODO
 import kotlin.math.max
 
 class InstitusjonsoppholdUtlederService(
@@ -459,7 +460,6 @@ class InstitusjonsoppholdUtlederService(
             if (barneTilleggetOpphørerMidtIOpphold) {
                 oppholdSomKanGiReduksjonMedBarnetilleggStopp = harOppholdSomKreverVurderingEtterStoppIBarneTillegg(
                     barnetilleggTidslinje,
-                    helseOppholdSluttDato,
                     helseOppholdTidslinje,
                 )
             }
@@ -470,13 +470,35 @@ class InstitusjonsoppholdUtlederService(
 
     private fun harOppholdSomKreverVurderingEtterStoppIBarneTillegg(
         barnetilleggTidslinje: Tidslinje<RettTilBarnetillegg>,
-        helseEnd: LocalDate,
         helseOppholdTidslinje: Tidslinje<Boolean>
-    ): Tidslinje<Boolean> =
-        harOppholdSomKreverAvklaring(
+    ): Tidslinje<Boolean> {
+
+        val oppholdFørBarnetillegg = harOppholdSomKreverAvklaring(
             helseOppholdTidslinje.begrensetTil(
-                Periode(fom = barnetilleggTidslinje.maxDato().plusDays(1), tom = helseEnd)
+                Periode(
+                    fom = helseOppholdTidslinje.minDato(),
+                    tom = barnetilleggTidslinje.minDato().minusDays(1)
+                )
             ),
             ignorerVarighetsBegrensning = true
         )
+
+        val oppholdEtterBarnetillegg = harOppholdSomKreverAvklaring(
+            helseOppholdTidslinje.begrensetTil(
+                Periode(
+                    fom = barnetilleggTidslinje.maxDato().plusDays(1),
+                    tom = helseOppholdTidslinje.maxDato()
+                )
+            ),
+            ignorerVarighetsBegrensning = true
+        )
+
+        val kombinertOpphold = oppholdFørBarnetillegg.kombiner(
+            oppholdEtterBarnetillegg,
+            joinStyle = StandardSammenslåere.prioriterHøyreSideCrossJoin(),
+        )
+
+        return kombinertOpphold
+    }
+
 }

@@ -197,7 +197,7 @@ private fun genererSykehusopphold() = InstitusjonsoppholdJSON(
     organisasjonsnummer = "12345",
     kategori = Oppholdstype.H.name,
     institusjonstype = Institusjonstype.HS.name,
-    forventetSluttdato = LocalDate.now().plusYears(1),
+    forventetSluttdato = Tid.MAKS,
     startdato = LocalDate.now().minusYears(2),
     institusjonsnavn = "St. Mungos Hospital"
 )
