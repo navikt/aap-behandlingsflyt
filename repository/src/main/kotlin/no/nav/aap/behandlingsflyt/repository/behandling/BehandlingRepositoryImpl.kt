@@ -18,6 +18,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
+import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.lookup.repository.Factory
 import java.time.LocalDateTime
 
@@ -502,8 +504,8 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
         }
 
         val vurderingsbehovQuery = """
-            INSERT INTO vurderingsbehov (behandling_id, aarsak, behandling_aarsak_id, oppdatert_tid)
-            VALUES (?, ?, ?, ?)
+            INSERT INTO vurderingsbehov (behandling_id, aarsak, behandling_aarsak_id, oppdatert_tid, periode)
+            VALUES (?, ?, ?, ?, ?::daterange)
             ON CONFLICT (behandling_id, aarsak, periode) DO UPDATE SET oppdatert_tid = ?
         """.trimIndent()
 
@@ -513,7 +515,9 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
                 setEnumName(2, it.type)
                 setLong(3, behandlingÅrsakId)
                 setLocalDateTime(4, LocalDateTime.now())
-                setLocalDateTime(5, LocalDateTime.now())
+                // Dummy for nå
+                setPeriode(5, Periode(behandling.opprettetTidspunkt.toLocalDate(), Tid.MAKS))
+                setLocalDateTime(6, LocalDateTime.now())
             }
         }
     }
