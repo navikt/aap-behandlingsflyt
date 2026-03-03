@@ -104,7 +104,7 @@ class SjekkInstitusjonsOppholdJobbUtfører(
 
         val grunnlag = institusjonsOppholdRepository.hentHvisEksisterer(behandlingId)
         grunnlag?.oppholdene?.opphold?.forEach { opphold ->
-            if (periodeErMinstFireMaanederOgTomInnenToMaaneder(opphold.periode)) {
+            if (periodeErMinstFireMaanederOgFomVartIToMaaneder(opphold.periode)) {
                 log.info("For behandlingsid $behandlingId er oppholdene true")
                 return true
             }
@@ -113,16 +113,16 @@ class SjekkInstitusjonsOppholdJobbUtfører(
         return false
     }
 
-    private fun periodeErMinstFireMaanederOgTomInnenToMaaneder(periode: Periode): Boolean {
+    private fun periodeErMinstFireMaanederOgFomVartIToMaaneder(periode: Periode): Boolean {
         val now = LocalDate.now()
 
         val varighetPaMinstFireMaaneder =
             !periode.tom.isBefore(periode.fom.plusMonths(4))
 
-        val tomInnenToMaaneder =
-            periode.tom.isBefore(now.withDayOfMonth(1).plusMonths(2))
+        val fomMinstToMaanederSiden =
+            periode.fom.isBefore(now.withDayOfMonth(1).minusMonths(1))
 
-        return varighetPaMinstFireMaaneder && tomInnenToMaaneder
+        return varighetPaMinstFireMaaneder && fomMinstToMaanederSiden
     }
 
     private fun opprettNyBehandling(sak: Sak): Behandling =
