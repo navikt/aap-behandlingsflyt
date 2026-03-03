@@ -356,11 +356,13 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
             erNedsettelseIArbeidsevneAvEnVissVarighet = row.getBooleanOrNull("ER_NEDSETTELSE_AV_EN_VISS_VARIGHET"),
             erArbeidsevnenNedsatt = row.getBooleanOrNull("ER_ARBEIDSEVNE_NEDSATT"),
             yrkesskadeBegrunnelse = row.getStringOrNull("YRKESSKADE_BEGRUNNELSE"),
-            diagnose = Diagnose(
-                row.getStringOrNull("KODEVERK"),
-                row.getStringOrNull("DIAGNOSE"),
-                hentBidiagnoser(sykdomsvurderingId)
-            ),
+            diagnose = row.getStringOrNull("KODEVERK")?.let {
+                Diagnose(
+                    it,
+                    row.getStringOrNull("DIAGNOSE"),
+                    hentBidiagnoser(sykdomsvurderingId)
+                )
+            },
             opprettet = row.getInstant("OPPRETTET_TID"),
             vurdertAv = Bruker(row.getString("VURDERT_AV_IDENT")),
             vurdertIBehandling = BehandlingId(row.getLong("VURDERT_I_BEHANDLING")),
