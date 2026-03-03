@@ -261,9 +261,15 @@ class AvklaringsbehovService(
                     .orEmpty()
 
                 val perioderSomBehøverVurdering =
-                    perioderVilkåretErRelevant.leftJoin(perioderVilkåretErVurdert) { erRelevant, erVurdert ->
-                        erRelevant && erVurdert != true
-                    }.filter { it.verdi }.komprimer().perioder().toSet()
+                    perioderVilkåretErRelevant
+                        .begrensetTil(kontekst.rettighetsperiode)
+                        .leftJoin(perioderVilkåretErVurdert) { erRelevant, erVurdert ->
+                            erRelevant && erVurdert != true
+                        }
+                        .filter { it.verdi }
+                        .komprimer()
+                        .perioder()
+                        .toSet()
 
                 if (perioderVilkåretErRelevant.segmenter().any { it.verdi }
                     && kontekst.vurderingsbehovRelevanteForSteg.any { it in tvingerAvklaringsbehov }
