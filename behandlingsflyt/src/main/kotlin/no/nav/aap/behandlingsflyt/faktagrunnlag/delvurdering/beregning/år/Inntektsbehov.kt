@@ -61,10 +61,6 @@ class Inntektsbehov(
 
     private val log = LoggerFactory.getLogger(javaClass)
 
-    fun hentYtterligereNedsattArbeidsevneDato(): LocalDate? {
-        return ytterligereNedsettelsesDato
-    }
-
     /**
      * Mengde med inntekt per år i de tre foregående årene fra nedsettelsesdatoen.
      */

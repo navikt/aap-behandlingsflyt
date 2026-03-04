@@ -30,7 +30,7 @@ class UføreBeregning(
         uføregrader = inntektsbehov.uføregrad,
         relevanteÅr = inntektsbehov.utledForYtterligereNedsatt(),
         inntektsPerioder = inntektsbehov.inntektsPerioder,
-        ytterligereNedsattÅr = Year.from(requireNotNull(inntektsbehov.hentYtterligereNedsattArbeidsevneDato())),
+        ytterligereNedsattÅr = Year.from(requireNotNull(inntektsbehov.ytterligereNedsettelsesDato)),
     )
 
     private val log = LoggerFactory.getLogger(javaClass)
