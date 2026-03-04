@@ -163,8 +163,7 @@ class BrevUtlederService(
                 ) {
                     return brevBehovVurderesForUføretrygd(behandling)
                 }
-                if (unleashGateway.isEnabled(BehandlingsflytFeature.NyBrevtype11_17) &&
-                    harRettighetsType(behandling.id, RettighetsType.ARBEIDSSØKER) &&
+                if (harRettighetsType(behandling.id, RettighetsType.ARBEIDSSØKER) &&
                     behandling.forrigeBehandlingId != null &&
                     !harRettighetsType(behandling.forrigeBehandlingId, RettighetsType.ARBEIDSSØKER)
                 ) {
