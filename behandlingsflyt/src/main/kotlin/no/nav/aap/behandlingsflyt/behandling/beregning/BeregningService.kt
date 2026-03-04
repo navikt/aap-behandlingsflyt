@@ -41,7 +41,7 @@ class BeregningService(
         val inntektGrunnlag = inntektGrunnlagRepository.hent(behandlingId)
         val manuelleInntekter = manuellInntektGrunnlagRepository.hentHvisEksisterer(behandlingId)?.manuelleInntekter.orEmpty()
 
-        val input = Beregning(
+        val beregningsgrunnlag = Beregning(
             årsInntekter = kombinerInntektOgManuellInntekt(inntektGrunnlag.inntekter, manuelleInntekter),
             nedsettelsesDato = beregningGrunnlag?.tidspunktVurdering?.nedsattArbeidsevneEllerStudieevneDato
                 ?: throw IllegalStateException("Nedsettelsesdato må være satt for beregning"),
@@ -52,9 +52,7 @@ class BeregningService(
             yrkesskadevurdering = yrkesskadevurdering,
             registrerteYrkesskader = registrerteYrkesskader,
             yrkesskadeBeløpVurderinger = beregningGrunnlag.yrkesskadeBeløpVurdering?.vurderinger,
-        )
-
-        val beregningsgrunnlag = input.beregnBeregningsgrunnlag()
+        ).beregnBeregningsgrunnlag()
 
         beregningsgrunnlagRepository.lagre(behandlingId, beregningsgrunnlag)
         return beregningsgrunnlag
