@@ -2,11 +2,11 @@ package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarHelseinstitusjonLøsning
+import no.nav.aap.behandlingsflyt.behandling.institusjonsopphold.PeriodisertInstitusjonsoppholdDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjon
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.HelseinstitusjonVurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.flate.HelseinstitusjonVurderingDto
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
@@ -17,6 +17,7 @@ import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.orEmpty
+import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -41,7 +42,7 @@ class AvklarHelseinstitusjonLøser(
 
         validerReduksjonsdatoForInstitusjonsopphold(
             behandling,
-            løsning.helseinstitusjonVurdering.vurderinger
+            løsning.løsningerForPerioder
         ).throwOnInvalid {
             UgyldigForespørselException(it.errorMessage)
         }
@@ -49,13 +50,12 @@ class AvklarHelseinstitusjonLøser(
         val vedtatteVurderinger =
             behandling.forrigeBehandlingId?.let { helseinstitusjonRepository.hentHvisEksisterer(it) }
 
-        val oppdaterteVurderinger =
-            slåSammenMedNyeVurderingerNy(
-                vedtatteVurderinger,
-                løsning.helseinstitusjonVurdering.vurderinger,
-                behandling,
-                vurdertAv
-            )
+        val oppdaterteVurderinger = slåSammenMedNyeVurderinger(
+            vedtatteVurderinger,
+            løsning.løsningerForPerioder,
+            behandling,
+            vurdertAv
+        )
 
         helseinstitusjonRepository.lagreHelseVurdering(
             kontekst.kontekst.behandlingId,
@@ -63,21 +63,22 @@ class AvklarHelseinstitusjonLøser(
             oppdaterteVurderinger
         )
 
-        return LøsningsResultat(løsning.helseinstitusjonVurdering.vurderinger.joinToString(" ") { it.begrunnelse })
+        return LøsningsResultat(løsning.løsningerForPerioder.joinToString(" ") { it.begrunnelse })
     }
 
-    private fun slåSammenMedNyeVurderingerNy(
+    private fun slåSammenMedNyeVurderinger(
         grunnlag: InstitusjonsoppholdGrunnlag?,
-        nyeVurderinger: List<HelseinstitusjonVurderingDto>,
+        nyeVurderinger: List<PeriodisertInstitusjonsoppholdDto>,
         behandling: Behandling,
         vurdertAv: String,
     ): List<HelseinstitusjonVurdering> {
         val eksisterendeTidslinje = byggTidslinjeForHelseoppholdvurderinger(grunnlag)
 
-        val nyeVurderingerTidslinje = Tidslinje(nyeVurderinger.sortedBy { it.periode }
+        val nyeVurderingerTidslinje = Tidslinje(nyeVurderinger.sortedBy { it.fom }
             .map {
+                val periode = Periode(it.fom, checkNotNull(it.tom) { "tom må være satt for institusjonsoppholdsvurdering" })
                 Segment(
-                    it.periode,
+                    periode,
                     HelseoppholdVurderingData(
                         begrunnelse = it.begrunnelse,
                         faarFriKostOgLosji = it.faarFriKostOgLosji,
@@ -124,19 +125,17 @@ class AvklarHelseinstitusjonLøser(
 
     private fun validerReduksjonsdatoForInstitusjonsopphold(
         behandling: Behandling,
-        nyeVurderinger: List<HelseinstitusjonVurderingDto>
-    ): Validation<List<HelseinstitusjonVurderingDto>> {
+        nyeVurderinger: List<PeriodisertInstitusjonsoppholdDto>
+    ): Validation<List<PeriodisertInstitusjonsoppholdDto>> {
         val grunnlag = helseinstitusjonRepository.hentHvisEksisterer(behandling.id)
         val opphold = grunnlag?.oppholdene?.opphold ?: emptyList()
         if (opphold.isEmpty() || nyeVurderinger.isEmpty()) return Validation.Valid(nyeVurderinger)
 
-        // Håndterer når vedtatte vurderinger finnes. Dette skjer i revurdering
-        val vurderingerPerOpphold: Map<Segment<Institusjon>, List<HelseinstitusjonVurderingDto>> =
-            // Finn vurderinger per opphold ved å matche oppholdets periode med vurderingenes periode.
+        val vurderingerPerOpphold: Map<Segment<Institusjon>, List<PeriodisertInstitusjonsoppholdDto>> =
             opphold.associateWith { o ->
                 nyeVurderinger
-                    .filter { v -> v.periode.fom >= o.periode.fom && v.periode.tom <= o.periode.tom }
-                    .sortedBy { it.periode }
+                    .filter { v -> v.fom >= o.periode.fom && (v.tom == null || v.tom <= o.periode.tom) }
+                    .sortedBy { it.fom }
             }
 
         val resultatFørste = validerFørsteOpphold(vurderingerPerOpphold)
@@ -148,8 +147,9 @@ class AvklarHelseinstitusjonLøser(
         return Validation.Valid(nyeVurderinger)
     }
 
-    private fun validerFørsteOpphold(vurderingerPerOpphold: Map<Segment<Institusjon>, List<HelseinstitusjonVurderingDto>>): Validation<List<HelseinstitusjonVurderingDto>>? {
-        // Valider første opphold: Ingen reduksjon første 4 måneder (innleggelsesmåned + 3 måneder)
+    private fun validerFørsteOpphold(
+        vurderingerPerOpphold: Map<Segment<Institusjon>, List<PeriodisertInstitusjonsoppholdDto>>
+    ): Validation<List<PeriodisertInstitusjonsoppholdDto>>? {
         vurderingerPerOpphold.entries.firstOrNull()?.let { (opphold, vurderinger) ->
             val første = førsteReduksjonsvurdering(vurderinger)
             val tidligsteReduksjonsdato = opphold.periode.fom.withDayOfMonth(1).plusMonths(4)
@@ -162,8 +162,8 @@ class AvklarHelseinstitusjonLøser(
     }
 
     private fun validerPåfølgendeOpphold(
-        vurderingerPerOpphold: Map<Segment<Institusjon>, List<HelseinstitusjonVurderingDto>>
-    ): Validation<List<HelseinstitusjonVurderingDto>>? {
+        vurderingerPerOpphold: Map<Segment<Institusjon>, List<PeriodisertInstitusjonsoppholdDto>>
+    ): Validation<List<PeriodisertInstitusjonsoppholdDto>>? {
         if (vurderingerPerOpphold.size > 1) {
             vurderingerPerOpphold.entries.toList()
                 .windowed(2)
@@ -189,19 +189,19 @@ class AvklarHelseinstitusjonLøser(
         return null
     }
 
-    private fun førsteReduksjonsvurdering(vurderinger: List<HelseinstitusjonVurderingDto>): HelseinstitusjonVurderingDto? {
+    private fun førsteReduksjonsvurdering(vurderinger: List<PeriodisertInstitusjonsoppholdDto>): PeriodisertInstitusjonsoppholdDto? {
         return vurderinger.firstOrNull {
             it.faarFriKostOgLosji && it.forsoergerEktefelle == false && it.harFasteUtgifter == false
         }
     }
 
     private fun validerReduksjonsdato(
-        vurderinger: List<HelseinstitusjonVurderingDto>,
-        førsteReduksjonsvurdering: HelseinstitusjonVurderingDto?,
+        vurderinger: List<PeriodisertInstitusjonsoppholdDto>,
+        førsteReduksjonsvurdering: PeriodisertInstitusjonsoppholdDto?,
         tidligsteReduksjonsdato: LocalDate,
         feilmelding: String
-    ): Validation<List<HelseinstitusjonVurderingDto>>? {
-        if (førsteReduksjonsvurdering != null && førsteReduksjonsvurdering.periode.fom.isBefore(tidligsteReduksjonsdato)) {
+    ): Validation<List<PeriodisertInstitusjonsoppholdDto>>? {
+        if (førsteReduksjonsvurdering != null && førsteReduksjonsvurdering.fom.isBefore(tidligsteReduksjonsdato)) {
             val tidligsteReduksjonsdatoFormatert =
                 tidligsteReduksjonsdato.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"))
             return Validation.Invalid(
