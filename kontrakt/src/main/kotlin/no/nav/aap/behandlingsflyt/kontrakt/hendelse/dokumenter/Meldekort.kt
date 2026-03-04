@@ -13,7 +13,7 @@ public sealed interface Meldekort : Melding {
 public data class MeldekortV0(
     public val harDuArbeidet: Boolean,
     public val timerArbeidPerPeriode: List<ArbeidIPeriodeV0>,
-    public val fravær: List<FraværIPeriodeV0>?,
+    public val fravær: List<FraværIPeriodeV0>? = null,
 ) : Meldekort {
 
     init {
