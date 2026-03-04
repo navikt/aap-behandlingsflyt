@@ -24,13 +24,6 @@ class UføreBeregning(
     private val inntektsPerioder: Set<Månedsinntekt>,
     private val ytterligereNedsattÅr: Year,
 ) {
-    constructor(grunnlag11_19: Grunnlag11_19, beregning: Beregning): this(
-        grunnlag = grunnlag11_19,
-        uføregrader = beregning.uføregrad,
-        relevanteÅr = beregning.utledForYtterligereNedsatt(),
-        inntektsPerioder = beregning.inntektsPerioder,
-        ytterligereNedsattÅr = Year.from(requireNotNull(beregning.ytterligereNedsettelsesDato)),
-    )
 
     private val log = LoggerFactory.getLogger(javaClass)
 

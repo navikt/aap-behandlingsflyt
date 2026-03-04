@@ -1,10 +1,5 @@
 package no.nav.aap.behandlingsflyt.behandling.beregning
 
-import java.math.BigDecimal
-import java.time.LocalDate
-import java.time.Year
-import java.util.SortedSet
-import kotlin.collections.orEmpty
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Beregningsgrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
@@ -19,6 +14,10 @@ import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.GUnit
 import no.nav.aap.komponenter.verdityper.Prosent
 import org.slf4j.LoggerFactory
+import java.math.BigDecimal
+import java.time.LocalDate
+import java.time.Year
+import java.util.*
 
 /*
 * @param nedsettelsesDato Dato da arbeidsevnen ble nedsatt.
@@ -53,7 +52,13 @@ class Beregning(
         val grunnlag11_19 = GrunnlagetForBeregningen(utledForOrdinær()).beregnGrunnlaget()
 
         val beregningMedEllerUtenUføre = if (finnesUføreData()) {
-            UføreBeregning(grunnlag11_19, this).beregnUføre()
+            UføreBeregning(
+                grunnlag = grunnlag11_19,
+                uføregrader = uføregrad,
+                relevanteÅr = treÅrForutFor(requireNotNull(ytterligereNedsettelsesDato)),
+                inntektsPerioder = inntektsPerioder,
+                ytterligereNedsattÅr = Year.from(ytterligereNedsettelsesDato),
+            ).beregnUføre()
         } else {
             grunnlag11_19
         }
@@ -96,13 +101,6 @@ class Beregning(
             )
             { "Håndterer ikke å støtte forskjellig inntekt fra A-Inntekt og PESYS. Fikk $sum for år $år, men fant ${årsInntekter.filter { it.år == år }}" }
         }
-    }
-
-    fun utledForYtterligereNedsatt(): Set<Year> {
-        val ytterligereNedsettelsesDato =
-            requireNotNull(ytterligereNedsettelsesDato)
-
-        return treÅrForutFor(ytterligereNedsettelsesDato)
     }
 
     /**
