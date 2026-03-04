@@ -88,18 +88,15 @@ class UnderveisService(
 
     private val kvoteService = KvoteService()
 
-    private val regelSett = listOf(
+    private val regelSett = listOfNotNull(
         AapEtterRegel(),
         UtledMeldeperiodeRegel(),
         InstitusjonRegel(),
         MeldepliktRegel(),
         FastsettGrenseverdiArbeidRegel(),
         GraderingArbeidRegel(),
-    ).also { regelSett ->
-        if (unleashGateway.isEnabled(BehandlingsflytFeature.FraværAvtaltAktivitet)) {
-            regelSett + FraværFastsattAktivitetRegel()
-        }
-    }
+        if (unleashGateway.isEnabled(BehandlingsflytFeature.FraværAvtaltAktivitet)) FraværFastsattAktivitetRegel() else null
+    )
 
     init {
         fun sjekkAvhengighet(forventetFør: KClass<*>, forventetEtter: KClass<*>) {
