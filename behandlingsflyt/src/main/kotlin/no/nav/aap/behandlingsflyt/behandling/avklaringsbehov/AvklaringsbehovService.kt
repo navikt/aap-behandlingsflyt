@@ -217,8 +217,12 @@ class AvklaringsbehovService(
         avklaringsbehov: Avklaringsbehov?
     ): Boolean {
         val nyesteVurderingsbehov = kontekst.vurderingsbehovRelevanteForStegMedPerioder.maxOfOrNull { it.oppdatertTid }
+        // Om vurderingsbehovet er nyere enn siste avsluttede status på avklaringsbehovet, gjenåpne
         val nyesteAvklaringsbehovEndring =
-            avklaringsbehov?.aktivHistorikk?.maxOfOrNull { it.tidsstempel } ?: LocalDateTime.MIN
+            avklaringsbehov?.aktivHistorikk.orEmpty()
+                .filter { it.status.erAvsluttet() }
+                .maxOfOrNull { it.tidsstempel }
+                ?: LocalDateTime.MIN
         val vurderingsbehovErNyere = nyesteVurderingsbehov != null && nyesteVurderingsbehov.isAfter(
             nyesteAvklaringsbehovEndring
         )
