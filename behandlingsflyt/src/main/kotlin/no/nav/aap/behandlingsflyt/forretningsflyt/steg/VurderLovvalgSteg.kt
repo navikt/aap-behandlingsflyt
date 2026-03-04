@@ -29,6 +29,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.orEmpty
@@ -41,6 +43,7 @@ class VurderLovvalgSteg private constructor(
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
     private val tidligereVurderinger: TidligereVurderinger,
     private val avklaringsbehovService: AvklaringsbehovService,
+    private val unleashGateway: UnleashGateway
 ) : BehandlingSteg, AvklaringsbehovMetadataUtleder {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         vilkårsresultatRepository = repositoryProvider.provide(),
@@ -49,13 +52,18 @@ class VurderLovvalgSteg private constructor(
         avklaringsbehovRepository = repositoryProvider.provide(),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
         avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
+        unleashGateway = gatewayProvider.provide()
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         var grunnlag = lazy { hentGrunnlag(kontekst.sakId, kontekst.behandlingId) }
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
 
-        if (utenlandsLovvalgslandTattAvVent(kontekst, avklaringsbehovene)) {
+        if (utenlandsLovvalgslandTattAvVent(
+                kontekst,
+                avklaringsbehovene
+            ) && !unleashGateway.isEnabled(BehandlingsflytFeature.RettTilAvslagHvisNorgeIkkeKompetentStat)
+        ) {
             tilbakestillVurderinger(kontekst, grunnlag.value)
             grunnlag = lazy { hentGrunnlag(kontekst.sakId, kontekst.behandlingId) }
         }
@@ -78,7 +86,7 @@ class VurderLovvalgSteg private constructor(
                     .vurder(grunnlag.value)
                 vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
 
-                if (norgeIkkeKompetentStat(kontekst)) {
+                if (norgeIkkeKompetentStat(kontekst) && !unleashGateway.isEnabled(BehandlingsflytFeature.RettTilAvslagHvisNorgeIkkeKompetentStat)) {
                     return FantVentebehov(
                         Ventebehov(
                             definisjon = Definisjon.VENTE_PÅ_UTENLANDSK_VIDEREFØRING_AVKLARING,
@@ -105,7 +113,8 @@ class VurderLovvalgSteg private constructor(
         kontekst: FlytKontekstMedPerioder,
         grunnlag: MedlemskapLovvalgGrunnlag
     ): Tidslinje<Boolean> {
-        val automatiskVilkårsvurderingLovvalg = vilkårsvurderingLovvalgUtenManuelleVurderinger(kontekst, grunnlag).mapValue { it.erOppfylt() }
+        val automatiskVilkårsvurderingLovvalg =
+            vilkårsvurderingLovvalgUtenManuelleVurderinger(kontekst, grunnlag).mapValue { it.erOppfylt() }
         val automatiskVurderingOppfylt = automatiskVilkårsvurderingLovvalg.filter { it.verdi }.isNotEmpty()
         if (automatiskVurderingOppfylt) {
             return automatiskVilkårsvurderingLovvalg

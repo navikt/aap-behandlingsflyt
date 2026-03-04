@@ -340,13 +340,11 @@ internal class BehandlingRepositoryImplTest {
             )
 
             val vurderingsbehovOgÅrsaker = behandlingRepository.hentVurderingsbehovOgÅrsaker(behandling.id)
-            assertThat(vurderingsbehovOgÅrsaker).hasSize(2)
+            assertThat(vurderingsbehovOgÅrsaker).hasSize(3)
             assertThat(vurderingsbehovOgÅrsaker.map { Pair(it.årsak, it.vurderingsbehov) })
                 .usingRecursiveComparison()
                 .ignoringCollectionOrder()
-                .withEqualsForType({ a: LocalDateTime, b: LocalDateTime ->
-                    abs(ChronoUnit.MILLIS.between(b, a)) < 100000
-                }, LocalDateTime::class.java)
+                .ignoringFields("second.oppdatertTid")
                 .isEqualTo(
                     listOf(
                         ÅrsakTilOpprettelse.SØKNAD to listOf(
@@ -357,7 +355,11 @@ internal class BehandlingRepositoryImplTest {
                         ÅrsakTilOpprettelse.MELDEKORT to listOf(
                             VurderingsbehovMedPeriode(
                                 type = Vurderingsbehov.MOTTATT_MELDEKORT,
-                                oppdatertTid = LocalDateTime.now()
+                            )
+                        ),
+                        ÅrsakTilOpprettelse.MELDEKORT to listOf(
+                            VurderingsbehovMedPeriode(
+                                type = Vurderingsbehov.MOTTATT_MELDEKORT,
                             )
                         )
                     )

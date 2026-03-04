@@ -12,13 +12,13 @@ class LoggingKontekst(
 
     init {
         if (logKontekst.referanse != null) {
-            contextRepository.hentDataFor(logKontekst.referanse)?.forEach { key, value ->
+            contextRepository.hentDataFor(logKontekst.referanse)?.forEach { (key, value) ->
                 keys.add(key)
                 MDC.put(key, value)
             }
 
         } else if (logKontekst.saksnummer != null) {
-            contextRepository.hentDataFor(logKontekst.saksnummer)?.forEach { key, value ->
+            contextRepository.hentDataFor(logKontekst.saksnummer)?.forEach { (key, value) ->
                 keys.add(key)
                 MDC.put(key, value)
             }

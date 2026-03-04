@@ -332,6 +332,8 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::clas
                 assertThat(åpneAvklaringsbehov.map { it.definisjon }).contains(Definisjon.AVKLAR_SONINGSFORRHOLD)
             }
     }
+    
+    
 
     private fun opprettSamordning(
         person: TestPerson,
