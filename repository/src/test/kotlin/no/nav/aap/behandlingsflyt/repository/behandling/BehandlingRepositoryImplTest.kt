@@ -340,7 +340,7 @@ internal class BehandlingRepositoryImplTest {
             )
 
             val vurderingsbehovOgÅrsaker = behandlingRepository.hentVurderingsbehovOgÅrsaker(behandling.id)
-            assertThat(vurderingsbehovOgÅrsaker).hasSize(2)
+            assertThat(vurderingsbehovOgÅrsaker).hasSize(3)
             assertThat(vurderingsbehovOgÅrsaker.map { Pair(it.årsak, it.vurderingsbehov) })
                 .usingRecursiveComparison()
                 .ignoringCollectionOrder()
@@ -352,6 +352,12 @@ internal class BehandlingRepositoryImplTest {
                         ÅrsakTilOpprettelse.SØKNAD to listOf(
                             VurderingsbehovMedPeriode(
                                 type = Vurderingsbehov.MOTTATT_SØKNAD,
+                            )
+                        ),
+                        ÅrsakTilOpprettelse.MELDEKORT to listOf(
+                            VurderingsbehovMedPeriode(
+                                type = Vurderingsbehov.MOTTATT_MELDEKORT,
+                                oppdatertTid = LocalDateTime.now()
                             )
                         ),
                         ÅrsakTilOpprettelse.MELDEKORT to listOf(
