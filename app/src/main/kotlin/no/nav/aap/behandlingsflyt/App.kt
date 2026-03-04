@@ -343,9 +343,9 @@ private fun Application.startKafkakonsumenter(
         startPDLHendelseKonsument(dataSource, repositoryRegistry, gatewayProvider)
         startTilbakekrevingEventKonsument(dataSource, repositoryRegistry)
         startSykepengevedtakKonsument(dataSource, repositoryRegistry, gatewayProvider)
+        startInstitusjonsOppholdKonsument(dataSource, repositoryRegistry)
     }
     if (!Miljø.erLokal() && !Miljø.erProd()) {
-        startInstitusjonsOppholdKonsument(dataSource, repositoryRegistry)
         startUføreVedtakEventKonsument(dataSource, repositoryRegistry, gatewayProvider)
     }
 }
