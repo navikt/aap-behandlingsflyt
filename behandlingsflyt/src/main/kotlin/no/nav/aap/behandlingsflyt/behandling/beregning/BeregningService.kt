@@ -51,10 +51,7 @@ class BeregningService(
                 manuellInntektGrunnlag?.manuelleInntekter.orEmpty()
             )
 
-        val nedsettelsesdato = beregningVurdering?.tidspunktVurdering?.nedsattArbeidsevneEllerStudieevneDato
-            ?: throw IllegalStateException("Nedsettelsesdato må være satt for beregning")
         val input = Inntektsbehov(
-            nedsettelsesDato = nedsettelsesdato,
             årsInntekter = kombinertInntekt,
             // TODO: Hvor langt tilbake i tid skal man hente uføregrader?
             uføregrad = uføre?.vurderinger.orEmpty(),

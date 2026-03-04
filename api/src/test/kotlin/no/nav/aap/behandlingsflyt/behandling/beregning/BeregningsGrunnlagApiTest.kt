@@ -5,9 +5,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.Uføre
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.Yrkesskade
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.Yrkesskader
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningYrkeskaderBeløpVurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.YrkesskadeBeløpVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.YrkesskadeSak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Yrkesskadevurdering
@@ -42,23 +39,13 @@ class BeregningsGrunnlagApiTest {
                 relevanteSaker = listOf(YrkesskadeSak("yrkesskadesaken", null)),
                 vurdertAv = "saksbehandler"
             ),
-            beregningGrunnlag = BeregningGrunnlag(
-                tidspunktVurdering = BeregningstidspunktVurdering(
-                    begrunnelse = "test",
-                    ytterligereNedsattArbeidsevneDato = LocalDate.of(2023, 1, 1),
-                    ytterligereNedsattBegrunnelse = "test",
-                    nedsattArbeidsevneEllerStudieevneDato = LocalDate.of(2023, 1, 1),
+            ytterligereNedsettelsesDato = LocalDate.of(2023, 1, 1),
+            yrkesskadeBeløpVurderinger = listOf(
+                YrkesskadeBeløpVurdering(
+                    antattÅrligInntekt = Beløp(50000),
+                    referanse = "yrkesskadesaken",
+                    begrunnelse = "asdf",
                     vurdertAv = "saksbehandler"
-                ),
-                yrkesskadeBeløpVurdering = BeregningYrkeskaderBeløpVurdering(
-                    vurderinger = listOf(
-                        YrkesskadeBeløpVurdering(
-                            antattÅrligInntekt = Beløp(50000),
-                            referanse = "yrkesskadesaken",
-                            begrunnelse = "asdf",
-                            vurdertAv = "saksbehandler"
-                        )
-                    )
                 )
             ),
             registrerteYrkesskader = Yrkesskader(
@@ -110,23 +97,13 @@ class BeregningsGrunnlagApiTest {
                 relevanteSaker = listOf(YrkesskadeSak("yrkesskadesaken", null)),
                 vurdertAv = "saksbehandler"
             ),
-            beregningGrunnlag = BeregningGrunnlag(
-                tidspunktVurdering = BeregningstidspunktVurdering(
-                    begrunnelse = "test",
-                    ytterligereNedsattArbeidsevneDato = LocalDate.of(2023, 1, 1),
-                    ytterligereNedsattBegrunnelse = "test",
-                    nedsattArbeidsevneEllerStudieevneDato = LocalDate.of(2023, 1, 1),
+            ytterligereNedsettelsesDato = LocalDate.of(2023, 1, 1),
+            yrkesskadeBeløpVurderinger = listOf(
+                YrkesskadeBeløpVurdering(
+                    antattÅrligInntekt = Beløp(9999999999),
+                    referanse = "yrkesskadesaken",
+                    begrunnelse = "asdf",
                     vurdertAv = "saksbehandler"
-                ),
-                yrkesskadeBeløpVurdering = BeregningYrkeskaderBeløpVurdering(
-                    vurderinger = listOf(
-                        YrkesskadeBeløpVurdering(
-                            antattÅrligInntekt = Beløp(9999999999),
-                            referanse = "yrkesskadesaken",
-                            begrunnelse = "asdf",
-                            vurdertAv = "saksbehandler"
-                        )
-                    )
                 )
             ),
             registrerteYrkesskader = Yrkesskader(

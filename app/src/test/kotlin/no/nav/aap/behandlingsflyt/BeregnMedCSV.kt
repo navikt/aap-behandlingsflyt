@@ -104,7 +104,8 @@ fun tilInput(csvLine: CSVLine): Pair<Inntektsbehov, Fødselsdato> {
             uføregrad = emptySet(),
             yrkesskadevurdering = null,
             registrerteYrkesskader = null,
-            beregningGrunnlag = null,
+            ytterligereNedsettelsesDato = null,
+            yrkesskadeBeløpVurderinger = null,
             inntektsPerioder = emptySet()
         ), csvLine.fødselsdato
     )

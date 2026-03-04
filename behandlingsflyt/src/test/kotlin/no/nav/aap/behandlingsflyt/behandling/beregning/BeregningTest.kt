@@ -10,9 +10,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.Uføre
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.Yrkesskade
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.Yrkesskader
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningYrkeskaderBeløpVurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.YrkesskadeBeløpVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.YrkesskadeSak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Yrkesskadevurdering
@@ -44,7 +41,8 @@ class BeregningTest {
             årsInntekter = årsInntekter,
             uføregrad = emptySet(),
             yrkesskadevurdering = null,
-            beregningGrunnlag = null,
+            ytterligereNedsettelsesDato = null,
+            yrkesskadeBeløpVurderinger = null,
             registrerteYrkesskader = null,
             inntektsPerioder = inntektsPerioder(årsInntekter)
         )
@@ -66,15 +64,8 @@ class BeregningTest {
             årsInntekter = årsInntekter,
             uføregrad = setOf(Uføre(LocalDate.now().minusYears(5), Prosent(30))),
             yrkesskadevurdering = null,
-            beregningGrunnlag = BeregningGrunnlag(
-                tidspunktVurdering = BeregningstidspunktVurdering(
-                    begrunnelse = "test",
-                    nedsattArbeidsevneEllerStudieevneDato = LocalDate.of(2023, 1, 1),
-                    ytterligereNedsattBegrunnelse = "test2",
-                    ytterligereNedsattArbeidsevneDato = LocalDate.of(2023, 1, 1),
-                    vurdertAv = "saksbehandler"
-                ), yrkesskadeBeløpVurdering = null
-            ),
+            ytterligereNedsettelsesDato = LocalDate.of(2023, 1, 1),
+            yrkesskadeBeløpVurderinger = null,
             registrerteYrkesskader = null,
             inntektsPerioder = inntektsPerioder(årsInntekter)
         )
@@ -101,15 +92,8 @@ class BeregningTest {
                 )
             ),
             yrkesskadevurdering = null,
-            beregningGrunnlag = BeregningGrunnlag(
-                tidspunktVurdering = BeregningstidspunktVurdering(
-                    begrunnelse = "test",
-                    nedsattArbeidsevneEllerStudieevneDato = 1 januar 2024,
-                    ytterligereNedsattBegrunnelse = "test2",
-                    ytterligereNedsattArbeidsevneDato = 1 januar 2025,
-                    vurdertAv = "saksbehandler"
-                ), yrkesskadeBeløpVurdering = null
-            ),
+            ytterligereNedsettelsesDato = 1 januar 2025,
+            yrkesskadeBeløpVurderinger = null,
             registrerteYrkesskader = null,
             inntektsPerioder = inntektsPerioder(årsInntekter)
         )
@@ -136,23 +120,13 @@ class BeregningTest {
                 relevanteSaker = listOf(YrkesskadeSak("yrkesskadesaken", null)),
                 vurdertAv = "saksbehandler"
             ),
-            beregningGrunnlag = BeregningGrunnlag(
-                tidspunktVurdering = BeregningstidspunktVurdering(
-                    begrunnelse = "test",
-                    nedsattArbeidsevneEllerStudieevneDato = LocalDate.of(2023, 1, 1),
-                    ytterligereNedsattArbeidsevneDato = null,
-                    ytterligereNedsattBegrunnelse = null,
+            ytterligereNedsettelsesDato = null,
+            yrkesskadeBeløpVurderinger = listOf(
+                YrkesskadeBeløpVurdering(
+                    antattÅrligInntekt = Beløp(500000),
+                    referanse = "yrkesskadesaken",
+                    begrunnelse = "asdf",
                     vurdertAv = "saksbehandler"
-                ),
-                yrkesskadeBeløpVurdering = BeregningYrkeskaderBeløpVurdering(
-                    vurderinger = listOf(
-                        YrkesskadeBeløpVurdering(
-                            antattÅrligInntekt = Beløp(500000),
-                            referanse = "yrkesskadesaken",
-                            begrunnelse = "asdf",
-                            vurdertAv = "saksbehandler"
-                        )
-                    )
                 )
             ),
             registrerteYrkesskader = Yrkesskader(
@@ -193,23 +167,13 @@ class BeregningTest {
                 relevanteSaker = listOf(YrkesskadeSak("yrkesskadesaken", null)),
                 vurdertAv = "saksbehandler"
             ),
-            beregningGrunnlag = BeregningGrunnlag(
-                tidspunktVurdering = BeregningstidspunktVurdering(
-                    begrunnelse = "test",
-                    nedsattArbeidsevneEllerStudieevneDato = LocalDate.of(2023, 1, 1),
-                    ytterligereNedsattBegrunnelse = "test2",
-                    ytterligereNedsattArbeidsevneDato = LocalDate.of(2023, 1, 1),
+            ytterligereNedsettelsesDato = LocalDate.of(2023, 1, 1),
+            yrkesskadeBeløpVurderinger = listOf(
+                YrkesskadeBeløpVurdering(
+                    antattÅrligInntekt = Beløp(500000),
+                    referanse = "yrkesskadesaken",
+                    begrunnelse = "asdf",
                     vurdertAv = "saksbehandler"
-                ),
-                yrkesskadeBeløpVurdering = BeregningYrkeskaderBeløpVurdering(
-                    vurderinger = listOf(
-                        YrkesskadeBeløpVurdering(
-                            antattÅrligInntekt = Beløp(500000),
-                            referanse = "yrkesskadesaken",
-                            begrunnelse = "asdf",
-                            vurdertAv = "saksbehandler"
-                        )
-                    )
                 )
             ),
             registrerteYrkesskader = Yrkesskader(
@@ -249,16 +213,8 @@ class BeregningTest {
             årsInntekter = årsInntekter,
             uføregrad = setOf(Uføre(LocalDate.now(), Prosent(0))),
             yrkesskadevurdering = null,
-            beregningGrunnlag = BeregningGrunnlag(
-                tidspunktVurdering = BeregningstidspunktVurdering(
-                    begrunnelse = "test",
-                    ytterligereNedsattArbeidsevneDato = LocalDate.of(2023, 1, 1),
-                    nedsattArbeidsevneEllerStudieevneDato = LocalDate.of(2023, 1, 1),
-                    ytterligereNedsattBegrunnelse = "test2",
-                    vurdertAv = "saksbehandler"
-                ),
-                yrkesskadeBeløpVurdering = null
-            ),
+            ytterligereNedsettelsesDato = LocalDate.of(2023, 1, 1),
+            yrkesskadeBeløpVurderinger = null,
             registrerteYrkesskader = null,
             inntektsPerioder = inntektsPerioder(årsInntekter)
         )
@@ -268,15 +224,8 @@ class BeregningTest {
             årsInntekter = årsInntekter,
             uføregrad = setOf(),
             yrkesskadevurdering = null,
-            beregningGrunnlag = BeregningGrunnlag(
-                tidspunktVurdering = BeregningstidspunktVurdering(
-                    begrunnelse = "test",
-                    ytterligereNedsattArbeidsevneDato = null,
-                    nedsattArbeidsevneEllerStudieevneDato = LocalDate.of(2023, 1, 1),
-                    ytterligereNedsattBegrunnelse = "asdf",
-                    vurdertAv = "saksbehandler"
-                ), yrkesskadeBeløpVurdering = null
-            ),
+            ytterligereNedsettelsesDato = null,
+            yrkesskadeBeløpVurderinger = null,
             registrerteYrkesskader = null,
             inntektsPerioder = inntektsPerioder(årsInntekter)
         )
@@ -306,7 +255,8 @@ class BeregningTest {
             nedsettelsesDato = nedsettelsesDato,
             uføregrad = emptySet(),
             yrkesskadevurdering = null,
-            beregningGrunnlag = null,
+            ytterligereNedsettelsesDato = null,
+            yrkesskadeBeløpVurderinger = null,
             registrerteYrkesskader = null,
             årsInntekter = inntektPerÅr,
             inntektsPerioder = inntektsPerioder(inntektPerÅr)

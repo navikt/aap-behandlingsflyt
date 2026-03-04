@@ -7,6 +7,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.Uføre
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.tilTidslinje
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.Yrkesskader
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.YrkesskadeBeløpVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Yrkesskadevurdering
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.GUnit
@@ -28,18 +29,38 @@ import java.util.*
 */
 class Inntektsbehov(
     val nedsettelsesDato: LocalDate,
+    val ytterligereNedsettelsesDato: LocalDate?,
     val årsInntekter: Set<InntektPerÅr>,
     val inntektsPerioder: Set<Månedsinntekt>,
     val uføregrad: Set<Uføre>,
     val yrkesskadevurdering: Yrkesskadevurdering?,
     val registrerteYrkesskader: Yrkesskader?,
-    val beregningGrunnlag: BeregningGrunnlag?,
+    val yrkesskadeBeløpVurderinger: List<YrkesskadeBeløpVurdering>?,
 ) {
+
+    constructor(
+        årsInntekter: Set<InntektPerÅr>,
+        inntektsPerioder: Set<Månedsinntekt>,
+        uføregrad: Set<Uføre>,
+        yrkesskadevurdering: Yrkesskadevurdering?,
+        registrerteYrkesskader: Yrkesskader?,
+        beregningGrunnlag: BeregningGrunnlag?,
+    ) : this(
+        nedsettelsesDato = beregningGrunnlag?.tidspunktVurdering?.nedsattArbeidsevneEllerStudieevneDato
+            ?: throw IllegalStateException("Nedsettelsesdato må være satt for beregning"),
+        ytterligereNedsettelsesDato = beregningGrunnlag.tidspunktVurdering.ytterligereNedsattArbeidsevneDato,
+        årsInntekter = årsInntekter,
+        inntektsPerioder = inntektsPerioder,
+        uføregrad = uføregrad,
+        yrkesskadevurdering = yrkesskadevurdering,
+        registrerteYrkesskader = registrerteYrkesskader,
+        yrkesskadeBeløpVurderinger = beregningGrunnlag.yrkesskadeBeløpVurdering?.vurderinger,
+    )
 
     private val log = LoggerFactory.getLogger(javaClass)
 
     fun hentYtterligereNedsattArbeidsevneDato(): LocalDate? {
-        return beregningGrunnlag?.tidspunktVurdering?.ytterligereNedsattArbeidsevneDato
+        return ytterligereNedsettelsesDato
     }
 
     /**
@@ -70,7 +91,7 @@ class Inntektsbehov(
 
     fun utledForYtterligereNedsatt(): Set<Year> {
         val ytterligereNedsettelsesDato =
-            requireNotNull(beregningGrunnlag?.tidspunktVurdering?.ytterligereNedsattArbeidsevneDato)
+            requireNotNull(ytterligereNedsettelsesDato)
 
         return treÅrForutFor(ytterligereNedsettelsesDato)
     }
@@ -79,12 +100,10 @@ class Inntektsbehov(
      * Skal beregne med uføre om det finnes data på uføregrad.
      */
     fun finnesUføreData(): Boolean {
-        val ytterligereNedsattArbeidsevneDato =
-            beregningGrunnlag?.tidspunktVurdering?.ytterligereNedsattArbeidsevneDato
-        return ytterligereNedsattArbeidsevneDato != null
+        return ytterligereNedsettelsesDato != null
                 && uføregrad.isNotEmpty()
-                && uføregrad.tilTidslinje().minDato() <= ytterligereNedsattArbeidsevneDato
-                && uføregrad.tilTidslinje().maxDato() >= ytterligereNedsattArbeidsevneDato
+                && uføregrad.tilTidslinje().minDato() <= ytterligereNedsettelsesDato
+                && uføregrad.tilTidslinje().maxDato() >= ytterligereNedsettelsesDato
     }
 
     /**
@@ -96,7 +115,7 @@ class Inntektsbehov(
         val betingelser = listOf(
             registrerteYrkesskader?.harYrkesskade() == true,
             yrkesskadevurdering.relevanteSaker.isNotEmpty(),
-            beregningGrunnlag?.yrkesskadeBeløpVurdering != null,
+            yrkesskadeBeløpVurderinger != null,
             yrkesskadevurdering.andelAvNedsettelsen != null
         )
 
@@ -149,7 +168,7 @@ class Inntektsbehov(
             YrkesskadeBeregning(
                 sak.ref,
                 requireNotNull(skadedato) { "Ulovlig tilstand. skadedato er null, og mangler manuell yrkesskade dato." },
-                beregningGrunnlag?.yrkesskadeBeløpVurdering?.vurderinger?.firstOrNull { it.referanse == sak.ref }?.antattÅrligInntekt!!
+                yrkesskadeBeløpVurderinger?.firstOrNull { it.referanse == sak.ref }?.antattÅrligInntekt!!
             )
         }
     }
