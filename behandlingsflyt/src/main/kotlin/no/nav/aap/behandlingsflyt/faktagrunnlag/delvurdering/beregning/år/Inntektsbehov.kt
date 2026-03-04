@@ -40,25 +40,6 @@ class Inntektsbehov(
     val yrkesskadeBeløpVurderinger: List<YrkesskadeBeløpVurdering>?,
 ) {
 
-    constructor(
-        uføregrad: Set<Uføre>,
-        yrkesskadevurdering: Yrkesskadevurdering?,
-        registrerteYrkesskader: Yrkesskader?,
-        beregningGrunnlag: BeregningGrunnlag?,
-        inntektGrunnlag: InntektGrunnlag,
-        manuelleInntekter: Set<ManuellInntektVurdering>,
-    ) : this(
-        årsInntekter = kombinerInntektOgManuellInntekt(inntektGrunnlag.inntekter, manuelleInntekter),
-        nedsettelsesDato = beregningGrunnlag?.tidspunktVurdering?.nedsattArbeidsevneEllerStudieevneDato
-            ?: throw IllegalStateException("Nedsettelsesdato må være satt for beregning"),
-        ytterligereNedsettelsesDato = beregningGrunnlag.tidspunktVurdering.ytterligereNedsattArbeidsevneDato,
-        inntektsPerioder = inntektGrunnlag.inntektPerMåned,
-        uføregrad = uføregrad,
-        yrkesskadevurdering = yrkesskadevurdering,
-        registrerteYrkesskader = registrerteYrkesskader,
-        yrkesskadeBeløpVurderinger = beregningGrunnlag.yrkesskadeBeløpVurdering?.vurderinger,
-    )
-
     private val log = LoggerFactory.getLogger(javaClass)
 
     init {

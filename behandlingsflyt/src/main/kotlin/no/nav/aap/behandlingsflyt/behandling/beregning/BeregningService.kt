@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.behandling.beregning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Beregningsgrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år.Inntektsbehov
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år.Inntektsbehov.Companion.kombinerInntektOgManuellInntekt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektGrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.ManuellInntektGrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreRepository
@@ -34,14 +35,24 @@ class BeregningService(
     )
 
     fun beregnGrunnlag(behandlingId: BehandlingId): Beregningsgrunnlag {
+        val uføregrad = uføreRepository.hentHvisEksisterer(behandlingId)?.vurderinger.orEmpty()
+        val yrkesskadevurdering = sykdomRepository.hentHvisEksisterer(behandlingId)?.yrkesskadevurdering
+        val beregningGrunnlag = beregningVurderingRepository.hentHvisEksisterer(behandlingId)
+        val registrerteYrkesskader = yrkesskadeRepository.hentHvisEksisterer(behandlingId)?.yrkesskader
+        val inntektGrunnlag = inntektGrunnlagRepository.hent(behandlingId)
+        val manuelleInntekter = manuellInntektGrunnlagRepository.hentHvisEksisterer(behandlingId)?.manuelleInntekter.orEmpty()
+
         val input = Inntektsbehov(
+            årsInntekter = kombinerInntektOgManuellInntekt(inntektGrunnlag.inntekter, manuelleInntekter),
+            nedsettelsesDato = beregningGrunnlag?.tidspunktVurdering?.nedsattArbeidsevneEllerStudieevneDato
+                ?: throw IllegalStateException("Nedsettelsesdato må være satt for beregning"),
+            ytterligereNedsettelsesDato = beregningGrunnlag.tidspunktVurdering.ytterligereNedsattArbeidsevneDato,
+            inntektsPerioder = inntektGrunnlag.inntektPerMåned,
             // TODO: Hvor langt tilbake i tid skal man hente uføregrader?
-            uføregrad = uføreRepository.hentHvisEksisterer(behandlingId)?.vurderinger.orEmpty(),
-            yrkesskadevurdering = sykdomRepository.hentHvisEksisterer(behandlingId)?.yrkesskadevurdering,
-            beregningGrunnlag = beregningVurderingRepository.hentHvisEksisterer(behandlingId),
-            registrerteYrkesskader = yrkesskadeRepository.hentHvisEksisterer(behandlingId)?.yrkesskader,
-            inntektGrunnlag = inntektGrunnlagRepository.hent(behandlingId),
-            manuelleInntekter = manuellInntektGrunnlagRepository.hentHvisEksisterer(behandlingId)?.manuelleInntekter.orEmpty(),
+            uføregrad = uføregrad,
+            yrkesskadevurdering = yrkesskadevurdering,
+            registrerteYrkesskader = registrerteYrkesskader,
+            yrkesskadeBeløpVurderinger = beregningGrunnlag.yrkesskadeBeløpVurdering?.vurderinger,
         )
 
         val beregningsgrunnlag = beregneMedInput(input)
