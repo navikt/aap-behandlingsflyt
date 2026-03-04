@@ -31,10 +31,11 @@ class UføreBeregningTest {
                 2022 to 0.7 * 5 * 109_784 / 12.0,
                 2021 to 0.7 * 5 * 104_716 / 12,
                 2020 to 0.7 * 5 * 100_853 / 12
-            )
+            ),
+            ytterligereNedsattÅr = Year.of(2023),
         )
 
-        val resultat = uføreBeregning.beregnUføre(Year.of(2023))
+        val resultat = uføreBeregning.beregnUføre()
 
         val uføreInntekt2021 = resultat.uføreInntekterFraForegåendeÅr().first { it.år == Year.of(2021) }
         val uføreInntekt2022 = resultat.uføreInntekterFraForegåendeÅr().first { it.år == Year.of(2022) }
@@ -56,10 +57,11 @@ class UføreBeregningTest {
                 2022 to 0.7 * 5 * 109_784 / 12,
                 2021 to 0.7 * 5 * 104_716 / 12,
                 2020 to 0.7 * 5 * 100_853 / 12
-            )
+            ),
+            ytterligereNedsattÅr = Year.of(2023),
         )
 
-        val grunnlagUføre = uføreBeregning.beregnUføre(Year.of(2023))
+        val grunnlagUføre = uføreBeregning.beregnUføre()
 
         assertThat(grunnlagUføre.grunnlaget().verdi()).isCloseTo(BigDecimal(5), Percentage.withPercentage(0.001))
         assertThat(grunnlagUføre.type()).isEqualTo(GrunnlagUføre.Type.YTTERLIGERE_NEDSATT)
@@ -78,10 +80,11 @@ class UføreBeregningTest {
                 2022 to 200_000 / 12,
                 2021 to 300_000 / 12,
                 2020 to 400_000 / 12
-            )
+            ),
+            ytterligereNedsattÅr = Year.of(2023),
         )
 
-        val grunnlagUføre = uføreBeregning.beregnUføre(Year.of(2023))
+        val grunnlagUføre = uføreBeregning.beregnUføre()
 
         assertThat(grunnlagUføre.grunnlaget()).isEqualTo(GUnit(6))
         assertThat(grunnlagUføre.type()).isEqualTo(GrunnlagUføre.Type.STANDARD)
@@ -98,10 +101,11 @@ class UføreBeregningTest {
                 2022 to 20_000,
                 2021 to 20_000,
                 2020 to 20_000
-            )
+            ),
+            ytterligereNedsattÅr = Year.of(2023),
         )
 
-        val grunnlagUføre = uføreBeregning.beregnUføre(Year.of(2023))
+        val grunnlagUføre = uføreBeregning.beregnUføre()
 
         assertThat(grunnlagUføre.type()).isEqualTo(GrunnlagUføre.Type.YTTERLIGERE_NEDSATT)
         val uføreInntekterFra2022 = grunnlagUføre.uføreInntekterFraForegåendeÅr().first { it.år == Year.of(2022) }
@@ -123,10 +127,11 @@ class UføreBeregningTest {
                 2022 to 10_000,
                 2021 to 5_000,
                 2020 to 20_000
-            )
+            ),
+            ytterligereNedsattÅr = Year.of(2023),
         )
 
-        val grunnlagUføre = uføreBeregning.beregnUføre(Year.of(2023))
+        val grunnlagUføre = uføreBeregning.beregnUføre()
 
         // 6 mnd 50% uføre, 6 mnd 80% uføre
         val uføreInntekterFraForegåendeÅr = grunnlagUføre.uføreInntekterFraForegåendeÅr()
@@ -159,9 +164,10 @@ class UføreBeregningTest {
                     2021 to 15_000,
                     2020 to 20_000
                 ),
+            ytterligereNedsattÅr = Year.of(2023),
         )
 
-        val grunnlag = uføreBeregning.beregnUføre(Year.of(2023))
+        val grunnlag = uføreBeregning.beregnUføre()
 
         val uføreInntekt2022 = grunnlag.uføreInntekterFraForegåendeÅr().first { it.år == Year.of(2022) }
 
@@ -180,10 +186,11 @@ class UføreBeregningTest {
                 LocalDate.of(2022, 7, 1) to Prosent.`50_PROSENT`
             ),
             relevanteÅr = relevanteÅr(2020, 2021, 2022),
-            inntektsPerioder = emptySet()
+            inntektsPerioder = emptySet(),
+            ytterligereNedsattÅr = Year.of(2023),
         )
 
-        val grunnlag = uføreBeregning.beregnUføre(Year.of(2023))
+        val grunnlag = uføreBeregning.beregnUføre()
 
         assertThat(grunnlag.grunnlaget()).isEqualTo(GUnit(0))
 

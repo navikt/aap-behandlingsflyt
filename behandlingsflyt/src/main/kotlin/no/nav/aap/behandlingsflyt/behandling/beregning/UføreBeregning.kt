@@ -22,6 +22,7 @@ class UføreBeregning(
     private val uføregrader: Set<Uføre>,
     private val relevanteÅr: Set<Year>,
     private val inntektsPerioder: Set<Månedsinntekt>,
+    private val ytterligereNedsattÅr: Year,
 ) {
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -32,7 +33,7 @@ class UføreBeregning(
         }
     }
 
-    fun beregnUføre(ytterligereNedsattÅr: Year): GrunnlagUføre {
+    fun beregnUføre(): GrunnlagUføre {
         // tidslinjelogikken er basert på antagelsen om at uføre alltid har virkningstidspunkt på den første i måneden
         // og at vi får inntekt fra inntektskomponenten per måned
         val uføreTidslinje = uføregrader.tilTidslinje()

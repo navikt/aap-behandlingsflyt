@@ -125,15 +125,17 @@ class BeregningService(
 
                 input.validerSummertInntekt()
 
+                val ytterligereNedsattArbeidsevneDato = requireNotNull(input.hentYtterligereNedsattArbeidsevneDato())
+
                 val uføreberegning = UføreBeregning(
                     grunnlag = grunnlag11_19,
                     uføregrader = input.uføregrad,
                     relevanteÅr = inntekterFørYtterligereNedsattDato,
                     inntektsPerioder = input.inntektsPerioder,
+                    ytterligereNedsattÅr = Year.from(ytterligereNedsattArbeidsevneDato),
                 )
-                val ytterligereNedsattArbeidsevneDato = requireNotNull(input.hentYtterligereNedsattArbeidsevneDato())
 
-                val grunnlagUføre = uføreberegning.beregnUføre(Year.from(ytterligereNedsattArbeidsevneDato))
+                val grunnlagUføre = uføreberegning.beregnUføre()
                 grunnlagUføre
             } else {
                 grunnlag11_19
