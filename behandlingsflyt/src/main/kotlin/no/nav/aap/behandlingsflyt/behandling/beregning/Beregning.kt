@@ -1,7 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.beregning
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Beregningsgrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag11_19
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år.Inntektsbehov
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import java.time.Year
@@ -11,7 +10,7 @@ class Beregning(
 ) {
     fun beregneMedInput(): Beregningsgrunnlag {
         // 6G-begrensning ligger her samt gjennomsnitt
-        val grunnlag11_19 = beregn11_19Grunnlag(input.utledForOrdinær())
+        val grunnlag11_19 = GrunnlagetForBeregningen(input.utledForOrdinær()).beregnGrunnlaget()
 
         val beregningMedEllerUtenUføre = if (input.finnesUføreData()) {
             val inntekterFørYtterligereNedsattDato = input.utledForYtterligereNedsatt()
@@ -49,14 +48,5 @@ class Beregning(
                 beregningMedEllerUtenUføre
             }
         return beregningMedEllerUtenUføreMedEllerUtenYrkesskade
-    }
-
-    private fun beregn11_19Grunnlag(
-        inntekterPerÅr: Set<InntektPerÅr>
-    ): Grunnlag11_19 {
-        val grunnlag11_19 =
-            GrunnlagetForBeregningen(inntekterPerÅr).beregnGrunnlaget()
-
-        return grunnlag11_19
     }
 }
