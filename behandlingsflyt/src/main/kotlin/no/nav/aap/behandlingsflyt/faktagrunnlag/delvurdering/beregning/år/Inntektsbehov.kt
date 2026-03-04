@@ -49,10 +49,6 @@ class Inntektsbehov(
         return filtrerInntekter(nedsettelsesDato, årsInntekter)
     }
 
-    fun inntektsPerioder(): Set<Månedsinntekt> {
-        return inntektsPerioder
-    }
-
     fun validerSummertInntekt() {
         val inntektPerÅrFraPerioder: Map<Year, Beløp> = inntektsPerioder
             .groupBy { Year.of(it.årMåned.year) }
@@ -125,10 +121,6 @@ class Inntektsbehov(
             }
             return@map år
         }.toSet()
-    }
-
-    fun uføregrad(): Set<Uføre> {
-        return requireNotNull(uføregrad)
     }
 
     /**

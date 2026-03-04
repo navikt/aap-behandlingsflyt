@@ -19,9 +19,9 @@ class Beregning(
 
             val uføreberegning = UføreBeregning(
                 grunnlag = grunnlag11_19,
-                uføregrader = input.uføregrad(),
+                uføregrader = input.uføregrad,
                 relevanteÅr = inntekterFørYtterligereNedsattDato,
-                inntektsPerioder = input.inntektsPerioder(),
+                inntektsPerioder = input.inntektsPerioder,
             )
             val ytterligereNedsattArbeidsevneDato = requireNotNull(input.hentYtterligereNedsattArbeidsevneDato())
 
