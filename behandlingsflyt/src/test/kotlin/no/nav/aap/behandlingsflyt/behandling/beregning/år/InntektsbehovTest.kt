@@ -1,7 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.beregning.år
 
 import no.nav.aap.behandlingsflyt.behandling.beregning.Månedsinntekt
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år.BeregningInput
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år.Inntektsbehov
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.Uføre
@@ -38,15 +37,13 @@ class InntektsbehovTest {
             InntektPerÅr(nedsettelsesDato.minusYears(4).year, Beløp(129))
         )
         val forOrdinær = Inntektsbehov(
-            BeregningInput(
-                nedsettelsesDato,
-                årsInntekter = årsInntekter,
-                uføregrad = setOf(Uføre(LocalDate.now(), Prosent.`0_PROSENT`)),
-                yrkesskadevurdering = null,
-                beregningGrunnlag = null,
-                registrerteYrkesskader = null,
-                inntektsPerioder = inntektsPerioder(årsInntekter)
-            )
+            nedsettelsesDato,
+            årsInntekter = årsInntekter,
+            uføregrad = setOf(Uføre(LocalDate.now(), Prosent.`0_PROSENT`)),
+            yrkesskadevurdering = null,
+            beregningGrunnlag = null,
+            registrerteYrkesskader = null,
+            inntektsPerioder = inntektsPerioder(årsInntekter)
         ).utledForOrdinær()
 
         assertThat(forOrdinær).containsExactlyInAnyOrder(
@@ -91,23 +88,21 @@ class InntektsbehovTest {
     fun `om det finnes uføredata, skal det oppgis`() {
         val nedsettelsesDato = LocalDate.now().minusYears(3)
         val inntektsbehov = Inntektsbehov(
-            BeregningInput(
-                nedsettelsesDato,
-                årsInntekter = emptySet(),
-                uføregrad = setOf(Uføre(LocalDate.now().minusYears(10), Prosent.`30_PROSENT`)),
-                yrkesskadevurdering = null,
-                registrerteYrkesskader = null,
-                beregningGrunnlag = BeregningGrunnlag(
-                    tidspunktVurdering = BeregningstidspunktVurdering(
-                        begrunnelse = "begrunnelse",
-                        nedsattArbeidsevneEllerStudieevneDato = nedsettelsesDato,
-                        ytterligereNedsattArbeidsevneDato = LocalDate.now().minusYears(10),
-                        ytterligereNedsattBegrunnelse = "begrunnelse",
-                        vurdertAv = "saksbehandler"
-                    ), yrkesskadeBeløpVurdering = null
-                ),
-                inntektsPerioder = emptySet()
-            )
+            nedsettelsesDato,
+            årsInntekter = emptySet(),
+            uføregrad = setOf(Uføre(LocalDate.now().minusYears(10), Prosent.`30_PROSENT`)),
+            yrkesskadevurdering = null,
+            registrerteYrkesskader = null,
+            beregningGrunnlag = BeregningGrunnlag(
+                tidspunktVurdering = BeregningstidspunktVurdering(
+                    begrunnelse = "begrunnelse",
+                    nedsattArbeidsevneEllerStudieevneDato = nedsettelsesDato,
+                    ytterligereNedsattArbeidsevneDato = LocalDate.now().minusYears(10),
+                    ytterligereNedsattBegrunnelse = "begrunnelse",
+                    vurdertAv = "saksbehandler"
+                ), yrkesskadeBeløpVurdering = null
+            ),
+            inntektsPerioder = emptySet()
         )
 
         assertThat(inntektsbehov.finnesUføreData()).isTrue()
@@ -117,44 +112,42 @@ class InntektsbehovTest {
     fun `bruker manuell dato for yrkesskade om den er null fra register`() {
         val nedsettelsesDato = LocalDate.now().minusYears(3)
         val inntektsbehov = Inntektsbehov(
-            BeregningInput(
-                nedsettelsesDato,
-                årsInntekter = emptySet(),
-                uføregrad = setOf(Uføre(LocalDate.now(), Prosent.`30_PROSENT`)),
-                yrkesskadevurdering = Yrkesskadevurdering(
-                    begrunnelse = "...",
-                    relevanteSaker = listOf(YrkesskadeSak("123", LocalDate.of(2023, 1, 1))),
-                    erÅrsakssammenheng = true,
-                    andelAvNedsettelsen = Prosent(70),
-                    vurdertAv = "Jojo Joyes",
-                ),
-                registrerteYrkesskader = Yrkesskader(
-                    listOf(
-                        Yrkesskade(
-                            ref = "123", saksnummer = 0, kildesystem = "KLVN", skadedato = null
+            nedsettelsesDato,
+            årsInntekter = emptySet(),
+            uføregrad = setOf(Uføre(LocalDate.now(), Prosent.`30_PROSENT`)),
+            yrkesskadevurdering = Yrkesskadevurdering(
+                begrunnelse = "...",
+                relevanteSaker = listOf(YrkesskadeSak("123", LocalDate.of(2023, 1, 1))),
+                erÅrsakssammenheng = true,
+                andelAvNedsettelsen = Prosent(70),
+                vurdertAv = "Jojo Joyes",
+            ),
+            registrerteYrkesskader = Yrkesskader(
+                listOf(
+                    Yrkesskade(
+                        ref = "123", saksnummer = 0, kildesystem = "KLVN", skadedato = null
+                    )
+                )
+            ),
+            beregningGrunnlag = BeregningGrunnlag(
+                tidspunktVurdering = BeregningstidspunktVurdering(
+                    begrunnelse = "begrunnelse",
+                    nedsattArbeidsevneEllerStudieevneDato = nedsettelsesDato,
+                    ytterligereNedsattArbeidsevneDato = LocalDate.now().minusYears(10),
+                    ytterligereNedsattBegrunnelse = "begrunnelse",
+                    vurdertAv = "saksbehandler"
+                ), yrkesskadeBeløpVurdering = BeregningYrkeskaderBeløpVurdering(
+                    vurderinger = listOf(
+                        YrkesskadeBeløpVurdering(
+                            antattÅrligInntekt = Beløp(1234),
+                            referanse = "123",
+                            begrunnelse = "...",
+                            vurdertAv = "meg",
                         )
                     )
-                ),
-                beregningGrunnlag = BeregningGrunnlag(
-                    tidspunktVurdering = BeregningstidspunktVurdering(
-                        begrunnelse = "begrunnelse",
-                        nedsattArbeidsevneEllerStudieevneDato = nedsettelsesDato,
-                        ytterligereNedsattArbeidsevneDato = LocalDate.now().minusYears(10),
-                        ytterligereNedsattBegrunnelse = "begrunnelse",
-                        vurdertAv = "saksbehandler"
-                    ), yrkesskadeBeløpVurdering = BeregningYrkeskaderBeløpVurdering(
-                        vurderinger = listOf(
-                            YrkesskadeBeløpVurdering(
-                                antattÅrligInntekt = Beløp(1234),
-                                referanse = "123",
-                                begrunnelse = "...",
-                                vurdertAv = "meg",
-                            )
-                        )
-                    )
-                ),
-                inntektsPerioder = emptySet()
-            )
+                )
+            ),
+            inntektsPerioder = emptySet()
         )
 
         assertThat(inntektsbehov.skadetidspunkt()).isEqualTo(LocalDate.of(2023, 1, 1))
@@ -201,59 +194,60 @@ class InntektsbehovTest {
             InntektPerÅr(2021, Beløp(400000)),
             InntektPerÅr(2020, Beløp(300000))
         )
-        val inputMedForStorForskjell = BeregningInput(
-            nedsettelsesDato = LocalDate.of(2015, 1, 1),
-            årsInntekter = årsInntekter,
-            uføregrad = setOf(Uføre(LocalDate.now().minusYears(5), Prosent(30))),
-            yrkesskadevurdering = null,
-            beregningGrunnlag = BeregningGrunnlag(
-                tidspunktVurdering = BeregningstidspunktVurdering(
-                    begrunnelse = "test",
-                    nedsattArbeidsevneEllerStudieevneDato = LocalDate.of(2023, 1, 1),
-                    ytterligereNedsattBegrunnelse = "test2",
-                    ytterligereNedsattArbeidsevneDato = LocalDate.of(2023, 1, 1),
-                    vurdertAv = "saksbehandler"
-                ), yrkesskadeBeløpVurdering = null
-            ),
-            registrerteYrkesskader = null,
-            inntektsPerioder = inntektsPerioder(
-                setOf(
-                    InntektPerÅr(2022, Beløp(500102)),
-                    InntektPerÅr(2021, Beløp(400000)),
-                    InntektPerÅr(2020, Beløp(300000))
-                )
-            )
-        )
 
         // 2kr forskjell, da skal feil kastes
-        assertThrows<IllegalArgumentException> { Inntektsbehov(inputMedForStorForskjell).validerSummertInntekt() }
-
-        val inputMedLitenNokForskjell = BeregningInput(
-            nedsettelsesDato = LocalDate.of(2015, 1, 1),
-            årsInntekter = årsInntekter,
-            uføregrad = setOf(Uføre(LocalDate.now().minusYears(5), Prosent(30))),
-            yrkesskadevurdering = null,
-            beregningGrunnlag = BeregningGrunnlag(
-                tidspunktVurdering = BeregningstidspunktVurdering(
-                    begrunnelse = "test",
-                    nedsattArbeidsevneEllerStudieevneDato = LocalDate.of(2023, 1, 1),
-                    ytterligereNedsattBegrunnelse = "test2",
-                    ytterligereNedsattArbeidsevneDato = LocalDate.of(2023, 1, 1),
-                    vurdertAv = "saksbehandler"
-                ), yrkesskadeBeløpVurdering = null
-            ),
-            registrerteYrkesskader = null,
-            inntektsPerioder = inntektsPerioder(
-                setOf(
-                    InntektPerÅr(2022, Beløp(BigDecimal(499999.5))),
-                    InntektPerÅr(2021, Beløp(400000)),
-                    InntektPerÅr(2020, Beløp(300000))
+        assertThrows<IllegalArgumentException> {
+            Inntektsbehov(
+                nedsettelsesDato = LocalDate.of(2015, 1, 1),
+                årsInntekter = årsInntekter,
+                uføregrad = setOf(Uføre(LocalDate.now().minusYears(5), Prosent(30))),
+                yrkesskadevurdering = null,
+                beregningGrunnlag = BeregningGrunnlag(
+                    tidspunktVurdering = BeregningstidspunktVurdering(
+                        begrunnelse = "test",
+                        nedsattArbeidsevneEllerStudieevneDato = LocalDate.of(2023, 1, 1),
+                        ytterligereNedsattBegrunnelse = "test2",
+                        ytterligereNedsattArbeidsevneDato = LocalDate.of(2023, 1, 1),
+                        vurdertAv = "saksbehandler"
+                    ), yrkesskadeBeløpVurdering = null
+                ),
+                registrerteYrkesskader = null,
+                inntektsPerioder = inntektsPerioder(
+                    setOf(
+                        InntektPerÅr(2022, Beløp(500102)),
+                        InntektPerÅr(2021, Beløp(400000)),
+                        InntektPerÅr(2020, Beløp(300000))
+                    )
                 )
-            )
-        )
+            ).validerSummertInntekt()
+        }
 
         // 0.5kr forskjell, skal ikke feile
-        assertDoesNotThrow { Inntektsbehov(inputMedLitenNokForskjell).validerSummertInntekt() }
+        assertDoesNotThrow {
+            Inntektsbehov(
+                nedsettelsesDato = LocalDate.of(2015, 1, 1),
+                årsInntekter = årsInntekter,
+                uføregrad = setOf(Uføre(LocalDate.now().minusYears(5), Prosent(30))),
+                yrkesskadevurdering = null,
+                beregningGrunnlag = BeregningGrunnlag(
+                    tidspunktVurdering = BeregningstidspunktVurdering(
+                        begrunnelse = "test",
+                        nedsattArbeidsevneEllerStudieevneDato = LocalDate.of(2023, 1, 1),
+                        ytterligereNedsattBegrunnelse = "test2",
+                        ytterligereNedsattArbeidsevneDato = LocalDate.of(2023, 1, 1),
+                        vurdertAv = "saksbehandler"
+                    ), yrkesskadeBeløpVurdering = null
+                ),
+                registrerteYrkesskader = null,
+                inntektsPerioder = inntektsPerioder(
+                    setOf(
+                        InntektPerÅr(2022, Beløp(BigDecimal(499999.5))),
+                        InntektPerÅr(2021, Beløp(400000)),
+                        InntektPerÅr(2020, Beløp(300000))
+                    )
+                )
+            ).validerSummertInntekt()
+        }
 
     }
 

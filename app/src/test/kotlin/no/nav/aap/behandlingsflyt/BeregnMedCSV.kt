@@ -4,7 +4,6 @@ import no.nav.aap.behandlingsflyt.behandling.beregning.Beregning
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.BeregnTilkjentYtelseService
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år.BeregningInput
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år.Inntektsbehov
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.ArbeidsGradering
@@ -90,10 +89,10 @@ fun readCSV(inputStream: InputStream): List<CSVLine> {
         }.toList()
 }
 
-fun tilInput(csvLine: CSVLine): Pair<BeregningInput, Fødselsdato> {
+fun tilInput(csvLine: CSVLine): Pair<Inntektsbehov, Fødselsdato> {
 
     return Pair(
-        BeregningInput(
+        Inntektsbehov(
             nedsettelsesDato = LocalDate.of(csvLine.beregningsAar, 1, 1),
             årsInntekter = csvLine.let { (intSiste, intNestSiste, intTredjeSiste, _, inntektSisteAar, inntektNestSisteAar, inntektTredjeSisteAar) ->
                 setOf(
@@ -111,8 +110,8 @@ fun tilInput(csvLine: CSVLine): Pair<BeregningInput, Fødselsdato> {
     )
 }
 
-fun beregnForInput(input: BeregningInput, fødselsdato: Fødselsdato): Triple<Year, GUnit, Double> {
-    val beregnet = Beregning(Inntektsbehov((input))).beregneMedInput()
+fun beregnForInput(inntektsbehov: Inntektsbehov, fødselsdato: Fødselsdato): Triple<Year, GUnit, Double> {
+    val beregnet = Beregning(inntektsbehov).beregneMedInput()
 
     val tilkjent = BeregnTilkjentYtelseService(
         TilkjentYtelseGrunnlag(
@@ -157,13 +156,14 @@ fun beregnForInput(input: BeregningInput, fødselsdato: Fødselsdato): Triple<Ye
 
     val dagsats = tilkjent.beregnTilkjentYtelse().mapValue { it.dagsats }.komprimer().segmenter().first().verdi.verdi
 
-    return Triple(Year.of(input.nedsettelsesDato.year), beregnet.grunnlaget(), dagsats.toDouble())
+    return Triple(Year.of(inntektsbehov.nedsettelsesDato.year), beregnet.grunnlaget(), dagsats.toDouble())
 }
 
 fun printRad(arenaBeløp: Int, beregnetGUnit: GUnit, personKode: Int, dagsats: Double) {
     val arenaGUnit =
         BigDecimal(arenaBeløp).divide(
-            Grunnbeløp.tilTidslinje().segment(Year.of(2025).atDay(200))!!.verdi.verdi, MathContext(5, RoundingMode.HALF_UP)
+            Grunnbeløp.tilTidslinje().segment(Year.of(2025).atDay(200))!!.verdi.verdi,
+            MathContext(5, RoundingMode.HALF_UP)
         )
 
     val grunnBeløp = grunnBeløpDetteÅret(Year.of(2025))

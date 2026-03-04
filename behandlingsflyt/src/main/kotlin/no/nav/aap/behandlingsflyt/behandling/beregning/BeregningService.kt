@@ -3,7 +3,6 @@ package no.nav.aap.behandlingsflyt.behandling.beregning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Beregningsgrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år.Inntektsbehov
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år.BeregningInput
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektGrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.ManuellInntektGrunnlagRepository
@@ -55,16 +54,14 @@ class BeregningService(
         val nedsettelsesdato = beregningVurdering?.tidspunktVurdering?.nedsattArbeidsevneEllerStudieevneDato
             ?: throw IllegalStateException("Nedsettelsesdato må være satt for beregning")
         val input = Inntektsbehov(
-            BeregningInput(
-                nedsettelsesDato = nedsettelsesdato,
-                årsInntekter = kombinertInntekt,
-                // TODO: Hvor langt tilbake i tid skal man hente uføregrader?
-                uføregrad = uføre?.vurderinger.orEmpty(),
-                yrkesskadevurdering = sykdomGrunnlag?.yrkesskadevurdering,
-                beregningGrunnlag = beregningVurdering,
-                registrerteYrkesskader = yrkesskadeGrunnlag?.yrkesskader,
-                inntektsPerioder = inntektGrunnlag.inntektPerMåned,
-            )
+            nedsettelsesDato = nedsettelsesdato,
+            årsInntekter = kombinertInntekt,
+            // TODO: Hvor langt tilbake i tid skal man hente uføregrader?
+            uføregrad = uføre?.vurderinger.orEmpty(),
+            yrkesskadevurdering = sykdomGrunnlag?.yrkesskadevurdering,
+            beregningGrunnlag = beregningVurdering,
+            registrerteYrkesskader = yrkesskadeGrunnlag?.yrkesskader,
+            inntektsPerioder = inntektGrunnlag.inntektPerMåned,
         )
 
         val beregningsgrunnlag = Beregning(input).beregneMedInput()

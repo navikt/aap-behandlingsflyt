@@ -17,6 +17,15 @@ import java.time.LocalDate
 import java.time.Year
 import java.util.*
 
+/*
+* @param nedsettelsesDato Dato da arbeidsevnen ble nedsatt.
+* @param årsInntekter Inntekter per år.
+* @param uføregrad Uføregrader bruker har hatt de siste tre årene.
+* @param yrkesskadevurdering Hvis ikke-null, en yrkesskadevurdering.
+* @param registrerteYrkesskader
+* @param beregningGrunnlag Se [no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningGrunnlag]
+* @param inntektsPerioder Inntekt per måned
+*/
 class Inntektsbehov(
     val nedsettelsesDato: LocalDate,
     val årsInntekter: Set<InntektPerÅr>,
@@ -26,17 +35,6 @@ class Inntektsbehov(
     val registrerteYrkesskader: Yrkesskader?,
     val beregningGrunnlag: BeregningGrunnlag?,
 ) {
-    constructor(
-        beregningInput: BeregningInput
-    ) : this(
-        nedsettelsesDato = beregningInput.nedsettelsesDato,
-        årsInntekter = beregningInput.årsInntekter,
-        inntektsPerioder = beregningInput.inntektsPerioder,
-        uføregrad = beregningInput.uføregrad,
-        yrkesskadevurdering = beregningInput.yrkesskadevurdering,
-        registrerteYrkesskader = beregningInput.registrerteYrkesskader,
-        beregningGrunnlag = beregningInput.beregningGrunnlag,
-    )
 
     private val log = LoggerFactory.getLogger(javaClass)
 
