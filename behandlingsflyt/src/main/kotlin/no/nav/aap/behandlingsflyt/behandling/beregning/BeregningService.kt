@@ -121,22 +121,14 @@ class BeregningService(
             val grunnlag11_19 = GrunnlagetForBeregningen(input.utledForOrdinær()).beregnGrunnlaget()
 
             val beregningMedEllerUtenUføre = if (input.finnesUføreData()) {
-                val inntekterFørYtterligereNedsattDato = input.utledForYtterligereNedsatt()
-
                 input.validerSummertInntekt()
-
-                val ytterligereNedsattArbeidsevneDato = requireNotNull(input.hentYtterligereNedsattArbeidsevneDato())
-
-                val uføreberegning = UføreBeregning(
+                UføreBeregning(
                     grunnlag = grunnlag11_19,
                     uføregrader = input.uføregrad,
-                    relevanteÅr = inntekterFørYtterligereNedsattDato,
+                    relevanteÅr = input.utledForYtterligereNedsatt(),
                     inntektsPerioder = input.inntektsPerioder,
-                    ytterligereNedsattÅr = Year.from(ytterligereNedsattArbeidsevneDato),
-                )
-
-                val grunnlagUføre = uføreberegning.beregnUføre()
-                grunnlagUføre
+                    ytterligereNedsattÅr = Year.from(requireNotNull(input.hentYtterligereNedsattArbeidsevneDato())),
+                ).beregnUføre()
             } else {
                 grunnlag11_19
             }
@@ -148,12 +140,11 @@ class BeregningService(
                         Year.from(input.skadetidspunkt()),
                         input.antattÅrligInntekt()
                     )
-                    val yrkesskaden = YrkesskadeBeregning(
+                    YrkesskadeBeregning(
                         grunnlag11_19 = beregningMedEllerUtenUføre,
                         antattÅrligInntekt = inntektPerÅr,
                         andelAvNedsettelsenSomSkyldesYrkesskaden = input.andelYrkesskade()
                     ).beregnYrkesskaden()
-                    yrkesskaden
                 } else {
                     beregningMedEllerUtenUføre
                 }
