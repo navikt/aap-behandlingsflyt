@@ -11,8 +11,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Aktivitetskort
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.AktivitetskortV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.AnnetRelevantDokument
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.FagsysteminfoBehovV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.KabalHendelse
@@ -20,8 +18,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Klage
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.KlageV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ManuellRevurdering
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ManuellRevurderingV0
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Meldekort
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.MeldekortV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Melding
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.NyÅrsakTilBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.NyÅrsakTilBehandlingV0
@@ -101,8 +97,7 @@ class HåndterMottattDokumentService(
         when (melding) {
             is KlageV0 -> {
                 val sak = sakService.hent(sakId)
-                val periode = utledPeriode(brevkategori, mottattTidspunkt, melding)
-                val vurderingsbehov = utledVurderingsbehov(brevkategori, melding, periode)
+                val vurderingsbehov = utledVurderingsbehov(brevkategori, melding)
 
                 val behandling = if (melding.behandlingReferanse != null) {
                     behandlingRepository.hent(BehandlingReferanse(UUID.fromString(melding.behandlingReferanse)))
@@ -150,8 +145,7 @@ class HåndterMottattDokumentService(
 
         val sak = sakService.hent(sakId)
         val årsakTilOpprettelse = utledÅrsakTilOpprettelse(brevkategori, melding)
-        val periode = utledPeriode(brevkategori, mottattTidspunkt, melding)
-        val vurderingsbehov = utledVurderingsbehov(brevkategori, melding, periode)
+        val vurderingsbehov = utledVurderingsbehov(brevkategori, melding)
 
         val (vurderingsbehovForAktivitetsplikt, vurderingsbehovForYtelsesbehandling) = vurderingsbehov.toSet()
             .partition { it.type in Vurderingsbehov.forAktivitetspliktbehandling() }
@@ -217,8 +211,7 @@ class HåndterMottattDokumentService(
     ) {
         log.info("Mottok dokument på sak-id $sakId, og referanse $referanse, med brevkategori $brevkategori.")
         val sak = sakService.hent(sakId)
-        val periode = utledPeriode(brevkategori, mottattTidspunkt, melding)
-        val vurderingsbehov = utledVurderingsbehov(brevkategori, melding, periode)
+        val vurderingsbehov = utledVurderingsbehov(brevkategori, melding)
         val årsakTilOpprettelse = utledÅrsakTilOpprettelse(brevkategori, melding)
 
         val opprettetBehandling = behandlingService.finnEllerOpprettBehandling(
@@ -278,13 +271,11 @@ class HåndterMottattDokumentService(
     fun håndterMottattDialogMelding(
         sakId: SakId,
         referanse: InnsendingReferanse,
-        mottattTidspunkt: LocalDateTime,
         brevkategori: InnsendingType,
         melding: Melding?
     ) {
         val sak = sakService.hent(sakId)
-        val periode = utledPeriode(brevkategori, mottattTidspunkt, melding)
-        val vurderingsbehov = utledVurderingsbehov(brevkategori, melding, periode)
+        val vurderingsbehov = utledVurderingsbehov(brevkategori, melding)
         log.info("Håndterer dialogmelding for ${sak.id}")
         val sisteYtelsesBehandling = behandlingService.finnSisteYtelsesbehandlingFor(sak.id)
 
@@ -539,8 +530,7 @@ class HåndterMottattDokumentService(
 
     private fun utledVurderingsbehov(
         brevkategori: InnsendingType,
-        melding: Melding?,
-        periode: Periode?
+        melding: Melding?
     ): List<VurderingsbehovMedPeriode> {
         return when (brevkategori) {
             InnsendingType.SØKNAD -> listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_SØKNAD))
@@ -558,14 +548,12 @@ class HåndterMottattDokumentService(
                 listOf(
                     VurderingsbehovMedPeriode(
                         type = Vurderingsbehov.MOTTATT_MELDEKORT,
-                        periode = periode
                     )
                 )
 
             InnsendingType.AKTIVITETSKORT -> listOf(
                 VurderingsbehovMedPeriode(
                     type = Vurderingsbehov.MOTTATT_AKTIVITETSMELDING,
-                    periode = periode
                 )
             )
 
@@ -595,37 +583,6 @@ class HåndterMottattDokumentService(
             InnsendingType.FAGSYSTEMINFO_BEHOV_HENDELSE,
             InnsendingType.SYKEPENGE_VEDTAK_HENDELSE,
             InnsendingType.UFØRE_VEDTAK_HENDELSE -> emptyList()
-        }
-    }
-
-    private fun utledPeriode(
-        innsendingType: InnsendingType,
-        mottattTidspunkt: LocalDateTime,
-        melding: Melding?,
-    ): Periode? {
-        return when (innsendingType) {
-            InnsendingType.SØKNAD -> Periode(
-                mottattTidspunkt.toLocalDate(),
-                mottattTidspunkt.plusYears(1).toLocalDate()
-            )
-
-            InnsendingType.AKTIVITETSKORT -> if (melding is Aktivitetskort) {
-                when (melding) {
-                    is AktivitetskortV0 -> Periode(fom = melding.fraOgMed, tom = melding.tilOgMed)
-                }
-
-            } else error("Må være aktivitetskort")
-
-            InnsendingType.MELDEKORT -> if (melding is Meldekort) {
-                when (melding) {
-                    is MeldekortV0 -> Periode(
-                        fom = melding.fom() ?: mottattTidspunkt.toLocalDate(),
-                        tom = melding.tom() ?: mottattTidspunkt.toLocalDate()
-                    )
-                }
-            } else error("Må være meldekort")
-
-            else -> null
         }
     }
 

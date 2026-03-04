@@ -54,7 +54,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettels
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
-import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
@@ -84,7 +83,7 @@ internal class BehandlingRepositoryImplTest {
         val skapt = dataSource.transaction { connection ->
             val sak = opprettSak(
                 connection,
-                Periode(LocalDate.now(), LocalDate.now().plusYears(3))
+                LocalDate.now()
             )
             val behandlingRepo = BehandlingRepositoryImpl(connection)
 
@@ -123,7 +122,7 @@ internal class BehandlingRepositoryImplTest {
         val skapt = dataSource.transaction { connection ->
             val sak = opprettSak(
                 connection,
-                Periode(LocalDate.now(), LocalDate.now().plusYears(3))
+                LocalDate.now()
             )
             val behandlingRepo = BehandlingRepositoryImpl(connection)
 
@@ -154,7 +153,7 @@ internal class BehandlingRepositoryImplTest {
         val (sak, førstegang, klage) = dataSource.transaction { connection ->
             val sak = opprettSak(
                 connection,
-                Periode(LocalDate.now(), LocalDate.now().plusYears(3))
+                LocalDate.now()
             )
             val behandlingRepo = BehandlingRepositoryImpl(connection)
 
@@ -207,7 +206,7 @@ internal class BehandlingRepositoryImplTest {
         val (sak, førstegang, _) = dataSource.transaction { connection ->
             val sak = opprettSak(
                 connection,
-                Periode(LocalDate.now(), LocalDate.now().plusYears(3))
+                LocalDate.now()
             )
             val behandlingRepo = BehandlingRepositoryImpl(connection)
             val vedtakRepo = VedtakRepositoryImpl(connection)
@@ -325,7 +324,6 @@ internal class BehandlingRepositoryImplTest {
                 vurderingsbehov = listOf(
                     VurderingsbehovMedPeriode(
                         type = Vurderingsbehov.MOTTATT_MELDEKORT,
-                        periode = sak.rettighetsperiode,
                     ),
                 ),
                 årsakTilOpprettelse = ÅrsakTilOpprettelse.MELDEKORT
@@ -336,7 +334,6 @@ internal class BehandlingRepositoryImplTest {
                 vurderingsbehov = listOf(
                     VurderingsbehovMedPeriode(
                         type = Vurderingsbehov.MOTTATT_MELDEKORT,
-                        periode = sak.rettighetsperiode,
                     ),
                 ),
                 årsakTilOpprettelse = ÅrsakTilOpprettelse.MELDEKORT
@@ -355,13 +352,11 @@ internal class BehandlingRepositoryImplTest {
                         ÅrsakTilOpprettelse.SØKNAD to listOf(
                             VurderingsbehovMedPeriode(
                                 type = Vurderingsbehov.MOTTATT_SØKNAD,
-                                periode = null
                             )
                         ),
                         ÅrsakTilOpprettelse.MELDEKORT to listOf(
                             VurderingsbehovMedPeriode(
                                 type = Vurderingsbehov.MOTTATT_MELDEKORT,
-                                periode = sak.rettighetsperiode,
                                 oppdatertTid = LocalDateTime.now()
                             )
                         )
@@ -426,7 +421,6 @@ internal class BehandlingRepositoryImplTest {
 
         assertThat(behandling.vurderingsbehov().map { it.type }).containsOnly(Vurderingsbehov.MOTTATT_SØKNAD)
 
-        val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(1))
         val oppdatertBehandling = dataSource.transaction {
             BehandlingRepositoryImpl(it).oppdaterVurderingsbehovOgÅrsak(
                 behandling,
@@ -434,7 +428,6 @@ internal class BehandlingRepositoryImplTest {
                     vurderingsbehov = listOf(
                         VurderingsbehovMedPeriode(
                             type = Vurderingsbehov.REVURDER_MEDLEMSKAP,
-                            periode = periode
                         )
                     ),
                     årsak = ÅrsakTilOpprettelse.SØKNAD
@@ -457,7 +450,6 @@ internal class BehandlingRepositoryImplTest {
                     vurderingsbehov = listOf(
                         VurderingsbehovMedPeriode(
                             type = Vurderingsbehov.REVURDER_MEDLEMSKAP,
-                            periode
                         )
                     ),
                     årsak = ÅrsakTilOpprettelse.SØKNAD
