@@ -74,9 +74,9 @@ class SjekkInstitusjonsOppholdJobbUtfører(
                                             .segmenter()
                                             .all { it.verdi.utfall == Utfall.IKKE_OPPFYLT }
                                     if (vurderingsbehovOgÅrsaker.any { it.vurderingsbehov.any { vurderingsbehovMedPeriode -> vurderingsbehovMedPeriode.type == Vurderingsbehov.INSTITUSJONSOPPHOLD } }) {
-                                        log.info("Vurderingsbehov for institusjonsopphold finnes allerede")
+                                        log.info("Vurderingsbehov for institusjonsopphold finnes allerede for ${sak.id}")
                                     } else if (alleIkkeOppfylt) {
-                                        log.info("Vurderingsbehov for institusjonsopphold opprettes ikke, da det er avslag overalt")
+                                        log.info("Vurderingsbehov for institusjonsopphold opprettes ikke, da det er avslag overalt for ${sak.id}")
                                     } else {
                                         log.info("Fant sak med institusjonsopphold ${sak.id}")
                                         val opprettInstitusjonsOppholdBehandling = opprettNyBehandling(sak)
@@ -157,6 +157,6 @@ class SjekkInstitusjonsOppholdJobbUtfører(
         /**
          * Kjøres en gang hver dag, slås av og på med Feature Toggle
          */
-        override val cron = CronExpression.createWithoutSeconds("0 11 * * *")
+        override val cron = CronExpression.createWithoutSeconds("0 3 * * *")
     }
 }
