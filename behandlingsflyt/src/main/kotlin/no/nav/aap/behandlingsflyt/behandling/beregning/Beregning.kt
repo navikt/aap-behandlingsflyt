@@ -41,17 +41,12 @@ class Beregning(
 
     private val log = LoggerFactory.getLogger(javaClass)
 
-    init {
-        if (finnesUføreData()) {
-            validerSummertInntekt()
-        }
-    }
-
     fun beregnBeregningsgrunnlag(): Beregningsgrunnlag {
         // 6G-begrensning ligger her samt gjennomsnitt
         val grunnlag11_19 = GrunnlagetForBeregningen(utledForOrdinær()).beregnGrunnlaget()
 
         val beregningMedEllerUtenUføre = if (finnesUføreData()) {
+            validerSummertInntekt()
             UføreBeregning(
                 grunnlag = grunnlag11_19,
                 uføregrader = uføregrad,
