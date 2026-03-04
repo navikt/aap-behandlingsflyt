@@ -54,7 +54,7 @@ class BeregningService(
             yrkesskadevurdering = sykdomGrunnlag?.yrkesskadevurdering,
             beregningGrunnlag = beregningVurdering,
             registrerteYrkesskader = yrkesskadeGrunnlag?.yrkesskader,
-            inntektsPerioder = inntektGrunnlag.inntektPerMåned,
+            inntektGrunnlag = inntektGrunnlag,
         )
 
         val beregningsgrunnlag = beregneMedInput(input)

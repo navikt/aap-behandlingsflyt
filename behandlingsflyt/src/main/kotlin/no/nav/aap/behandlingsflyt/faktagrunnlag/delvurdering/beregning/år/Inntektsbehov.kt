@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år
 
 import no.nav.aap.behandlingsflyt.behandling.beregning.Månedsinntekt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.Uføre
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.tilTidslinje
@@ -41,17 +42,17 @@ class Inntektsbehov(
 
     constructor(
         årsInntekter: Set<InntektPerÅr>,
-        inntektsPerioder: Set<Månedsinntekt>,
         uføregrad: Set<Uføre>,
         yrkesskadevurdering: Yrkesskadevurdering?,
         registrerteYrkesskader: Yrkesskader?,
         beregningGrunnlag: BeregningGrunnlag?,
+        inntektGrunnlag: InntektGrunnlag,
     ) : this(
         nedsettelsesDato = beregningGrunnlag?.tidspunktVurdering?.nedsattArbeidsevneEllerStudieevneDato
             ?: throw IllegalStateException("Nedsettelsesdato må være satt for beregning"),
         ytterligereNedsettelsesDato = beregningGrunnlag.tidspunktVurdering.ytterligereNedsattArbeidsevneDato,
         årsInntekter = årsInntekter,
-        inntektsPerioder = inntektsPerioder,
+        inntektsPerioder = inntektGrunnlag.inntektPerMåned,
         uføregrad = uføregrad,
         yrkesskadevurdering = yrkesskadevurdering,
         registrerteYrkesskader = registrerteYrkesskader,
