@@ -22,7 +22,7 @@ class HåndterUførevedtakService(
     private val trukketSøknadService: TrukketSøknadService,
     private val rettighetstypeService: RettighetstypeService,
     private val mottaDokumentService: MottaDokumentService,
-    private val prosesserBehandling: ProsesserBehandlingService,
+    private val prosesserBehandlingService: ProsesserBehandlingService,
 ) {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         behandlingService = BehandlingService(repositoryProvider, gatewayProvider),
@@ -62,7 +62,7 @@ class HåndterUførevedtakService(
                         beskrivelse = uførevedtak.beskrivelseVurderingsbehov()
                     )
                 ).åpenBehandling ?: error("Klarte ikke å finne eller opprette en behandling for sak $sakId")
-                prosesserBehandling.triggProsesserBehandling(
+                prosesserBehandlingService.triggProsesserBehandling(
                     sakId,
                     behandling.id,
                     vurderingsbehov = listOf(vurderingsbehov),
