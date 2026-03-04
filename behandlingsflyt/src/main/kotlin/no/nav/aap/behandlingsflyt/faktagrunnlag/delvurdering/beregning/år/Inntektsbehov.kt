@@ -41,17 +41,17 @@ class Inntektsbehov(
 ) {
 
     constructor(
-        årsInntekter: Set<InntektPerÅr>,
         uføregrad: Set<Uføre>,
         yrkesskadevurdering: Yrkesskadevurdering?,
         registrerteYrkesskader: Yrkesskader?,
         beregningGrunnlag: BeregningGrunnlag?,
         inntektGrunnlag: InntektGrunnlag,
+        manuelleInntekter: Set<ManuellInntektVurdering>,
     ) : this(
+        årsInntekter = kombinerInntektOgManuellInntekt(inntektGrunnlag.inntekter, manuelleInntekter),
         nedsettelsesDato = beregningGrunnlag?.tidspunktVurdering?.nedsattArbeidsevneEllerStudieevneDato
             ?: throw IllegalStateException("Nedsettelsesdato må være satt for beregning"),
         ytterligereNedsettelsesDato = beregningGrunnlag.tidspunktVurdering.ytterligereNedsattArbeidsevneDato,
-        årsInntekter = årsInntekter,
         inntektsPerioder = inntektGrunnlag.inntektPerMåned,
         uføregrad = uføregrad,
         yrkesskadevurdering = yrkesskadevurdering,

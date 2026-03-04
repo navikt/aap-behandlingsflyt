@@ -41,20 +41,14 @@ class BeregningService(
         val beregningVurdering = beregningVurderingRepository.hentHvisEksisterer(behandlingId)
         val yrkesskadeGrunnlag = yrkesskadeRepository.hentHvisEksisterer(behandlingId)
 
-        val kombinertInntekt =
-            Inntektsbehov.kombinerInntektOgManuellInntekt(
-                inntektGrunnlag.inntekter,
-                manuellInntektGrunnlag?.manuelleInntekter.orEmpty()
-            )
-
         val input = Inntektsbehov(
-            årsInntekter = kombinertInntekt,
             // TODO: Hvor langt tilbake i tid skal man hente uføregrader?
             uføregrad = uføre?.vurderinger.orEmpty(),
             yrkesskadevurdering = sykdomGrunnlag?.yrkesskadevurdering,
             beregningGrunnlag = beregningVurdering,
             registrerteYrkesskader = yrkesskadeGrunnlag?.yrkesskader,
             inntektGrunnlag = inntektGrunnlag,
+            manuelleInntekter = manuellInntektGrunnlag?.manuelleInntekter.orEmpty(),
         )
 
         val beregningsgrunnlag = beregneMedInput(input)
