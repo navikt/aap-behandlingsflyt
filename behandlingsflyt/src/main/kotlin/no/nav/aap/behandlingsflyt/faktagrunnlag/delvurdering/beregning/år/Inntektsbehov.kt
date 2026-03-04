@@ -158,6 +158,13 @@ class Inntektsbehov(
         return requireNotNull(yrkesskadevurdering?.andelAvNedsettelsen)
     }
 
+    fun årligAntattInntektVedYrkesskade(): InntektPerÅr {
+        return InntektPerÅr(
+            Year.from(skadetidspunkt()),
+            antattÅrligInntekt()
+        )
+    }
+
     companion object {
         fun utledAlleRelevanteÅr(
             nedsettelsesDato: LocalDate,
