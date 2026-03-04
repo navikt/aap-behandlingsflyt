@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag1
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagUføre
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.UføreInntekt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.UføreInntektPeriodisert
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år.Inntektsbehov
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.Uføre
@@ -24,6 +25,13 @@ class UføreBeregning(
     private val inntektsPerioder: Set<Månedsinntekt>,
     private val ytterligereNedsattÅr: Year,
 ) {
+    constructor(grunnlag11_19: Grunnlag11_19, inntektsbehov: Inntektsbehov): this(
+        grunnlag = grunnlag11_19,
+        uføregrader = inntektsbehov.uføregrad,
+        relevanteÅr = inntektsbehov.utledForYtterligereNedsatt(),
+        inntektsPerioder = inntektsbehov.inntektsPerioder,
+        ytterligereNedsattÅr = Year.from(requireNotNull(inntektsbehov.hentYtterligereNedsattArbeidsevneDato())),
+    )
 
     private val log = LoggerFactory.getLogger(javaClass)
 

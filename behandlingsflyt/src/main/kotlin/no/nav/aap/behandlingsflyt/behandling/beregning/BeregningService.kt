@@ -122,13 +122,7 @@ class BeregningService(
 
             val beregningMedEllerUtenUføre = if (input.finnesUføreData()) {
                 input.validerSummertInntekt()
-                UføreBeregning(
-                    grunnlag = grunnlag11_19,
-                    uføregrader = input.uføregrad,
-                    relevanteÅr = input.utledForYtterligereNedsatt(),
-                    inntektsPerioder = input.inntektsPerioder,
-                    ytterligereNedsattÅr = Year.from(requireNotNull(input.hentYtterligereNedsattArbeidsevneDato())),
-                ).beregnUføre()
+                UføreBeregning(grunnlag11_19, input).beregnUføre()
             } else {
                 grunnlag11_19
             }
