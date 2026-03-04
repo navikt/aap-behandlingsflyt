@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.Bruker
+import java.math.BigDecimal
 import java.time.Instant
 
 data class BarnepensjonGrunnlag(
@@ -18,7 +19,7 @@ data class BarnepensjonVurdering(
     val opprettet: Instant,
 ) {
     init {
-        if (Periode.overlapper(perioder.map { it.periode }.toSet())) {
+        if (Periode.overlapper(perioder.map { it.periode })) {
             throw IllegalArgumentException("Fant overlappende perioder")
         }
     }
@@ -26,5 +27,18 @@ data class BarnepensjonVurdering(
 
 data class BarnepensjonPeriode(
     val periode: Periode,
-    val månedbeløp: Beløp,
-)
+    val månedbeløp: Beløp
+) {
+    init {
+        if (månedbeløp.verdi < BigDecimal.ZERO) {
+            throw IllegalArgumentException("Månedbeløp kan ikke være negativt")
+        }
+        if ( periode.fom.dayOfMonth != 1) {
+            throw IllegalArgumentException("Periode må starte på første dag i måneden")
+        }
+        if (periode.tom.dayOfMonth != periode.tom.lengthOfMonth()) {
+            throw IllegalArgumentException("Periode må slutte på siste dag i måneden")
+        }
+
+    }
+}
