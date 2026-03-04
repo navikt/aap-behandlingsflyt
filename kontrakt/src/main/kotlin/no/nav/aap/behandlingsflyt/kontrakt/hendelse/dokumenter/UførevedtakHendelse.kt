@@ -48,7 +48,7 @@ public data class UførevedtakV0(
     val kilde: UførevedtakKilde,
 ) : Uførevedtak {
     public fun beskrivelseVurderingsbehov(): String {
-        val standardtekst = "Det er fattet et vedtak om uføre med status: ${resultat.name} fra $virkningsdato."
+        val standardtekst = "Det er fattet et vedtak om uføre med status: ${resultat.verdi} fra $virkningsdato."
         return when {
             avslag12_5 -> "$standardtekst Vedtaket er fattet med hjemmel i § 12-5."
             else -> standardtekst
@@ -60,7 +60,7 @@ public enum class UførevedtakKilde {
     PENSJON,
 }
 
-public enum class UførevedtakResultat(verdi: String) {
+public enum class UførevedtakResultat(public val verdi: String) {
     OPPH ("Opphør"),
     INNV ("Innvilgelse"),
     AVSL ("Avslag"),

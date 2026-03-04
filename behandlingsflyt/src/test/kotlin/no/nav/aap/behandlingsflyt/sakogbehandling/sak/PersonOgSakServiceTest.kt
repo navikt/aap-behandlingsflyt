@@ -2,7 +2,7 @@ package no.nav.aap.behandlingsflyt.sakogbehandling.sak
 
 import io.mockk.Called
 import io.mockk.checkUnnecessaryStub
-import io.mockk.clearAllMocks
+import io.mockk.clearMocks
 import io.mockk.confirmVerified
 import io.mockk.every
 import io.mockk.mockk
@@ -27,7 +27,6 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeAll
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -54,15 +53,11 @@ class PersonOgSakServiceTest {
         dataSource.close()
     }
 
-    @BeforeEach
-    fun beforeEach() {
-        clearAllMocks()
-    }
-
     @AfterEach
     fun afterEach() {
         confirmVerified(apiInternGateway, pdlGateway)
         checkUnnecessaryStub(pdlGateway, apiInternGateway)
+        clearMocks(pdlGateway, apiInternGateway)
     }
 
     @Nested
@@ -346,7 +341,7 @@ class PersonOgSakServiceTest {
             assertThat(funnetSaker.first().id).isEqualTo(opprettetSak.id)
 
             verify(exactly = 2) { pdlGateway.hentAlleIdenterForPerson(ident) }
-            verify(exactly = 1) { apiInternGateway.hentArenaStatus(setOf(ident.identifikator))  }
+            verify(exactly = 1) { apiInternGateway.hentArenaStatus(setOf(ident.identifikator)) }
         }
 
         @Test

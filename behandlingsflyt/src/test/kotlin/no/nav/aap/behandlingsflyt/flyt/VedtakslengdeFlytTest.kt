@@ -948,7 +948,7 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(VedtakslengdeFlytUnlea
                 assertThat(vedtakslengdeGrunnlag?.vurdering?.utvidetMed).isEqualTo(ÅrMedHverdager.ANDRE_ÅR)
             }
             .fattVedtak()
-            .løsVedtaksbrev(TypeBrev.VEDTAK_ENDRING)
+            .løsVedtaksbrev(TypeBrev.VEDTAK_11_17)
 
         // Gjør om fra arbeidssøker tilbake til bistandsbehov - skal behoholde sluttdatoen
         sak.opprettManuellRevurdering(
