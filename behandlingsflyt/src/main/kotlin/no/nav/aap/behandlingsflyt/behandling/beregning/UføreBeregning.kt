@@ -13,6 +13,7 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.Prosent
 import org.slf4j.LoggerFactory
+import java.time.LocalDate
 import java.time.Year
 import java.time.YearMonth
 
@@ -20,10 +21,11 @@ import java.time.YearMonth
 class UføreBeregning(
     private val grunnlag: Grunnlag11_19,
     private val uføregrader: Set<Uføre>,
-    private val relevanteÅr: Set<Year>,
     private val inntektsPerioder: Set<Månedsinntekt>,
-    private val ytterligereNedsattÅr: Year,
+    ytterligereNedsattDato: LocalDate,
 ) {
+    private val relevanteÅr = Beregning.treÅrForutFor(ytterligereNedsattDato)
+    private val ytterligereNedsattÅr = Year.from(ytterligereNedsattDato)
 
     private val log = LoggerFactory.getLogger(javaClass)
 

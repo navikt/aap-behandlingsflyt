@@ -50,9 +50,8 @@ class Beregning(
             UføreBeregning(
                 grunnlag = grunnlag11_19,
                 uføregrader = uføregrad,
-                relevanteÅr = treÅrForutFor(requireNotNull(ytterligereNedsettelsesDato)),
+                ytterligereNedsattDato = requireNotNull(ytterligereNedsettelsesDato),
                 inntektsPerioder = inntektsPerioder,
-                ytterligereNedsattÅr = Year.from(ytterligereNedsettelsesDato),
             ).beregnUføre()
         } else {
             grunnlag11_19
@@ -215,7 +214,7 @@ class Beregning(
                 .orEmpty()
         }
 
-        private fun treÅrForutFor(nedsettelsesdato: LocalDate): SortedSet<Year> {
+        fun treÅrForutFor(nedsettelsesdato: LocalDate): SortedSet<Year> {
             val nedsettelsesår = Year.from(nedsettelsesdato)
             return 3.downTo(1L).map(nedsettelsesår::minusYears).toSortedSet()
         }
