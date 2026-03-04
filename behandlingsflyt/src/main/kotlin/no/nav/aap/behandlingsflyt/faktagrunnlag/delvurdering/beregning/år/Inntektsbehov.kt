@@ -7,6 +7,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.Uføre
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.tilTidslinje
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.Yrkesskader
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.ManuellInntektVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.YrkesskadeBeløpVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Yrkesskadevurdering
 import no.nav.aap.komponenter.verdityper.Beløp
@@ -217,6 +218,42 @@ class Inntektsbehov(
             val nedsettelsesår = Year.from(nedsettelsesdato)
             return 3.downTo(1L).map(nedsettelsesår::minusYears).toSortedSet()
         }
+
+        fun kombinerInntektOgManuellInntekt(
+            inntekter: Set<InntektPerÅr>,
+            manuelleInntekter: Set<ManuellInntektVurdering>
+        ): Set<InntektPerÅr> {
+            val manuellePGIByÅr = manuelleInntekter
+                .tilÅrInntekt { it.belop }
+
+            val manuellEOSByÅr = manuelleInntekter
+                .tilÅrInntekt { it.eøsBeløp }
+
+            val inntekterByÅr = inntekter
+                .groupBy { it.år }
+                .mapValues {
+                    require(it.value.size == 1)
+                    it.value.first()
+                }
+
+            val kombinerteInntekter =
+                (manuellePGIByÅr + inntekterByÅr).mapValues { (år, inntektPerÅr) ->
+                    val eos = manuellEOSByÅr[år]?.beløp ?: Beløp(BigDecimal.ZERO)
+                    inntektPerÅr.copy(beløp = inntektPerÅr.beløp.pluss(eos))
+                }.values.toSet()
+
+            return kombinerteInntekter
+        }
+
+        private fun Collection<ManuellInntektVurdering>.tilÅrInntekt(selector: (ManuellInntektVurdering) -> Beløp?): Map<Year, InntektPerÅr> {
+            return this.filter { selector(it) != null }
+                .map { InntektPerÅr(it.år, selector(it)!!, it) }
+                .groupBy { it.år }
+                .mapValues {
+                    it.value.single()
+                }
+        }
+
     }
 }
 
