@@ -126,7 +126,7 @@ class InformasjonskravGrunnlagImpl(
         val informasjonskravMedInput = sekvensiellKlargjøring.associate { (_, krav, input) -> krav.navn to input } +
                 mapOf(SøknadInformasjonskrav.navn to IngenInput)
 
-        log.info("Registrerer oppdateringer fra informasjonskrav")
+        log.info("Registrerer oppdateringer fra informasjonskrav. Endrede: ${endredeInformasjonskrav.joinToString()}")
         informasjonskravRepository.registrerOppdateringer(
             kontekst.sakId,
             kontekst.behandlingId,

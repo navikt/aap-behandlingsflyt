@@ -269,7 +269,7 @@ class SamordningPeriodeSammenlignerTest {
     private fun nySak(): Sak {
         return opprettInMemorySak(
             ident(),
-            Periode(LocalDate.now(), LocalDate.now().plusYears(1))
+            LocalDate.now(),
         )
     }
 
