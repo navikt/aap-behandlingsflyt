@@ -74,7 +74,7 @@ class BeregningsGrunnlagApiTest {
             inntektsPerioder = inntektsPerioder(årsInntekter)
         )
 
-        val beregning = Beregning(input).beregneMedInput()
+        val beregning = BeregningService.beregneMedInput(input)
         val behandlingOpprettet = LocalDate.of(2024, 1, 1)
 
         val res = beregningDTO(beregning, behandlingOpprettet)
@@ -142,7 +142,7 @@ class BeregningsGrunnlagApiTest {
             inntektsPerioder = inntektsPerioder(årsInntekter)
         )
 
-        val beregning = Beregning(input).beregneMedInput()
+        val beregning = BeregningService.beregneMedInput(input)
         val behandlingOpprettet = LocalDate.of(2024, 1, 1)
 
         val res = beregningDTO(beregning, behandlingOpprettet)

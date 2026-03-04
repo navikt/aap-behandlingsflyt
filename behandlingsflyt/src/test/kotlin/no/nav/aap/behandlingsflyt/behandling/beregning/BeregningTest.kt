@@ -49,7 +49,7 @@ class BeregningTest {
             inntektsPerioder = inntektsPerioder(årsInntekter)
         )
 
-        val beregning = Beregning(input).beregneMedInput()
+        val beregning = BeregningService.beregneMedInput(input)
 
         assertThat(beregning.grunnlaget()).isEqualTo(GUnit("4.5543977264"))
     }
@@ -79,7 +79,7 @@ class BeregningTest {
             inntektsPerioder = inntektsPerioder(årsInntekter)
         )
 
-        val beregning = Beregning(input).beregneMedInput()
+        val beregning = BeregningService.beregneMedInput(input)
         assertThat(beregning.grunnlaget()).isEqualTo(GUnit("6"))
     }
 
@@ -114,7 +114,7 @@ class BeregningTest {
             inntektsPerioder = inntektsPerioder(årsInntekter)
         )
 
-        val beregning = Beregning(input).beregneMedInput()
+        val beregning = BeregningService.beregneMedInput(input)
         assertThat(beregning).isInstanceOf(Grunnlag11_19::class.java)
     }
 
@@ -168,7 +168,7 @@ class BeregningTest {
             inntektsPerioder = inntektsPerioder(inntekterPerÅr)
         )
 
-        val beregning = Beregning(input).beregneMedInput()
+        val beregning = BeregningService.beregneMedInput(input)
         // Riktig svar bør være: 0.4*(500000/98866) + 0.6*4 = 4,4229401412
         // Forklaring: første ledd kommer fra yrkesskade (justert til GUnit) pluss gjennomsnitt av inntekt
         // siste 3 år ganget med 0.6 (arbeidsgrad).
@@ -225,7 +225,7 @@ class BeregningTest {
             inntektsPerioder = inntektsPerioder(årsInntekter)
         )
 
-        val beregning = Beregning(input).beregneMedInput()
+        val beregning = BeregningService.beregneMedInput(input)
         beregning as GrunnlagYrkesskade
         beregning.underliggende() as GrunnlagUføre
 
@@ -281,8 +281,8 @@ class BeregningTest {
             inntektsPerioder = inntektsPerioder(årsInntekter)
         )
 
-        val beregning = Beregning(inputMedNullUføregrad).beregneMedInput()
-        val beregningUtenUføregrad = Beregning(inputMedUføreGradIkkeOppgitt).beregneMedInput()
+        val beregning = BeregningService.beregneMedInput(inputMedNullUføregrad)
+        val beregningUtenUføregrad = BeregningService.beregneMedInput(inputMedUføreGradIkkeOppgitt)
 
         assertThat(beregning.grunnlaget().verdi()).isCloseTo(
             beregningUtenUføregrad.grunnlaget().verdi(),
@@ -311,7 +311,7 @@ class BeregningTest {
             årsInntekter = inntektPerÅr,
             inntektsPerioder = inntektsPerioder(inntektPerÅr)
         )
-        val beregning = Beregning(input).beregneMedInput()
+        val beregning = BeregningService.beregneMedInput(input)
         val actual = beregning.grunnlaget()
 
         assertThat(actual).isEqualTo(forventetGrunnlag)

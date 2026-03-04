@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt
 
-import no.nav.aap.behandlingsflyt.behandling.beregning.Beregning
+import no.nav.aap.behandlingsflyt.behandling.beregning.BeregningService
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.BeregnTilkjentYtelseService
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggGrunnlag
@@ -111,7 +111,7 @@ fun tilInput(csvLine: CSVLine): Pair<Inntektsbehov, Fødselsdato> {
 }
 
 fun beregnForInput(inntektsbehov: Inntektsbehov, fødselsdato: Fødselsdato): Triple<Year, GUnit, Double> {
-    val beregnet = Beregning(inntektsbehov).beregneMedInput()
+    val beregnet = BeregningService.beregneMedInput(inntektsbehov)
 
     val tilkjent = BeregnTilkjentYtelseService(
         TilkjentYtelseGrunnlag(

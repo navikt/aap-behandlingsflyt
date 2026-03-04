@@ -64,7 +64,7 @@ class BeregningService(
             inntektsPerioder = inntektGrunnlag.inntektPerMåned,
         )
 
-        val beregningsgrunnlag = Beregning(input).beregneMedInput()
+        val beregningsgrunnlag = beregneMedInput(input)
 
         beregningsgrunnlagRepository.lagre(behandlingId, beregningsgrunnlag)
         return beregningsgrunnlag
@@ -112,5 +112,50 @@ class BeregningService(
             .mapValues {
                 it.value.single()
             }
+    }
+
+    companion object {
+
+        fun beregneMedInput(input: Inntektsbehov): Beregningsgrunnlag {
+            // 6G-begrensning ligger her samt gjennomsnitt
+            val grunnlag11_19 = GrunnlagetForBeregningen(input.utledForOrdinær()).beregnGrunnlaget()
+
+            val beregningMedEllerUtenUføre = if (input.finnesUføreData()) {
+                val inntekterFørYtterligereNedsattDato = input.utledForYtterligereNedsatt()
+
+                input.validerSummertInntekt()
+
+                val uføreberegning = UføreBeregning(
+                    grunnlag = grunnlag11_19,
+                    uføregrader = input.uføregrad,
+                    relevanteÅr = inntekterFørYtterligereNedsattDato,
+                    inntektsPerioder = input.inntektsPerioder,
+                )
+                val ytterligereNedsattArbeidsevneDato = requireNotNull(input.hentYtterligereNedsattArbeidsevneDato())
+
+                val grunnlagUføre = uføreberegning.beregnUføre(Year.from(ytterligereNedsattArbeidsevneDato))
+                grunnlagUføre
+            } else {
+                grunnlag11_19
+            }
+
+            // §11-22 Arbeidsavklaringspenger ved yrkesskade
+            val beregningMedEllerUtenUføreMedEllerUtenYrkesskade =
+                if (input.yrkesskadeVurderingEksisterer()) {
+                    val inntektPerÅr = InntektPerÅr(
+                        Year.from(input.skadetidspunkt()),
+                        input.antattÅrligInntekt()
+                    )
+                    val yrkesskaden = YrkesskadeBeregning(
+                        grunnlag11_19 = beregningMedEllerUtenUføre,
+                        antattÅrligInntekt = inntektPerÅr,
+                        andelAvNedsettelsenSomSkyldesYrkesskaden = input.andelYrkesskade()
+                    ).beregnYrkesskaden()
+                    yrkesskaden
+                } else {
+                    beregningMedEllerUtenUføre
+                }
+            return beregningMedEllerUtenUføreMedEllerUtenYrkesskade
+        }
     }
 }
