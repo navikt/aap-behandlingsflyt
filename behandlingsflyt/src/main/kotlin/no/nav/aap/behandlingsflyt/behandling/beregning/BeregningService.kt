@@ -66,7 +66,6 @@ class BeregningService(
             val grunnlag11_19 = GrunnlagetForBeregningen(input.utledForOrdinær()).beregnGrunnlaget()
 
             val beregningMedEllerUtenUføre = if (input.finnesUføreData()) {
-                input.validerSummertInntekt()
                 UføreBeregning(grunnlag11_19, input).beregnUføre()
             } else {
                 grunnlag11_19

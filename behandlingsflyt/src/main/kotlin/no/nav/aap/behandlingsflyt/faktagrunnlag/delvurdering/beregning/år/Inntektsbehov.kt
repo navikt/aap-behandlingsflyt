@@ -61,6 +61,12 @@ class Inntektsbehov(
 
     private val log = LoggerFactory.getLogger(javaClass)
 
+    init {
+        if (finnesUføreData()) {
+            validerSummertInntekt()
+        }
+    }
+
     /**
      * Mengde med inntekt per år i de tre foregående årene fra nedsettelsesdatoen.
      */
