@@ -171,9 +171,9 @@ class StatistikkMetoder(
     private fun relatertBehandling(behandling: Behandling): UUID? {
         return when (behandling.typeBehandling()) {
             TypeBehandling.Førstegangsbehandling -> null
-            TypeBehandling.Revurdering -> if (behandling.forrigeBehandlingId != null) behandlingRepository.hent(
+            TypeBehandling.Revurdering ->
                 behandling.forrigeBehandlingId
-            ).referanse.referanse else null
+                    ?.let { behandlingRepository.hent(it).referanse.referanse }
 
             TypeBehandling.Tilbakekreving -> TODO()
             TypeBehandling.Klage -> {

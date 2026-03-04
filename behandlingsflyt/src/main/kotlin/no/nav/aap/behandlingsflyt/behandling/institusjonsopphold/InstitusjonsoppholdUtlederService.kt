@@ -432,7 +432,7 @@ class InstitusjonsoppholdUtlederService(
         val helsevurderinger: List<HelseinstitusjonVurdering>
         if (basertPåVurderingerFørDenneBehandlingen) {
             val forrigeGrunnlag =
-                behandling.forrigeBehandlingId?.let { institusjonsoppholdRepository.hentHvisEksisterer(behandling.forrigeBehandlingId) }
+                behandling.forrigeBehandlingId?.let { institusjonsoppholdRepository.hentHvisEksisterer(it) }
             soningsvurderinger = forrigeGrunnlag?.soningsVurderinger?.vurderinger.orEmpty()
             helsevurderinger = forrigeGrunnlag?.helseoppholdvurderinger?.vurderinger.orEmpty()
         } else {
