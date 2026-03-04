@@ -67,8 +67,7 @@ class BeregningService(
             )
         )
 
-        val beregning = Beregning(input)
-        val beregningsgrunnlag = beregning.beregneMedInput()
+        val beregningsgrunnlag = Beregning(input).beregneMedInput()
 
         beregningsgrunnlagRepository.lagre(behandlingId, beregningsgrunnlag)
         return beregningsgrunnlag
