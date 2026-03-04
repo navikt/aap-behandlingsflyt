@@ -157,7 +157,7 @@ class BarnInformasjonskrav private constructor(
         return if (!harEndringer(barnGrunnlag, registerBarn)) {
             emptyList()
         } else {
-            listOf(VurderingsbehovMedPeriode(BARNETILLEGG, null))
+            listOf(VurderingsbehovMedPeriode(BARNETILLEGG))
         }
     }
 

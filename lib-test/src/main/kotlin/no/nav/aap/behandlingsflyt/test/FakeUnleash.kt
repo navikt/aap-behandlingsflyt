@@ -33,7 +33,6 @@ open class FakeUnleashBaseWithDefaultDisabled(
 object LokalUnleash : FakeUnleashBase(
     mapOf(
         BehandlingsflytFeature.IngenValidering to true,
-        BehandlingsflytFeature.NyBrevtype11_17 to true,
         BehandlingsflytFeature.NyBrevbyggerV3 to false,
         BehandlingsflytFeature.LagreVedtakIFatteVedtak to true,
         BehandlingsflytFeature.Under18 to true,
@@ -51,6 +50,8 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.BekreftVurderingerOppfolging to true,
         BehandlingsflytFeature.LagreStansOgOpphor to true,
         BehandlingsflytFeature.MigrerStansOgOpphor to true,
+        BehandlingsflytFeature.RettTilAvslagHvisNorgeIkkeKompetentStat to true,
+        BehandlingsflytFeature.SamordningBarnepensjon to true,
         )
 )
 

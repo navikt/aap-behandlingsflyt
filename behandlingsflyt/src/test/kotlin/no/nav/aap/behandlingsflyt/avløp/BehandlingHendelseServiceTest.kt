@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.avløp
 
+import io.mockk.checkUnnecessaryStub
 import io.mockk.every
-import io.mockk.junit5.MockKExtension
 import io.mockk.mockk
 import io.mockk.verify
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
@@ -26,22 +26,25 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.JobbInput
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.ExtendWith
 import java.time.LocalDate
 import java.util.*
 
-@ExtendWith(MockKExtension::class)
-@MockKExtension.CheckUnnecessaryStub
-@MockKExtension.RequireParallelTesting
 class BehandlingHendelseServiceTest {
+    private val sakService = mockk<SakService>()
+    private val flytJobbRepository = mockk<FlytJobbRepository>()
+    private val mottattDokumentRepository = mockk<MottattDokumentRepository>()
+    private val pipRepository = mockk<PipService>()
+
+    @AfterEach
+    fun afterEach() {
+        checkUnnecessaryStub(sakService, flytJobbRepository, mottattDokumentRepository, pipRepository)
+    }
+
     @Test
     fun `verifiser at FlytJobbRepository blir kalt med riktige argumenter`() {
         // SETUP
-        val sakService = mockk<SakService>()
-        val flytJobbRepository = mockk<FlytJobbRepository>()
-        val mottattDokumentRepository = mockk<MottattDokumentRepository>()
-        val pipRepository = mockk<PipService>()
 
         every { flytJobbRepository.leggTil(any()) } returns Unit
 

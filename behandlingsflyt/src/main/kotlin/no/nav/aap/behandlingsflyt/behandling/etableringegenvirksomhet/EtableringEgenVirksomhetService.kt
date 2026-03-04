@@ -60,7 +60,8 @@ class EtableringEgenVirksomhetService(
             }
         ) {
             return VirksomhetEtableringIkkeGyldig(
-                "Vurderte perioder må falle innen en periode med oppfylt 11-5 & 11-6b")
+                "Vurderte perioder må falle innen en periode med oppfylt 11-5 & 11-6b"
+            )
         }
 
         val førsteMuligeDato = gyldighetPeriode.first().fom
@@ -80,12 +81,9 @@ class EtableringEgenVirksomhetService(
         val alleUtviklingsPerioder = alleVurderinger.flatMap { it.utviklingsPerioder }
         val alleOppstartsPerioder = alleVurderinger.flatMap { it.oppstartsPerioder }
 
-        alleUtviklingsPerioder.maxOfOrNull { uPeriode -> uPeriode.tom }.let {
-            if (alleOppstartsPerioder.any { oPeriode -> oPeriode.fom.isBefore(it) }) {
-                return VirksomhetEtableringIkkeGyldig(
-                    "Oppstartsperioder kan ikke ligge før en utviklingsperiode"
-                )
-            }
+        val sisteUtviklingsPeriodeTom = alleUtviklingsPerioder.maxOfOrNull { it.tom }
+        if (sisteUtviklingsPeriodeTom != null && alleOppstartsPerioder.any { it.fom.isBefore(sisteUtviklingsPeriodeTom) }) {
+            return VirksomhetEtableringIkkeGyldig("Oppstartsperioder kan ikke ligge før en utviklingsperiode")
         }
 
         val bruktUtviklingsDager =

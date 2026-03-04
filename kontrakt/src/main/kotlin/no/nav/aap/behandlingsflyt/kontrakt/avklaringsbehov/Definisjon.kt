@@ -316,6 +316,13 @@ public enum class Definisjon(
         løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL),
         kreverToTrinn = true
     ),
+    SAMORDNING_BARNEPENSJON(
+        kode = AvklaringsbehovKode.`5036`,
+        type = BehovType.MANUELT_FRIVILLIG,
+        løsesISteg = StegType.SAMORDNING_BARNEPENSJON,
+        løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL),
+        kreverToTrinn = true
+    ),
 
     @Deprecated("Ikke i bruk")
     EFFEKTUER_11_7(

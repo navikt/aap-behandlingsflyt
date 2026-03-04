@@ -27,8 +27,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.Perio
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.SykdomsvurderingLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeRepository
 import no.nav.aap.behandlingsflyt.flyt.TestSøknader.SØKNAD_INGEN_MEDLEMSKAP
+import no.nav.aap.behandlingsflyt.integrasjon.defaultGatewayProvider
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
-import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.prosessering.OpprettJobbUtvidVedtakslengdeJobbUtfører
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.underveis.UnderveisRepositoryImpl
@@ -489,12 +489,17 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(VedtakslengdeFlytUnlea
 
         dataSource.transaction { connection ->
             val underveisRepository = UnderveisRepositoryImpl(connection)
-            val behandlingRepository = BehandlingRepositoryImpl(connection)
             val vedtakslengdeRepository = VedtakslengdeRepositoryImpl(connection)
-            val behandling = behandlingRepository.finnSisteOpprettedeBehandlingFor(sak.id, listOf(TypeBehandling.Førstegangsbehandling))
+            val behandling = BehandlingService(
+                postgresRepositoryRegistry.provider(connection),
+                defaultGatewayProvider { }).finnSisteYtelsesbehandlingFor(sak.id)
             val underveisGrunnlag = underveisRepository.hentHvisEksisterer(behandling!!.id)
             val sisteUnderveisperiode = underveisGrunnlag?.perioder?.maxByOrNull { it.periode.tom }
-            assertThat(sisteUnderveisperiode?.periode?.tom).isEqualTo(vedtakslengdeRepository.hentHvisEksisterer(behandling.id)!!.vurdering.sluttdato)
+            assertThat(sisteUnderveisperiode?.periode?.tom).isEqualTo(
+                vedtakslengdeRepository.hentHvisEksisterer(
+                    behandling.id
+                )!!.vurdering.sluttdato
+            )
         }
 
         /* Gir AAP som arbeidssøker. */
@@ -623,7 +628,7 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(VedtakslengdeFlytUnlea
 
 
        dataSource.transaction { connection ->
-            val førstegangsbehandling = BehandlingRepositoryImpl(connection).finnFørstegangsbehandling(sak.id)!!
+            val førstegangsbehandling = BehandlingRepositoryImpl(connection).finnFørstegangsbehandling(sak.id)
 
             val underveisGrunnlag = UnderveisRepositoryImpl(connection).hentHvisEksisterer(førstegangsbehandling.id)
             val sisteUnderveisperiode = underveisGrunnlag?.perioder?.maxBy { it.periode.fom }!!
@@ -710,7 +715,7 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(VedtakslengdeFlytUnlea
 
 
         val sluttdatoFørstegangsbehandling = dataSource.transaction { connection ->
-            val førstegangsbehandling = BehandlingRepositoryImpl(connection).finnFørstegangsbehandling(sak.id)!!
+            val førstegangsbehandling = BehandlingRepositoryImpl(connection).finnFørstegangsbehandling(sak.id)
 
             val underveisGrunnlag = UnderveisRepositoryImpl(connection).hentHvisEksisterer(førstegangsbehandling.id)
             val sisteUnderveisperiode = underveisGrunnlag?.perioder?.maxBy { it.periode.fom }!!
@@ -943,7 +948,7 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(VedtakslengdeFlytUnlea
                 assertThat(vedtakslengdeGrunnlag?.vurdering?.utvidetMed).isEqualTo(ÅrMedHverdager.ANDRE_ÅR)
             }
             .fattVedtak()
-            .løsVedtaksbrev(TypeBrev.VEDTAK_ENDRING)
+            .løsVedtaksbrev(TypeBrev.VEDTAK_11_17)
 
         // Gjør om fra arbeidssøker tilbake til bistandsbehov - skal behoholde sluttdatoen
         sak.opprettManuellRevurdering(

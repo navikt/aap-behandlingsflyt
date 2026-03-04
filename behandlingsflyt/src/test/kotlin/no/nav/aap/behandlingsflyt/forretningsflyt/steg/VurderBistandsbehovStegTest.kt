@@ -99,6 +99,7 @@ class VurderBistandsbehovStegTest {
                             vurdertAv = Bruker("Z00000"),
                             opprettet = Instant.now(),
                             vurdertIBehandling = behandling.id,
+                            diagnose = null
                         )
                     )
                 )

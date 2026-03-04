@@ -3,51 +3,45 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
-import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 
-class RefusjonkravSteg private constructor(
-    private val refusjonkravRepository: RefusjonkravRepository,
+class SamordningBarnepensjonSteg(
+    private val avklaringsbehovService: AvklaringsbehovService,
     private val tidligereVurderinger: TidligereVurderinger,
-    private val avklaringsbehovService: AvklaringsbehovService
+    private val unleashGateway: UnleashGateway
 ) : BehandlingSteg {
-    constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
-        refusjonkravRepository = repositoryProvider.provide(),
-        tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
-        avklaringsbehovService = AvklaringsbehovService(repositoryProvider)
-    )
-
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        val grunnlag = lazy { refusjonkravRepository.hentHvisEksisterer(kontekst.behandlingId) }
-
+        if (unleashGateway.isDisabled(BehandlingsflytFeature.SamordningBarnepensjon)) {
+            return Fullført
+        }
+        
         avklaringsbehovService.oppdaterAvklaringsbehov(
-            definisjon = Definisjon.REFUSJON_KRAV,
+            definisjon = Definisjon.SAMORDNING_BARNEPENSJON,
             vedtakBehøverVurdering = {
                 when (kontekst.vurderingType) {
-                    VurderingType.FØRSTEGANGSBEHANDLING -> {
+                    VurderingType.FØRSTEGANGSBEHANDLING,
+                    VurderingType.REVURDERING -> {
                         when {
-                            kontekst.behandlingType == TypeBehandling.Førstegangsbehandling -> !tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(
-                                kontekst,
-                                type()
-                            )
-
-                            else -> false
+                            tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, type()) -> false
+                            kontekst.vurderingsbehovRelevanteForSteg.isEmpty() -> false
+                            else -> Vurderingsbehov.REVURDER_SAMORDNING_BARNEPENSJON in kontekst.vurderingsbehovRelevanteForSteg
                         }
                     }
 
                     VurderingType.UTVID_VEDTAKSLENGDE,
                     VurderingType.MIGRER_RETTIGHETSPERIODE,
-                    VurderingType.REVURDERING,
                     VurderingType.MELDEKORT,
                     VurderingType.AUTOMATISK_BREV,
                     VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
@@ -55,16 +49,8 @@ class RefusjonkravSteg private constructor(
                     VurderingType.IKKE_RELEVANT -> false
                 }
             },
-            erTilstrekkeligVurdert = {
-                grunnlag.value != null
-            },
-            tilbakestillGrunnlag = {
-                kontekst.forrigeBehandlingId
-                    ?.let { grunnlag.value }
-                    ?.let {
-                        refusjonkravRepository.lagre(kontekst.sakId, kontekst.behandlingId, it)
-                    }
-            },
+            erTilstrekkeligVurdert = { true },
+            tilbakestillGrunnlag = { },
             kontekst = kontekst
         )
 
@@ -76,11 +62,15 @@ class RefusjonkravSteg private constructor(
             repositoryProvider: RepositoryProvider,
             gatewayProvider: GatewayProvider
         ): BehandlingSteg {
-            return RefusjonkravSteg(repositoryProvider, gatewayProvider)
+            return SamordningBarnepensjonSteg(
+                avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
+                tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
+                unleashGateway = gatewayProvider.provide()
+            )
         }
 
         override fun type(): StegType {
-            return StegType.REFUSJON_KRAV
+            return StegType.SAMORDNING_BARNEPENSJON
         }
     }
 }

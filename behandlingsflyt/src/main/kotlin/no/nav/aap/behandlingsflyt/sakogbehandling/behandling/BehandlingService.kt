@@ -1,14 +1,11 @@
 package no.nav.aap.behandlingsflyt.sakogbehandling.behandling
 
-import java.time.LocalDate
-import java.time.LocalDateTime
 import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingService
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopierer
 import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopiererImpl
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
@@ -17,9 +14,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
-import no.nav.aap.komponenter.type.Periode
-import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.lookup.repository.RepositoryProvider
+import java.time.LocalDateTime
 
 class BehandlingService(
     private val grunnlagKopierer: GrunnlagKopierer,
@@ -45,31 +41,8 @@ class BehandlingService(
      * Ytelsesbehandling betyr førstegangsbehandling eller revurdering.
      */
     fun finnSisteYtelsesbehandlingFor(sakId: SakId): Behandling? {
-        /* Finn siste ytelsesbehandling basert på `forrigeBehandlingId`-kjeden.
-         * Behandlingene er i praksis en singly-linked list. Pekerne går "feil vei",
-         * så vi regner ut bakover-pekerne.
-        **/
         val ytelsesbehandlinger = behandlingRepository.hentAlleFor(sakId, TypeBehandling.ytelseBehandlingstyper())
-        val nesteId = mutableMapOf<BehandlingId, BehandlingId>()
-        for (behandling in ytelsesbehandlinger) {
-            // Hopp over hvis behandlingen er avbrutt
-            if (avbrytRevurderingService.revurderingErAvbrutt(behandling.id)) {
-                continue
-            }
-
-            if (behandling.forrigeBehandlingId != null) {
-                nesteId[behandling.forrigeBehandlingId] = behandling.id
-            }
-        }
-
-        var behandling =
-            ytelsesbehandlinger.firstOrNull { !avbrytRevurderingService.revurderingErAvbrutt(it.id) }?.id
-                ?: return null
-
-        while (nesteId[behandling] != null) {
-            behandling = nesteId[behandling]!!
-        }
-        return ytelsesbehandlinger.find { it.id == behandling }
+        return ytelsesbehandlinger.sortedWith(comparator(ytelsesbehandlinger)).lastOrNull()
     }
 
     fun finnBehandlingMedSisteFattedeVedtak(sakId: SakId): BehandlingMedVedtak? {
@@ -375,6 +348,38 @@ class BehandlingService(
         val flyt = behandling.flyt()
         if (!flyt.skalOppdatereFaktagrunnlag()) {
             throw IllegalStateException("Behandlingen[${behandling.referanse}] kan ikke motta opplysinger nå, avventer fullføring av steg som ligger etter at oppdatering av faktagrunnlag opphører.")
+        }
+    }
+
+    fun comparator(ytelsesbehandlinger: List<Behandling>): Comparator<Behandling> {
+        /* Finn siste ytelsesbehandling basert på `forrigeBehandlingId`-kjeden.
+         * Behandlingene er i praksis en singly-linked list. Pekerne går "feil vei",
+         * så vi regner ut bakover-pekerne.
+        **/
+
+        val nesteId = mutableMapOf<BehandlingId, BehandlingId>()
+        for (behandling in ytelsesbehandlinger) {
+            // Hopp over hvis behandlingen er avbrutt
+            if (avbrytRevurderingService.revurderingErAvbrutt(behandling.id)) {
+                continue
+            }
+
+            if (behandling.forrigeBehandlingId != null) {
+                nesteId[behandling.forrigeBehandlingId] = behandling.id
+            }
+        }
+
+        val sortedListOfBehandlingId = mutableListOf<BehandlingId>()
+        var currentBehandlingId = ytelsesbehandlinger.find { it.forrigeBehandlingId==null }?.id
+        while (currentBehandlingId != null) {
+            sortedListOfBehandlingId.add(currentBehandlingId)
+            currentBehandlingId = nesteId[currentBehandlingId]
+        }
+
+        return Comparator { b1, b2 ->
+            val indexB1 = sortedListOfBehandlingId.indexOf(b1.id)
+            val indexB2 = sortedListOfBehandlingId.indexOf(b2.id)
+            indexB1.compareTo(indexB2)
         }
     }
 }
