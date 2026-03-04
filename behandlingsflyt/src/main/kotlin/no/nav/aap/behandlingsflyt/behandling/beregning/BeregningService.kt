@@ -34,21 +34,14 @@ class BeregningService(
     )
 
     fun beregnGrunnlag(behandlingId: BehandlingId): Beregningsgrunnlag {
-        val inntektGrunnlag = inntektGrunnlagRepository.hent(behandlingId)
-        val manuellInntektGrunnlag = manuellInntektGrunnlagRepository.hentHvisEksisterer(behandlingId)
-        val sykdomGrunnlag = sykdomRepository.hentHvisEksisterer(behandlingId)
-        val uføre = uføreRepository.hentHvisEksisterer(behandlingId)
-        val beregningVurdering = beregningVurderingRepository.hentHvisEksisterer(behandlingId)
-        val yrkesskadeGrunnlag = yrkesskadeRepository.hentHvisEksisterer(behandlingId)
-
         val input = Inntektsbehov(
             // TODO: Hvor langt tilbake i tid skal man hente uføregrader?
-            uføregrad = uføre?.vurderinger.orEmpty(),
-            yrkesskadevurdering = sykdomGrunnlag?.yrkesskadevurdering,
-            beregningGrunnlag = beregningVurdering,
-            registrerteYrkesskader = yrkesskadeGrunnlag?.yrkesskader,
-            inntektGrunnlag = inntektGrunnlag,
-            manuelleInntekter = manuellInntektGrunnlag?.manuelleInntekter.orEmpty(),
+            uføregrad = uføreRepository.hentHvisEksisterer(behandlingId)?.vurderinger.orEmpty(),
+            yrkesskadevurdering = sykdomRepository.hentHvisEksisterer(behandlingId)?.yrkesskadevurdering,
+            beregningGrunnlag = beregningVurderingRepository.hentHvisEksisterer(behandlingId),
+            registrerteYrkesskader = yrkesskadeRepository.hentHvisEksisterer(behandlingId)?.yrkesskader,
+            inntektGrunnlag = inntektGrunnlagRepository.hent(behandlingId),
+            manuelleInntekter = manuellInntektGrunnlagRepository.hentHvisEksisterer(behandlingId)?.manuelleInntekter.orEmpty(),
         )
 
         val beregningsgrunnlag = beregneMedInput(input)

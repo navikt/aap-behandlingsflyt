@@ -163,8 +163,7 @@ fun beregnForInput(inntektsbehov: Inntektsbehov, fødselsdato: Fødselsdato): Tr
 fun printRad(arenaBeløp: Int, beregnetGUnit: GUnit, personKode: Int, dagsats: Double) {
     val arenaGUnit =
         BigDecimal(arenaBeløp).divide(
-            Grunnbeløp.tilTidslinje().segment(Year.of(2025).atDay(200))!!.verdi.verdi,
-            MathContext(5, RoundingMode.HALF_UP)
+            Grunnbeløp.tilTidslinje().segment(Year.of(2025).atDay(200))!!.verdi.verdi, MathContext(5, RoundingMode.HALF_UP)
         )
 
     val grunnBeløp = grunnBeløpDetteÅret(Year.of(2025))
