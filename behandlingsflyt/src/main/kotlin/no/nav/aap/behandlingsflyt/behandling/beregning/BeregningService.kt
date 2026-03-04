@@ -55,7 +55,7 @@ class BeregningService(
             yrkesskadeBeløpVurderinger = beregningGrunnlag.yrkesskadeBeløpVurdering?.vurderinger,
         )
 
-        val beregningsgrunnlag = beregneMedInput(input)
+        val beregningsgrunnlag = input.beregnBeregningsgrunnlag()
 
         beregningsgrunnlagRepository.lagre(behandlingId, beregningsgrunnlag)
         return beregningsgrunnlag
@@ -68,32 +68,5 @@ class BeregningService(
     fun utledRelevanteBeregningsÅr(behandlingId: BehandlingId): Set<Year> {
         val beregningGrunnlag = beregningVurderingRepository.hentHvisEksisterer(behandlingId)
         return Inntektsbehov.utledAlleRelevanteÅr(beregningGrunnlag)
-    }
-
-    companion object {
-
-        fun beregneMedInput(input: Inntektsbehov): Beregningsgrunnlag {
-            // 6G-begrensning ligger her samt gjennomsnitt
-            val grunnlag11_19 = GrunnlagetForBeregningen(input.utledForOrdinær()).beregnGrunnlaget()
-
-            val beregningMedEllerUtenUføre = if (input.finnesUføreData()) {
-                UføreBeregning(grunnlag11_19, input).beregnUføre()
-            } else {
-                grunnlag11_19
-            }
-
-            // §11-22 Arbeidsavklaringspenger ved yrkesskade
-            val beregningMedEllerUtenUføreMedEllerUtenYrkesskade =
-                if (input.yrkesskadeVurderingEksisterer()) {
-                    beregnGrunnlagYrkesskade(
-                        grunnlag11_19 = beregningMedEllerUtenUføre,
-                        antattÅrligInntekt = input.årligAntattInntektVedYrkesskade(),
-                        andelAvNedsettelsenSomSkyldesYrkesskaden = input.andelYrkesskade()
-                    )
-                } else {
-                    beregningMedEllerUtenUføre
-                }
-            return beregningMedEllerUtenUføreMedEllerUtenYrkesskade
-        }
     }
 }

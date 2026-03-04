@@ -1,8 +1,11 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år
 
+import no.nav.aap.behandlingsflyt.behandling.beregning.GrunnlagetForBeregningen
 import no.nav.aap.behandlingsflyt.behandling.beregning.Månedsinntekt
+import no.nav.aap.behandlingsflyt.behandling.beregning.UføreBeregning
+import no.nav.aap.behandlingsflyt.behandling.beregning.beregnGrunnlagYrkesskade
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Beregningsgrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.Uføre
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.tilTidslinje
@@ -46,6 +49,30 @@ class Inntektsbehov(
         if (finnesUføreData()) {
             validerSummertInntekt()
         }
+    }
+
+    fun beregnBeregningsgrunnlag(): Beregningsgrunnlag {
+        // 6G-begrensning ligger her samt gjennomsnitt
+        val grunnlag11_19 = GrunnlagetForBeregningen(utledForOrdinær()).beregnGrunnlaget()
+
+        val beregningMedEllerUtenUføre = if (finnesUføreData()) {
+            UføreBeregning(grunnlag11_19, this).beregnUføre()
+        } else {
+            grunnlag11_19
+        }
+
+        // §11-22 Arbeidsavklaringspenger ved yrkesskade
+        val beregningMedEllerUtenUføreMedEllerUtenYrkesskade =
+            if (yrkesskadeVurderingEksisterer()) {
+                beregnGrunnlagYrkesskade(
+                    grunnlag11_19 = beregningMedEllerUtenUføre,
+                    antattÅrligInntekt = årligAntattInntektVedYrkesskade(),
+                    andelAvNedsettelsenSomSkyldesYrkesskaden = andelYrkesskade()
+                )
+            } else {
+                beregningMedEllerUtenUføre
+            }
+        return beregningMedEllerUtenUføreMedEllerUtenYrkesskade
     }
 
     /**

@@ -28,7 +28,8 @@ class BeregningsGrunnlagApiTest {
             InntektPerÅr(2021, Beløp(400000)),
             InntektPerÅr(2020, Beløp(300000))
         )
-        val input = Inntektsbehov(
+
+        val beregning = Inntektsbehov(
             nedsettelsesDato = LocalDate.of(2023, 1, 1),
             årsInntekter = årsInntekter,
             uføregrad = setOf(Uføre(LocalDate.of(2023, 1, 1), Prosent(30))),
@@ -59,9 +60,8 @@ class BeregningsGrunnlagApiTest {
                 )
             ),
             inntektsPerioder = inntektsPerioder(årsInntekter)
-        )
+        ).beregnBeregningsgrunnlag()
 
-        val beregning = BeregningService.beregneMedInput(input)
         val behandlingOpprettet = LocalDate.of(2024, 1, 1)
 
         val res = beregningDTO(beregning, behandlingOpprettet)
@@ -86,7 +86,8 @@ class BeregningsGrunnlagApiTest {
             InntektPerÅr(2021, Beløp(400000)),
             InntektPerÅr(2020, Beløp(300000))
         )
-        val input = Inntektsbehov(
+
+        val beregning = Inntektsbehov(
             nedsettelsesDato = LocalDate.of(2023, 1, 1),
             årsInntekter = årsInntekter,
             uføregrad = setOf(Uføre(LocalDate.of(2021, 1, 1), Prosent(30))),
@@ -117,9 +118,8 @@ class BeregningsGrunnlagApiTest {
                 )
             ),
             inntektsPerioder = inntektsPerioder(årsInntekter)
-        )
+        ).beregnBeregningsgrunnlag()
 
-        val beregning = BeregningService.beregneMedInput(input)
         val behandlingOpprettet = LocalDate.of(2024, 1, 1)
 
         val res = beregningDTO(beregning, behandlingOpprettet)

@@ -36,7 +36,8 @@ class BeregningTest {
             InntektPerÅr(2021, Beløp(400000)),
             InntektPerÅr(2020, Beløp(300000))
         )
-        val input = Inntektsbehov(
+
+        val beregning = Inntektsbehov(
             nedsettelsesDato = LocalDate.of(2023, 1, 1),
             årsInntekter = årsInntekter,
             uføregrad = emptySet(),
@@ -45,9 +46,7 @@ class BeregningTest {
             yrkesskadeBeløpVurderinger = null,
             registrerteYrkesskader = null,
             inntektsPerioder = inntektsPerioder(årsInntekter)
-        )
-
-        val beregning = BeregningService.beregneMedInput(input)
+        ).beregnBeregningsgrunnlag()
 
         assertThat(beregning.grunnlaget()).isEqualTo(GUnit("4.5543977264"))
     }
@@ -59,7 +58,8 @@ class BeregningTest {
             InntektPerÅr(2021, Beløp(400000)),
             InntektPerÅr(2020, Beløp(300000))
         )
-        val input = Inntektsbehov(
+
+        val beregning = Inntektsbehov(
             nedsettelsesDato = LocalDate.of(2015, 1, 1),
             årsInntekter = årsInntekter,
             uføregrad = setOf(Uføre(LocalDate.now().minusYears(5), Prosent(30))),
@@ -68,9 +68,8 @@ class BeregningTest {
             yrkesskadeBeløpVurderinger = null,
             registrerteYrkesskader = null,
             inntektsPerioder = inntektsPerioder(årsInntekter)
-        )
+        ).beregnBeregningsgrunnlag()
 
-        val beregning = BeregningService.beregneMedInput(input)
         assertThat(beregning.grunnlaget()).isEqualTo(GUnit("6"))
     }
 
@@ -81,7 +80,8 @@ class BeregningTest {
             InntektPerÅr(2023, Beløp(400000)),
             InntektPerÅr(2024, Beløp(300000))
         )
-        val input = Inntektsbehov(
+
+        val beregning = Inntektsbehov(
             nedsettelsesDato = LocalDate.of(2025, 1, 1),
             årsInntekter = årsInntekter,
             uføregrad = setOf(
@@ -96,9 +96,8 @@ class BeregningTest {
             yrkesskadeBeløpVurderinger = null,
             registrerteYrkesskader = null,
             inntektsPerioder = inntektsPerioder(årsInntekter)
-        )
+        ).beregnBeregningsgrunnlag()
 
-        val beregning = BeregningService.beregneMedInput(input)
         assertThat(beregning).isInstanceOf(Grunnlag11_19::class.java)
     }
 
@@ -109,7 +108,8 @@ class BeregningTest {
             InntektPerÅr(Year.of(2021), Beløp(4 * 104_716)),
             InntektPerÅr(Year.of(2020), Beløp(5 * 100_853))
         )
-        val input = Inntektsbehov(
+
+        val beregning = Inntektsbehov(
             nedsettelsesDato = LocalDate.of(2023, 1, 1),
             årsInntekter = inntekterPerÅr,
             uføregrad = emptySet(),
@@ -140,9 +140,8 @@ class BeregningTest {
                 )
             ),
             inntektsPerioder = inntektsPerioder(inntekterPerÅr)
-        )
+        ).beregnBeregningsgrunnlag()
 
-        val beregning = BeregningService.beregneMedInput(input)
         // Riktig svar bør være: 0.4*(500000/98866) + 0.6*4 = 4,4229401412
         // Forklaring: første ledd kommer fra yrkesskade (justert til GUnit) pluss gjennomsnitt av inntekt
         // siste 3 år ganget med 0.6 (arbeidsgrad).
@@ -156,7 +155,8 @@ class BeregningTest {
             InntektPerÅr(2021, Beløp(400000)),
             InntektPerÅr(2020, Beløp(300000))
         )
-        val input = Inntektsbehov(
+
+        val beregning = Inntektsbehov(
             nedsettelsesDato = LocalDate.of(2023, 1, 1),
             årsInntekter = årsInntekter,
             uføregrad = setOf(Uføre(LocalDate.of(2023, 1, 1), Prosent(50))),
@@ -187,9 +187,8 @@ class BeregningTest {
                 )
             ),
             inntektsPerioder = inntektsPerioder(årsInntekter)
-        )
+        ).beregnBeregningsgrunnlag()
 
-        val beregning = BeregningService.beregneMedInput(input)
         beregning as GrunnlagYrkesskade
         beregning.underliggende() as GrunnlagUføre
 
@@ -230,8 +229,8 @@ class BeregningTest {
             inntektsPerioder = inntektsPerioder(årsInntekter)
         )
 
-        val beregning = BeregningService.beregneMedInput(inputMedNullUføregrad)
-        val beregningUtenUføregrad = BeregningService.beregneMedInput(inputMedUføreGradIkkeOppgitt)
+        val beregning = inputMedNullUføregrad.beregnBeregningsgrunnlag()
+        val beregningUtenUføregrad = inputMedUføreGradIkkeOppgitt.beregnBeregningsgrunnlag()
 
         assertThat(beregning.grunnlaget().verdi()).isCloseTo(
             beregningUtenUføregrad.grunnlaget().verdi(),
@@ -251,7 +250,7 @@ class BeregningTest {
     )
     fun `11-19 tabelldrevet test`(nedsettelsesÅr: Year, inntektPerÅr: Set<InntektPerÅr>, forventetGrunnlag: GUnit) {
         val nedsettelsesDato = nedsettelsesÅr.atDay(1)
-        val input = Inntektsbehov(
+        val beregning = Inntektsbehov(
             nedsettelsesDato = nedsettelsesDato,
             uføregrad = emptySet(),
             yrkesskadevurdering = null,
@@ -260,8 +259,7 @@ class BeregningTest {
             registrerteYrkesskader = null,
             årsInntekter = inntektPerÅr,
             inntektsPerioder = inntektsPerioder(inntektPerÅr)
-        )
-        val beregning = BeregningService.beregneMedInput(input)
+        ).beregnBeregningsgrunnlag()
         val actual = beregning.grunnlaget()
 
         assertThat(actual).isEqualTo(forventetGrunnlag)
