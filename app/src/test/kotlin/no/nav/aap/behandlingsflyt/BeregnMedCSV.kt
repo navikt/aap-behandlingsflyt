@@ -3,7 +3,7 @@ package no.nav.aap.behandlingsflyt
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.BeregnTilkjentYtelseService
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år.Inntektsbehov
+import no.nav.aap.behandlingsflyt.behandling.beregning.Beregning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.ArbeidsGradering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
@@ -88,10 +88,10 @@ fun readCSV(inputStream: InputStream): List<CSVLine> {
         }.toList()
 }
 
-fun tilInput(csvLine: CSVLine): Pair<Inntektsbehov, Fødselsdato> {
+fun tilInput(csvLine: CSVLine): Pair<Beregning, Fødselsdato> {
 
     return Pair(
-        Inntektsbehov(
+        Beregning(
             nedsettelsesDato = LocalDate.of(csvLine.beregningsAar, 1, 1),
             årsInntekter = csvLine.let { (intSiste, intNestSiste, intTredjeSiste, _, inntektSisteAar, inntektNestSisteAar, inntektTredjeSisteAar) ->
                 setOf(
@@ -110,8 +110,8 @@ fun tilInput(csvLine: CSVLine): Pair<Inntektsbehov, Fødselsdato> {
     )
 }
 
-fun beregnForInput(inntektsbehov: Inntektsbehov, fødselsdato: Fødselsdato): Triple<Year, GUnit, Double> {
-    val beregnet = inntektsbehov.beregnBeregningsgrunnlag()
+fun beregnForInput(beregning: Beregning, fødselsdato: Fødselsdato): Triple<Year, GUnit, Double> {
+    val beregnet = beregning.beregnBeregningsgrunnlag()
 
     val tilkjent = BeregnTilkjentYtelseService(
         TilkjentYtelseGrunnlag(
@@ -156,7 +156,7 @@ fun beregnForInput(inntektsbehov: Inntektsbehov, fødselsdato: Fødselsdato): Tr
 
     val dagsats = tilkjent.beregnTilkjentYtelse().mapValue { it.dagsats }.komprimer().segmenter().first().verdi.verdi
 
-    return Triple(Year.of(inntektsbehov.nedsettelsesDato.year), beregnet.grunnlaget(), dagsats.toDouble())
+    return Triple(Year.of(beregning.nedsettelsesDato.year), beregnet.grunnlaget(), dagsats.toDouble())
 }
 
 fun printRad(arenaBeløp: Int, beregnetGUnit: GUnit, personKode: Int, dagsats: Double) {

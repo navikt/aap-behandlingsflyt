@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.behandling.beregning
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år.Inntektsbehov
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.Uføre
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.Yrkesskade
@@ -29,7 +28,7 @@ class BeregningsGrunnlagApiTest {
             InntektPerÅr(2020, Beløp(300000))
         )
 
-        val beregning = Inntektsbehov(
+        val beregning = Beregning(
             nedsettelsesDato = LocalDate.of(2023, 1, 1),
             årsInntekter = årsInntekter,
             uføregrad = setOf(Uføre(LocalDate.of(2023, 1, 1), Prosent(30))),
@@ -87,7 +86,7 @@ class BeregningsGrunnlagApiTest {
             InntektPerÅr(2020, Beløp(300000))
         )
 
-        val beregning = Inntektsbehov(
+        val beregning = Beregning(
             nedsettelsesDato = LocalDate.of(2023, 1, 1),
             årsInntekter = årsInntekter,
             uføregrad = setOf(Uføre(LocalDate.of(2021, 1, 1), Prosent(30))),

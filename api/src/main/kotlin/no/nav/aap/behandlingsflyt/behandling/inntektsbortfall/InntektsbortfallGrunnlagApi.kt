@@ -12,7 +12,7 @@ import no.nav.aap.behandlingsflyt.behandling.vilkår.inntektsbortfall.Inntektsbo
 import no.nav.aap.behandlingsflyt.behandling.vilkår.inntektsbortfall.Under62ÅrVedSøknadstidspunkt
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år.Inntektsbehov
+import no.nav.aap.behandlingsflyt.behandling.beregning.Beregning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektGrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.ManuellInntektGrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningRepository
@@ -152,7 +152,7 @@ fun NormalOpenAPIRoute.inntektsbortfallGrunnlagApi(
                 val manuelleInntekter = manuellInntektGrunnlagRepository.hentHvisEksisterer(behandling.id)
                 val inntektGrunnlag = inntektGrunnlagRepository.hentHvisEksisterer(behandling.id)
 
-                val kombinerteInntekter = Inntektsbehov.kombinerInntektOgManuellInntekt(
+                val kombinerteInntekter = Beregning.kombinerInntektOgManuellInntekt(
                     inntektGrunnlag?.inntekter.orEmpty(),
                     manuelleInntekter?.manuelleInntekter.orEmpty()
                 )

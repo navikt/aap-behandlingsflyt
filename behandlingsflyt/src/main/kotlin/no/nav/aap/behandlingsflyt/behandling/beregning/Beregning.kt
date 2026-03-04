@@ -1,9 +1,10 @@
-package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år
+package no.nav.aap.behandlingsflyt.behandling.beregning
 
-import no.nav.aap.behandlingsflyt.behandling.beregning.GrunnlagetForBeregningen
-import no.nav.aap.behandlingsflyt.behandling.beregning.Månedsinntekt
-import no.nav.aap.behandlingsflyt.behandling.beregning.UføreBeregning
-import no.nav.aap.behandlingsflyt.behandling.beregning.beregnGrunnlagYrkesskade
+import java.math.BigDecimal
+import java.time.LocalDate
+import java.time.Year
+import java.util.SortedSet
+import kotlin.collections.orEmpty
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Beregningsgrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
@@ -18,10 +19,6 @@ import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.GUnit
 import no.nav.aap.komponenter.verdityper.Prosent
 import org.slf4j.LoggerFactory
-import java.math.BigDecimal
-import java.time.LocalDate
-import java.time.Year
-import java.util.*
 
 /*
 * @param nedsettelsesDato Dato da arbeidsevnen ble nedsatt.
@@ -32,7 +29,7 @@ import java.util.*
 * @param beregningGrunnlag Se [no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningGrunnlag]
 * @param inntektsPerioder Inntekt per måned
 */
-class Inntektsbehov(
+class Beregning(
     val nedsettelsesDato: LocalDate,
     val ytterligereNedsettelsesDato: LocalDate?,
     val årsInntekter: Set<InntektPerÅr>,
@@ -208,7 +205,7 @@ class Inntektsbehov(
         /**
          * Returnerer en mengde av de tre foregående årene fra nedsettelsesdatoen og
          * dato for ytterligere nedsatt arbeidsevne.
-         * 
+         *
          * Dersom nedsettelsesdato ikke er satt, returneres en tom mengde.
          */
         fun utledAlleRelevanteÅr(beregningGrunnlag: BeregningGrunnlag?): Set<Year> {
@@ -266,17 +263,16 @@ class Inntektsbehov(
         }
 
     }
-}
 
-private data class YrkesskadeBeregning(val ref: String, val skadedato: LocalDate, val antattÅrligInntekt: Beløp) :
-    Comparable<YrkesskadeBeregning> {
+    private data class YrkesskadeBeregning(val ref: String, val skadedato: LocalDate, val antattÅrligInntekt: Beløp) :
+        Comparable<YrkesskadeBeregning> {
 
-    fun gUnit(): GUnit {
-        return Grunnbeløp.finnGUnit(skadedato, antattÅrligInntekt).gUnit
+        fun gUnit(): GUnit {
+            return Grunnbeløp.finnGUnit(skadedato, antattÅrligInntekt).gUnit
+        }
+
+        override fun compareTo(other: YrkesskadeBeregning): Int {
+            return gUnit().compareTo(other.gUnit())
+        }
     }
-
-    override fun compareTo(other: YrkesskadeBeregning): Int {
-        return gUnit().compareTo(other.gUnit())
-    }
-
 }

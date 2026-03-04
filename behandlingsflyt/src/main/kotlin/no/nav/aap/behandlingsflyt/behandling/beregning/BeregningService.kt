@@ -2,8 +2,7 @@ package no.nav.aap.behandlingsflyt.behandling.beregning
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Beregningsgrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år.Inntektsbehov
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år.Inntektsbehov.Companion.kombinerInntektOgManuellInntekt
+import no.nav.aap.behandlingsflyt.behandling.beregning.Beregning.Companion.kombinerInntektOgManuellInntekt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektGrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.ManuellInntektGrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreRepository
@@ -42,7 +41,7 @@ class BeregningService(
         val inntektGrunnlag = inntektGrunnlagRepository.hent(behandlingId)
         val manuelleInntekter = manuellInntektGrunnlagRepository.hentHvisEksisterer(behandlingId)?.manuelleInntekter.orEmpty()
 
-        val input = Inntektsbehov(
+        val input = Beregning(
             årsInntekter = kombinerInntektOgManuellInntekt(inntektGrunnlag.inntekter, manuelleInntekter),
             nedsettelsesDato = beregningGrunnlag?.tidspunktVurdering?.nedsattArbeidsevneEllerStudieevneDato
                 ?: throw IllegalStateException("Nedsettelsesdato må være satt for beregning"),
@@ -67,6 +66,6 @@ class BeregningService(
 
     fun utledRelevanteBeregningsÅr(behandlingId: BehandlingId): Set<Year> {
         val beregningGrunnlag = beregningVurderingRepository.hentHvisEksisterer(behandlingId)
-        return Inntektsbehov.utledAlleRelevanteÅr(beregningGrunnlag)
+        return Beregning.utledAlleRelevanteÅr(beregningGrunnlag)
     }
 }
