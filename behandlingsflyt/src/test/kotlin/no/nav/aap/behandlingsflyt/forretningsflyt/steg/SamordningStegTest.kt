@@ -494,7 +494,7 @@ class SamordningStegTest {
     }
 
     private fun nySak(): Sak {
-        return opprettInMemorySak(Periode(LocalDate.now(), LocalDate.now().plusYears(1)))
+        return opprettInMemorySak(LocalDate.now())
     }
 
     private fun opprettBehandling(sak: Sak): Behandling {
