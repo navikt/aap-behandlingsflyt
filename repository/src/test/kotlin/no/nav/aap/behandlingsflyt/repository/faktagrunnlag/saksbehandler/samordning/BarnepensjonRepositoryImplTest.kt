@@ -12,14 +12,13 @@ import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.Bruker
-import no.nav.aap.komponenter.verdityper.GUnit
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.recursive.comparison.RecursiveComparisonConfiguration
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
-import java.math.BigDecimal
 import java.time.Instant
 
 class BarnepensjonRepositoryImplTest {
@@ -56,14 +55,14 @@ class BarnepensjonRepositoryImplTest {
                         fom = 1 januar 2022,
                         tom = 31 desember 2022
                     ),
-                    grunnbeløp = GUnit(1)
+                    månedbeløp = Beløp(1000)
                 ),
                 BarnepensjonPeriode(
                     periode = Periode(
                         fom = 1 januar 2023,
                         tom = 31 desember 2023
                     ),
-                    grunnbeløp = GUnit("2.25")
+                    månedbeløp = Beløp(2500)
                 )
             ),
             vurdertAv = Bruker("Z123456"),
@@ -112,14 +111,14 @@ class BarnepensjonRepositoryImplTest {
                         fom = 1 januar 2022,
                         tom = 31 desember 2022
                     ),
-                    grunnbeløp = GUnit(1)
+                    månedbeløp = Beløp(1000)
                 ),
                 BarnepensjonPeriode(
                     periode = Periode(
                         fom = 1 januar 2023,
                         tom = 31 desember 2023
                     ),
-                    grunnbeløp = GUnit("2.25")
+                    månedbeløp = Beløp(2500)
                 )
             ),
             vurdertAv = Bruker("Z123456"),

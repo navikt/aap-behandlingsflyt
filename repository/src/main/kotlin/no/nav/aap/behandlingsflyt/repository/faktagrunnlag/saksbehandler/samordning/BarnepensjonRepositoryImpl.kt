@@ -6,8 +6,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.barnepe
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.barnepensjon.BarnepensjonPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.Bruker
-import no.nav.aap.komponenter.verdityper.GUnit
 import no.nav.aap.lookup.repository.Factory
 import org.slf4j.LoggerFactory
 
@@ -64,7 +64,7 @@ class BarnepensjonRepositoryImpl(private val connection: DBConnection) : Barnepe
         connection.executeBatch(
             """
             insert into samordning_barnepensjon_vurdering_periode (
-                vurdering_id, periode, grunnbelop
+                vurdering_id, periode, maaned_beloep
             ) values (?, ?::daterange, ?)
             """.trimIndent(),
             perioder.toList()
@@ -72,7 +72,7 @@ class BarnepensjonRepositoryImpl(private val connection: DBConnection) : Barnepe
             setParams {
                 setLong(1, vurderingId)
                 setPeriode(2, it.periode)
-                setBigDecimal(3, it.grunnbeløp.verdi())
+                setBigDecimal(3, it.månedbeløp.verdi())
             }
         }
     }
@@ -122,7 +122,7 @@ class BarnepensjonRepositoryImpl(private val connection: DBConnection) : Barnepe
     private fun hentPerioder(vurderingId: Long): List<BarnepensjonPeriode> {
         return connection.queryList(
             """
-            select periode, grunnbelop
+            select periode, maaned_beloep
             from samordning_barnepensjon_vurdering_periode
             where vurdering_id = ?
             """.trimIndent()
@@ -131,7 +131,7 @@ class BarnepensjonRepositoryImpl(private val connection: DBConnection) : Barnepe
             setRowMapper { row ->
                 BarnepensjonPeriode(
                     periode = row.getPeriode("periode"),
-                    grunnbeløp = GUnit(row.getBigDecimal("grunnbelop"))
+                    månedbeløp = Beløp(row.getBigDecimal("maaned_beloep"))
                 )
             }
         }
