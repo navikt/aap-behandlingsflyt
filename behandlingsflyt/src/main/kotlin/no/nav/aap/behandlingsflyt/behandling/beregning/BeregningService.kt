@@ -130,11 +130,11 @@ class BeregningService(
             // §11-22 Arbeidsavklaringspenger ved yrkesskade
             val beregningMedEllerUtenUføreMedEllerUtenYrkesskade =
                 if (input.yrkesskadeVurderingEksisterer()) {
-                    YrkesskadeBeregning(
+                    beregnGrunnlagYrkesskade(
                         grunnlag11_19 = beregningMedEllerUtenUføre,
                         antattÅrligInntekt = input.årligAntattInntektVedYrkesskade(),
                         andelAvNedsettelsenSomSkyldesYrkesskaden = input.andelYrkesskade()
-                    ).beregnYrkesskaden()
+                    )
                 } else {
                     beregningMedEllerUtenUføre
                 }
