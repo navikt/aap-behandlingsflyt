@@ -7,17 +7,11 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år.Bereg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektGrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.ManuellInntektGrunnlagRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.Uføre
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.Yrkesskader
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.ManuellInntektVurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Yrkesskadevurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.lookup.repository.RepositoryProvider
@@ -58,14 +52,19 @@ class BeregningService(
                 manuellInntektGrunnlag?.manuelleInntekter.orEmpty()
             )
 
-        val input = utledInput(
-            yrkesskadevurdering = sykdomGrunnlag?.yrkesskadevurdering,
-            vurdering = beregningVurdering,
-            årsInntekter = kombinertInntekt,
-            // TODO: Hvor langt tilbake i tid skal man hente uføregrader?
-            uføregrad = uføre?.vurderinger.orEmpty(),
-            registrerteYrkesskader = yrkesskadeGrunnlag?.yrkesskader,
-            inntektsPerioder = inntektGrunnlag.inntektPerMåned
+        val nedsettelsesdato = beregningVurdering?.tidspunktVurdering?.nedsattArbeidsevneEllerStudieevneDato
+            ?: throw IllegalStateException("Nedsettelsesdato må være satt for beregning")
+        val input = Inntektsbehov(
+            BeregningInput(
+                nedsettelsesDato = nedsettelsesdato,
+                årsInntekter = kombinertInntekt,
+                // TODO: Hvor langt tilbake i tid skal man hente uføregrader?
+                uføregrad = uføre?.vurderinger.orEmpty(),
+                yrkesskadevurdering = sykdomGrunnlag?.yrkesskadevurdering,
+                beregningGrunnlag = beregningVurdering,
+                registrerteYrkesskader = yrkesskadeGrunnlag?.yrkesskader,
+                inntektsPerioder = inntektGrunnlag.inntektPerMåned,
+            )
         )
 
         val beregning = Beregning(input)
@@ -117,29 +116,5 @@ class BeregningService(
             .mapValues {
                 it.value.single()
             }
-    }
-
-    private fun utledInput(
-        yrkesskadevurdering: Yrkesskadevurdering?,
-        vurdering: BeregningGrunnlag?,
-        årsInntekter: Set<InntektPerÅr>,
-        inntektsPerioder: Set<Månedsinntekt>,
-        uføregrad: Set<Uføre>,
-        registrerteYrkesskader: Yrkesskader?
-    ): Inntektsbehov {
-        val nedsettelsesdato = vurdering?.tidspunktVurdering?.nedsattArbeidsevneEllerStudieevneDato
-            ?: throw IllegalStateException("Nedsettelsesdato må være satt for beregning")
-
-        return Inntektsbehov(
-            BeregningInput(
-                nedsettelsesDato = nedsettelsesdato,
-                årsInntekter = årsInntekter,
-                uføregrad = uføregrad,
-                yrkesskadevurdering = yrkesskadevurdering,
-                beregningGrunnlag = vurdering,
-                registrerteYrkesskader = registrerteYrkesskader,
-                inntektsPerioder = inntektsPerioder,
-            )
-        )
     }
 }
