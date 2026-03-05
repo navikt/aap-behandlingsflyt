@@ -22,15 +22,12 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
 import no.nav.aap.behandlingsflyt.utils.UtfallOppfyltUtils
-import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
-import no.nav.aap.komponenter.repository.RepositoryRegistry
+import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
-import javax.sql.DataSource
 
 class PdlHendelseService(
-    private val dataSource: DataSource,
-    private val repositoryRegistry: RepositoryRegistry,
+    private val repositoryProvider: RepositoryProvider,
     private val gatewayProvider: GatewayProvider,
 ) {
     private val log = LoggerFactory.getLogger(javaClass)
@@ -38,63 +35,60 @@ class PdlHendelseService(
     private val utfallOppfyltUtils = UtfallOppfyltUtils()
 
     fun håndter(personHendelse: PdlPersonHendelse) {
-        dataSource.transaction {
-            val repositoryProvider = repositoryRegistry.provider(it)
-            val sakRepository: SakRepository = repositoryProvider.provide()
-            val behandlingRepository: BehandlingRepository = repositoryProvider.provide()
-            val personRepository: PersonRepository = repositoryProvider.provide()
-            val barnRepository: BarnRepository = repositoryProvider.provide()
-            val underveisRepository: UnderveisRepository = repositoryProvider.provide()
-            val hendelseService = MottattHendelseService(repositoryProvider)
-            val trukketSøknadService = TrukketSøknadService(repositoryProvider)
-            val behandlingService = BehandlingService(repositoryProvider, gatewayProvider)
-            if (personHendelse.opplysningstype == Opplysningstype.DOEDSFALL_V1 && personHendelse.endringstype == Endringstype.OPPRETTET) {
-                log.info("Håndterer hendelse med ${personHendelse.opplysningstype} og ${personHendelse.endringstype}")
-                var person: Person? = null
-                var saksbehandlersOppgitteBarn: SaksbehandlerOppgitteBarn.SaksbehandlerOppgitteBarn? = null
-                var funnetIdent: Ident? = null
-                for (ident in personHendelse.personidenter) {
-                    person = personRepository.finn(Ident(ident))
-                    saksbehandlersOppgitteBarn = barnRepository.finnSaksbehandlerOppgitteBarn(ident)
-                    // Håndterer D-nummer og Fnr
-                    if (person != null || saksbehandlersOppgitteBarn != null) {
-                        funnetIdent = Ident(ident)
-                        secureLogger.info("Håndterer hendelse for ident ${funnetIdent.identifikator} og navn ${personHendelse.navn?.etternavn} ")
-                        break
-                    }
+        val sakRepository: SakRepository = repositoryProvider.provide()
+        val behandlingRepository: BehandlingRepository = repositoryProvider.provide()
+        val personRepository: PersonRepository = repositoryProvider.provide()
+        val barnRepository: BarnRepository = repositoryProvider.provide()
+        val underveisRepository: UnderveisRepository = repositoryProvider.provide()
+        val hendelseService = MottattHendelseService(repositoryProvider)
+        val trukketSøknadService = TrukketSøknadService(repositoryProvider)
+        val behandlingService = BehandlingService(repositoryProvider, gatewayProvider)
+        if (personHendelse.opplysningstype == Opplysningstype.DOEDSFALL_V1 && personHendelse.endringstype == Endringstype.OPPRETTET) {
+            log.info("Håndterer hendelse med ${personHendelse.opplysningstype} og ${personHendelse.endringstype}")
+            var person: Person? = null
+            var saksbehandlersOppgitteBarn: SaksbehandlerOppgitteBarn.SaksbehandlerOppgitteBarn? = null
+            var funnetIdent: Ident? = null
+            for (ident in personHendelse.personidenter) {
+                person = personRepository.finn(Ident(ident))
+                saksbehandlersOppgitteBarn = barnRepository.finnSaksbehandlerOppgitteBarn(ident)
+                // Håndterer D-nummer og Fnr
+                if (person != null || saksbehandlersOppgitteBarn != null) {
+                    funnetIdent = Ident(ident)
+                    secureLogger.info("Håndterer hendelse for ident ${funnetIdent.identifikator} og navn ${personHendelse.navn?.etternavn} ")
+                    break
                 }
-
-                // Sjekk om personen er et barn fr apersontabellen eller aap-mottaker
-                håndterDødPersonSomBrukerEllerBarn(
-                    person,
-                    barnRepository,
-                    funnetIdent,
-                    behandlingRepository,
-                    sakRepository,
-                    behandlingService,
-                    underveisRepository,
-                    trukketSøknadService,
-                    personHendelse,
-                    hendelseService
-                )
-
-                // Sjekk om personen er et barn oppgitt av saksbehandler
-                håndterDødPersonSomEtBarnOppgittAvSaksbehandler(
-                    saksbehandlersOppgitteBarn,
-                    barnRepository,
-                    funnetIdent,
-                    behandlingRepository,
-                    sakRepository,
-                    behandlingService,
-                    underveisRepository,
-                    trukketSøknadService,
-                    personHendelse,
-                    hendelseService
-                )
             }
 
+            // Sjekk om personen er et barn fr apersontabellen eller aap-mottaker
+            håndterDødPersonSomBrukerEllerBarn(
+                person,
+                barnRepository,
+                funnetIdent,
+                behandlingRepository,
+                sakRepository,
+                behandlingService,
+                underveisRepository,
+                trukketSøknadService,
+                personHendelse,
+                hendelseService
+            )
 
+            // Sjekk om personen er et barn oppgitt av saksbehandler
+            håndterDødPersonSomEtBarnOppgittAvSaksbehandler(
+                saksbehandlersOppgitteBarn,
+                barnRepository,
+                funnetIdent,
+                behandlingRepository,
+                sakRepository,
+                behandlingService,
+                underveisRepository,
+                trukketSøknadService,
+                personHendelse,
+                hendelseService
+            )
         }
+
+
     }
 
     private fun håndterDødPersonSomBrukerEllerBarn(
