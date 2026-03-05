@@ -184,14 +184,14 @@ class SignaturService(
         val rolle: Rolle,
         val enhet: String?,
         val harLøstAvklaringsbehov: Boolean,
-    ) {
-        fun tilGrunnlag(): SignaturGrunnlag {
-            return SignaturGrunnlag(
-                navIdent = navIdent,
-                rolle = mapRolle(rolle),
-                enhet = enhet,
-            )
-        }
+    )
+
+    private fun UtledetSignatur.tilGrunnlag(): SignaturGrunnlag {
+        return SignaturGrunnlag(
+            navIdent = navIdent,
+            rolle = mapRolle(rolle),
+            enhet = enhet,
+        )
     }
 
     private fun signaturFraLøstAvklaringsbehov(
