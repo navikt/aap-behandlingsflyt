@@ -102,4 +102,56 @@ class VedtakslengdeRepositoryImplTest {
                 .isEqualTo(VedtakslengdeGrunnlag(listOf(vurdering)))
         }
     }
+
+    @Test
+    fun `lagrer og henter flere vurderinger med ulike sluttdatoer`() {
+        val sak = dataSource.transaction { sak(it, Periode(1 januar 2022, 31.desember(2023))) }
+        val behandling1 = dataSource.transaction { finnEllerOpprettBehandling(it, sak) }
+
+        val vurdering1 = VedtakslengdeVurdering(
+            sluttdato = LocalDate.of(2023, 6, 30),
+            utvidetMed = ÅrMedHverdager.FØRSTE_ÅR,
+            vurdertAv = Bruker("Z654321"),
+            vurdertIBehandling = behandling1.id,
+            opprettet = Instant.parse("2023-01-01T12:00:00Z")
+        )
+
+        dataSource.transaction {
+            VedtakslengdeRepositoryImpl(it).lagre(behandling1.id, listOf(vurdering1))
+            BehandlingRepositoryImpl(it).oppdaterBehandlingStatus(behandling1.id, Status.AVSLUTTET)
+        }
+
+        val behandling2 = dataSource.transaction { finnEllerOpprettBehandling(it, sak) }
+
+        val vurdering2 = VedtakslengdeVurdering(
+            sluttdato = LocalDate.of(2024, 6, 30),
+            utvidetMed = ÅrMedHverdager.ANDRE_ÅR,
+            vurdertAv = Bruker("Z654321"),
+            vurdertIBehandling = behandling2.id,
+            opprettet = Instant.parse("2024-01-01T12:00:00Z")
+        )
+
+        dataSource.transaction {
+            val vedtakslengdeRepository = VedtakslengdeRepositoryImpl(it)
+            val vedtakslengdeGrunnlag = vedtakslengdeRepository.hentHvisEksisterer(behandling1.id)
+            val tidligereVurderinger = vedtakslengdeGrunnlag?.vurderinger ?: emptyList()
+            vedtakslengdeRepository.lagre(behandling2.id, tidligereVurderinger + listOf(vurdering2))
+        }
+
+        val hentet = dataSource.transaction {
+            VedtakslengdeRepositoryImpl(it).hentHvisEksisterer(behandling2.id)
+        }
+
+        assertThat(hentet).isNotNull
+        assertThat(hentet!!.vurderinger).hasSize(2)
+        assertThat(hentet.vurderinger.map { it.sluttdato }).containsExactly(
+            LocalDate.of(2023, 6, 30),
+            LocalDate.of(2024, 6, 30),
+        )
+        assertThat(hentet.vurderinger.map { it.vurdertIBehandling }).containsExactly(
+            behandling1.id,
+            behandling2.id,
+        )
+        assertThat(hentet.gjeldendeVurdering()?.sluttdato).isEqualTo(LocalDate.of(2024, 6, 30))
+    }
 }
