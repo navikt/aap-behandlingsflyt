@@ -20,6 +20,7 @@ import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import java.time.Instant
+import java.time.YearMonth
 
 class BarnepensjonRepositoryImplTest {
     companion object {
@@ -51,18 +52,14 @@ class BarnepensjonRepositoryImplTest {
             begrunnelse = "begrunnelse",
             perioder = setOf(
                 BarnepensjonPeriode(
-                    periode = Periode(
-                        fom = 1 januar 2022,
-                        tom = 31 desember 2022
-                    ),
-                    månedbeløp = Beløp(1000)
+                    fom = YearMonth.of(2022, 1),
+                    tom = YearMonth.of(2022, 12),
+                    månedbeløp = Beløp(10000)
                 ),
                 BarnepensjonPeriode(
-                    periode = Periode(
-                        fom = 1 januar 2023,
-                        tom = 31 desember 2023
-                    ),
-                    månedbeløp = Beløp(2500)
+                    fom = YearMonth.of(2023, 1),
+                    tom = YearMonth.of(2023, 12),
+                    månedbeløp = Beløp(25000)
                 )
             ),
             vurdertAv = Bruker("Z123456"),
@@ -107,18 +104,14 @@ class BarnepensjonRepositoryImplTest {
             begrunnelse = "begrunnelse",
             perioder = setOf(
                 BarnepensjonPeriode(
-                    periode = Periode(
-                        fom = 1 januar 2022,
-                        tom = 31 desember 2022
-                    ),
-                    månedbeløp = Beløp(1000)
+                    fom = YearMonth.of(2022, 1),
+                    tom = YearMonth.of(2022, 12),
+                    månedbeløp = Beløp(10000)
                 ),
                 BarnepensjonPeriode(
-                    periode = Periode(
-                        fom = 1 januar 2023,
-                        tom = 31 desember 2023
-                    ),
-                    månedbeløp = Beløp(2500)
+                    fom = YearMonth.of(2023, 1),
+                    tom = YearMonth.of(2023, 12),
+                    månedbeløp = Beløp(25000)
                 )
             ),
             vurdertAv = Bruker("Z123456"),

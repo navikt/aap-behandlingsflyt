@@ -10,6 +10,7 @@ import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.lookup.repository.Factory
 import org.slf4j.LoggerFactory
+import java.time.YearMonth
 
 class BarnepensjonRepositoryImpl(private val connection: DBConnection) : BarnepensjonRepository {
     private val log = LoggerFactory.getLogger(javaClass)
@@ -64,15 +65,16 @@ class BarnepensjonRepositoryImpl(private val connection: DBConnection) : Barnepe
         connection.executeBatch(
             """
             insert into samordning_barnepensjon_vurdering_periode (
-                vurdering_id, periode, maaned_beloep
-            ) values (?, ?::daterange, ?)
+                vurdering_id, fom, tom, maaned_beloep
+            ) values (?, ?, ?, ?)
             """.trimIndent(),
             perioder.toList()
         ) {
             setParams {
                 setLong(1, vurderingId)
-                setPeriode(2, it.periode)
-                setBigDecimal(3, it.månedbeløp.verdi())
+                setString(2, it.fom.toString())
+                setString(3, it.tom.toString())
+                setBigDecimal(4, it.månedbeløp.verdi())
             }
         }
     }
@@ -122,7 +124,7 @@ class BarnepensjonRepositoryImpl(private val connection: DBConnection) : Barnepe
     private fun hentPerioder(vurderingId: Long): List<BarnepensjonPeriode> {
         return connection.queryList(
             """
-            select periode, maaned_beloep
+            select fom, tom, maaned_beloep
             from samordning_barnepensjon_vurdering_periode
             where vurdering_id = ?
             """.trimIndent()
@@ -130,7 +132,8 @@ class BarnepensjonRepositoryImpl(private val connection: DBConnection) : Barnepe
             setParams { setLong(1, vurderingId) }
             setRowMapper { row ->
                 BarnepensjonPeriode(
-                    periode = row.getPeriode("periode"),
+                    fom = YearMonth.parse(row.getString("fom")),
+                    tom = YearMonth.parse(row.getString("tom")),
                     månedbeløp = Beløp(row.getBigDecimal("maaned_beloep"))
                 )
             }

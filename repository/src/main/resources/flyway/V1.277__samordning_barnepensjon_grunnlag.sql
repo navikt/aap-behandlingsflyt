@@ -19,10 +19,9 @@ create table samordning_barnepensjon_grunnlag
 create table samordning_barnepensjon_vurdering_periode
 (
     id            bigserial primary key,
-    vurdering_id  bigint    not null references samordning_barnepensjon_vurdering (id),
-    periode       daterange not null,
-    maaned_beloep numeric   not null,
-    constraint samordning_barnepensjon_periode_ikke_overlapp_periode exclude using gist (
-        vurdering_id with =,periode with &&)
+    vurdering_id  bigint  not null references samordning_barnepensjon_vurdering (id),
+    fom           text    not null,
+    tom           text,
+    maaned_beloep numeric not null
 );
 
