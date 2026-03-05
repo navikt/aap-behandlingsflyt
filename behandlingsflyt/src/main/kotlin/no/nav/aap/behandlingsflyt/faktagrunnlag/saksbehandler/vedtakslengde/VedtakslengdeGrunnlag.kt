@@ -10,11 +10,7 @@ data class VedtakslengdeGrunnlag(
     val vurderinger: List<VedtakslengdeVurdering>
 ) {
     fun gjeldendeVurdering(): VedtakslengdeVurdering? {
-        return vurderinger
-            .groupBy { it.vurdertIBehandling }
-            .mapValues { (_, v) -> v.maxBy { it.opprettet } }
-            .values
-            .maxByOrNull { it.opprettet }
+        return vurderinger.maxByOrNull { it.opprettet }
     }
 }
 
