@@ -43,29 +43,15 @@ class OpprettBehandlingMigrereRettighetsperiodeJobbUtfører(
 
     private val log = LoggerFactory.getLogger(javaClass)
     private val secureLogger = LoggerFactory.getLogger("team-logs")
-    val sakerSomSkalTvingesTilMigreringsjobb = listOf(
-        "4MiABoG",
-        "4o1U2F4",
-        "4o08734",
-        "4MBM9PC",
-        "4M9PoKG",
-        "4LYGL8G",
-        "4LM5ZLC",
-    )
     override fun utfør(input: JobbInput) {
 
         val sakId = input.sakId()
         val sak = sakRepository.hent(SakId(sakId))
         log.info("Migrerer rettighetsperiode for sak $sakId")
 
-
         if (sak.rettighetsperiode.tom == Tid.MAKS) {
-            if(sakerSomSkalTvingesTilMigreringsjobb.contains(sak.saksnummer.toString())) {
-                log.info("Spesialsak ${sak.saksnummer} som skal tvinges gjennom migrering til tross for at den allerede har tid maks som rettighetsperiode")
-            } else {
-                log.info("Har allerede tid maks som rettighetsperiode - lager ikke en ny behandling")
-                return
-            }
+            log.info("Har allerede tid maks som rettighetsperiode - lager ikke en ny behandling")
+            return
         }
         val behandlingFørMigrering = behandlingService.finnSisteYtelsesbehandlingFor(sak.id)
             ?: error("Fant ikke behandling for sak=${sakId}")
@@ -191,7 +177,7 @@ class OpprettBehandlingMigrereRettighetsperiodeJobbUtfører(
 
 
     private fun skalIgnorereTilkjentYtelseSjekk (sak: Sak) : Boolean =
-        listOf("4MD3UPS", "4LDZA0W").contains(sak.saksnummer.toString())
+        listOf("4o08734", "4M9PoKG").contains(sak.saksnummer.toString())
     /**
      * Kan ikke validere underveis hvis siste behandling er fastsatt periode passert - da vil de av natur bli splittet ulikt og være ulike
      */
@@ -199,9 +185,8 @@ class OpprettBehandlingMigrereRettighetsperiodeJobbUtfører(
         val erForrigeBehandlingFastsattPeriodePassert =
             behandlingFørMigrering.vurderingsbehov().map { it.type }.contains(Vurderingsbehov.FASTSATT_PERIODE_PASSERT)
         val forhåndsgodkjenteSaksnummerMedPotensiellEndringIUnderveis = listOf(
-            "4MD3UPS",
-            "4oAoCR4",
-            "4LDZA0W"
+            "4o08734",
+            "4M9PoKG",
         )
         val skalIgnoreres =
             forhåndsgodkjenteSaksnummerMedPotensiellEndringIUnderveis.contains(sak.saksnummer.toString())

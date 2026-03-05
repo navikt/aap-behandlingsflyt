@@ -25,17 +25,7 @@ class OpprettJobbForMigrereRettighetsperiodeJobbUtfører(
     private val log = LoggerFactory.getLogger(javaClass)
 
     override fun utfør(input: JobbInput) {
-        val spesialsaker = listOf(
-            "4MiABoG",
-            "4o1U2F4",
-            "4o08734",
-            "4MBM9PC",
-            "4M9PoKG",
-            "4LYGL8G",
-            "4LM5ZLC",
-        )
-        val manuelleSaker = spesialsaker.map { sakRepository.hent(Saksnummer(it)) }
-        val saker = sakRepository.finnSakerMedAvsluttedeBehandlingerUtenRiktigSluttdatoPåRettighetsperiode() + manuelleSaker
+        val saker = sakRepository.finnSakerMedAvsluttedeBehandlingerUtenRiktigSluttdatoPåRettighetsperiode()
         val sakerForMigrering = saker
             .filter { sak ->
                 val sisteYtelsesbehandling = behandlingService.finnSisteYtelsesbehandlingFor(sak.id)
