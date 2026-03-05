@@ -74,7 +74,7 @@ class BarnepensjonRepositoryImpl(private val connection: DBConnection) : Barnepe
                 setLong(1, vurderingId)
                 setString(2, it.fom.toString())
                 setString(3, it.tom.toString())
-                setBigDecimal(4, it.månedbeløp.verdi())
+                setBigDecimal(4, it.månedsats.verdi())
             }
         }
     }
@@ -134,7 +134,7 @@ class BarnepensjonRepositoryImpl(private val connection: DBConnection) : Barnepe
                 BarnepensjonPeriode(
                     fom = YearMonth.parse(row.getString("fom")),
                     tom = YearMonth.parse(row.getString("tom")),
-                    månedbeløp = Beløp(row.getBigDecimal("maaned_beloep"))
+                    månedsats = Beløp(row.getBigDecimal("maaned_beloep"))
                 )
             }
         }

@@ -32,7 +32,7 @@ data class BarnepensjonLøsningPeriodeDto(
         return BarnepensjonPeriode(
             fom = fom,
             tom = tom,
-            månedbeløp = månedsbeløp
+            månedsats = månedsbeløp
         )
     }
 }

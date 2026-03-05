@@ -53,7 +53,8 @@ class TilkjentYtelseRepositoryImpl(private val connection: DBConnection) :
                                 ?.let { result -> Prosent(result) } ?: `0_PROSENT`,
                             arbeidGradering = it.getIntOrNull("ARBEID_GRADERING")?.let { result -> Prosent(result) }
                                 ?: `0_PROSENT`,
-                            meldepliktGradering = it.getIntOrNull("MELDEPLIKT_GRADERING")?.let { result -> Prosent(result) }
+                            meldepliktGradering = it.getIntOrNull("MELDEPLIKT_GRADERING")
+                                ?.let { result -> Prosent(result) }
                                 ?: `0_PROSENT`,
                         ),
                         barnetillegg = Beløp(it.getInt("BARNETILLEGG")),
@@ -62,8 +63,10 @@ class TilkjentYtelseRepositoryImpl(private val connection: DBConnection) :
                         barnetilleggsats = Beløp(it.getInt("BARNETILLEGGSATS")),
                         grunnbeløp = Beløp(it.getInt("GRUNNBELOP")),
                         utbetalingsdato = it.getLocalDate("UTBETALINGSDATO"),
-                        minsteSats = it.getStringOrNull("MINSTESATS")?.let { Minstesats.valueOf(it) } ?: Minstesats.IKKE_MINSTESATS, // Hva skal være verdi her?
-                        redusertDagsats = it.getBigDecimalOrNull("redusert_dagsats")?.let(::Beløp)
+                        minsteSats = it.getStringOrNull("MINSTESATS")?.let { Minstesats.valueOf(it) }
+                            ?: Minstesats.IKKE_MINSTESATS, // Hva skal være verdi her?
+                        redusertDagsats = it.getBigDecimalOrNull("redusert_dagsats")?.let(::Beløp),
+                        barnepensjonDagsats = Beløp(it.getBigDecimal("barnepensjon_dagsats"))
                     )
                 )
             }

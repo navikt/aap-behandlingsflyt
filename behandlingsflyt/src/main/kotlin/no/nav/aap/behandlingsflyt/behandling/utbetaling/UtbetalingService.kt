@@ -23,7 +23,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
@@ -234,6 +233,7 @@ class UtbetalingService(
             tom = this.maxOf { it.periode.tom }
         )
 
+    // TODO: Legg til barnepensjonsats i utbetal
     private fun List<TilkjentYtelsePeriode>.tilTilkjentYtelsePeriodeDtoer(meldeperioder: List<Periode>)  =
         map { segment ->
             val periode = segment.periode
