@@ -68,7 +68,7 @@ class BrevbestillingServiceTest {
     }
 
     @Test
-    fun `bestill feiler dersom man bestiller samme brev to ganger`() {
+    fun `returnerer samme bestilling dersom man gjør samme bestilling flere ganger`() {
         val behandling = opprettSakOgBehandling()
         val unikReferanse = UUID.randomUUID().toString()
         val brevbestillingReferanse = BrevbestillingReferanse(UUID.randomUUID())
@@ -86,7 +86,7 @@ class BrevbestillingServiceTest {
             )
         } returns brevbestillingReferanse
 
-        brevbestillingService.bestill(
+        val bestilling1 = brevbestillingService.bestill(
             behandlingId = behandling.id,
             brevBehov = VedtakEndring,
             unikReferanse = unikReferanse,
@@ -95,16 +95,18 @@ class BrevbestillingServiceTest {
             brukApiV3 = false
         )
 
-        assertThrows<IllegalStateException> {
-            brevbestillingService.bestill(
-                behandlingId = behandling.id,
-                brevBehov = VedtakEndring,
-                unikReferanse = unikReferanse,
-                ferdigstillAutomatisk = false,
-                vedlegg = null,
-                brukApiV3 = false
-            )
-        }
+        assertThat(bestilling1).isEqualTo(brevbestillingReferanse.brevbestillingReferanse)
+
+        val bestilling2 = brevbestillingService.bestill(
+            behandlingId = behandling.id,
+            brevBehov = VedtakEndring,
+            unikReferanse = unikReferanse,
+            ferdigstillAutomatisk = false,
+            vedlegg = null,
+            brukApiV3 = false
+        )
+
+        assertThat(bestilling2).isEqualTo(brevbestillingReferanse.brevbestillingReferanse)
     }
 
     @Test
