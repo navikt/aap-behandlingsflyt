@@ -269,7 +269,7 @@ and exists (
         val sql = """
             select * from sak s
                 where s.id not in (select sak_id from behandling where status not in('AVSLUTTET', 'IVERKSETTES'))
-            AND upper(s.rettighetsperiode) < ?
+            AND upper(s.rettighetsperiode) < ? AND upper(rettighetsperiode)-lower(rettighetsperiode) > 1
         """.trimIndent()
 
         return connection.queryList(sql) {

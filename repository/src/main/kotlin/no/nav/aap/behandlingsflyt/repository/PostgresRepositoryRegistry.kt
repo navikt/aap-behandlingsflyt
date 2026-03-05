@@ -68,6 +68,7 @@ import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.refusjo
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.rettighetsperiode.VurderRettighetsperiodeRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.student.StudentRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.student.SykestipendRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.samordning.BarnepensjonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.sykdom.SykdomRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.sykdom.SykdomsvurderingForBrevRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.sykdom.SykepengerErstatningRepositoryImpl
@@ -158,6 +159,7 @@ val postgresRepositoryRegistry = RepositoryRegistry()
     .register<TilbakekrevingRepositoryImpl>()
     .register<InntektsbortfallRepositoryImpl>()
     .register<SykestipendRepositoryImpl>()
+    .register<BarnepensjonRepositoryImpl>()
     .register<VedtakslengdeRepositoryImpl>()
     .register<DagpengerRepositoryImpl>()
     .register<RettighetstypeRepositoryImpl>()
