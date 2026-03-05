@@ -23,7 +23,6 @@ enum class BehandlingsflytFeature : FeatureToggle {
     NyTidligereVurderinger,
     BekreftVurderingerOppfolging,
     LagreStansOgOpphor,
-    RettTilAvslagHvisNorgeIkkeKompetentStat,
     SamordningBarnepensjon,
     ;
 
