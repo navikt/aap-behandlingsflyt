@@ -1,8 +1,8 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.barnepensjon
 
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.tidslinje.somTidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.Bruker
@@ -16,9 +16,7 @@ data class BarnepensjonGrunnlag(
     val vurdering: BarnepensjonVurdering
 ) {
     fun tilTidslinje(): Tidslinje<Beløp> {
-        return Tidslinje(
-            this.vurdering.perioder
-                .map { it.tilSegment() })
+        return vurdering.perioder.somTidslinje({ it.periode }, { it.dagsats() })
     }
 }
 
@@ -35,6 +33,8 @@ data class BarnepensjonPeriode(
     val tom: YearMonth?,
     val månedsats: Beløp
 ) {
+    val periode = Periode(fom.atDay(1), tom?.atEndOfMonth() ?: Tid.MAKS)
+
     init {
         if (månedsats.verdi < BigDecimal.ZERO) {
             throw IllegalArgumentException("Månedbeløp kan ikke være negativt")
@@ -43,9 +43,5 @@ data class BarnepensjonPeriode(
 
     fun dagsats(): Beløp {
         return Beløp(månedsats.multiplisert(12 / 260).verdi().setScale(0, RoundingMode.HALF_UP))
-    }
-
-    fun tilSegment(): Segment<Beløp> {
-        return Segment(Periode(fom.atDay(1), tom?.atEndOfMonth() ?: Tid.MAKS), dagsats())
     }
 }
