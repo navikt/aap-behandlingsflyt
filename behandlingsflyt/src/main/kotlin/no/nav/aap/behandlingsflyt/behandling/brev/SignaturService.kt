@@ -254,18 +254,17 @@ class SignaturService(
         return oppgaveEnhetListe.find { it.avklaringsbehovKode == definisjon.kode.name }?.enhet
     }
 
-}
-
-private fun mapRolle(rolle: Rolle): SignaturRolle? {
-    return when (rolle) {
-        Rolle.SAKSBEHANDLER_OPPFOLGING -> SignaturRolle.SAKSBEHANDLER_OPPFOLGING
-        Rolle.SAKSBEHANDLER_NASJONAL -> SignaturRolle.SAKSBEHANDLER_NASJONAL
-        Rolle.KVALITETSSIKRER -> SignaturRolle.KVALITETSSIKRER
-        Rolle.BESLUTTER -> SignaturRolle.BESLUTTER
-        else -> null
+    private fun mapRolle(rolle: Rolle): SignaturRolle? {
+        return when (rolle) {
+            Rolle.SAKSBEHANDLER_OPPFOLGING -> SignaturRolle.SAKSBEHANDLER_OPPFOLGING
+            Rolle.SAKSBEHANDLER_NASJONAL -> SignaturRolle.SAKSBEHANDLER_NASJONAL
+            Rolle.KVALITETSSIKRER -> SignaturRolle.KVALITETSSIKRER
+            Rolle.BESLUTTER -> SignaturRolle.BESLUTTER
+            else -> null
+        }
     }
-}
 
-private fun String.erNavIdent(): Boolean {
-    return this.matches(Regex("\\w\\d{6}"))
+    private fun String.erNavIdent(): Boolean {
+        return this.matches(Regex("\\w\\d{6}"))
+    }
 }
