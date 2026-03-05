@@ -73,7 +73,9 @@ class SjekkInstitusjonsOppholdJobbUtfører(
                                             .somTidslinje()
                                             .segmenter()
                                             .all { it.verdi.utfall == Utfall.IKKE_OPPFYLT }
-                                    if (alleIkkeOppfylt) {
+                                    if (vurderingsbehovOgÅrsaker.any { it.vurderingsbehov.any { vurderingsbehovMedPeriode -> vurderingsbehovMedPeriode.type == Vurderingsbehov.INSTITUSJONSOPPHOLD } }) {
+                                        log.info("Vurderingsbehov for institusjonsopphold finnes allerede for ${sak.id}")
+                                    } else if (alleIkkeOppfylt) {
                                         log.info("Vurderingsbehov for institusjonsopphold opprettes ikke, da det er avslag overalt for ${sak.id}")
                                     } else {
                                         log.info("Fant sak med institusjonsopphold ${sak.id}")
@@ -117,10 +119,10 @@ class SjekkInstitusjonsOppholdJobbUtfører(
         val varighetPaMinstFireMaaneder =
             !periode.tom.isBefore(periode.fom.plusMonths(4))
 
-        val fomToMaanederSiden =
-            periode.fom == now.minusMonths(2)
+        val fomMinstToMaanederSiden =
+            periode.fom.isBefore(now.withDayOfMonth(1).minusMonths(1))
 
-        return varighetPaMinstFireMaaneder && fomToMaanederSiden
+        return varighetPaMinstFireMaaneder && fomMinstToMaanederSiden
     }
 
     private fun opprettNyBehandling(sak: Sak): Behandling =
@@ -155,6 +157,6 @@ class SjekkInstitusjonsOppholdJobbUtfører(
         /**
          * Kjøres en gang hver dag, slås av og på med Feature Toggle
          */
-        override val cron = CronExpression.createWithoutSeconds("*/5 * * * *")
+        override val cron = CronExpression.createWithoutSeconds("0 3 * * *")
     }
 }
