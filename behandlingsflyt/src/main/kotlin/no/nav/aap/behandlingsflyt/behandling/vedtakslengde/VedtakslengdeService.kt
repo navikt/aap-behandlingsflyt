@@ -103,7 +103,7 @@ class VedtakslengdeService(
         val vedtakslengdeGrunnlag = vedtakslengdeRepository.hentHvisEksisterer(behandlingId)
 
         // Det finnes en manuell vurdering for denne behandlingen, og vi skal ikke overstyre denne ved å lagre en automatisk utledet sluttdato
-        if (vedtakslengdeGrunnlag?.vurdering?.vurdertManuelt == true) {
+        if (vedtakslengdeGrunnlag?.gjeldendeVurdering()?.vurdertManuelt == true) {
             return UtledetVedtakslengde.Manuell
         }
 

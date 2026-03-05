@@ -1015,8 +1015,8 @@ class AvklarVedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(AvklarVedtakslen
             val behandling = BehandlingRepositoryImpl(connection).finnFørstegangsbehandling(sak.id)
             val vedtakslengdeGrunnlag = VedtakslengdeRepositoryImpl(connection).hentHvisEksisterer(behandling.id)
             assertThat(vedtakslengdeGrunnlag).isNotNull
-            assertThat(vedtakslengdeGrunnlag?.vurdering?.sluttdato).isEqualTo(startDato.plusMonths(15))
-            assertThat(vedtakslengdeGrunnlag?.vurdering?.vurdertManuelt).isTrue
+            assertThat(vedtakslengdeGrunnlag?.gjeldendeVurdering()?.sluttdato).isEqualTo(startDato.plusMonths(15))
+            assertThat(vedtakslengdeGrunnlag?.gjeldendeVurdering()?.vurdertManuelt).isTrue
         }
 
         val endringsdato = sak.rettighetsperiode.fom.plusMonths(10)
@@ -1041,7 +1041,7 @@ class AvklarVedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(AvklarVedtakslen
             .medKontekst {
                 val vedtasklengdeRepository: VedtakslengdeRepository = repositoryProvider.provide()
                 val vedtakslengdeGrunnlag = vedtasklengdeRepository.hentHvisEksisterer(this.behandling.id)
-                assertThat(vedtakslengdeGrunnlag?.vurdering?.sluttdato).isEqualTo(endringsdato.plusMonths(6).minusDays(1))
+                assertThat(vedtakslengdeGrunnlag?.gjeldendeVurdering()?.sluttdato).isEqualTo(endringsdato.plusMonths(6).minusDays(1))
             }
     }
 
@@ -1077,8 +1077,8 @@ class AvklarVedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(AvklarVedtakslen
             val behandling = BehandlingRepositoryImpl(connection).finnFørstegangsbehandling(sak.id)
             val vedtakslengdeGrunnlag = VedtakslengdeRepositoryImpl(connection).hentHvisEksisterer(behandling.id)
             assertThat(vedtakslengdeGrunnlag).isNotNull
-            assertThat(vedtakslengdeGrunnlag?.vurdering?.sluttdato).isEqualTo(startDato.plusMonths(15))
-            assertThat(vedtakslengdeGrunnlag?.vurdering?.vurdertManuelt).isTrue
+            assertThat(vedtakslengdeGrunnlag?.gjeldendeVurdering()?.sluttdato).isEqualTo(startDato.plusMonths(15))
+            assertThat(vedtakslengdeGrunnlag?.gjeldendeVurdering()?.vurdertManuelt).isTrue
         }
     }
 }

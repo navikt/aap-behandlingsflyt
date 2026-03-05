@@ -63,7 +63,7 @@ class VedtakslengdeSteg(
                                 }
                             }
                         },
-                        erTilstrekkeligVurdert = { vedtakslengdeRepository.hentHvisEksisterer(kontekst.behandlingId)?.vurdering != null },
+                        erTilstrekkeligVurdert = { vedtakslengdeRepository.hentHvisEksisterer(kontekst.behandlingId)?.gjeldendeVurdering() != null },
                         tilbakestillGrunnlag = { },
                         kontekst = kontekst
                     )
