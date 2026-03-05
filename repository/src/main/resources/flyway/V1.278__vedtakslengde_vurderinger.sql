@@ -2,7 +2,7 @@
 create table vedtakslengde_vurderinger
 (
     id        bigserial primary key,
-    opprettet timestamp default current_timestamp
+    opprettet timestamp(3) default current_timestamp not null
 );
 
 -- Legg til vurderinger_id i vedtakslengde_vurdering
