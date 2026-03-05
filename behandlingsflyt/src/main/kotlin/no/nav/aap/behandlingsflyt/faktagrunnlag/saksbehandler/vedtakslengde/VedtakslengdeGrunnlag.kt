@@ -7,8 +7,12 @@ import java.time.Instant
 import java.time.LocalDate
 
 data class VedtakslengdeGrunnlag(
-    val vurdering: VedtakslengdeVurdering
-)
+    val vurderinger: List<VedtakslengdeVurdering>
+) {
+    fun gjeldendeVurdering(): VedtakslengdeVurdering? {
+        return vurderinger.maxByOrNull { it.opprettet }
+    }
+}
 
 data class VedtakslengdeVurdering(
     val sluttdato: LocalDate,

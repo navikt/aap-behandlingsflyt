@@ -14,85 +14,101 @@ class VedtakslengdeRepositoryImpl(private val connection: DBConnection) : Vedtak
 
     override fun lagre(
         behandlingId: BehandlingId,
-        vurdering: VedtakslengdeVurdering
+        vurderinger: List<VedtakslengdeVurdering>
     ) {
         val eksisterendeGrunnlag = hentHvisEksisterer(behandlingId)
-        val nyttGrunnlag = VedtakslengdeGrunnlag(
-            vurdering = vurdering
-        )
+        val nyttGrunnlag = VedtakslengdeGrunnlag(vurderinger)
 
         if (eksisterendeGrunnlag != nyttGrunnlag) {
             eksisterendeGrunnlag?.let {
                 deaktiverGrunnlag(behandlingId)
             }
-            lagre(behandlingId, nyttGrunnlag)
+            lagreGrunnlag(behandlingId, nyttGrunnlag)
         }
     }
 
-    private fun lagre(
+    private fun lagreGrunnlag(
         behandlingId: BehandlingId,
         grunnlag: VedtakslengdeGrunnlag
     ) {
-        val vurderingId = lagre(grunnlag.vurdering)
+        val vurderingerId = lagreVurderinger(grunnlag.vurderinger)
 
         connection.executeReturnKey(
             """
             insert into vedtakslengde_grunnlag (
-                behandling_id, vurdering_id, aktiv
+                behandling_id, vurderinger_id, aktiv
             ) values (?, ?, true)
             """.trimIndent()
         ) {
             setParams {
                 setLong(1, behandlingId.toLong())
-                setLong(2, vurderingId)
+                setLong(2, vurderingerId)
             }
         }
     }
 
-    private fun lagre(vurdering: VedtakslengdeVurdering): Long {
-        return connection.executeReturnKey(
+    private fun lagreVurderinger(vurderinger: List<VedtakslengdeVurdering>): Long {
+        val vurderingerId = connection.executeReturnKey(
+            "insert into vedtakslengde_vurderinger default values"
+        )
+
+        connection.executeBatch(
             """
             insert into vedtakslengde_vurdering (
-                sluttdato, utvidet_med, vurdert_i_behandling, vurdert_av, opprettet
-            ) values (?, ?, ?, ?, ?)
-            """.trimIndent()
+                sluttdato, utvidet_med, vurdert_i_behandling, vurdert_av, opprettet, vurderinger_id
+            ) values (?, ?, ?, ?, ?, ?)
+            """.trimIndent(),
+            vurderinger
         ) {
-            setParams {
+            setParams { vurdering ->
                 setLocalDate(1, vurdering.sluttdato)
                 setEnumName(2, vurdering.utvidetMed)
                 setLong(3, vurdering.vurdertIBehandling.toLong())
                 setString(4, vurdering.vurdertAv.ident)
                 setInstant(5, vurdering.opprettet)
+                setLong(6, vurderingerId)
             }
         }
+
+        return vurderingerId
     }
 
     override fun hentHvisEksisterer(behandlingId: BehandlingId): VedtakslengdeGrunnlag? {
-        return connection.queryFirstOrNull(
+        val vurderingerId: Long = connection.queryFirstOrNull(
             """
-            select 
-                v.sluttdato,
-                v.utvidet_med,
-                v.vurdert_i_behandling,
-                v.vurdert_av,
-                v.opprettet
-                from vedtakslengde_grunnlag g
-                join vedtakslengde_vurdering v on g.vurdering_id = v.id
-            where g.behandling_id = ? and g.aktiv
+            select vurderinger_id from vedtakslengde_grunnlag
+            where behandling_id = ? and aktiv
             """.trimIndent()
         ) {
             setParams {
                 setLong(1, behandlingId.toLong())
             }
+            setRowMapper { row -> row.getLong("vurderinger_id") }
+        } ?: return null
+
+        val vurderinger = hentVurderinger(vurderingerId)
+        return VedtakslengdeGrunnlag(vurderinger)
+    }
+
+    private fun hentVurderinger(vurderingerId: Long): List<VedtakslengdeVurdering> {
+        return connection.queryList(
+            """
+            select sluttdato, utvidet_med, vurdert_i_behandling, vurdert_av, opprettet
+            from vedtakslengde_vurdering
+            where vurderinger_id = ?
+            order by opprettet
+            """.trimIndent()
+        ) {
+            setParams {
+                setLong(1, vurderingerId)
+            }
             setRowMapper { row ->
-                VedtakslengdeGrunnlag(
-                    vurdering = VedtakslengdeVurdering(
-                        sluttdato = row.getLocalDate("sluttdato"),
-                        utvidetMed = row.getEnum("utvidet_med"),
-                        vurdertIBehandling = BehandlingId(row.getLong("vurdert_i_behandling")),
-                        vurdertAv = Bruker(row.getString("vurdert_av")),
-                        opprettet = row.getInstant("opprettet")
-                    )
+                VedtakslengdeVurdering(
+                    sluttdato = row.getLocalDate("sluttdato"),
+                    utvidetMed = row.getEnum("utvidet_med"),
+                    vurdertIBehandling = BehandlingId(row.getLong("vurdert_i_behandling")),
+                    vurdertAv = Bruker(row.getString("vurdert_av")),
+                    opprettet = row.getInstant("opprettet")
                 )
             }
         }
@@ -125,8 +141,8 @@ class VedtakslengdeRepositoryImpl(private val connection: DBConnection) : Vedtak
 
         connection.execute(
             """
-                insert into vedtakslengde_grunnlag (behandling_id, vurdering_id)
-                select ?, vurdering_id
+                insert into vedtakslengde_grunnlag (behandling_id, vurderinger_id)
+                select ?, vurderinger_id
                 from vedtakslengde_grunnlag 
                 where behandling_id = ? and aktiv
             """.trimIndent()
@@ -139,28 +155,36 @@ class VedtakslengdeRepositoryImpl(private val connection: DBConnection) : Vedtak
     }
 
     override fun slett(behandlingId: BehandlingId) {
-        val antallSlettedeRader = connection.executeReturnUpdated(
+        val vurderingerIds = connection.queryList(
             """
-            delete from vedtakslengde_grunnlag
-            where behandling_id = ?
+            select vurderinger_id from vedtakslengde_grunnlag where behandling_id = ?
             """.trimIndent()
         ) {
-            setParams {
-                setLong(1, behandlingId.toLong())
-            }
+            setParams { setLong(1, behandlingId.toLong()) }
+            setRowMapper { row -> row.getLong("vurderinger_id") }
+        }
+
+        val antallSlettedeRader = connection.executeReturnUpdated(
+            "delete from vedtakslengde_grunnlag where behandling_id = ?"
+        ) {
+            setParams { setLong(1, behandlingId.toLong()) }
         }
         log.info("Slettet $antallSlettedeRader rader fra vedtakslengde_grunnlag for behandlingId=${behandlingId.toLong()}")
-        val antallSlettedeVurderinger = connection.executeReturnUpdated(
-            """
-                delete from vedtakslengde_vurdering
-                where vurdert_i_behandling = ?
-                """.trimIndent()
-        ) {
-            setParams {
-                setLong(1, behandlingId.toLong())
+
+        if (vurderingerIds.isNotEmpty()) {
+            val antallSlettedeVurderinger = connection.executeReturnUpdated(
+                "delete from vedtakslengde_vurdering where vurderinger_id = ANY(?::bigint[])"
+            ) {
+                setParams { setLongArray(1, vurderingerIds) }
+            }
+            log.info("Slettet $antallSlettedeVurderinger rader fra vedtakslengde_vurdering for behandlingId=${behandlingId.toLong()}")
+
+            connection.executeReturnUpdated(
+                "delete from vedtakslengde_vurderinger where id = ANY(?::bigint[])"
+            ) {
+                setParams { setLongArray(1, vurderingerIds) }
             }
         }
-        log.info("Slettet $antallSlettedeVurderinger rader fra vedtakslengde_vurdering for behandlingId=${behandlingId.toLong()}")
     }
 
     companion object : Factory<VedtakslengdeRepositoryImpl> {
