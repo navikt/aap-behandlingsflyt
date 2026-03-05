@@ -1,10 +1,9 @@
-package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov
+package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.årmåned
 
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.verdityper.Tid
 import java.time.YearMonth
-import kotlin.collections.component1
-import kotlin.collections.component2
+import kotlin.compareTo
 
 interface ÅrMånedPeriodeLøsning {
     val fom: YearMonth
