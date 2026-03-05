@@ -10,7 +10,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravRegisterdata
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.gateway.DagpengerGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.gateway.DagpengerPeriode
-import no.nav.aap.behandlingsflyt.faktagrunnlag.ikkeKjørtSisteKalenderdag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.ikkeKjørtSisteKalenderdagForBehandling
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.dagpenger.DagpengerRepository
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
@@ -34,7 +34,7 @@ class DagpengerInformasjonskrav(
         return false
         return kontekst.erFørstegangsbehandlingEllerRevurdering() && !tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(
             kontekst, steg
-        ) && (oppdatert.ikkeKjørtSisteKalenderdag() || kontekst.rettighetsperiode != oppdatert?.rettighetsperiode)
+        ) && (oppdatert.ikkeKjørtSisteKalenderdagForBehandling(kontekst.behandlingId) || kontekst.rettighetsperiode != oppdatert?.rettighetsperiode || kontekst.erVurderingsbehovEndretEtterOppdatertInformasjonskrav(oppdatert))
     }
 
     override fun klargjør(kontekst: FlytKontekstMedPerioder): DagpengerInput {
@@ -107,10 +107,10 @@ class DagpengerInformasjonskrav(
             repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider
         ): DagpengerInformasjonskrav {
             return DagpengerInformasjonskrav(
-                TidligereVurderingerImpl(repositoryProvider),
-                gatewayProvider.provide(),
-                repositoryProvider.provide(),
-                SakService(repositoryProvider),
+                tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
+                dagpengerGateway = gatewayProvider.provide(),
+                dagpengerRepository = repositoryProvider.provide(),
+                sakService = SakService(repositoryProvider, gatewayProvider),
             )
         }
     }

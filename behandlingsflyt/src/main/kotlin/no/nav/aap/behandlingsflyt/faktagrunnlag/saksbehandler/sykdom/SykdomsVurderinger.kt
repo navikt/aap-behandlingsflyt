@@ -22,9 +22,7 @@ data class Sykdomsvurdering(
     val erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense: Boolean?,
     val yrkesskadeBegrunnelse: String?,
     val erArbeidsevnenNedsatt: Boolean?,
-    val kodeverk: String? = null,
-    val hoveddiagnose: String? = null,
-    val bidiagnoser: List<String>? = emptyList(),
+    val diagnose: Diagnose?,
     val vurdertIBehandling: BehandlingId,
     val opprettet: Instant,
     val vurdertAv: Bruker,
@@ -68,6 +66,17 @@ data class Sykdomsvurdering(
                 && erTilstrekkeligNedsattArbeidsevne
                 && erVissVarighetOmRelevant(kravdato, periodenVurderingenGjelderFor)
     }
+    
+    fun erOppfyltOrdinærEllerYrkesskadeSettBortIfraÅrsakssammenheng(kravDato: LocalDate, periodenVurderingenGjelderFor: Periode): Boolean {
+        return erOppfyltForYrkesskadeSettBortIfraÅrsakssammenheng(
+            kravDato,
+            periodenVurderingenGjelderFor
+        ) || erOppfyltOrdinær(
+            kravDato,
+            periodenVurderingenGjelderFor
+        )
+    }
+
 
     fun erOppfyltForYrkesskadeSettBortIfraÅrsakssammenhengOgVissVarighet(): Boolean {
         val erTilstrekkeligNedsattArbeidsevne = erNedsettelseIArbeidsevneMerEnnHalvparten == true
@@ -78,13 +87,13 @@ data class Sykdomsvurdering(
                 && erSkadeSykdomEllerLyteVesentligdel == true
                 && erTilstrekkeligNedsattArbeidsevne
     }
-
+    
     private fun erVissVarighetOmRelevant(kravdato: LocalDate, periodenVurderingenGjelderFor: Periode): Boolean {
         return if (erFørsteVurdering(kravdato, periodenVurderingenGjelderFor))
             erNedsettelseIArbeidsevneAvEnVissVarighet == true
         else true
     }
-
+    
     fun erOppfyltOrdinærSettBortIfraVissVarighet(): Boolean {
         return harSkadeSykdomEllerLyte
                 && erArbeidsevnenNedsatt == true

@@ -21,6 +21,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
+import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.test.FakeTidligereVurderinger
 import no.nav.aap.behandlingsflyt.test.desember
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
@@ -76,7 +77,8 @@ class VurderSykdomStegTest {
                         avbruttStudieDato = 1 desember 2024,
                         avbruddMerEnn6Måneder = true,
                         vurdertIBehandling = behandlingId,
-                        vurdertTidspunkt = LocalDateTime.now()
+                        vurdertTidspunkt = LocalDateTime.now(),
+                        diagnose = null
                     )
                 ),
                 oppgittStudent = OppgittStudent(erStudentStatus = ErStudentStatus.AVBRUTT)
@@ -94,7 +96,8 @@ class VurderSykdomStegTest {
                         avbruttStudieDato = 1 desember 2024,
                         avbruddMerEnn6Måneder = true,
                         vurdertIBehandling = revurderingId,
-                        vurdertTidspunkt = LocalDateTime.now()
+                        vurdertTidspunkt = LocalDateTime.now(),
+                        diagnose = null
                     )
                 ),
                 oppgittStudent = OppgittStudent(erStudentStatus = ErStudentStatus.AVBRUTT)
@@ -106,6 +109,7 @@ class VurderSykdomStegTest {
             sykdomRepository,
             FakeTidligereVurderinger(),
             avklaringsbehovService,
+            AlleAvskruddUnleash
         )
 
         lagreNedAlder(vilkårsresultatRepository, behandlingId)

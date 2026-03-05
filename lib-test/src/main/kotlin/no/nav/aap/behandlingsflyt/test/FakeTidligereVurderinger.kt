@@ -21,8 +21,9 @@ class FakeTidligereVurderinger: TidligereVurderinger {
 
     override fun behandlingsutfall(
         kontekst: FlytKontekstMedPerioder,
-        førSteg: StegType
+        førSteg: StegType,
+        etterSteg: StegType?,
     ): Tidslinje<TidligereVurderinger.Behandlingsutfall> {
-        return tidslinjeOf(kontekst.rettighetsperiode to TidligereVurderinger.Behandlingsutfall.UKJENT)
+        return tidslinjeOf(kontekst.rettighetsperiode to TidligereVurderinger.PotensieltOppfylt(null))
     }
 }

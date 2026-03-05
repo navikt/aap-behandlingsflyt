@@ -201,14 +201,14 @@ class LovvalgInformasjonskrav private constructor(
         ): LovvalgInformasjonskrav {
             val medlemskapArbeidInntektRepository = repositoryProvider.provide<MedlemskapArbeidInntektRepository>()
             return LovvalgInformasjonskrav(
-                SakService(repositoryProvider),
-                medlemskapArbeidInntektRepository,
-                repositoryProvider.provide<MedlemskapRepository>(),
-                TidligereVurderingerImpl(repositoryProvider),
-                gatewayProvider.provide(),
-                gatewayProvider.provide(),
-                gatewayProvider.provide(),
-                gatewayProvider.provide(),
+                sakService = SakService(repositoryProvider, gatewayProvider),
+                medlemskapArbeidInntektRepository = medlemskapArbeidInntektRepository,
+                medlemskapRepository = repositoryProvider.provide<MedlemskapRepository>(),
+                tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
+                medlemskapGateway = gatewayProvider.provide(),
+                arbeidsForholdGateway = gatewayProvider.provide(),
+                enhetsregisteretGateway = gatewayProvider.provide(),
+                inntektskomponentenGateway = gatewayProvider.provide(),
             )
         }
     }

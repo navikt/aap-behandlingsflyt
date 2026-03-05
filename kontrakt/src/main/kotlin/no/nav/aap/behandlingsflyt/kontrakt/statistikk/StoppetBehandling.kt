@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.kontrakt.statistikk
 
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.AvklaringsbehovHendelseDto
 import no.nav.aap.verdityper.dokument.JournalpostId
 import no.nav.aap.verdityper.dokument.Kanal
@@ -41,7 +42,7 @@ public data class StoppetBehandling(
     val ident: String,
     val versjon: String,
     val vurderingsbehov: List<Vurderingsbehov>,
-    val årsakTilOpprettelse: String,
+    val årsakTilOpprettelse: ÅrsakTilOpprettelse,
     val avklaringsbehov: List<AvklaringsbehovHendelseDto>,
     val hendelsesTidspunkt: LocalDateTime,
     val avsluttetBehandling: AvsluttetBehandlingDTO? = null,
@@ -91,6 +92,7 @@ public enum class Vurderingsbehov {
     REVURDER_SAMORDNING_UFØRE,
     REVURDER_SAMORDNING_ANDRE_STATLIGE_YTELSER,
     REVURDER_SAMORDNING_ARBEIDSGIVER,
+    REVURDER_SAMORDNING_BARNEPENSJON,
     REVURDER_SAMORDNING_TJENESTEPENSJON,
     REFUSJONSKRAV,              // Refusjonskrav
     UTENLANDSOPPHOLD_FOR_SOKNADSTIDSPUNKT, // Utenlandsopphold før søknadstidspunkt

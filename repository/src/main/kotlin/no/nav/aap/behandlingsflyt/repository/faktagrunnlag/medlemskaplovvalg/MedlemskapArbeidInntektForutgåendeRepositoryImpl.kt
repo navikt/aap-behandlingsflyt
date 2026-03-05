@@ -312,7 +312,7 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: 
             overstyrt = row.getBoolean("overstyrt"),
             vurdertAv = row.getString("vurdert_av"),
             vurdertTidspunkt = row.getLocalDateTime("opprettet_tid"),
-            vurdertIBehandling = row.getLong("vurdert_i_behandling").let { id -> BehandlingId(id) },
+            vurdertIBehandling = BehandlingId(row.getLong("vurdert_i_behandling")),
             fom = row.getLocalDate("fom"),
             tom = row.getLocalDateOrNull("tom"),
         )

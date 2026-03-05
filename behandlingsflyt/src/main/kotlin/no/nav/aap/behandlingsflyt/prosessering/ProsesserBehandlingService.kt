@@ -1,12 +1,14 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.flyt.FlytOrkestrator
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
+import no.nav.aap.behandlingsflyt.log.ContextRepository
+import no.nav.aap.behandlingsflyt.mdc.LogKontekst
+import no.nav.aap.behandlingsflyt.mdc.LoggingKontekst
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.gateway.GatewayProvider
@@ -20,6 +22,7 @@ class ProsesserBehandlingService(
     private val flytJobbRepository: FlytJobbRepository,
     private val behandlingRepository: BehandlingRepository,
     private val atomærFlytOrkestrator: FlytOrkestrator,
+    private val contextRepository: ContextRepository,
 ) {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         flytJobbRepository = repositoryProvider.provide(),
@@ -29,23 +32,24 @@ class ProsesserBehandlingService(
             stoppNårStatus = setOf(Status.IVERKSETTES, Status.AVSLUTTET),
             markSavepointAt = emptySet(),
             gatewayProvider = gatewayProvider
-        )
+        ),
+        contextRepository = repositoryProvider.provide(),
     )
 
     private val log = LoggerFactory.getLogger(javaClass)
 
     fun triggProsesserBehandling(
-        opprettetBehandling: SakOgBehandlingService.OpprettetBehandling,
+        opprettetBehandling: BehandlingService.OpprettetBehandling,
         vurderingsbehov: List<Vurderingsbehov> = emptyList(),
         parameters: List<Pair<String, String>> = emptyList()
     ) {
 
         when (opprettetBehandling) {
-            is SakOgBehandlingService.Ordinær -> triggProsesserBehandling(
+            is BehandlingService.Ordinær -> triggProsesserBehandling(
                 opprettetBehandling.åpenBehandling, vurderingsbehov, parameters
             )
 
-            is SakOgBehandlingService.MåBehandlesAtomært -> kjørAtomærBehandling(opprettetBehandling)
+            is BehandlingService.MåBehandlesAtomært -> kjørAtomærBehandling(opprettetBehandling)
         }
     }
 
@@ -54,7 +58,9 @@ class ProsesserBehandlingService(
         vurderingsbehov: List<Vurderingsbehov> = emptyList(),
         parameters: List<Pair<String, String>> = emptyList()
     ) {
-        triggProsesserBehandling(behandling.sakId, behandling.id, vurderingsbehov, parameters)
+        LoggingKontekst(contextRepository, LogKontekst(referanse = behandling.referanse)).use {
+            triggProsesserBehandling(behandling.sakId, behandling.id, vurderingsbehov, parameters)
+        }
     }
 
     fun triggProsesserBehandling(
@@ -86,7 +92,7 @@ class ProsesserBehandlingService(
         flytJobbRepository.leggTil(jobbInput)
     }
 
-    private fun kjørAtomærBehandling(opprettetBehandling: SakOgBehandlingService.MåBehandlesAtomært) {
+    private fun kjørAtomærBehandling(opprettetBehandling: BehandlingService.MåBehandlesAtomært) {
         val behandling = opprettetBehandling.nyBehandling
 
         val kontekst = atomærFlytOrkestrator.opprettKontekst(behandling.sakId, behandling.id)

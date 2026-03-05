@@ -47,7 +47,7 @@ class VurderForutgåendeMedlemskapSteg private constructor(
         medlemskapArbeidInntektRepository = repositoryProvider.provide(),
         personopplysningForutgåendeRepository = repositoryProvider.provide(),
         sykdomRepository = repositoryProvider.provide(),
-        tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
+        tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
         avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
     )
 
@@ -132,9 +132,9 @@ class VurderForutgåendeMedlemskapSteg private constructor(
             .mapValue { (behandlingsutfall, automatiskVilkårsvurderingLovvalg) ->
                 when (behandlingsutfall) {
                     null -> false
-                    TidligereVurderinger.Behandlingsutfall.IKKE_BEHANDLINGSGRUNNLAG -> false
-                    TidligereVurderinger.Behandlingsutfall.UUNGÅELIG_AVSLAG -> false
-                    TidligereVurderinger.Behandlingsutfall.UKJENT -> {
+                    TidligereVurderinger.IkkeBehandlingsgrunnlag -> false
+                    TidligereVurderinger.UunngåeligAvslag -> false
+                    is TidligereVurderinger.PotensieltOppfylt -> {
                         val automatiskVilkårsvurderingForutgåendeMedlemskapIkkeOppfylt =
                             automatiskVilkårsvurderingLovvalg?.erOppfylt() == false
 

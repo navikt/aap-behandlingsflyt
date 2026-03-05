@@ -7,7 +7,6 @@ import no.nav.aap.behandlingsflyt.exception.KanIkkeVurdereEgneVurderingerExcepti
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.vedtak.TotrinnsVurdering
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.KvalitetssikringLøsning
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
@@ -15,13 +14,11 @@ import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.lookup.repository.RepositoryProvider
 
 class KvalitetssikrerLøser(
-    private val behandlingRepository: BehandlingRepository,
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
     private val unleashGateway: UnleashGateway
 ) : AvklaringsbehovsLøser<KvalitetssikringLøsning> {
 
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
-        behandlingRepository = repositoryProvider.provide(),
         avklaringsbehovRepository = repositoryProvider.provide(),
         unleashGateway = gatewayProvider.provide()
     )
@@ -30,7 +27,6 @@ class KvalitetssikrerLøser(
         kontekst: AvklaringsbehovKontekst,
         løsning: KvalitetssikringLøsning
     ): LøsningsResultat {
-        val behandling = behandlingRepository.hent(kontekst.kontekst.behandlingId)
         val avklaringsbehovene =
             avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId = kontekst.kontekst.behandlingId)
 
@@ -44,39 +40,16 @@ class KvalitetssikrerLøser(
         )
 
         if (skalSendesTilbake(relevanteVurderinger)) {
-            val vurderingerSomErSendtTilbake = relevanteVurderinger
-                .filter { it.godkjent == false }
-
-            val vurderingerFørRetur = relevanteVurderinger
-                .filter { it.godkjent == true }
-
-            val vurderingerSomMåReåpnes = relevanteVurderinger
-                .filter { vurdering ->
-                    vurderingerSomErSendtTilbake.none { it.definisjon == vurdering.definisjon } &&
-                            vurderingerFørRetur.none { it.definisjon == vurdering.definisjon }
-                }
-
-            vurderingerFørRetur.forEach { vurdering ->
+            relevanteVurderinger
+                .filter { it.godkjent != null }
+                .forEach { vurdering ->
                 avklaringsbehovene.vurderKvalitet(
                     definisjon = Definisjon.forKode(vurdering.definisjon),
                     godkjent = vurdering.godkjent!!,
                     begrunnelse = vurdering.begrunnelse(),
-                    vurdertAv = kontekst.bruker.ident
-                )
-            }
-
-            vurderingerSomErSendtTilbake.forEach { vurdering ->
-                avklaringsbehovene.vurderKvalitet(
-                    definisjon = Definisjon.forKode(vurdering.definisjon),
-                    begrunnelse = vurdering.begrunnelse(),
-                    godkjent = vurdering.godkjent!!,
+                    vurdertAv = kontekst.bruker.ident,
                     årsakTilRetur = vurdering.grunner.orEmpty(),
-                    vurdertAv = kontekst.bruker.ident
                 )
-            }
-
-            vurderingerSomMåReåpnes.forEach { vurdering ->
-                avklaringsbehovene.reåpne(definisjon = Definisjon.forKode(vurdering.definisjon))
             }
         } else {
             relevanteVurderinger.forEach { vurdering ->

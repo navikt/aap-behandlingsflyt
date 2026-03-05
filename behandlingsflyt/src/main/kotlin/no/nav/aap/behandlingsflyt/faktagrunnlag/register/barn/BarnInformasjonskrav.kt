@@ -11,7 +11,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravOppdatert
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravRegisterdata
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.KanTriggeRevurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.ikkeKjørtSisteKalenderdag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.ikkeKjørtSisteKalenderdagForBehandling
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.adapter.BarnInnhentingRespons
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.BarnIdentifikator
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
@@ -51,7 +51,7 @@ class BarnInformasjonskrav private constructor(
         val gyldigBehandling =
             kontekst.erFørstegangsbehandling() || kontekst.erRevurderingMedVurderingsbehov(BARNETILLEGG)
         return gyldigBehandling &&
-                oppdatert.ikkeKjørtSisteKalenderdag() &&
+                oppdatert.ikkeKjørtSisteKalenderdagForBehandling(kontekst.behandlingId) &&
                 !tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, steg)
     }
 
@@ -157,7 +157,7 @@ class BarnInformasjonskrav private constructor(
         return if (!harEndringer(barnGrunnlag, registerBarn)) {
             emptyList()
         } else {
-            listOf(VurderingsbehovMedPeriode(BARNETILLEGG, null))
+            listOf(VurderingsbehovMedPeriode(BARNETILLEGG))
         }
     }
 
@@ -169,12 +169,12 @@ class BarnInformasjonskrav private constructor(
             gatewayProvider: GatewayProvider
         ): Informasjonskrav<BarnInput, Registerdata> {
             return BarnInformasjonskrav(
-                repositoryProvider.provide(),
-                repositoryProvider.provide(),
-                gatewayProvider.provide(),
-                gatewayProvider.provide(),
-                TidligereVurderingerImpl(repositoryProvider),
-                SakService(repositoryProvider)
+                barnRepository = repositoryProvider.provide(),
+                personRepository = repositoryProvider.provide(),
+                barnGateway = gatewayProvider.provide(),
+                identGateway = gatewayProvider.provide(),
+                tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
+                sakService = SakService(repositoryProvider, gatewayProvider)
             )
         }
     }

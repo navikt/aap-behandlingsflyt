@@ -12,7 +12,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.statistikk.StoppetBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
 import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
-import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
@@ -55,12 +54,10 @@ class AlderFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
     fun `stopper ikke opp når søker er rett under 62 år gammel`() {
         val fom = LocalDate.now()
         val person = TestPersoner.PERSON_61()
-        val periode = Periode(fom, fom.plusYears(3))
 
         val (sak, behandling) = sendInnFørsteSøknad(
             person = person,
             mottattTidspunkt = fom.atStartOfDay(),
-            periode = periode
         )
 
         behandling
@@ -79,13 +76,11 @@ class AlderFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
     @Test
     fun `stopper opp når søker er over 62 år, og løser behov, avslag ved rett til uttak av alderspensjon`() {
         val fom = LocalDate.now()
-        val periode = Periode(fom, fom.plusYears(3))
         val person = TestPersoner.PERSON_62().medInntekter(emptyList())
 
         val (sak, behandling) = sendInnFørsteSøknad(
             person = person,
             mottattTidspunkt = fom.atStartOfDay(),
-            periode = periode,
         )
 
         behandling

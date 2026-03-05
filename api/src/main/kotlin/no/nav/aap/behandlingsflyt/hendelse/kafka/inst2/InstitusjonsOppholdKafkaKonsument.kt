@@ -71,11 +71,7 @@ class InstitusjonsOppholdKafkaKonsument(
                         sluttdato = institusjonsopphold.sluttdato,
                     )
                     meldingVerdi.institusjonsOpphold = beriketInstitusjonsopphold
-                    val sluttdato = meldingVerdi.institusjonsOpphold?.sluttdato
-                    val varighetOverTreeMaaneder = institusjonsopphold.startdato
-                        .withDayOfMonth(1)
-                        .plusMonths(4)
-                    if (sluttdato == null || sluttdato > varighetOverTreeMaaneder) {
+
                         hendelseService.registrerMottattHendelse(
                             dto = meldingVerdi.tilInnsending(
                                 meldingKey,
@@ -83,14 +79,6 @@ class InstitusjonsOppholdKafkaKonsument(
                             )
                         )
                         log.info("Sendt institusjonsoppholdhendelse for saksnummer: ${saken.saksnummer}")
-                    } else {
-                        log.info(
-                            "Ignorerer institusjonsoppholdhendelse for saksnummer: ${saken.saksnummer}, " +
-                                    "institusjonsoppholdet er for lenge til skal avsluttes"
-                        )
-                    }
-
-                    log.info("Mottatt institusjonsoppholdhendelse for saksnummer: ${saken.saksnummer}")
                 }
             }
         }

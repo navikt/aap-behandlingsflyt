@@ -30,10 +30,10 @@ class VurderOppholdskravSteg private constructor(
     private val vilkårsresultatRepository: VilkårsresultatRepository
 ) : BehandlingSteg, AvklaringsbehovMetadataUtleder {
 
-    constructor(repositoryProvider: RepositoryProvider) : this(
+    constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         oppholdskravGrunnlagRepository = repositoryProvider.provide(),
         avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
-        tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
+        tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
         vilkårsresultatRepository = repositoryProvider.provide(),
     )
 
@@ -82,9 +82,9 @@ class VurderOppholdskravSteg private constructor(
         val tidligereVurderingsutfall = tidligereVurderinger.behandlingsutfall(kontekst, type())
         return tidligereVurderingsutfall.mapValue { behandlingsutfall ->
             when (behandlingsutfall) {
-                TidligereVurderinger.Behandlingsutfall.IKKE_BEHANDLINGSGRUNNLAG -> false
-                TidligereVurderinger.Behandlingsutfall.UUNGÅELIG_AVSLAG -> false
-                TidligereVurderinger.Behandlingsutfall.UKJENT -> true
+                TidligereVurderinger.IkkeBehandlingsgrunnlag -> false
+                TidligereVurderinger.UunngåeligAvslag -> false
+                is TidligereVurderinger.PotensieltOppfylt -> true
             }
         }
     }
@@ -103,7 +103,7 @@ class VurderOppholdskravSteg private constructor(
             repositoryProvider: RepositoryProvider,
             gatewayProvider: GatewayProvider
         ): VurderOppholdskravSteg {
-            return VurderOppholdskravSteg(repositoryProvider)
+            return VurderOppholdskravSteg(repositoryProvider, gatewayProvider)
         }
 
         override fun type(): StegType {

@@ -22,6 +22,7 @@ public data class InnsendingReferanse(
         TILBAKEKREVING_HENDELSE_ID,
         INSTITUSJONSOPPHOLD_HENDELSE_ID,
         SYKEPENGEVEDTAK_HENDELSE_ID,
+        UFØREVEDTAK_HENDELSE_ID,
         FAGSYSTEMINFO_BEHOV_HENDELSE_ID,
         PDL_HENDELSE_ID
     }
@@ -57,6 +58,7 @@ public data class InnsendingReferanse(
     public constructor(id: TilbakekrevingHendelseId) : this(Type.TILBAKEKREVING_HENDELSE_ID, id.asString)
     public constructor(id: InstitusjonsOppholdHendelseId) : this(Type.INSTITUSJONSOPPHOLD_HENDELSE_ID, id.asString)
     public constructor(id: SykepengevedtakReferanse) : this(Type.SYKEPENGEVEDTAK_HENDELSE_ID, id.asString)
+    public constructor(id: UførevedtakReferanse) : this(Type.UFØREVEDTAK_HENDELSE_ID, id.asString)
     public constructor(id: TilbakekrevingFagsysteminfoBehovHendelseId) : this(Type.FAGSYSTEMINFO_BEHOV_HENDELSE_ID, id.asString)
     public constructor(id: PdlHendelseId) : this(Type.PDL_HENDELSE_ID, id.asString)
 }
@@ -104,6 +106,14 @@ public data class SykepengevedtakReferanse(@JsonValue val value: String) {
 
     public companion object {
         public fun ny(meldingKey: String): SykepengevedtakReferanse = SykepengevedtakReferanse(meldingKey)
+    }
+}
+
+public data class UførevedtakReferanse(@JsonValue val value: String) {
+    val asString: String get() = value
+
+    public companion object {
+        public fun ny(meldingKey: String): UførevedtakReferanse = UførevedtakReferanse(meldingKey)
     }
 }
 

@@ -164,7 +164,7 @@ data class OversendtAdresseV4(
 
 internal fun IdentMedType.tilOversendtPartId(): OversendtPartId? {
     return if (type == IdentType.UTL_ORG) {
-        return null
+        null
     } else {
         OversendtPartId(
             type = type.tilOversendtPartIdType(),

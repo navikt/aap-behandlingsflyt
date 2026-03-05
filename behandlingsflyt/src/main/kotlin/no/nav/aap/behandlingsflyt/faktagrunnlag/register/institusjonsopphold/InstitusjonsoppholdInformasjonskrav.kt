@@ -11,7 +11,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravOppdatert
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravRegisterdata
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.KanTriggeRevurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.ikkeKjørtSisteKalenderdag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.ikkeKjørtSisteKalenderdagForBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
@@ -55,7 +55,7 @@ class InstitusjonsoppholdInformasjonskrav private constructor(
         else {
             return kontekst.erFørstegangsbehandlingEllerRevurdering()
                     && !tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, steg)
-                    && (oppdatert.ikkeKjørtSisteKalenderdag() || kontekst.rettighetsperiode != oppdatert?.rettighetsperiode)
+                    && (oppdatert.ikkeKjørtSisteKalenderdagForBehandling(kontekst.behandlingId) || kontekst.rettighetsperiode != oppdatert?.rettighetsperiode || kontekst.erVurderingsbehovEndretEtterOppdatertInformasjonskrav(oppdatert))
         }
 
     }
@@ -129,11 +129,11 @@ class InstitusjonsoppholdInformasjonskrav private constructor(
             gatewayProvider: GatewayProvider
         ): InstitusjonsoppholdInformasjonskrav {
             return InstitusjonsoppholdInformasjonskrav(
-                SakService(repositoryProvider),
-                repositoryProvider.provide(),
-                gatewayProvider.provide(),
-                TidligereVurderingerImpl(repositoryProvider),
-                gatewayProvider.provide<UnleashGateway>()
+                sakService = SakService(repositoryProvider, gatewayProvider),
+                institusjonsoppholdRepository = repositoryProvider.provide(),
+                institusjonsoppholdRegisterGateway = gatewayProvider.provide(),
+                tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
+                unleashGateway = gatewayProvider.provide<UnleashGateway>()
             )
         }
 

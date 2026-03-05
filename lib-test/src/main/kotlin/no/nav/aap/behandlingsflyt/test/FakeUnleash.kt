@@ -33,23 +33,24 @@ open class FakeUnleashBaseWithDefaultDisabled(
 object LokalUnleash : FakeUnleashBase(
     mapOf(
         BehandlingsflytFeature.IngenValidering to true,
-        BehandlingsflytFeature.NyBrevtype11_17 to true,
         BehandlingsflytFeature.NyBrevbyggerV3 to false,
         BehandlingsflytFeature.LagreVedtakIFatteVedtak to true,
         BehandlingsflytFeature.Under18 to true,
         BehandlingsflytFeature.SendBrevVedMottattKlage to true,
         BehandlingsflytFeature.ForlengelseIManuellBehandling to true,
-        BehandlingsflytFeature.UtvidVedtakslengdeJobb to true,
         BehandlingsflytFeature.InstitusjonsoppholdJobb to true,
         BehandlingsflytFeature.TrekkSoeknadOpprettetFraLegeerklaering to true,
         BehandlingsflytFeature.UbehandledeMeldekortJobb to true,
-        BehandlingsflytFeature.PapirMeldekortFraBehandingsflyt to true,
         BehandlingsflytFeature.VirksomhetsEtablering to true,
         BehandlingsflytFeature.KvalitetssikringVed2213 to true,
         BehandlingsflytFeature.tilbakekrevingsOppgaverTilOppgave to true,
-        BehandlingsflytFeature.PeriodiseringHelseinstitusjonOpphold to true,
         BehandlingsflytFeature.HentingAvInstitusjonsOpphold to true,
-        BehandlingsflytFeature.VisIkkeRelevantPeriode to true
+        BehandlingsflytFeature.VisIkkeRelevantPeriode to true,
+        BehandlingsflytFeature.NyTidligereVurderinger to true,
+        BehandlingsflytFeature.BekreftVurderingerOppfolging to true,
+        BehandlingsflytFeature.LagreStansOgOpphor to true,
+        BehandlingsflytFeature.RettTilAvslagHvisNorgeIkkeKompetentStat to true,
+        BehandlingsflytFeature.SamordningBarnepensjon to true,
         )
 )
 

@@ -2,12 +2,10 @@ package no.nav.aap.behandlingsflyt.prosessering
 
 import io.mockk.Runs
 import io.mockk.every
-import io.mockk.junit5.MockKExtension
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.verify
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.ArbeidsGradering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
@@ -30,6 +28,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingMedVedtak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.StegTilstand
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
@@ -50,14 +49,12 @@ import no.nav.aap.komponenter.verdityper.Dagsatser
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.komponenter.verdityper.TimerArbeid
 import no.nav.aap.motor.JobbInput
-import org.junit.jupiter.api.extension.ExtendWith
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
 import kotlin.test.Test
 
-@ExtendWith(MockKExtension::class)
 class SjekkInstitusjonsoppholdJobbUtførerTest {
 
     private val sakId = SakId(123L)
@@ -89,9 +86,9 @@ class SjekkInstitusjonsoppholdJobbUtførerTest {
     private fun mockAvhengigheterForInstitusjonsoppholdJobbUtfører(
         årsakerPåTidligereBehandling: List<VurderingsbehovMedPeriode> = emptyList(),
         hentInstitusjonsoppholdReturn: InstitusjonsoppholdGrunnlag
-    ): Pair<SjekkInstitusjonsOppholdJobbUtfører, SakOgBehandlingService> {
+    ): Pair<SjekkInstitusjonsOppholdJobbUtfører, BehandlingService> {
         val sakServiceMock = mockk<SakService>()
-        val sakOgBehandlingServiceMock = mockk<SakOgBehandlingService>()
+        val behandlingServiceMock = mockk<BehandlingService>()
         val trukketSøknadServiceMock = mockk<TrukketSøknadService>()
         val sakRepositoryMock = mockk<SakRepository>()
         val behandlingRepositoryMock = mockk<BehandlingRepository>()
@@ -142,7 +139,6 @@ class SjekkInstitusjonsoppholdJobbUtførerTest {
                 vurderingsbehov = listOf(
                     VurderingsbehovMedPeriode(
                         type = Vurderingsbehov.VURDER_RETTIGHETSPERIODE,
-                        periode = null,
                     )
                 ),
                 årsak = ÅrsakTilOpprettelse.ENDRING_I_REGISTERDATA,
@@ -188,12 +184,12 @@ class SjekkInstitusjonsoppholdJobbUtførerTest {
             versjon = 0L
         )
 
-        every { sakOgBehandlingServiceMock.finnSisteYtelsesbehandlingFor(sakId) } returns fakeBehandling
+        every { behandlingServiceMock.finnSisteYtelsesbehandlingFor(sakId) } returns fakeBehandling
 
         every { trukketSøknadServiceMock.søknadErTrukket(any()) } returns false
 
         every {
-            sakOgBehandlingServiceMock.finnEllerOpprettOrdinærBehandling(
+            behandlingServiceMock.finnEllerOpprettOrdinærBehandling(
                 any<SakId>(),
                 any()
             )
@@ -219,7 +215,7 @@ class SjekkInstitusjonsoppholdJobbUtførerTest {
             )
         } just Runs
 
-        every { sakOgBehandlingServiceMock.finnBehandlingMedSisteFattedeVedtak(any()) } returns BehandlingMedVedtak(
+        every { behandlingServiceMock.finnBehandlingMedSisteFattedeVedtak(any()) } returns BehandlingMedVedtak(
             saksnummer = Saksnummer("DUMMYSAKSNR"),
             id = BehandlingId(456L),
             referanse = BehandlingReferanse(UUID.randomUUID()),
@@ -266,12 +262,12 @@ class SjekkInstitusjonsoppholdJobbUtførerTest {
             prosesserBehandlingService = prosesserBehandlingServiceMock,
             sakRepository = sakRepositoryMock,
             institusjonsOppholdRepository = institusjonsoppholdRepositoryMock,
-            sakOgBehandlingService = sakOgBehandlingServiceMock,
+            behandlingService = behandlingServiceMock,
             trukketSøknadService = trukketSøknadServiceMock,
             behandlingRepository = behandlingRepositoryMock,
             underveisgrunnlagRepository = underveisgrunnlagRepositoryMock,
             unleashGateway = unleashGateway,
-        ) to sakOgBehandlingServiceMock
+        ) to behandlingServiceMock
     }
 
 

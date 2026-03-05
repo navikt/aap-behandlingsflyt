@@ -150,7 +150,7 @@ class FatteVedtakSteg(
                 avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
                 avbrytRevurderingService = AvbrytRevurderingService(repositoryProvider),
                 trukketSøknadService = TrukketSøknadService(repositoryProvider),
-                tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
+                tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
                 klageresultatUtleder = KlageresultatUtleder(repositoryProvider),
                 vedtakService = VedtakService(repositoryProvider),
                 virkningstidspunktUtleder = VirkningstidspunktUtleder(repositoryProvider),

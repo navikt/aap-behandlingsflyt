@@ -1,14 +1,13 @@
 package no.nav.aap.behandlingsflyt.behandling.vedtakslengde
 
 import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
-import no.nav.aap.behandlingsflyt.behandling.rettighetstype.KvoteOk
-import no.nav.aap.behandlingsflyt.behandling.rettighetstype.vurderRettighetstypeOgKvoter
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.VirkningstidspunktUtleder
-import no.nav.aap.behandlingsflyt.behandling.underveis.KvoteService
+import no.nav.aap.behandlingsflyt.behandling.underveis.RettighetstypeService
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companion.plussEtÅrMedHverdager
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Kvote
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.ÅrMedHverdager
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeRepository
@@ -28,12 +27,17 @@ class VedtakslengdeService(
     private val vedtakslengdeRepository: VedtakslengdeRepository,
     private val underveisRepository: UnderveisRepository,
     private val vilkårsresultatRepository: VilkårsresultatRepository,
+    private val rettighetstypeService: RettighetstypeService,
     private val clock: Clock = Clock.systemDefaultZone()
 ) {
+    companion object {
+        const val ANTALL_DAGER_FØR_UTVIDELSE = 28L
+    }
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         vedtakslengdeRepository =  repositoryProvider.provide(),
         underveisRepository = repositoryProvider.provide(),
         vilkårsresultatRepository = repositoryProvider.provide(),
+        rettighetstypeService = RettighetstypeService(repositoryProvider, gatewayProvider)
     )
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -45,7 +49,7 @@ class VedtakslengdeService(
     fun skalUtvideSluttdato(
         behandlingId: BehandlingId,
         forrigeBehandlingId: BehandlingId?,
-        datoForUtvidelse: LocalDate = LocalDate.now(clock).plusDays(28)
+        datoForUtvidelse: LocalDate = LocalDate.now(clock).plusDays(ANTALL_DAGER_FØR_UTVIDELSE)
     ): Boolean {
         val vedtakslengdeGrunnlag = forrigeBehandlingId?.let { vedtakslengdeRepository.hentHvisEksisterer(forrigeBehandlingId) }
         val vedtattSluttdato = hentVedtattSluttdato(forrigeBehandlingId, vedtakslengdeGrunnlag)
@@ -90,6 +94,85 @@ class VedtakslengdeService(
         }
     }
 
+    fun lagreGjeldendeSluttdato(
+        behandlingId: BehandlingId,
+        forrigeBehandlingId: BehandlingId?,
+        rettighetsperiode: Periode,
+    ) {
+        val vedtattVedtakslengdeGrunnlag =
+            forrigeBehandlingId?.let { vedtakslengdeRepository.hentHvisEksisterer(it) }
+        val vedtattSluttdato = hentVedtattSluttdato(forrigeBehandlingId, vedtattVedtakslengdeGrunnlag)
+        val vedtattUtvidelse = vedtattVedtakslengdeGrunnlag?.vurdering?.utvidetMed
+        val sluttdato = utledSluttdato(behandlingId, rettighetsperiode, vedtattSluttdato)
+
+        val erSluttdatoEndret = vedtattVedtakslengdeGrunnlag == null || vedtattVedtakslengdeGrunnlag.vurdering.sluttdato != sluttdato
+
+        if (erSluttdatoEndret) {
+            log.info("Sluttdato endret fra $vedtattSluttdato til $sluttdato for behandling $behandlingId")
+
+            vedtakslengdeRepository.lagre(
+                behandlingId, VedtakslengdeVurdering(
+                    sluttdato = sluttdato,
+                    utvidetMed = vedtattUtvidelse ?: ÅrMedHverdager.FØRSTE_ÅR,
+                    vurdertAv = SYSTEMBRUKER,
+                    vurdertIBehandling = behandlingId,
+                    opprettet = Instant.now(clock)
+                )
+            )
+        }
+    }
+
+    private fun utledSluttdato(
+        behandlingId: BehandlingId,
+        rettighetsperiode: Periode,
+        vedtattSluttdato: LocalDate?,
+    ): LocalDate {
+        val rettighetstypeTidslinje = rettighetstypeService.rettighetstypeTidslinjeBakoverkompatibel(behandlingId)
+        val initiellSluttdato = utledInitiellSluttdato(behandlingId, rettighetsperiode).tom
+        val gjeldendeSluttdato = vedtattSluttdato ?: utledInitiellSluttdato(behandlingId, rettighetsperiode).tom
+
+        // Hvis ingen rettighetstyper brukes gjeldende sluttdato
+        if (rettighetstypeTidslinje.isEmpty()) {
+            log.info("Ingen rettighetstyper, bruker gjeldende sluttdato: $gjeldendeSluttdato")
+            return gjeldendeSluttdato
+        }
+
+        val sluttdatoSisteUnntaksrettighet = rettighetstypeTidslinje.segmenter()
+            .findLast { it.verdi in unntaksrettighetstyper() }
+            ?.periode?.tom
+
+        log.info("Sluttdato for siste unntaksrettighet: $sluttdatoSisteUnntaksrettighet")
+
+        val sluttdatoSisteBistandsbehov = rettighetstypeTidslinje.segmenter()
+            .findLast { it.verdi == RettighetsType.BISTANDSBEHOV }
+            ?.periode?.tom
+
+        log.info("Sluttdato for siste bistandsbehov: $sluttdatoSisteBistandsbehov")
+
+        // Logikken rundt sluttdato når det ligger et bistandsbehov til slutt, må gåes opp. Inntil videre gis det
+        // opp til initiell sluttdato / vedtatt sluttdato.
+        val sluttdatoBistandsbehov = if (sluttdatoSisteBistandsbehov != null) {
+            // Returnere til og med kvote-slutt dersom denne datoen kommer før utledet sluttdato
+            listOfNotNull(sluttdatoSisteBistandsbehov, initiellSluttdato).min()
+        } else null
+
+        val kandidaterForSluttdato =  listOfNotNull(sluttdatoSisteUnntaksrettighet, sluttdatoBistandsbehov, vedtattSluttdato)
+
+        // Tillater ikke innskrenkelse av vedtakslengde da forrige vedtak kan ha sendt over perioder til utbetaling
+        val sluttdatoForBehandlingen = kandidaterForSluttdato.max()
+
+        log.info("Setter sluttdato: $sluttdatoForBehandlingen")
+        return sluttdatoForBehandlingen
+    }
+
+    private fun unntaksrettighetstyper(): List<RettighetsType> = listOf(
+        RettighetsType.SYKEPENGEERSTATNING,
+        RettighetsType.STUDENT,
+        RettighetsType.VURDERES_FOR_UFØRETRYGD,
+        RettighetsType.ARBEIDSSØKER
+    )
+
+    @Deprecated("Den første varianten - denne vil utvide med ett år uavhengig av rettighetstype")
     fun lagreGjeldendeSluttdatoHvisIkkeEksisterer(
         behandlingId: BehandlingId,
         forrigeBehandlingId: BehandlingId?,
@@ -115,17 +198,14 @@ class VedtakslengdeService(
     }
 
     /**
-     * Henter siste vedtatte sluttdato.
-     * - Foretrekker siste vedtatte vedtakslengdevurdering dersom den finnes.
-     * - Hvis ikke velges siste vedtatte underveisperiode (målet burde være å bli kvitt dette når alle saker har
-     *   vedtakslengdeVurdering.
+     * Henter siste vedtatte sluttdato. Bruker den største verdien da vi ikke ønsker å redusere vedtakslengden.
      */
     private fun hentVedtattSluttdato(forrigeBehandlingId: BehandlingId?, vedtakslengdeGrunnlag: VedtakslengdeGrunnlag?): LocalDate? {
         val vedtattUnderveis = forrigeBehandlingId?.let { underveisRepository.hentHvisEksisterer(it) }
         val sluttdatoSisteVedtatteUnderveis = vedtattUnderveis?.perioder?.maxByOrNull { it.periode.tom }?.periode?.tom
         val sluttdatoSisteVedtatteVedtakslengdeVurdering = vedtakslengdeGrunnlag?.vurdering?.sluttdato
 
-        return sluttdatoSisteVedtatteVedtakslengdeVurdering ?: sluttdatoSisteVedtatteUnderveis
+        return listOfNotNull(sluttdatoSisteVedtatteUnderveis, sluttdatoSisteVedtatteVedtakslengdeVurdering).maxOrNull()
     }
 
     private fun hentNesteUtvidelse(forrigeUtvidelse: VedtakslengdeVurdering?): ÅrMedHverdager =
@@ -137,7 +217,7 @@ class VedtakslengdeService(
 
     private fun utledInitiellSluttdato(
         behandlingId: BehandlingId,
-        rettighetsperiode: Periode
+        rettighetsperiode: Periode,
     ): Periode {
         val startdatoForBehandlingen =
             VirkningstidspunktUtleder(vilkårsresultatRepository).utledVirkningsTidspunkt(behandlingId)
@@ -168,10 +248,11 @@ class VedtakslengdeService(
     ): Boolean {
         val nyUtvidetVedtaksperiode = Periode(vedtattSluttdato.plusDays(1), utvidetSluttdato)
         val nyUtvidetVedtaksperiodeTidslinje = Tidslinje(nyUtvidetVedtaksperiode, true)
+        val rettighetstypeTidslinje = rettighetstypeService.rettighetstypeTidslinjeBakoverkompatibel(behandlingId)
 
-        return vurderRettighetstypeOgKvoter(vilkårsresultatRepository.hent(behandlingId), KvoteService().beregn())
-            .rightJoin(nyUtvidetVedtaksperiodeTidslinje) { vurdering, _ ->
-                vurdering != null && vurdering is KvoteOk && Kvote.ORDINÆR in vurdering.brukerAvKvoter()
+        return rettighetstypeTidslinje
+            .rightJoin(nyUtvidetVedtaksperiodeTidslinje) { rettighetstype, _ ->
+                rettighetstype != null && rettighetstype.kvote == Kvote.ORDINÆR
             }
             .segmenter()
             .all { it.verdi }

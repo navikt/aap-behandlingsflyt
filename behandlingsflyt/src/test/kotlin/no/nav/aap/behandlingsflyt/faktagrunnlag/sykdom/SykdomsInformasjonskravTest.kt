@@ -28,7 +28,8 @@ class SykdomsInformasjonskravTest {
             vurderingenGjelderTil = null,
             vurdertAv = Bruker("Z00000"),
             opprettet = Instant.now(),
-            vurdertIBehandling = BehandlingId(1L)
+            vurdertIBehandling = BehandlingId(1L),
+            diagnose = null
         )
 
         assertThat(vurdering.erKonsistentForSykdom(false, Førstegangsbehandling)).isTrue
@@ -51,6 +52,7 @@ class SykdomsInformasjonskravTest {
             opprettet = Instant.now(),
             vurdertIBehandling = BehandlingId(1L),
             vurderingenGjelderTil = null,
+            diagnose = null
         )
 
         assertThat(vurdering.erKonsistentForSykdom(true, Førstegangsbehandling)).isTrue
@@ -73,6 +75,7 @@ class SykdomsInformasjonskravTest {
             opprettet = Instant.now(),
             vurdertIBehandling = BehandlingId(1L),
             vurderingenGjelderTil = null,
+            diagnose = null
         )
 
         assertThat(vurdering.erKonsistentForSykdom(true, Førstegangsbehandling)).isFalse
@@ -95,6 +98,7 @@ class SykdomsInformasjonskravTest {
             opprettet = Instant.now(),
             vurdertIBehandling = BehandlingId(1L),
             vurderingenGjelderTil = null,
+            diagnose = null
         )
 
         assertThat(vurdering.erKonsistentForSykdom(true, Førstegangsbehandling)).isFalse
@@ -117,6 +121,7 @@ class SykdomsInformasjonskravTest {
             opprettet = Instant.now(),
             vurdertIBehandling = BehandlingId(1L),
             vurderingenGjelderTil = null,
+            diagnose = null
         )
 
         assertThat(vurdering.erKonsistentForSykdom(true, Revurdering)).isTrue
@@ -139,6 +144,7 @@ class SykdomsInformasjonskravTest {
             opprettet = Instant.now(),
             vurdertIBehandling = BehandlingId(1L),
             vurderingenGjelderTil = null,
+            diagnose = null
         )
         
         assertThat(vurdering.erKonsistentForSykdom(true, Førstegangsbehandling)).isTrue
@@ -161,6 +167,7 @@ class SykdomsInformasjonskravTest {
             opprettet = Instant.now(),
             vurdertIBehandling = BehandlingId(1L),
             vurderingenGjelderTil = null,
+            diagnose = null
         )
 
         assertThat(vurdering.erKonsistentForSykdom(false, Førstegangsbehandling)).isTrue
@@ -183,6 +190,7 @@ class SykdomsInformasjonskravTest {
             opprettet = Instant.now(),
             vurdertIBehandling = BehandlingId(1L),
             vurderingenGjelderTil = null,
+            diagnose = null
         )
 
         assertThat(vurdering.erKonsistentForSykdom(false, Førstegangsbehandling)).isTrue
@@ -205,6 +213,7 @@ class SykdomsInformasjonskravTest {
             opprettet = Instant.now(),
             vurdertIBehandling = BehandlingId(1L),
             vurderingenGjelderTil = null,
+            diagnose = null
         )
 
         assertThat(vurdering.erKonsistentForSykdom(false, Førstegangsbehandling)).isTrue
@@ -227,6 +236,7 @@ class SykdomsInformasjonskravTest {
             opprettet = Instant.now(),
             vurdertIBehandling = BehandlingId(1L),
             vurderingenGjelderTil = null,
+            diagnose = null
         )
 
         assertThat(vurdering.erKonsistentForSykdom(false, Førstegangsbehandling)).isFalse

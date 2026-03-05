@@ -18,11 +18,13 @@ import no.nav.aap.behandlingsflyt.prosessering.MeldeperiodeTilMeldekortBackendJo
 import no.nav.aap.behandlingsflyt.prosessering.VarsleOppgaveOmHendelseJobbUtFører
 import no.nav.aap.behandlingsflyt.prosessering.statistikk.BehandlingFlytStoppetHendelseTilStatistikk
 import no.nav.aap.behandlingsflyt.prosessering.statistikk.StatistikkJobbUtfører
+import no.nav.aap.behandlingsflyt.prosessering.statistikk.tilKontrakt
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.json.DefaultJsonMapper
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.FlytJobbRepository
@@ -36,9 +38,9 @@ class BehandlingHendelseServiceImpl(
     private val dokumentRepository: MottattDokumentRepository,
     private val pipService: PipService
 ) : BehandlingHendelseService {
-    constructor(repositoryProvider: RepositoryProvider) : this(
+    constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         flytJobbRepository = repositoryProvider.provide(),
-        sakService = SakService(repositoryProvider),
+        sakService = SakService(repositoryProvider, gatewayProvider),
         dokumentRepository = repositoryProvider.provide(),
         pipService = PipService(repositoryProvider)
     )
@@ -63,7 +65,7 @@ class BehandlingHendelseServiceImpl(
             status = behandling.status(),
             årsakerTilBehandling = vurderingsbehov.map { it.type.name },
             vurderingsbehov = vurderingsbehov.map { it.type.name },
-            årsakTilOpprettelse = behandling.årsakTilOpprettelse?.name ?: "Ukjent årsak",
+            årsakTilOpprettelse = behandling.årsakTilOpprettelse.tilKontrakt(),
             avklaringsbehov = sortererteAvklaringsbehov(behandling, avklaringsbehovene.alle()),
             relevanteIdenterPåBehandling = pipService.finnIdenterPåBehandling(behandling.referanse).map { it.ident },
             erPåVent = erPåVent,

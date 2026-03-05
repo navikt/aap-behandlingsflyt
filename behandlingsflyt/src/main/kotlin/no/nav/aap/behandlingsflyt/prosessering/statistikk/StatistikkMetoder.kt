@@ -154,7 +154,7 @@ class StatistikkMetoder(
             avsluttetBehandling = if (hendelse.status == AVSLUTTET) hentAvsluttetBehandlingDTO(hendelse) else null,
             identerForSak = hentIdenterPåSak(sak.saksnummer),
             vurderingsbehov = vurderingsbehovForBehandling,
-            årsakTilOpprettelse = behandling.årsakTilOpprettelse?.name ?: "UDEFINERT",
+            årsakTilOpprettelse = behandling.årsakTilOpprettelse.tilKontrakt(),
             opprettetAv = hendelse.opprettetAv,
             nyeMeldekort = nyeMeldekort.map { meldekort ->
                 MeldekortDTO(
@@ -171,9 +171,9 @@ class StatistikkMetoder(
     private fun relatertBehandling(behandling: Behandling): UUID? {
         return when (behandling.typeBehandling()) {
             TypeBehandling.Førstegangsbehandling -> null
-            TypeBehandling.Revurdering -> if (behandling.forrigeBehandlingId != null) behandlingRepository.hent(
+            TypeBehandling.Revurdering ->
                 behandling.forrigeBehandlingId
-            ).referanse.referanse else null
+                    ?.let { behandlingRepository.hent(it).referanse.referanse }
 
             TypeBehandling.Tilbakekreving -> TODO()
             TypeBehandling.Klage -> {
@@ -376,7 +376,9 @@ class StatistikkMetoder(
     }
 
     private fun hentDiagnose(behandling: Behandling): Diagnoser? {
-        val sykdomsvurdering = sykdomRepository.hentHvisEksisterer(behandling.id)?.sykdomsvurderinger.orEmpty()
+        val sykdomsvurdering = sykdomRepository.hentHvisEksisterer(behandling.id)
+            ?.sykdomsvurderinger.orEmpty()
+            .filter { it.diagnose != null }
             .maxByOrNull { it.opprettet }
 
         if (sykdomsvurdering == null) {
@@ -384,15 +386,16 @@ class StatistikkMetoder(
             return null
         }
 
-        if (sykdomsvurdering.hoveddiagnose == null || sykdomsvurdering.kodeverk == null) {
+        val diagnose = sykdomsvurdering.diagnose
+        if (diagnose?.hoveddiagnose == null) {
             log.info("Fant sykdomsvurdering, men ingen diagnose eller kodeverk for behandling ${behandling.referanse} (id: ${behandling.id})")
             return null
         }
 
         return Diagnoser(
-            kodeverk = sykdomsvurdering.kodeverk,
-            diagnosekode = sykdomsvurdering.hoveddiagnose,
-            bidiagnoser = sykdomsvurdering.bidiagnoser.orEmpty(),
+            kodeverk = diagnose.kodeverk,
+            diagnosekode = diagnose.hoveddiagnose,
+            bidiagnoser = diagnose.bidiagnoser.orEmpty(),
         )
     }
 

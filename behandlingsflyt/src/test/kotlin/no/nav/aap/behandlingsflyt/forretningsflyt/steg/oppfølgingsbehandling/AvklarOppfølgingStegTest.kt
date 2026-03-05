@@ -1,8 +1,6 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg.oppfølgingsbehandling
 
 import io.mockk.every
-import io.mockk.impl.annotations.MockK
-import io.mockk.junit5.MockKExtension
 import io.mockk.mockk
 import io.mockk.verify
 import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingService
@@ -13,7 +11,6 @@ import no.nav.aap.behandlingsflyt.behandling.oppfølgingsbehandling.KonsekvensAv
 import no.nav.aap.behandlingsflyt.behandling.oppfølgingsbehandling.OppfølgingsBehandlingRepository
 import no.nav.aap.behandlingsflyt.behandling.oppfølgingsbehandling.OppfølgingsoppgaveGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.BehandletOppfølgingsOppgave
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
@@ -28,6 +25,7 @@ import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
@@ -43,47 +41,32 @@ import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.ExtendWith
 import java.time.LocalDate
 import java.util.*
 
-@ExtendWith(MockKExtension::class)
 class AvklarOppfølgingStegTest {
+    private val oppfølgingsBehandlingRepository = mockk<OppfølgingsBehandlingRepository>()
+    private val låsRepository = mockk<TaSkriveLåsRepository>(relaxed = true)
+    private val prosesserBehandling = mockk<ProsesserBehandlingService>(relaxed = true)
+    private val behandlingService = mockk<BehandlingService>()
+    private val mottaDokumentService = mockk<MottaDokumentService>()
 
-    @MockK
-    lateinit var oppfølgingsBehandlingRepository: OppfølgingsBehandlingRepository
-
-    @MockK(relaxed = true)
-    lateinit var låsRepository: TaSkriveLåsRepository
-
-    @MockK(relaxed = true)
-    lateinit var prosesserBehandling: ProsesserBehandlingService
-
-    @MockK
-    lateinit var sakOgBehandlingService: SakOgBehandlingService
-
-    @MockK
-    lateinit var mottaDokumentService: MottaDokumentService
-
-
-    @MockK
-    private lateinit var avklaringsbehovRepository: AvklaringsbehovRepository
-
-    @MockK
-    private lateinit var vilkårsresultatRepository: VilkårsresultatRepository
-
-    @MockK
-    private lateinit var behandlingRepository: BehandlingRepository
-
-    @MockK
-    private lateinit var avbrytRevurderingService: AvbrytRevurderingService
-
-    @MockK
-    private lateinit var avklaringsbehovService: AvklaringsbehovService
+    private val avklaringsbehovRepository = mockk<AvklaringsbehovRepository>()
+    private val vilkårsresultatRepository = mockk<VilkårsresultatRepository>()
+    private val behandlingRepository = mockk<BehandlingRepository>()
+    private val avbrytRevurderingService = mockk<AvbrytRevurderingService>()
 
     private val trukketSøknadRepository = InMemoryTrukketSøknadRepository
 
-    val behandling = Behandling(
+    private val avklaringsbehovService = AvklaringsbehovService(
+        avklaringsbehovRepository = avklaringsbehovRepository,
+        behandlingRepository = behandlingRepository,
+        vilkårsresultatRepository = vilkårsresultatRepository,
+        avbrytRevurderingService = avbrytRevurderingService,
+        trukketSøknadService = TrukketSøknadService(trukketSøknadRepository)
+    )
+
+    private val behandling = Behandling(
         id = BehandlingId(1),
         forrigeBehandlingId = null,
         referanse = BehandlingReferanse(UUID.randomUUID()),
@@ -97,7 +80,7 @@ class AvklarOppfølgingStegTest {
 
     @BeforeEach
     fun setup() {
-        every { sakOgBehandlingService.finnEllerOpprettOrdinærBehandling(any<SakId>(), any()) } returns behandling
+        every { behandlingService.finnEllerOpprettOrdinærBehandling(any<SakId>(), any()) } returns behandling
 
         every { mottaDokumentService.hentOppfølgingsBehandlingDokument(any()) } returns BehandletOppfølgingsOppgave(
             datoForOppfølging = LocalDate.now(),
@@ -111,17 +94,7 @@ class AvklarOppfølgingStegTest {
             behandling.id
         )
 
-        avbrytRevurderingService = mockk {
-            every { revurderingErAvbrutt(any()) } returns false
-        }
-
-        avklaringsbehovService = AvklaringsbehovService(
-            avklaringsbehovRepository = avklaringsbehovRepository,
-            behandlingRepository = behandlingRepository,
-            vilkårsresultatRepository = vilkårsresultatRepository,
-            avbrytRevurderingService = avbrytRevurderingService,
-            trukketSøknadService = TrukketSøknadService(trukketSøknadRepository)
-        )
+        every { avbrytRevurderingService.revurderingErAvbrutt(any()) } returns false
     }
 
     @Test
@@ -138,7 +111,7 @@ class AvklarOppfølgingStegTest {
 
         verify {
             prosesserBehandling.triggProsesserBehandling(behandling.sakId, behandling.id)
-            sakOgBehandlingService.finnEllerOpprettOrdinærBehandling(
+            behandlingService.finnEllerOpprettOrdinærBehandling(
                 behandling.sakId,
                 match {
                     it.vurderingsbehov.map { it.type } == listOf(VurderingsbehovMedPeriode(Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND).type) &&
@@ -164,7 +137,7 @@ class AvklarOppfølgingStegTest {
 
         verify(exactly = 0) {
             prosesserBehandling.triggProsesserBehandling(behandling.sakId, behandling.id)
-            sakOgBehandlingService.finnEllerOpprettOrdinærBehandling(
+            behandlingService.finnEllerOpprettOrdinærBehandling(
                 behandling.sakId,
                 VurderingsbehovOgÅrsak(
                     listOf(VurderingsbehovMedPeriode(Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND)),
@@ -186,7 +159,7 @@ class AvklarOppfølgingStegTest {
 
         verify(exactly = 0) {
             prosesserBehandling.triggProsesserBehandling(behandling.sakId, behandling.id)
-            sakOgBehandlingService.finnEllerOpprettOrdinærBehandling(
+            behandlingService.finnEllerOpprettOrdinærBehandling(
                 behandling.sakId,
                 VurderingsbehovOgÅrsak(
                     listOf(VurderingsbehovMedPeriode(Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND)),
@@ -203,12 +176,11 @@ class AvklarOppfølgingStegTest {
 
         val steg = AvklarOppfølgingSteg(
             oppfølgingsBehandlingRepository = oppfølgingsBehandlingRepository,
-            sakOgBehandlingService = sakOgBehandlingService,
+            behandlingService = behandlingService,
             låsRepository = låsRepository,
             prosesserBehandling = prosesserBehandling,
             mottaDokumentService = mottaDokumentService,
             avklaringsbehovService = avklaringsbehovService,
-            avklaringsbehovRepository = avklaringsbehovRepository,
         )
 
         val kontekst = flytKontekstMedPerioder {

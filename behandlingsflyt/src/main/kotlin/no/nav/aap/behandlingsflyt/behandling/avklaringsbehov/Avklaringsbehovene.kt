@@ -30,14 +30,6 @@ class Avklaringsbehovene(
     private val avklaringsbehovene: List<Avklaringsbehov>
         get() = repository.hent(behandlingId)
 
-    fun ingenEndring(avklaringsbehov: Avklaringsbehov, bruker: String) {
-        løsAvklaringsbehov(
-            avklaringsbehov.definisjon,
-            "Ingen endring fra forrige vurdering",
-            bruker
-        )
-    }
-
     fun løsAvklaringsbehov(
         definisjon: Definisjon,
         begrunnelse: String,
@@ -200,7 +192,7 @@ class Avklaringsbehovene(
         repository.endre(avklaringsbehov.id, avklaringsbehov.historikk.last())
     }
 
-    fun oppdaterPerioder(
+    internal fun oppdaterPerioder(
         definisjon: Definisjon,
         perioderSomIkkeErTilstrekkeligVurdert: Set<Periode>?,
         perioderVedtaketBehøverVurdering: Set<Periode>?

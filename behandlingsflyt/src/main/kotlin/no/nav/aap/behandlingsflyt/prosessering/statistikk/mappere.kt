@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Minstesats
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Tilkjent
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 
 internal fun VurderingsbehovMedPeriode.tilKontraktVurderingsbehov(): no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov =
@@ -34,6 +35,7 @@ internal fun VurderingsbehovMedPeriode.tilKontraktVurderingsbehov(): no.nav.aap.
         Vurderingsbehov.REVURDER_SAMORDNING_UFØRE -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.REVURDER_SAMORDNING_UFØRE
         Vurderingsbehov.REVURDER_SAMORDNING_ANDRE_STATLIGE_YTELSER -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.REVURDER_SAMORDNING_ANDRE_STATLIGE_YTELSER
         Vurderingsbehov.REVURDER_SAMORDNING_ARBEIDSGIVER -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.REVURDER_SAMORDNING_ARBEIDSGIVER
+        Vurderingsbehov.REVURDER_SAMORDNING_BARNEPENSJON -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.REVURDER_SAMORDNING_BARNEPENSJON
         Vurderingsbehov.REVURDER_SAMORDNING_TJENESTEPENSJON -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.REVURDER_SAMORDNING_TJENESTEPENSJON
         Vurderingsbehov.REFUSJONSKRAV -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.REFUSJONSKRAV
         Vurderingsbehov.UTENLANDSOPPHOLD_FOR_SOKNADSTIDSPUNKT -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.UTENLANDSOPPHOLD_FOR_SOKNADSTIDSPUNKT
@@ -81,3 +83,29 @@ internal fun RettighetsType?.tilKontrakt(): no.nav.aap.behandlingsflyt.kontrakt.
         RettighetsType.VURDERES_FOR_UFØRETRYGD -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.RettighetsType.VURDERES_FOR_UFØRETRYGD
     }
 
+fun ÅrsakTilOpprettelse?.tilKontrakt(): no.nav.aap.behandlingsflyt.kontrakt.behandling.ÅrsakTilOpprettelse =
+    when (this) {
+        ÅrsakTilOpprettelse.SØKNAD -> no.nav.aap.behandlingsflyt.kontrakt.behandling.ÅrsakTilOpprettelse.SØKNAD
+        ÅrsakTilOpprettelse.MANUELL_OPPRETTELSE -> no.nav.aap.behandlingsflyt.kontrakt.behandling.ÅrsakTilOpprettelse.MANUELL_OPPRETTELSE
+        ÅrsakTilOpprettelse.HELSEOPPLYSNINGER -> no.nav.aap.behandlingsflyt.kontrakt.behandling.ÅrsakTilOpprettelse.HELSEOPPLYSNINGER
+        ÅrsakTilOpprettelse.ANNET_RELEVANT_DOKUMENT -> no.nav.aap.behandlingsflyt.kontrakt.behandling.ÅrsakTilOpprettelse.ANNET_RELEVANT_DOKUMENT
+        ÅrsakTilOpprettelse.OMGJØRING_ETTER_KLAGE -> no.nav.aap.behandlingsflyt.kontrakt.behandling.ÅrsakTilOpprettelse.OMGJØRING_ETTER_KLAGE
+        ÅrsakTilOpprettelse.OMGJØRING_ETTER_SVAR_FRA_KLAGEINSTANS -> no.nav.aap.behandlingsflyt.kontrakt.behandling.ÅrsakTilOpprettelse.OMGJØRING_ETTER_SVAR_FRA_KLAGEINSTANS
+        ÅrsakTilOpprettelse.ENDRING_I_REGISTERDATA -> no.nav.aap.behandlingsflyt.kontrakt.behandling.ÅrsakTilOpprettelse.ENDRING_I_REGISTERDATA
+        ÅrsakTilOpprettelse.BARNETILLEGG_SATSENDRING -> no.nav.aap.behandlingsflyt.kontrakt.behandling.ÅrsakTilOpprettelse.BARNETILLEGG_SATSENDRING
+        ÅrsakTilOpprettelse.FASTSATT_PERIODE_PASSERT -> no.nav.aap.behandlingsflyt.kontrakt.behandling.ÅrsakTilOpprettelse.FASTSATT_PERIODE_PASSERT
+        ÅrsakTilOpprettelse.FRITAK_MELDEPLIKT -> no.nav.aap.behandlingsflyt.kontrakt.behandling.ÅrsakTilOpprettelse.FRITAK_MELDEPLIKT
+        ÅrsakTilOpprettelse.MELDEKORT -> no.nav.aap.behandlingsflyt.kontrakt.behandling.ÅrsakTilOpprettelse.MELDEKORT
+        ÅrsakTilOpprettelse.AKTIVITETSMELDING -> no.nav.aap.behandlingsflyt.kontrakt.behandling.ÅrsakTilOpprettelse.AKTIVITETSMELDING
+        ÅrsakTilOpprettelse.UTVID_VEDTAKSLENGDE -> no.nav.aap.behandlingsflyt.kontrakt.behandling.ÅrsakTilOpprettelse.UTVID_VEDTAKSLENGDE
+        ÅrsakTilOpprettelse.MIGRER_RETTIGHETSPERIODE -> no.nav.aap.behandlingsflyt.kontrakt.behandling.ÅrsakTilOpprettelse.MIGRER_RETTIGHETSPERIODE
+        ÅrsakTilOpprettelse.OPPFØLGINGSOPPGAVE -> no.nav.aap.behandlingsflyt.kontrakt.behandling.ÅrsakTilOpprettelse.OPPFØLGINGSOPPGAVE
+        ÅrsakTilOpprettelse.OPPFØLGINGSOPPGAVE_SAMORDNING_GRADERING -> no.nav.aap.behandlingsflyt.kontrakt.behandling.ÅrsakTilOpprettelse.OPPFØLGINGSOPPGAVE_SAMORDNING_GRADERING
+        ÅrsakTilOpprettelse.SVAR_FRA_KLAGEINSTANS -> no.nav.aap.behandlingsflyt.kontrakt.behandling.ÅrsakTilOpprettelse.SVAR_FRA_KLAGEINSTANS
+        ÅrsakTilOpprettelse.KLAGE -> no.nav.aap.behandlingsflyt.kontrakt.behandling.ÅrsakTilOpprettelse.KLAGE
+        ÅrsakTilOpprettelse.AKTIVITETSPLIKT -> no.nav.aap.behandlingsflyt.kontrakt.behandling.ÅrsakTilOpprettelse.AKTIVITETSPLIKT
+        ÅrsakTilOpprettelse.AKTIVITETSPLIKT_11_9 -> no.nav.aap.behandlingsflyt.kontrakt.behandling.ÅrsakTilOpprettelse.AKTIVITETSPLIKT_11_9
+        ÅrsakTilOpprettelse.TILBAKEKREVING_HENDELSE -> no.nav.aap.behandlingsflyt.kontrakt.behandling.ÅrsakTilOpprettelse.TILBAKEKREVING_HENDELSE
+        ÅrsakTilOpprettelse.FAGSYSTEMINFO_BEHOV_HENDELSE -> no.nav.aap.behandlingsflyt.kontrakt.behandling.ÅrsakTilOpprettelse.FAGSYSTEMINFO_BEHOV_HENDELSE
+        null -> no.nav.aap.behandlingsflyt.kontrakt.behandling.ÅrsakTilOpprettelse.UDEFINERT
+    }

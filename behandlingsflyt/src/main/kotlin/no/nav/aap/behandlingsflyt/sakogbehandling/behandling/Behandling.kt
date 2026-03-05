@@ -13,17 +13,20 @@ import java.time.LocalDateTime
 
 class Behandling(
     val id: BehandlingId,
-    val forrigeBehandlingId: BehandlingId?,
+    forrigeBehandlingId: BehandlingId?,
     val referanse: BehandlingReferanse = BehandlingReferanse(),
     val sakId: SakId,
     private val typeBehandling: TypeBehandling,
     private var status: Status = Status.OPPRETTET,
-    private var vurderingsbehov: List<VurderingsbehovMedPeriode> = mutableListOf(),
+    private val vurderingsbehov: List<VurderingsbehovMedPeriode> = emptyList(),
     private var stegTilstand: StegTilstand? = null,
     val årsakTilOpprettelse: ÅrsakTilOpprettelse?,
     val opprettetTidspunkt: LocalDateTime = LocalDateTime.now(),
     val versjon: Long
 ) : Comparable<Behandling> {
+
+    var forrigeBehandlingId = forrigeBehandlingId
+        internal set
 
     fun flyt(): BehandlingFlyt = typeBehandling.flyt()
 

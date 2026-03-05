@@ -68,6 +68,20 @@ val detektReportMergeSarif by tasks.registering(dev.detekt.gradle.report.ReportM
     output.set(rootProject.layout.buildDirectory.file("reports/detekt/merge.sarif"))
 }
 
+val detektProjectBaseline by tasks.registering(dev.detekt.gradle.DetektCreateBaselineTask::class) {
+    description = "Overrides current baseline for all modules."
+    buildUponDefaultConfig.set(true)
+    ignoreFailures.set(true)
+    parallel.set(true)
+    setSource(files(rootDir))
+    config.setFrom(files("$rootDir/config/detekt/detekt.yml"))
+    baseline.set(file("$rootDir/config/detekt/baseline.xml"))
+    include("**/*.kt")
+    include("**/*.kts")
+    exclude("**/resources/**")
+    exclude("**/build/**")
+}
+
 subprojects {
     tasks.withType<dev.detekt.gradle.Detekt>().configureEach {
         finalizedBy(detektReportMergeSarif)

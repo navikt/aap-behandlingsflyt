@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.hendelse.kafka.person
 
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.SaksbehandlerOppgitteBarn
@@ -72,7 +72,7 @@ class PdlHendelseKafkaKonsument(
             val underveisRepository: UnderveisRepository = repositoryProvider.provide()
             val hendelseService = MottattHendelseService(repositoryProvider)
             val trukketSøknadService = TrukketSøknadService(repositoryProvider)
-            val sakOgBehandlingService = SakOgBehandlingService(repositoryProvider, gatewayProvider)
+            val behandlingService = BehandlingService(repositoryProvider, gatewayProvider)
             if (personHendelse.opplysningstype == Opplysningstype.DOEDSFALL_V1 && personHendelse.endringstype == Endringstype.OPPRETTET) {
                 log.info("Håndterer hendelse med ${personHendelse.opplysningstype} og ${personHendelse.endringstype}")
                 var person: Person? = null
@@ -96,7 +96,7 @@ class PdlHendelseKafkaKonsument(
                     funnetIdent,
                     behandlingRepository,
                     sakRepository,
-                    sakOgBehandlingService,
+                    behandlingService,
                     underveisRepository,
                     trukketSøknadService,
                     personHendelse,
@@ -110,7 +110,7 @@ class PdlHendelseKafkaKonsument(
                     funnetIdent,
                     behandlingRepository,
                     sakRepository,
-                    sakOgBehandlingService,
+                    behandlingService,
                     underveisRepository,
                     trukketSøknadService,
                     personHendelse,
@@ -128,7 +128,7 @@ class PdlHendelseKafkaKonsument(
         funnetIdent: Ident?,
         behandlingRepository: BehandlingRepository,
         sakRepository: SakRepository,
-        sakOgBehandlingService: SakOgBehandlingService,
+        behandlingService: BehandlingService,
         underveisRepository: UnderveisRepository,
         trukketSøknadService: TrukketSøknadService,
         personHendelse: PdlPersonHendelse,
@@ -150,7 +150,7 @@ class PdlHendelseKafkaKonsument(
                     .map { sakRepository.hent(it) }
                     .forEach { sak ->
                         val behandlingMedSistFattedeVedtak =
-                            sakOgBehandlingService.finnBehandlingMedSisteFattedeVedtak(sakId = sak.id)
+                            behandlingService.finnBehandlingMedSisteFattedeVedtak(sakId = sak.id)
                         val sisteOpprettedeBehandling = behandlingRepository.finnSisteOpprettedeBehandlingFor(
                             sak.id,
                             listOf(TypeBehandling.Førstegangsbehandling, TypeBehandling.Revurdering)
@@ -180,7 +180,7 @@ class PdlHendelseKafkaKonsument(
                 )
 
                 val behandlingMedSistFattedeVedtak =
-                    sakOgBehandlingService.finnBehandlingMedSisteFattedeVedtak(sakId = sak.id)
+                    behandlingService.finnBehandlingMedSisteFattedeVedtak(sakId = sak.id)
 
                 sendDødsHendelseHvisRelevant(
                     behandlingMedSistFattedeVedtak,
@@ -202,7 +202,7 @@ class PdlHendelseKafkaKonsument(
         funnetIdent: Ident?,
         behandlingRepository: BehandlingRepository,
         sakRepository: SakRepository,
-        sakOgBehandlingService: SakOgBehandlingService,
+        behandlingService: BehandlingService,
         underveisRepository: UnderveisRepository,
         trukketSøknadService: TrukketSøknadService,
         personHendelse: PdlPersonHendelse,
@@ -221,7 +221,7 @@ class PdlHendelseKafkaKonsument(
                     .map { sakRepository.hent(it) }
                     .forEach { sak ->
                         val behandlingMedSistFattedeVedtak =
-                            sakOgBehandlingService.finnBehandlingMedSisteFattedeVedtak(sakId = sak.id)
+                            behandlingService.finnBehandlingMedSisteFattedeVedtak(sakId = sak.id)
                         val sisteOpprettedeBehandling =
                             behandlingRepository.finnSisteOpprettedeBehandlingFor(
                                 sak.id,

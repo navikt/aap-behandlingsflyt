@@ -37,6 +37,9 @@ data class StudentVurderingResponse(
     val harBehovForBehandling: Boolean?,
     val avbruttStudieDato: LocalDate?,
     val avbruddMerEnn6Måneder: Boolean?,
+    val kodeverk: String? = null,
+    val hoveddiagnose: String? = null,
+    val bidiagnoser: List<String>? = emptyList(),
 ) : VurderingDto {
     companion object {
         fun fraDomene(
@@ -45,7 +48,7 @@ data class StudentVurderingResponse(
         ): List<StudentVurderingResponse> {
             val segmenter = tidslinje.segmenter().toList()
             return segmenter
-                .mapIndexed { index, segment ->
+                .mapIndexed { _, segment ->
                     fraDomene(
                         studentVurdering = segment.verdi,
                         vurdertAvService = vurdertAvService,
@@ -79,7 +82,10 @@ data class StudentVurderingResponse(
                 avbruttPgaSykdomEllerSkade = studentVurdering.avbruttPgaSykdomEllerSkade,
                 harBehovForBehandling = studentVurdering.harBehovForBehandling,
                 avbruttStudieDato = studentVurdering.avbruttStudieDato,
-                avbruddMerEnn6Måneder = studentVurdering.avbruddMerEnn6Måneder
+                avbruddMerEnn6Måneder = studentVurdering.avbruddMerEnn6Måneder,
+                kodeverk = studentVurdering.diagnose?.kodeverk,
+                hoveddiagnose = studentVurdering.diagnose?.hoveddiagnose,
+                bidiagnoser = studentVurdering.diagnose?.bidiagnoser,
             )
         }
     }

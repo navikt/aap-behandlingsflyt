@@ -1,12 +1,12 @@
 [versions]
 ktor = "3.4.0"
-komponenter = "2.0.2"
-tilgang = "1.0.179"
-utbetaling = "0.0.78"
-brev = "unspecified"
+komponenter = "2.0.15"
+tilgang = "1.0.182"
+utbetaling = "0.0.85"
+brev = "0.0.239"
 oppgave = "0.0.147"
-meldekort = "0.0.183"
-apiIntern = "0.0.25"
+meldekort = "0.0.189"
+apiIntern = "0.0.26"
 junit = "6.0.1"
 testcontainers = "2.0.2"
 

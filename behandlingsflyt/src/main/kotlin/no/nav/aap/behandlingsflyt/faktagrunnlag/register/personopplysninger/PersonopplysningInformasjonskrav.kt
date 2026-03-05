@@ -11,7 +11,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravOppdatert
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravRegisterdata
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.KanTriggeRevurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.ikkeKjørtSisteKalenderdag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.ikkeKjørtSisteKalenderdagForBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
@@ -37,7 +37,7 @@ class PersonopplysningInformasjonskrav private constructor(
         oppdatert: InformasjonskravOppdatert?
     ): Boolean {
         return kontekst.erFørstegangsbehandlingEllerRevurdering()
-                && oppdatert.ikkeKjørtSisteKalenderdag()
+                && (oppdatert.ikkeKjørtSisteKalenderdagForBehandling(kontekst.behandlingId) || kontekst.erVurderingsbehovEndretEtterOppdatertInformasjonskrav(oppdatert))
                 && !tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, steg)
     }
 
@@ -100,10 +100,10 @@ class PersonopplysningInformasjonskrav private constructor(
             val personopplysningRepository =
                 repositoryProvider.provide<PersonopplysningRepository>()
             return PersonopplysningInformasjonskrav(
-                SakService(repositoryProvider),
-                personopplysningRepository,
-                gatewayProvider.provide(),
-                TidligereVurderingerImpl(repositoryProvider),
+                sakService = SakService(repositoryProvider, gatewayProvider),
+                personopplysningRepository = personopplysningRepository,
+                personopplysningGateway = gatewayProvider.provide(),
+                tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
             )
         }
     }

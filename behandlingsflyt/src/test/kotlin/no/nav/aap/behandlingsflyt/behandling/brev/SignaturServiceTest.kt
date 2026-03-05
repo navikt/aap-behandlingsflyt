@@ -1,7 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.brev
 
 import io.mockk.every
-import io.mockk.junit5.MockKExtension
 import io.mockk.mockk
 import io.mockk.slot
 import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
@@ -41,8 +40,6 @@ import java.util.*
 import kotlin.random.Random
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status as AvklaringsbehovStatus
 
-@ExtendWith(MockKExtension::class)
-@MockKExtension.RequireParallelTesting
 @ParameterizedClass
 @ValueSource(booleans = [true, false])
 class SignaturServiceTest(
@@ -176,7 +173,13 @@ class SignaturServiceTest(
         )
 
         // definisjon som ikke skal tas høyde for
-        leggTilEndring(Definisjon.VURDER_TREKK_AV_SØKNAD, endretAv = saksbehandlerIdent, AvklaringsbehovStatus.AVSLUTTET)
+        leggTilEndring(
+            behandling = behandling,
+            definisjon = Definisjon.VURDER_TREKK_AV_SØKNAD,
+            endretAv = saksbehandlerIdent,
+            status = AvklaringsbehovStatus.AVSLUTTET,
+            oppgaveEnhet = "7891"
+        )
 
         // BESLUTTER
         leggTilEndring(
