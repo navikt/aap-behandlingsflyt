@@ -183,13 +183,12 @@ class PdlHendelseService(
     }
 
     private fun sendDødsHendelseHvisRelevant(
-        behandlingMedSistFattedeVedtak: BehandlingMedVedtak?,
+        vedtakBehandling: BehandlingMedVedtak?,
         personHendelse: PdlPersonHendelse,
         sak: Sak,
         sisteOpprettedeBehandling: Behandling?,
         hendelseType: Dødsfalltype
     ) {
-        val vedtakBehandling = behandlingMedSistFattedeVedtak
         val underveisGrunnlag = vedtakBehandling?.let { underveisRepository.hentHvisEksisterer(it.id) }
 
         if (sisteOpprettedeBehandling != null && trukketSøknadService.søknadErTrukket(sisteOpprettedeBehandling.id)) {
