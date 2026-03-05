@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
+import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
@@ -24,8 +25,17 @@ class OpprettJobbForMigrereRettighetsperiodeJobbUtfører(
     private val log = LoggerFactory.getLogger(javaClass)
 
     override fun utfør(input: JobbInput) {
-
-        val saker = sakRepository.finnSakerMedAvsluttedeBehandlingerUtenRiktigSluttdatoPåRettighetsperiode()
+        val spesialsaker = listOf(
+            "4MiABoG",
+            "4o1U2F4",
+            "4o08734",
+            "4MBM9PC",
+            "4M9PoKG",
+            "4LYGL8G",
+            "4LM5ZLC",
+        )
+        val manuelleSaker = spesialsaker.map { sakRepository.hent(Saksnummer(it)) }
+        val saker = sakRepository.finnSakerMedAvsluttedeBehandlingerUtenRiktigSluttdatoPåRettighetsperiode() + manuelleSaker
         val sakerForMigrering = saker
             .filter { sak ->
                 val sisteYtelsesbehandling = behandlingService.finnSisteYtelsesbehandlingFor(sak.id)
