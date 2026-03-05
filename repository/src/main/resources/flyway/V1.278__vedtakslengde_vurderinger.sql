@@ -11,20 +11,20 @@ alter table vedtakslengde_vurdering add column vurderinger_id bigint references 
 -- Legg til vurderinger_id i vedtakslengde_grunnlag
 alter table vedtakslengde_grunnlag add column vurderinger_id bigint references vedtakslengde_vurderinger(id);
 
--- Migrer eksisterende data: opprett en rad i vedtakslengde_vurderinger per eksisterende grunnlag
--- og koble sammen vurdering og grunnlag via den nye koblingstabellen
+-- Migrer eksisterende data.
+-- Grunnlag som deler samme vurdering_id (via kopier) skal dele samme vurderinger_id.
 do $$
 declare
     rec record;
     ny_vurderinger_id bigint;
 begin
-    for rec in select g.id as grunnlag_id, g.vurdering_id
-               from vedtakslengde_grunnlag g
-               where g.vurdering_id is not null
+    for rec in select distinct vurdering_id
+               from vedtakslengde_grunnlag
+               where vurdering_id is not null
     loop
         insert into vedtakslengde_vurderinger default values returning id into ny_vurderinger_id;
         update vedtakslengde_vurdering set vurderinger_id = ny_vurderinger_id where id = rec.vurdering_id;
-        update vedtakslengde_grunnlag set vurderinger_id = ny_vurderinger_id where id = rec.grunnlag_id;
+        update vedtakslengde_grunnlag set vurderinger_id = ny_vurderinger_id where vurdering_id = rec.vurdering_id;
     end loop;
 end $$;
 
