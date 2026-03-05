@@ -102,29 +102,27 @@ class PdlHendelseService(
         val alleBarneBehandlingIds =
             behandlingIdsForRegisterBarn + behandlingIdsForSøknadsBarn
         log.info("Sjekker mottatt hendelse for barn $alleBarneBehandlingIds")
-        if (alleBarneBehandlingIds.isNotEmpty()) {
-            alleBarneBehandlingIds
-                .map { behandlingRepository.hent(it) }
-                .map { it.sakId }
-                .distinct()
-                .map { sakRepository.hent(it) }
-                .forEach { sak ->
-                    val behandlingMedSistFattedeVedtak =
-                        behandlingService.finnBehandlingMedSisteFattedeVedtak(sakId = sak.id)
-                    val sisteOpprettedeBehandling = behandlingRepository.finnSisteOpprettedeBehandlingFor(
-                        sak.id,
-                        listOf(TypeBehandling.Førstegangsbehandling, TypeBehandling.Revurdering)
-                    )
-                    log.info("Registrerer mottatt hendelse på barn for ${sak.saksnummer}")
-                    sendDødsHendelseHvisRelevant(
-                        behandlingMedSistFattedeVedtak,
-                        personHendelse,
-                        sak,
-                        sisteOpprettedeBehandling,
-                        Dødsfalltype.DODSFALL_BARN
-                    )
-                }
-        }
+        alleBarneBehandlingIds
+            .map { behandlingRepository.hent(it) }
+            .map { it.sakId }
+            .distinct()
+            .map { sakRepository.hent(it) }
+            .forEach { sak ->
+                val behandlingMedSistFattedeVedtak =
+                    behandlingService.finnBehandlingMedSisteFattedeVedtak(sakId = sak.id)
+                val sisteOpprettedeBehandling = behandlingRepository.finnSisteOpprettedeBehandlingFor(
+                    sak.id,
+                    listOf(TypeBehandling.Førstegangsbehandling, TypeBehandling.Revurdering)
+                )
+                log.info("Registrerer mottatt hendelse på barn for ${sak.saksnummer}")
+                sendDødsHendelseHvisRelevant(
+                    behandlingMedSistFattedeVedtak,
+                    personHendelse,
+                    sak,
+                    sisteOpprettedeBehandling,
+                    Dødsfalltype.DODSFALL_BARN
+                )
+            }
 
         // Finn sak på person
         sakRepository.finnSakerFor(person).forEach { sak ->
