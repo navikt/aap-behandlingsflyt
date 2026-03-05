@@ -8,6 +8,7 @@ import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.verdityper.Tid
 import java.math.BigDecimal
+import java.math.RoundingMode
 import java.time.Instant
 import java.time.YearMonth
 
@@ -41,7 +42,7 @@ data class BarnepensjonPeriode(
     }
 
     fun dagsats(): Beløp {
-        return månedsats.multiplisert(12 / 260)
+        return Beløp(månedsats.multiplisert(12 / 260).verdi().setScale(0, RoundingMode.HALF_UP))
     }
 
     fun tilSegment(): Segment<Beløp> {
