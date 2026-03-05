@@ -4,8 +4,10 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.RettighetstypeSteg
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingMedVedtak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
@@ -23,6 +25,7 @@ class StansEllerOpphørMigrering(
     fun migrer() {
         dataSource.transaction { connection ->
             val repositoryProvider = repositoryRegistry.provider(connection)
+            val behandlingService = BehandlingService(repositoryProvider, gatewayProvider)
             val sakId = connection.queryFirstOrNull(
                 """
                 SELECT SAK_ID FROM BEHANDLING
@@ -46,12 +49,13 @@ class StansEllerOpphørMigrering(
             val sak = repositoryProvider.provide<SakRepository>().hent(sakId)
 
             val behandlingRepo = repositoryProvider.provide<BehandlingRepository>()
-            val behandlinger = behandlingRepo.hentAlleMedVedtakFor(
-                sak.person,
+            val behandlinger = behandlingRepo.hentAlleFor(
+                sak.id,
                 TypeBehandling.ytelseBehandlingstyper()
-            ).sortedBy { it.vedtakstidspunkt }
+            )
+            val sortedBehandlinger = behandlinger.sortedWith(behandlingService.comparator(behandlinger))
 
-            behandlinger.map { behandling ->
+            sortedBehandlinger.map { behandling ->
                 val behandlingLås = låsRepo.låsBehandling(behandling.id)
                 migrerBehandling(behandling, repositoryProvider)
                 låsRepo.verifiserSkrivelås(behandlingLås)
@@ -62,7 +66,7 @@ class StansEllerOpphørMigrering(
     }
 
 
-    fun migrerBehandling(behandling: BehandlingMedVedtak, repositoryProvider: RepositoryProvider) {
+    fun migrerBehandling(behandling: Behandling, repositoryProvider: RepositoryProvider) {
         val stansOpphørRepo = repositoryProvider.provide<StansOpphørRepository>()
         if (stansOpphørRepo.hentHvisEksisterer(behandling.id) != null) {
             return
@@ -82,7 +86,7 @@ class StansEllerOpphørMigrering(
             .lagreStansOgOpphør(
                 behandling.id,
                 forrigeBehandlingId,
-                behandling.typeBehandling,
+                behandling.typeBehandling(),
                 rettighetsPeriode
             )
     }

@@ -1,7 +1,9 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør
 
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SykdomsvurderingForBrevLøsning
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.flyt.AbstraktFlytOrkestratorTest
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
@@ -66,10 +68,12 @@ class StansEllerOpphørMigreringTest: AbstraktFlytOrkestratorTest(manuellStyring
         dataSource.transaction { connection ->
             val stansRepo = postgresRepositoryRegistry.provider(connection).provide<StansOpphørRepository>()
             assertThat(stansRepo.hentHvisEksisterer(revurdering.forrigeBehandlingId!!)).isNotNull
-            assertThat(stansRepo.hentHvisEksisterer(revurdering.id)).isNotNull
+            assertThat(stansRepo.hentHvisEksisterer(revurdering.id)?.stansOgOpphør?.size).isEqualTo(3)
         }
 
-        revurdering.løsSykdomsvurderingBrev().bekreftVurderinger().fattVedtak()
+        revurdering.løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
+            .fattVedtak()
 
 
 
