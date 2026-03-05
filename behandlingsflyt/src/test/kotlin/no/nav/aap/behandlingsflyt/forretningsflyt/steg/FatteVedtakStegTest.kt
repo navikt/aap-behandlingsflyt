@@ -1,7 +1,6 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import io.mockk.every
-import io.mockk.junit5.MockKExtension
 import io.mockk.mockk
 import io.mockk.verify
 import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingService
@@ -12,7 +11,7 @@ import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.VirkningstidspunktUt
 import no.nav.aap.behandlingsflyt.behandling.trekkklage.TrekkKlageService
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakService
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
-import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.*
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageresultatUtleder
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.flyt.steg.TilbakeføresFraBeslutter
 import no.nav.aap.behandlingsflyt.help.flytKontekstMedPerioder
@@ -34,7 +33,6 @@ import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 import org.junit.jupiter.params.provider.EnumSource.Mode
@@ -42,14 +40,12 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import kotlin.random.Random
 
-@ExtendWith(MockKExtension::class)
-@MockKExtension.RequireParallelTesting
 class FatteVedtakStegTest {
 
     val klageresultatUtleder = mockk<KlageresultatUtleder>(relaxed = true)
     val tidligereVurderinger = mockk<TidligereVurderinger>()
     val trekkKlageService = mockk<TrekkKlageService>()
-    val avklaringsbehovService = mockk<AvklaringsbehovService>()
+    val avklaringsbehovService = mockk<AvklaringsbehovService>(relaxed = true)
     val avbrytRevurderingService = mockk<AvbrytRevurderingService>()
     val trukketSøknadService = mockk<TrukketSøknadService>()
     val vedtakService = mockk<VedtakService>(relaxed = true)
@@ -61,11 +57,6 @@ class FatteVedtakStegTest {
     @BeforeEach
     fun setup() {
         every { trekkKlageService.klageErTrukket(any()) } returns false
-        every {
-            avklaringsbehovService.oppdaterAvklaringsbehov(
-                any(), any(), any(), any(), any()
-            )
-        } returns Unit
     }
 
     private fun kontekst(

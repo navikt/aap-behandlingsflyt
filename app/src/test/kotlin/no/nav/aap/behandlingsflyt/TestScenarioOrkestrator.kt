@@ -15,6 +15,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarStud
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSykdomLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarYrkesskadeLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklaringsbehovLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.BekreftVurderingerOppfølgingLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FastsettBeregningstidspunktLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FastsettYrkesskadeInntektLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FatteVedtakLøsning
@@ -189,6 +190,13 @@ class TestScenarioOrkestrator(
             avklaringsBehovLøsning = SykdomsvurderingForBrevLøsning(
                 vurdering = "Denne vurderingen skal vises i brev"
             )
+        )
+    }
+
+    fun løsVurderingerOppfølgning(behandling: Behandling): Behandling {
+        return løsAvklaringsBehov(
+            behandling,
+            avklaringsBehovLøsning = BekreftVurderingerOppfølgingLøsning()
         )
     }
 

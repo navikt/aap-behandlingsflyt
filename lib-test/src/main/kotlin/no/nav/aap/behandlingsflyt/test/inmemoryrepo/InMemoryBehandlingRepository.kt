@@ -62,7 +62,10 @@ object InMemoryBehandlingRepository : BehandlingRepository {
         }
     }
 
-    override fun finnSisteOpprettedeBehandlingFor(sakId: SakId, behandlingstypeFilter: List<TypeBehandling>): Behandling? {
+    override fun finnSisteOpprettedeBehandlingFor(
+        sakId: SakId,
+        behandlingstypeFilter: List<TypeBehandling>
+    ): Behandling? {
         synchronized(lock) {
             return memory.values
                 .filter { behandling -> behandling.sakId == sakId }
@@ -145,8 +148,32 @@ object InMemoryBehandlingRepository : BehandlingRepository {
     override fun hentAlleMedVedtakFor(
         person: Person,
         behandlingstypeFilter: List<TypeBehandling>
-    ): List<BehandlingMedVedtak> {
-        TODO("Not yet implemented")
+    ): List<BehandlingMedVedtak> = synchronized(lock) {
+        memory.values.mapNotNull { behandling ->
+            if (behandling.typeBehandling() !in behandlingstypeFilter) {
+                return@mapNotNull null
+            }
+
+            val sak = InMemorySakRepository.hent(behandling.sakId)
+            if (sak.person.id != person.id) {
+                return@mapNotNull null
+            }
+            val vedtak = InMemoryVedtakRepository.hent(behandling.id)
+                ?: return@mapNotNull null
+
+            BehandlingMedVedtak(
+                saksnummer = sak.saksnummer,
+                id = behandling.id,
+                referanse = behandling.referanse,
+                typeBehandling = behandling.typeBehandling(),
+                status = behandling.status(),
+                opprettetTidspunkt = behandling.opprettetTidspunkt,
+                vedtakstidspunkt = vedtak.vedtakstidspunkt,
+                virkningstidspunkt = vedtak.virkningstidspunkt,
+                vurderingsbehov = behandling.vurderingsbehov().map { it.type }.toSet(),
+                årsakTilOpprettelse = behandling.årsakTilOpprettelse,
+            )
+        }
     }
 
     override fun leggTilNyttAktivtSteg(

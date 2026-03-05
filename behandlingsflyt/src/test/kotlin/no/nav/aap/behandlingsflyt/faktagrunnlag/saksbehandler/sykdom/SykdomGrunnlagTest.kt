@@ -133,6 +133,7 @@ class SykdomGrunnlagTest {
         vurderingenGjelderTil = vurderingenGjelderTil,
         vurdertAv = Bruker("Z00000"),
         opprettet = opprettet.toInstant(ZoneOffset.UTC),
-        vurdertIBehandling = vurdertIBehandling
+        vurdertIBehandling = vurdertIBehandling,
+        diagnose = null
     )
 }

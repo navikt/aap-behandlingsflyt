@@ -119,7 +119,6 @@ class HendelseMottattHåndteringJobbUtfører(
                 håndterMottattDokumentService.håndterMottattDialogMelding(
                     sakId = sakId,
                     referanse = referanse,
-                    mottattTidspunkt = mottattTidspunkt,
                     brevkategori = innsendingType,
                     melding = parsedMelding,
                 )

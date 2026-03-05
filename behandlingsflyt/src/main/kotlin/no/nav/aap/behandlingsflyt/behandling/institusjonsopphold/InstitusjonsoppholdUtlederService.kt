@@ -432,7 +432,7 @@ class InstitusjonsoppholdUtlederService(
         val helsevurderinger: List<HelseinstitusjonVurdering>
         if (basertPåVurderingerFørDenneBehandlingen) {
             val forrigeGrunnlag =
-                behandling.forrigeBehandlingId?.let { institusjonsoppholdRepository.hentHvisEksisterer(behandling.forrigeBehandlingId) }
+                behandling.forrigeBehandlingId?.let { institusjonsoppholdRepository.hentHvisEksisterer(it) }
             soningsvurderinger = forrigeGrunnlag?.soningsVurderinger?.vurderinger.orEmpty()
             helsevurderinger = forrigeGrunnlag?.helseoppholdvurderinger?.vurderinger.orEmpty()
         } else {
@@ -459,7 +459,6 @@ class InstitusjonsoppholdUtlederService(
             if (barneTilleggetOpphørerMidtIOpphold) {
                 oppholdSomKanGiReduksjonMedBarnetilleggStopp = harOppholdSomKreverVurderingEtterStoppIBarneTillegg(
                     barnetilleggTidslinje,
-                    helseOppholdSluttDato,
                     helseOppholdTidslinje,
                 )
             }
@@ -470,13 +469,35 @@ class InstitusjonsoppholdUtlederService(
 
     private fun harOppholdSomKreverVurderingEtterStoppIBarneTillegg(
         barnetilleggTidslinje: Tidslinje<RettTilBarnetillegg>,
-        helseEnd: LocalDate,
         helseOppholdTidslinje: Tidslinje<Boolean>
-    ): Tidslinje<Boolean> =
-        harOppholdSomKreverAvklaring(
+    ): Tidslinje<Boolean> {
+
+        val oppholdFørBarnetillegg = harOppholdSomKreverAvklaring(
             helseOppholdTidslinje.begrensetTil(
-                Periode(fom = barnetilleggTidslinje.maxDato().plusDays(1), tom = helseEnd)
+                Periode(
+                    fom = helseOppholdTidslinje.minDato(),
+                    tom = barnetilleggTidslinje.minDato().plusDays(1)
+                )
             ),
             ignorerVarighetsBegrensning = true
         )
+
+        val oppholdEtterBarnetillegg = harOppholdSomKreverAvklaring(
+            helseOppholdTidslinje.begrensetTil(
+                Periode(
+                    fom = barnetilleggTidslinje.maxDato().plusDays(1),
+                    tom = helseOppholdTidslinje.maxDato()
+                )
+            ),
+            ignorerVarighetsBegrensning = true
+        )
+
+        val kombinertOpphold = oppholdFørBarnetillegg.kombiner(
+            oppholdEtterBarnetillegg,
+            joinStyle = StandardSammenslåere.prioriterVenstreSideCrossJoin(),
+        )
+
+        return kombinertOpphold
+    }
+
 }

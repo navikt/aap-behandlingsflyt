@@ -75,7 +75,7 @@ class UførevedtakHendelseKafkaKonsumentTest {
     fun `Uførevedtakhendelse konsumeres av kafka`() {
 
         val uførevedtakMelding = UførevedtakKafkaMelding(
-            personid = "12345678901",
+            personId = "12345678901",
             virkningsdato = LocalDate.now(),
             resultat = UførevedtakResultat.AVSL,
             avslag12_5 = false
@@ -91,7 +91,7 @@ class UførevedtakHendelseKafkaKonsumentTest {
             producer.send(
                 ProducerRecord(
                     UFØRE_KAFKA_TOPIC,
-                    uførevedtakMelding.personid,
+                    uførevedtakMelding.personId,
                     value
                 )
             )

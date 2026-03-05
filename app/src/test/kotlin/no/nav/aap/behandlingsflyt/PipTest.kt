@@ -30,7 +30,6 @@ import no.nav.aap.komponenter.httpklient.httpclient.error.DefaultResponseHandler
 import no.nav.aap.komponenter.httpklient.httpclient.get
 import no.nav.aap.komponenter.httpklient.httpclient.request.GetRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
-import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
@@ -88,9 +87,8 @@ class PipTest {
 
     @Test
     fun `pip test sak`() {
-
+        val fom = LocalDate.now()
         val saksnummer = dataSource.transaction { connection ->
-            val periode = Periode(LocalDate.now(), LocalDate.now())
             val personRepository = PersonRepositoryImpl(connection)
             val person = personRepository.finnEllerOpprett(
                 listOf(
@@ -99,13 +97,13 @@ class PipTest {
                     Ident("endaeldreident", false)
                 )
             )
-            val sak = SakRepositoryImpl(connection).finnEllerOpprett(person, periode)
+            val sak = SakRepositoryImpl(connection).finnEllerOpprett(person, fom)
             val behandling = BehandlingRepositoryImpl(connection).opprettBehandling(
                 sakId = sak.id,
                 typeBehandling = TypeBehandling.Førstegangsbehandling,
                 forrigeBehandlingId = null,
                 vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
-                    vurderingsbehov = listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_SØKNAD, periode)),
+                    vurderingsbehov = listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_SØKNAD,)),
                     årsak = ÅrsakTilOpprettelse.SØKNAD,
                 )
             )
@@ -142,7 +140,7 @@ class PipTest {
                 listOf(
                     VurdertBarn(
                         BarnIdentifikator.BarnIdent("vurdertbarn"),
-                        listOf(VurderingAvForeldreAnsvar(periode.fom, true, "fordi"))
+                        listOf(VurderingAvForeldreAnsvar(fom, true, "fordi"))
                     )
                 )
             )
@@ -169,7 +167,7 @@ class PipTest {
     fun `pip test behandling`() {
 
         val behandlingsreferanse = dataSource.transaction { connection ->
-            val periode = Periode(LocalDate.now(), LocalDate.now())
+            val fom = LocalDate.now()
             val personRepository = PersonRepositoryImpl(connection)
             val person = personRepository.finnEllerOpprett(
                 listOf(
@@ -178,13 +176,13 @@ class PipTest {
                     Ident("endaeldreident", false)
                 )
             )
-            val sak = SakRepositoryImpl(connection).finnEllerOpprett(person, periode)
+            val sak = SakRepositoryImpl(connection).finnEllerOpprett(person, fom)
             val behandling = BehandlingRepositoryImpl(connection).opprettBehandling(
                 sakId = sak.id,
                 typeBehandling = TypeBehandling.Førstegangsbehandling,
                 forrigeBehandlingId = null,
                 vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
-                    vurderingsbehov = listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_SØKNAD, periode)),
+                    vurderingsbehov = listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_SØKNAD)),
                     årsak = ÅrsakTilOpprettelse.SØKNAD,
                 )
             )
@@ -222,19 +220,19 @@ class PipTest {
                 listOf(
                     VurdertBarn(
                         BarnIdentifikator.BarnIdent("vurdertbarn"),
-                        listOf(VurderingAvForeldreAnsvar(periode.fom, true, "fordi"))
+                        listOf(VurderingAvForeldreAnsvar(fom, true, "fordi"))
                     )
                 )
             )
 
 
-            val periode2 = Periode(LocalDate.now().minusYears(5), LocalDate.now().minusYears(5))
+
             val behandling2 = BehandlingRepositoryImpl(connection).opprettBehandling(
                 sakId = sak.id,
                 typeBehandling = TypeBehandling.Førstegangsbehandling,
                 forrigeBehandlingId = null,
                 vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
-                    vurderingsbehov = listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_SØKNAD, periode2)),
+                    vurderingsbehov = listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_SØKNAD)),
                     årsak = ÅrsakTilOpprettelse.SØKNAD,
                 )
             )
@@ -256,7 +254,7 @@ class PipTest {
                 listOf(
                     VurdertBarn(
                         BarnIdentifikator.BarnIdent("vurdertbar2"),
-                        listOf(VurderingAvForeldreAnsvar(periode.fom, true, "fordi"))
+                        listOf(VurderingAvForeldreAnsvar(fom, true, "fordi"))
                     )
                 )
             )

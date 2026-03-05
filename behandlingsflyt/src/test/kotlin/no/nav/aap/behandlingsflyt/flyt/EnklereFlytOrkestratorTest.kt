@@ -105,7 +105,6 @@ class EnklereFlytOrkestratorTest {
                 vurderingsbehov = listOf(
                     VurderingsbehovMedPeriode(
                         type = Vurderingsbehov.MOTTATT_MELDEKORT,
-                        periode = periode,
                     )
                 ),
                 årsak = ÅrsakTilOpprettelse.MELDEKORT

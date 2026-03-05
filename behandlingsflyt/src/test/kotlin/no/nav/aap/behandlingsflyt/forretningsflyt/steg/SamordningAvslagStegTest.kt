@@ -1,9 +1,6 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
-import io.mockk.Runs
 import io.mockk.every
-import io.mockk.junit5.MockKExtension
-import io.mockk.just
 import io.mockk.mockk
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.samordning.SamordningGradering
@@ -27,9 +24,7 @@ import no.nav.aap.komponenter.verdityper.Prosent
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.ExtendWith
 
-@ExtendWith(MockKExtension::class)
 class SamordningAvslagStegTest {
 
     val samordningService = mockk<SamordningService>()

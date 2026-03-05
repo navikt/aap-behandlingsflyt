@@ -41,7 +41,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.FRITAK_ME
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.MIGRER_RETTIGHETSPERIODE
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.MOTTATT_MELDEKORT
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.UTVID_VEDTAKSLENGDE
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Segment
@@ -156,17 +155,16 @@ class BrevUtlederService(
                 if (harRettighetsType(
                         behandling.id,
                         RettighetsType.VURDERES_FOR_UFØRETRYGD
-                    ) && behandling.forrigeBehandlingId != null && !harRettighetsType(
-                        behandling.forrigeBehandlingId,
+                    ) && forrigeBehandlingId != null && !harRettighetsType(
+                        forrigeBehandlingId,
                         RettighetsType.VURDERES_FOR_UFØRETRYGD
                     )
                 ) {
                     return brevBehovVurderesForUføretrygd(behandling)
                 }
-                if (unleashGateway.isEnabled(BehandlingsflytFeature.NyBrevtype11_17) &&
-                    harRettighetsType(behandling.id, RettighetsType.ARBEIDSSØKER) &&
-                    behandling.forrigeBehandlingId != null &&
-                    !harRettighetsType(behandling.forrigeBehandlingId, RettighetsType.ARBEIDSSØKER)
+                if (harRettighetsType(behandling.id, RettighetsType.ARBEIDSSØKER) &&
+                    forrigeBehandlingId != null &&
+                    !harRettighetsType(forrigeBehandlingId, RettighetsType.ARBEIDSSØKER)
                 ) {
                     return brevBehovArbeidssøker(behandling)
                 }
@@ -204,10 +202,10 @@ class BrevUtlederService(
     }
 
     private fun brevBehovUtvidVedtakslengde(behandling: Behandling): UtvidVedtakslengde {
-        checkNotNull(behandling.forrigeBehandlingId) {
+        val forrigeBehandlingId = checkNotNull(behandling.forrigeBehandlingId) {
             "UtvidelsesVedtak mangler forrigeBehandlingId for ${behandling.id}"
         }
-        val underveisGrunnlagVedForrigeBehandling = underveisRepository.hent(behandling.forrigeBehandlingId)
+        val underveisGrunnlagVedForrigeBehandling = underveisRepository.hent(forrigeBehandlingId)
         val utvidetAapFomDato = underveisGrunnlagVedForrigeBehandling.sisteDagMedYtelse().plusDays(1)
         checkNotNull(utvidetAapFomDato) {
             "UtvidelsesVedtak mangler utvidetAapFomDato"
