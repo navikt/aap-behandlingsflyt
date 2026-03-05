@@ -75,7 +75,7 @@ class PdlHendelseService(
             if (person != null) {
                 håndterDødPersonSomBrukerEllerBarn(
                     person,
-                    funnetIdent,
+                    funnetIdent!!,
                     personHendelse,
                 )
             }
@@ -83,7 +83,7 @@ class PdlHendelseService(
             // Sjekk om personen er et barn oppgitt av saksbehandler
             if (saksbehandlersOppgitteBarn != null) {
                 håndterDødPersonSomEtBarnOppgittAvSaksbehandler(
-                    funnetIdent,
+                    funnetIdent!!,
                     personHendelse,
                 )
             }
@@ -92,11 +92,11 @@ class PdlHendelseService(
 
     private fun håndterDødPersonSomBrukerEllerBarn(
         person: Person,
-        funnetIdent: Ident?,
+        funnetIdent: Ident,
         personHendelse: PdlPersonHendelse,
     ) {
         val behandlingIdsForRegisterBarn =
-            barnRepository.hentBehandlingIdForSakSomFårBarnetilleggForRegisterBarn(funnetIdent!!)
+            barnRepository.hentBehandlingIdForSakSomFårBarnetilleggForRegisterBarn(funnetIdent)
         val behandlingIdsForSøknadsBarn =
             barnRepository.hentBehandlingIdForSakSomFårBarnetilleggForSøknadsBarn(funnetIdent)
         val alleBarneBehandlingIds =
@@ -148,12 +148,12 @@ class PdlHendelseService(
     }
 
     private fun håndterDødPersonSomEtBarnOppgittAvSaksbehandler(
-        funnetIdent: Ident?,
+        funnetIdent: Ident,
         personHendelse: PdlPersonHendelse,
     ) {
         val behandlingIdsForSaksbehandlerOppgitteBarn =
             barnRepository.hentBehandlingIdForSakSomFårBarnetilleggForSaksbehandlerOppgitteBarn(
-                funnetIdent!!
+                funnetIdent
             )
         if (behandlingIdsForSaksbehandlerOppgitteBarn.isNotEmpty()) {
             behandlingIdsForSaksbehandlerOppgitteBarn
