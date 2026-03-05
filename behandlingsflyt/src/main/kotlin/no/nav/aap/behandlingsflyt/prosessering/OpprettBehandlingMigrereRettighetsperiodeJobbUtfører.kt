@@ -49,7 +49,7 @@ class OpprettBehandlingMigrereRettighetsperiodeJobbUtfører(
         val sak = sakRepository.hent(SakId(sakId))
         log.info("Migrerer rettighetsperiode for sak $sakId")
 
-        if (sak.rettighetsperiode.tom == Tid.MAKS) {
+        if (sak.rettighetsperiode.tom == Tid.MAKS && !listOf("4o08734", "4M9PoKG").contains(sak.saksnummer.toString())) {
             log.info("Har allerede tid maks som rettighetsperiode - lager ikke en ny behandling")
             return
         }
