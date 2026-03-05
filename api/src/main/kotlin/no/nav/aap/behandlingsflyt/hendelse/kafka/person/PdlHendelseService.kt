@@ -27,22 +27,34 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
 
 class PdlHendelseService(
-    private val repositoryProvider: RepositoryProvider,
-    private val gatewayProvider: GatewayProvider,
+    private val sakRepository: SakRepository,
+    private val behandlingRepository: BehandlingRepository,
+    private val personRepository: PersonRepository,
+    private val barnRepository: BarnRepository,
+    private val underveisRepository: UnderveisRepository,
+    private val hendelseService: MottattHendelseService,
+    private val trukketSøknadService: TrukketSøknadService,
+    private val behandlingService: BehandlingService,
 ) {
+    constructor(
+        repositoryProvider: RepositoryProvider,
+        gatewayProvider: GatewayProvider,
+    ) : this(
+        sakRepository = repositoryProvider.provide(),
+        behandlingRepository = repositoryProvider.provide(),
+        personRepository = repositoryProvider.provide(),
+        barnRepository = repositoryProvider.provide(),
+        underveisRepository = repositoryProvider.provide(),
+        hendelseService = MottattHendelseService(repositoryProvider),
+        trukketSøknadService = TrukketSøknadService(repositoryProvider),
+        behandlingService = BehandlingService(repositoryProvider, gatewayProvider),
+    )
+
     private val log = LoggerFactory.getLogger(javaClass)
     private val secureLogger = LoggerFactory.getLogger("team-logs")
     private val utfallOppfyltUtils = UtfallOppfyltUtils()
 
     fun håndter(personHendelse: PdlPersonHendelse) {
-        val sakRepository: SakRepository = repositoryProvider.provide()
-        val behandlingRepository: BehandlingRepository = repositoryProvider.provide()
-        val personRepository: PersonRepository = repositoryProvider.provide()
-        val barnRepository: BarnRepository = repositoryProvider.provide()
-        val underveisRepository: UnderveisRepository = repositoryProvider.provide()
-        val hendelseService = MottattHendelseService(repositoryProvider)
-        val trukketSøknadService = TrukketSøknadService(repositoryProvider)
-        val behandlingService = BehandlingService(repositoryProvider, gatewayProvider)
         if (personHendelse.opplysningstype == Opplysningstype.DOEDSFALL_V1 && personHendelse.endringstype == Endringstype.OPPRETTET) {
             log.info("Håndterer hendelse med ${personHendelse.opplysningstype} og ${personHendelse.endringstype}")
             var person: Person? = null
@@ -62,46 +74,23 @@ class PdlHendelseService(
             // Sjekk om personen er et barn fr apersontabellen eller aap-mottaker
             håndterDødPersonSomBrukerEllerBarn(
                 person,
-                barnRepository,
                 funnetIdent,
-                behandlingRepository,
-                sakRepository,
-                behandlingService,
-                underveisRepository,
-                trukketSøknadService,
                 personHendelse,
-                hendelseService
             )
 
             // Sjekk om personen er et barn oppgitt av saksbehandler
             håndterDødPersonSomEtBarnOppgittAvSaksbehandler(
                 saksbehandlersOppgitteBarn,
-                barnRepository,
                 funnetIdent,
-                behandlingRepository,
-                sakRepository,
-                behandlingService,
-                underveisRepository,
-                trukketSøknadService,
                 personHendelse,
-                hendelseService
             )
         }
-
-
     }
 
     private fun håndterDødPersonSomBrukerEllerBarn(
         person: Person?,
-        barnRepository: BarnRepository,
         funnetIdent: Ident?,
-        behandlingRepository: BehandlingRepository,
-        sakRepository: SakRepository,
-        behandlingService: BehandlingService,
-        underveisRepository: UnderveisRepository,
-        trukketSøknadService: TrukketSøknadService,
         personHendelse: PdlPersonHendelse,
-        hendelseService: MottattHendelseService
     ) {
         person?.let { personIKelvin ->
             val behandlingIdsForRegisterBarn =
@@ -127,11 +116,8 @@ class PdlHendelseService(
                         log.info("Registrerer mottatt hendelse på barn for ${sak.saksnummer}")
                         sendDødsHendelseHvisRelevant(
                             behandlingMedSistFattedeVedtak,
-                            underveisRepository,
                             personHendelse,
                             sak,
-                            hendelseService,
-                            trukketSøknadService,
                             sisteOpprettedeBehandling,
                             Dødsfalltype.DODSFALL_BARN
                         )
@@ -153,11 +139,8 @@ class PdlHendelseService(
 
                 sendDødsHendelseHvisRelevant(
                     behandlingMedSistFattedeVedtak,
-                    underveisRepository,
                     personHendelse,
                     sak,
-                    hendelseService,
-                    trukketSøknadService,
                     sisteOpprettedeBehandling,
                     Dødsfalltype.DODSFALL_BRUKER
                 )
@@ -167,15 +150,8 @@ class PdlHendelseService(
 
     private fun håndterDødPersonSomEtBarnOppgittAvSaksbehandler(
         saksbehandlersOppgitteBarn: SaksbehandlerOppgitteBarn.SaksbehandlerOppgitteBarn?,
-        barnRepository: BarnRepository,
         funnetIdent: Ident?,
-        behandlingRepository: BehandlingRepository,
-        sakRepository: SakRepository,
-        behandlingService: BehandlingService,
-        underveisRepository: UnderveisRepository,
-        trukketSøknadService: TrukketSøknadService,
         personHendelse: PdlPersonHendelse,
-        hendelseService: MottattHendelseService
     ) {
         saksbehandlersOppgitteBarn?.let { _ ->
             val behandlingIdsForSaksbehandlerOppgitteBarn =
@@ -199,11 +175,8 @@ class PdlHendelseService(
                         log.info("Registrerer mottatt hendelse på barn oppgitt av saksbehandler for ${sak.saksnummer}")
                         sendDødsHendelseHvisRelevant(
                             behandlingMedSistFattedeVedtak,
-                            underveisRepository,
                             personHendelse,
                             sak,
-                            hendelseService,
-                            trukketSøknadService,
                             sisteOpprettedeBehandling,
                             Dødsfalltype.DODSFALL_BARN
                         )
@@ -215,11 +188,8 @@ class PdlHendelseService(
 
     private fun sendDødsHendelseHvisRelevant(
         behandlingMedSistFattedeVedtak: BehandlingMedVedtak?,
-        underveisRepository: UnderveisRepository,
         personHendelse: PdlPersonHendelse,
         sak: Sak,
-        hendelseService: MottattHendelseService,
-        trukketSøknadService: TrukketSøknadService,
         sisteOpprettedeBehandling: Behandling?,
         hendelseType: Dødsfalltype
     ) {
