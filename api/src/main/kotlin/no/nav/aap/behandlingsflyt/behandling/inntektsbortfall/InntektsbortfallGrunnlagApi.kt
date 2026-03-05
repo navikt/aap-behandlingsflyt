@@ -4,6 +4,7 @@ import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.VurderingDto
+import no.nav.aap.behandlingsflyt.behandling.beregning.Beregning
 import no.nav.aap.behandlingsflyt.behandling.beregning.BeregningService
 import no.nav.aap.behandlingsflyt.behandling.vilkår.inntektsbortfall.InntektSiste3ÅrOver3G
 import no.nav.aap.behandlingsflyt.behandling.vilkår.inntektsbortfall.InntektSisteÅrOver1G
@@ -12,7 +13,6 @@ import no.nav.aap.behandlingsflyt.behandling.vilkår.inntektsbortfall.Inntektsbo
 import no.nav.aap.behandlingsflyt.behandling.vilkår.inntektsbortfall.Under62ÅrVedSøknadstidspunkt
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
-import no.nav.aap.behandlingsflyt.behandling.beregning.Beregning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektGrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.ManuellInntektGrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningRepository
@@ -142,13 +142,11 @@ fun NormalOpenAPIRoute.inntektsbortfallGrunnlagApi(
                 val behandling: Behandling =
                     BehandlingReferanseService(behandlingRepository).behandling(behandlingReferanse)
 
-                val sak = sakRepository.hent(behandling.sakId)
-
-                val beregningService = BeregningService(repositoryProvider)
-                val relevanteBeregningsår =
-                    beregningService.utledRelevanteBeregningsÅr(behandling.id)
                 val brukerPersonopplysning =
-                    personopplysningRepository.hentBrukerPersonOpplysningHvisEksisterer(behandling.id)!!
+                    requireNotNull(personopplysningRepository.hentBrukerPersonOpplysningHvisEksisterer(behandling.id)) {
+                        "Finner ikke personopplysninger for behandling ${behandling.id}"
+                    }
+
                 val manuelleInntekter = manuellInntektGrunnlagRepository.hentHvisEksisterer(behandling.id)
                 val inntektGrunnlag = inntektGrunnlagRepository.hentHvisEksisterer(behandling.id)
 
@@ -157,8 +155,12 @@ fun NormalOpenAPIRoute.inntektsbortfallGrunnlagApi(
                     manuelleInntekter?.manuelleInntekter.orEmpty()
                 )
 
+                val sak = sakRepository.hent(behandling.sakId)
                 val vurdering = inntektsbortfallRepository.hentHvisEksisterer(behandling.id)
                     ?.tilDto(sak.rettighetsperiode.fom, VurdertAvService(repositoryProvider, gatewayProvider))
+
+                val relevanteBeregningsår = BeregningService(repositoryProvider)
+                    .utledRelevanteBeregningsÅr(behandling.id)
 
                 Pair(
                     InntektsbortfallVurderingService(
