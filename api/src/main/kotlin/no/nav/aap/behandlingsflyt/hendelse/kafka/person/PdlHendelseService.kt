@@ -60,12 +60,12 @@ class PdlHendelseService(
             var person: Person? = null
             var saksbehandlersOppgitteBarn: SaksbehandlerOppgitteBarn.SaksbehandlerOppgitteBarn? = null
             var funnetIdent: Ident? = null
-            for (ident in personHendelse.personidenter) {
-                person = personRepository.finn(Ident(ident))
-                saksbehandlersOppgitteBarn = barnRepository.finnSaksbehandlerOppgitteBarn(Ident(ident))
+            for (ident in personHendelse.personidenter.map(::Ident)) {
+                person = personRepository.finn(ident)
+                saksbehandlersOppgitteBarn = barnRepository.finnSaksbehandlerOppgitteBarn(ident)
                 // Håndterer D-nummer og Fnr
                 if (person != null || saksbehandlersOppgitteBarn != null) {
-                    funnetIdent = Ident(ident)
+                    funnetIdent = ident
                     secureLogger.info("Håndterer hendelse for ident ${funnetIdent.identifikator} og navn ${personHendelse.navn?.etternavn} ")
                     break
                 }
