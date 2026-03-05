@@ -9,10 +9,13 @@ import java.time.LocalDate
 data class VedtakslengdeGrunnlag(
     val vurderinger: List<VedtakslengdeVurdering>
 ) {
-    constructor(vurdering: VedtakslengdeVurdering) : this(listOf(vurdering))
-
-    /** Siste vurdering (convenience for eksisterende kallsteder) */
-    val vurdering: VedtakslengdeVurdering? get() = vurderinger.lastOrNull()
+    fun gjeldendeVurdering(): VedtakslengdeVurdering? {
+        return vurderinger
+            .groupBy { it.vurdertIBehandling }
+            .mapValues { (_, v) -> v.maxBy { it.opprettet } }
+            .values
+            .maxByOrNull { it.opprettet }
+    }
 }
 
 data class VedtakslengdeVurdering(

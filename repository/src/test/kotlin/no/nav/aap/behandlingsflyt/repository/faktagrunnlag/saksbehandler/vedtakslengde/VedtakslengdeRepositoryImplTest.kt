@@ -61,7 +61,7 @@ class VedtakslengdeRepositoryImplTest {
         }
 
         assertThat(hentet).usingRecursiveComparison(sammenligner).isEqualTo(
-            VedtakslengdeGrunnlag(vurdering)
+            VedtakslengdeGrunnlag(listOf(vurdering))
         )
     }
 
@@ -99,7 +99,7 @@ class VedtakslengdeRepositoryImplTest {
             val grunnlag2 = VedtakslengdeRepositoryImpl(connection).hentHvisEksisterer(behandling2.id)
             assertThat(grunnlag2)
                 .usingRecursiveComparison(sammenligner)
-                .isEqualTo(VedtakslengdeGrunnlag(vurdering))
+                .isEqualTo(VedtakslengdeGrunnlag(listOf(vurdering)))
         }
     }
 }
