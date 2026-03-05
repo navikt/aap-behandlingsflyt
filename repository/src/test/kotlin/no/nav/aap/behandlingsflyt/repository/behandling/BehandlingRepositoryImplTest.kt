@@ -62,7 +62,6 @@ import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
-import kotlin.math.abs
 
 internal class BehandlingRepositoryImplTest {
     companion object {
@@ -84,7 +83,7 @@ internal class BehandlingRepositoryImplTest {
         val skapt = dataSource.transaction { connection ->
             val sak = opprettSak(
                 connection,
-                Periode(LocalDate.now(), LocalDate.now().plusYears(3))
+                LocalDate.now()
             )
             val behandlingRepo = BehandlingRepositoryImpl(connection)
 
@@ -123,7 +122,7 @@ internal class BehandlingRepositoryImplTest {
         val skapt = dataSource.transaction { connection ->
             val sak = opprettSak(
                 connection,
-                Periode(LocalDate.now(), LocalDate.now().plusYears(3))
+                LocalDate.now()
             )
             val behandlingRepo = BehandlingRepositoryImpl(connection)
 
@@ -154,7 +153,7 @@ internal class BehandlingRepositoryImplTest {
         val (sak, førstegang, klage) = dataSource.transaction { connection ->
             val sak = opprettSak(
                 connection,
-                Periode(LocalDate.now(), LocalDate.now().plusYears(3))
+                LocalDate.now()
             )
             val behandlingRepo = BehandlingRepositoryImpl(connection)
 
@@ -207,7 +206,7 @@ internal class BehandlingRepositoryImplTest {
         val (sak, førstegang, _) = dataSource.transaction { connection ->
             val sak = opprettSak(
                 connection,
-                Periode(LocalDate.now(), LocalDate.now().plusYears(3))
+                LocalDate.now()
             )
             val behandlingRepo = BehandlingRepositoryImpl(connection)
             val vedtakRepo = VedtakRepositoryImpl(connection)
@@ -260,6 +259,50 @@ internal class BehandlingRepositoryImplTest {
         }
     }
 
+    @Test
+    fun `Skal hente ut saker som kan migrere rettighetsperiode`() {
+        dataSource.transaction { connection ->
+            val behandlingRepository = BehandlingRepositoryImpl(connection)
+            val sakRepository = SakRepositoryImpl(connection)
+
+            val sakFerdigMedOppfølgingsoppgave = sak(connection)
+            val behandlingForSakMedOppfølgingsoppgave = finnEllerOpprettBehandling(connection, sakFerdigMedOppfølgingsoppgave)
+            behandlingRepository.oppdaterBehandlingStatus(behandlingForSakMedOppfølgingsoppgave.id, Status.AVSLUTTET)
+            behandlingRepository.opprettBehandling(
+                sakId = sakFerdigMedOppfølgingsoppgave.id,
+                typeBehandling = TypeBehandling.OppfølgingsBehandling,
+                forrigeBehandlingId = null,
+                vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
+                    vurderingsbehov = emptyList(),
+                    årsak = ÅrsakTilOpprettelse.OPPFØLGINGSOPPGAVE
+                )
+            )
+
+            val sakFerdig = sak(connection)
+            val behandlingForSakFerdig = finnEllerOpprettBehandling(connection, sakFerdig)
+            behandlingRepository.oppdaterBehandlingStatus(behandlingForSakFerdig.id, Status.AVSLUTTET)
+
+            val sakÅpen = sak(connection)
+            val behandlingForSakÅpen = finnEllerOpprettBehandling(connection, sakÅpen)
+            val sakTrukket = sak(connection)
+            val behandlingForSakTrukket = finnEllerOpprettBehandling(connection, sakTrukket)
+            behandlingRepository.oppdaterBehandlingStatus(behandlingForSakTrukket.id, Status.AVSLUTTET)
+
+            sakRepository.oppdaterRettighetsperiode(sakFerdigMedOppfølgingsoppgave.id, Periode(LocalDate.now(), LocalDate.now().plusDays(5)))
+            sakRepository.oppdaterRettighetsperiode(sakFerdig.id, Periode(LocalDate.now(), LocalDate.now().plusDays(5)))
+            sakRepository.oppdaterRettighetsperiode(sakÅpen.id, Periode(LocalDate.now(), LocalDate.now().plusDays(5)))
+            sakRepository.oppdaterRettighetsperiode(sakTrukket.id, Periode(LocalDate.now(), LocalDate.now()))
+
+
+            // Skal ikke hente saker med åpen ytelsesbehandling
+            // Skal hente saker som har 0 dager i rettighetsperiode - disse er trukket
+            val sakIder = sakRepository.finnSakerMedAvsluttedeBehandlingerUtenRiktigSluttdatoPåRettighetsperiode().map { it.id }
+            assertThat(sakIder).hasSize(2)
+            assertThat(sakIder).contains(sakFerdig.id)
+            assertThat(sakIder).contains(sakFerdigMedOppfølgingsoppgave.id)
+
+        }
+    }
     @Test
     fun `Kan hente saksnummer for behandling`() {
         dataSource.transaction { connection ->
@@ -325,7 +368,6 @@ internal class BehandlingRepositoryImplTest {
                 vurderingsbehov = listOf(
                     VurderingsbehovMedPeriode(
                         type = Vurderingsbehov.MOTTATT_MELDEKORT,
-                        periode = sak.rettighetsperiode,
                     ),
                 ),
                 årsakTilOpprettelse = ÅrsakTilOpprettelse.MELDEKORT
@@ -336,33 +378,32 @@ internal class BehandlingRepositoryImplTest {
                 vurderingsbehov = listOf(
                     VurderingsbehovMedPeriode(
                         type = Vurderingsbehov.MOTTATT_MELDEKORT,
-                        periode = sak.rettighetsperiode,
                     ),
                 ),
                 årsakTilOpprettelse = ÅrsakTilOpprettelse.MELDEKORT
             )
 
             val vurderingsbehovOgÅrsaker = behandlingRepository.hentVurderingsbehovOgÅrsaker(behandling.id)
-            assertThat(vurderingsbehovOgÅrsaker).hasSize(2)
+            assertThat(vurderingsbehovOgÅrsaker).hasSize(3)
             assertThat(vurderingsbehovOgÅrsaker.map { Pair(it.årsak, it.vurderingsbehov) })
                 .usingRecursiveComparison()
                 .ignoringCollectionOrder()
-                .withEqualsForType({ a: LocalDateTime, b: LocalDateTime ->
-                    abs(ChronoUnit.MILLIS.between(b, a)) < 100000
-                }, LocalDateTime::class.java)
+                .ignoringFields("second.oppdatertTid")
                 .isEqualTo(
                     listOf(
                         ÅrsakTilOpprettelse.SØKNAD to listOf(
                             VurderingsbehovMedPeriode(
                                 type = Vurderingsbehov.MOTTATT_SØKNAD,
-                                periode = null
                             )
                         ),
                         ÅrsakTilOpprettelse.MELDEKORT to listOf(
                             VurderingsbehovMedPeriode(
                                 type = Vurderingsbehov.MOTTATT_MELDEKORT,
-                                periode = sak.rettighetsperiode,
-                                oppdatertTid = LocalDateTime.now()
+                            )
+                        ),
+                        ÅrsakTilOpprettelse.MELDEKORT to listOf(
+                            VurderingsbehovMedPeriode(
+                                type = Vurderingsbehov.MOTTATT_MELDEKORT,
                             )
                         )
                     )
@@ -426,7 +467,6 @@ internal class BehandlingRepositoryImplTest {
 
         assertThat(behandling.vurderingsbehov().map { it.type }).containsOnly(Vurderingsbehov.MOTTATT_SØKNAD)
 
-        val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(1))
         val oppdatertBehandling = dataSource.transaction {
             BehandlingRepositoryImpl(it).oppdaterVurderingsbehovOgÅrsak(
                 behandling,
@@ -434,7 +474,6 @@ internal class BehandlingRepositoryImplTest {
                     vurderingsbehov = listOf(
                         VurderingsbehovMedPeriode(
                             type = Vurderingsbehov.REVURDER_MEDLEMSKAP,
-                            periode = periode
                         )
                     ),
                     årsak = ÅrsakTilOpprettelse.SØKNAD
@@ -457,7 +496,6 @@ internal class BehandlingRepositoryImplTest {
                     vurderingsbehov = listOf(
                         VurderingsbehovMedPeriode(
                             type = Vurderingsbehov.REVURDER_MEDLEMSKAP,
-                            periode
                         )
                     ),
                     årsak = ÅrsakTilOpprettelse.SØKNAD

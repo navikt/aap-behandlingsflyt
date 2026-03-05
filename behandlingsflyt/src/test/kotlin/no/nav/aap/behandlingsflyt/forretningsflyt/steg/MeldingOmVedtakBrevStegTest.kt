@@ -79,7 +79,6 @@ class MeldingOmVedtakBrevStegTest {
                 vurderingsbehov = listOf(
                     VurderingsbehovMedPeriode(
                         Vurderingsbehov.MOTTATT_SØKNAD,
-                        Periode(LocalDate.now().minusDays(1), LocalDate.now().plusYears(1))
                     )
                 ),
                 årsak = ÅrsakTilOpprettelse.SØKNAD,
@@ -114,7 +113,7 @@ class MeldingOmVedtakBrevStegTest {
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
         val avklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.SKRIV_VEDTAKSBREV)
         assertThat(avklaringsbehov!!.historikk).hasSize(1)
-        assertThat(avklaringsbehov.historikk.get(0).status).isEqualTo(Status.OPPRETTET)
+        assertThat(avklaringsbehov.historikk[0].status).isEqualTo(Status.OPPRETTET)
 
         verify(exactly = 1) { brevbestillingService.bestill(behandling.id, VedtakAktivitetsplikt11_7, allAny(), false) }
 
@@ -154,7 +153,6 @@ class MeldingOmVedtakBrevStegTest {
                 vurderingsbehov = listOf(
                     VurderingsbehovMedPeriode(
                         Vurderingsbehov.MOTTATT_SØKNAD,
-                        Periode(LocalDate.now().minusDays(1), LocalDate.now().plusYears(1))
                     )
                 ),
                 årsak = ÅrsakTilOpprettelse.SØKNAD,
@@ -199,7 +197,6 @@ class MeldingOmVedtakBrevStegTest {
                 vurderingsbehov = listOf(
                     VurderingsbehovMedPeriode(
                         Vurderingsbehov.MOTTATT_SØKNAD,
-                        Periode(LocalDate.now().minusDays(1), LocalDate.now().plusYears(1))
                     )
                 ),
                 årsak = ÅrsakTilOpprettelse.SØKNAD,

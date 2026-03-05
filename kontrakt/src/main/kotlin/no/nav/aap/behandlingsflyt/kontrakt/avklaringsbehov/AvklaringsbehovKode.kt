@@ -38,6 +38,7 @@ public const val AVKLAR_OVERGANG_ARBEID: String = "5032"
 public const val AVBRYT_REVURDERING_KODE: String = "5033"
 public const val AVKLAR_SAMORDNING_SYKESTIPEND_KODE: String = "5034"
 public const val AVKLAR_OPPHOLDSKRAV: String = "5035"
+public const val AVKLAR_SAMORDNING_BARNEPENSJON_KODE: String = "5036"
 public const val VURDER_INNTEKTSBORTFALL: String = "5040"
 public const val SKRIV_BREV_KODE: String = "5050"
 public const val SKRIV_VEDTAKSBREV_KODE: String = "5051"
@@ -268,6 +269,11 @@ public enum class AvklaringsbehovKode {
      * [AVKLAR_OPPHOLDSKRAV_KODE]
      */
     `5035`,
+
+    /**
+     * [AVKLAR_SAMORDNING_BARNEPENSJON_KODE]
+     */
+    `5036`,
 
     /**
      * [VURDER_INNTEKTSBORTFALL]

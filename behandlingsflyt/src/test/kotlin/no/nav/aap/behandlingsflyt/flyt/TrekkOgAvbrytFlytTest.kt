@@ -25,10 +25,10 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status as Avklaringsb
 class TrekkOgAvbrytFlytTest: AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
     @Test
     fun `kan trekke søknad som har passert manuelt vurdert lovvalg`() {
-        val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
+        val fom = LocalDate.now()
 
         val (_, behandling) = sendInnFørsteSøknad(
-            periode = periode,
+            mottattTidspunkt = fom.atStartOfDay(),
             søknad = SøknadV0(
                 student = SøknadStudentDto(StudentStatus.Nei), yrkesskade = "NEI", oppgitteBarn = null,
                 medlemskap = SøknadMedlemskapDto("NEI", "NEI", "NEI", null, null)
@@ -39,7 +39,7 @@ class TrekkOgAvbrytFlytTest: AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::cl
             assertTrue(åpneAvklaringsbehov.all { Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP == it.definisjon })
         }
             // Løs lovvalg
-            .løsLovvalg(periode.fom)
+            .løsLovvalg(fom)
             .medKontekst {
                 assertThat(åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
                     .containsExactly(Definisjon.AVKLAR_SYKDOM)
@@ -62,10 +62,10 @@ class TrekkOgAvbrytFlytTest: AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::cl
 
     @Test
     fun `kan trekke søknad som har passert forutgående medlemskap`() {
-        val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
+        val fom = LocalDate.now()
 
         val (_, behandling) = sendInnFørsteSøknad(
-            periode = periode,
+            mottattTidspunkt = fom.atStartOfDay(),
             søknad = SøknadV0(
                 student = SøknadStudentDto(StudentStatus.Nei), yrkesskade = "NEI", oppgitteBarn = null,
                 medlemskap = SøknadMedlemskapDto("NEI", "NEI", "NEI", null, null)
@@ -73,17 +73,17 @@ class TrekkOgAvbrytFlytTest: AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::cl
         )
 
         behandling
-            .løsLovvalg(periode.fom)
+            .løsLovvalg(fom)
             // Løs fram til forutgående
-            .løsFramTilForutgåendeMedlemskap(periode.fom)
+            .løsFramTilForutgåendeMedlemskap(fom)
             .medKontekst {
                 assertThat(åpneAvklaringsbehov)
                     .extracting<Definisjon> { it.definisjon }
                     .contains(Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP)
             }
             // Løs forutgående
-            .løsForutgåendeMedlemskap(periode.fom)
-            .løsOppholdskrav(periode.fom)
+            .løsForutgåendeMedlemskap(fom)
+            .løsOppholdskrav(fom)
             // Trekk søknad
             .leggTilVurderingsbehov(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.SØKNAD_TRUKKET)
             .medKontekst {

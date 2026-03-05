@@ -25,6 +25,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Meldekort
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.dokument.KlagedokumentInformasjonUtleder
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.IKlageresultatUtleder
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageResultat
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Diagnose
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.integrasjon.statistikk.StatistikkGatewayImpl
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
@@ -149,7 +150,7 @@ class StatistikkJobbUtførerTest {
                 PersonRepositoryImpl(connection),
                 SakRepositoryImpl(connection)
             ).finnEllerOpprett(
-                ident, periode = Periode(LocalDate.now().minusDays(10), LocalDate.now().plusDays(1))
+                ident, søknadsdato = LocalDate.now().minusDays(10)
             )
 
             val opprettetBehandling = behandlingRepository.opprettBehandling(
@@ -325,7 +326,7 @@ class StatistikkJobbUtførerTest {
                 PersonRepositoryImpl(connection),
                 SakRepositoryImpl(connection)
             ).finnEllerOpprett(
-                ident, periode = Periode(LocalDate.now().minusDays(10), LocalDate.now().plusDays(1))
+                ident, søknadsdato = LocalDate.now().minusDays(10).plusDays(1)
             )
 
             val opprettetBehandling = behandlingRepository.opprettBehandling(
@@ -400,9 +401,11 @@ class StatistikkJobbUtførerTest {
                         erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = true,
                         yrkesskadeBegrunnelse = "begr",
                         erArbeidsevnenNedsatt = true,
-                        kodeverk = "KODEVERK",
-                        hoveddiagnose = "PEST",
-                        bidiagnoser = listOf("KOLERA"),
+                        diagnose = Diagnose(
+                            kodeverk = "KODEVERK",
+                            hoveddiagnose = "PEST",
+                            bidiagnoser = listOf("KOLERA")
+                        ),
                         vurderingenGjelderFra = 1 januar 2020,
                         vurderingenGjelderTil = null,
                         vurdertAv = Bruker("Z0000"),
@@ -538,7 +541,7 @@ class StatistikkJobbUtførerTest {
                         identifikator = "1234", aktivIdent = true
                     )
                 )
-            ), Periode(LocalDate.now(), LocalDate.now().plusDays(1))
+            ), LocalDate.now()
         )
         InMemorySakRepository.oppdaterSakStatus(sak.id, UTREDES)
         val sakId = sak.id
@@ -550,7 +553,6 @@ class StatistikkJobbUtførerTest {
                 vurderingsbehov = listOf(
                     VurderingsbehovMedPeriode(
                         type = no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.MOTTATT_SØKNAD,
-                        periode = Periode(LocalDate.now(), LocalDate.now().plusDays(1))
                     )
                 ), årsak = ÅrsakTilOpprettelse.SØKNAD
             )

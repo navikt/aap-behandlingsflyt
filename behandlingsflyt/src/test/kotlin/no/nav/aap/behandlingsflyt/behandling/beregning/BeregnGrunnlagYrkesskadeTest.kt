@@ -8,7 +8,7 @@ import no.nav.aap.komponenter.verdityper.Prosent
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 
-class YrkesskadeBeregningTest {
+class BeregnGrunnlagYrkesskadeTest {
 
     private companion object {
         private const val GRUNNBELØP_2022 = 109784
@@ -23,13 +23,11 @@ class YrkesskadeBeregningTest {
             inntekter = emptyList()
         )
 
-        val yrkesskadeBeregning = YrkesskadeBeregning(
+        val grunnlag = beregnGrunnlagYrkesskade(
             grunnlag11_19 = grunnlag11_19,
-            antattÅrligInntekt = InntektPerÅr(2022, Beløp(5* GRUNNBELØP_2022)),
+            antattÅrligInntekt = InntektPerÅr(2022, Beløp(5 * GRUNNBELØP_2022)),
             andelAvNedsettelsenSomSkyldesYrkesskaden = Prosent(0)
         )
-
-        val grunnlag = yrkesskadeBeregning.beregnYrkesskaden()
 
         assertThat(grunnlag.grunnlaget()).isEqualTo(GUnit(4))
     }
@@ -43,13 +41,11 @@ class YrkesskadeBeregningTest {
             inntekter = emptyList()
         )
 
-        val yrkesskadeBeregning = YrkesskadeBeregning(
+        val grunnlag = beregnGrunnlagYrkesskade(
             grunnlag11_19 = grunnlag11_19,
             antattÅrligInntekt = InntektPerÅr(2022, Beløp(2 * GRUNNBELØP_2022)),   // 219 568
             andelAvNedsettelsenSomSkyldesYrkesskaden = Prosent(100)
         )
-
-        val grunnlag = yrkesskadeBeregning.beregnYrkesskaden()
 
         assertThat(grunnlag.grunnlaget()).isEqualTo(GUnit(4))
     }
@@ -63,13 +59,11 @@ class YrkesskadeBeregningTest {
             inntekter = emptyList()
         )
 
-        val yrkesskadeBeregning = YrkesskadeBeregning(
+        val grunnlag = beregnGrunnlagYrkesskade(
             grunnlag11_19 = grunnlag11_19,
             antattÅrligInntekt = InntektPerÅr(2022, Beløp(4 * GRUNNBELØP_2022)), // 439 136
             andelAvNedsettelsenSomSkyldesYrkesskaden = Prosent(70)
         )
-
-        val grunnlag = yrkesskadeBeregning.beregnYrkesskaden()
 
         assertThat(grunnlag.grunnlaget()).isEqualTo(GUnit("3.4"))
     }
@@ -83,13 +77,11 @@ class YrkesskadeBeregningTest {
             inntekter = emptyList()
         )
 
-        val yrkesskadeBeregning = YrkesskadeBeregning(
+        val grunnlag = beregnGrunnlagYrkesskade(
             grunnlag11_19 = grunnlag11_19,
             antattÅrligInntekt = InntektPerÅr(2022, Beløp(4 * GRUNNBELØP_2022)), // 439 136
             andelAvNedsettelsenSomSkyldesYrkesskaden = Prosent(71)
         )
-
-        val grunnlag = yrkesskadeBeregning.beregnYrkesskaden()
 
         assertThat(grunnlag.grunnlaget()).isEqualTo(GUnit(4))
     }
@@ -103,13 +95,11 @@ class YrkesskadeBeregningTest {
             inntekter = emptyList()
         )
 
-        val yrkesskadeBeregning = YrkesskadeBeregning(
+        val grunnlag = beregnGrunnlagYrkesskade(
             grunnlag11_19 = grunnlag11_19,
             antattÅrligInntekt = InntektPerÅr(2022, Beløp(4 * GRUNNBELØP_2022)),   // 439 136
             andelAvNedsettelsenSomSkyldesYrkesskaden = Prosent(100)
         )
-
-        val grunnlag = yrkesskadeBeregning.beregnYrkesskaden()
 
         assertThat(grunnlag.grunnlaget()).isEqualTo(GUnit(4))
     }
@@ -123,13 +113,11 @@ class YrkesskadeBeregningTest {
             inntekter = emptyList()
         )
 
-        val yrkesskadeBeregning = YrkesskadeBeregning(
+        val grunnlag = beregnGrunnlagYrkesskade(
             grunnlag11_19 = grunnlag11_19,
             antattÅrligInntekt = InntektPerÅr(2022, Beløp(8 * GRUNNBELØP_2022)),   // 439 136
             andelAvNedsettelsenSomSkyldesYrkesskaden = Prosent(100)
         )
-
-        val grunnlag = yrkesskadeBeregning.beregnYrkesskaden()
 
         assertThat(grunnlag.grunnlaget()).isEqualTo(GUnit(6))
     }

@@ -129,7 +129,6 @@ class BrevUtlederServiceTest {
         every { sykdomsvurderingForBrevRepository.hent(any<BehandlingId>())} returns sykdomsvurderingForBrevGrunnlag()
         every { tilkjentYtelseRepository.hentHvisEksisterer(any<BehandlingId>()) } returns stubTilkjentYtelse()
         every { trukketSøknadService.søknadErTrukket(any<BehandlingId>()) } returns false
-        every { unleashGateway.isEnabled(BehandlingsflytFeature.NyBrevtype11_17) } returns true
     }
 
     @Nested
@@ -171,7 +170,6 @@ class BrevUtlederServiceTest {
             every { underveisRepository.hent(revurdering.id) } returns revurderingUnderveisGrunnlag
             every { underveisRepository.hentHvisEksisterer(revurdering.id) } returns revurderingUnderveisGrunnlag
             every { avbrytRevurderingService.revurderingErAvbrutt(any<BehandlingId>()) } returns false
-            every { unleashGateway.isEnabled(BehandlingsflytFeature.NyBrevtype11_17) } returns true
 
             val resultat = brevUtlederService.utledBehovForMeldingOmVedtak(revurdering.id)
 
@@ -213,7 +211,6 @@ class BrevUtlederServiceTest {
             every { underveisRepository.hent(revurdering.id) } returns underveisGrunnlag
             every { underveisRepository.hentHvisEksisterer(revurdering.id) } returns underveisGrunnlag
             every { avbrytRevurderingService.revurderingErAvbrutt(any<BehandlingId>()) } returns false
-            every { unleashGateway.isEnabled(BehandlingsflytFeature.NyBrevtype11_17) } returns true
 
             val resultat = brevUtlederService.utledBehovForMeldingOmVedtak(revurdering.id)
 
@@ -236,7 +233,6 @@ class BrevUtlederServiceTest {
                 forrigeBehandlingId = førstegangsbehandling.id,
                 vurderingsbehov = listOf(Vurderingsbehov.OVERGANG_ARBEID)
             )
-            every { unleashGateway.isEnabled(BehandlingsflytFeature.NyBrevtype11_17) } returns true
             every { underveisRepository.hentHvisEksisterer(førstegangsbehandling.id) } returns underveisGrunnlag(
                 underveisperiode(
                     periode = Periode(1 januar 2023, 31 desember 2023),
@@ -400,7 +396,6 @@ class BrevUtlederServiceTest {
                 forrigeBehandlingId = førstegangsbehandling.id,
                 vurderingsbehov = listOf(Vurderingsbehov.OVERGANG_UFORE)
             )
-            every { unleashGateway.isEnabled(BehandlingsflytFeature.NyBrevtype11_17) } returns true
             every { underveisRepository.hentHvisEksisterer(førstegangsbehandling.id) } returns underveisGrunnlag(
                 underveisperiode(
                     periode = Periode(1 januar 2023, 31 desember 2023),
@@ -433,7 +428,6 @@ class BrevUtlederServiceTest {
                 forrigeBehandlingId = forrigeBehandling.id,
                 vurderingsbehov = listOf(Vurderingsbehov.OVERGANG_ARBEID)
             )
-            every { unleashGateway.isEnabled(BehandlingsflytFeature.NyBrevtype11_17) } returns true
             every { underveisRepository.hentHvisEksisterer(forrigeBehandling.id) } returns underveisGrunnlag(
                 underveisperiode(
                     periode = Periode(1 januar 2023, 31 desember 2023),
@@ -655,7 +649,6 @@ class BrevUtlederServiceTest {
                 forrigeBehandlingId = BehandlingId(Random.nextLong()),
                 vurderingsbehov = listOf(Vurderingsbehov.OVERGANG_ARBEID)
             )
-            every { unleashGateway.isEnabled(BehandlingsflytFeature.NyBrevtype11_17) } returns true
             every { behandlingRepository.hent(revurdering.id) } returns revurdering
             every { avbrytRevurderingService.revurderingErAvbrutt(revurdering.id) } returns false
             every { arbeidsopptrappingRepository.hentHvisEksisterer(revurdering.id) } returns arbeidsopptrappingGrunnlag(
@@ -683,7 +676,6 @@ class BrevUtlederServiceTest {
                 forrigeBehandlingId = BehandlingId(Random.nextLong()),
                 vurderingsbehov = listOf(Vurderingsbehov.OVERGANG_ARBEID)
             )
-            every { unleashGateway.isEnabled(BehandlingsflytFeature.NyBrevtype11_17) } returns true
             every { behandlingRepository.hent(revurdering.id) } returns revurdering
             every { avbrytRevurderingService.revurderingErAvbrutt(revurdering.id) } returns false
             every { arbeidsopptrappingRepository.hentHvisEksisterer(revurdering.id) } returns arbeidsopptrappingGrunnlag(
