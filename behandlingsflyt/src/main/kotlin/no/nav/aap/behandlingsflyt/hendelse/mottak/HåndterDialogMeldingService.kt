@@ -2,13 +2,12 @@ package no.nav.aap.behandlingsflyt.hendelse.mottak
 
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Melding
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Melding
 import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingService
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
@@ -31,10 +30,12 @@ class HåndterDialogMeldingService(
     fun håndterMottattDialogMelding(
         sakId: SakId,
         referanse: InnsendingReferanse,
-        vurderingsbehov: List<VurderingsbehovMedPeriode>,
+        brevkategori: InnsendingType,
+        melding: Melding?,
     ) {
         val sak = sakService.hent(sakId)
         log.info("Håndterer dialogmelding for ${sak.id}")
+        val vurderingsbehov = MottattHendelseUtleder.utledVurderingsbehov(brevkategori, melding)
         val sisteYtelsesBehandling = behandlingService.finnSisteYtelsesbehandlingFor(sak.id)
 
         if (sisteYtelsesBehandling != null) {
