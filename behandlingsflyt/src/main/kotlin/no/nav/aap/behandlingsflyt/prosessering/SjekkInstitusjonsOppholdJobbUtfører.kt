@@ -57,8 +57,6 @@ class SjekkInstitusjonsOppholdJobbUtfører(
                     if (sisteYtelsesBehandling != null) {
                         val sak = sakRepository.hent(sak.id)
                         if (erKandidatForVurderingAvInstitusjonsopphold(sisteYtelsesBehandling.id)) {
-                            val vurderingsbehovOgÅrsaker =
-                                behandlingRepository.hentVurderingsbehovOgÅrsaker(sisteYtelsesBehandling.id)
                             val underveisgrunnlag =
                                 underveisgrunnlagRepository.hentHvisEksisterer(sisteYtelsesBehandling.id)
                             if (underveisgrunnlag == null) {

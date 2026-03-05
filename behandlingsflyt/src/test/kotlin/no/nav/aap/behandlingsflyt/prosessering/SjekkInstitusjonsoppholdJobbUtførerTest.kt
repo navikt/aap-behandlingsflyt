@@ -277,8 +277,8 @@ class SjekkInstitusjonsoppholdJobbUtførerTest {
                 Institusjonsopphold(
                     Institusjonstype.HS,
                     Oppholdstype.H,
-                    LocalDate.now().minusMonths(3),
-                    LocalDate.now().plusMonths(1),
+                    LocalDate.now().minusMonths(2),
+                    LocalDate.now().plusMonths(2),
                     orgnr = "123",
                     institusjonsnavn = "Det er institusjonen sin, det",
                 ),
