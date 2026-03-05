@@ -62,7 +62,7 @@ class PdlHendelseService(
             var funnetIdent: Ident? = null
             for (ident in personHendelse.personidenter) {
                 person = personRepository.finn(Ident(ident))
-                saksbehandlersOppgitteBarn = barnRepository.finnSaksbehandlerOppgitteBarn(ident)
+                saksbehandlersOppgitteBarn = barnRepository.finnSaksbehandlerOppgitteBarn(Ident(ident))
                 // Håndterer D-nummer og Fnr
                 if (person != null || saksbehandlersOppgitteBarn != null) {
                     funnetIdent = Ident(ident)
