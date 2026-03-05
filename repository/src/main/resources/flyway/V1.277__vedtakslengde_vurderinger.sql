@@ -34,8 +34,3 @@ alter table vedtakslengde_grunnlag drop column vurdering_id;
 -- Sett NOT NULL constraint
 alter table vedtakslengde_vurdering alter column vurderinger_id set not null;
 alter table vedtakslengde_grunnlag alter column vurderinger_id set not null;
-
--- Gjenopprett unik indeks
-drop index if exists uidx_vedtakslengde_grunnlag_behandling_id;
-create unique index uidx_vedtakslengde_grunnlag_behandling_id on vedtakslengde_grunnlag (behandling_id) where (aktiv = true);
-
