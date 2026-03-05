@@ -53,7 +53,7 @@ class VedtakslengdeRepositoryImplTest {
         val vurdering = vurdering(behandling.id)
 
         dataSource.transaction {
-            VedtakslengdeRepositoryImpl(it).lagre(behandling.id, vurdering)
+            VedtakslengdeRepositoryImpl(it).lagre(behandling.id, listOf(vurdering))
         }
 
         val hentet = dataSource.transaction {
@@ -61,7 +61,7 @@ class VedtakslengdeRepositoryImplTest {
         }
 
         assertThat(hentet).usingRecursiveComparison(sammenligner).isEqualTo(
-            VedtakslengdeGrunnlag(vurdering = vurdering)
+            VedtakslengdeGrunnlag(vurdering)
         )
     }
 
@@ -72,7 +72,7 @@ class VedtakslengdeRepositoryImplTest {
         val vurdering = vurdering(behandling.id)
 
         dataSource.transaction {
-            VedtakslengdeRepositoryImpl(it).lagre(behandling.id, vurdering)
+            VedtakslengdeRepositoryImpl(it).lagre(behandling.id, listOf(vurdering))
         }
         dataSource.transaction {
             VedtakslengdeRepositoryImpl(it).slett(behandling.id)
@@ -90,7 +90,7 @@ class VedtakslengdeRepositoryImplTest {
         val vurdering = vurdering(behandling.id)
 
         dataSource.transaction {
-            VedtakslengdeRepositoryImpl(it).lagre(behandling.id, vurdering)
+            VedtakslengdeRepositoryImpl(it).lagre(behandling.id, listOf(vurdering))
         }
 
         dataSource.transaction { connection ->

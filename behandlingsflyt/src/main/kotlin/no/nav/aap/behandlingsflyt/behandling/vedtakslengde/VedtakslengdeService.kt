@@ -81,13 +81,13 @@ class VedtakslengdeService(
 
             val nySluttdato = vedtattSluttdato.plussEtÅrMedHverdager(utvidelse)
             vedtakslengdeRepository.lagre(
-                behandlingId, VedtakslengdeVurdering(
+                behandlingId, listOf(VedtakslengdeVurdering(
                     sluttdato = nySluttdato,
                     utvidetMed = utvidelse,
                     vurdertAv = SYSTEMBRUKER,
                     vurdertIBehandling = behandlingId,
                     opprettet = Instant.now(clock)
-                )
+                ))
             )
         } else {
             log.info("Behandling $behandlingId har ingen vedtatt sluttdato, ingen utvidelse nødvendig")
@@ -105,19 +105,19 @@ class VedtakslengdeService(
         val vedtattUtvidelse = vedtattVedtakslengdeGrunnlag?.vurdering?.utvidetMed
         val sluttdato = utledSluttdato(behandlingId, rettighetsperiode, vedtattSluttdato)
 
-        val erSluttdatoEndret = vedtattVedtakslengdeGrunnlag == null || vedtattVedtakslengdeGrunnlag.vurdering.sluttdato != sluttdato
+        val erSluttdatoEndret = vedtattVedtakslengdeGrunnlag == null || vedtattVedtakslengdeGrunnlag.vurdering?.sluttdato != sluttdato
 
         if (erSluttdatoEndret) {
             log.info("Sluttdato endret fra $vedtattSluttdato til $sluttdato for behandling $behandlingId")
 
             vedtakslengdeRepository.lagre(
-                behandlingId, VedtakslengdeVurdering(
+                behandlingId, listOf(VedtakslengdeVurdering(
                     sluttdato = sluttdato,
                     utvidetMed = vedtattUtvidelse ?: ÅrMedHverdager.FØRSTE_ÅR,
                     vurdertAv = SYSTEMBRUKER,
                     vurdertIBehandling = behandlingId,
                     opprettet = Instant.now(clock)
-                )
+                ))
             )
         }
     }
@@ -186,13 +186,13 @@ class VedtakslengdeService(
 
             // Skal lagre ned vedtakslengde for eksisterende behandlinger som mangler dette
             vedtakslengdeRepository.lagre(
-                behandlingId, VedtakslengdeVurdering(
+                behandlingId, listOf(VedtakslengdeVurdering(
                     sluttdato = sluttdato,
                     utvidetMed = ÅrMedHverdager.FØRSTE_ÅR,
                     vurdertAv = SYSTEMBRUKER,
                     vurdertIBehandling = behandlingId,
                     opprettet = Instant.now(clock)
-                )
+                ))
             )
         }
     }

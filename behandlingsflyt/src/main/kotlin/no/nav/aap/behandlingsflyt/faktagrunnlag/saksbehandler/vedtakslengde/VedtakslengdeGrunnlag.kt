@@ -7,8 +7,13 @@ import java.time.Instant
 import java.time.LocalDate
 
 data class VedtakslengdeGrunnlag(
-    val vurdering: VedtakslengdeVurdering
-)
+    val vurderinger: List<VedtakslengdeVurdering>
+) {
+    constructor(vurdering: VedtakslengdeVurdering) : this(listOf(vurdering))
+
+    /** Siste vurdering (convenience for eksisterende kallsteder) */
+    val vurdering: VedtakslengdeVurdering? get() = vurderinger.lastOrNull()
+}
 
 data class VedtakslengdeVurdering(
     val sluttdato: LocalDate,

@@ -494,7 +494,7 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(VedtakslengdeFlytUnlea
             val behandling = behandlingRepository.finnSisteOpprettedeBehandlingFor(sak.id, listOf(TypeBehandling.Førstegangsbehandling))
             val underveisGrunnlag = underveisRepository.hentHvisEksisterer(behandling!!.id)
             val sisteUnderveisperiode = underveisGrunnlag?.perioder?.maxByOrNull { it.periode.tom }
-            assertThat(sisteUnderveisperiode?.periode?.tom).isEqualTo(vedtakslengdeRepository.hentHvisEksisterer(behandling.id)!!.vurdering.sluttdato)
+            assertThat(sisteUnderveisperiode?.periode?.tom).isEqualTo(vedtakslengdeRepository.hentHvisEksisterer(behandling.id)!!.vurdering?.sluttdato)
         }
 
         /* Gir AAP som arbeidssøker. */
@@ -896,7 +896,7 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(VedtakslengdeFlytUnlea
         val sluttdatoFørstegangsbehandling = dataSource.transaction { connection ->
             val førstegangsbehandling = BehandlingRepositoryImpl(connection).finnFørstegangsbehandling(sak.id)
             val vedtakslengdeVurdering = VedtakslengdeRepositoryImpl(connection).hentHvisEksisterer(førstegangsbehandling.id)
-            vedtakslengdeVurdering!!.vurdering.sluttdato
+            vedtakslengdeVurdering!!.vurdering!!.sluttdato
         }
 
         dataSource.transaction { connection ->
