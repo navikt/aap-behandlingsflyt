@@ -95,45 +95,45 @@ class VedtakslengdeService(
         }
     }
 
-    fun lagreGjeldendeSluttdato(
+    fun lagreAutomatiskVedtakslengde(
         behandlingId: BehandlingId,
         forrigeBehandlingId: BehandlingId?,
         rettighetsperiode: Periode,
-    ): UtledetVedtakslengde {
-        val vedtakslengdeGrunnlag = vedtakslengdeRepository.hentHvisEksisterer(behandlingId)
-
-        // Det finnes en manuell vurdering for denne behandlingen, og vi skal ikke overstyre denne ved å lagre en automatisk utledet sluttdato
-        if (vedtakslengdeGrunnlag?.gjeldendeVurdering()?.vurdertManuelt == true) {
-            return UtledetVedtakslengde.Manuell
-        }
-
+    ): LocalDate {
+        // Automatisk beregning av sluttdato basert på vedtatte vurderinger og rettighetstype-tidslinje for inneværende behandling.
         val vedtattVedtakslengdeGrunnlag =
             forrigeBehandlingId?.let { vedtakslengdeRepository.hentHvisEksisterer(it) }
+        val vedtakslengdeGrunnlag = vedtakslengdeRepository.hentHvisEksisterer(behandlingId)
         val vedtattSluttdato = hentVedtattSluttdato(forrigeBehandlingId, vedtattVedtakslengdeGrunnlag)
         val vedtattUtvidelse = vedtattVedtakslengdeGrunnlag?.gjeldendeVurdering()?.utvidetMed
         val sluttdato = utledSluttdato(behandlingId, rettighetsperiode, vedtattSluttdato)
 
-        val erSluttdatoEndret = vedtattVedtakslengdeGrunnlag == null || vedtattVedtakslengdeGrunnlag.gjeldendeVurdering()?.sluttdato != sluttdato
+        // Henter forrige automatiske vurdering for å sammenligne med ny automatisk beregnet sluttdato
+        val sisteAutomatiskeVurdering = vedtakslengdeGrunnlag?.vurderinger.orEmpty()
+            .filter { it.vurdertAutomatisk }
+            .maxByOrNull { it.opprettet }
 
-        // Mindre enn en måned igjen av vedtakslengden - manuell vurdering
-        if (sluttdato < LocalDate.now(clock).plusMonths(1)) return UtledetVedtakslengde.Manuell
+        if (sisteAutomatiskeVurdering?.sluttdato != sluttdato) {
+            log.info("Automatisk vurdering av sluttdato endret fra $vedtattSluttdato til $sluttdato for behandling $behandlingId")
 
-        if (erSluttdatoEndret) {
-            log.info("Sluttdato endret fra $vedtattSluttdato til $sluttdato for behandling $behandlingId")
+            val nyAutomatiskVurdering = VedtakslengdeVurdering(
+                sluttdato = sluttdato,
+                utvidetMed = vedtattUtvidelse ?: ÅrMedHverdager.FØRSTE_ÅR,
+                vurdertAv = SYSTEMBRUKER,
+                vurdertIBehandling = behandlingId,
+                opprettet = Instant.now(clock)
+            )
 
-            val tidligereVurderinger = vedtattVedtakslengdeGrunnlag?.vurderinger.orEmpty()
+            val vedtatteVurderinger = vedtattVedtakslengdeGrunnlag?.vurderinger.orEmpty()
+            val nyeVurderingerFraBehandlingen = vedtakslengdeGrunnlag?.vurderinger?.filter { it.vurdertIBehandling == behandlingId }.orEmpty()
+            val nyManuellVurderingFraBehandlingen = nyeVurderingerFraBehandlingen.filter { it.vurdertManuelt }.take(1)
+
             vedtakslengdeRepository.lagre(
-                behandlingId, tidligereVurderinger + VedtakslengdeVurdering(
-                    sluttdato = sluttdato,
-                    utvidetMed = vedtattUtvidelse ?: ÅrMedHverdager.FØRSTE_ÅR,
-                    vurdertAv = SYSTEMBRUKER,
-                    vurdertIBehandling = behandlingId,
-                    opprettet = Instant.now(clock)
-                )
+                behandlingId = behandlingId,
+                vurderinger = vedtatteVurderinger + nyManuellVurderingFraBehandlingen + nyAutomatiskVurdering
             )
         }
-
-        return UtledetVedtakslengde.Automatisk(sluttdato)
+        return sluttdato
     }
 
     private fun utledSluttdato(

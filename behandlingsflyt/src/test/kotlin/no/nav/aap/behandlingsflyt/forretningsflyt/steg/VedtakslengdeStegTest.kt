@@ -133,7 +133,6 @@ class VedtakslengdeStegTest {
                 rettighetstypeService = RettighetstypeService(InMemoryRettighetstypeRepository, InMemoryVilkårsresultatRepository, InMemoryUnderveisRepository),
                 clock = fixedClock(dagensDato),
             ),
-            vedtakslengdeRepository = InMemoryVedtakslengdeRepository,
             avklaringsbehovService = AvklaringsbehovService(inMemoryRepositoryProvider),
             tidligereVurderinger = FakeTidligereVurderinger(),
             unleashGateway = AlleAvskruddUnleash,

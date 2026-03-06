@@ -1,9 +1,7 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
-import no.nav.aap.behandlingsflyt.behandling.vedtakslengde.UtledetVedtakslengde
 import no.nav.aap.behandlingsflyt.behandling.vedtakslengde.VedtakslengdeService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeRepository
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
@@ -14,6 +12,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
@@ -22,7 +21,6 @@ import org.slf4j.LoggerFactory
 
 class VedtakslengdeSteg(
     private val vedtakslengdeService: VedtakslengdeService,
-    private val vedtakslengdeRepository: VedtakslengdeRepository,
     private val avklaringsbehovService: AvklaringsbehovService,
     private val tidligereVurderinger: TidligereVurderinger,
     private val unleashGateway: UnleashGateway,
@@ -31,7 +29,6 @@ class VedtakslengdeSteg(
 
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         vedtakslengdeService = VedtakslengdeService(repositoryProvider, gatewayProvider),
-        vedtakslengdeRepository = repositoryProvider.provide(),
         avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
         unleashGateway = gatewayProvider.provide()
@@ -44,8 +41,8 @@ class VedtakslengdeSteg(
                     return Fullført
                 }
 
-                // Forsøker å utlede vedtakslengde automatisk - hvis resultat er Manuell, opprettes avklaringsbehov
-                val utledetVedtakslengde = vedtakslengdeService.lagreGjeldendeSluttdato(
+                // Lagrer en automatisk vurdering med sluttdato - saksbehandler kan manuelt overstyre denne
+                vedtakslengdeService.lagreAutomatiskVedtakslengde(
                     behandlingId = kontekst.behandlingId,
                     forrigeBehandlingId = kontekst.forrigeBehandlingId,
                     rettighetsperiode = kontekst.rettighetsperiode
@@ -58,12 +55,11 @@ class VedtakslengdeSteg(
                             when {
                                 tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, type()) -> false
                                 kontekst.vurderingsbehovRelevanteForSteg.isEmpty() -> false
-                                else -> {
-                                    utledetVedtakslengde is UtledetVedtakslengde.Manuell
-                                }
+                                else ->
+                                    Vurderingsbehov.UTVID_VEDTAKSLENGDE_MANUELL in kontekst.vurderingsbehovRelevanteForSteg
                             }
                         },
-                        erTilstrekkeligVurdert = { vedtakslengdeRepository.hentHvisEksisterer(kontekst.behandlingId)?.gjeldendeVurdering() != null },
+                        erTilstrekkeligVurdert = { true },
                         tilbakestillGrunnlag = { },
                         kontekst = kontekst
                     )

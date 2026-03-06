@@ -60,6 +60,7 @@ internal fun VurderingsbehovMedPeriode.tilKontraktVurderingsbehov(): no.nav.aap.
         Vurderingsbehov.DØDSFALL_BRUKER -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.DØDSFALL_BRUKER
         Vurderingsbehov.DØDSFALL_BARN -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.DØDSFALL_BARN
         Vurderingsbehov.UTVID_VEDTAKSLENGDE -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.UTVID_VEDTAKSLENGDE
+        Vurderingsbehov.UTVID_VEDTAKSLENGDE_MANUELL -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.UTVID_VEDTAKSLENGDE_MANUELL
         Vurderingsbehov.MIGRER_RETTIGHETSPERIODE -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.MIGRER_RETTIGHETSPERIODE
         Vurderingsbehov.REVURDER_SYKESTIPEND -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.REVURDER_SYKESTIPEND
         Vurderingsbehov.ETABLERING_EGEN_VIRKSOMHET -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.ETABLERING_EGEN_VIRKSOMHET

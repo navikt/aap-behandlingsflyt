@@ -19,18 +19,29 @@ class AvklarVedtakslengdeLøser(
 
     override fun løs(kontekst: AvklaringsbehovKontekst, løsning: AvklarVedtakslengdeLøsning): LøsningsResultat {
         val vurdering = løsning.vedtakslengdeVurdering
-        val eksisterende = vedtakslengdeRepository.hentHvisEksisterer(kontekst.behandlingId())
+        val vedtattGrunnlag = kontekst.kontekst.forrigeBehandlingId?.let { vedtakslengdeRepository.hentHvisEksisterer(it) }
+        val grunnlag = vedtakslengdeRepository.hentHvisEksisterer(kontekst.behandlingId())
+
+        val gjeldendeVedtatteVurderinger = vedtattGrunnlag?.vurderinger.orEmpty()
+        val nyeVurderingerFraBehandlingen = grunnlag?.vurderinger?.filter { it.vurdertIBehandling == kontekst.behandlingId() }.orEmpty()
+
+        // Kun en ny automatisk vurdering per behandling
+        val automatiskVurderingFraBehandlingen = nyeVurderingerFraBehandlingen.filter { it.vurdertAutomatisk }.take(1)
+
+        // Kun en manuell vurdering per behandling
+        val nyManuellVurdering = VedtakslengdeVurdering(
+            sluttdato = vurdering.sluttdato,
+            utvidetMed = vedtattGrunnlag?.gjeldendeVurdering()?.utvidetMed ?: ÅrMedHverdager.FØRSTE_ÅR,
+            vurdertAv = kontekst.bruker,
+            vurdertIBehandling = kontekst.behandlingId(),
+            opprettet = Instant.now()
+        )
 
         vedtakslengdeRepository.lagre(
-            kontekst.behandlingId(),
-            VedtakslengdeVurdering(
-                sluttdato = vurdering.sluttdato,
-                utvidetMed = eksisterende?.vurdering?.utvidetMed ?: ÅrMedHverdager.FØRSTE_ÅR,
-                vurdertAv = kontekst.bruker,
-                vurdertIBehandling = kontekst.behandlingId(),
-                opprettet = Instant.now()
-            )
+            behandlingId = kontekst.behandlingId(),
+            vurderinger = gjeldendeVedtatteVurderinger + automatiskVurderingFraBehandlingen + nyManuellVurdering
         )
+
         return LøsningsResultat(vurdering.begrunnelse)
     }
 

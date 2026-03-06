@@ -22,5 +22,6 @@ data class VedtakslengdeVurdering(
     val vurdertIBehandling: BehandlingId,
     val opprettet: Instant
 ) {
-    val vurdertManuelt: Boolean get() = vurdertAv != SYSTEMBRUKER
+    val vurdertManuelt: Boolean get() = !vurdertAutomatisk
+    val vurdertAutomatisk: Boolean get() = vurdertAv == SYSTEMBRUKER
 }

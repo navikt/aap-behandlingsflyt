@@ -980,21 +980,21 @@ class AvklarVedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(AvklarVedtakslen
     private val clock = fixedClock(1 desember 2025)
 
     @Test
-    fun `skal trigge avklaringsbehov for vedtakslengde ved førstegangsbehandling`() {
-        val søknadstidspunkt = LocalDateTime.now().minusMonths(11)
-        val (sak, førstegangsbehandling) = sendInnFørsteSøknad(mottattTidspunkt = søknadstidspunkt)
-        val startDato = sak.rettighetsperiode.fom
+    fun `skal trigge avklaringsbehov for vedtakslengde i revurdering når vurderingsbehov UTVID_VEDTAKSLENGDE_MANUELT er lagt til`() {
+        val sak = happyCaseFørstegangsbehandling(LocalDate.now(clock))
+        val automatiskSluttdato = sak.rettighetsperiode.fom.plussEtÅrMedHverdager(ÅrMedHverdager.FØRSTE_ÅR)
 
-        førstegangsbehandling
-            .løsSykdom(startDato, erOppfylt = true)
-            .løsBistand(startDato, erOppfylt = true)
-            .løsRefusjonskrav()
-            .løsSykdomsvurderingBrev()
-            .bekreftVurderinger()
-            .kvalitetssikre()
-            .løsBeregningstidspunkt(startDato)
-            .løsOppholdskrav(startDato)
-            .løsAndreStatligeYtelser()
+        dataSource.transaction { connection ->
+            val behandling = BehandlingRepositoryImpl(connection).finnFørstegangsbehandling(sak.id)
+            val vedtakslengdeGrunnlag = VedtakslengdeRepositoryImpl(connection).hentHvisEksisterer(behandling.id)
+            assertThat(vedtakslengdeGrunnlag?.gjeldendeVurdering()?.sluttdato).isEqualTo(automatiskSluttdato)
+            assertThat(vedtakslengdeGrunnlag?.gjeldendeVurdering()?.vurdertAutomatisk).isTrue
+        }
+
+        val nyManuellSluttdato = automatiskSluttdato.plussEtÅrMedHverdager(ÅrMedHverdager.ANDRE_ÅR)
+        sak.opprettManuellRevurdering(
+                no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.UTVID_VEDTAKSLENGDE_MANUELL
+            )
             .medKontekst {
                 assertThat(åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
                     .contains(Definisjon.AVKLAR_VEDTAKSLENGDE)
@@ -1002,54 +1002,28 @@ class AvklarVedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(AvklarVedtakslen
             .løsAvklaringsBehov(
                 AvklarVedtakslengdeLøsning(
                     vedtakslengdeVurdering = VedtakslengdeVurderingDto(
-                        sluttdato = startDato.plusMonths(15),
-                        begrunnelse = "Vurdert vedtakslengde"
-                    )
-                )
-            )
-            .løsAvklaringsBehov(ForeslåVedtakLøsning())
-            .fattVedtak()
-            .løsVedtaksbrev(TypeBrev.VEDTAK_INNVILGELSE)
-
-        dataSource.transaction { connection ->
-            val behandling = BehandlingRepositoryImpl(connection).finnFørstegangsbehandling(sak.id)
-            val vedtakslengdeGrunnlag = VedtakslengdeRepositoryImpl(connection).hentHvisEksisterer(behandling.id)
-            assertThat(vedtakslengdeGrunnlag).isNotNull
-            assertThat(vedtakslengdeGrunnlag?.gjeldendeVurdering()?.sluttdato).isEqualTo(startDato.plusMonths(15))
-            assertThat(vedtakslengdeGrunnlag?.gjeldendeVurdering()?.vurdertManuelt).isTrue
-        }
-
-        val endringsdato = sak.rettighetsperiode.fom.plusMonths(10)
-
-        /* Gir AAP som arbeidssøker. */
-        sak.opprettManuellRevurdering(
-            no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND
-        )
-            .løsSykdom(vurderingGjelderFra = endringsdato, erOppfylt = false)
-            .løsBistand(endringsdato, erOppfylt = false)
-            .løsOvergangArbeid(Utfall.OPPFYLT, fom = endringsdato)
-            .løsSykdomsvurderingBrev()
-            .bekreftVurderinger()
-            .løsAvklaringsBehov(
-                AvklarVedtakslengdeLøsning(
-                    vedtakslengdeVurdering = VedtakslengdeVurderingDto(
-                        sluttdato = endringsdato.plusMonths(6).minusDays(1),
-                        begrunnelse = "Vurdert vedtakslengde til slutten av unntaksvilkåret for overgang til arbeid"
+                        // Overstyrer til 15 måneder
+                        sluttdato = nyManuellSluttdato,
+                        begrunnelse = "Utvidet vedtakslengde manuelt"
                     )
                 )
             )
             .medKontekst {
                 val vedtasklengdeRepository: VedtakslengdeRepository = repositoryProvider.provide()
                 val vedtakslengdeGrunnlag = vedtasklengdeRepository.hentHvisEksisterer(this.behandling.id)
-                assertThat(vedtakslengdeGrunnlag?.gjeldendeVurdering()?.sluttdato).isEqualTo(endringsdato.plusMonths(6).minusDays(1))
+                assertThat(vedtakslengdeGrunnlag?.vurderinger?.size).isEqualTo(2)
+                assertThat(vedtakslengdeGrunnlag?.gjeldendeVurdering()?.sluttdato).isEqualTo(nyManuellSluttdato)
+                assertThat(vedtakslengdeGrunnlag?.gjeldendeVurdering()?.vurdertManuelt).isTrue
             }
     }
 
     @Test
-    fun `skal kunne legge inn manuell vurdering for vedtakslengde ved førstegangsbehandling`() {
+    fun `skal kunne overstyre automatisk vurdering for vedtakslengde med manuell vurdering ved førstegangsbehandling`() {
         val søknadstidspunkt = LocalDateTime.now(clock)
         val (sak, førstegangsbehandling) = sendInnFørsteSøknad(mottattTidspunkt = søknadstidspunkt)
         val startDato = sak.rettighetsperiode.fom
+        val forventetSluttdato = startDato.plussEtÅrMedHverdager(ÅrMedHverdager.FØRSTE_ÅR)
+        val manueltOverstyrtSluttdato = startDato.plusMonths(15)
 
         førstegangsbehandling
             .løsSykdom(startDato, erOppfylt = true)
@@ -1061,24 +1035,32 @@ class AvklarVedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(AvklarVedtakslen
             .løsBeregningstidspunkt(startDato)
             .løsOppholdskrav(startDato)
             .løsAndreStatligeYtelser()
+            .medKontekst {
+                val vedtasklengdeRepository: VedtakslengdeRepository = repositoryProvider.provide()
+                val vedtakslengdeGrunnlag = vedtasklengdeRepository.hentHvisEksisterer(this.behandling.id)
+                // Ett år som forventet
+                assertThat(vedtakslengdeGrunnlag?.gjeldendeVurdering()?.sluttdato).isEqualTo(forventetSluttdato)
+            }
             .løsAvklaringsBehov(
                 AvklarVedtakslengdeLøsning(
                     vedtakslengdeVurdering = VedtakslengdeVurderingDto(
-                        sluttdato = startDato.plusMonths(15),
-                        begrunnelse = "Vurdert vedtakslengde"
+                        // Overstyrer til 15 måneder
+                        sluttdato = manueltOverstyrtSluttdato,
+                        begrunnelse = "Vurdert vedtakslengde manuelt"
                     )
                 )
             )
             .løsAvklaringsBehov(ForeslåVedtakLøsning())
             .fattVedtak()
             .løsVedtaksbrev(TypeBrev.VEDTAK_INNVILGELSE)
+            .medKontekst {
+                val vedtasklengdeRepository: VedtakslengdeRepository = repositoryProvider.provide()
+                val vedtakslengdeGrunnlag = vedtasklengdeRepository.hentHvisEksisterer(this.behandling.id)
 
-        dataSource.transaction { connection ->
-            val behandling = BehandlingRepositoryImpl(connection).finnFørstegangsbehandling(sak.id)
-            val vedtakslengdeGrunnlag = VedtakslengdeRepositoryImpl(connection).hentHvisEksisterer(behandling.id)
-            assertThat(vedtakslengdeGrunnlag).isNotNull
-            assertThat(vedtakslengdeGrunnlag?.gjeldendeVurdering()?.sluttdato).isEqualTo(startDato.plusMonths(15))
-            assertThat(vedtakslengdeGrunnlag?.gjeldendeVurdering()?.vurdertManuelt).isTrue
-        }
+                assertThat(vedtakslengdeGrunnlag).isNotNull
+                assertThat(vedtakslengdeGrunnlag?.vurderinger?.size).isEqualTo(2)
+                assertThat(vedtakslengdeGrunnlag?.gjeldendeVurdering()?.sluttdato).isEqualTo(manueltOverstyrtSluttdato)
+                assertThat(vedtakslengdeGrunnlag?.gjeldendeVurdering()?.vurdertManuelt).isTrue
+            }
     }
 }
