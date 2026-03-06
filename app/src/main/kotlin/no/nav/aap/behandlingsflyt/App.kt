@@ -345,7 +345,7 @@ private fun Application.startKafkakonsumenter(
         startPDLHendelseKonsument(dataSource, repositoryRegistry, gatewayProvider)
         startTilbakekrevingEventKonsument(dataSource, repositoryRegistry)
         startSykepengevedtakKonsument(dataSource, repositoryRegistry, gatewayProvider)
-        startInstitusjonsOppholdKonsument(dataSource, repositoryRegistry)
+        startInstitusjonsOppholdKonsument(dataSource, repositoryRegistry, gatewayProvider)
     }
     if (!Miljø.erLokal() && !Miljø.erProd()) {
         startUføreVedtakEventKonsument(dataSource, repositoryRegistry, gatewayProvider)
@@ -545,6 +545,7 @@ fun Application.startUføreVedtakEventKonsument(
 fun Application.startInstitusjonsOppholdKonsument(
     dataSource: DataSource,
     repositoryRegistry: RepositoryRegistry,
+    gatewayProvider: GatewayProvider,
 ): KafkaKonsument<String, InstitusjonsOppholdHendelseKafkaMelding> {
 
     val konsument = InstitusjonsOppholdKafkaKonsument(
@@ -555,6 +556,7 @@ fun Application.startInstitusjonsOppholdKonsument(
         closeTimeout = AppConfig.stansArbeidTimeout,
         dataSource = dataSource,
         repositoryRegistry = repositoryRegistry,
+        gatewayProvider = gatewayProvider,
         institusjonsoppholdKlient = InstitusjonsoppholdGatewayImpl
     )
     monitor.subscribe(ApplicationStarted) {
