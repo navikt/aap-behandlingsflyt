@@ -191,13 +191,6 @@ fun NormalOpenAPIRoute.institusjonApi(
                         mapVurderingerToDto(nyeVurderingerForOpphold, oppholdInfo, ansattInfoService) + uavklarteDto
                     }
 
-                    val ansattNavnOgEnhet =
-                        grunnlag?.helseoppholdvurderinger?.let {
-                            ansattInfoService.hentAnsattNavnOgEnhet(
-                                it.vurderinger.first().vurdertAv ?: "ukjent"
-                            )
-                        }
-
                     HelseinstitusjonGrunnlagDto(
                         harTilgangTilÅSaksbehandle = kanSaksbehandle(),
                         opphold = hentOppholdSomSkalVurderes(
@@ -207,15 +200,6 @@ fun NormalOpenAPIRoute.institusjonApi(
                         ),
                         vurderinger = vurderingerDto,
                         vedtatteVurderinger = vedtatteVurderingerDto,
-                        vurdertAv =
-                            grunnlag?.helseoppholdvurderinger?.let {
-                                VurdertAvResponse(
-                                    ident = it.vurderinger.first().vurdertAv ?: "ukjent",
-                                    dato = it.vurdertTidspunkt.toLocalDate(),
-                                    ansattnavn = ansattNavnOgEnhet?.navn,
-                                    enhetsnavn = ansattNavnOgEnhet?.enhet
-                                )
-                            }
                     )
                 }
                 respond(grunnlagDto)
