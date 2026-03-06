@@ -49,7 +49,6 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.NyTidligereVurderinger to true,
         BehandlingsflytFeature.BekreftVurderingerOppfolging to true,
         BehandlingsflytFeature.LagreStansOgOpphor to true,
-        BehandlingsflytFeature.RettTilAvslagHvisNorgeIkkeKompetentStat to true,
         BehandlingsflytFeature.SamordningBarnepensjon to true,
         )
 )
