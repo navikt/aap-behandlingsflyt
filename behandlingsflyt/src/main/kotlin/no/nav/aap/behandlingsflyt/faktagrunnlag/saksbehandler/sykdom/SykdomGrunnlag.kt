@@ -58,7 +58,7 @@ data class SykdomGrunnlag(
         maksDato: LocalDate = Tid.MAKS,
         filter: (sykdomsvurdering: Sykdomsvurdering) -> Boolean
     ): Tidslinje<Sykdomsvurdering> {
-        val tidslinje = sykdomsvurderinger
+        return sykdomsvurderinger
             .filter(filter)
             .groupBy { it.vurdertIBehandling }
             .values
@@ -66,7 +66,6 @@ data class SykdomGrunnlag(
             .flatMap { it.sortedBy { it.vurderingenGjelderFra } }
             .somTidslinje { Periode(it.vurderingenGjelderFra, it.vurderingenGjelderTil ?: Tid.MAKS) }
             .komprimer()
-
-        return tidslinje.begrensetTil(Periode(Tid.MIN, maksDato))
+            .begrensetTil(Periode(Tid.MIN, maksDato))
     }
 }
