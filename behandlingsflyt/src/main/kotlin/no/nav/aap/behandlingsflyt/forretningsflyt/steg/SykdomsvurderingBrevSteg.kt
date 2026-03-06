@@ -44,7 +44,7 @@ class SykdomsvurderingBrevSteg internal constructor(
 
                         // Kun aktuelt dersom sykdom og bistand er vurdert
                         val behov = avklaringsbehovene.hentBehovForDefinisjon(
-                            listOf(Definisjon.AVKLAR_SYKDOM, Definisjon.AVKLAR_BISTANDSBEHOV)
+                            listOf(Definisjon.AVKLAR_SYKDOM, Definisjon.AVKLAR_BISTANDSBEHOV, Definisjon.ETABLERING_EGEN_VIRKSOMHET)
                         )
 
                         val finnesAvsluttede =
