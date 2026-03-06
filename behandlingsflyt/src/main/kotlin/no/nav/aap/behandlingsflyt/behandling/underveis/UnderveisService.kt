@@ -209,8 +209,9 @@ class UnderveisService(
         sak: Sak
     ): Periode {
         val vedtakslengdeGrunnlag = vedtakslengdeRepository.hentHvisEksisterer(behandlingId)
-        if (vedtakslengdeGrunnlag != null) {
-            return Periode(sak.rettighetsperiode.fom, vedtakslengdeGrunnlag.vurdering.sluttdato)
+        val sluttdato = vedtakslengdeGrunnlag?.gjeldendeVurdering()?.sluttdato
+        if (sluttdato != null) {
+            return Periode(sak.rettighetsperiode.fom, sluttdato)
         }
 
         val startdatoForBehandlingen =
