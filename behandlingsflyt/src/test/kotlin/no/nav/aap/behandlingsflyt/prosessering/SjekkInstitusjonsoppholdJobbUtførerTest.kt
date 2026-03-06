@@ -60,7 +60,7 @@ class SjekkInstitusjonsoppholdJobbUtførerTest {
     private val sakId = SakId(123L)
 
     @Test
-    fun `Skal opprette revurdering pga institusjonsopphold`() {
+    fun `Skal opprette revurdering pga institusjonsopphold som har vart i to måneder`() {
         val (utfører, sakOgBehandlingServiceMock) =
             mockAvhengigheterForInstitusjonsoppholdJobbUtfører(
                 hentInstitusjonsoppholdReturn = kortvarigInstitusjonsopphold
@@ -70,6 +70,31 @@ class SjekkInstitusjonsoppholdJobbUtførerTest {
 
         verify { sakOgBehandlingServiceMock.finnEllerOpprettOrdinærBehandling(any<SakId>(), any()) }
     }
+
+    @Test
+    fun `Skal ikke opprette revurdering pga institusjonsopphold som har vart i kortere enn to måneder`() {
+        val (utfører, sakOgBehandlingServiceMock) =
+            mockAvhengigheterForInstitusjonsoppholdJobbUtfører(
+                hentInstitusjonsoppholdReturn = kortvarigInstitusjonsoppholdSomErForMindreEnnToMaanederSiden
+            )
+
+        utfører.utfør(JobbInput(SjekkInstitusjonsOppholdJobbUtfører).forSak(sakId.id))
+
+        verify(exactly = 0) { sakOgBehandlingServiceMock.finnEllerOpprettOrdinærBehandling(any<SakId>(), any()) }
+    }
+
+    @Test
+    fun `Skal ikke opprette revurdering pga institusjonsopphold som har vart lengere enn to måneder`() {
+        val (utfører, sakOgBehandlingServiceMock) =
+            mockAvhengigheterForInstitusjonsoppholdJobbUtfører(
+                hentInstitusjonsoppholdReturn = kortvarigInstitusjonsoppholdSomErForMerEnnToMaanederSiden
+            )
+
+        utfører.utfør(JobbInput(SjekkInstitusjonsOppholdJobbUtfører).forSak(sakId.id))
+
+        verify(exactly = 0) { sakOgBehandlingServiceMock.finnEllerOpprettOrdinærBehandling(any<SakId>(), any()) }
+    }
+
 
     @Test
     fun `Skal ikke opprette revurdering dersom institusjonsoppholdet er for langt frem i tid`() {
@@ -270,6 +295,34 @@ class SjekkInstitusjonsoppholdJobbUtførerTest {
         ) to behandlingServiceMock
     }
 
+
+    val kortvarigInstitusjonsoppholdSomErForMindreEnnToMaanederSiden = InstitusjonsoppholdGrunnlag(
+        Oppholdene(
+            1, listOf(
+                Institusjonsopphold(
+                    Institusjonstype.HS,
+                    Oppholdstype.H,
+                    LocalDate.now().minusMonths(1),
+                    LocalDate.now().plusMonths(3),
+                    orgnr = "123",
+                    institusjonsnavn = "Det er institusjonen sin, det",
+                ),
+            ).map { it.tilInstitusjonSegment() })
+    )
+
+    val kortvarigInstitusjonsoppholdSomErForMerEnnToMaanederSiden = InstitusjonsoppholdGrunnlag(
+        Oppholdene(
+            1, listOf(
+                Institusjonsopphold(
+                    Institusjonstype.HS,
+                    Oppholdstype.H,
+                    LocalDate.now().minusMonths(3),
+                    LocalDate.now().plusMonths(1).minusDays(5),
+                    orgnr = "123",
+                    institusjonsnavn = "Det er institusjonen sin, det",
+                ),
+            ).map { it.tilInstitusjonSegment() })
+    )
 
     val kortvarigInstitusjonsopphold = InstitusjonsoppholdGrunnlag(
         Oppholdene(
