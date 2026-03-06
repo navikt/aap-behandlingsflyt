@@ -13,14 +13,14 @@ public sealed interface Uførevedtak : Melding
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public data class UførevedtakKafkaMelding(
-    val personid: String,
+    val personId: String,
     val virkningsdato: LocalDate,
     val resultat: UførevedtakResultat,
     val avslag12_5: Boolean,
 ) {
     public fun tilUføreVedtakV0(): Uførevedtak =
         UførevedtakV0(
-            personid = personid,
+            personId = personId,
             virkningsdato = virkningsdato,
             resultat = resultat,
             avslag12_5 = avslag12_5,
@@ -41,14 +41,14 @@ public data class UførevedtakKafkaMelding(
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public data class UførevedtakV0(
-    val personid: String,
+    val personId: String,
     val virkningsdato: LocalDate,
     val resultat: UførevedtakResultat,
     val avslag12_5: Boolean,
     val kilde: UførevedtakKilde,
 ) : Uførevedtak {
     public fun beskrivelseVurderingsbehov(): String {
-        val standardtekst = "Det er fattet et vedtak om uføre med status: ${resultat.name} fra $virkningsdato."
+        val standardtekst = "Det er fattet et vedtak om uføre med status: ${resultat.verdi} fra $virkningsdato."
         return when {
             avslag12_5 -> "$standardtekst Vedtaket er fattet med hjemmel i § 12-5."
             else -> standardtekst
@@ -60,7 +60,7 @@ public enum class UførevedtakKilde {
     PENSJON,
 }
 
-public enum class UførevedtakResultat(verdi: String) {
+public enum class UførevedtakResultat(public val verdi: String) {
     OPPH ("Opphør"),
     INNV ("Innvilgelse"),
     AVSL ("Avslag"),

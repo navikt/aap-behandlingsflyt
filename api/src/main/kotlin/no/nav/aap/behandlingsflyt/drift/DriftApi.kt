@@ -6,6 +6,7 @@ import com.papsign.ktor.openapigen.route.response.respondWithStatus
 import com.papsign.ktor.openapigen.route.route
 import io.ktor.http.*
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingReferanse
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
@@ -177,6 +178,9 @@ fun NormalOpenAPIRoute.driftApi(
                                         ForenkletAvklaringsbehov(
                                             definisjon = avklaringsbehov.definisjon,
                                             status = endring.status,
+                                            årsakTilSettPåVent = endring.grunn,
+                                            perioderUgyldigVurdering = endring.perioderSomIkkeErTilstrekkeligVurdert,
+                                            perioderKreverVurdering = endring.perioderVedtaketBehøverVurdering,
                                             tidsstempel = endring.tidsstempel,
                                             endretAv = endring.endretAv
                                         )
@@ -279,8 +283,11 @@ private data class BehandlingDriftsinfo(
 private data class ForenkletAvklaringsbehov(
     val definisjon: Definisjon,
     val status: Status,
+    val perioderUgyldigVurdering: Set<Periode>?,
+    val perioderKreverVurdering: Set<Periode>?,
     val tidsstempel: LocalDateTime = LocalDateTime.now(),
-    val endretAv: String
+    val endretAv: String,
+    val årsakTilSettPåVent: ÅrsakTilSettPåVent?
 )
 
 private data class VilkårDriftsinfoDTO(

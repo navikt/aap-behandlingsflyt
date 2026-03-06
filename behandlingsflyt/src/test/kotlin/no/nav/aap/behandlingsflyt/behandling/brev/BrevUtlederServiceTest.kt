@@ -2,7 +2,6 @@ package no.nav.aap.behandlingsflyt.behandling.brev
 
 import io.mockk.every
 import io.mockk.mockk
-import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.behandling.ResultatUtleder
 import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingService
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
@@ -12,9 +11,9 @@ import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Minstesats
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Tilkjent
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelsePeriode
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.ÅrMedHverdager
 import no.nav.aap.behandlingsflyt.behandling.vedtak.Vedtak
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakRepository
+import no.nav.aap.behandlingsflyt.behandling.vedtakslengde.VedtakslengdeService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Grunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Repository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Vurdering
@@ -22,13 +21,11 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Beregning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag11_19
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagInntekt
-import no.nav.aap.behandlingsflyt.behandling.vedtakslengde.VedtakslengdeService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.ArbeidsGradering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisÅrsak
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageresultatUtleder
@@ -39,15 +36,12 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsopptrapping
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdomsvurderingbrev.SykdomsvurderingForBrev
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdomsvurderingbrev.SykdomsvurderingForBrevRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.UføreSøknadVedtakResultat
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdomsvurderingbrev.SykdomsvurderingForBrev
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdomsvurderingbrev.SykdomsvurderingForBrevRepository
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
@@ -138,7 +132,6 @@ class BrevUtlederServiceTest {
         every { sykdomsvurderingForBrevRepository.hent(any<BehandlingId>())} returns sykdomsvurderingForBrevGrunnlag()
         every { tilkjentYtelseRepository.hentHvisEksisterer(any<BehandlingId>()) } returns stubTilkjentYtelse()
         every { trukketSøknadService.søknadErTrukket(any<BehandlingId>()) } returns false
-        every { unleashGateway.isEnabled(BehandlingsflytFeature.NyBrevtype11_17) } returns true
     }
 
     @Nested
@@ -181,7 +174,6 @@ class BrevUtlederServiceTest {
             every { underveisRepository.hentHvisEksisterer(revurdering.id) } returns revurderingUnderveisGrunnlag
             every { avbrytRevurderingService.revurderingErAvbrutt(any<BehandlingId>()) } returns false
             every { vedtakslengdeService.hentAvslagsårsakerVedStansEllerOpphør(revurdering.id, any()) } returns emptySet()
-            every { unleashGateway.isEnabled(BehandlingsflytFeature.NyBrevtype11_17) } returns true
             every { unleashGateway.isEnabled(BehandlingsflytFeature.UtvidVedtakslengdeUnderEttAr) } returns true
 
             val resultat = brevUtlederService.utledBehovForMeldingOmVedtak(revurdering.id)
@@ -224,7 +216,6 @@ class BrevUtlederServiceTest {
             every { underveisRepository.hent(revurdering.id) } returns underveisGrunnlag
             every { underveisRepository.hentHvisEksisterer(revurdering.id) } returns underveisGrunnlag
             every { avbrytRevurderingService.revurderingErAvbrutt(any<BehandlingId>()) } returns false
-            every { unleashGateway.isEnabled(BehandlingsflytFeature.NyBrevtype11_17) } returns true
 
             val resultat = brevUtlederService.utledBehovForMeldingOmVedtak(revurdering.id)
 
@@ -247,7 +238,6 @@ class BrevUtlederServiceTest {
                 forrigeBehandlingId = førstegangsbehandling.id,
                 vurderingsbehov = listOf(Vurderingsbehov.OVERGANG_ARBEID)
             )
-            every { unleashGateway.isEnabled(BehandlingsflytFeature.NyBrevtype11_17) } returns true
             every { underveisRepository.hentHvisEksisterer(førstegangsbehandling.id) } returns underveisGrunnlag(
                 underveisperiode(
                     periode = Periode(1 januar 2023, 31 desember 2023),
@@ -411,7 +401,6 @@ class BrevUtlederServiceTest {
                 forrigeBehandlingId = førstegangsbehandling.id,
                 vurderingsbehov = listOf(Vurderingsbehov.OVERGANG_UFORE)
             )
-            every { unleashGateway.isEnabled(BehandlingsflytFeature.NyBrevtype11_17) } returns true
             every { underveisRepository.hentHvisEksisterer(førstegangsbehandling.id) } returns underveisGrunnlag(
                 underveisperiode(
                     periode = Periode(1 januar 2023, 31 desember 2023),
@@ -444,7 +433,6 @@ class BrevUtlederServiceTest {
                 forrigeBehandlingId = forrigeBehandling.id,
                 vurderingsbehov = listOf(Vurderingsbehov.OVERGANG_ARBEID)
             )
-            every { unleashGateway.isEnabled(BehandlingsflytFeature.NyBrevtype11_17) } returns true
             every { underveisRepository.hentHvisEksisterer(forrigeBehandling.id) } returns underveisGrunnlag(
                 underveisperiode(
                     periode = Periode(1 januar 2023, 31 desember 2023),
@@ -666,7 +654,6 @@ class BrevUtlederServiceTest {
                 forrigeBehandlingId = BehandlingId(Random.nextLong()),
                 vurderingsbehov = listOf(Vurderingsbehov.OVERGANG_ARBEID)
             )
-            every { unleashGateway.isEnabled(BehandlingsflytFeature.NyBrevtype11_17) } returns true
             every { behandlingRepository.hent(revurdering.id) } returns revurdering
             every { avbrytRevurderingService.revurderingErAvbrutt(revurdering.id) } returns false
             every { arbeidsopptrappingRepository.hentHvisEksisterer(revurdering.id) } returns arbeidsopptrappingGrunnlag(
@@ -694,7 +681,6 @@ class BrevUtlederServiceTest {
                 forrigeBehandlingId = BehandlingId(Random.nextLong()),
                 vurderingsbehov = listOf(Vurderingsbehov.OVERGANG_ARBEID)
             )
-            every { unleashGateway.isEnabled(BehandlingsflytFeature.NyBrevtype11_17) } returns true
             every { behandlingRepository.hent(revurdering.id) } returns revurdering
             every { avbrytRevurderingService.revurderingErAvbrutt(revurdering.id) } returns false
             every { arbeidsopptrappingRepository.hentHvisEksisterer(revurdering.id) } returns arbeidsopptrappingGrunnlag(
@@ -801,21 +787,6 @@ class BrevUtlederServiceTest {
             årsakTilOpprettelse = årsakTilOpprettelse,
             vurderingsbehov = vurderingsbehov.map { VurderingsbehovMedPeriode(it) },
             versjon = 1
-        )
-    }
-
-    private fun stubVedtakslengdeGrunnlag(
-        behandlingId: BehandlingId,
-        sluttdato: LocalDate,
-    ): VedtakslengdeGrunnlag {
-        return VedtakslengdeGrunnlag(
-            vurdering = VedtakslengdeVurdering(
-                sluttdato = sluttdato,
-                utvidetMed = ÅrMedHverdager.ANDRE_ÅR,
-                vurdertAv = SYSTEMBRUKER,
-                opprettet = Instant.now(),
-                vurdertIBehandling = behandlingId
-            )
         )
     }
 

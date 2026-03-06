@@ -2,7 +2,6 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.institusjonsopphold.InstitusjonsoppholdUtlederService
-import no.nav.aap.behandlingsflyt.behandling.institusjonsopphold.InstitusjonsoppholdUtlederServiceNy
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MapInstitusjonoppholdTilRegel
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
@@ -16,12 +15,9 @@ import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
@@ -29,21 +25,17 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 
 class InstitusjonsoppholdSteg(
     private val institusjonsoppholdUtlederService: InstitusjonsoppholdUtlederService,
-    private val institusjonsoppholdUtlederServiceNy: InstitusjonsoppholdUtlederServiceNy,
     private val institusjonsoppholdRepository: InstitusjonsoppholdRepository,
     private val tidligereVurderinger: TidligereVurderinger,
     private val avklaringsbehovService: AvklaringsbehovService,
-    private val vilkårsresultatRepository: VilkårsresultatRepository,
-    private val unleashGateway: UnleashGateway
+    private val vilkårsresultatRepository: VilkårsresultatRepository
 ) : BehandlingSteg {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         institusjonsoppholdRepository = repositoryProvider.provide(),
         institusjonsoppholdUtlederService = InstitusjonsoppholdUtlederService(repositoryProvider),
-        institusjonsoppholdUtlederServiceNy = InstitusjonsoppholdUtlederServiceNy(repositoryProvider),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
         avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
-        vilkårsresultatRepository = repositoryProvider.provide(),
-        unleashGateway = gatewayProvider.provide()
+        vilkårsresultatRepository = repositoryProvider.provide()
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
@@ -101,7 +93,7 @@ class InstitusjonsoppholdSteg(
             VurderingType.MIGRER_RETTIGHETSPERIODE,
             VurderingType.REVURDERING,
                 -> {
-                val utlederResultat = institusjonsoppholdUtlederServiceUtlederResultat(
+                val utlederResultat = institusjonsoppholdUtlederService.utled(
                     kontekst.behandlingId,
                     begrensetTilRettighetsperiode = false
                 )
@@ -131,20 +123,20 @@ class InstitusjonsoppholdSteg(
 
 
     private fun perioderHelseoppholdIkkeErTilstrekkeligVurdert(kontekst: FlytKontekstMedPerioder): Set<Periode> {
-        val harBehovForAvklaringer = institusjonsoppholdUtlederServiceUtlederResultat(kontekst.behandlingId)
+        val harBehovForAvklaringer = institusjonsoppholdUtlederService.utled(kontekst.behandlingId)
         return harBehovForAvklaringer.perioderTilVurdering.map { it.harUavklartHelseopphold() }.filter { it.verdi }
             .komprimer().perioder().toSet()
     }
 
     private fun perioderSoningOppholdIkkeErTilstrekkeligVurdert(kontekst: FlytKontekstMedPerioder): Set<Periode> {
-        val harBehovForAvklaringer = institusjonsoppholdUtlederServiceUtlederResultat(kontekst.behandlingId)
+        val harBehovForAvklaringer = institusjonsoppholdUtlederService.utled(kontekst.behandlingId)
         return harBehovForAvklaringer.perioderTilVurdering.map { it.harUavklartSoningsopphold() }.filter { it.verdi }
             .komprimer().perioder().toSet()
     }
 
     private fun perioderMedVurderingsbehovHelse(kontekst: FlytKontekstMedPerioder): Tidslinje<Boolean> {
         val tidligereVurderingsutfall = tidligereVurderinger.behandlingsutfall(kontekst, type())
-        val harBehovForAvklaringer = institusjonsoppholdUtlederServiceUtlederResultat(kontekst.behandlingId)
+        val harBehovForAvklaringer = institusjonsoppholdUtlederService.utled(kontekst.behandlingId)
 
         return Tidslinje.zip2(tidligereVurderingsutfall, harBehovForAvklaringer.perioderTilVurdering)
             .mapValue { (behandlingsutfall, denneBehandling) ->
@@ -160,7 +152,7 @@ class InstitusjonsoppholdSteg(
 
     private fun perioderMedVurderingsbehovSoning(kontekst: FlytKontekstMedPerioder): Tidslinje<Boolean> {
         val tidligereVurderingsutfall = tidligereVurderinger.behandlingsutfall(kontekst, type())
-        val harBehovForAvklaringer = institusjonsoppholdUtlederServiceUtlederResultat(kontekst.behandlingId)
+        val harBehovForAvklaringer = institusjonsoppholdUtlederService.utled(kontekst.behandlingId)
 
         return Tidslinje.zip2(tidligereVurderingsutfall, harBehovForAvklaringer.perioderTilVurdering)
             .mapValue { (behandlingsutfall, denneBehandling) ->
@@ -172,22 +164,6 @@ class InstitusjonsoppholdSteg(
                 }
             }
     }
-
-    private fun institusjonsoppholdUtlederServiceUtlederResultat(
-        behandlingId: BehandlingId,
-        begrensetTilRettighetsperiode: Boolean = true
-    ) =
-        if (unleashGateway.isEnabled(BehandlingsflytFeature.PeriodiseringHelseinstitusjonOpphold)) {
-            institusjonsoppholdUtlederServiceNy.utled(
-                behandlingId,
-                begrensetTilRettighetsperiode = begrensetTilRettighetsperiode
-            )
-        } else {
-            institusjonsoppholdUtlederService.utled(
-                behandlingId,
-                begrensetTilRettighetsperiode = begrensetTilRettighetsperiode
-            )
-        }
 
     companion object : FlytSteg {
         override fun konstruer(

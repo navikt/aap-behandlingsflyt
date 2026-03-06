@@ -135,10 +135,10 @@ class IverksettVedtakSteg private constructor(
             .filter { it.virkningstidspunkt != null }
 
         val tidligsteVirkningstidspunkt = vedtakMedVirkningstidspunkt
-            .minByOrNull { it.virkningstidspunkt!! }?.virkningstidspunkt
+            .mapNotNull { it.virkningstidspunkt }.minOrNull()
             ?: error("Ingen vedtak med virkningstidspunkt funnet")
 
-        val alleVedtakMedTidligsteVirkningstidspunkt = vedtakPåBehandling
+        val alleVedtakMedTidligsteVirkningstidspunkt = vedtakMedVirkningstidspunkt
             .filter { tidligsteVirkningstidspunkt.isEqual(it.virkningstidspunkt) }
 
         if (alleVedtakMedTidligsteVirkningstidspunkt.size == 1 && alleVedtakMedTidligsteVirkningstidspunkt.first().behandlingId == behandling.id) {
@@ -176,7 +176,6 @@ class IverksettVedtakSteg private constructor(
                 vedtak.virkningstidspunkt != null && vedtak.virkningstidspunkt < vedtak.vedtakstidspunkt.toLocalDate()
 
             if (!erInnvilgetMedEtterbetaling) {
-                log.info("")
                 return
             }
             val vedtakMedTidligsteVirkingsdato = finnVedtakMedTidligsteVirkningstidspunkt(behandling)

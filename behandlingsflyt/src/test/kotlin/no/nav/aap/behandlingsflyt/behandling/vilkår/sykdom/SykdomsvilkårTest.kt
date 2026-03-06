@@ -223,6 +223,7 @@ class SykdomsvilkårTest {
         vurderingenGjelderTil = vurderingenGjelderTil,
         vurdertAv = Bruker("Z00000"),
         opprettet = opprettet.toInstant(ZoneOffset.UTC),
-        vurdertIBehandling = behandlingId
+        vurdertIBehandling = behandlingId,
+        diagnose = null
     )
 }

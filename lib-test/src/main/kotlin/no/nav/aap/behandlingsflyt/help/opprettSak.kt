@@ -55,20 +55,3 @@ fun opprettSak(connection: DBConnection, ident: Ident, periode: Periode): Sak {
         SakRepositoryImpl(connection)
     ).finnEllerOpprett(ident, periode)
 }
-
-@Deprecated("Sluttdato for rettighetesperiode er alltid Tid.MAKS for nye/migrerte saker. Send kun med søknadsdato, med mindre du tester koden din for ikke-migrerte saker.")
-fun opprettInMemorySak(ident: Ident, periode: Periode): Sak {
-    @Suppress("DEPRECATION")
-    return PersonOgSakService(
-        FakePdlGateway,
-        FakeApiInternGateway.konstruer(),
-        InMemoryPersonRepository,
-        InMemorySakRepository
-    ).finnEllerOpprett(ident, periode)
-}
-
-@Deprecated("Sluttdato for rettighetesperiode er alltid Tid.MAKS for nye/migrerte saker. Send kun med søknadsdato, med mindre du tester koden din for ikke-migrerte saker.")
-fun opprettInMemorySak(periode: Periode): Sak {
-    @Suppress("DEPRECATION")
-    return opprettInMemorySak(ident(), periode)
-}

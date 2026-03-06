@@ -17,8 +17,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.komponenter.dbconnect.Query
 import no.nav.aap.komponenter.dbconnect.Row
-import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.Factory
 import java.time.LocalDateTime
 
@@ -59,18 +59,18 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
             VALUES (?, ?, ?, ?)
         """.trimIndent()
 
-        val behandlingÅrsakId = connection.executeReturnKey(årsakQuery, {
+        val behandlingÅrsakId = connection.executeReturnKey(årsakQuery) {
             setParams {
                 setLong(1, behandlingId)
                 setEnumName(2, vurderingsbehovOgÅrsak.årsak)
                 setString(3, vurderingsbehovOgÅrsak.beskrivelse)
                 setLocalDateTime(4, vurderingsbehovOgÅrsak.opprettet)
             }
-        })
+        }
 
         val vurderingsbehovQuery = """
-            INSERT INTO vurderingsbehov (behandling_id, aarsak, periode, behandling_aarsak_id, opprettet_tid, oppdatert_tid)
-            VALUES (?, ?, ?::daterange, ?, ?, ?)
+            INSERT INTO vurderingsbehov (behandling_id, aarsak, behandling_aarsak_id, opprettet_tid, oppdatert_tid)
+            VALUES (?, ?, ?, ?, ?)
         """.trimIndent()
 
         val opprettetTid = LocalDateTime.now()
@@ -78,10 +78,9 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
             setParams {
                 setLong(1, behandlingId)
                 setEnumName(2, it.type)
-                setPeriode(3, it.periode)
-                setLong(4, behandlingÅrsakId)
+                setLong(3, behandlingÅrsakId)
+                setLocalDateTime(4, opprettetTid)
                 setLocalDateTime(5, opprettetTid)
-                setLocalDateTime(6, opprettetTid)
             }
         }
 
@@ -92,7 +91,7 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
      * Denne må brukes med omhu, da siste opprettede behandling ikke nødvendigvis er siste behandling
      * i den lenkede listen av behandlinger. Ref. fasttrack/atomære behandlinger. Den returnerer også avbrutte behandlinger.
      */
-    @Deprecated("Mest sannsynlig ønsker du å bruke SakOgBehandlingService.finnSisteYtelsesbehandlingFor eller SakOgBehandlingService.finnBehandlingMedSisteFattedeVedtak")
+    @Deprecated("Mest sannsynlig ønsker du å bruke BehandlingService.finnSisteYtelsesbehandlingFor eller BehandlingService.finnBehandlingMedSisteFattedeVedtak")
     override fun finnSisteOpprettedeBehandlingFor(
         sakId: SakId,
         behandlingstypeFilter: List<TypeBehandling>
@@ -202,7 +201,6 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
             setRowMapper {
                 VurderingsbehovMedPeriode(
                     it.getEnum("aarsak"),
-                    it.getPeriodeOrNull("periode"),
                     it.getLocalDateTimeOrNull("oppdatert_tid") ?: it.getLocalDateTime("opprettet_tid")
                 )
             }
@@ -218,7 +216,6 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
         data class VurderingsbehovOgÅrsakInternal(
             val id: Long,
             val vurderingsbehovType: Vurderingsbehov,
-            val vurderingsbehovPeriode: Periode?,
             val vurderingsbehovOppdatertTid: LocalDateTime,
             val årsak: ÅrsakTilOpprettelse,
             val opprettet: LocalDateTime,
@@ -227,7 +224,7 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
 
         val query = """
             SELECT ba.id as aarsak_id, ba.aarsak, ba.begrunnelse, ba.opprettet_tid,
-                   vb.aarsak as vurderingsbehov, vb.periode, vb.opprettet_tid as vb_opprettet_Tid, vb.oppdatert_tid as vb_oppdatert_tid
+                   vb.aarsak as vurderingsbehov, vb.opprettet_tid as vb_opprettet_Tid, vb.oppdatert_tid as vb_oppdatert_tid
             FROM behandling_aarsak ba
             INNER JOIN vurderingsbehov vb ON vb.behandling_aarsak_id = ba.id
             WHERE vb.behandling_id = ?
@@ -245,7 +242,6 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
                     beskrivelse = row.getStringOrNull("begrunnelse"),
                     opprettet = row.getLocalDateTime("opprettet_tid"),
                     vurderingsbehovType = row.getEnum("vurderingsbehov"),
-                    vurderingsbehovPeriode = row.getPeriodeOrNull("periode"),
                     vurderingsbehovOppdatertTid = row.getLocalDateTimeOrNull("vb_oppdatert_tid")
                         ?: row.getLocalDateTime("vb_opprettet_Tid")
                 )
@@ -262,7 +258,6 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
                     vurderingsbehov = vurderingsbehovOgÅrsak.map {
                         VurderingsbehovMedPeriode(
                             it.vurderingsbehovType,
-                            it.vurderingsbehovPeriode,
                             it.vurderingsbehovOppdatertTid
                         )
                     }
@@ -337,7 +332,11 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
             SELECT * FROM STEG_HISTORIKK WHERE behandling_id = ? AND AKTIV = true
         """.trimIndent()
 
-        return connection.queryFirstOrNull(query) {
+        return connection.queryFirstOrNull(query, setStegtilstand(behandlingId))
+    }
+
+    private fun setStegtilstand(behandlingId: BehandlingId): Query<StegTilstand>.() -> Unit {
+        return {
             setParams {
                 setLong(1, behandlingId.toLong())
             }
@@ -357,19 +356,7 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
             SELECT * FROM STEG_HISTORIKK WHERE behandling_id = ? ORDER BY opprettet_tid
         """.trimIndent()
 
-        return connection.queryList(query) {
-            setParams {
-                setLong(1, behandlingId.toLong())
-            }
-            setRowMapper { row ->
-                StegTilstand(
-                    tidspunkt = row.getLocalDateTime("OPPRETTET_TID"),
-                    stegType = row.getEnum("steg"),
-                    stegStatus = row.getEnum("status"),
-                    aktiv = row.getBoolean("aktiv"),
-                )
-            }
-        }
+        return connection.queryList(query, setStegtilstand(behandlingId))
     }
 
     override fun hentAlleFor(sakId: SakId, behandlingstypeFilter: List<TypeBehandling>): List<Behandling> {
@@ -498,29 +485,28 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
             VALUES (?, ?, ?, ?)
         """.trimIndent()
 
-        val behandlingÅrsakId = connection.executeReturnKey(årsakQuery, {
+        val behandlingÅrsakId = connection.executeReturnKey(årsakQuery) {
             setParams {
                 setLong(1, behandling.id.toLong())
                 setEnumName(2, vurderingsbehovOgÅrsak.årsak)
                 setString(3, vurderingsbehovOgÅrsak.beskrivelse)
                 setLocalDateTime(4, vurderingsbehovOgÅrsak.opprettet)
             }
-        })
+        }
 
         val vurderingsbehovQuery = """
-            INSERT INTO vurderingsbehov (behandling_id, aarsak, periode, behandling_aarsak_id, oppdatert_tid)
-            VALUES (?, ?, ?::daterange, ?, ?)
-            ON CONFLICT (behandling_id, aarsak, periode) DO UPDATE SET oppdatert_tid = ?
+            INSERT INTO vurderingsbehov (behandling_id, aarsak, behandling_aarsak_id, opprettet_tid, oppdatert_tid)
+            VALUES (?, ?, ?, ?, ?)
         """.trimIndent()
 
         connection.executeBatch(vurderingsbehovQuery, vurderingsbehovOgÅrsak.vurderingsbehov) {
             setParams {
                 setLong(1, behandling.id.toLong())
                 setEnumName(2, it.type)
-                setPeriode(3, it.periode)
-                setLong(4, behandlingÅrsakId)
-                setLocalDateTime(5, LocalDateTime.now())
-                setLocalDateTime(6, LocalDateTime.now())
+                setLong(3, behandlingÅrsakId)
+                val nå = LocalDateTime.now()
+                setLocalDateTime(4, nå)
+                setLocalDateTime(5, nå)
             }
         }
     }

@@ -372,6 +372,9 @@ private fun opprettNySakOgBehandling(dto: OpprettTestcaseDTO, gatewayProvider: G
         if (dto.steg == StegType.SYKDOMSVURDERING_BREV) return sak
         else if (!dto.student) løsSykdomsvurderingBrev(behandling)
 
+        if(dto.steg == StegType.BEKREFT_VURDERINGER_OPPFØLGING) return sak
+        løsVurderingerOppfølgning(behandling)
+
         if (dto.steg == StegType.KVALITETSSIKRING) return sak
         kvalitetssikreOk(behandling)
 

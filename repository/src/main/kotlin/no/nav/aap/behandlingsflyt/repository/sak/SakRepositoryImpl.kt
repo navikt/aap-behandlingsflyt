@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.repository.sak
 
 import io.opentelemetry.instrumentation.annotations.WithSpan
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Status
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
@@ -121,6 +122,7 @@ class SakRepositoryImpl(private val connection: DBConnection) : SakRepository {
                 join trukket_soknad_vurderinger on trukket_soknad_grunnlag.vurderinger_id = trukket_soknad_vurderinger.id
                 join trukket_soknad_vurdering on trukket_soknad_vurderinger.id = trukket_soknad_vurdering.vurderinger_id
                 where trukket_soknad_grunnlag.aktiv
+                and trukket_soknad_vurdering.skal_trekkes
                 and sak.id = behandling.sak_id
             )
         """.trimIndent()
@@ -267,12 +269,15 @@ and exists (
     override fun finnSakerMedAvsluttedeBehandlingerUtenRiktigSluttdatoPåRettighetsperiode(): List<Sak> {
         val sql = """
             select * from sak s
-                where s.id not in (select sak_id from behandling where status not in('AVSLUTTET', 'IVERKSETTES'))
-            AND upper(s.rettighetsperiode) < ?
+                where s.id not in (select sak_id from behandling where status not in ('AVSLUTTET', 'IVERKSETTES') and type = ANY(?::text[]))
+            AND upper(s.rettighetsperiode) < ? AND upper(rettighetsperiode)-lower(rettighetsperiode) > 1;
         """.trimIndent()
 
         return connection.queryList(sql) {
-            setParams { setLocalDate(1, Tid.MAKS) }
+            setParams {
+                setArray(1, listOf(TypeBehandling.Førstegangsbehandling, TypeBehandling.Revurdering).map { it.identifikator() })
+                setLocalDate(2, Tid.MAKS)
+            }
             setRowMapper { row -> mapSak(row) }
         }
     }

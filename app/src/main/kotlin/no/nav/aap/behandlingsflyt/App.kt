@@ -27,6 +27,7 @@ import no.nav.aap.behandlingsflyt.behandling.arbeidsopptrapping.arbeidsopptrappi
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.avklaringsbehovApi
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.fatteVedtakGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.utledSubtypesTilAvklaringsbehovLøsning
+import no.nav.aap.behandlingsflyt.behandling.barnepensjon.barnepensjonGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.barnetillegg.barnetilleggApi
 import no.nav.aap.behandlingsflyt.behandling.beregning.beregningsGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.alder.aldersGrunnlagApi
@@ -101,11 +102,9 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.InstitusjonsOppho
 import no.nav.aap.behandlingsflyt.pip.behandlingsflytPipApi
 import no.nav.aap.behandlingsflyt.prosessering.BehandlingsflytLogInfoProvider
 import no.nav.aap.behandlingsflyt.prosessering.ProsesseringsJobber
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.saksApi
 import no.nav.aap.behandlingsflyt.test.opprettDummySakApi
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -295,6 +294,7 @@ internal fun Application.server(
                 mellomlagretVurderingApi(dataSource, repositoryRegistry, gatewayProvider)
                 rettighetApi(dataSource, repositoryRegistry)
                 tidligereVurderingerApi(dataSource, repositoryRegistry, gatewayProvider)
+                barnepensjonGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
                 // Klage
                 påklagetBehandlingGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
                 fullmektigGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
@@ -345,12 +345,9 @@ private fun Application.startKafkakonsumenter(
         startPDLHendelseKonsument(dataSource, repositoryRegistry, gatewayProvider)
         startTilbakekrevingEventKonsument(dataSource, repositoryRegistry)
         startSykepengevedtakKonsument(dataSource, repositoryRegistry, gatewayProvider)
+        startInstitusjonsOppholdKonsument(dataSource, repositoryRegistry, gatewayProvider)
     }
     if (!Miljø.erLokal() && !Miljø.erProd()) {
-        startInstitusjonsOppholdKonsument(dataSource, repositoryRegistry)
-    }
-
-    if(!Miljø.erLokal() && !Miljø.erProd() && !Miljø.erDev()) {
         startUføreVedtakEventKonsument(dataSource, repositoryRegistry, gatewayProvider)
     }
 }
@@ -365,17 +362,11 @@ private fun utførMigreringer(
     scheduler.schedule(Runnable {
         val unleashGateway: UnleashGateway = gatewayProvider.provide()
         val isLeader = isLeader(log)
-        val migrerInstitusjonsoppholdEnabled =
-            unleashGateway.isEnabled(BehandlingsflytFeature.MigrerInstitusjonsopphold)
-        log.info("isLeader = $isLeader, migrerInstitusjonsoppholdEnabled = $migrerInstitusjonsoppholdEnabled")
+        log.info("isLeader = $isLeader")
 
 
-        if (migrerInstitusjonsoppholdEnabled && isLeader) {
+        if (isLeader) {
             // kjør migreringer
-            dataSource.transaction { connection ->
-                val repository = InstitusjonsoppholdRepositoryImpl(connection)
-                repository.migrerInstitusjonsopphold()
-            }
         }
 
     }, 9, TimeUnit.MINUTES)
@@ -554,6 +545,7 @@ fun Application.startUføreVedtakEventKonsument(
 fun Application.startInstitusjonsOppholdKonsument(
     dataSource: DataSource,
     repositoryRegistry: RepositoryRegistry,
+    gatewayProvider: GatewayProvider,
 ): KafkaKonsument<String, InstitusjonsOppholdHendelseKafkaMelding> {
 
     val konsument = InstitusjonsOppholdKafkaKonsument(
@@ -564,6 +556,7 @@ fun Application.startInstitusjonsOppholdKonsument(
         closeTimeout = AppConfig.stansArbeidTimeout,
         dataSource = dataSource,
         repositoryRegistry = repositoryRegistry,
+        gatewayProvider = gatewayProvider,
         institusjonsoppholdKlient = InstitusjonsoppholdGatewayImpl
     )
     monitor.subscribe(ApplicationStarted) {
