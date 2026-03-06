@@ -50,6 +50,7 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.BekreftVurderingerOppfolging to true,
         BehandlingsflytFeature.LagreStansOgOpphor to true,
         BehandlingsflytFeature.SamordningBarnepensjon to true,
+        BehandlingsflytFeature.RefusjonkravIRevurdering to true,
         )
 )
 
