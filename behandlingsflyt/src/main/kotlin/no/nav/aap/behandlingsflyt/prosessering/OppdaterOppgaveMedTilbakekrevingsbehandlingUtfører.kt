@@ -50,6 +50,7 @@ class OppdaterOppgaveMedTilbakekrevingsbehandlingUtfører(
             saksbehandlingURL = tilbakekrevingsbehandling.saksbehandlingURL.toString()
         )
 
+        log.info("Kaller oppgavestyring for å varsle om oppdatering av tilbakekrevingsbehandling for sak: ${sak.saksnummer}")
         oppgaveStyringGateway.varsleTilbakekrevingHendelse(tilbakekrevingsbehandlingOppdatertHendelse)
     }
 
