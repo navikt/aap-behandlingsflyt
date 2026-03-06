@@ -38,7 +38,7 @@ data class OvergangUføreGrunnlag(
         maksDato: LocalDate = Tid.MAKS,
         filter: (vurdering: OvergangUføreVurdering) -> Boolean
     ): Tidslinje<OvergangUføreVurdering> {
-        val vurderinger = vurderinger
+        return vurderinger
             .filter(filter)
             .groupBy { it.vurdertIBehandling }
             .values
@@ -46,8 +46,7 @@ data class OvergangUføreGrunnlag(
             .flatMap { it.sortedBy { it.fom } }
             .somTidslinje { Periode(it.fom, it.tom ?: Tid.MAKS) }
             .komprimer()
-        
-        return vurderinger.begrensetTil(Periode(vurderinger.helePerioden().fom, maksDato))
+            .begrensetTil(Periode(Tid.MIN, maksDato))
     }
 
     fun kravdatoUføretrygd() : LocalDate? {

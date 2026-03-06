@@ -38,7 +38,7 @@ data class BistandGrunnlag(
         maksDato: LocalDate = Tid.MAKS,
         filter: (bistandsvurdering: Bistandsvurdering) -> Boolean
     ): Tidslinje<Bistandsvurdering> {
-        val tidslinje = vurderinger
+        return vurderinger
             .filter(filter)
             .groupBy { it.vurdertIBehandling }
             .values
@@ -46,7 +46,6 @@ data class BistandGrunnlag(
             .flatMap { vurderingerForBehandling -> vurderingerForBehandling.sortedBy { it.vurderingenGjelderFra } }
             .somTidslinje { Periode(it.vurderingenGjelderFra, it.tom ?: Tid.MAKS) }
             .komprimer()
-
-        return tidslinje.begrensetTil(Periode(tidslinje.helePerioden().fom, maksDato))
+            .begrensetTil(Periode(Tid.MIN, maksDato))
     }
 }
