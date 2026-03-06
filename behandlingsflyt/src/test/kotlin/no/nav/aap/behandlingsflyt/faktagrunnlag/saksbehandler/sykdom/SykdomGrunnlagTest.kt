@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.test.april
 import no.nav.aap.behandlingsflyt.test.februar
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.behandlingsflyt.test.mars
+import no.nav.aap.behandlingsflyt.test.november
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
@@ -106,6 +107,36 @@ class SykdomGrunnlagTest {
             .containsExactlyInAnyOrderElementsOf(
                 vurderingerBehandling2
             )
+    }
+
+    @Test
+    fun `Gjeldende vurderinger skal støtte kortere maksdato enn Tid MAKS`() {
+
+        val vurdering1 = sykdomsvurdering(
+            vurderingenGjelderFra = 11 november 2025,
+            vurderingenGjelderTil = 10 november 2026,
+            vurdertIBehandling = BehandlingId(1)
+        )
+
+        val sykdomsGrunnlag = SykdomGrunnlag(
+            yrkesskadevurdering = null,
+            sykdomsvurderinger = listOf(
+                vurdering1,
+                sykdomsvurdering(
+                    harSkadeSykdomEllerLyte = false,
+                    vurderingenGjelderFra = 11 november 2026,
+                    vurderingenGjelderTil = null,
+                    vurdertIBehandling = BehandlingId(1)
+                )
+            )
+        )
+
+        assertTidslinje(
+            sykdomsGrunnlag.somSykdomsvurderingstidslinje(10 november 2026),
+            Periode(11 november 2025, 10 november 2026) to {
+                assertThat(it).isEqualTo(vurdering1)
+            }
+        )
     }
 
     private fun sykdomsvurdering(

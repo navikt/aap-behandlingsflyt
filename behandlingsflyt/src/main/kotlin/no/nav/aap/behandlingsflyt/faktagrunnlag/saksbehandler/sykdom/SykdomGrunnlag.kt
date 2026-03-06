@@ -12,7 +12,7 @@ import java.time.LocalDate
 data class SykdomGrunnlag(
     val yrkesskadevurdering: Yrkesskadevurdering?,
     /**
-     * Alle tidligere vedtatte sykdomsvurderinger + nye sykdomsvurderinger for inneværende behandling. 
+     * Alle tidligere vedtatte sykdomsvurderinger + nye sykdomsvurderinger for inneværende behandling.
      * Skal sjeldent brukes direkte
      */
     val sykdomsvurderinger: List<Sykdomsvurdering>,
@@ -27,7 +27,7 @@ data class SykdomGrunnlag(
     ): Tidslinje<Sykdomsvurdering> {
         return filtrertSykdomstidslinje(maksDato) { true }
     }
-    
+
     fun gjeldendeSykdomsvurderinger(maksDato: LocalDate = Tid.MAKS): List<Sykdomsvurdering> {
         return somSykdomsvurderingstidslinje(maksDato).segmenter().map { it.verdi }
     }
@@ -35,7 +35,7 @@ data class SykdomGrunnlag(
     fun sykdomsvurderingerVurdertIBehandling(behandlingId: BehandlingId): List<Sykdomsvurdering> {
         return sykdomsvurderinger.filter { it.vurdertIBehandling == behandlingId }
     }
-    
+
     fun historiskeSykdomsvurderinger(behandlingIdForGrunnlag: BehandlingId): List<Sykdomsvurdering> {
         return sykdomsvurderinger.filterNot { it.vurdertIBehandling == behandlingIdForGrunnlag }
     }
@@ -58,13 +58,15 @@ data class SykdomGrunnlag(
         maksDato: LocalDate = Tid.MAKS,
         filter: (sykdomsvurdering: Sykdomsvurdering) -> Boolean
     ): Tidslinje<Sykdomsvurdering> {
-        return sykdomsvurderinger
+        val tidslinje = sykdomsvurderinger
             .filter(filter)
             .groupBy { it.vurdertIBehandling }
             .values
             .sortedBy { it[0].opprettet }
             .flatMap { it.sortedBy { it.vurderingenGjelderFra } }
-            .somTidslinje { Periode(it.vurderingenGjelderFra, it.vurderingenGjelderTil ?: maksDato) }
+            .somTidslinje { Periode(it.vurderingenGjelderFra, it.vurderingenGjelderTil ?: Tid.MAKS) }
             .komprimer()
+
+        return tidslinje.begrensetTil(Periode(tidslinje.helePerioden().fom, maksDato))
     }
 }

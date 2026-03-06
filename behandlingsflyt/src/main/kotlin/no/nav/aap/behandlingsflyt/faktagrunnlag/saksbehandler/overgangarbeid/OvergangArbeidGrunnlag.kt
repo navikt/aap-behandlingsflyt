@@ -10,11 +10,14 @@ data class OvergangArbeidGrunnlag(
     val vurderinger: List<OvergangArbeidVurdering>,
 ) {
     fun gjeldendeVurderinger(maksDato: LocalDate = Tid.MAKS): Tidslinje<OvergangArbeidVurdering> {
-        return vurderinger
+        val tidslinje = vurderinger
             .groupBy { it.vurdertIBehandling }
             .values
             .sortedBy { it[0].opprettet }
             .flatMap { it.sortedBy { it.vurderingenGjelderFra } }
-            .somTidslinje { Periode(it.vurderingenGjelderFra, it.vurderingenGjelderTil ?: maksDato) }
+            .somTidslinje { Periode(it.vurderingenGjelderFra, it.vurderingenGjelderTil ?: Tid.MAKS) }
+            .komprimer()
+        
+        return tidslinje.begrensetTil(Periode(tidslinje.helePerioden().fom, maksDato))
     }
 }
