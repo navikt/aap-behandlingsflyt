@@ -78,7 +78,7 @@ object MottattHendelseUtleder {
             InnsendingType.ANNET_RELEVANT_DOKUMENT ->
                 when (melding) {
                     is AnnetRelevantDokument -> melding.årsakerTilBehandling.map { VurderingsbehovMedPeriode(it.tilVurderingsbehov()) }
-                    else -> error("Melding må være AnnetRelevantDokumentV0")
+                    else -> error("Melding må være AnnetRelevantDokument")
                 }
 
             InnsendingType.KLAGE -> listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTATT_KLAGE))
