@@ -478,7 +478,7 @@ class InstitusjonsoppholdUtlederService(
                 helseOppholdTidslinje.begrensetTil(
                     Periode(
                         fom = helseOppholdTidslinje.minDato(),
-                        tom = barnetilleggTidslinje.minDato().plusDays(1)
+                        tom = barnetilleggTidslinje.minDato().minusDays(1)
                     )
                 ),
                 ignorerVarighetsBegrensning = true
