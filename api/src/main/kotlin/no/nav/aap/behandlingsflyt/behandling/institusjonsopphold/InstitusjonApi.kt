@@ -194,7 +194,7 @@ fun NormalOpenAPIRoute.institusjonApi(
                     val ansattNavnOgEnhet =
                         grunnlag?.helseoppholdvurderinger?.let {
                             ansattInfoService.hentAnsattNavnOgEnhet(
-                                it.vurdertAv
+                                it.vurderinger.first().vurdertAv ?: "ukjent"
                             )
                         }
 
@@ -210,7 +210,7 @@ fun NormalOpenAPIRoute.institusjonApi(
                         vurdertAv =
                             grunnlag?.helseoppholdvurderinger?.let {
                                 VurdertAvResponse(
-                                    ident = it.vurdertAv,
+                                    ident = it.vurderinger.first().vurdertAv ?: "ukjent",
                                     dato = it.vurdertTidspunkt.toLocalDate(),
                                     ansattnavn = ansattNavnOgEnhet?.navn,
                                     enhetsnavn = ansattNavnOgEnhet?.enhet
