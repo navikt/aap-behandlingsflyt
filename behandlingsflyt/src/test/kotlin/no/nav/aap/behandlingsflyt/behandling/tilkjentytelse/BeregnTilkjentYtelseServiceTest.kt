@@ -21,6 +21,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Ut
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.BarnIdentifikator
 import no.nav.aap.behandlingsflyt.help.assertTidslinje
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.test.august
 import no.nav.aap.behandlingsflyt.test.desember
 import no.nav.aap.behandlingsflyt.test.juli
@@ -30,6 +31,7 @@ import no.nav.aap.behandlingsflyt.test.september
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.verdityper.Dagsatser
 import no.nav.aap.komponenter.verdityper.GUnit
 import no.nav.aap.komponenter.verdityper.Prosent
@@ -40,7 +42,9 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.ValueSource
 import java.math.BigDecimal
+import java.time.Instant
 import java.time.LocalDate
+import java.time.YearMonth
 
 class BeregnTilkjentYtelseServiceTest {
 
@@ -1394,6 +1398,136 @@ class BeregnTilkjentYtelseServiceTest {
                 ),
             )
         )
+    }
+
+    @Test
+    fun `barnepensjon skal være heltall og trekkes fra redusert dagsats`() {
+        val fødselsdato = Fødselsdato(LocalDate.of(1985, 1, 2))
+        val beregningsgrunnlag = Grunnlag11_19(
+            grunnlaget = GUnit(BigDecimal(4)),
+            erGjennomsnitt = false,
+            gjennomsnittligInntektIG = GUnit(0),
+            inntekter = emptyList()
+        )
+
+        val periode = Periode(LocalDate.of(2024, 1, 1), LocalDate.of(2024, 1, 31))
+
+        val underveisgrunnlag = underveisgrunnlag(periode)
+
+        val barnetilleggGrunnlag = BarnetilleggGrunnlag(emptyList())
+
+        val samordningsgrunnlag = SamordningGrunnlag(emptySet())
+
+        val samordningUføre = null
+
+        val samordningArbeidsgiver = null
+
+        // Barnepensjon: 10335.66 per måned
+        // Dagsats = 10335.66 * 12 / 260 = 477.03, avrundet til 477 (heltall)
+        val barnepensjonGrunnlag = no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.barnepensjon.BarnepensjonGrunnlag(
+            vurdering = no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.barnepensjon.BarnepensjonVurdering(
+                begrunnelse = "Mottar barnepensjon",
+                perioder = setOf(
+                    no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.barnepensjon.BarnepensjonPeriode(
+                        fom = YearMonth.of(2024, 1),
+                        tom = YearMonth.of(2024, 1),
+                        månedsats = Beløp("10335.66")
+                    )
+                ),
+                vurdertIBehandling = BehandlingId(2),
+                vurdertAv = Bruker("test"),
+                opprettet = Instant.now()
+            )
+        )
+
+        val beregnTilkjentYtelseService = BeregnTilkjentYtelseService(
+            TilkjentYtelseGrunnlag(
+                fødselsdato,
+                beregningsgrunnlag.grunnlaget(),
+                underveisgrunnlag,
+                barnetilleggGrunnlag,
+                samordningsgrunnlag,
+                samordningUføre,
+                samordningArbeidsgiver,
+                barnepensjonGrunnlag,
+            )
+        ).beregnTilkjentYtelse()
+
+        assertThat(beregnTilkjentYtelseService.segmenter()).hasSize(1)
+        val tilkjent = beregnTilkjentYtelseService.segmenter().first().verdi
+
+        // Dagsats = 4 * 0.66 * 111477 / 260 = 1131.92
+        assertThat(tilkjent.dagsats).isEqualTo(Beløp("1131.92"))
+        
+        // Barnepensjon dagsats skal være heltall: 10335.66 * 12 / 260 = 477 
+        assertThat(tilkjent.barnepensjonDagsats).isEqualTo(Beløp(477))
+        
+        // Redusert dagsats = 1131.92 - 477 = 1131.92 - 478 = 655
+        assertThat(tilkjent.redusertDagsats().verdi.toInt()).isEqualTo(655)
+    }
+
+    @Test
+    fun `negativ redusert dagsats skal defaulte til 0`() {
+        val fødselsdato = Fødselsdato(LocalDate.of(1985, 1, 2))
+        val beregningsgrunnlag = Grunnlag11_19(
+            grunnlaget = GUnit(BigDecimal(2)), // Fører til minste årlige ytelse over 25
+            erGjennomsnitt = false,
+            gjennomsnittligInntektIG = GUnit(0),
+            inntekter = emptyList()
+        )
+
+        val periode = Periode(LocalDate.of(2025, 1, 1), LocalDate.of(2025, 1, 31))
+
+        val underveisgrunnlag = underveisgrunnlag(periode)
+
+        val barnetilleggGrunnlag = BarnetilleggGrunnlag(emptyList())
+
+        val samordningsgrunnlag = SamordningGrunnlag(emptySet())
+
+        val samordningUføre = null
+
+        val samordningArbeidsgiver = null
+
+        // Barnepensjon: 25000 per måned
+        // Barnepensjon dagsats = 25000 * 12 / 260 = 1154
+        val barnepensjonGrunnlag = no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.barnepensjon.BarnepensjonGrunnlag(
+            vurdering = no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.barnepensjon.BarnepensjonVurdering(
+                begrunnelse = "Mottar barnepensjon",
+                perioder = setOf(
+                    no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.barnepensjon.BarnepensjonPeriode(
+                        fom = YearMonth.of(2025, 1),
+                        tom = YearMonth.of(2025, 1),
+                        månedsats = Beløp("25000")
+                    )
+                ),
+                vurdertIBehandling = BehandlingId(3),
+                vurdertAv = Bruker("test"),
+                opprettet = Instant.now()
+            )
+        )
+
+        val beregnet = BeregnTilkjentYtelseService(
+            TilkjentYtelseGrunnlag(
+                fødselsdato,
+                beregningsgrunnlag.grunnlaget(),
+                underveisgrunnlag,
+                barnetilleggGrunnlag,
+                samordningsgrunnlag,
+                samordningUføre,
+                samordningArbeidsgiver,
+                barnepensjonGrunnlag,
+            )
+        ).beregnTilkjentYtelse()
+
+        assertThat(beregnet.segmenter()).hasSize(1)
+        val tilkjent = beregnet.segmenter().first().verdi
+
+        // Dagsats = 2.041 * 124 028 / 260 = 973.62
+        assertThat(tilkjent.dagsats).isEqualTo(Beløp("973.62"))
+        
+        assertThat(tilkjent.barnepensjonDagsats).isEqualTo(Beløp(1154))
+        
+        assertThat(tilkjent.redusertDagsats()).isEqualTo(Beløp(0))
     }
 
 }

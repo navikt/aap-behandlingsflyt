@@ -5,6 +5,8 @@ import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.somTidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
+import no.nav.aap.komponenter.verdityper.Beløp.Companion.ANTALL_DESIMALER_I_UTREGNING
+import no.nav.aap.komponenter.verdityper.Beløp.Companion.AVRUNDINGSMETODE
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.verdityper.Tid
 import java.math.BigDecimal
@@ -42,6 +44,11 @@ data class BarnepensjonPeriode(
     }
 
     fun dagsats(): Beløp {
-        return Beløp(månedsats.multiplisert(12 / 260).verdi().setScale(0, RoundingMode.HALF_UP))
+        return Beløp(
+            månedsats.verdi()
+                .multiply(BigDecimal(12))
+                .divide(BigDecimal(260), ANTALL_DESIMALER_I_UTREGNING, AVRUNDINGSMETODE)
+                .setScale(0, RoundingMode.HALF_UP)
+        )
     }
 }
