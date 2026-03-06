@@ -91,8 +91,7 @@ class RefusjonkravSteg private constructor(
     }
 
     private fun skalVurdereRefusjonkravIRevurdering(kontekst: FlytKontekstMedPerioder): Boolean {
-        return kontekst.vurderingType == VurderingType.REVURDERING &&
-                !tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, type()) &&
+        return !tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, type()) &&
                 forrigeBehandlingVarRentAvslag(kontekst)
     }
 
