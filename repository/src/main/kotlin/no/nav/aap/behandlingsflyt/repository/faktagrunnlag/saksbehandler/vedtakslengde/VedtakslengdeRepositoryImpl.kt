@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.vedtak
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeSluttdatoÅrsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeVurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
@@ -55,8 +56,8 @@ class VedtakslengdeRepositoryImpl(private val connection: DBConnection) : Vedtak
         connection.executeBatch(
             """
             insert into vedtakslengde_vurdering (
-                sluttdato, utvidet_med, vurdert_i_behandling, vurdert_av, opprettet, vurderinger_id
-            ) values (?, ?, ?, ?, ?, ?)
+                sluttdato, utvidet_med, vurdert_i_behandling, vurdert_av, opprettet, vurderinger_id, sluttdato_aarsak
+            ) values (?, ?, ?, ?, ?, ?, ?)
             """.trimIndent(),
             vurderinger
         ) {
@@ -67,6 +68,7 @@ class VedtakslengdeRepositoryImpl(private val connection: DBConnection) : Vedtak
                 setString(4, vurdering.vurdertAv.ident)
                 setInstant(5, vurdering.opprettet)
                 setLong(6, vurderingerId)
+                setArray(7, vurdering.sluttdatoÅrsak.map { it.name })
             }
         }
 
@@ -93,7 +95,7 @@ class VedtakslengdeRepositoryImpl(private val connection: DBConnection) : Vedtak
     private fun hentVurderinger(vurderingerId: Long): List<VedtakslengdeVurdering> {
         return connection.queryList(
             """
-            select sluttdato, utvidet_med, vurdert_i_behandling, vurdert_av, opprettet
+            select sluttdato, utvidet_med, vurdert_i_behandling, vurdert_av, opprettet, sluttdato_aarsak
             from vedtakslengde_vurdering
             where vurderinger_id = ?
             order by opprettet
@@ -108,7 +110,8 @@ class VedtakslengdeRepositoryImpl(private val connection: DBConnection) : Vedtak
                     utvidetMed = row.getEnum("utvidet_med"),
                     vurdertIBehandling = BehandlingId(row.getLong("vurdert_i_behandling")),
                     vurdertAv = Bruker(row.getString("vurdert_av")),
-                    opprettet = row.getInstant("opprettet")
+                    opprettet = row.getInstant("opprettet"),
+                    sluttdatoÅrsak = row.getArray("sluttdato_aarsak", String::class).map { VedtakslengdeSluttdatoÅrsak.valueOf(it) }
                 )
             }
         }

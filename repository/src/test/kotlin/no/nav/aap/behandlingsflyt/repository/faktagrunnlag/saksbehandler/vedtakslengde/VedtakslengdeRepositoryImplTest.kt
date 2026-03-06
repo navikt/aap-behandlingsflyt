@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.vedtak
 
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.ÅrMedHverdager
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeSluttdatoÅrsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeVurdering
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.help.sak
@@ -43,7 +44,8 @@ class VedtakslengdeRepositoryImplTest {
         utvidetMed = ÅrMedHverdager.FØRSTE_ÅR,
         vurdertAv = Bruker("Z654321"),
         vurdertIBehandling = behandlingId,
-        opprettet = Instant.parse("2023-01-01T12:00:00Z")
+        opprettet = Instant.parse("2023-01-01T12:00:00Z"),
+        sluttdatoÅrsak = listOf(VedtakslengdeSluttdatoÅrsak.ETT_ÅR_VARIGHET)
     )
 
     @Test
@@ -113,7 +115,8 @@ class VedtakslengdeRepositoryImplTest {
             utvidetMed = ÅrMedHverdager.FØRSTE_ÅR,
             vurdertAv = Bruker("Z654321"),
             vurdertIBehandling = behandling1.id,
-            opprettet = Instant.parse("2023-01-01T12:00:00Z")
+            opprettet = Instant.parse("2023-01-01T12:00:00Z"),
+            sluttdatoÅrsak = listOf(VedtakslengdeSluttdatoÅrsak.ETT_ÅR_VARIGHET)
         )
 
         dataSource.transaction {
@@ -128,7 +131,8 @@ class VedtakslengdeRepositoryImplTest {
             utvidetMed = ÅrMedHverdager.ANDRE_ÅR,
             vurdertAv = Bruker("Z654321"),
             vurdertIBehandling = behandling2.id,
-            opprettet = Instant.parse("2024-01-01T12:00:00Z")
+            opprettet = Instant.parse("2024-01-01T12:00:00Z"),
+            sluttdatoÅrsak = listOf(VedtakslengdeSluttdatoÅrsak.ETT_ÅR_VARIGHET)
         )
 
         dataSource.transaction {

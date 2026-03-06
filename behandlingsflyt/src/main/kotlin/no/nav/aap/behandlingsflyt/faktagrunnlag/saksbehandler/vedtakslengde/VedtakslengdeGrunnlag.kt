@@ -16,8 +16,9 @@ data class VedtakslengdeGrunnlag(
 
 data class VedtakslengdeVurdering(
     val sluttdato: LocalDate,
+    val sluttdatoÅrsak: List<VedtakslengdeSluttdatoÅrsak>,
     val utvidetMed: ÅrMedHverdager,
     val vurdertAv: Bruker,
     val vurdertIBehandling: BehandlingId,
-    val opprettet: Instant
+    val opprettet: Instant,
 )
