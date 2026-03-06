@@ -138,6 +138,17 @@ class SykdomGrunnlagTest {
             }
         )
     }
+    
+    @Test
+    fun `Gjeldende vurderinger skal fungere med tom tidslinje`() {
+        val sykdomsGrunnlag = SykdomGrunnlag(
+            yrkesskadevurdering = null,
+            sykdomsvurderinger = emptyList()
+        )
+
+        assertThat(sykdomsGrunnlag.gjeldendeSykdomsvurderinger())
+            .isEmpty()
+    }
 
     private fun sykdomsvurdering(
         harSkadeSykdomEllerLyte: Boolean = true,

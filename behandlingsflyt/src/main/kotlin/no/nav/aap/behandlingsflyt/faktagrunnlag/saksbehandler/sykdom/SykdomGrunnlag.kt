@@ -67,6 +67,9 @@ data class SykdomGrunnlag(
             .somTidslinje { Periode(it.vurderingenGjelderFra, it.vurderingenGjelderTil ?: Tid.MAKS) }
             .komprimer()
 
-        return tidslinje.begrensetTil(Periode(tidslinje.helePerioden().fom, maksDato))
+        return when {
+            tidslinje.isEmpty() -> tidslinje
+            else -> tidslinje.begrensetTil(Periode(tidslinje.helePerioden().fom, maksDato))
+        }
     }
 }
