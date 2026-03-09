@@ -41,7 +41,9 @@ data class StudentGrunnlag(
             .values
             .sortedBy { it[0].vurdertTidspunkt }
             .flatMap { it.sortedBy { it.fom } }
-            .somTidslinje { Periode(it.fom, it.tom ?: maksDato) }
+            .somTidslinje { Periode(it.fom, it.tom ?: Tid.MAKS) }
+            .komprimer()
+            .begrensetTil(Periode(Tid.MIN, maksDato))
     }
 }
 
