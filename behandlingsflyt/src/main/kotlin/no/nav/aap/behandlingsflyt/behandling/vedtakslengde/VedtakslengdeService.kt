@@ -11,6 +11,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Re
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeSluttdatoÅrsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeVurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
@@ -87,8 +88,8 @@ class VedtakslengdeService(
                     utvidetMed = utvidelse,
                     vurdertAv = SYSTEMBRUKER,
                     vurdertIBehandling = behandlingId,
-                    opprettet = Instant.now(clock)
-                )
+                    opprettet = Instant.now(clock),
+                    sluttdatoÅrsak = listOf(VedtakslengdeSluttdatoÅrsak.ETT_ÅR_VARIGHET))
             )
         } else {
             log.info("Behandling $behandlingId har ingen vedtatt sluttdato, ingen utvidelse nødvendig")
@@ -118,7 +119,8 @@ class VedtakslengdeService(
                     utvidetMed = vedtattUtvidelse ?: ÅrMedHverdager.FØRSTE_ÅR,
                     vurdertAv = SYSTEMBRUKER,
                     vurdertIBehandling = behandlingId,
-                    opprettet = Instant.now(clock)
+                    opprettet = Instant.now(clock),
+                    sluttdatoÅrsak = listOf(VedtakslengdeSluttdatoÅrsak.ETT_ÅR_VARIGHET)
                 )
             )
         }
@@ -193,8 +195,8 @@ class VedtakslengdeService(
                     utvidetMed = ÅrMedHverdager.FØRSTE_ÅR,
                     vurdertAv = SYSTEMBRUKER,
                     vurdertIBehandling = behandlingId,
-                    opprettet = Instant.now(clock)
-                ))
+                    opprettet = Instant.now(clock),
+                sluttdatoÅrsak = listOf(VedtakslengdeSluttdatoÅrsak.ETT_ÅR_VARIGHET)))
             )
         }
     }
