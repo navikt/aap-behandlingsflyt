@@ -44,7 +44,7 @@ class LovvalgOgMedlemskapFlytTest: AbstraktFlytOrkestratorTest(AlleAvskruddUnlea
     }
 
     @Test
-    fun `ved førstegangsbehandling og annet lovvalgsland settes saken på vent`() {
+    fun `ved førstegangsbehandling og annet lovvalgsland hopper behandling rett til foreslå vedtak`() {
         val (sak, behandling) = sendInnFørsteSøknad(
             periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3)),
             søknad = TestSøknader.SØKNAD_INGEN_MEDLEMSKAP
@@ -66,7 +66,7 @@ class LovvalgOgMedlemskapFlytTest: AbstraktFlytOrkestratorTest(AlleAvskruddUnlea
             )
             .medKontekst {
                 assertThat(åpneAvklaringsbehov.size).isEqualTo(1)
-                assertThat(åpneAvklaringsbehov.first().definisjon).isEqualTo(Definisjon.VENTE_PÅ_UTENLANDSK_VIDEREFØRING_AVKLARING)
+                assertThat(åpneAvklaringsbehov.first().definisjon).isEqualTo(Definisjon.FORESLÅ_VEDTAK)
             }
 
         assertThat(oppdatertBehandling.status()).isEqualTo(Status.UTREDES)

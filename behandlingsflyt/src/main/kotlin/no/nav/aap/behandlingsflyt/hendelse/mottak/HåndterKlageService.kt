@@ -16,7 +16,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingService
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
@@ -47,8 +46,8 @@ class HåndterKlageService(
         mottattTidspunkt: LocalDateTime,
         brevkategori: InnsendingType,
         melding: Klage,
-        vurderingsbehov: List<VurderingsbehovMedPeriode>,
     ) {
+        val vurderingsbehov = MottattHendelseUtleder.utledVurderingsbehov(brevkategori, melding)
         when (melding) {
             is KlageV0 -> {
                 val sak = sakService.hent(sakId)
@@ -68,8 +67,6 @@ class HåndterKlageService(
 
                 val behandlingSkrivelås = låsRepository.låsBehandling(behandling.id)
 
-                sakService.oppdaterRettighetsperioden(sakId, brevkategori, mottattTidspunkt.toLocalDate())
-
                 mottaDokumentService.markerSomBehandlet(sakId, behandling.id, referanse)
 
                 prosesserBehandling.triggProsesserBehandling(
@@ -86,10 +83,11 @@ class HåndterKlageService(
         referanse: InnsendingReferanse,
         mottattTidspunkt: LocalDateTime,
         melding: OmgjøringKlageRevurdering,
-        vurderingsbehov: List<VurderingsbehovMedPeriode>,
-        årsakTilOpprettelse: ÅrsakTilOpprettelse,
+        brevkategori: InnsendingType,
     ) {
         log.info("Håndterer mottatt omgjøring etter klage på sak-id $sakId, og referanse $referanse")
+        val vurderingsbehov = MottattHendelseUtleder.utledVurderingsbehov(brevkategori, melding)
+        val årsakTilOpprettelse = MottattHendelseUtleder.utledÅrsakTilOpprettelse(brevkategori, melding)
 
         val sak = sakService.hent(sakId)
 
