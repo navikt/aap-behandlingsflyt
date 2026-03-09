@@ -130,7 +130,9 @@ class VedtakslengdeService(
             val nyeVurderingerFraBehandlingen = vedtakslengdeGrunnlag?.vurderinger?.filter { it.vurdertIBehandling == behandlingId }.orEmpty()
 
             // Det kan kun være en ny manuell vurdering pr behandling
-            val nyManuellVurderingFraBehandlingen = nyeVurderingerFraBehandlingen.filter { it.vurdertManuelt }.take(1)
+            val nyManuellVurderingFraBehandlingen = nyeVurderingerFraBehandlingen.filter { it.vurdertManuelt }.also {
+                require(it.size <= 1) { "Det skal kun være opp til én manuell vurdering per behandling, fant ${it.size} for behandling $behandlingId" }
+            }
 
             vedtakslengdeRepository.lagre(
                 behandlingId = behandlingId,

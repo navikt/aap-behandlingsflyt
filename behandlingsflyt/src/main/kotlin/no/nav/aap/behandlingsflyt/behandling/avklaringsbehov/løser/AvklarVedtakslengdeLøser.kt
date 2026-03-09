@@ -26,7 +26,9 @@ class AvklarVedtakslengdeLøser(
         val nyeVurderingerFraBehandlingen = grunnlag?.vurderinger?.filter { it.vurdertIBehandling == kontekst.behandlingId() }.orEmpty()
 
         // Kun en ny automatisk vurdering per behandling
-        val automatiskVurderingFraBehandlingen = nyeVurderingerFraBehandlingen.filter { it.vurdertAutomatisk }.take(1)
+        val automatiskVurderingFraBehandlingen = nyeVurderingerFraBehandlingen.filter { it.vurdertAutomatisk }.also {
+            require(it.size <= 1) { "Det skal kun være opp til én automatisk vurdering per behandling, fant ${it.size} for behandling ${kontekst.behandlingId()}" }
+        }
 
         // Kun en manuell vurdering per behandling
         val nyManuellVurdering = VedtakslengdeVurdering(
