@@ -31,7 +31,7 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtfører(
             log.info("Gjeldende behandling for sak $sakId er ${sisteGjeldendeBehandling.id}")
 
             // Bruker sisteGjeldendeBehandling.id både for behandlingId og forrigeBehandlingId fordi vi ser på gjeldende behandling
-            val vedtakslengdeUtvidelse = vedtakslengdeService.hentNesteVedtakslengdeUtvidelse(
+            val vedtakslengdeUtvidelse = vedtakslengdeService.hentNesteVedtakslengdeUtvidelseOrdinær(
                 behandlingId = sisteGjeldendeBehandling.id,
                 forrigeBehandlingId = sisteGjeldendeBehandling.id,
             )

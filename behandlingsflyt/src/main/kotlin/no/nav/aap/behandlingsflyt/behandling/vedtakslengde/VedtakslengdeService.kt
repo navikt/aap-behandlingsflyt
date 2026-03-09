@@ -54,7 +54,7 @@ class VedtakslengdeService(
         return underveisRepository.hentSakerMedSisteUnderveisperiodeFørDato(datoForUtvidelse)
     }
 
-    fun hentNesteVedtakslengdeUtvidelse(
+    fun hentNesteVedtakslengdeUtvidelseOrdinær(
         behandlingId: BehandlingId,
         forrigeBehandlingId: BehandlingId?
     ): VedtakslengdeUtvidelse {
@@ -100,7 +100,7 @@ class VedtakslengdeService(
         }
     }
 
-    fun utvidVedtakslengde(
+    fun utvidVedtakslengdeOrdinær(
         behandlingId: BehandlingId,
         forrigeBehandlingId: BehandlingId?,
         vedtakslengdeUtvidelse: VedtakslengdeUtvidelse.Automatisk,

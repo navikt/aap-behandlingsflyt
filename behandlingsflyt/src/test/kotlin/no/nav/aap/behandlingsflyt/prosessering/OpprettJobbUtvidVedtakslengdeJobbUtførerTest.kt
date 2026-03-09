@@ -49,7 +49,7 @@ class OpprettJobbUtvidVedtakslengdeJobbUtførerTest {
         val jobbInputSak = JobbInput(OpprettBehandlingUtvidVedtakslengdeJobbUtfører).forSak(sakId.id)
 
         every { vedtakslengdeService.hentSakerAktuelleForUtvidelseAvVedtakslengde(any()) } returns setOf(sakId)
-        every { vedtakslengdeService.hentNesteVedtakslengdeUtvidelse(behandlingId, behandlingId)} returns VedtakslengdeUtvidelse.Automatisk(
+        every { vedtakslengdeService.hentNesteVedtakslengdeUtvidelseOrdinær(behandlingId, behandlingId)} returns VedtakslengdeUtvidelse.Automatisk(
             forrigeSluttdato = dagensDato,
             nySluttdato = dagensDato.plusYears(1),
         )
@@ -78,7 +78,7 @@ class OpprettJobbUtvidVedtakslengdeJobbUtførerTest {
     @Test
     fun `skal ikke opprette jobber hvis hentNesteVedtakslengdeUtvidelse gir IngenFramtidigOrdinærRettighet`() {
         every { vedtakslengdeService.hentSakerAktuelleForUtvidelseAvVedtakslengde(any()) } returns setOf(sakId)
-        every { vedtakslengdeService.hentNesteVedtakslengdeUtvidelse(behandlingId, behandlingId)} returns VedtakslengdeUtvidelse.IngenFremtidigOrdinærRettighet
+        every { vedtakslengdeService.hentNesteVedtakslengdeUtvidelseOrdinær(behandlingId, behandlingId)} returns VedtakslengdeUtvidelse.IngenFremtidigOrdinærRettighet
         every { behandlingService.finnBehandlingMedSisteFattedeVedtak(sakId) } returns behandlingMedVedtak()
 
         opprettJobbUtvidVedtakslengdeJobbUtfører.utfør(jobbInput)
