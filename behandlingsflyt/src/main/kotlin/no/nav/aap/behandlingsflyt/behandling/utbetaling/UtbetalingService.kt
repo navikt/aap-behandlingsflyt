@@ -253,7 +253,8 @@ class UtbetalingService(
                     barnetilleggsats = detaljer.barnetilleggsats.verdi(),
                     barnetillegg = detaljer.barnetillegg.verdi(),
                     utbetalingsdato = detaljer.utbetalingsdato,
-                    meldeperiode = meldeperiode?.let { MeldeperiodeDto(it.fom, it.tom) }
+                    meldeperiode = meldeperiode?.let { MeldeperiodeDto(it.fom, it.tom) },
+                    barnepensjonDagsats = detaljer.barnepensjonDagsats.verdi()
                 )
             )
         }
