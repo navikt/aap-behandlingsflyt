@@ -153,8 +153,8 @@ class TilkjentYtelseRepositoryImpl(private val connection: DBConnection) :
                                           GRUNNLAGSFAKTOR, GRUNNLAG, ANTALL_BARN, BARNETILLEGGSATS, GRUNNBELOP, 
                                           UTBETALINGSDATO, SAMORDNING_GRADERING, INSTITUSJON_GRADERING, ARBEID_GRADERING,
                                            SAMORDNING_UFORE_GRADERING, SAMORDNING_ARBEIDSGIVER_GRADERING, 
-                                           MELDEPLIKT_GRADERING, MINSTESATS, REDUSERT_DAGSATS)
-            VALUES (?, ?::daterange, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                                           MELDEPLIKT_GRADERING, MINSTESATS, REDUSERT_DAGSATS, BARNEPENSJON_DAGSATS)
+            VALUES (?, ?::daterange, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """.trimIndent()
         ) {
             setParams {
@@ -177,6 +177,7 @@ class TilkjentYtelseRepositoryImpl(private val connection: DBConnection) :
                 setInt(17, tilkjent.graderingGrunnlag.meldepliktGradering.prosentverdi())
                 setEnumName(18, tilkjent.minsteSats)
                 setBigDecimal(19, tilkjent.redusertDagsats().verdi())
+                setBigDecimal(20, tilkjent.barnepensjonDagsats.verdi())
             }
         }
     }
