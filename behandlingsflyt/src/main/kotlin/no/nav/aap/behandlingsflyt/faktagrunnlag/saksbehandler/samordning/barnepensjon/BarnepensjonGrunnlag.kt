@@ -47,8 +47,7 @@ data class BarnepensjonPeriode(
         return Beløp(
             månedsats.verdi()
                 .multiply(BigDecimal(12))
-                .divide(BigDecimal(260), ANTALL_DESIMALER_I_UTREGNING, AVRUNDINGSMETODE)
-                .setScale(0, RoundingMode.HALF_UP)
+                .divide(BigDecimal(260), 0, RoundingMode.HALF_UP)
         )
     }
 }

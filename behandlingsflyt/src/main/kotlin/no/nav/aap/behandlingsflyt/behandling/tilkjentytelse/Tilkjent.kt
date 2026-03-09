@@ -26,6 +26,11 @@ data class Tilkjent(
     val minsteSats: Minstesats,
     private val redusertDagsats: Beløp?
 ) {
+    init {
+        require(barnepensjonDagsats.verdi != barnepensjonDagsats.heltallverdi()) {
+            "Barnepensjon dagsats må være et heltall"
+        }
+    }
 
     /**
      * Hent ut full dagsats etter reduksjon.
