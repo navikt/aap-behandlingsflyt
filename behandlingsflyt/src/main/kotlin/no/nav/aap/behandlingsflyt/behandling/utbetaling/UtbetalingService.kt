@@ -233,7 +233,6 @@ class UtbetalingService(
             tom = this.maxOf { it.periode.tom }
         )
 
-    // TODO: Legg til barnepensjonsats i utbetal
     private fun List<TilkjentYtelsePeriode>.tilTilkjentYtelsePeriodeDtoer(meldeperioder: List<Periode>)  =
         map { segment ->
             val periode = segment.periode
