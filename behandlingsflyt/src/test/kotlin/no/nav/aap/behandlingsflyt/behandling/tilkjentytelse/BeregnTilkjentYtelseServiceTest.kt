@@ -1456,14 +1456,14 @@ class BeregnTilkjentYtelseServiceTest {
         assertThat(beregnTilkjentYtelseService.segmenter()).hasSize(1)
         val tilkjent = beregnTilkjentYtelseService.segmenter().first().verdi
 
-        // Dagsats = 4 * 0.66 * 111477 / 260 = 1131.92
-        assertThat(tilkjent.dagsats).isEqualTo(Beløp("1131.92"))
+        // Dagsats = 4 * 0.66 / 260 * 118 620 = 1204.45
+        assertThat(tilkjent.dagsats).isEqualTo(Beløp("1204.45"))
         
         // Barnepensjon dagsats skal være heltall: 10335.66 * 12 / 260 = 477 
         assertThat(tilkjent.barnepensjonDagsats).isEqualTo(Beløp(477))
         
-        // Redusert dagsats = 1131.92 - 477 = 1131.92 - 478 = 655
-        assertThat(tilkjent.redusertDagsats().verdi.toInt()).isEqualTo(655)
+        // Redusert dagsats = 1204.45 - 477
+        assertThat(tilkjent.redusertDagsats().verdi.toInt()).isEqualTo(727)
     }
 
     @Test
