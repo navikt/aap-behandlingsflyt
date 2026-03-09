@@ -11,7 +11,7 @@ interface InstitusjonsoppholdRepository: Repository {
     fun hent(behandlingId: BehandlingId): InstitusjonsoppholdGrunnlag
     fun lagreOpphold(behandlingId: BehandlingId, institusjonsopphold: List<Institusjonsopphold>)
     fun lagreSoningsVurdering(behandlingId: BehandlingId, vurdertAv: String, soningsvurderinger: List<Soningsvurdering>)
-    fun lagreHelseVurdering(behandlingId: BehandlingId, vurdertAv: String, helseinstitusjonVurderinger: List<HelseinstitusjonVurdering>)
+    fun lagreHelseVurdering(behandlingId: BehandlingId, helseinstitusjonVurderinger: List<HelseinstitusjonVurdering>)
     fun hentVurderingerGruppertPerOpphold(behandlingId: BehandlingId): Map<Periode, List<HelseinstitusjonVurdering>>
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId)
 }
