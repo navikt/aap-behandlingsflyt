@@ -27,7 +27,7 @@ data class Tilkjent(
     private val redusertDagsats: Beløp?
 ) {
     init {
-        require(barnepensjonDagsats.verdi != barnepensjonDagsats.heltallverdi()) {
+        require(barnepensjonDagsats.verdi.toDouble() == barnepensjonDagsats.heltallverdi().toDouble()) {
             "Barnepensjon dagsats må være et heltall"
         }
     }
