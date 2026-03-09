@@ -167,7 +167,6 @@ class InstitusjonsoppholdRepositoryImpl(private val connection: DBConnection) :
                 Helseoppholdvurderinger(
                     id = helseoppholdId,
                     vurderinger = vurderingene,
-                    vurdertAv = row.getString("VURDERT_AV"),
                     vurdertTidspunkt = row.getLocalDateTime("OPPRETTET_TID")
                 )
             }
@@ -279,8 +278,7 @@ class InstitusjonsoppholdRepositoryImpl(private val connection: DBConnection) :
 
     private fun lagreHelseoppholdVurderinger(
         oppholdPersonId: Long?,
-        helseoppholdVurderinger: List<HelseinstitusjonVurdering>,
-        vurdertAv: String
+        helseoppholdVurderinger: List<HelseinstitusjonVurdering>
     ): Long? {
         if (helseoppholdVurderinger.isEmpty()) {
             return null
@@ -313,14 +311,9 @@ class InstitusjonsoppholdRepositoryImpl(private val connection: DBConnection) :
 
         val vurderingerId = connection.executeReturnKey(
             """
-                INSERT INTO HELSEOPPHOLD_VURDERINGER (VURDERT_AV)
-                VALUES (?)
+                INSERT INTO HELSEOPPHOLD_VURDERINGER DEFAULT VALUES
             """.trimIndent()
-        ) {
-            setParams {
-                setString(1, vurdertAv)
-            }
-        }
+        )
         val query = """
         INSERT INTO HELSEOPPHOLD_VURDERING 
         (HELSEOPPHOLD_VURDERINGER_ID, OPPHOLD_ID, KOST_OG_LOSJI, FORSORGER_EKTEFELLE, FASTE_UTGIFTER, BEGRUNNELSE, PERIODE, VURDERT_I_BEHANDLING, VURDERT_AV) 
@@ -345,7 +338,7 @@ class InstitusjonsoppholdRepositoryImpl(private val connection: DBConnection) :
                 setString(7, vurdering.begrunnelse)
                 setPeriode(8, vurdering.periode)
                 setLong(9, vurdering.vurdertIBehandling?.toLong())
-                setString(10, vurdertAv)
+                setString(10, vurdering.vurdertAv)
             }
         }
 
@@ -354,7 +347,6 @@ class InstitusjonsoppholdRepositoryImpl(private val connection: DBConnection) :
 
     override fun lagreHelseVurdering(
         behandlingId: BehandlingId,
-        vurdertAv: String,
         helseinstitusjonVurderinger: List<HelseinstitusjonVurdering>
     ) {
         val eksisterendeGrunnlag = hentHvisEksisterer(behandlingId)
@@ -364,7 +356,7 @@ class InstitusjonsoppholdRepositoryImpl(private val connection: DBConnection) :
         }
 
         val vurderingerId =
-            lagreHelseoppholdVurderinger(eksisterendeGrunnlag?.oppholdene?.id, helseinstitusjonVurderinger, vurdertAv)
+            lagreHelseoppholdVurderinger(eksisterendeGrunnlag?.oppholdene?.id, helseinstitusjonVurderinger)
         connection.execute(
             """
             INSERT INTO OPPHOLD_GRUNNLAG (BEHANDLING_ID, OPPHOLD_PERSON_ID, soning_vurderinger_id, HELSEOPPHOLD_VURDERINGER_ID) VALUES (?, ?, ?, ?)

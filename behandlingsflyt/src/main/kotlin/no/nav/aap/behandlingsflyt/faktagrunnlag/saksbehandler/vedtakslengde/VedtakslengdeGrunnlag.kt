@@ -20,7 +20,8 @@ data class VedtakslengdeVurdering(
     val utvidetMed: ÅrMedHverdager,
     val vurdertAv: Bruker,
     val vurdertIBehandling: BehandlingId,
-    val opprettet: Instant
+    val opprettet: Instant,
+    val begrunnelse: String,
 ) {
     val vurdertManuelt: Boolean get() = !vurdertAutomatisk
     val vurdertAutomatisk: Boolean get() = vurdertAv == SYSTEMBRUKER

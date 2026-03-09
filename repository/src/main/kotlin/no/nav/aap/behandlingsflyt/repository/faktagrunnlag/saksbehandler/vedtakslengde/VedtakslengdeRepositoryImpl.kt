@@ -55,8 +55,8 @@ class VedtakslengdeRepositoryImpl(private val connection: DBConnection) : Vedtak
         connection.executeBatch(
             """
             insert into vedtakslengde_vurdering (
-                sluttdato, utvidet_med, vurdert_i_behandling, vurdert_av, opprettet, vurderinger_id
-            ) values (?, ?, ?, ?, ?, ?)
+                sluttdato, utvidet_med, vurdert_i_behandling, vurdert_av, opprettet, vurderinger_id, begrunnelse
+            ) values (?, ?, ?, ?, ?, ?, ?)
             """.trimIndent(),
             vurderinger
         ) {
@@ -67,6 +67,7 @@ class VedtakslengdeRepositoryImpl(private val connection: DBConnection) : Vedtak
                 setString(4, vurdering.vurdertAv.ident)
                 setInstant(5, vurdering.opprettet)
                 setLong(6, vurderingerId)
+                setString(7, vurdering.begrunnelse)
             }
         }
 
@@ -93,7 +94,7 @@ class VedtakslengdeRepositoryImpl(private val connection: DBConnection) : Vedtak
     private fun hentVurderinger(vurderingerId: Long): List<VedtakslengdeVurdering> {
         return connection.queryList(
             """
-            select sluttdato, utvidet_med, vurdert_i_behandling, vurdert_av, opprettet
+            select sluttdato, utvidet_med, vurdert_i_behandling, vurdert_av, opprettet, begrunnelse
             from vedtakslengde_vurdering
             where vurderinger_id = ?
             order by opprettet
@@ -108,7 +109,8 @@ class VedtakslengdeRepositoryImpl(private val connection: DBConnection) : Vedtak
                     utvidetMed = row.getEnum("utvidet_med"),
                     vurdertIBehandling = BehandlingId(row.getLong("vurdert_i_behandling")),
                     vurdertAv = Bruker(row.getString("vurdert_av")),
-                    opprettet = row.getInstant("opprettet")
+                    opprettet = row.getInstant("opprettet"),
+                    begrunnelse = row.getString("begrunnelse")
                 )
             }
         }

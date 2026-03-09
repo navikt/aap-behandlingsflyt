@@ -87,7 +87,8 @@ class VedtakslengdeService(
                     utvidetMed = utvidelse,
                     vurdertAv = SYSTEMBRUKER,
                     vurdertIBehandling = behandlingId,
-                    opprettet = Instant.now(clock)
+                    opprettet = Instant.now(clock),
+                    begrunnelse = "Automatisk vurdert"
                 )
             )
         } else {
@@ -121,7 +122,8 @@ class VedtakslengdeService(
                 utvidetMed = vedtattUtvidelse ?: ÅrMedHverdager.FØRSTE_ÅR,
                 vurdertAv = SYSTEMBRUKER,
                 vurdertIBehandling = behandlingId,
-                opprettet = Instant.now(clock)
+                opprettet = Instant.now(clock),
+                begrunnelse = "Automatisk vurdert"
             )
 
             val vedtatteVurderinger = vedtattVedtakslengdeGrunnlag?.vurderinger.orEmpty()
@@ -205,7 +207,8 @@ class VedtakslengdeService(
                     utvidetMed = ÅrMedHverdager.FØRSTE_ÅR,
                     vurdertAv = SYSTEMBRUKER,
                     vurdertIBehandling = behandlingId,
-                    opprettet = Instant.now(clock)
+                    opprettet = Instant.now(clock),
+                    begrunnelse = "Automatisk vurdert"
                 ))
             )
         }

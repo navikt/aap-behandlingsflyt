@@ -52,7 +52,6 @@ object InMemoryInstitusjonsoppholdRepository : InstitusjonsoppholdRepository {
 
     override fun lagreHelseVurdering(
         behandlingId: BehandlingId,
-        vurdertAv: String,
         helseinstitusjonVurderinger: List<HelseinstitusjonVurdering>
     ) = synchronized(lock) {
         val eksisterende = memory[behandlingId] ?: InstitusjonsoppholdGrunnlag()
@@ -60,7 +59,6 @@ object InMemoryInstitusjonsoppholdRepository : InstitusjonsoppholdRepository {
             helseoppholdvurderinger = Helseoppholdvurderinger(
                 vurderinger = helseinstitusjonVurderinger,
                 id = idSeq.getAndIncrement(),
-                vurdertAv = vurdertAv,
                 vurdertTidspunkt = LocalDateTime.now(),
             )
         )

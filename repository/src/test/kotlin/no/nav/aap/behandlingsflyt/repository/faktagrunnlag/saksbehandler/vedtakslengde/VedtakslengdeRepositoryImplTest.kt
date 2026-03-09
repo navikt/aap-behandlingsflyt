@@ -43,7 +43,8 @@ class VedtakslengdeRepositoryImplTest {
         utvidetMed = ÅrMedHverdager.FØRSTE_ÅR,
         vurdertAv = Bruker("Z654321"),
         vurdertIBehandling = behandlingId,
-        opprettet = Instant.parse("2023-01-01T12:00:00Z")
+        opprettet = Instant.parse("2023-01-01T12:00:00Z"),
+        begrunnelse = "Automatisk vurdert"
     )
 
     @Test
@@ -113,7 +114,8 @@ class VedtakslengdeRepositoryImplTest {
             utvidetMed = ÅrMedHverdager.FØRSTE_ÅR,
             vurdertAv = Bruker("Z654321"),
             vurdertIBehandling = behandling1.id,
-            opprettet = Instant.parse("2023-01-01T12:00:00Z")
+            opprettet = Instant.parse("2023-01-01T12:00:00Z"),
+            begrunnelse = "Automatisk vurdert"
         )
 
         dataSource.transaction {
@@ -128,7 +130,8 @@ class VedtakslengdeRepositoryImplTest {
             utvidetMed = ÅrMedHverdager.ANDRE_ÅR,
             vurdertAv = Bruker("Z654321"),
             vurdertIBehandling = behandling2.id,
-            opprettet = Instant.parse("2024-01-01T12:00:00Z")
+            opprettet = Instant.parse("2024-01-01T12:00:00Z"),
+            begrunnelse = "Automatisk vurdert"
         )
 
         dataSource.transaction {
