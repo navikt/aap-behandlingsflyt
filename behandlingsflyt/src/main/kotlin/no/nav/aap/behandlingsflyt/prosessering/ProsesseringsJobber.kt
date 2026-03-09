@@ -38,7 +38,6 @@ object ProsesseringsJobber {
             OpprettBehandlingMigrereRettighetsperiodeJobbUtfører,
             SendFagsysteminfoBehovTilTilbakekrevingUtfører,
             SjekkInstitusjonsOppholdJobbUtfører,
-            HåndterUbehandledeDokumenterJobbUtfører,
             HåndterUbehandletDokumentJobbUtfører,
             DigitaliserteMeldekortTilMeldekortBackendJobbUtfører,
             HåndterUbehandledeMeldekortForSakJobbUtfører

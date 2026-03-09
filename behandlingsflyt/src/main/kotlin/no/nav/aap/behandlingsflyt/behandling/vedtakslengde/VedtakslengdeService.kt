@@ -55,7 +55,7 @@ class VedtakslengdeService(
         val vedtattSluttdato = hentVedtattSluttdato(forrigeBehandlingId, vedtakslengdeGrunnlag)
 
         if (vedtattSluttdato != null) {
-            val nesteUtvidelse = hentNesteUtvidelse(vedtakslengdeGrunnlag?.vurdering)
+            val nesteUtvidelse = hentNesteUtvidelse(vedtakslengdeGrunnlag?.gjeldendeVurdering())
             val utvidetSluttdato = vedtattSluttdato.plussEtÅrMedHverdager(nesteUtvidelse)
 
             val harFremtidigRettOrdinær = harFremtidigRettOrdinær(vedtattSluttdato, utvidetSluttdato, behandlingId)
@@ -76,17 +76,19 @@ class VedtakslengdeService(
         val vedtattSluttdato = hentVedtattSluttdato(forrigeBehandlingId, vedtakslengdeGrunnlag)
 
         if (vedtattSluttdato != null) {
-            val forrigeUtvidelse = vedtakslengdeGrunnlag?.vurdering
+            val forrigeUtvidelse = vedtakslengdeGrunnlag?.gjeldendeVurdering()
             val utvidelse = hentNesteUtvidelse(forrigeUtvidelse)
 
             val nySluttdato = vedtattSluttdato.plussEtÅrMedHverdager(utvidelse)
+            val tidligereVurderinger = vedtakslengdeGrunnlag?.vurderinger.orEmpty()
             vedtakslengdeRepository.lagre(
-                behandlingId, VedtakslengdeVurdering(
+                behandlingId, tidligereVurderinger + VedtakslengdeVurdering(
                     sluttdato = nySluttdato,
                     utvidetMed = utvidelse,
                     vurdertAv = SYSTEMBRUKER,
                     vurdertIBehandling = behandlingId,
-                    opprettet = Instant.now(clock)
+                    opprettet = Instant.now(clock),
+                    begrunnelse = "Automatisk vurdert"
                 )
             )
         } else {
@@ -102,21 +104,23 @@ class VedtakslengdeService(
         val vedtattVedtakslengdeGrunnlag =
             forrigeBehandlingId?.let { vedtakslengdeRepository.hentHvisEksisterer(it) }
         val vedtattSluttdato = hentVedtattSluttdato(forrigeBehandlingId, vedtattVedtakslengdeGrunnlag)
-        val vedtattUtvidelse = vedtattVedtakslengdeGrunnlag?.vurdering?.utvidetMed
+        val vedtattUtvidelse = vedtattVedtakslengdeGrunnlag?.gjeldendeVurdering()?.utvidetMed
         val sluttdato = utledSluttdato(behandlingId, rettighetsperiode, vedtattSluttdato)
 
-        val erSluttdatoEndret = vedtattVedtakslengdeGrunnlag == null || vedtattVedtakslengdeGrunnlag.vurdering.sluttdato != sluttdato
+        val erSluttdatoEndret = vedtattVedtakslengdeGrunnlag == null || vedtattVedtakslengdeGrunnlag.gjeldendeVurdering()?.sluttdato != sluttdato
 
         if (erSluttdatoEndret) {
             log.info("Sluttdato endret fra $vedtattSluttdato til $sluttdato for behandling $behandlingId")
 
+            val tidligereVurderinger = vedtattVedtakslengdeGrunnlag?.vurderinger.orEmpty()
             vedtakslengdeRepository.lagre(
-                behandlingId, VedtakslengdeVurdering(
+                behandlingId, tidligereVurderinger + VedtakslengdeVurdering(
                     sluttdato = sluttdato,
                     utvidetMed = vedtattUtvidelse ?: ÅrMedHverdager.FØRSTE_ÅR,
                     vurdertAv = SYSTEMBRUKER,
                     vurdertIBehandling = behandlingId,
-                    opprettet = Instant.now(clock)
+                    opprettet = Instant.now(clock),
+                    begrunnelse = "Automatisk vurdert"
                 )
             )
         }
@@ -186,13 +190,14 @@ class VedtakslengdeService(
 
             // Skal lagre ned vedtakslengde for eksisterende behandlinger som mangler dette
             vedtakslengdeRepository.lagre(
-                behandlingId, VedtakslengdeVurdering(
+                behandlingId, listOf(VedtakslengdeVurdering(
                     sluttdato = sluttdato,
                     utvidetMed = ÅrMedHverdager.FØRSTE_ÅR,
                     vurdertAv = SYSTEMBRUKER,
                     vurdertIBehandling = behandlingId,
-                    opprettet = Instant.now(clock)
-                )
+                    opprettet = Instant.now(clock),
+                    begrunnelse = "Automatisk vurdert"
+                ))
             )
         }
     }
@@ -203,7 +208,7 @@ class VedtakslengdeService(
     private fun hentVedtattSluttdato(forrigeBehandlingId: BehandlingId?, vedtakslengdeGrunnlag: VedtakslengdeGrunnlag?): LocalDate? {
         val vedtattUnderveis = forrigeBehandlingId?.let { underveisRepository.hentHvisEksisterer(it) }
         val sluttdatoSisteVedtatteUnderveis = vedtattUnderveis?.perioder?.maxByOrNull { it.periode.tom }?.periode?.tom
-        val sluttdatoSisteVedtatteVedtakslengdeVurdering = vedtakslengdeGrunnlag?.vurdering?.sluttdato
+        val sluttdatoSisteVedtatteVedtakslengdeVurdering = vedtakslengdeGrunnlag?.gjeldendeVurdering()?.sluttdato
 
         return listOfNotNull(sluttdatoSisteVedtatteUnderveis, sluttdatoSisteVedtatteVedtakslengdeVurdering).maxOrNull()
     }
