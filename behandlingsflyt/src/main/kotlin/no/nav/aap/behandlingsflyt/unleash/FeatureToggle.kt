@@ -14,7 +14,6 @@ enum class BehandlingsflytFeature : FeatureToggle {
     ForlengelseIManuellBehandling,
     InstitusjonsoppholdJobb,
     TrekkSoeknadOpprettetFraLegeerklaering,
-    UbehandledeMeldekortJobb,
     VirksomhetsEtablering,
     KvalitetssikringVed2213,
     tilbakekrevingsOppgaverTilOppgave,
