@@ -313,14 +313,9 @@ class InstitusjonsoppholdRepositoryImpl(private val connection: DBConnection) :
 
         val vurderingerId = connection.executeReturnKey(
             """
-                INSERT INTO HELSEOPPHOLD_VURDERINGER (VURDERT_AV)
-                VALUES (?)
+                INSERT INTO HELSEOPPHOLD_VURDERINGER DEFAULT VALUES
             """.trimIndent()
-        ) {
-            setParams {
-                setString(1, vurdertAv)
-            }
-        }
+        )
         val query = """
         INSERT INTO HELSEOPPHOLD_VURDERING 
         (HELSEOPPHOLD_VURDERINGER_ID, OPPHOLD_ID, KOST_OG_LOSJI, FORSORGER_EKTEFELLE, FASTE_UTGIFTER, BEGRUNNELSE, PERIODE, VURDERT_I_BEHANDLING, VURDERT_AV) 
