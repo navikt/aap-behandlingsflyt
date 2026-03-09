@@ -13,7 +13,7 @@ public sealed interface Meldekort : Melding {
 public data class MeldekortV0(
     public val harDuArbeidet: Boolean,
     public val timerArbeidPerPeriode: List<ArbeidIPeriodeV0>,
-    public val fravær: List<FraværIPeriodeV0>? = null,
+    public val fravær: List<FraværForDagV0>? = null,
 ) : Meldekort {
 
     init {
@@ -88,7 +88,7 @@ public data class ArbeidIPeriodeV0(
     }
 }
 
-public data class FraværIPeriodeV0(
+public data class FraværForDagV0(
     val dato: LocalDate,
     val fraværÅrsak: FraværÅrsakV0,
 )

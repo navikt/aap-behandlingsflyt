@@ -5,9 +5,11 @@ import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAkt
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetVurdering.Vilkårsvurdering.UNNTAK_INNTIL_EN_DAG
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetVurdering.Vilkårsvurdering.UNNTAK_STERKE_VELFERDSGRUNNER
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetVurdering.Vilkårsvurdering.UNNTAK_SYKDOM_ELLER_SKADE
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.FraværForDag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.FraværÅrsak
 import no.nav.aap.komponenter.tidslinje.Segment
-import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
 import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.tidslinje.somTidslinje
 import no.nav.aap.komponenter.type.Periode
 
 private const val KVOTE_KALENDERÅR = 10
@@ -22,7 +24,14 @@ private const val KVOTE_KALENDERÅR = 10
 class FraværFastsattAktivitetRegel : UnderveisRegel {
     companion object {
         private val gyldigeGrunner = listOf(
-            Grunn.STERKE_VELFERDSGRUNNER, Grunn.SYKDOM_ELLER_SKADE
+//            STERKE_VELFERDSGRUNNER, // TODO denne eller alle under?
+            FraværÅrsak.OMSORG_FØRSTE_SKOLEDAG_TILVENNING_ELLER_ANNEN_OPPFØLGING_BARN,
+            FraværÅrsak.OMSORG_PLEIE_I_HJEMMET_AV_NÆR_PÅRØRENDE,
+            FraværÅrsak.OMSORG_DØDSFALL_I_FAMILIE_ELLER_VENNEKRETS,
+            FraværÅrsak.OMSORG_MEDDOMMER_ELLER_ANDRE_OFFENTLIGE_PLIKTER,
+            FraværÅrsak.OMSORG_ANNEN_STERK_GRUNN,
+
+            FraværÅrsak.SYKDOM_ELLER_SKADE,
         )
     }
 
@@ -31,15 +40,14 @@ class FraværFastsattAktivitetRegel : UnderveisRegel {
             "kan ikke vurdere utenfor periode for vurdering fordi meldeperioden ikke er definert"
         }
 
-        val tidslinje = input.aktivitetspliktGrunnlag.tidslinje(PARAGRAF_11_8)
+        val tidslinje: Tidslinje<FraværForDag> =
+            input.meldekort
+                .sortedBy { it.mottattTidspunkt } // somTidslinje vil overskrive tidligere verdier
+                .flatMap { it.fravær }.somTidslinje { Periode(it.dato, it.dato) }
 
-        require(tidslinje.segmenter().all { it.verdi.brudd.bruddType in relevanteBrudd }) {
-            "11-8 kan bare registreres med bruddtyper ${relevanteBrudd.joinToString(", ")}"
-        }
-
-        //Første brudd i meldeperioden teller ikke i årskvote
-        //Deler opp på meldeperiode først for å finne første i meldeperioden
-        //Dette brukes for å regne ut antall brudd per kalenderår
+        // Første brudd i meldeperioden teller ikke i årskvote
+        // Deler opp på meldeperiode først for å finne første i meldeperioden
+        // Dette brukes for å regne ut antall brudd per kalenderår
         val bruddTidslinjeMedFørsteFraværIdentifisert: Tidslinje<AktivitetspliktSteg1> =
             tidslinjeMedFørsteFraværIdentifisert(resultat, tidslinje)
 
@@ -53,7 +61,7 @@ class FraværFastsattAktivitetRegel : UnderveisRegel {
 
     private fun tidslinjeMedFørsteFraværIdentifisert(
         resultat: Tidslinje<Vurdering>,
-        tidslinje: Tidslinje<AktivitetspliktRegistrering>,
+        tidslinje: Tidslinje<FraværForDag>,
     ): Tidslinje<AktivitetspliktSteg1> {
         return groupByMeldeperiode(resultat, tidslinje)
             .flatMap { meldeperiodenSegment ->
@@ -61,21 +69,34 @@ class FraværFastsattAktivitetRegel : UnderveisRegel {
             }
     }
 
-    private fun vurderMeldeperiode(meldeperioden: Tidslinje<AktivitetspliktRegistrering>) =
+    private fun groupByMeldeperiode(
+        resultat: Tidslinje<Vurdering>,
+        tidslinje: Tidslinje<FraværForDag>,
+    ): Tidslinje<Tidslinje<FraværForDag>> {
+        // TODO trolig en annen måte for dette nå
+        return tidslinje.splittOppIPerioder(resultat.map { vurdering ->
+            Periode(
+                fom = maxOf(vurdering.meldeperiode().fom, resultat.minDato()),
+                tom = minOf(vurdering.meldeperiode().tom, resultat.maxDato()),
+            )
+        }.komprimer().segmenter().map { it.verdi })
+    }
+
+    private fun vurderMeldeperiode(meldeperioden: Tidslinje<FraværForDag>) =
         meldeperioden.flatMap { bruddSegment ->
             vurderMeldeperiode(meldeperioden, bruddSegment.periode, bruddSegment.verdi)
         }
 
     private fun vurderMeldeperiode(
-        meldeperioden: Tidslinje<AktivitetspliktRegistrering>,
+        meldeperioden: Tidslinje<FraværForDag>,
         periode: Periode,
-        dokument: AktivitetspliktRegistrering,
+        dokument: FraværForDag,
     ): Tidslinje<AktivitetspliktSteg1> {
         val inntilEnDagUnntak = meldeperioden.segmenter().firstOrNull {
-            it.verdi.grunn !in gyldigeGrunner
+            it.verdi.fraværÅrsak !in gyldigeGrunner
         }?.verdi
 
-        val harInntilEnDagUnntak = inntilEnDagUnntak?.metadata?.id == dokument.metadata.id
+        val harInntilEnDagUnntak = inntilEnDagUnntak == dokument
         return if (harInntilEnDagUnntak) {
             val førsteFravær = Periode(periode.fom, periode.fom)
             val periodene = listOf(førsteFravær) + periode.minus(førsteFravær)
@@ -108,8 +129,8 @@ class FraværFastsattAktivitetRegel : UnderveisRegel {
             val vurdering = vurderingSegment.verdi
             val dokument = vurdering.dokument
 
-            when (dokument.grunn) {
-                SYKDOM_ELLER_SKADE ->
+            when (dokument.fraværÅrsak) {
+                FraværÅrsak.SYKDOM_ELLER_SKADE ->
                     Tidslinje(
                         vurderingSegment.periode,
                         FraværFastsattAktivitetVurdering(
@@ -118,7 +139,11 @@ class FraværFastsattAktivitetRegel : UnderveisRegel {
                         )
                     )
 
-                STERKE_VELFERDSGRUNNER -> {
+                FraværÅrsak.OMSORG_FØRSTE_SKOLEDAG_TILVENNING_ELLER_ANNEN_OPPFØLGING_BARN,
+                FraværÅrsak.OMSORG_PLEIE_I_HJEMMET_AV_NÆR_PÅRØRENDE,
+                FraværÅrsak.OMSORG_DØDSFALL_I_FAMILIE_ELLER_VENNEKRETS,
+                FraværÅrsak.OMSORG_MEDDOMMER_ELLER_ANDRE_OFFENTLIGE_PLIKTER,
+                FraværÅrsak.OMSORG_ANNEN_STERK_GRUNN -> {
                     (0..<vurderingSegment.periode.antallDager()).map { periodeOffset ->
                         kalenderårskvote += 1
                         val dag = vurderingSegment.periode.fom.plusDays(periodeOffset.toLong())
@@ -135,9 +160,7 @@ class FraværFastsattAktivitetRegel : UnderveisRegel {
                         .komprimer()
                 }
 
-                RIMELIG_GRUNN,
-                BIDRAR_AKTIVT,
-                INGEN_GYLDIG_GRUNN ->
+                FraværÅrsak.ANNET ->
                     Tidslinje(
                         vurderingSegment.periode,
                         FraværFastsattAktivitetVurdering(
@@ -151,14 +174,7 @@ class FraværFastsattAktivitetRegel : UnderveisRegel {
 
 
     class AktivitetspliktSteg1(
-        val dokument: AktivitetspliktRegistrering,
+        val dokument: FraværForDag,
         val inntilEnDagUnntak: Boolean,
     )
-
-    enum class Grunn {
-        SYKDOM_ELLER_SKADE,
-        STERKE_VELFERDSGRUNNER,
-        RIMELIG_GRUNN,
-        INGEN_GYLDIG_GRUNN,
-    }
 }

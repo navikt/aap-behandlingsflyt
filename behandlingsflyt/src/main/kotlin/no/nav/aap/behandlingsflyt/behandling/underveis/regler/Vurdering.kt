@@ -38,6 +38,10 @@ data class Vurdering(
         return copy(meldepliktVurdering = meldepliktVurdering)
     }
 
+    fun leggTilAktivitetspliktVurdering(fraværFastsattAktivitetVurdering: FraværFastsattAktivitetVurdering): Vurdering {
+        return copy(fraværFastsattAktivitetVurdering = fraværFastsattAktivitetVurdering)
+    }
+
     fun leggTilGrenseverdi(grenseverdi: Prosent): Vurdering {
         return copy(grenseverdi = grenseverdi)
     }

@@ -108,7 +108,8 @@ class TilkjentYtelseApiTest : BaseApiTest() {
                                 TimerArbeid(BigDecimal("10.0"))
                             )
                         ),
-                        mottattTidspunkt = LocalDate.parse("2025-08-07").atTime(9, 0)
+                        mottattTidspunkt = LocalDate.parse("2025-08-07").atTime(9, 0),
+                        fravær = emptySet()
                     ),
                     Meldekort(
                         journalpostId = JournalpostId("1234567810"),
@@ -121,7 +122,8 @@ class TilkjentYtelseApiTest : BaseApiTest() {
                                 TimerArbeid(BigDecimal("11.0"))
                             )
                         ),
-                        mottattTidspunkt = LocalDate.parse("2025-08-07").atTime(10, 0)
+                        mottattTidspunkt = LocalDate.parse("2025-08-07").atTime(10, 0),
+                        fravær = emptySet()
                     ),
                 )
             )

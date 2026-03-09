@@ -7,6 +7,7 @@ import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAkt
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetVurdering.Vilkårsvurdering.UNNTAK_INNTIL_EN_DAG
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetVurdering.Vilkårsvurdering.UNNTAK_STERKE_VELFERDSGRUNNER
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetVurdering.Vilkårsvurdering.UNNTAK_SYKDOM_ELLER_SKADE
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.FraværForDag
 
 /** Den ferdige vurderingen av § 11-8 "Fravær fra fastsatt aktivitet".
  *
@@ -19,6 +20,7 @@ import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAkt
  * - [Forskriftens § 3](https://lovdata.no/forskrift/2017-12-13-2100/§3)
  */
 data class FraværFastsattAktivitetVurdering(
+    val dokument: FraværForDag,
     /** Er vilkårene for reduksjon etter § 11-8 oppfylt? */
     val vilkårsvurdering: Vilkårsvurdering,
 ) {
