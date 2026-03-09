@@ -99,6 +99,7 @@ data class SamordningArbeidsgiverGrunnlagDTO(
     val harTilgangTilÅSaksbehandle: Boolean,
     val vurdering: SamordningArbeidsgiverVurderingDTO?,
     val historiskeVurderinger: List<SamordningArbeidsgiverVurderingDTO>? = emptyList(),
+    val harFåttEkstrautbetalingFraArbeidsgiver: Boolean? = null
 )
 
 data class SamordningArbeidsgiverVurderingDTO(
