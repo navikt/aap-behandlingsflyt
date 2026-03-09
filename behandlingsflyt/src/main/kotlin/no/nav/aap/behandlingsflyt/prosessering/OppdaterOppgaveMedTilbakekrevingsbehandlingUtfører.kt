@@ -1,13 +1,9 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
 import no.nav.aap.behandlingsflyt.behandling.tilbakekrevingsbehandling.TilbakekrevingRepository
-import no.nav.aap.behandlingsflyt.behandling.tilbakekrevingsbehandling.tilAvklaringsBehov
 import no.nav.aap.behandlingsflyt.behandling.tilbakekrevingsbehandling.tilKontrakt
 import no.nav.aap.behandlingsflyt.hendelse.oppgavestyring.OppgavestyringGateway
-import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.AvklaringsbehovHendelseDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.TilbakekrevingsbehandlingOppdatertHendelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
@@ -19,7 +15,7 @@ import no.nav.aap.motor.JobbInput
 import no.nav.aap.motor.JobbUtfører
 import no.nav.aap.motor.ProvidersJobbSpesifikasjon
 import org.slf4j.LoggerFactory
-import java.util.UUID
+import java.util.*
 
 class OppdaterOppgaveMedTilbakekrevingsbehandlingUtfører(
     val oppgaveStyringGateway: OppgavestyringGateway,
@@ -50,11 +46,11 @@ class OppdaterOppgaveMedTilbakekrevingsbehandlingUtfører(
             ),
             behandlingStatus = tilbakekrevingsbehandling.behandlingsstatus.tilKontrakt(),
             sakOpprettet = tilbakekrevingsbehandling.sakOpprettet,
-            avklaringsbehov = tilbakekrevingsbehandling.behandlingsstatus.tilAvklaringsBehov(),
             totaltFeilutbetaltBeløp = tilbakekrevingsbehandling.totaltFeilutbetaltBeløp.verdi,
             saksbehandlingURL = tilbakekrevingsbehandling.saksbehandlingURL.toString()
         )
 
+        log.info("Kaller oppgavestyring for å varsle om oppdatering av tilbakekrevingsbehandling for sak: ${sak.saksnummer}")
         oppgaveStyringGateway.varsleTilbakekrevingHendelse(tilbakekrevingsbehandlingOppdatertHendelse)
     }
 
