@@ -24,6 +24,7 @@ enum class BehandlingsflytFeature : FeatureToggle {
     BekreftVurderingerOppfolging,
     LagreStansOgOpphor,
     SamordningBarnepensjon,
+    RefusjonkravIRevurdering
     ;
 
     override fun key(): String = name
