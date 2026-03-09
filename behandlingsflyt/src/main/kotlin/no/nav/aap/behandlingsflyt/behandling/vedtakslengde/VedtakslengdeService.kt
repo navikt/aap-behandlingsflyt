@@ -67,10 +67,10 @@ class VedtakslengdeService(
         val vedtattSluttdatoUtvidetMedEttÅr = vedtattSluttdato.plussEtÅrMedHverdager(nesteÅrligeUtvidelse)
         val periodeMedFremtidigOrdinærRettighet = hentNestePeriodeMedFremtidigOrdinærRettighet(vedtattSluttdato, behandlingId)
 
-        if (periodeMedFremtidigOrdinærRettighet != null) {
+        return if (periodeMedFremtidigOrdinærRettighet != null) {
             if (periodeMedFremtidigOrdinærRettighet.tom > vedtattSluttdatoUtvidetMedEttÅr) {
                 // Har over ett år gjenstående med ordinær rettighet, kan utvide med et helt år
-                return VedtakslengdeUtvidelse.Automatisk(
+                VedtakslengdeUtvidelse.Automatisk(
                     forrigeSluttdato = vedtattSluttdato,
                     nySluttdato = vedtattSluttdatoUtvidetMedEttÅr,
                 )
@@ -82,13 +82,13 @@ class VedtakslengdeService(
                 if (unleashGateway.isEnabled(BehandlingsflytFeature.UtvidVedtakslengdeUnderEttAr)
                     && gyldigForAutomatiskUtvidelseAvVedtakslengde(avslagsårsaker)) {
                     // Har avslagsårsaker som er støttet for automatisk utvidelse
-                    return VedtakslengdeUtvidelse.Automatisk(
+                    VedtakslengdeUtvidelse.Automatisk(
                         forrigeSluttdato = vedtattSluttdato,
                         nySluttdato = periodeMedFremtidigOrdinærRettighet.tom,
                         avslagsårsaker = avslagsårsaker,
                     )
                 } else {
-                    return VedtakslengdeUtvidelse.Manuell(
+                    VedtakslengdeUtvidelse.Manuell(
                         forrigeSluttdato = vedtattSluttdato,
                         nySluttdato = periodeMedFremtidigOrdinærRettighet.tom,
                         avslagsårsaker = avslagsårsaker,
@@ -96,7 +96,7 @@ class VedtakslengdeService(
                 }
             }
         } else {
-            return VedtakslengdeUtvidelse.IngenFremtidigOrdinærRettighet
+            VedtakslengdeUtvidelse.IngenFremtidigOrdinærRettighet
         }
     }
 
