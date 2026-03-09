@@ -416,7 +416,7 @@ object Revurdering : BehandlingType {
                 steg = VedtakslengdeSteg,
                 informasjonskrav = listOf(VedtakslengdeInformasjonskrav),
                 vurderingsbehovRelevanteForSteg = listOf(
-                    Vurderingsbehov.UTVID_VEDTAKSLENGDE_MANUELL
+                    Vurderingsbehov.VEDTAKSLENGDE_MANUELT
                 )
             )
             .medSteg(steg = UnderveisSteg)

@@ -56,7 +56,7 @@ class VedtakslengdeSteg(
                                 tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, type()) -> false
                                 kontekst.vurderingsbehovRelevanteForSteg.isEmpty() -> false
                                 else ->
-                                    Vurderingsbehov.UTVID_VEDTAKSLENGDE_MANUELL in kontekst.vurderingsbehovRelevanteForSteg
+                                    Vurderingsbehov.VEDTAKSLENGDE_MANUELT in kontekst.vurderingsbehovRelevanteForSteg
                             }
                         },
                         erTilstrekkeligVurdert = { true },

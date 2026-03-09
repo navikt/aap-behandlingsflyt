@@ -30,7 +30,7 @@ enum class Vurderingsbehov {
     REVURDER_SAMORDNING_TJENESTEPENSJON,          // Samordning tjenestepensjon
     G_REGULERING,
     UTVID_VEDTAKSLENGDE, // Skal kjøre igjennom behandlinger uten å trigge avklaringsbehov og vilkårsvurderinger
-    UTVID_VEDTAKSLENGDE_MANUELL,
+    VEDTAKSLENGDE_MANUELT,
     MIGRER_RETTIGHETSPERIODE, // Skal kjøre igjennom behandlinger uten å trigge avklaringsbehov
     LOVVALG_OG_MEDLEMSKAP,      // Lovvalg og medlemskap
     FORUTGAENDE_MEDLEMSKAP,     // Forutgående medlemskap
@@ -135,7 +135,7 @@ fun EksponertÅrsak.tilVurderingsbehov() =
         EksponertÅrsak.DØDSFALL_BRUKER -> Vurderingsbehov.DØDSFALL_BRUKER
         EksponertÅrsak.DØDSFALL_BARN -> Vurderingsbehov.DØDSFALL_BARN
         EksponertÅrsak.UTVID_VEDTAKSLENGDE -> Vurderingsbehov.UTVID_VEDTAKSLENGDE
-        EksponertÅrsak.UTVID_VEDTAKSLENGDE_MANUELL -> Vurderingsbehov.UTVID_VEDTAKSLENGDE_MANUELL
+        EksponertÅrsak.VEDTAKSLENGDE_MANUELT -> Vurderingsbehov.VEDTAKSLENGDE_MANUELT
         EksponertÅrsak.MIGRER_RETTIGHETSPERIODE -> Vurderingsbehov.MIGRER_RETTIGHETSPERIODE
         EksponertÅrsak.BARNETILLEGG_SATS_REGULERING -> Vurderingsbehov.BARNETILLEGG_SATS_REGULERING
         EksponertÅrsak.REVURDER_SYKESTIPEND -> Vurderingsbehov.REVURDER_SYKESTIPEND

@@ -31,6 +31,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.Vedt
 import no.nav.aap.behandlingsflyt.flyt.TestSøknader.SØKNAD_INGEN_MEDLEMSKAP
 import no.nav.aap.behandlingsflyt.integrasjon.defaultGatewayProvider
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.prosessering.OpprettJobbUtvidVedtakslengdeJobbUtfører
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.underveis.UnderveisRepositoryImpl
@@ -980,50 +981,15 @@ class AvklarVedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(AvklarVedtakslen
     private val clock = fixedClock(1 desember 2025)
 
     @Test
-    fun `skal trigge avklaringsbehov for vedtakslengde i revurdering når vurderingsbehov UTVID_VEDTAKSLENGDE_MANUELT er lagt til`() {
-        val sak = happyCaseFørstegangsbehandling(LocalDate.now(clock))
-        val automatiskSluttdato = sak.rettighetsperiode.fom.plussEtÅrMedHverdager(ÅrMedHverdager.FØRSTE_ÅR)
-
-        dataSource.transaction { connection ->
-            val behandling = BehandlingRepositoryImpl(connection).finnFørstegangsbehandling(sak.id)
-            val vedtakslengdeGrunnlag = VedtakslengdeRepositoryImpl(connection).hentHvisEksisterer(behandling.id)
-            assertThat(vedtakslengdeGrunnlag?.gjeldendeVurdering()?.sluttdato).isEqualTo(automatiskSluttdato)
-            assertThat(vedtakslengdeGrunnlag?.gjeldendeVurdering()?.vurdertAutomatisk).isTrue
-        }
-
-        val nyManuellSluttdato = automatiskSluttdato.plussEtÅrMedHverdager(ÅrMedHverdager.ANDRE_ÅR)
-        sak.opprettManuellRevurdering(
-                no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.UTVID_VEDTAKSLENGDE_MANUELL
-            )
-            .medKontekst {
-                assertThat(åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
-                    .contains(Definisjon.AVKLAR_VEDTAKSLENGDE)
-            }
-            .løsAvklaringsBehov(
-                AvklarVedtakslengdeLøsning(
-                    vedtakslengdeVurdering = VedtakslengdeVurderingDto(
-                        // Overstyrer til 15 måneder
-                        sluttdato = nyManuellSluttdato,
-                        begrunnelse = "Utvidet vedtakslengde manuelt"
-                    )
-                )
-            )
-            .medKontekst {
-                val vedtasklengdeRepository: VedtakslengdeRepository = repositoryProvider.provide()
-                val vedtakslengdeGrunnlag = vedtasklengdeRepository.hentHvisEksisterer(this.behandling.id)
-                assertThat(vedtakslengdeGrunnlag?.vurderinger?.size).isEqualTo(2)
-                assertThat(vedtakslengdeGrunnlag?.gjeldendeVurdering()?.sluttdato).isEqualTo(nyManuellSluttdato)
-                assertThat(vedtakslengdeGrunnlag?.gjeldendeVurdering()?.vurdertManuelt).isTrue
-            }
-    }
-
-    @Test
-    fun `skal kunne overstyre automatisk vurdering for vedtakslengde med manuell vurdering ved førstegangsbehandling`() {
+    fun `skal trigge avklaringsbehov for vedtakslengde når vurderingsbehov VEDTAKSLENGDE_MANUELT er lagt til i førstegangsbehandling`() {
         val søknadstidspunkt = LocalDateTime.now(clock)
         val (sak, førstegangsbehandling) = sendInnFørsteSøknad(mottattTidspunkt = søknadstidspunkt)
         val startDato = sak.rettighetsperiode.fom
-        val forventetSluttdato = startDato.plussEtÅrMedHverdager(ÅrMedHverdager.FØRSTE_ÅR)
+
+        sak.leggTilVurderingsbehov(førstegangsbehandling.referanse, listOf(Vurderingsbehov.VEDTAKSLENGDE_MANUELT))
+
         val manueltOverstyrtSluttdato = startDato.plusMonths(15)
+        val manueltOverstyrtBegrunnelse = "Vurdert vedtakslengde manuelt"
 
         førstegangsbehandling
             .løsSykdom(startDato, erOppfylt = true)
@@ -1038,13 +1004,20 @@ class AvklarVedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(AvklarVedtakslen
             .medKontekst {
                 val vedtasklengdeRepository: VedtakslengdeRepository = repositoryProvider.provide()
                 val vedtakslengdeGrunnlag = vedtasklengdeRepository.hentHvisEksisterer(this.behandling.id)
-                // Ett år som forventet
-                assertThat(vedtakslengdeGrunnlag?.gjeldendeVurdering()?.sluttdato).isEqualTo(forventetSluttdato)
+
+                assertThat(vedtakslengdeGrunnlag).isNotNull
+                assertThat(vedtakslengdeGrunnlag?.vurderinger?.size).isEqualTo(1)
+                assertThat(vedtakslengdeGrunnlag?.gjeldendeVurdering()?.sluttdato).isEqualTo(startDato.plussEtÅrMedHverdager(ÅrMedHverdager.FØRSTE_ÅR))
+                assertThat(vedtakslengdeGrunnlag?.gjeldendeVurdering()?.begrunnelse).isEqualTo("Automatisk vurdert")
+                assertThat(vedtakslengdeGrunnlag?.gjeldendeVurdering()?.vurdertAutomatisk).isTrue
+            }
+            .medKontekst {
+                assertThat(åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
+                    .contains(Definisjon.AVKLAR_VEDTAKSLENGDE)
             }
             .løsAvklaringsBehov(
                 AvklarVedtakslengdeLøsning(
                     vedtakslengdeVurdering = VedtakslengdeVurderingDto(
-                        // Overstyrer til 15 måneder
                         sluttdato = manueltOverstyrtSluttdato,
                         begrunnelse = "Vurdert vedtakslengde manuelt"
                     )
@@ -1060,6 +1033,99 @@ class AvklarVedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(AvklarVedtakslen
                 assertThat(vedtakslengdeGrunnlag).isNotNull
                 assertThat(vedtakslengdeGrunnlag?.vurderinger?.size).isEqualTo(2)
                 assertThat(vedtakslengdeGrunnlag?.gjeldendeVurdering()?.sluttdato).isEqualTo(manueltOverstyrtSluttdato)
+                assertThat(vedtakslengdeGrunnlag?.gjeldendeVurdering()?.begrunnelse).isEqualTo(manueltOverstyrtBegrunnelse)
+                assertThat(vedtakslengdeGrunnlag?.gjeldendeVurdering()?.vurdertManuelt).isTrue
+            }
+    }
+
+    @Test
+    fun `skal trigge avklaringsbehov for vedtakslengde når vurderingsbehov VEDTAKSLENGDE_MANUELT er lagt til i revurdering`() {
+        val sak = happyCaseFørstegangsbehandling(LocalDate.now(clock))
+        val automatiskSluttdato = sak.rettighetsperiode.fom.plussEtÅrMedHverdager(ÅrMedHverdager.FØRSTE_ÅR)
+
+        dataSource.transaction { connection ->
+            val behandling = BehandlingRepositoryImpl(connection).finnFørstegangsbehandling(sak.id)
+            val vedtakslengdeGrunnlag = VedtakslengdeRepositoryImpl(connection).hentHvisEksisterer(behandling.id)
+            assertThat(vedtakslengdeGrunnlag?.gjeldendeVurdering()?.sluttdato).isEqualTo(automatiskSluttdato)
+            assertThat(vedtakslengdeGrunnlag?.gjeldendeVurdering()?.vurdertAutomatisk).isTrue
+        }
+
+        val nyManuellSluttdato = automatiskSluttdato.plussEtÅrMedHverdager(ÅrMedHverdager.ANDRE_ÅR)
+        val nyBegrunnelse = "Utvidet vedtakslengde manuelt"
+
+        sak.opprettManuellRevurdering(
+                Vurderingsbehov.VEDTAKSLENGDE_MANUELT
+            )
+            .medKontekst {
+                assertThat(åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
+                    .contains(Definisjon.AVKLAR_VEDTAKSLENGDE)
+            }
+            .løsAvklaringsBehov(
+                AvklarVedtakslengdeLøsning(
+                    vedtakslengdeVurdering = VedtakslengdeVurderingDto(
+                        // Overstyrer til 15 måneder
+                        sluttdato = nyManuellSluttdato,
+                        begrunnelse = nyBegrunnelse
+                    )
+                )
+            )
+            .medKontekst {
+                val vedtasklengdeRepository: VedtakslengdeRepository = repositoryProvider.provide()
+                val vedtakslengdeGrunnlag = vedtasklengdeRepository.hentHvisEksisterer(this.behandling.id)
+                assertThat(vedtakslengdeGrunnlag?.vurderinger?.size).isEqualTo(2)
+                assertThat(vedtakslengdeGrunnlag?.gjeldendeVurdering()?.sluttdato).isEqualTo(nyManuellSluttdato)
+                assertThat(vedtakslengdeGrunnlag?.gjeldendeVurdering()?.begrunnelse).isEqualTo(nyBegrunnelse)
+                assertThat(vedtakslengdeGrunnlag?.gjeldendeVurdering()?.vurdertManuelt).isTrue
+            }
+    }
+
+    @Test
+    fun `skal kunne overstyre automatisk vurdering for vedtakslengde med manuell vurdering`() {
+        val søknadstidspunkt = LocalDateTime.now(clock)
+        val (sak, førstegangsbehandling) = sendInnFørsteSøknad(mottattTidspunkt = søknadstidspunkt)
+        val startDato = sak.rettighetsperiode.fom
+        val forventetSluttdato = startDato.plussEtÅrMedHverdager(ÅrMedHverdager.FØRSTE_ÅR)
+
+        val manueltOverstyrtSluttdato = startDato.plusMonths(15)
+        val manueltOverstyrtBegrunnelse = "Vurdert vedtakslengde manuelt"
+
+        førstegangsbehandling
+            .løsSykdom(startDato, erOppfylt = true)
+            .løsBistand(startDato, erOppfylt = true)
+            .løsRefusjonskrav()
+            .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
+            .kvalitetssikre()
+            .løsBeregningstidspunkt(startDato)
+            .løsOppholdskrav(startDato)
+            .løsAndreStatligeYtelser()
+            .medKontekst {
+                val vedtasklengdeRepository: VedtakslengdeRepository = repositoryProvider.provide()
+                val vedtakslengdeGrunnlag = vedtasklengdeRepository.hentHvisEksisterer(this.behandling.id)
+
+                // Ett år som forventet med ordinær rettighet
+                assertThat(vedtakslengdeGrunnlag?.gjeldendeVurdering()?.sluttdato).isEqualTo(forventetSluttdato)
+            }
+            // Overstyrer likevel manuelt til 15 måneder
+            .løsAvklaringsBehov(
+                AvklarVedtakslengdeLøsning(
+                    vedtakslengdeVurdering = VedtakslengdeVurderingDto(
+                        sluttdato = manueltOverstyrtSluttdato,
+                        begrunnelse = "Vurdert vedtakslengde manuelt"
+                    )
+                )
+            )
+            .løsAvklaringsBehov(ForeslåVedtakLøsning())
+            .fattVedtak()
+            .løsVedtaksbrev(TypeBrev.VEDTAK_INNVILGELSE)
+            .medKontekst {
+                val vedtasklengdeRepository: VedtakslengdeRepository = repositoryProvider.provide()
+                val vedtakslengdeGrunnlag = vedtasklengdeRepository.hentHvisEksisterer(this.behandling.id)
+
+                assertThat(vedtakslengdeGrunnlag).isNotNull
+                assertThat(vedtakslengdeGrunnlag?.vurderinger?.size).isEqualTo(2)
+                assertThat(vedtakslengdeGrunnlag?.gjeldendeVurdering()?.sluttdato).isEqualTo(manueltOverstyrtSluttdato)
+                assertThat(vedtakslengdeGrunnlag?.gjeldendeVurdering()?.begrunnelse).isEqualTo(manueltOverstyrtBegrunnelse)
                 assertThat(vedtakslengdeGrunnlag?.gjeldendeVurdering()?.vurdertManuelt).isTrue
             }
     }

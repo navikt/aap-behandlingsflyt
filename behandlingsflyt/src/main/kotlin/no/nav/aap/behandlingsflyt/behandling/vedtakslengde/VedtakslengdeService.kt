@@ -128,6 +128,8 @@ class VedtakslengdeService(
 
             val vedtatteVurderinger = vedtattVedtakslengdeGrunnlag?.vurderinger.orEmpty()
             val nyeVurderingerFraBehandlingen = vedtakslengdeGrunnlag?.vurderinger?.filter { it.vurdertIBehandling == behandlingId }.orEmpty()
+
+            // Det kan kun være en ny manuell vurdering pr behandling
             val nyManuellVurderingFraBehandlingen = nyeVurderingerFraBehandlingen.filter { it.vurdertManuelt }.take(1)
 
             vedtakslengdeRepository.lagre(

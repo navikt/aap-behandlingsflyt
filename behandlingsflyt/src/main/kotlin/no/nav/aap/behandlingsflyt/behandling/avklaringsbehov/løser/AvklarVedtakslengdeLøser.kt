@@ -34,7 +34,8 @@ class AvklarVedtakslengdeLøser(
             utvidetMed = vedtattGrunnlag?.gjeldendeVurdering()?.utvidetMed ?: ÅrMedHverdager.FØRSTE_ÅR,
             vurdertAv = kontekst.bruker,
             vurdertIBehandling = kontekst.behandlingId(),
-            opprettet = Instant.now()
+            opprettet = Instant.now(),
+            begrunnelse = vurdering.begrunnelse
         )
 
         vedtakslengdeRepository.lagre(
