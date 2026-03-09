@@ -105,18 +105,21 @@ class VedtakslengdeService(
         forrigeBehandlingId: BehandlingId?,
         vedtakslengdeUtvidelse: VedtakslengdeUtvidelse.Automatisk,
     ) {
-        val vedtakslengdeGrunnlag = forrigeBehandlingId?.let { vedtakslengdeRepository.hentHvisEksisterer(forrigeBehandlingId) }
-        val nesteÅrligeUtvidelse = hentNesteÅrligeUtvidelse(vedtakslengdeGrunnlag?.gjeldendeVurdering())
+        val vedtattVedtakslengdeGrunnlag = forrigeBehandlingId?.let { vedtakslengdeRepository.hentHvisEksisterer(forrigeBehandlingId) }
+        val nesteÅrligeUtvidelse = hentNesteÅrligeUtvidelse(vedtattVedtakslengdeGrunnlag?.gjeldendeVurdering())
 
-        val tidligereVurderinger = vedtakslengdeGrunnlag?.vurderinger.orEmpty()
+        val vedtattVurderinger = vedtattVedtakslengdeGrunnlag?.vurderinger.orEmpty()
+        val nyAutomatiskVurdering = VedtakslengdeVurdering(
+            sluttdato = vedtakslengdeUtvidelse.nySluttdato,
+            utvidetMed = nesteÅrligeUtvidelse,
+            vurdertAv = SYSTEMBRUKER,
+            vurdertIBehandling = behandlingId,
+            opprettet = Instant.now(clock),
+            begrunnelse = "Automatisk vurdert"
+        )
+
         vedtakslengdeRepository.lagre(
-            behandlingId, tidligereVurderinger + VedtakslengdeVurdering(
-                sluttdato = vedtakslengdeUtvidelse.nySluttdato,
-                utvidetMed = nesteÅrligeUtvidelse,
-                vurdertAv = SYSTEMBRUKER,
-                vurdertIBehandling = behandlingId,
-                opprettet = Instant.now(clock),
-            begrunnelse = "Automatisk vurdert")
+            behandlingId, vedtattVurderinger + nyAutomatiskVurdering
         )
     }
 
@@ -220,26 +223,18 @@ class VedtakslengdeService(
             val sluttdato = vedtattSluttdato ?: utledInitiellSluttdato(behandlingId, rettighetsperiode).tom
 
             // Skal lagre ned vedtakslengde for eksisterende behandlinger som mangler dette
-            lagreVedtakslengdeVurdering(behandlingId, sluttdato, ÅrMedHverdager.FØRSTE_ÅR)
+            log.info("Lagrer VedtakslengdeVurdering med sluttdato=$sluttdato")
+
+            vedtakslengdeRepository.lagre(
+                behandlingId, listOf(VedtakslengdeVurdering(
+                    sluttdato = sluttdato,
+                    utvidetMed = ÅrMedHverdager.FØRSTE_ÅR,
+                    vurdertAv = SYSTEMBRUKER,
+                    vurdertIBehandling = behandlingId,
+                    opprettet = Instant.now(clock),
+                    begrunnelse = "Automatisk vurdert"))
+            )
         }
-    }
-
-    private fun lagreVedtakslengdeVurdering(
-        behandlingId: BehandlingId,
-        sluttdato: LocalDate,
-        utvidelse: ÅrMedHverdager,
-    ) {
-        log.info("Lagrer VedtakslengdeVurdering med sluttdato=$sluttdato og utvidelse=$utvidelse")
-
-        vedtakslengdeRepository.lagre(
-            behandlingId, listOf(VedtakslengdeVurdering(
-                sluttdato = sluttdato,
-                utvidetMed = utvidelse,
-                vurdertAv = SYSTEMBRUKER,
-                vurdertIBehandling = behandlingId,
-                opprettet = Instant.now(clock),
-            begrunnelse = "Automatisk vurdert"))
-        )
     }
 
     /**
@@ -321,7 +316,6 @@ class VedtakslengdeService(
         setOf(
             Avslagsårsak.BRUKER_OVER_67,
             Avslagsårsak.IKKE_MEDLEM, // TODO ikke riktig Avslagstype?
-            Avslagsårsak.IKKE_MEDLEM_FORUTGÅENDE, // TODO ikke riktig Avslagstype?
             Avslagsårsak.ORDINÆRKVOTE_BRUKT_OPP,
             Avslagsårsak.BRUDD_PÅ_OPPHOLDSKRAV_STANS,
             Avslagsårsak.IKKE_RETT_UNDER_STRAFFEGJENNOMFØRING,
