@@ -133,18 +133,18 @@ class BarnepensjonFlytTest : AbstraktFlytOrkestratorTest(LokalUnleash::class) {
             tilkjent,
             Periode(1 januar 2025, 30 april 2025) to {
                 val (dagsats, redusertDagsats, barnepensjonDagsats) = it
-                assertThat(barnepensjonDagsats.verdi().toDouble()).isEqualTo(BigDecimal(477).toDouble())
-                assertThat(redusertDagsats.verdi().toDouble()).isEqualTo(dagsats.minus(barnepensjonDagsats).heltallverdi().toDouble())
+                assertThat(barnepensjonDagsats.verdi()).isEqualByComparingTo(BigDecimal(477))
+                assertThat(redusertDagsats.verdi()).isEqualByComparingTo(dagsats.minus(barnepensjonDagsats).heltallverdi())
             },
             Periode(1 mai 2025, 31 oktober 2025) to {
                 val (dagsats, redusertDagsats, barnepensjonDagsats) = it
-                assertThat(barnepensjonDagsats.verdi().toDouble()).isEqualTo(BigDecimal(501).toDouble())
-                assertThat(redusertDagsats.verdi().toDouble()).isEqualTo(dagsats.minus(barnepensjonDagsats).heltallverdi().toDouble())
+                assertThat(barnepensjonDagsats.verdi()).isEqualByComparingTo(BigDecimal(501))
+                assertThat(redusertDagsats.verdi()).isEqualByComparingTo(dagsats.minus(barnepensjonDagsats).heltallverdi())
             },
             Periode(1 november 2025, 31 desember 2025) to {
                 val (dagsats, redusertDagsats, barnepensjonDagsats) = it
-                assertThat(barnepensjonDagsats.verdi().toDouble()).isEqualTo(BigDecimal.ZERO.toDouble())
-                assertThat(redusertDagsats.verdi().toDouble()).isEqualTo(dagsats.heltallverdi().toDouble())
+                assertThat(barnepensjonDagsats.verdi()).isEqualByComparingTo(BigDecimal.ZERO)
+                assertThat(redusertDagsats.verdi()).isEqualByComparingTo(dagsats.heltallverdi())
             }
         )
     }
