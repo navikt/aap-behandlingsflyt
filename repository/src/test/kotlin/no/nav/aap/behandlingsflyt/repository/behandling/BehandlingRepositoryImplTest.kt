@@ -54,6 +54,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettels
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
+import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
@@ -258,6 +259,50 @@ internal class BehandlingRepositoryImplTest {
         }
     }
 
+    @Test
+    fun `Skal hente ut saker som kan migrere rettighetsperiode`() {
+        dataSource.transaction { connection ->
+            val behandlingRepository = BehandlingRepositoryImpl(connection)
+            val sakRepository = SakRepositoryImpl(connection)
+
+            val sakFerdigMedOppfølgingsoppgave = sak(connection)
+            val behandlingForSakMedOppfølgingsoppgave = finnEllerOpprettBehandling(connection, sakFerdigMedOppfølgingsoppgave)
+            behandlingRepository.oppdaterBehandlingStatus(behandlingForSakMedOppfølgingsoppgave.id, Status.AVSLUTTET)
+            behandlingRepository.opprettBehandling(
+                sakId = sakFerdigMedOppfølgingsoppgave.id,
+                typeBehandling = TypeBehandling.OppfølgingsBehandling,
+                forrigeBehandlingId = null,
+                vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
+                    vurderingsbehov = emptyList(),
+                    årsak = ÅrsakTilOpprettelse.OPPFØLGINGSOPPGAVE
+                )
+            )
+
+            val sakFerdig = sak(connection)
+            val behandlingForSakFerdig = finnEllerOpprettBehandling(connection, sakFerdig)
+            behandlingRepository.oppdaterBehandlingStatus(behandlingForSakFerdig.id, Status.AVSLUTTET)
+
+            val sakÅpen = sak(connection)
+            val behandlingForSakÅpen = finnEllerOpprettBehandling(connection, sakÅpen)
+            val sakTrukket = sak(connection)
+            val behandlingForSakTrukket = finnEllerOpprettBehandling(connection, sakTrukket)
+            behandlingRepository.oppdaterBehandlingStatus(behandlingForSakTrukket.id, Status.AVSLUTTET)
+
+            sakRepository.oppdaterRettighetsperiode(sakFerdigMedOppfølgingsoppgave.id, Periode(LocalDate.now(), LocalDate.now().plusDays(5)))
+            sakRepository.oppdaterRettighetsperiode(sakFerdig.id, Periode(LocalDate.now(), LocalDate.now().plusDays(5)))
+            sakRepository.oppdaterRettighetsperiode(sakÅpen.id, Periode(LocalDate.now(), LocalDate.now().plusDays(5)))
+            sakRepository.oppdaterRettighetsperiode(sakTrukket.id, Periode(LocalDate.now(), LocalDate.now()))
+
+
+            // Skal ikke hente saker med åpen ytelsesbehandling
+            // Skal hente saker som har 0 dager i rettighetsperiode - disse er trukket
+            val sakIder = sakRepository.finnSakerMedAvsluttedeBehandlingerUtenRiktigSluttdatoPåRettighetsperiode().map { it.id }
+            assertThat(sakIder).hasSize(2)
+            assertThat(sakIder).contains(sakFerdig.id)
+            assertThat(sakIder).contains(sakFerdigMedOppfølgingsoppgave.id)
+
+        }
+    }
     @Test
     fun `Kan hente saksnummer for behandling`() {
         dataSource.transaction { connection ->

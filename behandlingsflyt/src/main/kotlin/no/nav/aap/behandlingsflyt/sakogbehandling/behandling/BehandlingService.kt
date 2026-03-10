@@ -299,9 +299,10 @@ class BehandlingService(
             typeBehandling = TypeBehandling.Revurdering,
             vurderingsbehovOgÅrsak = vurderingsbehovOgÅrsak,
             forrigeBehandlingId = sisteAvsluttedeYtelsesvurdering.id,
-        ).also { behandling ->
-            grunnlagKopierer.overfør(sisteAvsluttedeYtelsesvurdering.id, behandling.id)
-            behandlingRepository.flyttForrigeBehandlingId(åpenRevurdering.id, behandling.id)
+        ).also { nyBehandling ->
+            grunnlagKopierer.overfør(sisteAvsluttedeYtelsesvurdering.id, nyBehandling.id)
+            behandlingRepository.flyttForrigeBehandlingId(åpenRevurdering.id, nyBehandling.id)
+            åpenRevurdering.forrigeBehandlingId = nyBehandling.id
         }
     }
 
@@ -364,9 +365,7 @@ class BehandlingService(
                 continue
             }
 
-            if (behandling.forrigeBehandlingId != null) {
-                nesteId[behandling.forrigeBehandlingId] = behandling.id
-            }
+            nesteId[behandling.forrigeBehandlingId ?: continue] = behandling.id
         }
 
         val sortedListOfBehandlingId = mutableListOf<BehandlingId>()

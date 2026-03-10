@@ -19,7 +19,7 @@ class AvklaringsbehovApiTest {
     @Test
     fun `ingen perioder er ok`() {
         assertDoesNotThrow {
-            validerPerioder(listOf())
+            validerPerioder(listOf<LøsningForPeriode>())
         }
     }
 

@@ -104,7 +104,7 @@ class BarnRepositoryImpl(private val connection: DBConnection) : BarnRepository 
             "Søknadsbarn"
         )
 
-    override fun finnSaksbehandlerOppgitteBarn(ident: String): SaksbehandlerOppgitteBarn.SaksbehandlerOppgitteBarn? {
+    override fun finnSaksbehandlerOppgitteBarn(ident: Ident): SaksbehandlerOppgitteBarn.SaksbehandlerOppgitteBarn? {
         return connection.queryFirstOrNull(
             """
         SELECT p.ident, p.navn, p.fodselsdato, p.relasjon
@@ -112,7 +112,7 @@ class BarnRepositoryImpl(private val connection: DBConnection) : BarnRepository 
         WHERE p.ident = ?
         """.trimIndent()
         ) {
-            setParams { setString(1, ident) }
+            setParams { setString(1, ident.identifikator) }
             setRowMapper { row ->
                 SaksbehandlerOppgitteBarn.SaksbehandlerOppgitteBarn(
                     ident = row.getStringOrNull("ident")?.let(::Ident),
@@ -124,7 +124,7 @@ class BarnRepositoryImpl(private val connection: DBConnection) : BarnRepository 
         }
     }
 
-    override fun finnSøknadsBarn(ident: String): OppgitteBarn.OppgittBarn? {
+    override fun finnSøknadsBarn(ident: Ident): OppgitteBarn.OppgittBarn? {
         return connection.queryFirstOrNull(
             """
         SELECT p.ident, p.navn, p.fodselsdato, p.relasjon
@@ -132,7 +132,7 @@ class BarnRepositoryImpl(private val connection: DBConnection) : BarnRepository 
         WHERE p.ident = ?
         """.trimIndent()
         ) {
-            setParams { setString(1, ident) }
+            setParams { setString(1, ident.identifikator) }
             setRowMapper { row ->
                 OppgitteBarn.OppgittBarn(
                     ident = row.getStringOrNull("ident")?.let(::Ident),

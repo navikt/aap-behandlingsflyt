@@ -69,6 +69,7 @@ public data class TilkjentYtelsePeriodeDTO(
     val gradering: Double,
     val redusertDagsats: Double,
     val antallBarn: Int,
+    val barnepensjonDagsats: Double,
     val barnetilleggSats: Double,
     val barnetillegg: Double,
     val utbetalingsdato: LocalDate,

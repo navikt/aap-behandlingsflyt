@@ -14,7 +14,6 @@ enum class BehandlingsflytFeature : FeatureToggle {
     ForlengelseIManuellBehandling,
     InstitusjonsoppholdJobb,
     TrekkSoeknadOpprettetFraLegeerklaering,
-    UbehandledeMeldekortJobb,
     VirksomhetsEtablering,
     KvalitetssikringVed2213,
     tilbakekrevingsOppgaverTilOppgave,
@@ -24,8 +23,11 @@ enum class BehandlingsflytFeature : FeatureToggle {
     BekreftVurderingerOppfolging,
     LagreStansOgOpphor,
     MigrerStansOgOpphor,
-    RettTilAvslagHvisNorgeIkkeKompetentStat,
     SamordningBarnepensjon,
+    RefusjonkravIRevurdering,
+    SignaturEnhetFraOppgave,
+    VedtakslengdeAvklaringsbehov,
+    hentDagpengerPerioder,
     ;
 
     override fun key(): String = name

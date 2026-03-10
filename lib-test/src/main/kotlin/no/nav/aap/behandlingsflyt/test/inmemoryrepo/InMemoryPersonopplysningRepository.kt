@@ -25,7 +25,9 @@ object InMemoryPersonopplysningRepository : PersonopplysningRepository {
     }
 
     override fun hentBrukerPersonOpplysningHvisEksisterer(behandlingId: BehandlingId): Personopplysning? {
-        TODO("Not yet implemented")
+        return synchronized(lock) {
+            personopplysninger[behandlingId]
+        }
     }
 
     override fun lagre(
