@@ -4,7 +4,7 @@ import no.nav.aap.behandlingsflyt.datadeling.SakStatus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.meldeperiode.MeldeperiodeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.ApiInternGateway
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.komponenter.gateway.GatewayProvider
@@ -21,8 +21,8 @@ class DatadelingMeldePerioderOgSakStatusJobbUtfører(
     private val underveisRepository: UnderveisRepository,
 ) : JobbUtfører {
     override fun utfør(input: JobbInput) {
-        val behandlingId = input.behandlingId()
-        val behandling = behandlingRepository.hent(BehandlingId(behandlingId))
+        val referanse = input.payload<BehandlingReferanse>()
+        val behandling = behandlingRepository.hent(referanse)
         val sak = sakRepository.hent(behandling.sakId)
         val personIdent = sak.person.aktivIdent()
 
