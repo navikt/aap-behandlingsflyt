@@ -78,13 +78,13 @@ class BarnepensjonFlytTest : AbstraktFlytOrkestratorTest(LokalUnleash::class) {
                     barnepensjonVurdering = BarnepensjonLøsningDto(
                         begrunnelse = "Mottar barnepensjon", perioder = listOf(
                             BarnepensjonLøsningPeriodeDto(
-                                fom = YearMonth.of(2025, 1),
-                                tom = YearMonth.of(2025, 4),
+                                fom = "2025-01",
+                                tom = "2025-04",
                                 månedsbeløp = Beløp("10335.66")
                             ),
                             BarnepensjonLøsningPeriodeDto(
-                                fom = YearMonth.of(2025, 5),
-                                tom = YearMonth.of(2025, 10),
+                                fom = "2025-05",
+                                tom = "2025-10",
                                 månedsbeløp = Beløp("10846.66")
                             )
                         )
