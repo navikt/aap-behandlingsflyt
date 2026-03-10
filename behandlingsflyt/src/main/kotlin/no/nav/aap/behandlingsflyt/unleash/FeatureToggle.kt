@@ -24,7 +24,11 @@ enum class BehandlingsflytFeature : FeatureToggle {
     LagreStansOgOpphor,
     SamordningBarnepensjon,
     RefusjonkravIRevurdering,
+<<<<<<< Updated upstream
     SignaturEnhetFraOppgave,
+=======
+    hentDagpengerPerioder
+>>>>>>> Stashed changes
     ;
 
     override fun key(): String = name
