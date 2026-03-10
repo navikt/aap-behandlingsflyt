@@ -99,7 +99,7 @@ class BehandlingHendelseServiceImpl(
                 .forBehandling(sak.id.id, behandling.id.id)
         )
         flytJobbRepository.leggTil(
-            JobbInput(jobb = DatadelingMeldePerioderOgSakStatusJobbUtfører).medPayload(hendelse)
+            JobbInput(jobb = DatadelingMeldePerioderOgSakStatusJobbUtfører).medPayload(behandling.referanse)
                 .forBehandling(sak.id.id, behandling.id.id)
         )
 
