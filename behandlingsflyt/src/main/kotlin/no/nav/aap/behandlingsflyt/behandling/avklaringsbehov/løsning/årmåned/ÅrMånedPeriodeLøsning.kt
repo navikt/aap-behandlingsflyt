@@ -5,16 +5,16 @@ import no.nav.aap.komponenter.verdityper.Tid
 import java.time.YearMonth
 
 interface ÅrMånedPeriodeLøsning {
-    val fom: YearMonth
-    val tom: YearMonth?
+    val fom: String
+    val tom: String?
 }
 
 fun validerPerioder(perioder: List<ÅrMånedPeriodeLøsning>) {
     val ugyldigePerioder = perioder
         .mapNotNull {
-            val tom = it.tom
+            val tom = it.tom?.let{ YearMonth.parse(it) }
             when {
-                tom == null || it.fom <= tom -> null
+                tom == null || YearMonth.parse(it.fom) <= tom -> null
                 else -> "${it.fom}–$tom"
             }
         }
@@ -26,9 +26,9 @@ fun validerPerioder(perioder: List<ÅrMånedPeriodeLøsning>) {
         .sortedBy { it.fom }
         .windowed(2, 1)
         .mapNotNull { (vurdering, nesteVurdering) ->
-            val tom = vurdering.tom ?: YearMonth.from(Tid.MAKS)
+            val tom = vurdering.tom?.let { YearMonth.parse(it) } ?: YearMonth.from(Tid.MAKS)
 
-            if (tom < vurdering.fom || tom >= nesteVurdering.fom)
+            if (tom < YearMonth.parse(vurdering.fom) || tom >= YearMonth.parse(nesteVurdering.fom))
                 "${vurdering.fom}–${vurdering.tom ?: "…"} og ${nesteVurdering.fom}–${nesteVurdering.tom ?: "…"}"
             else
                 null

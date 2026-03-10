@@ -5,7 +5,6 @@ import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.barnepensjon.BarnepensjonGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.barnepensjon.BarnepensjonVurdering
 import no.nav.aap.komponenter.verdityper.Beløp
-import java.time.YearMonth
 
 data class BarnepensjonGrunnlagDto(
     val harTilgangTilÅSaksbehandle: Boolean,
@@ -41,8 +40,8 @@ data class BarnepensjonVurderingDto(
             return BarnepensjonVurderingDto(
                 perioder = vurdering.perioder.map { periode ->
                     BarnepensjonVurderingPeriodeDto(
-                        fom = periode.fom,
-                        tom = periode.tom,
+                        fom = periode.fom.toString(),
+                        tom = periode.tom?.toString(),
                         månedsbeløp = periode.månedsats
                     )
                 },
@@ -54,7 +53,7 @@ data class BarnepensjonVurderingDto(
 }
 
 data class BarnepensjonVurderingPeriodeDto(
-    val fom: YearMonth,
-    val tom: YearMonth?,
+    val fom: String,
+    val tom: String?,
     val månedsbeløp: Beløp,
 )
