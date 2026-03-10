@@ -44,7 +44,8 @@ data class BistandGrunnlag(
             .values
             .sortedBy { it[0].opprettet }
             .flatMap { vurderingerForBehandling -> vurderingerForBehandling.sortedBy { it.vurderingenGjelderFra } }
-            .somTidslinje { Periode(it.vurderingenGjelderFra, it.tom ?: maksDato) }
+            .somTidslinje { Periode(it.vurderingenGjelderFra, it.tom ?: Tid.MAKS) }
             .komprimer()
+            .begrensetTil(Periode(Tid.MIN, maksDato))
     }
 }

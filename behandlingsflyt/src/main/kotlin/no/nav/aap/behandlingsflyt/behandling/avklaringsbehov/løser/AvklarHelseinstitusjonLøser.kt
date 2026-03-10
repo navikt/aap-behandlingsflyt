@@ -59,7 +59,6 @@ class AvklarHelseinstitusjonLøser(
 
         helseinstitusjonRepository.lagreHelseVurdering(
             kontekst.kontekst.behandlingId,
-            vurdertAv,
             oppdaterteVurderinger
         )
 

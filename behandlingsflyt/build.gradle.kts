@@ -50,6 +50,7 @@ dependencies {
     api(libs.tilgangPlugin)
     api(libs.tilgangKontrakt)
     api(libs.brevKontrakt)
+    api(libs.oppgaveKontrakt)
     api(libs.meldekortKontrakt)
     api(libs.motor)
     api(libs.gateway)

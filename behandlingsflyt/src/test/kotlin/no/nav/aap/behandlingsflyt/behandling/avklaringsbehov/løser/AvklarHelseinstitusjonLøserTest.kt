@@ -76,7 +76,7 @@ class AvklarHelseinstitusjonLøserTest {
 
         every { helseinstitusjonRepository.hentHvisEksisterer(behandlingId) } returns null
         every { behandlingRepository.hent(behandlingId) } returns opprettBehandling(behandlingId, null)
-        every { helseinstitusjonRepository.lagreHelseVurdering(any(), any(), capture(vurderingSlot)) } returns Unit
+        every { helseinstitusjonRepository.lagreHelseVurdering(any(), capture(vurderingSlot)) } returns Unit
 
         val løsning = AvklarHelseinstitusjonLøsning(
             helseinstitusjonVurdering = HelseinstitusjonVurderingerDto(
@@ -118,7 +118,7 @@ class AvklarHelseinstitusjonLøserTest {
 
         every { helseinstitusjonRepository.hentHvisEksisterer(behandlingId) } returns null
         every { behandlingRepository.hent(behandlingId) } returns opprettBehandling(behandlingId, null)
-        every { helseinstitusjonRepository.lagreHelseVurdering(any(), any(), capture(vurderingSlot)) } returns Unit
+        every { helseinstitusjonRepository.lagreHelseVurdering(any(), capture(vurderingSlot)) } returns Unit
 
         val løsning = AvklarHelseinstitusjonLøsning(
             helseinstitusjonVurdering = HelseinstitusjonVurderingerDto(
@@ -164,7 +164,7 @@ class AvklarHelseinstitusjonLøserTest {
 
         every { helseinstitusjonRepository.hentHvisEksisterer(nåværendeBehandlingId) } returns null
         every { helseinstitusjonRepository.hentHvisEksisterer(forrigeBehandlingId) } returns eksisterendeGrunnlag
-        every { helseinstitusjonRepository.lagreHelseVurdering(any(), any(), capture(vurderingSlot)) } returns Unit
+        every { helseinstitusjonRepository.lagreHelseVurdering(any(), capture(vurderingSlot)) } returns Unit
 
         // Oppdater kun en liten del av perioden
         val løsning = AvklarHelseinstitusjonLøsning(
@@ -194,7 +194,7 @@ class AvklarHelseinstitusjonLøserTest {
 
         every { helseinstitusjonRepository.hentHvisEksisterer(behandlingId) } returns null
         every { behandlingRepository.hent(behandlingId) } returns opprettBehandling(behandlingId, null)
-        every { helseinstitusjonRepository.lagreHelseVurdering(any(), any(), any()) } returns Unit
+        every { helseinstitusjonRepository.lagreHelseVurdering(any(), any()) } returns Unit
 
         val løsning = AvklarHelseinstitusjonLøsning(
             helseinstitusjonVurdering = HelseinstitusjonVurderingerDto(
@@ -229,7 +229,7 @@ class AvklarHelseinstitusjonLøserTest {
         val vurderingSlot = slot<List<HelseinstitusjonVurdering>>()
 
         every { behandlingRepository.hent(behandlingId) } returns opprettBehandling(behandlingId, null)
-        every { helseinstitusjonRepository.lagreHelseVurdering(any(), any(), capture(vurderingSlot)) } returns Unit
+        every { helseinstitusjonRepository.lagreHelseVurdering(any(), capture(vurderingSlot)) } returns Unit
         every { helseinstitusjonRepository.hentHvisEksisterer(behandlingId) } returns null
 
         val løsning = lagLøsning(
@@ -242,7 +242,7 @@ class AvklarHelseinstitusjonLøserTest {
         val resultat = løser.løs(lagKontekst(behandlingId), løsning)
 
         assertThat(resultat.begrunnelse).isEqualTo("Ny vurdering")
-        verify { helseinstitusjonRepository.lagreHelseVurdering(behandlingId, "12345678901", any()) }
+        verify { helseinstitusjonRepository.lagreHelseVurdering(behandlingId, any()) }
 
         val lagredeVurderinger = vurderingSlot.captured
         assertThat(lagredeVurderinger).hasSize(1)
@@ -273,7 +273,7 @@ class AvklarHelseinstitusjonLøserTest {
         )
         every { helseinstitusjonRepository.hentHvisEksisterer(nåværendeBehandlingId) } returns null
         every { helseinstitusjonRepository.hentHvisEksisterer(forrigeBehandlingId) } returns eksisterendeGrunnlag
-        every { helseinstitusjonRepository.lagreHelseVurdering(any(), any(), capture(vurderingSlot)) } returns Unit
+        every { helseinstitusjonRepository.lagreHelseVurdering(any(), capture(vurderingSlot)) } returns Unit
 
         val løsning = lagLøsning(
             lagHelseinstitusjonVurderingDto(
@@ -317,7 +317,7 @@ class AvklarHelseinstitusjonLøserTest {
 
         every { helseinstitusjonRepository.hentHvisEksisterer(nåværendeBehandlingId) } returns null
         every { helseinstitusjonRepository.hentHvisEksisterer(forrigeBehandlingId) } returns eksisterendeGrunnlag
-        every { helseinstitusjonRepository.lagreHelseVurdering(any(), any(), capture(vurderingSlot)) } returns Unit
+        every { helseinstitusjonRepository.lagreHelseVurdering(any(), capture(vurderingSlot)) } returns Unit
 
         val løsning = lagLøsning(
             lagHelseinstitusjonVurderingDto(
@@ -373,7 +373,7 @@ class AvklarHelseinstitusjonLøserTest {
 
         every { helseinstitusjonRepository.hentHvisEksisterer(nåværendeBehandlingId) } returns null
         every { helseinstitusjonRepository.hentHvisEksisterer(forrigeBehandlingId) } returns eksisterendeGrunnlag
-        every { helseinstitusjonRepository.lagreHelseVurdering(any(), any(), capture(vurderingSlot)) } returns Unit
+        every { helseinstitusjonRepository.lagreHelseVurdering(any(), capture(vurderingSlot)) } returns Unit
 
         // Nye vurderinger som splitter den gamle perioden
         val løsning = lagLøsning(
@@ -426,7 +426,7 @@ class AvklarHelseinstitusjonLøserTest {
 
         every { helseinstitusjonRepository.hentHvisEksisterer(nåværendeBehandlingId) } returns null
         every { helseinstitusjonRepository.hentHvisEksisterer(forrigeBehandlingId) } returns eksisterendeGrunnlag
-        every { helseinstitusjonRepository.lagreHelseVurdering(any(), any(), capture(vurderingSlot)) } returns Unit
+        every { helseinstitusjonRepository.lagreHelseVurdering(any(), capture(vurderingSlot)) } returns Unit
 
         // Ny vurdering som bare overlapper med første periode
         val løsning = lagLøsning(
@@ -460,7 +460,7 @@ class AvklarHelseinstitusjonLøserTest {
 
         every { helseinstitusjonRepository.hentHvisEksisterer(behandlingId) } returns null
         every { behandlingRepository.hent(behandlingId) } returns opprettBehandling(behandlingId, null)
-        every { helseinstitusjonRepository.lagreHelseVurdering(any(), any(), any()) } returns Unit
+        every { helseinstitusjonRepository.lagreHelseVurdering(any(), any()) } returns Unit
 
         val resultat = løser.løs(
             lagKontekst(behandlingId),
@@ -493,7 +493,7 @@ class AvklarHelseinstitusjonLøserTest {
 
         every { helseinstitusjonRepository.hentHvisEksisterer(behandlingId) } returns null
         every { behandlingRepository.hent(behandlingId) } returns opprettBehandling(behandlingId, null)
-        every { helseinstitusjonRepository.lagreHelseVurdering(any(), any(), capture(vurderingSlot)) } returns Unit
+        every { helseinstitusjonRepository.lagreHelseVurdering(any(), capture(vurderingSlot)) } returns Unit
 
         løser.løs(
             lagKontekst(behandlingId),
@@ -544,7 +544,7 @@ class AvklarHelseinstitusjonLøserTest {
         // Opphold fra 1/1/2025, tidligste reduksjonsdato = 1/5/2025
         every { helseinstitusjonRepository.hentHvisEksisterer(behandlingId) } returns opprettGrunnlag(emptyList())
         every { behandlingRepository.hent(behandlingId) } returns opprettBehandling(behandlingId, null)
-        every { helseinstitusjonRepository.lagreHelseVurdering(any(), any(), any()) } returns Unit
+        every { helseinstitusjonRepository.lagreHelseVurdering(any(), any()) } returns Unit
 
         assertDoesNotThrow {
             løser.løs(
@@ -564,7 +564,7 @@ class AvklarHelseinstitusjonLøserTest {
         val behandlingId = BehandlingId(1L)
         every { helseinstitusjonRepository.hentHvisEksisterer(behandlingId) } returns opprettGrunnlag(emptyList())
         every { behandlingRepository.hent(behandlingId) } returns opprettBehandling(behandlingId, null)
-        every { helseinstitusjonRepository.lagreHelseVurdering(any(), any(), any()) } returns Unit
+        every { helseinstitusjonRepository.lagreHelseVurdering(any(), any()) } returns Unit
 
         // forsørger = true → ikke reduksjonsvurdering → ingen validering av dato
         assertDoesNotThrow {
@@ -587,7 +587,7 @@ class AvklarHelseinstitusjonLøserTest {
         val behandlingId = BehandlingId(1L)
         every { helseinstitusjonRepository.hentHvisEksisterer(behandlingId) } returns opprettGrunnlag(emptyList())
         every { behandlingRepository.hent(behandlingId) } returns opprettBehandling(behandlingId, null)
-        every { helseinstitusjonRepository.lagreHelseVurdering(any(), any(), any()) } returns Unit
+        every { helseinstitusjonRepository.lagreHelseVurdering(any(), any()) } returns Unit
 
         assertDoesNotThrow {
             løser.løs(
@@ -612,7 +612,7 @@ class AvklarHelseinstitusjonLøserTest {
         every { helseinstitusjonRepository.hentHvisEksisterer(behandlingId) } returns
                 InstitusjonsoppholdGrunnlag(oppholdene = Oppholdene(id = 1L, opphold = emptyList()))
         every { behandlingRepository.hent(behandlingId) } returns opprettBehandling(behandlingId, null)
-        every { helseinstitusjonRepository.lagreHelseVurdering(any(), any(), any()) } returns Unit
+        every { helseinstitusjonRepository.lagreHelseVurdering(any(), any()) } returns Unit
 
         assertDoesNotThrow {
             løser.løs(
@@ -632,7 +632,7 @@ class AvklarHelseinstitusjonLøserTest {
         val behandlingId = BehandlingId(1L)
         every { helseinstitusjonRepository.hentHvisEksisterer(behandlingId) } returns null
         every { behandlingRepository.hent(behandlingId) } returns opprettBehandling(behandlingId, null)
-        every { helseinstitusjonRepository.lagreHelseVurdering(any(), any(), any()) } returns Unit
+        every { helseinstitusjonRepository.lagreHelseVurdering(any(), any()) } returns Unit
 
         assertDoesNotThrow {
             løser.løs(
@@ -652,7 +652,7 @@ class AvklarHelseinstitusjonLøserTest {
         val behandlingId = BehandlingId(1L)
         every { helseinstitusjonRepository.hentHvisEksisterer(behandlingId) } returns opprettGrunnlag(emptyList())
         every { behandlingRepository.hent(behandlingId) } returns opprettBehandling(behandlingId, null)
-        every { helseinstitusjonRepository.lagreHelseVurdering(any(), any(), any()) } returns Unit
+        every { helseinstitusjonRepository.lagreHelseVurdering(any(), any()) } returns Unit
 
         assertDoesNotThrow {
             løser.løs(lagKontekst(behandlingId), lagLøsning())
@@ -715,7 +715,7 @@ class AvklarHelseinstitusjonLøserTest {
 
         every { helseinstitusjonRepository.hentHvisEksisterer(behandlingId) } returns grunnlag
         every { behandlingRepository.hent(behandlingId) } returns opprettBehandling(behandlingId, null)
-        every { helseinstitusjonRepository.lagreHelseVurdering(any(), any(), any()) } returns Unit
+        every { helseinstitusjonRepository.lagreHelseVurdering(any(), any()) } returns Unit
 
         assertDoesNotThrow {
             løser.løs(
@@ -740,7 +740,7 @@ class AvklarHelseinstitusjonLøserTest {
         val opphold = opprettToOppholdGrunnlag(emptyList())
         every { helseinstitusjonRepository.hentHvisEksisterer(behandlingId) } returns opphold
         every { behandlingRepository.hent(behandlingId) } returns opprettBehandling(behandlingId, null)
-        every { helseinstitusjonRepository.lagreHelseVurdering(any(), any(), any()) } returns Unit
+        every { helseinstitusjonRepository.lagreHelseVurdering(any(), any()) } returns Unit
 
         // Opphold 2 starter 1/12/2025, tidligste reduksjonsdato = 1/4/2026
         assertDoesNotThrow {
@@ -832,7 +832,6 @@ class AvklarHelseinstitusjonLøserTest {
         helseoppholdvurderinger = Helseoppholdvurderinger(
             id = 1L,
             vurderinger = vurderinger,
-            vurdertAv = "testSaksbehandler",
             vurdertTidspunkt = LocalDateTime.of(2025, 5, 1, 12, 0)
         ),
         soningsVurderinger = null
@@ -856,7 +855,6 @@ class AvklarHelseinstitusjonLøserTest {
             helseoppholdvurderinger = Helseoppholdvurderinger(
                 id = 1L,
                 vurderinger = vurderinger,
-                vurdertAv = "testSaksbehandler",
                 vurdertTidspunkt = LocalDateTime.of(2025, 5, 1, 12, 0)
             ),
             soningsVurderinger = null
@@ -884,7 +882,6 @@ private fun opprettInstitusjonsoppholdGrunnlag(
         helseoppholdvurderinger = Helseoppholdvurderinger(
             id = 1L,
             vurderinger = vurderinger,
-            vurdertAv = "testSaksbehandler",
             vurdertTidspunkt = LocalDateTime.of(2025, 5, 1, 12, 0)
         ),
         soningsVurderinger = null

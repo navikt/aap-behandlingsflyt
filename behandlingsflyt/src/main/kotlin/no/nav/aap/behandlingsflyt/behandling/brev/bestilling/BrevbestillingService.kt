@@ -26,11 +26,11 @@ class BrevbestillingService(
     private val sakRepository: SakRepository,
 ) {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
-        signaturService = SignaturService(repositoryProvider),
+        signaturService = SignaturService(repositoryProvider, gatewayProvider),
         brevbestillingGateway = gatewayProvider.provide(),
         brevbestillingRepository = repositoryProvider.provide(),
         behandlingRepository = repositoryProvider.provide(),
-        sakRepository = repositoryProvider.provide(),
+        sakRepository = repositoryProvider.provide()
     )
 
     private val log = LoggerFactory.getLogger(javaClass)
