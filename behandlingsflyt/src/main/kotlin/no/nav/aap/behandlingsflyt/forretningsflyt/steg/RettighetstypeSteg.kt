@@ -99,16 +99,12 @@ class RettighetstypeSteg(
     }
 
     fun lagreStansOgOpphør(behandlingId: BehandlingId, forrigeBehandlingId: BehandlingId?, behandlingType: TypeBehandling, rettighetsperiode: Periode) {
-
-
-
         val forrigeGrunnlag = forrigeBehandlingId?.let { stansOpphørRepository.hentHvisEksisterer(it) }
             ?: when (behandlingType) {
                 TypeBehandling.Førstegangsbehandling -> StansOpphørGrunnlag(emptySet())
                 TypeBehandling.Revurdering -> return
                 else -> return
             }
-
 
         val stansOpphørGrunnlag = forrigeGrunnlag.utledNyttGrunnlag(
             utledStansEllerOpphør(
@@ -120,8 +116,6 @@ class RettighetstypeSteg(
         )
 
         stansOpphørRepository.lagre(behandlingId, stansOpphørGrunnlag)
-
-
     }
 
     companion object : FlytSteg {

@@ -4,8 +4,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.RettighetstypeSteg
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
+import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingMedVedtak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
@@ -43,51 +43,60 @@ class StansEllerOpphørMigrering(
                 return@transaction
             }
 
-
-            val låsRepo = repositoryProvider.provide<TaSkriveLåsRepository>()
-            val lås = låsRepo.låsSak(sakId)
+            val taSkriveLåsRepository = repositoryProvider.provide<TaSkriveLåsRepository>()
+            val sakLås = taSkriveLåsRepository.låsSak(sakId)
             val sak = repositoryProvider.provide<SakRepository>().hent(sakId)
 
-            val behandlingRepo = repositoryProvider.provide<BehandlingRepository>()
-            val behandlinger = behandlingRepo.hentAlleFor(
+            val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+            val behandlinger = behandlingRepository.hentAlleFor(
                 sak.id,
                 TypeBehandling.ytelseBehandlingstyper()
             )
             val sortedBehandlinger = behandlinger.sortedWith(behandlingService.comparator(behandlinger))
 
-            sortedBehandlinger.map { behandling ->
-                val behandlingLås = låsRepo.låsBehandling(behandling.id)
+            for (behandling in sortedBehandlinger) {
+                val behandlingLås = taSkriveLåsRepository.låsBehandling(behandling.id)
                 migrerBehandling(behandling, repositoryProvider)
-                låsRepo.verifiserSkrivelås(behandlingLås)
+                taSkriveLåsRepository.verifiserSkrivelås(behandlingLås)
             }
 
-            låsRepo.verifiserSkrivelås(lås)
+            taSkriveLåsRepository.verifiserSkrivelås(sakLås)
         }
     }
 
 
     fun migrerBehandling(behandling: Behandling, repositoryProvider: RepositoryProvider) {
-        val stansOpphørRepo = repositoryProvider.provide<StansOpphørRepository>()
-        if (stansOpphørRepo.hentHvisEksisterer(behandling.id) != null) {
+        val stansOpphørRepository = repositoryProvider.provide<StansOpphørRepository>()
+        if (stansOpphørRepository.hentHvisEksisterer(behandling.id) != null) {
             return
         }
 
         val rettighetsPeriode = repositoryProvider.provide<VilkårsresultatRepository>()
             .hent(behandling.id)
-            .optionalVilkår(Vilkårtype.ALDERSVILKÅRET)!!
-            .tidslinje()
-            .helePerioden()
+            .optionalVilkår(Vilkårtype.ALDERSVILKÅRET)
+            ?.tidslinje()
+            ?.helePerioden()
+            ?: return /* mangler aldersvilkåret, så dette må være førstegangsbehandling som er stanset før aldersvilkåret. Trenger derfor ikke å gjøre noe. */
 
-        val forrigeBehandlingId = repositoryProvider.provide<BehandlingRepository>()
+        val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+
+        val forrigeBehandlingId = behandlingRepository
             .hent(behandling.id)
             .forrigeBehandlingId
 
-        RettighetstypeSteg(repositoryProvider, gatewayProvider)
-            .lagreStansOgOpphør(
-                behandling.id,
-                forrigeBehandlingId,
-                behandling.typeBehandling(),
-                rettighetsPeriode
+        if (forrigeBehandlingId != null && behandling.flyt().erStegFør(behandling.aktivtSteg(), StegType.FASTSETT_RETTIGHETSTYPE)) {
+            stansOpphørRepository.kopier(
+                fraBehandling = forrigeBehandlingId,
+                tilBehandling = behandling.id,
             )
+        } else {
+            RettighetstypeSteg(repositoryProvider, gatewayProvider)
+                .lagreStansOgOpphør(
+                    behandling.id,
+                    forrigeBehandlingId,
+                    behandling.typeBehandling(),
+                    rettighetsPeriode
+                )
+        }
     }
 }
