@@ -29,6 +29,7 @@ data class VedtakslengdeVurderingResponse(
     val sluttdato: LocalDate,
     val utvidetMed: ÅrMedHverdager,
     val begrunnelse: String,
+    val manuellVurdering: Boolean
 ) : VurderingDto
 
 fun VedtakslengdeVurdering.toResponse(
@@ -46,4 +47,5 @@ fun VedtakslengdeVurdering.toResponse(
     sluttdato = sluttdato,
     utvidetMed = utvidetMed,
     begrunnelse = begrunnelse,
+    manuellVurdering = vurdertManuelt
 )

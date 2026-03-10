@@ -15,12 +15,9 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeName(value = AVKLAR_VEDTAKSLENGDE_KODE)
 class AvklarVedtakslengdeLøsning(
-    @param:JsonProperty(
-        "behovstype",
-        required = true,
-        defaultValue = AVKLAR_VEDTAKSLENGDE_KODE,
-    ) val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`5059`,
-    @param:JsonProperty("vurdering") val vedtakslengdeVurdering: VedtakslengdeVurderingDto,
+    @param:JsonProperty("behovstype", required = true, defaultValue = AVKLAR_VEDTAKSLENGDE_KODE)
+    val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`5059`,
+    @param:JsonProperty("vedtakslengdeVurdering") val vedtakslengdeVurdering: VedtakslengdeVurderingDto,
 ) : EnkeltAvklaringsbehovLøsning {
     override fun løs(
         repositoryProvider: RepositoryProvider,

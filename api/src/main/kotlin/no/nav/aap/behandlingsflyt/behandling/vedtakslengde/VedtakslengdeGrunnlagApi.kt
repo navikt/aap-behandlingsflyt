@@ -3,10 +3,8 @@ package no.nav.aap.behandlingsflyt.behandling.vedtakslengde
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeRepository
-import no.nav.aap.behandlingsflyt.harTilgangOgKanSaksbehandle
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
@@ -47,26 +45,24 @@ fun NormalOpenAPIRoute.vedtakslengdeGrunnlagApi(
                     val vurdertAvService = VurdertAvService(repositoryProvider, gatewayProvider)
 
                     val grunnlag = vedtakslengdeRepository.hentHvisEksisterer(behandling.id)
-                    val forrigeGrunnlag = behandling.forrigeBehandlingId?.let { vedtakslengdeRepository.hentHvisEksisterer(it) }
+                    val vedtattGrunnlag = behandling.forrigeBehandlingId?.let { vedtakslengdeRepository.hentHvisEksisterer(it) }
                     val nyeVurderinger = grunnlag?.vurderinger?.filter { it.vurdertIBehandling == behandling.id } ?: emptyList()
 
-                    val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
-                    val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
-
-                    // TODO burde vi egentlig persistere startdato for å unngå at denne kan endre seg i ettertid?
                     val initiellStartdato = sak.rettighetsperiode.fom
+                    val sluttdatoGjeldendeVurdering = vedtattGrunnlag?.gjeldendeVurdering()?.sluttdato
 
                     // Startdato i nye vurderinger fortsetter fra forrige vedtatte grunnlag
-                    val startdatoNyeVurderinger = forrigeGrunnlag?.gjeldendeVurdering()?.sluttdato?.plusDays(1) ?: initiellStartdato
+                    val startdatoNyeVurderinger = sluttdatoGjeldendeVurdering?.plusDays(1) ?: initiellStartdato
 
                     VedtakslengdeGrunnlagResponse(
-                        harTilgangTilÅSaksbehandle = harTilgangOgKanSaksbehandle(kanSaksbehandle(), avklaringsbehovene),
+                        harTilgangTilÅSaksbehandle = kanSaksbehandle(),
                         kanVurderes = listOf(sak.rettighetsperiode),
                         behøverVurderinger = emptyList(),
                         nyeVurderinger = nyeVurderinger.map { it.toResponse(vurdertAvService,
-                            Periode(startdatoNyeVurderinger, it.sluttdato)
+                            // Bruker gjeldende vedtatt sluttdato som startdato dersom denne er lik sluttdato i ny vurdering
+                            Periode(if (sluttdatoGjeldendeVurdering == it.sluttdato) it.sluttdato else startdatoNyeVurderinger, it.sluttdato)
                         ) },
-                        sisteVedtatteVurderinger = forrigeGrunnlag
+                        sisteVedtatteVurderinger = vedtattGrunnlag
                             ?.gjeldendeVurderinger(initiellStartdato)
                             ?.segmenter()
                             ?.map { it.verdi.toResponse(vurdertAvService, it.periode) }
