@@ -13,6 +13,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
 import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingService
 import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
@@ -48,10 +50,12 @@ class HåndterUførevedtakService(
             log.info("Søknad er trukket for sak $sakId, oppretter ikke revurdering ved mottak av uførevedtak")
         } else {
             log.info("Oppretter vurderingsbehov for mottatt uførevedtak for sak $sakId")
-            val rettighetstypeTidslinje =
-                rettighetstypeService.rettighetstypeTidslinjeBakoverkompatibel(sisteYtelsesBehandling.id)
-            val harRettPåAapEllerEnÅpenBehandling = rettighetstypeTidslinje.isNotEmpty() || sisteYtelsesBehandling.status().erÅpen()
-            if (harRettPåAapEllerEnÅpenBehandling) {
+            val aktuellPeriode = Periode(uførevedtak.virkningsdato, Tid.MAKS)
+            val rettighetstypeTidslinje = rettighetstypeService.rettighetstypeTidslinjeBakoverkompatibel(sisteYtelsesBehandling.id)
+                .begrensetTil(aktuellPeriode)
+            val kanHaRettPåAapEtterVirkningsdato = rettighetstypeTidslinje.isNotEmpty() || sisteYtelsesBehandling.status().erÅpen()
+
+            if (kanHaRettPåAapEtterVirkningsdato) {
                 val vurderingsbehov = Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND
                 val behandling = behandlingService.finnEllerOpprettBehandling(
                     sakId,
@@ -67,6 +71,8 @@ class HåndterUførevedtakService(
                     behandling.id,
                     vurderingsbehov = listOf(vurderingsbehov),
                 )
+            } else {
+                log.info("Har ikke åpen behandling eller rett på aap for sakId=$sakId, oppretter ikke revurdering ved uførevedtakhendelse")
             }
         }
         mottaDokumentService.markerSomBehandlet(sakId, sisteYtelsesBehandling.id, referanse)
