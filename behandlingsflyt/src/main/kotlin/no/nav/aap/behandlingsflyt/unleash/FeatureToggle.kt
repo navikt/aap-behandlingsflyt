@@ -26,6 +26,7 @@ enum class BehandlingsflytFeature : FeatureToggle {
     RefusjonkravIRevurdering,
     SignaturEnhetFraOppgave,
     VedtakslengdeAvklaringsbehov,
+    hentDagpengerPerioder,
     ;
 
     override fun key(): String = name

@@ -51,6 +51,7 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.SamordningBarnepensjon to true,
         BehandlingsflytFeature.RefusjonkravIRevurdering to true,
         BehandlingsflytFeature.SignaturEnhetFraOppgave to true,
+        BehandlingsflytFeature.hentDagpengerPerioder to true,
         BehandlingsflytFeature.VedtakslengdeAvklaringsbehov to true,
         )
 )
