@@ -28,7 +28,6 @@ class FraværFastsattAktivitetRegel : UnderveisRegel {
             FraværÅrsak.OMSORG_FØRSTE_SKOLEDAG_TILVENNING_ELLER_ANNEN_OPPFØLGING_BARN,
             FraværÅrsak.OMSORG_PLEIE_I_HJEMMET_AV_NÆR_PÅRØRENDE,
             FraværÅrsak.OMSORG_DØDSFALL_I_FAMILIE_ELLER_VENNEKRETS,
-            FraværÅrsak.OMSORG_MEDDOMMER_ELLER_ANDRE_OFFENTLIGE_PLIKTER,
             FraværÅrsak.OMSORG_ANNEN_STERK_GRUNN,
 
             FraværÅrsak.SYKDOM_ELLER_SKADE,
@@ -142,7 +141,6 @@ class FraværFastsattAktivitetRegel : UnderveisRegel {
                 FraværÅrsak.OMSORG_FØRSTE_SKOLEDAG_TILVENNING_ELLER_ANNEN_OPPFØLGING_BARN,
                 FraværÅrsak.OMSORG_PLEIE_I_HJEMMET_AV_NÆR_PÅRØRENDE,
                 FraværÅrsak.OMSORG_DØDSFALL_I_FAMILIE_ELLER_VENNEKRETS,
-                FraværÅrsak.OMSORG_MEDDOMMER_ELLER_ANDRE_OFFENTLIGE_PLIKTER,
                 FraværÅrsak.OMSORG_ANNEN_STERK_GRUNN -> {
                     (0..<vurderingSegment.periode.antallDager()).map { periodeOffset ->
                         kalenderårskvote += 1
