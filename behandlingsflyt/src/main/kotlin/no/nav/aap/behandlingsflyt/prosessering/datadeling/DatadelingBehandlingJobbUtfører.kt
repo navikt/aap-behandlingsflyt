@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.prosessering
+package no.nav.aap.behandlingsflyt.prosessering.datadeling
 
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakRepository

@@ -12,8 +12,8 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ManuellRevurderin
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Melding
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.NyÅrsakTilBehandlingV0
 import no.nav.aap.behandlingsflyt.pip.PipService
-import no.nav.aap.behandlingsflyt.prosessering.DatadelingMeldePerioderOgSakStatusJobbUtfører
-import no.nav.aap.behandlingsflyt.prosessering.DatadelingMeldekortJobbUtfører
+import no.nav.aap.behandlingsflyt.prosessering.datadeling.`DatadelingMeldePerioderOgSakStatusJobbUtfører`
+import no.nav.aap.behandlingsflyt.prosessering.datadeling.`DatadelingMeldekortJobbUtfører`
 import no.nav.aap.behandlingsflyt.prosessering.MeldeperiodeTilMeldekortBackendJobbUtfører
 import no.nav.aap.behandlingsflyt.prosessering.VarsleOppgaveOmHendelseJobbUtFører
 import no.nav.aap.behandlingsflyt.prosessering.statistikk.BehandlingFlytStoppetHendelseTilStatistikk

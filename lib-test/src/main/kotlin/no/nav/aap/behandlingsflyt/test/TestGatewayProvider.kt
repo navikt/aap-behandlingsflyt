@@ -31,38 +31,59 @@ import no.nav.aap.behandlingsflyt.integrasjon.ufore.UføreGateway
 import no.nav.aap.behandlingsflyt.integrasjon.utbetaling.UtbetalingGatewayImpl
 import no.nav.aap.behandlingsflyt.integrasjon.yrkesskade.YrkesskadeRegisterGatewayImpl
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import kotlin.reflect.KClass
 
-fun testGatewayProvider(unleashGateway: KClass<out UnleashGateway>) = createGatewayProvider {
-    register<PdlBarnGateway>()
-    register<PdlIdentGateway>()
-    register<PdlPersoninfoBulkGateway>()
-    register<PdlPersoninfoGateway>()
-    register<PdlPersonopplysningGateway>()
-    register<AbakusSykepengerGateway>()
-    register<AbakusForeldrepengerGateway>()
-    register<DokumentinnhentingGatewayImpl>()
-    register<MedlemskapGateway>()
-    register<FakeApiInternGateway>()
-    register<UtbetalingGatewayImpl>()
-    register<AARegisterGateway>()
-    register<EREGGateway>()
-    register<StatistikkGatewayImpl>()
-    register<InntektGatewayImpl>()
-    register<InstitusjonsoppholdGatewayImpl>()
-    register<InntektkomponentenGatewayImpl>()
-    register<BrevGateway>()
-    register<OppgavestyringGatewayImpl>()
-    register<UføreGateway>()
-    register<YrkesskadeRegisterGatewayImpl>()
-    register<MeldekortGatewayImpl>()
-    register<TjenestePensjonGatewayImpl>()
-    register(unleashGateway)
-    register<SamGatewayImpl>()
-    register<NomInfoGateway>()
-    register<KabalGateway>()
-    register<NorgGateway>()
-    register<TilgangGatewayImpl>()
-    register<GosysGateway>()
-    register<DagpengerGatewayImpl>()
+fun testGatewayProvider(unleashGateway: KClass<out UnleashGateway> = AlleAvskruddUnleash::class): GatewayProvider {
+    listOf(
+        "inntekt",
+        "institusjonsopphold",
+        "institusjonsoppholdenkelt",
+        "oppgavestyring",
+        "pesys",
+        "yrkesskade",
+        "utbetal"
+    ).forEach {
+        System.setProperty("integrasjon.$it.url", "dummy")
+        System.setProperty("integrasjon.$it.scope", "dummy")
+    }
+    System.setProperty("azure.openid.config.token.endpoint", "http://localhost:123/token/x12345")
+    System.setProperty("azure.app.client.id", "behandlingsflyt")
+    System.setProperty("azure.app.client.secret", "")
+    System.setProperty("azure.openid.config.jwks.uri", "http://localhost:12/jwks")
+    System.setProperty("azure.openid.config.issuer", "behandlingsflyt")
+
+    return createGatewayProvider {
+        register<PdlBarnGateway>()
+        register<PdlIdentGateway>()
+        register<PdlPersoninfoBulkGateway>()
+        register<PdlPersoninfoGateway>()
+        register<PdlPersonopplysningGateway>()
+        register<AbakusSykepengerGateway>()
+        register<AbakusForeldrepengerGateway>()
+        register<DokumentinnhentingGatewayImpl>()
+        register<MedlemskapGateway>()
+        register<FakeApiInternGateway>()
+        register<UtbetalingGatewayImpl>()
+        register<AARegisterGateway>()
+        register<EREGGateway>()
+        register<StatistikkGatewayImpl>()
+        register<InntektGatewayImpl>()
+        register<InstitusjonsoppholdGatewayImpl>()
+        register<InntektkomponentenGatewayImpl>()
+        register<BrevGateway>()
+        register<OppgavestyringGatewayImpl>()
+        register<UføreGateway>()
+        register<YrkesskadeRegisterGatewayImpl>()
+        register<MeldekortGatewayImpl>()
+        register<TjenestePensjonGatewayImpl>()
+        register(unleashGateway)
+        register<SamGatewayImpl>()
+        register<NomInfoGateway>()
+        register<KabalGateway>()
+        register<NorgGateway>()
+        register<TilgangGatewayImpl>()
+        register<GosysGateway>()
+        register<DagpengerGatewayImpl>()
+    }
 }
