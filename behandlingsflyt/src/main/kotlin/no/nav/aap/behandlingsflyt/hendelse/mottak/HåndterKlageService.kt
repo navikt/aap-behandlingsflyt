@@ -67,8 +67,6 @@ class HåndterKlageService(
 
                 val behandlingSkrivelås = låsRepository.låsBehandling(behandling.id)
 
-                sakService.oppdaterRettighetsperioden(sakId, brevkategori, mottattTidspunkt.toLocalDate())
-
                 mottaDokumentService.markerSomBehandlet(sakId, behandling.id, referanse)
 
                 prosesserBehandling.triggProsesserBehandling(
