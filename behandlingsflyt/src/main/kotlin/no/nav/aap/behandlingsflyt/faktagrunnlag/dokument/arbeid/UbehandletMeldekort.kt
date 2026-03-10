@@ -51,9 +51,6 @@ data class UbehandletMeldekort(
                                 FraværÅrsakV0.OMSORG_DØDSFALL_I_FAMILIE_ELLER_VENNEKRETS ->
                                     FraværÅrsak.OMSORG_DØDSFALL_I_FAMILIE_ELLER_VENNEKRETS
 
-                                FraværÅrsakV0.OMSORG_MEDDOMMER_ELLER_ANDRE_OFFENTLIGE_PLIKTER ->
-                                    FraværÅrsak.OMSORG_MEDDOMMER_ELLER_ANDRE_OFFENTLIGE_PLIKTER
-
                                 FraværÅrsakV0.OMSORG_ANNEN_STERK_GRUNN ->
                                     FraværÅrsak.OMSORG_ANNEN_STERK_GRUNN
 

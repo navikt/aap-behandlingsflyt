@@ -125,7 +125,7 @@ class FraværFastsattAktivitetRegelTest {
             Periode(LocalDate.of(2020, 1, 1), LocalDate.of(2020, 1, 12)).dager().map { dato ->
                 brudd(
                     dato = dato,
-                    fraværÅrsak = FraværÅrsak.OMSORG_MEDDOMMER_ELLER_ANDRE_OFFENTLIGE_PLIKTER,
+                    fraværÅrsak = FraværÅrsak.OMSORG_ANNEN_STERK_GRUNN,
                 )
             }
         )
