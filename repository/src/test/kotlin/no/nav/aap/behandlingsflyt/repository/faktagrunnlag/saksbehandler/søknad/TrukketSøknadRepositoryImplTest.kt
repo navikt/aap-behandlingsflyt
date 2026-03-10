@@ -13,7 +13,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettels
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
-import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.verdityper.dokument.JournalpostId
 import org.assertj.core.api.Assertions.assertThat
@@ -87,7 +86,7 @@ class TrukketSøknadRepositoryImplTest {
     fun behandling(): BehandlingId {
         return dataSource.transaction { connection ->
             val person = PersonRepositoryImpl(connection).finnEllerOpprett(listOf(Ident("0".repeat(11))))
-            val sak = SakRepositoryImpl(connection).finnEllerOpprett(person, Periode(1 januar 2025, 1 januar 2028))
+            val sak = SakRepositoryImpl(connection).finnEllerOpprett(person, 1 januar 2025)
             val behandling = BehandlingRepositoryImpl(connection).opprettBehandling(
                 sakId = sak.id,
                 typeBehandling = TypeBehandling.Førstegangsbehandling,
@@ -96,7 +95,6 @@ class TrukketSøknadRepositoryImplTest {
                     vurderingsbehov = listOf(
                         VurderingsbehovMedPeriode(
                             type = no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.MOTTATT_SØKNAD,
-                            periode = Periode(1 januar 2025, 1 januar 2028),
                         )
                     ),
                     årsak = ÅrsakTilOpprettelse.SØKNAD,

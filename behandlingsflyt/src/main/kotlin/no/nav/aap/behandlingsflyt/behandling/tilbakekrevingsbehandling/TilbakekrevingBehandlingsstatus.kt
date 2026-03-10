@@ -1,8 +1,5 @@
 package no.nav.aap.behandlingsflyt.behandling.tilbakekrevingsbehandling
 
-import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.AvklaringsbehovHendelseDto
-
 enum class TilbakekrevingBehandlingsstatus {
     OPPRETTET,
     TIL_BEHANDLING,
@@ -21,13 +18,3 @@ fun TilbakekrevingBehandlingsstatus.tilKontrakt(): no.nav.aap.behandlingsflyt.ko
     }
 }
 
-fun TilbakekrevingBehandlingsstatus.tilAvklaringsBehov(): List<AvklaringsbehovHendelseDto> {
-    return when(this){
-        else -> emptyList<AvklaringsbehovHendelseDto>()
-       /* TilbakekrevingBehandlingsstatus.AVSLUTTET
-        TilbakekrevingBehandlingsstatus.OPPRETTET,
-        TilbakekrevingBehandlingsstatus.RETUR_FRA_BESLUTTER,
-        TilbakekrevingBehandlingsstatus.TIL_BEHANDLING -> AvklaringsbehovKode.`9082`.name
-        TilbakekrevingBehandlingsstatus.TIL_BESLUTTER -> AvklaringsbehovKode.`9083`.name */
-    }
-}

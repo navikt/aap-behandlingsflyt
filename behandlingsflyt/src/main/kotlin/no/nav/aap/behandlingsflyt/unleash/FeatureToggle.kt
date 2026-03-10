@@ -7,7 +7,6 @@ interface FeatureToggle {
 enum class BehandlingsflytFeature : FeatureToggle {
     // Se: https://aap-unleash-web.iap.nav.cloud.nais.io/projects/default
     IngenValidering,
-    NyBrevtype11_17,
     NyBrevbyggerV3,
     LagreVedtakIFatteVedtak,
     Under18,
@@ -15,7 +14,6 @@ enum class BehandlingsflytFeature : FeatureToggle {
     ForlengelseIManuellBehandling,
     InstitusjonsoppholdJobb,
     TrekkSoeknadOpprettetFraLegeerklaering,
-    UbehandledeMeldekortJobb,
     VirksomhetsEtablering,
     KvalitetssikringVed2213,
     tilbakekrevingsOppgaverTilOppgave,
@@ -24,7 +22,11 @@ enum class BehandlingsflytFeature : FeatureToggle {
     NyTidligereVurderinger,
     BekreftVurderingerOppfolging,
     LagreStansOgOpphor,
-    RettTilAvslagHvisNorgeIkkeKompetentStat,
+    SamordningBarnepensjon,
+    RefusjonkravIRevurdering,
+    SignaturEnhetFraOppgave,
+    VedtakslengdeAvklaringsbehov,
+    hentDagpengerPerioder,
     FraværAvtaltAktivitet,
     ;
 

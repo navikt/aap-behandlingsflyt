@@ -554,7 +554,6 @@ class StatistikkJobbUtførerTest {
                 vurderingsbehov = listOf(
                     VurderingsbehovMedPeriode(
                         type = no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.MOTTATT_SØKNAD,
-                        periode = Periode(LocalDate.now(), LocalDate.now().plusDays(1))
                     )
                 ), årsak = ÅrsakTilOpprettelse.SØKNAD
             )

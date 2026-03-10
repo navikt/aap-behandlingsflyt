@@ -59,7 +59,6 @@ import no.nav.aap.behandlingsflyt.test.juli
 import no.nav.aap.behandlingsflyt.test.juni
 import no.nav.aap.behandlingsflyt.test.mai
 import no.nav.aap.behandlingsflyt.test.september
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
@@ -129,7 +128,6 @@ class BrevUtlederServiceTest {
         every { sykdomsvurderingForBrevRepository.hent(any<BehandlingId>())} returns sykdomsvurderingForBrevGrunnlag()
         every { tilkjentYtelseRepository.hentHvisEksisterer(any<BehandlingId>()) } returns stubTilkjentYtelse()
         every { trukketSøknadService.søknadErTrukket(any<BehandlingId>()) } returns false
-        every { unleashGateway.isEnabled(BehandlingsflytFeature.NyBrevtype11_17) } returns true
     }
 
     @Nested
@@ -171,7 +169,6 @@ class BrevUtlederServiceTest {
             every { underveisRepository.hent(revurdering.id) } returns revurderingUnderveisGrunnlag
             every { underveisRepository.hentHvisEksisterer(revurdering.id) } returns revurderingUnderveisGrunnlag
             every { avbrytRevurderingService.revurderingErAvbrutt(any<BehandlingId>()) } returns false
-            every { unleashGateway.isEnabled(BehandlingsflytFeature.NyBrevtype11_17) } returns true
 
             val resultat = brevUtlederService.utledBehovForMeldingOmVedtak(revurdering.id)
 
@@ -213,7 +210,6 @@ class BrevUtlederServiceTest {
             every { underveisRepository.hent(revurdering.id) } returns underveisGrunnlag
             every { underveisRepository.hentHvisEksisterer(revurdering.id) } returns underveisGrunnlag
             every { avbrytRevurderingService.revurderingErAvbrutt(any<BehandlingId>()) } returns false
-            every { unleashGateway.isEnabled(BehandlingsflytFeature.NyBrevtype11_17) } returns true
 
             val resultat = brevUtlederService.utledBehovForMeldingOmVedtak(revurdering.id)
 
@@ -236,7 +232,6 @@ class BrevUtlederServiceTest {
                 forrigeBehandlingId = førstegangsbehandling.id,
                 vurderingsbehov = listOf(Vurderingsbehov.OVERGANG_ARBEID)
             )
-            every { unleashGateway.isEnabled(BehandlingsflytFeature.NyBrevtype11_17) } returns true
             every { underveisRepository.hentHvisEksisterer(førstegangsbehandling.id) } returns underveisGrunnlag(
                 underveisperiode(
                     periode = Periode(1 januar 2023, 31 desember 2023),
@@ -400,7 +395,6 @@ class BrevUtlederServiceTest {
                 forrigeBehandlingId = førstegangsbehandling.id,
                 vurderingsbehov = listOf(Vurderingsbehov.OVERGANG_UFORE)
             )
-            every { unleashGateway.isEnabled(BehandlingsflytFeature.NyBrevtype11_17) } returns true
             every { underveisRepository.hentHvisEksisterer(førstegangsbehandling.id) } returns underveisGrunnlag(
                 underveisperiode(
                     periode = Periode(1 januar 2023, 31 desember 2023),
@@ -433,7 +427,6 @@ class BrevUtlederServiceTest {
                 forrigeBehandlingId = forrigeBehandling.id,
                 vurderingsbehov = listOf(Vurderingsbehov.OVERGANG_ARBEID)
             )
-            every { unleashGateway.isEnabled(BehandlingsflytFeature.NyBrevtype11_17) } returns true
             every { underveisRepository.hentHvisEksisterer(forrigeBehandling.id) } returns underveisGrunnlag(
                 underveisperiode(
                     periode = Periode(1 januar 2023, 31 desember 2023),
@@ -655,7 +648,6 @@ class BrevUtlederServiceTest {
                 forrigeBehandlingId = BehandlingId(Random.nextLong()),
                 vurderingsbehov = listOf(Vurderingsbehov.OVERGANG_ARBEID)
             )
-            every { unleashGateway.isEnabled(BehandlingsflytFeature.NyBrevtype11_17) } returns true
             every { behandlingRepository.hent(revurdering.id) } returns revurdering
             every { avbrytRevurderingService.revurderingErAvbrutt(revurdering.id) } returns false
             every { arbeidsopptrappingRepository.hentHvisEksisterer(revurdering.id) } returns arbeidsopptrappingGrunnlag(
@@ -683,7 +675,6 @@ class BrevUtlederServiceTest {
                 forrigeBehandlingId = BehandlingId(Random.nextLong()),
                 vurderingsbehov = listOf(Vurderingsbehov.OVERGANG_ARBEID)
             )
-            every { unleashGateway.isEnabled(BehandlingsflytFeature.NyBrevtype11_17) } returns true
             every { behandlingRepository.hent(revurdering.id) } returns revurdering
             every { avbrytRevurderingService.revurderingErAvbrutt(revurdering.id) } returns false
             every { arbeidsopptrappingRepository.hentHvisEksisterer(revurdering.id) } returns arbeidsopptrappingGrunnlag(
@@ -963,6 +954,7 @@ class BrevUtlederServiceTest {
             ),
             grunnlagsfaktor = GUnit(1),
             grunnbeløp = Beløp(300000),
+            barnepensjonDagsats = Beløp(0),
             antallBarn = 0,
             barnetilleggsats = Beløp(0),
             barnetillegg = Beløp(0),

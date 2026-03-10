@@ -171,9 +171,9 @@ class StatistikkMetoder(
     private fun relatertBehandling(behandling: Behandling): UUID? {
         return when (behandling.typeBehandling()) {
             TypeBehandling.Førstegangsbehandling -> null
-            TypeBehandling.Revurdering -> if (behandling.forrigeBehandlingId != null) behandlingRepository.hent(
+            TypeBehandling.Revurdering ->
                 behandling.forrigeBehandlingId
-            ).referanse.referanse else null
+                    ?.let { behandlingRepository.hent(it).referanse.referanse }
 
             TypeBehandling.Tilbakekreving -> TODO()
             TypeBehandling.Klage -> {
@@ -265,6 +265,7 @@ class StatistikkMetoder(
                         gradering = verdi.gradering.prosentverdi().toDouble(),
                         redusertDagsats = verdi.redusertDagsats().verdi().toDouble(),
                         antallBarn = verdi.antallBarn,
+                        barnepensjonDagsats = verdi.barnepensjonDagsats.verdi().toDouble(),
                         barnetilleggSats = verdi.barnetilleggsats.verdi().toDouble(),
                         barnetillegg = verdi.barnetillegg.verdi().toDouble(),
                         utbetalingsdato = verdi.utbetalingsdato,

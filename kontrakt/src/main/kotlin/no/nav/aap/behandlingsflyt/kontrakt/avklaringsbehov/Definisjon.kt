@@ -166,6 +166,14 @@ public enum class Definisjon(
         kvalitetssikres = true,
         løsesAv = listOf(Rolle.SAKSBEHANDLER_OPPFOLGING)
     ),
+    AVKLAR_VEDTAKSLENGDE(
+        kode = AvklaringsbehovKode.`5059`,
+        type = BehovType.MANUELT_FRIVILLIG,
+        løsesISteg = StegType.FASTSETT_VEDTAKSLENGDE,
+        kreverToTrinn = true,
+        kvalitetssikres = false,
+        løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL)
+    ),
     FASTSETT_ARBEIDSEVNE(
         kode = AvklaringsbehovKode.`5004`,
         type = BehovType.MANUELT_FRIVILLIG,
@@ -313,6 +321,13 @@ public enum class Definisjon(
         kode = AvklaringsbehovKode.`5030`,
         type = BehovType.MANUELT_FRIVILLIG,
         løsesISteg = StegType.SAMORDNING_ARBEIDSGIVER,
+        løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL),
+        kreverToTrinn = true
+    ),
+    SAMORDNING_BARNEPENSJON(
+        kode = AvklaringsbehovKode.`5036`,
+        type = BehovType.MANUELT_FRIVILLIG,
+        løsesISteg = StegType.SAMORDNING_BARNEPENSJON,
         løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL),
         kreverToTrinn = true
     ),

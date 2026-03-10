@@ -23,7 +23,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
@@ -253,7 +252,8 @@ class UtbetalingService(
                     barnetilleggsats = detaljer.barnetilleggsats.verdi(),
                     barnetillegg = detaljer.barnetillegg.verdi(),
                     utbetalingsdato = detaljer.utbetalingsdato,
-                    meldeperiode = meldeperiode?.let { MeldeperiodeDto(it.fom, it.tom) }
+                    meldeperiode = meldeperiode?.let { MeldeperiodeDto(it.fom, it.tom) },
+                    barnepensjonDagsats = detaljer.barnepensjonDagsats.verdi()
                 )
             )
         }
