@@ -9,17 +9,25 @@ import no.nav.aap.komponenter.verdityper.Beløp
 data class BarnepensjonGrunnlagDto(
     val harTilgangTilÅSaksbehandle: Boolean,
     val vurdering: BarnepensjonVurderingDto?,
+    val historiskeVurderinger: List<BarnepensjonVurderingDto>
 ) {
     companion object {
         fun fraDomene(
             kanSaksbehandle: Boolean,
             vurdertAvService: VurdertAvService,
-            grunnlag: BarnepensjonGrunnlag?
+            grunnlag: BarnepensjonGrunnlag?,
+            historiskeVurderinger: List<BarnepensjonGrunnlag>
         ): BarnepensjonGrunnlagDto {
             return BarnepensjonGrunnlagDto(
                 harTilgangTilÅSaksbehandle = kanSaksbehandle,
                 vurdering = grunnlag?.vurdering?.let {
                     BarnepensjonVurderingDto.fraDomene(it, vurdertAvService)
+                },
+                historiskeVurderinger = historiskeVurderinger.map {
+                    BarnepensjonVurderingDto.fraDomene(
+                        it.vurdering,
+                        vurdertAvService
+                    )
                 }
             )
         }
