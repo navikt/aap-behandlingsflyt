@@ -56,7 +56,7 @@ class DagpengerGatewayImpl: DagpengerGateway {
             )
         ).perioder.map {
             DagpengerPeriode(
-                periode = Periode(it.fraOgMedDato, it.tilOgMedDato),
+                periode = Periode(it.fraOgMedDato, it.tilOgMedDato ?: LocalDate.now().plusYears(200)),
                 kilde = it.kilde,
                 dagpengerYtelseType = it.ytelseType
             )
@@ -72,7 +72,7 @@ internal data class DagpengerRequest(
 
 internal class DagpengerPeriodeResponse(
     val fraOgMedDato: LocalDate,
-    val tilOgMedDato: LocalDate,
+    val tilOgMedDato: LocalDate?,
     val kilde: DagpengerKilde,
     val ytelseType: DagpengerYtelseType
 )
