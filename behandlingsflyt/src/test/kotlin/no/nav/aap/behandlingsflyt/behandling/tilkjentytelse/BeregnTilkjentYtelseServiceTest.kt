@@ -21,6 +21,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Ut
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.BarnIdentifikator
 import no.nav.aap.behandlingsflyt.help.assertTidslinje
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.test.august
 import no.nav.aap.behandlingsflyt.test.desember
 import no.nav.aap.behandlingsflyt.test.juli
@@ -30,6 +31,7 @@ import no.nav.aap.behandlingsflyt.test.september
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.verdityper.Dagsatser
 import no.nav.aap.komponenter.verdityper.GUnit
 import no.nav.aap.komponenter.verdityper.Prosent
@@ -40,7 +42,9 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.ValueSource
 import java.math.BigDecimal
+import java.time.Instant
 import java.time.LocalDate
+import java.time.YearMonth
 
 class BeregnTilkjentYtelseServiceTest {
 
@@ -71,6 +75,8 @@ class BeregnTilkjentYtelseServiceTest {
             )
         )
 
+        val barnepensjonGrunnlag = null
+
         val beregnTilkjentYtelseService = BeregnTilkjentYtelseService(
             TilkjentYtelseGrunnlag(
                 fødselsdato,
@@ -79,7 +85,8 @@ class BeregnTilkjentYtelseServiceTest {
                 barnetilleggGrunnlag,
                 samordningsgrunnlag,
                 samordningUføre,
-                samordningArbeidsgiver
+                samordningArbeidsgiver,
+                barnepensjonGrunnlag,
             )
         ).beregnTilkjentYtelse()
 
@@ -99,6 +106,7 @@ class BeregnTilkjentYtelseServiceTest {
                     grunnlagsfaktor = GUnit("0.0101538462"),
                     grunnbeløp = Beløp("111477"),
                     antallBarn = 0,
+                    barnepensjonDagsats = Beløp(0),
                     barnetilleggsats = Beløp("35.00"),
                     barnetillegg = Beløp("0"),
                     utbetalingsdato = periode.tom.plusDays(9),
@@ -119,7 +127,7 @@ class BeregnTilkjentYtelseServiceTest {
                     ),
                     grunnlagsfaktor = GUnit("0.0101538462"),
                     grunnbeløp = Beløp("118620.00"),
-                    antallBarn = 0,
+                    antallBarn = 0, barnepensjonDagsats = Beløp(0),
                     barnetilleggsats = Beløp("35.00"),
                     barnetillegg = Beløp("0"),
                     utbetalingsdato = periode.tom.plusDays(9),
@@ -162,6 +170,8 @@ class BeregnTilkjentYtelseServiceTest {
             )
         )
 
+        val barnepensjonGrunnlag = null
+
         val beregnTilkjentYtelseService = BeregnTilkjentYtelseService(
             TilkjentYtelseGrunnlag(
                 fødselsdato,
@@ -170,7 +180,8 @@ class BeregnTilkjentYtelseServiceTest {
                 barnetilleggGrunnlag,
                 samordningsgrunnlag,
                 samordningUføre,
-                samordningArbeidsgiver
+                samordningArbeidsgiver,
+                barnepensjonGrunnlag,
             )
         ).beregnTilkjentYtelse()
 
@@ -189,7 +200,7 @@ class BeregnTilkjentYtelseServiceTest {
                     ),
                     grunnlagsfaktor = GUnit("0.0101538462"),
                     grunnbeløp = Beløp("118620"),
-                    antallBarn = 1,
+                    antallBarn = 1, barnepensjonDagsats = Beløp(0),
                     barnetilleggsats = Beløp("36"),
                     barnetillegg = Beløp("36"),
                     utbetalingsdato = periode.tom.plusDays(9),
@@ -237,7 +248,7 @@ class BeregnTilkjentYtelseServiceTest {
                 emptyList(), vurdertAv = "ident"
             )
         )
-
+        val barnepensjonGrunnlag = null
         val beregnTilkjentYtelseService = BeregnTilkjentYtelseService(
             TilkjentYtelseGrunnlag(
                 fødselsdato,
@@ -247,6 +258,7 @@ class BeregnTilkjentYtelseServiceTest {
                 samordningsgrunnlag,
                 samordningUføre,
                 samordningArbeidsgiver,
+                barnepensjonGrunnlag,
             )
         ).beregnTilkjentYtelse()
 
@@ -295,6 +307,8 @@ class BeregnTilkjentYtelseServiceTest {
             )
         )
 
+        val barnepensjonGrunnlag = null
+
         val beregnTilkjentYtelseService = BeregnTilkjentYtelseService(
             TilkjentYtelseGrunnlag(
                 fødselsdato,
@@ -304,6 +318,7 @@ class BeregnTilkjentYtelseServiceTest {
                 samordningsgrunnlag,
                 samordningUføre,
                 samordningArbeidsgiver,
+                barnepensjonGrunnlag,
             )
         ).beregnTilkjentYtelse()
 
@@ -346,6 +361,8 @@ class BeregnTilkjentYtelseServiceTest {
             )
         )
 
+        val barnepensjonGrunnlag = null
+
         val beregnTilkjentYtelseService = BeregnTilkjentYtelseService(
             TilkjentYtelseGrunnlag(
                 fødselsdato,
@@ -354,7 +371,8 @@ class BeregnTilkjentYtelseServiceTest {
                 barnetilleggGrunnlag,
                 samordningsgrunnlag,
                 samordningUføre,
-                samordningArbeidsgiver
+                samordningArbeidsgiver,
+                barnepensjonGrunnlag
             )
         ).beregnTilkjentYtelse()
 
@@ -373,7 +391,7 @@ class BeregnTilkjentYtelseServiceTest {
                     ),
                     grunnlagsfaktor = GUnit("0.0101538462"),
                     grunnbeløp = Beløp("118620"),
-                    antallBarn = 1,
+                    antallBarn = 1, barnepensjonDagsats = Beløp(0),
                     barnetilleggsats = Beløp("35"),
                     barnetillegg = Beløp("35"),
                     utbetalingsdato = periode.tom.plusDays(9),
@@ -394,7 +412,7 @@ class BeregnTilkjentYtelseServiceTest {
                     ),
                     grunnlagsfaktor = GUnit("0.0101538462"),
                     grunnbeløp = Beløp("118620"),
-                    antallBarn = 1,
+                    antallBarn = 1, barnepensjonDagsats = Beløp(0),
                     barnetilleggsats = Beløp("36"),
                     barnetillegg = Beløp("36"),
                     utbetalingsdato = periode.tom.plusDays(9),
@@ -430,6 +448,8 @@ class BeregnTilkjentYtelseServiceTest {
             )
         )
 
+        val barnepensjonGrunnlag = null
+
         val beregnetTilkjentYtelse = BeregnTilkjentYtelseService(
             TilkjentYtelseGrunnlag(
                 fødeselsdato,
@@ -438,7 +458,8 @@ class BeregnTilkjentYtelseServiceTest {
                 barnetilleggGrunnlag,
                 samordningsgrunnlag,
                 samordningUføre,
-                samordningArbeidsgiver
+                samordningArbeidsgiver,
+                barnepensjonGrunnlag
             )
         ).beregnTilkjentYtelse()
 
@@ -457,7 +478,7 @@ class BeregnTilkjentYtelseServiceTest {
                     ),
                     grunnlagsfaktor = GUnit("0.0076923077"),
                     grunnbeløp = Beløp("124028"),
-                    antallBarn = 0,
+                    antallBarn = 0, barnepensjonDagsats = Beløp(0),
                     barnetilleggsats = Beløp("36.00"),
                     barnetillegg = Beløp("0"),
                     utbetalingsdato = periode.tom.plusDays(9),
@@ -478,7 +499,7 @@ class BeregnTilkjentYtelseServiceTest {
                     ),
                     grunnlagsfaktor = GUnit("0.0078500000"),
                     grunnbeløp = Beløp("124028"),
-                    antallBarn = 0,
+                    antallBarn = 0, barnepensjonDagsats = Beløp(0),
                     barnetilleggsats = Beløp("36.00"),
                     barnetillegg = Beløp("0"),
                     utbetalingsdato = periode.tom.plusDays(9),
@@ -514,6 +535,8 @@ class BeregnTilkjentYtelseServiceTest {
             )
         )
 
+        val barnepensjonGrunnlag = null
+
         val beregnTilkjentYtelseService = BeregnTilkjentYtelseService(
             TilkjentYtelseGrunnlag(
                 fødselsdato,
@@ -522,7 +545,8 @@ class BeregnTilkjentYtelseServiceTest {
                 barnetilleggGrunnlag,
                 samordningsgrunnlag,
                 samordningUføre,
-                samordningArbeidsgiver
+                samordningArbeidsgiver,
+                barnepensjonGrunnlag
             )
         ).beregnTilkjentYtelse()
 
@@ -541,7 +565,7 @@ class BeregnTilkjentYtelseServiceTest {
                     ),
                     grunnlagsfaktor = GUnit("0.0051282051"),
                     grunnbeløp = Beløp("99858"),
-                    antallBarn = 0,
+                    antallBarn = 0, barnepensjonDagsats = Beløp(0),
                     barnetilleggsats = Beløp("27.00"),
                     barnetillegg = Beløp("0"),
                     utbetalingsdato = periode.tom.plusDays(9),
@@ -562,7 +586,7 @@ class BeregnTilkjentYtelseServiceTest {
                     ),
                     grunnlagsfaktor = GUnit("0.0076923077"),
                     grunnbeløp = Beløp("99858"),
-                    antallBarn = 0,
+                    antallBarn = 0, barnepensjonDagsats = Beløp(0),
                     barnetilleggsats = Beløp("27.00"),
                     barnetillegg = Beløp("0"),
                     utbetalingsdato = periode.tom.plusDays(9),
@@ -596,6 +620,8 @@ class BeregnTilkjentYtelseServiceTest {
             )
         )
 
+        val barnepensjonGrunnlag = null
+
         val beregnTilkjentYtelseService = BeregnTilkjentYtelseService(
             TilkjentYtelseGrunnlag(
                 fødselsdato,
@@ -604,7 +630,8 @@ class BeregnTilkjentYtelseServiceTest {
                 barnetilleggGrunnlag,
                 samordningsgrunnlag,
                 samordningUføre,
-                samordningArbeidsgiver
+                samordningArbeidsgiver,
+                barnepensjonGrunnlag,
             )
         ).beregnTilkjentYtelse()
 
@@ -623,7 +650,7 @@ class BeregnTilkjentYtelseServiceTest {
                     ),
                     grunnlagsfaktor = GUnit("0.0101538462"),
                     grunnbeløp = Beløp("118620"),
-                    antallBarn = 0,
+                    antallBarn = 0, barnepensjonDagsats = Beløp(0),
                     barnetilleggsats = Beløp("35.00"),
                     barnetillegg = Beløp("0"),
                     utbetalingsdato = periode.tom.plusDays(9),
@@ -674,6 +701,8 @@ class BeregnTilkjentYtelseServiceTest {
             )
         )
 
+        val barnepensjonGrunnlag = null
+        
         val beregnTilkjentYtelseService = BeregnTilkjentYtelseService(
             TilkjentYtelseGrunnlag(
                 fødselsdato,
@@ -682,7 +711,8 @@ class BeregnTilkjentYtelseServiceTest {
                 barnetilleggGrunnlag,
                 samordningsgrunnlag,
                 samordningUføre,
-                samordningArbeidsgiver
+                samordningArbeidsgiver,
+                barnepensjonGrunnlag
             )
         ).beregnTilkjentYtelse()
 
@@ -708,7 +738,7 @@ class BeregnTilkjentYtelseServiceTest {
                     ),
                     grunnlagsfaktor = GUnit("0.0101538462"),
                     grunnbeløp = Beløp("118620"),
-                    antallBarn = 0,
+                    antallBarn = 0, barnepensjonDagsats = Beløp(0),
                     barnetilleggsats = Beløp("35.00"),
                     barnetillegg = Beløp("0"),
                     utbetalingsdato = periode.tom.plusDays(9),
@@ -730,7 +760,7 @@ class BeregnTilkjentYtelseServiceTest {
                     ),
                     grunnlagsfaktor = GUnit("0.0101538462"),
                     grunnbeløp = Beløp("118620"),
-                    antallBarn = 0,
+                    antallBarn = 0, barnepensjonDagsats = Beløp(0),
                     barnetilleggsats = Beløp("35.00"),
                     barnetillegg = Beløp("0"),
                     utbetalingsdato = periode.tom.plusDays(9),
@@ -751,7 +781,7 @@ class BeregnTilkjentYtelseServiceTest {
                     ),
                     grunnlagsfaktor = GUnit("0.0101538462"),
                     grunnbeløp = Beløp("118620.00"),
-                    antallBarn = 0,
+                    antallBarn = 0, barnepensjonDagsats = Beløp(0),
                     barnetilleggsats = Beløp("35.00"),
                     barnetillegg = Beløp("0"),
                     utbetalingsdato = periode.tom.plusDays(9),
@@ -797,7 +827,7 @@ class BeregnTilkjentYtelseServiceTest {
                 listOf(Periode(LocalDate.now(), LocalDate.now())), vurdertAv = "ident"
             )
         )
-
+        val barnepensjonGrunnlag = null
         val beregnTilkjentYtelseService = BeregnTilkjentYtelseService(
             TilkjentYtelseGrunnlag(
                 fødselsdato,
@@ -806,7 +836,8 @@ class BeregnTilkjentYtelseServiceTest {
                 barnetilleggGrunnlag,
                 samordningsgrunnlag,
                 samordningUføre,
-                samordningArbeidsgiver
+                samordningArbeidsgiver,
+                barnepensjonGrunnlag
             )
         ).beregnTilkjentYtelse()
 
@@ -832,7 +863,7 @@ class BeregnTilkjentYtelseServiceTest {
                     ),
                     grunnlagsfaktor = GUnit("0.0101538462"),
                     grunnbeløp = Beløp("118620"),
-                    antallBarn = 0,
+                    antallBarn = 0, barnepensjonDagsats = Beløp(0),
                     barnetilleggsats = Beløp("35.00"),
                     barnetillegg = Beløp("0"),
                     utbetalingsdato = periode.tom.plusDays(9),
@@ -853,7 +884,7 @@ class BeregnTilkjentYtelseServiceTest {
                     ),
                     grunnlagsfaktor = GUnit("0.0101538462"),
                     grunnbeløp = Beløp("118620.00"),
-                    antallBarn = 0,
+                    antallBarn = 0, barnepensjonDagsats = Beløp(0),
                     barnetilleggsats = Beløp("35.00"),
                     barnetillegg = Beløp("0"),
                     utbetalingsdato = periode.tom.plusDays(9),
@@ -886,7 +917,7 @@ class BeregnTilkjentYtelseServiceTest {
                 listOf(Periode(LocalDate.now(), LocalDate.now())), vurdertAv = "ident"
             )
         )
-
+        val barnepensjonGrunnlag = null
         val beregnTilkjentYtelseService = BeregnTilkjentYtelseService(
             TilkjentYtelseGrunnlag(
                 fødselsdato,
@@ -895,7 +926,8 @@ class BeregnTilkjentYtelseServiceTest {
                 barnetilleggGrunnlag,
                 samordningsgrunnlag,
                 samordningUføre,
-                samordningArbeidsgiver
+                samordningArbeidsgiver,
+                barnepensjonGrunnlag
             ),
         ).beregnTilkjentYtelse()
 
@@ -915,7 +947,7 @@ class BeregnTilkjentYtelseServiceTest {
                     ),
                     grunnlagsfaktor = GUnit("0.0101538462"),
                     grunnbeløp = Beløp("118620"),
-                    antallBarn = 0,
+                    antallBarn = 0, barnepensjonDagsats = Beløp(0),
                     barnetilleggsats = Beløp("35.00"),
                     barnetillegg = Beløp("0"),
                     utbetalingsdato = periode.tom.plusDays(9),
@@ -955,7 +987,7 @@ class BeregnTilkjentYtelseServiceTest {
                 listOf(Periode(LocalDate.now(), LocalDate.now())), vurdertAv = "ident"
             )
         )
-
+        val barnepensjonGrunnlag = null
         val beregnTilkjentYtelseService = BeregnTilkjentYtelseService(
             TilkjentYtelseGrunnlag(
                 fødselsdato,
@@ -964,7 +996,8 @@ class BeregnTilkjentYtelseServiceTest {
                 barnetilleggGrunnlag,
                 samordningsgrunnlag,
                 samordningUføre,
-                samordningArbeidsgiver
+                samordningArbeidsgiver,
+                barnepensjonGrunnlag
             )
         ).beregnTilkjentYtelse()
 
@@ -984,7 +1017,7 @@ class BeregnTilkjentYtelseServiceTest {
                     ),
                     grunnlagsfaktor = GUnit("0.0101538462"),
                     grunnbeløp = Beløp("118620"),
-                    antallBarn = 0,
+                    antallBarn = 0, barnepensjonDagsats = Beløp(0),
                     barnetilleggsats = Beløp("35.00"),
                     barnetillegg = Beløp("0"),
                     utbetalingsdato = periode.tom.plusDays(9),
@@ -1055,7 +1088,7 @@ class BeregnTilkjentYtelseServiceTest {
                 listOf(Periode(LocalDate.of(2023, 6, 1), LocalDate.of(2023, 8, 1))), vurdertAv = "ident"
             )
         )
-
+        val barnepensjonGrunnlag = null
         val beregnTilkjentYtelseService = BeregnTilkjentYtelseService(
             TilkjentYtelseGrunnlag(
                 fødselsdato,
@@ -1064,7 +1097,8 @@ class BeregnTilkjentYtelseServiceTest {
                 barnetilleggGrunnlag,
                 samordningsgrunnlag,
                 samordningUføre,
-                samordningArbeidsgiver
+                samordningArbeidsgiver,
+                barnepensjonGrunnlag
             )
         ).beregnTilkjentYtelse()
 
@@ -1084,7 +1118,7 @@ class BeregnTilkjentYtelseServiceTest {
                     ),
                     grunnlagsfaktor = GUnit("0.0101538462"),
                     grunnbeløp = Beløp("118620"),
-                    antallBarn = 0,
+                    antallBarn = 0, barnepensjonDagsats = Beløp(0),
                     barnetilleggsats = Beløp("35.00"),
                     barnetillegg = Beløp("0"),
                     utbetalingsdato = periode.tom.plusDays(9),
@@ -1131,7 +1165,7 @@ class BeregnTilkjentYtelseServiceTest {
                 listOf(Periode(LocalDate.now(), LocalDate.now())), vurdertAv = "ident"
             )
         )
-
+        val barnepensjonGrunnlag = null
         val beregnTilkjentYtelseService = BeregnTilkjentYtelseService(
             TilkjentYtelseGrunnlag(
                 fødselsdato,
@@ -1140,7 +1174,8 @@ class BeregnTilkjentYtelseServiceTest {
                 barnetilleggGrunnlag,
                 samordningsgrunnlag,
                 samordningUføre,
-                samordningArbeidsgiver
+                samordningArbeidsgiver,
+                barnepensjonGrunnlag
             )
         ).beregnTilkjentYtelse()
 
@@ -1159,7 +1194,7 @@ class BeregnTilkjentYtelseServiceTest {
                     ),
                     grunnlagsfaktor = GUnit("0.0101538462"),
                     grunnbeløp = Beløp("118620"),
-                    antallBarn = 0,
+                    antallBarn = 0, barnepensjonDagsats = Beløp(0),
                     barnetilleggsats = Beløp("35.00"),
                     barnetillegg = Beløp("0"),
                     utbetalingsdato = periode.tom.plusDays(9),
@@ -1231,7 +1266,7 @@ class BeregnTilkjentYtelseServiceTest {
                 "", emptyList(), vurdertAv = "ident"
             )
         )
-
+        val barnepensjonGrunnlag = null
         val beregnTilkjentYtelseService = BeregnTilkjentYtelseService(
             TilkjentYtelseGrunnlag(
                 fødselsdato,
@@ -1240,7 +1275,8 @@ class BeregnTilkjentYtelseServiceTest {
                 barnetilleggGrunnlag,
                 samordningsgrunnlag,
                 samordningUføre,
-                samordningArbeidsgiver
+                samordningArbeidsgiver,
+                barnepensjonGrunnlag
             )
         ).beregnTilkjentYtelse()
 
@@ -1268,7 +1304,8 @@ class BeregnTilkjentYtelseServiceTest {
                             barnetillegg = Beløp("0"),
                             utbetalingsdato = periode.tom.plusDays(9),
                             minsteSats = Minstesats.IKKE_MINSTESATS,
-                            redusertDagsats = null
+                            redusertDagsats = null,
+                            barnepensjonDagsats = Beløp(0)
                         )
                     )
                 )
@@ -1312,7 +1349,7 @@ class BeregnTilkjentYtelseServiceTest {
                 listOf(Periode(LocalDate.now(), LocalDate.now())), vurdertAv = "ident"
             )
         )
-
+        val barnepensjonGrunnlag = null
         val beregnTilkjentYtelseService = BeregnTilkjentYtelseService(
             TilkjentYtelseGrunnlag(
                 fødselsdato,
@@ -1321,7 +1358,8 @@ class BeregnTilkjentYtelseServiceTest {
                 barnetilleggGrunnlag,
                 samordningsgrunnlag,
                 samordningUføre,
-                samordningArbeidsgiver
+                samordningArbeidsgiver,
+                barnepensjonGrunnlag
             )
         ).beregnTilkjentYtelse()
 
@@ -1343,7 +1381,8 @@ class BeregnTilkjentYtelseServiceTest {
             barnetillegg = Beløp("0"),
             utbetalingsdato = LocalDate.now(),
             minsteSats = Minstesats.IKKE_MINSTESATS,
-            redusertDagsats = Beløp(1132)
+            redusertDagsats = Beløp(1132),
+            barnepensjonDagsats = Beløp(0)
         )
         assertThat(beregnTilkjentYtelseService.segmenter()).usingRecursiveComparison().isEqualTo(
             listOf(
@@ -1359,6 +1398,136 @@ class BeregnTilkjentYtelseServiceTest {
                 ),
             )
         )
+    }
+
+    @Test
+    fun `barnepensjon skal være heltall og trekkes fra redusert dagsats`() {
+        val fødselsdato = Fødselsdato(LocalDate.of(1985, 1, 2))
+        val beregningsgrunnlag = Grunnlag11_19(
+            grunnlaget = GUnit(BigDecimal(4)),
+            erGjennomsnitt = false,
+            gjennomsnittligInntektIG = GUnit(0),
+            inntekter = emptyList()
+        )
+
+        val periode = Periode(LocalDate.of(2024, 1, 1), LocalDate.of(2024, 1, 31))
+
+        val underveisgrunnlag = underveisgrunnlag(periode)
+
+        val barnetilleggGrunnlag = BarnetilleggGrunnlag(emptyList())
+
+        val samordningsgrunnlag = SamordningGrunnlag(emptySet())
+
+        val samordningUføre = null
+
+        val samordningArbeidsgiver = null
+
+        // Barnepensjon: 10335.66 per måned
+        // Dagsats = 10335.66 * 12 / 260 = 477.03, avrundet til 477 (heltall)
+        val barnepensjonGrunnlag = no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.barnepensjon.BarnepensjonGrunnlag(
+            vurdering = no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.barnepensjon.BarnepensjonVurdering(
+                begrunnelse = "Mottar barnepensjon",
+                perioder = setOf(
+                    no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.barnepensjon.BarnepensjonPeriode(
+                        fom = YearMonth.of(2024, 1),
+                        tom = YearMonth.of(2024, 1),
+                        månedsats = Beløp("10335.66")
+                    )
+                ),
+                vurdertIBehandling = BehandlingId(2),
+                vurdertAv = Bruker("test"),
+                opprettet = Instant.now()
+            )
+        )
+
+        val beregnTilkjentYtelseService = BeregnTilkjentYtelseService(
+            TilkjentYtelseGrunnlag(
+                fødselsdato,
+                beregningsgrunnlag.grunnlaget(),
+                underveisgrunnlag,
+                barnetilleggGrunnlag,
+                samordningsgrunnlag,
+                samordningUføre,
+                samordningArbeidsgiver,
+                barnepensjonGrunnlag,
+            )
+        ).beregnTilkjentYtelse()
+
+        assertThat(beregnTilkjentYtelseService.segmenter()).hasSize(1)
+        val tilkjent = beregnTilkjentYtelseService.segmenter().first().verdi
+
+        // Dagsats = 4 * 0.66 / 260 * 118 620 = 1204.45
+        assertThat(tilkjent.dagsats).isEqualTo(Beløp("1204.45"))
+        
+        // Barnepensjon dagsats skal være heltall: 10335.66 * 12 / 260 = 477 
+        assertThat(tilkjent.barnepensjonDagsats).isEqualTo(Beløp(477))
+        
+        // Redusert dagsats = 1204.45 - 477
+        assertThat(tilkjent.redusertDagsats().verdi.toInt()).isEqualTo(727)
+    }
+
+    @Test
+    fun `negativ redusert dagsats skal defaulte til 0`() {
+        val fødselsdato = Fødselsdato(LocalDate.of(1985, 1, 2))
+        val beregningsgrunnlag = Grunnlag11_19(
+            grunnlaget = GUnit(BigDecimal(2)), // Fører til minste årlige ytelse over 25
+            erGjennomsnitt = false,
+            gjennomsnittligInntektIG = GUnit(0),
+            inntekter = emptyList()
+        )
+
+        val periode = Periode(LocalDate.of(2025, 1, 1), LocalDate.of(2025, 1, 31))
+
+        val underveisgrunnlag = underveisgrunnlag(periode)
+
+        val barnetilleggGrunnlag = BarnetilleggGrunnlag(emptyList())
+
+        val samordningsgrunnlag = SamordningGrunnlag(emptySet())
+
+        val samordningUføre = null
+
+        val samordningArbeidsgiver = null
+
+        // Barnepensjon: 25000 per måned
+        // Barnepensjon dagsats = 25000 * 12 / 260 = 1154
+        val barnepensjonGrunnlag = no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.barnepensjon.BarnepensjonGrunnlag(
+            vurdering = no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.barnepensjon.BarnepensjonVurdering(
+                begrunnelse = "Mottar barnepensjon",
+                perioder = setOf(
+                    no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.barnepensjon.BarnepensjonPeriode(
+                        fom = YearMonth.of(2025, 1),
+                        tom = YearMonth.of(2025, 1),
+                        månedsats = Beløp("25000")
+                    )
+                ),
+                vurdertIBehandling = BehandlingId(3),
+                vurdertAv = Bruker("test"),
+                opprettet = Instant.now()
+            )
+        )
+
+        val beregnet = BeregnTilkjentYtelseService(
+            TilkjentYtelseGrunnlag(
+                fødselsdato,
+                beregningsgrunnlag.grunnlaget(),
+                underveisgrunnlag,
+                barnetilleggGrunnlag,
+                samordningsgrunnlag,
+                samordningUføre,
+                samordningArbeidsgiver,
+                barnepensjonGrunnlag,
+            )
+        ).beregnTilkjentYtelse()
+
+        assertThat(beregnet.segmenter()).hasSize(1)
+        val tilkjent = beregnet.segmenter().first().verdi
+
+        // Dagsats = 2.041 * 124 028 / 260 = 973.62
+        assertThat(tilkjent.dagsats).isEqualTo(Beløp("973.62"))
+        
+        assertThat(tilkjent.barnepensjonDagsats).isEqualTo(Beløp(1154))
+        
+        assertThat(tilkjent.redusertDagsats()).isEqualTo(Beløp(0))
     }
 
 }

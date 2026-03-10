@@ -66,6 +66,7 @@ class TilkjentYtelseApiTest : BaseApiTest() {
                 ),
                 grunnlagsfaktor = GUnit("1.5"),
                 grunnbeløp = Beløp(106399),
+                barnepensjonDagsats = Beløp(0),
                 antallBarn = 2,
                 barnetilleggsats = Beløp(36),
                 barnetillegg = Beløp(72),

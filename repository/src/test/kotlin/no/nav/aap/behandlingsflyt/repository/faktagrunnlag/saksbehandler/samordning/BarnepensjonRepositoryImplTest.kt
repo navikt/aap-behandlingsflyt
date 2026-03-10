@@ -54,12 +54,12 @@ class BarnepensjonRepositoryImplTest {
                 BarnepensjonPeriode(
                     fom = YearMonth.of(2022, 1),
                     tom = YearMonth.of(2022, 12),
-                    månedbeløp = Beløp(10000)
+                    månedsats = Beløp(10000)
                 ),
                 BarnepensjonPeriode(
                     fom = YearMonth.of(2023, 1),
                     tom = YearMonth.of(2023, 12),
-                    månedbeløp = Beløp(25000)
+                    månedsats = Beløp(25000)
                 )
             ),
             vurdertAv = Bruker("Z123456"),
@@ -106,12 +106,12 @@ class BarnepensjonRepositoryImplTest {
                 BarnepensjonPeriode(
                     fom = YearMonth.of(2022, 1),
                     tom = YearMonth.of(2022, 12),
-                    månedbeløp = Beløp(10000)
+                    månedsats = Beløp(10000)
                 ),
                 BarnepensjonPeriode(
                     fom = YearMonth.of(2023, 1),
                     tom = YearMonth.of(2023, 12),
-                    månedbeløp = Beløp(25000)
+                    månedsats = Beløp(25000)
                 )
             ),
             vurdertAv = Bruker("Z123456"),

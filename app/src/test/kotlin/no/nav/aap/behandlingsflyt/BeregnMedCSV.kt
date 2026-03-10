@@ -150,7 +150,8 @@ fun beregnForInput(beregning: Beregning, fødselsdato: Fødselsdato): Triple<Yea
             ),
             samordningGrunnlag = SamordningGrunnlag(emptySet()),
             samordningUføre = null,
-            samordningArbeidsgiver = null
+            samordningArbeidsgiver = null,
+            barnepensjonGrunnlag = null
         )
     )
 
