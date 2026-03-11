@@ -60,10 +60,6 @@ class HendelseMottattHåndteringJobbUtfører(
         val payloadAsString = if (input.harPayload()) input.payload() else null
         val mottattTidspunkt = DefaultJsonMapper.fromJson<LocalDateTime>(input.parameter(MOTTATT_TIDSPUNKT))
 
-        val parsedMelding = if (payloadAsString != null) {
-            DefaultJsonMapper.fromJson<Melding>(payloadAsString)
-        } else null
-
         val referanse = DefaultJsonMapper.fromJson<InnsendingReferanse>(input.parameter(MOTTATT_DOKUMENT_REFERANSE))
 
         val digitalisertAvPostmottak = input.optionalParameter(DIGITALISERT_AV_POSTMOTTAK)?.let {
@@ -74,6 +70,10 @@ class HendelseMottattHåndteringJobbUtfører(
             log.warn("Allerede håndtert dokument med referanse {}", referanse)
             return
         }
+
+        val parsedMelding = if (payloadAsString != null) {
+            DefaultJsonMapper.fromJson<Melding>(payloadAsString)
+        } else null
 
         // DO WORK
         mottaDokumentService.mottattDokument(

@@ -13,6 +13,8 @@ import no.nav.aap.komponenter.tidslinje.somTidslinje
 import no.nav.aap.komponenter.type.Periode
 
 private const val KVOTE_KALENDERÅR = 10
+private const val KVOTE_BARN = 3
+private const val KVOTE_DØDSFALL = 3
 
 
 /** Vurder om medlemmet kan sanksjoneres etter § 11-8 "Fravær fra fastsatt aktivitet".
@@ -39,10 +41,14 @@ class FraværFastsattAktivitetRegel : UnderveisRegel {
             "kan ikke vurdere utenfor periode for vurdering fordi meldeperioden ikke er definert"
         }
 
+        val sisteFjortenDager = TODO();
+        val inneværendeKalenderÅrOpptilDagensDato = TODO();
+
         val tidslinje: Tidslinje<FraværForDag> =
             input.meldekort
                 .sortedBy { it.mottattTidspunkt } // somTidslinje vil overskrive tidligere verdier
-                .flatMap { it.fravær }.somTidslinje { Periode(it.dato, it.dato) }
+                .flatMap { it.fravær }
+                .somTidslinje { Periode(it.dato, it.dato) }
 
         // Første brudd i meldeperioden teller ikke i årskvote
         // Deler opp på meldeperiode først for å finne første i meldeperioden
