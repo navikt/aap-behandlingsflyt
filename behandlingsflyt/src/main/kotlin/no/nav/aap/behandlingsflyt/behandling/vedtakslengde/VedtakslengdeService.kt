@@ -114,7 +114,7 @@ class VedtakslengdeService(
             .filter { it.vurdertAutomatisk }
             .maxByOrNull { it.opprettet }
 
-        if (sisteAutomatiskeVurdering?.sluttdato != sluttdato) {
+        if (sisteAutomatiskeVurdering?.sluttdato != sluttdato && vedtattSluttdato != sluttdato) {
             log.info("Automatisk vurdering av sluttdato endret fra $vedtattSluttdato til $sluttdato for behandling $behandlingId")
 
             val nyAutomatiskVurdering = VedtakslengdeVurdering(

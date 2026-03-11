@@ -1002,8 +1002,8 @@ class AvklarVedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(AvklarVedtakslen
             .løsOppholdskrav(startDato)
             .løsAndreStatligeYtelser()
             .medKontekst {
-                val vedtasklengdeRepository: VedtakslengdeRepository = repositoryProvider.provide()
-                val vedtakslengdeGrunnlag = vedtasklengdeRepository.hentHvisEksisterer(this.behandling.id)
+                val vedtakslengdeRepository: VedtakslengdeRepository = repositoryProvider.provide()
+                val vedtakslengdeGrunnlag = vedtakslengdeRepository.hentHvisEksisterer(this.behandling.id)
 
                 assertThat(vedtakslengdeGrunnlag).isNotNull
                 assertThat(vedtakslengdeGrunnlag?.vurderinger?.size).isEqualTo(1)
@@ -1017,18 +1017,20 @@ class AvklarVedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(AvklarVedtakslen
             }
             .løsAvklaringsBehov(
                 AvklarVedtakslengdeLøsning(
-                    vedtakslengdeVurdering = VedtakslengdeVurderingDto(
+                    løsningerForPerioder = listOf(VedtakslengdeVurderingDto(
+                        fom = startDato,
+                        tom = manueltOverstyrtSluttdato,
                         sluttdato = manueltOverstyrtSluttdato,
                         begrunnelse = "Vurdert vedtakslengde manuelt"
-                    )
+                    ))
                 )
             )
             .løsAvklaringsBehov(ForeslåVedtakLøsning())
             .fattVedtak()
             .løsVedtaksbrev(TypeBrev.VEDTAK_INNVILGELSE)
             .medKontekst {
-                val vedtasklengdeRepository: VedtakslengdeRepository = repositoryProvider.provide()
-                val vedtakslengdeGrunnlag = vedtasklengdeRepository.hentHvisEksisterer(this.behandling.id)
+                val vedtakslengdeRepository: VedtakslengdeRepository = repositoryProvider.provide()
+                val vedtakslengdeGrunnlag = vedtakslengdeRepository.hentHvisEksisterer(this.behandling.id)
 
                 assertThat(vedtakslengdeGrunnlag).isNotNull
                 assertThat(vedtakslengdeGrunnlag?.vurderinger?.size).isEqualTo(2)
@@ -1062,16 +1064,17 @@ class AvklarVedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(AvklarVedtakslen
             }
             .løsAvklaringsBehov(
                 AvklarVedtakslengdeLøsning(
-                    vedtakslengdeVurdering = VedtakslengdeVurderingDto(
-                        // Overstyrer til 15 måneder
+                    løsningerForPerioder = listOf(VedtakslengdeVurderingDto(
+                        fom = automatiskSluttdato.plusDays(1),
+                        tom = nyManuellSluttdato,
                         sluttdato = nyManuellSluttdato,
                         begrunnelse = nyBegrunnelse
-                    )
+                    ))
                 )
             )
             .medKontekst {
-                val vedtasklengdeRepository: VedtakslengdeRepository = repositoryProvider.provide()
-                val vedtakslengdeGrunnlag = vedtasklengdeRepository.hentHvisEksisterer(this.behandling.id)
+                val vedtakslengdeRepository: VedtakslengdeRepository = repositoryProvider.provide()
+                val vedtakslengdeGrunnlag = vedtakslengdeRepository.hentHvisEksisterer(this.behandling.id)
                 assertThat(vedtakslengdeGrunnlag?.vurderinger?.size).isEqualTo(2)
                 assertThat(vedtakslengdeGrunnlag?.gjeldendeVurdering()?.sluttdato).isEqualTo(nyManuellSluttdato)
                 assertThat(vedtakslengdeGrunnlag?.gjeldendeVurdering()?.begrunnelse).isEqualTo(nyBegrunnelse)
@@ -1100,8 +1103,8 @@ class AvklarVedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(AvklarVedtakslen
             .løsOppholdskrav(startDato)
             .løsAndreStatligeYtelser()
             .medKontekst {
-                val vedtasklengdeRepository: VedtakslengdeRepository = repositoryProvider.provide()
-                val vedtakslengdeGrunnlag = vedtasklengdeRepository.hentHvisEksisterer(this.behandling.id)
+                val vedtakslengdeRepository: VedtakslengdeRepository = repositoryProvider.provide()
+                val vedtakslengdeGrunnlag = vedtakslengdeRepository.hentHvisEksisterer(this.behandling.id)
 
                 // Ett år som forventet med ordinær rettighet
                 assertThat(vedtakslengdeGrunnlag?.gjeldendeVurdering()?.sluttdato).isEqualTo(forventetSluttdato)
@@ -1109,18 +1112,20 @@ class AvklarVedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(AvklarVedtakslen
             // Overstyrer likevel manuelt til 15 måneder
             .løsAvklaringsBehov(
                 AvklarVedtakslengdeLøsning(
-                    vedtakslengdeVurdering = VedtakslengdeVurderingDto(
+                    løsningerForPerioder = listOf(VedtakslengdeVurderingDto(
+                        fom = startDato,
+                        tom = manueltOverstyrtSluttdato,
                         sluttdato = manueltOverstyrtSluttdato,
                         begrunnelse = "Vurdert vedtakslengde manuelt"
-                    )
+                    ))
                 )
             )
             .løsAvklaringsBehov(ForeslåVedtakLøsning())
             .fattVedtak()
             .løsVedtaksbrev(TypeBrev.VEDTAK_INNVILGELSE)
             .medKontekst {
-                val vedtasklengdeRepository: VedtakslengdeRepository = repositoryProvider.provide()
-                val vedtakslengdeGrunnlag = vedtasklengdeRepository.hentHvisEksisterer(this.behandling.id)
+                val vedtakslengdeRepository: VedtakslengdeRepository = repositoryProvider.provide()
+                val vedtakslengdeGrunnlag = vedtakslengdeRepository.hentHvisEksisterer(this.behandling.id)
 
                 assertThat(vedtakslengdeGrunnlag).isNotNull
                 assertThat(vedtakslengdeGrunnlag?.vurderinger?.size).isEqualTo(2)
