@@ -35,6 +35,7 @@ import no.nav.aap.komponenter.gateway.GatewayProvider
 import kotlin.reflect.KClass
 
 fun testGatewayProvider(unleashGateway: KClass<out UnleashGateway> = AlleAvskruddUnleash::class): GatewayProvider {
+    // Sikkert bedre å lage fakes enn å fake disse verdiene i registeret
     listOf(
         "inntekt",
         "institusjonsopphold",
@@ -48,7 +49,6 @@ fun testGatewayProvider(unleashGateway: KClass<out UnleashGateway> = AlleAvskrud
         System.setProperty("integrasjon.$it.url", "http://dummy")
         System.setProperty("integrasjon.$it.scope", "dummy")
     }
-    // Only set these if not already configured (e.g. by FakeServers), to avoid overwriting real fake server URLs
     if (System.getProperty("azure.openid.config.token.endpoint") == null) {
         System.setProperty("azure.openid.config.token.endpoint", "http://localhost:123/token/x12345")
         System.setProperty("azure.app.client.id", "behandlingsflyt")

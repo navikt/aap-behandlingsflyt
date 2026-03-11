@@ -33,6 +33,9 @@ data class SakStatus(
         AVSLUTTET
     }
 
+    /**
+     * Ment å deles til NKS via api-intern.
+     */
     enum class SakOgBehandlingstatus {
         SOKNAD_UNDER_BEHANDLING,
         REVURDERING_UNDER_BEHANDLING,
