@@ -103,7 +103,7 @@ class KvalitetssikringsStegTest {
 
     private class Scenario {
         private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(1))
-        private val behandling = opprettBehandling(periode)
+        private val behandling = opprettBehandling(periode.fom)
         private val avklaringsbehovene = InMemoryAvklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
 
         private val steg = KvalitetssikringsSteg(
@@ -121,7 +121,7 @@ class KvalitetssikringsStegTest {
             steg.utfør(kontekst)
         }
 
-        private fun opprettBehandling(periode: Periode): Behandling {
+        private fun opprettBehandling(periode: LocalDate): Behandling {
             val person =
                 Person(
                     PersonId(Random.nextLong()),

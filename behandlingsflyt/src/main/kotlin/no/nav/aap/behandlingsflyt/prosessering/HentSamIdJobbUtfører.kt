@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakRepository
 import no.nav.aap.behandlingsflyt.datadeling.sam.SamGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.samid.SamIdRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.refusjonskrav.TjenestepensjonRefusjonsKravVurderingRepository
+import no.nav.aap.behandlingsflyt.prosessering.datadeling.DatadelingBehandlingJobbUtfører
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
@@ -16,7 +17,7 @@ import no.nav.aap.motor.ProvidersJobbSpesifikasjon
 import org.slf4j.LoggerFactory
 
 class HentSamIdJobbUtfører(
-    private val repositoryProvider: RepositoryProvider,
+    repositoryProvider: RepositoryProvider,
     private val gatewayProvider: GatewayProvider,
     private val samGateway: SamGateway = gatewayProvider.provide(),
     private val samIdRepository: SamIdRepository = repositoryProvider.provide(),
@@ -25,8 +26,7 @@ class HentSamIdJobbUtfører(
     private val vedtakRepository: VedtakRepository = repositoryProvider.provide(),
     private val flytJobbRepository: FlytJobbRepository = repositoryProvider.provide(),
     private val tjenestepensjonRefusjonsKravVurderingRepository: TjenestepensjonRefusjonsKravVurderingRepository = repositoryProvider.provide(),
-
-    ): JobbUtfører {
+    ) : JobbUtfører {
 
     private val log = LoggerFactory.getLogger(javaClass)
 

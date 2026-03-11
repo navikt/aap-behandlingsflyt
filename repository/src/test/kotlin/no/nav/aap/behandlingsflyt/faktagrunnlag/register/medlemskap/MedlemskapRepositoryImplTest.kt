@@ -39,7 +39,7 @@ internal class MedlemskapRepositoryImplTest {
         val (sak, behandling) = dataSource.transaction {
             val sak = opprettSak(
                 it,
-                Periode(fom = LocalDate.now().minusYears(2), tom = LocalDate.now())
+                LocalDate.now().minusYears(2)
             )
             val behandling = finnEllerOpprettBehandling(it, sak)
             Pair(sak, behandling)

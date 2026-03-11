@@ -6,7 +6,7 @@ utbetaling = "0.0.89"
 brev = "0.0.243"
 oppgave = "0.0.155"
 meldekort = "0.0.192"
-apiIntern = "0.0.31"
+apiIntern = "0.0.32"
 junit = "6.0.1"
 testcontainers = "2.0.2"
 

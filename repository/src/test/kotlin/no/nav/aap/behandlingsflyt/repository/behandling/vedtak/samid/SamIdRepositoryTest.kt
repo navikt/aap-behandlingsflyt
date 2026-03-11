@@ -5,7 +5,6 @@ import no.nav.aap.behandlingsflyt.help.opprettSak
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
-import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
@@ -33,7 +32,7 @@ class SamIdRepositoryTest {
             val samRepo = SamIdRepositoryImpl(connection)
             val samId = "123456789"
 
-            val sak = opprettSak(connection, Periode(1 januar 2020, 1 januar 2021))
+            val sak = opprettSak(connection, 1 januar 2020)
             val behandling = finnEllerOpprettBehandling(connection, sak)
 
             samRepo.lagre(behandling.id, samId)
