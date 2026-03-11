@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.prosessering.datadeling
 
 import no.nav.aap.behandlingsflyt.datadeling.SakStatus
-import no.nav.aap.behandlingsflyt.datadeling.SakStatus.SakOgBehandlingstatus
+import no.nav.aap.behandlingsflyt.datadeling.SakStatus.DatadelingBehandlingStatus
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
@@ -28,21 +28,21 @@ class SakstatusDatadelingService(
         val sisteYtelseBehandling =
             requireNotNull(behandlingService.finnSisteYtelsesbehandlingFor(sak.id)) { "Fant ingen ytelsesbehandling for sak ${sak.id}" }
 
-        val sakOgBehandlingstatus = when {
+        val datadelingBehandlingStatus = when {
             sisteYtelseBehandling.status()
                 .erÅpen() && sisteYtelseBehandling.vurderingsbehov()
-                .find { it.type == Vurderingsbehov.MOTTATT_SØKNAD } != null -> SakOgBehandlingstatus.SOKNAD_UNDER_BEHANDLING
+                .find { it.type == Vurderingsbehov.MOTTATT_SØKNAD } != null -> DatadelingBehandlingStatus.SOKNAD_UNDER_BEHANDLING
 
-            sisteYtelseBehandling.status().erÅpen() -> SakOgBehandlingstatus.REVURDERING_UNDER_BEHANDLING
+            sisteYtelseBehandling.status().erÅpen() -> DatadelingBehandlingStatus.REVURDERING_UNDER_BEHANDLING
 
-            else -> SakOgBehandlingstatus.FERDIGBEHANDLET
+            else -> DatadelingBehandlingStatus.FERDIGBEHANDLET
         }
 
 
         return SakStatus.fromKelvin(
             sak.saksnummer.toString(),
             sak.status(),
-            sakOgBehandlingstatus,
+            datadelingBehandlingStatus,
             sak.rettighetsperiode
         )
     }

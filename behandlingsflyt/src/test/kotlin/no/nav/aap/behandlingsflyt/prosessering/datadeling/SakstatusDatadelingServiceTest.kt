@@ -20,7 +20,7 @@ class SakstatusDatadelingServiceTest {
 
         val res = service.utledSakstatus(behandling.referanse)
 
-        assertThat(res.status).isEqualTo(SakStatus.SakOgBehandlingstatus.SOKNAD_UNDER_BEHANDLING)
+        assertThat(res.status).isEqualTo(SakStatus.DatadelingBehandlingStatus.SOKNAD_UNDER_BEHANDLING)
 
     }
 }
