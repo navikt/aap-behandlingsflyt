@@ -45,7 +45,7 @@ fun testGatewayProvider(unleashGateway: KClass<out UnleashGateway> = AlleAvskrud
         "utbetal",
     ).forEach {
         if (System.getProperty("integrasjon.$it.url") != null) return@forEach
-        System.setProperty("integrasjon.$it.url", "dummy")
+        System.setProperty("integrasjon.$it.url", "http://dummy")
         System.setProperty("integrasjon.$it.scope", "dummy")
     }
     // Only set these if not already configured (e.g. by FakeServers), to avoid overwriting real fake server URLs

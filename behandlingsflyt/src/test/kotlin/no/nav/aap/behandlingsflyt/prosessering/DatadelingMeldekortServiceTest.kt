@@ -83,7 +83,7 @@ class DatadelingMeldekortServiceTest {
             )
 
             // Legg inn testdata
-            val testSak = opprettSak(connection, testIdent, testPeriode)
+            val testSak = opprettSak(connection, testIdent, testPeriode.fom)
 
             // aktiv behandling med meldekort
             val testBehandling = behandlingRepository.opprettBehandling(
