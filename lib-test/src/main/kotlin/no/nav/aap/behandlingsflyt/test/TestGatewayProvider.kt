@@ -31,33 +31,10 @@ import no.nav.aap.behandlingsflyt.integrasjon.ufore.UføreGateway
 import no.nav.aap.behandlingsflyt.integrasjon.utbetaling.UtbetalingGatewayImpl
 import no.nav.aap.behandlingsflyt.integrasjon.yrkesskade.YrkesskadeRegisterGatewayImpl
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
-import no.nav.aap.komponenter.gateway.GatewayProvider
 import kotlin.reflect.KClass
 
-fun testGatewayProvider(unleashGateway: KClass<out UnleashGateway> = AlleAvskruddUnleash::class): GatewayProvider {
-    // Sikkert bedre å lage fakes enn å fake disse verdiene i registeret
-    listOf(
-        "inntekt",
-        "institusjonsopphold",
-        "institusjonsoppholdenkelt",
-        "oppgavestyring",
-        "pesys",
-        "yrkesskade",
-        "utbetal",
-    ).forEach {
-        if (System.getProperty("integrasjon.$it.url") != null) return@forEach
-        System.setProperty("integrasjon.$it.url", "http://dummy")
-        System.setProperty("integrasjon.$it.scope", "dummy")
-    }
-    if (System.getProperty("azure.openid.config.token.endpoint") == null) {
-        System.setProperty("azure.openid.config.token.endpoint", "http://localhost:123/token/x12345")
-        System.setProperty("azure.app.client.id", "behandlingsflyt")
-        System.setProperty("azure.app.client.secret", "")
-        System.setProperty("azure.openid.config.issuer", "behandlingsflyt")
-        System.setProperty("azure.openid.config.jwks.uri", "http://localhost:12/jwks")
-    }
-
-    return createGatewayProvider {
+fun testGatewayProvider(unleashGateway: KClass<out UnleashGateway> = AlleAvskruddUnleash::class) =
+    createGatewayProvider {
         register<PdlBarnGateway>()
         register<PdlIdentGateway>()
         register<PdlPersoninfoBulkGateway>()
@@ -90,4 +67,3 @@ fun testGatewayProvider(unleashGateway: KClass<out UnleashGateway> = AlleAvskrud
         register<GosysGateway>()
         register<DagpengerGatewayImpl>()
     }
-}
