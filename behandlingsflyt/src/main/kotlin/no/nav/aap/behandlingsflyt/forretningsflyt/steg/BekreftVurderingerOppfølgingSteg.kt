@@ -70,15 +70,16 @@ class BekreftVurderingerOppfølgingSteg(
         behandlingId: BehandlingId
     ): Boolean {
         val sykdomsbehovSistLøstAvKontor = sykdomsbehovLøstAvKontorIDenneBehandlingen(avklaringsbehovene)
-            .map { behov -> behov.aktivHistorikk.last() }
-            .filter { it.status == Status.AVSLUTTET }
+            .mapNotNull { behov -> behov.aktivHistorikk.lastOrNull { it.status == Status.AVSLUTTET } }
         val sistBekreftet =
-            avklaringsbehovene.hentBehovForDefinisjon(Definisjon.BEKREFT_VURDERINGER_OPPFØLGING)?.aktivHistorikk?.last()?.tidsstempel
+            avklaringsbehovene.hentBehovForDefinisjon(Definisjon.BEKREFT_VURDERINGER_OPPFØLGING)
+                ?.aktivHistorikk?.lastOrNull { endring -> endring.status == Status.AVSLUTTET }
+                ?.tidsstempel
 
         val mellomlagredeVurderinger = mellomlagretVurderingService.hentMellomlagredeVurderingerFørSteg(
             behandlingId, type(), listOf(Rolle.SAKSBEHANDLER_OPPFOLGING)
         )
-        
+
         return when {
             mellomlagredeVurderinger.isNotEmpty() -> false
             sykdomsbehovSistLøstAvKontor.isEmpty() -> true
