@@ -4,8 +4,6 @@ import no.nav.aap.behandlingsflyt.behandling.samordning.EndringStatus
 import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.AndreStatligeYtelser
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.gateway.DagpengerKilde
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.gateway.DagpengerYtelseType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjonForhold
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjonOrdning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.YtelseTypeCode
@@ -81,7 +79,7 @@ data class SamordningAndreStatligeYtelserGrunnlagDTO(
     val harTilgangTilÅSaksbehandle: Boolean,
     val vurdering: SamordningAndreStatligeYtelserVurderingDTO?,
     val historiskeVurderinger: List<SamordningAndreStatligeYtelserVurderingDTO>? = emptyList(),
-    val dagpengerPerioder: List<DagpengerPeriodeDto>? = emptyList(),
+    val perioder: List<AndreStatligeYtelserPeriodeDto>? = emptyList(),
 )
 
 data class SamordningAndreStatligeYtelserVurderingDTO(
@@ -122,12 +120,20 @@ data class TjenestepensjonYtelseDTO(
 )
 
 data class AndreStatligeYtelserGrunnlagDto (
-    val dagpengerPerioder : List <DagpengerPeriodeDto> = emptyList()
+    val perioder: List<AndreStatligeYtelserPeriodeDto> = emptyList()
 )
 
-data class DagpengerPeriodeDto(
+data class AndreStatligeYtelserPeriodeDto (
     val fom: LocalDate,
     val tom: LocalDate,
-    val kilde: DagpengerKilde,
-    val dagpengerYtelseType: DagpengerYtelseType
+    val kilde: SamordningKilde,
+    val ytelseType: SamordningYtelseType
 )
+
+enum class SamordningKilde {
+    ARENA, DP_SAK
+}
+
+enum class SamordningYtelseType {
+    DAGPENGER_ARBEIDSSOKER_ORDINAER, DAGPENGER_PERMITTERING_ORDINAER, DAGPENGER_PERMITTERING_FISKEINDUSTRI
+}

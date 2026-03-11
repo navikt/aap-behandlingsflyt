@@ -220,11 +220,11 @@ fun NormalOpenAPIRoute.samordningGrunnlag(
                             }
 
                         val dagpengerGrunnlag = andreStatligeYtelserRepository.hent(behandling.id).map {
-                            DagpengerPeriodeDto(
+                            AndreStatligeYtelserPeriodeDto(
                                 fom = it.periode.fom,
                                 tom = it.periode.tom,
-                                dagpengerYtelseType= it.dagpengerYtelseType,
-                                kilde = it.kilde
+                                ytelseType = mapDagpengerYtelseType(it.dagpengerYtelseType),
+                                kilde = mapDagpengerKilde(it.kilde)
                             )
                         }
 
@@ -248,7 +248,7 @@ fun NormalOpenAPIRoute.samordningGrunnlag(
                         harTilgangTilÅSaksbehandle = kanSaksbehandle(),
                         vurdering = vurdering,
                         historiskeVurderinger = historiskeVurderinger,
-                        dagpengerPerioder = dagpengerGrunnlagPerioder,
+                        perioder = dagpengerGrunnlagPerioder,
                     )
                 )
             }

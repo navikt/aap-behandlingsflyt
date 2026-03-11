@@ -4,11 +4,12 @@ import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
 import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattNavnOgEnhet
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.SamordningAndreStatligeYtelserVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.gateway.DagpengerKilde
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.gateway.DagpengerYtelseType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.arbeidsgiver.SamordningArbeidsgiverVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UførePeriodeMedEndringStatus
-import no.nav.aap.behandlingsflyt.tilgang.kanSaksbehandle
 
 fun mapSamordningAndreStatligeYtelserVurderingDTO(
     vurdering: SamordningAndreStatligeYtelserVurdering,
@@ -120,3 +121,18 @@ fun mapSamordningUføreGrunnlag(
             endringStatus = it.endringStatus
         )
     }
+
+fun mapDagpengerKilde(kilde: DagpengerKilde): SamordningKilde {
+    return when (kilde) {
+        DagpengerKilde.ARENA -> SamordningKilde.ARENA
+        DagpengerKilde.DP_SAK -> SamordningKilde.DP_SAK
+    }
+}
+
+fun mapDagpengerYtelseType(ytelseType: DagpengerYtelseType): SamordningYtelseType {
+    return when (ytelseType) {
+        DagpengerYtelseType.DAGPENGER_ARBEIDSSOKER_ORDINAER -> SamordningYtelseType.DAGPENGER_ARBEIDSSOKER_ORDINAER
+        DagpengerYtelseType.DAGPENGER_PERMITTERING_ORDINAER -> SamordningYtelseType.DAGPENGER_PERMITTERING_ORDINAER
+        DagpengerYtelseType.DAGPENGER_PERMITTERING_FISKEINDUSTRI -> SamordningYtelseType.DAGPENGER_PERMITTERING_FISKEINDUSTRI
+    }
+}
