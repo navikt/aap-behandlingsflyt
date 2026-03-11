@@ -3,7 +3,9 @@ package no.nav.aap.behandlingsflyt.behandling.vedtakslengde
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
+import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.VirkningstidspunktUtleder
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
@@ -17,6 +19,7 @@ import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.getGrunnlag
 import javax.sql.DataSource
@@ -38,6 +41,7 @@ fun NormalOpenAPIRoute.vedtakslengdeGrunnlagApi(
                     val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
                     val vedtakslengdeRepository = repositoryProvider.provide<VedtakslengdeRepository>()
                     val sakRepository = repositoryProvider.provide<SakRepository>()
+                    val vilkårsresultatRepository = repositoryProvider.provide<VilkårsresultatRepository>()
 
                     val behandling: Behandling =
                         BehandlingReferanseService(behandlingRepository).behandling(req)
@@ -48,22 +52,22 @@ fun NormalOpenAPIRoute.vedtakslengdeGrunnlagApi(
                     val vedtattGrunnlag = behandling.forrigeBehandlingId?.let { vedtakslengdeRepository.hentHvisEksisterer(it) }
                     val nyeVurderinger = grunnlag?.vurderinger?.filter { it.vurdertIBehandling == behandling.id } ?: emptyList()
 
-                    val initiellStartdato = sak.rettighetsperiode.fom
-                    val sluttdatoGjeldendeVurdering = vedtattGrunnlag?.gjeldendeVurdering()?.sluttdato
+                    val vedtakslengdeStartdato =
+                        VirkningstidspunktUtleder(vilkårsresultatRepository).utledVirkningsTidspunkt(behandling.id)
+                            ?: sak.rettighetsperiode.fom
 
                     // Startdato i nye vurderinger fortsetter fra forrige vedtatte grunnlag
-                    val startdatoNyeVurderinger = sluttdatoGjeldendeVurdering?.plusDays(1) ?: initiellStartdato
+                    val startdatoNyeVurderinger = vedtattGrunnlag?.gjeldendeVurdering()?.sluttdato?.plusDays(1) ?: vedtakslengdeStartdato
 
                     VedtakslengdeGrunnlagResponse(
                         harTilgangTilÅSaksbehandle = kanSaksbehandle(),
-                        kanVurderes = listOf(sak.rettighetsperiode),
+                        kanVurderes = listOf(Periode(vedtakslengdeStartdato, Tid.MAKS)),
                         behøverVurderinger = emptyList(),
                         nyeVurderinger = nyeVurderinger.map { it.toResponse(vurdertAvService,
-                            // Bruker gjeldende vedtatt sluttdato som startdato dersom denne er lik sluttdato i ny vurdering
-                            Periode(if (sluttdatoGjeldendeVurdering == it.sluttdato) it.sluttdato else startdatoNyeVurderinger, it.sluttdato)
+                            Periode(startdatoNyeVurderinger, it.sluttdato)
                         ) },
                         sisteVedtatteVurderinger = vedtattGrunnlag
-                            ?.gjeldendeVurderinger(initiellStartdato)
+                            ?.gjeldendeVurderinger(vedtakslengdeStartdato)
                             ?.segmenter()
                             ?.map { it.verdi.toResponse(vurdertAvService, it.periode) }
                             ?: emptyList(),
