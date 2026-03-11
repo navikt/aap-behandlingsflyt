@@ -9,7 +9,6 @@ import no.nav.aap.behandlingsflyt.help.opprettSak
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
-import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
@@ -17,10 +16,9 @@ import org.junit.jupiter.api.Test
 import java.time.Instant
 import java.time.LocalDate
 
+@Suppress("ClassName")
 internal class Aktivitetsplikt11_9RepositoryImplTest {
     companion object {
-        private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
-
         private lateinit var dataSource: TestDataSource
 
         @BeforeAll
@@ -37,7 +35,7 @@ internal class Aktivitetsplikt11_9RepositoryImplTest {
     @Test
     fun `Lagrer ned og henter vurdering av aktivitetsplikt § 11-9`() {
         dataSource.transaction { connection ->
-            val sak = opprettSak(connection, periode)
+            val sak = opprettSak(connection, LocalDate.now())
             val behandling = finnEllerOpprettBehandling(connection, sak)
 
             val aktivitetspliktRepository = Aktivitetsplikt11_9RepositoryImpl(connection)

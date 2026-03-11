@@ -1,6 +1,5 @@
-package no.nav.aap.behandlingsflyt.prosessering
+package no.nav.aap.behandlingsflyt.prosessering.datadeling
 
-import no.nav.aap.behandlingsflyt.datadeling.SakStatus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.meldeperiode.MeldeperiodeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.ApiInternGateway
@@ -19,6 +18,7 @@ class DatadelingMeldePerioderOgSakStatusJobbUtfører(
     private val sakRepository: SakRepository,
     private val meldeperiodeRepository: MeldeperiodeRepository,
     private val underveisRepository: UnderveisRepository,
+    private val sakstatusDatadelingService: SakstatusDatadelingService,
 ) : JobbUtfører {
     override fun utfør(input: JobbInput) {
         val referanse = input.payload<BehandlingReferanse>()
@@ -31,9 +31,10 @@ class DatadelingMeldePerioderOgSakStatusJobbUtfører(
         val meldeperioder = meldeperiodeRepository.hentMeldeperioder(behandling.id, aktuellPeriode)
         apiInternGateway.sendPerioder(personIdent.identifikator, meldeperioder)
 
+        val sakstatus = sakstatusDatadelingService.utledSakstatus(referanse)
         apiInternGateway.sendSakStatus(
             personIdent.identifikator,
-            SakStatus.fromKelvin(sak.saksnummer.toString(), sak.status(), sak.rettighetsperiode)
+            sakstatus,
         )
     }
 
@@ -49,6 +50,7 @@ class DatadelingMeldePerioderOgSakStatusJobbUtfører(
                 sakRepository = repositoryProvider.provide(),
                 meldeperiodeRepository = repositoryProvider.provide(),
                 underveisRepository = repositoryProvider.provide(),
+                sakstatusDatadelingService = SakstatusDatadelingService(repositoryProvider, gatewayProvider),
             )
         }
     }
