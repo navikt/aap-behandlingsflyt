@@ -158,10 +158,8 @@ class ApiTest {
         val dataSource = initDatasource(dbConfig)
 
         val opprettetBehandling = dataSource.transaction { connection ->
-            val sak = opprettSak(
-                connection,
-                Periode(LocalDate.now(), LocalDate.now().plusYears(3))
-            )
+            val sak = opprettSak(connection, LocalDate.now())
+
             val behandlingRepo = BehandlingRepositoryImpl(connection)
             val behandling = behandlingRepo.opprettBehandling(
                 sakId = sak.id,
