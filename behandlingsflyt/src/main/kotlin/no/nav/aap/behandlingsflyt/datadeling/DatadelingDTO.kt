@@ -1,36 +1,20 @@
 package no.nav.aap.behandlingsflyt.datadeling
 
-import no.nav.aap.behandlingsflyt.kontrakt.sak.Status
 import no.nav.aap.komponenter.type.Periode
-
-data class SakStatusDTO(
-    val ident: String,
-    val status: SakStatus
-)
 
 data class SakStatus(
     val sakId: String,
-    @Deprecated("Bruk status. Denne må skrives bort fra api-intern.")
-    val statusKode: VedtakStatus,
     val status: DatadelingBehandlingStatus,
     val periode: Periode,
 ) {
     companion object {
-        fun fromKelvin(saksnummer: String, status: Status, datadelingBehandlingStatus: DatadelingBehandlingStatus, periode: Periode): SakStatus {
+        fun fromKelvin(saksnummer: String, datadelingBehandlingStatus: DatadelingBehandlingStatus, periode: Periode): SakStatus {
             return SakStatus(
                 sakId = saksnummer,
-                statusKode = VedtakStatus.valueOf(status.toString()),
                 status = datadelingBehandlingStatus,
                 periode = periode,
             )
         }
-    }
-
-    enum class VedtakStatus {
-        OPPRETTET,
-        UTREDES,
-        LØPENDE,
-        AVSLUTTET
     }
 
     /**
