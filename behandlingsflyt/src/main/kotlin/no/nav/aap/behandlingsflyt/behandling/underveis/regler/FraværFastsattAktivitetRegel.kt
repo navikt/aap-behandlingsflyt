@@ -5,7 +5,7 @@ import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAkt
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetVurdering.Vilkårsvurdering.UNNTAK_INNTIL_EN_DAG
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetVurdering.Vilkårsvurdering.UNNTAK_STERKE_VELFERDSGRUNNER
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetVurdering.Vilkårsvurdering.UNNTAK_SYKDOM_ELLER_SKADE
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.FraværForDag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.FraværForPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.FraværÅrsak
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
@@ -40,10 +40,10 @@ class FraværFastsattAktivitetRegel : UnderveisRegel {
             "kan ikke vurdere utenfor periode for vurdering fordi meldeperioden ikke er definert"
         }
 
-        val fraværTidslinje: Tidslinje<FraværForDag> =
+        val fraværTidslinje: Tidslinje<FraværForPeriode> =
             input.meldekort
                 .sortedBy { it.mottattTidspunkt } // somTidslinje vil overskrive tidligere verdier
-                .flatMap { it.fravær }.somTidslinje { Periode(it.dato, it.dato) }
+                .flatMap { it.fravær }.somTidslinje { Periode(it.periode.fom, it.periode.tom ) }
 
         // Første brudd i meldeperioden teller ikke i årskvote
         // Deler opp på meldeperiode først for å finne første i meldeperioden
@@ -61,7 +61,7 @@ class FraværFastsattAktivitetRegel : UnderveisRegel {
 
     private fun tidslinjeMedFørsteFraværIdentifisert(
         meldeperioder: List<Periode>,
-        fravær: Tidslinje<FraværForDag>,
+        fravær: Tidslinje<FraværForPeriode>,
     ): Tidslinje<FraværForDagVurdertForPeriode> {
         return fravær.splittOppIPerioder(meldeperioder)
             .flatMap { meldeperiodenSegment ->
@@ -72,16 +72,16 @@ class FraværFastsattAktivitetRegel : UnderveisRegel {
     /**
      * [meldeperioden] er en tidslinje som bare skal inneholde segment med periode innenfor en gitt meldeperiode.
      */
-    private fun vurderMeldeperiode(meldeperioden: Tidslinje<FraværForDag>): Tidslinje<FraværForDagVurdertForPeriode> {
+    private fun vurderMeldeperiode(meldeperioden: Tidslinje<FraværForPeriode>): Tidslinje<FraværForDagVurdertForPeriode> {
         return meldeperioden.flatMap { fraværSegment ->
             vurderMeldeperiode(meldeperioden, fraværSegment.periode, fraværSegment.verdi)
         }
     }
 
     private fun vurderMeldeperiode(
-        meldeperioden: Tidslinje<FraværForDag>,
+        meldeperioden: Tidslinje<FraværForPeriode>,
         periode: Periode,
-        fravær: FraværForDag,
+        fravær: FraværForPeriode,
     ): Tidslinje<FraværForDagVurdertForPeriode> {
         val inntilEnDagUnntakUtenGyldigGrunn = meldeperioden.segmenter().firstOrNull {
             it.verdi.fraværÅrsak !in gyldigeÅrsaker
@@ -171,7 +171,7 @@ class FraværFastsattAktivitetRegel : UnderveisRegel {
 
 
     class FraværForDagVurdertForPeriode(
-        val fravær: FraværForDag,
+        val fravær: FraværForPeriode,
         val erUnntakForDag: Boolean,
     )
 }

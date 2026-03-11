@@ -13,7 +13,7 @@ public sealed interface Meldekort : Melding {
 public data class MeldekortV0(
     public val harDuArbeidet: Boolean,
     public val timerArbeidPerPeriode: List<ArbeidIPeriodeV0>,
-    public val fravær: List<FraværForDagV0>? = null,
+    public val fravær: List<FraværForPeriodeV0>? = null,
 ) : Meldekort {
 
     init {
@@ -29,14 +29,14 @@ public data class MeldekortV0(
     override fun fom(): LocalDate? {
         return listOfNotNull(
             timerArbeidPerPeriode.minOfOrNull { it.fraOgMedDato },
-            fravær?.minOfOrNull { it.dato }
+            fravær?.minOfOrNull { it.fraOgMedDato}
         ).minOrNull()
     }
 
     override fun tom(): LocalDate? {
         return listOfNotNull(
             timerArbeidPerPeriode.maxOfOrNull { it.tilOgMedDato },
-            fravær?.maxOfOrNull { it.dato }
+            fravær?.maxOfOrNull { it.tilOgMedDato }
         ).maxOrNull()
     }
 
@@ -88,8 +88,9 @@ public data class ArbeidIPeriodeV0(
     }
 }
 
-public data class FraværForDagV0(
-    val dato: LocalDate,
+public data class FraværForPeriodeV0(
+    val fraOgMedDato: LocalDate,
+    val tilOgMedDato: LocalDate,
     val fraværÅrsak: FraværÅrsakV0,
 )
 

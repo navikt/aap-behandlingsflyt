@@ -14,7 +14,7 @@ data class UbehandletMeldekort(
     val mottattTidspunkt: LocalDateTime,
     val harDuArbeidet: Boolean,
     val digitalisertAvPostmottak: Boolean?,
-    val fravær: Set<FraværForDag>,
+    val fravær: Set<FraværForPeriode>,
 ) {
     companion object {
         fun fraKontrakt(
@@ -36,8 +36,8 @@ data class UbehandletMeldekort(
                     harDuArbeidet = meldekort.harDuArbeidet,
                     digitalisertAvPostmottak = digitalisertAvPostmottak,
                     fravær = meldekort.fravær?.map { fravær ->
-                        FraværForDag(
-                            dato = fravær.dato,
+                        FraværForPeriode(
+                            periode = Periode(fravær.fraOgMedDato, fravær.tilOgMedDato),
                             fraværÅrsak = when (fravær.fraværÅrsak) {
                                 FraværÅrsakV0.SYKDOM_ELLER_SKADE ->
                                     FraværÅrsak.SYKDOM_ELLER_SKADE

@@ -5,7 +5,7 @@ import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAkt
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetVurdering.Vilkårsvurdering.UNNTAK_INNTIL_EN_DAG
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetVurdering.Vilkårsvurdering.UNNTAK_STERKE_VELFERDSGRUNNER
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetVurdering.Vilkårsvurdering.UNNTAK_SYKDOM_ELLER_SKADE
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.FraværForDag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.FraværForPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.FraværÅrsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Meldekort
 import no.nav.aap.behandlingsflyt.test.desember
@@ -17,7 +17,6 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.LocalDateTime
-import kotlin.collections.toTypedArray
 
 class FraværFastsattAktivitetRegelTest {
     @Test
@@ -32,8 +31,8 @@ class FraværFastsattAktivitetRegelTest {
     fun `ett fravær fra tiltak, 11-8 kan ikke brukes`() {
         val vurderinger = aktivitetsbruddVurderinger(
             rettighetsperiode = Periode(fom = LocalDate.of(2020, 1, 1), tom = LocalDate.of(2022, 12, 31)),
-            fraværForDag(
-                dato = LocalDate.of(2020, 1, 1),
+            fraværForPeriode(
+                periode = LocalDate.of(2020, 1, 1).tilSingelDagPeriode()
             ),
         )
         assertEquals(1, vurderinger.segmenter().count())
@@ -45,13 +44,17 @@ class FraværFastsattAktivitetRegelTest {
     fun `andre dag i meldeperiode fører til § 11-8 reduksjon`() {
         val vurdering = aktivitetsbruddVurderinger(
             rettighetsperiode = Periode(fom = LocalDate.of(2020, 1, 1), tom = LocalDate.of(2022, 12, 31)),
-            fraværForDag(
-                dato = LocalDate.of(2020, 1, 1),
+            fraværForPeriode(
+                periode = LocalDate.of(2020, 1, 1).tilSingelDagPeriode(),
             ),
-            fraværForDag(
-                dato = LocalDate.of(2020, 1, 2),
+            fraværForPeriode(
+                periode = LocalDate.of(2020, 1, 2).tilSingelDagPeriode()
             ),
         )
+        // TODO : Burde begge asserts forvente reduksjon for 2 påfølgende dager ? Noe ala dette her?
+        //assertEquals(REDUKSJON, vurdering.segment(LocalDate.of(2020, 1, 1))!!.verdi.vilkårsvurdering)
+        //assertEquals(REDUKSJON, vurdering.segment(LocalDate.of(2020, 1, 2))!!.verdi.vilkårsvurdering)
+
         assertEquals(UNNTAK_INNTIL_EN_DAG, vurdering.segment(LocalDate.of(2020, 1, 1))!!.verdi.vilkårsvurdering)
         assertEquals(REDUKSJON_ANDRE_DAG, vurdering.segment(LocalDate.of(2020, 1, 2))!!.verdi.vilkårsvurdering)
     }
@@ -60,16 +63,16 @@ class FraværFastsattAktivitetRegelTest {
     fun `første dag med velferdsgrunner, andre og tredje dag uten grunn fører til § 11-8 reduksjon`() {
         val vurdering = aktivitetsbruddVurderinger(
             rettighetsperiode = Periode(fom = LocalDate.of(2020, 1, 1), tom = LocalDate.of(2022, 12, 31)),
-            fraværForDag(
-                dato = LocalDate.of(2020, 1, 1),
+            fraværForPeriode(
+                periode = LocalDate.of(2020, 1, 1).tilSingelDagPeriode(),
                 fraværÅrsak = FraværÅrsak.OMSORG_ANNEN_STERK_GRUNN,
             ),
-            fraværForDag(
-                dato = LocalDate.of(2020, 1, 2),
+            fraværForPeriode(
+                periode = LocalDate.of(2020, 1, 2).tilSingelDagPeriode(),
                 fraværÅrsak = FraværÅrsak.ANNET,
             ),
-            fraværForDag(
-                dato = LocalDate.of(2020, 1, 3),
+            fraværForPeriode(
+                periode = LocalDate.of(2020, 1, 3).tilSingelDagPeriode(),
                 fraværÅrsak = FraværÅrsak.ANNET,
             ),
         )
@@ -85,16 +88,16 @@ class FraværFastsattAktivitetRegelTest {
     fun `første dag med sykdom, andre og tredje uten grunn, gir at tredje dag fører til § 11-8 redusjon`() {
         val vurdering = aktivitetsbruddVurderinger(
             rettighetsperiode = Periode(fom = LocalDate.of(2020, 1, 1), tom = LocalDate.of(2022, 12, 31)),
-            fraværForDag(
-                dato = LocalDate.of(2020, 1, 1),
+            fraværForPeriode(
+                periode = LocalDate.of(2020, 1, 1).tilSingelDagPeriode(),
                 fraværÅrsak = FraværÅrsak.SYKDOM_ELLER_SKADE,
             ),
-            fraværForDag(
-                dato = LocalDate.of(2020, 1, 2),
+            fraværForPeriode(
+                periode = LocalDate.of(2020, 1, 2).tilSingelDagPeriode(),
                 fraværÅrsak = FraværÅrsak.ANNET,
             ),
-            fraværForDag(
-                dato = LocalDate.of(2020, 1, 3),
+            fraværForPeriode(
+                periode = LocalDate.of(2020, 1, 3).tilSingelDagPeriode(),
                 fraværÅrsak = FraværÅrsak.ANNET,
             ),
         )
@@ -107,11 +110,11 @@ class FraværFastsattAktivitetRegelTest {
     fun `to fravær i hver sin meldeperiode fører ikke til § 11-8 reduksjon`() {
         val vurdering = aktivitetsbruddVurderinger(
             rettighetsperiode = Periode(fom = LocalDate.of(2020, 1, 1), tom = LocalDate.of(2022, 12, 31)),
-            fraværForDag(
-                dato = LocalDate.of(2020, 1, 1),
+            fraværForPeriode(
+                periode = LocalDate.of(2020, 1, 1).tilSingelDagPeriode(),
             ),
-            fraværForDag(
-                dato = LocalDate.of(2020, 1, 15),
+            fraværForPeriode(
+                periode = LocalDate.of(2020, 1, 15).tilSingelDagPeriode(),
             ),
         )
         assertEquals(UNNTAK_INNTIL_EN_DAG, vurdering.segment(LocalDate.of(2020, 1, 1))!!.verdi.vilkårsvurdering)
@@ -123,8 +126,8 @@ class FraværFastsattAktivitetRegelTest {
         val vurderinger = aktivitetsbruddVurderinger(
             rettighetsperiode = Periode(fom = LocalDate.of(2020, 1, 1), tom = LocalDate.of(2022, 12, 31)),
             Periode(LocalDate.of(2020, 1, 1), LocalDate.of(2020, 1, 12)).dager().map { dato ->
-                fraværForDag(
-                    dato = dato,
+                fraværForPeriode(
+                   periode = dato.tilSingelDagPeriode(),
                     fraværÅrsak = FraværÅrsak.OMSORG_ANNEN_STERK_GRUNN,
                 )
             }
@@ -159,8 +162,8 @@ class FraværFastsattAktivitetRegelTest {
                         tom = LocalDate.of(2021, 1, startMeldeperiode2021 + 11)
                     ).dager())
                 .map { dato ->
-                    fraværForDag(
-                        dato = dato,
+                    fraværForPeriode(
+                       periode = dato.tilSingelDagPeriode(),
                         fraværÅrsak = FraværÅrsak.OMSORG_ANNEN_STERK_GRUNN,
                     )
                 }
@@ -193,11 +196,11 @@ class FraværFastsattAktivitetRegelTest {
     fun `brudd som strekker seg over to meldeperioder blir vurdert i hver sin meldeperiode`() {
         val vurderinger = aktivitetsbruddVurderinger(
             rettighetsperiode = Periode(fom = 17 januar 2020, tom = 31 desember 2022),
-            fraværForDag(
-                dato = 26 januar 2020
+            fraværForPeriode(
+                periode = (26 januar 2020).tilSingelDagPeriode()
             ),
-            fraværForDag(
-                dato = 27 januar 2020,
+            fraværForPeriode(
+                periode = (27 januar 2020).tilSingelDagPeriode(),
             ),
         )
 
@@ -213,11 +216,11 @@ class FraværFastsattAktivitetRegelTest {
     fun `to brudd inntil grensen for en meldeperiode blir registrert i samme meldeperiode`() {
         val vurderinger = aktivitetsbruddVurderinger(
             rettighetsperiode = Periode(fom = LocalDate.of(2020, 1, 1), tom = LocalDate.of(2022, 12, 31)),
-            fraværForDag(
-                dato = LocalDate.of(2020, 1, 13),
+            fraværForPeriode(
+                periode = LocalDate.of(2020, 1, 13).tilSingelDagPeriode(),
             ),
-            fraværForDag(
-                dato = LocalDate.of(2020, 1, 14),
+            fraværForPeriode(
+                periode = LocalDate.of(2020, 1, 14).tilSingelDagPeriode(),
             ),
         )
 
@@ -232,7 +235,7 @@ class FraværFastsattAktivitetRegelTest {
     private fun aktivitetsbruddVurderinger(
         rettighetsperiode: Periode,
         startTidslinje: Tidslinje<Vurdering>,
-        vararg aktivitetspliktDokument: FraværForDag,
+        vararg aktivitetspliktDokument: FraværForPeriode,
     ): Tidslinje<FraværFastsattAktivitetVurdering> {
 
         // TODO mer fornuftige perioder
@@ -255,25 +258,28 @@ class FraværFastsattAktivitetRegelTest {
 
     private fun aktivitetsbruddVurderinger(
         rettighetsperiode: Periode,
-        vararg aktivitetspliktDokument: FraværForDag,
+        vararg aktivitetspliktDokument: FraværForPeriode,
     ): Tidslinje<FraværFastsattAktivitetVurdering> {
         return aktivitetsbruddVurderinger(rettighetsperiode, Tidslinje(), *aktivitetspliktDokument)
     }
 
     private fun aktivitetsbruddVurderinger(
         rettighetsperiode: Periode,
-        aktivitetspliktDokument: List<FraværForDag>,
+        aktivitetspliktDokument: List<FraværForPeriode>,
     ): Tidslinje<FraværFastsattAktivitetVurdering> {
         return aktivitetsbruddVurderinger(rettighetsperiode, Tidslinje(), *aktivitetspliktDokument.toTypedArray())
     }
+
+    fun LocalDate.tilSingelDagPeriode() = Periode(this, this)
+
 }
 
-fun fraværForDag(
-    dato: LocalDate,
+fun fraværForPeriode(
+    periode: Periode,
     fraværÅrsak: FraværÅrsak = FraværÅrsak.ANNET,
-): FraværForDag {
-    return FraværForDag(
-        dato = dato,
+): FraværForPeriode {
+    return FraværForPeriode(
+        periode = periode,
         fraværÅrsak = fraværÅrsak
     )
 }

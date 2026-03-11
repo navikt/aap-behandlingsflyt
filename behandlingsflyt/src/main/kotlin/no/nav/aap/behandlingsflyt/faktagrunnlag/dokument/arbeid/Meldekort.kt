@@ -5,14 +5,13 @@ import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.TimerArbeid
 import no.nav.aap.verdityper.dokument.JournalpostId
-import java.time.LocalDate
 import java.time.LocalDateTime
 
 data class Meldekort(
     val journalpostId: JournalpostId,
     val timerArbeidPerPeriode: Set<ArbeidIPeriode>,
     val mottattTidspunkt: LocalDateTime,
-    val fravær: Set<FraværForDag>,
+    val fravær: Set<FraværForPeriode>,
 ) {
     fun somTidslinje(): Tidslinje<Pair<TimerArbeid, Int>> {
         return Tidslinje(timerArbeidPerPeriode.map {
@@ -25,8 +24,8 @@ data class Meldekort(
  * Representerer arbeid i en Periode på et Meldekort.
  */
 data class ArbeidIPeriode(val periode: Periode, val timerArbeid: TimerArbeid)
-data class FraværForDag(
-    val dato: LocalDate,
+data class FraværForPeriode(
+    val periode: Periode,
     val fraværÅrsak: FraværÅrsak,
 )
 
