@@ -59,7 +59,6 @@ import no.nav.aap.behandlingsflyt.test.juli
 import no.nav.aap.behandlingsflyt.test.juni
 import no.nav.aap.behandlingsflyt.test.mai
 import no.nav.aap.behandlingsflyt.test.september
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
@@ -955,6 +954,7 @@ class BrevUtlederServiceTest {
             ),
             grunnlagsfaktor = GUnit(1),
             grunnbeløp = Beløp(300000),
+            barnepensjonDagsats = Beløp(0),
             antallBarn = 0,
             barnetilleggsats = Beløp(0),
             barnetillegg = Beløp(0),

@@ -54,12 +54,12 @@ class BarnepensjonRepositoryImplTest {
                 BarnepensjonPeriode(
                     fom = YearMonth.of(2022, 1),
                     tom = YearMonth.of(2022, 12),
-                    månedbeløp = Beløp(10000)
+                    månedsats = Beløp(10000)
                 ),
                 BarnepensjonPeriode(
                     fom = YearMonth.of(2023, 1),
                     tom = YearMonth.of(2023, 12),
-                    månedbeløp = Beløp(25000)
+                    månedsats = Beløp(25000)
                 )
             ),
             vurdertAv = Bruker("Z123456"),
@@ -93,6 +93,53 @@ class BarnepensjonRepositoryImplTest {
     }
 
     @Test
+    fun `hentHistoriskeVurderinger returnerer vurderinger fra tidligere behandlinger`() {
+        val sak = dataSource.transaction { sak(it, Periode(1 januar 2022, 31.desember(2023))) }
+
+        // Opprett første behandling og lagre en barnepensjonvurdering
+        val behandling1 = dataSource.transaction {
+            finnEllerOpprettBehandling(it, sak)
+        }
+
+        val vurdering1 = BarnepensjonVurdering(
+            begrunnelse = "Første vurdering",
+            perioder = setOf(
+                BarnepensjonPeriode(
+                    fom = YearMonth.of(2022, 1),
+                    tom = YearMonth.of(2022, 12),
+                    månedsats = Beløp(10000)
+                )
+            ),
+            vurdertAv = Bruker("Z123456"),
+            vurdertIBehandling = behandling1.id,
+            opprettet = Instant.parse("2023-01-01T12:00:00Z")
+        )
+
+        dataSource.transaction {
+            BarnepensjonRepositoryImpl(it).lagre(behandling1.id, vurdering1)
+        }
+
+        // Avslutt første behandling og opprett en ny
+        dataSource.transaction { connection ->
+            BehandlingRepositoryImpl(connection).oppdaterBehandlingStatus(behandling1.id, Status.AVSLUTTET)
+        }
+
+        val behandling2 = dataSource.transaction {
+            finnEllerOpprettBehandling(it, sak)
+        }
+
+        // Hent historiske vurderinger for den nye behandlingen
+        val historiskeVurderinger = dataSource.transaction {
+            BarnepensjonRepositoryImpl(it).hentHistoriskeVurderinger(sak.id, behandling2.id)
+        }
+
+        assertThat(historiskeVurderinger).hasSize(1)
+        assertThat(historiskeVurderinger.first())
+            .usingRecursiveComparison(sammenligner)
+            .isEqualTo(BarnepensjonGrunnlag(vurdering = vurdering1))
+    }
+
+    @Test
     fun `Kopier barnepensjon`() {
         val sak = dataSource.transaction { sak(it, Periode(1 januar 2022, 31.desember(2023))) }
 
@@ -106,12 +153,12 @@ class BarnepensjonRepositoryImplTest {
                 BarnepensjonPeriode(
                     fom = YearMonth.of(2022, 1),
                     tom = YearMonth.of(2022, 12),
-                    månedbeløp = Beløp(10000)
+                    månedsats = Beløp(10000)
                 ),
                 BarnepensjonPeriode(
                     fom = YearMonth.of(2023, 1),
                     tom = YearMonth.of(2023, 12),
-                    månedbeløp = Beløp(25000)
+                    månedsats = Beløp(25000)
                 )
             ),
             vurdertAv = Bruker("Z123456"),
@@ -136,4 +183,6 @@ class BarnepensjonRepositoryImplTest {
                 .isEqualTo(BarnepensjonGrunnlag(vurdering = vurdering))
         }
     }
+    
+    
 }

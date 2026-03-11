@@ -528,6 +528,7 @@ class TilkjentYtelseGrunnlagTest {
                         vurdertAv = "Z00000",
                     )
                 ),
+                barnepensjonGrunnlag = null,
                 samordningArbeidsgiver = SamordningArbeidsgiverGrunnlag(
                     vurdering = SamordningArbeidsgiverVurdering(
                         begrunnelse = "",

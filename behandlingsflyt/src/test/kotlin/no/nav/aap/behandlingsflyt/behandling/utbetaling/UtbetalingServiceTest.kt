@@ -248,6 +248,7 @@ class UtbetalingServiceTest {
             ),
             grunnlagsfaktor = GUnit(1),
             grunnbeløp = Beløp(100),
+            barnepensjonDagsats = Beløp(0),
             antallBarn = 0,
             barnetilleggsats = Beløp(40),
             barnetillegg = Beløp(0),

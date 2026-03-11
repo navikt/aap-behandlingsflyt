@@ -24,15 +24,15 @@ data class BarnepensjonLøsningDto(
 }
 
 data class BarnepensjonLøsningPeriodeDto(
-    override val fom: YearMonth,
-    override val tom: YearMonth?,
+    override val fom: String,
+    override val tom: String?,
     val månedsbeløp: Beløp
 ) : ÅrMånedPeriodeLøsning {
     fun tilBarnepensjonPeriode(): BarnepensjonPeriode {
         return BarnepensjonPeriode(
-            fom = fom,
-            tom = tom,
-            månedbeløp = månedsbeløp
+            fom = YearMonth.parse(fom),
+            tom = tom?.let{YearMonth.parse(it)},
+            månedsats = månedsbeløp
         )
     }
 }

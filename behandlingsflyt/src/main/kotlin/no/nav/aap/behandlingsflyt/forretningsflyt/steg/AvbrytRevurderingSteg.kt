@@ -1,7 +1,6 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingRepository
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
@@ -15,7 +14,6 @@ import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 
 class AvbrytRevurderingSteg private constructor(
-    private val avklaringsbehovRepository: AvklaringsbehovRepository,
     private val avbrytRevurderingRepository: AvbrytRevurderingRepository,
     private val avklaringsbehovService: AvklaringsbehovService,
 ) : BehandlingSteg {
@@ -46,7 +44,6 @@ class AvbrytRevurderingSteg private constructor(
             gatewayProvider: GatewayProvider
         ): BehandlingSteg {
             return AvbrytRevurderingSteg(
-                avklaringsbehovRepository = repositoryProvider.provide(),
                 avbrytRevurderingRepository = repositoryProvider.provide(),
                 avklaringsbehovService = AvklaringsbehovService(repositoryProvider)
             )

@@ -361,7 +361,7 @@ object FakeServers : AutoCloseable {
 
         data class DagpengerPeriodeResponse(
             val fraOgMedDato: LocalDate,
-            val tilOgMedDato: LocalDate,
+            val tilOgMedDato: LocalDate?,
             val kilde: DagpengerKilde,
             val ytelseType: DagpengerYtelseType
         )

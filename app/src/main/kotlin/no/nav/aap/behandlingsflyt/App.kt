@@ -29,6 +29,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.fatteVedtakGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.utledSubtypesTilAvklaringsbehovLøsning
 import no.nav.aap.behandlingsflyt.behandling.barnepensjon.barnepensjonGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.barnetillegg.barnetilleggApi
+import no.nav.aap.behandlingsflyt.behandling.bekreftvurderingeroppfølging.bekreftVurderingerOppfølgingApi
 import no.nav.aap.behandlingsflyt.behandling.beregning.beregningsGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.alder.aldersGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.fritakmeldeplikt.meldepliktsgrunnlagApi
@@ -297,6 +298,7 @@ internal fun Application.server(
                 rettighetApi(dataSource, repositoryRegistry)
                 tidligereVurderingerApi(dataSource, repositoryRegistry, gatewayProvider)
                 barnepensjonGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
+                bekreftVurderingerOppfølgingApi(dataSource, repositoryRegistry, gatewayProvider)
                 // Klage
                 påklagetBehandlingGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
                 fullmektigGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
@@ -348,8 +350,6 @@ private fun Application.startKafkakonsumenter(
         startTilbakekrevingEventKonsument(dataSource, repositoryRegistry)
         startSykepengevedtakKonsument(dataSource, repositoryRegistry, gatewayProvider)
         startInstitusjonsOppholdKonsument(dataSource, repositoryRegistry, gatewayProvider)
-    }
-    if (!Miljø.erLokal() && !Miljø.erProd()) {
         startUføreVedtakEventKonsument(dataSource, repositoryRegistry, gatewayProvider)
     }
 }
