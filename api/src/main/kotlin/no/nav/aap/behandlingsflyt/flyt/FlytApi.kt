@@ -61,7 +61,7 @@ import no.nav.aap.tilgang.Operasjon
 import no.nav.aap.tilgang.authorizedGet
 import no.nav.aap.tilgang.authorizedPost
 import org.slf4j.LoggerFactory
-import java.util.UUID
+import java.util.*
 import javax.sql.DataSource
 
 private val log = LoggerFactory.getLogger("flytApi")
@@ -144,7 +144,8 @@ fun NormalOpenAPIRoute.flytApi(
                     val alleAvklaringsbehov = alleAvklaringsbehovInkludertFrivillige.alle()
                     val resultatKode = when {
                         ((behandling.typeBehandling() == TypeBehandling.Revurdering) && (resultatUtleder.utledResultatRevurderingsBehandling(
-                            behandling) == Resultat.AVBRUTT)) -> ResultatKode.AVBRUTT
+                            behandling
+                        ) == Resultat.AVBRUTT)) -> ResultatKode.AVBRUTT
 
                         else -> null
                     }
@@ -261,9 +262,15 @@ fun NormalOpenAPIRoute.flytApi(
                         )
                         val avklaringsbehovRepository =
                             repositoryProvider.provide<AvklaringsbehovRepository>()
-                        val behandlingId = behandling(behandlingRepository, request).id
-                        val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId)
-                        sjekkTilgangTilSettPåVent(avklaringsbehovene, tilgangGateway, request.referanse, token())
+                        val behandling = behandling(behandlingRepository, request)
+                        val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
+                        sjekkTilgangTilSettPåVent(
+                            avklaringsbehovene = avklaringsbehovene,
+                            behandling = behandling,
+                            tilgangGateway = tilgangGateway,
+                            token = token(),
+                            behandlingsreferanse = request.referanse,
+                        )
 
 
                         val taSkriveLåsRepository =
@@ -341,11 +348,13 @@ private fun erStegGruppeFullført(
 
 private fun sjekkTilgangTilSettPåVent(
     avklaringsbehovene: Avklaringsbehovene,
+    behandling: Behandling,
     tilgangGateway: TilgangGateway,
+    token: OidcToken,
     behandlingsreferanse: UUID,
-    token: OidcToken
 ) {
-    val åpentAvklaringsbehov = avklaringsbehovene.åpne().first().definisjon
+    val åpentAvklaringsbehov = avklaringsbehovene.åpne().filterNot { it.erVentepunkt() }
+        .sortedWith(behandling.flyt().avklaringsbehovComparator).first().definisjon
     val harTilgang =
         tilgangGateway.sjekkTilgangTilBehandling(
             behandlingsreferanse,
