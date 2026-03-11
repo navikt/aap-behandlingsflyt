@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.behandling.underveis.regler.ÅrMedHverdager
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeVurdering
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.Instant
 
@@ -32,6 +33,11 @@ class AvklarVedtakslengdeLøser(
         val nyManuellVurdering = løsning.løsningerForPerioder.also {
             require(it.size <= 1) { "Det skal kun være opp til én manuell vurdering, fant ${it.size} for behandling ${kontekst.behandlingId()}" }
         }.singleOrNull()?.let { vurdering ->
+            // Inntil videre er det ikke mulig å innskrenke en vedtatt vedtakslengde
+            if (vedtattGrunnlag?.gjeldendeVurdering() != null && vurdering.sluttdato < vedtattGrunnlag.gjeldendeVurdering()?.sluttdato) {
+                throw UgyldigForespørselException("Sluttdato for vedtakslengde kan ikke være før en tidligere vedtatt sluttdato")
+            }
+
             VedtakslengdeVurdering(
                 sluttdato = vurdering.sluttdato,
                 utvidetMed = vedtattGrunnlag?.gjeldendeVurdering()?.utvidetMed ?: ÅrMedHverdager.FØRSTE_ÅR,
