@@ -134,7 +134,7 @@ public data class TilbakekrevingKafkaDto(
 public enum class TilbakekrevingBehandlingsstatus {
     OPPRETTET,
     TIL_BEHANDLING,
-    TIL_BESLUTTER,
+    TIL_GODKJENNING,
     RETUR_FRA_BESLUTTER,
     AVSLUTTET,
 }

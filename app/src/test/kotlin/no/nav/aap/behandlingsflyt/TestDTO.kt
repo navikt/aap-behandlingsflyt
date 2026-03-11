@@ -32,6 +32,7 @@ data class OpprettTestcaseDTO(
     @param:JsonProperty(value = "tjenestePensjon") val tjenestePensjon: Boolean? = null,
     val institusjoner: Institusjoner = Institusjoner(),
     val sykepenger: List<TestPerson.Sykepenger> = emptyList(),
+    val dagpenger: List<TestPerson.Dagpenger> = emptyList(),
     val søknadsdato: LocalDate? = null,
     val andreUtbetalinger: AndreUtbetalingerDto? = null,
     val steg: StegType? = null,
