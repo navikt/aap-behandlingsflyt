@@ -83,7 +83,7 @@ class FraværFastsattAktivitetRegel : UnderveisRegel {
         periode: Periode,
         fravær: FraværForPeriode,
     ): Tidslinje<FraværForDagVurdertForPeriode> {
-        val inntilEnDagUnntakUtenGyldigGrunn = meldeperioden.segmenter().firstOrNull {
+        val inntilEnDagUnntakUtenGyldigGrunn = meldeperioden.segmenter().singleOrNull{
             it.verdi.fraværÅrsak !in gyldigeÅrsaker
         }?.verdi
 
