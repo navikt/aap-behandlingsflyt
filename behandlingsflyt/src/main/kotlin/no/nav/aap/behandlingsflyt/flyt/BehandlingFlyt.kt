@@ -142,7 +142,7 @@ class BehandlingFlyt private constructor(
             .thenBy { rekkefølgeAvklaringsbehov[it.definisjon] ?: rekkefølgeAvklaringsbehov.size }
     }
 
-    internal fun erStegFørEllerLik(stegA: StegType, stegB: StegType): Boolean {
+    fun erStegFørEllerLik(stegA: StegType, stegB: StegType): Boolean {
         val aIndex = flyt.indexOfFirst { it.steg.type() == stegA }
         val bIndex = flyt.indexOfFirst { it.steg.type() == stegB }
 

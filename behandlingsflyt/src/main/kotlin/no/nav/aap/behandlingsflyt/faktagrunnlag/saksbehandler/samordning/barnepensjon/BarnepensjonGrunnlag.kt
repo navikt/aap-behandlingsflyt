@@ -1,0 +1,53 @@
+package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.barnepensjon
+
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.tidslinje.somTidslinje
+import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Beløp
+import no.nav.aap.komponenter.verdityper.Beløp.Companion.ANTALL_DESIMALER_I_UTREGNING
+import no.nav.aap.komponenter.verdityper.Beløp.Companion.AVRUNDINGSMETODE
+import no.nav.aap.komponenter.verdityper.Bruker
+import no.nav.aap.komponenter.verdityper.Tid
+import java.math.BigDecimal
+import java.math.RoundingMode
+import java.time.Instant
+import java.time.YearMonth
+
+data class BarnepensjonGrunnlag(
+    val vurdering: BarnepensjonVurdering
+) {
+    fun tilTidslinje(): Tidslinje<Beløp> {
+        return vurdering.perioder.somTidslinje({ it.periode }, { it.dagsats() })
+    }
+}
+
+data class BarnepensjonVurdering(
+    val begrunnelse: String,
+    val perioder: Set<BarnepensjonPeriode>,
+    val vurdertIBehandling: BehandlingId,
+    val vurdertAv: Bruker,
+    val opprettet: Instant,
+)
+
+data class BarnepensjonPeriode(
+    val fom: YearMonth,
+    val tom: YearMonth?,
+    val månedsats: Beløp
+) {
+    val periode = Periode(fom.atDay(1), tom?.atEndOfMonth() ?: Tid.MAKS)
+
+    init {
+        if (månedsats.verdi < BigDecimal.ZERO) {
+            throw IllegalArgumentException("Månedbeløp kan ikke være negativt")
+        }
+    }
+
+    fun dagsats(): Beløp {
+        return Beløp(
+            månedsats.verdi()
+                .multiply(BigDecimal(12))
+                .divide(BigDecimal(260), 0, RoundingMode.HALF_UP)
+        )
+    }
+}

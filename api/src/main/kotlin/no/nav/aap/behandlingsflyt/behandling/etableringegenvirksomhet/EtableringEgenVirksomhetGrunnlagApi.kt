@@ -4,6 +4,7 @@ import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companion.antallHverdager
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandRepository
@@ -11,7 +12,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirk
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
-import no.nav.aap.behandlingsflyt.harTilgangOgKanSaksbehandle
+import no.nav.aap.behandlingsflyt.kanLøseBehovSomSkalVæreLåstEtterKvalitetssikring
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
@@ -25,6 +26,7 @@ import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.orEmpty
+import no.nav.aap.komponenter.tidslinje.somTidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.getGrunnlag
@@ -73,10 +75,20 @@ fun NormalOpenAPIRoute.etableringEgenVirksomhetApi(
                     val ikkeVurderbarePerioder =
                         utledIkkeVurderbarePerioder(sykdomGrunnlag, bistandGrunnlag, sak.rettighetsperiode.fom)
 
+                    val alleVurderinger =
+                        etableringEgenVirksomhetGrunnlag?.vurderinger.orEmpty() + forrigeGrunnlag.vurderinger
+
+                    val bruktUtviklingsDager =
+                        (alleVurderinger).flatMap { it.utviklingsPerioder }.somTidslinje { it }.komprimer().segmenter()
+                            .sumOf { it.periode.antallHverdager().asInt }
+                    val bruktOppstartsdager =
+                        (alleVurderinger).flatMap { it.oppstartsPerioder }.somTidslinje { it }.komprimer().segmenter()
+                            .sumOf { it.periode.antallHverdager().asInt }
+
                     EtableringEgenVirksomhetGrunnlagResponse(
-                        harTilgangTilÅSaksbehandle = harTilgangOgKanSaksbehandle(
-                            harTilgang = kanSaksbehandle(),
-                            avklaringsbehovene = avklaringsbehovene
+                        harTilgangTilÅSaksbehandle = kanSaksbehandle() && kanLøseBehovSomSkalVæreLåstEtterKvalitetssikring(
+                            Definisjon.ETABLERING_EGEN_VIRKSOMHET.løsesISteg,
+                            behandling,
                         ),
                         sisteVedtatteVurderinger = EtableringEgenVirksomhetVurderingResponse.fraDomene(
                             tidslinje = forrigeGrunnlag.gjeldendeVurderingerSomTidslinje(),
@@ -100,6 +112,8 @@ fun NormalOpenAPIRoute.etableringEgenVirksomhetApi(
                             behandlingId = behandling.id
                         ),
                         ikkeRelevantePerioder = ikkeVurderbarePerioder,
+                        bruktUtviklingsDager = bruktUtviklingsDager,
+                        bruktOppstartsdager = bruktOppstartsdager
                     )
                 }
             respond(
@@ -122,8 +136,13 @@ private fun utledIkkeVurderbarePerioder(
 
     val førsteDagIOppfyltPeriode = zipped
         .filter {
-            it.verdi.first?.erOppfyltForYrkesskadeSettBortIfraÅrsakssammenheng(fom, it.periode) == true || it.verdi.second?.erBehovForBistand() != true
-        }.perioder().toList().first().fom
+            it.verdi.first?.erOppfyltForYrkesskadeSettBortIfraÅrsakssammenheng(
+                fom,
+                it.periode
+            ) == true || it.verdi.second?.erBehovForBistand() != true
+        }.perioder().toList().firstOrNull()?.fom
+
+    if (førsteDagIOppfyltPeriode == null) return emptyList()
 
     val mapped = zipped
         .filter {

@@ -93,6 +93,7 @@ fun NormalOpenAPIRoute.tilkjentYtelseApi(dataSource: DataSource, repositoryRegis
                                             dagsats = it.verdi.dagsats.verdi.toDouble(),
                                             barneTilleggsats = it.verdi.barnetilleggsats.verdi.toDouble(),
                                             barnetillegg = it.verdi.barnetillegg.verdi().toDouble(),
+                                            barnepensjonDagsats = it.verdi.barnepensjonDagsats.verdi().toDouble(),
                                             arbeidGradering = 100.minus(
                                                 it.verdi.graderingGrunnlag.arbeidGradering.prosentverdi()
                                             ),

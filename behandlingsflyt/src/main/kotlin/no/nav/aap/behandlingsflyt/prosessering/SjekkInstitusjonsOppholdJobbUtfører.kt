@@ -57,8 +57,6 @@ class SjekkInstitusjonsOppholdJobbUtfører(
                     if (sisteYtelsesBehandling != null) {
                         val sak = sakRepository.hent(sak.id)
                         if (erKandidatForVurderingAvInstitusjonsopphold(sisteYtelsesBehandling.id)) {
-                            val vurderingsbehovOgÅrsaker =
-                                behandlingRepository.hentVurderingsbehovOgÅrsaker(sisteYtelsesBehandling.id)
                             val underveisgrunnlag =
                                 underveisgrunnlagRepository.hentHvisEksisterer(sisteYtelsesBehandling.id)
                             if (underveisgrunnlag == null) {
@@ -73,10 +71,8 @@ class SjekkInstitusjonsOppholdJobbUtfører(
                                             .somTidslinje()
                                             .segmenter()
                                             .all { it.verdi.utfall == Utfall.IKKE_OPPFYLT }
-                                    if (vurderingsbehovOgÅrsaker.any { it.vurderingsbehov.any { vurderingsbehovMedPeriode -> vurderingsbehovMedPeriode.type == Vurderingsbehov.INSTITUSJONSOPPHOLD } }) {
-                                        log.info("Vurderingsbehov for institusjonsopphold finnes allerede")
-                                    } else if (alleIkkeOppfylt) {
-                                        log.info("Vurderingsbehov for institusjonsopphold opprettes ikke, da det er avslag overalt")
+                                    if (alleIkkeOppfylt) {
+                                        log.info("Vurderingsbehov for institusjonsopphold opprettes ikke, da det er avslag overalt for ${sak.id}")
                                     } else {
                                         log.info("Fant sak med institusjonsopphold ${sak.id}")
                                         val opprettInstitusjonsOppholdBehandling = opprettNyBehandling(sak)
@@ -104,7 +100,7 @@ class SjekkInstitusjonsOppholdJobbUtfører(
 
         val grunnlag = institusjonsOppholdRepository.hentHvisEksisterer(behandlingId)
         grunnlag?.oppholdene?.opphold?.forEach { opphold ->
-            if (periodeErMinstFireMaanederOgTomInnenToMaaneder(opphold.periode)) {
+            if (periodeErMinstFireMaanederOgFomVartIToMaaneder(opphold.periode)) {
                 log.info("For behandlingsid $behandlingId er oppholdene true")
                 return true
             }
@@ -113,16 +109,16 @@ class SjekkInstitusjonsOppholdJobbUtfører(
         return false
     }
 
-    private fun periodeErMinstFireMaanederOgTomInnenToMaaneder(periode: Periode): Boolean {
+    private fun periodeErMinstFireMaanederOgFomVartIToMaaneder(periode: Periode): Boolean {
         val now = LocalDate.now()
 
         val varighetPaMinstFireMaaneder =
             !periode.tom.isBefore(periode.fom.plusMonths(4))
 
-        val tomInnenToMaaneder =
-            periode.tom.isBefore(now.withDayOfMonth(1).plusMonths(2))
+        val fomToMaanederSiden =
+            periode.fom == now.minusMonths(2)
 
-        return varighetPaMinstFireMaaneder && tomInnenToMaaneder
+        return varighetPaMinstFireMaaneder && fomToMaanederSiden
     }
 
     private fun opprettNyBehandling(sak: Sak): Behandling =

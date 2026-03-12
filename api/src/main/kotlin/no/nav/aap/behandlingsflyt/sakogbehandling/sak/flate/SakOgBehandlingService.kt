@@ -47,6 +47,7 @@ class SakOgBehandlingService(private val repositoryProvider: RepositoryProvider)
                     TilbakekrevingBehandlingsstatus.TIL_BEHANDLING -> no.nav.aap.behandlingsflyt.kontrakt.behandling.Status.UTREDES
                     TilbakekrevingBehandlingsstatus.TIL_BESLUTTER -> no.nav.aap.behandlingsflyt.kontrakt.behandling.Status.UTREDES
                     TilbakekrevingBehandlingsstatus.RETUR_FRA_BESLUTTER -> no.nav.aap.behandlingsflyt.kontrakt.behandling.Status.UTREDES
+                    TilbakekrevingBehandlingsstatus.TIL_GODKJENNING -> no.nav.aap.behandlingsflyt.kontrakt.behandling.Status.UTREDES
                     TilbakekrevingBehandlingsstatus.AVSLUTTET -> no.nav.aap.behandlingsflyt.kontrakt.behandling.Status.AVSLUTTET
                 },
                 vurderingsbehov = emptyList(),

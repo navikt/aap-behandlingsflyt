@@ -6,6 +6,5 @@ import java.time.LocalDateTime
 
 data class VurderingsbehovMedPeriode(
     val type: Vurderingsbehov,
-    val periode: Periode? = null,
     val oppdatertTid: LocalDateTime = LocalDateTime.now()
 )

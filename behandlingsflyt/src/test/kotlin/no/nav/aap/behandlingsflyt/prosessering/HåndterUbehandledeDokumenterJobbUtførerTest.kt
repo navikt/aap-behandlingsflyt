@@ -16,15 +16,12 @@ import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
-import no.nav.aap.behandlingsflyt.test.FakeUnleashBaseWithDefaultDisabled
+import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.test.januar
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.json.DefaultJsonMapper
-import no.nav.aap.komponenter.type.Periode
-import no.nav.aap.motor.JobbInput
 import no.nav.aap.motor.JobbType
 import no.nav.aap.verdityper.dokument.JournalpostId
 import no.nav.aap.verdityper.dokument.Kanal
@@ -34,21 +31,14 @@ import org.junit.jupiter.api.BeforeAll
 import java.time.LocalDateTime
 import kotlin.test.Test
 
-object JobbPåskruddUnleash : FakeUnleashBaseWithDefaultDisabled(
-    enabledFlags = listOf(
-        BehandlingsflytFeature.UbehandledeMeldekortJobb
-    )
-)
-
 class HåndterUbehandledeDokumenterJobbUtførerTest {
     init {
-        JobbType.leggTil(HåndterUbehandledeDokumenterJobbUtfører)
         JobbType.leggTil(HåndterUbehandletDokumentJobbUtfører)
     }
 
     companion object {
         private val gatewayProvider = createGatewayProvider {
-            register<JobbPåskruddUnleash>()
+            register<AlleAvskruddUnleash>()
         }
         private lateinit var dataSource: TestDataSource
 
@@ -89,29 +79,15 @@ class HåndterUbehandledeDokumenterJobbUtførerTest {
             val ubehandledeMeldekort = mottattDokumentRepository.hentAlleUbehandledeDokumenter()
             assertThat(ubehandledeMeldekort).hasSize(1)
 
-            // TODO: Slett denne etter at den er kjørt; erstattes av jobben under
-            HåndterUbehandledeDokumenterJobbUtfører
-                .konstruer(repoprovider, gatewayProvider)
-                .utfør(JobbInput(HåndterUbehandledeDokumenterJobbUtfører))
-
             HåndterUbehandledeMeldekortForSakJobbUtfører
                 .konstruer(repoprovider, gatewayProvider)
                 .utfør(HåndterUbehandledeMeldekortForSakJobbUtfører.nyJobb(førstegangsbehandlingen.sakId))
 
             val jobber = hentJobber(connection)
-            assertThat(jobber).hasSize(2)
+            assertThat(jobber).hasSize(1)
             assertThat(jobber[0].sakId).isEqualTo(førstegangsbehandlingen.sakId)
             assertThat(jobber[0].type).isEqualTo(HåndterUbehandletDokumentJobbUtfører.type)
             assertThat(jobber[0].parameters.trimIndent()).isEqualTo(
-                """
-                innsendingsreferanse_verdi=101
-                innsendingsreferanse_type=JOURNALPOST
-                """.trimIndent()
-            )
-
-            assertThat(jobber[1].sakId).isEqualTo(førstegangsbehandlingen.sakId)
-            assertThat(jobber[1].type).isEqualTo(HåndterUbehandletDokumentJobbUtfører.type)
-            assertThat(jobber[1].parameters.trimIndent()).isEqualTo(
                 """
                 innsendingsreferanse_verdi=101
                 innsendingsreferanse_type=JOURNALPOST
@@ -123,7 +99,7 @@ class HåndterUbehandledeDokumenterJobbUtførerTest {
     private fun settOppFørstegangsbehandling() =
         dataSource.transaction { connection ->
             val repositoryProvider = postgresRepositoryRegistry.provider(connection)
-            val sak = opprettSak(connection, Periode(1 januar 2020, 1 januar 2021))
+            val sak = opprettSak(connection, 1 januar 2020)
             val førstegangsbehandlingen = finnEllerOpprettBehandling(connection, sak)
             repositoryProvider.provide<BehandlingRepository>()
                 .oppdaterBehandlingStatus(førstegangsbehandlingen.id, Status.AVSLUTTET)

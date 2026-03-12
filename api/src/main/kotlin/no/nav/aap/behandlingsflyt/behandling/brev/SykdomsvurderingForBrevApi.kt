@@ -9,7 +9,7 @@ import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdomsvurderingbrev.SykdomsvurderingForBrev
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdomsvurderingbrev.SykdomsvurderingForBrevRepository
-import no.nav.aap.behandlingsflyt.harTilgangOgKanSaksbehandle
+import no.nav.aap.behandlingsflyt.kanLøseBehovSomSkalVæreLåstEtterKvalitetssikring
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
@@ -69,7 +69,7 @@ fun NormalOpenAPIRoute.sykdomsvurderingForBrevApi(
                             behandlingRepository.hent(behandlingReferanse)
                         )
                     },
-                    kanSaksbehandle = harTilgangOgKanSaksbehandle(kanSaksbehandle(), avklaringsbehovene),
+                    kanSaksbehandle = kanSaksbehandle() && kanLøseBehovSomSkalVæreLåstEtterKvalitetssikring(Definisjon.SKRIV_SYKDOMSVURDERING_BREV.løsesISteg, behandling),
                 )
             }
             respond(grunnlag)

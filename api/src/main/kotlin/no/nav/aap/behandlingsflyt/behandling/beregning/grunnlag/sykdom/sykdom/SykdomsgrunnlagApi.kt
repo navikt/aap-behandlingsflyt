@@ -14,7 +14,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Yrkesskadev
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.InnhentetSykdomsOpplysninger
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.RegistrertYrkesskade
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderSykdomSteg
-import no.nav.aap.behandlingsflyt.harTilgangOgKanSaksbehandle
+import no.nav.aap.behandlingsflyt.kanLøseBehovSomSkalVæreLåstEtterKvalitetssikring
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
@@ -91,7 +91,7 @@ fun NormalOpenAPIRoute.sykdomsgrunnlagApi(
                             ?: false,
                         nyeVurderinger = nyeVurderinger,
                         sisteVedtatteVurderinger = sisteVedtatte,
-                        harTilgangTilÅSaksbehandle = harTilgangOgKanSaksbehandle(kanSaksbehandle(), avklaringsbehovene),
+                        harTilgangTilÅSaksbehandle = kanSaksbehandle() && kanLøseBehovSomSkalVæreLåstEtterKvalitetssikring(Definisjon.AVKLAR_SYKDOM.løsesISteg, behandling),
                         kanVurderes = listOf(sak.rettighetsperiode),
                         ikkeRelevantePerioder =
                             avklaringsbehovMetadataService.perioderSomSkalFremhevesSomIkkeRelevant(vurderSykdomSteg, behandling),

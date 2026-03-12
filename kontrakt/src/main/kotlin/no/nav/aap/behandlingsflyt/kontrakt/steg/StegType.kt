@@ -83,6 +83,10 @@ public enum class StegType(
         gruppe = StegGruppe.SYKDOM,
         status = Status.UTREDES
     ),
+    BEKREFT_VURDERINGER_OPPFØLGING(
+        gruppe = StegGruppe.SYKDOM,
+        status = Status.UTREDES
+    ),
     KVALITETSSIKRING(
         gruppe = StegGruppe.KVALITETSSIKRING,
         status = Status.UTREDES,
@@ -154,6 +158,10 @@ public enum class StegType(
     SAMORDNING_AVSLAG(
         gruppe = StegGruppe.SAMORDNING,
         status = Status.UTREDES,
+    ),
+    SAMORDNING_BARNEPENSJON(
+        gruppe = StegGruppe.SAMORDNING,
+        status = Status.UTREDES
     ),
 
     SAMORDNING_SYKESTIPEND(

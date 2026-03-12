@@ -92,6 +92,7 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::clas
                 ),
             )
             .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
             .kvalitetssikre()
             .løsBeregningstidspunkt()
             .løsOppholdskrav(fom)
@@ -331,6 +332,8 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::clas
                 assertThat(åpneAvklaringsbehov.map { it.definisjon }).contains(Definisjon.AVKLAR_SONINGSFORRHOLD)
             }
     }
+    
+    
 
     private fun opprettSamordning(
         person: TestPerson,
@@ -377,6 +380,7 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::clas
                 ),
             )
             .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
             .kvalitetssikre()
             .løsAvklaringsBehov(
                 FastsettBeregningstidspunktLøsning(
@@ -467,6 +471,7 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::clas
             .løsBistand(periode.fom)
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
             .kvalitetssikre()
             .løsBeregningstidspunkt()
             .løsOppholdskrav(fom)

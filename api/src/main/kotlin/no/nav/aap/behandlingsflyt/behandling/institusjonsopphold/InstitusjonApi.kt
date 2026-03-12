@@ -23,7 +23,6 @@ import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.komponenter.tidslinje.Tidslinje
-import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.getGrunnlag
@@ -125,86 +124,7 @@ fun NormalOpenAPIRoute.institusjonApi(
                     val institusjonsoppholdRepository = repositoryProvider.provide<InstitusjonsoppholdRepository>()
                     val barnetilleggRepository = repositoryProvider.provide<BarnetilleggRepository>()
 
-                    val utlederService =
-                        InstitusjonsoppholdUtlederService(
-                            barnetilleggRepository, institusjonsoppholdRepository,
-                            sakRepository,
-                            behandlingRepository
-                        )
-                    val behov = utlederService.utled(behandling.id)
-
-                    // Hent ut rå fakta fra grunnlaget
-                    val grunnlag = institusjonsoppholdRepository.hentHvisEksisterer(behandling.id)
-                    val oppholdInfo = byggTidslinjeForInstitusjonsopphold(grunnlag, Institusjonstype.HS)
-
-                    val perioderMedHelseopphold = behov.perioderTilVurdering.mapValue { it.helse }.komprimer()
-                    val vurderinger = grunnlag?.helseoppholdvurderinger?.tilTidslinje().orEmpty()
-
-                    val manglendePerioder = perioderMedHelseopphold.segmenter()
-                        .filterNot { it.verdi == null }
-                        .map {
-                            HelseoppholdDto(
-                                periode = it.periode,
-                                oppholdId = null,
-                                vurderinger = vurderinger.begrensetTil(it.periode).segmenter()
-                                    .map { helseinstitusjonsvurdering ->
-                                        HelseinstitusjonVurderingDto(
-                                            oppholdId = null,
-                                            begrunnelse = helseinstitusjonsvurdering.verdi.begrunnelse,
-                                            faarFriKostOgLosji = helseinstitusjonsvurdering.verdi.faarFriKostOgLosji,
-                                            forsoergerEktefelle = helseinstitusjonsvurdering.verdi.forsoergerEktefelle,
-                                            harFasteUtgifter = helseinstitusjonsvurdering.verdi.harFasteUtgifter,
-                                            periode = helseinstitusjonsvurdering.periode,
-                                            vurdertAv = null
-                                        )
-                                    },
-                                status = it.verdi!!.vurdering.toDto()
-                            )
-                        }
-
-                    val ansattNavnOgEnhet =
-                        grunnlag?.helseoppholdvurderinger?.let {
-                            ansattInfoService.hentAnsattNavnOgEnhet(
-                                it.vurdertAv
-                            )
-                        }
-
-                    HelseinstitusjonGrunnlagDto(
-                        harTilgangTilÅSaksbehandle = kanSaksbehandle(),
-                        opphold = oppholdInfo.segmenter().map { InstitusjonsoppholdDto.institusjonToDto(it) },
-                        vurderinger = manglendePerioder,
-                        vurdertAv =
-                            grunnlag?.helseoppholdvurderinger?.let {
-                                VurdertAvResponse(
-                                    ident = it.vurdertAv,
-                                    dato = it.vurdertTidspunkt.toLocalDate(),
-                                    ansattnavn = ansattNavnOgEnhet?.navn,
-                                    enhetsnavn = ansattNavnOgEnhet?.enhet
-                                )
-                            },
-                        vedtatteVurderinger = emptyList()
-                    )
-                }
-                respond(grunnlagDto)
-            }
-        }
-    }
-    route("/api/behandling") {
-        route("/{referanse}/grunnlag/institusjon/helseny") {
-            getGrunnlag<BehandlingReferanse, HelseinstitusjonGrunnlagDto>(
-                relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
-                behandlingPathParam = BehandlingPathParam("referanse"),
-                avklaringsbehovKode = Definisjon.AVKLAR_HELSEINSTITUSJON.kode.toString()
-            ) { req ->
-                val grunnlagDto = dataSource.transaction(readOnly = true) { connection ->
-                    val repositoryProvider = repositoryRegistry.provider(connection)
-                    val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
-                    val sakRepository = repositoryProvider.provide<SakRepository>()
-                    val behandling = BehandlingReferanseService(behandlingRepository).behandling(req)
-                    val institusjonsoppholdRepository = repositoryProvider.provide<InstitusjonsoppholdRepository>()
-                    val barnetilleggRepository = repositoryProvider.provide<BarnetilleggRepository>()
-
-                    val utlederService = InstitusjonsoppholdUtlederServiceNy(
+                    val utlederService = InstitusjonsoppholdUtlederService(
                         barnetilleggRepository,
                         institusjonsoppholdRepository,
                         sakRepository,
@@ -271,13 +191,6 @@ fun NormalOpenAPIRoute.institusjonApi(
                         mapVurderingerToDto(nyeVurderingerForOpphold, oppholdInfo, ansattInfoService) + uavklarteDto
                     }
 
-                    val ansattNavnOgEnhet =
-                        grunnlag?.helseoppholdvurderinger?.let {
-                            ansattInfoService.hentAnsattNavnOgEnhet(
-                                it.vurdertAv
-                            )
-                        }
-
                     HelseinstitusjonGrunnlagDto(
                         harTilgangTilÅSaksbehandle = kanSaksbehandle(),
                         opphold = hentOppholdSomSkalVurderes(
@@ -287,15 +200,6 @@ fun NormalOpenAPIRoute.institusjonApi(
                         ),
                         vurderinger = vurderingerDto,
                         vedtatteVurderinger = vedtatteVurderingerDto,
-                        vurdertAv =
-                            grunnlag?.helseoppholdvurderinger?.let {
-                                VurdertAvResponse(
-                                    ident = it.vurdertAv,
-                                    dato = it.vurdertTidspunkt.toLocalDate(),
-                                    ansattnavn = ansattNavnOgEnhet?.navn,
-                                    enhetsnavn = ansattNavnOgEnhet?.enhet
-                                )
-                            }
                     )
                 }
                 respond(grunnlagDto)

@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.behandling.tilbakekrevingsbehandling.Tilbakekr
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.komponenter.dbconnect.Row
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.lookup.repository.Factory
 import java.net.URI
@@ -106,27 +107,14 @@ class TilbakekrevingRepositoryImpl(private val connection: DBConnection) : Tilba
                 TILBAKEKREVING_SAKSBEHANDLING_URL,
                 FULLSTENDIG_PERIODE
             FROM TILBAKEKREVINGSBEHANDLING
-            WHERE SAK_ID = ?
+            WHERE SAK_ID = ? AND AKTIV = TRUE
         """.trimIndent()
 
         return connection.queryList(sql) {
             setParams {
                 setLong(1, sakId.id)
             }
-            setRowMapper { row ->
-                Tilbakekrevingsbehandling(
-                    tilbakekrevingBehandlingId = row.getUUID("TILBAKEKREVING_BEHANDLING_ID"),
-                    eksternFagsakId = row.getString("EKSTERN_FAGSAK_ID") ,
-                    hendelseOpprettet = row.getLocalDateTime("HENDELSE_OPPRETTET"),
-                    eksternBehandlingId = row.getStringOrNull("EKSTERN_BEHANDLING_ID"),
-                    sakOpprettet = row.getLocalDateTime("SAK_OPPRETTET"),
-                    varselSendt = row.getLocalDateOrNull("VARSEL_SENDT"),
-                    behandlingsstatus = row.getEnum("BEHANDLINGSSTATUS"),
-                    totaltFeilutbetaltBeløp = Beløp(row.getBigDecimal("TOTALT_FEILUTBETALT_BELOP")),
-                    saksbehandlingURL = URI.create(row.getString("TILBAKEKREVING_SAKSBEHANDLING_URL")), fullstendigPeriode = row.getPeriode("FULLSTENDIG_PERIODE")
-                )
-            }
-
+            setRowMapper { mapToTilbakekrevingsbehandling(it) }
         }
     }
     override fun hent(tilbakekrevingsBehandlingId: UUID): Tilbakekrevingsbehandling{
@@ -143,30 +131,29 @@ class TilbakekrevingRepositoryImpl(private val connection: DBConnection) : Tilba
                 TILBAKEKREVING_SAKSBEHANDLING_URL,
                 FULLSTENDIG_PERIODE
             FROM TILBAKEKREVINGSBEHANDLING
-            WHERE TILBAKEKREVING_BEHANDLING_ID = ?
+            WHERE TILBAKEKREVING_BEHANDLING_ID = ? AND AKTIV = TRUE
         """.trimIndent()
 
         return connection.queryFirst(sql) {
             setParams {
                 setUUID(1, tilbakekrevingsBehandlingId)
             }
-            setRowMapper { row ->
-                Tilbakekrevingsbehandling(
-                    tilbakekrevingBehandlingId = row.getUUID("TILBAKEKREVING_BEHANDLING_ID"),
-                    eksternFagsakId = row.getString("EKSTERN_FAGSAK_ID") ,
-                    hendelseOpprettet = row.getLocalDateTime("HENDELSE_OPPRETTET"),
-                    eksternBehandlingId = row.getStringOrNull("EKSTERN_BEHANDLING_ID"),
-                    sakOpprettet = row.getLocalDateTime("SAK_OPPRETTET"),
-                    varselSendt = row.getLocalDateOrNull("VARSEL_SENDT"),
-                    behandlingsstatus = row.getEnum("BEHANDLINGSSTATUS"),
-                    totaltFeilutbetaltBeløp = Beløp(row.getBigDecimal("TOTALT_FEILUTBETALT_BELOP")),
-                    saksbehandlingURL = URI.create(row.getString("TILBAKEKREVING_SAKSBEHANDLING_URL")), fullstendigPeriode = row.getPeriode("FULLSTENDIG_PERIODE")
-                )
-            }
-
+            setRowMapper { mapToTilbakekrevingsbehandling(it) }
         }
     }
 
+    private fun mapToTilbakekrevingsbehandling(row: Row) =
+        Tilbakekrevingsbehandling(
+            tilbakekrevingBehandlingId = row.getUUID("TILBAKEKREVING_BEHANDLING_ID"),
+            eksternFagsakId = row.getString("EKSTERN_FAGSAK_ID") ,
+            hendelseOpprettet = row.getLocalDateTime("HENDELSE_OPPRETTET"),
+            eksternBehandlingId = row.getStringOrNull("EKSTERN_BEHANDLING_ID"),
+            sakOpprettet = row.getLocalDateTime("SAK_OPPRETTET"),
+            varselSendt = row.getLocalDateOrNull("VARSEL_SENDT"),
+            behandlingsstatus = row.getEnum("BEHANDLINGSSTATUS"),
+            totaltFeilutbetaltBeløp = Beløp(row.getBigDecimal("TOTALT_FEILUTBETALT_BELOP")),
+            saksbehandlingURL = URI.create(row.getString("TILBAKEKREVING_SAKSBEHANDLING_URL")), fullstendigPeriode = row.getPeriode("FULLSTENDIG_PERIODE")
+        )
 
     override fun kopier(
         fraBehandling: BehandlingId,

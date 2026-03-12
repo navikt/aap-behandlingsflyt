@@ -54,6 +54,8 @@ import no.nav.aap.behandlingsflyt.forretningsflyt.steg.SamordningAvslagSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.SamordningSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.SamordningUføreSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.SendForvaltningsmeldingSteg
+import no.nav.aap.behandlingsflyt.forretningsflyt.steg.BekreftVurderingerOppfølgingSteg
+import no.nav.aap.behandlingsflyt.forretningsflyt.steg.SamordningBarnepensjonSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.SimulerUtbetalingSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.StartBehandlingSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.SykdomsvurderingBrevSteg
@@ -239,6 +241,7 @@ object Revurdering : BehandlingType {
                     Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP,
                 )
             )
+            .medSteg(steg = BekreftVurderingerOppfølgingSteg)
             .medSteg(steg = KvalitetssikringsSteg, vurderingsbehovRelevanteForSteg = emptyList())
             .medSteg(
                 steg = VurderYrkesskadeSteg, vurderingsbehovRelevanteForSteg = listOf(
@@ -380,6 +383,10 @@ object Revurdering : BehandlingType {
             )
             .medSteg(steg = SamordningAvslagSteg)
             .medSteg(
+                steg = SamordningBarnepensjonSteg,
+                vurderingsbehovRelevanteForSteg = listOf(Vurderingsbehov.REVURDER_SAMORDNING_BARNEPENSJON)
+            )
+            .medSteg(
                 steg = SykestipendSteg,
                 vurderingsbehovRelevanteForSteg = listOf(
                     Vurderingsbehov.REVURDER_STUDENT,
@@ -406,7 +413,13 @@ object Revurdering : BehandlingType {
             )
             .medSteg(steg = Effektuer11_7Steg)
             .medSteg(steg = RettighetstypeSteg)
-            .medSteg(steg = VedtakslengdeSteg, informasjonskrav = listOf(VedtakslengdeInformasjonskrav))
+            .medSteg(
+                steg = VedtakslengdeSteg,
+                informasjonskrav = listOf(VedtakslengdeInformasjonskrav),
+                vurderingsbehovRelevanteForSteg = listOf(
+                    Vurderingsbehov.VEDTAKSLENGDE_MANUELT
+                )
+            )
             .medSteg(steg = UnderveisSteg)
             .medSteg(
                 steg = BeregnTilkjentYtelseSteg,

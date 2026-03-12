@@ -21,6 +21,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
+import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.test.FakeTidligereVurderinger
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
@@ -74,6 +75,7 @@ class VurderBistandsbehovStegTest {
 
 
         val steg = VurderBistandsbehovSteg(
+            unleashGateway = AlleAvskruddUnleash,
             bistandRepository = bistandMock,
             studentRepository = mockk {
                 every { hentHvisEksisterer(any()) } returns null
@@ -97,6 +99,7 @@ class VurderBistandsbehovStegTest {
                             vurdertAv = Bruker("Z00000"),
                             opprettet = Instant.now(),
                             vurdertIBehandling = behandling.id,
+                            diagnose = null
                         )
                     )
                 )

@@ -281,6 +281,13 @@ private fun sendInnSøknad(dto: OpprettTestcaseDTO, gatewayProvider: GatewayProv
                     periode = it.periode
                 )
             },
+            dagpenger = dto.dagpenger.map {
+                TestPerson.Dagpenger(
+                    periode = it.periode,
+                    kilde = it.kilde,
+                    dagpengerYtelseType = it.dagpengerYtelseType
+                )
+            },
             tjenestePensjon = if (dto.tjenestePensjon != null && dto.tjenestePensjon) TjenestePensjonRespons(
                 fnr = ident.identifikator,
                 forhold = listOf(
@@ -371,6 +378,9 @@ private fun opprettNySakOgBehandling(dto: OpprettTestcaseDTO, gatewayProvider: G
 
         if (dto.steg == StegType.SYKDOMSVURDERING_BREV) return sak
         else if (!dto.student) løsSykdomsvurderingBrev(behandling)
+
+        if(dto.steg == StegType.BEKREFT_VURDERINGER_OPPFØLGING) return sak
+        løsVurderingerOppfølgning(behandling)
 
         if (dto.steg == StegType.KVALITETSSIKRING) return sak
         kvalitetssikreOk(behandling)

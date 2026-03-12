@@ -15,12 +15,11 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.MeldekortV0
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
+import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.json.DefaultJsonMapper
-import no.nav.aap.komponenter.type.Periode
-import no.nav.aap.motor.JobbInput
 import no.nav.aap.verdityper.dokument.JournalpostId
 import no.nav.aap.verdityper.dokument.Kanal
 import org.assertj.core.api.Assertions.assertThat
@@ -32,7 +31,7 @@ import kotlin.test.Test
 class DigitaliseringFraPostmottakHåndtererTest {
     companion object {
         private val gatewayProvider = createGatewayProvider {
-            register<JobbPåskruddUnleash>()
+            register<AlleAvskruddUnleash>()
         }
         private lateinit var dataSource: TestDataSource
 
@@ -51,7 +50,7 @@ class DigitaliseringFraPostmottakHåndtererTest {
     fun `Skal ikke inneholde informasjon om digitalisering i postmottak om ikke satt `() {
         val førstegangsbehandlingen = dataSource.transaction { connection ->
             val repositoryProvider = postgresRepositoryRegistry.provider(connection)
-            val sak = opprettSak(connection, Periode(1 januar 2020, 1 januar 2021))
+            val sak = opprettSak(connection, 1 januar 2020)
             val førstegangsbehandlingen = finnEllerOpprettBehandling(connection, sak)
             repositoryProvider.provide<BehandlingRepository>()
                 .oppdaterBehandlingStatus(førstegangsbehandlingen.id, Status.AVSLUTTET)
@@ -80,9 +79,9 @@ class DigitaliseringFraPostmottakHåndtererTest {
                 .provide<MottattDokumentRepository>()
             val ubehandledeMeldekort = mottattDokumentRepository.hentAlleUbehandledeDokumenter()
 
-            HåndterUbehandledeDokumenterJobbUtfører
+            HåndterUbehandledeMeldekortForSakJobbUtfører
                 .konstruer(repoprovider, gatewayProvider)
-                .utfør(JobbInput(HåndterUbehandledeDokumenterJobbUtfører))
+                .utfør(HåndterUbehandledeMeldekortForSakJobbUtfører.nyJobb(førstegangsbehandlingen.sakId))
 
             assertThat(ubehandledeMeldekort.first().digitalisertAvPostmottak).isNull()
         }

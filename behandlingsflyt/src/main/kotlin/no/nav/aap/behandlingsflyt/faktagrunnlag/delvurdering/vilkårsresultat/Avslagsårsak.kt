@@ -19,7 +19,7 @@ enum class Avslagsårsak(
     IKKE_NOK_REDUSERT_ARBEIDSEVNE(kode = "11-5-1", "§ 11-5", Avslagstype.OPPHØR),
     IKKE_BEHOV_FOR_OPPFOLGING(kode = "11-6-1", "§ 11-6", Avslagstype.OPPHØR),
     IKKE_MEDLEM_FORUTGÅENDE(kode= "11-2", hjemmel = "§ 11-2", Avslagstype.KUN_INNGANGSVILKÅR),
-    IKKE_MEDLEM(kode= "2-1", hjemmel = "§ 2-1", Avslagstype.UKJENT),
+    IKKE_MEDLEM(kode= "2-1", hjemmel = "§ 2-1", Avslagstype.OPPHØR),
     IKKE_OPPFYLT_OPPHOLDSKRAV_EØS(kode = "11-3-1", hjemmel = "§ 11-3 1.ledd", Avslagstype.STANS),
     NORGE_IKKE_KOMPETENT_STAT(kode= "EØS-forordning 883. Art 11-3-E", hjemmel = "EØS-forordning 883. Art 11-3-E", Avslagstype.UKJENT),
     ANNEN_FULL_YTELSE(kode = "11-27", hjemmel = "§ 11-27", Avslagstype.OPPHØR),

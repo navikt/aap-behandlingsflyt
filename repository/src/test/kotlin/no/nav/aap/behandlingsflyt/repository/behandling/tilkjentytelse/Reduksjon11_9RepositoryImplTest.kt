@@ -7,7 +7,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
-import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
@@ -30,8 +29,6 @@ class Reduksjon11_9RepositoryImplTest {
         fun tearDown() = dataSource.close()
     }
 
-
-    val periode = Periode(LocalDate.of(2025, 1, 1), LocalDate.of(2027, 12, 31))
     val reduksjon_brudd_1 = Reduksjon11_9(LocalDate.of(2025, 1, 1), Beløp(1000))
     val reduksjon_rimelig_grunn = Reduksjon11_9(LocalDate.of(2025, 1, 2), Beløp(0))
     val reduksjon_brudd_2 = Reduksjon11_9(LocalDate.of(2025, 1, 3), Beløp(500))
@@ -102,7 +99,7 @@ class Reduksjon11_9RepositoryImplTest {
 
 
     private fun lagSakOgBehandling(connection: DBConnection): Behandling {
-        val sak = opprettSak(connection, periode)
+        val sak = opprettSak(connection, LocalDate.of(2025, 1, 1))
         return finnEllerOpprettBehandling(connection, sak)
     }
 

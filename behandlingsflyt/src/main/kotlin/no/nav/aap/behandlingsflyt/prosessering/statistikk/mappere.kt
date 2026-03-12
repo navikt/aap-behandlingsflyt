@@ -35,6 +35,7 @@ internal fun VurderingsbehovMedPeriode.tilKontraktVurderingsbehov(): no.nav.aap.
         Vurderingsbehov.REVURDER_SAMORDNING_UFØRE -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.REVURDER_SAMORDNING_UFØRE
         Vurderingsbehov.REVURDER_SAMORDNING_ANDRE_STATLIGE_YTELSER -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.REVURDER_SAMORDNING_ANDRE_STATLIGE_YTELSER
         Vurderingsbehov.REVURDER_SAMORDNING_ARBEIDSGIVER -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.REVURDER_SAMORDNING_ARBEIDSGIVER
+        Vurderingsbehov.REVURDER_SAMORDNING_BARNEPENSJON -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.REVURDER_SAMORDNING_BARNEPENSJON
         Vurderingsbehov.REVURDER_SAMORDNING_TJENESTEPENSJON -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.REVURDER_SAMORDNING_TJENESTEPENSJON
         Vurderingsbehov.REFUSJONSKRAV -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.REFUSJONSKRAV
         Vurderingsbehov.UTENLANDSOPPHOLD_FOR_SOKNADSTIDSPUNKT -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.UTENLANDSOPPHOLD_FOR_SOKNADSTIDSPUNKT
@@ -59,6 +60,7 @@ internal fun VurderingsbehovMedPeriode.tilKontraktVurderingsbehov(): no.nav.aap.
         Vurderingsbehov.DØDSFALL_BRUKER -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.DØDSFALL_BRUKER
         Vurderingsbehov.DØDSFALL_BARN -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.DØDSFALL_BARN
         Vurderingsbehov.UTVID_VEDTAKSLENGDE -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.UTVID_VEDTAKSLENGDE
+        Vurderingsbehov.VEDTAKSLENGDE_MANUELT -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.VEDTAKSLENGDE_MANUELT
         Vurderingsbehov.MIGRER_RETTIGHETSPERIODE -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.MIGRER_RETTIGHETSPERIODE
         Vurderingsbehov.REVURDER_SYKESTIPEND -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.REVURDER_SYKESTIPEND
         Vurderingsbehov.ETABLERING_EGEN_VIRKSOMHET -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.ETABLERING_EGEN_VIRKSOMHET
