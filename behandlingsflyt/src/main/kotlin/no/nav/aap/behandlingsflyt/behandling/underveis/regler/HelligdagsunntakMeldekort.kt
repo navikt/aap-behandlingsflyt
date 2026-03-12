@@ -5,8 +5,6 @@ import java.time.LocalDate
 
 /**
  * Map fra ordinær fastsatt dag til justert dato for helligdager. Se [Confluence](https://confluence.adeo.no/x/uizUL) for dokumentasjon.
- *
- * Merk: if-else er for å kunne teste tidligere i dev.
  */
 val helligdagsunntakFastsattMeldedag =
     mapOf(
