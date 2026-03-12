@@ -130,7 +130,7 @@ class GraderingArbeidRegel : UnderveisRegel {
             if (fritaksvurdering?.harFritak == true && harPassertMeldeperiodeITid) {
                 OpplysningerOmArbeid(
                     timerArbeid = TimerArbeid(BigDecimal.ZERO),
-                    opplysningerFørstMottatt = unntakFritaksUtbetalingDato[meldeperiode.tom.plusDays(3)]
+                    opplysningerFørstMottatt = helligdagsunntakFritaksUtbetalingDato[meldeperiode.tom.plusDays(3)]
                         ?: meldeperiode.tom.plusDays(3)
                 )
             } else {
