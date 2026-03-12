@@ -854,6 +854,97 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(VedtakslengdeFlytUnlea
     }
 
     @Test
+    fun `forlenger ikke vedtak hvor bistandsbehov ikke er oppfylt i to korte periode i andre året - krever manuell behandling`() {
+        val søknadstidspunkt = LocalDateTime.now(clock).minusYears(1)
+        val (sak, førstegangsbehandling) = sendInnFørsteSøknad(mottattTidspunkt = søknadstidspunkt)
+        val startDato = sak.rettighetsperiode.fom
+        val forventetSluttdato = startDato.plussEtÅrMedHverdager(ÅrMedHverdager.FØRSTE_ÅR)
+        val datoOppholdskravIkkeOppfyltFra = sak.rettighetsperiode.fom.plusYears(1).plusMonths(2)
+        val nesteDatoOppholdskravIkkeOppfyltFra = datoOppholdskravIkkeOppfyltFra.plusMonths(4)
+
+        førstegangsbehandling
+            .løsSykdom(startDato)
+            .løsBistand(startDato)
+            .løsRefusjonskrav()
+            .løsSykdomsvurderingBrev()
+            .kvalitetssikre()
+            .løsBeregningstidspunkt(startDato)
+            // Legger inn flere hull etter ett år - dette skal føre til manuell behandling ved utvidelse av vedtakslengde
+            .løsAvklaringsBehov(
+                AvklarOppholdskravLøsning(
+                    løsningerForPerioder = listOf(
+                        AvklarOppholdkravLøsningForPeriodeDto(
+                            oppfylt = true,
+                            land = null,
+                            fom = startDato,
+                            tom = datoOppholdskravIkkeOppfyltFra.minusDays(1),
+                            begrunnelse = "Oppholder seg i Norge"
+                        ),
+                        AvklarOppholdkravLøsningForPeriodeDto(
+                            oppfylt = false,
+                            land = "Sverige",
+                            fom = datoOppholdskravIkkeOppfyltFra,
+                            tom = datoOppholdskravIkkeOppfyltFra.plusMonths(1).minusDays(1),
+                            begrunnelse = "Fiske"
+                        ),
+                        AvklarOppholdkravLøsningForPeriodeDto(
+                            oppfylt = true,
+                            land = null,
+                            fom = datoOppholdskravIkkeOppfyltFra.plusMonths(1),
+                            tom = nesteDatoOppholdskravIkkeOppfyltFra.minusDays(1),
+                            begrunnelse = "Oppholder seg i Norge"
+                        ),
+                        AvklarOppholdkravLøsningForPeriodeDto(
+                            oppfylt = false,
+                            land = "Sverige",
+                            fom = nesteDatoOppholdskravIkkeOppfyltFra,
+                            begrunnelse = "Fiske"
+                        )
+                    )
+                )
+            )
+            .løsAndreStatligeYtelser()
+            .løsAvklaringsBehov(ForeslåVedtakLøsning())
+            .fattVedtak()
+            .løsVedtaksbrev(TypeBrev.VEDTAK_INNVILGELSE)
+
+
+        dataSource.transaction { connection ->
+            val førstegangsbehandling = BehandlingRepositoryImpl(connection).finnFørstegangsbehandling(sak.id)
+
+            val vedtakslengdeVurdering = VedtakslengdeRepositoryImpl(connection).hentHvisEksisterer(førstegangsbehandling.id)
+            assertThat(vedtakslengdeVurdering).isNotNull()
+            assertThat(vedtakslengdeVurdering?.gjeldendeVurdering()?.sluttdato).isEqualTo(forventetSluttdato)
+        }
+
+        dataSource.transaction { connection ->
+            val repositoryProvider = postgresRepositoryRegistry.provider(connection)
+
+            val opprettJobbUtvidVedtakslengdeJobbUtfører = OpprettJobbUtvidVedtakslengdeJobbUtfører(
+                behandlingService = BehandlingService(repositoryProvider, gatewayProvider),
+                vedtakslengdeService = VedtakslengdeService(repositoryProvider, gatewayProvider),
+                flytJobbRepository = FlytJobbRepositoryImpl(connection),
+                clock = clock,
+            )
+
+            opprettJobbUtvidVedtakslengdeJobbUtfører.utfør(JobbInput(OpprettJobbUtvidVedtakslengdeJobbUtfører))
+        }
+
+        motor.kjørJobber()
+
+        dataSource.transaction { connection ->
+            val behandlingMedSisteFattedeVedtak = BehandlingService(
+                postgresRepositoryRegistry.provider(connection),
+                gatewayProvider
+            ).finnBehandlingMedSisteFattedeVedtak(sak.id)!!
+
+            val vedtakslengdeVurdering = VedtakslengdeRepositoryImpl(connection).hentHvisEksisterer(behandlingMedSisteFattedeVedtak.id)
+            assertThat(vedtakslengdeVurdering).isNotNull()
+            assertThat(vedtakslengdeVurdering?.gjeldendeVurdering()?.sluttdato).isEqualTo(forventetSluttdato)
+        }
+    }
+
+    @Test
     fun `forleng også vedtak i åpen behandling dersom vedtaksutvidelse-jobb kjører`() {
         val søknadstidspunkt = LocalDateTime.now(clock).minusYears(1)
         val (sak, førstegangsbehandling) = sendInnFørsteSøknad(mottattTidspunkt = søknadstidspunkt)

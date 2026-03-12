@@ -65,38 +65,52 @@ class VedtakslengdeService(
 
         val nesteÅrligeUtvidelse = hentNesteÅrligeUtvidelse(vedtakslengdeGrunnlag?.gjeldendeVurdering())
         val vedtattSluttdatoUtvidetMedEttÅr = vedtattSluttdato.plussEtÅrMedHverdager(nesteÅrligeUtvidelse)
-        val periodeMedFremtidigOrdinærRettighet = hentNestePeriodeMedFremtidigOrdinærRettighet(vedtattSluttdato, behandlingId)
+        val fremtidigOrdinæreRettighetsperioder = hentPerioderMedOrdinærRettighet(vedtattSluttdato.plusDays(1), behandlingId)
 
-        return if (periodeMedFremtidigOrdinærRettighet != null) {
-            if (periodeMedFremtidigOrdinærRettighet.tom > vedtattSluttdatoUtvidetMedEttÅr) {
-                // Har over ett år gjenstående med ordinær rettighet, kan utvide med et helt år
-                VedtakslengdeUtvidelse.Automatisk(
+        return when (fremtidigOrdinæreRettighetsperioder) {
+            // Ingen perioder å utvide for
+            is OrdinæreRettighetsperioder.IngenPerioder ->
+                VedtakslengdeUtvidelse.IngenFremtidigOrdinærRettighet
+
+            // Flere ikke-sammenhengende perioder med ordinær rettighet - må behandles manuelt
+            is OrdinæreRettighetsperioder.FlerePerioder ->
+                VedtakslengdeUtvidelse.Manuell(
                     forrigeSluttdato = vedtattSluttdato,
-                    nySluttdato = vedtattSluttdatoUtvidetMedEttÅr,
+                    flerePerioder = true,
+                    avslagsårsaker = emptySet(),
                 )
-            } else {
-                // Har ett år eller mindre gjenstående med ordinær rettighet
-                val forventetStansEllerOpphørFom = periodeMedFremtidigOrdinærRettighet.tom.plusDays(1)
-                val avslagsårsaker = hentAvslagsårsakerVedStansEllerOpphør(behandlingId, forventetStansEllerOpphørFom)
 
-                if (unleashGateway.isEnabled(BehandlingsflytFeature.UtvidVedtakslengdeUnderEttAr)
-                    && gyldigForAutomatiskUtvidelseAvVedtakslengde(avslagsårsaker)) {
-                    // Har avslagsårsaker som er støttet for automatisk utvidelse
+            // En sammenhengende periode med ordinær rettighet - kan vurderes for automatisk utvidelse
+            is OrdinæreRettighetsperioder.EnSammenhengendePeriode ->
+                if (fremtidigOrdinæreRettighetsperioder.periode.tom > vedtattSluttdatoUtvidetMedEttÅr) {
+                    // Den vanlige varianten hvor vi utvider med et helt år
                     VedtakslengdeUtvidelse.Automatisk(
                         forrigeSluttdato = vedtattSluttdato,
-                        nySluttdato = periodeMedFremtidigOrdinærRettighet.tom,
-                        avslagsårsaker = avslagsårsaker,
+                        nySluttdato = vedtattSluttdatoUtvidetMedEttÅr,
                     )
                 } else {
-                    VedtakslengdeUtvidelse.Manuell(
-                        forrigeSluttdato = vedtattSluttdato,
-                        nySluttdato = periodeMedFremtidigOrdinærRettighet.tom,
-                        avslagsårsaker = avslagsårsaker,
-                    )
+                    // Har ett år eller mindre gjenstående med ordinær rettighet - sjekke for årsaker
+                    val stansEllerOpphørFom = fremtidigOrdinæreRettighetsperioder.periode.tom.plusDays(1)
+                    val avslagsårsaker = hentAvslagsårsakerVedStansEllerOpphør(behandlingId, stansEllerOpphørFom)
+
+                    val kanBehandlesAutomatisk =
+                        unleashGateway.isEnabled(BehandlingsflytFeature.UtvidVedtakslengdeUnderEttAr)
+                                && gyldigForAutomatiskUtvidelseAvVedtakslengde(avslagsårsaker)
+
+                    if (kanBehandlesAutomatisk) {
+                        VedtakslengdeUtvidelse.Automatisk(
+                            forrigeSluttdato = vedtattSluttdato,
+                            nySluttdato = fremtidigOrdinæreRettighetsperioder.periode.tom,
+                            avslagsårsaker = avslagsårsaker,
+                        )
+                    } else {
+                        VedtakslengdeUtvidelse.Manuell(
+                            forrigeSluttdato = vedtattSluttdato,
+                            flerePerioder = false,
+                            avslagsårsaker = avslagsårsaker,
+                        )
+                    }
                 }
-            }
-        } else {
-            VedtakslengdeUtvidelse.IngenFremtidigOrdinærRettighet
         }
     }
 
@@ -279,23 +293,28 @@ class VedtakslengdeService(
     }
 
     /**
-     * Henter neste periode med ordinær rettighetstype fra dagen etter gjeldende sluttdato for vedtaket
+     * Henter perioder med ordinær rettighetstype fra fraDato og frem i tid
      */
-    private fun hentNestePeriodeMedFremtidigOrdinærRettighet(
-        vedtattSluttdato: LocalDate,
+    private fun hentPerioderMedOrdinærRettighet(
+        fraDato: LocalDate,
         behandlingId: BehandlingId,
-    ): Periode? {
+    ): OrdinæreRettighetsperioder {
         val rettighetstypeTidslinje = rettighetstypeService.rettighetstypeTidslinjeBakoverkompatibel(behandlingId)
-        val dagenEtterVedtattSluttdato = vedtattSluttdato.plusDays(1)
-        val periodeMedMuligFremtidigOrdinærRettighet = Periode(dagenEtterVedtattSluttdato, Tid.MAKS)
+        val periodeMedMuligOrdinærRettighet = Periode(fraDato, Tid.MAKS)
 
-        return rettighetstypeTidslinje
-            .begrensetTil(periodeMedMuligFremtidigOrdinærRettighet)
+        val perioder = rettighetstypeTidslinje
+            .begrensetTil(`periodeMedMuligOrdinærRettighet`)
             .filter { rettighetstype -> rettighetstype.verdi.kvote == Kvote.ORDINÆR }
+            .komprimer()
             .segmenter()
             .map { it.periode }
-            // Må vi støtte opphør etter forrige sluttdato for så gjeninntreden på senere dato?
-            .firstOrNull { it.fom == dagenEtterVedtattSluttdato }
+
+
+        return when (perioder.size) {
+            0 -> OrdinæreRettighetsperioder.IngenPerioder
+            1 -> OrdinæreRettighetsperioder.EnSammenhengendePeriode(perioder.single())
+            else -> OrdinæreRettighetsperioder.FlerePerioder(perioder)
+        }
     }
 
     private fun gyldigForAutomatiskUtvidelseAvVedtakslengde(avslagsårsaker: Set<Avslagsårsak>): Boolean {
@@ -321,4 +340,10 @@ class VedtakslengdeService(
             Avslagsårsak.IKKE_RETT_UNDER_STRAFFEGJENNOMFØRING,
             Avslagsårsak.ANNEN_FULL_YTELSE
         )
+}
+
+private sealed class OrdinæreRettighetsperioder {
+    data object IngenPerioder : OrdinæreRettighetsperioder()
+    data class EnSammenhengendePeriode(val periode: Periode) : OrdinæreRettighetsperioder()
+    data class FlerePerioder(val perioder: List<Periode>) : OrdinæreRettighetsperioder()
 }

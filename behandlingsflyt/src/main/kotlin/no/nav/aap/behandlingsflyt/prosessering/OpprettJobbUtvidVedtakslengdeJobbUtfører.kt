@@ -68,7 +68,7 @@ class OpprettJobbUtvidVedtakslengdeJobbUtfører(
             return when (vedtakslengdeUtvidelse) {
                 is VedtakslengdeUtvidelse.Automatisk -> true
                 is VedtakslengdeUtvidelse.Manuell -> {
-                    log.error("Sak med id $id trenger manuell utvidelse av vedtakslengde. Dette er ikke implementert. Må følges opp!")
+                    log.error("Sak med id $id trenger manuell utvidelse av vedtakslengde. Dette er ikke implementert. Må følges opp! ($vedtakslengdeUtvidelse)")
                     false
                 }
                 is VedtakslengdeUtvidelse.IngenFremtidigOrdinærRettighet -> {
