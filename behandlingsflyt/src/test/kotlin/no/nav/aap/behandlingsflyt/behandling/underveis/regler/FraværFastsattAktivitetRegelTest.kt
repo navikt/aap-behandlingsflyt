@@ -81,7 +81,7 @@ class FraværFastsattAktivitetRegelTest {
     }
 
     @Test
-    fun `første dag med sykdom, andre og tredje uten grunn, gir at tredje dag fører til § 11-8 redusjon`() {
+    fun `første dag med sykdom, andre og tredje uten grunn, gir at andre og tredje dag fører til § 11-8 redusjon`() {
         val vurdering = lagFraværVurderingTidslinje(
             rettighetsperiode = 2020 tilOgMed 2022,
             fraværForPeriode(
