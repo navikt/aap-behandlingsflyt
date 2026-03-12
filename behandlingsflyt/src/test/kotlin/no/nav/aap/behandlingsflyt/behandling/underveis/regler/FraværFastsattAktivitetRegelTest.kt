@@ -152,17 +152,17 @@ class FraværFastsattAktivitetRegelTest {
         val vurderinger = aktivitetsbruddVurderinger(
             rettighetsperiode = 2020 tilOgMed 2022,
             /* Fem brudd det første året (2020), hvorav fire teller mot kvoten. */
-            (Periode(fom = 1 januar 2020, tom = 5 januar 2020).dager() +
-                    Periode(
-                        fom = startMeldeperiode2021 januar 2021,
-                        tom = (startMeldeperiode2021 + 11) januar 2021
-                    ).dager())
-                .map { dato ->
-                    fraværForPeriode(
-                        dato,
-                        fraværÅrsak = FraværÅrsak.OMSORG_ANNEN_STERK_GRUNN,
-                    )
-                }
+            fraværForPeriode(
+                Periode(fom = 1 januar 2020, tom = 5 januar 2020),
+                fraværÅrsak = FraværÅrsak.OMSORG_ANNEN_STERK_GRUNN,
+            ),
+            fraværForPeriode(
+                Periode(
+                    fom = startMeldeperiode2021 januar 2021,
+                    tom = (startMeldeperiode2021 + 11) januar 2021,
+                ),
+                fraværÅrsak = FraværÅrsak.OMSORG_ANNEN_STERK_GRUNN,
+            )
         )
 
         /* Første 10 fravær i 2021 gir ikke stans pga ti dager fravær per kalenderår. */
@@ -267,6 +267,7 @@ class FraværFastsattAktivitetRegelTest {
     }
 
 }
+
 fun fraværForPeriode(
     tilOgFra: LocalDate,
     fraværÅrsak: FraværÅrsak = FraværÅrsak.ANNET,
