@@ -11,7 +11,6 @@ import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companio
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.ÅrMedHverdager
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.EØSLandEllerLandMedAvtale
 import no.nav.aap.behandlingsflyt.drift.Driftfunksjoner
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
@@ -27,13 +26,14 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
-import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.VURDER_RETTIGHETSPERIODE
 import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingService
+import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.tilkjentytelse.TilkjentYtelseRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.underveis.UnderveisRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
@@ -53,7 +53,6 @@ import org.junit.jupiter.params.ParameterizedClass
 import org.junit.jupiter.params.provider.MethodSource
 import java.time.LocalDate
 import kotlin.reflect.KClass
-import kotlin.test.assertEquals
 
 
 @ParameterizedClass
@@ -462,7 +461,9 @@ class RettighetsperiodeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
         assertThat(åpneAvklaringsbehov).hasSize(1)
         assertThat(oppdaterteAvklaringsbehovEtterUtvidelse).hasSize(1)
         assertThat(åpneAvklaringsbehov.first().definisjon).isEqualTo(oppdaterteAvklaringsbehovEtterUtvidelse.first().definisjon)
-        assertThat(åpneAvklaringsbehov.first().status()).isEqualTo(oppdaterteAvklaringsbehovEtterUtvidelse.first().status())
+        assertThat(åpneAvklaringsbehov.first().status()).isEqualTo(
+            oppdaterteAvklaringsbehovEtterUtvidelse.first().status()
+        )
 
         behandling.kvalitetssikre()
             .løsBeregningstidspunkt(startDato)
@@ -512,17 +513,24 @@ class RettighetsperiodeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
             listOf(Vurderingsbehov.REVURDER_SAMORDNING_ANDRE_STATLIGE_YTELSER),
         )
         val åpneAvklaringsbehov = hentÅpneAvklaringsbehov(oppdatertBehandlingFørUtvidelse)
-        dataSource.transaction { connection ->
-            val driftfunksjoner = Driftfunksjoner(postgresRepositoryRegistry.provider(connection), gatewayProvider)
-            val feilException = assertThrows<UgyldigForespørselException> {
+        val aktivtStegFørOppdatering = oppdatertBehandlingFørUtvidelse.aktivtSteg()
+        val feilException = assertThrows<UgyldigForespørselException> {
+            dataSource.transaction { connection ->
+                val driftfunksjoner = Driftfunksjoner(postgresRepositoryRegistry.provider(connection), gatewayProvider)
                 driftfunksjoner.utvidRettghetsperiodeOgKjørFraStart(oppdatertBehandlingFørUtvidelse)
             }
-            assertThat(feilException.message).contains("Ulikt antall avklaringsbehov")
-            val åpneAvklaringsbehovEtterKjøring = hentÅpneAvklaringsbehov(oppdatertBehandlingFørUtvidelse)
-            assertThat(åpneAvklaringsbehov).hasSize(åpneAvklaringsbehovEtterKjøring.size)
-            assertThat(åpneAvklaringsbehov.first().definisjon).isEqualTo(åpneAvklaringsbehovEtterKjøring.first().definisjon)
-            assertThat(åpneAvklaringsbehov.first().status()).isEqualTo(åpneAvklaringsbehovEtterKjøring.first().status())
-            assertThat(åpneAvklaringsbehov.first().historikk).isEqualTo(åpneAvklaringsbehovEtterKjøring.first().historikk)
+        }
+        assertThat(feilException.message).contains("Aktivt steg er ulikt etter utvidelse")
+        val åpneAvklaringsbehovEtterKjøring = hentÅpneAvklaringsbehov(oppdatertBehandlingFørUtvidelse)
+        assertThat(åpneAvklaringsbehov).hasSize(åpneAvklaringsbehovEtterKjøring.size)
+        assertThat(åpneAvklaringsbehov.first().definisjon).isEqualTo(åpneAvklaringsbehovEtterKjøring.first().definisjon)
+        assertThat(åpneAvklaringsbehov.first().status()).isEqualTo(åpneAvklaringsbehovEtterKjøring.first().status())
+        assertThat(åpneAvklaringsbehov.first().historikk).isEqualTo(åpneAvklaringsbehovEtterKjøring.first().historikk)
+
+        dataSource.transaction { connection ->
+            val aktivtStegEtterOppdatering =
+                BehandlingRepositoryImpl(connection).hentAktivtSteg(oppdatertBehandlingFørUtvidelse.id)
+            assertThat(aktivtStegEtterOppdatering!!.steg()).isEqualTo(aktivtStegFørOppdatering)
         }
     }
 

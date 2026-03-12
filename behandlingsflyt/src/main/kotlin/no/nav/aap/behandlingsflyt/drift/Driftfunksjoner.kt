@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.drift
 
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovOrkestrator
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivBrevAvklaringsbehovLøsning
@@ -33,6 +34,7 @@ class Driftfunksjoner(
     private val sakRepository: SakRepository,
     private val taSkriveLåsRepository: TaSkriveLåsRepository,
     private val flytOrkestrator: FlytOrkestrator,
+    private val flytOrkestratorUtenSavepoints: FlytOrkestrator,
     private val brevbestillingRepository: BrevbestillingRepository,
     private val avklaringsbehovOrkestrator: AvklaringsbehovOrkestrator,
     private val avklaringsbehovRepository: AvklaringsbehovRepository
@@ -42,6 +44,7 @@ class Driftfunksjoner(
         behandlingRepository = repositoryProvider.provide(),
         taSkriveLåsRepository = repositoryProvider.provide(),
         flytOrkestrator = FlytOrkestrator(repositoryProvider, gatewayProvider),
+        flytOrkestratorUtenSavepoints = FlytOrkestrator(repositoryProvider, gatewayProvider, markSavepointAt = emptySet()),
         brevbestillingRepository = repositoryProvider.provide(),
         avklaringsbehovOrkestrator = AvklaringsbehovOrkestrator(repositoryProvider, gatewayProvider),
         avklaringsbehovRepository = repositoryProvider.provide(),
@@ -79,47 +82,6 @@ class Driftfunksjoner(
         }
     }
 
-    fun utvidRettghetsperiodeOgKjørFraStart(behandling: Behandling) {
-        taSkriveLåsRepository.withLåstBehandling(behandling.id) {
-            val stegType = StegType.VURDER_LOVVALG
-            val sak = sakRepository.hent(behandling.sakId)
-            val avklaringsbehovFørEndring = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id).åpne()
-            when {
-                behandling.status() != Status.UTREDES -> throw UgyldigForespørselException("kan ikke flytte steg i behandling: behandling må ha status ${Status.UTREDES}, men denne behandling har status ${behandling.status()}")
-                stegType !in behandling.flyt()
-                    .stegene() -> throw UgyldigForespørselException("kan ikke flytte behandling til steg $stegType, da steget ikke hører til flyten ${behandling.typeBehandling()}")
-
-                behandling.flyt().stegComparator.compare(
-                    stegType,
-                    behandling.aktivtSteg()
-                ) > 0 -> throw UgyldigForespørselException("kan ikke flytte behandling til steg $stegType siden steget er etter aktivt steg ${behandling.aktivtSteg()}")
-            }
-
-            log.info("utvider rettighetsperiode til Tid.MAKS og setter aktivt steg fra ${behandling.aktivtSteg()} til $stegType")
-            sakRepository.oppdaterRettighetsperiode(behandling.sakId, Periode(sak.rettighetsperiode.fom, Tid.MAKS))
-            behandlingRepository.leggTilNyttAktivtSteg(
-                behandling.id, StegTilstand(
-                    stegType = stegType,
-                    stegStatus = StegStatus.START,
-                    aktiv = true,
-                )
-            )
-
-            flytOrkestrator.prosesserBehandling(flytOrkestrator.opprettKontekst(behandling))
-            // Valider
-            val avklaringsbehovEtterEndring = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id).åpne()
-            if (avklaringsbehovFørEndring.size != avklaringsbehovEtterEndring.size) {
-                throw UgyldigForespørselException("Ulikt antall avklaringsbehov før og etter endring, ruller tilbake. Før=${avklaringsbehovFørEndring} etter=${avklaringsbehovEtterEndring}")
-            }
-            avklaringsbehovEtterEndring.forEach { etter ->
-                val før = avklaringsbehovFørEndring.find { it.definisjon == etter.definisjon } ?: error("Fant ikke avklaringsbehov med definisjon ${etter.definisjon} fra avklaringsbehovene før endringen")
-                if (før.status() != etter.status()) {
-                   throw UgyldigForespørselException("Ulik status på avklaringsbehov før og etter endring for ${etter.definisjon}, ruller tilbake. Før=${avklaringsbehovFørEndring} etter=${avklaringsbehovEtterEndring}")
-                }
-            }
-        }
-    }
-
     fun avbrytVedtsaksbrevBestilling(bruker: Bruker, brevbestillingReferanse: BrevbestillingReferanse, begrunnelse: String) {
         val bestilling = brevbestillingRepository.hent(brevbestillingReferanse)
             ?: throw UgyldigForespørselException("Fant ingen brevbestilling med referanse $brevbestillingReferanse")
@@ -138,6 +100,68 @@ class Driftfunksjoner(
                 ),
                 bruker = bruker,
             )
+        }
+    }
+
+    fun utvidRettghetsperiodeOgKjørFraStart(behandling: Behandling) {
+        taSkriveLåsRepository.withLåstBehandling(behandling.id) {
+            val stegType = StegType.VURDER_LOVVALG
+            val sak = sakRepository.hent(behandling.sakId)
+            val avklaringsbehovFørEndring = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id).åpne()
+            validerGyldigTilstandFørUtvidelseAvRettighetsperiode(behandling, stegType)
+
+            log.info("Utvider rettighetsperiode til Tid.MAKS og setter aktivt steg fra ${behandling.aktivtSteg()} til $stegType")
+            sakRepository.oppdaterRettighetsperiode(behandling.sakId, Periode(sak.rettighetsperiode.fom, Tid.MAKS))
+            behandlingRepository.leggTilNyttAktivtSteg(
+                behandling.id, StegTilstand(
+                    stegType = stegType,
+                    stegStatus = StegStatus.START,
+                    aktiv = true,
+                )
+            )
+
+            flytOrkestratorUtenSavepoints.prosesserBehandling(flytOrkestratorUtenSavepoints.opprettKontekst(behandling))
+
+            val nyttAktivtSteg = behandlingRepository.hent(behandling.id).aktivtSteg()
+            val avklaringsbehovEtterEndring = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id).åpne()
+            validerGyldigTilstandEtterUtvidelseAvRettighetsperiode(nyttAktivtSteg, behandling, avklaringsbehovFørEndring, avklaringsbehovEtterEndring)
+        }
+    }
+
+    private fun validerGyldigTilstandFørUtvidelseAvRettighetsperiode(
+        behandling: Behandling,
+        stegType: StegType
+    ) {
+        when {
+            behandling.status() != Status.UTREDES -> throw UgyldigForespørselException("kan ikke flytte steg i behandling: behandling må ha status ${Status.UTREDES}, men denne behandling har status ${behandling.status()}")
+            stegType !in behandling.flyt()
+                .stegene() -> throw UgyldigForespørselException("kan ikke flytte behandling til steg $stegType, da steget ikke hører til flyten ${behandling.typeBehandling()}")
+
+            behandling.flyt().stegComparator.compare(
+                stegType,
+                behandling.aktivtSteg()
+            ) > 0 -> throw UgyldigForespørselException("kan ikke flytte behandling til steg $stegType siden steget er etter aktivt steg ${behandling.aktivtSteg()}")
+        }
+    }
+
+    private fun validerGyldigTilstandEtterUtvidelseAvRettighetsperiode(
+        nyttAktivtSteg: StegType,
+        behandling: Behandling,
+        avklaringsbehovFørEndring: List<Avklaringsbehov>,
+        avklaringsbehovEtterEndring: List<Avklaringsbehov>
+    ) {
+        if (nyttAktivtSteg != behandling.aktivtSteg()) {
+            throw UgyldigForespørselException("Aktivt steg er ulikt etter utvidelse av rettighetsperiode - rull tilbake. Før=${behandling.aktivtSteg()} etter=$nyttAktivtSteg")
+        }
+        if (`avklaringsbehovFørEndring`.size != avklaringsbehovEtterEndring.size) {
+            throw UgyldigForespørselException("Ulikt antall avklaringsbehov før og etter endring, ruller tilbake. Før=${`avklaringsbehovFørEndring`} etter=${avklaringsbehovEtterEndring}")
+        }
+        avklaringsbehovEtterEndring.forEach { etter ->
+            val før = `avklaringsbehovFørEndring`.find { it.definisjon == etter.definisjon }
+                ?: error("Fant ikke avklaringsbehov med definisjon ${etter.definisjon} fra avklaringsbehovene før endringen")
+            if (før.status() != etter.status()) {
+                throw UgyldigForespørselException("Ulik status på avklaringsbehov før og etter endring for ${etter.definisjon}, ruller tilbake. Før=${`avklaringsbehovFørEndring`} etter=${avklaringsbehovEtterEndring}")
+            }
         }
     }
 }
