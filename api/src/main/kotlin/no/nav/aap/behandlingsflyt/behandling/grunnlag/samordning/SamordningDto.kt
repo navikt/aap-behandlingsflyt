@@ -126,14 +126,14 @@ data class AndreStatligeYtelserGrunnlagDto (
 data class AndreStatligeYtelserPeriodeDto (
     val fom: LocalDate,
     val tom: LocalDate,
-    val kilde: SamordningKilde,
-    val ytelseType: SamordningYtelseType
+    val kilde: AndreStatligeYtelserKilde,
+    val ytelseType: AndreStatligeYtelserType
 )
 
-enum class SamordningKilde {
+enum class AndreStatligeYtelserKilde {
     ARENA, DP_SAK
 }
 
-enum class SamordningYtelseType {
+enum class AndreStatligeYtelserType {
     DAGPENGER_ARBEIDSSOKER_ORDINAER, DAGPENGER_PERMITTERING_ORDINAER, DAGPENGER_PERMITTERING_FISKEINDUSTRI
 }

@@ -122,17 +122,17 @@ fun mapSamordningUføreGrunnlag(
         )
     }
 
-fun mapDagpengerKilde(kilde: DagpengerKilde): SamordningKilde {
+fun mapDagpengerKilde(kilde: DagpengerKilde): AndreStatligeYtelserKilde {
     return when (kilde) {
-        DagpengerKilde.ARENA -> SamordningKilde.ARENA
-        DagpengerKilde.DP_SAK -> SamordningKilde.DP_SAK
+        DagpengerKilde.ARENA -> AndreStatligeYtelserKilde.ARENA
+        DagpengerKilde.DP_SAK -> AndreStatligeYtelserKilde.DP_SAK
     }
 }
 
-fun mapDagpengerYtelseType(ytelseType: DagpengerYtelseType): SamordningYtelseType {
+fun mapDagpengerYtelseType(ytelseType: DagpengerYtelseType): AndreStatligeYtelserType {
     return when (ytelseType) {
-        DagpengerYtelseType.DAGPENGER_ARBEIDSSOKER_ORDINAER -> SamordningYtelseType.DAGPENGER_ARBEIDSSOKER_ORDINAER
-        DagpengerYtelseType.DAGPENGER_PERMITTERING_ORDINAER -> SamordningYtelseType.DAGPENGER_PERMITTERING_ORDINAER
-        DagpengerYtelseType.DAGPENGER_PERMITTERING_FISKEINDUSTRI -> SamordningYtelseType.DAGPENGER_PERMITTERING_FISKEINDUSTRI
+        DagpengerYtelseType.DAGPENGER_ARBEIDSSOKER_ORDINAER -> AndreStatligeYtelserType.DAGPENGER_ARBEIDSSOKER_ORDINAER
+        DagpengerYtelseType.DAGPENGER_PERMITTERING_ORDINAER -> AndreStatligeYtelserType.DAGPENGER_PERMITTERING_ORDINAER
+        DagpengerYtelseType.DAGPENGER_PERMITTERING_FISKEINDUSTRI -> AndreStatligeYtelserType.DAGPENGER_PERMITTERING_FISKEINDUSTRI
     }
 }

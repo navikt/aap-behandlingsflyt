@@ -201,7 +201,7 @@ fun NormalOpenAPIRoute.samordningGrunnlag(
 
                         val sakRepository = repositoryProvider.provide<SakRepository>()
                         val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
-                        val andreStatligeYtelserRepository = repositoryProvider.provide<DagpengerRepository>()
+                        val dagpengerRepository = repositoryProvider.provide<DagpengerRepository>()
 
                         val behandling = behandlingRepository.hent(behandlingReferanse)
                         val sak = sakRepository.hent(behandling.sakId)
@@ -219,7 +219,7 @@ fun NormalOpenAPIRoute.samordningGrunnlag(
                                 samordningAndreStatligeYtelserRepository.hentHvisEksisterer(historiskeBehandling.id)?.vurdering
                             }
 
-                        val dagpengerGrunnlag = andreStatligeYtelserRepository.hent(behandling.id).map {
+                        val dagpengerGrunnlag = dagpengerRepository.hent(behandling.id).map {
                             AndreStatligeYtelserPeriodeDto(
                                 fom = it.periode.fom,
                                 tom = it.periode.tom,
