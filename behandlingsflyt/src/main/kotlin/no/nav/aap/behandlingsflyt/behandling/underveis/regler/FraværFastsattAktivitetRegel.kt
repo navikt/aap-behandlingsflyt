@@ -1,10 +1,10 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetVurdering.Vilkårsvurdering.REDUKSJON_ANDRE_DAG
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetVurdering.Vilkårsvurdering.REDUKSJON_TI_DAGER_BRUKT_OPP
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetVurdering.Vilkårsvurdering.UNNTAK_INNTIL_EN_DAG
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetVurdering.Vilkårsvurdering.UNNTAK_STERKE_VELFERDSGRUNNER
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetVurdering.Vilkårsvurdering.UNNTAK_SYKDOM_ELLER_SKADE
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetVurdering.Vilkårsvurdering.MER_ENN_EN_DAGS_FRAVÆR_I_MELDEPERIODE
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetVurdering.Vilkårsvurdering.MER_ENN_TI_DAGERS_FRAVÆR_I_KALENDERÅR
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetVurdering.Vilkårsvurdering.FRAVÆR_FØRSTE_DAG_I_MELDEPERIODE
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetVurdering.Vilkårsvurdering.FRAVÆR_STERK_VELFERDSGRUNN
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetVurdering.Vilkårsvurdering.FRAVÆR_SYKDOM_ELLER_SKADE
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.FraværForPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.FraværÅrsak
 import no.nav.aap.komponenter.tidslinje.Segment
@@ -129,7 +129,7 @@ class FraværFastsattAktivitetRegel : UnderveisRegel {
                         vurderingSegment.periode,
                         FraværFastsattAktivitetVurdering(
                             fravær = fravær,
-                            vilkårsvurdering = UNNTAK_SYKDOM_ELLER_SKADE,
+                            vilkårsvurdering = FRAVÆR_SYKDOM_ELLER_SKADE,
                         )
                     )
 
@@ -146,8 +146,8 @@ class FraværFastsattAktivitetRegel : UnderveisRegel {
                             FraværFastsattAktivitetVurdering(
                                 fravær = fravær,
                                 vilkårsvurdering =
-                                    if (kalenderårskvote > KVOTE_KALENDERÅR) REDUKSJON_TI_DAGER_BRUKT_OPP
-                                    else UNNTAK_STERKE_VELFERDSGRUNNER,
+                                    if (kalenderårskvote > KVOTE_KALENDERÅR) MER_ENN_TI_DAGERS_FRAVÆR_I_KALENDERÅR
+                                    else FRAVÆR_STERK_VELFERDSGRUNN,
                             )
                         )
                     }
@@ -161,8 +161,8 @@ class FraværFastsattAktivitetRegel : UnderveisRegel {
                         FraværFastsattAktivitetVurdering(
                             fravær = fravær,
                             vilkårsvurdering =
-                                if (vurdering.erUnntakForDag) UNNTAK_INNTIL_EN_DAG
-                                else REDUKSJON_ANDRE_DAG,
+                                if (vurdering.erUnntakForDag) FRAVÆR_FØRSTE_DAG_I_MELDEPERIODE
+                                else MER_ENN_EN_DAGS_FRAVÆR_I_MELDEPERIODE,
                         )
                     )
             }

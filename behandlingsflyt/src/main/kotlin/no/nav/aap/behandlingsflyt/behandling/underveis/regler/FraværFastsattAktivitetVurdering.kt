@@ -2,11 +2,11 @@ package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetVurdering.Utfall.REDUKSJON
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetVurdering.Utfall.UNNTAK
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetVurdering.Vilkårsvurdering.REDUKSJON_ANDRE_DAG
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetVurdering.Vilkårsvurdering.REDUKSJON_TI_DAGER_BRUKT_OPP
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetVurdering.Vilkårsvurdering.UNNTAK_INNTIL_EN_DAG
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetVurdering.Vilkårsvurdering.UNNTAK_STERKE_VELFERDSGRUNNER
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetVurdering.Vilkårsvurdering.UNNTAK_SYKDOM_ELLER_SKADE
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetVurdering.Vilkårsvurdering.FRAVÆR_FØRSTE_DAG_I_MELDEPERIODE
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetVurdering.Vilkårsvurdering.FRAVÆR_STERK_VELFERDSGRUNN
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetVurdering.Vilkårsvurdering.FRAVÆR_SYKDOM_ELLER_SKADE
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetVurdering.Vilkårsvurdering.MER_ENN_EN_DAGS_FRAVÆR_I_MELDEPERIODE
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetVurdering.Vilkårsvurdering.MER_ENN_TI_DAGERS_FRAVÆR_I_KALENDERÅR
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.FraværForPeriode
 
 /** Den ferdige vurderingen av § 11-8 "Fravær fra fastsatt aktivitet".
@@ -29,17 +29,16 @@ data class FraværFastsattAktivitetVurdering(
         UNNTAK
     }
 
-    val utfall: Utfall
-        get() = when (vilkårsvurdering) {
-            REDUKSJON_ANDRE_DAG, REDUKSJON_TI_DAGER_BRUKT_OPP -> REDUKSJON
-            UNNTAK_INNTIL_EN_DAG, UNNTAK_STERKE_VELFERDSGRUNNER, UNNTAK_SYKDOM_ELLER_SKADE -> UNNTAK
-        }
+    val utfall = when (vilkårsvurdering) {
+        MER_ENN_EN_DAGS_FRAVÆR_I_MELDEPERIODE, MER_ENN_TI_DAGERS_FRAVÆR_I_KALENDERÅR -> REDUKSJON
+        FRAVÆR_FØRSTE_DAG_I_MELDEPERIODE, FRAVÆR_STERK_VELFERDSGRUNN, FRAVÆR_SYKDOM_ELLER_SKADE -> UNNTAK
+    }
 
     enum class Vilkårsvurdering {
-        REDUKSJON_ANDRE_DAG,
-        REDUKSJON_TI_DAGER_BRUKT_OPP,
-        UNNTAK_INNTIL_EN_DAG,
-        UNNTAK_STERKE_VELFERDSGRUNNER,
-        UNNTAK_SYKDOM_ELLER_SKADE,
+        MER_ENN_EN_DAGS_FRAVÆR_I_MELDEPERIODE,
+        MER_ENN_TI_DAGERS_FRAVÆR_I_KALENDERÅR,
+        FRAVÆR_FØRSTE_DAG_I_MELDEPERIODE,
+        FRAVÆR_STERK_VELFERDSGRUNN,
+        FRAVÆR_SYKDOM_ELLER_SKADE,
     }
 }
