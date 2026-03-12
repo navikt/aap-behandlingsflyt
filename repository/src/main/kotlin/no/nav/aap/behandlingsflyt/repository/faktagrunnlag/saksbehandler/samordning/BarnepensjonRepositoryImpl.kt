@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.barnepe
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.barnepensjon.BarnepensjonVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.barnepensjon.BarnepensjonPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.Bruker
@@ -74,15 +75,36 @@ class BarnepensjonRepositoryImpl(private val connection: DBConnection) : Barnepe
                 setLong(1, vurderingId)
                 setString(2, it.fom.toString())
                 setString(3, it.tom.toString())
-                setBigDecimal(4, it.månedbeløp.verdi())
+                setBigDecimal(4, it.månedsats.verdi())
             }
         }
     }
 
-    override fun hentHvisEksisterer(behandlingId: BehandlingId): BarnepensjonGrunnlag? {
-        val vurderingId = hentVurderingId(behandlingId) ?: return null
-        val perioder = hentPerioder(vurderingId)
+    override fun hentHistoriskeVurderinger(sakId: SakId, behandlingId: BehandlingId): List<BarnepensjonGrunnlag> {
+        val query = """
+            select grunnlag.vurdering_id
+            from samordning_barnepensjon_grunnlag grunnlag 
+                join behandling b1 on b1.id = grunnlag.behandling_id
+                left join avbryt_revurdering_grunnlag ar on ar.behandling_id = b1.id
+            where grunnlag.aktiv
+            and b1.sak_id = ?
+            and b1.opprettet_tid < (select b2.opprettet_tid from behandling b2 where b2.id = ?)
+            and ar.behandling_id is null
+        """.trimIndent()
 
+        return connection.queryList(query) {
+            setParams {
+                setLong(1, sakId.id)
+                setLong(2, behandlingId.id)
+            }
+            setRowMapper {
+                hentVurderingHvisEksisterer(it.getLong("vurdering_id"))!!
+            }
+        }
+    }
+    
+    private fun hentVurderingHvisEksisterer(vurderingId: Long): BarnepensjonGrunnlag? {
+        val perioder = hentPerioder(vurderingId)
         return connection.queryFirstOrNull(
             """
             select 
@@ -106,6 +128,11 @@ class BarnepensjonRepositoryImpl(private val connection: DBConnection) : Barnepe
                 BarnepensjonGrunnlag(vurdering = vurdering)
             }
         }
+    }
+
+    override fun hentHvisEksisterer(behandlingId: BehandlingId): BarnepensjonGrunnlag? {
+        val vurderingId = hentVurderingId(behandlingId) ?: return null
+        return hentVurderingHvisEksisterer(vurderingId)
     }
 
     private fun hentVurderingId(behandlingId: BehandlingId): Long? {
@@ -134,7 +161,7 @@ class BarnepensjonRepositoryImpl(private val connection: DBConnection) : Barnepe
                 BarnepensjonPeriode(
                     fom = YearMonth.parse(row.getString("fom")),
                     tom = YearMonth.parse(row.getString("tom")),
-                    månedbeløp = Beløp(row.getBigDecimal("maaned_beloep"))
+                    månedsats = Beløp(row.getBigDecimal("maaned_beloep"))
                 )
             }
         }

@@ -11,7 +11,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangarbeid.Ove
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangarbeid.OvergangArbeidRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.OvergangArbeidSteg
-import no.nav.aap.behandlingsflyt.harTilgangOgKanSaksbehandle
+import no.nav.aap.behandlingsflyt.kanLøseBehovSomSkalVæreLåstEtterKvalitetssikring
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
@@ -60,7 +60,7 @@ fun NormalOpenAPIRoute.overgangArbeidGrunnlagApi(
                     val perioderSomTrengerVurdering = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_OVERGANG_ARBEID)?.perioderVedtaketBehøverVurdering().orEmpty()
 
                     OvergangArbeidGrunnlagResponse(
-                        harTilgangTilÅSaksbehandle = harTilgangOgKanSaksbehandle(kanSaksbehandle(), avklaringsbehovene),
+                        harTilgangTilÅSaksbehandle = kanSaksbehandle() && kanLøseBehovSomSkalVæreLåstEtterKvalitetssikring(Definisjon.AVKLAR_OVERGANG_ARBEID.løsesISteg,behandling),
                         sisteVedtatteVurderinger = OvergangArbeidVurderingResponse.fraDomene(
                             forrigeGrunnlag.gjeldendeVurderinger(),
                             vurdertAvService,

@@ -27,8 +27,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
-import no.nav.aap.behandlingsflyt.test.FakePersoner
 import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
+import no.nav.aap.behandlingsflyt.test.FakePersoner
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
@@ -47,7 +47,6 @@ import java.time.LocalDate
 class InformasjonskravGrunnlagTest {
 
     companion object {
-        private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
         private lateinit var dataSource: TestDataSource
 
         @BeforeAll
@@ -286,7 +285,7 @@ class InformasjonskravGrunnlagTest {
 
     ): Pair<Ident, FlytKontekstMedPerioder> {
         val ident = ident()
-        val sak = opprettSak(connection, ident, periode)
+        val sak = opprettSak(connection, ident, LocalDate.now())
         val behandling = finnEllerOpprettBehandling(connection, sak)
         val personopplysningRepository = PersonopplysningRepositoryImpl(connection)
         personopplysningRepository.lagre(

@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde
 
+import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.ÅrMedHverdager
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.verdityper.Bruker
@@ -20,5 +21,8 @@ data class VedtakslengdeVurdering(
     val vurdertAv: Bruker,
     val vurdertIBehandling: BehandlingId,
     val opprettet: Instant,
-    val begrunnelse: String
-)
+    val begrunnelse: String,
+) {
+    val vurdertManuelt: Boolean get() = !vurdertAutomatisk
+    val vurdertAutomatisk: Boolean get() = vurdertAv == SYSTEMBRUKER
+}

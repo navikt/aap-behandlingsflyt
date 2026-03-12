@@ -412,7 +412,13 @@ object Revurdering : BehandlingType {
             )
             .medSteg(steg = Effektuer11_7Steg)
             .medSteg(steg = RettighetstypeSteg)
-            .medSteg(steg = VedtakslengdeSteg, informasjonskrav = listOf(VedtakslengdeInformasjonskrav))
+            .medSteg(
+                steg = VedtakslengdeSteg,
+                informasjonskrav = listOf(VedtakslengdeInformasjonskrav),
+                vurderingsbehovRelevanteForSteg = listOf(
+                    Vurderingsbehov.VEDTAKSLENGDE_MANUELT
+                )
+            )
             .medSteg(steg = UnderveisSteg)
             .medSteg(
                 steg = BeregnTilkjentYtelseSteg,

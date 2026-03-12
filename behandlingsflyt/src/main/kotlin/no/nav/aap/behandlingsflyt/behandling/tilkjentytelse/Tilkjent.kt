@@ -21,10 +21,16 @@ data class Tilkjent(
     val antallBarn: Int,
     val barnetilleggsats: Beløp,
     val barnetillegg: Beløp,
+    val barnepensjonDagsats: Beløp,
     val utbetalingsdato: LocalDate,
     val minsteSats: Minstesats,
     private val redusertDagsats: Beløp?
 ) {
+    init {
+        require(barnepensjonDagsats.verdi.compareTo(barnepensjonDagsats.heltallverdi()) == 0) {
+            "Barnepensjon dagsats må være et heltall"
+        }
+    }
 
     /**
      * Hent ut full dagsats etter reduksjon.
@@ -32,18 +38,28 @@ data class Tilkjent(
     fun redusertDagsats(): Beløp {
         if (redusertDagsats != null) return redusertDagsats
 
-        return Beløp(
-            dagsats.multiplisert(gradering)
-                .pluss(barnetillegg.multiplisert(gradering)).verdi().setScale(0, RoundingMode.HALF_UP)
+        return maks(
+            Beløp(0),
+            Beløp(
+                dagsats.multiplisert(gradering)
+                    .pluss(barnetillegg.multiplisert(gradering))
+                    .minus(barnepensjonDagsats)
+                    .verdi().setScale(0, RoundingMode.HALF_UP)
+            )
         )
     }
 
     @Suppress("FunctionName")
     fun dagsatsFor11_9Reduksjon(): Beløp {
-        return Beløp(
-            dagsats.multiplisert(graderingGrunnlag.graderingForDagsats11_9Reduksjon())
-                .pluss(barnetillegg.multiplisert(graderingGrunnlag.graderingForDagsats11_9Reduksjon())).verdi()
-                .setScale(0, RoundingMode.HALF_UP)
+        return maks(
+            Beløp(0),
+            Beløp(
+                dagsats.multiplisert(graderingGrunnlag.graderingForDagsats11_9Reduksjon())
+                    .pluss(barnetillegg.multiplisert(graderingGrunnlag.graderingForDagsats11_9Reduksjon()))
+                    .minus(barnepensjonDagsats)
+                    .verdi()
+                    .setScale(0, RoundingMode.HALF_UP)
+            )
         )
     }
 }
@@ -65,4 +81,8 @@ data class GraderingGrunnlag(
         .minus(institusjonGradering)
         .minus(samordningUføregradering)
         .minus(meldepliktGradering)
+}
+
+fun maks(a: Beløp, b: Beløp): Beløp {
+    return if (a.verdi > b.verdi) a else b
 }

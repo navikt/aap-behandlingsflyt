@@ -44,10 +44,7 @@ class VilkårsresultatRepositoryImplTest {
             // Opprett person, sak og behandling
             val behandlingRepo = BehandlingRepositoryImpl(connection)
 
-            val sak = opprettSak(
-                connection,
-                Periode(LocalDate.now(), LocalDate.now().plusYears(3))
-            )
+            val sak = opprettSak(connection, LocalDate.now())
             val behandling =
                 behandlingRepo.opprettBehandling(
                     sak.id,

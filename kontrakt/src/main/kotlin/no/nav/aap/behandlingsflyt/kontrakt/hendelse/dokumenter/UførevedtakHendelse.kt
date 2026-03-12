@@ -16,7 +16,7 @@ public data class UførevedtakKafkaMelding(
     val personId: String,
     val virkningsdato: LocalDate,
     val resultat: UførevedtakResultat,
-    val avslag12_5: Boolean,
+    @Suppress("PropertyName") val avslag12_5: Boolean,
 ) {
     public fun tilUføreVedtakV0(): Uførevedtak =
         UførevedtakV0(
@@ -44,7 +44,7 @@ public data class UførevedtakV0(
     val personId: String,
     val virkningsdato: LocalDate,
     val resultat: UførevedtakResultat,
-    val avslag12_5: Boolean,
+    @Suppress("PropertyName") val avslag12_5: Boolean,
     val kilde: UførevedtakKilde,
 ) : Uførevedtak {
     public fun beskrivelseVurderingsbehov(): String {
@@ -61,9 +61,9 @@ public enum class UførevedtakKilde {
 }
 
 public enum class UførevedtakResultat(public val verdi: String) {
-    OPPH ("Opphør"),
-    INNV ("Innvilgelse"),
-    AVSL ("Avslag"),
+    OPPH("Opphør"),
+    INNV("Innvilgelse"),
+    AVSL("Avslag"),
     ENDR("Endret"), ;
 
     public fun erOpphørEllerEndring(): Boolean = this == OPPH || this == ENDR

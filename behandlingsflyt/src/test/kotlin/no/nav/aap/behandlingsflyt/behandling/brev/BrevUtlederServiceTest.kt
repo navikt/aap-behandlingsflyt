@@ -960,6 +960,7 @@ class BrevUtlederServiceTest {
             ),
             grunnlagsfaktor = GUnit(1),
             grunnbeløp = Beløp(300000),
+            barnepensjonDagsats = Beløp(0),
             antallBarn = 0,
             barnetilleggsats = Beløp(0),
             barnetillegg = Beløp(0),

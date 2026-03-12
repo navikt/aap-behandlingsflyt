@@ -14,6 +14,7 @@ import no.nav.aap.komponenter.httpklient.httpclient.post
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Tid
 import java.net.URI
 import java.time.LocalDate
 
@@ -56,7 +57,7 @@ class DagpengerGatewayImpl: DagpengerGateway {
             )
         ).perioder.map {
             DagpengerPeriode(
-                periode = Periode(it.fraOgMedDato, it.tilOgMedDato),
+                periode = Periode(it.fraOgMedDato, it.tilOgMedDato ?: Tid.MAKS),
                 kilde = it.kilde,
                 dagpengerYtelseType = it.ytelseType
             )
@@ -72,7 +73,7 @@ internal data class DagpengerRequest(
 
 internal class DagpengerPeriodeResponse(
     val fraOgMedDato: LocalDate,
-    val tilOgMedDato: LocalDate,
+    val tilOgMedDato: LocalDate?,
     val kilde: DagpengerKilde,
     val ytelseType: DagpengerYtelseType
 )

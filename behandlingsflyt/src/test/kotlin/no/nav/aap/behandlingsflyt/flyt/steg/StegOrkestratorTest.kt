@@ -17,7 +17,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
-import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
@@ -46,8 +45,7 @@ internal class StegOrkestratorTest {
     fun `ved avklaringsbehov skal vi gå gjennom statusene START-UTFØRER-AVKARLINGSPUNKT`() {
         dataSource.transaction { connection ->
             val ident = Ident("123123123126")
-            val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
-            val sak = opprettSak(connection, ident, periode)
+            val sak = opprettSak(connection, ident, LocalDate.now())
 
             val behandling = finnEllerOpprettBehandling(connection, sak)
             assertThat(behandling.typeBehandling()).isEqualTo(TypeBehandling.Førstegangsbehandling)

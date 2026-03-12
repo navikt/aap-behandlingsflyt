@@ -265,6 +265,7 @@ class StatistikkMetoder(
                         gradering = verdi.gradering.prosentverdi().toDouble(),
                         redusertDagsats = verdi.redusertDagsats().verdi().toDouble(),
                         antallBarn = verdi.antallBarn,
+                        barnepensjonDagsats = verdi.barnepensjonDagsats.verdi().toDouble(),
                         barnetilleggSats = verdi.barnetilleggsats.verdi().toDouble(),
                         barnetillegg = verdi.barnetillegg.verdi().toDouble(),
                         utbetalingsdato = verdi.utbetalingsdato,

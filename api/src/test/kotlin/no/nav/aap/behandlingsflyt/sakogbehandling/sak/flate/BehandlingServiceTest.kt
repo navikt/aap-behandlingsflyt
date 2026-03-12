@@ -63,7 +63,7 @@ class BehandlingServiceTest {
     }
 
     private fun sak(connection: DBConnection): Sak {
-        return opprettSak(connection, periode)
+        return opprettSak(connection, periode.fom)
     }
 
     private fun behandling(connection: DBConnection, sak: Sak): BehandlingId {
