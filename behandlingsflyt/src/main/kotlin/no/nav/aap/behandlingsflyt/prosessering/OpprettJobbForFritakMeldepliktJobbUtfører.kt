@@ -25,7 +25,7 @@ class OpprettJobbForFritakMeldepliktJobbUtfører(
     private val log = LoggerFactory.getLogger(javaClass)
 
     override fun utfør(input: JobbInput) {
-        // Skal kún kjøres mandager dersom det er et helligdagstilfelle
+        // Skal kun kjøres mandager dersom det er et helligdagstilfelle
         val idag = LocalDate.now(clock)
         val mandagInneværendeUke = idag.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
         val søndagInneværendeUke = idag.with(TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY))

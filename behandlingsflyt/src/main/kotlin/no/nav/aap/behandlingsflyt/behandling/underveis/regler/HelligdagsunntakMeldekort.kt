@@ -22,7 +22,7 @@ val helligdagsunntakFritaksUtbetalingDato =
 
 /**
  * Sjekker om en meldeperiode inneholder et helligdagsunntak for å
- * kunne beregne meldekort for "fritak for meldeplikt" brukere.
+ * kunne beregne meldekort for "fritak for meldeplikt"-brukere.
  */
 fun erHelligdagsUnntakPeriode(periode: Periode): Boolean {
     val originaleDatoer = helligdagsunntakFritaksUtbetalingDato.keys
