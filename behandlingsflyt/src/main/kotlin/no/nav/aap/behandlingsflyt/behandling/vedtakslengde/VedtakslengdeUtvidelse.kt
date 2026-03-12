@@ -12,10 +12,9 @@ sealed class VedtakslengdeUtvidelse {
 
     data class Manuell(
         val forrigeSluttdato: LocalDate,
-        val flerePerioder: Boolean,
         val avslagsårsaker: Set<Avslagsårsak> = emptySet(),
     ) : VedtakslengdeUtvidelse()
 
-    data object IngenFremtidigOrdinærRettighet : VedtakslengdeUtvidelse()
+    data object IngenFremtidigBistandsbehovRettighet : VedtakslengdeUtvidelse()
 }
 

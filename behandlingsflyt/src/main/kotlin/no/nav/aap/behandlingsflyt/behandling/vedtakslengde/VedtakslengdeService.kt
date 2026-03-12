@@ -4,7 +4,6 @@ import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.VirkningstidspunktUtleder
 import no.nav.aap.behandlingsflyt.behandling.underveis.RettighetstypeService
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companion.plussEtÅrMedHverdager
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Kvote
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.ÅrMedHverdager
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.StansOpphørRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
@@ -54,7 +53,7 @@ class VedtakslengdeService(
         return underveisRepository.hentSakerMedSisteUnderveisperiodeFørDato(datoForUtvidelse)
     }
 
-    fun hentNesteVedtakslengdeUtvidelseOrdinær(
+    fun hentNesteVedtakslengdeUtvidelse(
         behandlingId: BehandlingId,
         forrigeBehandlingId: BehandlingId?
     ): VedtakslengdeUtvidelse {
@@ -65,32 +64,32 @@ class VedtakslengdeService(
 
         val nesteÅrligeUtvidelse = hentNesteÅrligeUtvidelse(vedtakslengdeGrunnlag?.gjeldendeVurdering())
         val vedtattSluttdatoUtvidetMedEttÅr = vedtattSluttdato.plussEtÅrMedHverdager(nesteÅrligeUtvidelse)
-        val fremtidigOrdinæreRettighetsperioder = hentPerioderMedOrdinærRettighet(vedtattSluttdato.plusDays(1), behandlingId)
+        val fremtidigBistandsbehovRettighetsperioder = hentPerioderMedBistandsbehovRettighet(vedtattSluttdato.plusDays(1), behandlingId)
 
-        return when (fremtidigOrdinæreRettighetsperioder) {
+        return when (fremtidigBistandsbehovRettighetsperioder) {
             // Ingen perioder å utvide for
-            is OrdinæreRettighetsperioder.IngenPerioder ->
-                VedtakslengdeUtvidelse.IngenFremtidigOrdinærRettighet
+            is BistandsbehovRettighetsperioder.IngenPerioder ->
+                VedtakslengdeUtvidelse.IngenFremtidigBistandsbehovRettighet
 
-            // Flere ikke-sammenhengende perioder med ordinær rettighet - må behandles manuelt
-            is OrdinæreRettighetsperioder.FlerePerioder ->
+            // Flere ikke-sammenhengende perioder eller en sammenhengende periode som starter senere enn forige vedtakSluttdato
+            is BistandsbehovRettighetsperioder.FlereIkkeSammenhengendePerioder,
+            is BistandsbehovRettighetsperioder.EnSammenhengendePeriodeFraSenereDato ->
                 VedtakslengdeUtvidelse.Manuell(
                     forrigeSluttdato = vedtattSluttdato,
-                    flerePerioder = true,
                     avslagsårsaker = emptySet(),
                 )
 
-            // En sammenhengende periode med ordinær rettighet - kan vurderes for automatisk utvidelse
-            is OrdinæreRettighetsperioder.EnSammenhengendePeriode ->
-                if (fremtidigOrdinæreRettighetsperioder.periode.tom > vedtattSluttdatoUtvidetMedEttÅr) {
+            // En sammenhengende periode med bistandsbehovrettighet - kan vurderes for automatisk utvidelse
+            is BistandsbehovRettighetsperioder.EnSammenhengendePeriodeFraAngittDato ->
+                if (fremtidigBistandsbehovRettighetsperioder.periode.tom > vedtattSluttdatoUtvidetMedEttÅr) {
                     // Den vanlige varianten hvor vi utvider med et helt år
                     VedtakslengdeUtvidelse.Automatisk(
                         forrigeSluttdato = vedtattSluttdato,
                         nySluttdato = vedtattSluttdatoUtvidetMedEttÅr,
                     )
                 } else {
-                    // Har ett år eller mindre gjenstående med ordinær rettighet - sjekke for årsaker
-                    val stansEllerOpphørFom = fremtidigOrdinæreRettighetsperioder.periode.tom.plusDays(1)
+                    // Har ett år eller mindre gjenstående med bistandsbehovrettighet - sjekker for årsaker
+                    val stansEllerOpphørFom = fremtidigBistandsbehovRettighetsperioder.periode.tom.plusDays(1)
                     val avslagsårsaker = hentAvslagsårsakerVedStansEllerOpphør(behandlingId, stansEllerOpphørFom)
 
                     val kanBehandlesAutomatisk =
@@ -100,13 +99,12 @@ class VedtakslengdeService(
                     if (kanBehandlesAutomatisk) {
                         VedtakslengdeUtvidelse.Automatisk(
                             forrigeSluttdato = vedtattSluttdato,
-                            nySluttdato = fremtidigOrdinæreRettighetsperioder.periode.tom,
+                            nySluttdato = fremtidigBistandsbehovRettighetsperioder.periode.tom,
                             avslagsårsaker = avslagsårsaker,
                         )
                     } else {
                         VedtakslengdeUtvidelse.Manuell(
                             forrigeSluttdato = vedtattSluttdato,
-                            flerePerioder = false,
                             avslagsårsaker = avslagsårsaker,
                         )
                     }
@@ -114,7 +112,7 @@ class VedtakslengdeService(
         }
     }
 
-    fun utvidVedtakslengdeOrdinær(
+    fun utvidVedtakslengde(
         behandlingId: BehandlingId,
         forrigeBehandlingId: BehandlingId?,
         vedtakslengdeUtvidelse: VedtakslengdeUtvidelse.Automatisk,
@@ -143,12 +141,12 @@ class VedtakslengdeService(
     ): Set<Avslagsårsak> {
         val stansOpphørGrunnlag = stansOpphørRepository.hentHvisEksisterer(behandlingId)
         val gjeldendeStansEllerOpphør = stansOpphørGrunnlag?.gjeldendeStansOgOpphør()
-        val avslagsårsakerFørsteDagUtenOrdinærRettighet = gjeldendeStansEllerOpphør
+        val avslagsårsakerFørsteDagUtenBistandsbehovRettighet = gjeldendeStansEllerOpphør
             ?.filter { it.fom == stansEllerOpphørFom }
             ?.flatMap { it.vurdering.årsaker }
             ?.toSet() ?: emptySet()
 
-        return avslagsårsakerFørsteDagUtenOrdinærRettighet
+        return `avslagsårsakerFørsteDagUtenBistandsbehovRettighet`
     }
 
     fun lagreGjeldendeSluttdato(
@@ -293,27 +291,29 @@ class VedtakslengdeService(
     }
 
     /**
-     * Henter perioder med ordinær rettighetstype fra fraDato og frem i tid
+     * Henter perioder med bistandsbehov rettighetstype fom fraDato og frem i tid
      */
-    private fun hentPerioderMedOrdinærRettighet(
+    private fun hentPerioderMedBistandsbehovRettighet(
         fraDato: LocalDate,
         behandlingId: BehandlingId,
-    ): OrdinæreRettighetsperioder {
+    ): BistandsbehovRettighetsperioder {
         val rettighetstypeTidslinje = rettighetstypeService.rettighetstypeTidslinjeBakoverkompatibel(behandlingId)
-        val periodeMedMuligOrdinærRettighet = Periode(fraDato, Tid.MAKS)
+        val periodeMedMuligBistandsbehovRettighet = Periode(fraDato, Tid.MAKS)
 
         val perioder = rettighetstypeTidslinje
-            .begrensetTil(`periodeMedMuligOrdinærRettighet`)
-            .filter { rettighetstype -> rettighetstype.verdi.kvote == Kvote.ORDINÆR }
+            .begrensetTil(periodeMedMuligBistandsbehovRettighet)
+            .filter { rettighetstype -> rettighetstype.verdi == RettighetsType.BISTANDSBEHOV }
             .komprimer()
             .segmenter()
             .map { it.periode }
 
-
-        return when (perioder.size) {
-            0 -> OrdinæreRettighetsperioder.IngenPerioder
-            1 -> OrdinæreRettighetsperioder.EnSammenhengendePeriode(perioder.single())
-            else -> OrdinæreRettighetsperioder.FlerePerioder(perioder)
+        return when {
+            perioder.isEmpty() -> BistandsbehovRettighetsperioder.IngenPerioder
+            perioder.size == 1 && perioder.single().fom == fraDato ->
+                BistandsbehovRettighetsperioder.EnSammenhengendePeriodeFraAngittDato(perioder.single())
+            perioder.size == 1 && perioder.single().fom > fraDato ->
+                BistandsbehovRettighetsperioder.EnSammenhengendePeriodeFraSenereDato(perioder.single())
+            else -> BistandsbehovRettighetsperioder.FlereIkkeSammenhengendePerioder(perioder)
         }
     }
 
@@ -342,8 +342,9 @@ class VedtakslengdeService(
         )
 }
 
-private sealed class OrdinæreRettighetsperioder {
-    data object IngenPerioder : OrdinæreRettighetsperioder()
-    data class EnSammenhengendePeriode(val periode: Periode) : OrdinæreRettighetsperioder()
-    data class FlerePerioder(val perioder: List<Periode>) : OrdinæreRettighetsperioder()
+private sealed class BistandsbehovRettighetsperioder {
+    data object IngenPerioder : BistandsbehovRettighetsperioder()
+    data class EnSammenhengendePeriodeFraAngittDato(val periode: Periode) : BistandsbehovRettighetsperioder()
+    data class EnSammenhengendePeriodeFraSenereDato(val periode: Periode) : BistandsbehovRettighetsperioder()
+    data class FlereIkkeSammenhengendePerioder(val perioder: List<Periode>) : BistandsbehovRettighetsperioder()
 }

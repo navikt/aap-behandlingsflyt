@@ -48,13 +48,13 @@ class VedtakslengdeSteg(
             }
 
             VurderingType.UTVID_VEDTAKSLENGDE -> {
-                val vedtakslengdeUtvidelse = vedtakslengdeService.hentNesteVedtakslengdeUtvidelseOrdinær(
+                val vedtakslengdeUtvidelse = vedtakslengdeService.hentNesteVedtakslengdeUtvidelse(
                     behandlingId = kontekst.behandlingId,
                     forrigeBehandlingId = kontekst.forrigeBehandlingId,
                 )
 
                 if (vedtakslengdeUtvidelse is VedtakslengdeUtvidelse.Automatisk) {
-                    vedtakslengdeService.utvidVedtakslengdeOrdinær(
+                    vedtakslengdeService.utvidVedtakslengde(
                         behandlingId = kontekst.behandlingId,
                         forrigeBehandlingId = kontekst.forrigeBehandlingId,
                         vedtakslengdeUtvidelse = vedtakslengdeUtvidelse,

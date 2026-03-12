@@ -60,7 +60,7 @@ class OpprettJobbUtvidVedtakslengdeJobbUtfører(
         val sisteGjeldendeBehandling = behandlingService.finnBehandlingMedSisteFattedeVedtak(id)
         if (sisteGjeldendeBehandling != null) {
             // Bruker sisteGjeldendeBehandling.id både for behandlingId og forrigeBehandlingId fordi vi ser på gjeldende behandling
-            val vedtakslengdeUtvidelse = vedtakslengdeService.hentNesteVedtakslengdeUtvidelseOrdinær(
+            val vedtakslengdeUtvidelse = vedtakslengdeService.hentNesteVedtakslengdeUtvidelse(
                 behandlingId = sisteGjeldendeBehandling.id,
                 forrigeBehandlingId = sisteGjeldendeBehandling.id,
             )
@@ -71,8 +71,8 @@ class OpprettJobbUtvidVedtakslengdeJobbUtfører(
                     log.error("Sak med id $id trenger manuell utvidelse av vedtakslengde. Dette er ikke implementert. Må følges opp! ($vedtakslengdeUtvidelse)")
                     false
                 }
-                is VedtakslengdeUtvidelse.IngenFremtidigOrdinærRettighet -> {
-                    log.info("Sak med id $id har ingen fremtidig ordinær rettighet, hopper over")
+                is VedtakslengdeUtvidelse.IngenFremtidigBistandsbehovRettighet -> {
+                    log.info("Sak med id $id har ingen fremtidig bistandsbehovrettighet, hopper over")
                     false
                 }
             }
