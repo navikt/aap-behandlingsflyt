@@ -454,7 +454,8 @@ class RettighetsperiodeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
         val åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling)
         dataSource.transaction { connection ->
             val driftfunksjoner = Driftfunksjoner(postgresRepositoryRegistry.provider(connection), gatewayProvider)
-            driftfunksjoner.utvidRettghetsperiodeOgKjørFraStart(behandling)
+            val oppdatertBehandling = BehandlingRepositoryImpl(connection).hent(behandling.id)
+            driftfunksjoner.utvidRettghetsperiodeOgKjørFraStart(oppdatertBehandling)
         }
 
         val oppdaterteAvklaringsbehovEtterUtvidelse = hentÅpneAvklaringsbehov(behandling.id)
