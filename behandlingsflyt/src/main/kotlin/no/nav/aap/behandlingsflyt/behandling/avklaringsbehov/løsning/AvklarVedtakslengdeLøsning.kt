@@ -6,6 +6,8 @@ import com.fasterxml.jackson.annotation.JsonTypeName
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.AvklarVedtakslengdeLøser
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.LøsningsResultat
+import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.VirkningstidspunktUtleder
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeVurderingDto
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AVKLAR_VEDTAKSLENGDE_KODE
@@ -40,10 +42,15 @@ class AvklarVedtakslengdeLøsning(
         val vedtakslengdeRepository = repositoryProvider.provide<VedtakslengdeRepository>()
         val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
         val sakRepository = repositoryProvider.provide<SakRepository>()
+        val vilkårsresultatRepository = repositoryProvider.provide<VilkårsresultatRepository>()
 
         val behandling = behandlingRepository.hent(behandlingId)
         val sak = sakRepository.hent(behandling.sakId)
-        return vedtakslengdeRepository.hentHvisEksisterer(behandlingId)?.gjeldendeVurderinger(sak.rettighetsperiode.fom) ?: Tidslinje<Unit>()
+        val vedtakslengdeStartdato =
+            VirkningstidspunktUtleder(vilkårsresultatRepository).utledVirkningsTidspunkt(behandling.id)
+                ?: sak.rettighetsperiode.fom
+
+        return vedtakslengdeRepository.hentHvisEksisterer(behandlingId)?.gjeldendeVurderinger(vedtakslengdeStartdato) ?: Tidslinje<Unit>()
     }
 }
 
