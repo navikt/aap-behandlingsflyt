@@ -48,12 +48,7 @@ class FraværFastsattAktivitetRegel : UnderveisRegel {
                     val sammenslåttPeriode = Periode(last.periode.fom, current.periode.tom)
                     acc.dropLast(1) + Segment(
                         sammenslåttPeriode,
-                        last.verdi.copy(
-                            fravær = FraværForPeriode(
-                                periode = sammenslåttPeriode,
-                                fraværÅrsak = last.verdi.fravær.fraværÅrsak,
-                            )
-                        )
+                        last.verdi
                     )
                 } else {
                     acc + current
@@ -157,7 +152,7 @@ class FraværFastsattAktivitetRegel : UnderveisRegel {
                     Tidslinje(
                         vurderingSegment.periode,
                         FraværFastsattAktivitetVurdering(
-                            fravær = fravær,
+//                            fravær = fravær,
                             vilkårsvurdering = FRAVÆR_SYKDOM_ELLER_SKADE,
                         )
                     )
@@ -173,7 +168,7 @@ class FraværFastsattAktivitetRegel : UnderveisRegel {
                         Segment(
                             periode,
                             FraværFastsattAktivitetVurdering(
-                                fravær = fravær,
+//                                fravær = fravær,
                                 vilkårsvurdering =
                                     if (kalenderårskvote > KVOTE_KALENDERÅR) MER_ENN_TI_DAGERS_FRAVÆR_I_KALENDERÅR
                                     else FRAVÆR_STERK_VELFERDSGRUNN,
@@ -188,7 +183,7 @@ class FraværFastsattAktivitetRegel : UnderveisRegel {
                     Tidslinje(
                         vurderingSegment.periode,
                         FraværFastsattAktivitetVurdering(
-                            fravær = fravær,
+//                            fravær = fravær,
                             vilkårsvurdering =
                                 if (vurdering.erUnntakForDag) FRAVÆR_FØRSTE_DAG_I_MELDEPERIODE
                                 else MER_ENN_EN_DAGS_FRAVÆR_I_MELDEPERIODE,

@@ -20,7 +20,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.FraværForPeriod
  * - [Forskriftens § 3](https://lovdata.no/forskrift/2017-12-13-2100/§3)
  */
 data class FraværFastsattAktivitetVurdering(
-    val fravær: FraværForPeriode,
+//    val fravær: FraværForPeriode,
     /** Er vilkårene for reduksjon etter § 11-8 oppfylt? */
     val vilkårsvurdering: Vilkårsvurdering,
 ) {
