@@ -16,6 +16,8 @@ import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
@@ -25,16 +27,21 @@ class DagpengerInformasjonskrav(
     private val dagpengerGateway: DagpengerGateway,
     private val dagpengerRepository: DagpengerRepository,
     private val sakService: SakService,
+    private val unleashGateway: UnleashGateway
 ) : Informasjonskrav<DagpengerInformasjonskrav.DagpengerInput, DagpengerInformasjonskrav.DagpengerRegisterdata> {
     override val navn = Companion.navn
 
     override fun erRelevant(
         kontekst: FlytKontekstMedPerioder, steg: StegType, oppdatert: InformasjonskravOppdatert?
     ): Boolean {
-        return false
+        if (unleashGateway.isDisabled(BehandlingsflytFeature.hentDagpengerPerioder)) {
+            return false
+        }
         return kontekst.erFørstegangsbehandlingEllerRevurdering() && !tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(
             kontekst, steg
-        ) && (oppdatert.ikkeKjørtSisteKalenderdagForBehandling(kontekst.behandlingId) || kontekst.rettighetsperiode != oppdatert?.rettighetsperiode || kontekst.erVurderingsbehovEndretEtterOppdatertInformasjonskrav(oppdatert))
+        ) && (oppdatert.ikkeKjørtSisteKalenderdagForBehandling(kontekst.behandlingId) || kontekst.rettighetsperiode != oppdatert?.rettighetsperiode || kontekst.erVurderingsbehovEndretEtterOppdatertInformasjonskrav(
+            oppdatert
+        ))
     }
 
     override fun klargjør(kontekst: FlytKontekstMedPerioder): DagpengerInput {
@@ -48,7 +55,9 @@ class DagpengerInformasjonskrav(
     }
 
     override fun hentData(input: DagpengerInput): DagpengerRegisterdata {
-        return DagpengerRegisterdata(emptySet())
+        if (unleashGateway.isDisabled(BehandlingsflytFeature.hentDagpengerPerioder)) {
+            return DagpengerRegisterdata(emptySet())
+        }
         val (person, rettighetsperiode) = input
         val dagpengerPerioder = dagpengerGateway.hentYtelseDagpenger(
             personidentifikatorer = person.aktivIdent().identifikator,
@@ -111,6 +120,7 @@ class DagpengerInformasjonskrav(
                 dagpengerGateway = gatewayProvider.provide(),
                 dagpengerRepository = repositoryProvider.provide(),
                 sakService = SakService(repositoryProvider, gatewayProvider),
+                unleashGateway = gatewayProvider.provide()
             )
         }
     }

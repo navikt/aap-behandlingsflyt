@@ -166,6 +166,14 @@ public enum class Definisjon(
         kvalitetssikres = true,
         løsesAv = listOf(Rolle.SAKSBEHANDLER_OPPFOLGING)
     ),
+    AVKLAR_VEDTAKSLENGDE(
+        kode = AvklaringsbehovKode.`5059`,
+        type = BehovType.MANUELT_FRIVILLIG,
+        løsesISteg = StegType.FASTSETT_VEDTAKSLENGDE,
+        kreverToTrinn = true,
+        kvalitetssikres = false,
+        løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL)
+    ),
     FASTSETT_ARBEIDSEVNE(
         kode = AvklaringsbehovKode.`5004`,
         type = BehovType.MANUELT_FRIVILLIG,

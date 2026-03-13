@@ -6,12 +6,11 @@ import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.api.assertThrows
-import java.time.YearMonth
 
 class ÅrMånedPeriodeLøsningTest {
     data class P(
-        override val fom: YearMonth,
-        override val tom: YearMonth?,
+        override val fom: String,
+        override val tom: String?,
     ) : ÅrMånedPeriodeLøsning
 
     @Test
@@ -26,7 +25,7 @@ class ÅrMånedPeriodeLøsningTest {
         assertDoesNotThrow {
             validerPerioder(
                 listOf(
-                    P(YearMonth.of(2025, 1), YearMonth.of(2025, 1))
+                    P("2025-01", "2025-01")
                 )
             )
         }
@@ -37,7 +36,7 @@ class ÅrMånedPeriodeLøsningTest {
         assertDoesNotThrow {
             validerPerioder(
                 listOf(
-                    P(YearMonth.of(2025, 1), null)
+                    P("2025-01", null)
                 )
             )
         }
@@ -48,8 +47,8 @@ class ÅrMånedPeriodeLøsningTest {
         assertDoesNotThrow {
             validerPerioder(
                 listOf(
-                    P(YearMonth.of(2025, 1), YearMonth.of(2025, 1)),
-                    P(YearMonth.of(2025, 2), YearMonth.of(2025, 2)),
+                    P("2025-01", "2025-01"),
+                    P("2025-02", "2025-02"),
                 )
             )
         }
@@ -60,8 +59,8 @@ class ÅrMånedPeriodeLøsningTest {
         assertDoesNotThrow {
             validerPerioder(
                 listOf(
-                    P(YearMonth.of(2025, 1), YearMonth.of(2025, 1)),
-                    P(YearMonth.of(2025, 3), YearMonth.of(2025, 3)),
+                    P("2025-01", "2025-01"),
+                    P("2025-03", "2025-03"),
                 )
             )
         }
@@ -73,8 +72,8 @@ class ÅrMånedPeriodeLøsningTest {
             validerPerioder(
                 listOf(
                     /* "baklengs" */
-                    P(YearMonth.of(2025, 2), YearMonth.of(2025, 2)),
-                    P(YearMonth.of(2025, 1), YearMonth.of(2025, 1)),
+                    P("2025-02", "2025-02"),
+                    P("2025-01", "2025-01"),
                 )
             )
         }
@@ -85,8 +84,8 @@ class ÅrMånedPeriodeLøsningTest {
         assertThrows<UgyldigForespørselException> {
             validerPerioder(
                 listOf(
-                    P(YearMonth.of(2025, 1), null),
-                    P(YearMonth.of(2025, 1), null),
+                    P("2025-01", null),
+                    P("2025-01", null),
                 )
             )
         }
@@ -97,8 +96,8 @@ class ÅrMånedPeriodeLøsningTest {
         assertThrows<UgyldigForespørselException> {
             validerPerioder(
                 listOf(
-                    P(YearMonth.of(2025, 1), YearMonth.of(2025, 1)),
-                    P(YearMonth.of(2025, 1), YearMonth.of(2025, 1)),
+                    P("2025-01", "2025-01"),
+                    P("2025-01", "2025-01"),
                 )
             )
         }
@@ -109,8 +108,8 @@ class ÅrMånedPeriodeLøsningTest {
         assertThrows<UgyldigForespørselException> {
             validerPerioder(
                 listOf(
-                    P(YearMonth.of(2025, 1), null),
-                    P(YearMonth.of(2025, 2), null),
+                    P("2025-01", null),
+                    P("2025-02", null),
                 )
             )
         }
@@ -121,8 +120,8 @@ class ÅrMånedPeriodeLøsningTest {
         assertDoesNotThrow {
             validerPerioder(
                 listOf(
-                    P(YearMonth.of(2022, 3), YearMonth.of(2022, 6)),
-                    P(YearMonth.of(2025, 1), null),
+                    P("2022-03", "2022-06"),
+                    P("2025-01", null),
                 )
             )
         }

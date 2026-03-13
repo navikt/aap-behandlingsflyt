@@ -15,4 +15,5 @@ val tomtTilkjentYtelseGrunnlag = TilkjentYtelseGrunnlag(
     samordningGrunnlag = SamordningGrunnlag(setOf()),
     samordningUføre = null,
     samordningArbeidsgiver = null,
+    barnepensjonGrunnlag = null
 )

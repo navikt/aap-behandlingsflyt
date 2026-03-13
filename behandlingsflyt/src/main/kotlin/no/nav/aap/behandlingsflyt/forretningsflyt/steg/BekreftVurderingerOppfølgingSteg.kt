@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
+import no.nav.aap.behandlingsflyt.behandling.mellomlagring.MellomlagretVurderingService
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
@@ -14,6 +15,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegGruppe
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
@@ -25,6 +27,7 @@ class BekreftVurderingerOppfølgingSteg(
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
     private val avklaringsbehovService: AvklaringsbehovService,
     private val tidligereVurderinger: TidligereVurderinger,
+    private val mellomlagretVurderingService: MellomlagretVurderingService,
     private val unleashGateway: UnleashGateway
 ) : BehandlingSteg {
 
@@ -36,7 +39,7 @@ class BekreftVurderingerOppfølgingSteg(
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
 
         val vedtakBehøverVurdering = vedtakBehøverVurdering(kontekst, avklaringsbehovene)
-        val erTilstrekkeligVurdert = erTilstrekkeligVurdert(avklaringsbehovene)
+        val erTilstrekkeligVurdert = erTilstrekkeligVurdert(avklaringsbehovene, kontekst.behandlingId)
 
         avklaringsbehovService.oppdaterAvklaringsbehov(
             definisjon = Definisjon.BEKREFT_VURDERINGER_OPPFØLGING,
@@ -63,15 +66,22 @@ class BekreftVurderingerOppfølgingSteg(
     }
 
     private fun erTilstrekkeligVurdert(
-        avklaringsbehovene: Avklaringsbehovene
+        avklaringsbehovene: Avklaringsbehovene,
+        behandlingId: BehandlingId
     ): Boolean {
         val sykdomsbehovSistLøstAvKontor = sykdomsbehovLøstAvKontorIDenneBehandlingen(avklaringsbehovene)
-            .map { behov -> behov.aktivHistorikk.last() }
-            .filter { it.status == Status.AVSLUTTET }
+            .mapNotNull { behov -> behov.aktivHistorikk.lastOrNull { it.status == Status.AVSLUTTET } }
         val sistBekreftet =
-            avklaringsbehovene.hentBehovForDefinisjon(Definisjon.BEKREFT_VURDERINGER_OPPFØLGING)?.aktivHistorikk?.last()?.tidsstempel
+            avklaringsbehovene.hentBehovForDefinisjon(Definisjon.BEKREFT_VURDERINGER_OPPFØLGING)
+                ?.aktivHistorikk?.lastOrNull { endring -> endring.status == Status.AVSLUTTET }
+                ?.tidsstempel
+
+        val mellomlagredeVurderinger = mellomlagretVurderingService.hentMellomlagredeVurderingerFørSteg(
+            behandlingId, type(), listOf(Rolle.SAKSBEHANDLER_OPPFOLGING)
+        )
 
         return when {
+            mellomlagredeVurderinger.isNotEmpty() -> false
             sykdomsbehovSistLøstAvKontor.isEmpty() -> true
             sistBekreftet == null -> false
             else -> sykdomsbehovSistLøstAvKontor.all { nyesteSykdomsløsning ->
@@ -99,6 +109,7 @@ class BekreftVurderingerOppfølgingSteg(
                 avklaringsbehovRepository = repositoryProvider.provide(),
                 avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
                 tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
+                mellomlagretVurderingService = MellomlagretVurderingService(repositoryProvider),
                 unleashGateway = gatewayProvider.provide()
             )
         }

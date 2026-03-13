@@ -64,7 +64,7 @@ internal class MedlemskapArbeidInntektRepositoryImplTest {
     fun mapperOrgnavnKorrektTilInntekt() {
         dataSource.transaction { connection ->
             val medlemskapArbeidInntektRepository = MedlemskapArbeidInntektRepositoryImpl(connection)
-            val sak = opprettSak(connection, periode)
+            val sak = opprettSak(connection, LocalDate.now())
             val behandling = finnEllerOpprettBehandling(connection, sak)
 
             lagNyFullVurdering(behandling.id, periode, medlemskapArbeidInntektRepository, "Første begrunnelse")
@@ -85,7 +85,7 @@ internal class MedlemskapArbeidInntektRepositoryImplTest {
     fun `skal kunne lagre og hente manuelle vurderinger over flere perioder`() {
         dataSource.transaction { connection ->
             val medlemskapArbeidInntektRepository = MedlemskapArbeidInntektRepositoryImpl(connection)
-            val sak = opprettSak(connection, periode)
+            val sak = opprettSak(connection, LocalDate.now())
             val behandling = finnEllerOpprettBehandling(connection, sak)
 
             medlemskapArbeidInntektRepository.lagreVurderinger(
@@ -114,7 +114,7 @@ internal class MedlemskapArbeidInntektRepositoryImplTest {
     fun `skal ta med manuelle vurderinger i grunnlag når arbeid og inntekt oppdateres`() {
         dataSource.transaction { connection ->
             val medlemskapArbeidInntektRepository = MedlemskapArbeidInntektRepositoryImpl(connection)
-            val sak = opprettSak(connection, periode)
+            val sak = opprettSak(connection, LocalDate.now())
             val behandling = finnEllerOpprettBehandling(connection, sak)
             val medlemskapRepository = MedlemskapRepositoryImpl(connection)
 
@@ -151,7 +151,8 @@ internal class MedlemskapArbeidInntektRepositoryImplTest {
                 enhetGrunnlag = enhetGrunnlags()
             )
 
-            val medlemskapArbeidInntektGrunnlagOppdatert = medlemskapArbeidInntektRepository.hentHvisEksisterer(behandling.id)
+            val medlemskapArbeidInntektGrunnlagOppdatert =
+                medlemskapArbeidInntektRepository.hentHvisEksisterer(behandling.id)
 
             assertThat(medlemskapArbeidInntektGrunnlagOppdatert?.vurderinger?.size).isEqualTo(2)
         }
@@ -163,7 +164,7 @@ internal class MedlemskapArbeidInntektRepositoryImplTest {
             val medlemskapArbeidInntektRepository = MedlemskapArbeidInntektRepositoryImpl(connection)
             val medlemskapRepository = MedlemskapRepositoryImpl(connection)
 
-            val sak = opprettSak(connection, periode)
+            val sak = opprettSak(connection, LocalDate.now())
             val behandling = finnEllerOpprettBehandling(connection, sak)
             val vurderinger = listOf(
                 manuellVurdering(
@@ -226,7 +227,7 @@ internal class MedlemskapArbeidInntektRepositoryImplTest {
             val eksisterendeVurderinger = medlemskapArbeidInntektRepository.hentHvisEksisterer(revurdering.id)
             val vurderinger = listOf(
                 manuellVurdering(
-                    fom = 15 desember  2025,
+                    fom = 15 desember 2025,
                     tom = null,
                     vurdertIBehandling = revurdering.id
                 )
@@ -247,7 +248,7 @@ internal class MedlemskapArbeidInntektRepositoryImplTest {
     fun `test sletting`() {
         dataSource.transaction { connection ->
             val medlemskapArbeidInntektRepository = MedlemskapArbeidInntektRepositoryImpl(connection)
-            val sak = opprettSak(connection, periode)
+            val sak = opprettSak(connection, LocalDate.now())
             val behandling = finnEllerOpprettBehandling(connection, sak)
             val medlemskapRepository = MedlemskapRepositoryImpl(connection)
 
@@ -284,7 +285,8 @@ internal class MedlemskapArbeidInntektRepositoryImplTest {
                 enhetGrunnlag = enhetGrunnlags()
             )
 
-            val medlemskapArbeidInntektGrunnlagOppdatert = medlemskapArbeidInntektRepository.hentHvisEksisterer(behandling.id)
+            val medlemskapArbeidInntektGrunnlagOppdatert =
+                medlemskapArbeidInntektRepository.hentHvisEksisterer(behandling.id)
 
             assertThat(medlemskapArbeidInntektGrunnlagOppdatert?.vurderinger?.size).isEqualTo(2)
 
@@ -308,12 +310,14 @@ internal class MedlemskapArbeidInntektRepositoryImplTest {
 
         repo.lagreVurderinger(
             behandlingId,
-            listOf(manuellVurdering(
-                fom = periode.fom,
-                tom = null,
-                vurdertIBehandling = behandlingId,
-                begrunnelse = begrunnelse
-            )),
+            listOf(
+                manuellVurdering(
+                    fom = periode.fom,
+                    tom = null,
+                    vurdertIBehandling = behandlingId,
+                    begrunnelse = begrunnelse
+                )
+            ),
         )
 
         repo.lagreOppgittUtenlandsOppplysninger(
@@ -323,7 +327,12 @@ internal class MedlemskapArbeidInntektRepositoryImplTest {
         )
     }
 
-    private fun manuellVurdering(fom: LocalDate, tom: LocalDate?, vurdertIBehandling: BehandlingId, begrunnelse: String = "begrunnelse"): ManuellVurderingForLovvalgMedlemskap =
+    private fun manuellVurdering(
+        fom: LocalDate,
+        tom: LocalDate?,
+        vurdertIBehandling: BehandlingId,
+        begrunnelse: String = "begrunnelse"
+    ): ManuellVurderingForLovvalgMedlemskap =
         ManuellVurderingForLovvalgMedlemskap(
             fom = fom,
             tom = tom,

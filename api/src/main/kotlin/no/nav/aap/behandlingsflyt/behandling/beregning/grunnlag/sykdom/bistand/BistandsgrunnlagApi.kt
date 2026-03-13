@@ -8,7 +8,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepo
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandRepository
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderBistandsbehovSteg
-import no.nav.aap.behandlingsflyt.harTilgangOgKanSaksbehandle
+import no.nav.aap.behandlingsflyt.kanLøseBehovSomSkalVæreLåstEtterKvalitetssikring
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
@@ -70,7 +70,7 @@ fun NormalOpenAPIRoute.bistandsgrunnlagApi(
                             .orEmpty()
 
                     BistandGrunnlagResponse(
-                        harTilgangTilÅSaksbehandle = harTilgangOgKanSaksbehandle(kanSaksbehandle(), avklaringsbehovene),
+                        harTilgangTilÅSaksbehandle = kanSaksbehandle() && kanLøseBehovSomSkalVæreLåstEtterKvalitetssikring(Definisjon.AVKLAR_BISTANDSBEHOV.løsesISteg, behandling),
                         nyeVurderinger = nyeVurderinger,
                         sisteVedtatteVurderinger = BistandVurderingResponse.fraDomene(
                             grunnlag?.vedtattBistandstidslinje(behandling.id).orEmpty(),

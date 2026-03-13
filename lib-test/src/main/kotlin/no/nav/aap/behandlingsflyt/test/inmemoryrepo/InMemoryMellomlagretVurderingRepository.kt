@@ -39,4 +39,15 @@ object InMemoryMellomlagretVurderingRepository : MellomlagretVurderingRepository
         synchronized(lock) { vurderinger[Pair(behandlingId, avklaringsbehovKode)] = mellomlagretVurdering }
         return mellomlagretVurdering
     }
+
+    override fun hentForAvklaringsbehov(
+        behandlingId: BehandlingId,
+        avklaringsbehovKoder: List<AvklaringsbehovKode>
+    ): List<MellomlagretVurdering> {
+        synchronized(lock) {
+            return vurderinger.filter { (key, _) ->
+                key.first == behandlingId && avklaringsbehovKoder.contains(key.second)
+            }.values.toList()
+        }
+    }
 }
