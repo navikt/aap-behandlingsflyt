@@ -11,6 +11,7 @@ import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.somTidslinje
 import no.nav.aap.komponenter.type.Periode
+import kotlin.collections.plus
 
 private const val KVOTE_KALENDERÅR = 10
 private const val KVOTE_BARN = 3
@@ -35,6 +36,31 @@ class FraværFastsattAktivitetRegel : UnderveisRegel {
         )
     }
 
+    private fun Tidslinje<FraværFastsattAktivitetVurdering>.sammenslåTilstøtendeVurderinger(): Tidslinje<FraværFastsattAktivitetVurdering> =
+        segmenter()
+            .fold(emptyList<Segment<FraværFastsattAktivitetVurdering>>()) { acc, current ->
+                val last = acc.lastOrNull()
+
+                if (last != null &&
+                    last.verdi.utfall == current.verdi.utfall &&
+                    last.periode.tom.plusDays(1) == current.periode.fom
+                ) {
+                    val sammenslåttPeriode = Periode(last.periode.fom, current.periode.tom)
+                    acc.dropLast(1) + Segment(
+                        sammenslåttPeriode,
+                        last.verdi.copy(
+                            fravær = FraværForPeriode(
+                                periode = sammenslåttPeriode,
+                                fraværÅrsak = last.verdi.fravær.fraværÅrsak,
+                            )
+                        )
+                    )
+                } else {
+                    acc + current
+                }
+            }.let(::Tidslinje)
+
+
     override fun vurder(input: UnderveisInput, resultat: Tidslinje<Vurdering>): Tidslinje<Vurdering> {
         require(input.periodeForVurdering.inneholder(resultat.helePerioden())) {
             "kan ikke vurdere utenfor periode for vurdering fordi meldeperioden ikke er definert"
@@ -42,8 +68,9 @@ class FraværFastsattAktivitetRegel : UnderveisRegel {
 
         val fraværTidslinje: Tidslinje<FraværForPeriode> =
             input.meldekort
-                .sortedBy { it.mottattTidspunkt } // somTidslinje vil overskrive tidligere verdier
-                .flatMap { it.fravær }.somTidslinje { Periode(it.periode.fom, it.periode.tom ) }
+                .flatMap { it.fravær }
+                .sortedBy { it.periode }
+                .somTidslinje { it.periode }
 
         // Første brudd i meldeperioden teller ikke i årskvote
         // Deler opp på meldeperiode først for å finne første i meldeperioden
@@ -54,7 +81,9 @@ class FraværFastsattAktivitetRegel : UnderveisRegel {
         val ferdigVurdert = fraværTidslinjeMedFørsteFraværIdentifisert.splittOppKalenderår()
             .flatMap { kalenderårSegment ->
                 vurderKalenderår(kalenderårSegment.verdi)
-            }.begrensetTil(input.periodeForVurdering) // TODO skal dette gjøres?
+            }
+            .sammenslåTilstøtendeVurderinger()
+            .begrensetTil(input.periodeForVurdering) // TODO skal dette gjøres?
 
         return resultat.leggTilVurderinger(ferdigVurdert, Vurdering::leggTilAktivitetspliktVurdering)
     }
@@ -83,7 +112,7 @@ class FraværFastsattAktivitetRegel : UnderveisRegel {
         periode: Periode,
         fravær: FraværForPeriode,
     ): Tidslinje<FraværForDagVurdertForPeriode> {
-        val inntilEnDagUnntakUtenGyldigGrunn = meldeperioden.segmenter().singleOrNull{
+        val inntilEnDagUnntakUtenGyldigGrunn = meldeperioden.segmenter().singleOrNull {
             it.verdi.fraværÅrsak !in gyldigeÅrsaker
         }?.verdi
 
@@ -175,3 +204,5 @@ class FraværFastsattAktivitetRegel : UnderveisRegel {
         val erUnntakForDag: Boolean,
     )
 }
+
+

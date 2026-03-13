@@ -78,6 +78,9 @@ class FraværFastsattAktivitetRegelTest {
         assertEquals(UNNTAK, vurdering.segment(1 januar 2020)!!.verdi.utfall)
         assertEquals(REDUKSJON, vurdering.segment(2 januar 2020)!!.verdi.utfall)
         assertEquals(REDUKSJON, vurdering.segment(3 januar 2020)!!.verdi.utfall)
+
+        //Sjekker at samme segment hentes for to forskjellige datoer for å bevise at segmentene er sammenslått
+        assertEquals(vurdering.segment(2 januar 2020), vurdering.segment(3 januar 2020))
     }
 
     @Test
