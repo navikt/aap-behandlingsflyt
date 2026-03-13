@@ -28,6 +28,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingService
+import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.tilkjentytelse.TilkjentYtelseRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.underveis.UnderveisRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepositoryImpl
@@ -43,6 +44,9 @@ import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.tidslinje.somTidslinje
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Beløp
+import no.nav.aap.komponenter.verdityper.Prosent.Companion.`0_PROSENT`
+import no.nav.aap.komponenter.verdityper.Prosent.Companion.`100_PROSENT`
 import no.nav.aap.komponenter.verdityper.Tid
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -50,6 +54,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.params.ParameterizedClass
 import org.junit.jupiter.params.provider.MethodSource
+import java.math.BigDecimal
 import java.time.LocalDate
 import kotlin.reflect.KClass
 
@@ -372,6 +377,77 @@ class RettighetsperiodeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
         )
         assertThat(uthentetTilkjentYtelse.tilTidslinje().helePerioden().fom).isEqualTo(nyStartDato)
     }
+
+    @Test
+    fun `Når rettighetsperioden flyttes tilbake etter innlevert meldekort skal Kelvin utbetale samme beløp for meldeperioden som er delvis levert`() {
+
+        val søknadsdato = LocalDate.of(2026, 1, 8) // Torsdag
+        val justertDato = LocalDate.of(2026, 1, 7) // Onsdag - utvides i samme meldeperiode
+
+        val sak = happyCaseFørstegangsbehandling(søknadsdato, sendMeldekort = true)
+
+        val (underveisGrunnlagFørEndring, tilkjentYtelseFørEndring) = dataSource.transaction {
+            val repositoryProvider = postgresRepositoryRegistry.provider(it)
+            val behandlingService = BehandlingService(repositoryProvider, gatewayProvider)
+            val behandling = behandlingService.finnSisteYtelsesbehandlingFor(sak.id) ?: error("Fant ikke behandling")
+            val underveisGrunnlag = UnderveisRepositoryImpl(it).hent(behandling.id)
+            val tilkjentYtelse = TilkjentYtelseRepositoryImpl(it).hentHvisEksisterer(behandling.id) ?: error("Fant ikke tilkjent ytelse")
+            Pair(underveisGrunnlag, tilkjentYtelse)
+        }
+
+        val underveisPeriodeForUkjentDatoFørEndring = underveisGrunnlagFørEndring.perioder.find { it.periode.inneholder(justertDato) }
+        val underveisPeriodeForSøknadsdatoFørEndring = underveisGrunnlagFørEndring.perioder.find { it.periode.inneholder(søknadsdato) } ?: error("Fant ikke underveisperiode for søknadstidspunkt")
+        assertThat(underveisPeriodeForUkjentDatoFørEndring).isNull()
+        assertThat(underveisPeriodeForSøknadsdatoFørEndring.arbeidsgradering.andelArbeid).isEqualTo(`0_PROSENT`)
+        assertThat(underveisPeriodeForSøknadsdatoFørEndring.arbeidsgradering.gradering).isEqualTo(`100_PROSENT`)
+
+        val tilkjentPeriodeForUkjentDatoFørEndring = tilkjentYtelseFørEndring.find { it.periode.inneholder(justertDato) }
+        val tilkjentPeriodeForSøknadsdatoFørEndring = tilkjentYtelseFørEndring.find { it.periode.inneholder(søknadsdato) } ?: error("Fant ikke tilkjentperiode for søknadstidspunkt")
+        assertThat(tilkjentPeriodeForUkjentDatoFørEndring).isNull()
+        assertThat(tilkjentPeriodeForSøknadsdatoFørEndring.tilkjent.redusertDagsats().verdi).isGreaterThan(BigDecimal.ZERO)
+
+        val avklaringsbehovManuellRevurdering =
+            listOf(Vurderingsbehov.VURDER_RETTIGHETSPERIODE)
+        val revurdering = sak.opprettManuellRevurdering(avklaringsbehovManuellRevurdering)
+            .medKontekst {
+                assertThat(this.behandling.typeBehandling()).isEqualTo(TypeBehandling.Revurdering)
+                assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
+            }.løsRettighetsperiode(justertDato)
+            .løsSykdom(justertDato)
+            .løsBistand(justertDato)
+            .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
+            .løsBeregningstidspunkt(LocalDate.now())
+            .løsOppholdskrav(justertDato)
+            .løsUtenSamordning()
+            .løsAndreStatligeYtelser()
+            .løsAvklaringsBehov(ForeslåVedtakLøsning())
+            .fattVedtak()
+            .løsVedtaksbrev(TypeBrev.VEDTAK_ENDRING)
+
+        val (underveisGrunnlag, tilkjentYtelse) = dataSource.transaction {
+            val repositoryProvider = postgresRepositoryRegistry.provider(it)
+            val behandlingService = BehandlingService(repositoryProvider, gatewayProvider)
+            val behandling = behandlingService.finnSisteYtelsesbehandlingFor(sak.id) ?: error("Fant ikke behandling")
+            val underveisGrunnlag = UnderveisRepositoryImpl(it).hent(revurdering.id)
+            val tilkjentYtelse = TilkjentYtelseRepositoryImpl(it).hentHvisEksisterer(revurdering.id) ?: error("Fant ikke tilkjent ytelse")
+            Pair(underveisGrunnlag, tilkjentYtelse)
+        }
+
+        val underveisPeriodeForUkjentDato = underveisGrunnlag.perioder.find { it.periode.inneholder(justertDato) } ?: error("Fant ikke underveisperiode for nytt starttidspunkt")
+        val underveisPeriodeForSøknadsdato = underveisGrunnlag.perioder.find { it.periode.inneholder(søknadsdato) } ?: error("Fant ikke underveisperiode for søknadstidspunkt")
+        assertThat(underveisPeriodeForUkjentDato.arbeidsgradering.andelArbeid).isEqualTo(`100_PROSENT`)
+        assertThat(underveisPeriodeForUkjentDato.arbeidsgradering.gradering).isEqualTo(`0_PROSENT`)
+        assertThat(underveisPeriodeForSøknadsdato.arbeidsgradering.andelArbeid).isEqualTo(`0_PROSENT`)
+        assertThat(underveisPeriodeForSøknadsdato.arbeidsgradering.gradering).isEqualTo(`100_PROSENT`)
+
+        val tilkjentPeriodeForUkjentDato = tilkjentYtelse.find { it.periode.inneholder(justertDato) }?: error("Fant ikke tilkjentperiode for nytt starttidspunkt")
+        val tilkjentPeriodeForSøknadsdato = tilkjentYtelse.find { it.periode.inneholder(søknadsdato) } ?: error("Fant ikke tilkjentperiode for søknadstidspunkt")
+        assertThat(tilkjentPeriodeForUkjentDato.tilkjent.redusertDagsats().verdi).isEqualTo(Beløp(0).verdi)
+        assertThat(tilkjentPeriodeForSøknadsdato.tilkjent.redusertDagsats().verdi).isGreaterThan(Beløp(0).verdi)
+
+    }
+
 
     @Test
     fun `Skal kunne migrere rettighetsperioden automatisk og utvide vilkårslengden`() {
