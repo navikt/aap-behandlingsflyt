@@ -35,6 +35,6 @@ private val helligdagsunntakMeldefrist =
         LocalDate.of(2026, 5, 25) to LocalDate.of(2026, 5, 26),
     )
 
-fun tidligsteMuligeMeldefrist(dato: LocalDate): LocalDate {
+fun helligdagsunntakjustertMeldefrist(dato: LocalDate): LocalDate {
     return helligdagsunntakMeldefrist[dato] ?: dato
 }

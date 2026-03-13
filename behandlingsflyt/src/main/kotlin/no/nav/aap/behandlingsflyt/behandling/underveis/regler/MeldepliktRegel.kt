@@ -290,7 +290,7 @@ class MeldepliktRegel(
         meldeperiode: Periode,
         førsteDokument: Segment<out MeldepliktVurdering>?,
     ): Tidslinje<MeldepliktVurdering> {
-        val meldefrist = tidligsteMuligeMeldefrist(meldeperiode.fom.plusDays(7))
+        val meldefrist = helligdagsunntakjustertMeldefrist(meldeperiode.fom.plusDays(7))
 
         return when {
             førsteDokument == null ->
