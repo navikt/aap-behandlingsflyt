@@ -472,8 +472,7 @@ class InstitusjonsoppholdUtlederService(
         helseOppholdTidslinje: Tidslinje<Boolean>
     ): Tidslinje<Boolean> {
 
-        val tom = if (barnetilleggTidslinje.minDato() < helseOppholdTidslinje.minDato())
-            helseOppholdTidslinje.minDato() else barnetilleggTidslinje.minDato()
+        val tom = maxOf(barnetilleggTidslinje.minDato(), helseOppholdTidslinje.minDato())
 
         val oppholdFørBarnetillegg = harOppholdSomKreverAvklaring(
             helseOppholdTidslinje.begrensetTil(
