@@ -78,6 +78,7 @@ import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.tilkjentYtelseApi
 import no.nav.aap.behandlingsflyt.behandling.underveis.meldepliktOverstyringGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.underveis.underveisVurderingerApi
 import no.nav.aap.behandlingsflyt.drift.driftApi
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.StansEllerOpphørMigrering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.ApplikasjonsVersjon
 import no.nav.aap.behandlingsflyt.flyt.behandlingApi
 import no.nav.aap.behandlingsflyt.flyt.flytApi
@@ -106,6 +107,7 @@ import no.nav.aap.behandlingsflyt.prosessering.ProsesseringsJobber
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.saksApi
 import no.nav.aap.behandlingsflyt.test.opprettDummySakApi
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -365,8 +367,9 @@ private fun utførMigreringer(
         log.info("isLeader = $isLeader")
 
 
-        if (isLeader) {
+        if (unleashGateway.isEnabled(BehandlingsflytFeature.MigrerStansOgOpphor) && isLeader) {
             // kjør migreringer
+            StansEllerOpphørMigrering(dataSource, postgresRepositoryRegistry, gatewayProvider).migrer()
         }
 
     }, 9, TimeUnit.MINUTES)

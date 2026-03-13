@@ -48,6 +48,7 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.NyTidligereVurderinger to true,
         BehandlingsflytFeature.BekreftVurderingerOppfolging to true,
         BehandlingsflytFeature.LagreStansOgOpphor to true,
+        BehandlingsflytFeature.MigrerStansOgOpphor to true,
         BehandlingsflytFeature.SamordningBarnepensjon to true,
         BehandlingsflytFeature.RefusjonkravIRevurdering to true,
         BehandlingsflytFeature.SignaturEnhetFraOppgave to true,
@@ -65,4 +66,3 @@ object AlleAvskruddUnleash : FakeUnleashBaseWithDefaultDisabled(
         BehandlingsflytFeature.IngenValidering, // Vi må ha på validering, slik oppførselen er i prod. Dette er egentlig for å støtte superbruker
     )
 )
-

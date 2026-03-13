@@ -22,6 +22,7 @@ enum class BehandlingsflytFeature : FeatureToggle {
     NyTidligereVurderinger,
     BekreftVurderingerOppfolging,
     LagreStansOgOpphor,
+    MigrerStansOgOpphor,
     SamordningBarnepensjon,
     RefusjonkravIRevurdering,
     SignaturEnhetFraOppgave,
