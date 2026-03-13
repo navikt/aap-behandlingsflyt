@@ -11,6 +11,7 @@ import java.time.LocalDateTime
 data class BehandlingMedVedtak(
     val saksnummer: Saksnummer,
     val id: BehandlingId,
+    val forrigeBehandlingId: BehandlingId?,
     val referanse: BehandlingReferanse,
     val typeBehandling: TypeBehandling,
     val status: Status,

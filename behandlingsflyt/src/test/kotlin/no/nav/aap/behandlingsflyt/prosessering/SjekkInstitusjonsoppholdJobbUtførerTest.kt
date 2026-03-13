@@ -250,7 +250,8 @@ class SjekkInstitusjonsoppholdJobbUtførerTest {
             vedtakstidspunkt = LocalDateTime.now(),
             virkningstidspunkt = LocalDate.now(),
             vurderingsbehov = setOf(),
-            årsakTilOpprettelse = ÅrsakTilOpprettelse.SØKNAD
+            årsakTilOpprettelse = ÅrsakTilOpprettelse.SØKNAD,
+            forrigeBehandlingId = null,
         )
 
         every { sakRepositoryMock.hent(SakId(123)) } returns
