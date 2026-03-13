@@ -163,31 +163,27 @@ public enum class StegType(
         gruppe = StegGruppe.SAMORDNING,
         status = Status.UTREDES
     ),
-
     SAMORDNING_SYKESTIPEND(
         gruppe = StegGruppe.SAMORDNING,
         status = Status.UTREDES
     ),
-
     SAMORDNING_ANDRE_STATLIGE_YTELSER(
         gruppe = StegGruppe.SAMORDNING,
         status = Status.UTREDES
     ),
-
-    IKKE_OPPFYLT_MELDEPLIKT(
-        gruppe = StegGruppe.UNDERVEIS,
-        status = Status.UTREDES
-    ),
-
     EFFEKTUER_11_7(
-        gruppe = StegGruppe.UNDERVEIS,
+        gruppe = StegGruppe.VEDTAKSLENGDE,
         status = Status.UTREDES
     ),
     FASTSETT_RETTIGHETSTYPE(
-        gruppe = StegGruppe.UNDERVEIS,
+        gruppe = StegGruppe.VEDTAKSLENGDE,
         status = Status.UTREDES
     ),
     FASTSETT_VEDTAKSLENGDE(
+        gruppe = StegGruppe.VEDTAKSLENGDE,
+        status = Status.UTREDES
+    ),
+    IKKE_OPPFYLT_MELDEPLIKT(
         gruppe = StegGruppe.UNDERVEIS,
         status = Status.UTREDES
     ),

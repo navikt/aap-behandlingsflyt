@@ -406,11 +406,9 @@ object Revurdering : BehandlingType {
                 )
             )
             .medSteg(
-                steg = IkkeOppfyltMeldepliktSteg,
-                vurderingsbehovRelevanteForSteg = Vurderingsbehov.alleInklusivGRegulering(),
-                informasjonskrav = listOf(MeldekortInformasjonskrav, Aktivitetsplikt11_7Informasjonskrav)
+                steg = Effektuer11_7Steg,
+                informasjonskrav = listOf(Aktivitetsplikt11_7Informasjonskrav),
             )
-            .medSteg(steg = Effektuer11_7Steg)
             .medSteg(steg = RettighetstypeSteg)
             .medSteg(
                 steg = VedtakslengdeSteg,
@@ -418,6 +416,11 @@ object Revurdering : BehandlingType {
                 vurderingsbehovRelevanteForSteg = listOf(
                     Vurderingsbehov.VEDTAKSLENGDE_MANUELT
                 )
+            )
+            .medSteg(
+                steg = IkkeOppfyltMeldepliktSteg,
+                vurderingsbehovRelevanteForSteg = Vurderingsbehov.alleInklusivGRegulering(),
+                informasjonskrav = listOf(MeldekortInformasjonskrav)
             )
             .medSteg(steg = UnderveisSteg)
             .medSteg(
