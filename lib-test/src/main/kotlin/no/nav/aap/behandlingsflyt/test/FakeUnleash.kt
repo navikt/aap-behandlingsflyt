@@ -53,6 +53,7 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.SignaturEnhetFraOppgave to true,
         BehandlingsflytFeature.hentDagpengerPerioder to true,
         BehandlingsflytFeature.VedtakslengdeAvklaringsbehov to true,
+        BehandlingsflytFeature.FraværAvtaltAktivitet to true,
         )
 )
 
