@@ -122,7 +122,7 @@ class FraværFastsattAktivitetRegel : UnderveisRegel {
                         FraværMedUnntakVurdertForPeriode(
                             fravær = fravær,
                             // finnesEnDagFraværUtenGyldigÅrsak = true/false
-                            erUnntakForDag = it == førsteFravær,
+                            erUnntak = it == førsteFravær,
                         )
                     )
                 }
@@ -133,7 +133,7 @@ class FraværFastsattAktivitetRegel : UnderveisRegel {
                 // FraværIPeriodeMedUnntak
                 FraværMedUnntakVurdertForPeriode(
                     fravær = fravær,
-                    erUnntakForDag = false,
+                    erUnntak = false,
                 )
             )
         }
@@ -187,7 +187,7 @@ class FraværFastsattAktivitetRegel : UnderveisRegel {
                         FraværFastsattAktivitetVurdering(
 //                            fravær = fravær,
                             vilkårsvurdering =
-                                if (vurdering.erUnntakForDag) FRAVÆR_FØRSTE_DAG_I_MELDEPERIODE
+                                if (vurdering.erUnntak) FRAVÆR_FØRSTE_DAG_I_MELDEPERIODE
                                 else MER_ENN_EN_DAGS_FRAVÆR_I_MELDEPERIODE,
                         )
                     )
@@ -198,7 +198,7 @@ class FraværFastsattAktivitetRegel : UnderveisRegel {
 
     class FraværMedUnntakVurdertForPeriode(
         val fravær: FraværIPeriode,
-        val erUnntakForDag: Boolean,
+        val erUnntak: Boolean,
     )
 }
 
