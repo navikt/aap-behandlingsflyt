@@ -472,15 +472,18 @@ class InstitusjonsoppholdUtlederService(
         helseOppholdTidslinje: Tidslinje<Boolean>
     ): Tidslinje<Boolean> {
 
-        val oppholdFørBarnetillegg = harOppholdSomKreverAvklaring(
-            helseOppholdTidslinje.begrensetTil(
-                Periode(
-                    fom = helseOppholdTidslinje.minDato(),
-                    tom = barnetilleggTidslinje.minDato().plusDays(1)
-                )
-            ),
-            ignorerVarighetsBegrensning = true
-        )
+        var oppholdFørBarnetillegg = Tidslinje.empty<Boolean>()
+        if (helseOppholdTidslinje.minDato() < barnetilleggTidslinje.minDato()) {
+            oppholdFørBarnetillegg = harOppholdSomKreverAvklaring(
+                helseOppholdTidslinje.begrensetTil(
+                    Periode(
+                        fom = helseOppholdTidslinje.minDato(),
+                        tom = barnetilleggTidslinje.minDato().minusDays(1)
+                    )
+                ),
+                ignorerVarighetsBegrensning = true
+            )
+        }
 
         val oppholdEtterBarnetillegg = harOppholdSomKreverAvklaring(
             helseOppholdTidslinje.begrensetTil(
