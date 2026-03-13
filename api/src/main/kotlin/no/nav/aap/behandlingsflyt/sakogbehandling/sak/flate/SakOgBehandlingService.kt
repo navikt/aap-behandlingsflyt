@@ -45,7 +45,6 @@ class SakOgBehandlingService(private val repositoryProvider: RepositoryProvider)
                 status = when (tilbakekrevingBehandling.behandlingsstatus) {
                     TilbakekrevingBehandlingsstatus.OPPRETTET -> no.nav.aap.behandlingsflyt.kontrakt.behandling.Status.OPPRETTET
                     TilbakekrevingBehandlingsstatus.TIL_BEHANDLING -> no.nav.aap.behandlingsflyt.kontrakt.behandling.Status.UTREDES
-                    TilbakekrevingBehandlingsstatus.TIL_BESLUTTER -> no.nav.aap.behandlingsflyt.kontrakt.behandling.Status.UTREDES
                     TilbakekrevingBehandlingsstatus.RETUR_FRA_BESLUTTER -> no.nav.aap.behandlingsflyt.kontrakt.behandling.Status.UTREDES
                     TilbakekrevingBehandlingsstatus.TIL_GODKJENNING -> no.nav.aap.behandlingsflyt.kontrakt.behandling.Status.UTREDES
                     TilbakekrevingBehandlingsstatus.AVSLUTTET -> no.nav.aap.behandlingsflyt.kontrakt.behandling.Status.AVSLUTTET

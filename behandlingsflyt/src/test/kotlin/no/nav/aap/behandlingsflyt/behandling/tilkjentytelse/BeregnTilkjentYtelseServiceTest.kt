@@ -328,6 +328,61 @@ class BeregnTilkjentYtelseServiceTest {
     }
 
     @Test
+    fun `tidligere utbetalingsdato for fritak i påske`() {
+        val fødselsdato = Fødselsdato(LocalDate.of(1985, 1, 2))
+        val beregningsgrunnlag = Grunnlag11_19(
+            grunnlaget = GUnit(BigDecimal(4)),
+            erGjennomsnitt = false,
+            gjennomsnittligInntektIG = GUnit(0),
+            inntekter = emptyList()
+        )
+
+        val periode = Periode(LocalDate.of(2026, 3, 16), LocalDate.of(2026, 3, 29))
+
+        val underveisgrunnlag = UnderveisGrunnlag(
+            1L, perioder = listOf(
+                underveisperiode(
+                    periode = periode,
+                    gradering = Prosent.`100_PROSENT`,
+                    institusjonsOppholdReduksjon = Prosent.`0_PROSENT`,
+                    meldepliktStatus = MeldepliktStatus.FRITAK,
+                    opplysningerMottatt = null
+                ),
+            )
+        )
+
+        val barnetilleggGrunnlag = BarnetilleggGrunnlag(listOf())
+        val samordningsgrunnlag = SamordningGrunnlag(emptySet())
+        val samordningUføre = SamordningUføreGrunnlag(SamordningUføreVurdering("", emptyList(), "ident"))
+
+        val samordningArbeidsgiver = SamordningArbeidsgiverGrunnlag(
+            vurdering = SamordningArbeidsgiverVurdering(
+                "",
+                emptyList(), vurdertAv = "ident"
+            )
+        )
+
+        val barnepensjonGrunnlag = null
+
+        val beregnTilkjentYtelseService = BeregnTilkjentYtelseService(
+            TilkjentYtelseGrunnlag(
+                fødselsdato,
+                beregningsgrunnlag.grunnlaget(),
+                underveisgrunnlag,
+                barnetilleggGrunnlag,
+                samordningsgrunnlag,
+                samordningUføre,
+                samordningArbeidsgiver,
+                barnepensjonGrunnlag,
+            )
+        ).beregnTilkjentYtelse()
+
+        assertThat(beregnTilkjentYtelseService.segmenter()).hasSize(1)
+        assertThat(beregnTilkjentYtelseService.segmenter().first().verdi.utbetalingsdato)
+            .isEqualTo(LocalDate.of(2026, 3, 30))
+    }
+
+    @Test
     fun `Hva skjer med etterpåklatt`() {
         val fødselsdato = Fødselsdato(LocalDate.of(1985, 1, 2))
         val beregningsgrunnlag = Grunnlag11_19(
