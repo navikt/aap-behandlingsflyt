@@ -2,8 +2,8 @@ package no.nav.aap.behandlingsflyt.behandling.tilkjentytelse
 
 import no.nav.aap.behandlingsflyt.behandling.barnetillegg.RettTilBarnetillegg
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.unntakFastsattMeldedag
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.unntakFritaksUtbetalingDato
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.helligdagsunntakFastsattMeldedag
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.helligdagsunntakFritaksUtbetalingDato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Faktagrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.tilTidslinje
@@ -235,7 +235,7 @@ class BeregnTilkjentYtelseService(private val grunnlag: TilkjentYtelseGrunnlag) 
         val unntakFastsattMeldedag =
         // `meldeperiode` svarer til perioden det ble skrevet meldekort for (på dato `opplysningerMottatt`).
             // For å finne unntakts-meldepliktperiode, må vi flytte denne to uker fram.
-            unntakFastsattMeldedag[meldeperiode.flytt(14).fom]
+            helligdagsunntakFastsattMeldedag[meldeperiode.flytt(14).fom]
 
         val sisteMeldedagForMeldeperiode = meldeperiode.tom.plusDays(9)
         val førsteMeldedagForMeldeperiode = meldeperiode.tom.plusDays(1)
@@ -250,7 +250,7 @@ class BeregnTilkjentYtelseService(private val grunnlag: TilkjentYtelseGrunnlag) 
             opplysningerMottatt != null -> opplysningerMottatt
             underveisperiode.meldepliktStatus == MeldepliktStatus.FRITAK -> {
                 log.info("Traff sjekk for meldepliktstatus == FRITAK.")
-                unntakFritaksUtbetalingDato[førsteMeldedagForMeldeperiode]
+                helligdagsunntakFritaksUtbetalingDato[førsteMeldedagForMeldeperiode]
                     ?: førsteMeldedagForMeldeperiode
             }
 

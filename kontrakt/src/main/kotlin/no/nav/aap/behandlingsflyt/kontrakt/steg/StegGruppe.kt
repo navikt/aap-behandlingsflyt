@@ -18,6 +18,7 @@ public enum class StegGruppe(public val skalVises: Boolean, public val obligator
     GRUNNLAG(true, true),
     ET_ANNET_STED(true, false),
     SAMORDNING(skalVises = true, obligatoriskVisning = true),
+    VEDTAKSLENGDE(true, true),
     UNDERVEIS(true, true),
     TILKJENT_YTELSE(true, true),
     SIMULERING(true, true),
