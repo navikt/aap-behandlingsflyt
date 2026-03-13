@@ -75,6 +75,7 @@ class FraværFastsattAktivitetRegel : UnderveisRegel {
         // Første brudd i meldeperioden teller ikke i årskvote
         // Deler opp på meldeperiode først for å finne første i meldeperioden
         // Dette brukes for å regne ut antall brudd per kalenderår
+        //val fraværTidslinjeMedUnntakIdentifisert : Tidslinje<Fravær>
         val fraværTidslinjeMedFørsteFraværIdentifisert: Tidslinje<FraværForDagVurdertForPeriode> =
             tidslinjeMedFørsteFraværIdentifisert(input.meldeperioder, fraværTidslinje)
 
@@ -126,6 +127,7 @@ class FraværFastsattAktivitetRegel : UnderveisRegel {
                         it,
                         FraværForDagVurdertForPeriode(
                             fravær = fravær,
+                            // finnesEnDagFraværUtenGyldigÅrsak = true/false
                             erUnntakForDag = it == førsteFravær,
                         )
                     )
@@ -134,6 +136,7 @@ class FraværFastsattAktivitetRegel : UnderveisRegel {
         } else {
             Tidslinje(
                 periode,
+                // FraværForPeriodeMedUnntak
                 FraværForDagVurdertForPeriode(
                     fravær = fravær,
                     erUnntakForDag = false,
