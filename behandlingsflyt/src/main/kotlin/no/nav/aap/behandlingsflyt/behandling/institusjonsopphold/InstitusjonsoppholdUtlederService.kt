@@ -460,7 +460,7 @@ class InstitusjonsoppholdUtlederService(
         barnetilleggTidslinje: Tidslinje<RettTilBarnetillegg>,
         helseOppholdTidslinje: Tidslinje<Boolean>
     ): Tidslinje<Boolean> {
-        val oppholdFørBarnetillegg = if (barnetilleggTidslinje.minDato() >= helseOppholdTidslinje.minDato()) {
+        val oppholdFørBarnetillegg = if (barnetilleggTidslinje.minDato() > helseOppholdTidslinje.minDato()) {
             harOppholdSomKreverAvklaring(
                 helseOppholdTidslinje.begrensetTil(
                     Periode(
