@@ -55,13 +55,16 @@ class MeldekortRepositoryImplTest {
             val meldekortFørInnsending = meldekortRepositoryImpl.hentHvisEksisterer(behandling.id)
             assertThat(meldekortFørInnsending).isNull()
 
-            val mottattMeldekort = meldekortDokument(sak, behandling, "1", LocalDateTime.now().withNano(0).minusMinutes(5))
+            val mottattMeldekort =
+                meldekortDokument(sak, behandling, "1", LocalDateTime.now().withNano(0).minusMinutes(5))
             val meldekortPeriode = Periode(periode.fom, periode.fom.plusDays(1))
             val meldekortInitielt = Meldekort(
                 journalpostId = mottattMeldekort.referanse.asJournalpostId,
                 timerArbeidPerPeriode = setOf(
                     ArbeidIPeriode(periode = meldekortPeriode, timerArbeid = TimerArbeid(BigDecimal.TEN))
-                ), mottattTidspunkt = mottattMeldekort.mottattTidspunkt
+                ),
+                mottattTidspunkt = mottattMeldekort.mottattTidspunkt,
+                fravær = emptySet(),
             )
             dokumentRepositoryImpl.lagre(mottattMeldekort)
             meldekortRepositoryImpl.lagre(behandling.id, meldekortene = setOf(meldekortInitielt))
@@ -77,7 +80,9 @@ class MeldekortRepositoryImplTest {
                 journalpostId = mottattMeldekortKorrigert.referanse.asJournalpostId,
                 timerArbeidPerPeriode = setOf(
                     ArbeidIPeriode(periode = meldekortPeriode, timerArbeid = TimerArbeid(BigDecimal.ZERO))
-                ), mottattTidspunkt = mottattMeldekortKorrigert.mottattTidspunkt
+                ),
+                mottattTidspunkt = mottattMeldekortKorrigert.mottattTidspunkt,
+                fravær = emptySet(),
             )
 
             meldekortRepositoryImpl.lagre(behandling.id, setOf(meldekortInitielt, meldekortKorrigert))

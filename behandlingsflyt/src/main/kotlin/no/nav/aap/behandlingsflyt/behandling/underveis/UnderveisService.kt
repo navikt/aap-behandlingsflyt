@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.behandling.institusjonsopphold.Institusjonsopp
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.VirkningstidspunktUtleder
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.AapEtterRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FastsettGrenseverdiArbeidRegel
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.GraderingArbeidRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companion.plussEtÅrMedHverdager
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.InstitusjonRegel
@@ -35,6 +36,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Tidslinje
@@ -86,35 +88,36 @@ class UnderveisService(
 
     private val kvoteService = KvoteService()
 
-    companion object {
-        private val regelset = listOf(
-            AapEtterRegel(),
-            UtledMeldeperiodeRegel(),
-            InstitusjonRegel(),
-            MeldepliktRegel(),
-            FastsettGrenseverdiArbeidRegel(),
-            GraderingArbeidRegel(),
-        )
+    private val regelSett = listOfNotNull(
+        AapEtterRegel(),
+        UtledMeldeperiodeRegel(),
+        InstitusjonRegel(),
+        MeldepliktRegel(),
+        FastsettGrenseverdiArbeidRegel(),
+        GraderingArbeidRegel(),
+        if (unleashGateway.isEnabled(BehandlingsflytFeature.FraværAvtaltAktivitet)) FraværFastsattAktivitetRegel() else null
+    )
 
-        init {
-            fun sjekkAvhengighet(forventetFør: KClass<*>, forventetEtter: KClass<*>) {
-                val offset1 = regelset.indexOfFirst { it::class == forventetFør }
-                val offset2 = regelset.indexOfFirst { it::class == forventetEtter }
-                check(offset1 != -1) { "Regel ${forventetFør.qualifiedName} er ikke med" }
-                check(offset2 != -1) { "Regel ${forventetEtter.qualifiedName} er ikke med" }
-                check(offset1 < offset2) {
-                    "Regel ${forventetFør.qualifiedName} må ha kjørt før ${forventetEtter.qualifiedName}, men er kjørt etter"
-                }
+    init {
+        fun sjekkAvhengighet(forventetFør: KClass<*>, forventetEtter: KClass<*>) {
+            val offset1 = regelSett.indexOfFirst { it::class == forventetFør }
+            val offset2 = regelSett.indexOfFirst { it::class == forventetEtter }
+            check(offset1 != -1) { "Regel ${forventetFør.qualifiedName} er ikke med" }
+            check(offset2 != -1) { "Regel ${forventetEtter.qualifiedName} er ikke med" }
+            check(offset1 < offset2) {
+                "Regel ${forventetFør.qualifiedName} må ha kjørt før ${forventetEtter.qualifiedName}, men er kjørt etter"
             }
-
-            sjekkAvhengighet(forventetFør = UtledMeldeperiodeRegel::class, forventetEtter = MeldepliktRegel::class)
-            sjekkAvhengighet(forventetFør = UtledMeldeperiodeRegel::class, forventetEtter = GraderingArbeidRegel::class)
-            sjekkAvhengighet(
-                forventetFør = FastsettGrenseverdiArbeidRegel::class,
-                forventetEtter = GraderingArbeidRegel::class
-            )
         }
 
+        sjekkAvhengighet(forventetFør = UtledMeldeperiodeRegel::class, forventetEtter = MeldepliktRegel::class)
+        sjekkAvhengighet(forventetFør = UtledMeldeperiodeRegel::class, forventetEtter = GraderingArbeidRegel::class)
+        sjekkAvhengighet(
+            forventetFør = FastsettGrenseverdiArbeidRegel::class,
+            forventetEtter = GraderingArbeidRegel::class
+        )
+    }
+
+    companion object {
         fun tilUnderveisperioder(vurderRegler: Tidslinje<Vurdering>): List<Underveisperiode> = vurderRegler.segmenter()
             .map {
                 Underveisperiode(
@@ -150,7 +153,7 @@ class UnderveisService(
     }
 
     internal fun vurderRegler(input: UnderveisInput): Tidslinje<Vurdering> {
-        return regelset.fold(tidslinjeOf(input.periodeForVurdering to Vurdering())) { resultat, regel ->
+        return regelSett.fold(tidslinjeOf(input.periodeForVurdering to Vurdering())) { resultat, regel ->
             regel.vurder(input, resultat).begrensetTil(input.periodeForVurdering)
         }
     }

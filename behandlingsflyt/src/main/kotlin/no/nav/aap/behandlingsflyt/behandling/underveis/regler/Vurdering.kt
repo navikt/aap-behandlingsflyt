@@ -24,6 +24,7 @@ data class Vurdering(
     private val meldeperiode: Periode? = null,
     val varighetVurdering: VarighetVurdering? = null,
     val kvoteVurdering: KvoteVurdering? = null,
+    val fraværFastsattAktivitetVurdering: FraværFastsattAktivitetVurdering? = null,
 ) {
     fun leggTilRettighetstype(rettighetstype: RettighetsType): Vurdering {
         return copy(fårAapEtter = rettighetstype)
@@ -35,6 +36,10 @@ data class Vurdering(
 
     fun leggTilMeldepliktVurdering(meldepliktVurdering: MeldepliktVurdering): Vurdering {
         return copy(meldepliktVurdering = meldepliktVurdering)
+    }
+
+    fun leggTilAktivitetspliktVurdering(fraværFastsattAktivitetVurdering: FraværFastsattAktivitetVurdering): Vurdering {
+        return copy(fraværFastsattAktivitetVurdering = fraværFastsattAktivitetVurdering)
     }
 
     fun leggTilGrenseverdi(grenseverdi: Prosent): Vurdering {
