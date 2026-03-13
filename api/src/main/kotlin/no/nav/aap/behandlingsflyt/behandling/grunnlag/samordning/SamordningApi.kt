@@ -201,7 +201,7 @@ fun NormalOpenAPIRoute.samordningGrunnlag(
 
                         val sakRepository = repositoryProvider.provide<SakRepository>()
                         val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
-                        val andreStatligeYtelserRepository = repositoryProvider.provide<DagpengerRepository>()
+                        val dagpengerRepository = repositoryProvider.provide<DagpengerRepository>()
 
                         val behandling = behandlingRepository.hent(behandlingReferanse)
                         val sak = sakRepository.hent(behandling.sakId)
@@ -219,12 +219,12 @@ fun NormalOpenAPIRoute.samordningGrunnlag(
                                 samordningAndreStatligeYtelserRepository.hentHvisEksisterer(historiskeBehandling.id)?.vurdering
                             }
 
-                        val dagpengerGrunnlag = andreStatligeYtelserRepository.hent(behandling.id).map {
-                            DagpengerPeriodeDto(
+                        val dagpengerGrunnlag = dagpengerRepository.hent(behandling.id).map {
+                            AndreStatligeYtelserPeriodeDto(
                                 fom = it.periode.fom,
                                 tom = it.periode.tom,
-                                dagpengerYtelseType= it.dagpengerYtelseType,
-                                kilde = it.kilde
+                                ytelseType = mapDagpengerYtelseType(it.dagpengerYtelseType),
+                                kilde = mapDagpengerKilde(it.kilde)
                             )
                         }
 
@@ -248,7 +248,7 @@ fun NormalOpenAPIRoute.samordningGrunnlag(
                         harTilgangTilÅSaksbehandle = kanSaksbehandle(),
                         vurdering = vurdering,
                         historiskeVurderinger = historiskeVurderinger,
-                        dagpengerPerioder = dagpengerGrunnlagPerioder,
+                        perioder = dagpengerGrunnlagPerioder,
                     )
                 )
             }
