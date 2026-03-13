@@ -19,6 +19,7 @@ enum class BehandlingsflytFeature : FeatureToggle {
     tilbakekrevingsOppgaverTilOppgave,
     HentingAvInstitusjonsOpphold,
     VisIkkeRelevantPeriode,
+    RevurderFritakMeldeplikt,
     NyTidligereVurderinger,
     BekreftVurderingerOppfolging,
     LagreStansOgOpphor,
