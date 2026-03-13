@@ -3,7 +3,7 @@ package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetVurdering.Utfall.REDUKSJON
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetVurdering.Utfall.UNNTAK
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetVurdering.Vilkårsvurdering.FRAVÆR_FØRSTE_DAG_I_MELDEPERIODE
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.FraværForPeriode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.FraværIPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.FraværÅrsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Meldekort
 import no.nav.aap.behandlingsflyt.test.desember
@@ -30,7 +30,7 @@ class FraværFastsattAktivitetRegelTest {
     fun `ett fravær fra tiltak, 11-8 kan ikke brukes`() {
         val vurderinger = lagFraværVurderingTidslinje(
             rettighetsperiode = 2020 tilOgMed 2022,
-            fraværForPeriode(
+            fraværIPeriode(
                 1 januar 2020
             ),
         )
@@ -43,10 +43,10 @@ class FraværFastsattAktivitetRegelTest {
     fun `andre dag i meldeperiode fører til § 11-8 reduksjon`() {
         val vurdering = lagFraværVurderingTidslinje(
             rettighetsperiode = 2020 tilOgMed 2022,
-            fraværForPeriode(
+            fraværIPeriode(
                 1 januar 2020
             ),
-            fraværForPeriode(
+            fraværIPeriode(
                 2 januar 2020
             ),
         )
@@ -62,19 +62,19 @@ class FraværFastsattAktivitetRegelTest {
     fun `første dag med velferdsgrunner, andre og tredje dag uten grunn fører til § 11-8 reduksjon`() {
         val vurdering = lagFraværVurderingTidslinje(
             rettighetsperiode = 2020 tilOgMed 2022,
-            fraværForPeriode(
+            fraværIPeriode(
                 1 januar 2020,
                 fraværÅrsak = FraværÅrsak.OMSORG_ANNEN_STERK_GRUNN,
             ),
-            fraværForPeriode(
+            fraværIPeriode(
                 2 januar 2020,
                 fraværÅrsak = FraværÅrsak.OMSORG_PLEIE_I_HJEMMET_AV_NÆR_PÅRØRENDE,
             ),
-            fraværForPeriode(
+            fraværIPeriode(
                 3 januar 2020,
                 fraværÅrsak = FraværÅrsak.ANNET,
             ),
-            fraværForPeriode(
+            fraværIPeriode(
                 4 januar 2020,
                 fraværÅrsak = FraværÅrsak.ANNET,
             ),
@@ -91,15 +91,15 @@ class FraværFastsattAktivitetRegelTest {
     fun `første dag med sykdom, andre og tredje uten grunn, gir at andre og tredje dag fører til § 11-8 redusjon`() {
         val vurdering = lagFraværVurderingTidslinje(
             rettighetsperiode = 2020 tilOgMed 2022,
-            fraværForPeriode(
+            fraværIPeriode(
                 1 januar 2020,
                 fraværÅrsak = FraværÅrsak.SYKDOM_ELLER_SKADE,
             ),
-            fraværForPeriode(
+            fraværIPeriode(
                 2 januar 2020,
                 fraværÅrsak = FraværÅrsak.ANNET,
             ),
-            fraværForPeriode(
+            fraværIPeriode(
                 3 januar 2020,
                 fraværÅrsak = FraværÅrsak.ANNET,
             ),
@@ -113,10 +113,10 @@ class FraværFastsattAktivitetRegelTest {
     fun `to fravær i hver sin meldeperiode fører ikke til § 11-8 reduksjon`() {
         val vurdering = lagFraværVurderingTidslinje(
             rettighetsperiode = 2020 tilOgMed 2022,
-            fraværForPeriode(
+            fraværIPeriode(
                 1 januar 2020
             ),
-            fraværForPeriode(
+            fraværIPeriode(
                 15 januar 2020
             ),
         )
@@ -129,7 +129,7 @@ class FraværFastsattAktivitetRegelTest {
         val vurderinger = lagFraværVurderingTidslinje(
             rettighetsperiode = 2020 tilOgMed 2022,
             Periode(1 januar 2020, 12 januar 2020).dager().map { dato ->
-                fraværForPeriode(
+                fraværIPeriode(
                     dato,
                     fraværÅrsak = FraværÅrsak.OMSORG_ANNEN_STERK_GRUNN,
                 )
@@ -159,11 +159,11 @@ class FraværFastsattAktivitetRegelTest {
         val vurderinger = lagFraværVurderingTidslinje(
             rettighetsperiode = 2020 tilOgMed 2022,
             /* Fem brudd det første året (2020), hvorav fire teller mot kvoten. */
-            fraværForPeriode(
+            fraværIPeriode(
                 Periode(fom = 1 januar 2020, tom = 5 januar 2020),
                 fraværÅrsak = FraværÅrsak.OMSORG_ANNEN_STERK_GRUNN,
             ),
-            fraværForPeriode(
+            fraværIPeriode(
                 Periode(
                     fom = startMeldeperiode2021 januar 2021,
                     tom = (startMeldeperiode2021 + 11) januar 2021,
@@ -199,10 +199,10 @@ class FraværFastsattAktivitetRegelTest {
     fun `brudd som strekker seg over to meldeperioder blir vurdert i hver sin meldeperiode`() {
         val vurderinger = lagFraværVurderingTidslinje(
             rettighetsperiode = Periode(fom = 17 januar 2020, tom = 31 desember 2022),
-            fraværForPeriode(
+            fraværIPeriode(
                 26 januar 2020
             ),
-            fraværForPeriode(
+            fraværIPeriode(
                 27 januar 2020,
             ),
         )
@@ -219,10 +219,10 @@ class FraværFastsattAktivitetRegelTest {
     fun `to brudd inntil grensen for en meldeperiode blir registrert i samme meldeperiode`() {
         val vurderinger = lagFraværVurderingTidslinje(
             rettighetsperiode = 2020 tilOgMed 2022,
-            fraværForPeriode(
+            fraværIPeriode(
                 13 januar 2020,
             ),
-            fraværForPeriode(
+            fraværIPeriode(
                 14 januar 2020,
             ),
         )
@@ -238,11 +238,11 @@ class FraværFastsattAktivitetRegelTest {
     private fun lagFraværVurderingTidslinje(
         rettighetsperiode: Periode,
         startTidslinje: Tidslinje<Vurdering>,
-        vararg fraværForPeriode: FraværForPeriode,
+        vararg fraværIPeriode: FraværIPeriode,
     ): Tidslinje<FraværFastsattAktivitetVurdering> {
 
         // TODO mer fornuftige perioder
-        val meldekort = fraværForPeriode.mapIndexed { index, fraværForDag ->
+        val meldekort = fraværIPeriode.mapIndexed { index, fraværForDag ->
             Meldekort(
                 journalpostId = JournalpostId(index.toString()),
                 timerArbeidPerPeriode = emptySet(),
@@ -261,33 +261,33 @@ class FraværFastsattAktivitetRegelTest {
 
     private fun lagFraværVurderingTidslinje(
         rettighetsperiode: Periode,
-        vararg aktivitetspliktDokument: FraværForPeriode,
+        vararg aktivitetspliktDokument: FraværIPeriode,
     ): Tidslinje<FraværFastsattAktivitetVurdering> {
         return lagFraværVurderingTidslinje(rettighetsperiode, Tidslinje(), *aktivitetspliktDokument)
     }
 
     private fun lagFraværVurderingTidslinje(
         rettighetsperiode: Periode,
-        aktivitetspliktDokument: List<FraværForPeriode>,
+        aktivitetspliktDokument: List<FraværIPeriode>,
     ): Tidslinje<FraværFastsattAktivitetVurdering> {
         return lagFraværVurderingTidslinje(rettighetsperiode, Tidslinje(), *aktivitetspliktDokument.toTypedArray())
     }
 
 }
 
-fun fraværForPeriode(
+fun fraværIPeriode(
     tilOgFra: LocalDate,
     fraværÅrsak: FraværÅrsak = FraværÅrsak.ANNET,
-): FraværForPeriode = fraværForPeriode(
+): FraværIPeriode = fraværIPeriode(
     periode = Periode(tilOgFra, tilOgFra),
     fraværÅrsak = fraværÅrsak,
 )
 
-fun fraværForPeriode(
+fun fraværIPeriode(
     periode: Periode,
     fraværÅrsak: FraværÅrsak = FraværÅrsak.ANNET,
-): FraværForPeriode {
-    return FraværForPeriode(
+): FraværIPeriode {
+    return FraværIPeriode(
         periode = periode,
         fraværÅrsak = fraværÅrsak
     )
