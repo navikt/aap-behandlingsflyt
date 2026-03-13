@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
+import no.nav.aap.behandlingsflyt.behandling.vedtakslengde.VedtakslengdeUtvidelse
 import no.nav.aap.behandlingsflyt.behandling.vedtakslengde.VedtakslengdeService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
@@ -45,7 +46,7 @@ class OpprettJobbUtvidVedtakslengdeJobbUtfører(
     // TODO: Må filtrere vekk de som allerede har blitt kjørt, men ikke kvalifiserte til reell utvidelse av vedtakslengde
     private fun hentKandidaterForUtvidelseAvVedtakslengde(datoForUtvidelse: LocalDate): Set<SakId> {
         return vedtakslengdeService.hentSakerAktuelleForUtvidelseAvVedtakslengde(datoForUtvidelse)
-            .partition { kunSakerMedBehovForUtvidelseAvVedtakslengde(it, datoForUtvidelse) }
+            .partition { kunSakerMedBehovForUtvidelseAvVedtakslengde(it) }
             .let { (sakerSomUtvides, sakerSomIkkeUtvides) ->
                 if (sakerSomIkkeUtvides.isNotEmpty()) {
                     log.info("Følgende saker utvides ikke (ha et øye på disse inntil vi støtter manuell behandling): $sakerSomIkkeUtvides")
@@ -55,11 +56,26 @@ class OpprettJobbUtvidVedtakslengdeJobbUtfører(
             .toSet()
     }
 
-    private fun kunSakerMedBehovForUtvidelseAvVedtakslengde(id: SakId, dato: LocalDate): Boolean {
+    private fun kunSakerMedBehovForUtvidelseAvVedtakslengde(id: SakId): Boolean {
         val sisteGjeldendeBehandling = behandlingService.finnBehandlingMedSisteFattedeVedtak(id)
         if (sisteGjeldendeBehandling != null) {
             // Bruker sisteGjeldendeBehandling.id både for behandlingId og forrigeBehandlingId fordi vi ser på gjeldende behandling
-            return vedtakslengdeService.skalUtvideSluttdato(sisteGjeldendeBehandling.id, sisteGjeldendeBehandling.id, dato)
+            val vedtakslengdeUtvidelse = vedtakslengdeService.hentNesteVedtakslengdeUtvidelse(
+                behandlingId = sisteGjeldendeBehandling.id,
+                forrigeBehandlingId = sisteGjeldendeBehandling.id,
+            )
+
+            return when (vedtakslengdeUtvidelse) {
+                is VedtakslengdeUtvidelse.Automatisk -> true
+                is VedtakslengdeUtvidelse.Manuell -> {
+                    log.error("Sak med id $id trenger manuell utvidelse av vedtakslengde. Dette er ikke implementert. Må følges opp! ($vedtakslengdeUtvidelse)")
+                    false
+                }
+                is VedtakslengdeUtvidelse.IngenFremtidigBistandsbehovRettighet -> {
+                    log.info("Sak med id $id har ingen fremtidig bistandsbehovrettighet, hopper over")
+                    false
+                }
+            }
         }
         return false
     }

@@ -7,6 +7,7 @@ import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.MINSTE_ÅRLIG_YTELSE
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.tilTidslinje
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakRepository
+import no.nav.aap.behandlingsflyt.behandling.vedtakslengde.VedtakslengdeService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Repository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Beregningsgrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepository
@@ -41,6 +42,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.FRITAK_ME
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.MIGRER_RETTIGHETSPERIODE
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.MOTTATT_MELDEKORT
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.UTVID_VEDTAKSLENGDE
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Segment
@@ -64,6 +66,7 @@ class BrevUtlederService(
     private val arbeidsopptrappingRepository: ArbeidsopptrappingRepository,
     private val sykdomsvurderingForBrevRepository: SykdomsvurderingForBrevRepository,
     private val overgangUføreRepository: OvergangUføreRepository,
+    private val vedtakslengdeService: VedtakslengdeService,
     private val unleashGateway: UnleashGateway
 ) {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
@@ -79,6 +82,7 @@ class BrevUtlederService(
         arbeidsopptrappingRepository = repositoryProvider.provide(),
         sykdomsvurderingForBrevRepository = repositoryProvider.provide(),
         overgangUføreRepository = repositoryProvider.provide(),
+        vedtakslengdeService = VedtakslengdeService(repositoryProvider, gatewayProvider),
         unleashGateway = gatewayProvider.provide()
     )
 
@@ -205,15 +209,26 @@ class BrevUtlederService(
         val forrigeBehandlingId = checkNotNull(behandling.forrigeBehandlingId) {
             "UtvidelsesVedtak mangler forrigeBehandlingId for ${behandling.id}"
         }
+
+        // Datoen utvidelsen gjelder fra
         val underveisGrunnlagVedForrigeBehandling = underveisRepository.hent(forrigeBehandlingId)
         val utvidetAapFomDato = underveisGrunnlagVedForrigeBehandling.sisteDagMedYtelse().plusDays(1)
-        checkNotNull(utvidetAapFomDato) {
-            "UtvidelsesVedtak mangler utvidetAapFomDato"
-        }
+
+        // Datoen utvidelsen gjelder til
         val underveisGrunnlag = underveisRepository.hent(behandling.id)
+        val sisteDagMedYtelse = underveisGrunnlag.sisteDagMedYtelse()
+
+        val avslagsårsaker = if (unleashGateway.isEnabled(BehandlingsflytFeature.UtvidVedtakslengdeUnderEttAr)) {
+            vedtakslengdeService.hentAvslagsårsakerVedStansEllerOpphør(
+                behandlingId = behandling.id,
+                stansEllerOpphørFom = sisteDagMedYtelse.plusDays(1)
+            )
+        } else emptySet()
+
         return UtvidVedtakslengde(
             utvidetAapFomDato = utvidetAapFomDato,
-            sisteDagMedYtelse = underveisGrunnlag.sisteDagMedYtelse()
+            sisteDagMedYtelse = sisteDagMedYtelse,
+            sisteDagMedYtelseBegrensetAv = avslagsårsaker
         )
     }
 
