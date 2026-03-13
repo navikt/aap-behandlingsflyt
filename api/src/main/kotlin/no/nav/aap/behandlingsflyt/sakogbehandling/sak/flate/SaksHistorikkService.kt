@@ -24,8 +24,9 @@ class SaksHistorikkService(
         val opprettelsesHendelser = utledOpprettelseHendelser(alleBehandlinger)
         val behandlingHendelser = utledBehandlingHendelser(behandlingerMedBehov)
         val returerMedÅrsakHendelser = utledReturerMedÅrsak(behandlingerMedBehov)
+        val sendtVidereFraKvalitetssikrer = utledSendtVidereFraKvalitetssikrer(behandlingerMedBehov)
 
-        return (opprettelsesHendelser + behandlingHendelser + returerMedÅrsakHendelser)
+        return (opprettelsesHendelser + behandlingHendelser + returerMedÅrsakHendelser + sendtVidereFraKvalitetssikrer)
             .groupBy { it.behandlingId }
             .map { (_, behandlingData) ->
                 val samlet = behandlingData
@@ -192,6 +193,28 @@ class SaksHistorikkService(
                 null
             }
         }
+    }
+    private fun utledSendtVidereFraKvalitetssikrer(
+        behandlingerMedBehov: List<AvklaringsbehovForSak>
+    ): List<BehandlingHistorikkInternal> {
+        return behandlingerMedBehov.map {
+            val avsluttetKvalitetssikring = it.avklaringsbehov.find { it.definisjon == Definisjon.KVALITETSSIKRING && it.status() == Status.AVSLUTTET}
+            val åpentSendtTilbake = it.avklaringsbehov.find { it.status() == Status.SENDT_TILBAKE_FRA_KVALITETSSIKRER }
+            if(avsluttetKvalitetssikring != null && åpentSendtTilbake == null){
+                // overgang fra kvalitetsikring
+                return@map listOf(BehandlingHistorikkInternal(
+                    behandlingId = it.behandlingId  ,
+                    hendelser = listOf(
+                        BehandlingHendelseDTO(
+                            hendelse = BehandlingHendelseType.SENDT_VIDERE_FRA_KVALITETSSIKRER,
+                            tidspunkt = avsluttetKvalitetssikring.historikk.sortedByDescending { it.tidsstempel }.find { it.status == Status.AVSLUTTET }!!.tidsstempel,
+                        )
+                    )
+                ))
+            }
+            listOf()
+        }.flatMap { it }
+
     }
 
     private fun utledOpprettelseHendelser(alleBehandlinger: List<Behandling>): List<BehandlingHistorikkInternal> {
