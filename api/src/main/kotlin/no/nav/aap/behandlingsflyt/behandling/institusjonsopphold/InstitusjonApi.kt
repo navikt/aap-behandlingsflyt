@@ -191,13 +191,32 @@ fun NormalOpenAPIRoute.institusjonApi(
                         mapVurderingerToDto(nyeVurderingerForOpphold, oppholdInfo, ansattInfoService) + uavklarteDto
                     }
 
+                    val oppholdSegmenter = grunnlag?.oppholdene?.opphold
+                        ?.filter { it.verdi.type == Institusjonstype.HS }
+                        ?: emptyList()
+
+                    // Beregn tidligste reduksjonsdato per opphold
+                    val tidligsteReduksjonsdatoPerOpphold = beregnTidligsteReduksjonsdatoPerOpphold(oppholdSegmenter)
+
+                    // Bygg opphold-liste med tidligsteReduksjonsdato
+                    val oppholdMedReduksjonsdato = hentOppholdSomSkalVurderes(
+                        oppholdInfo,
+                        behov.perioderTilVurdering,
+                        vedtatteVurderingerDto
+                    ).map { dto ->
+                        val matchendeSegment = oppholdSegmenter.find { segment ->
+                            lagOppholdId(segment.verdi.navn, segment.periode.fom) == dto.oppholdId
+                        }
+                        dto.copy(
+                            tidligsteReduksjonsdato = matchendeSegment?.let {
+                                tidligsteReduksjonsdatoPerOpphold[it]
+                            }
+                        )
+                    }
+
                     HelseinstitusjonGrunnlagDto(
                         harTilgangTilÅSaksbehandle = kanSaksbehandle(),
-                        opphold = hentOppholdSomSkalVurderes(
-                            oppholdInfo,
-                            behov.perioderTilVurdering,
-                            vedtatteVurderingerDto
-                        ),
+                        opphold = oppholdMedReduksjonsdato,
                         vurderinger = vurderingerDto,
                         vedtatteVurderinger = vedtatteVurderingerDto,
                     )
@@ -206,37 +225,6 @@ fun NormalOpenAPIRoute.institusjonApi(
             }
         }
     }
-}
-
-private fun hentOppholdSomSkalVurderes(
-    oppholdInfo: Tidslinje<Institusjon>,
-    behovPerioder: Tidslinje<InstitusjonsoppholdVurdering>,
-    vedtatteVurderingerDto: List<HelseoppholdDto>
-): List<InstitusjonsoppholdDto> {
-    val behovOpphold = oppholdInfo.segmenter().mapNotNull { segment ->
-        val dto = InstitusjonsoppholdDto.institusjonToDto(segment)
-        val oppholdFra = dto.oppholdFra
-        val avsluttetDato = dto.avsluttetDato
-
-        val harUavklartOpphold = behovPerioder.segmenter().any { periode ->
-            val fom = periode.periode.fom
-            val tom = periode.periode.tom
-            (!fom.isBefore(oppholdFra)) && !tom.isAfter(avsluttetDato)
-        }
-        if (harUavklartOpphold) dto else null
-    }
-
-    val vedtatteOpphold = vedtatteVurderingerDto
-        .mapNotNull { vurdering ->
-        vurdering.oppholdId?.let { oppholdId ->
-            oppholdInfo.segmenter().mapNotNull { segment ->
-                val dto = InstitusjonsoppholdDto.institusjonToDto(segment)
-                if (dto.oppholdId == oppholdId) dto else null
-            }
-        }
-    }.flatten()
-
-    return (behovOpphold + vedtatteOpphold).distinctBy { it.oppholdId }
 }
 
 private fun mapVurderingerToDto(
@@ -289,6 +277,38 @@ private fun mapVurderingerToDto(
             )
         )
     }
+
+// Public for testing
+fun hentOppholdSomSkalVurderes(
+    oppholdInfo: Tidslinje<Institusjon>,
+    behovPerioder: Tidslinje<InstitusjonsoppholdVurdering>,
+    vedtatteVurderingerDto: List<HelseoppholdDto>
+): List<InstitusjonsoppholdDto> {
+    val behovOpphold = oppholdInfo.segmenter().mapNotNull { segment ->
+        val dto = InstitusjonsoppholdDto.institusjonToDto(segment)
+        val oppholdFra = dto.oppholdFra
+        val avsluttetDato = dto.avsluttetDato
+
+        val harUavklartOpphold = behovPerioder.segmenter().any { periode ->
+            val fom = periode.periode.fom
+            val tom = periode.periode.tom
+            (oppholdFra <= tom && avsluttetDato >= fom)
+        }
+        if (harUavklartOpphold) dto else null
+    }
+
+    val vedtatteOpphold = vedtatteVurderingerDto
+        .mapNotNull { vurdering ->
+            vurdering.oppholdId?.let { oppholdId ->
+                oppholdInfo.segmenter().mapNotNull { segment ->
+                    val dto = InstitusjonsoppholdDto.institusjonToDto(segment)
+                    if (dto.oppholdId == oppholdId) dto else null
+                }
+            }
+        }.flatten()
+
+    return (behovOpphold + vedtatteOpphold).distinctBy { it.oppholdId }
+}
 
 // Public for testing
 fun byggTidslinjeForInstitusjonsopphold(

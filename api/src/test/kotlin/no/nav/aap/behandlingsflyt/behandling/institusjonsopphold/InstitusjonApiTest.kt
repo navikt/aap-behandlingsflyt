@@ -5,7 +5,20 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Ins
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjonstype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Oppholdene
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Oppholdstype
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.flate.OppholdVurdering
+import no.nav.aap.behandlingsflyt.test.april
+import no.nav.aap.behandlingsflyt.test.august
+import no.nav.aap.behandlingsflyt.test.desember
+import no.nav.aap.behandlingsflyt.test.januar
+import no.nav.aap.behandlingsflyt.test.juli
+import no.nav.aap.behandlingsflyt.test.juni
+import no.nav.aap.behandlingsflyt.test.mai
+import no.nav.aap.behandlingsflyt.test.mars
+import no.nav.aap.behandlingsflyt.test.november
+import no.nav.aap.behandlingsflyt.test.oktober
+import no.nav.aap.behandlingsflyt.test.september
 import no.nav.aap.komponenter.tidslinje.Segment
+import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.DisplayName
@@ -14,6 +27,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import java.time.LocalDate
 import java.util.*
+
 
 class InstitusjonApiTest {
 
@@ -167,7 +181,322 @@ class InstitusjonApiTest {
             assertThat(segmenter[1].periode.tom).isEqualTo(opphold2.tom().minusDays(1))
             assertThat(segmenter[2].periode.tom).isEqualTo(opphold3.tom())
         }
+    }
 
+    // -------------------------------------------------------------------------
+    // hentOppholdSomSkalVurderes
+    // -------------------------------------------------------------------------
+    @Nested
+    @DisplayName("Tester funksjonen hentOppholdSomSkalVurderes")
+    inner class HentOppholdSomSkalVurderes {
+        private val sykehusA = Institusjon(Institusjonstype.HS, Oppholdstype.H, "111000111", "Sykehus A")
+        private val sykehusB = Institusjon(Institusjonstype.HS, Oppholdstype.H, "222000222", "Sykehus B")
+        private val sykehusC = Institusjon(Institusjonstype.HS, Oppholdstype.H, "333000333", "Sykehus C")
+
+        private fun oppholdTidslinje(vararg segmenter: Pair<Periode, Institusjon>): Tidslinje<Institusjon> =
+            Tidslinje(segmenter.map { (periode, institusjon) -> Segment(periode, institusjon) })
+
+        private fun behovTidslinje(vararg perioder: Periode): Tidslinje<InstitusjonsoppholdVurdering> =
+            Tidslinje(perioder.map { periode ->
+                Segment(periode, InstitusjonsoppholdVurdering(helse = HelseOpphold(OppholdVurdering.UAVKLART)))
+            })
+
+        private fun vedtattVurdering(institusjon: Institusjon, oppholdFom: LocalDate, vurderingPeriode: Periode) =
+            HelseoppholdDto(
+                periode = vurderingPeriode,
+                oppholdId = lagOppholdId(institusjon.navn, oppholdFom),
+                vurderinger = emptyList(),
+                status = OppholdVurderingDto.GODKJENT
+            )
+
+        // -------------------------------------------------------------------------
+        // Ingen opphold / ingen behov
+        // -------------------------------------------------------------------------
+
+        @Test
+        fun `ingen opphold og ingen behov gir tom liste`() {
+            val resultat = hentOppholdSomSkalVurderes(
+                oppholdInfo = Tidslinje(),
+                behovPerioder = Tidslinje(),
+                vedtatteVurderingerDto = emptyList()
+            )
+            assertThat(resultat).isEmpty()
+        }
+
+        @Test
+        fun `opphold finnes men ingen behov og ingen vedtatte vurderinger gir tom liste`() {
+            val oppholdFom = 1 januar 2026
+            val oppholdTom = 31 desember 2026
+            val oppholdInfo = oppholdTidslinje(Periode(oppholdFom, oppholdTom) to sykehusA)
+
+            val resultat = hentOppholdSomSkalVurderes(
+                oppholdInfo = oppholdInfo,
+                behovPerioder = Tidslinje(),
+                vedtatteVurderingerDto = emptyList()
+            )
+            assertThat(resultat).isEmpty()
+        }
+
+        // -------------------------------------------------------------------------
+        // Ett opphold — behovperiode hører til oppholdet
+        // -------------------------------------------------------------------------
+
+        @Test
+        fun `ett opphold med behovperiode innenfor oppholdet inkluderes`() {
+            val oppholdFom = 1 januar 2026
+            val oppholdTom = 31 desember 2026
+            val oppholdInfo = oppholdTidslinje(Periode(oppholdFom, oppholdTom) to sykehusA)
+            val behovPerioder = behovTidslinje(Periode(1 mai 2026, 31 august 2026))
+
+            val resultat = hentOppholdSomSkalVurderes(oppholdInfo, behovPerioder, emptyList())
+
+            assertThat(resultat).hasSize(1)
+            assertThat(resultat.first().oppholdId).isEqualTo(lagOppholdId(sykehusA.navn, oppholdFom))
+        }
+
+        @Test
+        fun `ett opphold med behovperiode som dekker hele oppholdet inkluderes`() {
+            val oppholdFom = 1 januar 2026
+            val oppholdTom = 31 desember 2026
+            val oppholdInfo = oppholdTidslinje(Periode(oppholdFom, oppholdTom) to sykehusA)
+            val behovPerioder = behovTidslinje(Periode(oppholdFom, oppholdTom))
+
+            val resultat = hentOppholdSomSkalVurderes(oppholdInfo, behovPerioder, emptyList())
+
+            assertThat(resultat).hasSize(1)
+            assertThat(resultat.first().oppholdFra).isEqualTo(oppholdFom)
+            assertThat(resultat.first().avsluttetDato).isEqualTo(oppholdTom)
+        }
+
+        @Test
+        fun `behovperiode utenfor oppholdet gir tom liste`() {
+            val oppholdInfo = oppholdTidslinje(
+                Periode(1 januar 2026, 30 juni 2026) to sykehusA
+            )
+            // Behovperiode starter etter oppholdet slutter
+            val behovPerioder = behovTidslinje(Periode(1 august 2026, 31 desember 2026))
+
+            val resultat = hentOppholdSomSkalVurderes(oppholdInfo, behovPerioder, emptyList())
+
+            assertThat(resultat).isEmpty()
+        }
+
+        // -------------------------------------------------------------------------
+        // To opphold — behovperioder for hvert opphold
+        // -------------------------------------------------------------------------
+
+        @Test
+        fun `to opphold med behovperiode for hvert opphold — begge inkluderes`() {
+            val oppholdFomA = 1 januar 2026
+            val oppholdTomA = 30 juni 2026
+            val oppholdFomB = 1 august 2026
+            val oppholdTomB = 31 desember 2026
+            val oppholdInfo = oppholdTidslinje(
+                Periode(oppholdFomA, oppholdTomA) to sykehusA,
+                Periode(oppholdFomB, oppholdTomB) to sykehusB
+            )
+            val behovPerioder = behovTidslinje(
+                Periode(1 mai 2026, 30 juni 2026),
+                Periode(1 august 2026, 31 oktober 2026)
+            )
+
+            val resultat = hentOppholdSomSkalVurderes(oppholdInfo, behovPerioder, emptyList())
+
+            assertThat(resultat).hasSize(2)
+            assertThat(resultat.map { it.oppholdId }).containsExactlyInAnyOrder(
+                lagOppholdId(sykehusA.navn, oppholdFomA),
+                lagOppholdId(sykehusB.navn, oppholdFomB)
+            )
+        }
+
+        @Test
+        fun `to opphold — behovperiode kun for ett av dem gir bare ett opphold`() {
+            val oppholdFomA = 1 januar 2026
+            val oppholdTomA = 30 juni 2026
+            val oppholdFomB = 1 august 2026
+            val oppholdTomB = 31 desember 2026
+            val oppholdInfo = oppholdTidslinje(
+                Periode(oppholdFomA, oppholdTomA) to sykehusA,
+                Periode(oppholdFomB, oppholdTomB) to sykehusB
+            )
+            // Behovperiode kun for sykehusB
+            val behovPerioder = behovTidslinje(Periode(1 september 2026, 30 november 2026))
+
+            val resultat = hentOppholdSomSkalVurderes(oppholdInfo, behovPerioder, emptyList())
+
+            assertThat(resultat).hasSize(1)
+            assertThat(resultat.first().oppholdId).isEqualTo(lagOppholdId(sykehusB.navn, oppholdFomB))
+        }
+
+        // -------------------------------------------------------------------------
+        // Behovperiode strekker seg over flere opphold
+        // -------------------------------------------------------------------------
+
+        @Test
+        fun `behovperiode som strekker seg over to opphold inkluderer begge opphold`() {
+            val oppholdFomA = 1 januar 2026
+            val oppholdTomA = 30 juni 2026
+            val oppholdFomB = 1 juli 2026
+            val oppholdTomB = 31 desember 2026
+            val oppholdInfo = oppholdTidslinje(
+                Periode(oppholdFomA, oppholdTomA) to sykehusA,
+                Periode(oppholdFomB, oppholdTomB) to sykehusB
+            )
+            // Én behovperiode som spenner over begge opphold
+            val behovPerioder = behovTidslinje(Periode(oppholdFomA, oppholdTomB))
+
+            val resultat = hentOppholdSomSkalVurderes(oppholdInfo, behovPerioder, emptyList())
+
+            assertThat(resultat).hasSize(2)
+            assertThat(resultat.map { it.oppholdId }).containsExactlyInAnyOrder(
+                lagOppholdId(sykehusA.navn, oppholdFomA),
+                lagOppholdId(sykehusB.navn, oppholdFomB)
+            )
+        }
+
+        @Test
+        fun `behovperiode som strekker seg over tre opphold inkluderer alle tre`() {
+            val oppholdFomA = 1 januar 2026
+            val oppholdTomA = 30 april 2026
+            val oppholdFomB = 1 mai 2026
+            val oppholdTomB = 31 august 2026
+            val oppholdFomC = 1 september 2026
+            val oppholdTomC = 31 desember 2026
+            val oppholdInfo = oppholdTidslinje(
+                Periode(oppholdFomA, oppholdTomA) to sykehusA,
+                Periode(oppholdFomB, oppholdTomB) to sykehusB,
+                Periode(oppholdFomC, oppholdTomC) to sykehusC
+            )
+            val behovPerioder = behovTidslinje(Periode(1 mars 2026, 30 november 2026))
+
+            val resultat = hentOppholdSomSkalVurderes(oppholdInfo, behovPerioder, emptyList())
+
+            assertThat(resultat).hasSize(3)
+            assertThat(resultat.map { it.oppholdId }).containsExactlyInAnyOrder(
+                lagOppholdId(sykehusA.navn, oppholdFomA),
+                lagOppholdId(sykehusB.navn, oppholdFomB),
+                lagOppholdId(sykehusC.navn, oppholdFomC)
+            )
+        }
+
+        // -------------------------------------------------------------------------
+        // Vedtatte vurderinger
+        // -------------------------------------------------------------------------
+
+        @Test
+        fun `opphold med kun vedtatt vurdering og ingen behovperiode inkluderes`() {
+            val oppholdFomA = 1 januar 2026
+            val oppholdTomA = 30 juli 2026
+            val oppholdInfo = oppholdTidslinje(
+                Periode(oppholdFomA, oppholdTomA) to sykehusA
+            )
+            val vedtatteVurderinger = listOf(
+                vedtattVurdering(sykehusA, oppholdFomA, Periode(1 mai 2026, 30 juni 2026))
+            )
+
+            val resultat = hentOppholdSomSkalVurderes(oppholdInfo, Tidslinje(), vedtatteVurderinger)
+
+            assertThat(resultat).hasSize(1)
+            assertThat(resultat.first().oppholdId).isEqualTo(lagOppholdId(sykehusA.navn, oppholdFomA))
+        }
+
+        @Test
+        fun `to opphold — ett med behovperiode og ett med kun vedtatt vurdering — begge inkluderes`() {
+            val oppholdFomA = 1 januar 2026
+            val oppholdTomA = 30 juni 2026
+            val oppholdFomB = 1 august 2026
+            val oppholdTomB = 31 desember 2026
+            val oppholdInfo = oppholdTidslinje(
+                Periode(oppholdFomA, oppholdTomA) to sykehusA,
+                Periode(oppholdFomB, oppholdTomB) to sykehusB
+            )
+            val behovPerioder = behovTidslinje(
+                Periode(1 mai 2026, 30 juni 2026)
+            )
+            val vedtatteVurderinger = listOf(
+                vedtattVurdering(sykehusB, oppholdFomB, Periode(1 august 2026, 31 oktober 2026))
+            )
+
+            val resultat = hentOppholdSomSkalVurderes(oppholdInfo, behovPerioder, vedtatteVurderinger)
+
+            assertThat(resultat).hasSize(2)
+            assertThat(resultat.map { it.oppholdId }).containsExactlyInAnyOrder(
+                lagOppholdId(sykehusA.navn, oppholdFomA),
+                lagOppholdId(sykehusB.navn, oppholdFomB)
+            )
+        }
+
+        @Test
+        fun `opphold med både behovperiode og vedtatt vurdering skal ikke dupliseres`() {
+            val oppholdFomA = 1 januar 2026
+            val oppholdTomA = 31 desember 2026
+            val oppholdInfo = oppholdTidslinje(
+                Periode(oppholdFomA, oppholdTomA) to sykehusA
+            )
+            val behovPerioder = behovTidslinje(
+                Periode(1 mai 2026, 31 august 2026)
+            )
+            val vedtatteVurderinger = listOf(
+                vedtattVurdering(sykehusA, oppholdFomA, Periode(1 mai 2026, 30 juni 2026))
+            )
+
+            val resultat = hentOppholdSomSkalVurderes(oppholdInfo, behovPerioder, vedtatteVurderinger)
+
+            assertThat(resultat).hasSize(1)
+            assertThat(resultat.first().oppholdId).isEqualTo(lagOppholdId(sykehusA.navn, oppholdFomA))
+        }
+
+        @Test
+        fun `vedtatt vurdering med oppholdId som ikke matcher noe opphold i oppholdInfo ignoreres`() {
+            val oppholdFomA = 1 januar 2026
+            val oppholdInfo = oppholdTidslinje(
+                Periode(oppholdFomA, 30 juni 2026) to sykehusA
+            )
+            val vedtatteVurderinger = listOf(
+                HelseoppholdDto(
+                    periode = Periode(1 januar 2026, 31 mars 2026),
+                    oppholdId = lagOppholdId("Ukjent sykehus", 1 januar 2025),
+                    vurderinger = emptyList(),
+                    status = OppholdVurderingDto.GODKJENT
+                )
+            )
+
+            val resultat = hentOppholdSomSkalVurderes(oppholdInfo, Tidslinje(), vedtatteVurderinger)
+
+            assertThat(resultat).isEmpty()
+        }
+
+        @Test
+        fun `tre opphold - kombinasjon av behovperioder og vedtatte vurderinger`() {
+            val oppholdFomA = 1 januar 2026
+            val oppholdTomA = 30 april 2026
+            val oppholdFomB = 1 mai 2026
+            val oppholdTomB = 31 august 2026
+            val oppholdFomC = 1 oktober 2026
+            val oppholdTomC = 31 desember 2026
+            val oppholdInfo = oppholdTidslinje(
+                Periode(oppholdFomA, oppholdTomA) to sykehusA,
+                Periode(oppholdFomB, oppholdTomB) to sykehusB,
+                Periode(oppholdFomC, oppholdTomC) to sykehusC
+            )
+            // Behovperiode kun for sykehusA og sykehusB (strekker seg over begge)
+            val behovPerioder = behovTidslinje(
+                Periode(1 mars 2026, 31 juli 2026),
+            )
+            // Vedtatt vurdering kun for sykehusC
+            val vedtatteVurderinger = listOf(
+                vedtattVurdering(sykehusC, oppholdFomC, Periode(1 oktober 2026, 30 november 2026))
+            )
+
+            val resultat = hentOppholdSomSkalVurderes(oppholdInfo, behovPerioder, vedtatteVurderinger)
+
+            assertThat(resultat).hasSize(3)
+            assertThat(resultat.map { it.oppholdId }).containsExactlyInAnyOrder(
+                lagOppholdId(sykehusA.navn, oppholdFomA),
+                lagOppholdId(sykehusB.navn, oppholdFomB),
+                lagOppholdId(sykehusC.navn, oppholdFomC)
+            )
+        }
     }
 
     private fun lagSegment(

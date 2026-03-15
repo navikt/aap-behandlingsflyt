@@ -535,7 +535,7 @@ class AvklarHelseinstitusjonLøserTest {
                 )
             )
         }
-        assertThat(exception.message).contains("Første reduksjonsvurdering starter for tidlig.")
+        assertThat(exception.message).contains("Reduksjonsvurdering starter for tidlig.")
     }
 
     @Test
@@ -685,7 +685,7 @@ class AvklarHelseinstitusjonLøserTest {
                 )
             )
         }
-        assertThat(exception.message).contains("Reduksjon ved nytt opphold starter for tidlig")
+        assertThat(exception.message).contains("Reduksjonsvurdering starter for tidlig.")
     }
 
     @Test
