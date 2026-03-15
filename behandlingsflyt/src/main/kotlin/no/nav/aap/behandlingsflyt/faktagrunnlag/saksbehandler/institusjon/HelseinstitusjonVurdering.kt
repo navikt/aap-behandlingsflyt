@@ -10,7 +10,7 @@ data class HelseinstitusjonVurdering(
     val forsoergerEktefelle: Boolean? = null,
     val harFasteUtgifter: Boolean? = null,
     val periode: Periode,
-    val vurdertIBehandling: BehandlingId? = null,
+    val vurdertIBehandling: BehandlingId,
     val vurdertAv: String? = null,
     val vurdertTidspunkt: LocalDateTime?
 )

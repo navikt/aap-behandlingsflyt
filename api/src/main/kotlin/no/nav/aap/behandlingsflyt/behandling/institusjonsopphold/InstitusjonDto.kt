@@ -59,7 +59,8 @@ data class HelseinstitusjonVurderingDto(
     val forsoergerEktefelle: Boolean? = null,
     val harFasteUtgifter: Boolean? = null,
     val periode: Periode,
-    val vurdertAv: VurdertAvResponse?
+    val vurdertAv: VurdertAvResponse?,
+    val besluttetAv: VurdertAvResponse?
 )
 
 data class SoningsGrunnlagDto(

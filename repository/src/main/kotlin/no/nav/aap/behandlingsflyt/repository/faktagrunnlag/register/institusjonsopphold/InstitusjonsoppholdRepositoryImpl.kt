@@ -148,7 +148,7 @@ class InstitusjonsoppholdRepositoryImpl(private val connection: DBConnection) :
                     forsoergerEktefelle = it.getBoolean("FORSORGER_EKTEFELLE"),
                     harFasteUtgifter = it.getBoolean("FASTE_UTGIFTER"),
                     periode = it.getPeriode("PERIODE"),
-                    vurdertIBehandling = it.getLongOrNull("VURDERT_I_BEHANDLING")?.let { id -> BehandlingId(id) },
+                    vurdertIBehandling = BehandlingId(it.getLong("VURDERT_I_BEHANDLING")),
                     vurdertAv = it.getString("VURDERT_AV"),
                     vurdertTidspunkt = it.getLocalDateTime("OPPRETTET_TID")
                 )
@@ -453,7 +453,7 @@ class InstitusjonsoppholdRepositoryImpl(private val connection: DBConnection) :
                         forsoergerEktefelle = it.getBooleanOrNull("FORSORGER_EKTEFELLE"),
                         harFasteUtgifter = it.getBooleanOrNull("FASTE_UTGIFTER"),
                         periode = it.getPeriode("VURDERING_PERIODE"),
-                        vurdertIBehandling = it.getLongOrNull("VURDERT_I_BEHANDLING")?.let { id -> BehandlingId(id) },
+                        vurdertIBehandling = BehandlingId(it.getLong("VURDERT_I_BEHANDLING")),
                         vurdertAv = it.getString("VURDERT_AV"),
                         vurdertTidspunkt = it.getLocalDateTime("OPPRETTET_TID")
                     )
