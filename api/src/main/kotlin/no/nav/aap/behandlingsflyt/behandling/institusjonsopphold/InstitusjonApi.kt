@@ -227,38 +227,6 @@ fun NormalOpenAPIRoute.institusjonApi(
     }
 }
 
-// Public for testing
-fun hentOppholdSomSkalVurderes(
-    oppholdInfo: Tidslinje<Institusjon>,
-    behovPerioder: Tidslinje<InstitusjonsoppholdVurdering>,
-    vedtatteVurderingerDto: List<HelseoppholdDto>
-): List<InstitusjonsoppholdDto> {
-    val behovOpphold = oppholdInfo.segmenter().mapNotNull { segment ->
-        val dto = InstitusjonsoppholdDto.institusjonToDto(segment)
-        val oppholdFra = dto.oppholdFra
-        val avsluttetDato = dto.avsluttetDato
-
-        val harUavklartOpphold = behovPerioder.segmenter().any { periode ->
-            val fom = periode.periode.fom
-            val tom = periode.periode.tom
-            (oppholdFra <= tom && avsluttetDato >= fom)
-        }
-        if (harUavklartOpphold) dto else null
-    }
-
-    val vedtatteOpphold = vedtatteVurderingerDto
-        .mapNotNull { vurdering ->
-            vurdering.oppholdId?.let { oppholdId ->
-                oppholdInfo.segmenter().mapNotNull { segment ->
-                    val dto = InstitusjonsoppholdDto.institusjonToDto(segment)
-                    if (dto.oppholdId == oppholdId) dto else null
-                }
-            }
-        }.flatten()
-
-    return (behovOpphold + vedtatteOpphold).distinctBy { it.oppholdId }
-}
-
 private fun mapVurderingerToDto(
     vurderingerPerOpphold: Map<Periode, List<HelseinstitusjonVurdering>>,
     oppholdInfo: Tidslinje<Institusjon>,
@@ -310,6 +278,37 @@ private fun mapVurderingerToDto(
         )
     }
 
+// Public for testing
+fun hentOppholdSomSkalVurderes(
+    oppholdInfo: Tidslinje<Institusjon>,
+    behovPerioder: Tidslinje<InstitusjonsoppholdVurdering>,
+    vedtatteVurderingerDto: List<HelseoppholdDto>
+): List<InstitusjonsoppholdDto> {
+    val behovOpphold = oppholdInfo.segmenter().mapNotNull { segment ->
+        val dto = InstitusjonsoppholdDto.institusjonToDto(segment)
+        val oppholdFra = dto.oppholdFra
+        val avsluttetDato = dto.avsluttetDato
+
+        val harUavklartOpphold = behovPerioder.segmenter().any { periode ->
+            val fom = periode.periode.fom
+            val tom = periode.periode.tom
+            (oppholdFra <= tom && avsluttetDato >= fom)
+        }
+        if (harUavklartOpphold) dto else null
+    }
+
+    val vedtatteOpphold = vedtatteVurderingerDto
+        .mapNotNull { vurdering ->
+            vurdering.oppholdId?.let { oppholdId ->
+                oppholdInfo.segmenter().mapNotNull { segment ->
+                    val dto = InstitusjonsoppholdDto.institusjonToDto(segment)
+                    if (dto.oppholdId == oppholdId) dto else null
+                }
+            }
+        }.flatten()
+
+    return (behovOpphold + vedtatteOpphold).distinctBy { it.oppholdId }
+}
 
 // Public for testing
 fun byggTidslinjeForInstitusjonsopphold(
