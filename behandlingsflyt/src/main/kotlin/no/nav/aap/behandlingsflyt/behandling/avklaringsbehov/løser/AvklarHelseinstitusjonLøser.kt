@@ -220,7 +220,7 @@ class AvklarHelseinstitusjonLøser(
         val faarFriKostOgLosji: Boolean,
         val forsoergerEktefelle: Boolean? = null,
         val harFasteUtgifter: Boolean? = null,
-        val vurdertIBehandling: BehandlingId? = null,
+        val vurdertIBehandling: BehandlingId,
         val vurdertAv: String? = null,
         val vurdertTidspunkt: LocalDateTime? = null
     )
