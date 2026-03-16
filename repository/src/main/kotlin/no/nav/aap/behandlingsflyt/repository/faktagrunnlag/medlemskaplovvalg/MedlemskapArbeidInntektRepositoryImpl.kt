@@ -617,7 +617,7 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
     ) {
         setParams { setLong(1, behandlingId.id) }
         setRowMapper { row ->
-            row.getLong("opphold_utenlandsopphold_id")
+            row.getLong("oppgitt_utenlandsopphold_id")
         }
     }
 
