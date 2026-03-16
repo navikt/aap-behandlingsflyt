@@ -443,7 +443,7 @@ class InstitusjonsoppholdUtlederService(
         return InstitusjonsoppholdInput(rettighetsperiode, opphold, soningsvurderinger, barnetillegg, helsevurderinger)
     }
 
-    private fun giNyTidslinjeHvisBarneTilleggTarSluttUnderOppholdet(
+    fun giNyTidslinjeHvisBarneTilleggTarSluttUnderOppholdet(
         barnetilleggTidslinje: Tidslinje<RettTilBarnetillegg>,
         helseOppholdSluttDato: LocalDate,
         oppholdSomKanGiReduksjon: Tidslinje<Boolean>,
