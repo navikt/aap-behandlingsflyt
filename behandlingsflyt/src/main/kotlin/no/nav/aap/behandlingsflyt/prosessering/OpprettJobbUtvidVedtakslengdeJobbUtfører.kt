@@ -46,46 +46,46 @@ class OpprettJobbUtvidVedtakslengdeJobbUtfører(
     // TODO: Må filtrere vekk de som allerede har blitt kjørt, men ikke kvalifiserte til reell utvidelse av vedtakslengde
     private fun hentKandidaterForUtvidelseAvVedtakslengde(datoForUtvidelse: LocalDate): Set<SakId> {
         val kandidater = vedtakslengdeService.hentSakerAktuelleForUtvidelseAvVedtakslengde(datoForUtvidelse)
-            .map { vurderUtvidelseBehov(it) }
-            .groupBy { it.utvidelse?.let { u -> u::class } }
+            .fold(KategoriserteKandidater()) { acc, sakId ->
+                val utvidelse = vurderUtvidelseBehov(sakId)
+                // Sikrer at nye typer i VedtakslengdeUtvidelse må håndteres
+                when (utvidelse) {
+                    is VedtakslengdeUtvidelse.Automatisk -> acc.copy(automatiske = acc.automatiske + sakId)
+                    is VedtakslengdeUtvidelse.Manuell -> acc.copy(manuelle = acc.manuelle + sakId)
+                    is VedtakslengdeUtvidelse.IngenFremtidigBistandsbehovRettighet -> acc.copy(ingenRettighet = acc.ingenRettighet + sakId)
+                    null -> acc.copy(ingenBehandling = acc.ingenBehandling + sakId)
+                }
+            }
 
-        val ingenBehandlingSaker = kandidater[null].orEmpty()
-
-        if (ingenBehandlingSaker.isNotEmpty()) {
-            log.info("Følgende saker har ingen gjeldende vedtatt behandling. Saker: ${ingenBehandlingSaker.map { it.sakId }}")
+        if (kandidater.ingenBehandling.isNotEmpty()) {
+            log.info("Følgende saker har ingen gjeldende vedtatt behandling. Saker: ${kandidater.ingenBehandling}")
+        }
+        if (kandidater.manuelle.isNotEmpty()) {
+            log.error("Følgende saker trenger manuell utvidelse av vedtakslengde. Må følges opp! Saker: ${kandidater.manuelle}")
+        }
+        if (kandidater.ingenRettighet.isNotEmpty()) {
+            log.info("Følgende saker har ingen fremtidig bistandsbehovrettighet. Saker: ${kandidater.ingenRettighet}")
         }
 
-        val manuelleSaker = kandidater[VedtakslengdeUtvidelse.Manuell::class].orEmpty()
-        if (manuelleSaker.isNotEmpty()) {
-            log.error("Følgende saker trenger manuell utvidelse av vedtakslengde. Må følges opp! Saker: ${manuelleSaker.map { it.sakId }}")
-        }
-
-        val ingenRettighetSaker = kandidater[VedtakslengdeUtvidelse.IngenFremtidigBistandsbehovRettighet::class].orEmpty()
-        if (ingenRettighetSaker.isNotEmpty()) {
-            log.info("Følgende saker har ingen fremtidig bistandsbehovrettighet. Saker: ${ingenRettighetSaker.map { it.sakId }}")
-        }
-
-        return kandidater[VedtakslengdeUtvidelse.Automatisk::class].orEmpty()
-            .map { it.sakId }
-            .toSet()
+        return kandidater.automatiske
     }
 
-    private fun vurderUtvidelseBehov(sakId: SakId): KandidatForUtvidelse {
+    private fun vurderUtvidelseBehov(sakId: SakId): VedtakslengdeUtvidelse? {
         val sisteGjeldendeBehandling = behandlingService.finnBehandlingMedSisteFattedeVedtak(sakId)
-            ?: return KandidatForUtvidelse(sakId = sakId, utvidelse = null)
+            ?: return null
 
         // Bruker sisteGjeldendeBehandling.id både for behandlingId og forrigeBehandlingId fordi vi ser på gjeldende behandling
-        val vedtakslengdeUtvidelse = vedtakslengdeService.hentNesteVedtakslengdeUtvidelse(
+        return vedtakslengdeService.hentNesteVedtakslengdeUtvidelse(
             behandlingId = sisteGjeldendeBehandling.id,
             forrigeBehandlingId = sisteGjeldendeBehandling.id,
         )
-
-        return KandidatForUtvidelse(sakId = sakId, utvidelse = vedtakslengdeUtvidelse)
     }
 
-    private data class KandidatForUtvidelse(
-        val sakId: SakId,
-        val utvidelse: VedtakslengdeUtvidelse?,
+    private data class KategoriserteKandidater(
+        val automatiske: Set<SakId> = emptySet(),
+        val manuelle: Set<SakId> = emptySet(),
+        val ingenRettighet: Set<SakId> = emptySet(),
+        val ingenBehandling: Set<SakId> = emptySet(),
     )
 
     companion object : ProvidersJobbSpesifikasjon {
