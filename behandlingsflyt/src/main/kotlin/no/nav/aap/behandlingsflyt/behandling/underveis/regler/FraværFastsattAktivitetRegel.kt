@@ -78,46 +78,57 @@ class FraværFastsattAktivitetRegel : UnderveisRegel {
      * [meldeperioden] er en tidslinje som bare skal inneholde segment med periode innenfor en gitt meldeperiode.
      */
     private fun vurderMeldeperiode(meldeperioden: Tidslinje<FraværIPeriode>): Tidslinje<FraværMedUnntakVurdertForPeriode> {
+        val fraværUtenGyldigÅrsak = finnFraværUtenGyldigÅrsak(meldeperioden)
+
         return meldeperioden.flatMap { fraværSegment ->
-            vurderMeldeperiode(meldeperioden, fraværSegment.periode, fraværSegment.verdi)
+            vurderFraværSegment(fraværSegment, fraværUtenGyldigÅrsak)
         }
     }
 
-    private fun vurderMeldeperiode(
-        meldeperioden: Tidslinje<FraværIPeriode>,
-        periode: Periode,
-        fravær: FraværIPeriode,
-    ): Tidslinje<FraværMedUnntakVurdertForPeriode> {
-        val inntilEnDagUnntakUtenGyldigGrunn = meldeperioden.segmenter().singleOrNull {
+    private fun finnFraværUtenGyldigÅrsak(meldeperioden: Tidslinje<FraværIPeriode>): FraværIPeriode? {
+        return meldeperioden.segmenter().singleOrNull {
             it.verdi.fraværÅrsak !in gyldigeÅrsaker
         }?.verdi
+    }
 
-        val harInntilEnDagUnntak = inntilEnDagUnntakUtenGyldigGrunn == fravær
-        return if (harInntilEnDagUnntak) {
-            val førsteFravær = Periode(periode.fom, periode.fom)
-            val periodene = listOf(førsteFravær) + periode.minus(førsteFravær)
-            Tidslinje(
-                periodene.map {
-                    Segment(
-                        it,
-                        FraværMedUnntakVurdertForPeriode(
-                            fravær = fravær,
-                            // finnesEnDagFraværUtenGyldigÅrsak = true/false
-                            erUnntak = it == førsteFravær,
-                        )
-                    )
-                }
-            )
-        } else {
-            Tidslinje(
-                periode,
-                // FraværIPeriodeMedUnntak
+    private fun vurderFraværSegment(
+        fraværSegment: Segment<FraværIPeriode>,
+        fraværUtenGyldigÅrsak: FraværIPeriode?,
+    ): Tidslinje<FraværMedUnntakVurdertForPeriode> {
+        val fravær = fraværSegment.verdi
+        val fårUnntakPåFørsteDag = fraværUtenGyldigÅrsak == fravær
+
+        if (!fårUnntakPåFørsteDag) {
+            return Tidslinje(
+                fraværSegment.periode,
                 FraværMedUnntakVurdertForPeriode(
                     fravær = fravær,
                     erUnntak = false,
                 )
             )
         }
+
+        return lagTidslinjeMedUnntakPåFørsteDag(fraværSegment.periode, fravær)
+    }
+
+    private fun lagTidslinjeMedUnntakPåFørsteDag(
+        periode: Periode,
+        fravær: FraværIPeriode,
+    ): Tidslinje<FraværMedUnntakVurdertForPeriode> {
+        val førsteFraværsdag = Periode(periode.fom, periode.fom)
+        val perioder = listOf(førsteFraværsdag) + periode.minus(førsteFraværsdag)
+
+        return Tidslinje(
+            perioder.map { delperiode ->
+                Segment(
+                    delperiode,
+                    FraværMedUnntakVurdertForPeriode(
+                        fravær = fravær,
+                        erUnntak = delperiode == førsteFraværsdag,
+                    )
+                )
+            }
+        )
     }
 
     /**
