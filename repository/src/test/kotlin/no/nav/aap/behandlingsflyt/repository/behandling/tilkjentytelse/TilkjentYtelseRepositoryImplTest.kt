@@ -64,6 +64,7 @@ class TilkjentYtelseRepositoryImplTest {
                             barnetillegg = Beløp(999),
                             grunnlagsfaktor = GUnit("1.0"),
                             antallBarn = 1,
+                            barnepensjonDagsats = Beløp(100),
                             barnetilleggsats = Beløp(999),
                             grunnbeløp = Beløp(1000),
                             utbetalingsdato = LocalDate.now().plusDays(14),
@@ -90,6 +91,7 @@ class TilkjentYtelseRepositoryImplTest {
                             barnetillegg = Beløp(1000),
                             grunnlagsfaktor = GUnit("1.0"),
                             antallBarn = 1,
+                            barnepensjonDagsats = Beløp(100),
                             barnetilleggsats = Beløp(1000),
                             grunnbeløp = Beløp(1000),
                             utbetalingsdato = LocalDate.now().plusDays(14),
@@ -107,7 +109,7 @@ class TilkjentYtelseRepositoryImplTest {
                 .ignoringExpectedNullFields()
                 .isEqualTo(tilkjentYtelse)
             // Dobbeltsjekke at vi avrunder redusert dagsats til nærmeste heltall
-            assertThat(tilkjentYtelse.first().tilkjent.redusertDagsats()).isEqualTo(Beløp(BigDecimal("1319")))
+            assertThat(tilkjentYtelse.first().tilkjent.redusertDagsats()).isEqualTo(Beløp(BigDecimal("1219")))
         }
 
     }
@@ -152,6 +154,7 @@ class TilkjentYtelseRepositoryImplTest {
                             grunnlagsfaktor = GUnit("1.0"),
                             antallBarn = 1,
                             barnetilleggsats = Beløp(999),
+                            barnepensjonDagsats = Beløp(100),
                             grunnbeløp = Beløp(1000),
                             utbetalingsdato = LocalDate.now().plusDays(14),
                             minsteSats = Minstesats.MINSTESATS_UNDER_25,
@@ -177,6 +180,7 @@ class TilkjentYtelseRepositoryImplTest {
                             barnetillegg = Beløp(1000),
                             grunnlagsfaktor = GUnit("1.0"),
                             antallBarn = 1,
+                            barnepensjonDagsats = Beløp(100),
                             barnetilleggsats = Beløp(1000),
                             grunnbeløp = Beløp(1000),
                             utbetalingsdato = LocalDate.now().plusDays(14),
@@ -209,6 +213,7 @@ class TilkjentYtelseRepositoryImplTest {
                             barnetillegg = Beløp(999),
                             grunnlagsfaktor = GUnit("1.0"),
                             antallBarn = 1,
+                            barnepensjonDagsats = Beløp(100),
                             barnetilleggsats = Beløp(999),
                             grunnbeløp = Beløp(1000),
                             utbetalingsdato = LocalDate.now().plusDays(14),
@@ -234,6 +239,7 @@ class TilkjentYtelseRepositoryImplTest {
                             ),
                             barnetillegg = Beløp(1000),
                             grunnlagsfaktor = GUnit("1.0"),
+                            barnepensjonDagsats = Beløp(100),
                             antallBarn = 1,
                             barnetilleggsats = Beløp(1000),
                             grunnbeløp = Beløp(1000),

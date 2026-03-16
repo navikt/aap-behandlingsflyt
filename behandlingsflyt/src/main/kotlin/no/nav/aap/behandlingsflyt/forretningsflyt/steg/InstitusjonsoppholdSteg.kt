@@ -49,11 +49,10 @@ class InstitusjonsoppholdSteg(
                 val aktiveVurderinger =
                     institusjonsoppholdRepository.hentHvisEksisterer(kontekst.behandlingId)?.helseoppholdvurderinger?.vurderinger.orEmpty()
                 if (vedtatteVurderinger == null && aktiveVurderinger.isNotEmpty()) {
-                    institusjonsoppholdRepository.lagreHelseVurdering(kontekst.behandlingId, "Kelvin", listOf())
+                    institusjonsoppholdRepository.lagreHelseVurdering(kontekst.behandlingId, listOf())
                 } else if (vedtatteVurderinger != null && vedtatteVurderinger.vurderinger.toSet() != aktiveVurderinger.toSet()) {
                     institusjonsoppholdRepository.lagreHelseVurdering(
                         kontekst.behandlingId,
-                        vedtatteVurderinger.vurdertAv,
                         vedtatteVurderinger.vurderinger
                     )
                 }

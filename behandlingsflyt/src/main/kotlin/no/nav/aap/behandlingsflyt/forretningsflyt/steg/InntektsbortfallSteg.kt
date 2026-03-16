@@ -9,6 +9,7 @@ import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.behandling.vilkår.inntektsbortfall.InntektsbortfallKanBehandlesAutomatisk
 import no.nav.aap.behandlingsflyt.behandling.vilkår.inntektsbortfall.InntektsbortfallVilkår
 import no.nav.aap.behandlingsflyt.behandling.vilkår.inntektsbortfall.InntektsbortfallVurderingService
+import no.nav.aap.behandlingsflyt.behandling.beregning.Beregning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektGrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.ManuellInntektGrunnlagRepository
@@ -85,7 +86,7 @@ class InntektsbortfallSteg private constructor(
         val manuellInntektGrunnlag = manuellInntektGrunnlagRepository.hentHvisEksisterer(kontekst.behandlingId)
         val inntektGrunnlag = inntektGrunnlagRepository.hentHvisEksisterer(kontekst.behandlingId)
 
-        val inntekter = beregningService.kombinerInntektOgManuellInntekt(
+        val inntekter = Beregning.kombinerInntektOgManuellInntekt(
             inntektGrunnlag?.inntekter.orEmpty(),
             manuellInntektGrunnlag?.manuelleInntekter.orEmpty()
         )

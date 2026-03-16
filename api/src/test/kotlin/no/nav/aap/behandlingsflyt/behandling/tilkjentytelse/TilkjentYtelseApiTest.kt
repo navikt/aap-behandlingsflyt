@@ -66,6 +66,7 @@ class TilkjentYtelseApiTest : BaseApiTest() {
                 ),
                 grunnlagsfaktor = GUnit("1.5"),
                 grunnbeløp = Beløp(106399),
+                barnepensjonDagsats = Beløp(0),
                 antallBarn = 2,
                 barnetilleggsats = Beløp(36),
                 barnetillegg = Beløp(72),
@@ -163,7 +164,9 @@ class TilkjentYtelseApiTest : BaseApiTest() {
                                         institusjonGradering = 50,
                                         totalReduksjon = 50,
                                         effektivDagsats = 236.0,
-                                        arbeidsgiverGradering = 50
+                                        arbeidsgiverGradering = 50,
+                                        barnepensjonDagsats = 0.0
+
                                     )
                                 )
                             ),
@@ -194,7 +197,9 @@ class TilkjentYtelseApiTest : BaseApiTest() {
                                         institusjonGradering = 50,
                                         totalReduksjon = 50,
                                         effektivDagsats = 286.0,
-                                        arbeidsgiverGradering = 50
+                                        arbeidsgiverGradering = 50,
+                                        barnepensjonDagsats = 0.0
+
                                     )
                                 )
                             ),
@@ -222,7 +227,8 @@ class TilkjentYtelseApiTest : BaseApiTest() {
                                         institusjonGradering = 50,
                                         totalReduksjon = 50,
                                         effektivDagsats = 336.0,
-                                        arbeidsgiverGradering = 50
+                                        arbeidsgiverGradering = 50,
+                                        barnepensjonDagsats = 0.0
                                     )
                                 )
                             ),

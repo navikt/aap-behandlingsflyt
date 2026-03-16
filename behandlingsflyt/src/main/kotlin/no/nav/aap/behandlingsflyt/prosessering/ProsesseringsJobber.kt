@@ -1,5 +1,8 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
+import no.nav.aap.behandlingsflyt.prosessering.datadeling.DatadelingBehandlingJobbUtfører
+import no.nav.aap.behandlingsflyt.prosessering.datadeling.DatadelingMeldePerioderOgSakStatusJobbUtfører
+import no.nav.aap.behandlingsflyt.prosessering.datadeling.DatadelingMeldekortJobbUtfører
 import no.nav.aap.behandlingsflyt.prosessering.statistikk.ResendStatistikkJobbUtfører
 import no.nav.aap.behandlingsflyt.prosessering.statistikk.StatistikkJobbUtfører
 import no.nav.aap.behandlingsflyt.prosessering.tilbakekreving.SendFagsysteminfoBehovTilTilbakekrevingUtfører
@@ -38,7 +41,6 @@ object ProsesseringsJobber {
             OpprettBehandlingMigrereRettighetsperiodeJobbUtfører,
             SendFagsysteminfoBehovTilTilbakekrevingUtfører,
             SjekkInstitusjonsOppholdJobbUtfører,
-            HåndterUbehandledeDokumenterJobbUtfører,
             HåndterUbehandletDokumentJobbUtfører,
             DigitaliserteMeldekortTilMeldekortBackendJobbUtfører,
             HåndterUbehandledeMeldekortForSakJobbUtfører

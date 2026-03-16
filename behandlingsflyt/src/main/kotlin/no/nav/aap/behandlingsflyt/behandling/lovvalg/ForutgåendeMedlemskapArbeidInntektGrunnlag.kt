@@ -29,4 +29,7 @@ data class ForutgåendeMedlemskapArbeidInntektGrunnlag(
 }
 
 fun List<ManuellVurderingForForutgåendeMedlemskap>.tilTidslinje(maksDato: LocalDate = Tid.MAKS): Tidslinje<ManuellVurderingForForutgåendeMedlemskap> =
-    sortedBy { it.vurdertTidspunkt }.somTidslinje { Periode(it.fom, it.tom ?: maksDato) }
+    sortedBy { it.vurdertTidspunkt }
+        .somTidslinje { Periode(it.fom, it.tom ?: Tid.MAKS) }
+        .komprimer()
+        .begrensetTil(Periode(Tid.MIN, maksDato))

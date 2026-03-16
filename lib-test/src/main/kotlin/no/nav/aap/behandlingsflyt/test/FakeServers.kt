@@ -121,6 +121,7 @@ import no.nav.aap.brev.kontrakt.Tekstbolk
 import no.nav.aap.komponenter.json.DefaultJsonMapper
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.meldekort.kontrakt.sak.MeldeperioderV0
+import no.nav.aap.oppgave.enhet.OppgaveEnhetResponse
 import no.nav.aap.tilgang.BehandlingTilgangRequest
 import no.nav.aap.tilgang.JournalpostTilgangRequest
 import no.nav.aap.tilgang.Operasjon
@@ -204,6 +205,9 @@ object FakeServers : AutoCloseable {
                 FakeServers.log.info("Åpne behov $åpneBehov")
                 FakeServers.log.info("Fikk oppgave-oppdatering: $received")
                 call.respond(HttpStatusCode.NoContent)
+            }
+            get("/{referanse}/hent-oppgave-enhet") {
+                call.respond(OppgaveEnhetResponse(emptyList()))
             }
         }
     }
@@ -357,7 +361,7 @@ object FakeServers : AutoCloseable {
 
         data class DagpengerPeriodeResponse(
             val fraOgMedDato: LocalDate,
-            val tilOgMedDato: LocalDate,
+            val tilOgMedDato: LocalDate?,
             val kilde: DagpengerKilde,
             val ytelseType: DagpengerYtelseType
         )

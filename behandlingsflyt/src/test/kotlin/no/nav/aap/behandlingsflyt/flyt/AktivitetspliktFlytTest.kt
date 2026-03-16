@@ -305,7 +305,7 @@ class AktivitetspliktFlytTest :
             dataSource.transaction { connection -> BehandlingRepositoryImpl(connection).hent(åpenBehandling.id) }
         assertThat(åpenBehandling.aktivtSteg())
             .describedAs { "Skal trekkes tilbake til steget informasjonskravet står på" }
-            .isEqualTo(StegType.IKKE_OPPFYLT_MELDEPLIKT)
+            .isEqualTo(StegType.EFFEKTUER_11_7)
 
         motor.kjørJobber()
         åpenBehandling =

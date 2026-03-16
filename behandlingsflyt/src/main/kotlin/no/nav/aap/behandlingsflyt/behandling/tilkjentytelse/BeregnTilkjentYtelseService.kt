@@ -2,8 +2,8 @@ package no.nav.aap.behandlingsflyt.behandling.tilkjentytelse
 
 import no.nav.aap.behandlingsflyt.behandling.barnetillegg.RettTilBarnetillegg
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.unntakFastsattMeldedag
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.unntakFritaksUtbetalingDato
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.helligdagsunntakFastsattMeldedag
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.helligdagsunntakFritaksUtbetalingDato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Faktagrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.tilTidslinje
@@ -16,6 +16,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveis
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.barnepensjon.BarnepensjonGrunnlag
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.filterNotNull
@@ -37,6 +38,7 @@ class TilkjentYtelseGrunnlag(
     val samordningGrunnlag: SamordningGrunnlag,
     val samordningUføre: SamordningUføreGrunnlag?,
     val samordningArbeidsgiver: SamordningArbeidsgiverGrunnlag?,
+    val barnepensjonGrunnlag: BarnepensjonGrunnlag?,
     val minsteÅrligeYtelse: Tidslinje<GUnit> = MINSTE_ÅRLIG_YTELSE_TIDSLINJE,
 ) : Faktagrunnlag
 
@@ -59,16 +61,17 @@ class BeregnTilkjentYtelseService(private val grunnlag: TilkjentYtelseGrunnlag) 
      * ```
      */
     fun beregnTilkjentYtelse(): Tidslinje<Tilkjent> {
-        return Tidslinje.map6(
+        return Tidslinje.map7(
             grunnlag.underveisgrunnlag.somTidslinje(),
             beregnDagsatsTidslinje(),
             gradering(),
             Grunnbeløp.tilTidslinje(),
+            grunnlag.barnepensjonGrunnlag?.tilTidslinje().orEmpty(),
             BARNETILLEGGSATS_TIDSLINJE,
             grunnlag.barnetilleggGrunnlag.perioder.tilTidslinje(),
-        ) { underveisperiode, dagsats, graderingGrunnlag, grunnbeløp, barnetilleggsats, rettTilBarnetillegg ->
+        ) { underveisperiode, dagsats, graderingGrunnlag, grunnbeløp, barnepensjon, barnetilleggsats, rettTilBarnetillegg ->
             if (underveisperiode == null || dagsats == null || graderingGrunnlag == null || grunnbeløp == null) {
-                return@map6 null
+                return@map7 null
             }
 
             val (dagsatsG, minstesats) = dagsats
@@ -88,6 +91,7 @@ class BeregnTilkjentYtelseService(private val grunnlag: TilkjentYtelseGrunnlag) 
                 barnetillegg = barnetillegg.barnetillegg,
                 antallBarn = barnetillegg.antallBarn,
                 barnetilleggsats = barnetillegg.barnetilleggsats,
+                barnepensjonDagsats = barnepensjon ?: Beløp(0),
                 grunnlagsfaktor = dagsatsG,
                 grunnbeløp = grunnbeløp,
                 utbetalingsdato = utledUtbetalingsdato(underveisperiode),
@@ -231,7 +235,7 @@ class BeregnTilkjentYtelseService(private val grunnlag: TilkjentYtelseGrunnlag) 
         val unntakFastsattMeldedag =
         // `meldeperiode` svarer til perioden det ble skrevet meldekort for (på dato `opplysningerMottatt`).
             // For å finne unntakts-meldepliktperiode, må vi flytte denne to uker fram.
-            unntakFastsattMeldedag[meldeperiode.flytt(14).fom]
+            helligdagsunntakFastsattMeldedag[meldeperiode.flytt(14).fom]
 
         val sisteMeldedagForMeldeperiode = meldeperiode.tom.plusDays(9)
         val førsteMeldedagForMeldeperiode = meldeperiode.tom.plusDays(1)
@@ -246,7 +250,7 @@ class BeregnTilkjentYtelseService(private val grunnlag: TilkjentYtelseGrunnlag) 
             opplysningerMottatt != null -> opplysningerMottatt
             underveisperiode.meldepliktStatus == MeldepliktStatus.FRITAK -> {
                 log.info("Traff sjekk for meldepliktstatus == FRITAK.")
-                unntakFritaksUtbetalingDato[førsteMeldedagForMeldeperiode]
+                helligdagsunntakFritaksUtbetalingDato[førsteMeldedagForMeldeperiode]
                     ?: førsteMeldedagForMeldeperiode
             }
 

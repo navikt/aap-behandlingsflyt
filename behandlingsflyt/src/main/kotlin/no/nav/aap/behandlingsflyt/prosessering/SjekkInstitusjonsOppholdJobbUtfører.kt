@@ -57,8 +57,6 @@ class SjekkInstitusjonsOppholdJobbUtfører(
                     if (sisteYtelsesBehandling != null) {
                         val sak = sakRepository.hent(sak.id)
                         if (erKandidatForVurderingAvInstitusjonsopphold(sisteYtelsesBehandling.id)) {
-                            val vurderingsbehovOgÅrsaker =
-                                behandlingRepository.hentVurderingsbehovOgÅrsaker(sisteYtelsesBehandling.id)
                             val underveisgrunnlag =
                                 underveisgrunnlagRepository.hentHvisEksisterer(sisteYtelsesBehandling.id)
                             if (underveisgrunnlag == null) {
@@ -73,10 +71,8 @@ class SjekkInstitusjonsOppholdJobbUtfører(
                                             .somTidslinje()
                                             .segmenter()
                                             .all { it.verdi.utfall == Utfall.IKKE_OPPFYLT }
-                                    if (vurderingsbehovOgÅrsaker.any { it.vurderingsbehov.any { vurderingsbehovMedPeriode -> vurderingsbehovMedPeriode.type == Vurderingsbehov.INSTITUSJONSOPPHOLD } }) {
-                                        log.info("Vurderingsbehov for institusjonsopphold finnes allerede")
-                                    } else if (alleIkkeOppfylt) {
-                                        log.info("Vurderingsbehov for institusjonsopphold opprettes ikke, da det er avslag overalt")
+                                    if (alleIkkeOppfylt) {
+                                        log.info("Vurderingsbehov for institusjonsopphold opprettes ikke, da det er avslag overalt for ${sak.id}")
                                     } else {
                                         log.info("Fant sak med institusjonsopphold ${sak.id}")
                                         val opprettInstitusjonsOppholdBehandling = opprettNyBehandling(sak)
@@ -119,10 +115,10 @@ class SjekkInstitusjonsOppholdJobbUtfører(
         val varighetPaMinstFireMaaneder =
             !periode.tom.isBefore(periode.fom.plusMonths(4))
 
-        val fomMinstToMaanederSiden =
-            periode.fom.isBefore(now.withDayOfMonth(1).minusMonths(1))
+        val fomToMaanederSiden =
+            periode.fom == now.minusMonths(2)
 
-        return varighetPaMinstFireMaaneder && fomMinstToMaanederSiden
+        return varighetPaMinstFireMaaneder && fomToMaanederSiden
     }
 
     private fun opprettNyBehandling(sak: Sak): Behandling =
@@ -157,6 +153,6 @@ class SjekkInstitusjonsOppholdJobbUtfører(
         /**
          * Kjøres en gang hver dag, slås av og på med Feature Toggle
          */
-        override val cron = CronExpression.createWithoutSeconds("0 11 * * *")
+        override val cron = CronExpression.createWithoutSeconds("0 3 * * *")
     }
 }

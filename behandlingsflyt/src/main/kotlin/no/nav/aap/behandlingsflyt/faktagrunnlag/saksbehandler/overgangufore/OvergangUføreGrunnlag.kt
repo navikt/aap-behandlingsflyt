@@ -44,8 +44,9 @@ data class OvergangUføreGrunnlag(
             .values
             .sortedBy { it[0].opprettet ?: Instant.now() }
             .flatMap { it.sortedBy { it.fom } }
-            .somTidslinje { Periode(it.fom, it.tom ?: maksDato) }
+            .somTidslinje { Periode(it.fom, it.tom ?: Tid.MAKS) }
             .komprimer()
+            .begrensetTil(Periode(Tid.MIN, maksDato))
     }
 
     fun kravdatoUføretrygd() : LocalDate? {

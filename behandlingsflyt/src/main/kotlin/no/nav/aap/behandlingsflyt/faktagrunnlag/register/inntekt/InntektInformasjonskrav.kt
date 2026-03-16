@@ -11,7 +11,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravNavn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravOppdatert
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravRegisterdata
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år.Inntektsbehov
+import no.nav.aap.behandlingsflyt.behandling.beregning.Beregning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.ikkeKjørtSisteKalenderdag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.InntektkomponentenGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.InntektskomponentData
@@ -162,9 +162,9 @@ class InntektInformasjonskrav(
 
     private fun utledAlleRelevanteÅr(behandlingId: BehandlingId): Pair<Set<Year>, Set<Year>> {
         val beregningGrunnlag = beregningVurderingRepository.hentHvisEksisterer(behandlingId)
-        val relevanteUføreInntektÅr = Inntektsbehov.utledRelevanteYtterligereNedsattÅr(beregningGrunnlag)
+        val relevanteUføreInntektÅr = Beregning.utledRelevanteYtterligereNedsattÅr(beregningGrunnlag)
 
-        return Pair(Inntektsbehov.utledAlleRelevanteÅr(beregningGrunnlag), relevanteUføreInntektÅr)
+        return Pair(Beregning.utledAlleRelevanteÅr(beregningGrunnlag), relevanteUføreInntektÅr)
     }
 
     companion object : Informasjonskravkonstruktør {

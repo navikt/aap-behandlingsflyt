@@ -16,6 +16,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Ins
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Oppholdene
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Oppholdstype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.HelseinstitusjonVurdering
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
@@ -56,12 +57,17 @@ class AvklarHelseinstitusjonLøserTest {
     }
 
     @Test
+    fun `forBehov returnerer AVKLAR_HELSEINSTITUSJON`() {
+        assertThat(løser.forBehov()).isEqualTo(Definisjon.AVKLAR_HELSEINSTITUSJON)
+    }
+
+    @Test
     fun `skal lagre ny vurdering når det ikke finnes tidligere vurderinger`() {
         val behandlingId = BehandlingId(1L)
         val vurderingSlot = slot<List<HelseinstitusjonVurdering>>()
 
         every { behandlingRepository.hent(behandlingId) } returns opprettBehandling(behandlingId, null)
-        every { helseinstitusjonRepository.lagreHelseVurdering(any(), any(), capture(vurderingSlot)) } returns Unit
+        every { helseinstitusjonRepository.lagreHelseVurdering(any(), capture(vurderingSlot)) } returns Unit
         every { helseinstitusjonRepository.hentHvisEksisterer(behandlingId) } returns null
 
         val løsning = AvklarHelseinstitusjonLøsning(
@@ -80,7 +86,7 @@ class AvklarHelseinstitusjonLøserTest {
         val resultat = løser.løs(lagKontekst(behandlingId), løsning)
 
         assertThat(resultat.begrunnelse).isEqualTo("Ny vurdering")
-        verify { helseinstitusjonRepository.lagreHelseVurdering(behandlingId, "12345678901", any()) }
+        verify { helseinstitusjonRepository.lagreHelseVurdering(behandlingId, any()) }
 
         val lagredeVurderinger = vurderingSlot.captured
         assertThat(lagredeVurderinger).hasSize(1)
@@ -115,7 +121,7 @@ class AvklarHelseinstitusjonLøserTest {
 
         every { helseinstitusjonRepository.hentHvisEksisterer(nåværendeBehandlingId) } returns null
         every { helseinstitusjonRepository.hentHvisEksisterer(forrigeBehandlingId) } returns eksisterendeGrunnlag
-        every { helseinstitusjonRepository.lagreHelseVurdering(any(), any(), capture(vurderingSlot)) } returns Unit
+        every { helseinstitusjonRepository.lagreHelseVurdering(any(), capture(vurderingSlot)) } returns Unit
 
         val løsning = AvklarHelseinstitusjonLøsning(
             løsningerForPerioder = listOf(
@@ -187,7 +193,7 @@ class AvklarHelseinstitusjonLøserTest {
 
         every { helseinstitusjonRepository.hentHvisEksisterer(nåværendeBehandlingId) } returns null
         every { helseinstitusjonRepository.hentHvisEksisterer(forrigeBehandlingId) } returns eksisterendeGrunnlag
-        every { helseinstitusjonRepository.lagreHelseVurdering(any(), any(), capture(vurderingSlot)) } returns Unit
+        every { helseinstitusjonRepository.lagreHelseVurdering(any(), capture(vurderingSlot)) } returns Unit
 
         val løsning = AvklarHelseinstitusjonLøsning(
             løsningerForPerioder = listOf(
@@ -257,7 +263,7 @@ class AvklarHelseinstitusjonLøserTest {
 
         every { helseinstitusjonRepository.hentHvisEksisterer(nåværendeBehandlingId) } returns null
         every { helseinstitusjonRepository.hentHvisEksisterer(forrigeBehandlingId) } returns eksisterendeGrunnlag
-        every { helseinstitusjonRepository.lagreHelseVurdering(any(), any(), capture(vurderingSlot)) } returns Unit
+        every { helseinstitusjonRepository.lagreHelseVurdering(any(), capture(vurderingSlot)) } returns Unit
 
         val løsning = AvklarHelseinstitusjonLøsning(
             løsningerForPerioder = listOf(
@@ -295,7 +301,7 @@ class AvklarHelseinstitusjonLøserTest {
 
         every { helseinstitusjonRepository.hentHvisEksisterer(behandlingId) } returns null
         every { behandlingRepository.hent(behandlingId) } returns opprettBehandling(behandlingId, null)
-        every { helseinstitusjonRepository.lagreHelseVurdering(any(), any(), capture(vurderingSlot)) } returns Unit
+        every { helseinstitusjonRepository.lagreHelseVurdering(any(), any()) } returns Unit
 
         val løsning = AvklarHelseinstitusjonLøsning(
             løsningerForPerioder = listOf(
@@ -344,7 +350,7 @@ class AvklarHelseinstitusjonLøserTest {
 
         every { helseinstitusjonRepository.hentHvisEksisterer(behandlingId) } returns null
         every { behandlingRepository.hent(behandlingId) } returns opprettBehandling(behandlingId, null)
-        every { helseinstitusjonRepository.lagreHelseVurdering(any(), any(), capture(vurderingSlot)) } returns Unit
+        every { helseinstitusjonRepository.lagreHelseVurdering(any(), capture(vurderingSlot)) } returns Unit
 
         val løsning = AvklarHelseinstitusjonLøsning(
             løsningerForPerioder = listOf(
@@ -394,7 +400,7 @@ class AvklarHelseinstitusjonLøserTest {
 
         every { helseinstitusjonRepository.hentHvisEksisterer(nåværendeBehandlingId) } returns null
         every { helseinstitusjonRepository.hentHvisEksisterer(forrigeBehandlingId) } returns eksisterendeGrunnlag
-        every { helseinstitusjonRepository.lagreHelseVurdering(any(), any(), capture(vurderingSlot)) } returns Unit
+        every { helseinstitusjonRepository.lagreHelseVurdering(any(), capture(vurderingSlot)) } returns Unit
 
         val løsning = AvklarHelseinstitusjonLøsning(
             løsningerForPerioder = listOf(
@@ -424,7 +430,7 @@ class AvklarHelseinstitusjonLøserTest {
 
         every { helseinstitusjonRepository.hentHvisEksisterer(behandlingId) } returns null
         every { behandlingRepository.hent(behandlingId) } returns opprettBehandling(behandlingId, null)
-        every { helseinstitusjonRepository.lagreHelseVurdering(any(), any(), any()) } returns Unit
+        every { helseinstitusjonRepository.lagreHelseVurdering(any(), any()) } returns Unit
 
         val løsning = AvklarHelseinstitusjonLøsning(
             løsningerForPerioder = listOf(

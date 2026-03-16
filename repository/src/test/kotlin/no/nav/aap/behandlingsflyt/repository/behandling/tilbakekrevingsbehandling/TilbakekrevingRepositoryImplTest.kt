@@ -40,7 +40,7 @@ class TilbakekrevingRepositoryImplTest {
     @Test
     fun `to hendelser på samme behandling`() {
         dataSource.transaction { connection ->
-            val sak = opprettSak(connection, periode)
+            val sak = opprettSak(connection, LocalDate.now())
             val nå = LocalDateTime.now()
             val hendelse = Tilbakekrevingshendelse(
                 tilbakekrevingBehandlingId = UUID.randomUUID(),
@@ -77,7 +77,7 @@ class TilbakekrevingRepositoryImplTest {
     @Test
     fun `to hendelser på forskjellig behandling`() {
         dataSource.transaction { connection ->
-            val sak = opprettSak(connection, periode)
+            val sak = opprettSak(connection, LocalDate.now())
             val nå = LocalDateTime.now()
             val hendelse = Tilbakekrevingshendelse(
                 tilbakekrevingBehandlingId = UUID.randomUUID(),
@@ -113,7 +113,7 @@ class TilbakekrevingRepositoryImplTest {
     @Test
     fun `skal ikke hente behandlinger som markert med aktiv = false`() {
         dataSource.transaction { connection ->
-            val sak = opprettSak(connection, periode)
+            val sak = opprettSak(connection, LocalDate.now())
             val nå = LocalDateTime.now()
             val hendelse = Tilbakekrevingshendelse(
                 tilbakekrevingBehandlingId = UUID.randomUUID(),

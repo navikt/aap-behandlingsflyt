@@ -4,16 +4,11 @@ import io.github.nchaugen.tabletest.junit.TableTest
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag11_19
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagUføre
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagYrkesskade
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år.BeregningInput
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år.Inntektsbehov
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.Uføre
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.Yrkesskade
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.Yrkesskader
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningYrkeskaderBeløpVurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.YrkesskadeBeløpVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.YrkesskadeSak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Yrkesskadevurdering
@@ -40,19 +35,17 @@ class BeregningTest {
             InntektPerÅr(2021, Beløp(400000)),
             InntektPerÅr(2020, Beløp(300000))
         )
-        val input = Inntektsbehov(
-            beregningInput = BeregningInput(
-                nedsettelsesDato = LocalDate.of(2023, 1, 1),
-                årsInntekter = årsInntekter,
-                uføregrad = emptySet(),
-                yrkesskadevurdering = null,
-                beregningGrunnlag = null,
-                registrerteYrkesskader = null,
-                inntektsPerioder = inntektsPerioder(årsInntekter)
-            )
-        )
 
-        val beregning = Beregning(input).beregneMedInput()
+        val beregning = Beregning(
+            nedsettelsesDato = LocalDate.of(2023, 1, 1),
+            årsInntekter = årsInntekter,
+            uføregrad = emptySet(),
+            yrkesskadevurdering = null,
+            ytterligereNedsettelsesDato = null,
+            yrkesskadeBeløpVurderinger = null,
+            registrerteYrkesskader = null,
+            inntektsPerioder = inntektsPerioder(årsInntekter)
+        ).beregnBeregningsgrunnlag()
 
         assertThat(beregning.grunnlaget()).isEqualTo(GUnit("4.5543977264"))
     }
@@ -64,27 +57,18 @@ class BeregningTest {
             InntektPerÅr(2021, Beløp(400000)),
             InntektPerÅr(2020, Beløp(300000))
         )
-        val input = Inntektsbehov(
-            BeregningInput(
-                nedsettelsesDato = LocalDate.of(2015, 1, 1),
-                årsInntekter = årsInntekter,
-                uføregrad = setOf(Uføre(LocalDate.now().minusYears(5), Prosent(30))),
-                yrkesskadevurdering = null,
-                beregningGrunnlag = BeregningGrunnlag(
-                    tidspunktVurdering = BeregningstidspunktVurdering(
-                        begrunnelse = "test",
-                        nedsattArbeidsevneEllerStudieevneDato = LocalDate.of(2023, 1, 1),
-                        ytterligereNedsattBegrunnelse = "test2",
-                        ytterligereNedsattArbeidsevneDato = LocalDate.of(2023, 1, 1),
-                        vurdertAv = "saksbehandler"
-                    ), yrkesskadeBeløpVurdering = null
-                ),
-                registrerteYrkesskader = null,
-                inntektsPerioder = inntektsPerioder(årsInntekter)
-            )
-        )
 
-        val beregning = Beregning(input).beregneMedInput()
+        val beregning = Beregning(
+            nedsettelsesDato = LocalDate.of(2015, 1, 1),
+            årsInntekter = årsInntekter,
+            uføregrad = setOf(Uføre(LocalDate.now().minusYears(5), Prosent(30))),
+            yrkesskadevurdering = null,
+            ytterligereNedsettelsesDato = LocalDate.of(2023, 1, 1),
+            yrkesskadeBeløpVurderinger = null,
+            registrerteYrkesskader = null,
+            inntektsPerioder = inntektsPerioder(årsInntekter)
+        ).beregnBeregningsgrunnlag()
+
         assertThat(beregning.grunnlaget()).isEqualTo(GUnit("6"))
     }
 
@@ -95,33 +79,24 @@ class BeregningTest {
             InntektPerÅr(2023, Beløp(400000)),
             InntektPerÅr(2024, Beløp(300000))
         )
-        val input = Inntektsbehov(
-            BeregningInput(
-                nedsettelsesDato = LocalDate.of(2025, 1, 1),
-                årsInntekter = årsInntekter,
-                uføregrad = setOf(
-                    Uføre(
-                        virkningstidspunkt = 1 januar 2023,
-                        uføregradTom = 1 januar 2024,
-                        uføregrad = Prosent(30)
-                    )
-                ),
-                yrkesskadevurdering = null,
-                beregningGrunnlag = BeregningGrunnlag(
-                    tidspunktVurdering = BeregningstidspunktVurdering(
-                        begrunnelse = "test",
-                        nedsattArbeidsevneEllerStudieevneDato = 1 januar 2024,
-                        ytterligereNedsattBegrunnelse = "test2",
-                        ytterligereNedsattArbeidsevneDato = 1 januar 2025,
-                        vurdertAv = "saksbehandler"
-                    ), yrkesskadeBeløpVurdering = null
-                ),
-                registrerteYrkesskader = null,
-                inntektsPerioder = inntektsPerioder(årsInntekter)
-            )
-        )
 
-        val beregning = Beregning(input).beregneMedInput()
+        val beregning = Beregning(
+            nedsettelsesDato = LocalDate.of(2025, 1, 1),
+            årsInntekter = årsInntekter,
+            uføregrad = setOf(
+                Uføre(
+                    virkningstidspunkt = 1 januar 2023,
+                    uføregradTom = 1 januar 2024,
+                    uføregrad = Prosent(30)
+                )
+            ),
+            yrkesskadevurdering = null,
+            ytterligereNedsettelsesDato = 1 januar 2025,
+            yrkesskadeBeløpVurderinger = null,
+            registrerteYrkesskader = null,
+            inntektsPerioder = inntektsPerioder(årsInntekter)
+        ).beregnBeregningsgrunnlag()
+
         assertThat(beregning).isInstanceOf(Grunnlag11_19::class.java)
     }
 
@@ -132,52 +107,40 @@ class BeregningTest {
             InntektPerÅr(Year.of(2021), Beløp(4 * 104_716)),
             InntektPerÅr(Year.of(2020), Beløp(5 * 100_853))
         )
-        val input = Inntektsbehov(
-            BeregningInput(
-                nedsettelsesDato = LocalDate.of(2023, 1, 1),
-                årsInntekter = inntekterPerÅr,
-                uføregrad = emptySet(),
-                yrkesskadevurdering = Yrkesskadevurdering(
-                    begrunnelse = "en begrunnelse",
-                    andelAvNedsettelsen = Prosent(40),
-                    erÅrsakssammenheng = true,
-                    relevanteSaker = listOf(YrkesskadeSak("yrkesskadesaken", null)),
-                    vurdertAv = "saksbehandler"
-                ),
-                beregningGrunnlag = BeregningGrunnlag(
-                    tidspunktVurdering = BeregningstidspunktVurdering(
-                        begrunnelse = "test",
-                        nedsattArbeidsevneEllerStudieevneDato = LocalDate.of(2023, 1, 1),
-                        ytterligereNedsattArbeidsevneDato = null,
-                        ytterligereNedsattBegrunnelse = null,
-                        vurdertAv = "saksbehandler"
-                    ),
-                    yrkesskadeBeløpVurdering = BeregningYrkeskaderBeløpVurdering(
-                        vurderinger = listOf(
-                            YrkesskadeBeløpVurdering(
-                                antattÅrligInntekt = Beløp(500000),
-                                referanse = "yrkesskadesaken",
-                                begrunnelse = "asdf",
-                                vurdertAv = "saksbehandler"
-                            )
-                        )
-                    )
-                ),
-                registrerteYrkesskader = Yrkesskader(
-                    listOf(
-                        Yrkesskade(
-                            ref = "yrkesskadesaken",
-                            saksnummer = 123,
-                            kildesystem = "INFOTRYGD",
-                            skadedato = LocalDate.of(2019, 1, 1)
-                        )
-                    )
-                ),
-                inntektsPerioder = inntektsPerioder(inntekterPerÅr)
-            )
-        )
 
-        val beregning = Beregning(input).beregneMedInput()
+        val beregning = Beregning(
+            nedsettelsesDato = LocalDate.of(2023, 1, 1),
+            årsInntekter = inntekterPerÅr,
+            uføregrad = emptySet(),
+            yrkesskadevurdering = Yrkesskadevurdering(
+                begrunnelse = "en begrunnelse",
+                andelAvNedsettelsen = Prosent(40),
+                erÅrsakssammenheng = true,
+                relevanteSaker = listOf(YrkesskadeSak("yrkesskadesaken", null)),
+                vurdertAv = "saksbehandler"
+            ),
+            ytterligereNedsettelsesDato = null,
+            yrkesskadeBeløpVurderinger = listOf(
+                YrkesskadeBeløpVurdering(
+                    antattÅrligInntekt = Beløp(500000),
+                    referanse = "yrkesskadesaken",
+                    begrunnelse = "asdf",
+                    vurdertAv = "saksbehandler"
+                )
+            ),
+            registrerteYrkesskader = Yrkesskader(
+                listOf(
+                    Yrkesskade(
+                        ref = "yrkesskadesaken",
+                        saksnummer = 123,
+                        kildesystem = "INFOTRYGD",
+                        skadedato = LocalDate.of(2019, 1, 1)
+                    )
+                )
+            ),
+            inntektsPerioder = inntektsPerioder(inntekterPerÅr)
+        ).beregnBeregningsgrunnlag()
+
         // Riktig svar bør være: 0.4*(500000/98866) + 0.6*4 = 4,4229401412
         // Forklaring: første ledd kommer fra yrkesskade (justert til GUnit) pluss gjennomsnitt av inntekt
         // siste 3 år ganget med 0.6 (arbeidsgrad).
@@ -191,52 +154,40 @@ class BeregningTest {
             InntektPerÅr(2021, Beløp(400000)),
             InntektPerÅr(2020, Beløp(300000))
         )
-        val input = Inntektsbehov(
-            BeregningInput(
-                nedsettelsesDato = LocalDate.of(2023, 1, 1),
-                årsInntekter = årsInntekter,
-                uføregrad = setOf(Uføre(LocalDate.of(2023, 1, 1), Prosent(50))),
-                yrkesskadevurdering = Yrkesskadevurdering(
-                    begrunnelse = "en begrunnelse",
-                    andelAvNedsettelsen = Prosent(30),
-                    erÅrsakssammenheng = true,
-                    relevanteSaker = listOf(YrkesskadeSak("yrkesskadesaken", null)),
-                    vurdertAv = "saksbehandler"
-                ),
-                beregningGrunnlag = BeregningGrunnlag(
-                    tidspunktVurdering = BeregningstidspunktVurdering(
-                        begrunnelse = "test",
-                        nedsattArbeidsevneEllerStudieevneDato = LocalDate.of(2023, 1, 1),
-                        ytterligereNedsattBegrunnelse = "test2",
-                        ytterligereNedsattArbeidsevneDato = LocalDate.of(2023, 1, 1),
-                        vurdertAv = "saksbehandler"
-                    ),
-                    yrkesskadeBeløpVurdering = BeregningYrkeskaderBeløpVurdering(
-                        vurderinger = listOf(
-                            YrkesskadeBeløpVurdering(
-                                antattÅrligInntekt = Beløp(500000),
-                                referanse = "yrkesskadesaken",
-                                begrunnelse = "asdf",
-                                vurdertAv = "saksbehandler"
-                            )
-                        )
-                    )
-                ),
-                registrerteYrkesskader = Yrkesskader(
-                    listOf(
-                        Yrkesskade(
-                            ref = "yrkesskadesaken",
-                            saksnummer = 123,
-                            kildesystem = "INFOTRYGD",
-                            skadedato = LocalDate.of(2021, 1, 1)
-                        )
-                    )
-                ),
-                inntektsPerioder = inntektsPerioder(årsInntekter)
-            )
-        )
 
-        val beregning = Beregning(input).beregneMedInput()
+        val beregning = Beregning(
+            nedsettelsesDato = LocalDate.of(2023, 1, 1),
+            årsInntekter = årsInntekter,
+            uføregrad = setOf(Uføre(LocalDate.of(2023, 1, 1), Prosent(50))),
+            yrkesskadevurdering = Yrkesskadevurdering(
+                begrunnelse = "en begrunnelse",
+                andelAvNedsettelsen = Prosent(30),
+                erÅrsakssammenheng = true,
+                relevanteSaker = listOf(YrkesskadeSak("yrkesskadesaken", null)),
+                vurdertAv = "saksbehandler"
+            ),
+            ytterligereNedsettelsesDato = LocalDate.of(2023, 1, 1),
+            yrkesskadeBeløpVurderinger = listOf(
+                YrkesskadeBeløpVurdering(
+                    antattÅrligInntekt = Beløp(500000),
+                    referanse = "yrkesskadesaken",
+                    begrunnelse = "asdf",
+                    vurdertAv = "saksbehandler"
+                )
+            ),
+            registrerteYrkesskader = Yrkesskader(
+                listOf(
+                    Yrkesskade(
+                        ref = "yrkesskadesaken",
+                        saksnummer = 123,
+                        kildesystem = "INFOTRYGD",
+                        skadedato = LocalDate.of(2021, 1, 1)
+                    )
+                )
+            ),
+            inntektsPerioder = inntektsPerioder(årsInntekter)
+        ).beregnBeregningsgrunnlag()
+
         beregning as GrunnlagYrkesskade
         beregning.underliggende() as GrunnlagUføre
 
@@ -255,49 +206,30 @@ class BeregningTest {
             InntektPerÅr(2020, Beløp(300000))
         )
 
-        val inputMedNullUføregrad = Inntektsbehov(
-            BeregningInput(
-                nedsettelsesDato = LocalDate.of(2023, 1, 1),
-                årsInntekter = årsInntekter,
-                uføregrad = setOf(Uføre(LocalDate.now(), Prosent(0))),
-                yrkesskadevurdering = null,
-                beregningGrunnlag = BeregningGrunnlag(
-                    tidspunktVurdering = BeregningstidspunktVurdering(
-                        begrunnelse = "test",
-                        ytterligereNedsattArbeidsevneDato = LocalDate.of(2023, 1, 1),
-                        nedsattArbeidsevneEllerStudieevneDato = LocalDate.of(2023, 1, 1),
-                        ytterligereNedsattBegrunnelse = "test2",
-                        vurdertAv = "saksbehandler"
-                    ),
-                    yrkesskadeBeløpVurdering = null
-                ),
-                registrerteYrkesskader = null,
-                inntektsPerioder = inntektsPerioder(årsInntekter)
-            )
+        val inputMedNullUføregrad = Beregning(
+            nedsettelsesDato = LocalDate.of(2023, 1, 1),
+            årsInntekter = årsInntekter,
+            uføregrad = setOf(Uføre(LocalDate.now(), Prosent(0))),
+            yrkesskadevurdering = null,
+            ytterligereNedsettelsesDato = LocalDate.of(2023, 1, 1),
+            yrkesskadeBeløpVurderinger = null,
+            registrerteYrkesskader = null,
+            inntektsPerioder = inntektsPerioder(årsInntekter)
         )
 
-        val inputMedUføreGradIkkeOppgitt = Inntektsbehov(
-            BeregningInput(
-                nedsettelsesDato = LocalDate.of(2023, 1, 1),
-                årsInntekter = årsInntekter,
-                uføregrad = setOf(),
-                yrkesskadevurdering = null,
-                beregningGrunnlag = BeregningGrunnlag(
-                    tidspunktVurdering = BeregningstidspunktVurdering(
-                        begrunnelse = "test",
-                        ytterligereNedsattArbeidsevneDato = null,
-                        nedsattArbeidsevneEllerStudieevneDato = LocalDate.of(2023, 1, 1),
-                        ytterligereNedsattBegrunnelse = "asdf",
-                        vurdertAv = "saksbehandler"
-                    ), yrkesskadeBeløpVurdering = null
-                ),
-                registrerteYrkesskader = null,
-                inntektsPerioder = inntektsPerioder(årsInntekter)
-            )
+        val inputMedUføreGradIkkeOppgitt = Beregning(
+            nedsettelsesDato = LocalDate.of(2023, 1, 1),
+            årsInntekter = årsInntekter,
+            uføregrad = setOf(),
+            yrkesskadevurdering = null,
+            ytterligereNedsettelsesDato = null,
+            yrkesskadeBeløpVurderinger = null,
+            registrerteYrkesskader = null,
+            inntektsPerioder = inntektsPerioder(årsInntekter)
         )
 
-        val beregning = Beregning(inputMedNullUføregrad).beregneMedInput()
-        val beregningUtenUføregrad = Beregning(inputMedUføreGradIkkeOppgitt).beregneMedInput()
+        val beregning = inputMedNullUføregrad.beregnBeregningsgrunnlag()
+        val beregningUtenUføregrad = inputMedUføreGradIkkeOppgitt.beregnBeregningsgrunnlag()
 
         assertThat(beregning.grunnlaget().verdi()).isCloseTo(
             beregningUtenUføregrad.grunnlaget().verdi(),
@@ -317,18 +249,16 @@ class BeregningTest {
     )
     fun `11-19 tabelldrevet test`(nedsettelsesÅr: Year, inntektPerÅr: Set<InntektPerÅr>, forventetGrunnlag: GUnit) {
         val nedsettelsesDato = nedsettelsesÅr.atDay(1)
-        val input = Inntektsbehov(
-            beregningInput = BeregningInput(
-                nedsettelsesDato = nedsettelsesDato,
-                uføregrad = emptySet(),
-                yrkesskadevurdering = null,
-                beregningGrunnlag = null,
-                registrerteYrkesskader = null,
-                årsInntekter = inntektPerÅr,
-                inntektsPerioder = inntektsPerioder(inntektPerÅr)
-            )
-        )
-        val beregning = Beregning(input).beregneMedInput()
+        val beregning = Beregning(
+            nedsettelsesDato = nedsettelsesDato,
+            uføregrad = emptySet(),
+            yrkesskadevurdering = null,
+            ytterligereNedsettelsesDato = null,
+            yrkesskadeBeløpVurderinger = null,
+            registrerteYrkesskader = null,
+            årsInntekter = inntektPerÅr,
+            inntektsPerioder = inntektsPerioder(inntektPerÅr)
+        ).beregnBeregningsgrunnlag()
         val actual = beregning.grunnlaget()
 
         assertThat(actual).isEqualTo(forventetGrunnlag)

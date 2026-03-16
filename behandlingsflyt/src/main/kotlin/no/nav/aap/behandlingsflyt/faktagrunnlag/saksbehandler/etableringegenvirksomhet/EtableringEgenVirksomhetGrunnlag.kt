@@ -15,7 +15,8 @@ data class EtableringEgenVirksomhetGrunnlag(
             .values
             .sortedBy { it[0].opprettetTid }
             .flatMap { it.sortedBy { it.vurderingenGjelderFra } }
-            .somTidslinje { Periode(it.vurderingenGjelderFra, it.vurderingenGjelderTil ?: maksDato) }
+            .somTidslinje { Periode(it.vurderingenGjelderFra, it.vurderingenGjelderTil ?: Tid.MAKS) }
             .komprimer()
+            .begrensetTil(Periode(Tid.MIN, maksDato))
     }
 }

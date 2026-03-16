@@ -15,6 +15,7 @@ import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.httpklient.exception.VerdiIkkeFunnetException
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.lookup.repository.RepositoryProvider
+import org.slf4j.LoggerFactory
 import java.util.*
 
 class BrevbestillingService(
@@ -25,12 +26,14 @@ class BrevbestillingService(
     private val sakRepository: SakRepository,
 ) {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
-        signaturService = SignaturService(repositoryProvider),
+        signaturService = SignaturService(repositoryProvider, gatewayProvider),
         brevbestillingGateway = gatewayProvider.provide(),
         brevbestillingRepository = repositoryProvider.provide(),
         behandlingRepository = repositoryProvider.provide(),
-        sakRepository = repositoryProvider.provide(),
+        sakRepository = repositoryProvider.provide()
     )
+
+    private val log = LoggerFactory.getLogger(javaClass)
 
     fun harBestillingOmVedtak(behandlingId: BehandlingId): Boolean {
         return brevbestillingRepository.hent(behandlingId).any { it.typeBrev.erVedtak() }
@@ -76,8 +79,10 @@ class BrevbestillingService(
         )
         val alleredeLagretBestilling = brevbestillingRepository.hent(bestillingReferanse)
         if (alleredeLagretBestilling != null) {
-            throw IllegalStateException("Bestilling med referanse $bestillingReferanse er allerede lagret.")
+            log.warn("Bestilling med referanse $bestillingReferanse er allerede lagret.")
+            return bestillingReferanse.brevbestillingReferanse
         }
+
         val status = if (ferdigstillAutomatisk) {
             Status.FULLFØRT
         } else {

@@ -133,11 +133,11 @@ object InMemoryBarnRepository : BarnRepository {
         TODO("Not yet implemented")
     }
 
-    override fun finnSaksbehandlerOppgitteBarn(ident: String): SaksbehandlerOppgitteBarn.SaksbehandlerOppgitteBarn {
+    override fun finnSaksbehandlerOppgitteBarn(ident: Ident): SaksbehandlerOppgitteBarn.SaksbehandlerOppgitteBarn {
         TODO("Not yet implemented")
     }
 
-    override fun finnSøknadsBarn(ident: String): OppgitteBarn.OppgittBarn? {
+    override fun finnSøknadsBarn(ident: Ident): OppgitteBarn.OppgittBarn? {
         TODO("Not yet implemented")
     }
 

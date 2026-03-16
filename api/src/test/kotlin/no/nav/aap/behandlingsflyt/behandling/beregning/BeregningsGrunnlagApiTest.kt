@@ -1,14 +1,9 @@
 package no.nav.aap.behandlingsflyt.behandling.beregning
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år.Inntektsbehov
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år.BeregningInput
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.Uføre
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.Yrkesskade
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.Yrkesskader
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningYrkeskaderBeløpVurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.YrkesskadeBeløpVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.YrkesskadeSak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Yrkesskadevurdering
@@ -32,52 +27,40 @@ class BeregningsGrunnlagApiTest {
             InntektPerÅr(2021, Beløp(400000)),
             InntektPerÅr(2020, Beløp(300000))
         )
-        val input = Inntektsbehov(
-            BeregningInput(
-                nedsettelsesDato = LocalDate.of(2023, 1, 1),
-                årsInntekter = årsInntekter,
-                uføregrad = setOf(Uføre(LocalDate.of(2023, 1, 1), Prosent(30))),
-                yrkesskadevurdering = Yrkesskadevurdering(
-                    begrunnelse = "en begrunnelse",
-                    andelAvNedsettelsen = Prosent(30),
-                    erÅrsakssammenheng = true,
-                    relevanteSaker = listOf(YrkesskadeSak("yrkesskadesaken", null)),
-                    vurdertAv = "saksbehandler"
-                ),
-                beregningGrunnlag = BeregningGrunnlag(
-                    tidspunktVurdering = BeregningstidspunktVurdering(
-                        begrunnelse = "test",
-                        ytterligereNedsattArbeidsevneDato = LocalDate.of(2023, 1, 1),
-                        ytterligereNedsattBegrunnelse = "test",
-                        nedsattArbeidsevneEllerStudieevneDato = LocalDate.of(2023, 1, 1),
-                        vurdertAv = "saksbehandler"
-                    ),
-                    yrkesskadeBeløpVurdering = BeregningYrkeskaderBeløpVurdering(
-                        vurderinger = listOf(
-                            YrkesskadeBeløpVurdering(
-                                antattÅrligInntekt = Beløp(50000),
-                                referanse = "yrkesskadesaken",
-                                begrunnelse = "asdf",
-                                vurdertAv = "saksbehandler"
-                            )
-                        )
-                    )
-                ),
-                registrerteYrkesskader = Yrkesskader(
-                    listOf(
-                        Yrkesskade(
-                            ref = "yrkesskadesaken",
-                            saksnummer = 123,
-                            kildesystem = "INFOTRYGD",
-                            skadedato = LocalDate.of(2021, 1, 1)
-                        )
-                    )
-                ),
-                inntektsPerioder = inntektsPerioder(årsInntekter)
-            )
-        )
 
-        val beregning = Beregning(input).beregneMedInput()
+        val beregning = Beregning(
+            nedsettelsesDato = LocalDate.of(2023, 1, 1),
+            årsInntekter = årsInntekter,
+            uføregrad = setOf(Uføre(LocalDate.of(2023, 1, 1), Prosent(30))),
+            yrkesskadevurdering = Yrkesskadevurdering(
+                begrunnelse = "en begrunnelse",
+                andelAvNedsettelsen = Prosent(30),
+                erÅrsakssammenheng = true,
+                relevanteSaker = listOf(YrkesskadeSak("yrkesskadesaken", null)),
+                vurdertAv = "saksbehandler"
+            ),
+            ytterligereNedsettelsesDato = LocalDate.of(2023, 1, 1),
+            yrkesskadeBeløpVurderinger = listOf(
+                YrkesskadeBeløpVurdering(
+                    antattÅrligInntekt = Beløp(50000),
+                    referanse = "yrkesskadesaken",
+                    begrunnelse = "asdf",
+                    vurdertAv = "saksbehandler"
+                )
+            ),
+            registrerteYrkesskader = Yrkesskader(
+                listOf(
+                    Yrkesskade(
+                        ref = "yrkesskadesaken",
+                        saksnummer = 123,
+                        kildesystem = "INFOTRYGD",
+                        skadedato = LocalDate.of(2021, 1, 1)
+                    )
+                )
+            ),
+            inntektsPerioder = inntektsPerioder(årsInntekter)
+        ).beregnBeregningsgrunnlag()
+
         val behandlingOpprettet = LocalDate.of(2024, 1, 1)
 
         val res = beregningDTO(beregning, behandlingOpprettet)
@@ -102,52 +85,40 @@ class BeregningsGrunnlagApiTest {
             InntektPerÅr(2021, Beløp(400000)),
             InntektPerÅr(2020, Beløp(300000))
         )
-        val input = Inntektsbehov(
-            BeregningInput(
-                nedsettelsesDato = LocalDate.of(2023, 1, 1),
-                årsInntekter = årsInntekter,
-                uføregrad = setOf(Uføre(LocalDate.of(2021, 1, 1), Prosent(30))),
-                yrkesskadevurdering = Yrkesskadevurdering(
-                    begrunnelse = "en begrunnelse",
-                    andelAvNedsettelsen = Prosent(30),
-                    erÅrsakssammenheng = true,
-                    relevanteSaker = listOf(YrkesskadeSak("yrkesskadesaken", null)),
-                    vurdertAv = "saksbehandler"
-                ),
-                beregningGrunnlag = BeregningGrunnlag(
-                    tidspunktVurdering = BeregningstidspunktVurdering(
-                        begrunnelse = "test",
-                        ytterligereNedsattArbeidsevneDato = LocalDate.of(2023, 1, 1),
-                        ytterligereNedsattBegrunnelse = "test",
-                        nedsattArbeidsevneEllerStudieevneDato = LocalDate.of(2023, 1, 1),
-                        vurdertAv = "saksbehandler"
-                    ),
-                    yrkesskadeBeløpVurdering = BeregningYrkeskaderBeløpVurdering(
-                        vurderinger = listOf(
-                            YrkesskadeBeløpVurdering(
-                                antattÅrligInntekt = Beløp(9999999999),
-                                referanse = "yrkesskadesaken",
-                                begrunnelse = "asdf",
-                                vurdertAv = "saksbehandler"
-                            )
-                        )
-                    )
-                ),
-                registrerteYrkesskader = Yrkesskader(
-                    listOf(
-                        Yrkesskade(
-                            ref = "yrkesskadesaken",
-                            saksnummer = 123,
-                            kildesystem = "INFOTRYGD",
-                            skadedato = LocalDate.of(2021, 1, 1)
-                        )
-                    )
-                ),
-                inntektsPerioder = inntektsPerioder(årsInntekter)
-            )
-        )
 
-        val beregning = Beregning(input).beregneMedInput()
+        val beregning = Beregning(
+            nedsettelsesDato = LocalDate.of(2023, 1, 1),
+            årsInntekter = årsInntekter,
+            uføregrad = setOf(Uføre(LocalDate.of(2021, 1, 1), Prosent(30))),
+            yrkesskadevurdering = Yrkesskadevurdering(
+                begrunnelse = "en begrunnelse",
+                andelAvNedsettelsen = Prosent(30),
+                erÅrsakssammenheng = true,
+                relevanteSaker = listOf(YrkesskadeSak("yrkesskadesaken", null)),
+                vurdertAv = "saksbehandler"
+            ),
+            ytterligereNedsettelsesDato = LocalDate.of(2023, 1, 1),
+            yrkesskadeBeløpVurderinger = listOf(
+                YrkesskadeBeløpVurdering(
+                    antattÅrligInntekt = Beløp(9999999999),
+                    referanse = "yrkesskadesaken",
+                    begrunnelse = "asdf",
+                    vurdertAv = "saksbehandler"
+                )
+            ),
+            registrerteYrkesskader = Yrkesskader(
+                listOf(
+                    Yrkesskade(
+                        ref = "yrkesskadesaken",
+                        saksnummer = 123,
+                        kildesystem = "INFOTRYGD",
+                        skadedato = LocalDate.of(2021, 1, 1)
+                    )
+                )
+            ),
+            inntektsPerioder = inntektsPerioder(årsInntekter)
+        ).beregnBeregningsgrunnlag()
+
         val behandlingOpprettet = LocalDate.of(2024, 1, 1)
 
         val res = beregningDTO(beregning, behandlingOpprettet)

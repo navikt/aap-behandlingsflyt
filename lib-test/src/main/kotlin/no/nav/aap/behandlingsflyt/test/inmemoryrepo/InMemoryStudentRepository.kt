@@ -7,36 +7,54 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentVur
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 
 object InMemoryStudentRepository : StudentRepository {
+    private val mutex = Any()
+    private val grunnlag = HashMap<BehandlingId, StudentGrunnlag>()
+
     override fun lagre(
         behandlingId: BehandlingId,
         oppgittStudent: OppgittStudent?
     ) {
-        TODO("Not yet implemented")
+        synchronized(mutex) {
+            grunnlag[behandlingId] = (grunnlag[behandlingId] ?: StudentGrunnlag(null, null))
+                .copy(oppgittStudent = oppgittStudent)
+        }
     }
 
     override fun lagre(
         behandlingId: BehandlingId,
         vurderinger: Set<StudentVurdering>?
     ) {
-        TODO("Not yet implemented")
+        synchronized(mutex) {
+            grunnlag[behandlingId] = (grunnlag[behandlingId] ?: StudentGrunnlag(null, null))
+                .copy(vurderinger = vurderinger)
+        }
     }
 
     override fun kopier(
         fraBehandling: BehandlingId,
         tilBehandling: BehandlingId
     ) {
-        TODO("Not yet implemented")
+        synchronized(mutex) {
+            val fraGrunnlag = grunnlag[fraBehandling]
+            if (fraGrunnlag != null) {
+                grunnlag[tilBehandling] = fraGrunnlag
+            }
+        }
     }
 
     override fun hentHvisEksisterer(behandlingId: BehandlingId): StudentGrunnlag? {
-        TODO("Not yet implemented")
+        return synchronized(mutex) {
+            grunnlag[behandlingId]
+        }
     }
 
     override fun hent(behandlingId: BehandlingId): StudentGrunnlag {
-        TODO("Not yet implemented")
+        return hentHvisEksisterer(behandlingId)!!
     }
 
     override fun slett(behandlingId: BehandlingId) {
-        TODO("Not yet implemented")
+        synchronized(mutex) {
+            grunnlag.remove(behandlingId)
+        }
     }
 }

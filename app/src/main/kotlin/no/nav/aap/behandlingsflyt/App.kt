@@ -27,7 +27,9 @@ import no.nav.aap.behandlingsflyt.behandling.arbeidsopptrapping.arbeidsopptrappi
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.avklaringsbehovApi
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.fatteVedtakGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.utledSubtypesTilAvklaringsbehovLøsning
+import no.nav.aap.behandlingsflyt.behandling.barnepensjon.barnepensjonGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.barnetillegg.barnetilleggApi
+import no.nav.aap.behandlingsflyt.behandling.bekreftvurderingeroppfølging.bekreftVurderingerOppfølgingApi
 import no.nav.aap.behandlingsflyt.behandling.beregning.beregningsGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.alder.aldersGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.fritakmeldeplikt.meldepliktsgrunnlagApi
@@ -293,6 +295,8 @@ internal fun Application.server(
                 mellomlagretVurderingApi(dataSource, repositoryRegistry, gatewayProvider)
                 rettighetApi(dataSource, repositoryRegistry)
                 tidligereVurderingerApi(dataSource, repositoryRegistry, gatewayProvider)
+                barnepensjonGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
+                bekreftVurderingerOppfølgingApi(dataSource, repositoryRegistry, gatewayProvider)
                 // Klage
                 påklagetBehandlingGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
                 fullmektigGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
@@ -343,9 +347,7 @@ private fun Application.startKafkakonsumenter(
         startPDLHendelseKonsument(dataSource, repositoryRegistry, gatewayProvider)
         startTilbakekrevingEventKonsument(dataSource, repositoryRegistry)
         startSykepengevedtakKonsument(dataSource, repositoryRegistry, gatewayProvider)
-        startInstitusjonsOppholdKonsument(dataSource, repositoryRegistry)
-    }
-    if (!Miljø.erLokal() && !Miljø.erProd()) {
+        startInstitusjonsOppholdKonsument(dataSource, repositoryRegistry, gatewayProvider)
         startUføreVedtakEventKonsument(dataSource, repositoryRegistry, gatewayProvider)
     }
 }
@@ -543,6 +545,7 @@ fun Application.startUføreVedtakEventKonsument(
 fun Application.startInstitusjonsOppholdKonsument(
     dataSource: DataSource,
     repositoryRegistry: RepositoryRegistry,
+    gatewayProvider: GatewayProvider,
 ): KafkaKonsument<String, InstitusjonsOppholdHendelseKafkaMelding> {
 
     val konsument = InstitusjonsOppholdKafkaKonsument(
@@ -553,6 +556,7 @@ fun Application.startInstitusjonsOppholdKonsument(
         closeTimeout = AppConfig.stansArbeidTimeout,
         dataSource = dataSource,
         repositoryRegistry = repositoryRegistry,
+        gatewayProvider = gatewayProvider,
         institusjonsoppholdKlient = InstitusjonsoppholdGatewayImpl
     )
     monitor.subscribe(ApplicationStarted) {

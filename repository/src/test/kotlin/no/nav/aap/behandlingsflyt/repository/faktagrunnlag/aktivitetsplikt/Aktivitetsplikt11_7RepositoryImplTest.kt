@@ -24,11 +24,10 @@ import java.time.Instant
 import java.time.LocalDate
 import java.util.*
 
+@Suppress("ClassName")
 internal class Aktivitetsplikt11_7RepositoryImplTest {
 
     companion object {
-        private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
-
         private lateinit var dataSource: TestDataSource
 
         @BeforeAll
@@ -45,7 +44,7 @@ internal class Aktivitetsplikt11_7RepositoryImplTest {
     @Test
     fun `Lagrer ned og henter vurdering av aktivitetsplikt § 11-7`() {
         dataSource.transaction { connection ->
-            val sak = opprettSak(connection, periode)
+            val sak = opprettSak(connection, LocalDate.now())
             val behandling = finnEllerOpprettBehandling(connection, sak)
 
             val aktivitetspliktRepository = Aktivitetsplikt11_7RepositoryImpl(connection)

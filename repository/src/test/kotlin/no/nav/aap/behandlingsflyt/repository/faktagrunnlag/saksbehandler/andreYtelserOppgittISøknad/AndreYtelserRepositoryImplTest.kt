@@ -4,14 +4,11 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.AndreUtbetaling
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.AndreYtelserSøknad
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.help.opprettSak
-
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
-import no.nav.aap.behandlingsflyt.test.desember
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
-import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
@@ -38,7 +35,7 @@ class AndreYtelserRepositoryImplTest {
         val behandling1 = dataSource.transaction {
             finnEllerOpprettBehandling(it, sak)
         }
-        val stønad = listOf<AndreUtbetalingerYtelser>(
+        val stønad = listOf(
             AndreUtbetalingerYtelser.ØKONOMISK_SOSIALHJELP,
             AndreUtbetalingerYtelser.OMSORGSSTØNAD,
             AndreUtbetalingerYtelser.AFP
@@ -81,7 +78,7 @@ class AndreYtelserRepositoryImplTest {
         val behandling1 = dataSource.transaction {
             finnEllerOpprettBehandling(it, sak)
         }
-        val stønad = listOf<AndreUtbetalingerYtelser>(
+        val stønad = listOf(
             AndreUtbetalingerYtelser.ØKONOMISK_SOSIALHJELP,
             AndreUtbetalingerYtelser.OMSORGSSTØNAD,
             AndreUtbetalingerYtelser.AFP
@@ -148,7 +145,7 @@ class AndreYtelserRepositoryImplTest {
         val behandling1 = dataSource.transaction {
             finnEllerOpprettBehandling(it, sak)
         }
-        val stønad1 = listOf<AndreUtbetalingerYtelser>(
+        val stønad1 = listOf(
             AndreUtbetalingerYtelser.ØKONOMISK_SOSIALHJELP,
             AndreUtbetalingerYtelser.OMSORGSSTØNAD
         )
@@ -160,7 +157,7 @@ class AndreYtelserRepositoryImplTest {
         val behandling2 = dataSource.transaction {
             finnEllerOpprettBehandling(it, sak2)
         }
-        val stønad2 = listOf<AndreUtbetalingerYtelser>(
+        val stønad2 = listOf(
             AndreUtbetalingerYtelser.OMSORGSSTØNAD,
             AndreUtbetalingerYtelser.INTRODUKSJONSSTØNAD,
         )
@@ -197,6 +194,6 @@ class AndreYtelserRepositoryImplTest {
 
 
     private fun sakForTestPeriode(connection: DBConnection): Sak {
-        return opprettSak(connection, Periode(1 januar 2022, 31.desember(2023)))
+        return opprettSak(connection, 1 januar 2022)
     }
 }
