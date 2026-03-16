@@ -50,10 +50,6 @@ class FraværFastsattAktivitetRegelTest {
                 2 januar 2020
             ),
         )
-        // TODO : Burde begge asserts forvente reduksjon for 2 påfølgende dager ? Noe ala dette her?
-        //assertEquals(REDUKSJON, vurdering.segment(LocalDate.of(2020, 1, 1))!!.verdi.vilkårsvurdering)
-        //assertEquals(REDUKSJON, vurdering.segment(LocalDate.of(2020, 1, 2))!!.verdi.vilkårsvurdering)
-
         assertEquals(REDUKSJON, vurdering.segment(1 januar 2020)!!.verdi.utfall)
         assertEquals(REDUKSJON, vurdering.segment(2 januar 2020)!!.verdi.utfall)
     }

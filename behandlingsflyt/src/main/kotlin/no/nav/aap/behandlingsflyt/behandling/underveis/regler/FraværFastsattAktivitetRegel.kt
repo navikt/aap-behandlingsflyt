@@ -36,52 +36,33 @@ class FraværFastsattAktivitetRegel : UnderveisRegel {
         )
     }
 
-    private fun Tidslinje<FraværFastsattAktivitetVurdering>.sammenslåTilstøtendeVurderinger(): Tidslinje<FraværFastsattAktivitetVurdering> =
-        segmenter()
-            .fold(emptyList<Segment<FraværFastsattAktivitetVurdering>>()) { acc, current ->
-                val last = acc.lastOrNull()
-
-                if (last != null &&
-                    last.verdi.utfall == current.verdi.utfall &&
-                    last.periode.tom.plusDays(1) == current.periode.fom
-                ) {
-                    val sammenslåttPeriode = Periode(last.periode.fom, current.periode.tom)
-                    acc.dropLast(1) + Segment(
-                        sammenslåttPeriode,
-                        last.verdi
-                    )
-                } else {
-                    acc + current
-                }
-            }.let(::Tidslinje)
-
-
     override fun vurder(input: UnderveisInput, resultat: Tidslinje<Vurdering>): Tidslinje<Vurdering> {
         require(input.periodeForVurdering.inneholder(resultat.helePerioden())) {
             "kan ikke vurdere utenfor periode for vurdering fordi meldeperioden ikke er definert"
         }
 
-        val fraværTidslinje: Tidslinje<FraværIPeriode> =
-            input.meldekort
-                .flatMap { it.fravær }
-                .sortedBy { it.periode }
-                .somTidslinje { it.periode }
+        val fraværTidslinje = hentUtAltFraværFraMeldekortene(input)
 
         // Første dag med fravær uten gyldig årsak i meldeperioden teller ikke i årskvote
         // Deler opp på meldeperiode først for å finne første i meldeperioden
         // Dette brukes for å regne ut antall dager med reduksjon per kalenderår som utfall av vurderingen
-        val fraværTidslinjeMedUnntakIdentifisert: Tidslinje<FraværMedUnntakVurdertForPeriode> =
-            tidslinjeMedUnntakIdentifisert(input.meldeperioder, fraværTidslinje)
+        val fraværTidslinjeMedUnntakIdentifisert = tidslinjeMedUnntakIdentifisert(input.meldeperioder, fraværTidslinje)
 
-        val ferdigVurdert = fraværTidslinjeMedUnntakIdentifisert.splittOppKalenderår()
+        val ferdigVurdert = fraværTidslinjeMedUnntakIdentifisert
+            .splittOppKalenderår()
             .flatMap { kalenderårSegment ->
                 vurderKalenderår(kalenderårSegment.verdi)
             }
-            .sammenslåTilstøtendeVurderinger()
+            .komprimer()
             .begrensetTil(input.periodeForVurdering) // TODO skal dette gjøres?
 
         return resultat.leggTilVurderinger(ferdigVurdert, Vurdering::leggTilAktivitetspliktVurdering)
     }
+
+    private fun hentUtAltFraværFraMeldekortene(input: UnderveisInput): Tidslinje<FraværIPeriode> = input.meldekort
+        .flatMap { it.fravær }
+        .sortedBy { it.periode }
+        .somTidslinje { it.periode }
 
     private fun tidslinjeMedUnntakIdentifisert(
         meldeperioder: List<Periode>,
