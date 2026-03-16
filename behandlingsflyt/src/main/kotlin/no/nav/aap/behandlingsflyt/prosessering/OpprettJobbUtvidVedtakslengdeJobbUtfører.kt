@@ -45,40 +45,48 @@ class OpprettJobbUtvidVedtakslengdeJobbUtfører(
 
     // TODO: Må filtrere vekk de som allerede har blitt kjørt, men ikke kvalifiserte til reell utvidelse av vedtakslengde
     private fun hentKandidaterForUtvidelseAvVedtakslengde(datoForUtvidelse: LocalDate): Set<SakId> {
-        return vedtakslengdeService.hentSakerAktuelleForUtvidelseAvVedtakslengde(datoForUtvidelse)
-            .partition { kunSakerMedBehovForUtvidelseAvVedtakslengde(it) }
-            .let { (sakerSomUtvides, sakerSomIkkeUtvides) ->
-                if (sakerSomIkkeUtvides.isNotEmpty()) {
-                    log.info("Følgende saker utvides ikke (ha et øye på disse inntil vi støtter manuell behandling): $sakerSomIkkeUtvides")
-                }
-                sakerSomUtvides
-            }
+        val kandidater = vedtakslengdeService.hentSakerAktuelleForUtvidelseAvVedtakslengde(datoForUtvidelse)
+            .map { vurderUtvidelseBehov(it) }
+            .groupBy { it.utvidelse?.let { u -> u::class } }
+
+        val ingenBehandlingSaker = kandidater[null].orEmpty()
+
+        if (ingenBehandlingSaker.isNotEmpty()) {
+            log.info("Følgende saker har ingen gjeldende vedtatt behandling. Saker: ${ingenBehandlingSaker.map { it.sakId }}")
+        }
+
+        val manuelleSaker = kandidater[VedtakslengdeUtvidelse.Manuell::class].orEmpty()
+        if (manuelleSaker.isNotEmpty()) {
+            log.error("Følgende saker trenger manuell utvidelse av vedtakslengde. Må følges opp! Saker: ${manuelleSaker.map { it.sakId }}")
+        }
+
+        val ingenRettighetSaker = kandidater[VedtakslengdeUtvidelse.IngenFremtidigBistandsbehovRettighet::class].orEmpty()
+        if (ingenRettighetSaker.isNotEmpty()) {
+            log.info("Følgende saker har ingen fremtidig bistandsbehovrettighet. Saker: ${ingenRettighetSaker.map { it.sakId }}")
+        }
+
+        return kandidater[VedtakslengdeUtvidelse.Automatisk::class].orEmpty()
+            .map { it.sakId }
             .toSet()
     }
 
-    private fun kunSakerMedBehovForUtvidelseAvVedtakslengde(id: SakId): Boolean {
-        val sisteGjeldendeBehandling = behandlingService.finnBehandlingMedSisteFattedeVedtak(id)
-        if (sisteGjeldendeBehandling != null) {
-            // Bruker sisteGjeldendeBehandling.id både for behandlingId og forrigeBehandlingId fordi vi ser på gjeldende behandling
-            val vedtakslengdeUtvidelse = vedtakslengdeService.hentNesteVedtakslengdeUtvidelse(
-                behandlingId = sisteGjeldendeBehandling.id,
-                forrigeBehandlingId = sisteGjeldendeBehandling.id,
-            )
+    private fun vurderUtvidelseBehov(sakId: SakId): KandidatForUtvidelse {
+        val sisteGjeldendeBehandling = behandlingService.finnBehandlingMedSisteFattedeVedtak(sakId)
+            ?: return KandidatForUtvidelse(sakId = sakId, utvidelse = null)
 
-            return when (vedtakslengdeUtvidelse) {
-                is VedtakslengdeUtvidelse.Automatisk -> true
-                is VedtakslengdeUtvidelse.Manuell -> {
-                    log.error("Sak med id $id trenger manuell utvidelse av vedtakslengde. Dette er ikke implementert. Må følges opp! ($vedtakslengdeUtvidelse)")
-                    false
-                }
-                is VedtakslengdeUtvidelse.IngenFremtidigBistandsbehovRettighet -> {
-                    log.info("Sak med id $id har ingen fremtidig bistandsbehovrettighet, hopper over")
-                    false
-                }
-            }
-        }
-        return false
+        // Bruker sisteGjeldendeBehandling.id både for behandlingId og forrigeBehandlingId fordi vi ser på gjeldende behandling
+        val vedtakslengdeUtvidelse = vedtakslengdeService.hentNesteVedtakslengdeUtvidelse(
+            behandlingId = sisteGjeldendeBehandling.id,
+            forrigeBehandlingId = sisteGjeldendeBehandling.id,
+        )
+
+        return KandidatForUtvidelse(sakId = sakId, utvidelse = vedtakslengdeUtvidelse)
     }
+
+    private data class KandidatForUtvidelse(
+        val sakId: SakId,
+        val utvidelse: VedtakslengdeUtvidelse?,
+    )
 
     companion object : ProvidersJobbSpesifikasjon {
         override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): JobbUtfører {

@@ -86,6 +86,29 @@ class OpprettJobbUtvidVedtakslengdeJobbUtførerTest {
         verify(exactly = 0) { flytJobbRepository.leggTil(any()) }
     }
 
+    @Test
+    fun `skal ikke opprette jobber hvis hentNesteVedtakslengdeUtvidelse gir Manuell`() {
+        every { vedtakslengdeService.hentSakerAktuelleForUtvidelseAvVedtakslengde(any()) } returns setOf(sakId)
+        every { vedtakslengdeService.hentNesteVedtakslengdeUtvidelse(behandlingId, behandlingId) } returns VedtakslengdeUtvidelse.Manuell(
+            forrigeSluttdato = dagensDato,
+        )
+        every { behandlingService.finnBehandlingMedSisteFattedeVedtak(sakId) } returns behandlingMedVedtak()
+
+        opprettJobbUtvidVedtakslengdeJobbUtfører.utfør(jobbInput)
+
+        verify(exactly = 0) { flytJobbRepository.leggTil(any()) }
+    }
+
+    @Test
+    fun `skal ikke opprette jobber hvis sak ikke har gjeldende vedtatt behandling`() {
+        every { vedtakslengdeService.hentSakerAktuelleForUtvidelseAvVedtakslengde(any()) } returns setOf(sakId)
+        every { behandlingService.finnBehandlingMedSisteFattedeVedtak(sakId) } returns null
+
+        opprettJobbUtvidVedtakslengdeJobbUtfører.utfør(jobbInput)
+
+        verify(exactly = 0) { flytJobbRepository.leggTil(any()) }
+    }
+
     private fun behandlingMedVedtak(): BehandlingMedVedtak =
         BehandlingMedVedtak(
             saksnummer = Saksnummer("123"),
