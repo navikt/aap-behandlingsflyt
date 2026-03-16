@@ -609,7 +609,7 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
 
     private fun getUtenlandsOppholdIds(behandlingId: BehandlingId): List<Long> = connection.queryList(
         """
-                    SELECT id
+                    SELECT oppgitt_utenlandsopphold_id
                     FROM OPPGITT_UTENLANDSOPPHOLD_GRUNNLAG
                     WHERE behandling_id = ?
                  
@@ -617,7 +617,7 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
     ) {
         setParams { setLong(1, behandlingId.id) }
         setRowMapper { row ->
-            row.getLong("id")
+            row.getLong("opphold_utenlandsopphold_id")
         }
     }
 
