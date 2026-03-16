@@ -1,0 +1,1 @@
+alter table utenlands_periode alter column utenlands_id type text;

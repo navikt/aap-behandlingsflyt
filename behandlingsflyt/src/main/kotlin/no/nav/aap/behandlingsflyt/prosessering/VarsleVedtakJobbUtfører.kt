@@ -6,9 +6,12 @@ import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.tilTidslinje
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakRepository
 import no.nav.aap.behandlingsflyt.datadeling.sam.SamGateway
 import no.nav.aap.behandlingsflyt.datadeling.sam.SamordneVedtakRequest
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjonRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.refusjonskrav.TjenestepensjonRefusjonsKravVurderingRepository
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
@@ -83,6 +86,9 @@ class VarsleVedtakJobbUtfører(
             forrigeUnderveisGrunnlag,
             nåværendeUnderveisGrunnlag!!
         )
+
+        val tpYtelser = repositoryProvider.provide<TjenestePensjonRepository>().hentHvisEksisterer(behandling.id)?.flatMap { it.ytelser }
+
         val relevantEndring =
             listOf(
                 førstegangsbehandling,
@@ -91,7 +97,7 @@ class VarsleVedtakJobbUtfører(
             )
 
 
-        if (relevantEndring.contains(true)) {
+        if (relevantEndring.contains(true) && tpYtelser?.isNotEmpty()?:false) {
             log.info("Varsler SAM for behandling med referanse ${behandling.referanse} og saksnummer ${sak.saksnummer}. Årsak: førstegangsbehandling=${førstegangsbehandling}, endringIRettighetstype=${endringIRettighetsTypeTidslinje}")
             samGateway.varsleVedtak(request)
         }
