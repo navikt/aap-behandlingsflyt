@@ -132,46 +132,26 @@ class FraværFastsattAktivitetRegel : UnderveisRegel {
 
             when (fravær.fraværÅrsak) {
                 FraværÅrsak.SYKDOM_ELLER_SKADE ->
-                    Tidslinje(
-                        vurderingSegment.periode,
-                        FraværFastsattAktivitetVurdering(
-//                            fravær = fravær,
-                            vilkårsvurdering = FRAVÆR_SYKDOM_ELLER_SKADE,
-                        )
-                    )
+                    Tidslinje(vurderingSegment.periode, FraværFastsattAktivitetVurdering(FRAVÆR_SYKDOM_ELLER_SKADE))
 
                 FraværÅrsak.OMSORG_FØRSTE_SKOLEDAG_TILVENNING_ELLER_ANNEN_OPPFØLGING_BARN, // TODO kvote
                 FraværÅrsak.OMSORG_PLEIE_I_HJEMMET_AV_NÆR_PÅRØRENDE,
                 FraværÅrsak.OMSORG_DØDSFALL_I_FAMILIE_ELLER_VENNEKRETS, // TODO kvote
                 FraværÅrsak.OMSORG_ANNEN_STERK_GRUNN -> {
-                    (0..<vurderingSegment.periode.antallDager()).map { periodeOffset ->
-                        kalenderårskvote += 1
-                        val dag = vurderingSegment.periode.fom.plusDays(periodeOffset.toLong())
-                        val periode = Periode(dag, dag)
-                        Segment(
-                            periode,
-                            FraværFastsattAktivitetVurdering(
-//                                fravær = fravær,
-                                vilkårsvurdering =
-                                    if (kalenderårskvote > KVOTE_KALENDERÅR) MER_ENN_TI_DAGERS_FRAVÆR_I_KALENDERÅR
-                                    else FRAVÆR_STERK_VELFERDSGRUNN,
-                            )
-                        )
+                    val dagsSegmenter = vurderingSegment.periode.dager().map { dag ->
+                        kalenderårskvote++
+                        val vilkår = if (kalenderårskvote > KVOTE_KALENDERÅR) MER_ENN_TI_DAGERS_FRAVÆR_I_KALENDERÅR
+                                     else FRAVÆR_STERK_VELFERDSGRUNN
+                        Segment(Periode(dag, dag), FraværFastsattAktivitetVurdering(vilkårsvurdering = vilkår))
                     }
-                        .let { Tidslinje(it) }
-                        .komprimer()
+                    Tidslinje(dagsSegmenter).komprimer()
                 }
 
                 FraværÅrsak.ANNET ->
-                    Tidslinje(
-                        vurderingSegment.periode,
-                        FraværFastsattAktivitetVurdering(
-//                            fravær = fravær,
-                            vilkårsvurdering =
-                                if (vurdering.erUnntak) FRAVÆR_FØRSTE_DAG_I_MELDEPERIODE
-                                else MER_ENN_EN_DAGS_FRAVÆR_I_MELDEPERIODE,
-                        )
-                    )
+                    if (vurdering.erUnntak)
+                        Tidslinje(vurderingSegment.periode, FraværFastsattAktivitetVurdering(FRAVÆR_FØRSTE_DAG_I_MELDEPERIODE))
+                    else
+                        Tidslinje(vurderingSegment.periode, FraværFastsattAktivitetVurdering(MER_ENN_EN_DAGS_FRAVÆR_I_MELDEPERIODE))
             }
         }
     }
