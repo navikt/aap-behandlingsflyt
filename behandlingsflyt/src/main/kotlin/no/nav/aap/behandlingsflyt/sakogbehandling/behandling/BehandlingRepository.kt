@@ -24,7 +24,7 @@ interface BehandlingRepository : Repository {
      * Denne må brukes med omhu, da siste opprettede behandling ikke nødvendigvis er siste behandling
      * i den lenkede listen av behandlinger. Ref. fasttrack/atomære behandlinger. Den returnerer også avbrutte behandlinger.
      */
-    @Deprecated("Mest sannsynlig ønsker du å bruke SakOgBehandlingService.finnSisteYtelsesbehandlingFor eller SakOgBehandlingService.finnBehandlingMedSisteFattedeVedtak")
+    @Deprecated("Mest sannsynlig ønsker du å bruke BehandlingService.finnSisteYtelsesbehandlingFor eller BehandlingService.finnBehandlingMedSisteFattedeVedtak")
     fun finnSisteOpprettedeBehandlingFor(sakId: SakId, behandlingstypeFilter: List<TypeBehandling>): Behandling?
 
     fun hentStegHistorikk(behandlingId: BehandlingId): List<StegTilstand>

@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.meldep
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.Fritaksvurdering
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.help.sak
+import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
@@ -118,7 +119,7 @@ class MeldepliktRepositoryImplTest {
         }
         dataSource.transaction { connection ->
             val meldepliktRepository = MeldepliktRepositoryImpl(connection)
-            val sakService = SakService(postgresRepositoryRegistry.provider(connection))
+            val sakService = SakService(postgresRepositoryRegistry.provider(connection), createGatewayProvider {  })
             val sak = sakService.hentSakFor(behandling1.id)
             val behandling2 = finnEllerOpprettBehandling(connection, sak)
             assertThat(behandling1.id).isNotEqualTo(behandling2.id)

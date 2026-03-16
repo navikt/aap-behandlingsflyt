@@ -9,11 +9,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurd
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
-import no.nav.aap.behandlingsflyt.utils.Validation
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
-import kotlin.collections.List
 
 class AvklarSykdomLøser(
     private val behandlingRepository: BehandlingRepository,
@@ -69,10 +67,18 @@ class AvklarSykdomLøser(
         val harYrkesskade = yrkesskadeGrunnlag?.yrkesskader?.harYrkesskade() == true
         sykdomLøsning.segmenter().forEach {
             if (!it.verdi.erKonsistentForSykdom(harYrkesskade, behandling.typeBehandling())) {
-                log.info(
-                    "Sykdomsvurderingen er ikke konsistent med yrkesskade sykdomsvurdering=[{}] harYrkesskade=[{}]",
-                    it.verdi,
-                    harYrkesskade,
+                log.warn(
+                    "Sykdomsvurderingen er ikke konsistent med yrkesskade. " +
+                            "harYrkesskade: $harYrkesskade, " +
+                            "typeBehandling: ${behandling.typeBehandling()}, " +
+                            "sykdomsvurdering: ${
+                                it.verdi.copy(
+                                    begrunnelse = "",
+                                    yrkesskadeBegrunnelse = "",
+                                    diagnose = null,
+                                    dokumenterBruktIVurdering = emptyList()
+                                )
+                            }"
                 )
                 throw UgyldigForespørselException("Sykdomsvurdering og yrkesskade har ikke konsistente verdier")
             }

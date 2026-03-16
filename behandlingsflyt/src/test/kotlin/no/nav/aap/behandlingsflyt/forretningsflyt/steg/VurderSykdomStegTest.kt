@@ -77,7 +77,8 @@ class VurderSykdomStegTest {
                         avbruttStudieDato = 1 desember 2024,
                         avbruddMerEnn6Måneder = true,
                         vurdertIBehandling = behandlingId,
-                        vurdertTidspunkt = LocalDateTime.now()
+                        vurdertTidspunkt = LocalDateTime.now(),
+                        diagnose = null
                     )
                 ),
                 oppgittStudent = OppgittStudent(erStudentStatus = ErStudentStatus.AVBRUTT)
@@ -95,7 +96,8 @@ class VurderSykdomStegTest {
                         avbruttStudieDato = 1 desember 2024,
                         avbruddMerEnn6Måneder = true,
                         vurdertIBehandling = revurderingId,
-                        vurdertTidspunkt = LocalDateTime.now()
+                        vurdertTidspunkt = LocalDateTime.now(),
+                        diagnose = null
                     )
                 ),
                 oppgittStudent = OppgittStudent(erStudentStatus = ErStudentStatus.AVBRUTT)

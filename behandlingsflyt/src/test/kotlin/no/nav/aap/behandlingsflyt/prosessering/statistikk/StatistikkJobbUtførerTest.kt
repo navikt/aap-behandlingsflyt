@@ -25,10 +25,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Meldekort
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.dokument.KlagedokumentInformasjonUtleder
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.IKlageresultatUtleder
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageResultat
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Diagnose
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Yrkesskadevurdering
 import no.nav.aap.behandlingsflyt.integrasjon.statistikk.StatistikkGatewayImpl
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
@@ -73,7 +71,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.IdentGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.test.FakeApiInternGateway
 import no.nav.aap.behandlingsflyt.test.Fakes
@@ -85,6 +82,7 @@ import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryMeldepliktRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryMottattDokumentRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryPåklagetBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySykdomRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryTilkjentYtelseRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryTrukketSøknadRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryUnderveisRepository
@@ -152,7 +150,7 @@ class StatistikkJobbUtførerTest {
                 PersonRepositoryImpl(connection),
                 SakRepositoryImpl(connection)
             ).finnEllerOpprett(
-                ident, periode = Periode(LocalDate.now().minusDays(10), LocalDate.now().plusDays(1))
+                ident, søknadsdato = LocalDate.now().minusDays(10)
             )
 
             val opprettetBehandling = behandlingRepository.opprettBehandling(
@@ -219,7 +217,7 @@ class StatistikkJobbUtførerTest {
             årsakerTilBehandling = listOf(Vurderingsbehov.SØKNAD.name),
             vurderingsbehov = listOf(Vurderingsbehov.SØKNAD.name),
             mottattDokumenter = emptyList(),
-            årsakTilOpprettelse = behandling.årsakTilOpprettelse?.name ?: "Ukjent",
+            årsakTilOpprettelse = behandling.årsakTilOpprettelse.tilKontrakt(),
         )
 
         val hendelse2 = DefaultJsonMapper.toJson(payload)
@@ -328,7 +326,7 @@ class StatistikkJobbUtførerTest {
                 PersonRepositoryImpl(connection),
                 SakRepositoryImpl(connection)
             ).finnEllerOpprett(
-                ident, periode = Periode(LocalDate.now().minusDays(10), LocalDate.now().plusDays(1))
+                ident, søknadsdato = LocalDate.now().minusDays(10).plusDays(1)
             )
 
             val opprettetBehandling = behandlingRepository.opprettBehandling(
@@ -403,9 +401,11 @@ class StatistikkJobbUtførerTest {
                         erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = true,
                         yrkesskadeBegrunnelse = "begr",
                         erArbeidsevnenNedsatt = true,
-                        kodeverk = "KODEVERK",
-                        hoveddiagnose = "PEST",
-                        bidiagnoser = listOf("KOLERA"),
+                        diagnose = Diagnose(
+                            kodeverk = "KODEVERK",
+                            hoveddiagnose = "PEST",
+                            bidiagnoser = listOf("KOLERA")
+                        ),
                         vurderingenGjelderFra = 1 januar 2020,
                         vurderingenGjelderTil = null,
                         vurdertAv = Bruker("Z0000"),
@@ -461,7 +461,7 @@ class StatistikkJobbUtførerTest {
             versjon = "123",
             årsakerTilBehandling = listOf(Vurderingsbehov.VURDER_RETTIGHETSPERIODE.name),
             vurderingsbehov = listOf(Vurderingsbehov.VURDER_RETTIGHETSPERIODE.name),
-            årsakTilOpprettelse = behandling.årsakTilOpprettelse?.name ?: "Ukjent",
+            årsakTilOpprettelse = behandling.årsakTilOpprettelse.tilKontrakt(),
             reserverTil = "meg",
             mottattDokumenter = emptyList()
         )
@@ -541,7 +541,7 @@ class StatistikkJobbUtførerTest {
                         identifikator = "1234", aktivIdent = true
                     )
                 )
-            ), Periode(LocalDate.now(), LocalDate.now().plusDays(1))
+            ), LocalDate.now()
         )
         InMemorySakRepository.oppdaterSakStatus(sak.id, UTREDES)
         val sakId = sak.id
@@ -553,7 +553,6 @@ class StatistikkJobbUtførerTest {
                 vurderingsbehov = listOf(
                     VurderingsbehovMedPeriode(
                         type = no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.MOTTATT_SØKNAD,
-                        periode = Periode(LocalDate.now(), LocalDate.now().plusDays(1))
                     )
                 ), årsak = ÅrsakTilOpprettelse.SØKNAD
             )
@@ -594,37 +593,6 @@ class StatistikkJobbUtførerTest {
             )
         )
 
-        val sykdomRepository = object : SykdomRepository {
-            override fun lagre(behandlingId: BehandlingId, sykdomsvurderinger: List<Sykdomsvurdering>) {
-                TODO("Not yet implemented")
-            }
-
-            override fun lagre(behandlingId: BehandlingId, yrkesskadevurdering: Yrkesskadevurdering?) {
-                TODO("Not yet implemented")
-            }
-
-            override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
-                TODO("Not yet implemented")
-            }
-
-            override fun hentHvisEksisterer(behandlingId: BehandlingId): SykdomGrunnlag {
-                TODO("Not yet implemented")
-            }
-
-            override fun hent(behandlingId: BehandlingId): SykdomGrunnlag {
-                TODO("Not yet implemented")
-            }
-
-            override fun slett(behandlingId: BehandlingId) {
-            }
-
-            override fun hentHistoriskeSykdomsvurderinger(
-                sakId: SakId, behandlingId: BehandlingId
-            ): List<Sykdomsvurdering> {
-                TODO("Not yet implemented")
-            }
-        }
-
         val utfører = StatistikkJobbUtfører(
             statistikkGateway = StatistikkGatewayImpl(), statistikkMetoder = StatistikkMetoder(
                 vilkårsresultatRepository = vilkårsResultatRepository,
@@ -634,7 +602,7 @@ class StatistikkJobbUtførerTest {
                 beregningsgrunnlagRepository = beregningsgrunnlagRepository,
                 pipService = PipService(inMemoryRepositoryProvider),
                 dokumentRepository = dokumentRepository,
-                sykdomRepository = sykdomRepository,
+                sykdomRepository = InMemorySykdomRepository,
                 underveisRepository = InMemoryUnderveisRepository,
                 trukketSøknadService = TrukketSøknadService(
                     trukketSøknadRepository = InMemoryTrukketSøknadRepository
@@ -680,7 +648,7 @@ class StatistikkJobbUtførerTest {
             versjon = ApplikasjonsVersjon.versjon,
             årsakerTilBehandling = listOf(Vurderingsbehov.VURDER_RETTIGHETSPERIODE.name),
             vurderingsbehov = listOf(Vurderingsbehov.VURDER_RETTIGHETSPERIODE.name),
-            årsakTilOpprettelse = behandling.årsakTilOpprettelse?.name ?: "Ukjent",
+            årsakTilOpprettelse = behandling.årsakTilOpprettelse.tilKontrakt(),
             mottattDokumenter = emptyList(),
             reserverTil = "meg",
         )
@@ -712,7 +680,7 @@ class StatistikkJobbUtførerTest {
                 sakStatus = UTREDES,
                 hendelsesTidspunkt = hendelsesTidspunkt,
                 identerForSak = listOf("1234"),
-                årsakTilOpprettelse = "SØKNAD",
+                årsakTilOpprettelse = no.nav.aap.behandlingsflyt.kontrakt.behandling.ÅrsakTilOpprettelse.SØKNAD,
                 vurderingsbehov = listOf(Vurderingsbehov.SØKNAD),
                 søknadIder = listOf(JournalpostId("xxx"), JournalpostId("xxx2"))
             )

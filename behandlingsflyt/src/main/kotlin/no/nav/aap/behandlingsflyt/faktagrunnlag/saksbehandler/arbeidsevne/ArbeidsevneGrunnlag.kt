@@ -15,8 +15,9 @@ data class ArbeidsevneGrunnlag(
             .values
             .sortedBy { it[0].opprettetTid }
             .flatMap { vurderingerForBehandling -> vurderingerForBehandling.sortedBy { it.fraDato } }
-            .somTidslinje { Periode(it.fraDato, it.tilDato ?: maksDato) }
+            .somTidslinje { Periode(it.fraDato, it.tilDato ?: Tid.MAKS) }
             .komprimer()
+            .begrensetTil(Periode(Tid.MIN, maksDato))
 
     fun tilTidslinje(): Tidslinje<ArbeidsevneVurdering.ArbeidsevneVurderingData> =
         gjeldendeVurderinger()

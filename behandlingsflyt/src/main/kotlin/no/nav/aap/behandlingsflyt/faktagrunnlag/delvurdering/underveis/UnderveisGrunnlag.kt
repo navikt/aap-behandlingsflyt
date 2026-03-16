@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.behandling.underveis.KvoteService
+import no.nav.aap.behandlingsflyt.behandling.underveis.RettighetsperiodeService
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companion.antallHverdager
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
@@ -38,9 +39,24 @@ data class UnderveisGrunnlag(
         return Hverdager(gjenværendeKvote).fraOgMed(gjeldendeDato)
     }
 
+    fun utledTotalKvote(rettighetstype: RettighetsType, startdatoForRettighet: LocalDate?): Int? {
+        if (arrayOf(RettighetsType.BISTANDSBEHOV, RettighetsType.SYKEPENGEERSTATNING).contains(rettighetstype)) {
+            return KvoteService().beregn().hentKvoteForRettighetstype(rettighetstype)?.asInt
+        }
+
+        val sluttdatoForPerioderettighet =
+            RettighetsperiodeService().utledMaksdatoForRettighet(rettighetstype, startdatoForRettighet)
+
+        return if (startdatoForRettighet != null && sluttdatoForPerioderettighet != null) {
+            Periode(startdatoForRettighet, sluttdatoForPerioderettighet).antallHverdager().asInt
+        } else {
+            null
+        }
+    }
+
     fun utledKvoterForRettighetstype(rettighetsType: RettighetsType, gjeldendeDato: LocalDate): RettighetKvoter {
-        val totalKvote = KvoteService().beregn().hentKvoteForRettighetstype(rettighetsType)?.asInt
         val perioderForRettighet = utledInnfriddePerioderForRettighet(rettighetsType)
+        val totalKvote = utledTotalKvote(rettighetsType, perioderForRettighet.firstOrNull()?.periode?.fom)
         val periodeKvoter = perioderForRettighet.map {
             val bruktKvote = perioderForRettighet
                 .somTidslinje { it.periode }.begrensetTil(Periode(Tid.MIN, it.periode.tom)).segmenter()

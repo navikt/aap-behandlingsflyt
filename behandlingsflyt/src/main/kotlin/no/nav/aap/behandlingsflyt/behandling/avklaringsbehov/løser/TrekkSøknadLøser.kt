@@ -9,7 +9,10 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
@@ -58,7 +61,7 @@ class TrekkSøknadLøser(
                     kontekst.bruker.ident
                 )
             ) {
-                forsøkTrekkLegeerklæring(kontekst, løsning)
+                forsøkTrekkLegeerklæring(kontekst, løsning, behandling)
             } else {
                 log.error(
                     "Prøver å trekke søknad, men det finnes ingen søknad knyttet til behandlingen. " +
@@ -88,15 +91,28 @@ class TrekkSøknadLøser(
      **/
     private fun forsøkTrekkLegeerklæring(
         kontekst: AvklaringsbehovKontekst,
-        løsning: TrekkSøknadLøsning
+        løsning: TrekkSøknadLøsning,
+        behandling: Behandling
     ) {
         log.info("Ingen søknad funnet for sak ${kontekst.kontekst.sakId.id}. Forsøker å trekke legeerklæring i stedet for søknad.")
+
+        val kanTrekkeLegeerklæring =
+            behandling.årsakTilOpprettelse == ÅrsakTilOpprettelse.HELSEOPPLYSNINGER
+                    && Vurderingsbehov.MOTTATT_LEGEERKLÆRING in behandling.vurderingsbehov().map { it.type }
+
+        if (!kanTrekkeLegeerklæring) {
+            log.error(
+                "Kan ikke trekke søknad for (${kontekst.sakId()}). Kan kun trekke søknad hvis den er " +
+                        "opprettet pga. helseopplysninger og har mottatt legeerklæring som vurderingsbehov"
+            )
+            return
+        }
 
         val legeerklæring =
             mottattDokumentRepository.hentDokumenterAvType(kontekst.behandlingId(), InnsendingType.LEGEERKLÆRING)
 
         if (legeerklæring.isEmpty()) {
-            log.error("Ingen legeerklæring funnet for søknad som skal trekkes. Sak=${kontekst.kontekst.sakId.id}, behandling=${kontekst.behandlingId().id}")
+            log.error("Ingen legeerklæring funnet for søknad som skal trekkes (${kontekst.sakId()}, ${kontekst.behandlingId()})")
             return
         } else if (legeerklæring.size == 1) {
             val dokument = legeerklæring.single()

@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.flyt
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarStudentEnkelLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarStudentLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.ForeslåVedtakLøsning
+import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.VirkningstidspunktUtleder
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companion.plussEtÅrMedHverdager
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.ÅrMedHverdager
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
@@ -91,6 +92,7 @@ class StudentFlytTest(val unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                 if (unleashGateway.objectInstance!!.isEnabled(BehandlingsflytFeature.NyTidligereVurderinger)) {
                     // Nei på 11-5, må skrive brev
                     this.behandling.løsSykdomsvurderingBrev()
+                    this.behandling.bekreftVurderinger()
                     this.behandling.kvalitetssikre()
                 }
             }
@@ -161,6 +163,7 @@ class StudentFlytTest(val unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             }
             .løsBistand(sak.rettighetsperiode.fom)
             .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
             .medKontekst {
                 if (unleashGateway.objectInstance!!.isEnabled(BehandlingsflytFeature.NyTidligereVurderinger)) {
                     // Kjent bug at dette løftes på nytt ved diff i nårVurderingErRelevant, selv om vurderingen er gjort for hele perioden
@@ -187,7 +190,11 @@ class StudentFlytTest(val unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             .assertRettighetstype(
                 Periode(
                     fom,
-                    fom.plusDays(15).plussEtÅrMedHverdager(ÅrMedHverdager.FØRSTE_ÅR)
+                    if (unleashGateway.objectInstance?.isEnabled(BehandlingsflytFeature.LagreVedtakIFatteVedtak) == true) {
+                        fom.plussEtÅrMedHverdager(ÅrMedHverdager.FØRSTE_ÅR)
+                    } else {
+                        fom.plusDays(15).plussEtÅrMedHverdager(ÅrMedHverdager.FØRSTE_ÅR)
+                    }
                 ) to RettighetsType.BISTANDSBEHOV
             )
     }
@@ -254,6 +261,7 @@ class StudentFlytTest(val unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             .løsSykdom(vurderingGjelderFra = 1 januar 2026, erOppfylt = false) // Må løse sykdom allerede nå
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
             .kvalitetssikre()
             .løsBeregningstidspunkt()
             .løsOppholdskrav(fom)

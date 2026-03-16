@@ -647,7 +647,7 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
             vurdertDato = row.getLocalDateTime("opprettet_tid"),
             fom = row.getLocalDate("fom"),
             tom = row.getLocalDateOrNull("tom"),
-            vurdertIBehandling = row.getLong("vurdert_i_behandling").let { BehandlingId(it) }
+            vurdertIBehandling = BehandlingId(row.getLong("vurdert_i_behandling"))
         )
 
     internal data class GrunnlagOppslag(

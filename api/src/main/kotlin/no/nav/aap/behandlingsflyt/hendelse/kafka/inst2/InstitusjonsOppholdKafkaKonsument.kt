@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.hendelse.kafka.inst2
 
+import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdGateway
 import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaConsumerConfig
 import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaKonsument
@@ -7,10 +8,12 @@ import no.nav.aap.behandlingsflyt.hendelse.mottak.MottattHendelseService
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Inst2KafkaDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.InstitusjonsOppholdHendelseKafkaMelding
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.dbconnect.transaction
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.apache.kafka.clients.consumer.ConsumerRecords
@@ -28,6 +31,7 @@ class InstitusjonsOppholdKafkaKonsument(
     closeTimeout: Duration = 30.seconds,
     private val dataSource: DataSource,
     private val repositoryRegistry: RepositoryRegistry,
+    private val gatewayProvider: GatewayProvider,
     val institusjonsoppholdKlient: InstitusjonsoppholdGateway,
 ) : KafkaKonsument<String, InstitusjonsOppholdHendelseKafkaMelding>(
     topic = INSTITUSJONSOPPHOLD_EVENT_TOPIC,
@@ -58,6 +62,9 @@ class InstitusjonsOppholdKafkaKonsument(
             val personRepository: PersonRepository = repositoryProvider.provide()
             val hendelseService =
                 MottattHendelseService(repositoryProvider)
+            val trukketSøknadService =
+                TrukketSøknadService(repositoryProvider)
+            val behandlingService = BehandlingService(repositoryProvider, gatewayProvider)
             val person = personRepository.finn(Ident(meldingVerdi.norskident))
             secureLogger.info("Prøver å finne person for ${meldingVerdi.norskident} $person")
             if (person != null) {
@@ -65,6 +72,13 @@ class InstitusjonsOppholdKafkaKonsument(
                 val saker = sakRepository.finnSakerFor(person)
 
                 for (saken in saker) {
+                    val sisteYtelsesBehandling = behandlingService.finnSisteYtelsesbehandlingFor(saken.id)
+                    if (sisteYtelsesBehandling != null) {
+                        val søknadErTrukket = trukketSøknadService.søknadErTrukket(sisteYtelsesBehandling.id)
+                        if (søknadErTrukket) {
+                            log.info("Institusjonsopphold oppdateres ikke, da sak med ${saken.id} er trukket")
+                        }
+                    }
                     val institusjonsopphold = institusjonsoppholdKlient.hentDataForHendelse(meldingVerdi.oppholdId)
                     val beriketInstitusjonsopphold = Inst2KafkaDto(
                         startdato = institusjonsopphold.startdato,
@@ -72,13 +86,13 @@ class InstitusjonsOppholdKafkaKonsument(
                     )
                     meldingVerdi.institusjonsOpphold = beriketInstitusjonsopphold
 
-                        hendelseService.registrerMottattHendelse(
-                            dto = meldingVerdi.tilInnsending(
-                                meldingKey,
-                                saken.saksnummer
-                            )
+                    hendelseService.registrerMottattHendelse(
+                        dto = meldingVerdi.tilInnsending(
+                            meldingKey,
+                            saken.saksnummer
                         )
-                        log.info("Sendt institusjonsoppholdhendelse for saksnummer: ${saken.saksnummer}")
+                    )
+                    log.info("Sendt institusjonsoppholdhendelse for saksnummer: ${saken.saksnummer}")
                 }
             }
         }

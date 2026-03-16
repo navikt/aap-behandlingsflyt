@@ -47,6 +47,7 @@ dokka {
 
 detekt {
     config.setFrom(files("$rootDir/config/detekt/detekt.yml"))
+    baseline = file("$rootDir/config/detekt/baseline.xml")
     buildUponDefaultConfig = false
 }
 

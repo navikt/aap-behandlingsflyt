@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.sakogbehandling.flyt
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravOppdatert
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
@@ -40,5 +41,10 @@ data class FlytKontekstMedPerioder(
     fun erRevurderingMedVurderingsbehov(behov: Vurderingsbehov): Boolean {
         return vurderingType == VurderingType.REVURDERING
                 && vurderingsbehovRelevanteForSteg.contains(behov)
+    }
+
+    fun erVurderingsbehovEndretEtterOppdatertInformasjonskrav(oppdatert: InformasjonskravOppdatert?): Boolean {
+        val nyesteVurderingsbehov = vurderingsbehovRelevanteForStegMedPerioder.maxOfOrNull { it.oppdatertTid }
+        return nyesteVurderingsbehov != null && (oppdatert == null || nyesteVurderingsbehov > oppdatert.tidOppdatert)
     }
 }

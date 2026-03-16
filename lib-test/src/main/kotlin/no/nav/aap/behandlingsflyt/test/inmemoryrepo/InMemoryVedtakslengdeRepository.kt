@@ -12,10 +12,10 @@ object InMemoryVedtakslengdeRepository: VedtakslengdeRepository {
     
     override fun lagre(
         behandlingId: BehandlingId,
-        vurdering: VedtakslengdeVurdering
+        vurderinger: List<VedtakslengdeVurdering>
     ) {
         synchronized(lock) {
-            grunnlag[behandlingId] = VedtakslengdeGrunnlag(vurdering)
+            grunnlag[behandlingId] = VedtakslengdeGrunnlag(vurderinger)
         }
     }
 
@@ -26,7 +26,9 @@ object InMemoryVedtakslengdeRepository: VedtakslengdeRepository {
     }
 
     override fun deaktiverGrunnlag(behandlingId: BehandlingId) {
-        TODO("Not yet implemented")
+        synchronized(lock) {
+            grunnlag.remove(behandlingId)
+        }
     }
 
     override fun kopier(

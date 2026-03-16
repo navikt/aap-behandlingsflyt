@@ -6,7 +6,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.lookup.repository.RepositoryProvider
 
 class LegeerklæringBestillingLøser() : AvklaringsbehovsLøser<LegeerklæringBestillingLøsning> {
-    constructor(repositoryProvider: RepositoryProvider): this()
+    constructor(repositoryProvider: RepositoryProvider) : this()
 
     override fun løs(kontekst: AvklaringsbehovKontekst, løsning: LegeerklæringBestillingLøsning): LøsningsResultat {
         return LøsningsResultat("Tatt av vent (ventet på bestilling av legeerklæring)")

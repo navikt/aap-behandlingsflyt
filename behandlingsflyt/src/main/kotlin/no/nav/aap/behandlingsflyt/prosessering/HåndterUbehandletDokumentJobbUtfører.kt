@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.hendelse.mottak.HåndterMottattDokumentService
@@ -23,7 +23,7 @@ private const val INNSENDINGSREFERANSE_VERDI = "innsendingsreferanse_verdi"
 
 class HåndterUbehandletDokumentJobbUtfører(
     private val mottattDokumentRepository: MottattDokumentRepository,
-    private val sakOgBehandlingService: SakOgBehandlingService,
+    private val behandlingService: BehandlingService,
     private val taSkrivelåsRepository: TaSkriveLåsRepository,
     private val håndterMottattDokumentService: HåndterMottattDokumentService
 ) : JobbUtfører {
@@ -45,7 +45,7 @@ class HåndterUbehandletDokumentJobbUtfører(
     private fun håndterUbehandletMeldekort(dokument: MottattDokument) {
         val skrivelås = taSkrivelåsRepository.låsSak(dokument.sakId)
 
-        val nyesteBehandling = sakOgBehandlingService.finnSisteYtelsesbehandlingFor(dokument.sakId)
+        val nyesteBehandling = behandlingService.finnSisteYtelsesbehandlingFor(dokument.sakId)
         requireNotNull(nyesteBehandling) {
             "Fant meldekort men ingen behandling for sak ${dokument.sakId}"
         }
@@ -77,7 +77,7 @@ class HåndterUbehandletDokumentJobbUtfører(
         override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): JobbUtfører {
             return HåndterUbehandletDokumentJobbUtfører(
                 mottattDokumentRepository = repositoryProvider.provide(),
-                sakOgBehandlingService = SakOgBehandlingService(repositoryProvider, gatewayProvider),
+                behandlingService = BehandlingService(repositoryProvider, gatewayProvider),
                 taSkrivelåsRepository = repositoryProvider.provide(),
                 håndterMottattDokumentService = HåndterMottattDokumentService(repositoryProvider, gatewayProvider)
             )

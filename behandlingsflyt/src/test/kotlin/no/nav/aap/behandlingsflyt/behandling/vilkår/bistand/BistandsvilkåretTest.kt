@@ -320,6 +320,7 @@ class BistandsvilkåretTest {
         vurderingenGjelderTil = vurderingenGjelderTil,
         vurdertAv = Bruker("Z00000"),
         opprettet = opprettet,
-        vurdertIBehandling = behandlingId
+        vurdertIBehandling = behandlingId,
+        diagnose = null,
     )
 }

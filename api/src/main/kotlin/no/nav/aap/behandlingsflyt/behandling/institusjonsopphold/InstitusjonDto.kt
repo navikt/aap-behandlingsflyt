@@ -42,7 +42,6 @@ data class HelseinstitusjonGrunnlagDto(
     val harTilgangTilÅSaksbehandle: Boolean,
     val opphold: List<InstitusjonsoppholdDto>,
     val vurderinger: List<HelseoppholdDto>,
-    val vurdertAv: VurdertAvResponse?,
     val vedtatteVurderinger: List<HelseoppholdDto>
 )
 

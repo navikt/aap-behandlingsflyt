@@ -6,6 +6,7 @@ import com.papsign.ktor.openapigen.route.response.respondWithStatus
 import com.papsign.ktor.openapigen.route.route
 import io.ktor.http.*
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingReferanse
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
@@ -13,9 +14,12 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.In
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
@@ -40,10 +44,12 @@ import no.nav.aap.tilgang.Operasjon
 import no.nav.aap.tilgang.SakPathParam
 import no.nav.aap.tilgang.authorizedPost
 import no.nav.aap.tilgang.plugin.kontrakt.BehandlingreferanseResolver
+import no.nav.aap.verdityper.dokument.Kanal
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 import java.util.*
 import javax.sql.DataSource
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Status as MottattDokumentStatus
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status as BehandlingStatus
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Status as SakStatus
 
@@ -80,6 +86,25 @@ fun NormalOpenAPIRoute.driftApi(
             }
         }
 
+        route("/behandling/{referanse}/utvid-rettighetsperiode-og-kjor-fra-start") {
+            authorizedPost<BehandlingReferanse, Unit, Unit>(
+                AuthorizationParamPathConfig(
+                    behandlingPathParam = BehandlingPathParam("referanse"),
+                    operasjon = Operasjon.DRIFTE
+                )
+            ) { params, request ->
+                dataSource.transaction { connection ->
+                    val repositoryProvider = repositoryRegistry.provider(connection)
+                    val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+                    val driftfunksjoner = Driftfunksjoner(repositoryProvider, gatewayProvider)
+
+                    val behandling = behandlingRepository.hent(BehandlingReferanse(params.referanse))
+                    driftfunksjoner.utvidRettghetsperiodeOgKjørFraStart(behandling)
+                }
+                respondWithStatus(HttpStatusCode.NoContent)
+            }
+        }
+
         data class AvbrytBrevBody(val begrunnelse: String)
         route("/brev/{brevbestillingReferanse}/avbryt") {
             authorizedPost<BrevbestillingReferanse, Unit, AvbrytBrevBody>(
@@ -98,7 +123,7 @@ fun NormalOpenAPIRoute.driftApi(
 
                     driftsfunksjoner.avbrytVedtsaksbrevBestilling(bruker(), param, req.begrunnelse)
 
-                    log.info("Brevbestilling med referanse ${param} er avbrutt av ${bruker()}.")
+                    log.info("Brevbestilling med referanse $param er avbrutt av ${bruker()}.")
                 }
                 respondWithStatus(HttpStatusCode.NoContent)
             }
@@ -172,6 +197,9 @@ fun NormalOpenAPIRoute.driftApi(
                                         ForenkletAvklaringsbehov(
                                             definisjon = avklaringsbehov.definisjon,
                                             status = endring.status,
+                                            årsakTilSettPåVent = endring.grunn,
+                                            perioderUgyldigVurdering = endring.perioderSomIkkeErTilstrekkeligVurdert,
+                                            perioderKreverVurdering = endring.perioderVedtaketBehøverVurdering,
                                             tidsstempel = endring.tidsstempel,
                                             endretAv = endring.endretAv
                                         )
@@ -194,6 +222,41 @@ fun NormalOpenAPIRoute.driftApi(
                 krevDtoErUtenFødselsnummer(sakDriftsinfoDTO)
 
                 respond(sakDriftsinfoDTO)
+            }
+        }
+
+        route("/sak/{saksnummer}/mottatte-dokumenter") {
+            authorizedPost<SaksnummerParameter, List<MottattDokumentDriftsinfoDTO>, Unit>(
+                AuthorizationParamPathConfig(
+                    sakPathParam = SakPathParam("saksnummer"),
+                    operasjon = Operasjon.DRIFTE,
+                ),
+            ) { params, _ ->
+                val dokumenter = dataSource.transaction { connection ->
+                    val repositoryProvider = repositoryRegistry.provider(connection)
+
+                    val sakRepository = repositoryProvider.provide<SakRepository>()
+                    val mottattDokumentRepository = repositoryProvider.provide<MottattDokumentRepository>()
+
+                    val sak = sakRepository.hentHvisFinnes(Saksnummer(params.saksnummer))
+                        ?: throw VerdiIkkeFunnetException("Sak med saksnummer ${params.saksnummer} finnes ikke")
+
+                    mottattDokumentRepository.hentDokumenterForSak(sak.id)
+                        .map { dokument ->
+                            MottattDokumentDriftsinfoDTO(
+                                referanse = dokument.referanse,
+                                mottattTidspunkt = dokument.mottattTidspunkt,
+                                type = dokument.type,
+                                kanal = dokument.kanal,
+                                status = dokument.status
+                            )
+                        }
+                        .sortedByDescending { it.mottattTidspunkt }
+                }
+
+                krevDtoErUtenFødselsnummer(dokumenter)
+
+                respond(dokumenter)
             }
         }
     }
@@ -239,8 +302,11 @@ private data class BehandlingDriftsinfo(
 private data class ForenkletAvklaringsbehov(
     val definisjon: Definisjon,
     val status: Status,
+    val perioderUgyldigVurdering: Set<Periode>?,
+    val perioderKreverVurdering: Set<Periode>?,
     val tidsstempel: LocalDateTime = LocalDateTime.now(),
-    val endretAv: String
+    val endretAv: String,
+    val årsakTilSettPåVent: ÅrsakTilSettPåVent?
 )
 
 private data class VilkårDriftsinfoDTO(
@@ -255,6 +321,14 @@ private data class ForenkletVilkårsperiode(
     val manuellVurdering: Boolean,
     val avslagsårsak: Avslagsårsak?,
     val innvilgelsesårsak: Innvilgelsesårsak?
+)
+
+private data class MottattDokumentDriftsinfoDTO(
+    val referanse: InnsendingReferanse,
+    val mottattTidspunkt: LocalDateTime,
+    val type: InnsendingType,
+    val kanal: Kanal,
+    val status: MottattDokumentStatus = MottattDokumentStatus.MOTTATT,
 )
 
 fun behandlingFraBrevbestilling(

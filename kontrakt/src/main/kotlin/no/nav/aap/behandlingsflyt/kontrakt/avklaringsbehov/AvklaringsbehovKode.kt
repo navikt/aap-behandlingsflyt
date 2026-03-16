@@ -38,14 +38,17 @@ public const val AVKLAR_OVERGANG_ARBEID: String = "5032"
 public const val AVBRYT_REVURDERING_KODE: String = "5033"
 public const val AVKLAR_SAMORDNING_SYKESTIPEND_KODE: String = "5034"
 public const val AVKLAR_OPPHOLDSKRAV: String = "5035"
+public const val AVKLAR_SAMORDNING_BARNEPENSJON_KODE: String = "5036"
 public const val VURDER_INNTEKTSBORTFALL: String = "5040"
 public const val SKRIV_BREV_KODE: String = "5050"
 public const val SKRIV_VEDTAKSBREV_KODE: String = "5051"
 public const val SKRIV_FORHÅNDSVARSEL_AKTIVITETSPLIKT_BREV_KODE: String = "5052"
 public const val SKRIV_SYKDOMSVURDERING_BREV_KODE: String = "5053"
+public const val BEKREFT_VURDERINGER_OPPFØLGING_KODE: String = "5054"
 public const val SAMORDNING_REFUSJONS_KRAV: String = "5056"
 public const val ARBEIDSOPPTRAPPING_KODE: String = "5057"
 public const val ETABLERING_EGEN_VIRKSOMHET_KODE: String = "5058"
+public const val AVKLAR_VEDTAKSLENGDE_KODE: String = "5059"
 public const val FORESLÅ_UTTAK_KODE: String = "5096"
 public const val KVALITETSSIKRING_KODE: String = "5097"
 public const val FORESLÅ_VEDTAK_KODE: String = "5098"
@@ -268,6 +271,11 @@ public enum class AvklaringsbehovKode {
     `5035`,
 
     /**
+     * [AVKLAR_SAMORDNING_BARNEPENSJON_KODE]
+     */
+    `5036`,
+
+    /**
      * [VURDER_INNTEKTSBORTFALL]
      */
     `5040`,
@@ -293,6 +301,11 @@ public enum class AvklaringsbehovKode {
     `5053`,
 
     /**
+     * [BEKREFT_VURDERINGER_OPPFØLGING]
+     */
+    `5054`,
+
+    /**
      * [SAMORDNING_REFUSJONS_KRAV]
      * */
     `5056`,
@@ -305,6 +318,11 @@ public enum class AvklaringsbehovKode {
      * [ETABLERING_EGEN_VIRKSOMHET_KODE]
      */
     `5058`,
+
+    /**
+     * [AVKLAR_VEDTAKSLENGDE_KODE]
+     */
+    `5059`,
 
     /**
      * [FORESLÅ_UTTAK_KODE]
@@ -426,4 +444,12 @@ public enum class AvklaringsbehovKode {
      * [OPPRETT_HENDELSE_PÅ_SAK_KODE]
      */
     `9004`,
+    /**
+     * [VURDER_TILBAKEKREVING]
+     */
+    `9082`,
+    /**
+     * [VURDER_TILBAKEKREVING_BESLUTTER]
+     */
+    `9083`
 }

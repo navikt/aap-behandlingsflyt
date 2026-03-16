@@ -86,9 +86,9 @@ class KvalitetssikringsSteg(
             .filter { it.status() != Status.AVBRUTT }
 
         /**
-         * Aldri tidligere blitt kvalitetssikret
+         * Om et behov aldri tidligere har blitt kvalitetssikret, ikke tilstrekkelig vurdert:
          */
-        if (!aktuelleAvklaringsbehovForKvalitetssikring.any { it.erKvalitetssikretTidligere() }) {
+        if (aktuelleAvklaringsbehovForKvalitetssikring.any { !it.erKvalitetssikretTidligere() }) {
             return false
         }
 
@@ -110,7 +110,7 @@ class KvalitetssikringsSteg(
          * Hvis stegets eget behov ("KVALITETSSIKRING") har status OPPRETTET, skal det alltid skje en ny kvalitetssikring
          */
         if (avklaringsbehovene.alle()
-                .any { it.definisjon.kode == Definisjon.KVALITETSSIKRING.kode && it.status() == Status.OPPRETTET }
+                .any { it.definisjon == Definisjon.KVALITETSSIKRING && it.status() == Status.OPPRETTET }
         ) {
             return false
         }

@@ -71,7 +71,7 @@ class RettighetstypeRepositoryImplTest {
 
         assertThat(sporing).isNotNull()
         assertThat(sporing!!.first).isEqualTo("1")
-        assertThat(sporing.second).isEqualTo("{\"vilkårsresultat\":{\"id\$behandlingsflyt_behandlingsflyt\":null}}")
+        assertThat(sporing.second).isEqualTo($$"{\"vilkårsresultat\":{\"id$behandlingsflyt_behandlingsflyt\":null}}")
 
         // Slett
         dataSource.transaction {

@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.OppgittStu
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Diagnose
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
@@ -32,16 +33,13 @@ class StudentRepositoryImpl(private val connection: DBConnection) : StudentRepos
                 deaktiverGrunnlag(behandlingId)
             }
 
-            val oppgittStudentId = lagreOppgittStudent(oppgittStudent)
+            val oppgittStudentId = oppgittStudent?.let(::lagreOppgittStudent)
 
-            lagreGrunnlag(behandlingId, eksisterendeGrunnlag?.vurderinger, oppgittStudentId)
+            lagreGrunnlag(behandlingId, eksisterendeGrunnlag?.vurderinger.orEmpty(), oppgittStudentId)
         }
     }
 
-    private fun lagreOppgittStudent(oppgittStudent: OppgittStudent?): Long? {
-        if (oppgittStudent == null) {
-            return null
-        }
+    private fun lagreOppgittStudent(oppgittStudent: OppgittStudent): Long {
         val query = """
                 INSERT INTO OPPGITT_STUDENT (avbrutt_dato, er_student, skal_gjenoppta_studie)
                 VALUES ( ?, ?, ?)
@@ -158,8 +156,12 @@ class StudentRepositoryImpl(private val connection: DBConnection) : StudentRepos
         val vurderingerId = connection.executeReturnKey("""INSERT INTO STUDENT_VURDERINGER DEFAULT VALUES""")
 
         val query = """
-                INSERT INTO STUDENT_VURDERING (begrunnelse, avbrutt_studie, godkjent_studie_av_laanekassen, avbrutt_pga_sykdom_eller_skade, har_behov_for_behandling, avbrutt_dato, avbrudd_mer_enn_6_maaneder, vurdert_av, fom, tom, vurdert_i_behandling, student_vurderinger_id, vurdert_tidspunkt)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO STUDENT_VURDERING (begrunnelse, avbrutt_studie, godkjent_studie_av_laanekassen,
+                                               avbrutt_pga_sykdom_eller_skade, har_behov_for_behandling,
+                                               avbrutt_dato, avbrudd_mer_enn_6_maaneder, vurdert_av, fom, tom,
+                                               vurdert_i_behandling, student_vurderinger_id, vurdert_tidspunkt,
+                                               kodeverk, hoveddiagnose, bidiagnoser)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """.trimIndent()
 
         connection.executeBatch(query, studentvurderinger) {
@@ -174,9 +176,12 @@ class StudentRepositoryImpl(private val connection: DBConnection) : StudentRepos
                 setString(8, studentvurdering.vurdertAv)
                 setLocalDate(9, studentvurdering.fom)
                 setLocalDate(10, studentvurdering.tom)
-                setLong(11, studentvurdering.vurdertIBehandling?.toLong())
+                setLong(11, studentvurdering.vurdertIBehandling.toLong())
                 setLong(12, vurderingerId)
                 setLocalDateTime(13, studentvurdering.vurdertTidspunkt)
+                setString(14, studentvurdering.diagnose?.kodeverk)
+                setString(15, studentvurdering.diagnose?.hoveddiagnose)
+                setArray(16, studentvurdering.diagnose?.bidiagnoser.orEmpty())
             }
         }
 
@@ -245,7 +250,7 @@ class StudentRepositoryImpl(private val connection: DBConnection) : StudentRepos
         }
     }
 
-    private fun mapStudentVurderinger(studentVurderingerId: Long): Set<StudentVurdering>? {
+    private fun mapStudentVurderinger(studentVurderingerId: Long): Set<StudentVurdering> {
         val query = """
             SELECT * FROM STUDENT_VURDERING WHERE student_vurdering.student_vurderinger_id = ?
         """.trimIndent()
@@ -272,6 +277,14 @@ class StudentRepositoryImpl(private val connection: DBConnection) : StudentRepos
             row.getString("vurdert_av"),
             row.getLocalDateTime("vurdert_tidspunkt"),
             row.getLong("vurdert_i_behandling").let(::BehandlingId),
+            diagnose = row.getStringOrNull("kodeverk")
+                ?.let {
+                    Diagnose(
+                        it,
+                        row.getStringOrNull("hoveddiagnose"),
+                        row.getArray("bidiagnoser", String::class)
+                    )
+                }
         )
     }
 

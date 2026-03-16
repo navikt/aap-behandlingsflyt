@@ -125,6 +125,12 @@ object InMemoryMottattDokumentRepository : MottattDokumentRepository {
         }
     }
 
+    override fun hentDokumenterForSak(sakId: SakId): Set<MottattDokument> {
+        synchronized(lock) {
+            return memory.filter { it.sakId == sakId && it.status == Status.MOTTATT }.toSet()
+        }
+    }
+
     override fun hentDokumenterAvType(
         sakId: SakId,
         type: InnsendingType

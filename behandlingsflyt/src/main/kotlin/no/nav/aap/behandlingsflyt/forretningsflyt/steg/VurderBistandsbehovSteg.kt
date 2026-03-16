@@ -19,6 +19,8 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.orEmpty
@@ -31,7 +33,8 @@ class VurderBistandsbehovSteg(
     private val sykdomsRepository: SykdomRepository,
     private val vilkårsresultatRepository: VilkårsresultatRepository,
     private val tidligereVurderinger: TidligereVurderinger,
-    private val avklaringsbehovService: AvklaringsbehovService
+    private val avklaringsbehovService: AvklaringsbehovService,
+    private val unleashGateway: UnleashGateway
 ) : BehandlingSteg, AvklaringsbehovMetadataUtleder {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         bistandRepository = repositoryProvider.provide(),
@@ -39,7 +42,8 @@ class VurderBistandsbehovSteg(
         sykdomsRepository = repositoryProvider.provide(),
         vilkårsresultatRepository = repositoryProvider.provide(),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
-        avklaringsbehovService = AvklaringsbehovService(repositoryProvider)
+        avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
+        unleashGateway = gatewayProvider.provide()
     )
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -73,14 +77,17 @@ class VurderBistandsbehovSteg(
         )
 
         when (kontekst.vurderingType) {
-            VurderingType.FØRSTEGANGSBEHANDLING, VurderingType.REVURDERING, VurderingType.MIGRER_RETTIGHETSPERIODE -> vurderBistandsvilkår(kontekst)
+            VurderingType.FØRSTEGANGSBEHANDLING, VurderingType.REVURDERING, VurderingType.MIGRER_RETTIGHETSPERIODE -> vurderBistandsvilkår(
+                kontekst
+            )
+
             VurderingType.MELDEKORT,
             VurderingType.UTVID_VEDTAKSLENGDE,
             VurderingType.AUTOMATISK_BREV,
             VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
             VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9,
             VurderingType.IKKE_RELEVANT -> {
-            /* noop */
+                /* noop */
             }
         }
 
@@ -112,6 +119,8 @@ class VurderBistandsbehovSteg(
             ?.somStudenttidslinje(kontekst.rettighetsperiode.tom)
             .orEmpty()
 
+        val nyTidligereVurderingerEnabled = unleashGateway.isEnabled(BehandlingsflytFeature.NyTidligereVurderinger)
+
         return Tidslinje.map3(tidligereVurderingsutfall, sykdomsvurderinger, studentvurderinger)
         { segmentPeriode, behandlingsutfall, sykdomsvurdering, studentvurdering ->
             when (behandlingsutfall) {
@@ -119,8 +128,9 @@ class VurderBistandsbehovSteg(
                 TidligereVurderinger.IkkeBehandlingsgrunnlag -> false
                 TidligereVurderinger.UunngåeligAvslag -> false
                 is TidligereVurderinger.PotensieltOppfylt -> {
-                    studentvurdering?.erOppfylt() != true &&
-                            (sykdomsvurdering?.erOppfyltOrdinær(
+                    if (nyTidligereVurderingerEnabled) {
+                        when (behandlingsutfall.rettighetstype) {
+                            null -> (sykdomsvurdering?.erOppfyltOrdinær(
                                 kravdato = kontekst.rettighetsperiode.fom,
                                 segmentPeriode
                             ) == true
@@ -128,6 +138,18 @@ class VurderBistandsbehovSteg(
                                 kravdato = kontekst.rettighetsperiode.fom, segmentPeriode
                             ) == true)
 
+                            else -> false
+                        }
+                    } else {
+                        studentvurdering?.erOppfylt() != true &&
+                                (sykdomsvurdering?.erOppfyltOrdinær(
+                                    kravdato = kontekst.rettighetsperiode.fom,
+                                    segmentPeriode
+                                ) == true
+                                        || sykdomsvurdering?.erOppfyltForYrkesskadeSettBortIfraÅrsakssammenheng(
+                                    kravdato = kontekst.rettighetsperiode.fom, segmentPeriode
+                                ) == true)
+                    }
                 }
             }
         }

@@ -20,7 +20,7 @@ import no.nav.aap.behandlingsflyt.test.desember
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryUnderveisRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryProvider
-import no.nav.aap.behandlingsflyt.test.inmemoryservice.InMemorySakOgBehandlingService
+import no.nav.aap.behandlingsflyt.test.inmemoryservice.InMemoryBehandlingService
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Dagsatser
@@ -31,13 +31,14 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import java.math.BigDecimal
+import java.time.LocalDate
 
 class ResultatUtlederTest {
     private val resultatUtleder = ResultatUtleder(inMemoryRepositoryProvider)
 
     @Test
     fun `innvilgelse betyr minst en periode med oppfylt`() {
-        val sak = nySak(Periode(1 januar 2023, 31 desember 2023))
+        val sak = nySak(1 januar 2023)
         val behandling = opprettBehandling(sak)
 
         InMemoryUnderveisRepository.lagre(
@@ -56,7 +57,7 @@ class ResultatUtlederTest {
 
     @Test
     fun `avslag betyr ingen oppfylte perioder`() {
-        val sak = nySak(Periode(1 januar 2023, 31 desember 2023))
+        val sak = nySak(1 januar 2023)
         val behandling = opprettBehandling(sak)
 
         InMemoryUnderveisRepository.lagre(
@@ -75,7 +76,7 @@ class ResultatUtlederTest {
 
     @Test
     fun `ingen oppfylte periode gir rent avslag`() {
-        val sak = nySak(Periode(1 januar 2023, 31 desember 2023))
+        val sak = nySak(1 januar 2023)
         val behandling = opprettBehandling(sak)
 
         InMemoryUnderveisRepository.lagre(
@@ -94,11 +95,11 @@ class ResultatUtlederTest {
 
     @Test
     fun `per nå, støtter kun å utlede resultat for førstegangsbehandling og revurdering`() {
-        val sak = nySak(Periode(1 januar 2023, 31 desember 2023))
+        val sak = nySak(1 januar 2023)
         val behandling = opprettBehandling(sak)
         InMemoryBehandlingRepository.oppdaterBehandlingStatus(behandling.id, Status.AVSLUTTET)
 
-        val klage = InMemorySakOgBehandlingService.finnEllerOpprettOrdinærBehandling(
+        val klage = InMemoryBehandlingService.finnEllerOpprettOrdinærBehandling(
             sak.id,
             vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
                 vurderingsbehov = listOf(VurderingsbehovMedPeriode(type = Vurderingsbehov.MOTATT_KLAGE)),
@@ -135,24 +136,24 @@ class ResultatUtlederTest {
         grenseverdi = Prosent.`100_PROSENT`,
         arbeidsgradering = ArbeidsGradering(
             totaltAntallTimer = TimerArbeid(BigDecimal(0)),
-            andelArbeid = Prosent.`0_PROSENT`,
+            andelArbeid = `0_PROSENT`,
             fastsattArbeidsevne = Prosent.`100_PROSENT`,
             gradering = Prosent.`100_PROSENT`,
             opplysningerMottatt = null,
         ),
         trekk = Dagsatser(0),
         brukerAvKvoter = emptySet(),
-        institusjonsoppholdReduksjon = Prosent.`0_PROSENT`,
+        institusjonsoppholdReduksjon = `0_PROSENT`,
         meldepliktStatus = MeldepliktStatus.MELDT_SEG,
         meldepliktGradering = `0_PROSENT`,
     )
 
-    private fun nySak(periode: Periode): Sak {
-        return opprettInMemorySak(periode)
+    private fun nySak(fraDato: LocalDate): Sak {
+        return opprettInMemorySak(fraDato)
     }
 
     private fun opprettBehandling(sak: Sak): Behandling {
-        return InMemorySakOgBehandlingService.finnEllerOpprettOrdinærBehandling(
+        return InMemoryBehandlingService.finnEllerOpprettOrdinærBehandling(
             sak.id,
             VurderingsbehovOgÅrsak(
                 listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_SØKNAD)),

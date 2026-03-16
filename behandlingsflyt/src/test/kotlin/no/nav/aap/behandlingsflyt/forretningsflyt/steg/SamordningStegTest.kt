@@ -36,7 +36,7 @@ import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySamordningVurderingR
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySamordningYtelseRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryTrukketSøknadRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryVilkårsresultatRepository
-import no.nav.aap.behandlingsflyt.test.inmemoryservice.InMemorySakOgBehandlingService
+import no.nav.aap.behandlingsflyt.test.inmemoryservice.InMemoryBehandlingService
 import no.nav.aap.komponenter.tidslinje.tidslinjeOf
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
@@ -494,11 +494,11 @@ class SamordningStegTest {
     }
 
     private fun nySak(): Sak {
-        return opprettInMemorySak(Periode(LocalDate.now(), LocalDate.now().plusYears(1)))
+        return opprettInMemorySak(LocalDate.now())
     }
 
     private fun opprettBehandling(sak: Sak): Behandling {
-        return InMemorySakOgBehandlingService
+        return InMemoryBehandlingService
             .finnEllerOpprettOrdinærBehandling(
                 sak.id,
                 VurderingsbehovOgÅrsak(

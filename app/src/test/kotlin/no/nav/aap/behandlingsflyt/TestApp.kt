@@ -9,7 +9,7 @@ import io.ktor.http.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
-import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.YtelseTypeCode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.gateway.SamhandlerForholdDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.gateway.SamhandlerYtelseDto
@@ -281,6 +281,13 @@ private fun sendInnSøknad(dto: OpprettTestcaseDTO, gatewayProvider: GatewayProv
                     periode = it.periode
                 )
             },
+            dagpenger = dto.dagpenger.map {
+                TestPerson.Dagpenger(
+                    periode = it.periode,
+                    kilde = it.kilde,
+                    dagpengerYtelseType = it.dagpengerYtelseType
+                )
+            },
             tjenestePensjon = if (dto.tjenestePensjon != null && dto.tjenestePensjon) TjenestePensjonRespons(
                 fnr = ident.identifikator,
                 forhold = listOf(
@@ -371,6 +378,9 @@ private fun opprettNySakOgBehandling(dto: OpprettTestcaseDTO, gatewayProvider: G
 
         if (dto.steg == StegType.SYKDOMSVURDERING_BREV) return sak
         else if (!dto.student) løsSykdomsvurderingBrev(behandling)
+
+        if(dto.steg == StegType.BEKREFT_VURDERINGER_OPPFØLGING) return sak
+        løsVurderingerOppfølgning(behandling)
 
         if (dto.steg == StegType.KVALITETSSIKRING) return sak
         kvalitetssikreOk(behandling)
@@ -470,7 +480,7 @@ private fun hentIdentForSak(saksnummer: Saksnummer): String {
 private fun hentSisteBehandlingForSak(sakId: SakId, gatewayProvider: GatewayProvider): Behandling {
     return datasource.transaction { connection ->
         val repositoryProvider = postgresRepositoryRegistry.provider(connection)
-        val sbService = SakOgBehandlingService(
+        val sbService = BehandlingService(
             repositoryProvider,
             gatewayProvider
         )

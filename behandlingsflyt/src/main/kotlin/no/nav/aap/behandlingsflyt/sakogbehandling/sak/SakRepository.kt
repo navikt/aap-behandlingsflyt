@@ -4,11 +4,18 @@ import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Status
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.Repository
+import org.jetbrains.annotations.TestOnly
 import java.time.LocalDate
 
 interface SakRepository : Repository {
 
-    fun finnEllerOpprett(person: Person, periode: Periode): Sak
+    @Deprecated("Sluttdato for rettighetesperiode er alltid Tid.MAKS for nye/migrerte saker. Send kun med søknadsdato, med mindre du tester koden din for ikke-migrerte saker.")
+    @TestOnly
+    fun finnEllerOpprett(person: Person, periode: Periode): Sak {
+        return finnEllerOpprett(person, periode.fom)
+    }
+
+    fun finnEllerOpprett(person: Person, søknadsdato: LocalDate): Sak
 
     fun finnSakerFor(person: Person): List<Sak>
 
@@ -35,5 +42,4 @@ interface SakRepository : Repository {
     fun finnSakerMedAvsluttedeBehandlingerUtenRiktigSluttdatoPåRettighetsperiode(): List<Sak>
 
     fun finnSakerMedBarnetillegg(påDato: LocalDate): List<SakId>
-
 }

@@ -59,12 +59,9 @@ import java.time.LocalDate
 import kotlin.test.assertTrue
 
 class BarnFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
-    val periode = Periode(LocalDate.now(), Tid.MAKS)
-
     @Test
     fun `barnetillegg gis fram til 18 år`() {
         val fom = LocalDate.of(2025, 12, 15).minusMonths(3)
-        val periode = Periode(fom, Tid.MAKS)
 
         val barnfødseldato = fom.minusYears(17).minusMonths(2)
 
@@ -81,14 +78,15 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
         )
 
         val (sak, behandling) = sendInnFørsteSøknad(
+            mottattTidspunkt = fom.atStartOfDay(),
             person = person,
-            periode = periode,
         )
         behandling
-            .løsSykdom(periode.fom)
-            .løsBistand(periode.fom)
+            .løsSykdom(fom)
+            .løsBistand(fom)
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
             .kvalitetssikre()
             .løsBeregningstidspunkt()
             .løsOppholdskrav(fom)
@@ -134,7 +132,7 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
 
         val barnBlirAttenPå = barnfødseldato.plusYears(18)
 
-        val periodeBarnUnderAtten = Periode(periode.fom, barnBlirAttenPå.minusDays(1))
+        val periodeBarnUnderAtten = Periode(fom, barnBlirAttenPå.minusDays(1))
         val barnErAtten = barnetillegg.begrensetTil(periodeBarnUnderAtten)
 
         assertThat(barnErAtten.segmenter()).isNotEmpty
@@ -199,7 +197,6 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
     @Test
     fun `barnetillegg gis ikke for gamle barn`() {
         val fom = LocalDate.of(2025, 12, 4)
-        val periode = Periode(fom, Tid.MAKS)
 
         val ungtBarnFødselsdato = fom.minusYears(7)
         val gammeltBarnFødselsdato = fom.minusYears(20)
@@ -220,14 +217,15 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
         )
 
         val (_, behandling) = sendInnFørsteSøknad(
+            mottattTidspunkt = fom.atStartOfDay(),
             person = person,
-            periode = periode,
         )
         behandling
-            .løsSykdom(periode.fom)
-            .løsBistand(periode.fom)
-            .løsRefusjonskrav(periode.fom)
+            .løsSykdom(fom)
+            .løsBistand(fom)
+            .løsRefusjonskrav(fom)
             .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
             .kvalitetssikre()
             .løsBeregningstidspunkt()
             .løsOppholdskrav(fom)
@@ -275,7 +273,7 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
         // Skal kun gi barnetillegg for det unge barnet
         assertTidslinje(
             barnetillegg,
-            Periode(fom = periode.fom, tom = LocalDate.of(2025, 12, 31)) to {
+            Periode(fom = fom, tom = LocalDate.of(2025, 12, 31)) to {
                 assertThat(it.barnetillegg).isEqualTo(Beløp(37))
                 assertThat(it.antallBarn).isEqualTo(1)
             },
@@ -288,7 +286,6 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
     @Test
     fun `oppgir manuelle barn, avklarer dem`() {
         val fom = LocalDate.now()
-        val periode = Periode(fom, fom.plusYears(3))
 
         val person = TestPersoner.STANDARD_PERSON()
 
@@ -315,15 +312,16 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
         )
 
         val (_, behandling) = sendInnFørsteSøknad(
+            mottattTidspunkt = fom.atStartOfDay(),
             person = person,
-            periode = periode,
             søknad = søknad,
         )
         behandling
-            .løsSykdom(periode.fom)
-            .løsBistand(periode.fom)
+            .løsSykdom(fom)
+            .løsBistand(fom)
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
             .kvalitetssikre()
             .løsBeregningstidspunkt()
             .løsOppholdskrav(fom)
@@ -340,7 +338,7 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
                                 fødselsdato = barnAlder,
                                 vurderinger = listOf(
                                     VurderingAvForeldreAnsvarDto(
-                                        fraDato = periode.fom,
+                                        fraDato = fom,
                                         harForeldreAnsvar = true,
                                         begrunnelse = "bra forelder"
                                     )
@@ -367,7 +365,7 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
                                 fødselsdato = barnAlder,
                                 vurderinger = listOf(
                                     VurderingAvForeldreAnsvarDto(
-                                        fraDato = periode.fom,
+                                        fraDato = fom,
                                         harForeldreAnsvar = true,
                                         begrunnelse = "bra forelder"
                                     )
@@ -379,7 +377,7 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
                                 fødselsdato = manueltBarnIPDL.fødselsdato.toLocalDate(),
                                 vurderinger = listOf(
                                     VurderingAvForeldreAnsvarDto(
-                                        fraDato = periode.fom,
+                                        fraDato = fom,
                                         harForeldreAnsvar = true,
                                         begrunnelse = "bra forelder"
                                     )
@@ -406,15 +404,15 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
                 // Barnet er 18 fram til periode.fom.plusYears(1).minusDays(1)
                 assertThat(periodeMedBarneTilleggForToBarn).isEqualTo(
                     Periode(
-                        periode.fom,
-                        periode.fom.plusYears(1).minusMonths(1).minusDays(1)
+                        fom,
+                        fom.plusYears(1).minusMonths(1).minusDays(1)
                     )
                 )
                 val underveisPeriode =
                     repositoryProvider.provide<UnderveisRepository>().hent(behandling.id).somTidslinje().helePerioden()
                 assertThat(periodeMedBarneTilleggForEttBarn).isEqualTo(
                     Periode(
-                        periode.fom.plusYears(1).minusMonths(1),
+                        fom.plusYears(1).minusMonths(1),
                         underveisPeriode.tom
                     )
                 )
@@ -432,14 +430,14 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
 
     @Test
     fun `barn lagres i pip i starten av behandlingen`() {
-        val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
         val manueltBarnIdent = genererIdent(LocalDate.now().minusYears(3))
         val person = TestPersoner.STANDARD_PERSON()
 
         // Oppretter søknad med manuelt barn
+        val fom = LocalDate.now()
         val (_, behandling) = sendInnFørsteSøknad(
+            mottattTidspunkt = fom.atStartOfDay(),
             person = person,
-            periode = periode,
             søknad = SøknadV0(
                 student = SøknadStudentDto(StudentStatus.Nei), yrkesskade = "NEI", oppgitteBarn = OppgitteBarn(
                     barn = listOf(
@@ -513,7 +511,7 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
             oppgittForeldreRelasjon = Relasjon.FORELDER
         )
 
-        vurdereFramTilBarnetillegg(søknadMedOppgittBarn, periode, personMedRegistrerteBarn).second
+        vurdereFramTilBarnetillegg(søknadMedOppgittBarn, personMedRegistrerteBarn, periode.fom).second
             // Løs barnetillegg avklaringsbehov
             .løsAvklaringsBehov(
                 AvklarBarnetilleggLøsning(
@@ -604,7 +602,7 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
             )
         )
 
-        val sakOgBehandlingPar = vurdereFramTilBarnetillegg(søknad, periode, TestPersoner.STANDARD_PERSON())
+        val sakOgBehandlingPar = vurdereFramTilBarnetillegg(søknad, TestPersoner.STANDARD_PERSON(), periode.fom)
         val behandling: Behandling = sakOgBehandlingPar.second
         // løs barnetillegg avklaringsbehov
         behandling.løsAvklaringsBehov(
@@ -759,7 +757,7 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
             )
         )
 
-        vurdereFramTilBarnetillegg(søknad, periode, TestPersoner.STANDARD_PERSON()).second
+        vurdereFramTilBarnetillegg(søknad, TestPersoner.STANDARD_PERSON(), periode.fom).second
             // Løs barnetillegg avklaringsbehov
             .løsAvklaringsBehov(
                 AvklarBarnetilleggLøsning(
@@ -804,6 +802,7 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
             }
             // Gi avslag på 11-13
             .løsSykdom(vurderingGjelderFra = periode.fom, erOppfylt = false)
+            .bekreftVurderinger()
             .kvalitetssikre()
             .medKontekst {
                 val tilkjentYtelseFraRepo = hentTilkjentYtelse(behandling.id)
@@ -842,7 +841,7 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
         )
 
         // Førstegangsbehandling med barnetillegg for register barn
-        val sakOgBehandlingPar = vurdereFramTilBarnetillegg(TestSøknader.STANDARD_SØKNAD, periode, person)
+        val sakOgBehandlingPar = vurdereFramTilBarnetillegg(TestSøknader.STANDARD_SØKNAD, person, periode.fom)
         val behandling: Behandling = sakOgBehandlingPar.second
         behandling.løsBarnetillegg()
             .løsAndreStatligeYtelser()
@@ -876,6 +875,7 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
             // Gi avslag på 11-13
             .løsSykdom(periode.fom, vissVarighet = false, erOppfylt = false)
             .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
             .fattVedtak()
             .medKontekst {
                 val tilkjentYtelseFraRepo = hentTilkjentYtelse(revurdering.id)
@@ -927,7 +927,7 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
             oppgittForeldreRelasjon = Relasjon.FORELDER
         )
 
-        vurdereFramTilBarnetillegg(TestSøknader.STANDARD_SØKNAD, periode, personMedRegistrerteBarn).second
+        vurdereFramTilBarnetillegg(TestSøknader.STANDARD_SØKNAD, personMedRegistrerteBarn, periode.fom).second
             // Legg til saksbehandler-oppgitte barn
             .løsAvklaringsBehov(
                 AvklarBarnetilleggLøsning(
@@ -1001,7 +1001,7 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
             )
         )
         val behandling =
-            vurdereFramTilBarnetillegg(TestSøknader.STANDARD_SØKNAD, periode, personMedRegistrerteBarn).second
+            vurdereFramTilBarnetillegg(TestSøknader.STANDARD_SØKNAD, personMedRegistrerteBarn, periode.fom).second
                 .løsBarnetillegg()
                 .løsAndreStatligeYtelser()
                 .medKontekst {
@@ -1077,9 +1077,9 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
 
     @Test
     fun `Barnetillegg opphører ved registrert dødsdato`() {
-        val periode = Periode(LocalDate.of(2026, 1, 1), Tid.MAKS)
-        val dødtBarnFødselsdato = periode.fom.minusYears(5)
-        val dødtBarnDødsdato = Dødsdato(periode.fom.plusMonths(5))
+        val fom = LocalDate.of(2026, 1, 1)
+        val dødtBarnFødselsdato = fom.minusYears(5)
+        val dødtBarnDødsdato = Dødsdato(fom.plusMonths(5))
         val dødtBarnIdent = genererIdent(dødtBarnFødselsdato)
         val dødtBarnNavn = PersonNavn("Kunstig", "Gramatikk")
         val personMedDødtBarn = TestPersoner.STANDARD_PERSON().medBarn(
@@ -1094,7 +1094,7 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
             )
         )
 
-        vurdereFramTilBarnetillegg(TestSøknader.STANDARD_SØKNAD, periode, personMedDødtBarn).second
+        vurdereFramTilBarnetillegg(TestSøknader.STANDARD_SØKNAD, personMedDødtBarn, fom).second
             .løsBarnetillegg()
             .løsAndreStatligeYtelser()
             .medKontekst {
@@ -1112,7 +1112,7 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
 
                 assertTrue(tilkjentYtelseTidslinje.isNotEmpty())
 
-                val periodeMedBarnetillegg = Periode(periode.fom, dødtBarnDødsdato.toLocalDate())
+                val periodeMedBarnetillegg = Periode(fom, dødtBarnDødsdato.toLocalDate())
                 val tilkjentYtelseMedBarnetillegg = tilkjentYtelseTidslinje.begrensetTil(periodeMedBarnetillegg)
                 assertTidslinje(tilkjentYtelseMedBarnetillegg, periodeMedBarnetillegg to {
                     assertThat(it.barnetillegg).isEqualTo(Beløp(38))
@@ -1142,11 +1142,10 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
         )
     }
 
-    fun vurdereFramTilBarnetillegg(søknad: SøknadV0, periode: Periode, person: TestPerson): Pair<Sak, Behandling> {
+    fun vurdereFramTilBarnetillegg(søknad: SøknadV0, person: TestPerson, fraDato: LocalDate): Pair<Sak, Behandling> {
         // Sender inn en søknad
         var (sak, behandling) = sendInnFørsteSøknad(
-            mottattTidspunkt = periode.fom.atStartOfDay(),
-            periode = periode,
+            mottattTidspunkt = fraDato.atStartOfDay(),
             søknad = søknad,
             person = person
         )
@@ -1156,10 +1155,11 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
             assertThat(åpneAvklaringsbehov).isNotEmpty()
             assertThat(behandling.status()).isEqualTo(Status.UTREDES)
         }
-            .løsSykdom(periode.fom)
-            .løsBistand(periode.fom)
-            .løsRefusjonskrav(periode.fom)
+            .løsSykdom(fraDato)
+            .løsBistand(fraDato)
+            .løsRefusjonskrav(fraDato)
             .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
             .kvalitetssikre()
             .løsAvklaringsBehov(
                 FastsettBeregningstidspunktLøsning(
@@ -1171,7 +1171,7 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
                     ),
                 ),
             )
-            .løsOppholdskrav(periode.fom)
+            .løsOppholdskrav(fraDato)
 
         return sak to behandling
     }

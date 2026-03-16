@@ -1,8 +1,8 @@
 package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser
 
-import io.mockk.clearAllMocks
+import io.mockk.checkUnnecessaryStub
+import io.mockk.clearMocks
 import io.mockk.every
-import io.mockk.junit5.MockKExtension
 import io.mockk.mockk
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovOperasjonerRepository
@@ -22,14 +22,10 @@ import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.assertThrows
-import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import java.time.LocalDate
 
-@ExtendWith(MockKExtension::class)
-@MockKExtension.CheckUnnecessaryStub
-@MockKExtension.RequireParallelTesting
 class VurderBrudd11_7LøserTest {
     private val aktivitetsplikt11_7Repository = mockk<Aktivitetsplikt11_7Repository>()
     private val behandlingRepository = mockk<BehandlingRepository>()
@@ -38,7 +34,18 @@ class VurderBrudd11_7LøserTest {
 
     @AfterEach
     fun tearDown() {
-        clearAllMocks()
+        checkUnnecessaryStub(
+            aktivitetsplikt11_7Repository,
+            behandlingRepository,
+            avklaringsbehovRepository,
+            avklaringsbehovOperasjonerRepository
+        )
+        clearMocks(
+            aktivitetsplikt11_7Repository,
+            behandlingRepository,
+            avklaringsbehovRepository,
+            avklaringsbehovOperasjonerRepository
+        )
     }
 
     @ParameterizedTest

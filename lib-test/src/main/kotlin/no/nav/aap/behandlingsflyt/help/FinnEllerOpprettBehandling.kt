@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.help
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
@@ -61,18 +61,41 @@ fun finnEllerOpprettBehandling(
     årsakTilOpprettelse: ÅrsakTilOpprettelse = ÅrsakTilOpprettelse.SØKNAD,
 ): Behandling {
     val sak = repositoryProvider.provide<SakRepository>().hent(saksnummer)
-    return SakOgBehandlingService(repositoryProvider, gatewayProvider)
+    return BehandlingService(repositoryProvider, gatewayProvider)
         .finnEllerOpprettOrdinærBehandling(sak.id, VurderingsbehovOgÅrsak(vurderingsbehov, årsakTilOpprettelse))
 }
 
-fun sak(connection: DBConnection, periode: Periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))): Sak {
-    return sak(postgresRepositoryRegistry.provider(connection), periode)
+fun sak(connection: DBConnection, søknadsdato: LocalDate = LocalDate.now()): Sak {
+    return sak(postgresRepositoryRegistry.provider(connection), søknadsdato)
 }
 
 fun sak(
     repositoryProvider: RepositoryProvider,
-    periode: Periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
+    søknadsdato: LocalDate = LocalDate.now(),
 ): Sak {
+    return PersonOgSakService(
+        FakePdlGateway,
+        FakeApiInternGateway.konstruer(),
+        repositoryProvider.provide(),
+        repositoryProvider.provide()
+    ).finnEllerOpprett(ident(), søknadsdato)
+}
+
+@Deprecated("Sluttdato for rettighetesperiode er alltid Tid.MAKS for nye/migrerte saker. Send kun med søknadsdato, med mindre du tester koden din for ikke-migrerte saker.")
+fun sak(
+    connection: DBConnection,
+    periode: Periode,
+): Sak {
+    @Suppress("DEPRECATION")
+    return sak(postgresRepositoryRegistry.provider(connection), periode)
+}
+
+@Deprecated("Sluttdato for rettighetesperiode er alltid Tid.MAKS for nye/migrerte saker. Send kun med søknadsdato, med mindre du tester koden din for ikke-migrerte saker.")
+fun sak(
+    repositoryProvider: RepositoryProvider,
+    periode: Periode,
+): Sak {
+    @Suppress("DEPRECATION")
     return PersonOgSakService(
         FakePdlGateway,
         FakeApiInternGateway.konstruer(),

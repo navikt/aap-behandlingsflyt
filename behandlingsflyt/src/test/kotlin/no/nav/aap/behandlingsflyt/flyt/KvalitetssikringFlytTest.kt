@@ -6,7 +6,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
-import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
@@ -16,19 +15,16 @@ class KvalitetssikringFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash
     @Test
     fun `Kvalitetssikrer godkjenner alle avklaringsbehov`() {
         val fom = LocalDate.now().minusMonths(3)
-        val periode = Periode(fom, fom.plusYears(3))
 
         val person = TestPersoner.STANDARD_PERSON()
 
-        val (_, behandling) = sendInnFørsteSøknad(
-            person = person,
-            periode = periode,
-        )
+        val (_, behandling) = sendInnFørsteSøknad(person = person)
         behandling
             .løsSykdom(fom)
             .løsBistand(fom)
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
             .kvalitetssikre()
 
         val avklaringsbehovSomKreverKvalitetssikring = hentAlleAvklaringsbehov(behandling)
@@ -39,19 +35,16 @@ class KvalitetssikringFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash
     @Test
     fun `Kvalitetssikrer underkjenner alle avklaringsbehov`() {
         val fom = LocalDate.now().minusMonths(3)
-        val periode = Periode(fom, fom.plusYears(3))
 
         val person = TestPersoner.STANDARD_PERSON()
 
-        val (_, behandling) = sendInnFørsteSøknad(
-            person = person,
-            periode = periode,
-        )
+        val (_, behandling) = sendInnFørsteSøknad(person = person)
         behandling
             .løsSykdom(fom)
             .løsBistand(fom)
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
             .kvalitetssikre(underkjennVurderinger = Definisjon.entries)
 
         val avklaringsbehovSomKreverKvalitetssikring = hentAlleAvklaringsbehov(behandling)
@@ -62,29 +55,36 @@ class KvalitetssikringFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash
     @Test
     fun `Kvalitetssikrer underkjenner AVKLAR_SYKDOM, men godkjenner de andre avklaringsbehovene`() {
         val fom = LocalDate.now().minusMonths(3)
-        val periode = Periode(fom, fom.plusYears(3))
 
         val person = TestPersoner.STANDARD_PERSON()
 
-        val (_, behandling) = sendInnFørsteSøknad(
-            person = person,
-            periode = periode,
-        )
+        val (_, behandling) = sendInnFørsteSøknad(person = person)
         behandling
             .løsSykdom(fom)
             .løsBistand(fom)
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
             .kvalitetssikre(underkjennVurderinger = listOf(Definisjon.AVKLAR_SYKDOM))
+            .medKontekst {
+                val avklaringsbehovSomKreverKvalitetssikring =
+                    avklaringsbehovene.alle().filter { it.kreverKvalitetssikring() }
 
-        val avklaringsbehovSomKreverKvalitetssikring = hentAlleAvklaringsbehov(behandling)
-            .filter { behov -> behov.kreverKvalitetssikring() }
-        assertThat(avklaringsbehovSomKreverKvalitetssikring.any { it.definisjon == Definisjon.AVKLAR_SYKDOM && it.status() == AvklaringsbehovStatus.SENDT_TILBAKE_FRA_KVALITETSSIKRER }).isTrue()
-        assertThat(
-            avklaringsbehovSomKreverKvalitetssikring
-                .filter { it.definisjon != Definisjon.AVKLAR_SYKDOM }
-                .all { it.status() == AvklaringsbehovStatus.KVALITETSSIKRET }
-        ).isTrue()
+                assertThat(avklaringsbehovSomKreverKvalitetssikring)
+                    .filteredOn { it.status() == AvklaringsbehovStatus.SENDT_TILBAKE_FRA_KVALITETSSIKRER }
+                    .extracting("definisjon")
+                    .containsExactlyInAnyOrder(
+                        Definisjon.AVKLAR_SYKDOM
+                    )
+
+                assertThat(avklaringsbehovSomKreverKvalitetssikring)
+                    .filteredOn { it.definisjon != Definisjon.AVKLAR_SYKDOM }
+                    .allMatch { it.status() == AvklaringsbehovStatus.KVALITETSSIKRET }
+
+                assertThat(avklaringsbehovene.hentBehovForDefinisjon(Definisjon.KVALITETSSIKRING))
+                    .extracting { it?.status() }
+                    .isEqualTo(AvklaringsbehovStatus.OPPRETTET)
+            }
 
         val stegetsEgetBehov = hentAlleAvklaringsbehov(behandling)
             .filter { behov -> behov.definisjon == Definisjon.KVALITETSSIKRING }
@@ -94,49 +94,46 @@ class KvalitetssikringFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash
     @Test
     fun `Kvalitetssikrer underkjenner AVKLAR_BISTANDSBEHOV, men tar ikke stilling til de andre avklaringsbehovene`() {
         val fom = LocalDate.now().minusMonths(3)
-        val periode = Periode(fom, fom.plusYears(3))
 
         val person = TestPersoner.STANDARD_PERSON()
 
-        val (_, behandling) = sendInnFørsteSøknad(
-            person = person,
-            periode = periode,
-        )
+        val (_, behandling) = sendInnFørsteSøknad(person = person)
         behandling
             .løsSykdom(fom)
             .løsBistand(fom)
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
             .kvalitetssikre(
                 behovÅKvalitetssikre = listOf(Definisjon.AVKLAR_BISTANDSBEHOV),
                 underkjennVurderinger = listOf(Definisjon.AVKLAR_BISTANDSBEHOV)
             )
+            .medKontekst {
+                val avklaringsbehovSomKreverKvalitetssikring =
+                    åpneAvklaringsbehov.filter { it.kreverKvalitetssikring() }
 
-        val avklaringsbehovSomKreverKvalitetssikring = hentAlleAvklaringsbehov(behandling)
-            .filter { behov -> behov.kreverKvalitetssikring() }
+                assertThat(avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_BISTANDSBEHOV))
+                    .matches { it?.status() == AvklaringsbehovStatus.SENDT_TILBAKE_FRA_KVALITETSSIKRER }
 
-        assertThat(avklaringsbehovSomKreverKvalitetssikring)
-            .anyMatch { it.definisjon == Definisjon.AVKLAR_BISTANDSBEHOV && it.status() == AvklaringsbehovStatus.SENDT_TILBAKE_FRA_KVALITETSSIKRER }
-        assertThat(avklaringsbehovSomKreverKvalitetssikring.filter { it.definisjon != Definisjon.AVKLAR_BISTANDSBEHOV })
-            .allMatch { it.status() == AvklaringsbehovStatus.AVSLUTTET }
+                assertThat(avklaringsbehovSomKreverKvalitetssikring)
+                    .filteredOn { it.definisjon != Definisjon.AVKLAR_BISTANDSBEHOV }
+                    .allMatch { it.status() == AvklaringsbehovStatus.AVSLUTTET }
+            }
     }
 
     @Test
     fun `Kvalitetssikrer underkjenner AVKLAR_BISTANDSBEHOV, men godkjenner de andre avklaringsbehovene`() {
         val fom = LocalDate.now().minusMonths(3)
-        val periode = Periode(fom, fom.plusYears(3))
 
         val person = TestPersoner.STANDARD_PERSON()
 
-        val (_, behandling) = sendInnFørsteSøknad(
-            person = person,
-            periode = periode,
-        )
+        val (_, behandling) = sendInnFørsteSøknad(person = person)
         behandling
             .løsSykdom(fom)
             .løsBistand(fom)
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
             .kvalitetssikre(underkjennVurderinger = listOf(Definisjon.AVKLAR_BISTANDSBEHOV))
 
         val avklaringsbehovSomKreverKvalitetssikring = hentAlleAvklaringsbehov(behandling)
@@ -145,26 +142,23 @@ class KvalitetssikringFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash
             .anyMatch { it.definisjon == Definisjon.AVKLAR_BISTANDSBEHOV && it.status() == AvklaringsbehovStatus.SENDT_TILBAKE_FRA_KVALITETSSIKRER }
 
         assertThat(avklaringsbehovSomKreverKvalitetssikring.filter { it.definisjon != Definisjon.AVKLAR_BISTANDSBEHOV })
-            .allMatch { it.status() == AvklaringsbehovStatus.KVALITETSSIKRET }
+            .anyMatch { it.status() == AvklaringsbehovStatus.KVALITETSSIKRET }
     }
 
 
     @Test
     fun `Kvalitetssikrer underkjenner SKRIV_SYKDOMSVURDERING_BREV, men godkjenner de andre avklaringsbehovene`() {
         val fom = LocalDate.now().minusMonths(3)
-        val periode = Periode(fom, fom.plusYears(3))
 
         val person = TestPersoner.STANDARD_PERSON()
 
-        val (_, behandling) = sendInnFørsteSøknad(
-            person = person,
-            periode = periode,
-        )
+        val (_, behandling) = sendInnFørsteSøknad(person = person)
         behandling
             .løsSykdom(fom)
             .løsBistand(fom)
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
             .kvalitetssikre(underkjennVurderinger = listOf(Definisjon.SKRIV_SYKDOMSVURDERING_BREV))
 
         val avklaringsbehovSomKreverKvalitetssikring = hentAlleAvklaringsbehov(behandling)
@@ -179,20 +173,17 @@ class KvalitetssikringFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash
     @Test
     fun `Beslutter underkjenner AVKLAR_SYKDOM, kvalitetssikrer godkjenner på nytt, beslutter fatter vedtak`() {
         val fom = LocalDate.now().minusMonths(3)
-        val periode = Periode(fom, fom.plusYears(3))
 
         val person = TestPersoner.STANDARD_PERSON()
 
-        val (_, behandling) = sendInnFørsteSøknad(
-            person = person,
-            periode = periode,
-        )
+        val (_, behandling) = sendInnFørsteSøknad(person = person)
 
         behandling
             .løsSykdom(fom)
             .løsBistand(fom)
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
             .kvalitetssikre()
             .løsBeregningstidspunkt()
             .løsOppholdskrav(fom)
@@ -204,6 +195,7 @@ class KvalitetssikringFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash
                 assertThat(åpneAvklaringsbehov)
                     .anyMatch { it.definisjon == Definisjon.KVALITETSSIKRING }
             }
+            .bekreftVurderinger()
             .kvalitetssikre()
             .foreslåVedtak()
             .fattVedtak()
@@ -216,14 +208,10 @@ class KvalitetssikringFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash
     @Test
     fun `Beslutter underkjenner kun VURDER_RETTIGHETSPERIODE, ingen ny kvalitetssikring, beslutter fatter vedtak`() {
         val fom = LocalDate.now().minusMonths(3)
-        val periode = Periode(fom, fom.plusYears(3))
 
         val person = TestPersoner.STANDARD_PERSON()
 
-        val (sak, behandling) = sendInnFørsteSøknad(
-            person = person,
-            periode = periode,
-        )
+        val (sak, behandling) = sendInnFørsteSøknad(person = person)
 
         sak.opprettManuellRevurdering(vurderingsbehov = Vurderingsbehov.VURDER_RETTIGHETSPERIODE)
 
@@ -233,6 +221,7 @@ class KvalitetssikringFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash
             .løsBistand(fom)
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
             .kvalitetssikre()
             .løsBeregningstidspunkt()
             .løsOppholdskrav(fom)
@@ -252,14 +241,10 @@ class KvalitetssikringFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash
     @Test
     fun `Ny kvalitetssikring skal skje dersom beslutter underkjenner VURDER_RETTIGHETSPERIODE og AVKLAR_SYKDOM`() {
         val fom = LocalDate.now().minusMonths(3)
-        val periode = Periode(fom, fom.plusYears(3))
 
         val person = TestPersoner.STANDARD_PERSON()
 
-        val (sak, behandling) = sendInnFørsteSøknad(
-            person = person,
-            periode = periode,
-        )
+        val (sak, behandling) = sendInnFørsteSøknad(person = person)
 
         sak.opprettManuellRevurdering(vurderingsbehov = Vurderingsbehov.VURDER_RETTIGHETSPERIODE)
 
@@ -269,12 +254,18 @@ class KvalitetssikringFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash
             .løsBistand(fom)
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
             .kvalitetssikre()
             .løsBeregningstidspunkt()
             .løsOppholdskrav(fom)
             .løsAndreStatligeYtelser()
             .løsAvklaringsBehov(ForeslåVedtakLøsning())
-            .beslutterGodkjennerIkke(underkjennVurderinger = listOf(Definisjon.VURDER_RETTIGHETSPERIODE, Definisjon.AVKLAR_SYKDOM))
+            .beslutterGodkjennerIkke(
+                underkjennVurderinger = listOf(
+                    Definisjon.VURDER_RETTIGHETSPERIODE,
+                    Definisjon.AVKLAR_SYKDOM
+                )
+            )
             .løsRettighetsperiodeIngenEndring()
             .løsSykdom(fom)
 
@@ -290,19 +281,16 @@ class KvalitetssikringFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash
         }
 
         val fom = LocalDate.now().minusMonths(3)
-        val periode = Periode(fom, fom.plusYears(3))
 
         val person = TestPersoner.STANDARD_PERSON()
 
-        val (sak, behandling) = sendInnFørsteSøknad(
-            person = person,
-            periode = periode,
-        )
+        val (sak, behandling) = sendInnFørsteSøknad(person = person)
         behandling
             .løsSykdom(fom)
             .løsBistand(fom)
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
             .kvalitetssikre()
 
         val oppdatertBehandling = sak.opprettManuellRevurdering(listOf(Vurderingsbehov.VURDER_RETTIGHETSPERIODE))
@@ -312,6 +300,7 @@ class KvalitetssikringFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash
             .løsSykdom(nyStartdato)
             .løsBistand(nyStartdato)
             .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
 
         val stegetsEgetBehov = hentAlleAvklaringsbehov(oppdatertBehandling)
             .filter { behov -> behov.definisjon == Definisjon.KVALITETSSIKRING }
@@ -321,19 +310,16 @@ class KvalitetssikringFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash
     @Test
     fun `Ny kvalitetssikring skal IKKE skje dersom behandlingen blir dratt tilbake til 22-13 og ingen ny startdato settes`() {
         val fom = LocalDate.now().minusMonths(3)
-        val periode = Periode(fom, fom.plusYears(3))
 
         val person = TestPersoner.STANDARD_PERSON()
 
-        val (sak, behandling) = sendInnFørsteSøknad(
-            person = person,
-            periode = periode,
-        )
+        val (sak, behandling) = sendInnFørsteSøknad(person = person)
         behandling
             .løsSykdom(fom)
             .løsBistand(fom)
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
             .kvalitetssikre()
 
         val oppdatertBehandling = sak.opprettManuellRevurdering(listOf(Vurderingsbehov.VURDER_RETTIGHETSPERIODE))

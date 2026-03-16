@@ -32,7 +32,6 @@ import no.nav.aap.behandlingsflyt.test.oktober
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
-import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.verdityper.dokument.JournalpostId
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
@@ -46,7 +45,6 @@ import java.time.YearMonth
 
 internal class MedlemskapArbeidInntektForutgåendeRepositoryImplTest {
     companion object {
-        private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
         private lateinit var dataSource: TestDataSource
 
         @BeforeAll
@@ -66,10 +64,8 @@ internal class MedlemskapArbeidInntektForutgåendeRepositoryImplTest {
             val behandlingRepo = BehandlingRepositoryImpl(connection)
             val medlemskapArbeidInntektForutgåendeRepo = MedlemskapArbeidInntektForutgåendeRepositoryImpl(connection)
 
-            val sak = opprettSak(
-                connection,
-                Periode(LocalDate.now(), LocalDate.now().plusYears(3))
-            )
+            val sak = opprettSak(connection,LocalDate.now())
+
             val behandling =
                 behandlingRepo.opprettBehandling(
                     sak.id,
@@ -97,14 +93,11 @@ internal class MedlemskapArbeidInntektForutgåendeRepositoryImplTest {
     @Test
     fun `kan hente siste relevante utenlandsopplysning`() {
         val sak = dataSource.transaction { connection ->
-            opprettSak(
-                connection,
-                Periode(LocalDate.now(), LocalDate.now().plusYears(3))
-            )
+            opprettSak(connection,LocalDate.now())
         }
 
         val sak2 = dataSource.transaction { connection ->
-            opprettSak(connection, Periode(LocalDate.now(), LocalDate.now().plusYears(3)))
+            opprettSak(connection,LocalDate.now())
         }
 
         dataSource.transaction { connection ->
@@ -155,7 +148,7 @@ internal class MedlemskapArbeidInntektForutgåendeRepositoryImplTest {
     fun `skal kunne lagre og hente manuelle vurderinger over flere perioder`() {
         dataSource.transaction { connection ->
             val medlemskapArbeidInntektForutgåendeRepo = MedlemskapArbeidInntektForutgåendeRepositoryImpl(connection)
-            val sak = opprettSak(connection, periode)
+            val sak = opprettSak(connection,LocalDate.now())
             val behandling = finnEllerOpprettBehandling(connection, sak)
 
             medlemskapArbeidInntektForutgåendeRepo.lagreVurderinger(
@@ -184,7 +177,7 @@ internal class MedlemskapArbeidInntektForutgåendeRepositoryImplTest {
     fun `skal ta med manuelle vurderinger i grunnlag når arbeid og inntekt oppdateres`() {
         dataSource.transaction { connection ->
             val medlemskapArbeidInntektForutgåendeRepo = MedlemskapArbeidInntektForutgåendeRepositoryImpl(connection)
-            val sak = opprettSak(connection, periode)
+            val sak = opprettSak(connection,LocalDate.now())
             val behandling = finnEllerOpprettBehandling(connection, sak)
             val medlemskapRepository = MedlemskapForutgåendeRepositoryImpl(connection)
 
@@ -233,7 +226,7 @@ internal class MedlemskapArbeidInntektForutgåendeRepositoryImplTest {
             val medlemskapArbeidInntektForutgåendeRepo = MedlemskapArbeidInntektForutgåendeRepositoryImpl(connection)
             val medlemskapRepository = MedlemskapForutgåendeRepositoryImpl(connection)
 
-            val sak = opprettSak(connection, periode)
+            val sak = opprettSak(connection,LocalDate.now())
             val behandling = finnEllerOpprettBehandling(connection, sak)
             val vurderinger = listOf(
                 manuellVurdering(
@@ -311,7 +304,7 @@ internal class MedlemskapArbeidInntektForutgåendeRepositoryImplTest {
     fun `test sletting`() {
         dataSource.transaction { connection ->
             val medlemskapArbeidInntektForutgåendeRepo = MedlemskapArbeidInntektForutgåendeRepositoryImpl(connection)
-            val sak = opprettSak(connection, periode)
+            val sak = opprettSak(connection,LocalDate.now())
             val behandling = finnEllerOpprettBehandling(connection, sak)
             val medlemskapRepository = MedlemskapForutgåendeRepositoryImpl(connection)
 

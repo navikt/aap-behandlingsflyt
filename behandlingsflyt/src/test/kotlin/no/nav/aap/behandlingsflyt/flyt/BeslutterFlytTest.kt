@@ -15,6 +15,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.Sykdo
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
+import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.komponenter.type.Periode
@@ -23,16 +24,17 @@ import no.nav.aap.verdityper.dokument.JournalpostId
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 class BeslutterFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
     @Test
     fun `to-trinn og ingen endring i gruppe etter sendt tilbake fra beslutter`() {
-        val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
+        val fom = LocalDate.now()
 
         val person = TestPersoner.STANDARD_PERSON()
         // Sender inn en søknad
         val (_, behandling) = sendInnFørsteSøknad(
-            periode = periode,
+            mottattTidspunkt = fom.atStartOfDay(),
             person = person,
             søknad = TestSøknader.SØKNAD_STUDENT
         )
@@ -66,12 +68,12 @@ class BeslutterFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class
                             erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
                             erArbeidsevnenNedsatt = true,
                             yrkesskadeBegrunnelse = null,
-                            fom = periode.fom,
+                            fom = fom,
                             tom = null
                         )
                     )
                 )
-            ).løsBistand(periode.fom)
+            ).løsBistand(fom)
 
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
@@ -81,6 +83,7 @@ class BeslutterFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class
                 assertThat(åpneAvklaringsbehov).anySatisfy { behov -> assertThat(behov.definisjon).isEqualTo(Definisjon.KVALITETSSIKRING) }
                 assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
             }
+            .bekreftVurderinger()
             .kvalitetssikre()
             .løsAvklaringsBehov(
                 FastsettBeregningstidspunktLøsning(
@@ -92,7 +95,7 @@ class BeslutterFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class
                     ),
                 ),
             )
-            .løsOppholdskrav(periode.fom)
+            .løsOppholdskrav(fom)
             .løsAndreStatligeYtelser()
             .løsAvklaringsBehov(ForeslåVedtakLøsning())
             .medKontekst {
@@ -117,13 +120,14 @@ class BeslutterFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class
                             erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
                             erArbeidsevnenNedsatt = true,
                             yrkesskadeBegrunnelse = null,
-                            fom = periode.fom,
+                            fom = fom,
                             tom = null
                         )
                     )
                 ),
                 bruker = Bruker("SAKSBEHANDLER")
             )
+            .bekreftVurderinger()
             .kvalitetssikre()
             .løsAvklaringsBehov(
                 FastsettBeregningstidspunktLøsning(
@@ -136,7 +140,7 @@ class BeslutterFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class
                 ),
                 Bruker("SAKSBEHANDLER")
             )
-            .løsOppholdskrav(periode.fom)
+            .løsOppholdskrav(fom)
             .medKontekst {
                 assertThat(behandling.status()).isEqualTo(Status.UTREDES)
                 // Saken står til en-trinnskontroll hos saksbehandler klar for å bli sendt til beslutter
@@ -169,12 +173,12 @@ class BeslutterFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class
 
     @Test
     fun `er hos beslutter, kommer inn meldekort, skal ikke kaste tilbake til kvalitettsikrer`() {
-        val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
+        val startDato = LocalDate.now()
 
         val person = TestPersoner.STANDARD_PERSON()
         // Sender inn en søknad
         val (sak, behandling) = sendInnFørsteSøknad(
-            periode = periode,
+            mottattTidspunkt = startDato.atStartOfDay(),
             person = person,
             søknad = TestSøknader.STANDARD_SØKNAD
         )
@@ -184,7 +188,7 @@ class BeslutterFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class
             assertThat(behandling.status()).isEqualTo(Status.UTREDES)
         }
             .løsSykdom(sak.rettighetsperiode.fom)
-            .løsBistand(periode.fom)
+            .løsBistand(startDato)
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
             .medKontekst {
@@ -193,9 +197,10 @@ class BeslutterFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class
                 assertThat(åpneAvklaringsbehov.map { it.definisjon }).containsExactly(Definisjon.KVALITETSSIKRING)
                 assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
             }
+            .bekreftVurderinger()
             .kvalitetssikre()
             .løsBeregningstidspunkt()
-            .løsOppholdskrav(periode.fom)
+            .løsOppholdskrav(startDato)
             .løsAndreStatligeYtelser()
             .løsAvklaringsBehov(ForeslåVedtakLøsning())
             .medKontekst {
@@ -216,10 +221,10 @@ class BeslutterFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class
 
     @Test
     fun `Når beslutter ikke godkjenner vurdering av samordning skal flyt tilbakeføres`() {
-        val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
-
         // Sender inn en søknad
-        val (_, behandling) = sendInnFørsteSøknad(periode = periode)
+        val mottattTidspunkt = LocalDateTime.now()
+        val fom = mottattTidspunkt.toLocalDate()
+        val (_, behandling) = sendInnFørsteSøknad(mottattTidspunkt = mottattTidspunkt)
 
         assertThat(behandling.status()).isEqualTo(Status.UTREDES)
 
@@ -236,17 +241,18 @@ class BeslutterFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class
                         erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
                         erArbeidsevnenNedsatt = true,
                         yrkesskadeBegrunnelse = null,
-                        fom = periode.fom,
+                        fom = fom,
                         tom = null
                     )
                 )
             )
-        ).løsBistand(periode.fom)
+        ).løsBistand(fom)
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
             .kvalitetssikre()
             .løsBeregningstidspunkt()
-            .løsOppholdskrav(periode.fom)
+            .løsOppholdskrav(fom)
             .løsAvklaringsBehov(
                 AvklarSamordningGraderingLøsning(
                     VurderingerForSamordning(
@@ -276,6 +282,36 @@ class BeslutterFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class
                 assertThat(åpneAvklaringsbehov).anySatisfy { assertThat(it.definisjon).isEqualTo(Definisjon.AVKLAR_SAMORDNING_GRADERING) }
                 assertThat(this.behandling.aktivtSteg()).isEqualTo(StegType.SAMORDNING_GRADERING)
             }
+    }
+
+    @Test
+    fun `aap-1905, regresjonstest - skal ikke lukke ting etter tilbakesending`() {
+        // Sender inn en søknad
+        val fom = LocalDate.now()
+        val (sak, behandling) = sendInnFørsteSøknad(mottattTidspunkt = fom.atStartOfDay())
+
+        assertThat(behandling.status()).isEqualTo(Status.UTREDES)
+
+        behandling.løsSykdom(fom)
+            .løsBistand(fom)
+            .løsRefusjonskrav()
+            .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
+            .kvalitetssikre()
+            .løsBeregningstidspunkt()
+
+        sak.opprettManuellRevurdering(Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND)
+
+        behandling.medKontekst {
+            assertThat(this.behandling.aktivtSteg()).isEqualTo(StegType.AVKLAR_SYKDOM)
+        }
+
+        prosesserBehandling(behandling)
+        prosesserBehandling(behandling)
+
+        behandling.medKontekst {
+            assertThat(this.behandling.aktivtSteg()).isEqualTo(StegType.AVKLAR_SYKDOM)
+        }
     }
 
 }

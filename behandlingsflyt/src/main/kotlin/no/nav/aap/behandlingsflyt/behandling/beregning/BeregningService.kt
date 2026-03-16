@@ -2,26 +2,15 @@ package no.nav.aap.behandlingsflyt.behandling.beregning
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Beregningsgrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år.Inntektsbehov
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år.BeregningInput
+import no.nav.aap.behandlingsflyt.behandling.beregning.Beregning.Companion.kombinerInntektOgManuellInntekt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektGrunnlagRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.ManuellInntektGrunnlagRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.Uføre
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.Yrkesskader
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.ManuellInntektVurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Yrkesskadevurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.lookup.repository.RepositoryProvider
-import java.math.BigDecimal
 import java.time.Year
 
 class BeregningService(
@@ -45,31 +34,25 @@ class BeregningService(
     )
 
     fun beregnGrunnlag(behandlingId: BehandlingId): Beregningsgrunnlag {
+        val uføregrad = uføreRepository.hentHvisEksisterer(behandlingId)?.vurderinger.orEmpty()
+        val yrkesskadevurdering = sykdomRepository.hentHvisEksisterer(behandlingId)?.yrkesskadevurdering
+        val beregningGrunnlag = beregningVurderingRepository.hentHvisEksisterer(behandlingId)
+        val registrerteYrkesskader = yrkesskadeRepository.hentHvisEksisterer(behandlingId)?.yrkesskader
         val inntektGrunnlag = inntektGrunnlagRepository.hent(behandlingId)
-        val manuellInntektGrunnlag = manuellInntektGrunnlagRepository.hentHvisEksisterer(behandlingId)
-        val sykdomGrunnlag = sykdomRepository.hentHvisEksisterer(behandlingId)
-        val uføre = uføreRepository.hentHvisEksisterer(behandlingId)
-        val beregningVurdering = beregningVurderingRepository.hentHvisEksisterer(behandlingId)
-        val yrkesskadeGrunnlag = yrkesskadeRepository.hentHvisEksisterer(behandlingId)
+        val manuelleInntekter = manuellInntektGrunnlagRepository.hentHvisEksisterer(behandlingId)?.manuelleInntekter.orEmpty()
 
-        val kombinertInntekt =
-            kombinerInntektOgManuellInntekt(
-                inntektGrunnlag.inntekter,
-                manuellInntektGrunnlag?.manuelleInntekter.orEmpty()
-            )
-
-        val input = utledInput(
-            yrkesskadevurdering = sykdomGrunnlag?.yrkesskadevurdering,
-            vurdering = beregningVurdering,
-            årsInntekter = kombinertInntekt,
+        val beregningsgrunnlag = Beregning(
+            årsInntekter = kombinerInntektOgManuellInntekt(inntektGrunnlag.inntekter, manuelleInntekter),
+            nedsettelsesDato = beregningGrunnlag?.tidspunktVurdering?.nedsattArbeidsevneEllerStudieevneDato
+                ?: throw IllegalStateException("Nedsettelsesdato må være satt for beregning"),
+            ytterligereNedsettelsesDato = beregningGrunnlag.tidspunktVurdering.ytterligereNedsattArbeidsevneDato,
+            inntektsPerioder = inntektGrunnlag.inntektPerMåned,
             // TODO: Hvor langt tilbake i tid skal man hente uføregrader?
-            uføregrad = uføre?.vurderinger.orEmpty(),
-            registrerteYrkesskader = yrkesskadeGrunnlag?.yrkesskader,
-            inntektsPerioder = inntektGrunnlag.inntektPerMåned
-        )
-
-        val beregning = Beregning(input)
-        val beregningsgrunnlag = beregning.beregneMedInput()
+            uføregrad = uføregrad,
+            yrkesskadevurdering = yrkesskadevurdering,
+            registrerteYrkesskader = registrerteYrkesskader,
+            yrkesskadeBeløpVurderinger = beregningGrunnlag.yrkesskadeBeløpVurdering?.vurderinger,
+        ).beregnBeregningsgrunnlag()
 
         beregningsgrunnlagRepository.lagre(behandlingId, beregningsgrunnlag)
         return beregningsgrunnlag
@@ -81,65 +64,6 @@ class BeregningService(
 
     fun utledRelevanteBeregningsÅr(behandlingId: BehandlingId): Set<Year> {
         val beregningGrunnlag = beregningVurderingRepository.hentHvisEksisterer(behandlingId)
-        return Inntektsbehov.utledAlleRelevanteÅr(beregningGrunnlag)
-    }
-
-    fun kombinerInntektOgManuellInntekt(
-        inntekter: Set<InntektPerÅr>,
-        manuelleInntekter: Set<ManuellInntektVurdering>
-    ): Set<InntektPerÅr> {
-        val manuellePGIByÅr = manuelleInntekter
-            .tilÅrInntekt { it.belop }
-
-        val manuellEOSByÅr = manuelleInntekter
-            .tilÅrInntekt { it.eøsBeløp }
-
-        val inntekterByÅr = inntekter
-            .groupBy { it.år }
-            .mapValues {
-                require(it.value.size == 1)
-                it.value.first()
-            }
-
-        val kombinerteInntekter =
-            (manuellePGIByÅr + inntekterByÅr).mapValues { (år, inntektPerÅr) ->
-                val eos = manuellEOSByÅr[år]?.beløp ?: Beløp(BigDecimal.ZERO)
-                inntektPerÅr.copy(beløp = inntektPerÅr.beløp.pluss(eos))
-            }.values.toSet()
-
-        return kombinerteInntekter
-    }
-
-    private fun Collection<ManuellInntektVurdering>.tilÅrInntekt(selector: (ManuellInntektVurdering) -> Beløp?): Map<Year, InntektPerÅr> {
-        return this.filter { selector(it) != null }
-            .map { InntektPerÅr(it.år, selector(it)!!, it) }
-            .groupBy { it.år }
-            .mapValues {
-                it.value.single()
-            }
-    }
-
-    private fun utledInput(
-        yrkesskadevurdering: Yrkesskadevurdering?,
-        vurdering: BeregningGrunnlag?,
-        årsInntekter: Set<InntektPerÅr>,
-        inntektsPerioder: Set<Månedsinntekt>,
-        uføregrad: Set<Uføre>,
-        registrerteYrkesskader: Yrkesskader?
-    ): Inntektsbehov {
-        val nedsettelsesdato = vurdering?.tidspunktVurdering?.nedsattArbeidsevneEllerStudieevneDato
-            ?: throw IllegalStateException("Nedsettelsesdato må være satt for beregning")
-
-        return Inntektsbehov(
-            BeregningInput(
-                nedsettelsesDato = nedsettelsesdato,
-                årsInntekter = årsInntekter,
-                uføregrad = uføregrad,
-                yrkesskadevurdering = yrkesskadevurdering,
-                beregningGrunnlag = vurdering,
-                registrerteYrkesskader = registrerteYrkesskader,
-                inntektsPerioder = inntektsPerioder,
-            )
-        )
+        return Beregning.utledAlleRelevanteÅr(beregningGrunnlag)
     }
 }

@@ -97,6 +97,6 @@ class ResultatUtleder(
             .orEmpty()
             .any { it.utfall == Utfall.OPPFYLT }
 
-        return if (harOppfyltPeriode) false else true
+        return !harOppfyltPeriode
     }
 }

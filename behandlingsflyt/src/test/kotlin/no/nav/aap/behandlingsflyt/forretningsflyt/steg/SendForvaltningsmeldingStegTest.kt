@@ -23,6 +23,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
+import no.nav.aap.behandlingsflyt.test.FakeOppgavestyringGateway
 import no.nav.aap.behandlingsflyt.test.FakeUnleashBaseWithDefaultDisabled
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBrevbestillingRepository
@@ -54,6 +55,7 @@ class SendForvaltningsmeldingStegTest {
         inMemoryRepositoryProvider,
         createGatewayProvider {
             register<FakeBrevbestillingGateway>()
+            register<FakeOppgavestyringGateway>()
             register<SendKlagebrevEnabledOgAltAnnetAvskruddUnleash>()
         }
     )

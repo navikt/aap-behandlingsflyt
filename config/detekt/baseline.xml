@@ -1,0 +1,352 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>ComplexCondition:AvklarManuellInntektVurderingLøser.kt:AvklarManuellInntektVurderingLøser$(løsning.manuellVurderingForManglendeInntekt.belop != null &amp;&amp; løsning.manuellVurderingForManglendeInntekt.belop &lt; BigDecimal.ZERO) || løsning.manuellVurderingForManglendeInntekt.vurderinger?.any { it.beløp != null &amp;&amp; it.beløp &lt; BigDecimal.ZERO } == true || løsning.manuellVurderingForManglendeInntekt.vurderinger?.any { it.eøsBeløp != null &amp;&amp; it.eøsBeløp &lt; BigDecimal.ZERO } == true</ID>
+    <ID>ComplexCondition:InMemoryBarnRepository.kt:InMemoryBarnRepository$barn.containsKey(behandlingId) || oppgitteBarn.containsKey(behandlingId) || saksbehandlerOppgitteBarn.containsKey(behandlingId) || registerBarn.containsKey(behandlingId) || vurdertBarn.containsKey(behandlingId)</ID>
+    <ID>ComplexCondition:OpprettBehandlingMigrereRettighetsperiodeJobbUtfører.kt:OpprettBehandlingMigrereRettighetsperiodeJobbUtfører$verdiFør.meldePeriode != verdiEtter.meldePeriode || verdiFør.avslagsårsak != verdiEtter.avslagsårsak || verdiFør.brukerAvKvoter != verdiEtter.brukerAvKvoter || verdiFør.grenseverdi != verdiEtter.grenseverdi || verdiFør.arbeidsgradering.opplysningerMottatt != verdiEtter.arbeidsgradering.opplysningerMottatt || verdiFør.arbeidsgradering.fastsattArbeidsevne != verdiEtter.arbeidsgradering.fastsattArbeidsevne || verdiFør.arbeidsgradering.totaltAntallTimer != verdiEtter.arbeidsgradering.totaltAntallTimer || verdiFør.rettighetsType != verdiEtter.rettighetsType || verdiFør.utfall != verdiEtter.utfall || verdiFør.trekk != verdiEtter.trekk || verdiFør.institusjonsoppholdReduksjon != verdiEtter.institusjonsoppholdReduksjon || !likArbeidsgradering(verdiFør.arbeidsgradering, verdiEtter.arbeidsgradering)</ID>
+    <ID>CyclomaticComplexMethod:AvklaringsbehovService.kt:AvklaringsbehovService$private fun oppdaterAvklaringsbehov( definisjon: Definisjon, /** Skal vedtaket inneholde en menneskelig vurdering av [definisjon]? * * Det er viktig å svare på det mer generelle spørsmålet *om vedtaket* * skal inneholde en menneskelig vurdering. Ikke om nå-tilstanden av behandlingen * har behov for en menneskelig vurdering. Grunnen er at det vil være behov for totrinnskontroll hvis vedtaket inneholder * en menneskelig vurdering, selv om siste gjennomkjøring av steget * ikke løftet avklaringsbehovet. * * En egenskap denne funksjonen må ha: * Hvis `vedtakBehøverVurdering() == true` og noen løser * (avklaringsbehovet)[definisjon], så er fortsatt `vedtakBehøverVurdering() == true`. * * @return Skal returnere `true` hvis behandlingen kommer til å inneholde * en menneskelig vurdering av [definisjon]. */ vedtakBehøverVurdering: () -> Boolean, perioderVedtaketBehøverVurdering: () -> Set&lt;Periode>?, /** Er avklaringsbehovet [definisjon] tilstrekkelig vurdert for å fortsette behandlingen? * * Denne funksjonen kalles kun om `vedtakBehøverVurdering() == true` og avklaringsbehovet * [definisjon] allerede har en løsning. Merk at selv om definisjonen allerede har en løsning, * så kan den løsningen ha blitt rullet tilbake (se [tilbakestillGrunnlag]). * * @return `null` betyr at [erTilstrekkeligVurdert] benyttes i stedet for periodebasert sjekk. */ perioderSomIkkeErTilstrekkeligVurdert: () -> Set&lt;Periode>?, erTilstrekkeligVurdert: () -> Boolean, /** Rydd opp manuelle vurderinger introdusert i denne behandlingen på grunn av løsninger * av avklaringsbehovet [definisjon]. * * - Du burde ikke rydde opp for andre steg eller avklaringsbehov. * - Hvis register-data og menneskelige vurderinger er lagret i samme grunnlag, så pass * på at du ikke tilbakestiller register-dataen! */ tilbakestillGrunnlag: () -> Unit, kontekst: FlytKontekstMedPerioder )</ID>
+    <ID>CyclomaticComplexMethod:BrevUtlederService.kt:BrevUtlederService$fun utledBehovForMeldingOmVedtak(behandlingId: BehandlingId): BrevBehov?</ID>
+    <ID>CyclomaticComplexMethod:FlytApi.kt:private fun utledVisning( aktivtSteg: StegType, flyt: BehandlingFlyt, alleAvklaringsbehovInkludertFrivillige: FrivilligeAvklaringsbehov, status: ProsesseringStatus, typeBehandling: TypeBehandling, avklaringsbehov: List&lt;Avklaringsbehov>, bruker: Bruker, behandlingStatus: Status, unleashGateway: UnleashGateway, resultatKode: ResultatKode? ): Visning</ID>
+    <ID>CyclomaticComplexMethod:FødselsnummerGenerator.kt:FødselsnummerGenerator$private fun generate(): String</ID>
+    <ID>CyclomaticComplexMethod:InstitusjonApi.kt:fun NormalOpenAPIRoute.institusjonApi( dataSource: DataSource, repositoryRegistry: RepositoryRegistry, gatewayProvider: GatewayProvider, )</ID>
+    <ID>CyclomaticComplexMethod:KravspesifikasjonForRettighetsType.kt:KravspesifikasjonForRettighetsType$fun oppfyllesAv(forutgåendeRettighetstyper: Tidslinje&lt;RettighetsType>, vilkårsresultat: Map&lt;Vilkårtype, Vilkårsvurdering>): Boolean</ID>
+    <ID>CyclomaticComplexMethod:MeldeperiodeTilMeldekortBackendJobbUtførerTest.kt:MeldeperiodeTilMeldekortBackendJobbUtførerTest$@Test fun `har opplysningsplikt selv om meldeplikt ikke er overholdt`()</ID>
+    <ID>CyclomaticComplexMethod:OpprettBehandlingMigrereRettighetsperiodeJobbUtfører.kt:OpprettBehandlingMigrereRettighetsperiodeJobbUtfører$private fun validerUnderveisPerioder( behandlingFørMigrering: Behandling, behandlingEtterMigrering: Behandling, sak: Sak )</ID>
+    <ID>CyclomaticComplexMethod:TestApp.kt:private fun opprettNySakOgBehandling(dto: OpprettTestcaseDTO, gatewayProvider: GatewayProvider, repositoryRegistry: RepositoryRegistry): Sak</ID>
+    <ID>CyclomaticComplexMethod:TilkjentYtelseRepositoryImpl.kt:TilkjentYtelseRepositoryImpl$override fun hentHvisEksisterer(behandlingId: BehandlingId): List&lt;TilkjentYtelsePeriode>?</ID>
+    <ID>DestructuringDeclarationWithTooManyEntries:BeregnMedCSV.kt:(intSiste, intNestSiste, intTredjeSiste, _, inntektSisteAar, inntektNestSisteAar, inntektTredjeSisteAar)</ID>
+    <ID>DestructuringDeclarationWithTooManyEntries:FasttrackMeldekortFlytTest.kt:FasttrackMeldekortFlytTest$val (førstegangsbehandling, førsteMeldekort, andreMeldekort, åpenBehandling) = behandlinger</ID>
+    <ID>DestructuringDeclarationWithTooManyEntries:ForutgåendeMedlemskapInformasjonskrav.kt:ForutgåendeMedlemskapInformasjonskrav$val (medlemskapPerioder, arbeidGrunnlag, inntektGrunnlag, enhetGrunnlag) = registerdata</ID>
+    <ID>DestructuringDeclarationWithTooManyEntries:LovvalgInformasjonskrav.kt:LovvalgInformasjonskrav$val (medlemskapPerioder, arbeidGrunnlag, inntektGrunnlag, enhetGrunnlag) = registerdata</ID>
+    <ID>DestructuringDeclarationWithTooManyEntries:SykdomsvilkårFraLansering.kt:SykdomsvilkårFraLansering$(segmentPeriode, yrkesskadeVurdering, sykdomVurdering, sykepengerVurdering, bistandVurdering)</ID>
+    <ID>EmptyFunctionBlock:DummyBehandlingHendelseService.kt:DummyBehandlingHendelseService${ }</ID>
+    <ID>EmptyFunctionBlock:FakeBrevbestillingGateway.kt:FakeBrevbestillingGateway${ }</ID>
+    <ID>EmptyFunctionBlock:InMemoryAktivitetsplikt11_7Repository.kt:InMemoryAktivitetsplikt11_7Repository${ }</ID>
+    <ID>EmptyFunctionBlock:InMemoryAktivitetsplikt11_9Repository.kt:InMemoryAktivitetsplikt11_9Repository${ }</ID>
+    <ID>EmptyFunctionBlock:InMemoryAvklaringsbehovRepository.kt:InMemoryAvklaringsbehovRepository${ }</ID>
+    <ID>EmptyFunctionBlock:InMemoryBehandlingRepository.kt:InMemoryBehandlingRepository${ }</ID>
+    <ID>EmptyFunctionBlock:InMemoryBeregningsgrunnlagRepository.kt:InMemoryBeregningsgrunnlagRepository${ }</ID>
+    <ID>EmptyFunctionBlock:InMemoryBrevbestillingRepository.kt:InMemoryBrevbestillingRepository${ }</ID>
+    <ID>EmptyFunctionBlock:InMemoryContextRepository.kt:InMemoryContextRepository${ }</ID>
+    <ID>EmptyFunctionBlock:InMemoryMeldeperiodeRepository.kt:InMemoryMeldeperiodeRepository${ }</ID>
+    <ID>EmptyFunctionBlock:InMemoryPersonRepository.kt:InMemoryPersonRepository${ }</ID>
+    <ID>EmptyFunctionBlock:InMemoryPipRepository.kt:InMemoryPipRepository${ }</ID>
+    <ID>EmptyFunctionBlock:InMemoryRefusjonkravRepository.kt:InMemoryRefusjonKravRepository${ }</ID>
+    <ID>EmptyFunctionBlock:InMemoryRefusjonkravRepository.kt:InMemoryRefusjonKravRepository${}</ID>
+    <ID>EmptyFunctionBlock:InMemorySakOgBehandlingService.kt:&lt;no name provided>${ }</ID>
+    <ID>EmptyFunctionBlock:InMemorySakRepository.kt:InMemorySakRepository${ }</ID>
+    <ID>EmptyFunctionBlock:InMemorySykdomsvurderingForBrevRepository.kt:InMemorySykdomsvurderingForBrevRepository${ }</ID>
+    <ID>EmptyFunctionBlock:InMemoryTilkjentYtelseRepository.kt:InMemoryTilkjentYtelseRepository${ }</ID>
+    <ID>EmptyFunctionBlock:InMemoryTrukketSøknadRepository.kt:InMemoryTrukketSøknadRepository${ }</ID>
+    <ID>EmptyFunctionBlock:MockConnection.kt:MockConnection${ }</ID>
+    <ID>EmptyFunctionBlock:MockConnection.kt:MockConnection${}</ID>
+    <ID>EmptyFunctionBlock:OppfølgingsBehandlingRepositoryImpl.kt:OppfølgingsBehandlingRepositoryImpl${ }</ID>
+    <ID>EmptyFunctionBlock:RettighetstypeSteg.kt:RettighetstypeSteg${ }</ID>
+    <ID>EmptyFunctionBlock:StatistikkJobbUtførerTest.kt:StatistikkJobbUtførerTest.&lt;no name provided>${ }</ID>
+    <ID>EmptyFunctionBlock:TrekkKlageRepositoryImpl.kt:TrekkKlageRepositoryImpl${ }</ID>
+    <ID>EnumNaming:FeatureToggle.kt:BehandlingsflytFeature$tilbakekrevingsOppgaverTilOppgave</ID>
+    <ID>EnumNaming:Medlemskap.kt:KildesystemKode$srvgosys</ID>
+    <ID>EnumNaming:Medlemskap.kt:KildesystemKode$srvmelosys</ID>
+    <ID>EnumNaming:PersonopplysningMedHistorikk.kt:PersonStatus$bosatt</ID>
+    <ID>EnumNaming:PersonopplysningMedHistorikk.kt:PersonStatus$doed</ID>
+    <ID>EnumNaming:PersonopplysningMedHistorikk.kt:PersonStatus$foedselsregistrert</ID>
+    <ID>EnumNaming:PersonopplysningMedHistorikk.kt:PersonStatus$forsvunnet</ID>
+    <ID>EnumNaming:PersonopplysningMedHistorikk.kt:PersonStatus$ikkeBosatt</ID>
+    <ID>EnumNaming:PersonopplysningMedHistorikk.kt:PersonStatus$inaktiv</ID>
+    <ID>EnumNaming:PersonopplysningMedHistorikk.kt:PersonStatus$midlertidig</ID>
+    <ID>EnumNaming:PersonopplysningMedHistorikk.kt:PersonStatus$opphort</ID>
+    <ID>EnumNaming:PersonopplysningMedHistorikk.kt:PersonStatus$utflyttet</ID>
+    <ID>ForbiddenComment:Aktivitetsplikt11_7RepositoryImpl.kt:Aktivitetsplikt11_7RepositoryImpl$// TODO: Avgjør om vi trenger dette. Gjør ingenting inntil videre</ID>
+    <ID>ForbiddenComment:Aktivitetsplikt11_9RepositoryImpl.kt:Aktivitetsplikt11_9RepositoryImpl$// TODO: Avgjør om vi trenger dette. Gjør ingenting inntil videre</ID>
+    <ID>ForbiddenComment:AndreinstansGateway.kt:AndreinstansGateway$// TODO: Håndter Arena</ID>
+    <ID>ForbiddenComment:ApiInternGatewayImpl.kt:ApiInternGatewayImpl$// TODO: fjern</ID>
+    <ID>ForbiddenComment:AvklaringsbehovService.kt:AvklaringsbehovService$/* TODO: hacky. Er faktisk bare behandlingId som brukes av sjekkene. */</ID>
+    <ID>ForbiddenComment:AvklaringsbehovService.kt:AvklaringsbehovService$// TODO: Fjern denne når alle kall tar i bruk perioderSomIkkeErTilstrekkeligVurdert</ID>
+    <ID>ForbiddenComment:Avklaringsbehovene.kt:Avklaringsbehovene$// TODO: Vurdere om funnet steg bør ligge på endringen...</ID>
+    <ID>ForbiddenComment:Avslagsårsak.kt:Avslagsårsak.MANGLENDE_DOKUMENTASJON$// FIXME: Dette er neppe rett med 11-1,</ID>
+    <ID>ForbiddenComment:BeregningService.kt:BeregningService$// TODO: Hvor langt tilbake i tid skal man hente uføregrader?</ID>
+    <ID>ForbiddenComment:Beregningsgrunnlag.kt:Beregningsgrunnlag$* Brukt til serialisering. // TODO: bedre docstring</ID>
+    <ID>ForbiddenComment:BistandsgrunnlagApi.kt:// TODO: Undersøk om denne gir noe verdi</ID>
+    <ID>ForbiddenComment:FakeServers.kt:FakeServers$// TODO: utvid til å støtte andre ytelser</ID>
+    <ID>ForbiddenComment:FlytKontekstMedPeriodeService.kt:FlytKontekstMedPeriodeService$// TODO: Verifiser at dette er korrekt.</ID>
+    <ID>ForbiddenComment:ForutgåendeMedlemskapInformasjonskrav.kt:ForutgåendeMedlemskapInformasjonskrav$// TODO: kun lagre hvis forskjell!!</ID>
+    <ID>ForbiddenComment:Hjemmel.kt:Hjemmel$// TODO: Hjemler her som er markert som TODO er ting som kan klages på</ID>
+    <ID>ForbiddenComment:Hjemmel.kt:Hjemmel.FOLKETRYGDLOVEN_11_10_MELDEPLIKT$// TODO: Underveis - Mangler mulighet til å korrigere meldedato</ID>
+    <ID>ForbiddenComment:Hjemmel.kt:Hjemmel.FOLKETRYGDLOVEN_11_12$// TODO: Hva klages på her?</ID>
+    <ID>ForbiddenComment:Hjemmel.kt:Hjemmel.FOLKETRYGDLOVEN_11_14$// TODO: Mangler revurdering student - må evt. sende ny søknad?</ID>
+    <ID>ForbiddenComment:Hjemmel.kt:Hjemmel.FOLKETRYGDLOVEN_11_15$// TODO: Mangler steg</ID>
+    <ID>ForbiddenComment:Hjemmel.kt:Hjemmel.FOLKETRYGDLOVEN_11_23_OVERGNG_ARB$// TODO: Mangler steg</ID>
+    <ID>ForbiddenComment:Hjemmel.kt:Hjemmel.FOLKETRYGDLOVEN_11_29$// TODO: Hva kan klages på her?</ID>
+    <ID>ForbiddenComment:Hjemmel.kt:Hjemmel.FOLKETRYGDLOVEN_11_31$// TODO: Hva kan klages på her?</ID>
+    <ID>ForbiddenComment:Hjemmel.kt:Hjemmel.FOLKETRYGDLOVEN_11_4$// TODO: Hva klages på her?</ID>
+    <ID>ForbiddenComment:Hjemmel.kt:Hjemmel.FOLKETRYGDLOVEN_11_8$// TODO: Mangler</ID>
+    <ID>ForbiddenComment:Hjemmel.kt:Hjemmel.FOLKETRYGDLOVEN_22_13$// TODO: Hva kan klages på her?</ID>
+    <ID>ForbiddenComment:Hjemmel.kt:Hjemmel.FOLKETRYGDLOVEN_22_15$// TODO: Må videre til Team Tilbake?</ID>
+    <ID>ForbiddenComment:Hjemmel.kt:Hjemmel.FOLKETRYGDLOVEN_22_17$// TODO: Hva kan klages på her?</ID>
+    <ID>ForbiddenComment:HåndterMottattDokumentService.kt:HåndterMottattDokumentService$// TODO: Bør kanskje støtte flere behandlinger - velger den første</ID>
+    <ID>ForbiddenComment:HåndterMottattDokumentService.kt:HåndterMottattDokumentService$// TODO: Meldeperioder inkluderer helg i Kelvin, men er mandag-fredag i tilbakekreving. Kan bruke denne for å "slå sammen" to mandag-fredag-perioder til én lang periode.</ID>
+    <ID>ForbiddenComment:HåndterUbehandledeDokumenterJobbUtførerTest.kt:HåndterUbehandledeDokumenterJobbUtførerTest$// TODO: Slett denne etter at den er kjørt; erstattes av jobben under</ID>
+    <ID>ForbiddenComment:InformasjonskravGrunnlagImpl.kt:InformasjonskravGrunnlagImpl$// TODO: Finn en bedre måde å forhindre race conditions når async informasjonskrav avghenger av hverandre</ID>
+    <ID>ForbiddenComment:InstitusjonRegelTest.kt:InstitusjonRegelTest$// Ingen reduksjon da datoen ikke er passert (TODO: gjør testene relativ til dagens dato)</ID>
+    <ID>ForbiddenComment:InstitusjonsoppholdServiceTest.kt:InstitusjonsoppholdServiceTest$// TODO: Erstatt med InMemory*Repo</ID>
+    <ID>ForbiddenComment:IverksettKonsekvensSteg.kt:IverksettKonsekvensSteg$// TODO: automatisk opprette ny klagebehandling</ID>
+    <ID>ForbiddenComment:IverksettVedtakSteg.kt:IverksettVedtakSteg$// TODO: Opprett egen jobb-kjøring for å opprette gosysoppgave</ID>
+    <ID>ForbiddenComment:KabalGateway.kt:KabalGateway$// TODO: Håndter Arena</ID>
+    <ID>ForbiddenComment:KabalGateway.kt:KabalGateway$// TODO: Send med relevante journalposter?</ID>
+    <ID>ForbiddenComment:Klage.kt:Klage$// TODO: informasjonskrav - behov ? snakker vi her om postadresse e.l. til brevbestilling?</ID>
+    <ID>ForbiddenComment:LovvalgInformasjonskrav.kt:LovvalgInformasjonskrav$// TODO: kun lagre hvis forskjell!</ID>
+    <ID>ForbiddenComment:ManuellInntektGrunnlagRepositoryImpl.kt:ManuellInntektGrunnlagRepositoryImpl$// TODO: burde ikke det slettes rader fra MANUELL_INNTEKT_VURDERINGER også?</ID>
+    <ID>ForbiddenComment:MeldepliktRegel.kt:MeldepliktRegel.Companion$/* TODO: uheldig at periodene vi sender til meldekort-backend ikke deler implementasjon * med vilkårsprøvingen. */</ID>
+    <ID>ForbiddenComment:MeldingOmVedtakBrevSteg.kt:MeldingOmVedtakBrevSteg$* TODO: AAP-1676 : vurder å gjøre teoretisk tilbakestillGrunnlag() fullt funksjonell * * En behandling kan kun ha ett vedtaksbrev og ny brevbestilling per i dag er ikke mulig hvis det finnes et avbrutt * vedtaksbrev. Da må avbrutt vedtaksbrev isteden endre status fra AVBRUTT til FORHÅNDSVISNING_KLAR slik at det * kan sparkes igang igjen med nytt kall til fremtidig API-endepunkt brevbestilling/gjenoppta-bestilling i aap-brev. * Først da vil brevet kunne behandles videre igjen. Hvis brev-steg plutselig blir mulig å tilbakestille med nåværende * tilbakestillGrunnlag() logikk, så vil utfør() feile når ny runde i BrevSteg.utfør() trigges da vedtaksbrev med * status AVBRUTT må kunne gjenopptas og settes tilbake til FORHÅNDSVISNING_KLAR i aap-behandlingsflyt og aap-brev * må motta API-kall /gjenoppta-bestilling slik at brevet igjen får status UNDER_ARBEID i aap-brev</ID>
+    <ID>ForbiddenComment:MottattHendelseApi.kt:// TODO: Fikse bug i tilgang for å sikre endepunktet</ID>
+    <ID>ForbiddenComment:OpprettJobbUtvidVedtakslengdeJobbUtfører.kt:OpprettJobbUtvidVedtakslengdeJobbUtfører$// TODO: Må filtrere vekk de som allerede har blitt kjørt, men ikke kvalifiserte til reell utvidelse av vedtakslengde</ID>
+    <ID>ForbiddenComment:OvergangUføreGrunnlagApi.kt:// TODO: Fjern</ID>
+    <ID>ForbiddenComment:OvergangUføreVurderingResponse.kt:OvergangUføreVurderingResponse.Companion$// TODO: Sett denne i kode i stedet for database</ID>
+    <ID>ForbiddenComment:RefusjonkravGrunnlagApi.kt:// TODO: Undersøk hvorfor vi forventer at denne kan feile, og erstatt i så fall med en metode som håndterer dette mer eksplisitt</ID>
+    <ID>ForbiddenComment:RettighetsperiodeFlytTest.kt:RettighetsperiodeFlytTest$* TODO: Disse burde ideellt sett også blitt utvidet (minus samordning) ved * migrering av rettighetsperioden, men må sjekkes når periodisering er "avklart"</ID>
+    <ID>ForbiddenComment:RettighetsperiodeSteg.kt:RettighetsperiodeSteg$// TODO: Hva hvis man innskrenker perioden - må innskrenke vilkår og underveis?</ID>
+    <ID>ForbiddenComment:Revurdering.kt:Revurdering$// TODO: Midlertidig duplikat av BarnService, skal på sikt kun være i StartBehandlingSteg</ID>
+    <ID>ForbiddenComment:SaksApi.kt:// TODO:</ID>
+    <ID>ForbiddenComment:SaksApi.kt:// TODO: Skriveoperasjon krever behandlingsreferanse - bruker 'SE' enn så lenge</ID>
+    <ID>ForbiddenComment:SamordningSteg.kt:SamordningSteg$// FIXME: Stygg hack for å tvinge manuell revurdering</ID>
+    <ID>ForbiddenComment:SimulerUtbetalingSteg.kt:SimulerUtbetalingSteg$// TODO: Simuler utbetaling mot økonomi</ID>
+    <ID>ForbiddenComment:StudentRepositoryImpl.kt:StudentRepositoryImpl$// TODO: Få inn strukturert</ID>
+    <ID>ForbiddenComment:StudentVurdering.kt:StudentVurderingDTO$// TODO: Gjør denne påkrevd</ID>
+    <ID>ForbiddenComment:StudentgrunnlagApi.kt:// TODO: Slett</ID>
+    <ID>ForbiddenComment:Sykdomsvilkår.kt:Sykdomsvilkår$// TODO: Finne en bedre variant her enn å instansiere opp alle sammen</ID>
+    <ID>ForbiddenComment:SykdomsvilkårFraLansering.kt:SykdomsvilkårFraLansering$// TODO: dekk alle muligheter for nei her</ID>
+    <ID>ForbiddenComment:SykdomsvilkårTest.kt:SykdomsvilkårTest$// TODO: </ID>
+    <ID>ForbiddenComment:Søknad.kt:JaNeiVetIkke.Companion$* FIXME: Midlertidig fiks! * Må bruke @JsonCreator for å håndtere deserialisering korrekt for "VetIkke". * customValue() med @JsonValue gjør at jackson ignorerer alias og kun tillater stringRepresentation * Usikker på hva konsekvensen ved å fjerne customValue() er andre steder i kodebasen, derav kjapp fiks før ferien.</ID>
+    <ID>ForbiddenComment:TidligereVurderinger.kt:TidligereVurderingerImpl$/* TODO: Tror ikke dette er riktig. Sykdomsvilkåret er ikke satt når * man er i steget VURDER_BiSTANDSBEHOV. */</ID>
+    <ID>ForbiddenComment:TilbakekrevingHendelse.kt:TilbakekrevingHendelseKafkaMelding$//TODO: Litt stygg hack for å hente behandlingId fra url ettersom den ikke er med i gammel datastruktur.</ID>
+    <ID>ForbiddenComment:TilbakekrevingHendelse.kt:TilbakekrevingHendelseKafkaMelding$//TODO: triks for å støtte både ny og gammel datastruktur. Kan slettes når alle gamle meldinger er ferdig.</ID>
+    <ID>ForbiddenComment:TjenestepensjonRefusjonskravVurderingRepositoryImpl.kt:TjenestepensjonRefusjonskravVurderingRepositoryImpl$// TODO: ingen grunn til å lagre SakId her: gitt behandlingId er den implisitt</ID>
+    <ID>ForbiddenComment:TotrinnsVurdering.kt:TotrinnsVurdering$// TODO: dumt at denne deles på kvalitetsiskrer og beslutter</ID>
+    <ID>ForbiddenComment:UføreBeregning.kt:UføreBeregning$// TODO: ta inn både månedsinntekt og årsinntekt, og velg basert på uføre-grad</ID>
+    <ID>ForbiddenComment:UtenlandskVidereføringLøser.kt:UtenlandskVidereføringLøser$// TODO: Handler om utenlandsk lovvalg, legg inn når vi har støtte for dette</ID>
+    <ID>ForbiddenComment:YrkesskadeInformasjonskrav.kt:YrkesskadeInformasjonskrav$/* TODO: Modeller og vis informasjon fra søknad i kelvin. */</ID>
+    <ID>ForbiddenComment:YrkesskadeRegisterGatewayImpl.kt:YrkesskadeRegisterGatewayImpl$//TODO: fra når skal yrkesskade hentes</ID>
+    <ID>ForbiddenComment:build.gradle.kts:// TODO: fjern denne avhengigheten når alle RestClient-instanser er i repository-modulen</ID>
+    <ID>FunctionOnlyReturningConstant:Vurdering.kt:Vurdering$fun skalReduseresDagsatser(): Boolean</ID>
+    <ID>LargeClass:AbstraktFlytOrkestratorTest.kt:AbstraktFlytOrkestratorTest</ID>
+    <ID>LargeClass:BarnFlytTest.kt:BarnFlytTest : AbstraktFlytOrkestratorTest</ID>
+    <ID>LargeClass:BarnRepositoryImpl.kt:BarnRepositoryImpl : BarnRepository</ID>
+    <ID>LargeClass:BeregnTilkjentYtelseServiceTest.kt:BeregnTilkjentYtelseServiceTest</ID>
+    <ID>LargeClass:EnklereFlytOrkestratorTest.kt:EnklereFlytOrkestratorTest</ID>
+    <ID>LargeClass:FakeServers.kt:FakeServers : AutoCloseable</ID>
+    <ID>LargeClass:KlageFlytTest.kt:KlageFlytTest : AbstraktFlytOrkestratorTest</ID>
+    <ID>LargeClass:MeldepliktRegelTest.kt:MeldepliktRegelTest</ID>
+    <ID>LargeClass:SamordningYtelseVurderingInformasjonskravTest.kt:SamordningYtelseVurderingInformasjonskravTest</ID>
+    <ID>LargeClass:VarighetRegelTest.kt:VarighetRegelTest</ID>
+    <ID>LargeClass:VedtakslengdeFlytTest.kt:VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest</ID>
+    <ID>LargeClass:YrkesskadeFlytTest.kt:YrkesskadeFlytTest : AbstraktFlytOrkestratorTest</ID>
+    <ID>LongMethod:Aktivitetsplikt11_9GrunnlagApi.kt:fun NormalOpenAPIRoute.aktivitetsplikt11_9GrunnlagApi( dataSource: DataSource, repositoryRegistry: RepositoryRegistry, gatewayProvider: GatewayProvider, )</ID>
+    <ID>LongMethod:App.kt:internal fun Application.server( dbConfig: DbConfig, repositoryRegistry: RepositoryRegistry, gatewayProvider: GatewayProvider, )</ID>
+    <ID>LongMethod:AvklaringsbehovService.kt:AvklaringsbehovService$private fun oppdaterAvklaringsbehov( definisjon: Definisjon, /** Skal vedtaket inneholde en menneskelig vurdering av [definisjon]? * * Det er viktig å svare på det mer generelle spørsmålet *om vedtaket* * skal inneholde en menneskelig vurdering. Ikke om nå-tilstanden av behandlingen * har behov for en menneskelig vurdering. Grunnen er at det vil være behov for totrinnskontroll hvis vedtaket inneholder * en menneskelig vurdering, selv om siste gjennomkjøring av steget * ikke løftet avklaringsbehovet. * * En egenskap denne funksjonen må ha: * Hvis `vedtakBehøverVurdering() == true` og noen løser * (avklaringsbehovet)[definisjon], så er fortsatt `vedtakBehøverVurdering() == true`. * * @return Skal returnere `true` hvis behandlingen kommer til å inneholde * en menneskelig vurdering av [definisjon]. */ vedtakBehøverVurdering: () -> Boolean, perioderVedtaketBehøverVurdering: () -> Set&lt;Periode>?, /** Er avklaringsbehovet [definisjon] tilstrekkelig vurdert for å fortsette behandlingen? * * Denne funksjonen kalles kun om `vedtakBehøverVurdering() == true` og avklaringsbehovet * [definisjon] allerede har en løsning. Merk at selv om definisjonen allerede har en løsning, * så kan den løsningen ha blitt rullet tilbake (se [tilbakestillGrunnlag]). * * @return `null` betyr at [erTilstrekkeligVurdert] benyttes i stedet for periodebasert sjekk. */ perioderSomIkkeErTilstrekkeligVurdert: () -> Set&lt;Periode>?, erTilstrekkeligVurdert: () -> Boolean, /** Rydd opp manuelle vurderinger introdusert i denne behandlingen på grunn av løsninger * av avklaringsbehovet [definisjon]. * * - Du burde ikke rydde opp for andre steg eller avklaringsbehov. * - Hvis register-data og menneskelige vurderinger er lagret i samme grunnlag, så pass * på at du ikke tilbakestiller register-dataen! */ tilbakestillGrunnlag: () -> Unit, kontekst: FlytKontekstMedPerioder )</ID>
+    <ID>LongMethod:AvklaringsbehovService.kt:AvklaringsbehovService$private fun oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår( definisjon: Definisjon, tvingerAvklaringsbehov: Set&lt;Vurderingsbehov>, nårVurderingErRelevant: (kontekst: FlytKontekstMedPerioder) -> Tidslinje&lt;Boolean>, kontekst: FlytKontekstMedPerioder, perioderSomIkkeErTilstrekkeligVurdert: () -> Set&lt;Periode>?, nårVurderingErGyldig: () -> Tidslinje&lt;Boolean>?, tilbakestillGrunnlag: () -> Unit, )</ID>
+    <ID>LongMethod:BehandlingApi.kt:fun NormalOpenAPIRoute.behandlingApi( dataSource: DataSource, repositoryRegistry: RepositoryRegistry, gatewayProvider: GatewayProvider, )</ID>
+    <ID>LongMethod:BeregningAvklarFaktaSteg.kt:BeregningAvklarFaktaSteg$override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat</ID>
+    <ID>LongMethod:BeregningVurderingApi.kt:fun NormalOpenAPIRoute.beregningVurderingApi( dataSource: DataSource, repositoryRegistry: RepositoryRegistry, gatewayProvider: GatewayProvider, )</ID>
+    <ID>LongMethod:BeregningsgrunnlagRepositoryImpl.kt:BeregningsgrunnlagRepositoryImpl$private fun hentUføreBeregning(beregningsId: Long): GrunnlagUføre</ID>
+    <ID>LongMethod:BrevApi.kt:fun NormalOpenAPIRoute.brevApi( dataSource: DataSource, repositoryRegistry: RepositoryRegistry, gatewayProvider: GatewayProvider, )</ID>
+    <ID>LongMethod:BrevGateway.kt:BrevGateway$private fun mapFaktagrunnlag(brevBehov: BrevBehov): Set&lt;Faktagrunnlag></ID>
+    <ID>LongMethod:BrevUtlederService.kt:BrevUtlederService$fun utledBehovForMeldingOmVedtak(behandlingId: BehandlingId): BrevBehov?</ID>
+    <ID>LongMethod:DokumentinnhentingApi.kt:fun NormalOpenAPIRoute.dokumentinnhentingApi( dataSource: DataSource, repositoryRegistry: RepositoryRegistry, gatewayProvider: GatewayProvider, )</ID>
+    <ID>LongMethod:DriftApi.kt:fun NormalOpenAPIRoute.driftApi( dataSource: DataSource, repositoryRegistry: RepositoryRegistry, gatewayProvider: GatewayProvider, )</ID>
+    <ID>LongMethod:EtableringEgenVirksomhetGrunnlagApi.kt:fun NormalOpenAPIRoute.etableringEgenVirksomhetApi( dataSource: DataSource, repositoryRegistry: RepositoryRegistry, gatewayProvider: GatewayProvider )</ID>
+    <ID>LongMethod:EtableringEgenVirksomhetService.kt:EtableringEgenVirksomhetService$fun erVurderingerGyldig( behandlingId: BehandlingId, nyeVurderinger: List&lt;EtableringEgenVirksomhetVurdering> ): VirksomhetEtableringGyldig</ID>
+    <ID>LongMethod:FatteVedtakLøser.kt:FatteVedtakLøser$override fun løs( kontekst: AvklaringsbehovKontekst, løsning: FatteVedtakLøsning ): LøsningsResultat</ID>
+    <ID>LongMethod:FlytApi.kt:fun NormalOpenAPIRoute.flytApi( dataSource: DataSource, repositoryRegistry: RepositoryRegistry, gatewayProvider: GatewayProvider, )</ID>
+    <ID>LongMethod:FlytApi.kt:private fun utledVisning( aktivtSteg: StegType, flyt: BehandlingFlyt, alleAvklaringsbehovInkludertFrivillige: FrivilligeAvklaringsbehov, status: ProsesseringStatus, typeBehandling: TypeBehandling, avklaringsbehov: List&lt;Avklaringsbehov>, bruker: Bruker, behandlingStatus: Status, unleashGateway: UnleashGateway, resultatKode: ResultatKode? ): Visning</ID>
+    <ID>LongMethod:GraderingArbeidRegel.kt:GraderingArbeidRegel$private fun regnUtGradering( opplysningerOmArbeid: Tidslinje&lt;OpplysningerOmArbeid>, ): Tidslinje&lt;ArbeidsGradering></ID>
+    <ID>LongMethod:HendelseMottattHåndteringJobbUtfører.kt:HendelseMottattHåndteringJobbUtfører$override fun utfør(input: JobbInput)</ID>
+    <ID>LongMethod:InformasjonskravGrunnlagImpl.kt:InformasjonskravGrunnlagImpl$override fun oppdaterFaktagrunnlagForKravliste( kravkonstruktører: List&lt;Pair&lt;StegType, Informasjonskravkonstruktør>>, kontekst: FlytKontekstMedPerioder ): List&lt;Informasjonskravkonstruktør></ID>
+    <ID>LongMethod:InstitusjonApi.kt:fun NormalOpenAPIRoute.institusjonApi( dataSource: DataSource, repositoryRegistry: RepositoryRegistry, gatewayProvider: GatewayProvider, )</ID>
+    <ID>LongMethod:InstitusjonsoppholdRepositoryImpl.kt:InstitusjonsoppholdRepositoryImpl$private fun lagreHelseoppholdVurderinger( oppholdPersonId: Long?, helseoppholdVurderinger: List&lt;HelseinstitusjonVurdering>, vurdertAv: String ): Long?</ID>
+    <ID>LongMethod:InstitusjonsoppholdSteg.kt:InstitusjonsoppholdSteg$override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat</ID>
+    <ID>LongMethod:KvalitetssikringsSteg.kt:KvalitetssikringsSteg$private fun erTilstrekkeligVurdert(avklaringsbehovene: Avklaringsbehovene): Boolean</ID>
+    <ID>LongMethod:LovvalgMedlemskapGrunnlagApi.kt:fun NormalOpenAPIRoute.lovvalgMedlemskapGrunnlagApi( dataSource: DataSource, repositoryRegistry: RepositoryRegistry, gatewayProvider: GatewayProvider, )</ID>
+    <ID>LongMethod:LovvalgMedlemskapVurderingApi.kt:fun NormalOpenAPIRoute.lovvalgMedlemskapApi(dataSource: DataSource, repositoryRegistry: RepositoryRegistry)</ID>
+    <ID>LongMethod:ManglendeGrunnlagApi.kt:fun NormalOpenAPIRoute.manglendeGrunnlagApi( dataSource: DataSource, repositoryRegistry: RepositoryRegistry )</ID>
+    <ID>LongMethod:ManglendeLigningGrunnlagSteg.kt:ManglendeLigningGrunnlagSteg$override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat</ID>
+    <ID>LongMethod:MeldepliktRegel.kt:MeldepliktRegel$private fun vurderMeldeperiode( meldeperiode: Periode, dataForMeldeperiode: Tidslinje&lt;MeldepliktData>, forrigeSegmentOppfylt: Boolean, dataForForrigeMeldeperiode: Tidslinje&lt;MeldepliktData>?, ): Tidslinje&lt;MeldepliktVurdering></ID>
+    <ID>LongMethod:MellomlagretVurderingApi.kt:fun NormalOpenAPIRoute.mellomlagretVurderingApi( dataSource: DataSource, repositoryRegistry: RepositoryRegistry, gatewayProvider: GatewayProvider )</ID>
+    <ID>LongMethod:OppholdskravGrunnlagRepositoryImpl.kt:OppholdskravGrunnlagRepositoryImpl$override fun hentHvisEksisterer(behandlingId: BehandlingId): OppholdskravGrunnlag?</ID>
+    <ID>LongMethod:OppholdskravGrunnlagRepositoryImpl.kt:OppholdskravGrunnlagRepositoryImpl$override fun lagre( behandlingId: BehandlingId, oppholdskravVurdering: OppholdskravVurdering )</ID>
+    <ID>LongMethod:OvergangArbeidSteg.kt:OvergangArbeidSteg$override fun nårVurderingErRelevant(kontekst: FlytKontekstMedPerioder): Tidslinje&lt;Boolean></ID>
+    <ID>LongMethod:OvergangUføreGrunnlagApi.kt:fun NormalOpenAPIRoute.overgangUforeGrunnlagApi( dataSource: DataSource, repositoryRegistry: RepositoryRegistry, gatewayProvider: GatewayProvider, )</ID>
+    <ID>LongMethod:PdlHendelseKafkaKonsument.kt:PdlHendelseKafkaKonsument$private fun sendDødsHendelseHvisRelevant( behandlingMedSistFattedeVedtak: BehandlingMedVedtak?, underveisRepository: UnderveisRepository, personHendelse: PdlPersonHendelse, sak: Sak, hendelseService: MottattHendelseService, trukketSøknadService: TrukketSøknadService, sisteOpprettedeBehandling: Behandling?, hendelseType: Dødsfalltype )</ID>
+    <ID>LongMethod:PdlPersonopplysningGateway.kt:private fun mapUtenlandsAdresser(personInfo: PdlPersoninfo?): List&lt;UtenlandsAdresse>?</ID>
+    <ID>LongMethod:PersonopplysningForutgåendeRepositoryImpl.kt:PersonopplysningForutgåendeRepositoryImpl$override fun lagre(behandlingId: BehandlingId, personopplysning: PersonopplysningMedHistorikk)</ID>
+    <ID>LongMethod:RefusjonkravGrunnlagApi.kt:fun NormalOpenAPIRoute.refusjonGrunnlagApi( dataSource: DataSource, repositoryRegistry: RepositoryRegistry, gatewayProvider: GatewayProvider, )</ID>
+    <ID>LongMethod:RettighetApi.kt:fun NormalOpenAPIRoute.rettighetApi( dataSource: DataSource, repositoryRegistry: RepositoryRegistry )</ID>
+    <ID>LongMethod:Revurdering.kt:Revurdering$override fun flyt(): BehandlingFlyt</ID>
+    <ID>LongMethod:SaksApi.kt:fun NormalOpenAPIRoute.saksApi( dataSource: DataSource, repositoryRegistry: RepositoryRegistry, gatewayProvider: GatewayProvider, )</ID>
+    <ID>LongMethod:SaksHistorikkService.kt:SaksHistorikkService$private fun utledBehandlingHendelser( behandlingerMedBehov: List&lt;AvklaringsbehovForSak> ): List&lt;BehandlingHistorikkInternal></ID>
+    <ID>LongMethod:SamordningApi.kt:fun NormalOpenAPIRoute.samordningGrunnlag( dataSource: DataSource, repositoryRegistry: RepositoryRegistry, gatewayProvider: GatewayProvider, )</ID>
+    <ID>LongMethod:StansOpphørRepositoryImpl.kt:StansOpphørRepositoryImpl$override fun lagre( behandlingId: BehandlingId, grunnlag: StansOpphørGrunnlag )</ID>
+    <ID>LongMethod:StatistikkMetoder.kt:StatistikkMetoder$private fun hentAvsluttetBehandlingDTO(hendelse: BehandlingFlytStoppetHendelseTilStatistikk): AvsluttetBehandlingDTO</ID>
+    <ID>LongMethod:StatusPagesConfigHelper.kt:StatusPagesConfigHelper$fun setup(): StatusPagesConfig.() -> Unit</ID>
+    <ID>LongMethod:SykdomsgrunnlagApi.kt:fun NormalOpenAPIRoute.sykdomsgrunnlagApi( dataSource: DataSource, repositoryRegistry: RepositoryRegistry, gatewayProvider: GatewayProvider, )</ID>
+    <ID>LongMethod:TilkjentYtelseApi.kt:fun NormalOpenAPIRoute.tilkjentYtelseApi(dataSource: DataSource, repositoryRegistry: RepositoryRegistry)</ID>
+    <ID>MatchingDeclarationName:AvbrytRevurderingGrunnlag.kt:AvbrytRevurderingGrunnlagDto</ID>
+    <ID>MatchingDeclarationName:AvklarForutgåendeMedlemskapLøsning.kt:AvklarPeriodisertForutgåendeMedlemskapLøsning : PeriodisertAvklaringsbehovLøsning</ID>
+    <ID>MatchingDeclarationName:AvklarOppholdskravLøsningDto.kt:AvklarOppholdkravLøsningForPeriodeDto : LøsningForPeriode</ID>
+    <ID>MatchingDeclarationName:AvklarOverstyrtForutgåendeMedlemskapLøsning.kt:AvklarPeriodisertOverstyrtForutgåendeMedlemskapLøsning : PeriodisertAvklaringsbehovLøsning</ID>
+    <ID>MatchingDeclarationName:BeregnMedCSV.kt:CSVLine</ID>
+    <ID>MatchingDeclarationName:BistandVurderingLøsningDto.kt:BistandLøsningDto : LøsningForPeriode</ID>
+    <ID>MatchingDeclarationName:EREGRequest.kt:EnhetsregisterOrganisasjonRequest</ID>
+    <ID>MatchingDeclarationName:FastsettArbeidsevneDto.kt:PeriodisertFastsettArbeidsevneDto : LøsningForPeriode</ID>
+    <ID>MatchingDeclarationName:FastsettArbeidsevneLøsning.kt:PeriodisertFastsettArbeidsevneLøsning : PeriodisertAvklaringsbehovLøsning</ID>
+    <ID>MatchingDeclarationName:InMemoryRefusjonkravRepository.kt:InMemoryRefusjonKravRepository : RefusjonkravRepository</ID>
+    <ID>MatchingDeclarationName:OvergangArbeidFaktaGrunnlag.kt:OvergangArbeidFaktagrunnlag : Faktagrunnlag</ID>
+    <ID>MatchingDeclarationName:OvergangUføreFaktaGrunnlag.kt:OvergangUføreFaktagrunnlag : Faktagrunnlag</ID>
+    <ID>MatchingDeclarationName:SamordningApiTest.kt:SamordningApiKtTest : BaseApiTest</ID>
+    <ID>MatchingDeclarationName:SykepengerVurderingDto.kt:PeriodisertSykepengerVurderingDto : LøsningForPeriode</ID>
+    <ID>MatchingDeclarationName:UføreModell.kt:UføreRequest</ID>
+    <ID>MatchingDeclarationName:Varighetsbegrensning.kt:Varighetsvurdering</ID>
+    <ID>NestedBlockDepth:StegOrkestrator.kt:StegOrkestrator$fun utfør( aktivtSteg: FlytSteg, kontekstMedPerioder: FlytKontekstMedPerioder, behandling: Behandling, faktagrunnlagForGjeldendeSteg: List&lt;Pair&lt;StegType, Informasjonskravkonstruktør>>, ): Transisjon</ID>
+    <ID>ReturnCount:AvklarHelseinstitusjonLøser.kt:AvklarHelseinstitusjonLøser$private fun validerReduksjonsdatoForInstitusjonsopphold( behandling: Behandling, nyeVurderinger: List&lt;HelseinstitusjonVurderingDto> ): Validation&lt;List&lt;HelseinstitusjonVurderingDto>></ID>
+    <ID>ReturnCount:AvklarSamordningArbeidsgiverLøser.kt:AvklarSamordningArbeidsgiverLøser$private fun sjekkOmPerioderOverlapper(perioder: List&lt;Periode>): Boolean</ID>
+    <ID>ReturnCount:AvklaringsbehovLøsningTest.kt:AvklaringsbehovLøsningTest$private fun validerAlleKlasserHarFelt(it: Class&lt;*>): Boolean</ID>
+    <ID>ReturnCount:AvventUtbetalingService.kt:AvventUtbetalingService$private fun overlapperMedSamordningArbeidsgiver( behandlingId: BehandlingId, førsteVedtaksdato: LocalDate, tilkjentYtelseHelePerioden: Periode ): TilkjentYtelseAvventDto?</ID>
+    <ID>ReturnCount:AvventUtbetalingService.kt:AvventUtbetalingService$private fun overlapperMedSosialRefusjonskrav( behandling: Behandling, vedtakDenneBehandligen: Vedtak, førsteVedtak: Vedtak?, tilkjentYtelseHelePerioden: Periode ): TilkjentYtelseAvventDto?</ID>
+    <ID>ReturnCount:BehandlingFlyt.kt:BehandlingFlyt$fun neste(): FlytSteg?</ID>
+    <ID>ReturnCount:BehandlingFlyt.kt:BehandlingFlyt$private fun utledTilbakeflytTilSteg(skalTilSteg: StegType?): BehandlingFlyt</ID>
+    <ID>ReturnCount:BehandlingsflytLogInfoProvider.kt:BehandlingsflytLogInfoProvider$override fun hentInformasjon(connection: DBConnection, jobbInput: JobbInput): LogInformasjon?</ID>
+    <ID>ReturnCount:BrevUtlederService.kt:BrevUtlederService$fun utledBehovForMeldingOmVedtak(behandlingId: BehandlingId): BrevBehov?</ID>
+    <ID>ReturnCount:BrevUtlederService.kt:BrevUtlederService$private fun beregnBeregningsgrunnlagBeløp(grunnlag: Beregningsgrunnlag?, dato: LocalDate?): Beløp?</ID>
+    <ID>ReturnCount:DatadelingMeldekortService.kt:DatadelingMeldekortService$internal fun opprettKontraktObjekter( sakId: SakId, behandlingId: BehandlingId ): List&lt;DetaljertMeldekortDTO></ID>
+    <ID>ReturnCount:DatadelingMeldekortService.kt:DatadelingMeldekortService$private fun underveisperiodeOmBareEn( underveisGrunnlag: UnderveisGrunnlag, meldeperiode: Periode, behandlingId: BehandlingId ): Underveisperiode?</ID>
+    <ID>ReturnCount:DynamiskStegGruppeVisningService.kt:DynamiskStegGruppeVisningService$fun skalVises(gruppe: StegGruppe, behandlingId: BehandlingId): Boolean</ID>
+    <ID>ReturnCount:EtableringEgenVirksomhetService.kt:EtableringEgenVirksomhetService$fun erVurderingerGyldig( behandlingId: BehandlingId, nyeVurderinger: List&lt;EtableringEgenVirksomhetVurdering> ): VirksomhetEtableringGyldig</ID>
+    <ID>ReturnCount:FastsettFullmektigLøser.kt:FastsettFullmektigLøser$private fun valider(løsning: FullmektigLøsningDto): Validation&lt;FullmektigLøsningDto></ID>
+    <ID>ReturnCount:FastsettMeldeperiodeSteg.kt:FastsettMeldeperiodeSteg$override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat</ID>
+    <ID>ReturnCount:FasttrackMeldekortFlytTest.kt:FasttrackMeldekortFlytTest.BehandlingCompare$override fun compare(o1: Behandling, o2: Behandling): Int</ID>
+    <ID>ReturnCount:FatteVedtakSteg.kt:FatteVedtakSteg$private fun skalLagreYtelsesvedtak(kontekst: FlytKontekstMedPerioder): Boolean</ID>
+    <ID>ReturnCount:FatteVedtakSteg.kt:FatteVedtakSteg$private fun vedtakBehøverVurdering( kontekst: FlytKontekstMedPerioder, avklaringsbehovene: Avklaringsbehovene ): Boolean</ID>
+    <ID>ReturnCount:FlytApi.kt:private fun utledStatus(jobber: List&lt;JobbInput>, avklaringsbehovene: Avklaringsbehovene): ProsesseringStatus</ID>
+    <ID>ReturnCount:FlytApi.kt:private fun utledVisningAvKvalitetsikrerKort( avklaringsbehovene: FrivilligeAvklaringsbehov ): Boolean</ID>
+    <ID>ReturnCount:FlytApi.kt:private fun utledVurdertGruppe( prosessering: Prosessering, aktivtSteg: StegType, flyt: BehandlingFlyt, avklaringsbehovene: Avklaringsbehovene ): Pair&lt;StegGruppe, StegType>?</ID>
+    <ID>ReturnCount:ForeslåVedtakSteg.kt:ForeslåVedtakSteg$private fun skalInnomForeslåVedtak(avklaringsbehovene: Avklaringsbehovene): Boolean</ID>
+    <ID>ReturnCount:FormkravSteg.kt:FormkravSteg$private fun erTilstrekkeligVurdertFormkrav( kontekst: FlytKontekstMedPerioder, grunnlag: FormkravGrunnlag?, venteBehov: Avklaringsbehov?, ): Boolean</ID>
+    <ID>ReturnCount:FormkravSteg.kt:FormkravSteg$private fun vedtakBehøverVurderingForhåndsvarsel(kontekst: FlytKontekstMedPerioder, vurdering: FormkravVurdering?): Boolean</ID>
+    <ID>ReturnCount:ForutgåendeMedlemskapVurderingService.kt:ForutgåendeMedlemskapVurderingService$private fun sammenhengendePerioderAlleMndSiste5år(perioder: List&lt;Periode>?, forutgåendePeriode: Periode): Boolean</ID>
+    <ID>ReturnCount:FødselsnummerGenerator.kt:FødselsnummerGenerator$private fun generate(): String</ID>
+    <ID>ReturnCount:InstitusjonsoppholdUtlederService.kt:InstitusjonsoppholdUtlederService$private fun utledHelse( venstreopphold: HelseOpphold?, høyreopphold: HelseOpphold? ): HelseOpphold?</ID>
+    <ID>ReturnCount:InstitusjonsoppholdUtlederService.kt:InstitusjonsoppholdUtlederService$private fun utledSoning( venstreopphold: SoningOpphold?, høyreopphold: SoningOpphold? ): SoningOpphold?</ID>
+    <ID>ReturnCount:InstitusjonsoppholdUtlederService.kt:InstitusjonsoppholdUtlederServiceNy$private fun utledHelse( venstreopphold: HelseOpphold?, høyreopphold: HelseOpphold? ): HelseOpphold?</ID>
+    <ID>ReturnCount:InstitusjonsoppholdUtlederService.kt:InstitusjonsoppholdUtlederServiceNy$private fun utledSoning( venstreopphold: SoningOpphold?, høyreopphold: SoningOpphold? ): SoningOpphold?</ID>
+    <ID>ReturnCount:InstitusjonsoppholdVurdering.kt:InstitusjonsoppholdVurdering$fun harNoeUavklart(): Boolean</ID>
+    <ID>ReturnCount:KvalitetssikringsSteg.kt:KvalitetssikringsSteg$private fun erTilstrekkeligVurdert(avklaringsbehovene: Avklaringsbehovene): Boolean</ID>
+    <ID>ReturnCount:ManuellVurderingForForutgåendeMedlemskap.kt:fun List&lt;PeriodisertManuellVurderingForForutgåendeMedlemskapDto>.validerGyldigVurderinger(): Validation&lt;List&lt;PeriodisertManuellVurderingForForutgåendeMedlemskapDto>></ID>
+    <ID>ReturnCount:MedlemskapArbeidInntektGrunnlag.kt:fun List&lt;PeriodisertManuellVurderingForLovvalgMedlemskapDto>.validerGyldigVurderinger(): Validation&lt;List&lt;PeriodisertManuellVurderingForLovvalgMedlemskapDto>></ID>
+    <ID>ReturnCount:MedlemskapArbeidInntektGrunnlag.kt:fun Tidslinje&lt;ManuellVurderingForLovvalgMedlemskap>.validerGyldigForRettighetsperiode(rettighetsperiode: Periode): Validation&lt;Tidslinje&lt;ManuellVurderingForLovvalgMedlemskap>></ID>
+    <ID>ReturnCount:MeldekortInformasjonskrav.kt:MeldekortInformasjonskrav$override fun flettOpplysningerFraAtomærBehandling(kontekst: FlytKontekst): Informasjonskrav.Endret</ID>
+    <ID>ReturnCount:MeldepliktRegel.kt:MeldepliktRegel$private fun vurderMeldeperiode( meldeperiode: Periode, dataForMeldeperiode: Tidslinje&lt;MeldepliktData>, forrigeSegmentOppfylt: Boolean, dataForForrigeMeldeperiode: Tidslinje&lt;MeldepliktData>?, ): Tidslinje&lt;MeldepliktVurdering></ID>
+    <ID>ReturnCount:MottattDokument.kt:MottattDokument$inline fun &lt;reified T : Melding> strukturerteData(): StrukturertDokument&lt;T>?</ID>
+    <ID>ReturnCount:MottattHendelseService.kt:private fun erBehandlingAvsluttetOgKanIkkeOppretteNyttVurderingsbehov( innsending: Innsending, behandlingRepository: BehandlingRepository ): Boolean</ID>
+    <ID>ReturnCount:OppholdVurdering.kt:OppholdVurdering$fun prioritertVerdi(other: OppholdVurdering): OppholdVurdering</ID>
+    <ID>ReturnCount:OppholdskravGrunnlag.kt:fun Tidslinje&lt;OppholdskravTidslinjeData>.validerGyldigForRettighetsperiode(rettighetsperiode: Periode): Validation&lt;Tidslinje&lt;OppholdskravTidslinjeData>></ID>
+    <ID>ReturnCount:OpprettBehandlingFastsattPeriodePassertJobbUtfører.kt:OpprettBehandlingFastsattPeriodePassertJobbUtfører$override fun utfør(input: JobbInput)</ID>
+    <ID>ReturnCount:OpprettBehandlingFritakMeldepliktJobbUtfører.kt:OpprettBehandlingFritakMeldepliktJobbUtfører$private fun skalHaFritakForPassertMeldeperiode(sak: Sak): Boolean</ID>
+    <ID>ReturnCount:OpprettBehandlingMigrereRettighetsperiodeJobbUtfører.kt:OpprettBehandlingMigrereRettighetsperiodeJobbUtfører$fun likArbeidsgradering( arbeidsgraderingFør: ArbeidsGradering, arbeidsgraderingEtter: ArbeidsGradering ): Boolean</ID>
+    <ID>ReturnCount:OpprettBehandlingMigrereRettighetsperiodeJobbUtfører.kt:OpprettBehandlingMigrereRettighetsperiodeJobbUtfører$private fun validerRettighetstype( behandlingFørMigrering: Behandling, behandlingEtterMigrering: Behandling, sak: Sak )</ID>
+    <ID>ReturnCount:PdlBarnGateway.kt:PdlBarnGateway$private fun hentBarn(identer: List&lt;Ident>): List&lt;Barn></ID>
+    <ID>ReturnCount:PdlParser.kt:PdlParser$fun utledFødselsdato(foedsels: List&lt;PdlFoedsel>?): Fødselsdato?</ID>
+    <ID>ReturnCount:PersonopplysningForutgåendeInformasjonskrav.kt:PersonopplysningForutgåendeInformasjonskrav$override fun oppdater( input: Input, registerdata: Registerdata, kontekst: FlytKontekstMedPerioder ): Informasjonskrav.Endret</ID>
+    <ID>ReturnCount:RettighetsperiodeSteg.kt:RettighetsperiodeSteg$private fun manueltTriggetVurderingsbehov(kontekst: FlytKontekstMedPerioder): Boolean</ID>
+    <ID>ReturnCount:SamordningAvslagSteg.kt:SamordningAvslagSteg$override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat</ID>
+    <ID>ReturnCount:SamordningPeriodeSammenligner.kt:SamordningPeriodeSammenligner$fun hentPerioderMarkertMedEndringer(behandlingId: BehandlingId): List&lt;SamordningYtelseMedEndring></ID>
+    <ID>ReturnCount:SamordningYtelseVurderingInformasjonskrav.kt:SamordningYtelseVurderingInformasjonskrav.Companion$fun harEndringerIYtelserIkkeDekketAvEksisterendeGrunnlag( eksisterende: SamordningYtelseGrunnlag?, nye: Set&lt;SamordningYtelse> ): Boolean</ID>
+    <ID>ReturnCount:SamordningYtelseVurderingInformasjonskrav.kt:SamordningYtelseVurderingInformasjonskrav.Companion$fun harEndringerIYtelserIkkeDekketAvManuelleVurderinger( eksisterendeVurderinger: SamordningVurderingGrunnlag?, samordningYtelser: Set&lt;SamordningYtelse> ): Boolean</ID>
+    <ID>ReturnCount:StartOppfølgingsBehandlingSteg.kt:StartOppfølgingsBehandlingSteg$override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat</ID>
+    <ID>ReturnCount:StatistikkMetoder.kt:StatistikkMetoder$private fun hentDiagnose(behandling: Behandling): Diagnoser?</ID>
+    <ID>ReturnCount:SykdomRepositoryImpl.kt:SykdomRepositoryImpl$private fun lagreYrkesskade(vurdering: Yrkesskadevurdering?): Long?</ID>
+    <ID>ReturnCount:SykdomsVurderinger.kt:Sykdomsvurdering$fun erKonsistentForSykdom(harYrkesskadeRegistrert: Boolean, typeBehandling: TypeBehandling): Boolean</ID>
+    <ID>ReturnCount:TestApp.kt:private fun opprettNySakOgBehandling(dto: OpprettTestcaseDTO, gatewayProvider: GatewayProvider, repositoryRegistry: RepositoryRegistry): Sak</ID>
+    <ID>ReturnCount:UførePeriodeSammenligner.kt:UførePeriodeSammenligner$private fun sammenlignGjeldendeMedTidligereUføreGrunnlag( gjeldendeUføreGrunnlag: UføreGrunnlag?, eldsteUføreGrunnlag: UføreGrunnlag? ): List&lt;UførePeriodeMedEndringStatus></ID>
+    <ID>ReturnCount:VarsleVedtakJobbUtfører.kt:VarsleVedtakJobbUtfører.Companion$fun endringITilkjentYtelseTidslinje( forrigeTilkjentYtelse: Tidslinje&lt;Tilkjent>?, nåværendeTilkjentYtelse: Tidslinje&lt;Tilkjent>? ): Boolean</ID>
+    <ID>ReturnCount:VurderAktivitetsplikt11_7Steg.kt:VurderAktivitetsplikt11_7Steg$private fun er11_7TilstrekkeligVurdert( kontekst: FlytKontekstMedPerioder, vurderingForBehandling: Aktivitetsplikt11_7Vurdering?, venteBehov: Avklaringsbehov? ): Boolean</ID>
+    <ID>ReturnCount:Vurdering.kt:Vurdering$fun avslagsårsak(): UnderveisÅrsak?</ID>
+    <ID>SwallowedException:AbstraktFlytOrkestratorTest.kt:AbstraktFlytOrkestratorTest$e: Throwable</ID>
+    <ID>SwallowedException:OpprettDummySakApi.kt:e: OpprettTestSakException</ID>
+    <ID>SwallowedException:VurderKlageKontorLøser.kt:VurderKlageKontorLøser$e: IllegalStateException</ID>
+    <ID>SwallowedException:VurderKlageNayLøser.kt:VurderKlageNayLøser$e: IllegalStateException</ID>
+    <ID>ThrowsCount:AbstraktFlytOrkestratorTest.kt:AbstraktFlytOrkestratorTest$@JvmName("assertThrowsExt") protected fun Behandling.assertThrows( expectedException: KClass&lt;out Throwable>, message: String? = null, block: (Behandling) -> Unit ): Behandling</ID>
+    <ID>ThrowsCount:BehandlingService.kt:BehandlingService$fun opprettAktivitetspliktBehandling( sakId: SakId, årsak: ÅrsakTilOpprettelse, vurderingsbehov: Vurderingsbehov, opprettet: LocalDateTime = LocalDateTime.now(), beskrivelse: String? = null, ): Behandling</ID>
+    <ID>ThrowsCount:Definisjon.kt:Definisjon$private fun validerVentepunkt()</ID>
+    <ID>ThrowsCount:Driftfunksjoner.kt:Driftfunksjoner$fun kjørFraSteg(behandling: Behandling, stegType: StegType)</ID>
+    <ID>ThrowsCount:OpprettBehandlingMigrereRettighetsperiodeJobbUtfører.kt:OpprettBehandlingMigrereRettighetsperiodeJobbUtfører$private fun validerTilkjentYtelse( behandlingFørMigrering: Behandling, behandlingEtterMigrering: Behandling, sak: Sak )</ID>
+    <ID>ThrowsCount:SaksApi.kt:fun NormalOpenAPIRoute.saksApi( dataSource: DataSource, repositoryRegistry: RepositoryRegistry, gatewayProvider: GatewayProvider, )</ID>
+    <ID>ThrowsCount:TestSakService.kt:TestSakService$fun opprettTestSak(ident: Ident, erStudent: Boolean, harYrkesskade: Boolean, harMedlemskap: Boolean,andreUtbetalinger: AndreUtbetalingerDto?): Sak</ID>
+    <ID>ThrowsCount:VurderBrudd11_9Løser.kt:VurderBrudd11_9Løser$private fun VurderBrudd11_9Løsning.valider(kontekst: AvklaringsbehovKontekst)</ID>
+    <ID>ThrowsCount:VurderRettighetsperiodeLøser.kt:VurderRettighetsperiodeLøser$override fun løs(kontekst: AvklaringsbehovKontekst, løsning: VurderRettighetsperiodeLøsning): LøsningsResultat</ID>
+    <ID>TooGenericExceptionCaught:AnsattInfoService.kt:AnsattInfoService$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:BehandlingFlyt.kt:BehandlingFlyt$e: IndexOutOfBoundsException</ID>
+    <ID>TooGenericExceptionCaught:EREGGateway.kt:EREGGateway$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:GosysGateway.kt:GosysGateway$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:KabalKafkaKonsument.kt:KabalKafkaKonsument$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:KafkaKonsument.kt:KafkaKonsument$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:NavKontorService.kt:NavKontorService$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:TilbakekrevingKafkaKonsument.kt:TilbakekrevingKafkaKonsument$exception: Exception</ID>
+    <ID>TooGenericExceptionThrown:Grunnbeløp.kt:Grunnbeløp.GjennomsnittElement.Companion$throw RuntimeException("Finner ikke gjennomsnittsbeløp for dato: $dato.")</ID>
+    <ID>TooGenericExceptionThrown:TestSakService.kt:TestSakService$throw RuntimeException("Man kan ikke opprette testsaker i produksjon")</ID>
+    <ID>TooManyFunctions:Aktivitetsplikt11_7RepositoryImpl.kt:Aktivitetsplikt11_7RepositoryImpl : Aktivitetsplikt11_7Repository</ID>
+    <ID>TooManyFunctions:App.kt:no.nav.aap.behandlingsflyt.App.kt</ID>
+    <ID>TooManyFunctions:AvklarHelseinstitusjonLøser.kt:AvklarHelseinstitusjonLøser : AvklaringsbehovsLøser</ID>
+    <ID>TooManyFunctions:Avklaringsbehov.kt:Avklaringsbehov</ID>
+    <ID>TooManyFunctions:AvklaringsbehovRepositoryImpl.kt:AvklaringsbehovRepositoryImpl : AvklaringsbehovRepositoryAvklaringsbehovOperasjonerRepository</ID>
+    <ID>TooManyFunctions:Avklaringsbehovene.kt:Avklaringsbehovene : AvklaringsbehoveneDecorator</ID>
+    <ID>TooManyFunctions:BarnRepository.kt:BarnRepository : Repository</ID>
+    <ID>TooManyFunctions:BarnRepositoryImpl.kt:BarnRepositoryImpl : BarnRepository</ID>
+    <ID>TooManyFunctions:BarnetilleggGrunnlagApi.kt:no.nav.aap.behandlingsflyt.behandling.barnetillegg.BarnetilleggGrunnlagApi.kt</ID>
+    <ID>TooManyFunctions:Behandling.kt:Behandling : Comparable</ID>
+    <ID>TooManyFunctions:BehandlingFlyt.kt:BehandlingFlyt</ID>
+    <ID>TooManyFunctions:BehandlingRepository.kt:BehandlingRepository : Repository</ID>
+    <ID>TooManyFunctions:BehandlingRepositoryImpl.kt:BehandlingRepositoryImpl : BehandlingRepository</ID>
+    <ID>TooManyFunctions:BehandlingService.kt:BehandlingService</ID>
+    <ID>TooManyFunctions:BeregningVurderingRepositoryImpl.kt:BeregningVurderingRepositoryImpl : BeregningVurderingRepository</ID>
+    <ID>TooManyFunctions:BeregningsgrunnlagRepositoryImpl.kt:BeregningsgrunnlagRepositoryImpl : BeregningsgrunnlagRepository</ID>
+    <ID>TooManyFunctions:BrevGateway.kt:BrevGateway : BrevbestillingGateway</ID>
+    <ID>TooManyFunctions:BrevUtlederService.kt:BrevUtlederService</ID>
+    <ID>TooManyFunctions:BrevbestillingService.kt:BrevbestillingService</ID>
+    <ID>TooManyFunctions:Definisjon.kt:Definisjon</ID>
+    <ID>TooManyFunctions:FlytApi.kt:no.nav.aap.behandlingsflyt.flyt.FlytApi.kt</ID>
+    <ID>TooManyFunctions:FlytOrkestrator.kt:FlytOrkestrator</ID>
+    <ID>TooManyFunctions:FormkravRepositoryImpl.kt:FormkravRepositoryImpl : FormkravRepository</ID>
+    <ID>TooManyFunctions:FormkravSteg.kt:FormkravSteg : BehandlingSteg</ID>
+    <ID>TooManyFunctions:GrunnlagYrkesskade.kt:GrunnlagYrkesskade : Beregningsgrunnlag</ID>
+    <ID>TooManyFunctions:HåndterMottattDokumentService.kt:HåndterMottattDokumentService</ID>
+    <ID>TooManyFunctions:InntektGrunnlagRepositoryImpl.kt:InntektGrunnlagRepositoryImpl : InntektGrunnlagRepository</ID>
+    <ID>TooManyFunctions:Inntektsbehov.kt:Inntektsbehov</ID>
+    <ID>TooManyFunctions:InstitusjonsoppholdRepositoryImpl.kt:InstitusjonsoppholdRepositoryImpl : InstitusjonsoppholdRepository</ID>
+    <ID>TooManyFunctions:InstitusjonsoppholdUtlederService.kt:InstitusjonsoppholdUtlederService</ID>
+    <ID>TooManyFunctions:InstitusjonsoppholdUtlederService.kt:InstitusjonsoppholdUtlederServiceNy</ID>
+    <ID>TooManyFunctions:MedlemskapArbeidInntektForutgåendeRepositoryImpl.kt:MedlemskapArbeidInntektForutgåendeRepositoryImpl : MedlemskapArbeidInntektForutgåendeRepository</ID>
+    <ID>TooManyFunctions:MedlemskapArbeidInntektRepositoryImpl.kt:MedlemskapArbeidInntektRepositoryImpl : MedlemskapArbeidInntektRepository</ID>
+    <ID>TooManyFunctions:MeldekortRepositoryImpl.kt:MeldekortRepositoryImpl : MeldekortRepository</ID>
+    <ID>TooManyFunctions:MottaDokumentService.kt:MottaDokumentService</ID>
+    <ID>TooManyFunctions:MottattDokumentRepositoryImpl.kt:MottattDokumentRepositoryImpl : MottattDokumentRepository</ID>
+    <ID>TooManyFunctions:PersonRepositoryImpl.kt:PersonRepositoryImpl : PersonRepository</ID>
+    <ID>TooManyFunctions:PersonopplysningForutgåendeRepositoryImpl.kt:PersonopplysningForutgåendeRepositoryImpl : PersonopplysningForutgåendeRepository</ID>
+    <ID>TooManyFunctions:PersonopplysningRepositoryImpl.kt:PersonopplysningRepositoryImpl : PersonopplysningRepository</ID>
+    <ID>TooManyFunctions:PåklagetBehandlingRepositoryImpl.kt:PåklagetBehandlingRepositoryImpl : PåklagetBehandlingRepository</ID>
+    <ID>TooManyFunctions:RettTilBarnetillegg.kt:RettTilBarnetillegg</ID>
+    <ID>TooManyFunctions:RettighetstypeRepositoryImpl.kt:RettighetstypeRepositoryImpl : RettighetstypeRepository</ID>
+    <ID>TooManyFunctions:SakRepository.kt:SakRepository : Repository</ID>
+    <ID>TooManyFunctions:SakRepositoryImpl.kt:SakRepositoryImpl : SakRepository</ID>
+    <ID>TooManyFunctions:StatistikkMetoder.kt:StatistikkMetoder</ID>
+    <ID>TooManyFunctions:StudentRepositoryImpl.kt:StudentRepositoryImpl : StudentRepository</ID>
+    <ID>TooManyFunctions:SykdomRepositoryImpl.kt:SykdomRepositoryImpl : SykdomRepository</ID>
+    <ID>TooManyFunctions:UnderveisRepositoryImpl.kt:UnderveisRepositoryImpl : UnderveisRepository</ID>
+    <ID>TooManyFunctions:Vilkår.kt:Vilkår</ID>
+    <ID>TooManyFunctions:VurderAktivitetsplikt11_7Steg.kt:VurderAktivitetsplikt11_7Steg : BehandlingSteg</ID>
+    <ID>TooManyFunctions:Vurdering.kt:Vurdering</ID>
+    <ID>UnusedParameter:App.kt:dataSource: HikariDataSource</ID>
+    <ID>UnusedParameter:InstitusjonsOppholdHendelse.kt:InstitusjonsOppholdHendelseKafkaMelding$meldingKey: String</ID>
+    <ID>UnusedParameter:RettighetstypeSteg.kt:RettighetstypeSteg$kontekst: FlytKontekstMedPerioder</ID>
+    <ID>VariableNaming:GosysGateway.kt:val SISTE_ARBEIDSTIME = 12</ID>
+  </CurrentIssues>
+</SmellBaseline>

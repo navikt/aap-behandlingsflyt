@@ -135,7 +135,7 @@ public enum class FeilregistrertType {
 }
 
 public enum class OmgjoeringsUtfall {
-    MEDHOLD_ETTER_FVL_35
+    MEDHOLD_ETTER_FVL_35, UGUNST
 }
 
 public fun BehandlingDetaljer.avsluttetTidspunkt(): LocalDateTime? {

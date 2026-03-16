@@ -10,30 +10,30 @@ import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryPersonRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
 import no.nav.aap.komponenter.dbconnect.DBConnection
-import no.nav.aap.komponenter.type.Periode
+import java.time.LocalDate
 
-fun opprettSak(connection: DBConnection, periode: Periode): Sak {
-    return opprettSak(connection, ident(), periode)
+fun opprettSak(connection: DBConnection, søknadsdato: LocalDate): Sak {
+    return opprettSak(connection, ident(), søknadsdato)
 }
 
-fun opprettSak(connection: DBConnection, ident: Ident, periode: Periode): Sak {
+fun opprettSak(connection: DBConnection, ident: Ident, søknadsdato: LocalDate): Sak {
     return PersonOgSakService(
         FakePdlGateway,
         FakeApiInternGateway.konstruer(),
         PersonRepositoryImpl(connection),
         SakRepositoryImpl(connection)
-    ).finnEllerOpprett(ident, periode)
+    ).finnEllerOpprett(ident, søknadsdato)
 }
 
-fun opprettInMemorySak(ident: Ident, periode: Periode): Sak {
+fun opprettInMemorySak(ident: Ident, søknadsdato: LocalDate): Sak {
     return PersonOgSakService(
         FakePdlGateway,
         FakeApiInternGateway.konstruer(),
         InMemoryPersonRepository,
         InMemorySakRepository
-    ).finnEllerOpprett(ident, periode)
+    ).finnEllerOpprett(ident, søknadsdato)
 }
 
-fun opprettInMemorySak(periode: Periode): Sak {
-    return opprettInMemorySak(ident(), periode)
+fun opprettInMemorySak(søknadsdato: LocalDate): Sak {
+    return opprettInMemorySak(ident(), søknadsdato)
 }

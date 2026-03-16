@@ -67,6 +67,7 @@ class VarsleVedtakJobbUtførerTest {
             ),
             grunnlagsfaktor = GUnit("1.0"),
             grunnbeløp = Beløp(100),
+            barnepensjonDagsats = Beløp(0),
             antallBarn = 0,
             barnetilleggsats = Beløp(0),
             barnetillegg = Beløp(0),

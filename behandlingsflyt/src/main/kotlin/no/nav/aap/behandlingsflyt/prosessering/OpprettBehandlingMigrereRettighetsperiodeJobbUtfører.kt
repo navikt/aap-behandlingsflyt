@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.ArbeidsGradering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
@@ -16,6 +16,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.miljo.Miljø
 import no.nav.aap.komponenter.tidslinje.somTidslinje
@@ -33,7 +34,8 @@ import java.time.LocalDate
 class OpprettBehandlingMigrereRettighetsperiodeJobbUtfører(
     private val prosesserBehandlingService: ProsesserBehandlingService,
     private val sakRepository: SakRepository,
-    private val sakOgBehandlingService: SakOgBehandlingService,
+    private val sakService: SakService,
+    private val behandlingService: BehandlingService,
     private val tilkjentYtelseRepository: TilkjentYtelseRepository,
     private val underveisRepository: UnderveisRepository,
     private val vilkårsresultatRepository: VilkårsresultatRepository,
@@ -41,24 +43,22 @@ class OpprettBehandlingMigrereRettighetsperiodeJobbUtfører(
 
     private val log = LoggerFactory.getLogger(javaClass)
     private val secureLogger = LoggerFactory.getLogger("team-logs")
-
     override fun utfør(input: JobbInput) {
 
         val sakId = input.sakId()
         val sak = sakRepository.hent(SakId(sakId))
         log.info("Migrerer rettighetsperiode for sak $sakId")
 
-
-        if (sak.rettighetsperiode.tom == Tid.MAKS) {
+        if (sak.rettighetsperiode.tom == Tid.MAKS && !listOf("4o08734", "4M9PoKG").contains(sak.saksnummer.toString())) {
             log.info("Har allerede tid maks som rettighetsperiode - lager ikke en ny behandling")
             return
         }
-        val behandlingFørMigrering = sakOgBehandlingService.finnSisteYtelsesbehandlingFor(sak.id)
+        val behandlingFørMigrering = behandlingService.finnSisteYtelsesbehandlingFor(sak.id)
             ?: error("Fant ikke behandling for sak=${sakId}")
         if (behandlingFørMigrering.status().erÅpen()) {
             throw IllegalArgumentException("Kan ikke migrere sak når det finnes en åpen behandling")
         }
-        sakOgBehandlingService.overstyrRettighetsperioden(sak.id, sak.rettighetsperiode.fom, Tid.MAKS)
+        sakService.overstyrRettighetsperioden(sak.id, sak.rettighetsperiode.fom, Tid.MAKS)
         val utvidVedtakslengdeBehandling = opprettNyBehandling(sak)
         prosesserBehandlingService.triggProsesserBehandling(utvidVedtakslengdeBehandling)
         validerTilstandEtterMigrering(sak, sakId, behandlingFørMigrering)
@@ -76,7 +76,7 @@ class OpprettBehandlingMigrereRettighetsperiodeJobbUtfører(
         if (Miljø.erDev()) {
             return
         }
-        val behandlingEtterMigrering = sakOgBehandlingService.finnSisteYtelsesbehandlingFor(sak.id)
+        val behandlingEtterMigrering = behandlingService.finnSisteYtelsesbehandlingFor(sak.id)
             ?: error("Fant ikke behandling for sak=${sakId}")
         validerBehandlingerErUlike(behandlingFørMigrering, behandlingEtterMigrering)
         validerRettighetstype(behandlingFørMigrering, behandlingEtterMigrering, sak)
@@ -177,7 +177,7 @@ class OpprettBehandlingMigrereRettighetsperiodeJobbUtfører(
 
 
     private fun skalIgnorereTilkjentYtelseSjekk (sak: Sak) : Boolean =
-        listOf("4MD3UPS", "4LDZA0W").contains(sak.saksnummer.toString())
+        listOf("4o08734", "4M9PoKG").contains(sak.saksnummer.toString())
     /**
      * Kan ikke validere underveis hvis siste behandling er fastsatt periode passert - da vil de av natur bli splittet ulikt og være ulike
      */
@@ -185,9 +185,8 @@ class OpprettBehandlingMigrereRettighetsperiodeJobbUtfører(
         val erForrigeBehandlingFastsattPeriodePassert =
             behandlingFørMigrering.vurderingsbehov().map { it.type }.contains(Vurderingsbehov.FASTSATT_PERIODE_PASSERT)
         val forhåndsgodkjenteSaksnummerMedPotensiellEndringIUnderveis = listOf(
-            "4MD3UPS",
-            "4oAoCR4",
-            "4LDZA0W"
+            "4o08734",
+            "4M9PoKG",
         )
         val skalIgnoreres =
             forhåndsgodkjenteSaksnummerMedPotensiellEndringIUnderveis.contains(sak.saksnummer.toString())
@@ -280,8 +279,8 @@ class OpprettBehandlingMigrereRettighetsperiodeJobbUtfører(
         }
     }
 
-    private fun opprettNyBehandling(sak: Sak): SakOgBehandlingService.OpprettetBehandling =
-        sakOgBehandlingService.finnEllerOpprettBehandling(
+    private fun opprettNyBehandling(sak: Sak): BehandlingService.OpprettetBehandling =
+        behandlingService.finnEllerOpprettBehandling(
             sakId = sak.id,
             vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
                 årsak = ÅrsakTilOpprettelse.MIGRER_RETTIGHETSPERIODE,
@@ -297,7 +296,8 @@ class OpprettBehandlingMigrereRettighetsperiodeJobbUtfører(
                 underveisRepository = repositoryProvider.provide(),
                 tilkjentYtelseRepository = repositoryProvider.provide(),
                 vilkårsresultatRepository = repositoryProvider.provide(),
-                sakOgBehandlingService = SakOgBehandlingService(repositoryProvider, gatewayProvider),
+                behandlingService = BehandlingService(repositoryProvider, gatewayProvider),
+                sakService = SakService(repositoryProvider, gatewayProvider),
             )
         }
 

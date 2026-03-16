@@ -54,7 +54,7 @@ fun ArbeidsevneVurdering.toResponse(
             definisjon = Definisjon.FRITAK_MELDEPLIKT,
             behandlingId = vurdertIBehandling
         ),
-        kvalitetssikretAv = vurdertAvService.besluttetAv(
+        kvalitetssikretAv = vurdertAvService.kvalitetssikretAv(
             definisjon = Definisjon.FRITAK_MELDEPLIKT,
             behandlingId = vurdertIBehandling
         ),

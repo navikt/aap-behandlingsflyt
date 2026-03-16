@@ -45,6 +45,7 @@ class MellomlagringFlyttest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::c
                 }
             }
             .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
             .kvalitetssikre()
             .løsBeregningstidspunkt()
             .løsOppholdskrav(periode.fom)
