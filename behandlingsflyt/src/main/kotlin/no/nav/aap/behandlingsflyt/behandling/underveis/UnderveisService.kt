@@ -135,7 +135,8 @@ class UnderveisService(
                     meldepliktGradering = if (it.verdi.meldepliktVurdering?.utfall == Utfall.OPPFYLT)
                         Prosent.`0_PROSENT`
                     else
-                        Prosent.`100_PROSENT`
+                        Prosent.`100_PROSENT`,
+                    fraværFastsattAktivitet = it.verdi.fraværFastsattAktivitetVurdering?.vilkårsvurdering
                 )
             }
     }

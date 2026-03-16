@@ -1,6 +1,8 @@
 package no.nav.aap.behandlingsflyt.behandling.tilkjentytelse
 
 import no.nav.aap.behandlingsflyt.behandling.barnetillegg.RettTilBarnetillegg
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetVurdering.Vilkårsvurdering.MER_ENN_EN_DAGS_FRAVÆR_I_MELDEPERIODE
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetVurdering.Vilkårsvurdering.MER_ENN_TI_DAGERS_FRAVÆR_I_KALENDERÅR
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.unntakFastsattMeldedag
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.unntakFritaksUtbetalingDato
@@ -136,6 +138,7 @@ class BeregnTilkjentYtelseService(private val grunnlag: TilkjentYtelseGrunnlag) 
             .minus(samordningGradering)
             .minus(samordningArbeidsgiverGradering)
             .minus(meldepliktGradering)
+            .minus(fraværFastsattAktivitetGradering)
             .multiplisert(institusjonGradering.komplement())
     }
 
@@ -149,6 +152,13 @@ class BeregnTilkjentYtelseService(private val grunnlag: TilkjentYtelseGrunnlag) 
             return@map4 null
         }
 
+        val harReduksjonForFraværFastsattAktivitet: Boolean =
+            // TODO duplikat logikk fra FraværFastsattAktivitetVurdering
+            when (underveisperiode.fraværFastsattAktivitet) {
+                MER_ENN_EN_DAGS_FRAVÆR_I_MELDEPERIODE, MER_ENN_TI_DAGERS_FRAVÆR_I_KALENDERÅR -> true
+                else -> false
+            }
+
         GraderingGrunnlag(
             arbeidGradering = underveisperiode.arbeidsgradering.gradering,
             institusjonGradering = underveisperiode.institusjonsoppholdReduksjon,
@@ -156,6 +166,7 @@ class BeregnTilkjentYtelseService(private val grunnlag: TilkjentYtelseGrunnlag) 
             samordningUføregradering = samordningUføre ?: `0_PROSENT`,
             samordningArbeidsgiverGradering = if (samordningArbeidsgiver == null) `0_PROSENT` else `100_PROSENT`,
             meldepliktGradering = underveisperiode.meldepliktGradering ?: `0_PROSENT`,
+            fraværFastsattAktivitetGradering = if (harReduksjonForFraværFastsattAktivitet) `100_PROSENT` else `0_PROSENT`,
         )
     }
         .filterNotNull()
