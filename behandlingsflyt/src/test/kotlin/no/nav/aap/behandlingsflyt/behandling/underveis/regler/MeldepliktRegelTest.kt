@@ -1305,6 +1305,34 @@ Mo Tu We Th Fr Sa Su      Mo Tu We Th Fr Sa Su      Mo Tu We Th Fr Sa Su
         )
     }
 
+    @Test
+    fun `Får oppfylt i periode når det blir innsendt etter meldefrist i helligdagsunntak`() {
+        val rettighetsperiode = Periode(
+            LocalDate.of(2026, 5, 4), LocalDate.of(2026, 5, 31)
+        )
+        val input = tomUnderveisInput(
+            rettighetsperiode = rettighetsperiode,
+            innsendingsTidspunkt = mapOf(
+                LocalDate.of(2026, 5, 26) to JournalpostId("1")
+            )
+        )
+        val vurdertTidslinje = vurder(input, nå = rettighetsperiode.tom.plusDays(1))
+
+        assertVurdering(
+            vurdertTidslinje, rettighetsperiode,
+            Forventer(
+                fom = LocalDate.of(2026, 5, 4),
+                tom = LocalDate.of(2026, 5, 17),
+                vurdering = MeldepliktVurdering.FørVedtak,
+            ),
+            Forventer(
+                fom = LocalDate.of(2026, 5, 18),
+                tom = LocalDate.of(2026, 5, 31),
+                vurdering = MeldepliktVurdering.MeldtSeg(JournalpostId("1")),
+            )
+        )
+    }
+
     private fun vurder(
         input: UnderveisInput,
         nå: LocalDate,

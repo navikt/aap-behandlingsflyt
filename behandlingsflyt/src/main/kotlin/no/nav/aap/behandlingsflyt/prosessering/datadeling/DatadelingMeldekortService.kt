@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.prosessering
+package no.nav.aap.behandlingsflyt.prosessering.datadeling
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.meldeperiode.MeldeperiodeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
@@ -14,6 +14,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.komponenter.type.Periode
+import org.slf4j.LoggerFactory
 
 class DatadelingMeldekortService(
     private val saksRepository: SakRepository,
@@ -21,7 +22,7 @@ class DatadelingMeldekortService(
     private val meldekortRepository: MeldekortRepository,
     private val meldeperiodeRepository: MeldeperiodeRepository,
 ) {
-    private val log = org.slf4j.LoggerFactory.getLogger(javaClass)
+    private val log = LoggerFactory.getLogger(javaClass)
 
     internal fun opprettKontraktObjekter(
         sakId: SakId, behandlingId: BehandlingId

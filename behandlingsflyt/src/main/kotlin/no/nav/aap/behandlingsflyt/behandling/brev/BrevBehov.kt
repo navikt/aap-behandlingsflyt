@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.behandling.brev
 
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import java.time.LocalDate
 
 sealed class BrevBehov(val typeBrev: TypeBrev)
@@ -28,7 +29,8 @@ data class Arbeidssøker(
 
 data class UtvidVedtakslengde(
     val utvidetAapFomDato: LocalDate,
-    val sisteDagMedYtelse: LocalDate
+    val sisteDagMedYtelse: LocalDate,
+    val sisteDagMedYtelseBegrensetAv: Set<Avslagsårsak>
 ) : BrevBehov(TypeBrev.VEDTAK_UTVID_VEDTAKSLENGDE)
 
 data class Avslag(val sykdomsvurdering: String?): BrevBehov(TypeBrev.VEDTAK_AVSLAG)

@@ -166,7 +166,9 @@ class TilkjentYtelseApiTest : BaseApiTest() {
                                         institusjonGradering = 50,
                                         totalReduksjon = 50,
                                         effektivDagsats = 236.0,
-                                        arbeidsgiverGradering = 50
+                                        arbeidsgiverGradering = 50,
+                                        barnepensjonDagsats = 0.0
+
                                     )
                                 )
                             ),
@@ -197,7 +199,9 @@ class TilkjentYtelseApiTest : BaseApiTest() {
                                         institusjonGradering = 50,
                                         totalReduksjon = 50,
                                         effektivDagsats = 286.0,
-                                        arbeidsgiverGradering = 50
+                                        arbeidsgiverGradering = 50,
+                                        barnepensjonDagsats = 0.0
+
                                     )
                                 )
                             ),
@@ -225,7 +229,8 @@ class TilkjentYtelseApiTest : BaseApiTest() {
                                         institusjonGradering = 50,
                                         totalReduksjon = 50,
                                         effektivDagsats = 336.0,
-                                        arbeidsgiverGradering = 50
+                                        arbeidsgiverGradering = 50,
+                                        barnepensjonDagsats = 0.0
                                     )
                                 )
                             ),

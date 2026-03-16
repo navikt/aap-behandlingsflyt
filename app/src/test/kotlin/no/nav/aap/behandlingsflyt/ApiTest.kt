@@ -10,7 +10,6 @@ import no.nav.aap.behandlingsflyt.behandling.grunnlag.medlemskap.MedlemskapGrunn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag11_19
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagInntekt
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.KildesystemKode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.KildesystemMedl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapDataIntern
@@ -31,6 +30,7 @@ import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.FinnEllerOpprettSakDTO
@@ -57,7 +57,6 @@ import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.NoTokenTokenPr
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.OnBehalfOfTokenProvider
-import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.GUnit
 import no.nav.aap.verdityper.dokument.JournalpostId
@@ -158,10 +157,8 @@ class ApiTest {
         val dataSource = initDatasource(dbConfig)
 
         val opprettetBehandling = dataSource.transaction { connection ->
-            val sak = opprettSak(
-                connection,
-                Periode(LocalDate.now(), LocalDate.now().plusYears(3))
-            )
+            val sak = opprettSak(connection, LocalDate.now())
+
             val behandlingRepo = BehandlingRepositoryImpl(connection)
             val behandling = behandlingRepo.opprettBehandling(
                 sakId = sak.id,
@@ -209,7 +206,7 @@ class ApiTest {
     fun `kalle beregningsgrunnlag-api`() {
         val ds = initDatasource(dbConfig)
         val referanse = ds.transaction { connection ->
-            val sak = opprettSak(connection, Periode(LocalDate.now(), LocalDate.now().plusYears(3)))
+            val sak = opprettSak(connection, LocalDate.now())
             val behandlingRepo = BehandlingRepositoryImpl(connection)
             val behandling = behandlingRepo.opprettBehandling(
                 sakId = sak.id,

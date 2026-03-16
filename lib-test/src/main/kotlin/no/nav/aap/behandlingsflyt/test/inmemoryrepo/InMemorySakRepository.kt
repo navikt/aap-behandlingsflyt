@@ -27,7 +27,7 @@ object InMemorySakRepository : SakRepository {
         return finnEllerOpprett(person, Periode(søknadsdato, Tid.MAKS))
     }
 
-    @Deprecated("Sluttdato for rettighetesperiode er alltid Tid.MAKS for nye/migrerte saker. Send kun med søknadsdato, med mindre du tester koden din for ikke-migrerte saker.")
+    @Deprecated("Sluttdato for rettighetsperiode er alltid Tid.MAKS for nye/migrerte saker. Send kun med søknadsdato, med mindre du tester koden din for ikke-migrerte saker.")
     override fun finnEllerOpprett(
         person: Person,
         periode: Periode

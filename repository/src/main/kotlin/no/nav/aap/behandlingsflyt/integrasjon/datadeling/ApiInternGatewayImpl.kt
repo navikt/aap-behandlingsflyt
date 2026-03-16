@@ -3,10 +3,12 @@ package no.nav.aap.behandlingsflyt.integrasjon.datadeling
 import com.github.benmanes.caffeine.cache.Caffeine
 import no.nav.aap.api.intern.PersonEksistererIAAPArena
 import no.nav.aap.api.intern.SakerRequest
+import no.nav.aap.api.intern.behandlingsflyt.SakStatusKelvin
+import no.nav.aap.api.intern.behandlingsflyt.SakstatusFraKelvin
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelsePeriode
 import no.nav.aap.behandlingsflyt.datadeling.SakStatus
-import no.nav.aap.behandlingsflyt.datadeling.SakStatusDTO
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.ApiInternGateway
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.ArenaStatusResponse
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.MeldekortPerioderDTO
@@ -14,6 +16,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.datadeling.DatadelingDTO
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.DetaljertMeldekortDTO
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.RettighetsTypePeriode
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.SakDTO
+import no.nav.aap.behandlingsflyt.kontrakt.datadeling.TilkjentDTO
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.UnderveisDTO
 import no.nav.aap.behandlingsflyt.prometheus
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
@@ -69,7 +72,22 @@ class ApiInternGatewayImpl : ApiInternGateway {
     override fun sendSakStatus(ident: String, sakStatus: SakStatus) {
         restClient.post(
             uri = uri.resolve("/api/insert/sakStatus"),
-            request = PostRequest(body = SakStatusDTO(ident, sakStatus)),
+            request = PostRequest(
+                body = SakStatusKelvin(
+                    ident = ident, status = no.nav.aap.api.intern.behandlingsflyt.SakStatus(
+                        sakId = sakStatus.sakId,
+                        statusKode = when (sakStatus.status) {
+                            SakStatus.DatadelingBehandlingStatus.SOKNAD_UNDER_BEHANDLING -> SakstatusFraKelvin.SOKNAD_UNDER_BEHANDLING
+                            SakStatus.DatadelingBehandlingStatus.REVURDERING_UNDER_BEHANDLING -> SakstatusFraKelvin.REVURDERING_UNDER_BEHANDLING
+                            SakStatus.DatadelingBehandlingStatus.FERDIGBEHANDLET -> SakstatusFraKelvin.FERDIGBEHANDLET
+                        },
+                        periode = no.nav.aap.api.intern.behandlingsflyt.Periode(
+                            fom = sakStatus.periode.fom,
+                            tom = sakStatus.periode.tom
+                        )
+                    )
+                )
+            ),
             mapper = { _, _ ->
             })
     }
@@ -83,7 +101,7 @@ class ApiInternGatewayImpl : ApiInternGateway {
         beregningsgrunnlag: BigDecimal?,
         underveis: List<Underveisperiode>,
         vedtaksDato: LocalDate,
-        rettighetsTypeTidslinje: Tidslinje<no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType>
+        rettighetsTypeTidslinje: Tidslinje<RettighetsType>
     ) {
         log.info("Sender behandling for behandlingId=${behandling.id} med vedtakId=$vedtakId, sak: ${sak.saksnummer}. Beregningsgrunnlag: $beregningsgrunnlag")
         restClient.post(
@@ -115,7 +133,7 @@ class ApiInternGatewayImpl : ApiInternGateway {
                         opprettetTidspunkt = sak.opprettetTidspunkt
                     ),
                     tilkjent = tilkjent.map { tilkjentPeriode ->
-                        no.nav.aap.behandlingsflyt.kontrakt.datadeling.TilkjentDTO(
+                        TilkjentDTO(
                             tilkjentFom = tilkjentPeriode.periode.fom,
                             tilkjentTom = tilkjentPeriode.periode.tom,
                             dagsats = tilkjentPeriode.tilkjent.dagsats.verdi.toInt(),
@@ -162,10 +180,10 @@ class ApiInternGatewayImpl : ApiInternGateway {
 
     override fun hentArenaStatus(personidentifikatorer: Set<String>): ArenaStatusResponse {
         // Kalles ofte fra saksbehandling, så cache den
-        return arenaStatusCache.get(personidentifikatorer, {
+        return arenaStatusCache.get(personidentifikatorer) {
             val sakerRequest = SakerRequest(personidentifikatorer = personidentifikatorer.toList())
             doHentArenaStatus(sakerRequest)
-        })
+        }
     }
 
     private fun doHentArenaStatus(sakerRequest: SakerRequest): ArenaStatusResponse {

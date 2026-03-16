@@ -12,7 +12,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirk
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
-import no.nav.aap.behandlingsflyt.harTilgangOgKanSaksbehandle
+import no.nav.aap.behandlingsflyt.kanLøseBehovSomSkalVæreLåstEtterKvalitetssikring
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
@@ -75,7 +75,8 @@ fun NormalOpenAPIRoute.etableringEgenVirksomhetApi(
                     val ikkeVurderbarePerioder =
                         utledIkkeVurderbarePerioder(sykdomGrunnlag, bistandGrunnlag, sak.rettighetsperiode.fom)
 
-                    val alleVurderinger = etableringEgenVirksomhetGrunnlag?.vurderinger.orEmpty() + forrigeGrunnlag.vurderinger
+                    val alleVurderinger =
+                        etableringEgenVirksomhetGrunnlag?.vurderinger.orEmpty() + forrigeGrunnlag.vurderinger
 
                     val bruktUtviklingsDager =
                         (alleVurderinger).flatMap { it.utviklingsPerioder }.somTidslinje { it }.komprimer().segmenter()
@@ -85,9 +86,9 @@ fun NormalOpenAPIRoute.etableringEgenVirksomhetApi(
                             .sumOf { it.periode.antallHverdager().asInt }
 
                     EtableringEgenVirksomhetGrunnlagResponse(
-                        harTilgangTilÅSaksbehandle = harTilgangOgKanSaksbehandle(
-                            harTilgang = kanSaksbehandle(),
-                            avklaringsbehovene = avklaringsbehovene
+                        harTilgangTilÅSaksbehandle = kanSaksbehandle() && kanLøseBehovSomSkalVæreLåstEtterKvalitetssikring(
+                            Definisjon.ETABLERING_EGEN_VIRKSOMHET.løsesISteg,
+                            behandling,
                         ),
                         sisteVedtatteVurderinger = EtableringEgenVirksomhetVurderingResponse.fraDomene(
                             tidslinje = forrigeGrunnlag.gjeldendeVurderingerSomTidslinje(),

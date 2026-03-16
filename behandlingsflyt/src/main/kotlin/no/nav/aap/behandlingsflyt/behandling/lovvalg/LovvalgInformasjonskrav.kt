@@ -36,7 +36,7 @@ import java.util.concurrent.CompletableFuture
 import java.util.concurrent.Executors
 
 
-class LovvalgInformasjonskrav private constructor(
+class LovvalgInformasjonskrav internal constructor(
     private val sakService: SakService,
     private val medlemskapArbeidInntektRepository: MedlemskapArbeidInntektRepository,
     private val medlemskapRepository: MedlemskapRepository,
