@@ -59,31 +59,12 @@ class VurderSykdomSteg(
             type()
         )
 
-        return if (unleashGateway.isEnabled(BehandlingsflytFeature.NyTidligereVurderinger)) {
-            tidligereVurderingsutfall.mapValue { behandlingsutfall ->
-                when (behandlingsutfall) {
-                    TidligereVurderinger.IkkeBehandlingsgrunnlag -> false
-                    TidligereVurderinger.UunngåeligAvslag -> false
-                    is TidligereVurderinger.PotensieltOppfylt -> {
-                        behandlingsutfall.rettighetstype == null
-                    }
-                }
-            }
-        } else {
-            // Det riktige her er egentlig å sjekke på vilkåret
-            val studentvurderinger = studentRepository.hentHvisEksisterer(kontekst.behandlingId)
-                ?.somStudenttidslinje(kontekst.rettighetsperiode.tom)
-                .orEmpty()
-
-            Tidslinje.map2(tidligereVurderingsutfall, studentvurderinger)
-            { behandlingsutfall, studentvurdering ->
-                when (behandlingsutfall) {
-                    null -> false
-                    TidligereVurderinger.IkkeBehandlingsgrunnlag -> false
-                    TidligereVurderinger.UunngåeligAvslag -> false
-                    is TidligereVurderinger.PotensieltOppfylt -> {
-                        studentvurdering?.erOppfylt() != true
-                    }
+        return tidligereVurderingsutfall.mapValue { behandlingsutfall ->
+            when (behandlingsutfall) {
+                TidligereVurderinger.IkkeBehandlingsgrunnlag -> false
+                TidligereVurderinger.UunngåeligAvslag -> false
+                is TidligereVurderinger.PotensieltOppfylt -> {
+                    behandlingsutfall.rettighetstype == null
                 }
             }
         }
