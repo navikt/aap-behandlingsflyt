@@ -51,6 +51,7 @@ class StudentFlytTest(val unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
         )
 
         val avbruttStudieDato = 1 oktober 2025
+        val forventetVarighetSluttStudent = avbruttStudieDato.plusMonths(6)
 
         behandling = behandling
             .løsAvklaringsBehov(
@@ -70,7 +71,6 @@ class StudentFlytTest(val unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                 val vilkår = repositoryProvider.provide<VilkårsresultatRepository>().hent(this.behandling.id)
 
                 val studentVilkår = vilkår.finnVilkår(Vilkårtype.STUDENT)
-                val forventetVarighetSluttStudent = avbruttStudieDato.plusMonths(6)
 
                 studentVilkår.tidslinje().assertTidslinje(
                     Segment(Periode(fom, avbruttStudieDato.plusMonths(6).minusDays(1))) { vurdering ->
@@ -82,20 +82,12 @@ class StudentFlytTest(val unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                     }
                 )
 
-                if (unleashGateway.objectInstance!!.isEnabled(BehandlingsflytFeature.NyTidligereVurderinger)) {
-                    // Her løftes sykdombehovet fordi det er studentvilkåret og ikke vurderingen som sjekkes 
-                    this.behandling.løsSykdom(forventetVarighetSluttStudent, erOppfylt = false)
-                }
             }
+            .løsSykdom(forventetVarighetSluttStudent, erOppfylt = false)
             .løsRefusjonskrav()
-            .medKontekst {
-                if (unleashGateway.objectInstance!!.isEnabled(BehandlingsflytFeature.NyTidligereVurderinger)) {
-                    // Nei på 11-5, må skrive brev
-                    this.behandling.løsSykdomsvurderingBrev()
-                    this.behandling.bekreftVurderinger()
-                    this.behandling.kvalitetssikre()
-                }
-            }
+            .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
+            .kvalitetssikre()
             .løsBeregningstidspunkt()
             .løsOppholdskrav(fom)
             .løsSykestipend(listOf(sykestipendPeriode))
@@ -164,12 +156,8 @@ class StudentFlytTest(val unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             .løsBistand(sak.rettighetsperiode.fom)
             .løsSykdomsvurderingBrev()
             .bekreftVurderinger()
-            .medKontekst {
-                if (unleashGateway.objectInstance!!.isEnabled(BehandlingsflytFeature.NyTidligereVurderinger)) {
-                    // Kjent bug at dette løftes på nytt ved diff i nårVurderingErRelevant, selv om vurderingen er gjort for hele perioden
-                    this.behandling.løsOppholdskrav(fom)
-                }
-            }
+            // Kjent bug at oppholdskrav løftes på nytt ved diff i nårVurderingErRelevant, selv om vurderingen er gjort for hele perioden
+            .løsOppholdskrav(fom) 
             .løsSykestipend()
             .medKontekst {
                 val vilkår = repositoryProvider.provide<VilkårsresultatRepository>().hent(this.behandling.id)

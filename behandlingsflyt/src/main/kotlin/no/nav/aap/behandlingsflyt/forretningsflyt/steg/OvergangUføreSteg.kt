@@ -95,41 +95,20 @@ class OvergangUføreSteg private constructor(
         val sykdomsvurderinger =
             sykdomRepository.hentHvisEksisterer(kontekst.behandlingId)?.somSykdomsvurderingstidslinje().orEmpty()
 
-        return if (unleashGateway.isEnabled(BehandlingsflytFeature.NyTidligereVurderinger)) {
-            Tidslinje.map2(
-                utfall,
-                sykdomsvurderinger
-            ) { segmentPeriode, utfall, sykdomsvurering ->
-                when (utfall) {
-                    TidligereVurderinger.IkkeBehandlingsgrunnlag, TidligereVurderinger.UunngåeligAvslag -> false
-                    is TidligereVurderinger.PotensieltOppfylt -> {
-                        utfall.rettighetstype == null && sykdomsvurering?.erOppfyltOrdinærEllerYrkesskadeSettBortIfraÅrsakssammenheng(
-                            kontekst.rettighetsperiode.fom,
-                            segmentPeriode
-                        ) == true
-                    }
-
-                    else -> false
+        return Tidslinje.map2(
+            utfall,
+            sykdomsvurderinger
+        ) { segmentPeriode, utfall, sykdomsvurering ->
+            when (utfall) {
+                TidligereVurderinger.IkkeBehandlingsgrunnlag, TidligereVurderinger.UunngåeligAvslag -> false
+                is TidligereVurderinger.PotensieltOppfylt -> {
+                    utfall.rettighetstype == null && sykdomsvurering?.erOppfyltOrdinærEllerYrkesskadeSettBortIfraÅrsakssammenheng(
+                        kontekst.rettighetsperiode.fom,
+                        segmentPeriode
+                    ) == true
                 }
-            }
-        } else {
-            val bistandsvurderinger =
-                bistandRepository.hentHvisEksisterer(kontekst.behandlingId)?.somBistandsvurderingstidslinje().orEmpty()
 
-            Tidslinje.map3(
-                utfall,
-                sykdomsvurderinger,
-                bistandsvurderinger
-            ) { segmentPeriode, utfall, sykdomsvurdering, bistandsvurdering ->
-                when (utfall) {
-                    null -> false
-                    TidligereVurderinger.IkkeBehandlingsgrunnlag -> false
-                    TidligereVurderinger.UunngåeligAvslag -> false
-                    is TidligereVurderinger.PotensieltOppfylt ->
-                        sykdomErOppfyltOgBistandErIkkeOppfylt(
-                            kontekst.rettighetsperiode.fom, segmentPeriode, sykdomsvurdering, bistandsvurdering
-                        )
-                }
+                else -> false
             }
         }
     }
