@@ -301,7 +301,7 @@ class AvklarHelseinstitusjonLøserTest {
 
         every { helseinstitusjonRepository.hentHvisEksisterer(behandlingId) } returns null
         every { behandlingRepository.hent(behandlingId) } returns opprettBehandling(behandlingId, null)
-        every { helseinstitusjonRepository.lagreHelseVurdering(any(), any()) } returns Unit
+        every { helseinstitusjonRepository.lagreHelseVurdering(any(), capture(vurderingSlot)) } returns Unit
 
         val løsning = AvklarHelseinstitusjonLøsning(
             løsningerForPerioder = listOf(
@@ -568,7 +568,6 @@ class AvklarHelseinstitusjonLøserTest {
             helseoppholdvurderinger = Helseoppholdvurderinger(
                 id = 1L,
                 vurderinger = vurderinger,
-                vurdertAv = "testSaksbehandler",
                 vurdertTidspunkt = LocalDateTime.of(2025, 5, 1, 12, 0)
             ),
             soningsVurderinger = null
@@ -605,7 +604,6 @@ class AvklarHelseinstitusjonLøserTest {
             helseoppholdvurderinger = Helseoppholdvurderinger(
                 id = 1L,
                 vurderinger = vurderinger,
-                vurdertAv = "testSaksbehandler",
                 vurdertTidspunkt = LocalDateTime.of(2025, 5, 1, 12, 0)
             ),
             soningsVurderinger = null
