@@ -56,6 +56,10 @@ class StansEllerOpphørMigrering(
 
                 stansEllerOpphørMigreringService.migrerSak(sakId)
                 antallMigreringer += 1
+
+                if (antallMigreringer % 10 == 0) {
+                    log.info("Pågående migrering, $antallMigreringer utført")
+                }
             }
         }
     }

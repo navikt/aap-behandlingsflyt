@@ -363,7 +363,10 @@ private fun utførMigreringer(
     log: io.ktor.util.logging.Logger
 ): ScheduledExecutorService {
     val scheduler = Executors.newScheduledThreadPool(1)
-    scheduler.schedule(Runnable {
+    /* Prøv på nytt, for å se om vi er elected til leader, hvert 9. minutt. Hvis vi blir elected, så vil metoden
+     * aldri returnere, og med fixed delay, så blir det heller ikke skjedulert flere tasks.
+    **/
+    scheduler.scheduleWithFixedDelay(Runnable {
         val unleashGateway: UnleashGateway = gatewayProvider.provide()
         val isLeader = isLeader(log)
         log.info("isLeader = $isLeader")
@@ -374,7 +377,7 @@ private fun utførMigreringer(
             StansEllerOpphørMigrering(dataSource, postgresRepositoryRegistry, gatewayProvider).migrer()
         }
 
-    }, 9, TimeUnit.MINUTES)
+    }, 1, 9, TimeUnit.MINUTES)
     return scheduler
 }
 
