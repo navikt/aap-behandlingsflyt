@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.erHelligdagsUnntak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
@@ -9,15 +10,29 @@ import no.nav.aap.motor.JobbUtfører
 import no.nav.aap.motor.ProvidersJobbSpesifikasjon
 import no.nav.aap.motor.cron.CronExpression
 import org.slf4j.LoggerFactory
+import java.time.Clock
+import java.time.DayOfWeek
+import java.time.LocalDate
 
 class OpprettJobbForFritakMeldepliktJobbUtfører(
     private val flytJobbRepository: FlytJobbRepository,
     private val sakRepository: SakRepository,
+    private val clock: Clock = Clock.systemDefaultZone()
 ) : JobbUtfører {
 
     private val log = LoggerFactory.getLogger(javaClass)
 
     override fun utfør(input: JobbInput) {
+        // Skal kun kjøre ekstra dersom det er et helligdagstilfelle
+        val idag = LocalDate.now(clock)
+
+        val helligdagsUnntak = erHelligdagsUnntak(idag)
+        val dagerMedEkstraKjøring = setOf(DayOfWeek.MONDAY, DayOfWeek.TUESDAY)
+
+        if (idag.dayOfWeek in (dagerMedEkstraKjøring) && !helligdagsUnntak) {
+            return
+        }
+
         val saker = sakRepository.finnSakerMedFritakMeldeplikt()
 
         log.info("Oppretter jobber for alle saker som skal undersøkes for fritak meldeplikt. Antall = ${saker.size}")
@@ -43,9 +58,7 @@ class OpprettJobbForFritakMeldepliktJobbUtfører(
         /**
          * Kjøres på både mandag og onsdag for å fange opp tidlig utbetaling i helligdager. På sikt bør vi få en litt
          * mindre sløsende løsning.
-         * For å kjøre på mandager - som kan være nødvendig før helligdagskjøringer:
-         *   override val cron = CronExpression.createWithoutSeconds("10 2 * * 1,3")
          */
-        override val cron = CronExpression.createWithoutSeconds("10 2 * * 3")
+        override val cron = CronExpression.createWithoutSeconds("10 2 * * 1,2,3")
     }
 }

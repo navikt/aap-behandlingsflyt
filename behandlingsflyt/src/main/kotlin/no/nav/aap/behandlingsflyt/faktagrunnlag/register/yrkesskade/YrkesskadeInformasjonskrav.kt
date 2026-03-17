@@ -31,7 +31,7 @@ import no.nav.aap.komponenter.miljo.MiljøKode
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
 
-class YrkesskadeInformasjonskrav private constructor(
+class YrkesskadeInformasjonskrav internal constructor(
     private val sakService: SakService,
     private val yrkesskadeRepository: YrkesskadeRepository,
     private val personopplysningRepository: PersonopplysningRepository,

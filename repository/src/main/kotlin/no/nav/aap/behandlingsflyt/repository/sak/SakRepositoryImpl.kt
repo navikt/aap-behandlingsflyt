@@ -239,25 +239,31 @@ class SakRepositoryImpl(private val connection: DBConnection) : SakRepository {
     s.status,
     s.opprettet_tid
 from sak s
-join behandling b on b.sak_id = s.id
+         join behandling b on b.sak_id = s.id
 where not exists (
     select 1
     from behandling b_forrige
     where b_forrige.forrige_id = b.id
 )
-and exists (
+  and exists (
     select 1
     from opphold_grunnlag g
     where g.behandling_id = b.id
       and g.aktiv = true
       and (
-          g.helseopphold_vurderinger_id is null
-          or exists (
-              select 1
-              from helseopphold_vurderinger v
-              where v.id = g.helseopphold_vurderinger_id
-          )
-      )
+        g.helseopphold_vurderinger_id is null
+            or exists (
+            select 1
+            from helseopphold_vurderinger v
+            where v.id = g.helseopphold_vurderinger_id
+        )
+        )
+)
+  and exists (
+    select 1
+    from opphold o
+             join opphold_grunnlag g2 on g2.opphold_person_id = o.opphold_person_id
+    where g2.behandling_id = b.id
 )
         """.trimIndent()
 

@@ -281,6 +281,13 @@ private fun sendInnSøknad(dto: OpprettTestcaseDTO, gatewayProvider: GatewayProv
                     periode = it.periode
                 )
             },
+            dagpenger = dto.dagpenger.map {
+                TestPerson.Dagpenger(
+                    periode = it.periode,
+                    kilde = it.kilde,
+                    dagpengerYtelseType = it.dagpengerYtelseType
+                )
+            },
             tjenestePensjon = if (dto.tjenestePensjon != null && dto.tjenestePensjon) TjenestePensjonRespons(
                 fnr = ident.identifikator,
                 forhold = listOf(

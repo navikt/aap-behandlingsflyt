@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
+import no.nav.aap.behandlingsflyt.behandling.vedtakslengde.VedtakslengdeUtvidelse
 import no.nav.aap.behandlingsflyt.behandling.vedtakslengde.VedtakslengdeService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
@@ -44,25 +45,48 @@ class OpprettJobbUtvidVedtakslengdeJobbUtfører(
 
     // TODO: Må filtrere vekk de som allerede har blitt kjørt, men ikke kvalifiserte til reell utvidelse av vedtakslengde
     private fun hentKandidaterForUtvidelseAvVedtakslengde(datoForUtvidelse: LocalDate): Set<SakId> {
-        return vedtakslengdeService.hentSakerAktuelleForUtvidelseAvVedtakslengde(datoForUtvidelse)
-            .partition { kunSakerMedBehovForUtvidelseAvVedtakslengde(it, datoForUtvidelse) }
-            .let { (sakerSomUtvides, sakerSomIkkeUtvides) ->
-                if (sakerSomIkkeUtvides.isNotEmpty()) {
-                    log.info("Følgende saker utvides ikke (ha et øye på disse inntil vi støtter manuell behandling): $sakerSomIkkeUtvides")
+        val kandidater = vedtakslengdeService.hentSakerAktuelleForUtvidelseAvVedtakslengde(datoForUtvidelse)
+            .fold(KategoriserteKandidater()) { acc, sakId ->
+                val utvidelse = vurderUtvidelseBehov(sakId)
+                // Sikrer at nye typer i VedtakslengdeUtvidelse må håndteres
+                when (utvidelse) {
+                    is VedtakslengdeUtvidelse.Automatisk -> acc.copy(automatiske = acc.automatiske + sakId)
+                    is VedtakslengdeUtvidelse.Manuell -> acc.copy(manuelle = acc.manuelle + sakId)
+                    is VedtakslengdeUtvidelse.IngenFremtidigBistandsbehovRettighet -> acc.copy(ingenRettighet = acc.ingenRettighet + sakId)
+                    null -> acc.copy(ingenBehandling = acc.ingenBehandling + sakId)
                 }
-                sakerSomUtvides
             }
-            .toSet()
+
+        if (kandidater.ingenBehandling.isNotEmpty()) {
+            log.info("Følgende saker har ingen gjeldende vedtatt behandling. Saker: ${kandidater.ingenBehandling}")
+        }
+        if (kandidater.manuelle.isNotEmpty()) {
+            log.error("Følgende saker trenger manuell utvidelse av vedtakslengde. Må følges opp! Saker: ${kandidater.manuelle}")
+        }
+        if (kandidater.ingenRettighet.isNotEmpty()) {
+            log.info("Følgende saker har ingen fremtidig bistandsbehovrettighet. Saker: ${kandidater.ingenRettighet}")
+        }
+
+        return kandidater.automatiske
     }
 
-    private fun kunSakerMedBehovForUtvidelseAvVedtakslengde(id: SakId, dato: LocalDate): Boolean {
-        val sisteGjeldendeBehandling = behandlingService.finnBehandlingMedSisteFattedeVedtak(id)
-        if (sisteGjeldendeBehandling != null) {
-            // Bruker sisteGjeldendeBehandling.id både for behandlingId og forrigeBehandlingId fordi vi ser på gjeldende behandling
-            return vedtakslengdeService.skalUtvideSluttdato(sisteGjeldendeBehandling.id, sisteGjeldendeBehandling.id, dato)
-        }
-        return false
+    private fun vurderUtvidelseBehov(sakId: SakId): VedtakslengdeUtvidelse? {
+        val sisteGjeldendeBehandling = behandlingService.finnBehandlingMedSisteFattedeVedtak(sakId)
+            ?: return null
+
+        // Bruker sisteGjeldendeBehandling.id både for behandlingId og forrigeBehandlingId fordi vi ser på gjeldende behandling
+        return vedtakslengdeService.hentNesteVedtakslengdeUtvidelse(
+            behandlingId = sisteGjeldendeBehandling.id,
+            forrigeBehandlingId = sisteGjeldendeBehandling.id,
+        )
     }
+
+    private data class KategoriserteKandidater(
+        val automatiske: Set<SakId> = emptySet(),
+        val manuelle: Set<SakId> = emptySet(),
+        val ingenRettighet: Set<SakId> = emptySet(),
+        val ingenBehandling: Set<SakId> = emptySet(),
+    )
 
     companion object : ProvidersJobbSpesifikasjon {
         override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): JobbUtfører {

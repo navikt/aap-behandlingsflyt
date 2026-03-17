@@ -14,7 +14,6 @@ import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
-import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
@@ -44,7 +43,7 @@ class BehandlingServiceTest {
             val behandlingService =
                 BehandlingService(postgresRepositoryRegistry.provider(connection), gatewayProvider)
             val behandlingRepository = BehandlingRepositoryImpl(connection)
-            val sak = opprettSak(connection, Periode(1 januar 2020, 1 januar 2021))
+            val sak = opprettSak(connection, 1 januar 2020)
 
             /* Førstegangsbehandling */
             behandlingService.finnEllerOpprettBehandling(

@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.test.modell
 
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonProperty
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.gateway.DagpengerKilde
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.gateway.TjenestePensjonRespons
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Dødsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
@@ -20,6 +21,7 @@ import no.nav.aap.behandlingsflyt.test.PersonNavn
 import no.nav.aap.behandlingsflyt.test.TestPersonService
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.gateway.DagpengerPeriode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.gateway.DagpengerYtelseType
 
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.Prosent
@@ -59,13 +61,14 @@ class TestPerson(
     ),
     val medlStatus: List<MedlemskapDataIntern> = emptyList(),
     var sykepenger: List<Sykepenger>? = null,
+    var dagpenger: List<Dagpenger>? = null,
     val foreldrepenger: List<ForeldrePenger>? = null,
     val tjenestePensjon: TjenestePensjonRespons? = null,
-    val dagpenger : List<DagpengerPeriode>? = null,
     @JsonIgnore
     val testPersonService: TestPersonService = FakePersoner
 ) {
     data class Sykepenger(val grad: Int, val periode: Periode)
+    data class Dagpenger(val periode: Periode, val kilde: DagpengerKilde, val dagpengerYtelseType: DagpengerYtelseType)
     data class ForeldrePenger(val grad: Number, val periode: Periode)
 
     private val inntekter: MutableList<InntektPerÅr> = inntekter.toMutableList()
@@ -80,11 +83,15 @@ class TestPerson(
     }
 
     override fun toString(): String {
-        return "TestPerson(barn=$barn, fødselsdato=$fødselsdato, identer=$identer, dødsdato=$dødsdato, navn=$navn, yrkesskade=$yrkesskade, institusjonsopphold=$institusjonsopphold, uføre=$uføre, personStatus=$personStatus, statsborgerskap=$statsborgerskap, sykepenger=$sykepenger, foreldrepenger=$foreldrepenger, inntekter=$inntekter)"
+        return "TestPerson(barn=$barn, fødselsdato=$fødselsdato, identer=$identer, dødsdato=$dødsdato, navn=$navn, yrkesskade=$yrkesskade, institusjonsopphold=$institusjonsopphold, uføre=$uføre, personStatus=$personStatus, statsborgerskap=$statsborgerskap, sykepenger=$sykepenger, dagpenger=$dagpenger, foreldrepenger=$foreldrepenger, inntekter=$inntekter)"
     }
 
     fun sykepenger(): List<Sykepenger> {
         return sykepenger.orEmpty()
+    }
+
+    fun dagpenger(): List<Dagpenger> {
+        return dagpenger.orEmpty()
     }
 
     fun medBarn(barn: List<TestPerson>): TestPerson {
@@ -100,6 +107,11 @@ class TestPerson(
 
     fun medSykepenger(sykepenger: List<Sykepenger>): TestPerson {
         this.sykepenger = sykepenger
+        return this
+    }
+
+    fun medDagpenger(dagpenger: List<Dagpenger>): TestPerson {
+        this.dagpenger = dagpenger
         return this
     }
 

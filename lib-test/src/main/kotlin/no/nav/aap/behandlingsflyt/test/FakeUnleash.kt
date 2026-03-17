@@ -45,7 +45,6 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.tilbakekrevingsOppgaverTilOppgave to true,
         BehandlingsflytFeature.HentingAvInstitusjonsOpphold to true,
         BehandlingsflytFeature.VisIkkeRelevantPeriode to true,
-        BehandlingsflytFeature.NyTidligereVurderinger to true,
         BehandlingsflytFeature.BekreftVurderingerOppfolging to true,
         BehandlingsflytFeature.LagreStansOgOpphor to true,
         BehandlingsflytFeature.MigrerStansOgOpphor to true,
@@ -54,6 +53,7 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.SignaturEnhetFraOppgave to true,
         BehandlingsflytFeature.hentDagpengerPerioder to true,
         BehandlingsflytFeature.VedtakslengdeAvklaringsbehov to true,
+        BehandlingsflytFeature.UtvidVedtakslengdeUnderEttAr to true,
         )
 )
 

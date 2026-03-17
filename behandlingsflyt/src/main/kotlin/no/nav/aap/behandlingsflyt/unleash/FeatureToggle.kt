@@ -19,7 +19,6 @@ enum class BehandlingsflytFeature : FeatureToggle {
     tilbakekrevingsOppgaverTilOppgave,
     HentingAvInstitusjonsOpphold,
     VisIkkeRelevantPeriode,
-    NyTidligereVurderinger,
     BekreftVurderingerOppfolging,
     LagreStansOgOpphor,
     MigrerStansOgOpphor,
@@ -28,6 +27,7 @@ enum class BehandlingsflytFeature : FeatureToggle {
     SignaturEnhetFraOppgave,
     VedtakslengdeAvklaringsbehov,
     hentDagpengerPerioder,
+    UtvidVedtakslengdeUnderEttAr,
     ;
 
     override fun key(): String = name

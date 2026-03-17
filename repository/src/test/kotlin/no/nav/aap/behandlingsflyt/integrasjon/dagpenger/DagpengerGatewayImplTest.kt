@@ -20,7 +20,7 @@ class DagpengerGatewayImplTest {
     fun `Kan hente data fra Dagpenger`() {
         val person = TestPerson(
             dagpenger = listOf(
-                DagpengerPeriode(
+                TestPerson.Dagpenger(
                     Periode(
                         LocalDate.now().minusYears(1),
                         LocalDate.now()
@@ -30,8 +30,6 @@ class DagpengerGatewayImplTest {
                 )
             )
         )
-
-
 
         FakePersoner.leggTil(person)
         val dpGateway = DagpengerGatewayImpl()
@@ -44,7 +42,5 @@ class DagpengerGatewayImplTest {
 
         assertThat(response).isNotEmpty()
         assertEquals(1, response.size)
-
     }
-
 }
