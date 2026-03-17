@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.behandling.brev
 
 import no.nav.aap.behandlingsflyt.behandling.Resultat
 import no.nav.aap.behandlingsflyt.behandling.ResultatUtleder
+import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.BeregnTilkjentYtelseService.Companion.ANTALL_ÅRLIGE_ARBEIDSDAGER
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.MINSTE_ÅRLIG_YTELSE_TIDSLINJE
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
@@ -231,40 +232,29 @@ class BrevUtlederService(
                     "Fant avslagsårsaker $avslagsårsaker for behandling ${behandling.id}, men ingen av dem er støttet for utvidelse under ett år"
                 }
 
-                return when (prioritertAvslagsårsak) {
-                    Avslagsårsak.BRUKER_OVER_67 -> UtvidVedtakslengdeUnderEttÅrBrukerOver67(
-                        utvidetAapFomDato = utvidetAapFomDato,
-                        sisteDagMedYtelse = sisteDagMedYtelse,
-                    )
-                    Avslagsårsak.IKKE_MEDLEM -> UtvidVedtakslengdeUnderEttÅrMedlemskap(
-                        utvidetAapFomDato = utvidetAapFomDato,
-                        sisteDagMedYtelse = sisteDagMedYtelse,
-                    )
-                    Avslagsårsak.ORDINÆRKVOTE_BRUKT_OPP -> UtvidVedtakslengdeUnderEttÅrOrdinærkvoteBruktOpp(
-                        utvidetAapFomDato = utvidetAapFomDato,
-                        sisteDagMedYtelse = sisteDagMedYtelse,
-                    )
-                    Avslagsårsak.BRUDD_PÅ_OPPHOLDSKRAV_STANS -> UtvidVedtakslengdeUnderEttÅrOppholdskrav(
-                        utvidetAapFomDato = utvidetAapFomDato,
-                        sisteDagMedYtelse = sisteDagMedYtelse,
-                    )
-                    Avslagsårsak.IKKE_RETT_UNDER_STRAFFEGJENNOMFØRING -> UtvidVedtakslengdeUnderEttÅrStraffegjennomføring(
-                        utvidetAapFomDato = utvidetAapFomDato,
-                        sisteDagMedYtelse = sisteDagMedYtelse,
-                    )
-                    Avslagsårsak.ANNEN_FULL_YTELSE -> UtvidVedtakslengdeUnderEttÅrAnnenFullYtelse(
-                        utvidetAapFomDato = utvidetAapFomDato,
-                        sisteDagMedYtelse = sisteDagMedYtelse,
-                    )
-                    else -> error("Uventet avslagsårsak for utvidelse under ett år: $prioritertAvslagsårsak")
-                }
+                return UtvidVedtakslengde(
+                    utvidetAapFomDato = utvidetAapFomDato,
+                    sisteDagMedYtelse = sisteDagMedYtelse,
+                    vedtakslengdeTypeBrev = avslagsårsakTilTypeBrev(prioritertAvslagsårsak),
+                )
             }
         }
 
-        return UtvidVedtakslengdeEttÅr(
+        return UtvidVedtakslengde(
             utvidetAapFomDato = utvidetAapFomDato,
             sisteDagMedYtelse = sisteDagMedYtelse,
+            vedtakslengdeTypeBrev = TypeBrev.VEDTAK_UTVID_VEDTAKSLENGDE,
         )
+    }
+
+    private fun avslagsårsakTilTypeBrev(avslagsårsak: Avslagsårsak): TypeBrev = when (avslagsårsak) {
+        Avslagsårsak.BRUKER_OVER_67 -> TypeBrev.VEDTAK_FORLENGELSE_UNDER_ETT_ÅR_11_4
+        Avslagsårsak.IKKE_MEDLEM -> TypeBrev.VEDTAK_FORLENGELSE_UNDER_ETT_ÅR_MEDLEMSKAP
+        Avslagsårsak.ORDINÆRKVOTE_BRUKT_OPP -> TypeBrev.VEDTAK_FORLENGELSE_UNDER_ETT_ÅR_11_12
+        Avslagsårsak.BRUDD_PÅ_OPPHOLDSKRAV_STANS -> TypeBrev.VEDTAK_FORLENGELSE_UNDER_ETT_ÅR_11_3
+        Avslagsårsak.IKKE_RETT_UNDER_STRAFFEGJENNOMFØRING -> TypeBrev.VEDTAK_FORLENGELSE_UNDER_ETT_ÅR_11_26
+        Avslagsårsak.ANNEN_FULL_YTELSE -> TypeBrev.VEDTAK_FORLENGELSE_UNDER_ETT_ÅR_11_27
+        else -> error("Uventet avslagsårsak for utvidelse under ett år: $avslagsårsak")
     }
 
     private fun prioriterAvslagsårsak(avslagsårsaker: Set<Avslagsårsak>): Avslagsårsak? {

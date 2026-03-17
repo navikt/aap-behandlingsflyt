@@ -13,6 +13,7 @@ import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelsePeriod
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
 import no.nav.aap.behandlingsflyt.behandling.vedtak.Vedtak
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakRepository
+import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.behandling.vedtakslengde.VedtakslengdeService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Grunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Repository
@@ -156,16 +157,17 @@ class BrevUtlederServiceTest {
 
             val resultat = brevUtlederService.utledBehovForMeldingOmVedtak(revurdering.id)
 
-            assertIs<UtvidVedtakslengdeEttÅr>(resultat, "forventer brevbehov er av typen UtvidVedtakslengde")
+            assertIs<UtvidVedtakslengde>(resultat, "forventer brevbehov er av typen UtvidVedtakslengdeBrev")
+            assertEquals(TypeBrev.VEDTAK_UTVID_VEDTAKSLENGDE, resultat.vedtakslengdeTypeBrev)
             assertEquals(sisteDagRevurdering, resultat.sisteDagMedYtelse)
             assertEquals(sisteDagFørstegang.plusDays(1), resultat.utvidetAapFomDato)
         }
 
-        @ParameterizedTest(name = "skal utlede brevbehov {1} for avslagsårsak {0}")
+        @ParameterizedTest(name = "skal utlede brevtype {1} for avslagsårsak {0}")
         @MethodSource("no.nav.aap.behandlingsflyt.behandling.brev.BrevUtlederServiceTest#avslagsårsakTilBrevBehov")
         fun `skal utlede riktig brevbehov for avslagsårsak ved utvidelse under ett år`(
             avslagsårsak: Avslagsårsak,
-            forventetBrevBehovType: Class<out BrevBehov>
+            forventetTypeBrev: TypeBrev
         ) {
             val (_, revurdering) = stubUtvidVedtakslengdeBehandlinger()
 
@@ -174,7 +176,8 @@ class BrevUtlederServiceTest {
 
             val resultat = brevUtlederService.utledBehovForMeldingOmVedtak(revurdering.id)
 
-            assertThat(resultat).isInstanceOf(forventetBrevBehovType)
+            assertIs<UtvidVedtakslengde>(resultat)
+            assertEquals(forventetTypeBrev, resultat.vedtakslengdeTypeBrev)
         }
 
         @Test
@@ -201,7 +204,8 @@ class BrevUtlederServiceTest {
 
             val resultat = brevUtlederService.utledBehovForMeldingOmVedtak(revurdering.id)
 
-            assertIs<UtvidVedtakslengdeUnderEttÅrBrukerOver67>(resultat, "BRUKER_OVER_67 har høyest prioritet")
+            assertIs<UtvidVedtakslengde>(resultat)
+            assertEquals(TypeBrev.VEDTAK_FORLENGELSE_UNDER_ETT_ÅR_11_4, resultat.vedtakslengdeTypeBrev)
         }
 
         private fun stubUtvidVedtakslengdeBehandlinger(
@@ -1034,12 +1038,12 @@ class BrevUtlederServiceTest {
     companion object {
         @JvmStatic
         fun avslagsårsakTilBrevBehov(): Stream<Arguments> = Stream.of(
-            Arguments.of(Avslagsårsak.BRUKER_OVER_67, UtvidVedtakslengdeUnderEttÅrBrukerOver67::class.java),
-            Arguments.of(Avslagsårsak.IKKE_MEDLEM, UtvidVedtakslengdeUnderEttÅrMedlemskap::class.java),
-            Arguments.of(Avslagsårsak.ORDINÆRKVOTE_BRUKT_OPP, UtvidVedtakslengdeUnderEttÅrOrdinærkvoteBruktOpp::class.java),
-            Arguments.of(Avslagsårsak.BRUDD_PÅ_OPPHOLDSKRAV_STANS, UtvidVedtakslengdeUnderEttÅrOppholdskrav::class.java),
-            Arguments.of(Avslagsårsak.IKKE_RETT_UNDER_STRAFFEGJENNOMFØRING, UtvidVedtakslengdeUnderEttÅrStraffegjennomføring::class.java),
-            Arguments.of(Avslagsårsak.ANNEN_FULL_YTELSE, UtvidVedtakslengdeUnderEttÅrAnnenFullYtelse::class.java),
+            Arguments.of(Avslagsårsak.BRUKER_OVER_67, TypeBrev.VEDTAK_FORLENGELSE_UNDER_ETT_ÅR_11_4),
+            Arguments.of(Avslagsårsak.IKKE_MEDLEM, TypeBrev.VEDTAK_FORLENGELSE_UNDER_ETT_ÅR_MEDLEMSKAP),
+            Arguments.of(Avslagsårsak.ORDINÆRKVOTE_BRUKT_OPP, TypeBrev.VEDTAK_FORLENGELSE_UNDER_ETT_ÅR_11_12),
+            Arguments.of(Avslagsårsak.BRUDD_PÅ_OPPHOLDSKRAV_STANS, TypeBrev.VEDTAK_FORLENGELSE_UNDER_ETT_ÅR_11_3),
+            Arguments.of(Avslagsårsak.IKKE_RETT_UNDER_STRAFFEGJENNOMFØRING, TypeBrev.VEDTAK_FORLENGELSE_UNDER_ETT_ÅR_11_26),
+            Arguments.of(Avslagsårsak.ANNEN_FULL_YTELSE, TypeBrev.VEDTAK_FORLENGELSE_UNDER_ETT_ÅR_11_27),
         )
     }
 }

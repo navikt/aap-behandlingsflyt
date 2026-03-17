@@ -6,7 +6,6 @@ import no.nav.aap.behandlingsflyt.behandling.brev.BarnetilleggSatsRegulering
 import no.nav.aap.behandlingsflyt.behandling.brev.BrevBehov
 import no.nav.aap.behandlingsflyt.behandling.brev.BrevUtlederService
 import no.nav.aap.behandlingsflyt.behandling.brev.UtvidVedtakslengde
-import no.nav.aap.behandlingsflyt.behandling.brev.`UtvidVedtakslengdeEttÅr`
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingService
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.behandling.trekkklage.TrekkKlageService
