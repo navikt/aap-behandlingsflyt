@@ -26,40 +26,40 @@ data class Arbeidssøker(
     val tilkjentYtelse: TilkjentYtelse?,
 ) : BrevBehov(TypeBrev.VEDTAK_11_17)
 
-data class UtvidVedtakslengde(
-    val utvidetAapFomDato: LocalDate,
-    val sisteDagMedYtelse: LocalDate,
-) : BrevBehov(TypeBrev.VEDTAK_UTVID_VEDTAKSLENGDE)
+data class UtvidVedtakslengdeEttÅr(
+    override val utvidetAapFomDato: LocalDate,
+    override val sisteDagMedYtelse: LocalDate,
+) : BrevBehov(TypeBrev.VEDTAK_UTVID_VEDTAKSLENGDE), UtvidVedtakslengde
 
 data class UtvidVedtakslengdeUnderEttÅrMedlemskap(
-    val utvidetAapFomDato: LocalDate,
-    val sisteDagMedYtelse: LocalDate,
-) : BrevBehov(TypeBrev.VEDTAK_FORLENGELSE_UNDER_ETT_ÅR_MEDLEMSKAP)
+    override val utvidetAapFomDato: LocalDate,
+    override val sisteDagMedYtelse: LocalDate,
+) : BrevBehov(TypeBrev.VEDTAK_FORLENGELSE_UNDER_ETT_ÅR_MEDLEMSKAP), UtvidVedtakslengde
 
 data class UtvidVedtakslengdeUnderEttÅrOppholdskrav(
-    val utvidetAapFomDato: LocalDate,
-    val sisteDagMedYtelse: LocalDate,
-) : BrevBehov(TypeBrev.VEDTAK_FORLENGELSE_UNDER_ETT_ÅR_11_3)
+    override val utvidetAapFomDato: LocalDate,
+    override val sisteDagMedYtelse: LocalDate,
+) : BrevBehov(TypeBrev.VEDTAK_FORLENGELSE_UNDER_ETT_ÅR_11_3), UtvidVedtakslengde
 
 data class UtvidVedtakslengdeUnderEttÅrBrukerOver67(
-    val utvidetAapFomDato: LocalDate,
-    val sisteDagMedYtelse: LocalDate,
-) : BrevBehov(TypeBrev.VEDTAK_FORLENGELSE_UNDER_ETT_ÅR_11_4)
+    override val utvidetAapFomDato: LocalDate,
+    override val sisteDagMedYtelse: LocalDate,
+) : BrevBehov(TypeBrev.VEDTAK_FORLENGELSE_UNDER_ETT_ÅR_11_4), UtvidVedtakslengde
 
 data class UtvidVedtakslengdeUnderEttÅrOrdinærkvoteBruktOpp(
-    val utvidetAapFomDato: LocalDate,
-    val sisteDagMedYtelse: LocalDate,
-) : BrevBehov(TypeBrev.VEDTAK_FORLENGELSE_UNDER_ETT_ÅR_11_12)
+    override val utvidetAapFomDato: LocalDate,
+    override val sisteDagMedYtelse: LocalDate,
+) : BrevBehov(TypeBrev.VEDTAK_FORLENGELSE_UNDER_ETT_ÅR_11_12), UtvidVedtakslengde
 
 data class UtvidVedtakslengdeUnderEttÅrStraffegjennomføring(
-    val utvidetAapFomDato: LocalDate,
-    val sisteDagMedYtelse: LocalDate,
-) : BrevBehov(TypeBrev.VEDTAK_FORLENGELSE_UNDER_ETT_ÅR_11_26)
+    override val utvidetAapFomDato: LocalDate,
+    override val sisteDagMedYtelse: LocalDate,
+) : BrevBehov(TypeBrev.VEDTAK_FORLENGELSE_UNDER_ETT_ÅR_11_26), UtvidVedtakslengde
 
 data class UtvidVedtakslengdeUnderEttÅrAnnenFullYtelse(
-    val utvidetAapFomDato: LocalDate,
-    val sisteDagMedYtelse: LocalDate,
-) : BrevBehov(TypeBrev.VEDTAK_FORLENGELSE_UNDER_ETT_ÅR_11_27)
+    override val utvidetAapFomDato: LocalDate,
+    override val sisteDagMedYtelse: LocalDate,
+) : BrevBehov(TypeBrev.VEDTAK_FORLENGELSE_UNDER_ETT_ÅR_11_27), UtvidVedtakslengde
 
 data class Avslag(val sykdomsvurdering: String?): BrevBehov(TypeBrev.VEDTAK_AVSLAG)
 object VedtakEndring : BrevBehov(TypeBrev.VEDTAK_ENDRING)
@@ -75,3 +75,8 @@ object Forvaltningsmelding : BrevBehov(TypeBrev.FORVALTNINGSMELDING)
 object VedtakAktivitetsplikt11_7 : BrevBehov(TypeBrev.VEDTAK_11_7)
 object VedtakAktivitetsplikt11_9 : BrevBehov(TypeBrev.VEDTAK_11_9)
 object VedtakArbeidsopptrapping11_23SjetteLedd : BrevBehov(TypeBrev.VEDTAK_11_23_SJETTE_LEDD)
+
+interface UtvidVedtakslengde {
+    val utvidetAapFomDato: LocalDate
+    val sisteDagMedYtelse: LocalDate
+}

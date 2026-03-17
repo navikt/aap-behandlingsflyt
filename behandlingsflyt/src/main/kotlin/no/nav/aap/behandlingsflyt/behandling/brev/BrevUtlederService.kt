@@ -261,7 +261,7 @@ class BrevUtlederService(
             }
         }
 
-        return UtvidVedtakslengde(
+        return UtvidVedtakslengdeEttÅr(
             utvidetAapFomDato = utvidetAapFomDato,
             sisteDagMedYtelse = sisteDagMedYtelse,
         )

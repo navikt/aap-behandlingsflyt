@@ -54,7 +54,6 @@ import no.nav.aap.komponenter.json.DefaultJsonMapper
 import org.slf4j.LoggerFactory
 import java.io.InputStream
 import java.net.URI
-import java.time.LocalDate
 import kotlin.collections.orEmpty
 
 class BrevGateway : BrevbestillingGateway {

@@ -156,7 +156,7 @@ class BrevUtlederServiceTest {
 
             val resultat = brevUtlederService.utledBehovForMeldingOmVedtak(revurdering.id)
 
-            assertIs<UtvidVedtakslengde>(resultat, "forventer brevbehov er av typen UtvidVedtakslengde")
+            assertIs<UtvidVedtakslengdeEttÅr>(resultat, "forventer brevbehov er av typen UtvidVedtakslengde")
             assertEquals(sisteDagRevurdering, resultat.sisteDagMedYtelse)
             assertEquals(sisteDagFørstegang.plusDays(1), resultat.utvidetAapFomDato)
         }
