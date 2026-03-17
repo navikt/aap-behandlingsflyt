@@ -2,8 +2,8 @@ package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType.BISTANDSBEHOV
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.Fritaksvurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktOverstyringStatus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktOverstyringStatus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.OverstyringMeldepliktGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.OverstyringMeldepliktVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.OverstyringMeldepliktVurderingPeriode
@@ -27,13 +27,11 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
-import java.time.Clock
 import java.time.LocalDate
 import java.time.LocalDateTime
-import java.time.ZoneId
-
 
 class MeldepliktRegelTest {
+
     private data class Forventer(
         val fom: LocalDate,
         val tom: LocalDate,
@@ -56,7 +54,6 @@ class MeldepliktRegelTest {
 
         val vurdertTidslinje = vurder(
             input,
-            nå = 26 mai 2025,
             vurderinger = tidslinjeOf(
                 Periode(31 mars 2025, 11 mai 2025) to Vurdering(fårAapEtter = null),
                 Periode(12 mai 2025, 30 mars 2026) to Vurdering(fårAapEtter = BISTANDSBEHOV),
@@ -88,7 +85,7 @@ class MeldepliktRegelTest {
             Forventer(
                 fom = 9 juni 2025,
                 tom = 30 mars 2026,
-                vurdering = MeldepliktVurdering.FremtidigOppfylt,
+                vurdering = MeldepliktVurdering.IkkeMeldtSeg,
             ),
         )
     }
@@ -118,7 +115,7 @@ class MeldepliktRegelTest {
             ),
         )
 
-        val vurdertTidslinje = vurder(input, nå = rettighetsperiode.tom.plusDays(1))
+        val vurdertTidslinje = vurder(input)
 
         assertVurdering(
             vurdertTidslinje, rettighetsperiode,
@@ -170,7 +167,7 @@ class MeldepliktRegelTest {
             ),
         )
         // behandling kjøres på `nå`
-        val vurdertTidslinje = vurder(input, nå = 19 januar 2026)
+        val vurdertTidslinje = vurder(input)
 
         assertVurdering(
             vurdertTidslinje, rettighetsperiode,
@@ -226,7 +223,7 @@ class MeldepliktRegelTest {
             ),
         )
         // behandling kjøres på `nå`
-        val vurdertTidslinje = vurder(input, nå = 19 januar 2026)
+        val vurdertTidslinje = vurder(input)
 
         assertVurdering(
             vurdertTidslinje, rettighetsperiode,
@@ -292,7 +289,7 @@ class MeldepliktRegelTest {
             ),
         )
         // behandling kjøres på `nå`
-        val vurdertTidslinje = vurder(input, nå = 19 januar 2026)
+        val vurdertTidslinje = vurder(input)
 
         assertVurdering(
             vurdertTidslinje, rettighetsperiode,
@@ -338,8 +335,10 @@ class MeldepliktRegelTest {
     @Test
     fun `Skal starte med full utbetalingsplan`() {
         val rettighetsperiode = Periode(20 april 2020, 19 april 2021)
-        val input = tomUnderveisInput(rettighetsperiode = rettighetsperiode)
-        val vurdertTidslinje = vurder(input, nå = 20 april 2020)
+        val input = tomUnderveisInput(
+            rettighetsperiode = rettighetsperiode,
+        )
+        val vurdertTidslinje = vurder(input)
 
         assertVurdering(
             vurdertTidslinje, rettighetsperiode,
@@ -351,7 +350,7 @@ class MeldepliktRegelTest {
             Forventer(
                 fom = 4 mai 2020,
                 tom = 19 april 2021,
-                vurdering = MeldepliktVurdering.FremtidigOppfylt,
+                vurdering = MeldepliktVurdering.IkkeMeldtSeg,
             ),
         )
     }
@@ -378,7 +377,7 @@ class MeldepliktRegelTest {
             ),
         )
 
-        val vurdertTidslinje = vurder(input, nå = rettighetsperiode.tom.plusDays(1))
+        val vurdertTidslinje = vurder(input)
 
         assertVurdering(
             vurdertTidslinje, rettighetsperiode,
@@ -441,10 +440,10 @@ class MeldepliktRegelTest {
                         vurdertIBehandling = BehandlingId(1),
                     )
                 )
-            )
+            ),
         )
 
-        val vurdertTidslinje = vurder(input, nå = rettighetsperiode.tom.plusDays(1))
+        val vurdertTidslinje = vurder(input)
 
         assertVurdering(
             vurdertTidslinje, rettighetsperiode,
@@ -490,7 +489,7 @@ class MeldepliktRegelTest {
             innsendingsTidspunkt = mapOf(28 april 2020 to JournalpostId("1")),
         )
 
-        val vurdertTidslinje = vurder(input, nå = 20 april 2021)
+        val vurdertTidslinje = vurder(input)
 
         assertVurdering(
             vurdertTidslinje, rettighetsperiode,
@@ -532,7 +531,7 @@ class MeldepliktRegelTest {
         )
 
         val vurdertTidslinje = vurder(
-            input, nå = 20 april 2022,
+            input,
             tidslinjeOf(
                 Periode(20 april 2020, 11 mai 2020) to Vurdering(fårAapEtter = null),
                 Periode(12 mai 2020, 19 april 2021) to Vurdering(fårAapEtter = BISTANDSBEHOV),
@@ -586,7 +585,7 @@ class MeldepliktRegelTest {
         )
 
         val vurdertTidslinje = vurder(
-            input, nå = 20 april 2022,
+            input,
             tidslinjeOf(
                 Periode(20 april 2020, 3 mai 2020) to Vurdering(fårAapEtter = BISTANDSBEHOV),
                 Periode(4 mai 2020, 17 mai 2020) to Vurdering(fårAapEtter = null),
@@ -634,7 +633,7 @@ class MeldepliktRegelTest {
             rettighetsperiode = rettighetsperiode,
         )
 
-        val vurdertTidslinje = vurder(input, nå = 2 februar 2020)
+        val vurdertTidslinje = vurder(input)
 
         assertVurdering(
             vurdertTidslinje, rettighetsperiode,
@@ -648,15 +647,15 @@ class MeldepliktRegelTest {
             ),
             Forventer(
                 fom = 2 februar 2020, tom = 2 februar 2020,
-                vurdering = MeldepliktVurdering.FremtidigIkkeOppfylt,
+                vurdering = MeldepliktVurdering.IkkeMeldtSeg,
             ),
             Forventer(
                 fom = 3 februar 2020, tom = 16 februar 2020,
-                vurdering = MeldepliktVurdering.FremtidigIkkeOppfylt,
+                vurdering = MeldepliktVurdering.IkkeMeldtSeg,
             ),
             Forventer(
                 fom = 17 februar 2020, tom = 1 mars 2020,
-                vurdering = MeldepliktVurdering.FremtidigIkkeOppfylt,
+                vurdering = MeldepliktVurdering.IkkeMeldtSeg,
             )
         )
     }
@@ -683,7 +682,7 @@ class MeldepliktRegelTest {
             ),
         )
 
-        val vurdertTidslinje = vurder(input, nå = 16 mai 2020)
+        val vurdertTidslinje = vurder(input)
 
         assertVurdering(
             vurdertTidslinje, rettighetsperiode,
@@ -700,7 +699,7 @@ class MeldepliktRegelTest {
             Forventer(
                 fom = rettighetsperiode.fom.plusDays(28),
                 tom = rettighetsperiode.tom,
-                vurdering = MeldepliktVurdering.FremtidigOppfylt,
+                vurdering = MeldepliktVurdering.IkkeMeldtSeg,
             ),
         )
     }
@@ -727,7 +726,7 @@ class MeldepliktRegelTest {
             ),
         )
 
-        val vurdertTidslinje = vurder(input, nå = 18 mai 2020)
+        val vurdertTidslinje = vurder(input)
 
         assertVurdering(
             vurdertTidslinje, rettighetsperiode,
@@ -744,7 +743,7 @@ class MeldepliktRegelTest {
             Forventer(
                 fom = rettighetsperiode.fom.plusDays(28),
                 tom = rettighetsperiode.tom,
-                vurdering = MeldepliktVurdering.FremtidigOppfylt,
+                vurdering = MeldepliktVurdering.IkkeMeldtSeg,
             ),
         )
     }
@@ -773,7 +772,7 @@ class MeldepliktRegelTest {
             ),
         )
 
-        val vurdertTidslinje = vurder(input, nå = 17 februar 2020)
+        val vurdertTidslinje = vurder(input)
 
         assertVurdering(
             vurdertTidslinje, rettighetsperiode,
@@ -820,7 +819,7 @@ class MeldepliktRegelTest {
             ),
         )
 
-        val vurdertTidslinje = vurder(input, nå = 17 februar 2020)
+        val vurdertTidslinje = vurder(input)
 
         assertVurdering(
             vurdertTidslinje, rettighetsperiode,
@@ -880,10 +879,10 @@ class MeldepliktRegelTest {
                     )
                 )
             ),
-            innsendingsTidspunkt = mapOf(19 mai 2020 to JournalpostId("1"))
+            innsendingsTidspunkt = mapOf(19 mai 2020 to JournalpostId("1")),
         )
 
-        val vurdertTidslinje = vurder(input, nå = rettighetsperiode.tom.plusDays(1))
+        val vurdertTidslinje = vurder(input)
 
         assertVurdering(
             vurdertTidslinje, rettighetsperiode,
@@ -941,10 +940,10 @@ class MeldepliktRegelTest {
                         vurdertIBehandling = BehandlingId(1),
                     )
                 )
-            )
+            ),
         )
 
-        val vurdertTidslinje = vurder(input, nå = rettighetsperiode.tom.plusDays(1))
+        val vurdertTidslinje = vurder(input)
 
         assertVurdering(
             vurdertTidslinje, rettighetsperiode,
@@ -983,10 +982,10 @@ class MeldepliktRegelTest {
         )
         val input = tomUnderveisInput(
             rettighetsperiode = rettighetsperiode,
-            innsendingsTidspunkt = mapOf(22 mai 2020 to JournalpostId("1"))
+            innsendingsTidspunkt = mapOf(22 mai 2020 to JournalpostId("1")),
         )
 
-        val vurdertTidslinje = vurder(input, nå = 23 mai 2020)
+        val vurdertTidslinje = vurder(input)
 
         assertVurdering(
             vurdertTidslinje, rettighetsperiode,
@@ -1044,10 +1043,10 @@ class MeldepliktRegelTest {
                         vurdertIBehandling = BehandlingId(1),
                     )
                 )
-            )
+            ),
         )
 
-        val vurdertTidslinje = vurder(input, nå = rettighetsperiode.tom.plusDays(1))
+        val vurdertTidslinje = vurder(input)
 
         assertVurdering(
             vurdertTidslinje, rettighetsperiode,
@@ -1088,7 +1087,7 @@ class MeldepliktRegelTest {
             rettighetsperiode = rettighetsperiode,
         )
 
-        val vurdertTidslinje = vurder(input, nå = 15 mai 2020)
+        val vurdertTidslinje = vurder(input)
 
         assertVurdering(
             vurdertTidslinje, rettighetsperiode,
@@ -1105,7 +1104,7 @@ class MeldepliktRegelTest {
             Forventer(
                 fom = 15 mai 2020,
                 tom = 17 mai 2020,
-                vurdering = MeldepliktVurdering.FremtidigIkkeOppfylt,
+                vurdering = MeldepliktVurdering.IkkeMeldtSeg,
             )
         )
     }
@@ -1126,7 +1125,7 @@ class MeldepliktRegelTest {
             rettighetsperiode = rettighetsperiode,
         )
 
-        val vurdertTidslinje = vurder(input, nå = 7 mai 2020)
+        val vurdertTidslinje = vurder(input)
 
         assertVurdering(
             vurdertTidslinje, rettighetsperiode,
@@ -1138,7 +1137,7 @@ class MeldepliktRegelTest {
             Forventer(
                 fom = 4 mai 2020,
                 tom = 17 mai 2020,
-                vurdering = MeldepliktVurdering.FremtidigOppfylt,
+                vurdering = MeldepliktVurdering.IkkeMeldtSeg,
             )
         )
     }
@@ -1162,7 +1161,7 @@ class MeldepliktRegelTest {
             rettighetsperiode = rettighetsperiode,
         )
 
-        val vurdertTidslinje = vurder(input, nå = 20 mai 2020)
+        val vurdertTidslinje = vurder(input)
 
         assertVurdering(
             vurdertTidslinje, rettighetsperiode,
@@ -1179,7 +1178,7 @@ class MeldepliktRegelTest {
             Forventer(
                 fom = 18 mai 2020,
                 tom = 31 mai 2020,
-                vurdering = MeldepliktVurdering.FremtidigIkkeOppfylt,
+                vurdering = MeldepliktVurdering.IkkeMeldtSeg,
             )
         )
     }
@@ -1212,10 +1211,10 @@ class MeldepliktRegelTest {
                         vurdertIBehandling = BehandlingId(1),
                     )
                 )
-            )
+            ),
         )
 
-        val vurdertTidslinje = vurder(input, nå = 20 mai 2020)
+        val vurdertTidslinje = vurder(input)
 
         assertVurdering(
             vurdertTidslinje, rettighetsperiode,
@@ -1232,7 +1231,7 @@ class MeldepliktRegelTest {
             Forventer(
                 fom = 18 mai 2020,
                 tom = 27 mai 2020,
-                vurdering = MeldepliktVurdering.FremtidigIkkeOppfylt,
+                vurdering = MeldepliktVurdering.IkkeMeldtSeg,
             ),
             Forventer(
                 fom = 28 mai 2020,
@@ -1275,10 +1274,10 @@ Mo Tu We Th Fr Sa Su      Mo Tu We Th Fr Sa Su      Mo Tu We Th Fr Sa Su
                         opprettetTid = rettighetsperiode.fom.atStartOfDay(),
                     )
                 )
-            )
+            ),
         )
 
-        val vurdertTidslinje = vurder(input, nå = 2 juni 2020)
+        val vurdertTidslinje = vurder(input)
 
         assertVurdering(
             vurdertTidslinje, rettighetsperiode,
@@ -1300,7 +1299,7 @@ Mo Tu We Th Fr Sa Su      Mo Tu We Th Fr Sa Su      Mo Tu We Th Fr Sa Su
             Forventer(
                 fom = 1 juni 2020,
                 tom = 14 juni 2020,
-                vurdering = MeldepliktVurdering.FremtidigIkkeOppfylt,
+                vurdering = MeldepliktVurdering.IkkeMeldtSeg,
             )
         )
     }
@@ -1314,9 +1313,9 @@ Mo Tu We Th Fr Sa Su      Mo Tu We Th Fr Sa Su      Mo Tu We Th Fr Sa Su
             rettighetsperiode = rettighetsperiode,
             innsendingsTidspunkt = mapOf(
                 LocalDate.of(2026, 5, 26) to JournalpostId("1")
-            )
+            ),
         )
-        val vurdertTidslinje = vurder(input, nå = rettighetsperiode.tom.plusDays(1))
+        val vurdertTidslinje = vurder(input)
 
         assertVurdering(
             vurdertTidslinje, rettighetsperiode,
@@ -1335,15 +1334,12 @@ Mo Tu We Th Fr Sa Su      Mo Tu We Th Fr Sa Su      Mo Tu We Th Fr Sa Su
 
     private fun vurder(
         input: UnderveisInput,
-        nå: LocalDate,
         vurderinger: Tidslinje<Vurdering> = Tidslinje(
             input.periodeForVurdering,
             Vurdering(fårAapEtter = BISTANDSBEHOV)
         ),
     ): Tidslinje<Vurdering> {
-        val zone = ZoneId.of("Europe/Oslo")
-        val now = nå.atStartOfDay(zone).toInstant()
-        return MeldepliktRegel(clock = Clock.fixed(now, zone))
+        return MeldepliktRegel()
             .vurder(input, UtledMeldeperiodeRegel().vurder(input, vurderinger))
     }
 

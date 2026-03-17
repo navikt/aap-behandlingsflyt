@@ -1,10 +1,8 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus.FREMTIDIG_IKKE_OPPFYLT
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus.FREMTIDIG_OPPFYLT
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus.FRITAK
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus.FØR_VEDTAK
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus.FØRSTE_MELDEPERIODE_MED_RETT
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus.FØR_VEDTAK
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus.IKKE_MELDT_SEG
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus.MELDT_SEG
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus.UTEN_RETT
@@ -18,63 +16,63 @@ enum class MeldepliktStatus {
     FRITAK,
     MELDT_SEG,
     IKKE_MELDT_SEG,
-    FREMTIDIG_IKKE_OPPFYLT,
+    RIMELIG_GRUNN,
+
+    @Deprecated(
+        """Verdien produseres ikke lenger, men vil kunne leses ut fra databasen. Den brukes også i
+        |OpprettBehandlingFastsattPeriodePassertJobbUtførerfor å identifisere perioder i tilkjent ytelser som 
+        |må nulles ut pga. antatt oppfylt. Men for nye behandlinger, så antas det ikke at de er oppfylt, og det 
+        |er derforikke nødvendig å nulle ut i utbetalingsplanen."""
+    )
     FREMTIDIG_OPPFYLT,
-    RIMELIG_GRUNN
+
+    @Suppress("unused") // leses fra database
+    @Deprecated("Verdien brukes ikke, men vil kunne leses ut fra databasen.")
+    FREMTIDIG_IKKE_OPPFYLT,
 }
 
 interface MeldepliktVurdering {
     val utfall: Utfall
     val status: MeldepliktStatus
 
-    data object Fritak: MeldepliktVurdering {
+    data object Fritak : MeldepliktVurdering {
         override val utfall = Utfall.OPPFYLT
         override val status = FRITAK
     }
 
-    data object FørVedtak: MeldepliktVurdering {
+    data object FørVedtak : MeldepliktVurdering {
         override val utfall = Utfall.OPPFYLT
         override val status = FØR_VEDTAK
     }
 
-    data object UtenRett: MeldepliktVurdering {
+    data object UtenRett : MeldepliktVurdering {
         override val utfall = Utfall.OPPFYLT
         override val status = UTEN_RETT
     }
 
-    data object FørsteMeldeperiodeMedRett: MeldepliktVurdering {
+    data object FørsteMeldeperiodeMedRett : MeldepliktVurdering {
         override val utfall = Utfall.OPPFYLT
         override val status = FØRSTE_MELDEPERIODE_MED_RETT
     }
 
     data class MeldtSeg(
         val journalpostId: JournalpostId,
-    ): MeldepliktVurdering {
+    ) : MeldepliktVurdering {
         override val utfall = Utfall.OPPFYLT
         override val status = MELDT_SEG
     }
 
-    data object IkkeMeldtSeg: MeldepliktVurdering {
+    data object IkkeMeldtSeg : MeldepliktVurdering {
         override val utfall = Utfall.IKKE_OPPFYLT
         override val status = IKKE_MELDT_SEG
     }
 
-    data object FremtidigIkkeOppfylt: MeldepliktVurdering {
-        override val utfall = Utfall.IKKE_OPPFYLT
-        override val status = FREMTIDIG_IKKE_OPPFYLT
-    }
-
-    data object FremtidigOppfylt: MeldepliktVurdering {
-        override val utfall = Utfall.OPPFYLT
-        override val status = FREMTIDIG_OPPFYLT
-    }
-    
-    data object RimeligGrunnOverstyring: MeldepliktVurdering {
+    data object RimeligGrunnOverstyring : MeldepliktVurdering {
         override val utfall = Utfall.OPPFYLT
         override val status = MeldepliktStatus.RIMELIG_GRUNN
     }
 
-    data object MeldtSegOverstyring: MeldepliktVurdering {
+    data object MeldtSegOverstyring : MeldepliktVurdering {
         override val utfall = Utfall.OPPFYLT
         override val status = MELDT_SEG
     }
