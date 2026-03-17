@@ -30,8 +30,37 @@ data class Arbeidssøker(
 data class UtvidVedtakslengde(
     val utvidetAapFomDato: LocalDate,
     val sisteDagMedYtelse: LocalDate,
-    val sisteDagMedYtelseBegrensetAv: Set<Avslagsårsak>
 ) : BrevBehov(TypeBrev.VEDTAK_UTVID_VEDTAKSLENGDE)
+
+data class UtvidVedtakslengdeUnderEttÅrMedlemskap(
+    val utvidetAapFomDato: LocalDate,
+    val sisteDagMedYtelse: LocalDate,
+) : BrevBehov(TypeBrev.VEDTAK_FORLENGELSE_UNDER_ETT_ÅR_MEDLEMSKAP)
+
+data class UtvidVedtakslengdeUnderEttÅr_11_3(
+    val utvidetAapFomDato: LocalDate,
+    val sisteDagMedYtelse: LocalDate,
+) : BrevBehov(TypeBrev.VEDTAK_FORLENGELSE_UNDER_ETT_ÅR_11_3)
+
+data class UtvidVedtakslengdeUnderEttÅr_11_4(
+    val utvidetAapFomDato: LocalDate,
+    val sisteDagMedYtelse: LocalDate,
+) : BrevBehov(TypeBrev.VEDTAK_FORLENGELSE_UNDER_ETT_ÅR_11_4)
+
+data class UtvidVedtakslengdeUnderEttÅr_11_12(
+    val utvidetAapFomDato: LocalDate,
+    val sisteDagMedYtelse: LocalDate,
+) : BrevBehov(TypeBrev.VEDTAK_FORLENGELSE_UNDER_ETT_ÅR_11_12)
+
+data class UtvidVedtakslengdeUnderEttÅr_11_26(
+    val utvidetAapFomDato: LocalDate,
+    val sisteDagMedYtelse: LocalDate,
+) : BrevBehov(TypeBrev.VEDTAK_FORLENGELSE_UNDER_ETT_ÅR_11_26)
+
+data class UtvidVedtakslengdeUnderEttÅr_11_27(
+    val utvidetAapFomDato: LocalDate,
+    val sisteDagMedYtelse: LocalDate,
+) : BrevBehov(TypeBrev.VEDTAK_FORLENGELSE_UNDER_ETT_ÅR_11_27)
 
 data class Avslag(val sykdomsvurdering: String?): BrevBehov(TypeBrev.VEDTAK_AVSLAG)
 object VedtakEndring : BrevBehov(TypeBrev.VEDTAK_ENDRING)

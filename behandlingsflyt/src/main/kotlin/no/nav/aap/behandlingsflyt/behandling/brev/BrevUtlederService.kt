@@ -17,6 +17,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagU
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagYrkesskade
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.UføreInntekt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.Avslått
@@ -205,7 +206,7 @@ class BrevUtlederService(
         }
     }
 
-    private fun brevBehovUtvidVedtakslengde(behandling: Behandling): UtvidVedtakslengde {
+    private fun brevBehovUtvidVedtakslengde(behandling: Behandling): BrevBehov {
         val forrigeBehandlingId = checkNotNull(behandling.forrigeBehandlingId) {
             "UtvidelsesVedtak mangler forrigeBehandlingId for ${behandling.id}"
         }
@@ -218,18 +219,63 @@ class BrevUtlederService(
         val underveisGrunnlag = underveisRepository.hent(behandling.id)
         val sisteDagMedYtelse = underveisGrunnlag.sisteDagMedYtelse()
 
-        val avslagsårsaker = if (unleashGateway.isEnabled(BehandlingsflytFeature.UtvidVedtakslengdeUnderEttAr)) {
-            vedtakslengdeService.hentAvslagsårsakerVedStansEllerOpphør(
+        if (unleashGateway.isEnabled(BehandlingsflytFeature.UtvidVedtakslengdeUnderEttAr)) {
+            val avslagsårsaker = vedtakslengdeService.hentAvslagsårsakerVedStansEllerOpphør(
                 behandlingId = behandling.id,
                 stansEllerOpphørFom = sisteDagMedYtelse.plusDays(1)
             )
-        } else emptySet()
+
+            if (avslagsårsaker.isNotEmpty()) {
+                val prioritertAvslagsårsak = requireNotNull(prioriterAvslagsårsak(avslagsårsaker)) {
+                    "Fant avslagsårsaker $avslagsårsaker for behandling ${behandling.id}, men ingen av dem er støttet for utvidelse under ett år"
+                }
+
+                return when (prioritertAvslagsårsak) {
+                    Avslagsårsak.BRUKER_OVER_67 -> UtvidVedtakslengdeUnderEttÅr_11_4(
+                        utvidetAapFomDato = utvidetAapFomDato,
+                        sisteDagMedYtelse = sisteDagMedYtelse,
+                    )
+                    Avslagsårsak.IKKE_MEDLEM -> UtvidVedtakslengdeUnderEttÅrMedlemskap(
+                        utvidetAapFomDato = utvidetAapFomDato,
+                        sisteDagMedYtelse = sisteDagMedYtelse,
+                    )
+                    Avslagsårsak.ORDINÆRKVOTE_BRUKT_OPP -> UtvidVedtakslengdeUnderEttÅr_11_12(
+                        utvidetAapFomDato = utvidetAapFomDato,
+                        sisteDagMedYtelse = sisteDagMedYtelse,
+                    )
+                    Avslagsårsak.BRUDD_PÅ_OPPHOLDSKRAV_STANS -> UtvidVedtakslengdeUnderEttÅr_11_3(
+                        utvidetAapFomDato = utvidetAapFomDato,
+                        sisteDagMedYtelse = sisteDagMedYtelse,
+                    )
+                    Avslagsårsak.IKKE_RETT_UNDER_STRAFFEGJENNOMFØRING -> UtvidVedtakslengdeUnderEttÅr_11_26(
+                        utvidetAapFomDato = utvidetAapFomDato,
+                        sisteDagMedYtelse = sisteDagMedYtelse,
+                    )
+                    Avslagsårsak.ANNEN_FULL_YTELSE -> UtvidVedtakslengdeUnderEttÅr_11_27(
+                        utvidetAapFomDato = utvidetAapFomDato,
+                        sisteDagMedYtelse = sisteDagMedYtelse,
+                    )
+                    else -> error("Uventet avslagsårsak for utvidelse under ett år: $prioritertAvslagsårsak")
+                }
+            }
+        }
 
         return UtvidVedtakslengde(
             utvidetAapFomDato = utvidetAapFomDato,
             sisteDagMedYtelse = sisteDagMedYtelse,
-            sisteDagMedYtelseBegrensetAv = avslagsårsaker
         )
+    }
+
+    private fun prioriterAvslagsårsak(avslagsårsaker: Set<Avslagsårsak>): Avslagsårsak? {
+        val prioritertRekkefølge = listOf(
+            Avslagsårsak.BRUKER_OVER_67,
+            Avslagsårsak.IKKE_MEDLEM,
+            Avslagsårsak.ORDINÆRKVOTE_BRUKT_OPP,
+            Avslagsårsak.BRUDD_PÅ_OPPHOLDSKRAV_STANS,
+            Avslagsårsak.IKKE_RETT_UNDER_STRAFFEGJENNOMFØRING,
+            Avslagsårsak.ANNEN_FULL_YTELSE,
+        )
+        return prioritertRekkefølge.firstOrNull { it in avslagsårsaker }
     }
 
     private fun brevBehovArbeidssøker(behandling: Behandling): Arbeidssøker {

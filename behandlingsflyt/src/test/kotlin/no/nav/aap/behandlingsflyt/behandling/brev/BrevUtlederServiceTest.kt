@@ -26,6 +26,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveis
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisÅrsak
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageresultatUtleder
@@ -73,12 +74,16 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.Arguments
+import org.junit.jupiter.params.provider.MethodSource
 import java.math.BigDecimal
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.Year
 import java.time.temporal.ChronoUnit
+import java.util.stream.Stream
 import kotlin.random.Random
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
@@ -184,7 +189,91 @@ class BrevUtlederServiceTest {
             val forventetUtvidetAapFomDato = førstegangSisteDagMedYtelse.plusDays(1)
             assertEquals(forventetUtvidetAapFomDato, resultat.utvidetAapFomDato)
         }
+
+        @ParameterizedTest(name = "skal utlede brevbehov {1} for avslagsårsak {0}")
+        @MethodSource("no.nav.aap.behandlingsflyt.behandling.brev.BrevUtlederServiceTest#avslagsårsakTilBrevBehov")
+        fun `skal utlede riktig brevbehov for avslagsårsak ved utvidelse under ett år`(
+            avslagsårsak: Avslagsårsak,
+            forventetBrevBehovType: Class<out BrevBehov>
+        ) {
+            val (_, revurdering) = stubUtvidVedtakslengdeBehandlinger()
+
+            every { vedtakslengdeService.hentAvslagsårsakerVedStansEllerOpphør(revurdering.id, any()) } returns setOf(avslagsårsak)
+            every { unleashGateway.isEnabled(BehandlingsflytFeature.UtvidVedtakslengdeUnderEttAr) } returns true
+
+            val resultat = brevUtlederService.utledBehovForMeldingOmVedtak(revurdering.id)
+
+            assertThat(resultat).isInstanceOf(forventetBrevBehovType)
+        }
+
+        @Test
+        fun `skal feile ved ustøttet avslagsårsak ved utvidelse under ett år`() {
+            val (_, revurdering) = stubUtvidVedtakslengdeBehandlinger()
+
+            every { vedtakslengdeService.hentAvslagsårsakerVedStansEllerOpphør(revurdering.id, any()) } returns setOf(Avslagsårsak.MANGLENDE_DOKUMENTASJON)
+            every { unleashGateway.isEnabled(BehandlingsflytFeature.UtvidVedtakslengdeUnderEttAr) } returns true
+
+            assertThrows<IllegalArgumentException> {
+                brevUtlederService.utledBehovForMeldingOmVedtak(revurdering.id)
+            }
+        }
+
+        @Test
+        fun `skal prioritere avslagsårsak med høyest prioritet ved flere avslagsårsaker`() {
+            val (_, revurdering) = stubUtvidVedtakslengdeBehandlinger()
+
+            every { vedtakslengdeService.hentAvslagsårsakerVedStansEllerOpphør(revurdering.id, any()) } returns setOf(
+                Avslagsårsak.ANNEN_FULL_YTELSE,
+                Avslagsårsak.BRUKER_OVER_67
+            )
+            every { unleashGateway.isEnabled(BehandlingsflytFeature.UtvidVedtakslengdeUnderEttAr) } returns true
+
+            val resultat = brevUtlederService.utledBehovForMeldingOmVedtak(revurdering.id)
+
+            assertIs<UtvidVedtakslengdeUnderEttÅr_11_4>(resultat, "BRUKER_OVER_67 har høyest prioritet")
+        }
+
+        private fun stubUtvidVedtakslengdeBehandlinger(): Pair<Behandling, Behandling> {
+            val førstegangsbehandling = stubBehandling(
+                typeBehandling = TypeBehandling.Førstegangsbehandling,
+                status = Status.AVSLUTTET,
+                årsakTilOpprettelse = ÅrsakTilOpprettelse.SØKNAD,
+                vurderingsbehov = emptyList()
+            )
+            every { vedtakRepository.hent(førstegangsbehandling.id) } returns stubVedtak(førstegangsbehandling.id)
+            every { behandlingRepository.hent(førstegangsbehandling.id) } returns førstegangsbehandling
+            val førstegangSisteDagMedYtelse = 31 august 2025
+            val førstegangUnderveisGrunnlag = stubDynamiskUnderveisGrunnlag(
+                sisteDagMedYtelse = førstegangSisteDagMedYtelse,
+                rettighetsType = RettighetsType.BISTANDSBEHOV
+            )
+            every { underveisRepository.hent(førstegangsbehandling.id) } returns førstegangUnderveisGrunnlag
+            every { underveisRepository.hentHvisEksisterer(førstegangsbehandling.id) } returns førstegangUnderveisGrunnlag
+
+            val revurdering = stubBehandling(
+                typeBehandling = TypeBehandling.Revurdering,
+                status = Status.OPPRETTET,
+                årsakTilOpprettelse = ÅrsakTilOpprettelse.UTVID_VEDTAKSLENGDE,
+                vurderingsbehov = listOf(Vurderingsbehov.UTVID_VEDTAKSLENGDE),
+                forrigeBehandlingId = førstegangsbehandling.id
+            )
+            every { vedtakRepository.hent(revurdering.id) } returns stubVedtak(revurdering.id)
+            every { behandlingRepository.hent(revurdering.id) } returns revurdering
+            val revurderingSisteDagMedYtelse = 31 desember 2025
+            val revurderingUnderveisGrunnlag = stubDynamiskUnderveisGrunnlag(
+                førsteDagMedYtelse = 2 september 2025,
+                sisteDagMedYtelse = revurderingSisteDagMedYtelse,
+                rettighetsType = RettighetsType.BISTANDSBEHOV
+            )
+            every { underveisRepository.hent(revurdering.id) } returns revurderingUnderveisGrunnlag
+            every { underveisRepository.hentHvisEksisterer(revurdering.id) } returns revurderingUnderveisGrunnlag
+            every { avbrytRevurderingService.revurderingErAvbrutt(any<BehandlingId>()) } returns false
+
+            return Pair(førstegangsbehandling, revurdering)
+        }
     }
+
+
     
     @Nested
     inner class TestGruppe_Arbeidssøkerbrev_11_17 {
@@ -967,6 +1056,18 @@ class BrevUtlederServiceTest {
             utbetalingsdato = utbetalingsdato,
             minsteSats = Minstesats.IKKE_MINSTESATS,
             redusertDagsats = dagsats
+        )
+    }
+
+    companion object {
+        @JvmStatic
+        fun avslagsårsakTilBrevBehov(): Stream<Arguments> = Stream.of(
+            Arguments.of(Avslagsårsak.BRUKER_OVER_67, UtvidVedtakslengdeUnderEttÅr_11_4::class.java),
+            Arguments.of(Avslagsårsak.IKKE_MEDLEM, UtvidVedtakslengdeUnderEttÅrMedlemskap::class.java),
+            Arguments.of(Avslagsårsak.ORDINÆRKVOTE_BRUKT_OPP, UtvidVedtakslengdeUnderEttÅr_11_12::class.java),
+            Arguments.of(Avslagsårsak.BRUDD_PÅ_OPPHOLDSKRAV_STANS, UtvidVedtakslengdeUnderEttÅr_11_3::class.java),
+            Arguments.of(Avslagsårsak.IKKE_RETT_UNDER_STRAFFEGJENNOMFØRING, UtvidVedtakslengdeUnderEttÅr_11_26::class.java),
+            Arguments.of(Avslagsårsak.ANNEN_FULL_YTELSE, UtvidVedtakslengdeUnderEttÅr_11_27::class.java),
         )
     }
 }
