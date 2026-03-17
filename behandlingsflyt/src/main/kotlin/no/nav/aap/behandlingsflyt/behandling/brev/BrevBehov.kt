@@ -1,7 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.brev
 
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import java.time.LocalDate
 
 sealed class BrevBehov(val typeBrev: TypeBrev)
@@ -37,27 +36,27 @@ data class UtvidVedtakslengdeUnderEttÅrMedlemskap(
     val sisteDagMedYtelse: LocalDate,
 ) : BrevBehov(TypeBrev.VEDTAK_FORLENGELSE_UNDER_ETT_ÅR_MEDLEMSKAP)
 
-data class UtvidVedtakslengdeUnderEttÅr_11_3(
+data class UtvidVedtakslengdeUnderEttÅrOppholdskrav(
     val utvidetAapFomDato: LocalDate,
     val sisteDagMedYtelse: LocalDate,
 ) : BrevBehov(TypeBrev.VEDTAK_FORLENGELSE_UNDER_ETT_ÅR_11_3)
 
-data class UtvidVedtakslengdeUnderEttÅr_11_4(
+data class UtvidVedtakslengdeUnderEttÅrBrukerOver67(
     val utvidetAapFomDato: LocalDate,
     val sisteDagMedYtelse: LocalDate,
 ) : BrevBehov(TypeBrev.VEDTAK_FORLENGELSE_UNDER_ETT_ÅR_11_4)
 
-data class UtvidVedtakslengdeUnderEttÅr_11_12(
+data class UtvidVedtakslengdeUnderEttÅrOrdinærkvoteBruktOpp(
     val utvidetAapFomDato: LocalDate,
     val sisteDagMedYtelse: LocalDate,
 ) : BrevBehov(TypeBrev.VEDTAK_FORLENGELSE_UNDER_ETT_ÅR_11_12)
 
-data class UtvidVedtakslengdeUnderEttÅr_11_26(
+data class UtvidVedtakslengdeUnderEttÅrStraffegjennomføring(
     val utvidetAapFomDato: LocalDate,
     val sisteDagMedYtelse: LocalDate,
 ) : BrevBehov(TypeBrev.VEDTAK_FORLENGELSE_UNDER_ETT_ÅR_11_26)
 
-data class UtvidVedtakslengdeUnderEttÅr_11_27(
+data class UtvidVedtakslengdeUnderEttÅrAnnenFullYtelse(
     val utvidetAapFomDato: LocalDate,
     val sisteDagMedYtelse: LocalDate,
 ) : BrevBehov(TypeBrev.VEDTAK_FORLENGELSE_UNDER_ETT_ÅR_11_27)

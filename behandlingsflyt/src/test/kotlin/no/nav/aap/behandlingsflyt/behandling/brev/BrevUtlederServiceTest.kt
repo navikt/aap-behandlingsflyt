@@ -230,7 +230,7 @@ class BrevUtlederServiceTest {
 
             val resultat = brevUtlederService.utledBehovForMeldingOmVedtak(revurdering.id)
 
-            assertIs<UtvidVedtakslengdeUnderEttÅr_11_4>(resultat, "BRUKER_OVER_67 har høyest prioritet")
+            assertIs<UtvidVedtakslengdeUnderEttÅrBrukerOver67>(resultat, "BRUKER_OVER_67 har høyest prioritet")
         }
 
         private fun stubUtvidVedtakslengdeBehandlinger(): Pair<Behandling, Behandling> {
@@ -1062,12 +1062,12 @@ class BrevUtlederServiceTest {
     companion object {
         @JvmStatic
         fun avslagsårsakTilBrevBehov(): Stream<Arguments> = Stream.of(
-            Arguments.of(Avslagsårsak.BRUKER_OVER_67, UtvidVedtakslengdeUnderEttÅr_11_4::class.java),
+            Arguments.of(Avslagsårsak.BRUKER_OVER_67, UtvidVedtakslengdeUnderEttÅrBrukerOver67::class.java),
             Arguments.of(Avslagsårsak.IKKE_MEDLEM, UtvidVedtakslengdeUnderEttÅrMedlemskap::class.java),
-            Arguments.of(Avslagsårsak.ORDINÆRKVOTE_BRUKT_OPP, UtvidVedtakslengdeUnderEttÅr_11_12::class.java),
-            Arguments.of(Avslagsårsak.BRUDD_PÅ_OPPHOLDSKRAV_STANS, UtvidVedtakslengdeUnderEttÅr_11_3::class.java),
-            Arguments.of(Avslagsårsak.IKKE_RETT_UNDER_STRAFFEGJENNOMFØRING, UtvidVedtakslengdeUnderEttÅr_11_26::class.java),
-            Arguments.of(Avslagsårsak.ANNEN_FULL_YTELSE, UtvidVedtakslengdeUnderEttÅr_11_27::class.java),
+            Arguments.of(Avslagsårsak.ORDINÆRKVOTE_BRUKT_OPP, UtvidVedtakslengdeUnderEttÅrOrdinærkvoteBruktOpp::class.java),
+            Arguments.of(Avslagsårsak.BRUDD_PÅ_OPPHOLDSKRAV_STANS, UtvidVedtakslengdeUnderEttÅrOppholdskrav::class.java),
+            Arguments.of(Avslagsårsak.IKKE_RETT_UNDER_STRAFFEGJENNOMFØRING, UtvidVedtakslengdeUnderEttÅrStraffegjennomføring::class.java),
+            Arguments.of(Avslagsårsak.ANNEN_FULL_YTELSE, UtvidVedtakslengdeUnderEttÅrAnnenFullYtelse::class.java),
         )
     }
 }

@@ -232,7 +232,7 @@ class BrevUtlederService(
                 }
 
                 return when (prioritertAvslagsårsak) {
-                    Avslagsårsak.BRUKER_OVER_67 -> UtvidVedtakslengdeUnderEttÅr_11_4(
+                    Avslagsårsak.BRUKER_OVER_67 -> UtvidVedtakslengdeUnderEttÅrBrukerOver67(
                         utvidetAapFomDato = utvidetAapFomDato,
                         sisteDagMedYtelse = sisteDagMedYtelse,
                     )
@@ -240,19 +240,19 @@ class BrevUtlederService(
                         utvidetAapFomDato = utvidetAapFomDato,
                         sisteDagMedYtelse = sisteDagMedYtelse,
                     )
-                    Avslagsårsak.ORDINÆRKVOTE_BRUKT_OPP -> UtvidVedtakslengdeUnderEttÅr_11_12(
+                    Avslagsårsak.ORDINÆRKVOTE_BRUKT_OPP -> UtvidVedtakslengdeUnderEttÅrOrdinærkvoteBruktOpp(
                         utvidetAapFomDato = utvidetAapFomDato,
                         sisteDagMedYtelse = sisteDagMedYtelse,
                     )
-                    Avslagsårsak.BRUDD_PÅ_OPPHOLDSKRAV_STANS -> UtvidVedtakslengdeUnderEttÅr_11_3(
+                    Avslagsårsak.BRUDD_PÅ_OPPHOLDSKRAV_STANS -> UtvidVedtakslengdeUnderEttÅrOppholdskrav(
                         utvidetAapFomDato = utvidetAapFomDato,
                         sisteDagMedYtelse = sisteDagMedYtelse,
                     )
-                    Avslagsårsak.IKKE_RETT_UNDER_STRAFFEGJENNOMFØRING -> UtvidVedtakslengdeUnderEttÅr_11_26(
+                    Avslagsårsak.IKKE_RETT_UNDER_STRAFFEGJENNOMFØRING -> UtvidVedtakslengdeUnderEttÅrStraffegjennomføring(
                         utvidetAapFomDato = utvidetAapFomDato,
                         sisteDagMedYtelse = sisteDagMedYtelse,
                     )
-                    Avslagsårsak.ANNEN_FULL_YTELSE -> UtvidVedtakslengdeUnderEttÅr_11_27(
+                    Avslagsårsak.ANNEN_FULL_YTELSE -> UtvidVedtakslengdeUnderEttÅrAnnenFullYtelse(
                         utvidetAapFomDato = utvidetAapFomDato,
                         sisteDagMedYtelse = sisteDagMedYtelse,
                     )
