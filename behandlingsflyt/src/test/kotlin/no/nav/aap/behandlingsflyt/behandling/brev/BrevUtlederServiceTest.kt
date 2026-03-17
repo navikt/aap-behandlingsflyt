@@ -144,50 +144,21 @@ class BrevUtlederServiceTest {
         
         @Test
         fun `utledBehov legger ved sisteDagMedYtelse & fomDato i faktagrunnlag for UtvidVedtakslengde brev ved revurdering`() {
-            val førstegangsbehandling = stubBehandling(
-                typeBehandling = TypeBehandling.Førstegangsbehandling,
-                status = Status.AVSLUTTET,
-                årsakTilOpprettelse = ÅrsakTilOpprettelse.SØKNAD,
-                vurderingsbehov = emptyList()
+            val sisteDagFørstegang = 31 august 2025
+            val sisteDagRevurdering = 31 desember 2025
+            val (_, revurdering) = stubUtvidVedtakslengdeBehandlinger(
+                sisteDagMedYtelseFørstegangsbehandling = sisteDagFørstegang,
+                sisteDagMedYtelseRevurdering = sisteDagRevurdering,
             )
-            every { vedtakRepository.hent(førstegangsbehandling.id) } returns stubVedtak(førstegangsbehandling.id)
-            every { behandlingRepository.hent(førstegangsbehandling.id) } returns førstegangsbehandling
-            val førstegangSisteDagMedYtelse = 31 august 2025
-            val førstegangUnderveisGrunnlag = stubDynamiskUnderveisGrunnlag(
-                sisteDagMedYtelse = førstegangSisteDagMedYtelse,
-                rettighetsType = RettighetsType.BISTANDSBEHOV
-            )
-            every { underveisRepository.hent(førstegangsbehandling.id) } returns førstegangUnderveisGrunnlag
-            every { underveisRepository.hentHvisEksisterer(førstegangsbehandling.id) } returns førstegangUnderveisGrunnlag
-            val revurdering = stubBehandling(
-                typeBehandling = TypeBehandling.Revurdering,
-                status = Status.OPPRETTET,
-                årsakTilOpprettelse = ÅrsakTilOpprettelse.UTVID_VEDTAKSLENGDE,
-                vurderingsbehov = listOf(Vurderingsbehov.UTVID_VEDTAKSLENGDE),
-                forrigeBehandlingId = førstegangsbehandling.id
-            )
-            every { vedtakRepository.hent(revurdering.id) } returns stubVedtak(revurdering.id)
-            every { behandlingRepository.hent(revurdering.id) } returns revurdering
-            val revurderingVirkningstidspunkt = 2 september 2025
-            val revurderingSisteDagMedYtelse = 31 desember 2025
-            val revurderingUnderveisGrunnlag = stubDynamiskUnderveisGrunnlag(
-                førsteDagMedYtelse = revurderingVirkningstidspunkt,
-                sisteDagMedYtelse = revurderingSisteDagMedYtelse,
-                rettighetsType = RettighetsType.ARBEIDSSØKER
-            )
-            every { underveisRepository.hent(revurdering.id) } returns revurderingUnderveisGrunnlag
-            every { underveisRepository.hentHvisEksisterer(revurdering.id) } returns revurderingUnderveisGrunnlag
-            every { avbrytRevurderingService.revurderingErAvbrutt(any<BehandlingId>()) } returns false
+
             every { vedtakslengdeService.hentAvslagsårsakerVedStansEllerOpphør(revurdering.id, any()) } returns emptySet()
             every { unleashGateway.isEnabled(BehandlingsflytFeature.UtvidVedtakslengdeUnderEttAr) } returns true
 
             val resultat = brevUtlederService.utledBehovForMeldingOmVedtak(revurdering.id)
 
             assertIs<UtvidVedtakslengde>(resultat, "forventer brevbehov er av typen UtvidVedtakslengde")
-            assertEquals(revurderingSisteDagMedYtelse, resultat.sisteDagMedYtelse)
-            // revurderingVirkningstidspunkt og førstegangSisteDagMedYtelse+1 er bevisst ulike for testformål
-            val forventetUtvidetAapFomDato = førstegangSisteDagMedYtelse.plusDays(1)
-            assertEquals(forventetUtvidetAapFomDato, resultat.utvidetAapFomDato)
+            assertEquals(sisteDagRevurdering, resultat.sisteDagMedYtelse)
+            assertEquals(sisteDagFørstegang.plusDays(1), resultat.utvidetAapFomDato)
         }
 
         @ParameterizedTest(name = "skal utlede brevbehov {1} for avslagsårsak {0}")
@@ -233,7 +204,10 @@ class BrevUtlederServiceTest {
             assertIs<UtvidVedtakslengdeUnderEttÅrBrukerOver67>(resultat, "BRUKER_OVER_67 har høyest prioritet")
         }
 
-        private fun stubUtvidVedtakslengdeBehandlinger(): Pair<Behandling, Behandling> {
+        private fun stubUtvidVedtakslengdeBehandlinger(
+            sisteDagMedYtelseFørstegangsbehandling: LocalDate = 31 august 2025,
+            sisteDagMedYtelseRevurdering: LocalDate = 31 desember 2025,
+        ): Pair<Behandling, Behandling> {
             val førstegangsbehandling = stubBehandling(
                 typeBehandling = TypeBehandling.Førstegangsbehandling,
                 status = Status.AVSLUTTET,
@@ -242,9 +216,8 @@ class BrevUtlederServiceTest {
             )
             every { vedtakRepository.hent(førstegangsbehandling.id) } returns stubVedtak(førstegangsbehandling.id)
             every { behandlingRepository.hent(førstegangsbehandling.id) } returns førstegangsbehandling
-            val førstegangSisteDagMedYtelse = 31 august 2025
             val førstegangUnderveisGrunnlag = stubDynamiskUnderveisGrunnlag(
-                sisteDagMedYtelse = førstegangSisteDagMedYtelse,
+                sisteDagMedYtelse = sisteDagMedYtelseFørstegangsbehandling,
                 rettighetsType = RettighetsType.BISTANDSBEHOV
             )
             every { underveisRepository.hent(førstegangsbehandling.id) } returns førstegangUnderveisGrunnlag
@@ -259,10 +232,9 @@ class BrevUtlederServiceTest {
             )
             every { vedtakRepository.hent(revurdering.id) } returns stubVedtak(revurdering.id)
             every { behandlingRepository.hent(revurdering.id) } returns revurdering
-            val revurderingSisteDagMedYtelse = 31 desember 2025
             val revurderingUnderveisGrunnlag = stubDynamiskUnderveisGrunnlag(
-                førsteDagMedYtelse = 2 september 2025,
-                sisteDagMedYtelse = revurderingSisteDagMedYtelse,
+                førsteDagMedYtelse = sisteDagMedYtelseFørstegangsbehandling.plusDays(1),
+                sisteDagMedYtelse = sisteDagMedYtelseRevurdering,
                 rettighetsType = RettighetsType.BISTANDSBEHOV
             )
             every { underveisRepository.hent(revurdering.id) } returns revurderingUnderveisGrunnlag
