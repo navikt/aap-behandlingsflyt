@@ -38,7 +38,9 @@ class StansEllerOpphørMigrering(
 
                 val sakId = connection.queryFirstOrNull(
                     """
-                    SELECT SAK_ID FROM BEHANDLING
+                    SELECT sak.id as sak_id
+                    FROM BEHANDLING
+                    JOIN SAK on BEHANDLING.sak_id = SAK.id
                     WHERE NOT EXISTS(
                         SELECT *
                         FROM stans_opphor_grunnlag
@@ -51,10 +53,11 @@ class StansEllerOpphørMigrering(
                                  JOIN trukket_soknad_vurderinger ON trukket_soknad_grunnlag.vurderinger_id = trukket_soknad_vurderinger.id
                                  JOIN trukket_Soknad_vurdering ON trukket_soknad_vurderinger.id = trukket_Soknad_vurdering.vurderinger_id
                         WHERE
-                                   trukket_soknad_grunnlag.behandling_id = behandling.id
+                            trukket_soknad_grunnlag.behandling_id = behandling.id
                           AND trukket_soknad_grunnlag.aktiv
                           AND trukket_soknad_vurdering.skal_trekkes
                     )
+                      AND sak.opprettet_tid >= '2025-04-01'
                     LIMIT 1
                 """.trimIndent()
                 ) {
