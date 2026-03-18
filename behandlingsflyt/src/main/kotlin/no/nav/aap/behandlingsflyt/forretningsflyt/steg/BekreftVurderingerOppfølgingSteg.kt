@@ -17,6 +17,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.steg.StegGruppe
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
@@ -53,28 +54,31 @@ class BekreftVurderingerOppfølgingSteg(
     }
 
     private fun vedtakBehøverVurdering(
-        kontekst: FlytKontekstMedPerioder,
-        avklaringsbehovene: Avklaringsbehovene
+        kontekst: FlytKontekstMedPerioder, avklaringsbehovene: Avklaringsbehovene
     ): Boolean {
-        if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
-            /// Blir kanskje feil?
-            return false
-        }
+        return when (kontekst.vurderingType) {
+            VurderingType.FØRSTEGANGSBEHANDLING, VurderingType.REVURDERING -> {
+                if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
+                    /// Blir kanskje feil?
+                    return false
+                }
 
-        val sykdomsbehovLøstAvKontor = sykdomsbehovLøstAvKontorIDenneBehandlingen(avklaringsbehovene)
-        return sykdomsbehovLøstAvKontor.isNotEmpty()
+                val sykdomsbehovLøstAvKontor = sykdomsbehovLøstAvKontorIDenneBehandlingen(avklaringsbehovene)
+                return sykdomsbehovLøstAvKontor.isNotEmpty()
+            }
+
+            VurderingType.UTVID_VEDTAKSLENGDE, VurderingType.MIGRER_RETTIGHETSPERIODE, VurderingType.MELDEKORT, VurderingType.AUTOMATISK_BREV, VurderingType.EFFEKTUER_AKTIVITETSPLIKT, VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9, VurderingType.IKKE_RELEVANT -> false
+        }
     }
 
+
     private fun erTilstrekkeligVurdert(
-        avklaringsbehovene: Avklaringsbehovene,
-        behandlingId: BehandlingId
+        avklaringsbehovene: Avklaringsbehovene, behandlingId: BehandlingId
     ): Boolean {
-        val sykdomsbehovSistLøstAvKontor = sykdomsbehovLøstAvKontorIDenneBehandlingen(avklaringsbehovene)
-            .mapNotNull { behov -> behov.aktivHistorikk.lastOrNull { it.status == Status.AVSLUTTET } }
+        val sykdomsbehovSistLøstAvKontor =
+            sykdomsbehovLøstAvKontorIDenneBehandlingen(avklaringsbehovene).mapNotNull { behov -> behov.aktivHistorikk.lastOrNull { it.status == Status.AVSLUTTET } }
         val sistBekreftet =
-            avklaringsbehovene.hentBehovForDefinisjon(Definisjon.BEKREFT_VURDERINGER_OPPFØLGING)
-                ?.aktivHistorikk?.lastOrNull { endring -> endring.status == Status.AVSLUTTET }
-                ?.tidsstempel
+            avklaringsbehovene.hentBehovForDefinisjon(Definisjon.BEKREFT_VURDERINGER_OPPFØLGING)?.aktivHistorikk?.lastOrNull { endring -> endring.status == Status.AVSLUTTET }?.tidsstempel
 
         val mellomlagredeVurderinger = mellomlagretVurderingService.hentMellomlagredeVurderingerFørSteg(
             behandlingId, type(), listOf(Rolle.SAKSBEHANDLER_OPPFOLGING)
@@ -93,9 +97,7 @@ class BekreftVurderingerOppfølgingSteg(
     }
 
     private fun sykdomsbehovLøstAvKontorIDenneBehandlingen(avklaringsbehovene: Avklaringsbehovene): List<Avklaringsbehov> {
-        return avklaringsbehovene
-            .alle()
-            .filter { it.løsesISteg().gruppe == StegGruppe.SYKDOM }
+        return avklaringsbehovene.alle().filter { it.løsesISteg().gruppe == StegGruppe.SYKDOM }
             .filterNot { it.løsesISteg() == type() }
             .filter { it.definisjon.løsesAv.contains(Rolle.SAKSBEHANDLER_OPPFOLGING) }
             .filter { it.aktivHistorikk.any { it.status == Status.AVSLUTTET } }
