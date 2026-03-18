@@ -44,6 +44,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.adapter.Inntekt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.adapter.InntektRequest
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.adapter.InntektResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreSøknadRequest
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreSøknadResponse
 import no.nav.aap.behandlingsflyt.integrasjon.ident.IDENT_QUERY
 import no.nav.aap.behandlingsflyt.integrasjon.ident.PdlPersoninfoGateway
 import no.nav.aap.behandlingsflyt.integrasjon.institusjonsopphold.InstitusjonoppholdRequest
@@ -249,6 +251,15 @@ object FakeServers : AutoCloseable {
                         )
                     )
                 }
+            }
+            post("/api/uforetrygd/ekstern/soknad") {
+                val body = call.receive<UføreSøknadRequest>()
+                val hentPerson = fakePersoner.hentPerson(body.pid)
+                if (hentPerson == null) {
+                    call.respond(HttpStatusCode.NotFound, "Fant ikke person med fnr ${body.pid}")
+                    return@post
+                }
+                call.respond(HttpStatusCode.OK, UføreSøknadResponse(hentPerson.uføreSøknad))
             }
 
         }
