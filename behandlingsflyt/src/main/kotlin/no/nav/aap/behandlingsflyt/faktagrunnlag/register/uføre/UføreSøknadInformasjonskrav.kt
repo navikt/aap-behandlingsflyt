@@ -18,6 +18,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedP
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
@@ -27,6 +29,7 @@ class UføreSøknadInformasjonskrav(
     private val uføreSøknadRepository: UføreSøknadRepository,
     private val uføreRegisterGateway: UføreRegisterGateway,
     private val tidligereVurderinger: TidligereVurderinger,
+    private val unleashGateway: UnleashGateway,
 ) : Informasjonskrav<UføreSøknadInformasjonskrav.UføreSøknadInput, UføreSøknadInformasjonskrav.UføreSøknadRegisterdata>,
     KanTriggeRevurdering {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
@@ -34,6 +37,7 @@ class UføreSøknadInformasjonskrav(
         uføreSøknadRepository = repositoryProvider.provide(),
         uføreRegisterGateway = gatewayProvider.provide(),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
+        unleashGateway = gatewayProvider.provide(),
     )
 
     override val navn = Companion.navn
@@ -44,6 +48,9 @@ class UføreSøknadInformasjonskrav(
         steg: StegType,
         oppdatert: InformasjonskravOppdatert?
     ): Boolean {
+        if (unleashGateway.isDisabled(BehandlingsflytFeature.hentUføreSøknadsdata)) {
+            return false
+        }
         return kontekst.erFørstegangsbehandlingEllerRevurdering()
                 && !tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, steg)
                 && (oppdatert.ikkeKjørtSisteKalenderdagForBehandling(kontekst.behandlingId) || kontekst.rettighetsperiode != oppdatert?.rettighetsperiode || kontekst.erVurderingsbehovEndretEtterOppdatertInformasjonskrav(
@@ -61,6 +68,10 @@ class UføreSøknadInformasjonskrav(
     }
 
     override fun hentData(input: UføreSøknadInput): UføreSøknadRegisterdata {
+        if (unleashGateway.isDisabled(BehandlingsflytFeature.hentUføreSøknadsdata)) {
+            return UføreSøknadRegisterdata(null)
+        }
+
         return UføreSøknadRegisterdata(hentUføreSøknad(input))
     }
 
@@ -107,14 +118,12 @@ class UføreSøknadInformasjonskrav(
             eksisterende: UføreSøknadGrunnlag?,
             uføreSøknad: UføreSøknad?
         ): Boolean {
-            return if (eksisterende == null) {
-                uføreSøknad != null
-            } else if (uføreSøknad == null) {
-                // Søknaden er ferdigbehandlet, men Kelvin skal ikke slette registeropplysningene
-                // ettersom de kan være brukt for vurderingen av 11-18
+            return if (uføreSøknad == null) {
+                // Søknaden er ferdigbehandlet, men Kelvin skal ikke slette registeropplysninger
+                // ettersom de kan blitt brukt for vurderingen av 11-18
                 false
             } else {
-                eksisterende.uføreSøknad != uføreSøknad
+                eksisterende?.uføreSøknad != uføreSøknad
             }
         }
     }
