@@ -13,6 +13,7 @@ import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelsePeriod
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
 import no.nav.aap.behandlingsflyt.behandling.vedtak.Vedtak
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakRepository
+import no.nav.aap.behandlingsflyt.behandling.vedtakslengde.VedtakslengdeService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Grunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Repository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Vurdering
@@ -35,12 +36,12 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsopptrapping
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdomsvurderingbrev.SykdomsvurderingForBrev
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdomsvurderingbrev.SykdomsvurderingForBrevRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.UføreSøknadVedtakResultat
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdomsvurderingbrev.SykdomsvurderingForBrev
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdomsvurderingbrev.SykdomsvurderingForBrevRepository
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
@@ -59,6 +60,7 @@ import no.nav.aap.behandlingsflyt.test.juli
 import no.nav.aap.behandlingsflyt.test.juni
 import no.nav.aap.behandlingsflyt.test.mai
 import no.nav.aap.behandlingsflyt.test.september
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
@@ -95,6 +97,7 @@ class BrevUtlederServiceTest {
     val underveisRepository = mockk<UnderveisRepository>()
     val overgangUføreRepository = mockk<OvergangUføreRepository>()
     val avbrytRevurderingService = mockk<AvbrytRevurderingService>()
+    val vedtakslengdeService = mockk<VedtakslengdeService>()
     val unleashGateway = mockk<UnleashGateway>()
     val brevUtlederService = BrevUtlederService(
         resultatUtleder = ResultatUtleder(
@@ -114,6 +117,7 @@ class BrevUtlederServiceTest {
         arbeidsopptrappingRepository = arbeidsopptrappingRepository,
         sykdomsvurderingForBrevRepository = sykdomsvurderingForBrevRepository,
         overgangUføreRepository = overgangUføreRepository,
+        vedtakslengdeService = vedtakslengdeService,
         unleashGateway = unleashGateway,
     )
     val virkningstidspunkt = 1 januar 2025
@@ -169,6 +173,8 @@ class BrevUtlederServiceTest {
             every { underveisRepository.hent(revurdering.id) } returns revurderingUnderveisGrunnlag
             every { underveisRepository.hentHvisEksisterer(revurdering.id) } returns revurderingUnderveisGrunnlag
             every { avbrytRevurderingService.revurderingErAvbrutt(any<BehandlingId>()) } returns false
+            every { vedtakslengdeService.hentAvslagsårsakerVedStansEllerOpphør(revurdering.id, any()) } returns emptySet()
+            every { unleashGateway.isEnabled(BehandlingsflytFeature.UtvidVedtakslengdeUnderEttAr) } returns true
 
             val resultat = brevUtlederService.utledBehovForMeldingOmVedtak(revurdering.id)
 
