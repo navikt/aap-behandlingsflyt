@@ -29,6 +29,7 @@ class StansEllerOpphørMigrering(
         log.info("starter migrering av stans og opphør")
         var ferdig = false
         var antallMigreringer = 0
+        val sakIdSett = HashSet<Long>()
 
         while (!ferdig) {
             dataSource.transaction { connection ->
@@ -37,10 +38,24 @@ class StansEllerOpphørMigrering(
 
                 val sakId = connection.queryFirstOrNull(
                     """
-                SELECT SAK_ID FROM BEHANDLING
-                WHERE NOT EXISTS(
-                    SELECT * FROM stans_opphor_grunnlag WHERE behandling_id = behandling.id
-                ) LIMIT 1
+                    SELECT SAK_ID FROM BEHANDLING
+                    WHERE NOT EXISTS(
+                        SELECT *
+                        FROM stans_opphor_grunnlag
+                        WHERE behandling_id = behandling.id
+                    )
+                      AND behandling.type IN ('ae0034', 'ae0028')
+                      AND NOT EXISTS(
+                        SELECT *
+                        FROM trukket_soknad_grunnlag
+                                 JOIN trukket_soknad_vurderinger ON trukket_soknad_grunnlag.vurderinger_id = trukket_soknad_vurderinger.id
+                                 JOIN trukket_Soknad_vurdering ON trukket_soknad_vurderinger.id = trukket_Soknad_vurdering.vurderinger_id
+                        WHERE
+                                   trukket_soknad_grunnlag.behandling_id = behandling.id
+                          AND trukket_soknad_grunnlag.aktiv
+                          AND trukket_soknad_vurdering.skal_trekkes
+                    )
+                    LIMIT 1
                 """.trimIndent()
                 ) {
                     setRowMapper {
@@ -53,6 +68,12 @@ class StansEllerOpphørMigrering(
                     log.info("Ferdig med $antallMigreringer migrering av stans og opphør")
                     return@transaction
                 }
+                if (sakId.id in sakIdSett) {
+                    log.info("Trukket samme sak id etter den er migrert, så migrering / utplukk feilet")
+                    return@transaction
+                }
+
+                sakIdSett += sakId.id
 
                 stansEllerOpphørMigreringService.migrerSak(sakId)
                 antallMigreringer += 1
