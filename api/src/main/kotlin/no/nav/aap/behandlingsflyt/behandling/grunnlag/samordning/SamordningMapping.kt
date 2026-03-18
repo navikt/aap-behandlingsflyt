@@ -6,6 +6,8 @@ import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.SamordningAndreStatligeYtelserVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.gateway.DagpengerKilde
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.gateway.DagpengerYtelseType
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.gateway.TiltakspengerKilde
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.gateway.TiltakspengerYtelseType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.arbeidsgiver.SamordningArbeidsgiverVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingGrunnlag
@@ -134,5 +136,20 @@ fun mapDagpengerYtelseType(ytelseType: DagpengerYtelseType): AndreStatligeYtelse
         DagpengerYtelseType.DAGPENGER_ARBEIDSSOKER_ORDINAER -> AndreStatligeYtelserType.DAGPENGER_ARBEIDSSOKER_ORDINAER
         DagpengerYtelseType.DAGPENGER_PERMITTERING_ORDINAER -> AndreStatligeYtelserType.DAGPENGER_PERMITTERING_ORDINAER
         DagpengerYtelseType.DAGPENGER_PERMITTERING_FISKEINDUSTRI -> AndreStatligeYtelserType.DAGPENGER_PERMITTERING_FISKEINDUSTRI
+    }
+}
+
+fun mapTiltakspengerKilde(kilde: TiltakspengerKilde): AndreStatligeYtelserKilde {
+    return when (kilde) {
+        TiltakspengerKilde.TPSAK -> AndreStatligeYtelserKilde.TPSAK
+        TiltakspengerKilde.ARENA -> AndreStatligeYtelserKilde.ARENA
+    }
+}
+
+fun mapTiltakspengerYtelseType(ytelseType: TiltakspengerYtelseType): AndreStatligeYtelserType {
+    return when (ytelseType) {
+        TiltakspengerYtelseType.TILTAKSPENGER -> AndreStatligeYtelserType.TILTAKSPENGER
+        TiltakspengerYtelseType.TILTAKSPENGER_OG_BARNETILLEGG -> AndreStatligeYtelserType.TILTAKSPENGER_OG_BARNETILLEGG
+        TiltakspengerYtelseType.INGENTING -> AndreStatligeYtelserType.INGENTING
     }
 }
