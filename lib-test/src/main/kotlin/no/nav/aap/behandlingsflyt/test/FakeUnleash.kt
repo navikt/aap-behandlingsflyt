@@ -54,6 +54,7 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.hentDagpengerPerioder to true,
         BehandlingsflytFeature.VedtakslengdeAvklaringsbehov to true,
         BehandlingsflytFeature.UtvidVedtakslengdeUnderEttAr to true,
+        BehandlingsflytFeature.hentUføreSøknadsdata to true,
         )
 )
 
