@@ -9,7 +9,6 @@ import io.ktor.http.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.YtelseTypeCode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.gateway.SamhandlerForholdDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.gateway.SamhandlerYtelseDto
@@ -36,6 +35,7 @@ import no.nav.aap.behandlingsflyt.prosessering.HendelseMottattHåndteringJobbUtf
 import no.nav.aap.behandlingsflyt.prosessering.ProsesseringsJobber
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
@@ -43,6 +43,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.SaksnummerParameter
 import no.nav.aap.behandlingsflyt.test.AzurePortHolder
 import no.nav.aap.behandlingsflyt.test.FakeServers
+import no.nav.aap.behandlingsflyt.test.FiktivtHelseoppholdNavnGenerator
 import no.nav.aap.behandlingsflyt.test.JSONTestPersonService
 import no.nav.aap.behandlingsflyt.test.LokalUnleash
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
@@ -124,7 +125,7 @@ fun main() {
 
                         val fakePersoner = JSONTestPersonService()
                         val oppdatertPerson = fakePersoner.hentPerson(ident)
-                            ?.medInstitusjonsopphold(listOf(genererInstitusjonsopphold(dto)))
+                            ?.medInstitusjonsopphold(dto.opphold.map { genererInstitusjonsopphold(it) })
 
                         if (oppdatertPerson != null) {
                             fakePersoner.oppdater(oppdatertPerson)
@@ -175,14 +176,46 @@ private fun initDbConfig(): DbConfig {
     }
 }
 
-private fun genererInstitusjonsopphold(dto: LeggTilInstitusjonsoppholdDTO) = InstitusjonsoppholdJSON(
-    organisasjonsnummer = Random.nextInt(911111111, 999999999).toString(),
-    kategori = dto.oppholdstype.name,
-    institusjonstype = dto.institusjonstype.name,
-    forventetSluttdato = dto.oppholdTom,
-    startdato = dto.oppholdFom,
-    institusjonsnavn = "Test Institusjon"
-)
+private fun slåSammenInstitusjonsopphold(
+    eksisterende: List<InstitusjonsoppholdJSON>,
+    fraFrontend: List<InstitusjonsoppholdItemDTO>
+): List<InstitusjonsoppholdJSON> {
+    val resultat = eksisterende.toMutableList()
+
+    fraFrontend.forEach { nytt ->
+        val eksisterendeIndex = resultat.indexOfFirst { it.startdato == nytt.oppholdFom }
+        if (eksisterendeIndex >= 0 && resultat[eksisterendeIndex].forventetSluttdato != nytt.oppholdTom) {
+            resultat[eksisterendeIndex] = resultat[eksisterendeIndex].copy(forventetSluttdato = nytt.oppholdTom)
+        } else if (eksisterendeIndex < 0) {
+            resultat.add(genererInstitusjonsopphold(nytt))
+        }
+    }
+
+    return resultat
+}
+
+private fun genererInstitusjonsopphold(oppholdDto: InstitusjonsoppholdItemDTO) =
+        InstitusjonsoppholdJSON(
+            organisasjonsnummer = Random.nextInt(911111111, 999999999).toString(),
+            kategori = oppholdDto.oppholdstype.name,
+            institusjonstype = oppholdDto.institusjonstype.name,
+            forventetSluttdato = oppholdDto.oppholdTom,
+            startdato = oppholdDto.oppholdFom,
+            institusjonsnavn = FiktivtHelseoppholdNavnGenerator.generer()
+        )
+
+
+/*private fun genererInstitusjonsopphold(helseoppholdListeDto: List<InstitusjonsoppholdItemDTO>) =
+    helseoppholdListeDto.map { dto ->
+        InstitusjonsoppholdJSON(
+            organisasjonsnummer = Random.nextInt(911111111, 999999999).toString(),
+            kategori = dto.oppholdstype.name,
+            institusjonstype = dto.institusjonstype.name,
+            forventetSluttdato = dto.oppholdTom,
+            startdato = dto.oppholdFom,
+            institusjonsnavn = FiktivtHelseoppholdNavnGenerator.generer()
+        )
+    }*/
 
 private fun genererFengselsopphold() = InstitusjonsoppholdJSON(
     organisasjonsnummer = "12345",
@@ -379,7 +412,7 @@ private fun opprettNySakOgBehandling(dto: OpprettTestcaseDTO, gatewayProvider: G
         if (dto.steg == StegType.SYKDOMSVURDERING_BREV) return sak
         else if (!dto.student) løsSykdomsvurderingBrev(behandling)
 
-        if(dto.steg == StegType.BEKREFT_VURDERINGER_OPPFØLGING) return sak
+        if (dto.steg == StegType.BEKREFT_VURDERINGER_OPPFØLGING) return sak
         løsVurderingerOppfølgning(behandling)
 
         if (dto.steg == StegType.KVALITETSSIKRING) return sak
