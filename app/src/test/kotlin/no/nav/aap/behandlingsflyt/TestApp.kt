@@ -14,6 +14,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjeneste
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.gateway.SamhandlerYtelseDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.gateway.TjenestePensjonRespons
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.gateway.TpOrdning
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjonstype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Oppholdstype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
@@ -77,6 +78,8 @@ lateinit var testScenarioOrkestrator: TestScenarioOrkestrator
 lateinit var motor: ManuellMotorImpl
 lateinit var datasource: DataSource
 
+data class IdentOgOpphold(val ident: String, val opphold: List<InstitusjonsoppholdJSON>)
+
 // Kjøres opp for å få logback i console uten json
 fun main() {
     val dbConfig = initDbConfig()
@@ -121,14 +124,18 @@ fun main() {
 
                 route("/endre/{saksnummer}/legg-til-institusjonsopphold") {
                     post<SaksnummerParameter, Unit, LeggTilInstitusjonsoppholdDTO> { param, dto ->
-                        val ident = hentIdentForSak(Saksnummer(param.saksnummer))
+                        val (ident, eksisterendeOpphold) = hentIdentOgOppholdForSak(
+                            Saksnummer(param.saksnummer),
+                            repositoryRegistry,
+                            gatewayProvider
+                        )
 
                         val fakePersoner = JSONTestPersonService()
-                        val oppdatertPerson = fakePersoner.hentPerson(ident)
-                            ?.medInstitusjonsopphold(dto.opphold.map { genererInstitusjonsopphold(it) })
+                        val person = fakePersoner.hentPerson(ident)
 
-                        if (oppdatertPerson != null) {
-                            fakePersoner.oppdater(oppdatertPerson)
+                        if (person != null) {
+                            val oppdaterteOpphold = slåSammenInstitusjonsopphold(eksisterendeOpphold, dto.opphold)
+                            fakePersoner.oppdater(person.medInstitusjonsopphold(oppdaterteOpphold))
                             respondWithStatus(HttpStatusCode.OK)
                         } else {
                             log.warn("Finner ikke person med ident $ident for å legge til institusjonsopphold")
@@ -176,17 +183,51 @@ private fun initDbConfig(): DbConfig {
     }
 }
 
+private fun hentIdentOgOppholdForSak(
+    saksnummer: Saksnummer,
+    repositoryRegistry: RepositoryRegistry,
+    gatewayProvider: GatewayProvider
+): IdentOgOpphold {
+    return datasource.transaction(readOnly = true) { connection ->
+        val repositoryProvider = repositoryRegistry.provider(connection)
+        val sakRepository = repositoryProvider.provide<SakRepository>()
+        val sak = sakRepository.hent(saksnummer)
+        val ident = sak.person.aktivIdent().identifikator
+
+        val sisteBehandlingId = hentSisteBehandlingForSak(sak.id, gatewayProvider)
+
+        val oppholdFraDb = sisteBehandlingId
+            .let { repositoryProvider.provide<InstitusjonsoppholdRepository>().hentHvisEksisterer(it.id) }
+            ?.oppholdene
+            ?.opphold
+            ?.map { segment ->
+                InstitusjonsoppholdJSON(
+                    organisasjonsnummer = segment.verdi.orgnr,
+                    kategori = segment.verdi.kategori.name,
+                    institusjonstype = segment.verdi.type.name,
+                    startdato = segment.periode.fom,
+                    forventetSluttdato = segment.periode.tom,
+                    institusjonsnavn = segment.verdi.navn
+                )
+            } ?: emptyList()
+
+        IdentOgOpphold(ident, oppholdFraDb)
+    }
+}
+
 private fun slåSammenInstitusjonsopphold(
-    eksisterende: List<InstitusjonsoppholdJSON>,
+    fraDb: List<InstitusjonsoppholdJSON>,
     fraFrontend: List<InstitusjonsoppholdItemDTO>
 ): List<InstitusjonsoppholdJSON> {
-    val resultat = eksisterende.toMutableList()
+    val resultat = fraDb.toMutableList()
 
     fraFrontend.forEach { nytt ->
         val eksisterendeIndex = resultat.indexOfFirst { it.startdato == nytt.oppholdFom }
-        if (eksisterendeIndex >= 0 && resultat[eksisterendeIndex].forventetSluttdato != nytt.oppholdTom) {
-            resultat[eksisterendeIndex] = resultat[eksisterendeIndex].copy(forventetSluttdato = nytt.oppholdTom)
-        } else if (eksisterendeIndex < 0) {
+        if (eksisterendeIndex >= 0) {
+            if (resultat[eksisterendeIndex].forventetSluttdato != nytt.oppholdTom) {
+                resultat[eksisterendeIndex] = resultat[eksisterendeIndex].copy(forventetSluttdato = nytt.oppholdTom)
+            }
+        } else {
             resultat.add(genererInstitusjonsopphold(nytt))
         }
     }
