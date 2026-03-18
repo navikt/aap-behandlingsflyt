@@ -34,6 +34,7 @@ import no.nav.aap.behandlingsflyt.behandling.beregning.beregningsGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.alder.aldersGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.fritakmeldeplikt.meldepliktsgrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.refusjon.refusjonGrunnlagApi
+import no.nav.aap.behandlingsflyt.behandling.vedtakslengde.vedtakslengdeGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.bistand.bistandsgrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.overgangarbeid.overgangArbeidGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.overgangufore.overgangUforeGrunnlagApi
@@ -78,6 +79,7 @@ import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.tilkjentYtelseApi
 import no.nav.aap.behandlingsflyt.behandling.underveis.meldepliktOverstyringGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.underveis.underveisVurderingerApi
 import no.nav.aap.behandlingsflyt.drift.driftApi
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.StansEllerOpphørMigrering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.ApplikasjonsVersjon
 import no.nav.aap.behandlingsflyt.flyt.behandlingApi
 import no.nav.aap.behandlingsflyt.flyt.flytApi
@@ -106,6 +108,7 @@ import no.nav.aap.behandlingsflyt.prosessering.ProsesseringsJobber
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.saksApi
 import no.nav.aap.behandlingsflyt.test.opprettDummySakApi
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -263,6 +266,7 @@ internal fun Application.server(
                 bistandsgrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
                 meldepliktsgrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
                 meldepliktOverstyringGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
+                vedtakslengdeGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
                 arbeidsevneGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
                 arbeidsopptrappingGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
                 etableringEgenVirksomhetApi(dataSource, repositoryRegistry, gatewayProvider)
@@ -359,17 +363,21 @@ private fun utførMigreringer(
     log: io.ktor.util.logging.Logger
 ): ScheduledExecutorService {
     val scheduler = Executors.newScheduledThreadPool(1)
-    scheduler.schedule(Runnable {
+    /* Prøv på nytt, for å se om vi er elected til leader, hvert 9. minutt. Hvis vi blir elected, så vil metoden
+     * aldri returnere, og med fixed delay, så blir det heller ikke skjedulert flere tasks.
+    **/
+    scheduler.scheduleWithFixedDelay(Runnable {
         val unleashGateway: UnleashGateway = gatewayProvider.provide()
         val isLeader = isLeader(log)
         log.info("isLeader = $isLeader")
 
 
-        if (isLeader) {
+        if (unleashGateway.isEnabled(BehandlingsflytFeature.MigrerStansOgOpphor) && isLeader) {
             // kjør migreringer
+            StansEllerOpphørMigrering(dataSource, postgresRepositoryRegistry, gatewayProvider).migrer()
         }
 
-    }, 9, TimeUnit.MINUTES)
+    }, 1, 9, TimeUnit.MINUTES)
     return scheduler
 }
 
