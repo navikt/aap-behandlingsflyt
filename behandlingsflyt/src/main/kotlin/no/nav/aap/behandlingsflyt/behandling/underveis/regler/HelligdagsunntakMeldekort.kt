@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 
-import no.nav.aap.komponenter.type.Periode
 import java.time.LocalDate
 
 /**
@@ -24,9 +23,9 @@ val helligdagsunntakFritaksUtbetalingDato =
  * Sjekker om en meldeperiode inneholder et helligdagsunntak for å
  * kunne beregne meldekort for "fritak for meldeplikt"-brukere.
  */
-fun erHelligdagsUnntakPeriode(periode: Periode): Boolean {
-    val originaleDatoer = helligdagsunntakFritaksUtbetalingDato.keys
-    return originaleDatoer.any { periode.inneholder(it) }
+fun erHelligdagsUnntak(dato: LocalDate): Boolean {
+    val unntaksDatoer = helligdagsunntakFritaksUtbetalingDato.values
+    return dato in unntaksDatoer
 }
 
 private val helligdagsunntakMeldefrist =

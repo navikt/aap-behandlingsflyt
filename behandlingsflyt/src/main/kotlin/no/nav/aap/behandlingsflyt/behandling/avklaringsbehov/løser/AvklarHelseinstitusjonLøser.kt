@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarHelseinstitusjonLøsning
+import no.nav.aap.behandlingsflyt.behandling.institusjonsopphold.beregnTidligsteReduksjonsdatoPerOpphold
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjon
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdRepository
@@ -138,54 +139,22 @@ class AvklarHelseinstitusjonLøser(
                     .sortedBy { it.periode }
             }
 
-        val resultatFørste = validerFørsteOpphold(vurderingerPerOpphold)
-        if (resultatFørste != null) return resultatFørste
+        // Henter forhåndsberegnet tidligste reduksjonsdato per opphold fra util
+        val tidligsteReduksjonsdatoPerOpphold = beregnTidligsteReduksjonsdatoPerOpphold(opphold)
 
-        val resultatPåfølgende = validerPåfølgendeOpphold(vurderingerPerOpphold)
-        if (resultatPåfølgende != null) return resultatPåfølgende
+        vurderingerPerOpphold.entries.forEach { (oppholdSegment, vurderinger) ->
+            val tidligsteReduksjonsdato = tidligsteReduksjonsdatoPerOpphold[oppholdSegment] ?: return@forEach
+            val første = førsteReduksjonsvurdering(vurderinger)
+            val resultat = validerReduksjonsdato(
+                vurderinger,
+                første,
+                tidligsteReduksjonsdato,
+                "Reduksjonsvurdering starter for tidlig. Skal ikke starte før"
+            )
+            if (resultat != null) return resultat
+        }
 
         return Validation.Valid(nyeVurderinger)
-    }
-
-    private fun validerFørsteOpphold(vurderingerPerOpphold: Map<Segment<Institusjon>, List<HelseinstitusjonVurderingDto>>): Validation<List<HelseinstitusjonVurderingDto>>? {
-        // Valider første opphold: Ingen reduksjon første 4 måneder (innleggelsesmåned + 3 måneder)
-        vurderingerPerOpphold.entries.firstOrNull()?.let { (opphold, vurderinger) ->
-            val første = førsteReduksjonsvurdering(vurderinger)
-            val tidligsteReduksjonsdato = opphold.periode.fom.withDayOfMonth(1).plusMonths(4)
-            return validerReduksjonsdato(
-                vurderinger, første, tidligsteReduksjonsdato,
-                "Første reduksjonsvurdering starter for tidlig. Skal ikke starte før"
-            )
-        }
-        return null
-    }
-
-    private fun validerPåfølgendeOpphold(
-        vurderingerPerOpphold: Map<Segment<Institusjon>, List<HelseinstitusjonVurderingDto>>
-    ): Validation<List<HelseinstitusjonVurderingDto>>? {
-        if (vurderingerPerOpphold.size > 1) {
-            vurderingerPerOpphold.entries.toList()
-                .windowed(2)
-                .forEach { (forrige, nåværende) ->
-                    val forrigeOpphold = forrige.key
-                    val nåværendeOpphold = nåværende.key
-                    val vurderingerNåværende = nåværende.value
-
-                    val treMånederEtterUtskrivelse = forrigeOpphold.periode.tom.plusMonths(3)
-                    val erInnenTreMåneder = !nåværendeOpphold.periode.fom.isAfter(treMånederEtterUtskrivelse)
-                    val første = førsteReduksjonsvurdering(vurderingerNåværende)
-
-                    if (!erInnenTreMåneder) {
-                        val tidligsteReduksjonsdato = nåværendeOpphold.periode.fom.withDayOfMonth(1).plusMonths(4)
-                        val resultat = validerReduksjonsdato(
-                            vurderingerNåværende, første, tidligsteReduksjonsdato,
-                            "Reduksjon ved nytt opphold starter for tidlig. Skal ikke starte før"
-                        )
-                        if (resultat != null) return resultat
-                    }
-                }
-        }
-        return null
     }
 
     private fun førsteReduksjonsvurdering(vurderinger: List<HelseinstitusjonVurderingDto>): HelseinstitusjonVurderingDto? {
@@ -198,7 +167,7 @@ class AvklarHelseinstitusjonLøser(
         vurderinger: List<HelseinstitusjonVurderingDto>,
         førsteReduksjonsvurdering: HelseinstitusjonVurderingDto?,
         tidligsteReduksjonsdato: LocalDate,
-        feilmelding: String
+        feilmelding: String,
     ): Validation<List<HelseinstitusjonVurderingDto>>? {
         if (førsteReduksjonsvurdering != null && førsteReduksjonsvurdering.periode.fom.isBefore(tidligsteReduksjonsdato)) {
             val tidligsteReduksjonsdatoFormatert =
