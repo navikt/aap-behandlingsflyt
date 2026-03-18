@@ -70,6 +70,7 @@ class StansEllerOpphørMigrering(
                 }
                 if (sakId.id in sakIdSett) {
                     log.info("Trukket samme sak id etter den er migrert, så migrering / utplukk feilet")
+                    ferdig = true
                     return@transaction
                 }
 
