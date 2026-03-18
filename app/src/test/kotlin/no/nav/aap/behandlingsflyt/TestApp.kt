@@ -245,19 +245,6 @@ private fun genererInstitusjonsopphold(oppholdDto: InstitusjonsoppholdItemDTO) =
             institusjonsnavn = FiktivtHelseoppholdNavnGenerator.generer()
         )
 
-
-/*private fun genererInstitusjonsopphold(helseoppholdListeDto: List<InstitusjonsoppholdItemDTO>) =
-    helseoppholdListeDto.map { dto ->
-        InstitusjonsoppholdJSON(
-            organisasjonsnummer = Random.nextInt(911111111, 999999999).toString(),
-            kategori = dto.oppholdstype.name,
-            institusjonstype = dto.institusjonstype.name,
-            forventetSluttdato = dto.oppholdTom,
-            startdato = dto.oppholdFom,
-            institusjonsnavn = FiktivtHelseoppholdNavnGenerator.generer()
-        )
-    }*/
-
 private fun genererFengselsopphold() = InstitusjonsoppholdJSON(
     organisasjonsnummer = "12345",
     kategori = Oppholdstype.S.name,
