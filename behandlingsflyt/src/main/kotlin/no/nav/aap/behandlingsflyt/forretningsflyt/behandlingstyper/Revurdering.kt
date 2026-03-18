@@ -240,7 +240,7 @@ object Revurdering : BehandlingType {
                     Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP,
                 )
             )
-            .medSteg(steg = BekreftVurderingerOppfølgingSteg)
+            .medSteg(steg = BekreftVurderingerOppfølgingSteg, vurderingsbehovRelevanteForSteg = emptyList())
             .medSteg(steg = KvalitetssikringsSteg, vurderingsbehovRelevanteForSteg = emptyList())
             .medSteg(
                 steg = VurderYrkesskadeSteg, vurderingsbehovRelevanteForSteg = listOf(
