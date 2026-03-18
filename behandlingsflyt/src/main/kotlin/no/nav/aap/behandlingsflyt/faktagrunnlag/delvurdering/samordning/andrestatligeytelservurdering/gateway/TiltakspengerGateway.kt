@@ -5,7 +5,7 @@ import java.time.LocalDate
 
 interface TiltakspengerGateway : Gateway {
     fun hentYtelseTiltakspenger(
-        ident: String,
+        personidentifikatorer: String,
         fom: LocalDate,
         tom: LocalDate
     ): List<TiltakspengerPeriode>

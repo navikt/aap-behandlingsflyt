@@ -132,6 +132,8 @@ spec:
           namespace: nais-system
         - application: dp-datadeling
           namespace: teamdagpenger
+        - application: tp-datadeling
+          namespace: teamtiltakspenger
 
   env:
     - name: INTEGRASJON_PDL_URL
@@ -252,3 +254,7 @@ spec:
       value: http://dp-datadeling.teamdagpenger
     - name: INTEGRASJON_DAGPENGER_SCOPE
       value: api://prod-gcp.teamdagpenger.dp-datadeling/.default
+    - name: INTEGRASJON_TILTAKSPENGER_URL
+      value: http://tiltakspenger-datadeling.tpts
+    - name: INTEGRASJON_TILTAKSPENGER_SCOPE
+      value: api://prod-gcp.tpts.tiltakspenger-datadeling/.default
