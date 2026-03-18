@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.behandling.brev
 
 import no.nav.aap.behandlingsflyt.behandling.Resultat
 import no.nav.aap.behandlingsflyt.behandling.ResultatUtleder
+import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.BeregnTilkjentYtelseService.Companion.ANTALL_ÅRLIGE_ARBEIDSDAGER
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.MINSTE_ÅRLIG_YTELSE_TIDSLINJE
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
@@ -17,6 +18,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagU
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagYrkesskade
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.UføreInntekt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.Avslått
@@ -205,7 +207,7 @@ class BrevUtlederService(
         }
     }
 
-    private fun brevBehovUtvidVedtakslengde(behandling: Behandling): UtvidVedtakslengde {
+    private fun brevBehovUtvidVedtakslengde(behandling: Behandling): BrevBehov {
         val forrigeBehandlingId = checkNotNull(behandling.forrigeBehandlingId) {
             "UtvidelsesVedtak mangler forrigeBehandlingId for ${behandling.id}"
         }
@@ -218,18 +220,53 @@ class BrevUtlederService(
         val underveisGrunnlag = underveisRepository.hent(behandling.id)
         val sisteDagMedYtelse = underveisGrunnlag.sisteDagMedYtelse()
 
-        val avslagsårsaker = if (unleashGateway.isEnabled(BehandlingsflytFeature.UtvidVedtakslengdeUnderEttAr)) {
-            vedtakslengdeService.hentAvslagsårsakerVedStansEllerOpphør(
+        if (unleashGateway.isEnabled(BehandlingsflytFeature.UtvidVedtakslengdeUnderEttAr)) {
+            val avslagsårsaker = vedtakslengdeService.hentAvslagsårsakerVedStansEllerOpphør(
                 behandlingId = behandling.id,
                 stansEllerOpphørFom = sisteDagMedYtelse.plusDays(1)
             )
-        } else emptySet()
+
+            if (avslagsårsaker.isNotEmpty()) {
+                // Støtter kun en avslagsårsakk i brev - henter ut høyest prioritert
+                val prioritertAvslagsårsak = requireNotNull(prioriterAvslagsårsak(avslagsårsaker)) {
+                    "Fant avslagsårsaker $avslagsårsaker for behandling ${behandling.id}, men ingen av dem er støttet for utvidelse under ett år"
+                }
+
+                return UtvidVedtakslengde(
+                    utvidetAapFomDato = utvidetAapFomDato,
+                    sisteDagMedYtelse = sisteDagMedYtelse,
+                    vedtakslengdeTypeBrev = avslagsårsakTilTypeBrev(prioritertAvslagsårsak),
+                )
+            }
+        }
 
         return UtvidVedtakslengde(
             utvidetAapFomDato = utvidetAapFomDato,
             sisteDagMedYtelse = sisteDagMedYtelse,
-            sisteDagMedYtelseBegrensetAv = avslagsårsaker
+            vedtakslengdeTypeBrev = TypeBrev.VEDTAK_UTVID_VEDTAKSLENGDE,
         )
+    }
+
+    private fun avslagsårsakTilTypeBrev(avslagsårsak: Avslagsårsak): TypeBrev = when (avslagsårsak) {
+        Avslagsårsak.BRUKER_OVER_67 -> TypeBrev.VEDTAK_FORLENGELSE_UNDER_ETT_ÅR_11_4
+        Avslagsårsak.IKKE_MEDLEM -> TypeBrev.VEDTAK_FORLENGELSE_UNDER_ETT_ÅR_MEDLEMSKAP
+        Avslagsårsak.ORDINÆRKVOTE_BRUKT_OPP -> TypeBrev.VEDTAK_FORLENGELSE_UNDER_ETT_ÅR_11_12
+        Avslagsårsak.BRUDD_PÅ_OPPHOLDSKRAV_STANS -> TypeBrev.VEDTAK_FORLENGELSE_UNDER_ETT_ÅR_11_3
+        Avslagsårsak.IKKE_RETT_UNDER_STRAFFEGJENNOMFØRING -> TypeBrev.VEDTAK_FORLENGELSE_UNDER_ETT_ÅR_11_26
+        Avslagsårsak.ANNEN_FULL_YTELSE -> TypeBrev.VEDTAK_FORLENGELSE_UNDER_ETT_ÅR_11_27
+        else -> error("Uventet avslagsårsak for utvidelse under ett år: $avslagsårsak")
+    }
+
+    private fun prioriterAvslagsårsak(avslagsårsaker: Set<Avslagsårsak>): Avslagsårsak? {
+        val prioritertRekkefølge = listOf(
+            Avslagsårsak.BRUKER_OVER_67,
+            Avslagsårsak.IKKE_MEDLEM,
+            Avslagsårsak.ORDINÆRKVOTE_BRUKT_OPP,
+            Avslagsårsak.BRUDD_PÅ_OPPHOLDSKRAV_STANS,
+            Avslagsårsak.IKKE_RETT_UNDER_STRAFFEGJENNOMFØRING,
+            Avslagsårsak.ANNEN_FULL_YTELSE,
+        )
+        return prioritertRekkefølge.firstOrNull { it in avslagsårsaker }
     }
 
     private fun brevBehovArbeidssøker(behandling: Behandling): Arbeidssøker {
