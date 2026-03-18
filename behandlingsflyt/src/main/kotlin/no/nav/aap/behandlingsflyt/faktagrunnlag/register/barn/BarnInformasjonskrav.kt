@@ -29,7 +29,7 @@ import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
 
-class BarnInformasjonskrav private constructor(
+class BarnInformasjonskrav internal constructor(
     private val barnRepository: BarnRepository,
     private val personRepository: PersonRepository,
     private val barnGateway: BarnGateway,

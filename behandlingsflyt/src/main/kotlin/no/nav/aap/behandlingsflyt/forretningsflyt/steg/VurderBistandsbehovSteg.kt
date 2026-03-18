@@ -119,7 +119,6 @@ class VurderBistandsbehovSteg(
             ?.somStudenttidslinje(kontekst.rettighetsperiode.tom)
             .orEmpty()
 
-        val nyTidligereVurderingerEnabled = unleashGateway.isEnabled(BehandlingsflytFeature.NyTidligereVurderinger)
 
         return Tidslinje.map3(tidligereVurderingsutfall, sykdomsvurderinger, studentvurderinger)
         { segmentPeriode, behandlingsutfall, sykdomsvurdering, studentvurdering ->
@@ -128,27 +127,16 @@ class VurderBistandsbehovSteg(
                 TidligereVurderinger.IkkeBehandlingsgrunnlag -> false
                 TidligereVurderinger.UunngåeligAvslag -> false
                 is TidligereVurderinger.PotensieltOppfylt -> {
-                    if (nyTidligereVurderingerEnabled) {
-                        when (behandlingsutfall.rettighetstype) {
-                            null -> (sykdomsvurdering?.erOppfyltOrdinær(
-                                kravdato = kontekst.rettighetsperiode.fom,
-                                segmentPeriode
-                            ) == true
-                                    || sykdomsvurdering?.erOppfyltForYrkesskadeSettBortIfraÅrsakssammenheng(
-                                kravdato = kontekst.rettighetsperiode.fom, segmentPeriode
-                            ) == true)
+                    when (behandlingsutfall.rettighetstype) {
+                        null -> (sykdomsvurdering?.erOppfyltOrdinær(
+                            kravdato = kontekst.rettighetsperiode.fom,
+                            segmentPeriode
+                        ) == true
+                                || sykdomsvurdering?.erOppfyltForYrkesskadeSettBortIfraÅrsakssammenheng(
+                            kravdato = kontekst.rettighetsperiode.fom, segmentPeriode
+                        ) == true)
 
-                            else -> false
-                        }
-                    } else {
-                        studentvurdering?.erOppfylt() != true &&
-                                (sykdomsvurdering?.erOppfyltOrdinær(
-                                    kravdato = kontekst.rettighetsperiode.fom,
-                                    segmentPeriode
-                                ) == true
-                                        || sykdomsvurdering?.erOppfyltForYrkesskadeSettBortIfraÅrsakssammenheng(
-                                    kravdato = kontekst.rettighetsperiode.fom, segmentPeriode
-                                ) == true)
+                        else -> false
                     }
                 }
             }

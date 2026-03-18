@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
+import io.mockk.mockk
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.underveis.RettighetstypeService
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Kvote
@@ -131,6 +132,8 @@ class VedtakslengdeStegTest {
                 underveisRepository = InMemoryUnderveisRepository,
                 vilkårsresultatRepository = InMemoryVilkårsresultatRepository,
                 rettighetstypeService = RettighetstypeService(InMemoryRettighetstypeRepository, InMemoryVilkårsresultatRepository, InMemoryUnderveisRepository),
+                stansOpphørRepository = mockk(),
+                unleashGateway = AlleAvskruddUnleash,
                 clock = fixedClock(dagensDato),
             ),
             avklaringsbehovService = AvklaringsbehovService(inMemoryRepositoryProvider),
