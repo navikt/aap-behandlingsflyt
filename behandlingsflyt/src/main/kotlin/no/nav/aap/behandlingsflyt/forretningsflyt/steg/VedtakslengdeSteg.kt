@@ -38,9 +38,6 @@ class VedtakslengdeSteg(
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         when (kontekst.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING, VurderingType.REVURDERING -> {
-                if (unleashGateway.isDisabled(BehandlingsflytFeature.ForlengelseIManuellBehandling)) {
-                    return Fullført
-                }
 
                 // Lagrer en automatisk vurdering med sluttdato - saksbehandler kan manuelt overstyre denne
                 vedtakslengdeService.lagreAutomatiskVedtakslengde(

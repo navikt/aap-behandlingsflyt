@@ -37,7 +37,6 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.LagreVedtakIFatteVedtak to true,
         BehandlingsflytFeature.Under18 to true,
         BehandlingsflytFeature.SendBrevVedMottattKlage to true,
-        BehandlingsflytFeature.ForlengelseIManuellBehandling to true,
         BehandlingsflytFeature.InstitusjonsoppholdJobb to true,
         BehandlingsflytFeature.TrekkSoeknadOpprettetFraLegeerklaering to true,
         BehandlingsflytFeature.VirksomhetsEtablering to true,
