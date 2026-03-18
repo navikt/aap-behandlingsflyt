@@ -440,7 +440,7 @@ object FakeServers : AutoCloseable {
 
         installerContentNegotiation()
         routing {
-            route("/tiltakspenger-datadeling/v1/perioder") {
+            route("/vedtak/perioder") {
                 post {
                     val body = call.receive<TiltakspengerRequest>()
                     val hentPerson = fakePersoner.hentPerson(body.personIdent)

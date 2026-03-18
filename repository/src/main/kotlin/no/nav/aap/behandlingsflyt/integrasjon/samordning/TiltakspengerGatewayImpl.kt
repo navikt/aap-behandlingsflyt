@@ -20,7 +20,7 @@ import java.time.LocalDate
 
 // https://navikt.github.io/dp-datadeling/openapi.html
 class TiltakspengerGatewayImpl: TiltakspengerGateway {
-    private val url = URI.create(requiredConfigForKey("integrasjon.tiltakspenger.url") + "/tiltakspenger-datadeling/v1/perioder")
+    private val url = URI.create(requiredConfigForKey("integrasjon.tiltakspenger.url") + "/vedtak/perioder")
     private val config = ClientConfig(scope = requiredConfigForKey("integrasjon.tiltakspenger.scope"))
 
     companion object : Factory<TiltakspengerGateway> {
