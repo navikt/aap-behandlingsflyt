@@ -624,6 +624,7 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(VedtakslengdeFlytUnlea
                 behandlingService = BehandlingService(repositoryProvider, gatewayProvider),
                 vedtakslengdeService = VedtakslengdeService(repositoryProvider, gatewayProvider),
                 flytJobbRepository = FlytJobbRepositoryImpl(connection),
+                unleashGateway = AlleAvskruddUnleash,
                 clock = clock,
             )
 
@@ -702,6 +703,7 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(VedtakslengdeFlytUnlea
                 behandlingService = BehandlingService(repositoryProvider, gatewayProvider),
                 vedtakslengdeService = VedtakslengdeService(repositoryProvider, gatewayProvider),
                 flytJobbRepository = FlytJobbRepositoryImpl(connection),
+                unleashGateway = AlleAvskruddUnleash,
                 clock = clock,
             )
 
@@ -810,6 +812,7 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(VedtakslengdeFlytUnlea
                 behandlingService = BehandlingService(repositoryProvider, gatewayProvider),
                 vedtakslengdeService = VedtakslengdeService(repositoryProvider, gatewayProviderAlleAvskruddUnleash),
                 flytJobbRepository = FlytJobbRepositoryImpl(connection),
+                unleashGateway = AlleAvskruddUnleash,
                 clock = clock,
             )
 
@@ -892,6 +895,7 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(VedtakslengdeFlytUnlea
                 behandlingService = BehandlingService(repositoryProvider, gatewayProvider),
                 vedtakslengdeService = VedtakslengdeService(repositoryProvider, gatewayProvider),
                 flytJobbRepository = FlytJobbRepositoryImpl(connection),
+                unleashGateway = AlleAvskruddUnleash,
                 clock = clock,
             )
 
@@ -987,6 +991,7 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(VedtakslengdeFlytUnlea
                 behandlingService = BehandlingService(repositoryProvider, gatewayProvider),
                 vedtakslengdeService = VedtakslengdeService(repositoryProvider, gatewayProvider),
                 flytJobbRepository = FlytJobbRepositoryImpl(connection),
+                unleashGateway = AlleAvskruddUnleash,
                 clock = clock,
             )
 
@@ -1084,6 +1089,7 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(VedtakslengdeFlytUnlea
                 behandlingService = BehandlingService(repositoryProvider, gatewayProvider),
                 vedtakslengdeService = VedtakslengdeService(repositoryProvider, gatewayProvider),
                 flytJobbRepository = FlytJobbRepositoryImpl(connection),
+                unleashGateway = AlleAvskruddUnleash,
                 clock = clock,
             )
 
@@ -1168,6 +1174,7 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(VedtakslengdeFlytUnlea
                 behandlingService = BehandlingService(repositoryProvider, gatewayProvider),
                 vedtakslengdeService = VedtakslengdeService(repositoryProvider, gatewayProvider),
                 flytJobbRepository = FlytJobbRepositoryImpl(connection),
+                unleashGateway = AlleAvskruddUnleash,
                 clock = clock,
             )
 
