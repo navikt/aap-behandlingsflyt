@@ -9,12 +9,12 @@ import io.ktor.http.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.YtelseTypeCode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.gateway.SamhandlerForholdDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.gateway.SamhandlerYtelseDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.gateway.TjenestePensjonRespons
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.gateway.TpOrdning
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjonstype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Oppholdstype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
@@ -36,6 +36,7 @@ import no.nav.aap.behandlingsflyt.prosessering.HendelseMottattHåndteringJobbUtf
 import no.nav.aap.behandlingsflyt.prosessering.ProsesseringsJobber
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
@@ -43,6 +44,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.SaksnummerParameter
 import no.nav.aap.behandlingsflyt.test.AzurePortHolder
 import no.nav.aap.behandlingsflyt.test.FakeServers
+import no.nav.aap.behandlingsflyt.test.FiktivtHelseoppholdNavnGenerator
 import no.nav.aap.behandlingsflyt.test.JSONTestPersonService
 import no.nav.aap.behandlingsflyt.test.LokalUnleash
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
@@ -75,6 +77,8 @@ private val log = LoggerFactory.getLogger("TestApp")
 lateinit var testScenarioOrkestrator: TestScenarioOrkestrator
 lateinit var motor: ManuellMotorImpl
 lateinit var datasource: DataSource
+
+data class IdentOgOpphold(val ident: String, val opphold: List<InstitusjonsoppholdJSON>)
 
 // Kjøres opp for å få logback i console uten json
 fun main() {
@@ -120,14 +124,18 @@ fun main() {
 
                 route("/endre/{saksnummer}/legg-til-institusjonsopphold") {
                     post<SaksnummerParameter, Unit, LeggTilInstitusjonsoppholdDTO> { param, dto ->
-                        val ident = hentIdentForSak(Saksnummer(param.saksnummer))
+                        val (ident, eksisterendeOpphold) = hentIdentOgOppholdForSak(
+                            Saksnummer(param.saksnummer),
+                            repositoryRegistry,
+                            gatewayProvider
+                        )
 
                         val fakePersoner = JSONTestPersonService()
-                        val oppdatertPerson = fakePersoner.hentPerson(ident)
-                            ?.medInstitusjonsopphold(listOf(genererInstitusjonsopphold(dto)))
+                        val person = fakePersoner.hentPerson(ident)
 
-                        if (oppdatertPerson != null) {
-                            fakePersoner.oppdater(oppdatertPerson)
+                        if (person != null) {
+                            val oppdaterteOpphold = slåSammenInstitusjonsopphold(eksisterendeOpphold, dto.opphold)
+                            fakePersoner.oppdater(person.medInstitusjonsopphold(oppdaterteOpphold))
                             respondWithStatus(HttpStatusCode.OK)
                         } else {
                             log.warn("Finner ikke person med ident $ident for å legge til institusjonsopphold")
@@ -175,14 +183,67 @@ private fun initDbConfig(): DbConfig {
     }
 }
 
-private fun genererInstitusjonsopphold(dto: LeggTilInstitusjonsoppholdDTO) = InstitusjonsoppholdJSON(
-    organisasjonsnummer = Random.nextInt(911111111, 999999999).toString(),
-    kategori = dto.oppholdstype.name,
-    institusjonstype = dto.institusjonstype.name,
-    forventetSluttdato = dto.oppholdTom,
-    startdato = dto.oppholdFom,
-    institusjonsnavn = "Test Institusjon"
-)
+private fun hentIdentOgOppholdForSak(
+    saksnummer: Saksnummer,
+    repositoryRegistry: RepositoryRegistry,
+    gatewayProvider: GatewayProvider
+): IdentOgOpphold {
+    return datasource.transaction(readOnly = true) { connection ->
+        val repositoryProvider = repositoryRegistry.provider(connection)
+        val sakRepository = repositoryProvider.provide<SakRepository>()
+        val sak = sakRepository.hent(saksnummer)
+        val ident = sak.person.aktivIdent().identifikator
+
+        val sisteBehandlingId = hentSisteBehandlingForSak(sak.id, gatewayProvider)
+
+        val oppholdFraDb = sisteBehandlingId
+            .let { repositoryProvider.provide<InstitusjonsoppholdRepository>().hentHvisEksisterer(it.id) }
+            ?.oppholdene
+            ?.opphold
+            ?.map { segment ->
+                InstitusjonsoppholdJSON(
+                    organisasjonsnummer = segment.verdi.orgnr,
+                    kategori = segment.verdi.kategori.name,
+                    institusjonstype = segment.verdi.type.name,
+                    startdato = segment.periode.fom,
+                    forventetSluttdato = segment.periode.tom,
+                    institusjonsnavn = segment.verdi.navn
+                )
+            } ?: emptyList()
+
+        IdentOgOpphold(ident, oppholdFraDb)
+    }
+}
+
+private fun slåSammenInstitusjonsopphold(
+    fraDb: List<InstitusjonsoppholdJSON>,
+    fraFrontend: List<InstitusjonsoppholdItemDTO>
+): List<InstitusjonsoppholdJSON> {
+    val oppdaterte = fraFrontend.map { nytt ->
+        val eksisterende = fraDb.find { it.startdato == nytt.oppholdFom }
+        eksisterende?.let {
+            if ( it.forventetSluttdato != nytt.oppholdTom)
+                it.copy(forventetSluttdato = nytt.oppholdTom)
+            else it
+        } ?: genererInstitusjonsopphold(nytt)
+    }
+
+    val ikkeOppdaterte = fraDb.filter { db ->
+        fraFrontend.none { it.oppholdFom == db.startdato }
+    }
+
+    return ikkeOppdaterte + oppdaterte
+}
+
+private fun genererInstitusjonsopphold(oppholdDto: InstitusjonsoppholdItemDTO) =
+    InstitusjonsoppholdJSON(
+        organisasjonsnummer = Random.nextInt(911111111, 999999999).toString(),
+        kategori = oppholdDto.oppholdstype.name,
+        institusjonstype = oppholdDto.institusjonstype.name,
+        forventetSluttdato = oppholdDto.oppholdTom,
+        startdato = oppholdDto.oppholdFom,
+        institusjonsnavn = FiktivtHelseoppholdNavnGenerator.generer()
+    )
 
 private fun genererFengselsopphold() = InstitusjonsoppholdJSON(
     organisasjonsnummer = "12345",
@@ -340,7 +401,11 @@ private fun sendInnSøknad(dto: OpprettTestcaseDTO, gatewayProvider: GatewayProv
     return sak
 }
 
-private fun opprettNySakOgBehandling(dto: OpprettTestcaseDTO, gatewayProvider: GatewayProvider, repositoryRegistry: RepositoryRegistry): Sak {
+private fun opprettNySakOgBehandling(
+    dto: OpprettTestcaseDTO,
+    gatewayProvider: GatewayProvider,
+    repositoryRegistry: RepositoryRegistry
+): Sak {
     val sak = sendInnSøknad(dto, gatewayProvider, repositoryRegistry)
 
     if (dto.steg in listOf(StegType.START_BEHANDLING, StegType.AVKLAR_STUDENT)) return sak
@@ -379,7 +444,7 @@ private fun opprettNySakOgBehandling(dto: OpprettTestcaseDTO, gatewayProvider: G
         if (dto.steg == StegType.SYKDOMSVURDERING_BREV) return sak
         else if (!dto.student) løsSykdomsvurderingBrev(behandling)
 
-        if(dto.steg == StegType.BEKREFT_VURDERINGER_OPPFØLGING) return sak
+        if (dto.steg == StegType.BEKREFT_VURDERINGER_OPPFØLGING) return sak
         løsVurderingerOppfølgning(behandling)
 
         if (dto.steg == StegType.KVALITETSSIKRING) return sak
