@@ -219,31 +219,31 @@ private fun slåSammenInstitusjonsopphold(
     fraDb: List<InstitusjonsoppholdJSON>,
     fraFrontend: List<InstitusjonsoppholdItemDTO>
 ): List<InstitusjonsoppholdJSON> {
-    val resultat = fraDb.toMutableList()
-
-    fraFrontend.forEach { nytt ->
-        val eksisterendeIndex = resultat.indexOfFirst { it.startdato == nytt.oppholdFom }
-        if (eksisterendeIndex >= 0) {
-            if (resultat[eksisterendeIndex].forventetSluttdato != nytt.oppholdTom) {
-                resultat[eksisterendeIndex] = resultat[eksisterendeIndex].copy(forventetSluttdato = nytt.oppholdTom)
-            }
-        } else {
-            resultat.add(genererInstitusjonsopphold(nytt))
-        }
+    val oppdaterte = fraFrontend.map { nytt ->
+        val eksisterende = fraDb.find { it.startdato == nytt.oppholdFom }
+        eksisterende?.let {
+            if ( it.forventetSluttdato != nytt.oppholdTom)
+                it.copy(forventetSluttdato = nytt.oppholdTom)
+            else it
+        } ?: genererInstitusjonsopphold(nytt)
     }
 
-    return resultat
+    val ikkeOppdaterte = fraDb.filter { db ->
+        fraFrontend.none { it.oppholdFom == db.startdato }
+    }
+
+    return ikkeOppdaterte + oppdaterte
 }
 
 private fun genererInstitusjonsopphold(oppholdDto: InstitusjonsoppholdItemDTO) =
-        InstitusjonsoppholdJSON(
-            organisasjonsnummer = Random.nextInt(911111111, 999999999).toString(),
-            kategori = oppholdDto.oppholdstype.name,
-            institusjonstype = oppholdDto.institusjonstype.name,
-            forventetSluttdato = oppholdDto.oppholdTom,
-            startdato = oppholdDto.oppholdFom,
-            institusjonsnavn = FiktivtHelseoppholdNavnGenerator.generer()
-        )
+    InstitusjonsoppholdJSON(
+        organisasjonsnummer = Random.nextInt(911111111, 999999999).toString(),
+        kategori = oppholdDto.oppholdstype.name,
+        institusjonstype = oppholdDto.institusjonstype.name,
+        forventetSluttdato = oppholdDto.oppholdTom,
+        startdato = oppholdDto.oppholdFom,
+        institusjonsnavn = FiktivtHelseoppholdNavnGenerator.generer()
+    )
 
 private fun genererFengselsopphold() = InstitusjonsoppholdJSON(
     organisasjonsnummer = "12345",
@@ -401,7 +401,11 @@ private fun sendInnSøknad(dto: OpprettTestcaseDTO, gatewayProvider: GatewayProv
     return sak
 }
 
-private fun opprettNySakOgBehandling(dto: OpprettTestcaseDTO, gatewayProvider: GatewayProvider, repositoryRegistry: RepositoryRegistry): Sak {
+private fun opprettNySakOgBehandling(
+    dto: OpprettTestcaseDTO,
+    gatewayProvider: GatewayProvider,
+    repositoryRegistry: RepositoryRegistry
+): Sak {
     val sak = sendInnSøknad(dto, gatewayProvider, repositoryRegistry)
 
     if (dto.steg in listOf(StegType.START_BEHANDLING, StegType.AVKLAR_STUDENT)) return sak
