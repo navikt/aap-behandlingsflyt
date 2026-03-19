@@ -68,6 +68,7 @@ object VedtakslengdeFlytUnleash : FakeUnleashBaseWithDefaultDisabled(
 object AvklarVedtakslengdeFlytUnleash : FakeUnleashBaseWithDefaultDisabled(
     enabledFlags = listOf(
         BehandlingsflytFeature.VedtakslengdeAvklaringsbehov,
+        BehandlingsflytFeature.OpprettManuellVedtakslengdeBehandling
     )
 )
 
@@ -1401,6 +1402,127 @@ class AvklarVedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(AvklarVedtakslen
                 assertThat(vedtakslengdeGrunnlag?.gjeldendeVurdering()?.sluttdato).isEqualTo(manueltOverstyrtSluttdato)
                 assertThat(vedtakslengdeGrunnlag?.gjeldendeVurdering()?.begrunnelse).isEqualTo(
                     manueltOverstyrtBegrunnelse
+                )
+                assertThat(vedtakslengdeGrunnlag?.gjeldendeVurdering()?.vurdertManuelt).isTrue
+            }
+    }
+
+    @Test
+    fun `jobb oppretter manuell behandling når neste periode inneholder to korte perioder med bistand`() {
+        val søknadstidspunkt = LocalDateTime.now(clock).minusYears(1)
+        val (sak, førstegangsbehandling) = sendInnFørsteSøknad(mottattTidspunkt = søknadstidspunkt)
+        val startDato = sak.rettighetsperiode.fom
+        val forventetSluttdato = startDato.plussEtÅrMedHverdager(ÅrMedHverdager.FØRSTE_ÅR)
+        val datoOppholdskravIkkeOppfyltFra = sak.rettighetsperiode.fom.plusYears(1).plusMonths(2)
+        val nesteDatoOppholdskravIkkeOppfyltFra = datoOppholdskravIkkeOppfyltFra.plusMonths(4)
+
+        førstegangsbehandling
+            .løsSykdom(startDato)
+            .løsBistand(startDato)
+            .løsRefusjonskrav()
+            .løsSykdomsvurderingBrev()
+            .kvalitetssikre()
+            .løsBeregningstidspunkt(startDato)
+            // Legger inn flere hull etter ett år - dette skal føre til manuell behandling ved utvidelse av vedtakslengde
+            .løsAvklaringsBehov(
+                AvklarOppholdskravLøsning(
+                    løsningerForPerioder = listOf(
+                        AvklarOppholdkravLøsningForPeriodeDto(
+                            oppfylt = true,
+                            land = null,
+                            fom = startDato,
+                            tom = datoOppholdskravIkkeOppfyltFra.minusDays(1),
+                            begrunnelse = "Oppholder seg i Norge"
+                        ),
+                        AvklarOppholdkravLøsningForPeriodeDto(
+                            oppfylt = false,
+                            land = "Sverige",
+                            fom = datoOppholdskravIkkeOppfyltFra,
+                            tom = datoOppholdskravIkkeOppfyltFra.plusMonths(1).minusDays(1),
+                            begrunnelse = "Fiske"
+                        ),
+                        AvklarOppholdkravLøsningForPeriodeDto(
+                            oppfylt = true,
+                            land = null,
+                            fom = datoOppholdskravIkkeOppfyltFra.plusMonths(1),
+                            tom = nesteDatoOppholdskravIkkeOppfyltFra.minusDays(1),
+                            begrunnelse = "Oppholder seg i Norge"
+                        ),
+                        AvklarOppholdkravLøsningForPeriodeDto(
+                            oppfylt = false,
+                            land = "Sverige",
+                            fom = nesteDatoOppholdskravIkkeOppfyltFra,
+                            begrunnelse = "Fiske"
+                        )
+                    )
+                )
+            )
+            .løsAndreStatligeYtelser()
+            .løsAvklaringsBehov(ForeslåVedtakLøsning())
+            .fattVedtak()
+            .løsVedtaksbrev(TypeBrev.VEDTAK_INNVILGELSE)
+
+
+        dataSource.transaction { connection ->
+            val førstegangsbehandling = BehandlingRepositoryImpl(connection).finnFørstegangsbehandling(sak.id)
+
+            val vedtakslengdeVurdering = VedtakslengdeRepositoryImpl(connection).hentHvisEksisterer(førstegangsbehandling.id)
+            assertThat(vedtakslengdeVurdering).isNotNull()
+            assertThat(vedtakslengdeVurdering?.gjeldendeVurdering()?.sluttdato).isEqualTo(forventetSluttdato)
+        }
+
+        dataSource.transaction { connection ->
+            val repositoryProvider = postgresRepositoryRegistry.provider(connection)
+
+            val opprettJobbUtvidVedtakslengdeJobbUtfører = OpprettJobbUtvidVedtakslengdeJobbUtfører(
+                behandlingService = BehandlingService(repositoryProvider, gatewayProvider),
+                vedtakslengdeService = VedtakslengdeService(repositoryProvider, gatewayProvider),
+                flytJobbRepository = FlytJobbRepositoryImpl(connection),
+                unleashGateway = AvklarVedtakslengdeFlytUnleash,
+                clock = clock,
+            )
+
+            opprettJobbUtvidVedtakslengdeJobbUtfører.utfør(JobbInput(OpprettJobbUtvidVedtakslengdeJobbUtfører))
+        }
+
+        motor.kjørJobber()
+
+        val manuellBehandlingMedVurderingsbehovVedtakslengdeManuelt = dataSource.transaction { connection ->
+            val behandling = BehandlingService(
+                postgresRepositoryRegistry.provider(connection),
+                gatewayProvider
+            ).finnSisteYtelsesbehandlingFor(sak.id)!!
+
+            assertThat(behandling.vurderingsbehov().map { it.type })
+                .containsExactly(no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.VEDTAKSLENGDE_MANUELT)
+            behandling
+        }
+
+        val forlengelseFom = nesteDatoOppholdskravIkkeOppfyltFra.plusDays(1)
+
+        manuellBehandlingMedVurderingsbehovVedtakslengdeManuelt
+            .løsAvklaringsBehov(
+                AvklarVedtakslengdeLøsning(
+                    løsningerForPerioder = listOf(VedtakslengdeVurderingDto(
+                        fom = forventetSluttdato.plusDays(1),
+                        tom = forlengelseFom,
+                        sluttdato = forlengelseFom,
+                        begrunnelse = "Vurdert vedtakslengde manuelt"
+                    ))
+                )
+            )
+            .løsAvklaringsBehov(ForeslåVedtakLøsning())
+            .fattVedtak()
+            .løsVedtaksbrev(TypeBrev.VEDTAK_ENDRING)
+            .medKontekst {
+                val vedtakslengdeRepository: VedtakslengdeRepository = repositoryProvider.provide()
+                val vedtakslengdeGrunnlag = vedtakslengdeRepository.hentHvisEksisterer(this.behandling.id)
+
+                assertThat(vedtakslengdeGrunnlag).isNotNull
+                assertThat(vedtakslengdeGrunnlag?.vurderinger?.size).isEqualTo(2)
+                assertThat(vedtakslengdeGrunnlag?.gjeldendeVurdering()?.sluttdato).isEqualTo(forlengelseFom)
+                assertThat(vedtakslengdeGrunnlag?.gjeldendeVurdering()?.begrunnelse).isEqualTo(
+                    "Vurdert vedtakslengde manuelt"
                 )
                 assertThat(vedtakslengdeGrunnlag?.gjeldendeVurdering()?.vurdertManuelt).isTrue
             }
