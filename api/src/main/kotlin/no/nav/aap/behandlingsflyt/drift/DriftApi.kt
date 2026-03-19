@@ -9,6 +9,8 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepo
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingReferanse
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingRepository
+import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelse2Dto
+import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Innvilgelsesårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
@@ -167,6 +169,22 @@ fun NormalOpenAPIRoute.driftApi(
                 krevDtoErUtenFødselsnummer(vilkår)
 
                 respond(vilkår)
+            }
+        }
+
+        route("/behandling/{referanse}/tilkjent-ytelse") {
+            authorizedPost<BehandlingReferanse, TilkjentYtelse2Dto, Unit>(
+                AuthorizationParamPathConfig(
+                    behandlingPathParam = BehandlingPathParam("referanse"),
+                    operasjon = Operasjon.DRIFTE
+                )
+            ) { params, _ ->
+                val tilkjentYtelseDto = TilkjentYtelseService(dataSource, repositoryRegistry)
+                    .hentTilkjentYtelse(params)
+
+                krevDtoErUtenFødselsnummer(tilkjentYtelseDto)
+
+                respond(tilkjentYtelseDto)
             }
         }
 
