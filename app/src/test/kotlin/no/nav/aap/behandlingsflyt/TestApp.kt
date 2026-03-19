@@ -149,8 +149,9 @@ fun main() {
                         val ident = hentIdentForSak(Saksnummer(param.saksnummer))
 
                         val fakePersoner = JSONTestPersonService()
-                        val oppdatertPerson = fakePersoner.hentPerson(ident)
-                            ?.medYrkesskade(TestYrkesskade())
+                        val oppdatertPerson = fakePersoner.hentPerson(ident)?.let {
+                            it.medYrkesskade(it.yrkesskade + TestYrkesskade())
+                        }
 
                         if (oppdatertPerson != null) {
                             fakePersoner.oppdater(oppdatertPerson)
