@@ -11,7 +11,6 @@ enum class BehandlingsflytFeature : FeatureToggle {
     LagreVedtakIFatteVedtak,
     Under18,
     SendBrevVedMottattKlage,
-    ForlengelseIManuellBehandling,
     InstitusjonsoppholdJobb,
     TrekkSoeknadOpprettetFraLegeerklaering,
     VirksomhetsEtablering,
