@@ -58,6 +58,7 @@ class StansEllerOpphørMigrering(
                           AND trukket_soknad_vurdering.skal_trekkes
                     )
                       AND sak.opprettet_tid >= '2025-04-01'
+                    ORDER BY sak.id
                     LIMIT 1
                 """.trimIndent()
                 ) {
