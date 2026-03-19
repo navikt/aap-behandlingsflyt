@@ -246,7 +246,7 @@ class BeregnTilkjentYtelseService(private val grunnlag: TilkjentYtelseGrunnlag) 
         // Ellers, betal ut etter dato for levert meldekort.
         // Fallback til siste meldedag for meldeperiode.
         // kanskje denne burde være min, ikke when
-        val muligUtbetalingsdato = when {
+        val utbetalingsdato = when {
             opplysningerMottatt != null -> opplysningerMottatt
             underveisperiode.meldepliktStatus == MeldepliktStatus.FRITAK -> {
                 log.info("Traff sjekk for meldepliktstatus == FRITAK.")
@@ -256,8 +256,6 @@ class BeregnTilkjentYtelseService(private val grunnlag: TilkjentYtelseGrunnlag) 
 
             else -> sisteMeldedagForMeldeperiode
         }
-        val utbetalingsdato = muligUtbetalingsdato
-            .coerceIn(prioritertFørstedag..sisteMeldedagForMeldeperiode)
         return utbetalingsdato
     }
 
