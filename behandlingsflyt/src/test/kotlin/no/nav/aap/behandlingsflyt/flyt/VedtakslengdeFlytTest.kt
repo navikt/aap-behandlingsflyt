@@ -60,7 +60,6 @@ import java.time.LocalDateTime
 
 object VedtakslengdeFlytUnleash : FakeUnleashBaseWithDefaultDisabled(
     enabledFlags = listOf(
-        BehandlingsflytFeature.ForlengelseIManuellBehandling,
         BehandlingsflytFeature.UtvidVedtakslengdeUnderEttAr,
         BehandlingsflytFeature.LagreStansOgOpphor
     )
@@ -68,7 +67,6 @@ object VedtakslengdeFlytUnleash : FakeUnleashBaseWithDefaultDisabled(
 
 object AvklarVedtakslengdeFlytUnleash : FakeUnleashBaseWithDefaultDisabled(
     enabledFlags = listOf(
-        BehandlingsflytFeature.ForlengelseIManuellBehandling,
         BehandlingsflytFeature.VedtakslengdeAvklaringsbehov,
     )
 )

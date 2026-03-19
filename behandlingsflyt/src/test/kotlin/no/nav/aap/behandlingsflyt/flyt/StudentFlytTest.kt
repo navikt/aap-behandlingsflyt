@@ -178,11 +178,7 @@ class StudentFlytTest(val unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             .assertRettighetstype(
                 Periode(
                     fom,
-                    if (unleashGateway.objectInstance?.isEnabled(BehandlingsflytFeature.LagreVedtakIFatteVedtak) == true) {
-                        fom.plussEtÅrMedHverdager(ÅrMedHverdager.FØRSTE_ÅR)
-                    } else {
-                        fom.plusDays(15).plussEtÅrMedHverdager(ÅrMedHverdager.FØRSTE_ÅR)
-                    }
+                    fom.plussEtÅrMedHverdager(ÅrMedHverdager.FØRSTE_ÅR)
                 ) to RettighetsType.BISTANDSBEHOV
             )
     }
