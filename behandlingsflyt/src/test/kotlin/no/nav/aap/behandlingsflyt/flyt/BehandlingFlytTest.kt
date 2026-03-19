@@ -35,7 +35,7 @@ class BehandlingFlytTest {
     @Test
     fun `Skal sortere avklaringsbehov etter steg og deretter rekkefølge definert innenfor steg`() {
         val flyt = BehandlingFlytBuilder()
-            .medSteg(GeneriskTestFlytSteg(StegType.AVKLAR_SYKDOM))
+            .medSteg(GeneriskTestFlytSteg(StegType.AVKLAR_SYKDOM), vurderingsbehovRelevanteForSteg = emptyList())
             .medSteg(
                 GeneriskTestFlytSteg(
                     StegType.FASTSETT_BEREGNINGSTIDSPUNKT,
@@ -43,9 +43,9 @@ class BehandlingFlytTest {
                         Definisjon.FASTSETT_BEREGNINGSTIDSPUNKT,
                         Definisjon.FASTSETT_YRKESSKADEINNTEKT
                     )
-                )
+                ), vurderingsbehovRelevanteForSteg = emptyList()
             )
-            .medSteg(GeneriskTestFlytSteg(StegType.FORESLÅ_VEDTAK))
+            .medSteg(GeneriskTestFlytSteg(StegType.FORESLÅ_VEDTAK), vurderingsbehovRelevanteForSteg = emptyList())
             .build()
 
         val avklaringsbehov1 = Avklaringsbehov(
@@ -84,12 +84,13 @@ class BehandlingFlytTest {
     @Test
     fun `hent faktagrunnlag for gjeldende steg`() {
         val behandlingFlyt = BehandlingFlytBuilder()
-            .medSteg(GeneriskTestFlytSteg(StegType.START_BEHANDLING))
+            .medSteg(GeneriskTestFlytSteg(StegType.START_BEHANDLING), vurderingsbehovRelevanteForSteg = emptyList())
             .medSteg(
                 GeneriskTestFlytSteg(StegType.VURDER_MEDLEMSKAP),
-                informasjonskrav = listOf(LovvalgInformasjonskrav)
+                informasjonskrav = listOf(LovvalgInformasjonskrav),
+                vurderingsbehovRelevanteForSteg = emptyList()
             )
-            .medSteg(GeneriskTestFlytSteg(StegType.FASTSETT_GRUNNLAG))
+            .medSteg(GeneriskTestFlytSteg(StegType.FASTSETT_GRUNNLAG), vurderingsbehovRelevanteForSteg = emptyList())
             .build()
 
         // Forventer å få tilbake LovvalgInformasjonskrav
@@ -108,12 +109,12 @@ class BehandlingFlytTest {
     @Test
     fun `hent faktagrunnlag før gjeldende steg`() {
         val behandlingFlyt = BehandlingFlytBuilder()
-            .medSteg(GeneriskTestFlytSteg(StegType.START_BEHANDLING))
+            .medSteg(GeneriskTestFlytSteg(StegType.START_BEHANDLING), vurderingsbehovRelevanteForSteg = emptyList())
             .medSteg(
                 GeneriskTestFlytSteg(StegType.VURDER_MEDLEMSKAP),
-                informasjonskrav = listOf(LovvalgInformasjonskrav)
+                informasjonskrav = listOf(LovvalgInformasjonskrav), vurderingsbehovRelevanteForSteg = emptyList()
             )
-            .medSteg(GeneriskTestFlytSteg(StegType.FASTSETT_GRUNNLAG))
+            .medSteg(GeneriskTestFlytSteg(StegType.FASTSETT_GRUNNLAG), vurderingsbehovRelevanteForSteg = emptyList())
             .build()
 
         // Forventer å få tilbake LovvalgInformasjonskrav
@@ -166,16 +167,16 @@ class BehandlingFlytTest {
     }
 
     private val førstegangsbehandling = BehandlingFlytBuilder()
-        .medSteg(GeneriskTestFlytSteg(StegType.START_BEHANDLING))
-        .medSteg(GeneriskTestFlytSteg(StegType.VURDER_MEDLEMSKAP))
-        .medSteg(GeneriskTestFlytSteg(StegType.FASTSETT_GRUNNLAG))
+        .medSteg(GeneriskTestFlytSteg(StegType.START_BEHANDLING), vurderingsbehovRelevanteForSteg = emptyList())
+        .medSteg(GeneriskTestFlytSteg(StegType.VURDER_MEDLEMSKAP), vurderingsbehovRelevanteForSteg = emptyList())
+        .medSteg(GeneriskTestFlytSteg(StegType.FASTSETT_GRUNNLAG), vurderingsbehovRelevanteForSteg = emptyList())
         .build()
 
     private val sykdomsbehandling = BehandlingFlytBuilder()
-        .medSteg(GeneriskTestFlytSteg(StegType.AVKLAR_SYKDOM))
-        .medSteg(GeneriskTestFlytSteg(StegType.VURDER_BISTANDSBEHOV))
-        .medSteg(GeneriskTestFlytSteg(StegType.FRITAK_MELDEPLIKT))
-        .medSteg(GeneriskTestFlytSteg(StegType.FASTSETT_GRUNNLAG))
-        .medSteg(GeneriskTestFlytSteg(StegType.IVERKSETT_VEDTAK))
+        .medSteg(GeneriskTestFlytSteg(StegType.AVKLAR_SYKDOM), vurderingsbehovRelevanteForSteg = emptyList())
+        .medSteg(GeneriskTestFlytSteg(StegType.VURDER_BISTANDSBEHOV), vurderingsbehovRelevanteForSteg = emptyList())
+        .medSteg(GeneriskTestFlytSteg(StegType.FRITAK_MELDEPLIKT), vurderingsbehovRelevanteForSteg = emptyList())
+        .medSteg(GeneriskTestFlytSteg(StegType.FASTSETT_GRUNNLAG), vurderingsbehovRelevanteForSteg = emptyList())
+        .medSteg(GeneriskTestFlytSteg(StegType.IVERKSETT_VEDTAK), vurderingsbehovRelevanteForSteg = emptyList())
         .build()
 }
