@@ -60,9 +60,10 @@ class MeldekortRepositoryImpl(private val connection: DBConnection) : MeldekortR
             }
             setRowMapper {
                 Meldekort(
-                    JournalpostId(it.getString("journalpost")),
-                    hentTimerPerPeriode(it.getLong("id")),
-                    it.getLocalDateTime("mottatt_tidspunkt")
+                    journalpostId = JournalpostId(it.getString("journalpost")),
+                    timerArbeidPerPeriode = hentTimerPerPeriode(it.getLong("id")),
+                    mottattTidspunkt = it.getLocalDateTime("mottatt_tidspunkt"),
+                    fravær = emptySet() // TODO
                 )
             }
         }.toSet()

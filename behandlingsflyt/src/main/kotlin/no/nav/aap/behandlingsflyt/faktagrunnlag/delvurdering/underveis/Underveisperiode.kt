@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis
 
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetVurdering
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Kvote
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
@@ -26,6 +27,7 @@ data class Underveisperiode(
     val brukerAvKvoter: Set<Kvote>,
     val meldepliktStatus: MeldepliktStatus?,
     val meldepliktGradering: Prosent?,
+    val fraværFastsattAktivitet: FraværFastsattAktivitetVurdering.Vilkårsvurdering? = null, // TODO midlertidig default-verdi
     val id: UnderveisperiodeId? = null,
 ) : Comparable<Underveisperiode> {
     init {

@@ -379,6 +379,7 @@ class GraderingArbeidRegelTest {
                         )
                     }.toSet(),
                 mottattTidspunkt = LocalDateTime.now().plusMinutes(i.toLong()),
+                fravær = emptySet()
             )
         }
     }

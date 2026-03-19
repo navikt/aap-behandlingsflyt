@@ -13,6 +13,7 @@ public sealed interface Meldekort : Melding {
 public data class MeldekortV0(
     public val harDuArbeidet: Boolean,
     public val timerArbeidPerPeriode: List<ArbeidIPeriodeV0>,
+    public val fravær: List<FraværForPeriodeV0>? = null,
 ) : Meldekort {
 
     init {
@@ -26,11 +27,17 @@ public data class MeldekortV0(
     }
 
     override fun fom(): LocalDate? {
-        return timerArbeidPerPeriode.minOfOrNull { it.fraOgMedDato }
+        return listOfNotNull(
+            timerArbeidPerPeriode.minOfOrNull { it.fraOgMedDato },
+            fravær?.minOfOrNull { it.fraOgMedDato}
+        ).minOrNull()
     }
 
     override fun tom(): LocalDate? {
-        return timerArbeidPerPeriode.maxOfOrNull { it.fraOgMedDato }
+        return listOfNotNull(
+            timerArbeidPerPeriode.maxOfOrNull { it.tilOgMedDato },
+            fravær?.maxOfOrNull { it.tilOgMedDato }
+        ).maxOrNull()
     }
 
     public companion object {
@@ -79,6 +86,22 @@ public data class ArbeidIPeriodeV0(
             return timer >= 0 && timer <= 24.0 * antallDager(fom, tom)
         }
     }
+}
+
+public data class FraværForPeriodeV0(
+    val fraOgMedDato: LocalDate,
+    val tilOgMedDato: LocalDate,
+    val fraværÅrsak: FraværÅrsakV0,
+)
+
+enum class FraværÅrsakV0 {
+    SYKDOM_ELLER_SKADE,
+    OMSORG_FØRSTE_SKOLEDAG_TILVENNING_ELLER_ANNEN_OPPFØLGING_BARN,
+    OMSORG_PLEIE_I_HJEMMET_AV_NÆR_PÅRØRENDE,
+    OMSORG_DØDSFALL_I_FAMILIE_ELLER_VENNEKRETS,
+    OMSORG_ANNEN_STERK_GRUNN,
+    ANNET,
+    ;
 }
 
 private fun antallDager(fom: LocalDate, tom: LocalDate): Int {

@@ -489,7 +489,8 @@ class TilkjentYtelseGrunnlagTest {
                             timerArbeid = TimerArbeid(BigDecimal(timer)),
                         )
                     }.toSet(),
-                    mottattTidspunkt = (14 desember 2025).atTime(14, 0)
+                    mottattTidspunkt = (14 desember 2025).atTime(14, 0),
+                    fravær = emptySet()
                 )
             ),
             innsendingsTidspunkt = mapOf(15 desember 2025 to JournalpostId("0")),

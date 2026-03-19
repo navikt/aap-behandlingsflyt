@@ -294,6 +294,7 @@ class StatistikkJobbUtførerTest {
                         )
                     ),
                     mottattTidspunkt = LocalDateTime.now(),
+                    fravær = emptySet(),
                 )
             )
         )

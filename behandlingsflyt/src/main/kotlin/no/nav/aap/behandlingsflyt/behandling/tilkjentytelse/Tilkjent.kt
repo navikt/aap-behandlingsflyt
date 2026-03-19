@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.behandling.tilkjentytelse
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.GUnit
 import no.nav.aap.komponenter.verdityper.Prosent
+import no.nav.aap.komponenter.verdityper.Prosent.Companion.`0_PROSENT`
 import no.nav.aap.komponenter.verdityper.Prosent.Companion.`100_PROSENT`
 import java.math.RoundingMode
 import java.time.LocalDate
@@ -73,6 +74,7 @@ data class GraderingGrunnlag(
     val samordningUføregradering: Prosent,
     val samordningArbeidsgiverGradering: Prosent,
     val meldepliktGradering: Prosent,
+    val fraværFastsattAktivitetGradering: Prosent = `0_PROSENT`, // TODO midlertidig default-verdi
 ) {
     @Suppress("FunctionName")
     fun graderingForDagsats11_9Reduksjon() = `100_PROSENT`
@@ -81,6 +83,7 @@ data class GraderingGrunnlag(
         .minus(institusjonGradering)
         .minus(samordningUføregradering)
         .minus(meldepliktGradering)
+//        .minus(fraværFastsattAktivitetGradering) // TODO skal denne med her?
 }
 
 fun maks(a: Beløp, b: Beløp): Beløp {

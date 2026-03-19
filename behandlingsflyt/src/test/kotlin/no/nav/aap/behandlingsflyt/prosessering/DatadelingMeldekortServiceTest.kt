@@ -157,7 +157,8 @@ private fun lagreUnderveisGrunnlag(
     meldeperioder: List<Periode>,
     testPeriode: Periode,
 ): UnderveisGrunnlag {
-    val testGrunnlag = Aldersgrunnlag(testPeriode, Fødselsdato(LocalDate.now().minusYears(20)), grenseForAntallMånederFørFylte18 = 3)
+    val testGrunnlag =
+        Aldersgrunnlag(testPeriode, Fødselsdato(LocalDate.now().minusYears(20)), grenseForAntallMånederFørFylte18 = 3)
     underveisRepository.lagre(
         testBehandling.id,
         listOf(testUnderveisperiode(testPeriode, meldeperioder.first())),
@@ -241,7 +242,9 @@ private fun lagreMeldekort(
                         Periode(periodeStart.plusDays(4), periodeStart.plusDays(5)),
                         TimerArbeid(7.5.toBigDecimal())
                     )
-                ), mottattTidspunkt = mottattMeldekort.mottattTidspunkt
+                ),
+                mottattTidspunkt = mottattMeldekort.mottattTidspunkt,
+                fravær = emptySet()
             )
         )
     )
