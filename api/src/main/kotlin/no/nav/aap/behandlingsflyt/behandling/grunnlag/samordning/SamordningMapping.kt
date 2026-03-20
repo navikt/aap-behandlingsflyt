@@ -150,6 +150,6 @@ fun mapTiltakspengerYtelseType(ytelseType: TiltakspengerYtelseType): AndreStatli
     return when (ytelseType) {
         TiltakspengerYtelseType.TILTAKSPENGER -> AndreStatligeYtelserType.TILTAKSPENGER
         TiltakspengerYtelseType.TILTAKSPENGER_OG_BARNETILLEGG -> AndreStatligeYtelserType.TILTAKSPENGER_OG_BARNETILLEGG
-        TiltakspengerYtelseType.INGENTING -> AndreStatligeYtelserType.INGENTING
+        TiltakspengerYtelseType.INGENTING -> AndreStatligeYtelserType.TILTAKSPENGER_INAKTIV
     }
 }

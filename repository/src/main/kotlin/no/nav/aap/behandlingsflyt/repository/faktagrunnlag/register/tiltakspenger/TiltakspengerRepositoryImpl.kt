@@ -6,6 +6,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andresta
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.tiltakspenger.TiltakspengerRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.lookup.repository.Factory
 
 class TiltakspengerRepositoryImpl(private val connection: DBConnection) : TiltakspengerRepository {
@@ -29,7 +31,7 @@ class TiltakspengerRepositoryImpl(private val connection: DBConnection) : Tiltak
         val tpPeriode = connection.executeReturnKey("""INSERT INTO TILTAKSPENGER_PERIODER DEFAULT VALUES""")
 
         connection.execute(
-            """INSERT INTO TILTAKSPENGER_GRUNNLAG (AKTIV, BEHANDLING_ID, TILTAKSPENGER_PERIODER_ID)
+            """INSERT INTO TILTAKSPENGER_GRUNNLAG (AKTIV, BEHANDLING_ID, PERIODER_ID)
             VALUES (TRUE, ?, ?)"""
         ) {
             setParams {
@@ -38,11 +40,11 @@ class TiltakspengerRepositoryImpl(private val connection: DBConnection) : Tiltak
             }
         }
 
-        connection.executeBatch("""INSERT INTO TILTAKSPENGER_PERIODE (TILTAKSPENGER_PERIODER_ID, PERIODE, YTELSE_TYPE, KILDE) 
+        connection.executeBatch("""INSERT INTO TILTAKSPENGER_PERIODE (PERIODER_ID, PERIODE, YTELSE_TYPE, KILDE) 
             VALUES (?, ?::daterange, ?, ?)""".trimIndent(), tiltakspengerPeriode) {
             setParams {periode ->
                 setLong(1, tpPeriode)
-                setPeriode(2, periode.periode)
+                setPeriode(2, Periode(periode.fraOgMed, periode.tilOgMed ?: Tid.MAKS))
                 setString(3, periode.tiltakspengerYtelseType.name)
                 setString(4, periode.kilde.name)
             }
@@ -54,7 +56,7 @@ class TiltakspengerRepositoryImpl(private val connection: DBConnection) : Tiltak
 
         connection.execute("""
             DELETE FROM TILTAKSPENGER_GRUNNLAG WHERE BEHANDLING_ID = ?;
-            DELETE FROM TILTAKSPENGER_PERIODE WHERE TILTAKSPENGER_PERIODER_ID = ANY(?::BigInt[]);
+            DELETE FROM TILTAKSPENGER_PERIODE WHERE PERIODER_ID = ANY(?::BigInt[]);
             DELETE FROM TILTAKSPENGER_PERIODER WHERE ID = ANY(?::BigInt[]);
             """.trimIndent()){
             setParams {
@@ -71,8 +73,8 @@ class TiltakspengerRepositoryImpl(private val connection: DBConnection) : Tiltak
         return connection.queryList(
             """SELECT TP.PERIODE, TP.YTELSE_TYPE, TP.KILDE
             FROM TILTAKSPENGER_PERIODE TP
-            JOIN TILTAKSPENGER_PERIODER TPER ON TP.TILTAKSPENGER_PERIODER_ID = TPER.ID
-            JOIN TILTAKSPENGER_GRUNNLAG TG ON TPER.ID = TG.TILTAKSPENGER_PERIODER_ID
+            JOIN TILTAKSPENGER_PERIODER TPER ON TP.PERIODER_ID = TPER.ID
+            JOIN TILTAKSPENGER_GRUNNLAG TG ON TPER.ID = TG.PERIODER_ID
             WHERE TG.BEHANDLING_ID = ? AND TG.AKTIV = TRUE""".trimIndent()
         ) {
             setParams {
@@ -80,7 +82,8 @@ class TiltakspengerRepositoryImpl(private val connection: DBConnection) : Tiltak
             }
             setRowMapper { row ->
                 TiltakspengerPeriode(
-                    periode = row.getPeriode("PERIODE"),
+                    fraOgMed = row.getPeriode("PERIODE").fom,
+                    tilOgMed = row.getPeriode("PERIODE").tom,
                     tiltakspengerYtelseType = TiltakspengerYtelseType.valueOf(row.getString("YTELSE_TYPE")),
                     kilde = TiltakspengerKilde.valueOf(row.getString("KILDE"))
                 )
@@ -103,7 +106,7 @@ class TiltakspengerRepositoryImpl(private val connection: DBConnection) : Tiltak
 
     private fun getPerioderId(behandlingId: BehandlingId) : List<Long>{
         return connection.queryList(
-            """SELECT TILTAKSPENGER_PERIODER_ID
+            """SELECT PERIODER_ID
             FROM TILTAKSPENGER_GRUNNLAG
             WHERE BEHANDLING_ID = ? AND AKTIV""".trimIndent()
         ) {
@@ -111,7 +114,7 @@ class TiltakspengerRepositoryImpl(private val connection: DBConnection) : Tiltak
                 setLong(1, behandlingId.id)
             }
             setRowMapper { row ->
-                row.getLong("TILTAKSPENGER_PERIODER_ID")
+                row.getLong("PERIODER_ID")
             }
         }
     }
@@ -120,8 +123,8 @@ class TiltakspengerRepositoryImpl(private val connection: DBConnection) : Tiltak
         require(fraBehandling != tilBehandling) {
             "Kan ikke kopiere tiltakspengergrunnlag til samme behandling"
         }
-        connection.execute("""INSERT INTO TILTAKSPENGER_GRUNNLAG (BEHANDLING_ID, TILTAKSPENGER_PERIODER_ID) 
-                SELECT ?, TILTAKSPENGER_PERIODER_ID 
+        connection.execute("""INSERT INTO TILTAKSPENGER_GRUNNLAG (BEHANDLING_ID, PERIODER_ID) 
+                SELECT ?, PERIODER_ID 
                 FROM TILTAKSPENGER_GRUNNLAG 
                 WHERE AKTIV AND BEHANDLING_ID = ?
             """.trimIndent()) {

@@ -1,9 +1,10 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.gateway
 
-import no.nav.aap.komponenter.type.Periode
+import java.time.LocalDate
 
 data class TiltakspengerPeriode(
-    val periode: Periode,
+    val fraOgMed: LocalDate,
+    val tilOgMed: LocalDate?,
     val kilde: TiltakspengerKilde,
     val tiltakspengerYtelseType: TiltakspengerYtelseType
 )

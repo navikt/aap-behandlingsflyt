@@ -125,7 +125,7 @@ data class AndreStatligeYtelserGrunnlagDto (
 
 data class AndreStatligeYtelserPeriodeDto (
     val fom: LocalDate,
-    val tom: LocalDate,
+    val tom: LocalDate?,
     val kilde: AndreStatligeYtelserKilde,
     val ytelseType: AndreStatligeYtelserType
 )
@@ -142,7 +142,7 @@ enum class AndreStatligeYtelserType {
     DAGPENGER_PERMITTERING_FISKEINDUSTRI,
     TILTAKSPENGER,
     TILTAKSPENGER_OG_BARNETILLEGG,
-    INGENTING
+    TILTAKSPENGER_INAKTIV
 }
 
 enum class DagpengerYtelseType{
@@ -153,7 +153,7 @@ enum class DagpengerKilde{
 }
 
 enum class TiltakspengerYtelseType{
-    TILTAKSPENGER, TILTAKSPENGER_OG_BARNETILLEGG, INGENTING
+    TILTAKSPENGER, TILTAKSPENGER_OG_BARNETILLEGG, TILTAKSPENGER_INAKTIV
 }
 enum class TiltakspengerKilde{
     TPSAK, ARENA

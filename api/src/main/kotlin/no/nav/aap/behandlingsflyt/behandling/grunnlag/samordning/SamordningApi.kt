@@ -33,6 +33,7 @@ import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.getGrunnlag
+import java.time.LocalDate
 import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.samordningGrunnlag(
@@ -234,8 +235,8 @@ fun NormalOpenAPIRoute.samordningGrunnlag(
 
                         val tiltakspengerGrunnlag = tiltakspengerRepository.hent(behandling.id).map {
                             AndreStatligeYtelserPeriodeDto(
-                                fom = it.periode.fom,
-                                tom = it.periode.tom,
+                                fom = it.fraOgMed,
+                                tom = it.tilOgMed,
                                 ytelseType = mapTiltakspengerYtelseType(it.tiltakspengerYtelseType),
                                 kilde = mapTiltakspengerKilde(it.kilde)
                             )

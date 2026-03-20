@@ -138,8 +138,8 @@ spec:
           namespace: nais-system
         - application: dp-datadeling
           namespace: teamdagpenger
-        - application: tp-datadeling
-          namespace: teamtiltakspenger
+        - application: tiltakspenger-datadeling
+          namespace: tpts
 
   env:
     - name: INTEGRASJON_PDL_URL

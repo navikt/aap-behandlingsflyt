@@ -44,18 +44,14 @@ class TiltakspengerRepositoryImplTest {
             val tiltakspengerList: List<TiltakspengerPeriode> =
                 listOf(
                     TiltakspengerPeriode(
-                        periode = Periode(
-                            fom = LocalDate.of(2023,1,1),
-                            tom = LocalDate.of(2023,3,31)
-                        ),
+                        fraOgMed = LocalDate.of(2023,1,1),
+                        tilOgMed = LocalDate.of(2023,3,31),
                         kilde = TiltakspengerKilde.ARENA,
                         tiltakspengerYtelseType = TiltakspengerYtelseType.TILTAKSPENGER
                     ),
                     TiltakspengerPeriode(
-                        periode = Periode(
-                            fom = LocalDate.of(2023,4,1),
-                            tom = LocalDate.of(2023,6,30)
-                        ),
+                        fraOgMed = LocalDate.of(2023,4,1),
+                        tilOgMed = LocalDate.of(2023,6,30),
                         kilde = TiltakspengerKilde.TPSAK,
                         tiltakspengerYtelseType = TiltakspengerYtelseType.TILTAKSPENGER
                     )
@@ -97,10 +93,8 @@ class TiltakspengerRepositoryImplTest {
             val tiltakspengerList: List<TiltakspengerPeriode> =
                 listOf(
                     TiltakspengerPeriode(
-                        periode = Periode(
-                            fom = LocalDate.of(2023,1,1),
-                            tom = LocalDate.of(2023,3,31)
-                        ),
+                        fraOgMed = LocalDate.of(2023,1,1),
+                        tilOgMed = LocalDate.of(2023,3,31),
                         kilde = TiltakspengerKilde.ARENA,
                         tiltakspengerYtelseType = TiltakspengerYtelseType.TILTAKSPENGER
                     )

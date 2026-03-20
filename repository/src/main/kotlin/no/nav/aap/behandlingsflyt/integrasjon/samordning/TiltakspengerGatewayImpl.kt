@@ -13,12 +13,10 @@ import no.nav.aap.komponenter.httpklient.httpclient.RestClient
 import no.nav.aap.komponenter.httpklient.httpclient.post
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
-import no.nav.aap.komponenter.type.Periode
-import no.nav.aap.komponenter.verdityper.Tid
 import java.net.URI
 import java.time.LocalDate
 
-// https://navikt.github.io/dp-datadeling/openapi.html
+// https://tiltakspenger-datadeling.intern.dev.nav.no/swagger
 class TiltakspengerGatewayImpl: TiltakspengerGateway {
     private val url = URI.create(requiredConfigForKey("integrasjon.tiltakspenger.url") + "/vedtak/perioder")
     private val config = ClientConfig(scope = requiredConfigForKey("integrasjon.tiltakspenger.scope"))
@@ -57,7 +55,8 @@ class TiltakspengerGatewayImpl: TiltakspengerGateway {
             )
         ).perioder.map {
             TiltakspengerPeriode(
-                periode = Periode(it.fraOgMedDato, it.tilOgMedDato ?: Tid.MAKS),
+                fraOgMed = it.fraOgMedDato,
+                tilOgMed = it.tilOgMedDato,
                 kilde = it.kilde,
                 tiltakspengerYtelseType = it.ytelseType
             )
