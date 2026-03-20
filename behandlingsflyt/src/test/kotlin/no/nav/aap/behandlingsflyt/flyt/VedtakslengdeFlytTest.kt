@@ -32,6 +32,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.Vedt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeVurderingDto
 import no.nav.aap.behandlingsflyt.flyt.TestSøknader.SØKNAD_INGEN_MEDLEMSKAP
 import no.nav.aap.behandlingsflyt.integrasjon.defaultGatewayProvider
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.prosessering.OpprettJobbUtvidVedtakslengdeJobbUtfører
@@ -60,7 +61,6 @@ import java.time.LocalDateTime
 
 object VedtakslengdeFlytUnleash : FakeUnleashBaseWithDefaultDisabled(
     enabledFlags = listOf(
-        BehandlingsflytFeature.ForlengelseIManuellBehandling,
         BehandlingsflytFeature.UtvidVedtakslengdeUnderEttAr,
         BehandlingsflytFeature.LagreStansOgOpphor
     )
@@ -68,8 +68,8 @@ object VedtakslengdeFlytUnleash : FakeUnleashBaseWithDefaultDisabled(
 
 object AvklarVedtakslengdeFlytUnleash : FakeUnleashBaseWithDefaultDisabled(
     enabledFlags = listOf(
-        BehandlingsflytFeature.ForlengelseIManuellBehandling,
         BehandlingsflytFeature.VedtakslengdeAvklaringsbehov,
+        BehandlingsflytFeature.OpprettManuellVedtakslengdeBehandling
     )
 )
 
@@ -94,8 +94,8 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(VedtakslengdeFlytUnlea
             .løsOppholdskrav(startDato)
             .løsAndreStatligeYtelser()
             .medKontekst {
-                val vedtasklengdeRepository: VedtakslengdeRepository = repositoryProvider.provide()
-                val vedtakslengdeGrunnlag = vedtasklengdeRepository.hentHvisEksisterer(this.behandling.id)
+                val vedtakslengdeRepository: VedtakslengdeRepository = repositoryProvider.provide()
+                val vedtakslengdeGrunnlag = vedtakslengdeRepository.hentHvisEksisterer(this.behandling.id)
                 assertThat(vedtakslengdeGrunnlag?.gjeldendeVurdering()?.sluttdato).isEqualTo(
                     startDato.plussEtÅrMedHverdager(
                         ÅrMedHverdager.FØRSTE_ÅR
@@ -118,8 +118,8 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(VedtakslengdeFlytUnlea
             .løsSykdomsvurderingBrev()
             .bekreftVurderinger()
             .medKontekst {
-                val vedtasklengdeRepository: VedtakslengdeRepository = repositoryProvider.provide()
-                val vedtakslengdeGrunnlag = vedtasklengdeRepository.hentHvisEksisterer(this.behandling.id)
+                val vedtakslengdeRepository: VedtakslengdeRepository = repositoryProvider.provide()
+                val vedtakslengdeGrunnlag = vedtakslengdeRepository.hentHvisEksisterer(this.behandling.id)
                 assertThat(vedtakslengdeGrunnlag?.gjeldendeVurdering()?.sluttdato).isEqualTo(
                     sak.rettighetsperiode.fom.plusMonths(
                         12
@@ -204,8 +204,8 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(VedtakslengdeFlytUnlea
             .løsOppholdskrav(startDato)
             .løsAndreStatligeYtelser()
             .medKontekst {
-                val vedtasklengdeRepository: VedtakslengdeRepository = repositoryProvider.provide()
-                val vedtakslengdeGrunnlag = vedtasklengdeRepository.hentHvisEksisterer(this.behandling.id)
+                val vedtakslengdeRepository: VedtakslengdeRepository = repositoryProvider.provide()
+                val vedtakslengdeGrunnlag = vedtakslengdeRepository.hentHvisEksisterer(this.behandling.id)
                 assertThat(vedtakslengdeGrunnlag?.gjeldendeVurdering()?.sluttdato).isEqualTo(
                     overgangDato.plusMonths(6).minusDays(1)
                 )
@@ -288,8 +288,8 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(VedtakslengdeFlytUnlea
             .løsOppholdskrav(startDato)
             .løsAndreStatligeYtelser()
             .medKontekst {
-                val vedtasklengdeRepository: VedtakslengdeRepository = repositoryProvider.provide()
-                val vedtakslengdeGrunnlag = vedtasklengdeRepository.hentHvisEksisterer(this.behandling.id)
+                val vedtakslengdeRepository: VedtakslengdeRepository = repositoryProvider.provide()
+                val vedtakslengdeGrunnlag = vedtakslengdeRepository.hentHvisEksisterer(this.behandling.id)
                 assertThat(vedtakslengdeGrunnlag?.gjeldendeVurdering()?.sluttdato).isEqualTo(
                     overgangDato.plusMonths(6).minusDays(1)
                 )
@@ -396,8 +396,8 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(VedtakslengdeFlytUnlea
             .løsOppholdskrav(startDato)
             .løsAndreStatligeYtelser()
             .medKontekst {
-                val vedtasklengdeRepository: VedtakslengdeRepository = repositoryProvider.provide()
-                val vedtakslengdeGrunnlag = vedtasklengdeRepository.hentHvisEksisterer(this.behandling.id)
+                val vedtakslengdeRepository: VedtakslengdeRepository = repositoryProvider.provide()
+                val vedtakslengdeGrunnlag = vedtakslengdeRepository.hentHvisEksisterer(this.behandling.id)
                 assertThat(vedtakslengdeGrunnlag?.gjeldendeVurdering()?.sluttdato).isEqualTo(
                     overgangDato.plusMonths(6).minusDays(1)
                 )
@@ -419,8 +419,8 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(VedtakslengdeFlytUnlea
             .løsSykdomsvurderingBrev()
             .bekreftVurderinger()
             .medKontekst {
-                val vedtasklengdeRepository: VedtakslengdeRepository = repositoryProvider.provide()
-                val vedtakslengdeGrunnlag = vedtasklengdeRepository.hentHvisEksisterer(this.behandling.id)
+                val vedtakslengdeRepository: VedtakslengdeRepository = repositoryProvider.provide()
+                val vedtakslengdeGrunnlag = vedtakslengdeRepository.hentHvisEksisterer(this.behandling.id)
                 assertThat(vedtakslengdeGrunnlag?.gjeldendeVurdering()?.sluttdato).isEqualTo(
                     endringsdato.plusMonths(6).minusDays(1)
                 )
@@ -472,8 +472,8 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(VedtakslengdeFlytUnlea
             .løsOppholdskrav(startDato)
             .løsAndreStatligeYtelser()
             .medKontekst {
-                val vedtasklengdeRepository: VedtakslengdeRepository = repositoryProvider.provide()
-                val vedtakslengdeGrunnlag = vedtasklengdeRepository.hentHvisEksisterer(this.behandling.id)
+                val vedtakslengdeRepository: VedtakslengdeRepository = repositoryProvider.provide()
+                val vedtakslengdeGrunnlag = vedtakslengdeRepository.hentHvisEksisterer(this.behandling.id)
                 assertThat(vedtakslengdeGrunnlag?.gjeldendeVurdering()?.sluttdato).isEqualTo(
                     startDato.plusMonths(8).minusDays(1)
                 )
@@ -514,8 +514,8 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(VedtakslengdeFlytUnlea
             .løsSykestipend()
             .løsAndreStatligeYtelser()
             .medKontekst {
-                val vedtasklengdeRepository: VedtakslengdeRepository = repositoryProvider.provide()
-                val vedtakslengdeGrunnlag = vedtasklengdeRepository.hentHvisEksisterer(this.behandling.id)
+                val vedtakslengdeRepository: VedtakslengdeRepository = repositoryProvider.provide()
+                val vedtakslengdeGrunnlag = vedtakslengdeRepository.hentHvisEksisterer(this.behandling.id)
                 assertThat(vedtakslengdeGrunnlag?.gjeldendeVurdering()?.sluttdato).isEqualTo(
                     startDato.plusMonths(6).minusDays(1)
                 )
@@ -550,9 +550,9 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(VedtakslengdeFlytUnlea
             .løsSykdomsvurderingBrev()
             .bekreftVurderinger()
             .medKontekst {
-                val vedtasklengdeRepository: VedtakslengdeRepository = repositoryProvider.provide()
+                val vedtakslengdeRepository: VedtakslengdeRepository = repositoryProvider.provide()
                 val underveisRepository: UnderveisRepository = repositoryProvider.provide()
-                val vedtakslengdeGrunnlag = vedtasklengdeRepository.hentHvisEksisterer(this.behandling.id)
+                val vedtakslengdeGrunnlag = vedtakslengdeRepository.hentHvisEksisterer(this.behandling.id)
                 val underveisGrunnlag = underveisRepository.hentHvisEksisterer(behandling.id)
                 val sisteUnderveisperiode = underveisGrunnlag?.perioder?.maxByOrNull { it.periode.tom }
                 assertThat(sisteUnderveisperiode?.periode?.tom).isEqualTo(
@@ -617,20 +617,7 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(VedtakslengdeFlytUnlea
             sisteUnderveisperiode.periode.tom
         }
 
-        dataSource.transaction { connection ->
-            val repositoryProvider = postgresRepositoryRegistry.provider(connection)
-
-            val opprettJobbUtvidVedtakslengdeJobbUtfører = `OpprettJobbUtvidVedtakslengdeJobbUtfører`(
-                behandlingService = BehandlingService(repositoryProvider, gatewayProvider),
-                vedtakslengdeService = VedtakslengdeService(repositoryProvider, gatewayProvider),
-                flytJobbRepository = FlytJobbRepositoryImpl(connection),
-                clock = clock,
-            )
-
-            opprettJobbUtvidVedtakslengdeJobbUtfører.utfør(JobbInput(OpprettJobbUtvidVedtakslengdeJobbUtfører))
-        }
-
-        motor.kjørJobber()
+        kjørUtvidVedtakslengdeJobb()
 
         dataSource.transaction { connection ->
             val automatiskBehandling = BehandlingService(
@@ -695,20 +682,7 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(VedtakslengdeFlytUnlea
             assertThat(sisteUnderveisperiode.rettighetsType).isEqualTo(null)
         }
 
-        dataSource.transaction { connection ->
-            val repositoryProvider = postgresRepositoryRegistry.provider(connection)
-
-            val opprettJobbUtvidVedtakslengdeJobbUtfører = `OpprettJobbUtvidVedtakslengdeJobbUtfører`(
-                behandlingService = BehandlingService(repositoryProvider, gatewayProvider),
-                vedtakslengdeService = VedtakslengdeService(repositoryProvider, gatewayProvider),
-                flytJobbRepository = FlytJobbRepositoryImpl(connection),
-                clock = clock,
-            )
-
-            opprettJobbUtvidVedtakslengdeJobbUtfører.utfør(JobbInput(OpprettJobbUtvidVedtakslengdeJobbUtfører))
-        }
-
-        motor.kjørJobber()
+        kjørUtvidVedtakslengdeJobb()
 
         dataSource.transaction { connection ->
             val behandlingMedSisteFattedeVedtak = BehandlingService(
@@ -802,21 +776,9 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(VedtakslengdeFlytUnlea
             sisteUnderveisperiode.periode.tom
         }
 
-        dataSource.transaction { connection ->
-            val repositoryProvider = postgresRepositoryRegistry.provider(connection)
-            val gatewayProviderAlleAvskruddUnleash = testGatewayProvider(AlleAvskruddUnleash::class)
-
-            val opprettJobbUtvidVedtakslengdeJobbUtfører = `OpprettJobbUtvidVedtakslengdeJobbUtfører`(
-                behandlingService = BehandlingService(repositoryProvider, gatewayProvider),
-                vedtakslengdeService = VedtakslengdeService(repositoryProvider, gatewayProviderAlleAvskruddUnleash),
-                flytJobbRepository = FlytJobbRepositoryImpl(connection),
-                clock = clock,
-            )
-
-            opprettJobbUtvidVedtakslengdeJobbUtfører.utfør(JobbInput(OpprettJobbUtvidVedtakslengdeJobbUtfører))
-        }
-
-        motor.kjørJobber()
+        kjørUtvidVedtakslengdeJobb(
+            vedtakslengdeGatewayProvider = testGatewayProvider(AlleAvskruddUnleash::class),
+        )
 
         dataSource.transaction { connection ->
             val behandlingMedSisteFattedeVedtak = BehandlingService(
@@ -885,20 +847,7 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(VedtakslengdeFlytUnlea
             assertThat(sisteUnderveisperiode.rettighetsType).isEqualTo(RettighetsType.BISTANDSBEHOV)
         }
 
-        dataSource.transaction { connection ->
-            val repositoryProvider = postgresRepositoryRegistry.provider(connection)
-
-            val opprettJobbUtvidVedtakslengdeJobbUtfører = OpprettJobbUtvidVedtakslengdeJobbUtfører(
-                behandlingService = BehandlingService(repositoryProvider, gatewayProvider),
-                vedtakslengdeService = VedtakslengdeService(repositoryProvider, gatewayProvider),
-                flytJobbRepository = FlytJobbRepositoryImpl(connection),
-                clock = clock,
-            )
-
-            opprettJobbUtvidVedtakslengdeJobbUtfører.utfør(JobbInput(OpprettJobbUtvidVedtakslengdeJobbUtfører))
-        }
-
-        motor.kjørJobber()
+        kjørUtvidVedtakslengdeJobb()
 
         dataSource.transaction { connection ->
             val behandlingMedSisteFattedeVedtak = BehandlingService(
@@ -980,20 +929,7 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(VedtakslengdeFlytUnlea
             assertThat(vedtakslengdeVurdering?.gjeldendeVurdering()?.sluttdato).isEqualTo(forventetSluttdato)
         }
 
-        dataSource.transaction { connection ->
-            val repositoryProvider = postgresRepositoryRegistry.provider(connection)
-
-            val opprettJobbUtvidVedtakslengdeJobbUtfører = OpprettJobbUtvidVedtakslengdeJobbUtfører(
-                behandlingService = BehandlingService(repositoryProvider, gatewayProvider),
-                vedtakslengdeService = VedtakslengdeService(repositoryProvider, gatewayProvider),
-                flytJobbRepository = FlytJobbRepositoryImpl(connection),
-                clock = clock,
-            )
-
-            opprettJobbUtvidVedtakslengdeJobbUtfører.utfør(JobbInput(OpprettJobbUtvidVedtakslengdeJobbUtfører))
-        }
-
-        motor.kjørJobber()
+        kjørUtvidVedtakslengdeJobb()
 
         dataSource.transaction { connection ->
             val behandlingMedSisteFattedeVedtak = BehandlingService(
@@ -1034,10 +970,10 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(VedtakslengdeFlytUnlea
             .løsSykdomsvurderingBrev()
             .bekreftVurderinger()
             .medKontekst {
-                val vedtasklengdeRepository: VedtakslengdeRepository = repositoryProvider.provide()
+                val vedtakslengdeRepository: VedtakslengdeRepository = repositoryProvider.provide()
                 val underveisRepository: UnderveisRepository = repositoryProvider.provide()
                 val vedtakslengdeVurdering =
-                    vedtasklengdeRepository.hentHvisEksisterer(this.behandling.id)
+                    vedtakslengdeRepository.hentHvisEksisterer(this.behandling.id)
                 val underveisGrunnlag = underveisRepository.hentHvisEksisterer(this.behandling.id)
                 val sisteUnderveisperiode = underveisGrunnlag?.perioder?.maxBy { it.periode.fom }!!
 
@@ -1077,20 +1013,7 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(VedtakslengdeFlytUnlea
             sisteUnderveisperiode.periode.tom
         }
 
-        dataSource.transaction { connection ->
-            val repositoryProvider = postgresRepositoryRegistry.provider(connection)
-
-            val opprettJobbUtvidVedtakslengdeJobbUtfører = `OpprettJobbUtvidVedtakslengdeJobbUtfører`(
-                behandlingService = BehandlingService(repositoryProvider, gatewayProvider),
-                vedtakslengdeService = VedtakslengdeService(repositoryProvider, gatewayProvider),
-                flytJobbRepository = FlytJobbRepositoryImpl(connection),
-                clock = clock,
-            )
-
-            opprettJobbUtvidVedtakslengdeJobbUtfører.utfør(JobbInput(OpprettJobbUtvidVedtakslengdeJobbUtfører))
-        }
-
-        motor.kjørJobber()
+        kjørUtvidVedtakslengdeJobb()
 
         dataSource.transaction { connection ->
             val automatiskBehandling = BehandlingService(
@@ -1161,20 +1084,7 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(VedtakslengdeFlytUnlea
             vedtakslengdeVurdering!!.gjeldendeVurdering()!!.sluttdato
         }
 
-        dataSource.transaction { connection ->
-            val repositoryProvider = postgresRepositoryRegistry.provider(connection)
-
-            val opprettJobbUtvidVedtakslengdeJobbUtfører = `OpprettJobbUtvidVedtakslengdeJobbUtfører`(
-                behandlingService = BehandlingService(repositoryProvider, gatewayProvider),
-                vedtakslengdeService = VedtakslengdeService(repositoryProvider, gatewayProvider),
-                flytJobbRepository = FlytJobbRepositoryImpl(connection),
-                clock = clock,
-            )
-
-            opprettJobbUtvidVedtakslengdeJobbUtfører.utfør(JobbInput(OpprettJobbUtvidVedtakslengdeJobbUtfører))
-        }
-
-        motor.kjørJobber()
+        kjørUtvidVedtakslengdeJobb()
 
         dataSource.transaction { connection ->
             val automatiskBehandling = BehandlingService(
@@ -1204,8 +1114,8 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(VedtakslengdeFlytUnlea
             .løsSykdomsvurderingBrev()
             .bekreftVurderinger()
             .medKontekst {
-                val vedtasklengdeRepository: VedtakslengdeRepository = repositoryProvider.provide()
-                val vedtakslengdeGrunnlag = vedtasklengdeRepository.hentHvisEksisterer(this.behandling.id)
+                val vedtakslengdeRepository: VedtakslengdeRepository = repositoryProvider.provide()
+                val vedtakslengdeGrunnlag = vedtakslengdeRepository.hentHvisEksisterer(this.behandling.id)
                 assertThat(vedtakslengdeGrunnlag?.gjeldendeVurdering()?.sluttdato).isEqualTo(
                     endringsdato.plusMonths(6).minusDays(1)
                 )
@@ -1223,8 +1133,8 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(VedtakslengdeFlytUnlea
             .løsSykdomsvurderingBrev()
             .bekreftVurderinger()
             .medKontekst {
-                val vedtasklengdeRepository: VedtakslengdeRepository = repositoryProvider.provide()
-                val vedtakslengdeGrunnlag = vedtasklengdeRepository.hentHvisEksisterer(this.behandling.id)
+                val vedtakslengdeRepository: VedtakslengdeRepository = repositoryProvider.provide()
+                val vedtakslengdeGrunnlag = vedtakslengdeRepository.hentHvisEksisterer(this.behandling.id)
                 assertThat(vedtakslengdeGrunnlag?.gjeldendeVurdering()?.sluttdato).isEqualTo(
                     endringsdato.plusMonths(6).minusDays(1)
                 )
@@ -1232,6 +1142,25 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(VedtakslengdeFlytUnlea
             }
     }
 
+    private fun kjørUtvidVedtakslengdeJobb(
+        vedtakslengdeGatewayProvider: GatewayProvider = gatewayProvider,
+    ) {
+        dataSource.transaction { connection ->
+            val repositoryProvider = postgresRepositoryRegistry.provider(connection)
+
+            val opprettJobbUtvidVedtakslengdeJobbUtfører = OpprettJobbUtvidVedtakslengdeJobbUtfører(
+                behandlingService = BehandlingService(repositoryProvider, gatewayProvider),
+                vedtakslengdeService = VedtakslengdeService(repositoryProvider, vedtakslengdeGatewayProvider),
+                flytJobbRepository = FlytJobbRepositoryImpl(connection),
+                unleashGateway = AlleAvskruddUnleash,
+                clock = clock,
+            )
+
+            opprettJobbUtvidVedtakslengdeJobbUtfører.utfør(JobbInput(OpprettJobbUtvidVedtakslengdeJobbUtfører))
+        }
+
+        motor.kjørJobber()
+    }
 }
 
 class AvklarVedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(AvklarVedtakslengdeFlytUnleash::class) {
@@ -1399,5 +1328,130 @@ class AvklarVedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(AvklarVedtakslen
                 )
                 assertThat(vedtakslengdeGrunnlag?.gjeldendeVurdering()?.vurdertManuelt).isTrue
             }
+    }
+
+    @Test
+    fun `jobb oppretter manuell behandling når neste periode inneholder to korte perioder med bistand`() {
+        val søknadstidspunkt = LocalDateTime.now(clock).minusYears(1)
+        val (sak, førstegangsbehandling) = sendInnFørsteSøknad(mottattTidspunkt = søknadstidspunkt)
+        val startDato = sak.rettighetsperiode.fom
+        val forventetSluttdato = startDato.plussEtÅrMedHverdager(ÅrMedHverdager.FØRSTE_ÅR)
+        val datoOppholdskravIkkeOppfyltFra = sak.rettighetsperiode.fom.plusYears(1).plusMonths(2)
+        val nesteDatoOppholdskravIkkeOppfyltFra = datoOppholdskravIkkeOppfyltFra.plusMonths(4)
+
+        førstegangsbehandling
+            .løsSykdom(startDato)
+            .løsBistand(startDato)
+            .løsRefusjonskrav()
+            .løsSykdomsvurderingBrev()
+            .kvalitetssikre()
+            .løsBeregningstidspunkt(startDato)
+            // Legger inn flere hull etter ett år - dette skal føre til manuell behandling ved utvidelse av vedtakslengde
+            .løsAvklaringsBehov(
+                AvklarOppholdskravLøsning(
+                    løsningerForPerioder = listOf(
+                        AvklarOppholdkravLøsningForPeriodeDto(
+                            oppfylt = true,
+                            land = null,
+                            fom = startDato,
+                            tom = datoOppholdskravIkkeOppfyltFra.minusDays(1),
+                            begrunnelse = "Oppholder seg i Norge"
+                        ),
+                        AvklarOppholdkravLøsningForPeriodeDto(
+                            oppfylt = false,
+                            land = "Sverige",
+                            fom = datoOppholdskravIkkeOppfyltFra,
+                            tom = datoOppholdskravIkkeOppfyltFra.plusMonths(1).minusDays(1),
+                            begrunnelse = "Fiske"
+                        ),
+                        AvklarOppholdkravLøsningForPeriodeDto(
+                            oppfylt = true,
+                            land = null,
+                            fom = datoOppholdskravIkkeOppfyltFra.plusMonths(1),
+                            tom = nesteDatoOppholdskravIkkeOppfyltFra.minusDays(1),
+                            begrunnelse = "Oppholder seg i Norge"
+                        ),
+                        AvklarOppholdkravLøsningForPeriodeDto(
+                            oppfylt = false,
+                            land = "Sverige",
+                            fom = nesteDatoOppholdskravIkkeOppfyltFra,
+                            begrunnelse = "Fiske"
+                        )
+                    )
+                )
+            )
+            .løsAndreStatligeYtelser()
+            .løsAvklaringsBehov(ForeslåVedtakLøsning())
+            .fattVedtak()
+            .løsVedtaksbrev(TypeBrev.VEDTAK_INNVILGELSE)
+
+
+        dataSource.transaction { connection ->
+            val førstegangsbehandling = BehandlingRepositoryImpl(connection).finnFørstegangsbehandling(sak.id)
+
+            val vedtakslengdeVurdering = VedtakslengdeRepositoryImpl(connection).hentHvisEksisterer(førstegangsbehandling.id)
+            assertThat(vedtakslengdeVurdering).isNotNull()
+            assertThat(vedtakslengdeVurdering?.gjeldendeVurdering()?.sluttdato).isEqualTo(forventetSluttdato)
+        }
+
+        kjørUtvidVedtakslengdeJobb()
+
+        val manuellBehandlingMedVurderingsbehovVedtakslengdeManuelt = dataSource.transaction { connection ->
+            val behandling = BehandlingService(
+                postgresRepositoryRegistry.provider(connection),
+                gatewayProvider
+            ).finnSisteYtelsesbehandlingFor(sak.id)!!
+
+            assertThat(behandling.vurderingsbehov().map { it.type })
+                .containsExactly(no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.VEDTAKSLENGDE_MANUELT)
+            behandling
+        }
+
+        val forlengelseFom = nesteDatoOppholdskravIkkeOppfyltFra.plusDays(1)
+
+        manuellBehandlingMedVurderingsbehovVedtakslengdeManuelt
+            .løsAvklaringsBehov(
+                AvklarVedtakslengdeLøsning(
+                    løsningerForPerioder = listOf(VedtakslengdeVurderingDto(
+                        fom = forventetSluttdato.plusDays(1),
+                        tom = forlengelseFom,
+                        sluttdato = forlengelseFom,
+                        begrunnelse = "Vurdert vedtakslengde manuelt"
+                    ))
+                )
+            )
+            .løsAvklaringsBehov(ForeslåVedtakLøsning())
+            .fattVedtak()
+            .løsVedtaksbrev(TypeBrev.VEDTAK_ENDRING)
+            .medKontekst {
+                val vedtakslengdeRepository: VedtakslengdeRepository = repositoryProvider.provide()
+                val vedtakslengdeGrunnlag = vedtakslengdeRepository.hentHvisEksisterer(this.behandling.id)
+
+                assertThat(vedtakslengdeGrunnlag).isNotNull
+                assertThat(vedtakslengdeGrunnlag?.vurderinger?.size).isEqualTo(2)
+                assertThat(vedtakslengdeGrunnlag?.gjeldendeVurdering()?.sluttdato).isEqualTo(forlengelseFom)
+                assertThat(vedtakslengdeGrunnlag?.gjeldendeVurdering()?.begrunnelse).isEqualTo(
+                    "Vurdert vedtakslengde manuelt"
+                )
+                assertThat(vedtakslengdeGrunnlag?.gjeldendeVurdering()?.vurdertManuelt).isTrue
+            }
+    }
+
+    private fun kjørUtvidVedtakslengdeJobb() {
+        dataSource.transaction { connection ->
+            val repositoryProvider = postgresRepositoryRegistry.provider(connection)
+
+            val opprettJobbUtvidVedtakslengdeJobbUtfører = OpprettJobbUtvidVedtakslengdeJobbUtfører(
+                behandlingService = BehandlingService(repositoryProvider, gatewayProvider),
+                vedtakslengdeService = VedtakslengdeService(repositoryProvider, gatewayProvider),
+                flytJobbRepository = FlytJobbRepositoryImpl(connection),
+                unleashGateway = AvklarVedtakslengdeFlytUnleash,
+                clock = clock,
+            )
+
+            opprettJobbUtvidVedtakslengdeJobbUtfører.utfør(JobbInput(OpprettJobbUtvidVedtakslengdeJobbUtfører))
+        }
+
+        motor.kjørJobber()
     }
 }

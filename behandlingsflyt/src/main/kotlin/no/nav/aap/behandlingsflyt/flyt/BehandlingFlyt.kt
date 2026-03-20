@@ -290,7 +290,7 @@ class BehandlingFlytBuilder {
 
     fun medSteg(
         steg: FlytSteg,
-        vurderingsbehovRelevanteForSteg: List<Vurderingsbehov> = Vurderingsbehov.alle(),
+        vurderingsbehovRelevanteForSteg: List<Vurderingsbehov>,
         informasjonskrav: List<Informasjonskravkonstruktør> = emptyList()
     ): BehandlingFlytBuilder {
         if (buildt) {

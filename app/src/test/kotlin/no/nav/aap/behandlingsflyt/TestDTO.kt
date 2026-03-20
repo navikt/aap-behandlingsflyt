@@ -42,6 +42,11 @@ data class OpprettTestcaseDTO(
 )
 
 data class LeggTilInstitusjonsoppholdDTO(
+    @param:JsonProperty(value = "opphold", required = true)
+    val opphold: List<InstitusjonsoppholdItemDTO>
+)
+
+data class InstitusjonsoppholdItemDTO(
     @param:JsonProperty(value = "institusjonstype", required = true) val institusjonstype: Institusjonstype,
     @param:JsonProperty(value = "oppholdstype", required = true) val oppholdstype: Oppholdstype,
     @param:JsonProperty(value = "oppholdFom", required = true) val oppholdFom: LocalDate,

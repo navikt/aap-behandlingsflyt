@@ -7,14 +7,15 @@ import no.nav.aap.behandlingsflyt.forretningsflyt.steg.FatteVedtakSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.MeldingOmVedtakBrevSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.aktivitetsplikt.IverksettBruddSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.aktivitetsplikt.VurderAktivitetsplikt11_7Steg
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 
 object Aktivitetsplikt : BehandlingType {
     override fun flyt(): BehandlingFlyt {
         return BehandlingFlytBuilder()
-            .medSteg(steg = VurderAktivitetsplikt11_7Steg)
-            .medSteg(steg = FatteVedtakSteg)
-            .medSteg(steg = IverksettBruddSteg)
-            .medSteg(steg = MeldingOmVedtakBrevSteg)
+            .medSteg(steg = VurderAktivitetsplikt11_7Steg, vurderingsbehovRelevanteForSteg = Vurderingsbehov.alle())
+            .medSteg(steg = FatteVedtakSteg, vurderingsbehovRelevanteForSteg = Vurderingsbehov.alle())
+            .medSteg(steg = IverksettBruddSteg, vurderingsbehovRelevanteForSteg = Vurderingsbehov.alle())
+            .medSteg(steg = MeldingOmVedtakBrevSteg, vurderingsbehovRelevanteForSteg = Vurderingsbehov.alle())
             .build()
     }
 }

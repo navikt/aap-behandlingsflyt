@@ -115,8 +115,8 @@ object Revurdering : BehandlingType {
                     Vurderingsbehov.HELHETLIG_VURDERING,
                 )
             )
-            .medSteg(steg = FastsettMeldeperiodeSteg)
-            .medSteg(steg = VurderAlderSteg)
+            .medSteg(steg = FastsettMeldeperiodeSteg, vurderingsbehovRelevanteForSteg = Vurderingsbehov.alle())
+            .medSteg(steg = VurderAlderSteg, vurderingsbehovRelevanteForSteg = Vurderingsbehov.alle())
             .medSteg(
                 steg = VurderStudentSteg,
                 vurderingsbehovRelevanteForSteg = listOf(
@@ -270,7 +270,7 @@ object Revurdering : BehandlingType {
                     Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP,
                 )
             )
-            .medSteg(steg = FastsettSykdomsvilkåretSteg)
+            .medSteg(steg = FastsettSykdomsvilkåretSteg, vurderingsbehovRelevanteForSteg = Vurderingsbehov.alle())
             .medSteg(
                 steg = BeregningAvklarFaktaSteg, vurderingsbehovRelevanteForSteg = listOf(
                     Vurderingsbehov.MOTTATT_SØKNAD,
@@ -282,7 +282,7 @@ object Revurdering : BehandlingType {
                     Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP,
                 )
             )
-            .medSteg(steg = VisGrunnlagSteg)
+            .medSteg(steg = VisGrunnlagSteg, vurderingsbehovRelevanteForSteg = Vurderingsbehov.alle())
             .medSteg(
                 steg = ManglendeLigningGrunnlagSteg,
                 informasjonskrav = listOf(InntektInformasjonskrav),
@@ -384,7 +384,7 @@ object Revurdering : BehandlingType {
                 steg = SamordningArbeidsgiverSteg,
                 vurderingsbehovRelevanteForSteg = listOf(Vurderingsbehov.REVURDER_SAMORDNING_ARBEIDSGIVER)
             )
-            .medSteg(steg = SamordningAvslagSteg)
+            .medSteg(steg = SamordningAvslagSteg, vurderingsbehovRelevanteForSteg = Vurderingsbehov.alle())
             .medSteg(
                 steg = SamordningBarnepensjonSteg,
                 vurderingsbehovRelevanteForSteg = listOf(Vurderingsbehov.REVURDER_SAMORDNING_BARNEPENSJON)
@@ -412,8 +412,9 @@ object Revurdering : BehandlingType {
             .medSteg(
                 steg = Effektuer11_7Steg,
                 informasjonskrav = listOf(Aktivitetsplikt11_7Informasjonskrav),
+                vurderingsbehovRelevanteForSteg = Vurderingsbehov.alle()
             )
-            .medSteg(steg = RettighetstypeSteg)
+            .medSteg(steg = RettighetstypeSteg, vurderingsbehovRelevanteForSteg = Vurderingsbehov.alle())
             .medSteg(
                 steg = VedtakslengdeSteg,
                 informasjonskrav = listOf(VedtakslengdeInformasjonskrav),
@@ -426,7 +427,7 @@ object Revurdering : BehandlingType {
                 vurderingsbehovRelevanteForSteg = Vurderingsbehov.alleInklusivGRegulering(),
                 informasjonskrav = listOf(MeldekortInformasjonskrav)
             )
-            .medSteg(steg = UnderveisSteg)
+            .medSteg(steg = UnderveisSteg, vurderingsbehovRelevanteForSteg = Vurderingsbehov.alle())
             .medSteg(
                 steg = BeregnTilkjentYtelseSteg,
                 vurderingsbehovRelevanteForSteg = Vurderingsbehov.alleInklusivGRegulering(),
@@ -454,7 +455,7 @@ object Revurdering : BehandlingType {
                 vurderingsbehovRelevanteForSteg = Vurderingsbehov.alleInklusivGRegulering()
             )
             .medSteg(
-                steg = OpprettRevurderingSteg
+                steg = OpprettRevurderingSteg, vurderingsbehovRelevanteForSteg = Vurderingsbehov.alle()
             )
             .build()
     }

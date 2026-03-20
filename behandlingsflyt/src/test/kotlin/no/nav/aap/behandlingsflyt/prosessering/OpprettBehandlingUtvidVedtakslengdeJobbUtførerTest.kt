@@ -34,10 +34,12 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettels
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
+import no.nav.aap.behandlingsflyt.test.FakeUnleashBaseWithDefaultDisabled
 import no.nav.aap.behandlingsflyt.test.desember
 import no.nav.aap.behandlingsflyt.test.fixedClock
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.motor.JobbInput
@@ -62,7 +64,7 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtførerTest {
     private val rettighetestypeRepository = mockk<RettighetstypeRepository>()
     private val stansOpphørRepository = mockk<StansOpphørRepository>()
 
-    private val opprettBehandlingUtvidVedtakslengdeJobbUtfører =
+    private fun opprettUtfører(unleashGateway: UnleashGateway = AlleAvskruddUnleash) =
         OpprettBehandlingUtvidVedtakslengdeJobbUtfører(
             prosesserBehandlingService = prosesserBehandlingService,
             behandlingService = behandlingService,
@@ -75,6 +77,7 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtførerTest {
                 unleashGateway = AlleAvskruddUnleash,
                 clock = clock
             ),
+            unleashGateway = unleashGateway,
         )
 
 
@@ -92,13 +95,13 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtførerTest {
         every { vedtakslengdeRepository.hentHvisEksisterer(behandling.id) } returns null
         every { rettighetestypeRepository.hentHvisEksisterer(behandling.id) } returns rettighetstypeGrunnlag(vilkårsresultat)
 
-        opprettBehandlingUtvidVedtakslengdeJobbUtfører.utfør(jobbInput)
+        opprettUtfører().utfør(jobbInput)
 
         verify(exactly = 1) { prosesserBehandlingService.triggProsesserBehandling(any<BehandlingService.OpprettetBehandling>()) }
     }
 
     @Test
-    fun `skal ikke opprette og sette i gang prosessering av behandling hvis sluttdato er innenfor dagens dato + 28 dager og under ett år gjenstående ordinær rettighet`() {
+    fun `skal ikke opprette manuell behandling for utvidelse av vedtakslengde hvis toggle er av`() {
         val sak = sak()
         val behandling = behandlingMedVedtak()
         val vilkårsresultat = genererVilkårsresultat(
@@ -114,9 +117,36 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtførerTest {
         every { rettighetestypeRepository.hentHvisEksisterer(behandling.id) } returns rettighetstypeGrunnlag(vilkårsresultat)
         every { stansOpphørRepository.hentHvisEksisterer(behandling.id) } returns null
 
-        opprettBehandlingUtvidVedtakslengdeJobbUtfører.utfør(jobbInput)
+        opprettUtfører().utfør(jobbInput)
 
         verify(exactly = 0) { prosesserBehandlingService.triggProsesserBehandling(any<BehandlingService.OpprettetBehandling>()) }
+    }
+
+    @Test
+    fun `skal opprette manuell behandling for utvidelse av vedtakslengde hvis toggle er på`() {
+        val sak = sak()
+        val behandling = behandlingMedVedtak()
+        val vilkårsresultat = genererVilkårsresultat(
+            periode = sak.rettighetsperiode,
+            oppfyltBistand = true,
+            bistandPeriode = Periode(sak.rettighetsperiode.fom, sak.rettighetsperiode.fom.plusMonths(14))
+        )
+
+        every { underveisRepository.hentHvisEksisterer(behandling.id)} returns underveisGrunnlag()
+        every { behandlingService.finnBehandlingMedSisteFattedeVedtak(sakId) } returns behandlingMedVedtak()
+        every { behandlingService.finnEllerOpprettBehandling(sak.id, any()) } returns opprettetBehandling()
+        every { prosesserBehandlingService.triggProsesserBehandling(any<BehandlingService.OpprettetBehandling>()) } just Runs
+        every { vilkårsresultatRepository.hent(behandlingId) } returns vilkårsresultat
+        every { vedtakslengdeRepository.hentHvisEksisterer(behandling.id) } returns null
+        every { rettighetestypeRepository.hentHvisEksisterer(behandling.id) } returns rettighetstypeGrunnlag(vilkårsresultat)
+        every { stansOpphørRepository.hentHvisEksisterer(behandling.id) } returns null
+
+        val unleashMedManuellToggle = FakeUnleashBaseWithDefaultDisabled(
+            enabledFlags = listOf(BehandlingsflytFeature.OpprettManuellVedtakslengdeBehandling)
+        )
+        opprettUtfører(unleashMedManuellToggle).utfør(jobbInput)
+
+        verify(exactly = 1) { prosesserBehandlingService.triggProsesserBehandling(any<BehandlingService.OpprettetBehandling>()) }
     }
 
     @Test
@@ -126,7 +156,7 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtførerTest {
         every { underveisRepository.hentHvisEksisterer(behandling.id)} returns underveisGrunnlag()
         every { behandlingService.finnBehandlingMedSisteFattedeVedtak(sakId) } returns null
 
-        opprettBehandlingUtvidVedtakslengdeJobbUtfører.utfør(jobbInput)
+        opprettUtfører().utfør(jobbInput)
 
         verify(exactly = 0) { prosesserBehandlingService.triggProsesserBehandling(any<BehandlingService.OpprettetBehandling>()) }
     }
@@ -141,7 +171,7 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtførerTest {
         every { behandlingService.finnEllerOpprettBehandling(sak.id, any()) } returns opprettetBehandling()
         every { vilkårsresultatRepository.hent(behandlingId) } returns genererVilkårsresultat(sak.rettighetsperiode)
 
-        opprettBehandlingUtvidVedtakslengdeJobbUtfører.utfør(jobbInput)
+        opprettUtfører().utfør(jobbInput)
 
         verify(exactly = 0) { prosesserBehandlingService.triggProsesserBehandling(any<BehandlingService.OpprettetBehandling>()) }
     }
@@ -160,7 +190,7 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtførerTest {
         every { vedtakslengdeRepository.hentHvisEksisterer(behandling.id) } returns null
         every { rettighetestypeRepository.hentHvisEksisterer(behandling.id) } returns rettighetstypeGrunnlag(vilkårsresultat)
 
-        opprettBehandlingUtvidVedtakslengdeJobbUtfører.utfør(jobbInput)
+        opprettUtfører().utfør(jobbInput)
 
         verify(exactly = 0) { prosesserBehandlingService.triggProsesserBehandling(any<BehandlingService.OpprettetBehandling>()) }
     }

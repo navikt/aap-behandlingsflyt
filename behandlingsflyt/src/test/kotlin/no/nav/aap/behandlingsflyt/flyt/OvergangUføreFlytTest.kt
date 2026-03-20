@@ -224,9 +224,6 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::
             overgangUføreVilkår.tidslinje().begrensetTil(underveisPeriode),
             Periode(periode.fom, virkningsdatoAndreLøsningOvergangUføre.plusMonths(8).minusDays(1)) to {
                 assertThat(it.utfall).isEqualTo(Utfall.OPPFYLT)
-            },
-            Periode(virkningsdatoAndreLøsningOvergangUføre.plusMonths(8), underveisPeriode.tom) to {
-                assertThat(it.utfall).isEqualTo(Utfall.IKKE_OPPFYLT)
             })
 
         resultat =

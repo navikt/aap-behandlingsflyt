@@ -15,8 +15,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.somTidslinje
@@ -27,22 +25,16 @@ class EtableringEgenVirksomhetSteg(
     private val etableringEgenVirksomhetRepository: EtableringEgenVirksomhetRepository,
     private val avklaringsbehovService: AvklaringsbehovService,
     private val etableringEgenVirksomhetService: EtableringEgenVirksomhetService,
-    private val tidligereVurderinger: TidligereVurderinger,
-    private val unleashGateway: UnleashGateway
+    private val tidligereVurderinger: TidligereVurderinger
 ) : BehandlingSteg {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         etableringEgenVirksomhetRepository = repositoryProvider.provide(),
         avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
         etableringEgenVirksomhetService = EtableringEgenVirksomhetService(repositoryProvider),
-        tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
-        unleashGateway = gatewayProvider.provide()
+        tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider)
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        if (unleashGateway.isDisabled(BehandlingsflytFeature.VirksomhetsEtablering)) {
-            return Fullført
-        }
-
         avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
             definisjon = Definisjon.ETABLERING_EGEN_VIRKSOMHET,
             tvingerAvklaringsbehov = setOf(

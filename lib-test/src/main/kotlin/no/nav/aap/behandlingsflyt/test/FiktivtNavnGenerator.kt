@@ -20,7 +20,7 @@ object FiktivtNavnGenerator {
         return PersonNavn(fornavn, Navnelager.randomEtternavn)
     }
 
-    private object Navnelager {
+    object Navnelager {
 
         private val etternavn = loadNames("/etternavn.txt")
         private val fornavnKvinner = loadNames("/fornavn-kvinner.txt")
@@ -42,7 +42,7 @@ object FiktivtNavnGenerator {
             return liste[RANDOM.nextInt(liste.size)]
         }
 
-        private fun loadNames(resourceName: String): List<String> {
+        fun loadNames(resourceName: String): List<String> {
             try {
                 // Try multiple class loaders to find the resource
                 val resourceStream = Thread.currentThread().contextClassLoader.getResourceAsStream(resourceName)
