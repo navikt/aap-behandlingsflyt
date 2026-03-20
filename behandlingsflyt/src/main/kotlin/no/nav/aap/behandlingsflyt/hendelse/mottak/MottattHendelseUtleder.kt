@@ -40,6 +40,7 @@ object MottattHendelseUtleder {
             InnsendingType.FAGSYSTEMINFO_BEHOV_HENDELSE -> ÅrsakTilOpprettelse.FAGSYSTEMINFO_BEHOV_HENDELSE
             InnsendingType.SYKEPENGE_VEDTAK_HENDELSE -> throw IllegalArgumentException("Sykepengevedtakhendelser skal trigge sjekk av informasjonskrav og ikke opprette en behandling direkte")
             InnsendingType.UFØRE_VEDTAK_HENDELSE -> ÅrsakTilOpprettelse.ENDRING_I_REGISTERDATA
+            InnsendingType.FEILREGISTRERT_JOURNALPOST -> throw IllegalArgumentException("Feilregistrerte journalposter skal ikke opprette en behandling")
         }
     }
 
@@ -97,7 +98,8 @@ object MottattHendelseUtleder {
             InnsendingType.TILBAKEKREVING_HENDELSE,
             InnsendingType.FAGSYSTEMINFO_BEHOV_HENDELSE,
             InnsendingType.SYKEPENGE_VEDTAK_HENDELSE,
-            InnsendingType.UFØRE_VEDTAK_HENDELSE -> emptyList()
+            InnsendingType.UFØRE_VEDTAK_HENDELSE,
+            InnsendingType.FEILREGISTRERT_JOURNALPOST -> emptyList()
         }
     }
 

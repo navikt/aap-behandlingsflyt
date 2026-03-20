@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.hendelse.mottak
 
 import no.nav.aap.behandlingsflyt.dokumentHendelse
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
@@ -42,6 +43,11 @@ class MottattHendelseService(
             else -> log.info("Mottok dokumenthendelse. Brevkategori: ${dto.type} Mottattdato: ${dto.mottattTidspunkt} Referanse: ${dto.referanse}")
         }
 
+        if (dto.type == InnsendingType.FEILREGISTRERT_JOURNALPOST) {
+            håndterFeilregistrertJournalpost(dto, sak)
+            return
+        }
+
         if (erBehandlingAvsluttetOgKanIkkeOppretteNyttVurderingsbehov(dto, behandlingRepository)) {
             when (val melding = dto.melding) {
                 is NyÅrsakTilBehandlingV0 -> log.warn(
@@ -72,6 +78,40 @@ class MottattHendelseService(
                     digitalisertAvPostmottak = dto.digitalisertAvPostmottak
                 ),
             )
+        }
+    }
+
+    private fun håndterFeilregistrertJournalpost(dto: Innsending, sak: Sak) {
+        val journalpostId = dto.referanse.verdi
+        val dokumenterMedJournalpostId = finnDokumenterMedJournalpostId(sak, journalpostId)
+
+        if (dokumenterMedJournalpostId.isEmpty()) {
+            log.info("Mottok feilregistrert journalpost med id {}, men fant ingen dokumenter med denne journalposten", journalpostId)
+            return
+        }
+
+        dokumenterMedJournalpostId.forEach { dokument ->
+            håndterFeilregistrertDokument(dokument, journalpostId)
+        }
+    }
+
+    private fun finnDokumenterMedJournalpostId(sak: Sak, journalpostId: String): List<MottattDokument> {
+        val alleDokumenter = mottattDokumentRepository.hentDokumenterForSak(sak.id)
+        return alleDokumenter.filter { dokument ->
+            dokument.referanse.type == InnsendingReferanse.Type.JOURNALPOST &&
+                dokument.referanse.verdi == journalpostId
+        }
+    }
+
+    private fun håndterFeilregistrertDokument(dokument: MottattDokument, journalpostId: String) {
+        when (dokument.type) {
+            InnsendingType.MELDEKORT -> {
+                log.info("Journalpost {} er feilregistrert. Dokumentet var opprinnelig et meldekort.", journalpostId)
+            }
+            
+            else -> {
+                log.info("Journalpost {} er feilregistrert. Dokumentet hadde type {}.", journalpostId, dokument.type)
+            }
         }
     }
 }

@@ -128,6 +128,11 @@ public class Innsending(
                 requireNotNull(melding) {"Melding fra uførevedtakhendelse kan ikke være null"}
                 require(melding is UførevedtakV0)
             }
+
+            InnsendingType.FEILREGISTRERT_JOURNALPOST -> {
+                require(referanse.type == InnsendingReferanse.Type.JOURNALPOST)
+                require(melding == null) { "Feilregistrert journalpost har ikke payload." }
+            }
         }
     }
 }
