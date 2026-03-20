@@ -27,6 +27,7 @@ import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.komponenter.verdityper.Prosent.Companion.`0_PROSENT`
 import no.nav.aap.komponenter.verdityper.Prosent.Companion.`100_PROSENT`
 import no.nav.aap.komponenter.verdityper.Prosent.Companion.`66_PROSENT`
+import no.nav.aap.komponenter.verdityper.Tid
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
 
@@ -232,30 +233,24 @@ class BeregnTilkjentYtelseService(private val grunnlag: TilkjentYtelseGrunnlag) 
         val meldeperiode = underveisperiode.meldePeriode
         val opplysningerMottatt = underveisperiode.arbeidsgradering.opplysningerMottatt
 
-        val unntakFastsattMeldedag =
-        // `meldeperiode` svarer til perioden det ble skrevet meldekort for (på dato `opplysningerMottatt`).
-            // For å finne unntakts-meldepliktperiode, må vi flytte denne to uker fram.
-            helligdagsunntakFastsattMeldedag[meldeperiode.flytt(14).fom]
-
         val sisteMeldedagForMeldeperiode = meldeperiode.tom.plusDays(9)
         val førsteMeldedagForMeldeperiode = meldeperiode.tom.plusDays(1)
 
-        val prioritertFørstedag = unntakFastsattMeldedag ?: førsteMeldedagForMeldeperiode
-
-        // Hvis fritak fra meldeplikt, betal ut så tidlig som mulig.
-        // Ellers, betal ut etter dato for levert meldekort.
-        // Fallback til siste meldedag for meldeperiode.
-        // kanskje denne burde være min, ikke when
-        val utbetalingsdato = when {
+        // Hvis fritak fra meldeplikt, så kjøres fritaksjobben og setter opplysningermottatt til datoen jobben kjører.
+        // Ved meldekort settes opplysninger mottatt.
+        // Fallback til siste meldedag for meldeperiode - kunne vært null ettersom vi ikke ønsker å betale ut i fremtiden
+        val muligUtbetalingsdato = when {
             opplysningerMottatt != null -> opplysningerMottatt
             underveisperiode.meldepliktStatus == MeldepliktStatus.FRITAK -> {
-                log.info("Traff sjekk for meldepliktstatus == FRITAK.")
+                log.info("Traff sjekk for meldepliktstatus == FRITAK. Første meldedag for meldeperiode: $førsteMeldedagForMeldeperiode")
                 helligdagsunntakFritaksUtbetalingDato[førsteMeldedagForMeldeperiode]
                     ?: førsteMeldedagForMeldeperiode
             }
 
             else -> sisteMeldedagForMeldeperiode
         }
+        val utbetalingsdato = muligUtbetalingsdato
+            .coerceIn(Tid.MIN..sisteMeldedagForMeldeperiode)
         return utbetalingsdato
     }
 
