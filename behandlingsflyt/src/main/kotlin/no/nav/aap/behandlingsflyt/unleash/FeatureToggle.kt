@@ -25,7 +25,7 @@ enum class BehandlingsflytFeature : FeatureToggle {
     SignaturEnhetFraOppgave,
     VedtakslengdeAvklaringsbehov,
     hentDagpengerPerioder,
-    hentUføreSøknadsdata,
+    hentUforesoknadsdata,
     UtvidVedtakslengdeUnderEttAr,
     OpprettManuellVedtakslengdeBehandling,
     ;

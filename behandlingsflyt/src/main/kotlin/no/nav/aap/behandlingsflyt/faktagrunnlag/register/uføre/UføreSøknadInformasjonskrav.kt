@@ -48,7 +48,7 @@ class UføreSøknadInformasjonskrav(
         steg: StegType,
         oppdatert: InformasjonskravOppdatert?
     ): Boolean {
-        if (unleashGateway.isDisabled(BehandlingsflytFeature.hentUføreSøknadsdata)) {
+        if (unleashGateway.isDisabled(BehandlingsflytFeature.hentUforesoknadsdata)) {
             return false
         }
         return kontekst.erFørstegangsbehandlingEllerRevurdering()
@@ -68,7 +68,7 @@ class UføreSøknadInformasjonskrav(
     }
 
     override fun hentData(input: UføreSøknadInput): UføreSøknadRegisterdata {
-        if (unleashGateway.isDisabled(BehandlingsflytFeature.hentUføreSøknadsdata)) {
+        if (unleashGateway.isDisabled(BehandlingsflytFeature.hentUforesoknadsdata)) {
             return UføreSøknadRegisterdata(null)
         }
 
