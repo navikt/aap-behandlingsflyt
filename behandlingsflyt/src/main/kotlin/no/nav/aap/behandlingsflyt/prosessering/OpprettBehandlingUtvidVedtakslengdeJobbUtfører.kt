@@ -41,22 +41,20 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtfører(
 
             when (vedtakslengdeUtvidelse) {
                 is VedtakslengdeUtvidelse.Automatisk -> {
-                    log.info("Oppretter automatisk behandling for utvidelse av vedtakslengde fra " +
-                            "forrige sluttdato ${vedtakslengdeUtvidelse.forrigeSluttdato} til " +
-                            "ny sluttdato ${vedtakslengdeUtvidelse.nySluttdato} for sak $sakId")
+                    log.info("Oppretter automatisk behandling for utvidelse ($vedtakslengdeUtvidelse) av vedtakslengde for sak $sakId")
 
                     val utvidVedtakslengdeBehandling = opprettNyBehandling(sakId, Vurderingsbehov.UTVID_VEDTAKSLENGDE)
                     prosesserBehandlingService.triggProsesserBehandling(utvidVedtakslengdeBehandling)
                 }
                 is VedtakslengdeUtvidelse.Manuell -> {
                     if (unleashGateway.isEnabled(BehandlingsflytFeature.OpprettManuellVedtakslengdeBehandling)) {
-                        log.info("Oppretter manuell behandling for utvidelse av vedtakslengde fra " +
-                                "forrige sluttdato ${vedtakslengdeUtvidelse.forrigeSluttdato} for sak $sakId")
+                        log.info("Oppretter manuell behandling for utvidelse ($vedtakslengdeUtvidelse) av vedtakslengde for sak $sakId")
 
                         val utvidVedtakslengdeBehandling = opprettNyBehandling(sakId, Vurderingsbehov.VEDTAKSLENGDE_MANUELT)
                         prosesserBehandlingService.triggProsesserBehandling(utvidVedtakslengdeBehandling)
                     } else {
-                        log.error("Sak med id $sakId trenger manuell utvidelse av vedtakslengde. Dette er ikke implementert. Må følges opp!")
+                        log.error("Sak med id $sakId trenger manuell utvidelse ($vedtakslengdeUtvidelse) av vedtakslengde. " +
+                                "Dette er ikke implementert. Må følges opp!")
                     }
                 }
                 is VedtakslengdeUtvidelse.IngenFremtidigBistandsbehovRettighet -> {
