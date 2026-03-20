@@ -188,12 +188,24 @@ class IverksettVedtakSteg private constructor(
                 behandling,
                 vedtak.vedtakstidspunkt.toLocalDate()
             )
+            val refusjonsperiode = beregnEtterbetalingsperiodeForRefusjonskrav(
+                virkningstidspunkt = vedtakMedTidligsteVirkingsdato.virkningstidspunkt,
+                tidligsteVedtaksTidspunkt = tidligsteVedtaksTidspunkt
+            )
+            if (refusjonsperiode == null) {
+                log.info(
+                    "Oppretter ikke gosysoppgave for refusjonskrav i behandling ${kontekst.behandlingId} fordi perioden er ugyldig. " +
+                            "virkningstidspunkt=${vedtakMedTidligsteVirkingsdato.virkningstidspunkt}, tidligsteVedtaksTidspunkt=$tidligsteVedtaksTidspunkt"
+                )
+                return
+            }
+            val (virkningsdato, vedtaksdato) = refusjonsperiode
             val gjeldendeSosialRefusjonDtoer = navkontorSosialRefusjon
                 .filter { it.harKrav && it.navKontor != null }
                 .map {
                     it.tilNavKontorPeriodeDto(
-                        virkningsdato = vedtakMedTidligsteVirkingsdato.virkningstidspunkt,
-                        vedtaksdato = tidligsteVedtaksTidspunkt.minusDays(1)
+                        virkningsdato = virkningsdato,
+                        vedtaksdato = vedtaksdato
                     )
                 }
                 .toSet()
@@ -204,7 +216,6 @@ class IverksettVedtakSteg private constructor(
             opprettGosysOppgaverForSosialrefusjon(gjeldendeSosialRefusjonDtoer, aktivIdent, kontekst)
         }
     }
-
 
     fun lagGysOppgaveHvisRelevant(kontekst: FlytKontekstMedPerioder, vedtak: Vedtak) {
         val behandling = behandlingRepository.hent(behandlingId = kontekst.behandlingId)
@@ -235,6 +246,17 @@ class IverksettVedtakSteg private constructor(
         vedtakService.lagreVedtak(kontekst.behandlingId, vedtakstidspunkt, virkningstidspunkt)
     }
 
+    private fun beregnEtterbetalingsperiodeForRefusjonskrav(
+        virkningstidspunkt: LocalDate,
+        tidligsteVedtaksTidspunkt: LocalDate
+    ): Pair<LocalDate, LocalDate>? {
+        val tom = tidligsteVedtaksTidspunkt.minusDays(1)
+        return if (virkningstidspunkt > tom) {
+            null
+        } else {
+            virkningstidspunkt to tom
+        }
+    }
 
     private fun harAvbruttRevurderingIBehandlingen(kontekst: FlytKontekstMedPerioder): Boolean =
         kontekst.vurderingType == VurderingType.REVURDERING && avbrytRevurderingService.revurderingErAvbrutt(

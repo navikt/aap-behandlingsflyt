@@ -191,6 +191,49 @@ class AvventUtbetalingServiceTest {
 
     }
 
+    @Test
+    fun `Refusjonskrav i revurdering med ugyldig periode skal ikke føre til avvent utbetaling`() {
+        val førstegangBehandling = Behandling(
+            BehandlingId(1L),
+            sakId = SakId(1),
+            typeBehandling = TypeBehandling.Førstegangsbehandling,
+            årsakTilOpprettelse = ÅrsakTilOpprettelse.SØKNAD,
+            forrigeBehandlingId = null,
+            versjon = 1
+        )
+
+        val førstegangVedtak = Vedtak(
+            behandlingId = BehandlingId(1L),
+            vedtakstidspunkt = LocalDate.parse("2026-01-12").atStartOfDay(),
+            virkningstidspunkt = LocalDate.parse("2026-01-29"),
+        )
+
+        val revurderingBehandling = Behandling(
+            BehandlingId(2L),
+            sakId = SakId(1),
+            typeBehandling = TypeBehandling.Revurdering,
+            årsakTilOpprettelse = ÅrsakTilOpprettelse.KLAGE,
+            forrigeBehandlingId = BehandlingId(1L),
+            versjon = 1
+        )
+
+        every { behandlingRepositoryMock.hent(BehandlingId(1L)) } returns førstegangBehandling
+        every { vedtakServiceMock.hentVedtak(any()) } returnsMany listOf(førstegangVedtak, førstegangVedtak)
+        every { refusjonkravRepositoryMock.hentHvisEksisterer(any()) } returns
+            listOf(RefusjonkravVurdering(true, null, null, "Nav Løten", "saksbehandler"))
+        every { tjenestepensjonRefusjonsKravVurderingRepositoryMock.hentHvisEksisterer(any()) } returns null
+        every { samordningAndreStatligeYtelserRepositoryMock.hentHvisEksisterer(any()) } returns null
+        every { samordningArbeidsgiverRepositoryMock.hentHvisEksisterer(any()) } returns null
+
+        val avventUtbetaling = service.finnEventuellAvventUtbetaling(
+            førsteVedtak = førstegangVedtak,
+            behandling = revurderingBehandling,
+            tilkjentYtelseHelePerioden = Periode(LocalDate.parse("2026-01-01"), LocalDate.parse("2026-01-31"))
+        )
+
+        assertNull(avventUtbetaling)
+    }
+
 
     @Test
     fun `Refusjonskrav med åpen tom overlapper med tilkjent ytelse skal føre til avvent utbetaling`() {
