@@ -1,5 +1,7 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
+import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
+import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.komponenter.gateway.Gateway
 import no.nav.aap.meldekort.kontrakt.sak.BehandslingsflytUtfyllingRequest
 import no.nav.aap.meldekort.kontrakt.sak.MeldeperioderV0
@@ -7,4 +9,5 @@ import no.nav.aap.meldekort.kontrakt.sak.MeldeperioderV0
 interface MeldekortGateway : Gateway {
     fun oppdaterMeldeperioder(meldeperioderV0: MeldeperioderV0)
     fun sendTimerArbeidetIPeriode(arbeidstimerRequest: BehandslingsflytUtfyllingRequest)
+    fun oppdaterIdenter(saksnummer: Saksnummer, identer: List<Ident>)
 }

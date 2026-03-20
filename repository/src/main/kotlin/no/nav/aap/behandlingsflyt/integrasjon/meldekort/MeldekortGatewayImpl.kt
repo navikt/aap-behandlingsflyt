@@ -1,7 +1,9 @@
 package no.nav.aap.behandlingsflyt.integrasjon.meldekort
 
+import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.prometheus
 import no.nav.aap.behandlingsflyt.prosessering.MeldekortGateway
+import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.gateway.Factory
 import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
@@ -13,7 +15,7 @@ import no.nav.aap.meldekort.kontrakt.sak.BehandslingsflytUtfyllingRequest
 import no.nav.aap.meldekort.kontrakt.sak.MeldeperioderV0
 import java.net.URI
 
-class MeldekortGatewayImpl: MeldekortGateway {
+class MeldekortGatewayImpl : MeldekortGateway {
     private val url = URI.create(requiredConfigForKey("integrasjon.meldekort.url"))
 
     private val client = RestClient.withDefaultResponseHandler(
@@ -24,13 +26,32 @@ class MeldekortGatewayImpl: MeldekortGateway {
 
     private val oppdaterMeldeperiodeUrl = URI("$url/api/behandlingsflyt/sak/meldeperioder")
     private val innsendingTimerArbeidetUrl = URI("$url/api/behandlingsflyt/sak/timer")
+    private val oppdaterIdenterUrl = URI("$url/api/behandlingsflyt/sak/oppdater-identer")
 
     override fun oppdaterMeldeperioder(meldeperioderV0: MeldeperioderV0) {
         client.post<MeldeperioderV0, Unit>(oppdaterMeldeperiodeUrl, PostRequest(meldeperioderV0))
     }
 
     override fun sendTimerArbeidetIPeriode(arbeidstimerRequest: BehandslingsflytUtfyllingRequest) {
-        client.post<BehandslingsflytUtfyllingRequest, Unit>(innsendingTimerArbeidetUrl, PostRequest(arbeidstimerRequest))
+        client.post<BehandslingsflytUtfyllingRequest, Unit>(
+            innsendingTimerArbeidetUrl,
+            PostRequest(arbeidstimerRequest)
+        )
+    }
+
+    override fun oppdaterIdenter(
+        saksnummer: Saksnummer,
+        identer: List<Ident>
+    ) {
+        client.post<MeldeperioderV0, Unit>(
+            oppdaterIdenterUrl,
+            PostRequest(
+                OppdaterIdenterV0(
+                    saksnummer = saksnummer,
+                    identer = identer,
+                )
+            )
+        )
     }
 
     companion object : Factory<MeldekortGateway> {

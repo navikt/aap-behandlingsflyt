@@ -277,6 +277,24 @@ fun NormalOpenAPIRoute.driftApi(
                 respond(dokumenter)
             }
         }
+
+        route("/sak/{saksnummer}/oppdater-person-identer") {
+            authorizedPost<SaksnummerParameter, SakDriftsinfoDTO, Unit>(
+                AuthorizationParamPathConfig(
+                    sakPathParam = SakPathParam("saksnummer"),
+                    operasjon = Operasjon.DRIFTE,
+                ),
+            ) { params, _ ->
+                dataSource.transaction { connection ->
+                    val repositoryProvider = repositoryRegistry.provider(connection)
+                    val driftfunksjoner = Driftfunksjoner(repositoryProvider, gatewayProvider)
+                    driftfunksjoner.oppdaterPersonIdenter(Saksnummer(params.saksnummer))
+                }
+
+                respondWithStatus(HttpStatusCode.NoContent)
+            }
+        }
+
     }
 }
 
