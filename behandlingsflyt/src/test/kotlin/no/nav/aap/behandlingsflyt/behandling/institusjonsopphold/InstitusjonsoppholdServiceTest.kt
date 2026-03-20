@@ -1060,8 +1060,6 @@ internal class InstitusjonsoppholdUtlederServiceTest {
         assertThat(res.harBehovForAvklaring()).isTrue
     }
 
-    // --- Regression tests for barnetillegg gaps ---
-
     @Test
     fun `gap i barnetillegg under helseopphold gir avklaring selv om senere barnetilleggperiode finnes`() {
         val helseFom = LocalDate.of(2025, 1, 1)
