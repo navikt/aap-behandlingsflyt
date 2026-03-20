@@ -490,7 +490,7 @@ class InstitusjonsoppholdUtlederService(
             Tidslinje.empty()
         }
         
-        val oppholdIGaps = barnetilleggTidslinje.segmenter().sortedBy { it.fom() }
+        val oppholdIBarneTilleggGapSomKreverAvklaring = barnetilleggTidslinje.segmenter().sortedBy { it.fom() }
             .zipWithNext()
             .mapNotNull { (current, next) ->
                 val gapStart = current.tom().plusDays(1)
@@ -519,7 +519,7 @@ class InstitusjonsoppholdUtlederService(
         }
 
         return oppholdFørBarnetillegg
-            .kombiner(oppholdIGaps, joinStyle = StandardSammenslåere.prioriterVenstreSideCrossJoin())
+            .kombiner(oppholdIBarneTilleggGapSomKreverAvklaring, joinStyle = StandardSammenslåere.prioriterVenstreSideCrossJoin())
             .kombiner(oppholdEtterBarnetillegg, joinStyle = StandardSammenslåere.prioriterVenstreSideCrossJoin())
     }
 
