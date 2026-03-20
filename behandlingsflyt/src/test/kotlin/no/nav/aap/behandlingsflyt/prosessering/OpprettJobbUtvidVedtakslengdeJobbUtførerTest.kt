@@ -17,7 +17,11 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingMedVedtak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
+import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
+import no.nav.aap.behandlingsflyt.test.FakeUnleashBaseWithDefaultDisabled
 import no.nav.aap.behandlingsflyt.test.desember
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.behandlingsflyt.test.fixedClock
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.JobbInput
@@ -36,11 +40,13 @@ class OpprettJobbUtvidVedtakslengdeJobbUtførerTest {
     private val behandlingService = mockk<BehandlingService>()
     private val vedtakslengdeService = mockk<VedtakslengdeService>()
     private val flytJobbRepository = mockk<FlytJobbRepository>()
-    private val opprettJobbUtvidVedtakslengdeJobbUtfører =
+
+    private fun opprettJobbUtfører(unleashGateway: UnleashGateway = AlleAvskruddUnleash) =
         OpprettJobbUtvidVedtakslengdeJobbUtfører(
             behandlingService = behandlingService,
             vedtakslengdeService = vedtakslengdeService,
             flytJobbRepository = flytJobbRepository,
+            unleashGateway = unleashGateway,
             clock = clock
         )
 
@@ -56,7 +62,7 @@ class OpprettJobbUtvidVedtakslengdeJobbUtførerTest {
         every { behandlingService.finnBehandlingMedSisteFattedeVedtak(sakId) } returns behandlingMedVedtak()
         every { flytJobbRepository.leggTil(match { it.sakId() == sakId.id }) } just Runs
 
-        opprettJobbUtvidVedtakslengdeJobbUtfører.utfør(jobbInput)
+        opprettJobbUtfører().utfør(jobbInput)
 
         val slot = slot<JobbInput>()
         verify(exactly = 1) { flytJobbRepository.leggTil(capture(slot)) }
@@ -70,7 +76,7 @@ class OpprettJobbUtvidVedtakslengdeJobbUtførerTest {
     fun `skal ikke opprette jobber hvis ingen saker returneres`() {
         every { vedtakslengdeService.hentSakerAktuelleForUtvidelseAvVedtakslengde(any()) } returns emptySet()
 
-        opprettJobbUtvidVedtakslengdeJobbUtfører.utfør(jobbInput)
+        opprettJobbUtfører().utfør(jobbInput)
 
         verify(exactly = 0) { flytJobbRepository.leggTil(any()) }
     }
@@ -81,22 +87,46 @@ class OpprettJobbUtvidVedtakslengdeJobbUtførerTest {
         every { vedtakslengdeService.hentNesteVedtakslengdeUtvidelse(behandlingId, behandlingId)} returns VedtakslengdeUtvidelse.IngenFremtidigBistandsbehovRettighet
         every { behandlingService.finnBehandlingMedSisteFattedeVedtak(sakId) } returns behandlingMedVedtak()
 
-        opprettJobbUtvidVedtakslengdeJobbUtfører.utfør(jobbInput)
+        opprettJobbUtfører().utfør(jobbInput)
 
         verify(exactly = 0) { flytJobbRepository.leggTil(any()) }
     }
 
     @Test
-    fun `skal ikke opprette jobber hvis hentNesteVedtakslengdeUtvidelse gir Manuell`() {
+    fun `skal ikke opprette jobber hvis hentNesteVedtakslengdeUtvidelse gir Manuell og toggle er av`() {
         every { vedtakslengdeService.hentSakerAktuelleForUtvidelseAvVedtakslengde(any()) } returns setOf(sakId)
         every { vedtakslengdeService.hentNesteVedtakslengdeUtvidelse(behandlingId, behandlingId) } returns VedtakslengdeUtvidelse.Manuell(
             forrigeSluttdato = dagensDato,
         )
         every { behandlingService.finnBehandlingMedSisteFattedeVedtak(sakId) } returns behandlingMedVedtak()
 
-        opprettJobbUtvidVedtakslengdeJobbUtfører.utfør(jobbInput)
+        opprettJobbUtfører().utfør(jobbInput)
 
         verify(exactly = 0) { flytJobbRepository.leggTil(any()) }
+    }
+
+    @Test
+    fun `skal opprette jobber hvis hentNesteVedtakslengdeUtvidelse gir Manuell og toggle er på`() {
+        val jobbInputSak = JobbInput(OpprettBehandlingUtvidVedtakslengdeJobbUtfører).forSak(sakId.id)
+
+        every { vedtakslengdeService.hentSakerAktuelleForUtvidelseAvVedtakslengde(any()) } returns setOf(sakId)
+        every { vedtakslengdeService.hentNesteVedtakslengdeUtvidelse(behandlingId, behandlingId) } returns VedtakslengdeUtvidelse.Manuell(
+            forrigeSluttdato = dagensDato,
+        )
+        every { behandlingService.finnBehandlingMedSisteFattedeVedtak(sakId) } returns behandlingMedVedtak()
+        every { flytJobbRepository.leggTil(match { it.sakId() == sakId.id }) } just Runs
+
+        val unleashMedManuellToggle = FakeUnleashBaseWithDefaultDisabled(
+            enabledFlags = listOf(BehandlingsflytFeature.OpprettManuellVedtakslengdeBehandling)
+        )
+        opprettJobbUtfører(unleashMedManuellToggle).utfør(jobbInput)
+
+        val slot = slot<JobbInput>()
+        verify(exactly = 1) { flytJobbRepository.leggTil(capture(slot)) }
+
+        assertThat(slot.captured)
+            .usingRecursiveComparison()
+            .isEqualTo(jobbInputSak)
     }
 
     @Test
@@ -104,7 +134,7 @@ class OpprettJobbUtvidVedtakslengdeJobbUtførerTest {
         every { vedtakslengdeService.hentSakerAktuelleForUtvidelseAvVedtakslengde(any()) } returns setOf(sakId)
         every { behandlingService.finnBehandlingMedSisteFattedeVedtak(sakId) } returns null
 
-        opprettJobbUtvidVedtakslengdeJobbUtfører.utfør(jobbInput)
+        opprettJobbUtfører().utfør(jobbInput)
 
         verify(exactly = 0) { flytJobbRepository.leggTil(any()) }
     }

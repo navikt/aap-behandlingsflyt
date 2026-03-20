@@ -9,8 +9,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
-import no.nav.aap.behandlingsflyt.test.FakeUnleashBaseWithDefaultDisabled
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.type.Periode
@@ -18,7 +17,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 
-class EtableringEgenVirksomhetFlytTest : AbstraktFlytOrkestratorTest(VirksomhetUnleash::class) {
+class EtableringEgenVirksomhetFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
     @Test
     fun `Skal kunne løse normalt og få gyldige perioder`() {
         val (sak, behandling) = sendInnFørsteSøknad(person = TestPersoner.STANDARD_PERSON())
@@ -445,10 +444,4 @@ class EtableringEgenVirksomhetFlytTest : AbstraktFlytOrkestratorTest(VirksomhetU
         }
         assertThat(feil.message).contains("Må ha definert minst én periode i tidsplanen dersom vilkåret er oppfylt for en periode")
     }
-
-    object VirksomhetUnleash : FakeUnleashBaseWithDefaultDisabled(
-        enabledFlags = listOf(
-            BehandlingsflytFeature.VirksomhetsEtablering
-        )
-    )
 }

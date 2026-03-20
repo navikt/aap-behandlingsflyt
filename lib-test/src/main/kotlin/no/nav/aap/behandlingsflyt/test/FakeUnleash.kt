@@ -39,7 +39,6 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.SendBrevVedMottattKlage to true,
         BehandlingsflytFeature.InstitusjonsoppholdJobb to true,
         BehandlingsflytFeature.TrekkSoeknadOpprettetFraLegeerklaering to true,
-        BehandlingsflytFeature.VirksomhetsEtablering to true,
         BehandlingsflytFeature.KvalitetssikringVed2213 to true,
         BehandlingsflytFeature.tilbakekrevingsOppgaverTilOppgave to true,
         BehandlingsflytFeature.HentingAvInstitusjonsOpphold to true,
@@ -53,6 +52,8 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.hentDagpengerPerioder to true,
         BehandlingsflytFeature.VedtakslengdeAvklaringsbehov to true,
         BehandlingsflytFeature.UtvidVedtakslengdeUnderEttAr to true,
+        BehandlingsflytFeature.hentUforesoknadsdata to true,
+        BehandlingsflytFeature.OpprettManuellVedtakslengdeBehandling to true,
         )
 )
 

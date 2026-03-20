@@ -9,4 +9,8 @@ interface UføreRegisterGateway : Gateway {
         person: Person,
         fraDato: LocalDate
     ): Set<Uføre>
+
+    fun hentÅpenUføreSøknad(
+        person: Person,
+    ): UføreSøknad?
 }

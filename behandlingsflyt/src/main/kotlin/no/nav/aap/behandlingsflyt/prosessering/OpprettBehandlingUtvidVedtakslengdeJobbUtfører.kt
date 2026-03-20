@@ -8,6 +8,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅ
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.JobbInput
@@ -19,6 +21,7 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtfører(
     private val prosesserBehandlingService: ProsesserBehandlingService,
     private val behandlingService: BehandlingService,
     private val vedtakslengdeService: VedtakslengdeService,
+    private val unleashGateway: UnleashGateway,
 ) : JobbUtfører {
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -38,32 +41,37 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtfører(
 
             when (vedtakslengdeUtvidelse) {
                 is VedtakslengdeUtvidelse.Automatisk -> {
-                    log.info("Oppretter behandling for utvidelse av vedtakslengde fra " +
-                            "forrige sluttdato ${vedtakslengdeUtvidelse.forrigeSluttdato} til " +
-                            "ny sluttdato ${vedtakslengdeUtvidelse.nySluttdato} for sak $sakId")
+                    log.info("Oppretter automatisk behandling for utvidelse ($vedtakslengdeUtvidelse) av vedtakslengde for sak $sakId")
 
-                    val utvidVedtakslengdeBehandling = opprettNyBehandling(sakId)
+                    val utvidVedtakslengdeBehandling = opprettNyBehandling(sakId, Vurderingsbehov.UTVID_VEDTAKSLENGDE)
                     prosesserBehandlingService.triggProsesserBehandling(utvidVedtakslengdeBehandling)
                 }
                 is VedtakslengdeUtvidelse.Manuell -> {
-                    // Her skal vi på sikt opprette manuell behandling med eget vurderingsbehov
-                    log.error("Sak med id $sakId trenger manuell utvidelse av vedtakslengde. Dette er ikke implementert. Må følges opp!")
+                    if (unleashGateway.isEnabled(BehandlingsflytFeature.OpprettManuellVedtakslengdeBehandling)) {
+                        log.info("Oppretter manuell behandling for utvidelse ($vedtakslengdeUtvidelse) av vedtakslengde for sak $sakId")
+
+                        val utvidVedtakslengdeBehandling = opprettNyBehandling(sakId, Vurderingsbehov.VEDTAKSLENGDE_MANUELT)
+                        prosesserBehandlingService.triggProsesserBehandling(utvidVedtakslengdeBehandling)
+                    } else {
+                        log.error("Sak med id $sakId trenger manuell utvidelse ($vedtakslengdeUtvidelse) av vedtakslengde. " +
+                                "Dette er ikke implementert. Må følges opp!")
+                    }
                 }
                 is VedtakslengdeUtvidelse.IngenFremtidigBistandsbehovRettighet -> {
-                    log.info("Sak med id $sakId har ingen fremtidig bistandsbehovrettighet, hopper over")
+                    log.info("Sak med id $sakId har ingen fremtidig bistandsbehovrettighet, ingen behandling opprettes")
                 }
             }
         } else {
-            log.info("Sak med id $sakId har ingen gjeldende behandlinger, hopper over")
+            log.info("Sak med id $sakId har ingen gjeldende behandlinger, ingen behandling opprettes")
         }
     }
 
-    private fun opprettNyBehandling(sakId: SakId): BehandlingService.OpprettetBehandling =
+    private fun opprettNyBehandling(sakId: SakId, vurderingsbehov: Vurderingsbehov): BehandlingService.OpprettetBehandling =
         behandlingService.finnEllerOpprettBehandling(
             sakId = sakId,
             vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
                 årsak = ÅrsakTilOpprettelse.UTVID_VEDTAKSLENGDE,
-                vurderingsbehov = listOf(VurderingsbehovMedPeriode(type = Vurderingsbehov.UTVID_VEDTAKSLENGDE))
+                vurderingsbehov = listOf(VurderingsbehovMedPeriode(vurderingsbehov))
             ),
         )
 
@@ -73,11 +81,13 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtfører(
                 prosesserBehandlingService = ProsesserBehandlingService(repositoryProvider, gatewayProvider),
                 behandlingService = BehandlingService(repositoryProvider, gatewayProvider),
                 vedtakslengdeService = VedtakslengdeService(repositoryProvider, gatewayProvider),
+                unleashGateway = gatewayProvider.provide(),
             )
         }
 
         override val type = "batch.UtvidVedtakslengdeJobbUtfører"
         override val navn = "Utvid vedtakslengde for saker"
-        override val beskrivelse = "Skal trigge behandling som utvider vedtakslengde for saker som er i ferd med å nå sluttdato"
+        override val beskrivelse = "Skal trigge behandling som enten automatisk eller manuelt utvider " +
+                "vedtakslengde for saker som er i ferd med å nå sluttdato"
     }
 }

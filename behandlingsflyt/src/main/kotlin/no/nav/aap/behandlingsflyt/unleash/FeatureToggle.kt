@@ -13,7 +13,6 @@ enum class BehandlingsflytFeature : FeatureToggle {
     SendBrevVedMottattKlage,
     InstitusjonsoppholdJobb,
     TrekkSoeknadOpprettetFraLegeerklaering,
-    VirksomhetsEtablering,
     KvalitetssikringVed2213,
     tilbakekrevingsOppgaverTilOppgave,
     HentingAvInstitusjonsOpphold,
@@ -26,7 +25,9 @@ enum class BehandlingsflytFeature : FeatureToggle {
     SignaturEnhetFraOppgave,
     VedtakslengdeAvklaringsbehov,
     hentDagpengerPerioder,
+    hentUforesoknadsdata,
     UtvidVedtakslengdeUnderEttAr,
+    OpprettManuellVedtakslengdeBehandling,
     ;
 
     override fun key(): String = name
