@@ -107,6 +107,7 @@ class HåndterTilbakekrevingHendelseService(
             ÅrsakTilOpprettelse.AKTIVITETSPLIKT,
             ÅrsakTilOpprettelse.AKTIVITETSPLIKT_11_9,
             ÅrsakTilOpprettelse.UTVID_VEDTAKSLENGDE,
+            ÅrsakTilOpprettelse.BARNETILLEGG_SATSENDRING,
             ÅrsakTilOpprettelse.MIGRER_RETTIGHETSPERIODE -> FagsysteminfoSvarHendelse.RevurderingDto.Årsak.NYE_OPPLYSNINGER
 
             ÅrsakTilOpprettelse.MELDEKORT,
@@ -114,13 +115,11 @@ class HåndterTilbakekrevingHendelseService(
 
             ÅrsakTilOpprettelse.OMGJØRING_ETTER_SVAR_FRA_KLAGEINSTANS,
             ÅrsakTilOpprettelse.OMGJØRING_ETTER_KLAGE,
-            ÅrsakTilOpprettelse.BARNETILLEGG_SATSENDRING,
             ÅrsakTilOpprettelse.SVAR_FRA_KLAGEINSTANS,
             ÅrsakTilOpprettelse.KLAGE -> FagsysteminfoSvarHendelse.RevurderingDto.Årsak.KLAGE
 
             ÅrsakTilOpprettelse.TILBAKEKREVING_HENDELSE,
             ÅrsakTilOpprettelse.FAGSYSTEMINFO_BEHOV_HENDELSE,
-
             null -> FagsysteminfoSvarHendelse.RevurderingDto.Årsak.UKJENT // Ikke relevant
         }
 

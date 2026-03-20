@@ -29,7 +29,7 @@ class StansEllerOpphørMigrering(
         log.info("starter migrering av stans og opphør")
         var ferdig = false
         var antallMigreringer = 0
-        val sakIdSett = HashSet<Long>()
+        var sisteMigrerte = 0L // bigserial starter på 1
 
         while (!ferdig) {
             dataSource.transaction { connection ->
@@ -58,9 +58,14 @@ class StansEllerOpphørMigrering(
                           AND trukket_soknad_vurdering.skal_trekkes
                     )
                       AND sak.opprettet_tid >= '2025-04-01'
+                      AND sak.id > ?
+                    ORDER BY sak.id
                     LIMIT 1
                 """.trimIndent()
                 ) {
+                    setParams {
+                        setLong(1, sisteMigrerte)
+                    }
                     setRowMapper {
                         SakId(it.getLong("sak_id"))
                     }
@@ -71,16 +76,10 @@ class StansEllerOpphørMigrering(
                     log.info("Ferdig med $antallMigreringer migrering av stans og opphør")
                     return@transaction
                 }
-                if (sakId.id in sakIdSett) {
-                    log.info("Trukket samme sak id $sakId etter den er migrert, så migrering / utplukk feilet")
-                    ferdig = true
-                    return@transaction
-                }
-
-                sakIdSett += sakId.id
 
                 stansEllerOpphørMigreringService.migrerSak(sakId)
                 antallMigreringer += 1
+                sisteMigrerte = sakId.id
 
                 if (antallMigreringer % 10 == 0) {
                     log.info("Pågående migrering, $antallMigreringer utført")

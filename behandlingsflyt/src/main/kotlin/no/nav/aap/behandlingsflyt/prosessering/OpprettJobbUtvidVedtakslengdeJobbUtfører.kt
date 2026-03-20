@@ -4,6 +4,8 @@ import no.nav.aap.behandlingsflyt.behandling.vedtakslengde.VedtakslengdeUtvidels
 import no.nav.aap.behandlingsflyt.behandling.vedtakslengde.VedtakslengdeService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.FlytJobbRepository
@@ -25,6 +27,7 @@ class OpprettJobbUtvidVedtakslengdeJobbUtfører(
     private val behandlingService: BehandlingService,
     private val vedtakslengdeService: VedtakslengdeService,
     private val flytJobbRepository: FlytJobbRepository,
+    private val unleashGateway: UnleashGateway,
     private val clock: Clock = Clock.systemDefaultZone()
 ) : JobbUtfører {
 
@@ -60,14 +63,27 @@ class OpprettJobbUtvidVedtakslengdeJobbUtfører(
         if (kandidater.ingenBehandling.isNotEmpty()) {
             log.info("Følgende saker har ingen gjeldende vedtatt behandling. Saker: ${kandidater.ingenBehandling}")
         }
-        if (kandidater.manuelle.isNotEmpty()) {
-            log.error("Følgende saker trenger manuell utvidelse av vedtakslengde. Må følges opp! Saker: ${kandidater.manuelle}")
-        }
         if (kandidater.ingenRettighet.isNotEmpty()) {
             log.info("Følgende saker har ingen fremtidig bistandsbehovrettighet. Saker: ${kandidater.ingenRettighet}")
         }
 
-        return kandidater.automatiske
+        return if (unleashGateway.isEnabled(BehandlingsflytFeature.OpprettManuellVedtakslengdeBehandling)) {
+            if (kandidater.manuelle.isNotEmpty()) {
+                log.info("Følgende saker trenger manuell utvidelse av vedtakslengde. Saker: ${kandidater.manuelle}")
+            }
+            if (kandidater.automatiske.isNotEmpty()) {
+                log.info("Følgende saker får automatisk utvidet vedtakslengde. Saker: ${kandidater.automatiske}")
+            }
+            kandidater.automatiske + kandidater.manuelle
+        } else {
+            if (kandidater.manuelle.isNotEmpty()) {
+                log.error("Følgende saker trenger manuell utvidelse av vedtakslengde. Må følges opp! Saker: ${kandidater.manuelle}")
+            }
+            if (kandidater.automatiske.isNotEmpty()) {
+                log.info("Følgende saker får automatisk utvidet vedtakslengde. Saker: ${kandidater.automatiske}")
+            }
+            kandidater.automatiske
+        }
     }
 
     private fun vurderUtvidelseBehov(sakId: SakId): VedtakslengdeUtvidelse? {
@@ -94,6 +110,7 @@ class OpprettJobbUtvidVedtakslengdeJobbUtfører(
                 behandlingService = BehandlingService(repositoryProvider, gatewayProvider),
                 vedtakslengdeService = VedtakslengdeService(repositoryProvider, gatewayProvider),
                 flytJobbRepository = repositoryProvider.provide(),
+                unleashGateway = gatewayProvider.provide(),
             )
         }
 

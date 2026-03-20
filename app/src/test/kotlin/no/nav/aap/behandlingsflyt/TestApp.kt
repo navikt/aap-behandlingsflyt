@@ -19,6 +19,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Ins
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Oppholdstype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.Uføre
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreSøknad
 import no.nav.aap.behandlingsflyt.integrasjon.institusjonsopphold.InstitusjonsoppholdJSON
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
@@ -149,8 +150,9 @@ fun main() {
                         val ident = hentIdentForSak(Saksnummer(param.saksnummer))
 
                         val fakePersoner = JSONTestPersonService()
-                        val oppdatertPerson = fakePersoner.hentPerson(ident)
-                            ?.medYrkesskade(TestYrkesskade())
+                        val oppdatertPerson = fakePersoner.hentPerson(ident)?.let {
+                            it.medYrkesskade(it.yrkesskade + TestYrkesskade())
+                        }
 
                         if (oppdatertPerson != null) {
                             fakePersoner.oppdater(oppdatertPerson)
@@ -328,6 +330,13 @@ private fun sendInnSøknad(dto: OpprettTestcaseDTO, gatewayProvider: GatewayProv
                     virkningstidspunkt = dto.uføreTidspunkt!!,
                     uføregrad = Prosent(it),
                     uføregradTom = dto.uføregradTom,
+                )
+            },
+            uføreSøknad = dto.uføreSøknadDato?.let {
+                UføreSøknad(
+                    soknadsdato = dto.uføreSøknadDato,
+                    sakId = Random.nextLong(),
+
                 )
             },
             barn = barn,

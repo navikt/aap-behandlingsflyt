@@ -52,6 +52,7 @@ import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.lookup.repository.RepositoryProvider
+import org.slf4j.LoggerFactory
 import java.math.RoundingMode
 import java.time.LocalDate
 
@@ -87,6 +88,8 @@ class BrevUtlederService(
         vedtakslengdeService = VedtakslengdeService(repositoryProvider, gatewayProvider),
         unleashGateway = gatewayProvider.provide()
     )
+
+    private val log = LoggerFactory.getLogger(javaClass)
 
     fun utledBehovForMeldingOmVedtak(behandlingId: BehandlingId): BrevBehov? {
         val behandling = behandlingRepository.hent(behandlingId)
@@ -231,6 +234,8 @@ class BrevUtlederService(
                 val prioritertAvslagsårsak = requireNotNull(prioriterAvslagsårsak(avslagsårsaker)) {
                     "Fant avslagsårsaker $avslagsårsaker for behandling ${behandling.id}, men ingen av dem er støttet for utvidelse under ett år"
                 }
+
+                log.info("Fant avslagsårsak $prioritertAvslagsårsak for brev i behandling ${behandling.id}")
 
                 return UtvidVedtakslengde(
                     utvidetAapFomDato = utvidetAapFomDato,
