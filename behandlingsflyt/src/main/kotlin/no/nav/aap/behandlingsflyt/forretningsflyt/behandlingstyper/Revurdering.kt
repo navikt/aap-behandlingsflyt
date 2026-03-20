@@ -16,6 +16,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.Forutgående
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningForutgåendeInformasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningInformasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreInformasjonskrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreSøknadInformasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeInformasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeInformasjonskrav
 import no.nav.aap.behandlingsflyt.flyt.BehandlingFlyt
@@ -197,6 +198,9 @@ object Revurdering : BehandlingType {
             )
             .medSteg(
                 steg = OvergangUføreSteg,
+                informasjonskrav = listOf(
+                    UføreSøknadInformasjonskrav
+                ),
                 vurderingsbehovRelevanteForSteg = listOf(
                     Vurderingsbehov.MOTTATT_SØKNAD,
                     Vurderingsbehov.MOTTATT_DIALOGMELDING,

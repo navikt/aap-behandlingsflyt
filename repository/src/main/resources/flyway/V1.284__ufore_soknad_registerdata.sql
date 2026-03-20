@@ -1,0 +1,10 @@
+CREATE TABLE UFORE_SOKNAD_GRUNNLAG
+(
+    ID            BIGSERIAL PRIMARY KEY,
+    UFORE_SAK_ID  BIGINT                                 NOT NULL,
+    BEHANDLING_ID BIGINT                                 NOT NULL REFERENCES BEHANDLING (ID),
+    SOKNADSDATO   DATE                                   NOT NULL,
+    OPPRETTET_TID TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    AKTIV         BOOLEAN      DEFAULT TRUE              NOT NULL
+);
+

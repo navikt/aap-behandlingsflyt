@@ -22,6 +22,7 @@ import no.nav.aap.behandlingsflyt.test.TestPersonService
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.gateway.DagpengerPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.gateway.DagpengerYtelseType
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreSøknad
 
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.Prosent
@@ -45,6 +46,7 @@ class TestPerson(
     var yrkesskade: List<TestYrkesskade> = emptyList(),
     var institusjonsopphold: List<InstitusjonsoppholdJSON> = emptyList(),
     var uføre: Uføre? = null,
+    var uføreSøknad: UføreSøknad? = null,
     inntekter: List<InntektPerÅr> = defaultInntekt(),
     val personStatus: List<PdlFolkeregisterPersonStatus> = listOf(
         PdlFolkeregisterPersonStatus(
