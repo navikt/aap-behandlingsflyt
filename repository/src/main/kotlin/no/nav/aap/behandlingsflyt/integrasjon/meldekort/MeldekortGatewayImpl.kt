@@ -43,7 +43,7 @@ class MeldekortGatewayImpl : MeldekortGateway {
         saksnummer: Saksnummer,
         identer: List<Ident>
     ) {
-        client.post<MeldeperioderV0, Unit>(
+        client.post<OppdaterIdenterV0, Unit>(
             oppdaterIdenterUrl,
             PostRequest(
                 OppdaterIdenterV0(

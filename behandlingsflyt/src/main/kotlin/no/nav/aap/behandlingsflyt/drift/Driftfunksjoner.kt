@@ -162,12 +162,12 @@ class Driftfunksjoner(
             log.info(" ${nyeIdenter.size} ny(e) identer i PDL for sak.")
         }
 
-        val nyAktiv = sak.person.identer().find { it.aktivIdent } != identliste.find { it.aktivIdent }
+        val erNyAktiv = sak.person.identer().find { it.aktivIdent } != identliste.find { it.aktivIdent }
 
-        if (nyeIdenter.isNotEmpty() || nyAktiv) {
+        if (nyeIdenter.isNotEmpty() || erNyAktiv) {
             log.info(
                 "Oppdaterer identer for person i sak ${sak.saksnummer} med ${nyeIdenter.size} ny(e) identer fra" +
-                        "  ${sak.saksnummer} PDL. Er aktiv ident endret: $nyAktiv."
+                        "  ${sak.saksnummer} PDL. Er aktiv ident endret: $erNyAktiv."
             )
             val person = personRepository.finnEllerOpprett(identliste)
             meldekortGateway.oppdaterIdenter(saksnummer = sak.saksnummer, identer = person.identer())
