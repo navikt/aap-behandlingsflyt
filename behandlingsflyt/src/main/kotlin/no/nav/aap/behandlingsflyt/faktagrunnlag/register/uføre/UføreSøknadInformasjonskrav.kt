@@ -105,7 +105,7 @@ class UføreSøknadInformasjonskrav(
     }
 
     companion object : Informasjonskravkonstruktør {
-        override val navn = InformasjonskravNavn.UFØRE
+        override val navn = InformasjonskravNavn.UFØRE_SØKNAD
 
         override fun konstruer(
             repositoryProvider: RepositoryProvider,
