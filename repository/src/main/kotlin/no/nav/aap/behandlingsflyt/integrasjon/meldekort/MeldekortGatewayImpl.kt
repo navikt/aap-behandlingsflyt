@@ -13,6 +13,7 @@ import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
 import no.nav.aap.meldekort.kontrakt.sak.BehandslingsflytUtfyllingRequest
 import no.nav.aap.meldekort.kontrakt.sak.MeldeperioderV0
+import no.nav.aap.meldekort.kontrakt.sak.OppdaterIdenterV0
 import java.net.URI
 
 class MeldekortGatewayImpl : MeldekortGateway {
@@ -47,8 +48,8 @@ class MeldekortGatewayImpl : MeldekortGateway {
             oppdaterIdenterUrl,
             PostRequest(
                 OppdaterIdenterV0(
-                    saksnummer = saksnummer,
-                    identer = identer,
+                    saksnummer = saksnummer.toString(),
+                    identer = identer.map { it.identifikator },
                 )
             )
         )
