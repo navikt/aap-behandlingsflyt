@@ -1,11 +1,8 @@
 package no.nav.aap.behandlingsflyt.flyt
 
-import io.mockk.Called
 import io.mockk.Runs
-import io.mockk.confirmVerified
 import io.mockk.every
 import io.mockk.just
-import io.mockk.mockk
 import io.mockk.mockkConstructor
 import io.mockk.verify
 import no.nav.aap.behandlingsflyt.behandling.Resultat
