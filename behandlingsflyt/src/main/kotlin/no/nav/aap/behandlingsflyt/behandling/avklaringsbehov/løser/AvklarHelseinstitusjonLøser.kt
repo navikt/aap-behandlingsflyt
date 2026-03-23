@@ -120,7 +120,9 @@ class AvklarHelseinstitusjonLøser(
         nåværendeGrunnlag: InstitusjonsoppholdGrunnlag?,
         nåværendeBehandlingId: BehandlingId
     ): Tidslinje<HelseoppholdVurderingData> {
-        if (forrigeGrunnlag == null || nåværendeGrunnlag == null) return this
+        if (forrigeGrunnlag == null || nåværendeGrunnlag == null) {
+            return this
+        }
 
         val forrigeOpphold = forrigeGrunnlag.oppholdene?.opphold
             ?.filter { it.verdi.type == Institusjonstype.HS }
@@ -138,26 +140,28 @@ class AvklarHelseinstitusjonLøser(
                 } else null
             }.toMap()
 
-        if (oppholdEndringer.isEmpty()) return this
+        val justerteSegmenter = if (oppholdEndringer.isEmpty()) {
+            this.segmenter()
+        } else {
+            segmenter().map { segment ->
+                // Finn hvilket forrige opphold denne vurderingen tilhører
+                val tilhørendeOppholdFom = forrigeOpphold
+                    .firstOrNull { segment.periode.fom >= it.periode.fom && segment.periode.tom <= it.periode.tom }
+                    ?.periode?.fom
 
-        val justerteSegmenter = segmenter().map { segment ->
-            // Finn hvilket forrige opphold denne vurderingen tilhører
-            val tilhørendeOppholdFom = forrigeOpphold
-                .firstOrNull { segment.periode.fom >= it.periode.fom && segment.periode.tom <= it.periode.tom }
-                ?.periode?.fom
+                val nyOppholdTom = tilhørendeOppholdFom?.let { oppholdEndringer[it] }
 
-            val nyOppholdTom = tilhørendeOppholdFom?.let { oppholdEndringer[it] }
-
-            if (nyOppholdTom != null) {
-                Segment(
-                    Periode(segment.periode.fom, nyOppholdTom),
-                    segment.verdi.copy(
-                        vurdertIBehandling = nåværendeBehandlingId,
-                        vurdertTidspunkt = LocalDateTime.now()
+                if (nyOppholdTom != null) {
+                    Segment(
+                        Periode(segment.periode.fom, nyOppholdTom),
+                        segment.verdi.copy(
+                            vurdertIBehandling = nåværendeBehandlingId,
+                            vurdertTidspunkt = LocalDateTime.now()
+                        )
                     )
-                )
-            } else {
-                segment
+                } else {
+                    segment
+                }
             }
         }
 
@@ -205,8 +209,7 @@ class AvklarHelseinstitusjonLøser(
             val resultat = validerReduksjonsdato(
                 vurderinger,
                 første,
-                tidligsteReduksjonsdato,
-                "Reduksjonsvurdering starter for tidlig. Skal ikke starte før"
+                tidligsteReduksjonsdato
             )
             if (resultat != null) return resultat
         }
@@ -223,15 +226,14 @@ class AvklarHelseinstitusjonLøser(
     private fun validerReduksjonsdato(
         vurderinger: List<HelseinstitusjonVurderingDto>,
         førsteReduksjonsvurdering: HelseinstitusjonVurderingDto?,
-        tidligsteReduksjonsdato: LocalDate,
-        feilmelding: String,
+        tidligsteReduksjonsdato: LocalDate
     ): Validation<List<HelseinstitusjonVurderingDto>>? {
         if (førsteReduksjonsvurdering != null && førsteReduksjonsvurdering.periode.fom.isBefore(tidligsteReduksjonsdato)) {
             val tidligsteReduksjonsdatoFormatert =
                 tidligsteReduksjonsdato.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"))
             return Validation.Invalid(
                 vurderinger,
-                "$feilmelding $tidligsteReduksjonsdatoFormatert"
+                "Reduksjonsvurdering starter for tidlig. Skal ikke starte før $tidligsteReduksjonsdatoFormatert"
             )
         }
         return null
