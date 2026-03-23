@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.behandling.institusjonsopphold.beregnTidligste
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjon
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjonstype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.HelseinstitusjonVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.flate.HelseinstitusjonVurderingDto
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
@@ -18,6 +19,7 @@ import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.orEmpty
+import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -50,9 +52,12 @@ class AvklarHelseinstitusjonLøser(
         val vedtatteVurderinger =
             behandling.forrigeBehandlingId?.let { helseinstitusjonRepository.hentHvisEksisterer(it) }
 
+        val nåværendeGrunnlag = helseinstitusjonRepository.hentHvisEksisterer(behandling.id)
+
         val oppdaterteVurderinger =
             slåSammenMedNyeVurderingerNy(
                 vedtatteVurderinger,
+                nåværendeGrunnlag,
                 løsning.helseinstitusjonVurdering.vurderinger,
                 behandling,
                 vurdertAv
@@ -67,12 +72,15 @@ class AvklarHelseinstitusjonLøser(
     }
 
     private fun slåSammenMedNyeVurderingerNy(
-        grunnlag: InstitusjonsoppholdGrunnlag?,
+        vedtatteVurderinger: InstitusjonsoppholdGrunnlag?,
+        nåværendeGrunnlag: InstitusjonsoppholdGrunnlag?,
         nyeVurderinger: List<HelseinstitusjonVurderingDto>,
         behandling: Behandling,
         vurdertAv: String,
     ): List<HelseinstitusjonVurdering> {
-        val eksisterendeTidslinje = byggTidslinjeForHelseoppholdvurderinger(grunnlag)
+
+        val eksisterendeTidslinje = byggTidslinjeForHelseoppholdvurderinger(vedtatteVurderinger)
+            .justerTilNåværendeOpphold(vedtatteVurderinger, nåværendeGrunnlag, behandling.id)
 
         val nyeVurderingerTidslinje = Tidslinje(nyeVurderinger.sortedBy { it.periode }
             .map {
@@ -105,6 +113,55 @@ class AvklarHelseinstitusjonLøser(
                 vurdertTidspunkt = it.verdi.vurdertTidspunkt
             )
         }
+    }
+
+    private fun Tidslinje<HelseoppholdVurderingData>.justerTilNåværendeOpphold(
+        forrigeGrunnlag: InstitusjonsoppholdGrunnlag?,
+        nåværendeGrunnlag: InstitusjonsoppholdGrunnlag?,
+        nåværendeBehandlingId: BehandlingId
+    ): Tidslinje<HelseoppholdVurderingData> {
+        if (forrigeGrunnlag == null || nåværendeGrunnlag == null) return this
+
+        val forrigeOpphold = forrigeGrunnlag.oppholdene?.opphold
+            ?.filter { it.verdi.type == Institusjonstype.HS }
+            .orEmpty()
+        val nåværendeOpphold = nåværendeGrunnlag.oppholdene?.opphold
+            ?.filter { it.verdi.type == Institusjonstype.HS }
+            .orEmpty()
+
+        // Match opphold på fom-dato — samme fom = samme opphold, men kan ha endret tom
+        val oppholdEndringer: Map<LocalDate, LocalDate> = forrigeOpphold
+            .mapNotNull { forrige ->
+                val nåværende = nåværendeOpphold.firstOrNull { it.periode.fom.isEqual(forrige.periode.fom) }
+                if (nåværende != null && !nåværende.periode.tom.isEqual(forrige.periode.tom)) {
+                    forrige.periode.fom to nåværende.periode.tom
+                } else null
+            }.toMap()
+
+        if (oppholdEndringer.isEmpty()) return this
+
+        val justerteSegmenter = segmenter().map { segment ->
+            // Finn hvilket forrige opphold denne vurderingen tilhører
+            val tilhørendeOppholdFom = forrigeOpphold
+                .firstOrNull { segment.periode.fom >= it.periode.fom && segment.periode.tom <= it.periode.tom }
+                ?.periode?.fom
+
+            val nyOppholdTom = tilhørendeOppholdFom?.let { oppholdEndringer[it] }
+
+            if (nyOppholdTom != null) {
+                Segment(
+                    Periode(segment.periode.fom, nyOppholdTom),
+                    segment.verdi.copy(
+                        vurdertIBehandling = nåværendeBehandlingId,
+                        vurdertTidspunkt = LocalDateTime.now()
+                    )
+                )
+            } else {
+                segment
+            }
+        }
+
+        return Tidslinje(justerteSegmenter)
     }
 
     private fun byggTidslinjeForHelseoppholdvurderinger(grunnlag: InstitusjonsoppholdGrunnlag?): Tidslinje<HelseoppholdVurderingData> {
