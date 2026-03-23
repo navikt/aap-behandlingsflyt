@@ -97,19 +97,28 @@ class VurderLovvalgSteg private constructor(
         val grunnlag = hentGrunnlag(kontekst.sakId, kontekst.behandlingId)
         val tidligereVurderingsutfall = tidligereVurderinger.behandlingsutfall(kontekst, type())
         val automatiskVilkårsvurderingLovvalg = vilkårsvurderingLovvalgUtenManuelleVurderinger(kontekst, grunnlag)
-        val tvingerAvklaringsbehov = kontekst.vurderingsbehovRelevanteForSteg.any {
-            it in vurderingsbehovSomTvingerAvklaringsbehov()
+
+        val tvingerRelevans = kontekst.vurderingsbehovRelevanteForSteg.any {
+            it in vurderingsbehovSomGjørVurderingRelevant()
         }
+
         return Tidslinje.zip2(tidligereVurderingsutfall, automatiskVilkårsvurderingLovvalg)
             .mapValue { (behandlingsutfall, automatiskVilkårsvurderingLovvalg) ->
+                val automatiskIkkeOppfylt = automatiskVilkårsvurderingLovvalg?.erOppfylt() == false
                 when (behandlingsutfall) {
                     null -> false
                     TidligereVurderinger.IkkeBehandlingsgrunnlag -> false
-                    TidligereVurderinger.UunngåeligAvslag -> tvingerAvklaringsbehov
-                    is TidligereVurderinger.PotensieltOppfylt -> automatiskVilkårsvurderingLovvalg?.erOppfylt() == false || tvingerAvklaringsbehov
+                    TidligereVurderinger.UunngåeligAvslag -> false
+                    is TidligereVurderinger.PotensieltOppfylt -> automatiskIkkeOppfylt || tvingerRelevans
                 }
             }
     }
+
+    private fun vurderingsbehovSomGjørVurderingRelevant(): Set<Vurderingsbehov> =
+        setOf(
+            Vurderingsbehov.REVURDER_LOVVALG,
+            Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP,
+        )
 
     private fun vilkårsvurderingLovvalgUtenManuelleVurderinger(
         kontekst: FlytKontekstMedPerioder,
@@ -146,7 +155,7 @@ class VurderLovvalgSteg private constructor(
     }
 
     private fun vurderingsbehovSomTvingerAvklaringsbehov(): Set<Vurderingsbehov> =
-        setOf(Vurderingsbehov.REVURDER_LOVVALG, Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP, Vurderingsbehov.MOTTATT_SØKNAD)
+        setOf(Vurderingsbehov.REVURDER_LOVVALG, Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP, Vurderingsbehov.MOTTATT_SØKNAD,)
 
 
     private fun hentGrunnlag(sakId: SakId, behandlingId: BehandlingId): MedlemskapLovvalgGrunnlag {
