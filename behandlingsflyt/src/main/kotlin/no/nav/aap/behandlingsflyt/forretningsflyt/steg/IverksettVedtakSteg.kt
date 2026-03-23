@@ -124,27 +124,21 @@ class IverksettVedtakSteg private constructor(
         }
     }
 
-    private fun finnVedtakMedTidligsteVirkningstidspunkt(behandling: Behandling): Vedtak? {
-        val alleBehandling =
+    private fun utledTidligsteMuligeVirkningstidspunkt(behandling: Behandling): Vedtak? {
+        behandling.forrigeBehandlingId ?: return null
+
+        val alleYtelsesbehandlingerPåSak =
             behandlingRepository.hentAlleFor(behandling.sakId, TypeBehandling.ytelseBehandlingstyper())
-        val vedtakPåBehandling = alleBehandling.mapNotNull {
+
+        val oppfylteVurderinger = alleYtelsesbehandlingerPåSak.filter {
+            !resultatUtleder.erRentAvslag(it)
+        }
+
+        val alleInnvilgedeVedtak = oppfylteVurderinger.mapNotNull {
             vedtakService.hentVedtak(it.id)
         }
 
-        val vedtakMedVirkningstidspunkt = vedtakPåBehandling
-            .filter { it.virkningstidspunkt != null }
-
-        val tidligsteVirkningstidspunkt = vedtakMedVirkningstidspunkt
-            .mapNotNull { it.virkningstidspunkt }.minOrNull()
-            ?: error("Ingen vedtak med virkningstidspunkt funnet")
-
-        val alleVedtakMedTidligsteVirkningstidspunkt = vedtakMedVirkningstidspunkt
-            .filter { tidligsteVirkningstidspunkt.isEqual(it.virkningstidspunkt) }
-
-        if (alleVedtakMedTidligsteVirkningstidspunkt.size == 1 && alleVedtakMedTidligsteVirkningstidspunkt.first().behandlingId == behandling.id) {
-            return alleVedtakMedTidligsteVirkningstidspunkt.first()
-        }
-        return null
+        return alleInnvilgedeVedtak.minByOrNull { it.vedtakstidspunkt}
     }
 
     private fun finnTidligesteVedtakstidspunktFraTidligereBehandlinger(
@@ -178,7 +172,7 @@ class IverksettVedtakSteg private constructor(
             if (!erInnvilgetMedEtterbetaling) {
                 return
             }
-            val vedtakMedTidligsteVirkingsdato = finnVedtakMedTidligsteVirkningstidspunkt(behandling)
+            val vedtakMedTidligsteVirkingsdato = utledTidligsteMuligeVirkningstidspunkt(behandling) ?: vedtak
             if (vedtakMedTidligsteVirkingsdato?.virkningstidspunkt == null) {
                 log.info("Tidligste virkningsdato er i en tidligere eller sametiding behandling enn ${kontekst.behandlingId}, så ingen oppgave opprettes")
                 return
@@ -188,24 +182,19 @@ class IverksettVedtakSteg private constructor(
                 behandling,
                 vedtak.vedtakstidspunkt.toLocalDate()
             )
-            val refusjonsperiode = beregnEtterbetalingsperiodeForRefusjonskrav(
-                virkningstidspunkt = vedtakMedTidligsteVirkingsdato.virkningstidspunkt,
-                tidligsteVedtaksTidspunkt = tidligsteVedtaksTidspunkt
-            )
-            if (refusjonsperiode == null) {
-                log.info(
-                    "Oppretter ikke gosysoppgave for refusjonskrav i behandling ${kontekst.behandlingId} fordi perioden er ugyldig. " +
-                            "virkningstidspunkt=${vedtakMedTidligsteVirkingsdato.virkningstidspunkt}, tidligsteVedtaksTidspunkt=$tidligsteVedtaksTidspunkt"
-                )
-                return
+
+            val virkningsdato = if (behandling.typeBehandling() == TypeBehandling.Revurdering) {
+                vedtakMedTidligsteVirkingsdato.vedtakstidspunkt.toLocalDate()
+            } else {
+                vedtakMedTidligsteVirkingsdato.virkningstidspunkt
             }
-            val (virkningsdato, vedtaksdato) = refusjonsperiode
+
             val gjeldendeSosialRefusjonDtoer = navkontorSosialRefusjon
                 .filter { it.harKrav && it.navKontor != null }
                 .map {
                     it.tilNavKontorPeriodeDto(
                         virkningsdato = virkningsdato,
-                        vedtaksdato = vedtaksdato
+                        vedtaksdato = tidligsteVedtaksTidspunkt.minusDays(1)
                     )
                 }
                 .toSet()
@@ -246,17 +235,6 @@ class IverksettVedtakSteg private constructor(
         vedtakService.lagreVedtak(kontekst.behandlingId, vedtakstidspunkt, virkningstidspunkt)
     }
 
-    private fun beregnEtterbetalingsperiodeForRefusjonskrav(
-        virkningstidspunkt: LocalDate,
-        tidligsteVedtaksTidspunkt: LocalDate
-    ): Pair<LocalDate, LocalDate>? {
-        val tom = tidligsteVedtaksTidspunkt.minusDays(1)
-        return if (virkningstidspunkt > tom) {
-            null
-        } else {
-            virkningstidspunkt to tom
-        }
-    }
 
     private fun harAvbruttRevurderingIBehandlingen(kontekst: FlytKontekstMedPerioder): Boolean =
         kontekst.vurderingType == VurderingType.REVURDERING && avbrytRevurderingService.revurderingErAvbrutt(

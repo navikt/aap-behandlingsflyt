@@ -515,14 +515,14 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
         )
     }
 
-    protected fun Behandling.løsOppholdskrav(startDato: LocalDate): Behandling {
+    protected fun Behandling.løsOppholdskrav(startDato: LocalDate, oppfylt: Boolean = true): Behandling {
         return løsAvklaringsBehov(
             behandling = this,
             avklaringsBehovLøsning =
                 AvklarOppholdskravLøsning(
                     løsningerForPerioder = listOf(
                         AvklarOppholdkravLøsningForPeriodeDto(
-                            oppfylt = true,
+                            oppfylt = oppfylt,
                             land = "",
                             fom = startDato,
                             begrunnelse = "Fiske"
@@ -1291,7 +1291,7 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
                 listOf(
                     RefusjonkravVurderingDto(
                         harKrav = true,
-                        navKontor = "",
+                        navKontor = "Peppas Crib",
                     )
                 )
             )
