@@ -29,7 +29,7 @@ class IverksettVedtakStegTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash:
     }
 
     @Test
-    fun `Skal kunne revurdere uten tidligere vurdering`() {
+    fun `virkingsdato på revurdert refusjon skal bruke første tidligere innvilgede vedtaksdato`() {
         val (sak, behandling) = sendInnFørsteSøknad(
             person = TestPersoner.STANDARD_PERSON(),
             mottattTidspunkt = LocalDateTime.now().minusDays(10)
