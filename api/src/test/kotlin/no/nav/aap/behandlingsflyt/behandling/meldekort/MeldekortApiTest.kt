@@ -5,6 +5,13 @@ import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.server.testing.*
 import no.nav.aap.behandlingsflyt.BaseApiTest
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus
+import no.nav.aap.behandlingsflyt.faktagrunnlag.Faktagrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.ArbeidsGradering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisÅrsak
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.ArbeidIPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Meldekort
 import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
@@ -15,9 +22,14 @@ import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.behandlingsflyt.test.MockDataSource
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryMeldekortRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryMeldeperiodeRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryUnderveisRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryVedtakRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryRegistry
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Dagsatser
+import no.nav.aap.komponenter.verdityper.Prosent
+import no.nav.aap.komponenter.verdityper.Prosent.Companion.`0_PROSENT`
 import no.nav.aap.komponenter.verdityper.TimerArbeid
 import no.nav.aap.verdityper.dokument.JournalpostId
 import org.assertj.core.api.Assertions.assertThat
@@ -88,6 +100,15 @@ class MeldekortApiTest : BaseApiTest() {
 
         val dag1 = LocalDate.of(2025, 1, 6)
         val dag2 = LocalDate.of(2025, 1, 7)
+        val meldeperiode = Periode(dag1, dag1.plusDays(13))
+
+        InMemoryMeldeperiodeRepository.lagreFørsteMeldeperiode(behandling.id, meldeperiode)
+
+        InMemoryUnderveisRepository.lagre(
+            behandlingId = behandling.id,
+            underveisperioder = listOf(underveisperiode(Utfall.OPPFYLT, meldeperiode)),
+            input = object : Faktagrunnlag {}
+        )
 
         InMemoryMeldekortRepository.lagre(
             behandling.id, setOf(
@@ -120,7 +141,9 @@ class MeldekortApiTest : BaseApiTest() {
             assertThat(body.meldekortene).hasSize(1)
 
             val meldekort = body.meldekortene.first()
-            assertThat(meldekort.meldekortId).isEqualTo("111")
+            assertThat(meldekort.id).isEqualTo("111")
+            assertThat(meldekort.meldeperiode).isEqualTo(meldeperiode)
+            assertThat(meldekort.mottattTidspunkt).isEqualTo(LocalDateTime.of(2025, 1, 20, 9, 0))
             assertThat(meldekort.dager).hasSize(2)
             assertThat(meldekort.dager.map { it.dato }).containsExactlyInAnyOrder(dag1, dag2)
             assertThat(meldekort.dager.map { it.timerArbeidet }).containsExactlyInAnyOrder(7.5, 3.0)
@@ -135,6 +158,19 @@ class MeldekortApiTest : BaseApiTest() {
         InMemoryVedtakRepository.lagre(behandling.id, LocalDateTime.now(), LocalDate.now())
 
         val dag = LocalDate.of(2025, 2, 3)
+        val meldeperiode1 = Periode(dag, dag.plusDays(13))
+        val meldeperiode2 = Periode(dag.plusWeeks(2), dag.plusWeeks(2).plusDays(13))
+
+        InMemoryMeldeperiodeRepository.lagreFørsteMeldeperiode(behandling.id, meldeperiode1)
+
+        InMemoryUnderveisRepository.lagre(
+            behandlingId = behandling.id,
+            underveisperioder = listOf(
+                underveisperiode(Utfall.OPPFYLT, meldeperiode1),
+                underveisperiode(Utfall.OPPFYLT, meldeperiode2),
+            ),
+            input = object : Faktagrunnlag {}
+        )
 
         InMemoryMeldekortRepository.lagre(
             behandling.id, setOf(
@@ -171,16 +207,15 @@ class MeldekortApiTest : BaseApiTest() {
             assertThat(response.status).isEqualTo(HttpStatusCode.OK)
             val body = response.body<MeldekorteneDto>()
             assertThat(body.meldekortene).hasSize(2)
-            assertThat(body.meldekortene.map { it.meldekortId }).containsExactlyInAnyOrder("aaa", "bbb")
+            assertThat(body.meldekortene.map { it.id }).containsExactlyInAnyOrder("aaa", "bbb")
         }
     }
-}
 
     private fun underveisperiode(utfall: Utfall, periode: Periode) = Underveisperiode(
         periode = periode,
         meldePeriode = periode,
         utfall = utfall,
-        rettighetsType = Rettighets_Type.BISTANDSBEHOV,
+        rettighetsType = RettighetsType.BISTANDSBEHOV,
         avslagsårsak = if (utfall == Utfall.IKKE_OPPFYLT) UnderveisÅrsak.BRUDD_PÅ_AKTIVITETSPLIKT_11_7_STANS else null,
         grenseverdi = Prosent.`100_PROSENT`,
         arbeidsgradering = ArbeidsGradering(
