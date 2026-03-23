@@ -382,10 +382,14 @@ private fun sendInnSøknad(dto: OpprettTestcaseDTO, gatewayProvider: GatewayProv
         )
     )
 
+    val periode = Periode(
+        LocalDate.now(),
+        Tid.MAKS
+    )
     val sak = datasource.transaction { connection ->
         val repositoryProvider = repositoryRegistry.provider(connection)
         val sakService = PersonOgSakService(gatewayProvider, repositoryProvider)
-        val sak = sakService.finnEllerOpprett(ident, LocalDate.now())
+        val sak = sakService.finnEllerOpprett(ident, periode)
 
         val flytJobbRepository = FlytJobbRepository(connection)
 
