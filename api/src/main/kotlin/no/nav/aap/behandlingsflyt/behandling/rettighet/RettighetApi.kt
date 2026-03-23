@@ -7,6 +7,7 @@ import com.papsign.ktor.openapigen.route.route
 import io.ktor.http.*
 import no.nav.aap.behandlingsflyt.behandling.rettighetstype.utledStansEllerOpphør
 import no.nav.aap.behandlingsflyt.behandling.underveis.RettighetsperiodeService
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.rettighetstype.RettighetstypeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagstype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.Opphør
@@ -20,6 +21,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.SaksnummerParameter
 import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForSakResolver
 import no.nav.aap.komponenter.dbconnect.transaction
+import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.httpklient.exception.VerdiIkkeFunnetException
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
@@ -109,6 +111,51 @@ fun NormalOpenAPIRoute.rettighetApi(
                     )
                 }
                 rettighetDtoListe
+            }
+
+            if (respons == null) {
+                respondWithStatus(HttpStatusCode.NoContent)
+            } else {
+                respond(respons)
+            }
+        }
+    }
+
+    route("/api/sak/{saksnummer}/rettighetsinfo") {
+        authorizedGet<SaksnummerParameter, RettighetsinfoDto>(
+            AuthorizationParamPathConfig(
+                relevanteIdenterResolver = relevanteIdenterForSakResolver(repositoryRegistry, dataSource),
+                sakPathParam = SakPathParam("saksnummer")
+            )
+        ) { saksnummer ->
+            val respons: RettighetsinfoDto? = dataSource.transaction(readOnly = true) { connection ->
+                val repositoryProvider = repositoryRegistry.provider(connection)
+                val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+                val sakRepository = repositoryProvider.provide<SakRepository>()
+                val rettighetstypeRepository = repositoryProvider.provide<RettighetstypeRepository>()
+
+
+                val sak = sakRepository.hentHvisFinnes(Saksnummer(saksnummer.saksnummer))
+                    ?: throw UgyldigForespørselException("Sak med saksnummer ${saksnummer.saksnummer} finnes ikke")
+
+                val sisteVedtatteYtelsesbehandling =
+                    behandlingRepository.finnGjeldendeVedtattBehandlingForSak(sak.id) ?: return@transaction null
+
+                val rettighetstypeTidslinje =
+                    rettighetstypeRepository.hentHvisEksisterer(sisteVedtatteYtelsesbehandling.behandlingId)?.rettighetstypeTidslinje
+                        ?: return@transaction null
+
+                val sisteDagMedRett = rettighetstypeTidslinje.perioder().maxOfOrNull { it.tom }
+
+                RettighetsinfoDto(
+                    sisteDagMedRett = sisteDagMedRett,
+                    perioderMedRett = rettighetstypeTidslinje.komprimer().segmenter().map {
+                        RettighetsperiodeDto(
+                            rettighetstype = it.verdi,
+                            fom = it.fom(),
+                            tom = it.tom(),
+                        )
+                    })
             }
 
             if (respons == null) {
