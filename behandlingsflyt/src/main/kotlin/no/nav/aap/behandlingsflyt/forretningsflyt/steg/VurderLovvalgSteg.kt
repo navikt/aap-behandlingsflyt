@@ -99,7 +99,7 @@ class VurderLovvalgSteg private constructor(
         val automatiskVilkårsvurderingLovvalg = vilkårsvurderingLovvalgUtenManuelleVurderinger(kontekst, grunnlag)
 
         val tvingerRelevans = kontekst.vurderingsbehovRelevanteForSteg.any {
-            it in vurderingsbehovSomGjørVurderingRelevant()
+            it in vurderingsbehovSomGjørAtRevurderingSkalTvinges()
         }
 
         return Tidslinje.zip2(tidligereVurderingsutfall, automatiskVilkårsvurderingLovvalg)
@@ -114,7 +114,7 @@ class VurderLovvalgSteg private constructor(
             }
     }
 
-    private fun vurderingsbehovSomGjørVurderingRelevant(): Set<Vurderingsbehov> =
+    private fun vurderingsbehovSomGjørAtRevurderingSkalTvinges(): Set<Vurderingsbehov> =
         setOf(
             Vurderingsbehov.REVURDER_LOVVALG,
             Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP,
