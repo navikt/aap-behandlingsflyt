@@ -197,7 +197,7 @@ fun NormalOpenAPIRoute.samordningGrunnlag(
             ) { behandlingReferanse ->
                 val (samordningAndreStatligeYtelserVurdering,
                      samordningAndreStatligeYtelserHistoriskeVurdering,
-                     dagpengerGrunnlagPerioder) =
+                     samordningAndreStatligeYtelserPerioder) =
                     dataSource.transaction { connection ->
                         val repositoryProvider = repositoryRegistry.provider(connection)
                         val samordningAndreStatligeYtelserRepository =
@@ -264,7 +264,7 @@ fun NormalOpenAPIRoute.samordningGrunnlag(
                         harTilgangTilÅSaksbehandle = kanSaksbehandle(),
                         vurdering = vurdering,
                         historiskeVurderinger = historiskeVurderinger,
-                        perioder = dagpengerGrunnlagPerioder,
+                        perioder = samordningAndreStatligeYtelserPerioder,
                     )
                 )
             }
