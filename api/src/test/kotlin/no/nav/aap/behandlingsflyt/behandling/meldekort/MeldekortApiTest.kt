@@ -176,3 +176,24 @@ class MeldekortApiTest : BaseApiTest() {
     }
 }
 
+    private fun underveisperiode(utfall: Utfall, periode: Periode) = Underveisperiode(
+        periode = periode,
+        meldePeriode = periode,
+        utfall = utfall,
+        rettighetsType = Rettighets_Type.BISTANDSBEHOV,
+        avslagsårsak = if (utfall == Utfall.IKKE_OPPFYLT) UnderveisÅrsak.BRUDD_PÅ_AKTIVITETSPLIKT_11_7_STANS else null,
+        grenseverdi = Prosent.`100_PROSENT`,
+        arbeidsgradering = ArbeidsGradering(
+            totaltAntallTimer = TimerArbeid(BigDecimal.ZERO),
+            andelArbeid = `0_PROSENT`,
+            fastsattArbeidsevne = Prosent.`100_PROSENT`,
+            gradering = Prosent.`100_PROSENT`,
+            opplysningerMottatt = null,
+        ),
+        trekk = Dagsatser(0),
+        brukerAvKvoter = emptySet(),
+        institusjonsoppholdReduksjon = `0_PROSENT`,
+        meldepliktStatus = MeldepliktStatus.MELDT_SEG,
+        meldepliktGradering = `0_PROSENT`,
+    )
+}
