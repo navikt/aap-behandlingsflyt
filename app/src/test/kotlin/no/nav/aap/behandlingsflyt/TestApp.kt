@@ -310,7 +310,7 @@ private fun mapTilSøknad(dto: OpprettTestcaseDTO, urelaterteBarn: List<TestPers
 }
 
 private fun sendInnSøknad(dto: OpprettTestcaseDTO, gatewayProvider: GatewayProvider, repositoryRegistry: RepositoryRegistry): Sak {
-    val ident = no.nav.aap.behandlingsflyt.sakogbehandling.Ident("01410012924")
+    val ident = genererIdent(dto.fødselsdato)
     val barn = dto.barn.filter { it.harRelasjon }.map { genererBarn(it) }
     val urelaterteBarnIPDL = dto.barn.filter { !it.harRelasjon && it.skalFinnesIPDL }.map { genererBarn(it) }
     val urelaterteBarnIkkeIPDL = dto.barn.filter { !it.harRelasjon && !it.skalFinnesIPDL }.map { genererBarn(it) }
@@ -381,14 +381,11 @@ private fun sendInnSøknad(dto: OpprettTestcaseDTO, gatewayProvider: GatewayProv
             ) else null,
         )
     )
-    val periode = Periode(
-        LocalDate.now(),
-        Tid.MAKS
-    )
+
     val sak = datasource.transaction { connection ->
         val repositoryProvider = repositoryRegistry.provider(connection)
         val sakService = PersonOgSakService(gatewayProvider, repositoryProvider)
-        val sak = sakService.finnEllerOpprett(ident, periode)
+        val sak = sakService.finnEllerOpprett(ident, LocalDate.now())
 
         val flytJobbRepository = FlytJobbRepository(connection)
 
