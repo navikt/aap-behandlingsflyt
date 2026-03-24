@@ -23,6 +23,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.orEmpty
@@ -35,6 +37,7 @@ class VurderLovvalgSteg private constructor(
     private val medlemskapArbeidInntektRepository: MedlemskapArbeidInntektRepository,
     private val tidligereVurderinger: TidligereVurderinger,
     private val avklaringsbehovService: AvklaringsbehovService,
+    private val unleashGateway: UnleashGateway
 ) : BehandlingSteg, AvklaringsbehovMetadataUtleder {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         vilkårsresultatRepository = repositoryProvider.provide(),
@@ -42,6 +45,7 @@ class VurderLovvalgSteg private constructor(
         medlemskapArbeidInntektRepository = repositoryProvider.provide(),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
         avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
+        unleashGateway = gatewayProvider.provide()
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
@@ -65,6 +69,7 @@ class VurderLovvalgSteg private constructor(
                     .vurder(grunnlag.value)
                 vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
             }
+
             VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
             VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9,
             VurderingType.UTVID_VEDTAKSLENGDE,
@@ -95,32 +100,59 @@ class VurderLovvalgSteg private constructor(
     }
 
     override fun nårVurderingErRelevant(kontekst: FlytKontekstMedPerioder): Tidslinje<Boolean> {
-        val grunnlag = hentGrunnlag(kontekst.sakId, kontekst.behandlingId)
-        val tidligereVurderingsutfall = tidligereVurderinger.behandlingsutfall(kontekst, type())
-        val automatiskVilkårsvurderingLovvalg = vilkårsvurderingLovvalgUtenManuelleVurderinger(kontekst, grunnlag)
+        if (unleashGateway.isEnabled(BehandlingsflytFeature.AvslagLovvalgMedlemskap)) {
+            val grunnlag = hentGrunnlag(kontekst.sakId, kontekst.behandlingId)
+            val tidligereVurderingsutfall = tidligereVurderinger.behandlingsutfall(kontekst, type())
+            val automatiskVilkårsvurderingLovvalg = vilkårsvurderingLovvalgUtenManuelleVurderinger(kontekst, grunnlag)
 
-        val forrigeHaddeAvslagPåLovvalg = kontekst.forrigeBehandlingId?.let { forrigeId ->
-            vilkårsresultatRepository.hent(forrigeId)
-                .finnVilkår(Vilkårtype.LOVVALG)
-                .vilkårsperioder()
-                .lastOrNull()?.erOppfylt() == false
-        } ?: false
+            val forrigeHaddeAvslagPåLovvalg = kontekst.forrigeBehandlingId?.let { forrigeId ->
+                vilkårsresultatRepository.hent(forrigeId)
+                    .finnVilkår(Vilkårtype.LOVVALG)
+                    .vilkårsperioder()
+                    .lastOrNull()?.erOppfylt() == false
+            } ?: false
 
-        val tvingerRelevans = kontekst.vurderingsbehovRelevanteForSteg.any {
-            it in vurderingsbehovSomGjørAtRevurderingSkalTvinges()
-        } || (forrigeHaddeAvslagPåLovvalg && Vurderingsbehov.MOTTATT_SØKNAD in kontekst.vurderingsbehovRelevanteForSteg)
+            val tvingerRelevans = kontekst.vurderingsbehovRelevanteForSteg.any {
+                it in vurderingsbehovSomGjørAtRevurderingSkalTvinges()
+            } || (forrigeHaddeAvslagPåLovvalg && Vurderingsbehov.MOTTATT_SØKNAD in kontekst.vurderingsbehovRelevanteForSteg)
 
-        return Tidslinje.zip2(tidligereVurderingsutfall, automatiskVilkårsvurderingLovvalg)
-            .mapValue { (behandlingsutfall, automatiskVilkårsvurderingLovvalg) ->
-                val automatiskIkkeOppfylt = automatiskVilkårsvurderingLovvalg?.erOppfylt() == false
-                when (behandlingsutfall) {
-                    null -> false
-                    TidligereVurderinger.IkkeBehandlingsgrunnlag -> false
-                    TidligereVurderinger.UunngåeligAvslag -> false
-                    is TidligereVurderinger.PotensieltOppfylt -> automatiskIkkeOppfylt || tvingerRelevans
+            return Tidslinje.zip2(tidligereVurderingsutfall, automatiskVilkårsvurderingLovvalg)
+                .mapValue { (behandlingsutfall, automatiskVilkårsvurderingLovvalg) ->
+                    val automatiskIkkeOppfylt = automatiskVilkårsvurderingLovvalg?.erOppfylt() == false
+                    when (behandlingsutfall) {
+                        null -> false
+                        TidligereVurderinger.IkkeBehandlingsgrunnlag -> false
+                        TidligereVurderinger.UunngåeligAvslag -> false
+                        is TidligereVurderinger.PotensieltOppfylt -> automatiskIkkeOppfylt || tvingerRelevans
+                    }
                 }
-            }
+        } else {
+            val grunnlag = hentGrunnlag(kontekst.sakId, kontekst.behandlingId)
+            val tidligereVurderingsutfall = tidligereVurderinger.behandlingsutfall(kontekst, type())
+            val automatiskVilkårsvurderingLovvalg = vilkårsvurderingLovvalgUtenManuelleVurderinger(kontekst, grunnlag)
+
+            return Tidslinje.zip2(tidligereVurderingsutfall, automatiskVilkårsvurderingLovvalg)
+                .mapValue { (behandlingsutfall, automatiskVilkårsvurderingLovvalg) ->
+                    when (behandlingsutfall) {
+                        null -> false
+                        TidligereVurderinger.IkkeBehandlingsgrunnlag -> false
+                        TidligereVurderinger.UunngåeligAvslag -> false
+                        is TidligereVurderinger.PotensieltOppfylt -> {
+                            val automatiskVilkårsvurderinglovvalgIkkeOppfylt =
+                                automatiskVilkårsvurderingLovvalg?.erOppfylt() == false
+
+                            // Må gjøres slik for å trigge overstyrt avklaringsbehov hvis allerede automatisk oppfylt
+                            val tvingerAvklaringsbehov = kontekst.vurderingsbehovRelevanteForSteg.any {
+                                it in vurderingsbehovSomTvingerAvklaringsbehov()
+                            }
+
+                            automatiskVilkårsvurderinglovvalgIkkeOppfylt || tvingerAvklaringsbehov
+                        }
+                    }
+                }
+        }
     }
+
 
     private fun vurderingsbehovSomGjørAtRevurderingSkalTvinges(): Set<Vurderingsbehov> =
         setOf(
@@ -163,7 +195,7 @@ class VurderLovvalgSteg private constructor(
     }
 
     private fun vurderingsbehovSomTvingerAvklaringsbehov(): Set<Vurderingsbehov> =
-        setOf(Vurderingsbehov.REVURDER_LOVVALG, Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP, Vurderingsbehov.MOTTATT_SØKNAD,)
+        setOf(Vurderingsbehov.REVURDER_LOVVALG, Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP, Vurderingsbehov.MOTTATT_SØKNAD)
 
 
     private fun hentGrunnlag(sakId: SakId, behandlingId: BehandlingId): MedlemskapLovvalgGrunnlag {
