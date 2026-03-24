@@ -23,7 +23,6 @@ import no.nav.aap.tilgang.SakPathParam
 import no.nav.aap.tilgang.authorizedGet
 import java.time.Clock
 import java.time.LocalDate
-import java.time.LocalDateTime
 import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.meldekortApi(
@@ -104,34 +103,3 @@ private fun hentAktuelleMeldeperioder(
 
     return meldeperioder
 }
-
-private fun Meldekort.toDto(): MeldekortDto = MeldekortDto(
-    id = journalpostId.identifikator,
-    mottattTidspunkt = mottattTidspunkt,
-    dager = timerArbeidPerPeriode.map { arbeid ->
-        DagDto(
-            dato = arbeid.periode.fom,
-            timerArbeidet = arbeid.timerArbeid.antallTimer.toDouble()
-        )
-    }.toSet()
-)
-
-data class MeldeperioderMedMeldekortResponse(
-    val meldeperioderMedMeldekort: Set<MeldeperiodeMedMeldekortDto>,
-)
-
-data class MeldeperiodeMedMeldekortDto(
-    val meldeperiode: Periode,
-    val meldekort: MeldekortDto?
-)
-
-data class MeldekortDto(
-    val id: String,
-    val mottattTidspunkt: LocalDateTime,
-    val dager: Set<DagDto>,
-)
-
-data class DagDto(
-    val dato: LocalDate,
-    val timerArbeidet: Double
-)
