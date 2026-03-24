@@ -78,48 +78,6 @@ fun NormalOpenAPIRoute.mellomlagretVurderingApi(
             }
         }
 
-        route("/mellomlagret-vurdering") {
-            authorizedPost<Unit, MellomlagretVurderingResponse, MellomlagretVurderingRequest>(
-                AuthorizationBodyPathConfig(
-                    operasjon = Operasjon.SAKSBEHANDLE,
-                )
-            ) { _, request ->
-                val ansattInfoService = AnsattInfoService(gatewayProvider)
-                val response = dataSource.transaction { connection ->
-                    val repositoryProvider = repositoryRegistry.provider(connection)
-                    val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
-                    val mellomlagretVurderingRepository = repositoryProvider.provide<MellomlagretVurderingRepository>()
-                    val referanse = BehandlingReferanse(request.behandlingsReferanse)
-                    val avklaringsbehovKode = AvklaringsbehovKode.valueOf(request.avklaringsbehovkode)
-                    val behandling = behandlingRepository.hent(referanse)
-
-                    LoggingKontekst(
-                        repositoryProvider.provide(),
-                        LogKontekst(referanse = referanse)
-                    ).use {
-                        if (behandling.status().erAvsluttet()) {
-                            throw UgyldigForespørselException("Kan ikke mellomlagre vurderinger på en avsluttet behandling")
-                        }
-
-                        val mellomlagretVurdering = mellomlagretVurderingRepository.lagre(
-                            MellomlagretVurdering(
-                                behandlingId = behandling.id,
-                                avklaringsbehovKode = avklaringsbehovKode,
-                                data = request.data,
-                                vurdertAv = ansattInfoService.hentAnsattNavnOgEnhet(bruker().ident)?.navn
-                                    ?: bruker().ident,
-                                vurdertDato = LocalDateTime.now()
-                            )
-                        )
-
-                        MellomlagretVurderingResponse(
-                            mellomlagretVurdering = mellomlagretVurdering.tilResponse()
-                        )
-                    }
-                }
-                respond(response)
-            }
-        }
         route("/mellomlagret-vurdering/{referanse}/{avklaringsbehovkode}") {
             authorizedGet<BehandlingReferanseMedAvklaringsbehov, MellomlagretVurderingResponse>(
                 AuthorizationParamPathConfig(
