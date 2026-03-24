@@ -22,7 +22,6 @@ import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.behandlingsflyt.test.MockDataSource
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryMeldekortRepository
-import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryMeldeperiodeRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryUnderveisRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryVedtakRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryRegistry
@@ -35,24 +34,31 @@ import no.nav.aap.verdityper.dokument.JournalpostId
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
+import java.time.Clock
+import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.ZoneId
 
 @Fakes
 class MeldekortApiTest : BaseApiTest() {
 
+    private val fixedClock = Clock.fixed(Instant.parse("2025-04-01T00:00:00Z"), ZoneId.systemDefault())
+
+    private fun createTestGatewayProvider() = createGatewayProvider {
+        register<NomInfoGateway>()
+        register<NorgGateway>()
+        register<AlleAvskruddUnleash>()
+    }
+
     @Test
-    fun `returnerer tomt sett når ingen vedtak finnes`() {
+    fun `returnerer tomt sett naar ingen vedtak finnes`() {
         val sak = nySak()
         opprettBehandling(sak, TypeBehandling.Førstegangsbehandling)
 
         testApplication {
             installApplication {
-                meldekortApi(MockDataSource(), inMemoryRepositoryRegistry, createGatewayProvider {
-                    register<NomInfoGateway>()
-                    register<NorgGateway>()
-                    register<AlleAvskruddUnleash>()
-                })
+                meldekortApi(MockDataSource(), inMemoryRepositoryRegistry, createTestGatewayProvider(), fixedClock)
             }
 
             val response = createClient().get("/api/meldekort/${sak.saksnummer}") {
@@ -66,19 +72,23 @@ class MeldekortApiTest : BaseApiTest() {
     }
 
     @Test
-    fun `returnerer tomt sett når vedtak finnes men ingen meldekort`() {
+    fun `returnerer tom meldekort for meldeperiode uten innsendt meldekort`() {
         val sak = nySak()
         val behandling = opprettBehandling(sak, TypeBehandling.Førstegangsbehandling)
 
         InMemoryVedtakRepository.lagre(behandling.id, LocalDateTime.now(), LocalDate.now())
 
+        val meldeperiode = Periode(LocalDate.of(2025, 1, 6), LocalDate.of(2025, 1, 19))
+
+        InMemoryUnderveisRepository.lagre(
+            behandlingId = behandling.id,
+            underveisperioder = listOf(underveisperiode(Utfall.OPPFYLT, meldeperiode)),
+            input = object : Faktagrunnlag {}
+        )
+
         testApplication {
             installApplication {
-                meldekortApi(MockDataSource(), inMemoryRepositoryRegistry, createGatewayProvider {
-                    register<NomInfoGateway>()
-                    register<NorgGateway>()
-                    register<AlleAvskruddUnleash>()
-                })
+                meldekortApi(MockDataSource(), inMemoryRepositoryRegistry, createTestGatewayProvider(), fixedClock)
             }
 
             val response = createClient().get("/api/meldekort/${sak.saksnummer}") {
@@ -87,7 +97,13 @@ class MeldekortApiTest : BaseApiTest() {
 
             assertThat(response.status).isEqualTo(HttpStatusCode.OK)
             val body = response.body<MeldekorteneDto>()
-            assertThat(body.meldekortene).isEmpty()
+            assertThat(body.meldekortene).hasSize(1)
+
+            val meldekort = body.meldekortene.first()
+            assertThat(meldekort.id).isNull()
+            assertThat(meldekort.meldeperiode).isEqualTo(meldeperiode)
+            assertThat(meldekort.mottattTidspunkt).isNull()
+            assertThat(meldekort.dager).isEmpty()
         }
     }
 
@@ -101,8 +117,6 @@ class MeldekortApiTest : BaseApiTest() {
         val dag1 = LocalDate.of(2025, 1, 6)
         val dag2 = LocalDate.of(2025, 1, 7)
         val meldeperiode = Periode(dag1, dag1.plusDays(13))
-
-        InMemoryMeldeperiodeRepository.lagreFørsteMeldeperiode(behandling.id, meldeperiode)
 
         InMemoryUnderveisRepository.lagre(
             behandlingId = behandling.id,
@@ -125,11 +139,7 @@ class MeldekortApiTest : BaseApiTest() {
 
         testApplication {
             installApplication {
-                meldekortApi(MockDataSource(), inMemoryRepositoryRegistry, createGatewayProvider {
-                    register<NomInfoGateway>()
-                    register<NorgGateway>()
-                    register<AlleAvskruddUnleash>()
-                })
+                meldekortApi(MockDataSource(), inMemoryRepositoryRegistry, createTestGatewayProvider(), fixedClock)
             }
 
             val response = createClient().get("/api/meldekort/${sak.saksnummer}") {
@@ -161,8 +171,6 @@ class MeldekortApiTest : BaseApiTest() {
         val meldeperiode1 = Periode(dag, dag.plusDays(13))
         val meldeperiode2 = Periode(dag.plusWeeks(2), dag.plusWeeks(2).plusDays(13))
 
-        InMemoryMeldeperiodeRepository.lagreFørsteMeldeperiode(behandling.id, meldeperiode1)
-
         InMemoryUnderveisRepository.lagre(
             behandlingId = behandling.id,
             underveisperioder = listOf(
@@ -193,11 +201,7 @@ class MeldekortApiTest : BaseApiTest() {
 
         testApplication {
             installApplication {
-                meldekortApi(MockDataSource(), inMemoryRepositoryRegistry, createGatewayProvider {
-                    register<NomInfoGateway>()
-                    register<NorgGateway>()
-                    register<AlleAvskruddUnleash>()
-                })
+                meldekortApi(MockDataSource(), inMemoryRepositoryRegistry, createTestGatewayProvider(), fixedClock)
             }
 
             val response = createClient().get("/api/meldekort/${sak.saksnummer}") {
@@ -208,6 +212,42 @@ class MeldekortApiTest : BaseApiTest() {
             val body = response.body<MeldekorteneDto>()
             assertThat(body.meldekortene).hasSize(2)
             assertThat(body.meldekortene.map { it.id }).containsExactlyInAnyOrder("aaa", "bbb")
+        }
+    }
+
+    @Test
+    fun `ekskluderer meldeperioder med tom-dato etter nå`() {
+        val sak = nySak()
+        val behandling = opprettBehandling(sak, TypeBehandling.Førstegangsbehandling)
+
+        InMemoryVedtakRepository.lagre(behandling.id, LocalDateTime.now(), LocalDate.now())
+
+        // fixedClock = 2025-04-01
+        val pastPeriode = Periode(LocalDate.of(2025, 3, 3), LocalDate.of(2025, 3, 16))    // tom < now → included
+        val futurePeriode = Periode(LocalDate.of(2025, 3, 31), LocalDate.of(2025, 4, 13)) // tom > now → excluded
+
+        InMemoryUnderveisRepository.lagre(
+            behandlingId = behandling.id,
+            underveisperioder = listOf(
+                underveisperiode(Utfall.OPPFYLT, pastPeriode),
+                underveisperiode(Utfall.OPPFYLT, futurePeriode),
+            ),
+            input = object : Faktagrunnlag {}
+        )
+
+        testApplication {
+            installApplication {
+                meldekortApi(MockDataSource(), inMemoryRepositoryRegistry, createTestGatewayProvider(), fixedClock)
+            }
+
+            val response = createClient().get("/api/meldekort/${sak.saksnummer}") {
+                header("Authorization", "Bearer ${getToken().token()}")
+            }
+
+            assertThat(response.status).isEqualTo(HttpStatusCode.OK)
+            val body = response.body<MeldekorteneDto>()
+            assertThat(body.meldekortene).hasSize(1)
+            assertThat(body.meldekortene.first().meldeperiode).isEqualTo(pastPeriode)
         }
     }
 

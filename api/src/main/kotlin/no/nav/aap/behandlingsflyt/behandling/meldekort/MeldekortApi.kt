@@ -5,7 +5,6 @@ import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.Tags
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.meldeperiode.MeldeperiodeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.MeldekortRepository
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
@@ -28,6 +27,7 @@ fun NormalOpenAPIRoute.meldekortApi(
     dataSource: DataSource,
     repositoryRegistry: RepositoryRegistry,
     gatewayProvider: GatewayProvider,
+    clock: java.time.Clock = java.time.Clock.systemDefaultZone()
 ) {
     route("api/meldekort/{saksnummer}") {
         authorizedGet<HentSakDTO, MeldekorteneDto>(
@@ -41,7 +41,6 @@ fun NormalOpenAPIRoute.meldekortApi(
             val meldekorteneDto = dataSource.transaction(readOnly = true) { connection ->
                 val repositoryProvider = repositoryRegistry.provider(connection)
                 val meldekortRepository = repositoryProvider.provide<MeldekortRepository>()
-                val meldeperiodeRepository = repositoryProvider.provide<MeldeperiodeRepository>()
                 val underveisRepository = repositoryProvider.provide<UnderveisRepository>()
                 val sakRepository = repositoryProvider.provide<SakRepository>()
                 val behandlingService = BehandlingService(
@@ -53,26 +52,32 @@ fun NormalOpenAPIRoute.meldekortApi(
                 val sisteFattedeVedtaksBehandling = behandlingService.finnBehandlingMedSisteFattedeVedtak(sak.id)
 
                 sisteFattedeVedtaksBehandling?.let { behandling ->
-                    val meldekortGrunnlag = meldekortRepository.hentHvisEksisterer(behandling.id)
-                    meldekortGrunnlag?.meldekort()?.map { meldekort ->
-                        val underveisGrunnlag = underveisRepository.hentHvisEksisterer(behandling.id) ?: return@let null
+                    val underveisGrunnlag = underveisRepository.hentHvisEksisterer(behandling.id) ?: return@let null
 
-                        val aktuellPeriode = underveisGrunnlag.somTidslinje().helePerioden()
-                        val meldePeriodene = meldeperiodeRepository.hentMeldeperioder(behandling.id, aktuellPeriode)
+                    // Henter meldeperioder som kan endres for saksbehandler
+                    val meldeperiodene = underveisGrunnlag.perioder
+                        .map { it.meldePeriode }
+                        .sortedBy { it.fom }
+                        .takeWhile { it.tom < LocalDate.now(clock) }
 
-                        val arbeidsperiode = meldekort.arbeidsperiode()
-                        val meldekortetsPeriode = finnMeldekortetsPeriode(arbeidsperiode, meldePeriodene)
+                    val meldekortListe = meldekortRepository.hentHvisEksisterer(behandling.id)?.meldekort().orEmpty()
+
+                    meldeperiodene.map { meldeperiode ->
+                        val meldekort = meldekortListe.firstOrNull { meldekort ->
+                            val arbeidsperiode = meldekort.arbeidsperiode()
+                            arbeidsperiode != null && meldeperiode.inneholder(arbeidsperiode)
+                        }
 
                         MeldekortDto(
-                            id = meldekort.journalpostId.identifikator,
-                            meldeperiode = meldekortetsPeriode,
-                            mottattTidspunkt = meldekort.mottattTidspunkt,
-                            dager = meldekort.timerArbeidPerPeriode.map { arbeid ->
+                            id = meldekort?.journalpostId?.identifikator,
+                            meldeperiode = meldeperiode,
+                            mottattTidspunkt = meldekort?.mottattTidspunkt,
+                            dager = meldekort?.timerArbeidPerPeriode?.map { arbeid ->
                                 DagDto(
-                                    dato = arbeid.periode.fom, // TODO sjekk opp - antar at det kun meldes inn enkeltdager
+                                    dato = arbeid.periode.fom,
                                     timerArbeidet = arbeid.timerArbeid.antallTimer.toDouble()
                                 )
-                            }
+                            }.orEmpty()
                         )
                     }
                 }?.let { MeldekorteneDto(it.toSet()) }
@@ -83,25 +88,13 @@ fun NormalOpenAPIRoute.meldekortApi(
     }
 }
 
-private fun finnMeldekortetsPeriode(
-    arbeidsperiode: Periode?, meldeperioder: List<Periode>
-): Periode? {
-    return arbeidsperiode?.let {
-        meldeperioder.firstOrNull {
-            // Alle arbeidsperiodene i meldekortet må være innenfor en og samme meldekortperiode.
-            // MeldekortPerioder overlapper ikke med hverandre.
-            it.inneholder(arbeidsperiode)
-        }
-    }
-}
-
 data class MeldekorteneDto(
     val meldekortene: Set<MeldekortDto>
 )
 
 data class MeldekortDto(
-    val id: String,
-    val meldeperiode: Periode?,
+    val id: String?,
+    val meldeperiode: Periode,
     val mottattTidspunkt: LocalDateTime?,
     val dager: List<DagDto>,
 )
