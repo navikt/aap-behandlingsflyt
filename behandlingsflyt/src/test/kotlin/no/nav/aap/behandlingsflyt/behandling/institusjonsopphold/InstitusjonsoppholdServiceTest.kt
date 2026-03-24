@@ -1059,4 +1059,53 @@ internal class InstitusjonsoppholdUtlederServiceTest {
         val res = utlederService.utledBehov(input)
         assertThat(res.harBehovForAvklaring()).isTrue
     }
+
+    @Test
+    fun `gap i barnetillegg under helseopphold gir avklaring selv om senere barnetilleggperiode finnes`() {
+        val helseFom = LocalDate.of(2025, 1, 1)
+        val helseTom = LocalDate.of(2025, 5, 31)
+        val gapFom = LocalDate.of(2025, 4, 1)
+        val gapTom = LocalDate.of(2025, 5, 31)
+
+        val res = utlederService.utledBehov(
+            InstitusjonsoppholdInput(
+                institusjonsOpphold = listOf(hsOpphold(helseFom, helseTom)),
+                soningsvurderinger = emptyList(),
+                barnetillegg = listOf(
+                    barnPeriode(LocalDate.of(2025, 1, 1), LocalDate.of(2025, 3, 31)),
+                    barnPeriode(LocalDate.of(2027, 1, 1), LocalDate.of(2027, 1, 31))
+                ),
+                helsevurderinger = emptyList(),
+                rettighetsperiode = Periode(LocalDate.of(2024, 1, 1), LocalDate.of(2028, 12, 31))
+            )
+        )
+
+        assertThat(res.harBehovForAvklaring()).isTrue
+        val avklaringssegmenterIGap = res.perioderTilVurdering.segmenter()
+            .filter { it.periode.overlapper(Periode(gapFom, gapTom)) }
+            .mapNotNull { it.verdi.helse?.vurdering }
+        assertThat(avklaringssegmenterIGap).contains(OppholdVurdering.UAVKLART)
+    }
+
+    @Test
+    fun `to sammenhengende barnetilleggperioder i helseopphold gir ikke falsk gap-avklaring`() {
+        val helseFom = LocalDate.of(2025, 1, 1)
+        val helseTom = LocalDate.of(2025, 5, 31)
+
+        val res = utlederService.utledBehov(
+            InstitusjonsoppholdInput(
+                institusjonsOpphold = listOf(hsOpphold(helseFom, helseTom)),
+                soningsvurderinger = emptyList(),
+                barnetillegg = listOf(
+                    barnPeriode(LocalDate.of(2025, 1, 1), LocalDate.of(2025, 3, 31)),
+                    barnPeriode(LocalDate.of(2025, 4, 1), LocalDate.of(2025, 5, 31))
+                ),
+                helsevurderinger = emptyList(),
+                rettighetsperiode = Periode(LocalDate.of(2024, 1, 1), LocalDate.of(2028, 12, 31))
+            )
+        )
+
+        assertThat(res.harBehovForAvklaring()).isFalse
+    }
 }
+

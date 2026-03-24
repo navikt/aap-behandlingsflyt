@@ -447,13 +447,29 @@ class InstitusjonsoppholdUtlederService(
     ): Tidslinje<Boolean> {
         val barnetilleggSlutterUnderPågåendeOpphold =
             barnetilleggTidslinje.isNotEmpty() && barnetilleggTidslinje.maxDato() <= helseOppholdTidslinje.maxDato()
+        val harGapIBarnetilleggUnderOpphold =
+            harGapIBarnetilleggSomOverlapperMedOpphold(barnetilleggTidslinje, helseOppholdTidslinje)
 
-        return if (barnetilleggSlutterUnderPågåendeOpphold) {
+        return if (barnetilleggSlutterUnderPågåendeOpphold || harGapIBarnetilleggUnderOpphold) {
             harOppholdSomKreverVurderingEtterStoppIBarneTillegg(
                 barnetilleggTidslinje,
                 helseOppholdTidslinje,
             )
         } else oppholdSomKanGiReduksjon
+    }
+
+    private fun harGapIBarnetilleggSomOverlapperMedOpphold(
+        barnetilleggTidslinje: Tidslinje<RettTilBarnetillegg>,
+        helseOppholdTidslinje: Tidslinje<Boolean>
+    ): Boolean {
+        return barnetilleggTidslinje.segmenter().sortedBy { it.fom() }
+            .zipWithNext()
+            .any { (current, next) ->
+                val gapStart = current.tom().plusDays(1)
+                val gapEnd = next.fom().minusDays(1)
+                !gapEnd.isBefore(gapStart) &&
+                        helseOppholdTidslinje.begrensetTil(Periode(gapStart, gapEnd)).isNotEmpty()
+            }
     }
 
     private fun harOppholdSomKreverVurderingEtterStoppIBarneTillegg(
@@ -473,6 +489,20 @@ class InstitusjonsoppholdUtlederService(
         } else {
             Tidslinje.empty()
         }
+        
+        val oppholdIBarneTilleggGapSomKreverAvklaring = barnetilleggTidslinje.segmenter().sortedBy { it.fom() }
+            .zipWithNext()
+            .mapNotNull { (current, next) ->
+                val gapStart = current.tom().plusDays(1)
+                val gapEnd = next.fom().minusDays(1)
+                if (gapEnd.isBefore(gapStart)) return@mapNotNull null
+                val helseIGap = helseOppholdTidslinje.begrensetTil(Periode(gapStart, gapEnd))
+                if (helseIGap.isEmpty()) return@mapNotNull null
+                harOppholdSomKreverAvklaring(helseIGap, ignorerVarighetsBegrensning = true)
+            }
+            .fold(Tidslinje.empty<Boolean>()) { acc, tidslinje ->
+                acc.kombiner(tidslinje, StandardSammenslåere.prioriterHøyreSideCrossJoin())
+            }
 
         val oppholdEtterBarnetillegg = if (helseOppholdTidslinje.maxDato() > barnetilleggTidslinje.maxDato()) {
             harOppholdSomKreverAvklaring(
@@ -488,11 +518,9 @@ class InstitusjonsoppholdUtlederService(
             Tidslinje.empty()
         }
 
-
-        return oppholdFørBarnetillegg.kombiner(
-            oppholdEtterBarnetillegg,
-            joinStyle = StandardSammenslåere.prioriterVenstreSideCrossJoin(),
-        )
+        return oppholdFørBarnetillegg
+            .kombiner(oppholdIBarneTilleggGapSomKreverAvklaring, joinStyle = StandardSammenslåere.prioriterVenstreSideCrossJoin())
+            .kombiner(oppholdEtterBarnetillegg, joinStyle = StandardSammenslåere.prioriterVenstreSideCrossJoin())
     }
 
 }
