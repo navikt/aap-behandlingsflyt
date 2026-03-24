@@ -27,6 +27,7 @@ import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.lookup.repository.RepositoryProvider
+import kotlin.lazy
 
 class VurderLovvalgSteg private constructor(
     private val vilkårsresultatRepository: VilkårsresultatRepository,
@@ -102,7 +103,7 @@ class VurderLovvalgSteg private constructor(
             vilkårsresultatRepository.hent(forrigeId)
                 .finnVilkår(Vilkårtype.LOVVALG)
                 .vilkårsperioder()
-                .any { !it.erOppfylt() }
+                .lastOrNull()?.erOppfylt() == false
         } ?: false
 
         val tvingerRelevans = kontekst.vurderingsbehovRelevanteForSteg.any {
