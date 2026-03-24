@@ -52,9 +52,9 @@ class VurderLovvalgSteg private constructor(
         val grunnlag = lazy { hentGrunnlag(kontekst.sakId, kontekst.behandlingId) }
 
         val tvingerAvklaringsbehov = if (unleashGateway.isEnabled(BehandlingsflytFeature.AvslagLovvalgMedlemskap)) {
-            vurderingsbehovSomTvingerAvklaringsbehov()  // includes MOTTATT_SØKNAD
+            vurderingsbehovSomTvingerAvklaringsbehov()  // med MOTTATT_SØKNAD
         } else {
-            vurderingsbehovSomTvingerAvklaringsbehovOld()  // without MOTTATT_SØKNAD
+            vurderingsbehovSomTvingerAvklaringsbehovOld()  // uten MOTTATT_SØKNAD
         }
         avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
             kontekst = kontekst,
