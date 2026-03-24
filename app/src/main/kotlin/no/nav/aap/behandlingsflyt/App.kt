@@ -67,6 +67,7 @@ import no.nav.aap.behandlingsflyt.behandling.oppfolgingsbehandling.avklarOppfolg
 import no.nav.aap.behandlingsflyt.behandling.oppfolgingsbehandling.oppfølgingsOppgaveApi
 import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.oppholdskravGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.rettighet.rettighetApi
+import no.nav.aap.behandlingsflyt.behandling.rettighet.rettighetsinfoApi
 import no.nav.aap.behandlingsflyt.behandling.rettighetsperiode.rettighetsperiodeGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.revurdering.avbrytRevurderingGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.simulering.simuleringApi
@@ -298,6 +299,7 @@ internal fun Application.server(
                 manglendeGrunnlagApi(dataSource, repositoryRegistry)
                 mellomlagretVurderingApi(dataSource, repositoryRegistry, gatewayProvider)
                 rettighetApi(dataSource, repositoryRegistry)
+                rettighetsinfoApi(dataSource, repositoryRegistry)
                 tidligereVurderingerApi(dataSource, repositoryRegistry, gatewayProvider)
                 barnepensjonGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
                 bekreftVurderingerOppfølgingApi(dataSource, repositoryRegistry, gatewayProvider)
