@@ -98,9 +98,16 @@ class VurderLovvalgSteg private constructor(
         val tidligereVurderingsutfall = tidligereVurderinger.behandlingsutfall(kontekst, type())
         val automatiskVilkårsvurderingLovvalg = vilkårsvurderingLovvalgUtenManuelleVurderinger(kontekst, grunnlag)
 
+        val forrigeHaddeAvslagPåLovvalg = kontekst.forrigeBehandlingId?.let { forrigeId ->
+            vilkårsresultatRepository.hent(forrigeId)
+                .finnVilkår(Vilkårtype.LOVVALG)
+                .vilkårsperioder()
+                .any { !it.erOppfylt() }
+        } ?: false
+
         val tvingerRelevans = kontekst.vurderingsbehovRelevanteForSteg.any {
             it in vurderingsbehovSomGjørAtRevurderingSkalTvinges()
-        }
+        } || (forrigeHaddeAvslagPåLovvalg && Vurderingsbehov.MOTTATT_SØKNAD in kontekst.vurderingsbehovRelevanteForSteg)
 
         return Tidslinje.zip2(tidligereVurderingsutfall, automatiskVilkårsvurderingLovvalg)
             .mapValue { (behandlingsutfall, automatiskVilkårsvurderingLovvalg) ->
