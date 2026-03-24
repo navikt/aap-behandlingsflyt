@@ -337,7 +337,7 @@ private fun sendInnSøknad(dto: OpprettTestcaseDTO, gatewayProvider: GatewayProv
                     soknadsdato = dto.uføreSøknadDato,
                     sakId = Random.nextLong(),
 
-                )
+                    )
             },
             barn = barn,
             institusjonsopphold = listOfNotNull(
@@ -381,7 +381,6 @@ private fun sendInnSøknad(dto: OpprettTestcaseDTO, gatewayProvider: GatewayProv
             ) else null,
         )
     )
-
     val periode = Periode(
         LocalDate.now(),
         Tid.MAKS

@@ -719,8 +719,8 @@ class YrkesskadeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
         val alleAvklaringsbehov = hentAlleAvklaringsbehov(behandling)
         assertThat(alleAvklaringsbehov).isNotEmpty()
         assertThat(behandling.status()).isEqualTo(Status.UTREDES)
-        behandling =
-            løsAvklaringsBehov(
+
+        behandling = løsAvklaringsBehov(
             behandling,
             AvklarSykdomLøsning(
                 løsningerForPerioder = listOf(
@@ -740,7 +740,6 @@ class YrkesskadeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
                 )
             ),
         )
-
             .løsSykdomsvurderingBrev()
             .bekreftVurderinger()
             .kvalitetssikre()
