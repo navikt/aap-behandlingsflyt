@@ -57,10 +57,7 @@ fun NormalOpenAPIRoute.meldekortApi(
                     val meldekortene = meldekortRepository.hentHvisEksisterer(behandling.id)?.meldekort().orEmpty()
 
                     meldeperioder.map { meldeperiode ->
-                        val meldekort = meldekortene.firstOrNull { meldekort ->
-                            val arbeidsperiode = meldekort.arbeidsperiode()
-                            arbeidsperiode != null && meldeperiode.inneholder(arbeidsperiode)
-                        }
+                        val meldekort = nyesteMeldekortForMeldeperiode(meldekortene, meldeperiode)
 
                         MeldeperiodeMedMeldekortDto(
                             meldeperiode = meldeperiode,
@@ -75,19 +72,30 @@ fun NormalOpenAPIRoute.meldekortApi(
     }
 }
 
+/**
+ * Henter ut nyeste meldekort som sammenfaller med meldeperiode basert på innmeldte timer
+ */
+private fun nyesteMeldekortForMeldeperiode(
+    meldekortene: List<Meldekort>,
+    meldeperiode: Periode
+): Meldekort? = meldekortene.lastOrNull { meldekort ->
+    val arbeidsperiode = meldekort.arbeidsperiode()
+    arbeidsperiode != null && meldeperiode.inneholder(arbeidsperiode)
+}
+
+/**
+ * Henter meldeperioder som er aktuelle å endre for saksbehandler.
+ * - Perioden må ha rettighetstype
+ * - Meldeperioder bakover i tid skal inkluderes
+ * - Inneværende periode skal inkluderes
+ *
+ * Verdt å merke seg at dersom meldeplikten ikke er oppfylt for en periode, så vil Utfall == IKKE_OPPFYLT, mens
+ * rettighetstypen vil fortsatt være satt. Dermed kan saksbehandler kunne sette timer i meldekortet for perioden.
+ */
 private fun hentAktuelleMeldeperioder(
     underveisGrunnlag: UnderveisGrunnlag,
     clock: Clock
 ): List<Periode> {
-    /**
-     * Henter meldeperioder som er aktuelle å endre for saksbehandler.
-     * - Perioden må ha rettighetstype
-     * - Meldeperioder bakover i tid skal inkluderes
-     * - Inneværende periode skal inkluderes
-     *
-     * Verdt å merke seg at dersom meldeplikten ikke er oppfylt for en periode, så vil Utfall == IKKE_OPPFYLT, mens
-     * rettighetstypen vil fortsatt være satt. Dermed kan saksbehandler kunne sette timer i meldekortet for perioden.
-     */
     val meldeperioder = underveisGrunnlag.perioder
         .filter { it.rettighetsType != null }
         .map { it.meldePeriode }
