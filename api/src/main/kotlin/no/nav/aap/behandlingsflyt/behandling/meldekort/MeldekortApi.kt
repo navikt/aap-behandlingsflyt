@@ -5,7 +5,9 @@ import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.Tags
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Meldekort
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.MeldekortRepository
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
@@ -19,6 +21,7 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.SakPathParam
 import no.nav.aap.tilgang.authorizedGet
+import java.time.Clock
 import java.time.LocalDate
 import java.time.LocalDateTime
 import javax.sql.DataSource
@@ -27,10 +30,10 @@ fun NormalOpenAPIRoute.meldekortApi(
     dataSource: DataSource,
     repositoryRegistry: RepositoryRegistry,
     gatewayProvider: GatewayProvider,
-    clock: java.time.Clock = java.time.Clock.systemDefaultZone()
+    clock: Clock = Clock.systemDefaultZone()
 ) {
     route("api/meldekort/{saksnummer}") {
-        authorizedGet<HentSakDTO, MeldekorteneDto>(
+        authorizedGet<HentSakDTO, MeldeperioderMedMeldekortResponse>(
             AuthorizationParamPathConfig(
                 relevanteIdenterResolver = relevanteIdenterForSakResolver(repositoryRegistry, dataSource),
                 sakPathParam = SakPathParam("saksnummer")
@@ -38,65 +41,86 @@ fun NormalOpenAPIRoute.meldekortApi(
             null,
             modules = arrayOf(TagModule(listOf(Tags.Sak))),
         ) { req ->
-            val meldekorteneDto = dataSource.transaction(readOnly = true) { connection ->
+            val meldeperioderMedMeldekortResponse = dataSource.transaction(readOnly = true) { connection ->
                 val repositoryProvider = repositoryRegistry.provider(connection)
                 val meldekortRepository = repositoryProvider.provide<MeldekortRepository>()
                 val underveisRepository = repositoryProvider.provide<UnderveisRepository>()
                 val sakRepository = repositoryProvider.provide<SakRepository>()
-                val behandlingService = BehandlingService(
-                    repositoryProvider = repositoryProvider,
-                    gatewayProvider = gatewayProvider
-                )
+                val behandlingService = BehandlingService(repositoryProvider, gatewayProvider)
 
-                val sak = sakRepository.hent(saksnummer = Saksnummer(req.saksnummer))
+                val sak = sakRepository.hent(Saksnummer(req.saksnummer))
                 val sisteFattedeVedtaksBehandling = behandlingService.finnBehandlingMedSisteFattedeVedtak(sak.id)
 
                 sisteFattedeVedtaksBehandling?.let { behandling ->
                     val underveisGrunnlag = underveisRepository.hentHvisEksisterer(behandling.id) ?: return@let null
+                    val meldeperioder = hentAktuelleMeldeperioder(underveisGrunnlag, clock)
+                    val meldekortene = meldekortRepository.hentHvisEksisterer(behandling.id)?.meldekort().orEmpty()
 
-                    // Henter meldeperioder som kan endres for saksbehandler
-                    val meldeperiodene = underveisGrunnlag.perioder
-                        .map { it.meldePeriode }
-                        .sortedBy { it.fom }
-                        .takeWhile { it.tom < LocalDate.now(clock) }
-
-                    val meldekortListe = meldekortRepository.hentHvisEksisterer(behandling.id)?.meldekort().orEmpty()
-
-                    meldeperiodene.map { meldeperiode ->
-                        val meldekort = meldekortListe.firstOrNull { meldekort ->
+                    meldeperioder.map { meldeperiode ->
+                        val meldekort = meldekortene.firstOrNull { meldekort ->
                             val arbeidsperiode = meldekort.arbeidsperiode()
                             arbeidsperiode != null && meldeperiode.inneholder(arbeidsperiode)
                         }
 
-                        MeldekortDto(
-                            id = meldekort?.journalpostId?.identifikator,
+                        MeldeperiodeMedMeldekortDto(
                             meldeperiode = meldeperiode,
-                            mottattTidspunkt = meldekort?.mottattTidspunkt,
-                            dager = meldekort?.timerArbeidPerPeriode?.map { arbeid ->
-                                DagDto(
-                                    dato = arbeid.periode.fom,
-                                    timerArbeidet = arbeid.timerArbeid.antallTimer.toDouble()
-                                )
-                            }.orEmpty()
+                            meldekort = meldekort?.toDto()
                         )
                     }
-                }?.let { MeldekorteneDto(it.toSet()) }
+                }?.let { MeldeperioderMedMeldekortResponse(it.toSet()) }
             }
 
-            respond(meldekorteneDto ?: MeldekorteneDto(emptySet()))
+            respond(meldeperioderMedMeldekortResponse ?: MeldeperioderMedMeldekortResponse(emptySet()))
         }
     }
 }
 
-data class MeldekorteneDto(
-    val meldekortene: Set<MeldekortDto>
+private fun hentAktuelleMeldeperioder(
+    underveisGrunnlag: UnderveisGrunnlag,
+    clock: Clock
+): List<Periode> {
+    /**
+     * Henter meldeperioder som er aktuelle å endre for saksbehandler.
+     * - Perioden må ha rettighetstype
+     * - Meldeperioder bakover i tid skal inkluderes
+     * - Inneværende periode skal inkluderes
+     *
+     * Verdt å merke seg at dersom meldeplikten ikke er oppfylt for en periode, så vil Utfall == IKKE_OPPFYLT, mens
+     * rettighetstypen vil fortsatt være satt. Dermed kan saksbehandler kunne sette timer i meldekortet for perioden.
+     */
+    val meldeperioder = underveisGrunnlag.perioder
+        .filter { it.rettighetsType != null }
+        .map { it.meldePeriode }
+        .sortedBy { it.fom }
+        .takeWhile { it.fom < LocalDate.now(clock) }
+
+    return meldeperioder
+}
+
+private fun Meldekort.toDto(): MeldekortDto = MeldekortDto(
+    id = journalpostId.identifikator,
+    mottattTidspunkt = mottattTidspunkt,
+    dager = timerArbeidPerPeriode.map { arbeid ->
+        DagDto(
+            dato = arbeid.periode.fom,
+            timerArbeidet = arbeid.timerArbeid.antallTimer.toDouble()
+        )
+    }.toSet()
+)
+
+data class MeldeperioderMedMeldekortResponse(
+    val meldeperioderMedMeldekort: Set<MeldeperiodeMedMeldekortDto>,
+)
+
+data class MeldeperiodeMedMeldekortDto(
+    val meldeperiode: Periode,
+    val meldekort: MeldekortDto?
 )
 
 data class MeldekortDto(
-    val id: String?,
-    val meldeperiode: Periode,
-    val mottattTidspunkt: LocalDateTime?,
-    val dager: List<DagDto>,
+    val id: String,
+    val mottattTidspunkt: LocalDateTime,
+    val dager: Set<DagDto>,
 )
 
 data class DagDto(
