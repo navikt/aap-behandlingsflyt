@@ -34,7 +34,7 @@ fun NormalOpenAPIRoute.mellomlagretVurderingApi(
     gatewayProvider: GatewayProvider
 ) {
     route("/api/behandling").tag(Tags.Behandling) {
-        route("/mellomlagret-vurdering") {
+        route("/mellomlagret-vurdering/{referanse}") {
             authorizedPost<Unit, MellomlagretVurderingResponse, MellomlagretVurderingRequest>(
                 AuthorizationBodyPathConfig(
                     operasjon = Operasjon.SAKSBEHANDLE,
@@ -73,9 +73,11 @@ fun NormalOpenAPIRoute.mellomlagretVurderingApi(
                         )
                     }
                 }
+
                 respond(response)
             }
         }
+
         route("/mellomlagret-vurdering/{referanse}/{avklaringsbehovkode}") {
             authorizedGet<BehandlingReferanseMedAvklaringsbehov, MellomlagretVurderingResponse>(
                 AuthorizationParamPathConfig(

@@ -54,6 +54,7 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.UtvidVedtakslengdeUnderEttAr to true,
         BehandlingsflytFeature.hentUforesoknadsdata to true,
         BehandlingsflytFeature.OpprettManuellVedtakslengdeBehandling to true,
+        BehandlingsflytFeature.AvslagLovvalgMedlemskap to true
         )
 )
 

@@ -337,7 +337,7 @@ private fun sendInnSøknad(dto: OpprettTestcaseDTO, gatewayProvider: GatewayProv
                     soknadsdato = dto.uføreSøknadDato,
                     sakId = Random.nextLong(),
 
-                )
+                    )
             },
             barn = barn,
             institusjonsopphold = listOfNotNull(
