@@ -187,6 +187,25 @@ class InnsendingTest {
     }
 
     @Test
+    fun `serialisere og deserialisere meldekort fra saksbehandler`() {
+        val meldekort = MeldekortFraSaksbehandlerV0(
+            harDuArbeidet = true,
+            timerArbeidPerPeriode = listOf(
+                ArbeidIPeriodeV0(
+                    fraOgMedDato = LocalDate.of(2023, 1, 1),
+                    tilOgMedDato = LocalDate.of(2023, 1, 31),
+                    timerArbeid = 25.0,
+                )
+            ),
+            begrunnelse = "Korrigert av saksbehandler",
+            opprettetAv = "Z999999",
+        )
+
+        val somJSON = DefaultJsonMapper.toJson(meldekort)
+        assertThat(DefaultJsonMapper.fromJson<Melding>(somJSON)).isEqualTo(meldekort)
+    }
+
+    @Test
     fun `serialisere og deserialisere klage`() {
         val klage = KlageV0(
             kravMottatt = LocalDate.of(2023, 1, 1)
