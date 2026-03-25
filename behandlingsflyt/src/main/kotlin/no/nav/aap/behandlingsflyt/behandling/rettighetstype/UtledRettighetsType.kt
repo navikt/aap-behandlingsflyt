@@ -12,6 +12,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.StansE
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
+import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.tidslinjeOf
 import no.nav.aap.komponenter.tidslinje.tidslinjeOfNotNullPeriode
@@ -30,7 +31,7 @@ internal data class Telleverk(
     val ordinærForbruk: Hverdager = Hverdager(0),
     val sykepengeerstatningForbruk: Hverdager = Hverdager(0),
 ) {
-    fun maksdato(kvoter: Kvoter, kvote: Kvote, fom: LocalDate): LocalDate? {
+    fun maksdato(kvoter: Kvoter, kvote: Kvote, fom: LocalDate, forrigeKvoteVurdering: KvoteVurdering?): LocalDate? {
         val hverdagerIgjen =
             when (kvote) {
                 Kvote.ORDINÆR -> kvoter.ordinærkvote - ordinærForbruk
@@ -41,10 +42,10 @@ internal data class Telleverk(
             Hverdager(0) < hverdagerIgjen ->
                 hverdagerIgjen.fraOgMed(fom)
 
-            hverdagerIgjen == Hverdager(0) && fom.dayOfWeek == DayOfWeek.SATURDAY ->
+            hverdagerIgjen == Hverdager(0) && fom.dayOfWeek == DayOfWeek.SATURDAY  && forrigeKvoteVurdering is KvoteOk ->
                 fom.plusDays(1)
 
-            hverdagerIgjen == Hverdager(0) && fom.dayOfWeek == DayOfWeek.SUNDAY ->
+            hverdagerIgjen == Hverdager(0) && fom.dayOfWeek == DayOfWeek.SUNDAY && forrigeKvoteVurdering is KvoteOk ->
                 fom
 
             else ->
@@ -125,16 +126,19 @@ internal fun vurderKvoter(
 ): Tidslinje<KvoteVurdering> {
     var telleverk = Telleverk()
 
-    return rettighetsType.flatMap { (periode, rettighetstypevurdering) ->
+    return rettighetsType.fold(Tidslinje()) { kvotevurderingTidslinje, periode, rettighetstypevurdering ->
         val kvote = rettighetstypevurdering.kravspesifikasjonForRettighetsType?.rettighetstype?.kvote
-            ?: return@flatMap tidslinjeOf(
+            ?: return@fold kvotevurderingTidslinje.kombiner(tidslinjeOf(
                 periode to KvoteOk(null, rettighetstypevurdering),
-            )
+            ), StandardSammenslåere.prioriterHøyreSideCrossJoin())
 
-        val maksdato = telleverk.maksdato(kvoter, kvote, periode.fom)
-            ?: return@flatMap tidslinjeOf(
+        val forrigeRelevanteKvoteVurdering = kvotevurderingTidslinje.segmenter().lastOrNull()?.let {
+            if (it.tom().plusDays(1) == periode.fom) it.verdi else null
+        }
+        val maksdato = telleverk.maksdato(kvoter, kvote, periode.fom, forrigeRelevanteKvoteVurdering)
+            ?: return@fold kvotevurderingTidslinje.kombiner(tidslinjeOf(
                 periode to KvoteBruktOpp(kvote, rettighetstypevurdering)
-            )
+            ), StandardSammenslåere.prioriterHøyreSideCrossJoin())
 
         val maksdatoForPeriode = minOf(maksdato, periode.tom)
 
@@ -142,10 +146,10 @@ internal fun vurderKvoter(
         val periodeKvoteBruktOpp = Periode.orNull(maksdatoForPeriode.plusDays(1), periode.tom)
         telleverk = telleverk.oppdater(kvote, periode.antallHverdager())
 
-        tidslinjeOfNotNullPeriode(
+        kvotevurderingTidslinje.kombiner(tidslinjeOfNotNullPeriode(
             periodeKvoteOk to KvoteOk(kvote, rettighetstypevurdering),
             periodeKvoteBruktOpp to KvoteBruktOpp(kvote, rettighetstypevurdering),
-        )
+        ),StandardSammenslåere.prioriterHøyreSideCrossJoin())
     }
 }
 
