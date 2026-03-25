@@ -10,7 +10,9 @@ import java.time.LocalDateTime
 data class Meldekort(
     val journalpostId: JournalpostId,
     val timerArbeidPerPeriode: Set<ArbeidIPeriode>,
-    val mottattTidspunkt: LocalDateTime
+    val mottattTidspunkt: LocalDateTime,
+    val begrunnelse: String? = null,
+    val opprettetAv: String? = null,
 ) {
     fun somTidslinje(): Tidslinje<Pair<TimerArbeid, Int>> {
         return Tidslinje(timerArbeidPerPeriode.map {

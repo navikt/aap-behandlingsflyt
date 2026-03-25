@@ -124,13 +124,15 @@ class MeldekortRepositoryImpl(private val connection: DBConnection) : MeldekortR
 
         meldekortene.forEach { meldekort ->
             val query = """
-            INSERT INTO MELDEKORT (journalpost, meldekortene_id, mottatt_tidspunkt) VALUES (?, ?, ?)
+            INSERT INTO MELDEKORT (journalpost, meldekortene_id, mottatt_tidspunkt, begrunnelse, opprettet_av) VALUES (?, ?, ?, ?, ?)
             """.trimIndent()
             val meldekortId = connection.executeReturnKey(query) {
                 setParams {
                     setString(1, meldekort.journalpostId.identifikator)
                     setLong(2, meldekorteneId)
                     setLocalDateTime(3, meldekort.mottattTidspunkt)
+                    setString(4, meldekort.begrunnelse)
+                    setString(5, meldekort.opprettetAv)
                 }
             }
 

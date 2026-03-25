@@ -76,6 +76,8 @@ class MeldekortInformasjonskrav private constructor(
                 journalpostId = ubehandletMeldekort.referanse.asJournalpostId,
                 timerArbeidPerPeriode = ubehandletMeldekort.timerArbeidPerPeriode,
                 mottattTidspunkt = ubehandletMeldekort.mottattTidspunkt,
+                begrunnelse = ubehandletMeldekort.begrunnelse,
+                opprettetAv = ubehandletMeldekort.opprettetAv,
             )
             mottaDokumentService.markerSomBehandlet(
                 sakId = kontekst.sakId,
