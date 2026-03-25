@@ -21,6 +21,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.komponenter.miljo.Miljø
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.tilgang.Rolle
 import java.time.LocalDate
@@ -103,9 +104,9 @@ class BekreftVurderingerOppfølgingSteg(
             .filter { it.definisjon.løsesAv.contains(Rolle.SAKSBEHANDLER_OPPFOLGING) }
             .filter {
                 it.aktivHistorikk.any { endring ->
-                    endring.status == Status.AVSLUTTET && endring.tidsstempel.toLocalDate().isAfter(
+                    endring.status == Status.AVSLUTTET && (!Miljø.erProd() || endring.tidsstempel.toLocalDate().isAfter(
                         LocalDate.of(2026, 3, 25)
-                    ) // Hack for å unngå at man må bekrefte behov som ble utført før steget fantes. Bør se på en bedre løsning
+                    )) // Hack for å unngå at man må bekrefte behov som ble utført før steget fantes. Bør se på en bedre løsning
                 }
             }
     }
