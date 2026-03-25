@@ -23,6 +23,7 @@ import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.tilgang.Rolle
+import java.time.LocalDate
 
 class BekreftVurderingerOppfølgingSteg(
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
@@ -100,7 +101,13 @@ class BekreftVurderingerOppfølgingSteg(
         return avklaringsbehovene.alle().filter { it.løsesISteg().gruppe == StegGruppe.SYKDOM }
             .filterNot { it.løsesISteg() == type() }
             .filter { it.definisjon.løsesAv.contains(Rolle.SAKSBEHANDLER_OPPFOLGING) }
-            .filter { it.aktivHistorikk.any { it.status == Status.AVSLUTTET } }
+            .filter {
+                it.aktivHistorikk.any { endring ->
+                    endring.status == Status.AVSLUTTET && endring.tidsstempel.toLocalDate().isAfter(
+                        LocalDate.of(2026, 3, 25)
+                    ) // Hack for å unngå at man må bekrefte behov som ble utført før steget fantes. Bør se på en bedre løsning
+                }
+            }
     }
 
     companion object : FlytSteg {
