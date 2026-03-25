@@ -20,6 +20,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Re
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.ArbeidIPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Meldekort
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.help.assertTidslinje
 import no.nav.aap.behandlingsflyt.test.august
 import no.nav.aap.behandlingsflyt.test.desember
@@ -481,7 +482,7 @@ class TilkjentYtelseGrunnlagTest {
             rettighetsperiode = periodeForVurdering,
             meldekort = listOf(
                 Meldekort(
-                    journalpostId = JournalpostId("0"),
+                    referanse = InnsendingReferanse(JournalpostId("0")),
                     timerArbeidPerPeriode = timerArbeidet.mapIndexed { i, timer ->
                         val dato = (1 + i) desember 2025
                         ArbeidIPeriode(

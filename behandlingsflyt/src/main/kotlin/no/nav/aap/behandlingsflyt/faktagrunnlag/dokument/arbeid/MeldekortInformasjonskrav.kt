@@ -9,7 +9,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.IngenInput
 import no.nav.aap.behandlingsflyt.faktagrunnlag.IngenRegisterData
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.prosessering.DigitaliserteMeldekortTilMeldekortBackendJobbUtfører
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
@@ -73,7 +72,7 @@ class MeldekortInformasjonskrav private constructor(
 
         for (ubehandletMeldekort in meldekortSomIkkeErBehandlet) {
             val nyttMeldekort = Meldekort(
-                journalpostId = ubehandletMeldekort.referanse.asJournalpostId,
+                referanse = ubehandletMeldekort.referanse,
                 timerArbeidPerPeriode = ubehandletMeldekort.timerArbeidPerPeriode,
                 mottattTidspunkt = ubehandletMeldekort.mottattTidspunkt,
                 begrunnelse = ubehandletMeldekort.begrunnelse,
@@ -109,10 +108,10 @@ class MeldekortInformasjonskrav private constructor(
             ?.meldekortene
             .orEmpty()
 
-        val journalpostIderFraNyeMeldekort = nyeMeldekort.map { it.journalpostId }
+        val referanserFraNyeMeldekort = nyeMeldekort.map { it.referanse }
         val meldekortBareIForrigeGrunnlag = mutableSetOf<Meldekort>()
         for (meldekort in forrigeMeldekortGrunnlag.meldekortene) {
-            if (meldekort.journalpostId !in journalpostIderFraNyeMeldekort) {
+            if (meldekort.referanse !in referanserFraNyeMeldekort) {
                 meldekortBareIForrigeGrunnlag.add(meldekort)
             }
         }

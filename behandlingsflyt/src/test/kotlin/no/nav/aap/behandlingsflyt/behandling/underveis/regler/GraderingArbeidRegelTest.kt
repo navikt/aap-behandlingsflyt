@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Re
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.ArbeidIPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Meldekort
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneGrunnlag
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.Fritaksvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktGrunnlag
@@ -63,12 +64,12 @@ class GraderingArbeidRegelTest {
             opptrappingPerioder = emptyList(),
             meldekort = listOf(
                 Meldekort(
-                    journalpostId = JournalpostId(1010.toString()),
+                    referanse = InnsendingReferanse(JournalpostId(1010.toString())),
                     timerArbeidPerPeriode = arbeidetPerDag,
                     mottattTidspunkt = (1 januar 2024).atStartOfDay(),
                 ),
                 Meldekort(
-                    journalpostId = JournalpostId(1011.toString()),
+                    referanse = InnsendingReferanse(JournalpostId(1011.toString())),
                     timerArbeidPerPeriode = emptySet(),
                     mottattTidspunkt = (2 januar 2024).atStartOfDay(),
                 )
@@ -298,7 +299,7 @@ class GraderingArbeidRegelTest {
             rettighetsperiode = rettighetsperiode,
             fastsattArbeidsevne = Prosent.`30_PROSENT`,
             meldekort = allemeldekort
-        ).copy(innsendingsTidspunkt = allemeldekort.associate { it.mottattTidspunkt.toLocalDate() to it.journalpostId })
+        ).copy(innsendingsTidspunkt = allemeldekort.associate { it.mottattTidspunkt.toLocalDate() to it.referanse.asJournalpostId })
         val vurdering = vurder(input)
 
         assertEquals(Prosent.`70_PROSENT`, vurdering.segment(meldeperiode1.fom)?.verdi?.arbeidsgradering()?.gradering)
@@ -397,7 +398,7 @@ class GraderingArbeidRegelTest {
         fritaksvurderinger: List<Fritaksvurdering> = emptyList(),
         opptrappingPerioder: List<Periode> = emptyList()
     ) = tomUnderveisInput(
-        innsendingsTidspunkt = meldekort.associate { it.mottattTidspunkt.toLocalDate() to it.journalpostId },
+        innsendingsTidspunkt = meldekort.associate { it.mottattTidspunkt.toLocalDate() to it.referanse.asJournalpostId },
         rettighetsperiode = rettighetsperiode,
         meldekort = meldekort,
         meldepliktGrunnlag = MeldepliktGrunnlag(vurderinger = fritaksvurderinger),
@@ -420,7 +421,7 @@ class GraderingArbeidRegelTest {
     private fun meldekort(vararg datoOgTimer: Pair<LocalDate, List<Double>>): List<Meldekort> {
         return datoOgTimer.mapIndexed { i, (førsteDag, timerArbeidet) ->
             Meldekort(
-                journalpostId = JournalpostId(i.toString()),
+                referanse = InnsendingReferanse(JournalpostId(i.toString())),
                 timerArbeidPerPeriode =
                     timerArbeidet.mapIndexed { j, timer ->
                         val dato = førsteDag.plusDays(j.toLong())

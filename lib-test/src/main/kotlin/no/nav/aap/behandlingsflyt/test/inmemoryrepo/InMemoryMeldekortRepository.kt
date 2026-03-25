@@ -4,7 +4,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.DokumentRekkefø
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Meldekort
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.MeldekortGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.MeldekortRepository
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 
 object InMemoryMeldekortRepository : MeldekortRepository {
@@ -22,7 +21,7 @@ object InMemoryMeldekortRepository : MeldekortRepository {
                 meldekortene = it,
                 rekkefølge = it.sortedBy { it.mottattTidspunkt }.map {
                     DokumentRekkefølge(
-                        referanse = InnsendingReferanse(it.journalpostId),
+                        referanse = it.referanse,
                         mottattTidspunkt = it.mottattTidspunkt
                     )
                 }.toSet()

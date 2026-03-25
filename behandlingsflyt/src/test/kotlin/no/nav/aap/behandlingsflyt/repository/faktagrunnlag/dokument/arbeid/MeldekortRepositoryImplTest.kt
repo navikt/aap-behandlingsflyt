@@ -58,7 +58,7 @@ class MeldekortRepositoryImplTest {
             val mottattMeldekort = meldekortDokument(sak, behandling, "1", LocalDateTime.now().withNano(0).minusMinutes(5))
             val meldekortPeriode = Periode(periode.fom, periode.fom.plusDays(1))
             val meldekortInitielt = Meldekort(
-                journalpostId = mottattMeldekort.referanse.asJournalpostId,
+                referanse = mottattMeldekort.referanse,
                 timerArbeidPerPeriode = setOf(
                     ArbeidIPeriode(periode = meldekortPeriode, timerArbeid = TimerArbeid(BigDecimal.TEN))
                 ), mottattTidspunkt = mottattMeldekort.mottattTidspunkt
@@ -74,7 +74,7 @@ class MeldekortRepositoryImplTest {
             val mottattMeldekortKorrigert = meldekortDokument(sak, behandling, "2", LocalDateTime.now().withNano(0))
             dokumentRepositoryImpl.lagre(mottattMeldekortKorrigert)
             val meldekortKorrigert = Meldekort(
-                journalpostId = mottattMeldekortKorrigert.referanse.asJournalpostId,
+                referanse = mottattMeldekortKorrigert.referanse,
                 timerArbeidPerPeriode = setOf(
                     ArbeidIPeriode(periode = meldekortPeriode, timerArbeid = TimerArbeid(BigDecimal.ZERO))
                 ), mottattTidspunkt = mottattMeldekortKorrigert.mottattTidspunkt

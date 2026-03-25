@@ -158,7 +158,7 @@ class StatistikkMetoder(
             opprettetAv = hendelse.opprettetAv,
             nyeMeldekort = nyeMeldekort.map { meldekort ->
                 MeldekortDTO(
-                    meldekort.journalpostId.identifikator,
+                    meldekort.referanse.asJournalpostId.identifikator,
                     meldekort.timerArbeidPerPeriode.map {
                         ArbeidIPeriode(it.periode.fom, it.periode.tom, it.timerArbeid.antallTimer)
                     }

@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.ArbeidIPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Meldekort
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.MeldekortGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.MeldekortRepository
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
@@ -12,7 +13,6 @@ import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
 import no.nav.aap.komponenter.verdityper.TimerArbeid
 import no.nav.aap.lookup.repository.Factory
-import no.nav.aap.verdityper.dokument.JournalpostId
 import org.slf4j.LoggerFactory
 
 class MeldekortRepositoryImpl(private val connection: DBConnection) : MeldekortRepository {
@@ -60,9 +60,11 @@ class MeldekortRepositoryImpl(private val connection: DBConnection) : MeldekortR
             }
             setRowMapper {
                 Meldekort(
-                    JournalpostId(it.getString("journalpost")),
+                    InnsendingReferanse(InnsendingReferanse.Type.valueOf(it.getString("referanse_type")), it.getString("journalpost")),
                     hentTimerPerPeriode(it.getLong("id")),
-                    it.getLocalDateTime("mottatt_tidspunkt")
+                    it.getLocalDateTime("mottatt_tidspunkt"),
+                    begrunnelse = it.getStringOrNull("begrunnelse"),
+                    opprettetAv = it.getStringOrNull("opprettet_av"),
                 )
             }
         }.toSet()
@@ -124,15 +126,16 @@ class MeldekortRepositoryImpl(private val connection: DBConnection) : MeldekortR
 
         meldekortene.forEach { meldekort ->
             val query = """
-            INSERT INTO MELDEKORT (journalpost, meldekortene_id, mottatt_tidspunkt, begrunnelse, opprettet_av) VALUES (?, ?, ?, ?, ?)
+            INSERT INTO MELDEKORT (journalpost, meldekortene_id, mottatt_tidspunkt, begrunnelse, opprettet_av, referanse_type) VALUES (?, ?, ?, ?, ?, ?)
             """.trimIndent()
             val meldekortId = connection.executeReturnKey(query) {
                 setParams {
-                    setString(1, meldekort.journalpostId.identifikator)
+                    setString(1, meldekort.referanse.verdi)
                     setLong(2, meldekorteneId)
                     setLocalDateTime(3, meldekort.mottattTidspunkt)
                     setString(4, meldekort.begrunnelse)
                     setString(5, meldekort.opprettetAv)
+                    setString(6, meldekort.referanse.type.name)
                 }
             }
 

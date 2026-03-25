@@ -286,7 +286,7 @@ class StatistikkJobbUtførerTest {
         MeldekortRepositoryImpl(connection).lagre(
             opprettetBehandling.id, setOf(
                 Meldekort(
-                    journalpostId = JournalpostId(journalpostId),
+                    referanse = InnsendingReferanse(JournalpostId(journalpostId)),
                     timerArbeidPerPeriode = setOf(
                         ArbeidIPeriode(
                             periode = Periode(LocalDate.now().minusDays(10), LocalDate.now().plusDays(1)),

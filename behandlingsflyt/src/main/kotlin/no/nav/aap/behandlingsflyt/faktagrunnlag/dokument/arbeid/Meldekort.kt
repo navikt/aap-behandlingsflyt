@@ -1,14 +1,14 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid
 
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.TimerArbeid
-import no.nav.aap.verdityper.dokument.JournalpostId
 import java.time.LocalDateTime
 
 data class Meldekort(
-    val journalpostId: JournalpostId,
+    val referanse: InnsendingReferanse,
     val timerArbeidPerPeriode: Set<ArbeidIPeriode>,
     val mottattTidspunkt: LocalDateTime,
     val begrunnelse: String? = null,

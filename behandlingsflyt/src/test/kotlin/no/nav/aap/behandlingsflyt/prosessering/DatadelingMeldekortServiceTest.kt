@@ -230,8 +230,7 @@ private fun lagreMeldekort(
     val periodeStart = meldeperiode.fom
     meldekortRepository.lagre(
         testBehandling.id, setOf(
-            Meldekort(
-                mottattMeldekort.referanse.asJournalpostId, setOf(
+            Meldekort(mottattMeldekort.referanse, setOf(
                     ArbeidIPeriode(
                         Periode(periodeStart, periodeStart.plusDays(1)), TimerArbeid(4.0.toBigDecimal())
                     ), ArbeidIPeriode(

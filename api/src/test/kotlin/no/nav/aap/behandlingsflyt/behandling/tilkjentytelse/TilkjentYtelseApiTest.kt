@@ -11,6 +11,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.ArbeidIPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Meldekort
 import no.nav.aap.behandlingsflyt.help.tomtTilkjentYtelseGrunnlag
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.behandlingsflyt.test.MockDataSource
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryMeldekortRepository
@@ -99,7 +100,7 @@ class TilkjentYtelseApiTest : BaseApiTest() {
             InMemoryMeldekortRepository.lagre(
                 behandling.id, setOf(
                     Meldekort(
-                        journalpostId = JournalpostId("123456789"),
+                        referanse = InnsendingReferanse(JournalpostId("123456789")),
                         timerArbeidPerPeriode = setOf(
                             ArbeidIPeriode(
                                 Periode(
@@ -112,7 +113,7 @@ class TilkjentYtelseApiTest : BaseApiTest() {
                         mottattTidspunkt = LocalDate.parse("2025-08-07").atTime(9, 0)
                     ),
                     Meldekort(
-                        journalpostId = JournalpostId("1234567810"),
+                        referanse = InnsendingReferanse(JournalpostId("1234567810")),
                         timerArbeidPerPeriode = setOf(
                             ArbeidIPeriode(
                                 Periode(

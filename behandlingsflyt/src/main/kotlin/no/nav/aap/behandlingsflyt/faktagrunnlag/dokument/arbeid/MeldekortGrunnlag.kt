@@ -14,8 +14,8 @@ data class MeldekortGrunnlag(
         }
 
         val rekkefølgeIder = rekkefølge.map { it.referanse.asJournalpostId }
-        require(meldekortene.all { it.journalpostId in rekkefølgeIder }) {
-            "sjekk feilet: ${meldekortene.joinToString { it.journalpostId.toString() }} subset ${rekkefølge.joinToString { it.referanse.toString() }}"
+        require(meldekortene.all { it.referanse.asJournalpostId in rekkefølgeIder }) {
+            "sjekk feilet: ${meldekortene.joinToString { it.referanse.toString() }} subset ${rekkefølge.joinToString { it.referanse.toString() }}"
         }
     }
 
@@ -23,7 +23,7 @@ data class MeldekortGrunnlag(
      * Returnerer sortert stigende på innsendingstidspunkt
      */
     fun meldekort(): List<Meldekort> {
-        return meldekortene.sortedWith(compareBy { rekkefølge.first { at -> at.referanse.asJournalpostId == it.journalpostId }.mottattTidspunkt })
+        return meldekortene.sortedWith(compareBy { rekkefølge.first { at -> at.referanse.asJournalpostId == it.referanse.asJournalpostId }.mottattTidspunkt })
     }
 
     fun innsendingsdatoPerMelding(): Map<LocalDate, JournalpostId> {
