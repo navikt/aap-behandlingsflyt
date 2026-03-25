@@ -7,6 +7,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Re
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.ApiInternGateway
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.ArenaStatusResponse
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.DetaljertMeldekortDTO
+import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
+import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
@@ -51,11 +53,18 @@ class FakeApiInternGateway : ApiInternGateway {
         detaljertMeldekortListe: List<DetaljertMeldekortDTO>,
         sakId: SakId,
         behandlingId: BehandlingId
-    ){
+    ) {
         // No-op
     }
 
     override fun hentArenaStatus(personidentifikatorer: Set<String>): ArenaStatusResponse {
         return ArenaStatusResponse(false)
+    }
+
+    override fun oppdaterIdenter(
+        saksnummer: Saksnummer,
+        identer: List<Ident>
+    ) {
+        // No-op
     }
 }
