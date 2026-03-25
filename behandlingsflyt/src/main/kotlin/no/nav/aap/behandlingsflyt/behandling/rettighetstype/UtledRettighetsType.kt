@@ -133,7 +133,7 @@ internal fun vurderKvoter(
             ), StandardSammenslåere.prioriterHøyreSideCrossJoin())
 
         val forrigeRelevanteKvoteVurdering = kvotevurderingTidslinje.segmenter().lastOrNull()?.let {
-            if (it.tom().plusDays(1) == periode.fom) it.verdi else null
+            if (it.periode.inntil(periode)) it.verdi else null
         }
         val maksdato = telleverk.maksdato(kvoter, kvote, periode.fom, forrigeRelevanteKvoteVurdering)
             ?: return@fold kvotevurderingTidslinje.kombiner(tidslinjeOf(
