@@ -73,21 +73,22 @@ class MeldekortInformasjonskrav private constructor(
 
         for (ubehandletMeldekort in meldekortSomIkkeErBehandlet) {
             val nyttMeldekort = Meldekort(
-                journalpostId = ubehandletMeldekort.journalpostId,
+                journalpostId = ubehandletMeldekort.referanse.asJournalpostId,
                 timerArbeidPerPeriode = ubehandletMeldekort.timerArbeidPerPeriode,
                 mottattTidspunkt = ubehandletMeldekort.mottattTidspunkt,
             )
             mottaDokumentService.markerSomBehandlet(
                 sakId = kontekst.sakId,
                 behandlingId = kontekst.behandlingId,
-                referanse = InnsendingReferanse(ubehandletMeldekort.journalpostId)
+                referanse = ubehandletMeldekort.referanse
             )
             allePlussNye.add(nyttMeldekort)
 
+            // TODO hva blir riktig her mtp at saksbehandler har lagt inn timer - skal disse overføres på tilsvarende vis?
             if (ubehandletMeldekort.digitalisertAvPostmottak == true) {
                 flytJobbRepository.leggTil(
                     JobbInput(jobb = DigitaliserteMeldekortTilMeldekortBackendJobbUtfører).medPayload(
-                        ubehandletMeldekort.journalpostId
+                        ubehandletMeldekort.referanse.asJournalpostId
                     ).forSak(sakId = kontekst.sakId.id)
                 )
             }

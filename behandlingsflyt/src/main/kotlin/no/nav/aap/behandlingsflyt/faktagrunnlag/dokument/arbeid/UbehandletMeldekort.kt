@@ -1,15 +1,15 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid
 
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Meldekort
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.MeldekortFraSaksbehandlerV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.MeldekortV0
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.TimerArbeid
-import no.nav.aap.verdityper.dokument.JournalpostId
 import java.time.LocalDateTime
 
 data class UbehandletMeldekort(
-    val journalpostId: JournalpostId,
+    val referanse: InnsendingReferanse,
     val timerArbeidPerPeriode: Set<ArbeidIPeriode>,
     val mottattTidspunkt: LocalDateTime,
     val harDuArbeidet: Boolean?,
@@ -18,13 +18,13 @@ data class UbehandletMeldekort(
     companion object {
         fun fraKontrakt(
             meldekort: Meldekort,
-            journalpostId: JournalpostId,
+            referanse: InnsendingReferanse,
             mottattTidspunkt: LocalDateTime,
             digitalisertAvPostmottak: Boolean?
         ): UbehandletMeldekort {
             return when (meldekort) {
                 is MeldekortV0 -> UbehandletMeldekort(
-                    journalpostId = journalpostId,
+                    referanse = referanse,
                     timerArbeidPerPeriode = meldekort.timerArbeidPerPeriode.map {
                         ArbeidIPeriode(
                             periode = Periode(it.fraOgMedDato, it.tilOgMedDato),
@@ -37,7 +37,7 @@ data class UbehandletMeldekort(
                 )
 
                 is MeldekortFraSaksbehandlerV0 -> UbehandletMeldekort(
-                    journalpostId = journalpostId,
+                    referanse = referanse,
                     timerArbeidPerPeriode = meldekort.timerArbeidPerPeriode.map {
                         ArbeidIPeriode(
                             periode = Periode(it.fraOgMedDato, it.tilOgMedDato),
@@ -46,7 +46,7 @@ data class UbehandletMeldekort(
                     }.toSet(),
                     mottattTidspunkt = mottattTidspunkt,
                     harDuArbeidet = meldekort.harDuArbeidet,
-                    digitalisertAvPostmottak = digitalisertAvPostmottak
+                    digitalisertAvPostmottak = false
                 )
             }
         }

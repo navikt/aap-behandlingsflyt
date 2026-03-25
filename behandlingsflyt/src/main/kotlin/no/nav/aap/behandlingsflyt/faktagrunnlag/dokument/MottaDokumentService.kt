@@ -60,7 +60,7 @@ class MottaDokumentService(
             .map {
                 UbehandletMeldekort.fraKontrakt(
                     meldekort = meldekort(it),
-                    journalpostId = it.referanse.asJournalpostId,
+                    referanse = it.referanse,
                     mottattTidspunkt = it.mottattTidspunkt,
                     digitalisertAvPostmottak = it.digitalisertAvPostmottak
                 )
@@ -75,7 +75,7 @@ class MottaDokumentService(
     fun tilUbehandletMeldekort(dokument: MottattDokument): UbehandletMeldekort {
         return UbehandletMeldekort.fraKontrakt(
             meldekort = meldekort(dokument),
-            journalpostId = dokument.referanse.asJournalpostId,
+            referanse = dokument.referanse,
             mottattTidspunkt = dokument.mottattTidspunkt,
             digitalisertAvPostmottak = dokument.digitalisertAvPostmottak
         )
