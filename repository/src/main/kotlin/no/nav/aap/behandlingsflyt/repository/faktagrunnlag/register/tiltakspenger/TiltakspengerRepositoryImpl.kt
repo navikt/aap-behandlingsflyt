@@ -44,7 +44,7 @@ class TiltakspengerRepositoryImpl(private val connection: DBConnection) : Tiltak
             VALUES (?, ?::daterange, ?, ?)""".trimIndent(), tiltakspengerPeriode) {
             setParams {periode ->
                 setLong(1, tpPeriode)
-                setPeriode(2, Periode(periode.fraOgMed, periode.tilOgMed ?: Tid.MAKS))
+                setPeriode(2, Periode(periode.fraOgMed, periode.tilOgMed))
                 setString(3, periode.tiltakspengerYtelseType.name)
                 setString(4, periode.kilde.name)
             }

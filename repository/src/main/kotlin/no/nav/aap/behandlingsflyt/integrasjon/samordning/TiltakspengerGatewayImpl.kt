@@ -72,7 +72,7 @@ internal data class TiltakspengerRequest(
 
 internal class TiltakspengerPeriodeResponse(
     val fraOgMedDato: LocalDate,
-    val tilOgMedDato: LocalDate?,
+    val tilOgMedDato: LocalDate,
     val kilde: TiltakspengerKilde,
     val ytelseType: TiltakspengerYtelseType
 )

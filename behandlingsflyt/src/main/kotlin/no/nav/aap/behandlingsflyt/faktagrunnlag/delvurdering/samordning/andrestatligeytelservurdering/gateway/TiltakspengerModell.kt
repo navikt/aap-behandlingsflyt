@@ -4,7 +4,7 @@ import java.time.LocalDate
 
 data class TiltakspengerPeriode(
     val fraOgMed: LocalDate,
-    val tilOgMed: LocalDate?,
+    val tilOgMed: LocalDate,
     val kilde: TiltakspengerKilde,
     val tiltakspengerYtelseType: TiltakspengerYtelseType
 )
