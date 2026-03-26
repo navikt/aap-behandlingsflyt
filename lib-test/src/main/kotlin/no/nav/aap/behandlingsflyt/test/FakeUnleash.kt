@@ -41,7 +41,6 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.TrekkSoeknadOpprettetFraLegeerklaering to true,
         BehandlingsflytFeature.KvalitetssikringVed2213 to true,
         BehandlingsflytFeature.tilbakekrevingsOppgaverTilOppgave to true,
-        BehandlingsflytFeature.HentingAvInstitusjonsOpphold to true,
         BehandlingsflytFeature.VisIkkeRelevantPeriode to true,
         BehandlingsflytFeature.BekreftVurderingerOppfolging to true,
         BehandlingsflytFeature.LagreStansOgOpphor to true,

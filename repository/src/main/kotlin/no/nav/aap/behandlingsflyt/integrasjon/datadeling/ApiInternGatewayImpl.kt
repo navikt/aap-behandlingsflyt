@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.integrasjon.datadeling
 import com.github.benmanes.caffeine.cache.Caffeine
 import no.nav.aap.api.intern.PersonEksistererIAAPArena
 import no.nav.aap.api.intern.SakerRequest
+import no.nav.aap.api.intern.behandlingsflyt.OppdaterIdenterDto
 import no.nav.aap.api.intern.behandlingsflyt.SakStatusKelvin
 import no.nav.aap.api.intern.behandlingsflyt.SakstatusFraKelvin
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelsePeriode
@@ -18,7 +19,9 @@ import no.nav.aap.behandlingsflyt.kontrakt.datadeling.RettighetsTypePeriode
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.SakDTO
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.TilkjentDTO
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.UnderveisDTO
+import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.prometheus
+import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
@@ -184,6 +187,18 @@ class ApiInternGatewayImpl : ApiInternGateway {
             val sakerRequest = SakerRequest(personidentifikatorer = personidentifikatorer.toList())
             doHentArenaStatus(sakerRequest)
         }
+    }
+
+    override fun oppdaterIdenter(
+        saksnummer: Saksnummer,
+        identer: List<Ident>
+    ) {
+        log.info("Oppdaterer identer for sak $saksnummer.")
+        restClient.post(
+            uri.resolve("/api/insert/oppdater-identer"),
+            PostRequest(body = OppdaterIdenterDto(saksnummer.toString(), identer.map(Ident::identifikator))),
+            mapper = { _, _ -> }
+        )
     }
 
     private fun doHentArenaStatus(sakerRequest: SakerRequest): ArenaStatusResponse {
