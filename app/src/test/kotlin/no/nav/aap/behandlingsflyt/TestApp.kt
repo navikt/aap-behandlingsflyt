@@ -19,6 +19,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Ins
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Oppholdstype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.Uføre
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreSøknad
 import no.nav.aap.behandlingsflyt.integrasjon.institusjonsopphold.InstitusjonsoppholdJSON
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
@@ -331,6 +332,13 @@ private fun sendInnSøknad(dto: OpprettTestcaseDTO, gatewayProvider: GatewayProv
                     uføregradTom = dto.uføregradTom,
                 )
             },
+            uføreSøknad = dto.uføreSøknadDato?.let {
+                UføreSøknad(
+                    soknadsdato = dto.uføreSøknadDato,
+                    sakId = Random.nextLong(),
+
+                    )
+            },
             barn = barn,
             institusjonsopphold = listOfNotNull(
                 if (dto.institusjoner.fengsel == true) genererFengselsopphold() else null,
@@ -373,14 +381,11 @@ private fun sendInnSøknad(dto: OpprettTestcaseDTO, gatewayProvider: GatewayProv
             ) else null,
         )
     )
-    val periode = Periode(
-        LocalDate.now(),
-        Tid.MAKS
-    )
+
     val sak = datasource.transaction { connection ->
         val repositoryProvider = repositoryRegistry.provider(connection)
         val sakService = PersonOgSakService(gatewayProvider, repositoryProvider)
-        val sak = sakService.finnEllerOpprett(ident, periode)
+        val sak = sakService.finnEllerOpprett(ident, LocalDate.now())
 
         val flytJobbRepository = FlytJobbRepository(connection)
 

@@ -31,6 +31,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Pers
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.Uføre
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreInformasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreRegisterGateway
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreSøknad
 import no.nav.aap.behandlingsflyt.help.FakePdlGateway
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.help.genererVilkårsresultat
@@ -108,6 +109,7 @@ class OppdagEndretInformasjonskravJobbUtførerTest {
     object FakeUføreRegisterGateway : UføreRegisterGateway {
         var response: Set<Uføre> = emptySet()
         override fun innhentMedHistorikk(person: Person, fraDato: LocalDate) = response
+        override fun hentÅpenUføreSøknad(person: Person): UføreSøknad? = null
     }
 
     object FakeInstitusjonsoppholdGateway : InstitusjonsoppholdGateway {

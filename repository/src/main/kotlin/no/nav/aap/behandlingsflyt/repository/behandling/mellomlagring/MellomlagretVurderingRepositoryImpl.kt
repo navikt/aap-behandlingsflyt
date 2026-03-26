@@ -93,21 +93,14 @@ class MellomlagretVurderingRepositoryImpl(private val connection: DBConnection) 
     }
 
     override fun lagre(mellomlagretVurdering: MellomlagretVurdering): MellomlagretVurdering {
-
-        connection.execute(
-            """ 
-            DELETE FROM MELLOMLAGRET_VURDERING WHERE behandling_id = ? AND avklaringsbehov_kode = ?
-        """.trimIndent()
-        ) {
-            setParams {
-                setLong(1, mellomlagretVurdering.behandlingId.id)
-                setEnumName(2, mellomlagretVurdering.avklaringsbehovKode)
-            }
-        }
         connection.execute(
             """
             INSERT INTO MELLOMLAGRET_VURDERING (behandling_id, avklaringsbehov_kode, data, vurdert_av, vurdert_dato)
             VALUES (?, ?, ?::jsonb, ?, ?)
+            ON CONFLICT (behandling_id, avklaringsbehov_kode) DO UPDATE SET
+                data        = EXCLUDED.data,
+                vurdert_av  = EXCLUDED.vurdert_av,
+                vurdert_dato = EXCLUDED.vurdert_dato
         """.trimIndent()
         ) {
             setParams {

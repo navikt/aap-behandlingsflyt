@@ -8,16 +8,21 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivVedta
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingReferanse
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingRepository
 import no.nav.aap.behandlingsflyt.flyt.FlytOrkestrator
+import no.nav.aap.behandlingsflyt.hendelse.datadeling.ApiInternGateway
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
-import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
+import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
+import no.nav.aap.behandlingsflyt.prosessering.MeldekortGateway
+import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.StegTilstand
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.IdentGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.repository.RepositoryProvider
@@ -37,17 +42,29 @@ class Driftfunksjoner(
     private val flytOrkestratorUtenSavepoints: FlytOrkestrator,
     private val brevbestillingRepository: BrevbestillingRepository,
     private val avklaringsbehovOrkestrator: AvklaringsbehovOrkestrator,
-    private val avklaringsbehovRepository: AvklaringsbehovRepository
+    private val avklaringsbehovRepository: AvklaringsbehovRepository,
+    private val personRepository: PersonRepository,
+    private val identGateway: IdentGateway,
+    private val meldekortGateway: MeldekortGateway,
+    private val apiInternGateway: ApiInternGateway,
 ) {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         sakRepository = repositoryProvider.provide(),
         behandlingRepository = repositoryProvider.provide(),
         taSkriveLåsRepository = repositoryProvider.provide(),
         flytOrkestrator = FlytOrkestrator(repositoryProvider, gatewayProvider),
-        flytOrkestratorUtenSavepoints = FlytOrkestrator(repositoryProvider, gatewayProvider, markSavepointAt = emptySet()),
+        flytOrkestratorUtenSavepoints = FlytOrkestrator(
+            repositoryProvider,
+            gatewayProvider,
+            markSavepointAt = emptySet()
+        ),
         brevbestillingRepository = repositoryProvider.provide(),
         avklaringsbehovOrkestrator = AvklaringsbehovOrkestrator(repositoryProvider, gatewayProvider),
         avklaringsbehovRepository = repositoryProvider.provide(),
+        personRepository = repositoryProvider.provide(),
+        identGateway = gatewayProvider.provide(),
+        meldekortGateway = gatewayProvider.provide(),
+        apiInternGateway = gatewayProvider.provide(),
     )
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -82,7 +99,11 @@ class Driftfunksjoner(
         }
     }
 
-    fun avbrytVedtsaksbrevBestilling(bruker: Bruker, brevbestillingReferanse: BrevbestillingReferanse, begrunnelse: String) {
+    fun avbrytVedtsaksbrevBestilling(
+        bruker: Bruker,
+        brevbestillingReferanse: BrevbestillingReferanse,
+        begrunnelse: String
+    ) {
         val bestilling = brevbestillingRepository.hent(brevbestillingReferanse)
             ?: throw UgyldigForespørselException("Fant ingen brevbestilling med referanse $brevbestillingReferanse")
 
@@ -124,8 +145,40 @@ class Driftfunksjoner(
 
             val nyttAktivtSteg = behandlingRepository.hent(behandling.id).aktivtSteg()
             val avklaringsbehovEtterEndring = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id).åpne()
-            validerGyldigTilstandEtterUtvidelseAvRettighetsperiode(nyttAktivtSteg, behandling, avklaringsbehovFørEndring, avklaringsbehovEtterEndring)
+            validerGyldigTilstandEtterUtvidelseAvRettighetsperiode(
+                nyttAktivtSteg,
+                behandling,
+                avklaringsbehovFørEndring,
+                avklaringsbehovEtterEndring
+            )
         }
+    }
+
+    fun oppdaterPersonIdenter(sak: Saksnummer) {
+        val sak = sakRepository.hent(sak)
+        val identliste = identGateway.hentAlleIdenterForPerson(sak.person.aktivIdent())
+        check(identliste.isNotEmpty()) { "Fikk ingen treff på ident i PDL" }
+
+        val nyeIdenter = identliste.filterNot {
+            sak.person.identer().map(Ident::identifikator).contains(it.identifikator)
+        }.also { nyeIdenter ->
+            log.info(" ${nyeIdenter.size} ny(e) identer i PDL for sak.")
+        }
+
+        val erNyAktiv = sak.person.identer().find { it.aktivIdent } != identliste.find { it.aktivIdent }
+
+        if (nyeIdenter.isNotEmpty() || erNyAktiv) {
+            log.info(
+                "Oppdaterer identer for person i sak ${sak.saksnummer} med ${nyeIdenter.size} ny(e) identer fra PDL." +
+                        " Er aktiv ident endret: $erNyAktiv."
+            )
+        } else {
+            log.info("Fant ingen nye identer eller ny aktiv ident i PDL for person i sak ${sak.saksnummer}.")
+        }
+
+        val person = personRepository.finnEllerOpprett(identliste)
+        meldekortGateway.oppdaterIdenter(saksnummer = sak.saksnummer, identer = person.identer())
+        apiInternGateway.oppdaterIdenter(sak.saksnummer, person.identer())
     }
 
     private fun validerGyldigTilstandFørUtvidelseAvRettighetsperiode(
