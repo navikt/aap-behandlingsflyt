@@ -149,8 +149,14 @@ data class YrkesskadeSak(
 
 enum class ErNedsettelseMinstHalvpartenValg {
     JA,
+    JA_FORBIGÅENDE_PROBLEMER,
     NEI,
-    FORBIGÅENDE_PROBLEMER
+}
+
+enum class ErNedsettelseMerEnnYrkesskadegrenseValg {
+    JA,
+    JA_FORBIGÅENDE_PROBLEMER,
+    NEI,
 }
 
 
