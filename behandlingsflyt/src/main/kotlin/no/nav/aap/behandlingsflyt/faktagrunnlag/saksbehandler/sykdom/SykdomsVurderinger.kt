@@ -156,7 +156,7 @@ enum class ErNedsettelseMinstHalvpartenValg {
 enum class ErNedsettelseMerEnnYrkesskadegrenseValg {
     JA,
     JA_FORBIGÅENDE_PROBLEMER,
-    NEI,
+    NEI
 }
 
 
