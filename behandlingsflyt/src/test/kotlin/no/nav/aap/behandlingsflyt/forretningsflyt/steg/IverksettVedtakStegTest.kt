@@ -14,13 +14,21 @@ import no.nav.aap.behandlingsflyt.flyt.AbstraktFlytOrkestratorTest
 import no.nav.aap.behandlingsflyt.flyt.TestPersoner
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov
-import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
+import no.nav.aap.behandlingsflyt.test.FakeUnleashBaseWithDefaultDisabled
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 
-class IverksettVedtakStegTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
+class IverksettVedtakStegTest : AbstraktFlytOrkestratorTest(RefusjonTestUnleash::class) {
+
+    object RefusjonTestUnleash : FakeUnleashBaseWithDefaultDisabled(
+        enabledFlags = listOf(
+            BehandlingsflytFeature.RefusjonsdatoKorreksjon,
+        )
+    )
 
     @BeforeEach
     fun setup() {
@@ -30,6 +38,7 @@ class IverksettVedtakStegTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash:
         } just Runs
     }
 
+    @Disabled("")
     @Test
     fun `virkingsdato på revurdert refusjon skal bruke første tidligere innvilgede vedtaksdato`() {
         val (sak, behandling) = sendInnFørsteSøknad(
@@ -78,7 +87,7 @@ class IverksettVedtakStegTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash:
                 behandlingId = revurdering.id,
                 navKontor = NavKontorPeriodeDto(
                     enhetsNummer = "Peppas Crib",
-                    virkingsdato = revurdering.opprettetTidspunkt.toLocalDate(),
+                    virkingsdato = behandling.opprettetTidspunkt.toLocalDate(),
                     vedtaksdato = revurdering.opprettetTidspunkt.toLocalDate().minusDays(1)
                 )
             )

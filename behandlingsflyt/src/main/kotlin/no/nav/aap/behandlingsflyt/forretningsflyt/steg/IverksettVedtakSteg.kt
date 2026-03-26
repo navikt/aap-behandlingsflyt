@@ -124,8 +124,31 @@ class IverksettVedtakSteg private constructor(
         }
     }
 
-    private fun utledTidligsteMuligeVirkningstidspunkt(behandling: Behandling): Vedtak? {
-        behandling.forrigeBehandlingId ?: return null
+    private fun finnVedtakMedTidligsteVirkningstidspunkt(behandling: Behandling): Vedtak? {
+        val alleBehandling =
+            behandlingRepository.hentAlleFor(behandling.sakId, TypeBehandling.ytelseBehandlingstyper())
+        val vedtakPåBehandling = alleBehandling.mapNotNull {
+            vedtakService.hentVedtak(it.id)
+        }
+
+        val vedtakMedVirkningstidspunkt = vedtakPåBehandling
+            .filter { it.virkningstidspunkt != null }
+
+        val tidligsteVirkningstidspunkt = vedtakMedVirkningstidspunkt
+            .mapNotNull { it.virkningstidspunkt }.minOrNull()
+            ?: error("Ingen vedtak med virkningstidspunkt funnet")
+
+        val alleVedtakMedTidligsteVirkningstidspunkt = vedtakMedVirkningstidspunkt
+            .filter { tidligsteVirkningstidspunkt.isEqual(it.virkningstidspunkt) }
+
+        if (alleVedtakMedTidligsteVirkningstidspunkt.size == 1 && alleVedtakMedTidligsteVirkningstidspunkt.first().behandlingId == behandling.id) {
+            return alleVedtakMedTidligsteVirkningstidspunkt.first()
+        }
+        return null
+    }
+
+    private fun utledTidligsteMuligeVedtakstidspunkt(behandling: Behandling, vedtakstidspunkt: LocalDate): LocalDate {
+        behandling.forrigeBehandlingId ?: return vedtakstidspunkt
 
         val alleYtelsesbehandlingerPåSak =
             behandlingRepository.hentAlleFor(behandling.sakId, TypeBehandling.ytelseBehandlingstyper())
@@ -138,7 +161,8 @@ class IverksettVedtakSteg private constructor(
             vedtakService.hentVedtak(it.id)
         }
 
-        return alleInnvilgedeVedtak.minByOrNull { it.vedtakstidspunkt}
+        return alleInnvilgedeVedtak.minByOrNull { it.vedtakstidspunkt }?.vedtakstidspunkt?.toLocalDate()
+            ?: vedtakstidspunkt
     }
 
     private fun finnTidligesteVedtakstidspunktFraTidligereBehandlinger(
@@ -172,29 +196,31 @@ class IverksettVedtakSteg private constructor(
             if (!erInnvilgetMedEtterbetaling) {
                 return
             }
-            val vedtakMedTidligsteVirkingsdato = utledTidligsteMuligeVirkningstidspunkt(behandling) ?: vedtak
+            val vedtakMedTidligsteVirkingsdato = finnVedtakMedTidligsteVirkningstidspunkt(behandling)
             if (vedtakMedTidligsteVirkingsdato?.virkningstidspunkt == null) {
                 log.info("Tidligste virkningsdato er i en tidligere eller sametiding behandling enn ${kontekst.behandlingId}, så ingen oppgave opprettes")
                 return
             }
 
-            val tidligsteVedtaksTidspunkt = finnTidligesteVedtakstidspunktFraTidligereBehandlinger(
-                behandling,
-                vedtak.vedtakstidspunkt.toLocalDate()
-            )
-
-            val virkningsdato = if (behandling.typeBehandling() == TypeBehandling.Revurdering) {
-                vedtakMedTidligsteVirkingsdato.vedtakstidspunkt.toLocalDate()
-            } else {
-                vedtakMedTidligsteVirkingsdato.virkningstidspunkt
-            }
+            val tidligsteMuligeVedtakstidspunkt =
+                if (unleashGateway.isEnabled(BehandlingsflytFeature.RefusjonsdatoKorreksjon)) {
+                    utledTidligsteMuligeVedtakstidspunkt(
+                        behandling,
+                        vedtak.vedtakstidspunkt.toLocalDate()
+                    )
+                } else {
+                    finnTidligesteVedtakstidspunktFraTidligereBehandlinger(
+                        behandling,
+                        vedtak.vedtakstidspunkt.toLocalDate()
+                    )
+                }
 
             val gjeldendeSosialRefusjonDtoer = navkontorSosialRefusjon
                 .filter { it.harKrav && it.navKontor != null }
                 .map {
                     it.tilNavKontorPeriodeDto(
-                        virkningsdato = virkningsdato,
-                        vedtaksdato = tidligsteVedtaksTidspunkt.minusDays(1)
+                        virkningsdato = vedtakMedTidligsteVirkingsdato.virkningstidspunkt,
+                        vedtaksdato = tidligsteMuligeVedtakstidspunkt.minusDays(1)
                     )
                 }
                 .toSet()
