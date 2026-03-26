@@ -49,6 +49,7 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.RefusjonkravIRevurdering to true,
         BehandlingsflytFeature.SignaturEnhetFraOppgave to true,
         BehandlingsflytFeature.hentDagpengerPerioder to true,
+        BehandlingsflytFeature.hentTiltakspengerPerioder to true,
         BehandlingsflytFeature.VedtakslengdeAvklaringsbehov to true,
         BehandlingsflytFeature.UtvidVedtakslengdeUnderEttAr to true,
         BehandlingsflytFeature.hentUforesoknadsdata to true,
