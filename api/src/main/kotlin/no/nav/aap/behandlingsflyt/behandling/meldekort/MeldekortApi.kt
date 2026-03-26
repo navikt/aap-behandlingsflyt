@@ -83,13 +83,21 @@ private fun nyesteMeldekortForMeldeperiode(
 }
 
 /**
- * Henter meldeperioder som er aktuelle å endre for saksbehandler.
- * - Perioden må ha rettighetstype
- * - Meldeperioder bakover i tid skal inkluderes
- * - Inneværende periode skal inkluderes
+ * Henter meldeperioder som kan være aktuelle å endre for saksbehandler. Følgende kriterier gjelder:
+ * - Perioden må ha en rettighetstype
+ * - Meldeperioder bakover i tid inkluderes
+ * - Inneværende periode inkluderes
+ * - Perioder frem i tid inkluderes ikke
  *
  * Verdt å merke seg at dersom meldeplikten ikke er oppfylt for en periode, så vil Utfall == IKKE_OPPFYLT, mens
  * rettighetstypen vil fortsatt være satt. Dermed kan saksbehandler kunne sette timer i meldekortet for perioden.
+ * Utfallet vil bli 0 utbetaling dersom saksbehandler ikke gjør annet enn å føre timer, og man er forbi meldevinduet.
+ *
+ * For at en bruker som i utgangspunktet ikke har oppfylt meldeplikten (ikke meldt seg til NKS, ikke sendt inn meldekort)
+ * skal få utbetalt, må saksbehandler sørge for at meldeplikten oppfylles, enten ved
+ * - Sette mottattdato på dokumentet innenfor meldevinduet. Dette er riktig dersom saksbehandler bare har vært treig med å legge inn timene.
+ * - Gi fritak, dersom bruker skulle hatt fritak.
+ * - Gi rimelig grunn, dersom bruker faktisk hadde rimelig grunn til ikke å ha meldt seg.
  */
 private fun hentAktuelleMeldeperioder(
     underveisGrunnlag: UnderveisGrunnlag,
