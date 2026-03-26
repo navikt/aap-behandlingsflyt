@@ -86,6 +86,8 @@ import no.nav.aap.behandlingsflyt.flyt.behandlingApi
 import no.nav.aap.behandlingsflyt.flyt.flytApi
 import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaConsumerConfig
 import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaKonsument
+import no.nav.aap.behandlingsflyt.hendelse.kafka.foreldrepenger.FORELDREPENGEVEDTAK_EVENT_TOPIC
+import no.nav.aap.behandlingsflyt.hendelse.kafka.foreldrepenger.ForeldrepengevedtakKafkaKonsument
 import no.nav.aap.behandlingsflyt.hendelse.kafka.inst2.INSTITUSJONSOPPHOLD_EVENT_TOPIC
 import no.nav.aap.behandlingsflyt.hendelse.kafka.inst2.InstitusjonsOppholdKafkaKonsument
 import no.nav.aap.behandlingsflyt.hendelse.kafka.klage.KABAL_EVENT_TOPIC
@@ -356,6 +358,9 @@ private fun Application.startKafkakonsumenter(
         startInstitusjonsOppholdKonsument(dataSource, repositoryRegistry, gatewayProvider)
         startUføreVedtakEventKonsument(dataSource, repositoryRegistry, gatewayProvider)
     }
+    if (Miljø.erDev()) {
+        startForeldrepengevedtakKonsument(dataSource, repositoryRegistry, gatewayProvider)
+    }
 }
 
 // Bruker leaderElector for å sikre at kun en pod kjører migreringen og spinner opp en egen tråd for å ikke blokkere.
@@ -618,6 +623,43 @@ fun Application.startSykepengevedtakKonsument(
     }
     monitor.subscribe(ApplicationStopping) { env ->
         env.log.info("Forbereder stopp av applikasjon, lukker SykepengevedtakKonsument.")
+
+        // ktor sine eventer kjøres synkront, så vi må kjøre dette asynkront for ikke å blokkere nedstengings-sekvensen
+        env.launch(Dispatchers.IO) {
+            konsument.lukk()
+        }
+    }
+
+    return konsument
+}
+
+fun Application.startForeldrepengevedtakKonsument(
+    dataSource: DataSource,
+    repositoryRegistry: RepositoryRegistry,
+    gatewayProvider: GatewayProvider,
+): KafkaKonsument<String, String> {
+
+    val konsument = ForeldrepengevedtakKafkaKonsument(
+        config = KafkaConsumerConfig(
+            keyDeserializer = StringDeserializer::class.java,
+            valueDeserializer = StringDeserializer::class.java,
+        ),
+        closeTimeout = AppConfig.stansArbeidTimeout,
+        dataSource = dataSource,
+        repositoryRegistry = repositoryRegistry,
+        gatewayProvider = gatewayProvider
+    )
+    monitor.subscribe(ApplicationStarted) {
+        val t = Thread {
+            konsument.konsumer()
+        }
+        t.uncaughtExceptionHandler = Thread.UncaughtExceptionHandler { _, e ->
+            log.error("Konsumering av $FORELDREPENGEVEDTAK_EVENT_TOPIC ble lukket pga uhåndtert feil", e)
+        }
+        t.start()
+    }
+    monitor.subscribe(ApplicationStopping) { env ->
+        env.log.info("Forbereder stopp av applikasjon, lukker ForeldrepengevedtakKonsument.")
 
         // ktor sine eventer kjøres synkront, så vi må kjøre dette asynkront for ikke å blokkere nedstengings-sekvensen
         env.launch(Dispatchers.IO) {

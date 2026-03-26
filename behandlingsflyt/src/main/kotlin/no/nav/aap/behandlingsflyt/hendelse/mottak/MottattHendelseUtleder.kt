@@ -39,6 +39,7 @@ object MottattHendelseUtleder {
             InnsendingType.INSTITUSJONSOPPHOLD -> ÅrsakTilOpprettelse.ENDRING_I_REGISTERDATA
             InnsendingType.FAGSYSTEMINFO_BEHOV_HENDELSE -> ÅrsakTilOpprettelse.FAGSYSTEMINFO_BEHOV_HENDELSE
             InnsendingType.SYKEPENGE_VEDTAK_HENDELSE -> throw IllegalArgumentException("Sykepengevedtakhendelser skal trigge sjekk av informasjonskrav og ikke opprette en behandling direkte")
+            InnsendingType.FORELDREPENGE_VEDTAK_HENDELSE -> throw IllegalArgumentException("Foreldrepengevedtakhendelser skal trigge sjekk av informasjonskrav og ikke opprette en behandling direkte")
             InnsendingType.UFØRE_VEDTAK_HENDELSE -> ÅrsakTilOpprettelse.ENDRING_I_REGISTERDATA
         }
     }
@@ -97,6 +98,7 @@ object MottattHendelseUtleder {
             InnsendingType.TILBAKEKREVING_HENDELSE,
             InnsendingType.FAGSYSTEMINFO_BEHOV_HENDELSE,
             InnsendingType.SYKEPENGE_VEDTAK_HENDELSE,
+            InnsendingType.FORELDREPENGE_VEDTAK_HENDELSE,
             InnsendingType.UFØRE_VEDTAK_HENDELSE -> emptyList()
         }
     }
