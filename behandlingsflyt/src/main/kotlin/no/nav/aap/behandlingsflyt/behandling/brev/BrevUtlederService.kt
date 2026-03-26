@@ -112,7 +112,7 @@ class BrevUtlederService(
 
                 return when (resultat) {
                     Resultat.INNVILGELSE -> {
-                        if (harRettighetsType(behandling.id, RettighetsType.VURDERES_FOR_UFØRETRYGD)
+                        if (harNyRettighetstype(behandling, RettighetsType.VURDERES_FOR_UFØRETRYGD)
                         ) {
                             brevBehovVurderesForUføretrygd(behandling)
                         } else {
@@ -134,7 +134,7 @@ class BrevUtlederService(
                 if (resultat == Resultat.AVBRUTT) {
                     return null
                 }
-                
+
                 if (skalSendeVedtakForArbeidsopptrapping) {
                     return VedtakArbeidsopptrapping11_23SjetteLedd
                 }
@@ -161,21 +161,11 @@ class BrevUtlederService(
                 if (vurderingsbehov == setOf(UTVID_VEDTAKSLENGDE)) {
                     return brevBehovUtvidVedtakslengde(behandling)
                 }
-                
-                if (harRettighetsType(
-                        behandling.id,
-                        RettighetsType.VURDERES_FOR_UFØRETRYGD
-                    ) && forrigeBehandlingId != null && !harRettighetsType(
-                        forrigeBehandlingId,
-                        RettighetsType.VURDERES_FOR_UFØRETRYGD
-                    )
-                ) {
+
+                if (harNyRettighetstype(behandling, RettighetsType.VURDERES_FOR_UFØRETRYGD)) {
                     return brevBehovVurderesForUføretrygd(behandling)
                 }
-                if (harRettighetsType(behandling.id, RettighetsType.ARBEIDSSØKER) &&
-                    forrigeBehandlingId != null &&
-                    !harRettighetsType(forrigeBehandlingId, RettighetsType.ARBEIDSSØKER)
-                ) {
+                if (harNyRettighetstype(behandling, RettighetsType.ARBEIDSSØKER)) {
                     return brevBehovArbeidssøker(behandling)
                 }
                 return VedtakEndring
@@ -501,13 +491,22 @@ class BrevUtlederService(
         return Beløp(grunnlagetBeløp.verdi.setScale(0, RoundingMode.HALF_UP))
     }
 
-    private fun harRettighetsType(behandlingId: BehandlingId, rettighetsType: RettighetsType): Boolean {
-        return underveisRepository.hentHvisEksisterer(behandlingId)
-            ?.perioder
-            .orEmpty()
-            .any {
-                it.utfall == Utfall.OPPFYLT &&
-                        it.rettighetsType == rettighetsType
-            }
+    private fun harNyRettighetstype(
+        behandling: Behandling,
+        rettighetsType: RettighetsType
+    ): Boolean {
+        val forrigeRettighetsTyper = behandling.forrigeBehandlingId?.let(::rettighetstyperForBehandling) ?: emptySet()
+        val nyRettighetsTyper = rettighetstyperForBehandling(behandling.id)
+
+        val harKunEndretTilDenNyeRettighetstypen = (nyRettighetsTyper - forrigeRettighetsTyper) == setOf(rettighetsType)
+        val harBareLagtTilRettighetstyper = (forrigeRettighetsTyper - nyRettighetsTyper).isEmpty()
+        val erEnTilEnErstatning = forrigeRettighetsTyper.size == 1 && nyRettighetsTyper.size == 1
+
+        return harKunEndretTilDenNyeRettighetstypen && (harBareLagtTilRettighetstyper || erEnTilEnErstatning)
+    }
+
+    private fun rettighetstyperForBehandling(behandlingId: BehandlingId): Set<RettighetsType> {
+        val underveis = underveisRepository.hentHvisEksisterer(behandlingId)?.perioder ?: emptyList()
+        return underveis.filter { it.utfall == Utfall.OPPFYLT }.mapNotNull { it.rettighetsType }.toSet()
     }
 }
