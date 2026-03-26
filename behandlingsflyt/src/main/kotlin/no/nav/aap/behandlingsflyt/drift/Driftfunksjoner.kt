@@ -169,15 +169,16 @@ class Driftfunksjoner(
 
         if (nyeIdenter.isNotEmpty() || erNyAktiv) {
             log.info(
-                "Oppdaterer identer for person i sak ${sak.saksnummer} med ${nyeIdenter.size} ny(e) identer fra" +
-                        "  ${sak.saksnummer} PDL. Er aktiv ident endret: $erNyAktiv."
+                "Oppdaterer identer for person i sak ${sak.saksnummer} med ${nyeIdenter.size} ny(e) identer fra PDL." +
+                        " Er aktiv ident endret: $erNyAktiv."
             )
-            val person = personRepository.finnEllerOpprett(identliste)
-            meldekortGateway.oppdaterIdenter(saksnummer = sak.saksnummer, identer = person.identer())
-            apiInternGateway.oppdaterIdenter(sak.saksnummer, person.identer())
         } else {
             log.info("Fant ingen nye identer eller ny aktiv ident i PDL for person i sak ${sak.saksnummer}.")
         }
+
+        val person = personRepository.finnEllerOpprett(identliste)
+        meldekortGateway.oppdaterIdenter(saksnummer = sak.saksnummer, identer = person.identer())
+        apiInternGateway.oppdaterIdenter(sak.saksnummer, person.identer())
     }
 
     private fun validerGyldigTilstandFørUtvidelseAvRettighetsperiode(
