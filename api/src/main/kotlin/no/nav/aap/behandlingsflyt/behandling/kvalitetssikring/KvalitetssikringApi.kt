@@ -161,11 +161,14 @@ private fun tilKvalitetssikring(it: no.nav.aap.behandlingsflyt.behandling.avklar
             it.aktivHistorikk.lastOrNull {
                 it.status in setOf(
                     Status.SENDT_TILBAKE_FRA_KVALITETSSIKRER,
-                    Status.KVALITETSSIKRET
+                    Status.KVALITETSSIKRET,
                 )
             }
 
-        val godkjent = it.status() == Status.KVALITETSSIKRET
+        val godkjent = when (it.status()) {
+            Status.AVSLUTTET -> null
+            else -> it.status() == Status.KVALITETSSIKRET
+        }
 
         TotrinnsVurdering(
             it.definisjon.kode,
