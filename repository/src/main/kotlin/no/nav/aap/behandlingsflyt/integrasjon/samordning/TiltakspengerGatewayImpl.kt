@@ -17,7 +17,7 @@ import java.net.URI
 import java.time.LocalDate
 
 // https://tiltakspenger-datadeling.intern.dev.nav.no/swagger
-class TiltakspengerGatewayImpl: TiltakspengerGateway {
+class TiltakspengerGatewayImpl : TiltakspengerGateway {
     private val url = URI.create(requiredConfigForKey("integrasjon.tiltakspenger.url") + "/vedtak/perioder")
     private val config = ClientConfig(scope = requiredConfigForKey("integrasjon.tiltakspenger.scope"))
 
@@ -31,14 +31,14 @@ class TiltakspengerGatewayImpl: TiltakspengerGateway {
         config = config, tokenProvider = ClientCredentialsTokenProvider, prometheus = prometheus
     )
 
-    private fun query(request: TiltakspengerRequest): TiltakspengerResponse {
+    private fun query(request: TiltakspengerRequest): List<TiltakspengerVedtakResponse> {
         val httpRequest = PostRequest(
             body = request, additionalHeaders = listOf(
                 Header("Accept", "application/json")
             )
         )
 
-        val response: TiltakspengerResponse? = client.post(uri = url, request = httpRequest)
+        val response: List<TiltakspengerVedtakResponse>? = client.post(uri = url, request = httpRequest)
         return requireNotNull(response)
     }
 
@@ -49,35 +49,34 @@ class TiltakspengerGatewayImpl: TiltakspengerGateway {
     ): List<TiltakspengerPeriode> {
         return query(
             TiltakspengerRequest(
-                personIdent = personidentifikatorer,
-                fraOgMedDato = fom.toString(),
-                tilOgMedDato = tom.toString()
+                ident = personidentifikatorer,
+                fom = fom.toString(),
+                tom = tom.toString()
             )
-        ).perioder.map {
+        ).map { vedtak ->
             TiltakspengerPeriode(
-                fraOgMed = it.fraOgMedDato,
-                tilOgMed = it.tilOgMedDato,
-                kilde = it.kilde,
-                tiltakspengerYtelseType = it.ytelseType
+                fraOgMed = vedtak.periode.fraOgMed,
+                tilOgMed = vedtak.periode.tilOgMed,
+                kilde = vedtak.kilde,
+                tiltakspengerYtelseType = vedtak.rettighet
             )
         }
     }
 }
 
-internal data class TiltakspengerRequest(
-    val personIdent: String,
-    val fraOgMedDato: String,
-    val tilOgMedDato: String
+data class TiltakspengerRequest(
+    val ident: String,
+    val fom: String,
+    val tom: String
 )
 
-internal class TiltakspengerPeriodeResponse(
-    val fraOgMedDato: LocalDate,
-    val tilOgMedDato: LocalDate,
+data class TiltakspengerPeriodeResponse(
+    val fraOgMed: LocalDate,
+    val tilOgMed: LocalDate
+)
+
+data class TiltakspengerVedtakResponse(
+    val rettighet: TiltakspengerYtelseType,
+    val periode: TiltakspengerPeriodeResponse,
     val kilde: TiltakspengerKilde,
-    val ytelseType: TiltakspengerYtelseType
-)
-
-internal class TiltakspengerResponse(
-    val personIdent: String,
-    val perioder: List<TiltakspengerPeriodeResponse>
 )
