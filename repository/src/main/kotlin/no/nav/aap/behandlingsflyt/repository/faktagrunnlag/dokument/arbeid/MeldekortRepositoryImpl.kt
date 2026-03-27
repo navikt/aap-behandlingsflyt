@@ -60,7 +60,7 @@ class MeldekortRepositoryImpl(private val connection: DBConnection) : MeldekortR
             }
             setRowMapper {
                 Meldekort(
-                    InnsendingReferanse(InnsendingReferanse.Type.valueOf(it.getString("referanse_type")), it.getString("journalpost")),
+                    InnsendingReferanse(InnsendingReferanse.Type.valueOf(it.getString("referanse_type")), it.getString("referanse")),
                     hentTimerPerPeriode(it.getLong("id")),
                     it.getLocalDateTime("mottatt_tidspunkt"),
                     begrunnelse = it.getStringOrNull("begrunnelse"),
@@ -126,16 +126,16 @@ class MeldekortRepositoryImpl(private val connection: DBConnection) : MeldekortR
 
         meldekortene.forEach { meldekort ->
             val query = """
-            INSERT INTO MELDEKORT (journalpost, meldekortene_id, mottatt_tidspunkt, begrunnelse, opprettet_av, referanse_type) VALUES (?, ?, ?, ?, ?, ?)
+            INSERT INTO MELDEKORT (referanse, referanse_type, meldekortene_id, mottatt_tidspunkt, begrunnelse, opprettet_av) VALUES (?, ?, ?, ?, ?, ?)
             """.trimIndent()
             val meldekortId = connection.executeReturnKey(query) {
                 setParams {
                     setString(1, meldekort.referanse.verdi)
-                    setLong(2, meldekorteneId)
-                    setLocalDateTime(3, meldekort.mottattTidspunkt)
-                    setString(4, meldekort.begrunnelse)
-                    setString(5, meldekort.opprettetAv)
-                    setString(6, meldekort.referanse.type.name)
+                    setString(2, meldekort.referanse.type.name)
+                    setLong(3, meldekorteneId)
+                    setLocalDateTime(4, meldekort.mottattTidspunkt)
+                    setString(5, meldekort.begrunnelse)
+                    setString(6, meldekort.opprettetAv)
                 }
             }
 
