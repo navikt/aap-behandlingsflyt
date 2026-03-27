@@ -69,11 +69,6 @@ class TestSakService(
             sakRepository
         )
 
-        val periode = Periode(
-            LocalDate.now(),
-            Tid.MAKS
-        )
-
         val eksisterendeSaker = personOgSakService.finnSakerFor(ident)
         if (eksisterendeSaker.isNotEmpty()) {
             throw OpprettTestSakException(
@@ -83,7 +78,7 @@ class TestSakService(
             )
         }
 
-        val sak = personOgSakService.finnEllerOpprett(ident, periode)
+        val sak = personOgSakService.finnEllerOpprett(ident, LocalDate.now())
 
         val melding = SøknadV0(
             student = SøknadStudentDto(erStudent = erStudent.toJaNei()),

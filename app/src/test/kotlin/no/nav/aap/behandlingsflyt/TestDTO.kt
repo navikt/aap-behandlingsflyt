@@ -34,6 +34,7 @@ data class OpprettTestcaseDTO(
     val institusjoner: Institusjoner = Institusjoner(),
     val sykepenger: List<TestPerson.Sykepenger> = emptyList(),
     val dagpenger: List<TestPerson.Dagpenger> = emptyList(),
+    val tiltakspenger: List<TestPerson.Tiltakspenger> = emptyList(),
     val søknadsdato: LocalDate? = null,
     val andreUtbetalinger: AndreUtbetalingerDto? = null,
     val steg: StegType? = null,

@@ -50,7 +50,7 @@ class DatadelingMeldekortService(
         }
 
         val kontraktObjekter = meldekortene.mapNotNull { meldekort ->
-            val arbeidsperiode = arbeidsperiodeFraMeldekort(meldekort)
+            val arbeidsperiode = meldekort.arbeidsperiode()
             val meldekortetsPeriode = finnMeldekortetsPeriode(arbeidsperiode, meldePeriodene)
 
             if (arbeidsperiode == null) {
@@ -137,22 +137,5 @@ class DatadelingMeldekortService(
                 it.inneholder(arbeidsperiode)
             }
         }
-    }
-
-    /**
-    @return Tidsperioden meldekortet inneholder arbeidstimer for.
-    Merk at det kan være dager i perioden meldekortet gjelder for som det ikke er rapportert timer på.
-    @param meldekort -
-     **/
-    private fun arbeidsperiodeFraMeldekort(meldekort: Meldekort): Periode? {
-        val timerArbeidPerPeriode = meldekort.timerArbeidPerPeriode
-        if (timerArbeidPerPeriode.isEmpty()) {
-            return null
-        }
-        val arbeidPerioder = timerArbeidPerPeriode.map { it.periode }
-        val arbeidsPerioderStart = arbeidPerioder.minBy { it.fom }.fom
-        val arbeidsPerioderSlutt = arbeidPerioder.maxBy { it.tom }.tom
-
-        return Periode(arbeidsPerioderStart, arbeidsPerioderSlutt)
     }
 }

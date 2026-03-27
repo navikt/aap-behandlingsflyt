@@ -19,6 +19,22 @@ data class Meldekort(
             Segment(it.periode, it.timerArbeid to it.periode.antallDager())
         }.toList())
     }
+
+    /**
+    @return Tidsperioden meldekortet inneholder arbeidstimer for.
+    Merk at det kan være dager i perioden meldekortet gjelder for som det ikke er rapportert timer på.
+    @param meldekort -
+     **/
+    fun arbeidsperiode(): Periode? {
+        if (timerArbeidPerPeriode.isEmpty()) {
+            return null
+        }
+        val arbeidPerioder = timerArbeidPerPeriode.map { it.periode }
+        val arbeidsPerioderStart = arbeidPerioder.minBy { it.fom }.fom
+        val arbeidsPerioderSlutt = arbeidPerioder.maxBy { it.tom }.tom
+
+        return Periode(arbeidsPerioderStart, arbeidsPerioderSlutt)
+    }
 }
 /**
  * Representerer arbeid i en Periode på et Meldekort.
