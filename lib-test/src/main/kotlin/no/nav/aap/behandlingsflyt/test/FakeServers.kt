@@ -29,6 +29,8 @@ import no.nav.aap.behandlingsflyt.datadeling.sam.SamordneVedtakRespons
 import no.nav.aap.behandlingsflyt.datadeling.sam.SamordningsmeldingApi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.gateway.DagpengerKilde
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.gateway.DagpengerYtelseType
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.gateway.TiltakspengerKilde
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.gateway.TiltakspengerYtelseType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.gateway.TjenestePensjonRespons
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.Anvist
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.ForeldrepengerRequest
@@ -77,8 +79,6 @@ import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlIdenterData
 import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlIdenterDataResponse
 import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlNavn
 import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlNavnData
-import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlNavnDataBolk
-import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlPersonBolk
 import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlPersonNavnDataResponse
 import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlPersoninfo
 import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlPersoninfoData
@@ -143,7 +143,6 @@ import java.time.format.DateTimeFormatter
 import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
-import kotlin.collections.emptyList
 
 object FakeServers : AutoCloseable {
     private val log = LoggerFactory.getLogger(javaClass)
@@ -177,6 +176,7 @@ object FakeServers : AutoCloseable {
     private val gosys = embeddedServer(Netty, port = 0, module = { gosysFake() })
     private val leaderElector = embeddedServer(Netty, port = 0, module = { leaderElectorFake() })
     private val dagpenger = embeddedServer(Netty, port = 0, module = { dagpengerFake() })
+    private val tiltakspenger = embeddedServer(Netty, port = 0, module = { tiltakspengerFake() })
 
     internal val statistikkHendelser = mutableListOf<StoppetBehandling>()
     internal val legeerklæringStatuser = mutableListOf<LegeerklæringStatusResponse>()
@@ -416,6 +416,58 @@ object FakeServers : AutoCloseable {
         }
     }
 
+    private fun Application.tiltakspengerFake() {
+        data class TiltakspengerRequest(
+            val personIdent: String,
+            val fraOgMedDato: String,
+            val tilOgMedDato: String
+        )
+
+        data class TiltakspengerPeriodeResponse(
+            val fraOgMedDato: LocalDate,
+            val tilOgMedDato: LocalDate?,
+            val kilde: TiltakspengerKilde,
+            val ytelseType: TiltakspengerYtelseType
+        )
+
+        data class TiltakspengerResponse(
+            val personIdent: String,
+            val perioder: List<TiltakspengerPeriodeResponse>
+        )
+
+        installerContentNegotiation()
+        routing {
+            route("/vedtak/perioder") {
+                post {
+                    val body = call.receive<TiltakspengerRequest>()
+                    val hentPerson = fakePersoner.hentPerson(body.personIdent)
+                    val tiltakspenger = hentPerson?.tiltakspenger
+                    if (hentPerson != null && tiltakspenger != null) {
+                        call.respond(TiltakspengerResponse(
+                            personIdent = body.personIdent,
+                            perioder = tiltakspenger.map { tp ->
+                                TiltakspengerPeriodeResponse(
+                                    fraOgMedDato = tp.periode.fom,
+                                    tilOgMedDato = tp.periode.tom,
+                                    kilde = tp.kilde,
+                                    ytelseType = tp.ytelseType
+                                )
+                            }.toList()
+                        ))
+                        return@post
+                    }
+
+                    call.respond(
+                        TiltakspengerResponse(
+                            perioder = emptyList(),
+                            personIdent = body.personIdent
+                        )
+                    )
+                }
+            }
+        }
+    }
+
     private fun Application.leaderElectorFake() {
         installerContentNegotiation()
         routing {
@@ -449,7 +501,6 @@ object FakeServers : AutoCloseable {
                     PERSON_QUERY -> call.respond(personopplysninger(req))
                     PERSON_QUERY_HISTORIKK -> call.respond(personopplysningerHistorikk(req))
                     PdlPersoninfoGateway.PERSONINFO_QUERY -> call.respond(navn(req))
-                    PdlPersoninfoGateway.PERSONINFO_BOLK_QUERY -> call.respond(bolknavn(req))
                     BARN_RELASJON_QUERY -> call.respond(barnRelasjoner(req))
                     PERSON_BOLK_QUERY -> call.respond(barn(req))
                     else -> call.respond(HttpStatusCode.BadRequest)
@@ -1475,31 +1526,6 @@ object FakeServers : AutoCloseable {
         )
     }
 
-    private fun bolknavn(req: PdlRequest): PdlPersonNavnDataResponse {
-        val navnData = req.variables.identer?.map {
-            val testPerson = hentEllerGenererTestPerson(it)
-            PdlNavnDataBolk(
-                ident = testPerson.identer.first().identifikator,
-                person =
-                    PdlPersonBolk(
-                        navn = listOf(
-                            PdlNavn(
-                                fornavn = testPerson.navn.fornavn,
-                                mellomnavn = null,
-                                etternavn = testPerson.navn.etternavn
-                            )
-                        )
-                    )
-            )
-        }
-
-        return PdlPersonNavnDataResponse(
-            errors = null,
-            extensions = null,
-            data = HentPerson(hentPersonBolk = navnData)
-        )
-    }
-
     private fun Application.azureFake() {
         install(ContentNegotiation) {
             jackson()
@@ -2009,6 +2035,7 @@ object FakeServers : AutoCloseable {
         kabal.start()
         ereg.start()
         dagpenger.start()
+        tiltakspenger.start()
         gosys.start()
         leaderElector.start()
 
@@ -2089,6 +2116,10 @@ object FakeServers : AutoCloseable {
         // Dagpenger
         System.setProperty("integrasjon.dagpenger.url", "http://localhost:${dagpenger.port()}")
         System.setProperty("integrasjon.dagpenger.scope", "scope")
+
+        // Tiltakspenger
+        System.setProperty("integrasjon.tiltakspenger.url", "http://localhost:${tiltakspenger.port()}")
+        System.setProperty("integrasjon.tiltakspenger.scope", "scope")
 
         // AAregisteret
         System.setProperty("integrasjon.aareg.url", "http://localhost:${aareg.port()}")
@@ -2187,6 +2218,7 @@ object FakeServers : AutoCloseable {
         kabal.stop(0L, 0L)
         ereg.stop(0L, 0L)
         dagpenger.stop(0L, 0L)
+        tiltakspenger.stop(0L, 0L)
         leaderElector.stop(0L, 0L)
     }
 }
