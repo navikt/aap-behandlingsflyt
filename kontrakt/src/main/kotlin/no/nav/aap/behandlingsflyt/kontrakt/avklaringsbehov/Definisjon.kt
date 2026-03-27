@@ -36,7 +36,7 @@ public enum class Definisjon(
         )
     ),
 
-    @Deprecated("Ikke i bruk lenger")
+    @Deprecated("Brukt i tidligere behandlinger")
     BESTILL_BREV(
         kode = AvklaringsbehovKode.`9002`,
         løsesISteg = StegType.UDEFINERT,
@@ -81,7 +81,7 @@ public enum class Definisjon(
         )
     ),
 
-    @Deprecated("Bruk egne definisjoner for forskjellige brev")
+    @Deprecated("Brukt i tidligere behandlinger, bruk egne definisjoner for forskjellige brev")
     SKRIV_BREV(
         kode = AvklaringsbehovKode.`5050`,
         løsesISteg = StegType.UDEFINERT,
@@ -302,7 +302,7 @@ public enum class Definisjon(
         kreverToTrinn = true,
     ),
 
-    @Deprecated("Ikke lenger i bruk, erstattet av oppfølgingsoppgave")
+    @Deprecated("Brukt i tidligere behandlinger, erstattet av oppfølgingsoppgave")
     SAMORDNING_VENT_PA_VIRKNINGSTIDSPUNKT(
         kode = AvklaringsbehovKode.`5025`,
         type = BehovType.VENTEPUNKT,
@@ -332,7 +332,7 @@ public enum class Definisjon(
         kreverToTrinn = true
     ),
 
-    @Deprecated("Ikke i bruk")
+    @Deprecated("Brukt i tidligere behandlinger")
     EFFEKTUER_11_7(
         kode = AvklaringsbehovKode.`5015`,
         type = BehovType.MANUELT_PÅKREVD,
@@ -341,7 +341,7 @@ public enum class Definisjon(
         kreverToTrinn = true,
     ),
 
-    @Deprecated("Ikke i bruk")
+    @Deprecated("Brukt i tidligere behandlinger")
     FORHÅNDSVARSEL_AKTIVITETSPLIKT(
         kode = AvklaringsbehovKode.`5016`,
         type = BehovType.BREV_VENTEPUNKT,
@@ -349,7 +349,7 @@ public enum class Definisjon(
         løsesAv = listOf(Rolle.SAKSBEHANDLER_OPPFOLGING),
     ),
 
-    @Deprecated("Ikke i bruk")
+    @Deprecated("Brukt i tidligere behandlinger")
     VENTE_PÅ_FRIST_EFFEKTUER_11_7(
         kode = AvklaringsbehovKode.`5018`,
         type = BehovType.VENTEPUNKT,
@@ -486,7 +486,7 @@ public enum class Definisjon(
         kreverToTrinn = false
     ),
 
-    @Deprecated("Effektuer-steget er fjernet. Kun bevart for statistikk i DEV")
+    @Deprecated("Brukt i tidligere behandlinger, kun bevart for statistikk i DEV")
     EFFEKTUER_AVVIST_PÅ_FORMKRAV(
         kode = AvklaringsbehovKode.`6004`,
         type = BehovType.MANUELT_PÅKREVD,
@@ -627,9 +627,10 @@ public enum class Definisjon(
         /**
          * Brevpunkter
          */
+        @Deprecated("Brukt i tidligere behandlinger")
         BREV(Definisjon::validerBrevpunkt),
 
-        @Deprecated("Ikke i bruk lenger")
+        @Deprecated("Brukt i tidligere behandlinger")
         BREV_VENTEPUNKT(Definisjon::validerBrevVentepunkt),
 
         /**
