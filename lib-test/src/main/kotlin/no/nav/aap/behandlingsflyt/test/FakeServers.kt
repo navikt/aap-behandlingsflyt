@@ -88,6 +88,9 @@ import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlRelasjonDataResponse
 import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlRequest
 import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlStatsborgerskap
 import no.nav.aap.behandlingsflyt.integrasjon.pdl.PersonStatus
+import no.nav.aap.behandlingsflyt.integrasjon.samordning.DagpengerPeriodeResponse
+import no.nav.aap.behandlingsflyt.integrasjon.samordning.DagpengerRequest
+import no.nav.aap.behandlingsflyt.integrasjon.samordning.DagpengerResponse
 import no.nav.aap.behandlingsflyt.integrasjon.samordning.TiltakspengerPeriodeResponse
 import no.nav.aap.behandlingsflyt.integrasjon.samordning.TiltakspengerRequest
 import no.nav.aap.behandlingsflyt.integrasjon.samordning.TiltakspengerVedtakResponse
@@ -367,23 +370,6 @@ object FakeServers : AutoCloseable {
     }
 
     private fun Application.dagpengerFake() {
-        data class DagpengerRequest(
-            val personIdent: String,
-            val fraOgMedDato: String,
-            val tilOgMedDato: String
-        )
-
-        data class DagpengerPeriodeResponse(
-            val fraOgMedDato: LocalDate,
-            val tilOgMedDato: LocalDate?,
-            val kilde: DagpengerKilde,
-            val ytelseType: DagpengerYtelseType
-        )
-
-        data class DagpengerResponse(
-            val personIdent: String,
-            val perioder: List<DagpengerPeriodeResponse>
-        )
 
         installerContentNegotiation()
         routing {
