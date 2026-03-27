@@ -49,9 +49,9 @@ class TiltakspengerGatewayImpl: TiltakspengerGateway {
     ): List<TiltakspengerPeriode> {
         return query(
             TiltakspengerRequest(
-                personIdent = personidentifikatorer,
-                fraOgMedDato = fom.toString(),
-                tilOgMedDato = tom.toString()
+                ident = personidentifikatorer,
+                fom = fom.toString(),
+                tom = tom.toString()
             )
         ).perioder.map {
             TiltakspengerPeriode(
@@ -65,9 +65,9 @@ class TiltakspengerGatewayImpl: TiltakspengerGateway {
 }
 
 internal data class TiltakspengerRequest(
-    val personIdent: String,
-    val fraOgMedDato: String,
-    val tilOgMedDato: String
+    val ident: String,
+    val fom: String,
+    val tom: String
 )
 
 internal class TiltakspengerPeriodeResponse(
