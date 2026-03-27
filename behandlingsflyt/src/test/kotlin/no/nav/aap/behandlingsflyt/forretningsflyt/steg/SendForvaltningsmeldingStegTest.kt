@@ -31,7 +31,6 @@ import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryMottattDokumentRepos
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryProvider
 import no.nav.aap.behandlingsflyt.test.modell.genererIdent
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.verdityper.dokument.Kanal
 import org.assertj.core.api.Assertions.assertThat
@@ -45,9 +44,7 @@ import java.time.LocalDateTime
 import java.util.*
 
 object SendKlagebrevEnabledOgAltAnnetAvskruddUnleash : FakeUnleashBaseWithDefaultDisabled(
-    enabledFlags = listOf(
-        BehandlingsflytFeature.SendBrevVedMottattKlage
-    )
+    emptyList()
 )
 
 class SendForvaltningsmeldingStegTest {
