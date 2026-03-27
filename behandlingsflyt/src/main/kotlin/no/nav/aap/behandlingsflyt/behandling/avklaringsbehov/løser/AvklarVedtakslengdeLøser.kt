@@ -38,6 +38,11 @@ class AvklarVedtakslengdeLøser(
                 throw UgyldigForespørselException("Sluttdato for vedtakslengde kan ikke være før en tidligere vedtatt sluttdato")
             }
 
+            // Sluttdato må være senere enn hva som er automatisk vurdert
+            if (automatiskVurderingFraBehandlingen.isNotEmpty() && vurdering.sluttdato <= automatiskVurderingFraBehandlingen.first().sluttdato) {
+                throw UgyldigForespørselException("Kan ikke redusere sluttdato for vedtakslengde med manuell vurdering")
+            }
+
             VedtakslengdeVurdering(
                 sluttdato = vurdering.sluttdato,
                 utvidetMed = vedtattGrunnlag?.gjeldendeVurdering()?.utvidetMed ?: ÅrMedHverdager.FØRSTE_ÅR,

@@ -146,7 +146,7 @@ class VedtakslengdeService(
             ?.flatMap { it.vurdering.årsaker }
             ?.toSet() ?: emptySet()
 
-        return `avslagsårsakerFørsteDagUtenBistandsbehovRettighet`
+        return avslagsårsakerFørsteDagUtenBistandsbehovRettighet
     }
 
     fun lagreAutomatiskVedtakslengde(
@@ -350,7 +350,7 @@ class VedtakslengdeService(
     private fun gyldigeAvslagsårsakerForAutomatiskBehandling() =
         setOf(
             Avslagsårsak.BRUKER_OVER_67,
-            Avslagsårsak.IKKE_MEDLEM, // TODO ikke riktig Avslagstype?
+            Avslagsårsak.IKKE_MEDLEM,
             Avslagsårsak.ORDINÆRKVOTE_BRUKT_OPP,
             Avslagsårsak.BRUDD_PÅ_OPPHOLDSKRAV_STANS,
             Avslagsårsak.IKKE_RETT_UNDER_STRAFFEGJENNOMFØRING,
