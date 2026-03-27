@@ -79,8 +79,6 @@ import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlIdenterData
 import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlIdenterDataResponse
 import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlNavn
 import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlNavnData
-import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlNavnDataBolk
-import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlPersonBolk
 import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlPersonNavnDataResponse
 import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlPersoninfo
 import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlPersoninfoData
@@ -90,6 +88,12 @@ import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlRelasjonDataResponse
 import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlRequest
 import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlStatsborgerskap
 import no.nav.aap.behandlingsflyt.integrasjon.pdl.PersonStatus
+import no.nav.aap.behandlingsflyt.integrasjon.samordning.DagpengerPeriodeResponse
+import no.nav.aap.behandlingsflyt.integrasjon.samordning.DagpengerRequest
+import no.nav.aap.behandlingsflyt.integrasjon.samordning.DagpengerResponse
+import no.nav.aap.behandlingsflyt.integrasjon.samordning.TiltakspengerPeriodeResponse
+import no.nav.aap.behandlingsflyt.integrasjon.samordning.TiltakspengerRequest
+import no.nav.aap.behandlingsflyt.integrasjon.samordning.TiltakspengerVedtakResponse
 import no.nav.aap.behandlingsflyt.integrasjon.ufore.UføreHistorikkRespons
 import no.nav.aap.behandlingsflyt.integrasjon.ufore.UførePeriode
 import no.nav.aap.behandlingsflyt.integrasjon.ufore.UføreRequest
@@ -145,7 +149,6 @@ import java.time.format.DateTimeFormatter
 import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
-import kotlin.collections.emptyList
 
 object FakeServers : AutoCloseable {
     private val log = LoggerFactory.getLogger(javaClass)
@@ -367,23 +370,6 @@ object FakeServers : AutoCloseable {
     }
 
     private fun Application.dagpengerFake() {
-        data class DagpengerRequest(
-            val personIdent: String,
-            val fraOgMedDato: String,
-            val tilOgMedDato: String
-        )
-
-        data class DagpengerPeriodeResponse(
-            val fraOgMedDato: LocalDate,
-            val tilOgMedDato: LocalDate?,
-            val kilde: DagpengerKilde,
-            val ytelseType: DagpengerYtelseType
-        )
-
-        data class DagpengerResponse(
-            val personIdent: String,
-            val perioder: List<DagpengerPeriodeResponse>
-        )
 
         installerContentNegotiation()
         routing {
@@ -393,17 +379,19 @@ object FakeServers : AutoCloseable {
                     val hentPerson = fakePersoner.hentPerson(body.personIdent)
                     val dagpenger = hentPerson?.dagpenger
                     if (hentPerson != null && dagpenger != null) {
-                        call.respond(DagpengerResponse(
-                            personIdent = body.personIdent,
-                            perioder = dagpenger.map { dp ->
-                            DagpengerPeriodeResponse(
-                                fraOgMedDato = dp.periode.fom,
-                                tilOgMedDato = dp.periode.tom,
-                                kilde = dp.kilde,
-                                ytelseType = dp.dagpengerYtelseType
+                        call.respond(
+                            DagpengerResponse(
+                                personIdent = body.personIdent,
+                                perioder = dagpenger.map { dp ->
+                                    DagpengerPeriodeResponse(
+                                        fraOgMedDato = dp.periode.fom,
+                                        tilOgMedDato = dp.periode.tom,
+                                        kilde = dp.kilde,
+                                        ytelseType = dp.dagpengerYtelseType
+                                    )
+                                }.toList()
                             )
-                            }.toList()
-                        ))
+                        )
                         return@post
                     }
 
@@ -420,52 +408,28 @@ object FakeServers : AutoCloseable {
     }
 
     private fun Application.tiltakspengerFake() {
-        data class TiltakspengerRequest(
-            val personIdent: String,
-            val fraOgMedDato: String,
-            val tilOgMedDato: String
-        )
-
-        data class TiltakspengerPeriodeResponse(
-            val fraOgMedDato: LocalDate,
-            val tilOgMedDato: LocalDate?,
-            val kilde: TiltakspengerKilde,
-            val ytelseType: TiltakspengerYtelseType
-        )
-
-        data class TiltakspengerResponse(
-            val personIdent: String,
-            val perioder: List<TiltakspengerPeriodeResponse>
-        )
-
         installerContentNegotiation()
         routing {
             route("/vedtak/perioder") {
                 post {
                     val body = call.receive<TiltakspengerRequest>()
-                    val hentPerson = fakePersoner.hentPerson(body.personIdent)
+                    val hentPerson = fakePersoner.hentPerson(body.ident)
                     val tiltakspenger = hentPerson?.tiltakspenger
                     if (hentPerson != null && tiltakspenger != null) {
-                        call.respond(TiltakspengerResponse(
-                            personIdent = body.personIdent,
-                            perioder = tiltakspenger.map { tp ->
-                                TiltakspengerPeriodeResponse(
-                                    fraOgMedDato = tp.periode.fom,
-                                    tilOgMedDato = tp.periode.tom,
-                                    kilde = tp.kilde,
-                                    ytelseType = tp.ytelseType
-                                )
-                            }.toList()
-                        ))
+                        call.respond(tiltakspenger.map { tp ->
+                            TiltakspengerVedtakResponse(
+                                periode = TiltakspengerPeriodeResponse(
+                                    fraOgMed = tp.periode.fom,
+                                    tilOgMed = tp.periode.tom
+                                ),
+                                kilde = tp.kilde,
+                                rettighet = TiltakspengerYtelseType.TILTAKSPENGER
+                            )
+                        })
                         return@post
                     }
 
-                    call.respond(
-                        TiltakspengerResponse(
-                            perioder = emptyList(),
-                            personIdent = body.personIdent
-                        )
-                    )
+                    call.respond(emptyList<TiltakspengerVedtakResponse>())
                 }
             }
         }
@@ -504,7 +468,6 @@ object FakeServers : AutoCloseable {
                     PERSON_QUERY -> call.respond(personopplysninger(req))
                     PERSON_QUERY_HISTORIKK -> call.respond(personopplysningerHistorikk(req))
                     PdlPersoninfoGateway.PERSONINFO_QUERY -> call.respond(navn(req))
-                    PdlPersoninfoGateway.PERSONINFO_BOLK_QUERY -> call.respond(bolknavn(req))
                     BARN_RELASJON_QUERY -> call.respond(barnRelasjoner(req))
                     PERSON_BOLK_QUERY -> call.respond(barn(req))
                     else -> call.respond(HttpStatusCode.BadRequest)
@@ -1527,31 +1490,6 @@ object FakeServers : AutoCloseable {
                     )
                 )
             ),
-        )
-    }
-
-    private fun bolknavn(req: PdlRequest): PdlPersonNavnDataResponse {
-        val navnData = req.variables.identer?.map {
-            val testPerson = hentEllerGenererTestPerson(it)
-            PdlNavnDataBolk(
-                ident = testPerson.identer.first().identifikator,
-                person =
-                    PdlPersonBolk(
-                        navn = listOf(
-                            PdlNavn(
-                                fornavn = testPerson.navn.fornavn,
-                                mellomnavn = null,
-                                etternavn = testPerson.navn.etternavn
-                            )
-                        )
-                    )
-            )
-        }
-
-        return PdlPersonNavnDataResponse(
-            errors = null,
-            extensions = null,
-            data = HentPerson(hentPersonBolk = navnData)
         )
     }
 

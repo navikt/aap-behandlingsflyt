@@ -65,20 +65,20 @@ class DagpengerGatewayImpl: DagpengerGateway {
     }
 }
 
-internal data class DagpengerRequest(
+data class DagpengerRequest(
     val personIdent: String,
     val fraOgMedDato: String,
     val tilOgMedDato: String
 )
 
-internal class DagpengerPeriodeResponse(
+data class DagpengerPeriodeResponse(
     val fraOgMedDato: LocalDate,
     val tilOgMedDato: LocalDate?,
     val kilde: DagpengerKilde,
     val ytelseType: DagpengerYtelseType
 )
 
-internal class DagpengerResponse(
+data class DagpengerResponse(
     val personIdent: String,
     val perioder: List<DagpengerPeriodeResponse>
 )
