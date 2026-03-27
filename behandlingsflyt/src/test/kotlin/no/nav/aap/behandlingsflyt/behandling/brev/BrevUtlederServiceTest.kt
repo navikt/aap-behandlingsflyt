@@ -137,6 +137,7 @@ class BrevUtlederServiceTest {
         every { sykdomsvurderingForBrevRepository.hent(any<BehandlingId>()) } returns sykdomsvurderingForBrevGrunnlag()
         every { tilkjentYtelseRepository.hentHvisEksisterer(any<BehandlingId>()) } returns stubTilkjentYtelse()
         every { trukketSøknadService.søknadErTrukket(any<BehandlingId>()) } returns false
+        every { avbrytRevurderingService.revurderingErAvbrutt(any<BehandlingId>()) } returns false
     }
 
     @Nested
@@ -245,7 +246,6 @@ class BrevUtlederServiceTest {
                 sisteDagMedYtelse = sisteDagMedYtelseRevurdering,
                 rettighetsType = RettighetsType.BISTANDSBEHOV
             )
-            every { avbrytRevurderingService.revurderingErAvbrutt(any<BehandlingId>()) } returns false
 
             return revurdering
         }
@@ -287,7 +287,6 @@ class BrevUtlederServiceTest {
                     utfall = Utfall.OPPFYLT,
                 )
             )
-            every { avbrytRevurderingService.revurderingErAvbrutt(any<BehandlingId>()) } returns false
 
             val resultat = brevUtlederService.utledBehovForMeldingOmVedtak(revurdering.id)
 
@@ -330,9 +329,6 @@ class BrevUtlederServiceTest {
                     utfall = Utfall.OPPFYLT,
                 )
             )
-            every { avbrytRevurderingService.revurderingErAvbrutt(revurdering.id) } returns false
-            every { arbeidsopptrappingRepository.hentHvisEksisterer(revurdering.id) } returns null
-            every { arbeidsopptrappingRepository.hentHvisEksisterer(revurdering.forrigeBehandlingId!!) } returns null
             gittUnderveisGrunnlag(
                 revurdering.id,
                 underveisperiode(
@@ -361,7 +357,6 @@ class BrevUtlederServiceTest {
                 forrigeBehandlingId = førstegangsbehandling.id,
                 vurderingsbehov = listOf(Vurderingsbehov.OVERGANG_UFORE)
             )
-            every { avbrytRevurderingService.revurderingErAvbrutt(revurdering.id) } returns false
 
             gittUnderveisGrunnlag(
                 førstegangsbehandling.id,
@@ -476,9 +471,6 @@ class BrevUtlederServiceTest {
                     utfall = Utfall.OPPFYLT,
                 )
             )
-            every { arbeidsopptrappingRepository.hentHvisEksisterer(revurdering.id) } returns null
-            every { arbeidsopptrappingRepository.hentHvisEksisterer(revurdering.forrigeBehandlingId!!) } returns null
-            every { avbrytRevurderingService.revurderingErAvbrutt(revurdering.id) } returns false
             val sisteDagMedYtelse = 31 desember 2023
             gittUnderveisGrunnlag(
                 revurdering.id,
@@ -561,7 +553,6 @@ class BrevUtlederServiceTest {
                 forrigeBehandlingId = førstegangsbehandling.id,
                 vurderingsbehov = listOf(Vurderingsbehov.OVERGANG_UFORE)
             )
-            every { avbrytRevurderingService.revurderingErAvbrutt(revurdering.id) } returns false
 
             gittUnderveisGrunnlag(
                 førstegangsbehandling.id,
@@ -617,10 +608,6 @@ class BrevUtlederServiceTest {
                     utfall = Utfall.OPPFYLT,
                 )
             )
-            every { behandlingRepository.hent(revurdering.id) } returns revurdering
-            every { avbrytRevurderingService.revurderingErAvbrutt(revurdering.id) } returns false
-            every { arbeidsopptrappingRepository.hentHvisEksisterer(revurdering.id) } returns null
-            every { arbeidsopptrappingRepository.hentHvisEksisterer(revurdering.forrigeBehandlingId!!) } returns null
             gittUnderveisGrunnlag(
                 revurdering.id,
                 underveisperiode(
@@ -651,10 +638,6 @@ class BrevUtlederServiceTest {
                     utfall = Utfall.OPPFYLT,
                 )
             )
-            every { behandlingRepository.hent(revurdering.id) } returns revurdering
-            every { avbrytRevurderingService.revurderingErAvbrutt(revurdering.id) } returns false
-            every { arbeidsopptrappingRepository.hentHvisEksisterer(revurdering.id) } returns null
-            every { arbeidsopptrappingRepository.hentHvisEksisterer(revurdering.forrigeBehandlingId!!) } returns null
             gittUnderveisGrunnlag(
                 revurdering.id,
                 underveisperiode(
@@ -676,7 +659,6 @@ class BrevUtlederServiceTest {
             every { aktivitetspliktRepository.hentHvisEksisterer(aktivitetspliktBehandling.id) } returns Aktivitetsplikt11_7Grunnlag(
                 vurderinger = listOf(aktivitetspliktBruddOppfylt(aktivitetspliktBehandling.id))
             )
-            every { arbeidsopptrappingRepository.hentHvisEksisterer(aktivitetspliktBehandling.id) } returns null
 
             assertThat(brevUtlederService.utledBehovForMeldingOmVedtak(aktivitetspliktBehandling.id)).isEqualTo(
                 VedtakEndring
@@ -699,7 +681,6 @@ class BrevUtlederServiceTest {
                     aktivitetspliktBruddOppfylt(aktivitetspliktBehandling.id)
                 )
             )
-            every { arbeidsopptrappingRepository.hentHvisEksisterer(aktivitetspliktBehandling.id) } returns null
 
             assertThat(brevUtlederService.utledBehovForMeldingOmVedtak(aktivitetspliktBehandling.id)).isEqualTo(
                 VedtakEndring
@@ -817,13 +798,12 @@ class BrevUtlederServiceTest {
     inner class TestGruppe_VedtakAktivitetsplikt {
 
         @Test
-        fun `skal feile ved utleding av brevtype dersom aktivitetsplikt mangler`() {
+        fun `skal feile ved utleding av brevtype dersom aktivitetsplikt mangler for aktivitetsplikt-behandling`() {
             val aktivitetspliktBehandling = gittBehandling(
                 typeBehandling = TypeBehandling.Aktivitetsplikt,
                 årsakTilOpprettelse = ÅrsakTilOpprettelse.AKTIVITETSPLIKT,
             )
             every { aktivitetspliktRepository.hentHvisEksisterer(aktivitetspliktBehandling.id) } returns null
-            every { arbeidsopptrappingRepository.hentHvisEksisterer(aktivitetspliktBehandling.id) } returns null
             assertThrows<IllegalStateException> {
                 brevUtlederService.utledBehovForMeldingOmVedtak(aktivitetspliktBehandling.id)
             }
@@ -839,7 +819,6 @@ class BrevUtlederServiceTest {
             every { aktivitetspliktRepository.hentHvisEksisterer(aktivitetspliktBehandling.id) } returns Aktivitetsplikt11_7Grunnlag(
                 vurderinger = listOf(aktivitetspliktBrudd(aktivitetspliktBehandling.id))
             )
-            every { arbeidsopptrappingRepository.hentHvisEksisterer(aktivitetspliktBehandling.id) } returns null
 
             assertThat(brevUtlederService.utledBehovForMeldingOmVedtak(aktivitetspliktBehandling.id)).isEqualTo(
                 VedtakAktivitetsplikt11_7
@@ -862,7 +841,6 @@ class BrevUtlederServiceTest {
                     aktivitetspliktBrudd(aktivitetspliktBehandling.id)
                 )
             )
-            every { arbeidsopptrappingRepository.hentHvisEksisterer(aktivitetspliktBehandling.id) } returns null
 
             assertThat(brevUtlederService.utledBehovForMeldingOmVedtak(aktivitetspliktBehandling.id)).isEqualTo(
                 VedtakAktivitetsplikt11_7
@@ -881,8 +859,6 @@ class BrevUtlederServiceTest {
                 forrigeBehandlingId = BehandlingId(Random.nextLong()),
                 vurderingsbehov = listOf(Vurderingsbehov.OVERGANG_ARBEID)
             )
-            every { behandlingRepository.hent(revurdering.id) } returns revurdering
-            every { avbrytRevurderingService.revurderingErAvbrutt(revurdering.id) } returns false
             every { arbeidsopptrappingRepository.hentHvisEksisterer(revurdering.id) } returns arbeidsopptrappingGrunnlag(
                 revurdering,
                 1 januar 2024,
@@ -910,7 +886,6 @@ class BrevUtlederServiceTest {
                 vurderingsbehov = listOf(Vurderingsbehov.OVERGANG_ARBEID)
             )
             every { behandlingRepository.hent(revurdering.id) } returns revurdering
-            every { avbrytRevurderingService.revurderingErAvbrutt(revurdering.id) } returns false
             every { arbeidsopptrappingRepository.hentHvisEksisterer(revurdering.id) } returns arbeidsopptrappingGrunnlag(
                 revurdering,
                 1 januar 2024,
