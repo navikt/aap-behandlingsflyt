@@ -64,18 +64,18 @@ class TiltakspengerGatewayImpl : TiltakspengerGateway {
     }
 }
 
-internal data class TiltakspengerRequest(
+data class TiltakspengerRequest(
     val ident: String,
     val fom: String,
     val tom: String
 )
 
-internal data class TiltakspengerPeriodeResponse(
+data class TiltakspengerPeriodeResponse(
     val fraOgMed: LocalDate,
     val tilOgMed: LocalDate
 )
 
-internal data class TiltakspengerVedtakResponse(
+data class TiltakspengerVedtakResponse(
     val rettighet: TiltakspengerYtelseType,
     val periode: TiltakspengerPeriodeResponse,
     val kilde: TiltakspengerKilde,
