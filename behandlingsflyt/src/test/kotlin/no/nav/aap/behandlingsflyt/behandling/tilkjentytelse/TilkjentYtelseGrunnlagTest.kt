@@ -493,7 +493,7 @@ class TilkjentYtelseGrunnlagTest {
                     mottattTidspunkt = (14 desember 2025).atTime(14, 0)
                 )
             ),
-            innsendingsTidspunkt = mapOf(15 desember 2025 to JournalpostId("0")),
+            innsendingsTidspunkt = mapOf(15 desember 2025 to InnsendingReferanse(InnsendingReferanse.Type.JOURNALPOST, "0")),
         )
 
 

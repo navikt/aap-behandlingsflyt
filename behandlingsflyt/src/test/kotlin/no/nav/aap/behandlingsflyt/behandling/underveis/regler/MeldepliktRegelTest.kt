@@ -2,8 +2,8 @@ package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType.BISTANDSBEHOV
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.Fritaksvurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktOverstyringStatus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktOverstyringStatus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.OverstyringMeldepliktGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.OverstyringMeldepliktVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.OverstyringMeldepliktVurderingPeriode
@@ -23,7 +23,6 @@ import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.tidslinjeOf
 import no.nav.aap.komponenter.type.Periode
-import no.nav.aap.verdityper.dokument.JournalpostId
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
@@ -51,7 +50,7 @@ class MeldepliktRegelTest {
         val input = tomUnderveisInput(
             rettighetsperiode = rettighetsperiode,
             innsendingsTidspunkt = mapOf(
-                26 mai 2025 to JournalpostId("1"),
+                26 mai 2025 to journalpostId("1"),
             ),
         )
 
@@ -113,9 +112,9 @@ class MeldepliktRegelTest {
         val input = tomUnderveisInput(
             rettighetsperiode = rettighetsperiode,
             innsendingsTidspunkt = mapOf(
-                20 januar 2020 to JournalpostId("1"),
-                3 februar 2020 to JournalpostId("2"),
-                17 februar 2020 to JournalpostId("3"),
+                20 januar 2020 to journalpostId("1"),
+                3 februar 2020 to journalpostId("2"),
+                17 februar 2020 to journalpostId("3"),
             ),
         )
 
@@ -131,17 +130,17 @@ class MeldepliktRegelTest {
             Forventer(
                 fom = 20 januar 2020,
                 tom = 2 februar 2020,
-                vurdering = MeldepliktVurdering.MeldtSeg(JournalpostId("1")),
+                vurdering = MeldepliktVurdering.MeldtSeg(journalpostId("1")),
             ),
             Forventer(
                 fom = 3 februar 2020,
                 tom = 16 februar 2020,
-                vurdering = MeldepliktVurdering.MeldtSeg(JournalpostId("2")),
+                vurdering = MeldepliktVurdering.MeldtSeg(journalpostId("2")),
             ),
             Forventer(
                 fom = 17 februar 2020,
                 tom = 1 mars 2020,
-                vurdering = MeldepliktVurdering.MeldtSeg(JournalpostId("3")),
+                vurdering = MeldepliktVurdering.MeldtSeg(journalpostId("3")),
             ),
         )
     }
@@ -164,10 +163,10 @@ class MeldepliktRegelTest {
         val input = tomUnderveisInput(
             rettighetsperiode = rettighetsperiode,
             innsendingsTidspunkt = mapOf(
-                8 desember 2025 to JournalpostId("2"),
-                17 desember 2025 to JournalpostId("3"), // meldekort blir sendt inn
-                5 januar 2026 to JournalpostId("4"),
-                19 januar 2026 to JournalpostId("5"),
+                8 desember 2025 to journalpostId("2"),
+                17 desember 2025 to journalpostId("3"), // meldekort blir sendt inn
+                5 januar 2026 to journalpostId("4"),
+                19 januar 2026 to journalpostId("5"),
             ),
         )
         // behandling kjøres på `nå`
@@ -183,22 +182,22 @@ class MeldepliktRegelTest {
             Forventer(
                 fom = 8 desember 2025,
                 tom = 21 desember 2025,
-                vurdering = MeldepliktVurdering.MeldtSeg(JournalpostId("2")),
+                vurdering = MeldepliktVurdering.MeldtSeg(journalpostId("2")),
             ),
             Forventer(
                 fom = 22 desember 2025,
                 tom = 4 januar 2026,
-                vurdering = MeldepliktVurdering.MeldtSeg(JournalpostId("3")), // MeldepliktVurdering.IkkeMeldtSeg //
+                vurdering = MeldepliktVurdering.MeldtSeg(journalpostId("3")), // MeldepliktVurdering.IkkeMeldtSeg //
             ),
             Forventer(
                 fom = 5 januar 2026,
                 tom = 18 januar 2026,
-                vurdering = MeldepliktVurdering.MeldtSeg(JournalpostId("4")), //MeldepliktVurdering.MeldtSeg(JournalpostId("4")),
+                vurdering = MeldepliktVurdering.MeldtSeg(journalpostId("4")), //MeldepliktVurdering.MeldtSeg(journalpostId("4")),
             ),
             Forventer(
                 fom = 19 januar 2026,
                 tom = 19 januar 2026,
-                vurdering = MeldepliktVurdering.MeldtSeg(JournalpostId("5")),
+                vurdering = MeldepliktVurdering.MeldtSeg(journalpostId("5")),
             ),
         )
     }
@@ -221,9 +220,9 @@ class MeldepliktRegelTest {
         val input = tomUnderveisInput(
             rettighetsperiode = rettighetsperiode,
             innsendingsTidspunkt = mapOf(
-                17 desember 2025 to JournalpostId("3"),
-                5 januar 2026 to JournalpostId("5"),
-                19 januar 2026 to JournalpostId("6"),
+                17 desember 2025 to journalpostId("3"),
+                5 januar 2026 to journalpostId("5"),
+                19 januar 2026 to journalpostId("6"),
             ),
         )
         // behandling kjøres på `nå`
@@ -247,22 +246,22 @@ class MeldepliktRegelTest {
             Forventer(
                 fom = 17 desember 2025,
                 tom = 21 desember 2025,
-                vurdering = MeldepliktVurdering.MeldtSeg(JournalpostId("3")),
+                vurdering = MeldepliktVurdering.MeldtSeg(journalpostId("3")),
             ),
             Forventer(
                 fom = 22 desember 2025,
                 tom = 4 januar 2026,
-                vurdering = MeldepliktVurdering.MeldtSeg(JournalpostId("3")),
+                vurdering = MeldepliktVurdering.MeldtSeg(journalpostId("3")),
             ),
             Forventer(
                 fom = 5 januar 2026,
                 tom = 18 januar 2026,
-                vurdering = MeldepliktVurdering.MeldtSeg(JournalpostId("5")),
+                vurdering = MeldepliktVurdering.MeldtSeg(journalpostId("5")),
             ),
             Forventer(
                 fom = 19 januar 2026,
                 tom = 19 januar 2026,
-                vurdering = MeldepliktVurdering.MeldtSeg(JournalpostId("6")),
+                vurdering = MeldepliktVurdering.MeldtSeg(journalpostId("6")),
             ),
         )
     }
@@ -286,10 +285,10 @@ class MeldepliktRegelTest {
         val input = tomUnderveisInput(
             rettighetsperiode = rettighetsperiode,
             innsendingsTidspunkt = mapOf(
-                1 desember 2025 to JournalpostId("2"),
-                dag desember 2025 to JournalpostId("3"),
-                29 desember 2025 to JournalpostId("4"),
-                12 januar 2026 to JournalpostId("5"),
+                1 desember 2025 to journalpostId("2"),
+                dag desember 2025 to journalpostId("3"),
+                29 desember 2025 to journalpostId("4"),
+                12 januar 2026 to journalpostId("5"),
             ),
         )
         // behandling kjøres på `nå`
@@ -305,22 +304,22 @@ class MeldepliktRegelTest {
             Forventer(
                 fom = 1 desember 2025,
                 tom = 7 desember 2025,
-                vurdering = MeldepliktVurdering.MeldtSeg(JournalpostId("2")),
+                vurdering = MeldepliktVurdering.MeldtSeg(journalpostId("2")),
             ),
             Forventer(
                 fom = 15 desember 2025,
                 tom = 28 desember 2025,
-                vurdering = MeldepliktVurdering.MeldtSeg(JournalpostId("3")),
+                vurdering = MeldepliktVurdering.MeldtSeg(journalpostId("3")),
             ),
             Forventer(
                 fom = 29 desember 2025,
                 tom = 11 januar 2026,
-                vurdering = MeldepliktVurdering.MeldtSeg(JournalpostId("4")),
+                vurdering = MeldepliktVurdering.MeldtSeg(journalpostId("4")),
             ),
             Forventer(
                 fom = 12 januar 2026,
                 tom = 19 januar 2026,
-                vurdering = MeldepliktVurdering.MeldtSeg(JournalpostId("5")),
+                vurdering = MeldepliktVurdering.MeldtSeg(journalpostId("5")),
             ),
         )
     }
@@ -374,8 +373,8 @@ class MeldepliktRegelTest {
         val input = tomUnderveisInput(
             rettighetsperiode = rettighetsperiode,
             innsendingsTidspunkt = mapOf(
-                2 februar 2020 to JournalpostId("1"),
-                6 mars 2020 to JournalpostId("2"),
+                2 februar 2020 to journalpostId("1"),
+                6 mars 2020 to journalpostId("2"),
             ),
         )
 
@@ -393,7 +392,7 @@ class MeldepliktRegelTest {
             ),
             Forventer(
                 fom = 2 februar 2020, tom = 2 februar 2020,
-                vurdering = MeldepliktVurdering.MeldtSeg(JournalpostId("1")),
+                vurdering = MeldepliktVurdering.MeldtSeg(journalpostId("1")),
             ),
             Forventer(
                 fom = 3 februar 2020, tom = 16 februar 2020,
@@ -405,7 +404,7 @@ class MeldepliktRegelTest {
             ),
             Forventer(
                 fom = 2 mars 2020, tom = 15 mars 2020,
-                vurdering = MeldepliktVurdering.MeldtSeg(JournalpostId("2")),
+                vurdering = MeldepliktVurdering.MeldtSeg(journalpostId("2")),
             ),
             Forventer(
                 fom = 16 mars 2020, tom = 29 mars 2020,
@@ -488,7 +487,7 @@ class MeldepliktRegelTest {
                     )
                 )
             ),
-            innsendingsTidspunkt = mapOf(28 april 2020 to JournalpostId("1")),
+            innsendingsTidspunkt = mapOf(28 april 2020 to journalpostId("1")),
         )
 
         val vurdertTidslinje = vurder(input, nå = 20 april 2021)
@@ -680,7 +679,7 @@ class MeldepliktRegelTest {
         val input = tomUnderveisInput(
             rettighetsperiode = rettighetsperiode,
             innsendingsTidspunkt = mapOf(
-                11 mai 2020 to JournalpostId("1"),
+                11 mai 2020 to journalpostId("1"),
             ),
         )
 
@@ -696,7 +695,7 @@ class MeldepliktRegelTest {
             Forventer(
                 fom = rettighetsperiode.fom.plusDays(14),
                 tom = rettighetsperiode.fom.plusDays(27),
-                vurdering = MeldepliktVurdering.MeldtSeg(JournalpostId("1")),
+                vurdering = MeldepliktVurdering.MeldtSeg(journalpostId("1")),
             ),
             Forventer(
                 fom = rettighetsperiode.fom.plusDays(28),
@@ -724,7 +723,7 @@ class MeldepliktRegelTest {
         val input = tomUnderveisInput(
             rettighetsperiode = rettighetsperiode,
             innsendingsTidspunkt = mapOf(
-                11 mai 2020 to JournalpostId("1"),
+                11 mai 2020 to journalpostId("1"),
             ),
         )
 
@@ -740,7 +739,7 @@ class MeldepliktRegelTest {
             Forventer(
                 fom = rettighetsperiode.fom.plusDays(14),
                 tom = rettighetsperiode.fom.plusDays(27),
-                vurdering = MeldepliktVurdering.MeldtSeg(JournalpostId("1")),
+                vurdering = MeldepliktVurdering.MeldtSeg(journalpostId("1")),
             ),
             Forventer(
                 fom = rettighetsperiode.fom.plusDays(28),
@@ -770,7 +769,7 @@ class MeldepliktRegelTest {
         val input = tomUnderveisInput(
             rettighetsperiode = rettighetsperiode,
             innsendingsTidspunkt = mapOf(
-                28 januar 2020 to JournalpostId("1"),
+                28 januar 2020 to journalpostId("1"),
             ),
         )
 
@@ -788,7 +787,7 @@ class MeldepliktRegelTest {
             ),
             Forventer(
                 fom = 28 januar 2020, tom = 2 februar 2020,
-                vurdering = MeldepliktVurdering.MeldtSeg(JournalpostId("1")),
+                vurdering = MeldepliktVurdering.MeldtSeg(journalpostId("1")),
             ),
             Forventer(
                 fom = 3 februar 2020, tom = 16 februar 2020,
@@ -817,7 +816,7 @@ class MeldepliktRegelTest {
         val input = tomUnderveisInput(
             rettighetsperiode = rettighetsperiode,
             innsendingsTidspunkt = mapOf(
-                30 januar 2020 to JournalpostId("1"),
+                30 januar 2020 to journalpostId("1"),
             ),
         )
 
@@ -835,7 +834,7 @@ class MeldepliktRegelTest {
             ),
             Forventer(
                 fom = 30 januar 2020, tom = 2 februar 2020,
-                vurdering = MeldepliktVurdering.MeldtSeg(JournalpostId("1")),
+                vurdering = MeldepliktVurdering.MeldtSeg(journalpostId("1")),
             ),
             Forventer(
                 fom = 3 februar 2020, tom = 16 februar 2020,
@@ -881,7 +880,7 @@ class MeldepliktRegelTest {
                     )
                 )
             ),
-            innsendingsTidspunkt = mapOf(19 mai 2020 to JournalpostId("1"))
+            innsendingsTidspunkt = mapOf(19 mai 2020 to journalpostId("1"))
         )
 
         val vurdertTidslinje = vurder(input, nå = rettighetsperiode.tom.plusDays(1))
@@ -901,7 +900,7 @@ class MeldepliktRegelTest {
             Forventer(
                 fom = 18 mai 2020,
                 tom = 31 mai 2020,
-                vurdering = MeldepliktVurdering.MeldtSeg(JournalpostId("1")),
+                vurdering = MeldepliktVurdering.MeldtSeg(journalpostId("1")),
             )
         )
     }
@@ -984,7 +983,7 @@ class MeldepliktRegelTest {
         )
         val input = tomUnderveisInput(
             rettighetsperiode = rettighetsperiode,
-            innsendingsTidspunkt = mapOf(22 mai 2020 to JournalpostId("1"))
+            innsendingsTidspunkt = mapOf(22 mai 2020 to journalpostId("1"))
         )
 
         val vurdertTidslinje = vurder(input, nå = 23 mai 2020)
@@ -1004,7 +1003,7 @@ class MeldepliktRegelTest {
             Forventer(
                 fom = 18 mai 2020,
                 tom = 20 mai 2020,
-                vurdering = MeldepliktVurdering.MeldtSeg(JournalpostId("1"))
+                vurdering = MeldepliktVurdering.MeldtSeg(journalpostId("1"))
             ),
         )
     }
@@ -1314,7 +1313,7 @@ Mo Tu We Th Fr Sa Su      Mo Tu We Th Fr Sa Su      Mo Tu We Th Fr Sa Su
         val input = tomUnderveisInput(
             rettighetsperiode = rettighetsperiode,
             innsendingsTidspunkt = mapOf(
-                LocalDate.of(2026, 5, 26) to JournalpostId("1")
+                LocalDate.of(2026, 5, 26) to journalpostId("1")
             )
         )
         val vurdertTidslinje = vurder(input, nå = rettighetsperiode.tom.plusDays(1))
@@ -1329,7 +1328,7 @@ Mo Tu We Th Fr Sa Su      Mo Tu We Th Fr Sa Su      Mo Tu We Th Fr Sa Su
             Forventer(
                 fom = LocalDate.of(2026, 5, 18),
                 tom = LocalDate.of(2026, 5, 31),
-                vurdering = MeldepliktVurdering.MeldtSeg(JournalpostId("1")),
+                vurdering = MeldepliktVurdering.MeldtSeg(journalpostId("1")),
             )
         )
     }
@@ -1371,4 +1370,6 @@ Mo Tu We Th Fr Sa Su      Mo Tu We Th Fr Sa Su      Mo Tu We Th Fr Sa Su
                 null
             })
     }
+
+    private fun journalpostId(verdi: String) = InnsendingReferanse(InnsendingReferanse.Type.JOURNALPOST, verdi)
 }

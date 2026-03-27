@@ -14,6 +14,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Meldekort
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.OverstyringMeldepliktGrunnlag
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.verdityper.dokument.JournalpostId
 import java.time.LocalDate
@@ -35,7 +36,7 @@ fun tomUnderveisInput(
     ),
     opptrappingPerioder: List<Periode> = emptyList(),
     meldekort: List<Meldekort> = emptyList(),
-    innsendingsTidspunkt: Map<LocalDate, JournalpostId> = emptyMap(),
+    innsendingsTidspunkt: Map<LocalDate, InnsendingReferanse> = emptyMap(),
     kvoter: Kvoter = tomKvoter,
     institusjonsopphold: List<Institusjonsopphold> = emptyList(),
     arbeidsevneGrunnlag: ArbeidsevneGrunnlag = ArbeidsevneGrunnlag(emptyList()),

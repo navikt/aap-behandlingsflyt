@@ -4,11 +4,11 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Re
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.ArbeidIPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Meldekort
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneGrunnlag
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.Fritaksvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktGrunnlag
 import no.nav.aap.behandlingsflyt.help.assertTidslinjeEquals
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.tidslinje.Segment
@@ -398,7 +398,7 @@ class GraderingArbeidRegelTest {
         fritaksvurderinger: List<Fritaksvurdering> = emptyList(),
         opptrappingPerioder: List<Periode> = emptyList()
     ) = tomUnderveisInput(
-        innsendingsTidspunkt = meldekort.associate { it.mottattTidspunkt.toLocalDate() to it.referanse.asJournalpostId },
+        innsendingsTidspunkt = meldekort.associate { it.mottattTidspunkt.toLocalDate() to it.referanse },
         rettighetsperiode = rettighetsperiode,
         meldekort = meldekort,
         meldepliktGrunnlag = MeldepliktGrunnlag(vurderinger = fritaksvurderinger),
