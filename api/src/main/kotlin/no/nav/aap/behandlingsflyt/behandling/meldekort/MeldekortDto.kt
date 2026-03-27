@@ -26,7 +26,7 @@ data class DagDto(
 )
 
 fun Meldekort.toDto(): MeldekortDto = MeldekortDto(
-    id = journalpostId.identifikator,
+    id = referanse.verdi,
     mottattTidspunkt = mottattTidspunkt,
     dager = timerArbeidPerPeriode.map { arbeid ->
         DagDto(

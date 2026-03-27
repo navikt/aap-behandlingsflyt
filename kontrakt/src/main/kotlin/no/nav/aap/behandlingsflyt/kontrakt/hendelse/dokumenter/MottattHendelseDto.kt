@@ -40,7 +40,7 @@ public class Innsending(
             }
 
             InnsendingType.MELDEKORT -> {
-                require(InnsendingReferanse.Type.JOURNALPOST == referanse.type)
+                require(InnsendingReferanse.Type.JOURNALPOST == referanse.type || InnsendingReferanse.Type.SAKSBEHANDLER_KELVIN_REFERANSE == referanse.type)
                 requireNotNull(melding)
                 require(melding is Meldekort)
             }

@@ -74,7 +74,9 @@ public data class DetaljertMeldekortDTO(
     val personIdent: String,
     val saksnummer: Saksnummer,
     val behandlingId: Long,
+    @Deprecated("Bruk referanse, meldekort kan være sendt inn av både bruker (journalpost) og saksbehandler")
     val journalpostId: String,
+    val referanse: String,
     val meldeperiodeFom: LocalDate,
     val meldeperiodeTom: LocalDate,
     val mottattTidspunkt: LocalDateTime,
