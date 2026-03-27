@@ -86,6 +86,8 @@ data class SykdomsvurderingLøsningDto(
                 ErNedsettelseMinstHalvpartenValg.JA
             erNedsettelseIArbeidsevneMerEnnHalvparten == true && erNedsettelseIArbeidsevneAvEnVissVarighet == false -> 
                 ErNedsettelseMinstHalvpartenValg.JA_FORBIGÅENDE_PROBLEMER
+            erNedsettelseIArbeidsevneMerEnnHalvparten == true && erNedsettelseIArbeidsevneAvEnVissVarighet == null -> 
+                ErNedsettelseMinstHalvpartenValg.JA
             erNedsettelseIArbeidsevneMerEnnHalvparten == false -> 
                 ErNedsettelseMinstHalvpartenValg.NEI
             else -> null
@@ -102,6 +104,8 @@ data class SykdomsvurderingLøsningDto(
                 ErNedsettelseMerEnnYrkesskadegrenseValg.JA
             erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense == true && erNedsettelseIArbeidsevneAvEnVissVarighet == false -> 
                 ErNedsettelseMerEnnYrkesskadegrenseValg.JA_FORBIGÅENDE_PROBLEMER
+            erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense == true && erNedsettelseIArbeidsevneAvEnVissVarighet == null -> 
+                ErNedsettelseMerEnnYrkesskadegrenseValg.JA
             erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense == false -> 
                 ErNedsettelseMerEnnYrkesskadegrenseValg.NEI
             else -> null
