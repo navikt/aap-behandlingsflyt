@@ -8,6 +8,7 @@ import io.ktor.http.*
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
 import no.nav.aap.komponenter.dbconnect.transaction
+import no.nav.aap.komponenter.httpklient.exception.VerdiIkkeFunnetException
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import javax.sql.DataSource
 
@@ -24,11 +25,15 @@ fun NormalOpenAPIRoute.personApi(
 ) {
     route("/api/person") {
         route("/ident").post<Unit, PersonIdentResponse, PersonIdentRequest> { _, request ->
-            val personIdent = dataSource.transaction(readOnly = true) { connection ->
-                val repositoryProvider = repositoryRegistry.provider(connection)
-                repositoryProvider.provide<PersonRepository>().hent(PersonId(request.personId))
-            }.aktivIdent()
-            respond(PersonIdentResponse(personIdent.identifikator), HttpStatusCode.OK)
+            try {
+                val personIdent = dataSource.transaction(readOnly = true) { connection ->
+                    val repositoryProvider = repositoryRegistry.provider(connection)
+                    repositoryProvider.provide<PersonRepository>().hent(PersonId(request.personId))
+                }.aktivIdent()
+                respond(PersonIdentResponse(personIdent.identifikator), HttpStatusCode.OK)
+            } catch (e: Exception) {
+                throw VerdiIkkeFunnetException("Fant ingen person for personId: ${request.personId}")
+            }
         }
     }
 }
