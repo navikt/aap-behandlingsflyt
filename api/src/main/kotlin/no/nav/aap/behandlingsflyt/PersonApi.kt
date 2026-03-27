@@ -10,6 +10,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.httpklient.exception.VerdiIkkeFunnetException
 import no.nav.aap.komponenter.repository.RepositoryRegistry
+import org.slf4j.LoggerFactory
 import javax.sql.DataSource
 
 
@@ -19,6 +20,8 @@ data class PersonIdentRequest (
 data class PersonIdentResponse(
     val ident: String
 )
+
+private val log = LoggerFactory.getLogger("PersonApi")
 fun NormalOpenAPIRoute.personApi(
     dataSource: DataSource,
     repositoryRegistry: RepositoryRegistry,
@@ -32,6 +35,7 @@ fun NormalOpenAPIRoute.personApi(
                 }.aktivIdent()
                 respond(PersonIdentResponse(personIdent.identifikator), HttpStatusCode.OK)
             } catch (e: Exception) {
+                log.warn("Fant ikke ident for personId: ${request.personId}", e)
                 throw VerdiIkkeFunnetException("Fant ingen person for personId: ${request.personId}")
             }
         }
