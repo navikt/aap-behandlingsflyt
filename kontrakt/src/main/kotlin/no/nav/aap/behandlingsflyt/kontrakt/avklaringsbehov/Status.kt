@@ -4,7 +4,7 @@ public enum class Status {
      /**  Hvis Definisjon.type er
       * - MANUELT_PÅKREVD:  behandlingsflyt venter på en løsning
       * - MANUELT_FRIVILLIG:  behandlingsflyt kan godta en løsning
-      * - OVERSTYR: ???
+      * - OVERSTYR:  behandlingsflyt kan godta en løsning
       * */
     OPPRETTET,
 
