@@ -161,7 +161,7 @@ private fun tilKvalitetssikring(it: no.nav.aap.behandlingsflyt.behandling.avklar
             it.aktivHistorikk.lastOrNull {
                 it.status in setOf(
                     Status.SENDT_TILBAKE_FRA_KVALITETSSIKRER,
-                    Status.KVALITETSSIKRET,
+                    Status.KVALITETSSIKRET
                 )
             }
 
