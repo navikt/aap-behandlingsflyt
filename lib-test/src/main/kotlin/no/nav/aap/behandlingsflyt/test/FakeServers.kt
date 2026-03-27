@@ -79,8 +79,6 @@ import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlIdenterData
 import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlIdenterDataResponse
 import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlNavn
 import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlNavnData
-import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlNavnDataBolk
-import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlPersonBolk
 import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlPersonNavnDataResponse
 import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlPersoninfo
 import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlPersoninfoData
@@ -145,7 +143,6 @@ import java.time.format.DateTimeFormatter
 import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
-import kotlin.collections.emptyList
 
 object FakeServers : AutoCloseable {
     private val log = LoggerFactory.getLogger(javaClass)
@@ -504,7 +501,6 @@ object FakeServers : AutoCloseable {
                     PERSON_QUERY -> call.respond(personopplysninger(req))
                     PERSON_QUERY_HISTORIKK -> call.respond(personopplysningerHistorikk(req))
                     PdlPersoninfoGateway.PERSONINFO_QUERY -> call.respond(navn(req))
-                    PdlPersoninfoGateway.PERSONINFO_BOLK_QUERY -> call.respond(bolknavn(req))
                     BARN_RELASJON_QUERY -> call.respond(barnRelasjoner(req))
                     PERSON_BOLK_QUERY -> call.respond(barn(req))
                     else -> call.respond(HttpStatusCode.BadRequest)
@@ -1527,31 +1523,6 @@ object FakeServers : AutoCloseable {
                     )
                 )
             ),
-        )
-    }
-
-    private fun bolknavn(req: PdlRequest): PdlPersonNavnDataResponse {
-        val navnData = req.variables.identer?.map {
-            val testPerson = hentEllerGenererTestPerson(it)
-            PdlNavnDataBolk(
-                ident = testPerson.identer.first().identifikator,
-                person =
-                    PdlPersonBolk(
-                        navn = listOf(
-                            PdlNavn(
-                                fornavn = testPerson.navn.fornavn,
-                                mellomnavn = null,
-                                etternavn = testPerson.navn.etternavn
-                            )
-                        )
-                    )
-            )
-        }
-
-        return PdlPersonNavnDataResponse(
-            errors = null,
-            extensions = null,
-            data = HentPerson(hentPersonBolk = navnData)
         )
     }
 
