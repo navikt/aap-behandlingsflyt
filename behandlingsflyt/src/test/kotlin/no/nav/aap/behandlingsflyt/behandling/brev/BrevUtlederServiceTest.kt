@@ -147,7 +147,7 @@ class BrevUtlederServiceTest {
         fun `utledBehov legger ved sisteDagMedYtelse & fomDato i faktagrunnlag for UtvidVedtakslengde brev ved revurdering`() {
             val sisteDagFørstegang = 31 august 2025
             val sisteDagRevurdering = 31 desember 2025
-            val revurdering = stubUtvidVedtakslengdeBehandlinger(
+            val revurdering = gittRevurderingForUtvidetVedtakslengde(
                 sisteDagMedYtelseFørstegangsbehandling = sisteDagFørstegang,
                 sisteDagMedYtelseRevurdering = sisteDagRevurdering,
             )
@@ -174,7 +174,7 @@ class BrevUtlederServiceTest {
             avslagsårsak: Avslagsårsak,
             forventetTypeBrev: TypeBrev
         ) {
-            val revurdering = stubUtvidVedtakslengdeBehandlinger()
+            val revurdering = gittRevurderingForUtvidetVedtakslengde()
 
             every { vedtakslengdeService.hentAvslagsårsakerVedStansEllerOpphør(revurdering.id, any()) } returns setOf(
                 avslagsårsak
@@ -189,7 +189,7 @@ class BrevUtlederServiceTest {
 
         @Test
         fun `skal feile ved ustøttet avslagsårsak ved utvidelse under ett år`() {
-            val revurdering = stubUtvidVedtakslengdeBehandlinger()
+            val revurdering = gittRevurderingForUtvidetVedtakslengde()
 
             every { vedtakslengdeService.hentAvslagsårsakerVedStansEllerOpphør(revurdering.id, any()) } returns setOf(
                 Avslagsårsak.MANGLENDE_DOKUMENTASJON
@@ -203,7 +203,7 @@ class BrevUtlederServiceTest {
 
         @Test
         fun `skal prioritere avslagsårsak med høyest prioritet ved flere avslagsårsaker`() {
-            val revurdering = stubUtvidVedtakslengdeBehandlinger()
+            val revurdering = gittRevurderingForUtvidetVedtakslengde()
 
             every { vedtakslengdeService.hentAvslagsårsakerVedStansEllerOpphør(revurdering.id, any()) } returns setOf(
                 Avslagsårsak.ANNEN_FULL_YTELSE,
@@ -217,7 +217,7 @@ class BrevUtlederServiceTest {
             assertEquals(TypeBrev.VEDTAK_FORLENGELSE_UNDER_ETT_ÅR_11_4, resultat.vedtakslengdeTypeBrev)
         }
 
-        private fun stubUtvidVedtakslengdeBehandlinger(
+        private fun gittRevurderingForUtvidetVedtakslengde(
             sisteDagMedYtelseFørstegangsbehandling: LocalDate = 31 august 2025,
             sisteDagMedYtelseRevurdering: LocalDate = 31 desember 2025,
         ): Behandling {
