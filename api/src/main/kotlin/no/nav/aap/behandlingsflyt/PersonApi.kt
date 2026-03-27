@@ -13,7 +13,7 @@ import javax.sql.DataSource
 
 
 data class PersonIdentRequest (
-    val personid: Long,
+    val personId: Long,
 )
 data class PersonIdentResponse(
     val ident: String
@@ -26,7 +26,7 @@ fun NormalOpenAPIRoute.personApi(
         route("/ident").post<Unit, PersonIdentResponse, PersonIdentRequest> { _, request ->
             val personIdent = dataSource.transaction(readOnly = true) { connection ->
                 val repositoryProvider = repositoryRegistry.provider(connection)
-                repositoryProvider.provide<PersonRepository>().hent(PersonId(request.personid))
+                repositoryProvider.provide<PersonRepository>().hent(PersonId(request.personId))
             }.aktivIdent()
             respond(PersonIdentResponse(personIdent.identifikator), HttpStatusCode.OK)
         }
