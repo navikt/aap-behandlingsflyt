@@ -20,7 +20,6 @@ enum class BehandlingsflytFeature : FeatureToggle {
     LagreStansOgOpphor,
     MigrerStansOgOpphor,
     SamordningBarnepensjon,
-    RefusjonkravIRevurdering,
     SignaturEnhetFraOppgave,
     VedtakslengdeAvklaringsbehov,
     hentDagpengerPerioder,
