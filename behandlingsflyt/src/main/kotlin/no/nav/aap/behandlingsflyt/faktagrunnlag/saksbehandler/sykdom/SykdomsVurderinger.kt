@@ -20,6 +20,8 @@ data class Sykdomsvurdering(
     val erNedsettelseIArbeidsevneAvEnVissVarighet: Boolean?,
     val erNedsettelseIArbeidsevneMerEnnHalvparten: Boolean?,
     val erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense: Boolean?,
+    val erNedsettelseMinstHalvparten: ErNedsettelseMinstHalvpartenValg?,
+    val erNedsettelseMerEnnYrkesskadegrense: ErNedsettelseMerEnnYrkesskadegrenseValg?,
     val yrkesskadeBegrunnelse: String?,
     val erArbeidsevnenNedsatt: Boolean?,
     val diagnose: Diagnose?,
@@ -158,6 +160,8 @@ enum class ErNedsettelseMerEnnYrkesskadegrenseValg {
     JA_FORBIGÅENDE_PROBLEMER,
     NEI
 }
+
+
 
 
 

@@ -1,6 +1,8 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.sykdom
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Diagnose
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ErNedsettelseMerEnnYrkesskadegrenseValg
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ErNedsettelseMinstHalvpartenValg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
@@ -210,10 +212,11 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
                 ER_ARBEIDSEVNE_NEDSATT, HAR_SYKDOM_SKADE_LYTE,
                 ER_SYKDOM_SKADE_LYTE_VESETLING_DEL, ER_NEDSETTELSE_MER_ENN_HALVPARTEN,
                 ER_NEDSETTELSE_MER_ENN_YRKESSKADE_GRENSE, ER_NEDSETTELSE_AV_EN_VISS_VARIGHET,
+                ER_NEDSETTELSE_MINST_HALVPARTEN, ER_NEDSETTELSE_MER_ENN_YRKESSKADEGRENSE,
                 YRKESSKADE_BEGRUNNELSE, KODEVERK,
                 DIAGNOSE, OPPRETTET_TID, VURDERT_AV_IDENT, VURDERT_I_BEHANDLING, VURDERINGEN_GJELDER_TIL)
             VALUES
-            (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """.trimIndent()
 
         for (vurdering in vurderinger) {
@@ -228,13 +231,15 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
                     setBoolean(7, vurdering.erNedsettelseIArbeidsevneMerEnnHalvparten)
                     setBoolean(8, vurdering.erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense)
                     setBoolean(9, vurdering.erNedsettelseIArbeidsevneAvEnVissVarighet)
-                    setString(10, vurdering.yrkesskadeBegrunnelse)
-                    setString(11, vurdering.diagnose?.kodeverk)
-                    setString(12, vurdering.diagnose?.hoveddiagnose)
-                    setInstant(13, vurdering.opprettet)
-                    setString(14, vurdering.vurdertAv.ident)
-                    setLong(15, vurdering.vurdertIBehandling.id)
-                    setLocalDate(16, vurdering.vurderingenGjelderTil)
+                    setString(10, vurdering.erNedsettelseMinstHalvparten?.name)
+                    setString(11, vurdering.erNedsettelseMerEnnYrkesskadegrense?.name)
+                    setString(12, vurdering.yrkesskadeBegrunnelse)
+                    setString(13, vurdering.diagnose?.kodeverk)
+                    setString(14, vurdering.diagnose?.hoveddiagnose)
+                    setInstant(15, vurdering.opprettet)
+                    setString(16, vurdering.vurdertAv.ident)
+                    setLong(17, vurdering.vurdertIBehandling.id)
+                    setLocalDate(18, vurdering.vurderingenGjelderTil)
                 }
             }
 
@@ -323,6 +328,8 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
                    ER_NEDSETTELSE_MER_ENN_HALVPARTEN,
                    ER_NEDSETTELSE_MER_ENN_YRKESSKADE_GRENSE,
                    ER_NEDSETTELSE_AV_EN_VISS_VARIGHET,
+                   ER_NEDSETTELSE_MINST_HALVPARTEN,
+                   ER_NEDSETTELSE_MER_ENN_YRKESSKADEGRENSE,
                    ER_ARBEIDSEVNE_NEDSATT,
                    YRKESSKADE_BEGRUNNELSE,
                    KODEVERK,
@@ -354,6 +361,10 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
             erNedsettelseIArbeidsevneMerEnnHalvparten = row.getBooleanOrNull("ER_NEDSETTELSE_MER_ENN_HALVPARTEN"),
             erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = row.getBooleanOrNull("ER_NEDSETTELSE_MER_ENN_YRKESSKADE_GRENSE"),
             erNedsettelseIArbeidsevneAvEnVissVarighet = row.getBooleanOrNull("ER_NEDSETTELSE_AV_EN_VISS_VARIGHET"),
+            erNedsettelseMinstHalvparten = row.getStringOrNull("ER_NEDSETTELSE_MINST_HALVPARTEN")
+                ?.let { ErNedsettelseMinstHalvpartenValg.valueOf(it) },
+            erNedsettelseMerEnnYrkesskadegrense = row.getStringOrNull("ER_NEDSETTELSE_MER_ENN_YRKESSKADEGRENSE")
+                ?.let { ErNedsettelseMerEnnYrkesskadegrenseValg.valueOf(it) },
             erArbeidsevnenNedsatt = row.getBooleanOrNull("ER_ARBEIDSEVNE_NEDSATT"),
             yrkesskadeBegrunnelse = row.getStringOrNull("YRKESSKADE_BEGRUNNELSE"),
             diagnose = row.getStringOrNull("KODEVERK")?.let {

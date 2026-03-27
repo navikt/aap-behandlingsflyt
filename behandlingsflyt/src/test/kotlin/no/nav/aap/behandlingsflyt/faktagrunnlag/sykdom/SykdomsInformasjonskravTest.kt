@@ -14,9 +14,7 @@ class SykdomsInformasjonskravTest {
 
     @Test
     fun `er konsistent hvis ikke yrkesskade og 50 prosent`() {
-        val vurdering = Sykdomsvurdering(
-            begrunnelse = "",
-            dokumenterBruktIVurdering = emptyList(),
+        val vurdering = sykdomsvurdering(
             harSkadeSykdomEllerLyte = true,
             erSkadeSykdomEllerLyteVesentligdel = true,
             erNedsettelseIArbeidsevneMerEnnHalvparten = true,
@@ -24,12 +22,6 @@ class SykdomsInformasjonskravTest {
             erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
             erArbeidsevnenNedsatt = true,
             yrkesskadeBegrunnelse = null,
-            vurderingenGjelderFra = 1 januar 2020,
-            vurderingenGjelderTil = null,
-            vurdertAv = Bruker("Z00000"),
-            opprettet = Instant.now(),
-            vurdertIBehandling = BehandlingId(1L),
-            diagnose = null
         )
 
         assertThat(vurdering.erKonsistentForSykdom(false, Førstegangsbehandling)).isTrue
@@ -37,9 +29,7 @@ class SykdomsInformasjonskravTest {
 
     @Test
     fun `er konsistent hvis yrkesskade med årsakssammenheng og 30 prosent`() {
-        val vurdering = Sykdomsvurdering(
-            begrunnelse = "",
-            dokumenterBruktIVurdering = emptyList(),
+        val vurdering = sykdomsvurdering(
             harSkadeSykdomEllerLyte = true,
             erSkadeSykdomEllerLyteVesentligdel = true,
             erNedsettelseIArbeidsevneMerEnnHalvparten = true,
@@ -47,12 +37,6 @@ class SykdomsInformasjonskravTest {
             erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
             erArbeidsevnenNedsatt = true,
             yrkesskadeBegrunnelse = null,
-            vurderingenGjelderFra = 1 januar 2020,
-            vurdertAv = Bruker("Z00000"),
-            opprettet = Instant.now(),
-            vurdertIBehandling = BehandlingId(1L),
-            vurderingenGjelderTil = null,
-            diagnose = null
         )
 
         assertThat(vurdering.erKonsistentForSykdom(true, Førstegangsbehandling)).isTrue
@@ -60,9 +44,7 @@ class SykdomsInformasjonskravTest {
 
     @Test
     fun `er ikke konsistent hvis yrkesskade uten årsakssammenheng og 30 prosent`() {
-        val vurdering = Sykdomsvurdering(
-            begrunnelse = "",
-            dokumenterBruktIVurdering = emptyList(),
+        val vurdering = sykdomsvurdering(
             harSkadeSykdomEllerLyte = true,
             erSkadeSykdomEllerLyteVesentligdel = true,
             erNedsettelseIArbeidsevneMerEnnHalvparten = false,
@@ -70,12 +52,6 @@ class SykdomsInformasjonskravTest {
             erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
             erArbeidsevnenNedsatt = true,
             yrkesskadeBegrunnelse = null,
-            vurderingenGjelderFra = 1 januar 2020,
-            vurdertAv = Bruker("Z00000"),
-            opprettet = Instant.now(),
-            vurdertIBehandling = BehandlingId(1L),
-            vurderingenGjelderTil = null,
-            diagnose = null
         )
 
         assertThat(vurdering.erKonsistentForSykdom(true, Førstegangsbehandling)).isFalse
@@ -83,9 +59,7 @@ class SykdomsInformasjonskravTest {
 
     @Test
     fun `er ikke konsistent hvis yrkesskade 30 prosent og ingen begrunnelse for ys`() {
-        val vurdering = Sykdomsvurdering(
-            begrunnelse = "",
-            dokumenterBruktIVurdering = emptyList(),
+        val vurdering = sykdomsvurdering(
             harSkadeSykdomEllerLyte = true,
             erSkadeSykdomEllerLyteVesentligdel = true,
             erNedsettelseIArbeidsevneMerEnnHalvparten = false,
@@ -93,12 +67,6 @@ class SykdomsInformasjonskravTest {
             erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = true,
             erArbeidsevnenNedsatt = true,
             yrkesskadeBegrunnelse = null,
-            vurderingenGjelderFra = 1 januar 2020,
-            vurdertAv = Bruker("Z00000"),
-            opprettet = Instant.now(),
-            vurdertIBehandling = BehandlingId(1L),
-            vurderingenGjelderTil = null,
-            diagnose = null
         )
 
         assertThat(vurdering.erKonsistentForSykdom(true, Førstegangsbehandling)).isFalse
@@ -106,9 +74,7 @@ class SykdomsInformasjonskravTest {
 
     @Test
     fun `er konsistent hvis yrkesskade 30 prosent og ingen begrunnelse for ys på revurdering`() {
-        val vurdering = Sykdomsvurdering(
-            begrunnelse = "",
-            dokumenterBruktIVurdering = emptyList(),
+        val vurdering = sykdomsvurdering(
             harSkadeSykdomEllerLyte = true,
             erSkadeSykdomEllerLyteVesentligdel = true,
             erNedsettelseIArbeidsevneMerEnnHalvparten = false,
@@ -116,12 +82,6 @@ class SykdomsInformasjonskravTest {
             erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = true,
             erArbeidsevnenNedsatt = true,
             yrkesskadeBegrunnelse = null,
-            vurderingenGjelderFra = 1 januar 2020,
-            vurdertAv = Bruker("Z00000"),
-            opprettet = Instant.now(),
-            vurdertIBehandling = BehandlingId(1L),
-            vurderingenGjelderTil = null,
-            diagnose = null
         )
 
         assertThat(vurdering.erKonsistentForSykdom(true, Revurdering)).isTrue
@@ -129,9 +89,7 @@ class SykdomsInformasjonskravTest {
 
     @Test
     fun `er konsistent hvis yrkesskade uten årsakssammenheng og 50 prosent`() {
-        val vurdering = Sykdomsvurdering(
-            begrunnelse = "",
-            dokumenterBruktIVurdering = emptyList(),
+        val vurdering = sykdomsvurdering(
             harSkadeSykdomEllerLyte = true,
             erSkadeSykdomEllerLyteVesentligdel = true,
             erNedsettelseIArbeidsevneMerEnnHalvparten = true,
@@ -139,12 +97,6 @@ class SykdomsInformasjonskravTest {
             erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
             erArbeidsevnenNedsatt = true,
             yrkesskadeBegrunnelse = null,
-            vurderingenGjelderFra = 1 januar 2020,
-            vurdertAv = Bruker("Z00000"),
-            opprettet = Instant.now(),
-            vurdertIBehandling = BehandlingId(1L),
-            vurderingenGjelderTil = null,
-            diagnose = null
         )
         
         assertThat(vurdering.erKonsistentForSykdom(true, Førstegangsbehandling)).isTrue
@@ -152,9 +104,7 @@ class SykdomsInformasjonskravTest {
 
     @Test
     fun `er konsistent hvis ikke ssl og ssl ikke vesentlig del`() {
-        val vurdering = Sykdomsvurdering(
-            begrunnelse = "",
-            dokumenterBruktIVurdering = emptyList(),
+        val vurdering = sykdomsvurdering(
             harSkadeSykdomEllerLyte = false,
             erSkadeSykdomEllerLyteVesentligdel = false,
             erNedsettelseIArbeidsevneMerEnnHalvparten = true,
@@ -162,12 +112,6 @@ class SykdomsInformasjonskravTest {
             erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
             erArbeidsevnenNedsatt = true,
             yrkesskadeBegrunnelse = null,
-            vurderingenGjelderFra = 1 januar 2020,
-            vurdertAv = Bruker("Z00000"),
-            opprettet = Instant.now(),
-            vurdertIBehandling = BehandlingId(1L),
-            vurderingenGjelderTil = null,
-            diagnose = null
         )
 
         assertThat(vurdering.erKonsistentForSykdom(false, Førstegangsbehandling)).isTrue
@@ -175,9 +119,7 @@ class SykdomsInformasjonskravTest {
 
     @Test
     fun `er konsistent hvis ssl og ssl ikke vesentlig del`() {
-        val vurdering = Sykdomsvurdering(
-            begrunnelse = "",
-            dokumenterBruktIVurdering = emptyList(),
+        val vurdering = sykdomsvurdering(
             harSkadeSykdomEllerLyte = true,
             erSkadeSykdomEllerLyteVesentligdel = false,
             erNedsettelseIArbeidsevneMerEnnHalvparten = true,
@@ -185,12 +127,6 @@ class SykdomsInformasjonskravTest {
             erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
             erArbeidsevnenNedsatt = true,
             yrkesskadeBegrunnelse = null,
-            vurderingenGjelderFra = 1 januar 2020,
-            vurdertAv = Bruker("Z00000"),
-            opprettet = Instant.now(),
-            vurdertIBehandling = BehandlingId(1L),
-            vurderingenGjelderTil = null,
-            diagnose = null
         )
 
         assertThat(vurdering.erKonsistentForSykdom(false, Førstegangsbehandling)).isTrue
@@ -198,9 +134,7 @@ class SykdomsInformasjonskravTest {
 
     @Test
     fun `er konsistent hvis ssl og ssl vesentlig del`() {
-        val vurdering = Sykdomsvurdering(
-            begrunnelse = "",
-            dokumenterBruktIVurdering = emptyList(),
+        val vurdering = sykdomsvurdering(
             harSkadeSykdomEllerLyte = true,
             erSkadeSykdomEllerLyteVesentligdel = true,
             erNedsettelseIArbeidsevneMerEnnHalvparten = true,
@@ -208,12 +142,6 @@ class SykdomsInformasjonskravTest {
             erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
             erArbeidsevnenNedsatt = true,
             yrkesskadeBegrunnelse = null,
-            vurderingenGjelderFra = 1 januar 2020,
-            vurdertAv = Bruker("Z00000"),
-            opprettet = Instant.now(),
-            vurdertIBehandling = BehandlingId(1L),
-            vurderingenGjelderTil = null,
-            diagnose = null
         )
 
         assertThat(vurdering.erKonsistentForSykdom(false, Førstegangsbehandling)).isTrue
@@ -221,9 +149,7 @@ class SykdomsInformasjonskravTest {
 
     @Test
     fun `er ikke konsistend hvis ikke ssl og ssl vesentlig del`() {
-        val vurdering = Sykdomsvurdering(
-            begrunnelse = "",
-            dokumenterBruktIVurdering = emptyList(),
+        val vurdering = sykdomsvurdering(
             harSkadeSykdomEllerLyte = false,
             erSkadeSykdomEllerLyteVesentligdel = true,
             erNedsettelseIArbeidsevneMerEnnHalvparten = true,
@@ -231,14 +157,36 @@ class SykdomsInformasjonskravTest {
             erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
             erArbeidsevnenNedsatt = true,
             yrkesskadeBegrunnelse = null,
-            vurderingenGjelderFra = 1 januar 2020,
-            vurdertAv = Bruker("Z00000"),
-            opprettet = Instant.now(),
-            vurdertIBehandling = BehandlingId(1L),
-            vurderingenGjelderTil = null,
-            diagnose = null
         )
 
         assertThat(vurdering.erKonsistentForSykdom(false, Førstegangsbehandling)).isFalse
     }
+
+    private fun sykdomsvurdering(
+        harSkadeSykdomEllerLyte: Boolean,
+        erSkadeSykdomEllerLyteVesentligdel: Boolean? = null,
+        erNedsettelseIArbeidsevneMerEnnHalvparten: Boolean? = null,
+        erNedsettelseIArbeidsevneAvEnVissVarighet: Boolean? = null,
+        erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense: Boolean? = null,
+        erArbeidsevnenNedsatt: Boolean? = null,
+        yrkesskadeBegrunnelse: String? = null,
+    ) = Sykdomsvurdering(
+        begrunnelse = "",
+        dokumenterBruktIVurdering = emptyList(),
+        harSkadeSykdomEllerLyte = harSkadeSykdomEllerLyte,
+        erSkadeSykdomEllerLyteVesentligdel = erSkadeSykdomEllerLyteVesentligdel,
+        erNedsettelseIArbeidsevneMerEnnHalvparten = erNedsettelseIArbeidsevneMerEnnHalvparten,
+        erNedsettelseIArbeidsevneAvEnVissVarighet = erNedsettelseIArbeidsevneAvEnVissVarighet,
+        erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense,
+        erNedsettelseMinstHalvparten = null,
+        erNedsettelseMerEnnYrkesskadegrense = null,
+        erArbeidsevnenNedsatt = erArbeidsevnenNedsatt,
+        yrkesskadeBegrunnelse = yrkesskadeBegrunnelse,
+        vurderingenGjelderFra = 1 januar 2020,
+        vurderingenGjelderTil = null,
+        vurdertAv = Bruker("Z00000"),
+        opprettet = Instant.now(),
+        vurdertIBehandling = BehandlingId(1L),
+        diagnose = null
+    )
 }

@@ -314,6 +314,8 @@ class BistandsvilkåretTest {
         erNedsettelseIArbeidsevneMerEnnHalvparten = erNedsettelseIArbeidsevneMerEnnHalvparten,
         erNedsettelseIArbeidsevneAvEnVissVarighet = erNedsettelseIArbeidsevneAvEnVissVarighet,
         erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense,
+        erNedsettelseMinstHalvparten = null,
+        erNedsettelseMerEnnYrkesskadegrense = null,
         erArbeidsevnenNedsatt = erArbeidsevnenNedsatt,
         yrkesskadeBegrunnelse = null,
         vurderingenGjelderFra = vurderingenGjelderFra,
