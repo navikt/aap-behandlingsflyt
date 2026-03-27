@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.tilgang.TilgangGateway
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
 import no.nav.aap.tilgang.BehandlingTilgangRequest
 import no.nav.aap.tilgang.Operasjon
+import no.nav.aap.tilgang.PersonTilgangRequest
 import no.nav.aap.tilgang.SakTilgangRequest
 import java.util.UUID
 
@@ -31,6 +32,13 @@ object TilgangGatewayImpl : TilgangGateway {
                 saksnummer = saksnummer.toString(),
                 operasjon = operasjon
             ), token
+        ).tilgang
+    }
+
+    override fun sjekkTilgangTilPerson(ident: String, token: OidcToken, operasjon: Operasjon): Boolean {
+        return no.nav.aap.tilgang.TilgangGateway.harTilgangTilPerson(
+            body = PersonTilgangRequest(ident),
+            currentToken = token
         ).tilgang
     }
 }

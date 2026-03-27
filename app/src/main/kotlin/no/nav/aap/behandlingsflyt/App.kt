@@ -258,7 +258,7 @@ internal fun Application.server(
 
             apiRouting {
                 configApi()
-                personApi(dataSource, repositoryRegistry)
+                personApi(dataSource, repositoryRegistry, gatewayProvider)
                 saksApi(dataSource, repositoryRegistry, gatewayProvider)
                 behandlingApi(dataSource, repositoryRegistry, gatewayProvider)
                 flytApi(dataSource, repositoryRegistry, gatewayProvider)
