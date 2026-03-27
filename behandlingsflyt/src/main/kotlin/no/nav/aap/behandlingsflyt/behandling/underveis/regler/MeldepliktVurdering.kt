@@ -10,6 +10,7 @@ import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus.M
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus.UTEN_RETT
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisÅrsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.verdityper.dokument.JournalpostId
 
 enum class MeldepliktStatus {
@@ -49,7 +50,7 @@ interface MeldepliktVurdering {
     }
 
     data class MeldtSeg(
-        val journalpostId: JournalpostId,
+        val innsendingReferanse: InnsendingReferanse,
     ): MeldepliktVurdering {
         override val utfall = Utfall.OPPFYLT
         override val status = MELDT_SEG

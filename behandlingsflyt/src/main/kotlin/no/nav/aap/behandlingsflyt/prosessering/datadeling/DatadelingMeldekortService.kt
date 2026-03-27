@@ -55,12 +55,12 @@ class DatadelingMeldekortService(
 
             if (arbeidsperiode == null) {
                 log.warn(
-                    "Meldekort uten arbeidstimer ble ignorert. journalpostId=${meldekort.referanse.asJournalpostId.identifikator}, behandlingId=${behandlingId.id}"
+                    "Meldekort uten arbeidstimer ble ignorert. journalpostId=${meldekort.referanse.verdi}, behandlingId=${behandlingId.id}"
                 )
                 null
             } else if (meldekortetsPeriode == null) {
                 log.warn(
-                    "Meldekort med arbeidstimer som ikke samsvarer med noen meldekortperiode for behandlingen ble ignorert. journalpostId=${meldekort.referanse.asJournalpostId.identifikator}, behandlingId=${behandlingId.id}, arbeidsperiode=$arbeidsperiode"
+                    "Meldekort med arbeidstimer som ikke samsvarer med noen meldekortperiode for behandlingen ble ignorert. journalpostId=${meldekort.referanse.verdi}, behandlingId=${behandlingId.id}, arbeidsperiode=$arbeidsperiode"
                 )
                 null
             } else {

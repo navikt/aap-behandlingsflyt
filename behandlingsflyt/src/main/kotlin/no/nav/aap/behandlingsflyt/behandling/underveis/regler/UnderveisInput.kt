@@ -9,6 +9,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Meldekort
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.OverstyringMeldepliktGrunnlag
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.verdityper.dokument.JournalpostId
 import java.time.LocalDate
@@ -18,7 +19,7 @@ data class UnderveisInput(
     val vilkårsresultat: Vilkårsresultat,
     val opptrappingPerioder: List<Periode>,
     val meldekort: List<Meldekort>,
-    val innsendingsTidspunkt: Map<LocalDate, JournalpostId>,
+    val innsendingsTidspunkt: Map<LocalDate, InnsendingReferanse>,
     val dødsdato: LocalDate? = null,
     val kvoter: Kvoter,
     val institusjonsopphold: List<Institusjonsopphold>,

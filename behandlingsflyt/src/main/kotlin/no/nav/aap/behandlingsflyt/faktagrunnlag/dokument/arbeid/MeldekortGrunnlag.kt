@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid
 
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.verdityper.dokument.JournalpostId
 import java.time.LocalDate
 
@@ -13,8 +14,8 @@ data class MeldekortGrunnlag(
 
         }
 
-        val rekkefølgeIder = rekkefølge.map { it.referanse.asJournalpostId }
-        require(meldekortene.all { it.referanse.asJournalpostId in rekkefølgeIder }) {
+        val rekkefølgeIder = rekkefølge.map { it.referanse.verdi }
+        require(meldekortene.all { it.referanse.verdi in rekkefølgeIder }) {
             "sjekk feilet: ${meldekortene.joinToString { it.referanse.toString() }} subset ${rekkefølge.joinToString { it.referanse.toString() }}"
         }
     }
@@ -23,14 +24,14 @@ data class MeldekortGrunnlag(
      * Returnerer sortert stigende på innsendingstidspunkt
      */
     fun meldekort(): List<Meldekort> {
-        return meldekortene.sortedWith(compareBy { rekkefølge.first { at -> at.referanse.asJournalpostId == it.referanse.asJournalpostId }.mottattTidspunkt })
+        return meldekortene.sortedWith(compareBy { rekkefølge.first { at -> at.referanse.verdi == it.referanse.verdi }.mottattTidspunkt })
     }
 
-    fun innsendingsdatoPerMelding(): Map<LocalDate, JournalpostId> {
-        val datoer = HashMap<LocalDate, JournalpostId>()
+    fun innsendingsdatoPerMelding(): Map<LocalDate, InnsendingReferanse> {
+        val datoer = HashMap<LocalDate, InnsendingReferanse>()
 
         for (dokumentRekkefølge in rekkefølge) {
-            datoer[dokumentRekkefølge.mottattTidspunkt.toLocalDate()] = dokumentRekkefølge.referanse.asJournalpostId
+            datoer[dokumentRekkefølge.mottattTidspunkt.toLocalDate()] = dokumentRekkefølge.referanse
         }
 
         return datoer

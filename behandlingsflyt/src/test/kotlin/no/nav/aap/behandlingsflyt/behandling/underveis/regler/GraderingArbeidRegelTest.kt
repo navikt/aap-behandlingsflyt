@@ -299,7 +299,7 @@ class GraderingArbeidRegelTest {
             rettighetsperiode = rettighetsperiode,
             fastsattArbeidsevne = Prosent.`30_PROSENT`,
             meldekort = allemeldekort
-        ).copy(innsendingsTidspunkt = allemeldekort.associate { it.mottattTidspunkt.toLocalDate() to it.referanse.asJournalpostId })
+        ).copy(innsendingsTidspunkt = allemeldekort.associate { it.mottattTidspunkt.toLocalDate() to it.referanse })
         val vurdering = vurder(input)
 
         assertEquals(Prosent.`70_PROSENT`, vurdering.segment(meldeperiode1.fom)?.verdi?.arbeidsgradering()?.gradering)

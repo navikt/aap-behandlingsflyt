@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Ut
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.Fritaksvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktOverstyringStatus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.OverstyringMeldepliktData
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.komponenter.tidslinje.JoinStyle
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
@@ -26,7 +27,7 @@ class MeldepliktRegel(
     data class MeldepliktData(
         val fritaksvurdering: Fritaksvurdering.FritaksvurderingData? = null,
         val overstyringMeldeplikt: OverstyringMeldepliktData? = null,
-        val meldekort: JournalpostId? = null,
+        val meldekort: InnsendingReferanse? = null,
         val førVedtak: Boolean = false,
         val utenRett: Boolean = false,
         val førsteDagMedRettForPerioden: Boolean = false,
@@ -166,10 +167,10 @@ class MeldepliktRegel(
     }
 
     private fun meldekortTidslinje(input: UnderveisInput): Tidslinje<MeldepliktData> {
-        return input.innsendingsTidspunkt.entries.map { (dato, journalpostId) ->
+        return input.innsendingsTidspunkt.entries.map { (dato, innsendingReferanse) ->
             Segment(
                 Periode(dato, dato),
-                MeldepliktData(meldekort = journalpostId)
+                MeldepliktData(meldekort = innsendingReferanse)
             )
         }.let(::Tidslinje)
     }
@@ -190,6 +191,7 @@ class MeldepliktRegel(
             begrensetForrigePeriode.segmenter().firstNotNullOfOrNull {
                 val innsending = it.verdi.meldekort
                 when {
+                    // TODO er det riktig å gjøre dette uansett eller kun dersom referansen er journalføring?
                     innsending != null -> Segment(it.periode, MeldepliktVurdering.MeldtSeg(innsending))
                     else -> null
                 }

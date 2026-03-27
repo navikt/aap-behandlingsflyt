@@ -8,6 +8,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.Oversty
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.OverstyringMeldepliktVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.OverstyringMeldepliktVurderingPeriode
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.test.april
 import no.nav.aap.behandlingsflyt.test.desember
@@ -83,7 +84,7 @@ class MeldepliktRegelTest {
             Forventer(
                 fom = 26 mai 2025,
                 tom = 8 juni 2025,
-                vurdering = MeldepliktVurdering.MeldtSeg(JournalpostId("1")),
+                vurdering = MeldepliktVurdering.MeldtSeg(InnsendingReferanse(InnsendingReferanse.Type.JOURNALPOST, "1")),
             ),
             Forventer(
                 fom = 9 juni 2025,
