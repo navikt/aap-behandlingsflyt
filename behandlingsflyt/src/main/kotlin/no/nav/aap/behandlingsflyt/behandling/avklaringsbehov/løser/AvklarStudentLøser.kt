@@ -30,12 +30,12 @@ class AvklarStudentLøser(
                 kontekst.behandlingId(),
             )
         }?.toSet() ?: setOf(
-            løsning.studentvurdering.tilStudentVurdering(
+            løsning.studentvurdering?.tilStudentVurdering(
                 kontekst.bruker,
                 kontekst.behandlingId(),
                 sak.rettighetsperiode.fom
             )
-        )
+        ).filterNotNull().toSet()
 
 
         val forrigeBehandlingId = kontekst.kontekst.forrigeBehandlingId
@@ -53,7 +53,7 @@ class AvklarStudentLøser(
         )
 
         return LøsningsResultat(
-            begrunnelse = løsning.studentvurdering.begrunnelse
+            begrunnelse = løsning.studentvurdering?.begrunnelse ?: "Vurdert avklar student"
         )
     }
 

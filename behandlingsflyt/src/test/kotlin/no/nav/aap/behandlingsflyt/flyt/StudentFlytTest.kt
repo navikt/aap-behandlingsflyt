@@ -184,6 +184,56 @@ class StudentFlytTest(val unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
     }
 
     @Test
+    fun `revurdering med tom løsningerForPerioder skal ikke kaste NoSuchElementException`() {
+        val fom = 24 november 2025
+        val sykestipendPeriode = Periode(fom, fom.plusDays(14))
+        val avbruttStudieDato = 1 oktober 2025
+
+        val person = TestPersoner.STANDARD_PERSON()
+
+        val (sak, behandling) = sendInnFørsteSøknad(
+            person = person,
+            mottattTidspunkt = fom.atStartOfDay(),
+            søknad = TestSøknader.SØKNAD_STUDENT
+        )
+
+        behandling
+            .løsAvklaringsBehov(
+                AvklarStudentEnkelLøsning(
+                    studentvurdering = StudentVurderingDTO(
+                        begrunnelse = "...",
+                        harAvbruttStudie = true,
+                        godkjentStudieAvLånekassen = true,
+                        avbruttPgaSykdomEllerSkade = true,
+                        harBehovForBehandling = true,
+                        avbruttStudieDato = avbruttStudieDato,
+                        avbruddMerEnn6Måneder = true
+                    ),
+                )
+            )
+            .løsSykdom(avbruttStudieDato.plusMonths(6), erOppfylt = false)
+            .løsRefusjonskrav()
+            .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
+            .kvalitetssikre()
+            .løsBeregningstidspunkt()
+            .løsOppholdskrav(fom)
+            .løsSykestipend(listOf(sykestipendPeriode))
+            .løsAndreStatligeYtelser()
+            .løsAvklaringsBehov(ForeslåVedtakLøsning())
+            .fattVedtak()
+
+        sak.opprettManuellRevurdering(listOf(Vurderingsbehov.REVURDER_STUDENT))
+            .løsAvklaringsBehov(
+                AvklarStudentLøsning(løsningerForPerioder = emptyList())
+            )
+            .medKontekst {
+                assertThat(åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
+                    .doesNotContain(Definisjon.AVKLAR_STUDENT)
+            }
+    }
+
+    @Test
     fun `Periodisering - skal kunne avslutte student i samme behandling`() {
         val fom = 24 november 2025
         val periode = Periode(fom, fom.plusYears(3))
