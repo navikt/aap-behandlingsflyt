@@ -147,6 +147,17 @@ data class YrkesskadeSak(
     val manuellYrkesskadeDato: LocalDate?,
 )
 
+enum class ErNedsettelseMinstHalvpartenValg {
+    JA,
+    JA_FORBIGÅENDE_PROBLEMER,
+    NEI,
+}
+
+enum class ErNedsettelseMerEnnYrkesskadegrenseValg {
+    JA,
+    JA_FORBIGÅENDE_PROBLEMER,
+    NEI,
+}
 
 
 
