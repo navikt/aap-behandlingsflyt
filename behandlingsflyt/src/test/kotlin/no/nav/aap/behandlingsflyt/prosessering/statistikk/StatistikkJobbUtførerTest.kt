@@ -399,6 +399,8 @@ class StatistikkJobbUtførerTest {
                         erNedsettelseIArbeidsevneAvEnVissVarighet = true,
                         erNedsettelseIArbeidsevneMerEnnHalvparten = true,
                         erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = true,
+                        erNedsettelseMinstHalvparten = null,
+                        erNedsettelseMerEnnYrkesskadegrense = null,
                         yrkesskadeBegrunnelse = "begr",
                         erArbeidsevnenNedsatt = true,
                         diagnose = Diagnose(
