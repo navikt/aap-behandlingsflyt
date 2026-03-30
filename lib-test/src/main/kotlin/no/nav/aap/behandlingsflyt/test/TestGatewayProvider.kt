@@ -24,6 +24,7 @@ import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlPersonopplysningGateway
 import no.nav.aap.behandlingsflyt.integrasjon.samordning.AbakusForeldrepengerGateway
 import no.nav.aap.behandlingsflyt.integrasjon.samordning.AbakusSykepengerGateway
 import no.nav.aap.behandlingsflyt.integrasjon.samordning.DagpengerGatewayImpl
+import no.nav.aap.behandlingsflyt.integrasjon.samordning.TiltakspengerGatewayImpl
 import no.nav.aap.behandlingsflyt.integrasjon.samordning.TjenestePensjonGatewayImpl
 import no.nav.aap.behandlingsflyt.integrasjon.statistikk.StatistikkGatewayImpl
 import no.nav.aap.behandlingsflyt.integrasjon.tilgang.TilgangGatewayImpl
@@ -66,4 +67,5 @@ fun testGatewayProvider(unleashGateway: KClass<out UnleashGateway> = AlleAvskrud
         register<TilgangGatewayImpl>()
         register<GosysGateway>()
         register<DagpengerGatewayImpl>()
+        register<TiltakspengerGatewayImpl>()
     }

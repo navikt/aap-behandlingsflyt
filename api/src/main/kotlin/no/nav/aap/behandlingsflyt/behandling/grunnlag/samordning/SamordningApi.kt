@@ -6,12 +6,15 @@ import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
 import no.nav.aap.behandlingsflyt.behandling.samordning.SamordningPeriodeSammenligner
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.SamordningAndreStatligeYtelserRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.gateway.TiltakspengerKilde
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.gateway.TiltakspengerYtelseType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.arbeidsgiver.SamordningArbeidsgiverRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjonRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.dagpenger.DagpengerRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.tiltakspenger.TiltakspengerRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UførePeriodeSammenligner
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.andreYtelserOppgittISøknad.AndreYtelserOppgittISøknadRepository
@@ -30,6 +33,7 @@ import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.getGrunnlag
+import java.time.LocalDate
 import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.samordningGrunnlag(
@@ -193,7 +197,7 @@ fun NormalOpenAPIRoute.samordningGrunnlag(
             ) { behandlingReferanse ->
                 val (samordningAndreStatligeYtelserVurdering,
                      samordningAndreStatligeYtelserHistoriskeVurdering,
-                     dagpengerGrunnlagPerioder) =
+                     samordningAndreStatligeYtelserPerioder) =
                     dataSource.transaction { connection ->
                         val repositoryProvider = repositoryRegistry.provider(connection)
                         val samordningAndreStatligeYtelserRepository =
@@ -202,6 +206,7 @@ fun NormalOpenAPIRoute.samordningGrunnlag(
                         val sakRepository = repositoryProvider.provide<SakRepository>()
                         val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
                         val dagpengerRepository = repositoryProvider.provide<DagpengerRepository>()
+                        val tiltakspengerRepository = repositoryProvider.provide<TiltakspengerRepository>();
 
                         val behandling = behandlingRepository.hent(behandlingReferanse)
                         val sak = sakRepository.hent(behandling.sakId)
@@ -228,7 +233,18 @@ fun NormalOpenAPIRoute.samordningGrunnlag(
                             )
                         }
 
-                        Triple(vurdering, historiskeVurderinger, dagpengerGrunnlag)
+                        val tiltakspengerGrunnlag = tiltakspengerRepository.hent(behandling.id).map {
+                            AndreStatligeYtelserPeriodeDto(
+                                fom = it.fraOgMed,
+                                tom = it.tilOgMed,
+                                ytelseType = mapTiltakspengerYtelseType(it.tiltakspengerYtelseType),
+                                kilde = mapTiltakspengerKilde(it.kilde)
+                            )
+                        }
+
+                        val andreStatligeYtelserGrunnlag = dagpengerGrunnlag + tiltakspengerGrunnlag;
+
+                        Triple(vurdering, historiskeVurderinger, andreStatligeYtelserGrunnlag)
                     }
 
                 val navnOgEnhet = samordningAndreStatligeYtelserVurdering?.let {
@@ -248,7 +264,7 @@ fun NormalOpenAPIRoute.samordningGrunnlag(
                         harTilgangTilÅSaksbehandle = kanSaksbehandle(),
                         vurdering = vurdering,
                         historiskeVurderinger = historiskeVurderinger,
-                        perioder = dagpengerGrunnlagPerioder,
+                        perioder = samordningAndreStatligeYtelserPerioder,
                     )
                 )
             }

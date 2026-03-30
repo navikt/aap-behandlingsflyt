@@ -72,6 +72,7 @@ import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 import java.util.concurrent.TimeUnit
 import javax.sql.DataSource
+import kotlin.collections.map
 import kotlin.random.Random
 
 private val log = LoggerFactory.getLogger("TestApp")
@@ -356,6 +357,13 @@ private fun sendInnSøknad(dto: OpprettTestcaseDTO, gatewayProvider: GatewayProv
                     periode = it.periode,
                     kilde = it.kilde,
                     dagpengerYtelseType = it.dagpengerYtelseType
+                )
+            },
+            tiltakspenger = dto.tiltakspenger.map {
+                TestPerson.Tiltakspenger(
+                    periode = it.periode,
+                    kilde = it.kilde,
+                    ytelseType = it.ytelseType
                 )
             },
             tjenestePensjon = if (dto.tjenestePensjon != null && dto.tjenestePensjon) TjenestePensjonRespons(
