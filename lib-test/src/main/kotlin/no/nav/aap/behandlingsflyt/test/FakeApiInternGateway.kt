@@ -2,6 +2,8 @@ package no.nav.aap.behandlingsflyt.test
 
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelsePeriode
 import no.nav.aap.behandlingsflyt.datadeling.SakStatus
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.StansEllerOpphørVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.StansOpphørGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.ApiInternGateway
@@ -44,7 +46,8 @@ class FakeApiInternGateway : ApiInternGateway {
         beregningsgrunnlag: BigDecimal?,
         underveis: List<Underveisperiode>,
         vedtaksDato: LocalDate,
-        rettighetsTypeTidslinje: Tidslinje<RettighetsType>
+        rettighetsTypeTidslinje: Tidslinje<RettighetsType>,
+        stansOpphørGrunnlag: Set<StansEllerOpphørVurdering>?
     ) {
         // No-op
     }
