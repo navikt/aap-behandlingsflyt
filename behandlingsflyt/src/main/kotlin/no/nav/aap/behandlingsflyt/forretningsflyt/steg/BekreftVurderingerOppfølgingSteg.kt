@@ -80,7 +80,6 @@ class BekreftVurderingerOppfølgingSteg(
         val sykdomsbehovSistLøstAvKontor =
             sykdomsbehovLøstAvKontorIDenneBehandlingen(avklaringsbehovene).mapNotNull { behov ->
                 behov.aktivHistorikk.lastOrNull { it.status == Status.AVSLUTTET }
-                    ?.let { Pair(behov.definisjon, it) }
             }
 
         val sistBekreftet =
@@ -89,20 +88,19 @@ class BekreftVurderingerOppfølgingSteg(
                 ?.lastOrNull { endring -> endring.status == Status.AVSLUTTET }
                 ?.tidsstempel
 
-        val finnesMellomlagredeVurderingerForRelevanteBehov =
-            mellomlagretVurderingService.hentMellomlagredeVurderingerFørSteg(
+        val mellomlagredeVurderingerForRelevanteBehov =
+            // Filtrer vekk avbrutte behov som kan ha mellomlagrede vurderinger som det ikke er mulig for saksbehandler å slette
+            // Bør nok heller løses ved automatisk sletting ved avbrutt i avklaringsbehovservice
+            mellomlagretVurderingService.hentMellomlagredeVurderingerForAktiveBehovFørSteg(
                 behandlingId, type(), listOf(Rolle.SAKSBEHANDLER_OPPFOLGING)
-            ).any { mellomlagretVurdering ->
-                // Filtrer vekk avbrutte behov som kan ha mellomlagrede vurderinger som det ikke er mulig for saksbehandler å slette
-                // Bør nok heller løses ved automatisk sletting ved avbrutt i avklaringsbehovservice
-                sykdomsbehovSistLøstAvKontor.map { it.first.kode }.contains(mellomlagretVurdering.avklaringsbehovKode)
-            }
+            )
+
 
         return when {
-            finnesMellomlagredeVurderingerForRelevanteBehov -> false
+            mellomlagredeVurderingerForRelevanteBehov.isNotEmpty() -> false
             sykdomsbehovSistLøstAvKontor.isEmpty() -> true
             sistBekreftet == null -> false
-            else -> sykdomsbehovSistLøstAvKontor.all { (_, nyesteSykdomsløsning) ->
+            else -> sykdomsbehovSistLøstAvKontor.all { nyesteSykdomsløsning ->
                 nyesteSykdomsløsning.tidsstempel.isBefore(
                     sistBekreftet
                 )
