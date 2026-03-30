@@ -24,18 +24,22 @@ class AvklarStudentLøser(
     ): LøsningsResultat {
         val sak = sakRepository.hent(kontekst.kontekst.sakId)
 
-        val nyeVurderinger = løsning.løsningerForPerioder?.map {
-            it.tilStudentVurdering(
-                kontekst.bruker,
-                kontekst.behandlingId(),
-            )
-        }?.toSet() ?: setOf(
-            løsning.studentvurdering?.tilStudentVurdering(
-                kontekst.bruker,
-                kontekst.behandlingId(),
-                sak.rettighetsperiode.fom
-            )
-        ).filterNotNull().toSet()
+        val nyeVurderinger = (
+                løsning.løsningerForPerioder
+                    ?.map {
+                        it.tilStudentVurdering(
+                            kontekst.bruker,
+                            kontekst.behandlingId(),
+                        )
+                    }
+                    ?: listOfNotNull(
+                        løsning.studentvurdering?.tilStudentVurdering(
+                            kontekst.bruker,
+                            kontekst.behandlingId(),
+                            sak.rettighetsperiode.fom
+                        )
+                    )
+                ).toSet()
 
 
         val forrigeBehandlingId = kontekst.kontekst.forrigeBehandlingId
