@@ -223,7 +223,7 @@ class SykepengeerstatningFlytTest(val unleashGateway: KClass<UnleashGateway>) :
                 assertThat(resultat).isEqualTo(Resultat.INNVILGELSE)
             }
 
-        behandling = behandling.løsVedtaksbrev(typeBrev = TypeBrev.VEDTAK_11_18)
+        behandling = behandling.løsVedtaksbrev(typeBrev = TypeBrev.VEDTAK_INNVILGELSE)
 
         assertThat(behandling.status()).isEqualTo(Status.AVSLUTTET)
 
