@@ -231,8 +231,8 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
                     setBoolean(7, vurdering.erNedsettelseIArbeidsevneMerEnnHalvparten)
                     setBoolean(8, vurdering.erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense)
                     setBoolean(9, vurdering.erNedsettelseIArbeidsevneAvEnVissVarighet)
-                    setString(10, vurdering.erNedsettelseMinstHalvparten?.name)
-                    setString(11, vurdering.erNedsettelseMerEnnYrkesskadegrense?.name)
+                    setEnumName(10, vurdering.erNedsettelseMinstHalvparten)
+                    setEnumName(11, vurdering.erNedsettelseMerEnnYrkesskadegrense)
                     setString(12, vurdering.yrkesskadeBegrunnelse)
                     setString(13, vurdering.diagnose?.kodeverk)
                     setString(14, vurdering.diagnose?.hoveddiagnose)
@@ -374,10 +374,8 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
             vurdertAv = Bruker(row.getString("VURDERT_AV_IDENT")),
             vurdertIBehandling = BehandlingId(row.getLong("VURDERT_I_BEHANDLING")),
             vurderingenGjelderTil = row.getLocalDateOrNull("VURDERINGEN_GJELDER_TIL"),
-            erNedsettelseMinstHalvparten = row.getStringOrNull("ER_NEDSETTELSE_MINST_HALVPARTEN")
-                ?.let { ErNedsettelseMinstHalvpartenValg.valueOf(it) },
-            erNedsettelseMerEnnYrkesskadegrense = row.getStringOrNull("ER_NEDSETTELSE_MER_ENN_YRKESSKADEGRENSE")
-                ?.let { ErNedsettelseMerEnnYrkesskadegrenseValg.valueOf(it) },
+            erNedsettelseMinstHalvparten = row.getEnumOrNull("ER_NEDSETTELSE_MINST_HALVPARTEN"),
+            erNedsettelseMerEnnYrkesskadegrense = row.getEnumOrNull("ER_NEDSETTELSE_MER_ENN_YRKESSKADEGRENSE")
         )
     }
 
