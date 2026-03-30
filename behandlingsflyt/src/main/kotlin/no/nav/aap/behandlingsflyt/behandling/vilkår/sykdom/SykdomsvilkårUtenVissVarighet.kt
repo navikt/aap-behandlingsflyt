@@ -88,9 +88,8 @@ class SykdomsvilkårUtenVissVarighet(vilkårsresultat: Vilkårsresultat) : Vilk�
             sykepengeerstatningTidslinje,
             bistandvurderingtidslinje
         )
-            .mapValue { (segmentPeriode, yrkesskadeVurdering, sykdomVurdering, sykepengerVurdering, bistandVurdering) ->
+            .mapValue { (yrkesskadeVurdering, sykdomVurdering, sykepengerVurdering, bistandVurdering) ->
                 opprettVilkårsvurdering(
-                    segmentPeriode,
                     grunnlag.sykepengeerstatningVilkår,
                     sykdomVurdering,
                     yrkesskadeVurdering,
@@ -117,9 +116,8 @@ class SykdomsvilkårUtenVissVarighet(vilkårsresultat: Vilkårsresultat) : Vilk�
             zip2,
             sykepengerTidslinje,
             bistandvurderingTidslinje,
-        ) { segmentPeriode, a, b, c ->
+        ) { a, b, c ->
             LokaltSegment(
-                segmentPeriode,
                 yrkesskadeVurdering = a?.first,
                 sykdomVurdering = a?.second,
                 sykepengerVurdering = b,
@@ -129,7 +127,6 @@ class SykdomsvilkårUtenVissVarighet(vilkårsresultat: Vilkårsresultat) : Vilk�
     }
 
     internal data class LokaltSegment(
-        val segmentPeriode: Periode,
         val yrkesskadeVurdering: Yrkesskadevurdering?,
         val sykdomVurdering: Sykdomsvurdering?,
         val sykepengerVurdering: SykepengerVurdering?,
@@ -138,7 +135,6 @@ class SykdomsvilkårUtenVissVarighet(vilkårsresultat: Vilkårsresultat) : Vilk�
 
 
     private fun opprettVilkårsvurdering(
-        segmentPeriode: Periode,
         sykepengeerstatningVilkår: Tidslinje<Vilkårsvurdering>,
         sykdomVurdering: Sykdomsvurdering?,
         yrkesskadeVurdering: Yrkesskadevurdering?,
@@ -201,6 +197,7 @@ class SykdomsvilkårUtenVissVarighet(vilkårsresultat: Vilkårsresultat) : Vilk�
 }
 
 data class SammenlignetSegment(val gammel: SammenlignbarVurdering?, val ny: SammenlignbarVurdering?)
+
 fun Tidslinje<SammenlignetSegment>.diff() = this.segmenter().filter { it.verdi.gammel != it.verdi.ny }
 fun Tidslinje<SammenlignetSegment>.harDiff() = this.segmenter().none { it.verdi.gammel != it.verdi.ny }
 data class SammenlignbarVurdering(
