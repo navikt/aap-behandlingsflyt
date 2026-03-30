@@ -766,6 +766,51 @@ class AvklarHelseinstitusjonLøserTest {
     // -------------------------------------------------------------------------
 
     @Test
+    fun `løpende opphold forkortet til konkret dato med tom ny vurdering`() {
+        val forrigeBehandlingId = BehandlingId(1L)
+        val nåværendeBehandlingId = BehandlingId(2L)
+        val vurderingSlot = slot<List<HelseinstitusjonVurdering>>()
+
+        // Forrige behandling: opphold løpende (tom = 2999-01-01), vurdering fra 1/6 til 2999-01-01
+        val løpendeTom = 1 januar 2999
+        val forrigeGrunnlag = lagGrunnlagMedOpphold(
+            oppholdFom = 1 februar 2025,
+            oppholdTom = løpendeTom,
+            vurderinger = listOf(
+                lagHelseinstitusjonVurdering(
+                    begrunnelse = "reduksjon løpende",
+                    periode = Periode(1 juni 2025, løpendeTom),
+                    behandlingId = forrigeBehandlingId
+                )
+            )
+        )
+
+        // Nåværende behandling: samme opphold, men tom endret til konkret dato
+        val nyTom = 1 august 2025
+        val nåværendeGrunnlag = lagGrunnlagMedOpphold(
+            oppholdFom = 1 februar 2025,
+            oppholdTom = nyTom,
+            vurderinger = emptyList()
+        )
+
+        every { behandlingRepository.hent(nåværendeBehandlingId) } returns
+                opprettBehandling(nåværendeBehandlingId, forrigeBehandlingId)
+        every { helseinstitusjonRepository.hentHvisEksisterer(forrigeBehandlingId) } returns forrigeGrunnlag
+        every { helseinstitusjonRepository.hentHvisEksisterer(nåværendeBehandlingId) } returns nåværendeGrunnlag
+        every { helseinstitusjonRepository.lagreHelseVurdering(any(), capture(vurderingSlot)) } returns Unit
+
+        løser.løs(
+            lagKontekst(nåværendeBehandlingId),
+            lagLøsning()
+        )
+
+        val lagrede = vurderingSlot.captured
+        assertThat(lagrede).hasSize(1)
+        assertThat(lagrede[0].periode.tom).isEqualTo(nyTom)
+        assertThat(lagrede[0].vurdertIBehandling).isEqualTo(nåværendeBehandlingId)
+    }
+
+    @Test
     fun `løpende opphold forkortet til konkret dato - vedtatt vurdering klippes og reassigneres`() {
         val forrigeBehandlingId = BehandlingId(1L)
         val nåværendeBehandlingId = BehandlingId(2L)
