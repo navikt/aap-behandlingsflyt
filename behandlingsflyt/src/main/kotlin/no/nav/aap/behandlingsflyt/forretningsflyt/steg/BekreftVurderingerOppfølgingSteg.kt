@@ -78,19 +78,31 @@ class BekreftVurderingerOppfølgingSteg(
         avklaringsbehovene: Avklaringsbehovene, behandlingId: BehandlingId
     ): Boolean {
         val sykdomsbehovSistLøstAvKontor =
-            sykdomsbehovLøstAvKontorIDenneBehandlingen(avklaringsbehovene).mapNotNull { behov -> behov.aktivHistorikk.lastOrNull { it.status == Status.AVSLUTTET } }
-        val sistBekreftet =
-            avklaringsbehovene.hentBehovForDefinisjon(Definisjon.BEKREFT_VURDERINGER_OPPFØLGING)?.aktivHistorikk?.lastOrNull { endring -> endring.status == Status.AVSLUTTET }?.tidsstempel
+            sykdomsbehovLøstAvKontorIDenneBehandlingen(avklaringsbehovene).mapNotNull { behov ->
+                behov.aktivHistorikk.lastOrNull { it.status == Status.AVSLUTTET }
+                    ?.let { Pair(behov.definisjon, it) }
+            }
 
-        val mellomlagredeVurderinger = mellomlagretVurderingService.hentMellomlagredeVurderingerFørSteg(
-            behandlingId, type(), listOf(Rolle.SAKSBEHANDLER_OPPFOLGING)
-        )
+        val sistBekreftet =
+            avklaringsbehovene.hentBehovForDefinisjon(Definisjon.BEKREFT_VURDERINGER_OPPFØLGING)
+                ?.aktivHistorikk
+                ?.lastOrNull { endring -> endring.status == Status.AVSLUTTET }
+                ?.tidsstempel
+
+        val finnesMellomlagredeVurderingerForRelevanteBehov =
+            mellomlagretVurderingService.hentMellomlagredeVurderingerFørSteg(
+                behandlingId, type(), listOf(Rolle.SAKSBEHANDLER_OPPFOLGING)
+            ).any { mellomlagretVurdering ->
+                // Filtrer vekk avbrutte behov som kan ha mellomlagrede vurderinger som det ikke er mulig for saksbehandler å slette
+                // Bør nok heller løses ved automatisk sletting ved avbrutt i avklaringsbehovservice
+                sykdomsbehovSistLøstAvKontor.map { it.first.kode }.contains(mellomlagretVurdering.avklaringsbehovKode)
+            }
 
         return when {
-            mellomlagredeVurderinger.isNotEmpty() -> false
+            finnesMellomlagredeVurderingerForRelevanteBehov -> false
             sykdomsbehovSistLøstAvKontor.isEmpty() -> true
             sistBekreftet == null -> false
-            else -> sykdomsbehovSistLøstAvKontor.all { nyesteSykdomsløsning ->
+            else -> sykdomsbehovSistLøstAvKontor.all { (_, nyesteSykdomsløsning) ->
                 nyesteSykdomsløsning.tidsstempel.isBefore(
                     sistBekreftet
                 )
