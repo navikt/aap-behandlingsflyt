@@ -1,8 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.refusjon
 
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.AndreUtbetalingerYtelser
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.AndreYtelserSøknad
 import java.time.LocalDate
 
 

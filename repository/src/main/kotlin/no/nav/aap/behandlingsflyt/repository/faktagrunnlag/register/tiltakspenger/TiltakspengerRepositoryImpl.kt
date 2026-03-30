@@ -7,7 +7,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.tiltakspenger.Tiltakspe
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.type.Periode
-import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.lookup.repository.Factory
 
 class TiltakspengerRepositoryImpl(private val connection: DBConnection) : TiltakspengerRepository {
