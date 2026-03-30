@@ -13,10 +13,12 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerV
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Yrkesskadevurdering
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.orEmpty
+import org.slf4j.LoggerFactory
 
 class SykepengeerstatningVilkår(vilkårsresultat: Vilkårsresultat) :
     Vilkårsvurderer<SykepengerErstatningFaktagrunnlag> {
     private val vilkår: Vilkår = vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.SYKEPENGEERSTATNING)
+    private val log = LoggerFactory.getLogger(javaClass)
 
     override fun vurder(grunnlag: SykepengerErstatningFaktagrunnlag) {
         val sykdomsvurderingTidslinje = grunnlag.sykdomGrunnlag?.somSykdomsvurderingstidslinje(
@@ -30,7 +32,7 @@ class SykepengeerstatningVilkår(vilkårsresultat: Vilkårsresultat) :
             sisteMuligDagMedYtelse = grunnlag.rettighetsperiode.tom
         ).orEmpty()
 
-        val tidslinje =
+        val tidslinjeGammel =
             Tidslinje.zip3(sykdomsvurderingTidslinje, sykepengeerstatningTidslinje, yrkesskadevurderingTidslinje)
                 .mapValue { (sykdomsvurdering, sykepengeerstatningVurdering, yrkesskadevurdering) ->
                     opprettVilkårsvurdering(
@@ -40,7 +42,24 @@ class SykepengeerstatningVilkår(vilkårsresultat: Vilkårsresultat) :
                         grunnlag
                     )
                 }
-        vilkår.leggTilVurderinger(tidslinje)
+        val tidslinjeNy =        Tidslinje.zip3(sykdomsvurderingTidslinje, sykepengeerstatningTidslinje, yrkesskadevurderingTidslinje)
+            .mapValue { (sykdomsvurdering, sykepengeerstatningVurdering, yrkesskadevurdering) ->
+                opprettVilkårsvurderingNy(
+                    sykdomsvurdering,
+                    sykepengeerstatningVurdering,
+                    yrkesskadevurdering,
+                    grunnlag
+                )
+            }
+        
+        val sammenlignbarTidslinjeGammel = tidslinjeGammel.mapValue{Triple(it.utfall,it.avslagsårsak, it.innvilgelsesårsak)}.komprimer()
+        val sammenlignbarTidslinjeNy = tidslinjeNy.mapValue{Triple(it.utfall,it.avslagsårsak, it.innvilgelsesårsak)}.komprimer()
+        
+        if (sammenlignbarTidslinjeGammel != sammenlignbarTidslinjeNy) {
+            log.warn("Fant diff i sykepengeerstatningvilkår")
+        }
+        
+        vilkår.leggTilVurderinger(tidslinjeGammel)
     }
 
     private fun opprettVilkårsvurdering(
@@ -51,6 +70,38 @@ class SykepengeerstatningVilkår(vilkårsresultat: Vilkårsresultat) :
     ): Vilkårsvurdering {
         return if (sykepengeerstatningVurdering?.harRettPå == true &&
             sykdomsvurdering?.erOppfyltOrdinærtEllerMedYrkesskadeSettBortFraVissVarighet(yrkesskadeVurdering) ?: false
+        ) {
+            Vilkårsvurdering(
+                Vilkårsperiode(
+                    periode = grunnlag.rettighetsperiode,
+                    utfall = Utfall.OPPFYLT,
+                    begrunnelse = sykepengeerstatningVurdering.begrunnelse,
+                    innvilgelsesårsak = null,
+                    avslagsårsak = null,
+                    faktagrunnlag = grunnlag,
+                )
+            )
+        } else {
+            Vilkårsvurdering(
+                Vilkårsperiode(
+                    periode = grunnlag.rettighetsperiode,
+                    utfall = Utfall.IKKE_OPPFYLT,
+                    begrunnelse = sykepengeerstatningVurdering?.begrunnelse,
+                    innvilgelsesårsak = null,
+                    avslagsårsak = Avslagsårsak.IKKE_RETT_PA_SYKEPENGEERSTATNING,
+                    faktagrunnlag = grunnlag,
+                )
+            )
+        }
+    }
+    private fun opprettVilkårsvurderingNy(
+        sykdomsvurdering: Sykdomsvurdering?,
+        sykepengeerstatningVurdering: SykepengerVurdering?,
+        yrkesskadeVurdering: Yrkesskadevurdering?,
+        grunnlag: SykepengerErstatningFaktagrunnlag,
+    ): Vilkårsvurdering {
+        return if (sykepengeerstatningVurdering?.harRettPå == true &&
+            sykdomsvurdering?.erKonsistentMedSykepengeerstatning(yrkesskadeVurdering) ?: false
         ) {
             Vilkårsvurdering(
                 Vilkårsperiode(

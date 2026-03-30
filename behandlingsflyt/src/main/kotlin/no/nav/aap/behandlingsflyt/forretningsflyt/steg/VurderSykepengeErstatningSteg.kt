@@ -26,6 +26,7 @@ import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.lookup.repository.RepositoryProvider
+import java.lang.IllegalStateException
 
 class VurderSykepengeErstatningSteg private constructor(
     private val vilkårsresultatRepository: VilkårsresultatRepository,
@@ -129,14 +130,16 @@ class VurderSykepengeErstatningSteg private constructor(
                 is TidligereVurderinger.UunngåeligAvslag -> false
                 is TidligereVurderinger.PotensieltOppfylt -> {
                     when {
+                        // Denne inngangen skal fjernes på sikt
                         sykdomsvurdering?.erOppfyltOrdinær(kravDato, segmentPeriode) == true
                                 && bistandvurdering?.erBehovForBistand() != true
                                 && overgangUføreVilkårsvurdering?.utfall != Utfall.OPPFYLT
                                 && overgangarbeidVilkår?.utfall != Utfall.OPPFYLT -> true
 
                         /* caset oppfyller ikke medlemmet vilkåret for ordinær AAP, men SPE er mulig */
+                        sykdomsvurdering?.erKonsistentMedSykepengeerstatning(yrkesskadevurdering) == true -> true
                         sykdomsvurdering?.erOppfyltOrdinærtEllerMedYrkesskadeMenIkkeVissVarighet(yrkesskadevurdering) == true ->
-                            true
+                            throw IllegalStateException("Fant diff mellom ny bakoverkompatibel løsning og gammel løsning")
 
                         else -> false
                     }
