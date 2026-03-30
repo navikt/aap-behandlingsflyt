@@ -102,25 +102,7 @@ class AvsluttetBehandlingTilStatistikk(
 
         val vedtakTidspunkt = vedtakService.vedtakstidspunkt(behandling)
 
-        val tilkjentYtelse =
-            tilkjentYtelseRepository.hentHvisEksisterer(behandling.id)
-                ?.map { Segment(it.periode, it.tilkjent) }
-                ?.let(::Tidslinje)?.mapValue { it }?.komprimer()?.segmenter()?.map {
-                    val verdi = it.verdi
-                    TilkjentYtelsePeriodeDTO(
-                        fraDato = it.periode.fom,
-                        tilDato = it.periode.tom,
-                        dagsats = verdi.dagsats.verdi().toDouble(),
-                        gradering = verdi.gradering.prosentverdi().toDouble(),
-                        redusertDagsats = verdi.redusertDagsats().verdi().toDouble(),
-                        antallBarn = verdi.antallBarn,
-                        barnepensjonDagsats = verdi.barnepensjonDagsats.verdi().toDouble(),
-                        barnetilleggSats = verdi.barnetilleggsats.verdi().toDouble(),
-                        barnetillegg = verdi.barnetillegg.verdi().toDouble(),
-                        utbetalingsdato = verdi.utbetalingsdato,
-                        minsteSats = verdi.tilKontrakt()
-                    )
-                }
+        val tilkjentYtelse = mapTilkjentYtelse(behandling)
 
         if (tilkjentYtelse == null) {
             log.info("Ingen tilkjente ytelser knyttet til avsluttet behandling ${behandling.id}.")
@@ -133,21 +115,9 @@ class AvsluttetBehandlingTilStatistikk(
 
         log.info("Kaller aap-statistikk for sak ${sak.saksnummer} og behandling ${behandling.referanse}")
 
-        val rettighetstypePerioder = underveisRepository.hentHvisEksisterer(behandling.id)?.perioder.orEmpty()
-            .filter { it.rettighetsType != null }.map { Segment(it.periode, it.rettighetsType) }.let(::Tidslinje)
-            .komprimer().segmenter().map {
-                RettighetstypePeriode(
-                    fraDato = it.periode.fom,
-                    tilDato = it.periode.tom,
-                    rettighetstype = it.verdi.tilKontrakt()
-                )
-            }
+        val rettighetstypePerioder = hentRettighetstypePerioder(behandling)
 
-        val fritaksvurderinger =
-            meldepliktRepository.hentHvisEksisterer(behandling.id)?.tilTidslinje().orEmpty().komprimer()
-                .map { periode, data ->
-                    Fritakvurdering(data.harFritak, periode.fom, periode.tom)
-                }.verdier()
+        val fritaksvurderinger = hentFritaksvurderinger(behandling)
 
         val perioderMedArbeidsopptrapping =
             arbeidsopptrappingRepository.hentHvisEksisterer(behandling.id).perioderMedArbeidsopptrapping()
@@ -178,6 +148,45 @@ class AvsluttetBehandlingTilStatistikk(
             perioderMedArbeidsopptrapping = perioderMedArbeidsopptrapping.map { PeriodeDTO(it.fom, it.tom) }
         )
     }
+
+    private fun hentRettighetstypePerioder(behandling: Behandling): List<RettighetstypePeriode> {
+        val rettighetstypePerioder = underveisRepository.hentHvisEksisterer(behandling.id)?.perioder.orEmpty()
+            .filter { it.rettighetsType != null }.map { Segment(it.periode, it.rettighetsType) }.let(::Tidslinje)
+            .komprimer().segmenter().map {
+                RettighetstypePeriode(
+                    fraDato = it.periode.fom,
+                    tilDato = it.periode.tom,
+                    rettighetstype = it.verdi.tilKontrakt()
+                )
+            }
+        return rettighetstypePerioder
+    }
+
+    private fun hentFritaksvurderinger(behandling: Behandling): Iterable<Fritakvurdering> =
+        meldepliktRepository.hentHvisEksisterer(behandling.id)?.tilTidslinje().orEmpty().komprimer()
+            .map { periode, data ->
+                Fritakvurdering(data.harFritak, periode.fom, periode.tom)
+            }.verdier()
+
+    private fun mapTilkjentYtelse(behandling: Behandling): List<TilkjentYtelsePeriodeDTO>? =
+        tilkjentYtelseRepository.hentHvisEksisterer(behandling.id)
+            ?.map { Segment(it.periode, it.tilkjent) }
+            ?.let(::Tidslinje)?.mapValue { it }?.komprimer()?.segmenter()?.map {
+                val verdi = it.verdi
+                TilkjentYtelsePeriodeDTO(
+                    fraDato = it.periode.fom,
+                    tilDato = it.periode.tom,
+                    dagsats = verdi.dagsats.verdi().toDouble(),
+                    gradering = verdi.gradering.prosentverdi().toDouble(),
+                    redusertDagsats = verdi.redusertDagsats().verdi().toDouble(),
+                    antallBarn = verdi.antallBarn,
+                    barnepensjonDagsats = verdi.barnepensjonDagsats.verdi().toDouble(),
+                    barnetilleggSats = verdi.barnetilleggsats.verdi().toDouble(),
+                    barnetillegg = verdi.barnetillegg.verdi().toDouble(),
+                    utbetalingsdato = verdi.utbetalingsdato,
+                    minsteSats = verdi.tilKontrakt()
+                )
+            }
 
     private fun hentDiagnose(behandling: Behandling): Diagnoser? {
         val sykdomsvurdering = sykdomRepository.hentHvisEksisterer(behandling.id)
