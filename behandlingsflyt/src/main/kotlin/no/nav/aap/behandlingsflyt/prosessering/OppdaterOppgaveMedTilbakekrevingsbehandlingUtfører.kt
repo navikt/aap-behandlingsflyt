@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.prosessering
 import no.nav.aap.behandlingsflyt.behandling.tilbakekrevingsbehandling.TilbakekrevingRepository
 import no.nav.aap.behandlingsflyt.behandling.tilbakekrevingsbehandling.tilKontrakt
 import no.nav.aap.behandlingsflyt.hendelse.oppgavestyring.OppgavestyringGateway
+import no.nav.aap.behandlingsflyt.hendelse.statistikk.StatistikkGateway
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.TilbakekrevingsbehandlingOppdatertHendelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
@@ -18,11 +19,12 @@ import java.util.*
 
 class OppdaterOppgaveMedTilbakekrevingsbehandlingUtfører(
     val oppgaveStyringGateway: OppgavestyringGateway,
+    val statistikkGateway: StatistikkGateway,
     val tilbakekrevingsbehandlingRepository: TilbakekrevingRepository,
-    val unleashGateway : UnleashGateway,
+    val unleashGateway: UnleashGateway,
     val sakRepository: SakRepository
 
-): JobbUtfører {
+) : JobbUtfører {
     // HER BLIR MELDINGEN OM TILBAKEKREVING SENDT TIL OPPGAVESTYRING
     private val log = LoggerFactory.getLogger(javaClass)
 
@@ -32,7 +34,7 @@ class OppdaterOppgaveMedTilbakekrevingsbehandlingUtfører(
         val tilbakekrevingBehandlingId = UUID.fromString(input.parameter("tilbakekrevingBehandlingId"))
         val tilbakekrevingsbehandling = tilbakekrevingsbehandlingRepository.hent(tilbakekrevingBehandlingId)
         log.info("Mottatt melding om oppdatering av oppgave med tilbakekrevingsbehandling, input: ${sak.saksnummer}")
-         val tilbakekrevingsbehandlingOppdatertHendelse = TilbakekrevingsbehandlingOppdatertHendelse(
+        val tilbakekrevingsbehandlingOppdatertHendelse = TilbakekrevingsbehandlingOppdatertHendelse(
             personIdent = sak.person.aktivIdent().identifikator,
             saksnummer = sak.saksnummer,
             behandlingref = BehandlingReferanse(
@@ -46,6 +48,7 @@ class OppdaterOppgaveMedTilbakekrevingsbehandlingUtfører(
 
         log.info("Kaller oppgavestyring for å varsle om oppdatering av tilbakekrevingsbehandling for sak: ${sak.saksnummer}")
         oppgaveStyringGateway.varsleTilbakekrevingHendelse(tilbakekrevingsbehandlingOppdatertHendelse)
+        statistikkGateway.varsleTilbakekrevingHendelse(tilbakekrevingsbehandlingOppdatertHendelse)
     }
 
     companion object : ProvidersJobbSpesifikasjon {
@@ -55,6 +58,7 @@ class OppdaterOppgaveMedTilbakekrevingsbehandlingUtfører(
                 oppgaveStyringGateway = gatewayProvider.provide<OppgavestyringGateway>(),
                 tilbakekrevingsbehandlingRepository = repositoryProvider.provide<TilbakekrevingRepository>(),
                 unleashGateway = gatewayProvider.provide<UnleashGateway>(),
+                statistikkGateway = gatewayProvider.provide<StatistikkGateway>(),
                 sakRepository = repositoryProvider.provide<SakRepository>(),
             )
         }
