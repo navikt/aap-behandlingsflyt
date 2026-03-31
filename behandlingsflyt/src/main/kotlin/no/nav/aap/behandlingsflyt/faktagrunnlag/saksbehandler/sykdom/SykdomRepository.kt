@@ -20,4 +20,19 @@ interface SykdomRepository : Repository {
     fun hent(behandlingId: BehandlingId): SykdomGrunnlag
 
     fun hentHistoriskeSykdomsvurderinger(sakId: SakId, behandlingId: BehandlingId): List<Sykdomsvurdering>
+
+    fun hentBehandlingIderMedUmigrerteSykdomsvurderinger(sisteBehandlingId: Long): List<BehandlingId>
+
+    fun oppdaterNyeFelter(
+        sykdomVurderingId: Long,
+        erNedsettelseMinstHalvparten: ErNedsettelseMinstHalvpartenValg?,
+        erNedsettelseMerEnnYrkesskadegrense: ErNedsettelseMerEnnYrkesskadegrenseValg?
+    )
+
+    fun hentSykdomsvurderingMedId(behandlingId: BehandlingId): List<SykdomsvurderingMedId>
 }
+
+data class SykdomsvurderingMedId(
+    val id: Long,
+    val sykdomsvurdering: Sykdomsvurdering
+)
