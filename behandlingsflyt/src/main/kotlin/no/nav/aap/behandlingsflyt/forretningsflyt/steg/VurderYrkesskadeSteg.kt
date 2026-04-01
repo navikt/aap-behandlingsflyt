@@ -16,6 +16,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
+import kotlin.text.contains
+import kotlin.text.orEmpty
 
 class VurderYrkesskadeSteg private constructor(
     private val sykdomRepository: SykdomRepository,
@@ -42,7 +44,11 @@ class VurderYrkesskadeSteg private constructor(
                     kontekst, tidligereVurderinger, yrkesskader
                 )
             },
-            erTilstrekkeligVurdert = { sykdomsgrunnlag != null && sykdomsgrunnlag.yrkesskadevurdering != null },
+            erTilstrekkeligVurdert = {
+                val vurdering = sykdomsgrunnlag?.yrkesskadevurdering
+                val aktiveRefs = yrkesskader?.yrkesskader?.yrkesskader?.map { it.ref }.orEmpty()
+                vurdering != null && vurdering.relevanteSaker.all { it.referanse in aktiveRefs }
+            },
             tilbakestillGrunnlag = {
                 val forrigeGrunnlag =
                     kontekst.forrigeBehandlingId?.let { sykdomRepository.hentHvisEksisterer(it) }?.yrkesskadevurdering
