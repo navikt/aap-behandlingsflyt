@@ -214,7 +214,7 @@ class TidligereVurderingerImpl(
                             RettighetsType.ARBEIDSSØKER
                         )
 
-                        foreløpigUtfall is TidligereVurderinger.PotensieltOppfylt && foreløpigUtfall.rettighetstype == null && sykdomsvurdering?.potensieltOppfyltSykepengeerstatning() != true ->
+                        foreløpigUtfall is TidligereVurderinger.PotensieltOppfylt && foreløpigUtfall.rettighetstype == null && sykdomsvurdering?.erKonsistentMedSykepengeerstatningSettBortIfraÅrsakssammenheng() != true ->
                             TidligereVurderinger.UunngåeligAvslag
 
                         else -> TidligereVurderinger.PotensieltOppfylt(null)
@@ -418,9 +418,5 @@ class TidligereVurderingerImpl(
         val erIkkeFørsteSykdomsvurdering =
             !Sykdomsvurdering.erFørsteVurdering(rettighetsperiode.fom, segmentPeriode)
         return erIkkeFørsteSykdomsvurdering && harTidligereInnvilgetSykdomsvurdering
-    }
-
-    private fun Sykdomsvurdering.potensieltOppfyltSykepengeerstatning(): Boolean {
-        return this.erOppfyltOrdinærSettBortIfraVissVarighet() || this.erOppfyltForYrkesskadeSettBortIfraÅrsakssammenhengOgVissVarighet()
     }
 }

@@ -32,29 +32,6 @@ data class Sykdomsvurdering(
     val opprettet: Instant,
     val vurdertAv: Bruker,
 ) {
-    fun erOppfyltOrdinærtEllerMedYrkesskadeSettBortFraVissVarighet(yrkesskadevurdering: Yrkesskadevurdering?): Boolean {
-        return harSkadeSykdomEllerLyte
-                && erArbeidsevnenNedsatt == true
-                && erSkadeSykdomEllerLyteVesentligdel == true
-                && (
-                erNedsettelseIArbeidsevneMerEnnHalvparten == true ||
-                        ((yrkesskadevurdering?.erÅrsakssammenheng ?: false) &&
-                                erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense == true)
-                )
-    }
-
-    fun erOppfyltOrdinærtEllerMedYrkesskadeMenIkkeVissVarighet(yrkesskadevurdering: Yrkesskadevurdering?): Boolean {
-        return harSkadeSykdomEllerLyte
-                && erArbeidsevnenNedsatt == true
-                && erSkadeSykdomEllerLyteVesentligdel == true
-                && erNedsettelseIArbeidsevneAvEnVissVarighet == false
-                && (
-                erNedsettelseIArbeidsevneMerEnnHalvparten == true ||
-                        ((yrkesskadevurdering?.erÅrsakssammenheng ?: false) &&
-                                erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense == true)
-                )
-    }
-
     fun erOppfyltOrdinær(kravdato: LocalDate, periodenVurderingenGjelderFor: Periode): Boolean {
         return erOppfyltOrdinærSettBortIfraVissVarighet() &&
                 if (erFørsteVurdering(
@@ -166,6 +143,26 @@ data class Sykdomsvurdering(
                 && erSkadeSykdomEllerLyteVesentligdel == true
                 && erTilstrekkeligNedsattArbeidsevne
     }
+
+
+    fun erKonsistentMedSykepengeerstatning(yrkesskadevurdering: Yrkesskadevurdering?): Boolean {
+        val nedsettelseHalvparten = utledErNedsettelseMinstHalvparten()
+        val nedsetteYrkesskade = utledErNedsettelseMerEnnYrkesskadegrense()
+        return harSkadeSykdomEllerLyte
+                && erArbeidsevnenNedsatt == true
+                && erSkadeSykdomEllerLyteVesentligdel == true
+                && (nedsettelseHalvparten == ErNedsettelseMinstHalvpartenValg.JA_FORBIGÅENDE_PROBLEMER || (nedsetteYrkesskade == ErNedsettelseMerEnnYrkesskadegrenseValg.JA_FORBIGÅENDE_PROBLEMER && yrkesskadevurdering?.erÅrsakssammenheng == true))
+    }
+
+    fun erKonsistentMedSykepengeerstatningSettBortIfraÅrsakssammenheng(): Boolean {
+        val nedsettelseHalvparten = utledErNedsettelseMinstHalvparten()
+        val nedsetteYrkesskade = utledErNedsettelseMerEnnYrkesskadegrense()
+        return harSkadeSykdomEllerLyte
+                && erArbeidsevnenNedsatt == true
+                && erSkadeSykdomEllerLyteVesentligdel == true
+                && (nedsettelseHalvparten == ErNedsettelseMinstHalvpartenValg.JA_FORBIGÅENDE_PROBLEMER || (nedsetteYrkesskade == ErNedsettelseMerEnnYrkesskadegrenseValg.JA_FORBIGÅENDE_PROBLEMER))
+    }
+
 
     fun utledErNedsettelseMinstHalvparten(): ErNedsettelseMinstHalvpartenValg? {
         if (erNedsettelseMinstHalvparten != null) {
