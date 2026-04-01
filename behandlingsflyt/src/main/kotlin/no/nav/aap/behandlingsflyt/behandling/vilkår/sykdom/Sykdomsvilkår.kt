@@ -14,7 +14,7 @@ class Sykdomsvilkår(vilkårsresultat: Vilkårsresultat) :
         listOf(
             Segment(
                 Periode(LocalDate.of(2023, 1, 1), Tid.MAKS),
-                SykdomsvilkårFraLansering(vilkårsresultat) // TODO: Finne en bedre variant her enn å instansiere opp alle sammen
+                SykdomsvilkårUtenVissVarighet(vilkårsresultat) // TODO: Finne en bedre variant her enn å instansiere opp alle sammen
             )
         )
     )
