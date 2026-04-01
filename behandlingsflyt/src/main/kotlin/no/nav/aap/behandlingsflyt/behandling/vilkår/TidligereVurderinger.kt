@@ -134,9 +134,13 @@ class TidligereVurderingerImpl(
 
                 tidligereVurderinger.leftJoin(sykdomstidslinje) { segmentPeriode, foreløpigUtfall, sykdomsvurdering ->
                     val sykdomDefinitivtAvslag = sykdomsvurdering?.erOppfyltOrdinærMedUtlededeFelter() == false
-                                && !sykdomsvurdering.erOppfyltForOrdinærEllerYrkesskadeSettBortIfraÅrsakssammenhengMedUtlededeFelter()
-                                && !sykdomsvurdering.erKonsistentMedSykepengeerstatningSettBortIfraÅrsakssammenheng()
-                                && !potensieltOppfyltOvergangArbeid(kontekst.rettighetsperiode, segmentPeriode, sykdomstidslinje)
+                            && !sykdomsvurdering.erOppfyltForOrdinærEllerYrkesskadeSettBortIfraÅrsakssammenhengMedUtlededeFelter()
+                            && !sykdomsvurdering.erKonsistentMedSykepengeerstatningSettBortIfraÅrsakssammenheng()
+                            && !potensieltOppfyltOvergangArbeid(
+                        kontekst.rettighetsperiode,
+                        segmentPeriode,
+                        sykdomstidslinje
+                    )
 
                     val foreløpigRettighetstype = when (foreløpigUtfall) {
                         is TidligereVurderinger.PotensieltOppfylt -> foreløpigUtfall.rettighetstype
@@ -162,17 +166,12 @@ class TidligereVurderingerImpl(
 
                 Tidslinje.map2(
                     sykdomstidslinje, bistandTidslinje
-                ) { segmentPeriode, sykdomvurdering, bistandvurdering ->
+                ) { sykdomvurdering, bistandvurdering ->
                     val erBistandOppfylt = bistandvurdering?.erBehovForBistand() == true
-                    val erSykdomOppfyltOrdinærEllerPotensieltYrkesskade =
-                        sykdomvurdering?.erOppfyltOrdinærEllerYrkesskadeSettBortIfraÅrsakssammenheng(
-                            kontekst.rettighetsperiode.fom, segmentPeriode
-                        ) == true
 
                     when {
-                        erBistandOppfylt && erSykdomOppfyltOrdinærEllerPotensieltYrkesskade -> TidligereVurderinger.PotensieltOppfylt(
-                            RettighetsType.BISTANDSBEHOV
-                        )
+                        erBistandOppfylt && sykdomvurdering?.erOppfyltForOrdinærEllerYrkesskadeSettBortIfraÅrsakssammenhengMedUtlededeFelter() == true ->
+                            TidligereVurderinger.PotensieltOppfylt(RettighetsType.BISTANDSBEHOV)
 
                         else -> TidligereVurderinger.PotensieltOppfylt(null)
                     }

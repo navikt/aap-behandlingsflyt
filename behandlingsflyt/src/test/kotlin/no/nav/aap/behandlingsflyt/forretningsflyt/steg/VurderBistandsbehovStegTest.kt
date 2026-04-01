@@ -77,9 +77,6 @@ class VurderBistandsbehovStegTest {
         val steg = VurderBistandsbehovSteg(
             unleashGateway = AlleAvskruddUnleash,
             bistandRepository = bistandMock,
-            studentRepository = mockk {
-                every { hentHvisEksisterer(any()) } returns null
-            },
             sykdomsRepository = mockk {
                 every { hentHvisEksisterer(any()) } returns SykdomGrunnlag(
                     yrkesskadevurdering = null,

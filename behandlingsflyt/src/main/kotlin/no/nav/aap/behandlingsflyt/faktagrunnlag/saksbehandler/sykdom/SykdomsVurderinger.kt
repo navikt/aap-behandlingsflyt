@@ -32,6 +32,8 @@ data class Sykdomsvurdering(
     val opprettet: Instant,
     val vurdertAv: Bruker,
 ) {
+    
+    @Deprecated("Erstattet av erOppfyltOrdinærMedUtlededeFelter")
     fun erOppfyltOrdinær(kravdato: LocalDate, periodenVurderingenGjelderFor: Periode): Boolean {
         return erOppfyltOrdinærSettBortIfraVissVarighet() &&
                 if (erFørsteVurdering(
@@ -42,6 +44,7 @@ data class Sykdomsvurdering(
                 else true
     }
 
+    @Deprecated("Erstattet av erOppfyltForOrdinærEllerYrkesskadeSettBortIfraÅrsakssammenhengMedUtlededeFelter")
     fun erOppfyltForYrkesskadeSettBortIfraÅrsakssammenheng(
         kravdato: LocalDate,
         periodenVurderingenGjelderFor: Periode
@@ -54,19 +57,6 @@ data class Sykdomsvurdering(
                 && erSkadeSykdomEllerLyteVesentligdel == true
                 && erTilstrekkeligNedsattArbeidsevne
                 && erVissVarighetOmRelevant(kravdato, periodenVurderingenGjelderFor)
-    }
-
-    fun erOppfyltOrdinærEllerYrkesskadeSettBortIfraÅrsakssammenheng(
-        kravDato: LocalDate,
-        periodenVurderingenGjelderFor: Periode
-    ): Boolean {
-        return erOppfyltForYrkesskadeSettBortIfraÅrsakssammenheng(
-            kravDato,
-            periodenVurderingenGjelderFor
-        ) || erOppfyltOrdinær(
-            kravDato,
-            periodenVurderingenGjelderFor
-        )
     }
 
     private fun erVissVarighetOmRelevant(kravdato: LocalDate, periodenVurderingenGjelderFor: Periode): Boolean {
@@ -82,6 +72,7 @@ data class Sykdomsvurdering(
                 && erNedsettelseIArbeidsevneMerEnnHalvparten == true
     }
 
+    // TODO: Erstatt denne med en som sjekker nye felter
     fun erKonsistentForSykdom(harYrkesskadeRegistrert: Boolean, typeBehandling: TypeBehandling): Boolean {
         if (!harSkadeSykdomEllerLyte && erSkadeSykdomEllerLyteVesentligdel == true) {
             return false
