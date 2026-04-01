@@ -11,8 +11,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangarbeid.OvergangArbeidRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
@@ -39,8 +37,6 @@ class OvergangArbeidSteg internal constructor(
     private val tidligereVurderinger: TidligereVurderinger,
     private val bistandRepository: BistandRepository,
     private val avklaringsbehovService: AvklaringsbehovService,
-    private val studentRepository: StudentRepository,
-    private val overgangUføreRepository: OvergangUføreRepository,
 ) : BehandlingSteg, AvklaringsbehovMetadataUtleder {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         vilkårsresultatRepository = repositoryProvider.provide(),
@@ -50,8 +46,6 @@ class OvergangArbeidSteg internal constructor(
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
         bistandRepository = repositoryProvider.provide(),
         avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
-        studentRepository = repositoryProvider.provide(),
-        overgangUføreRepository = repositoryProvider.provide(),
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
@@ -101,17 +95,9 @@ class OvergangArbeidSteg internal constructor(
             ?.somBistandsvurderingstidslinje()
             .orEmpty()
 
-        val studentVurderinger = studentRepository.hentHvisEksisterer(kontekst.behandlingId)
-            ?.somStudenttidslinje()
-            .orEmpty()
-
-        val overgangUføreVurderinger = overgangUføreRepository.hentHvisEksisterer(kontekst.behandlingId)
-            ?.somOvergangUforevurderingstidslinje()
-            .orEmpty()
-
-        val forutgåendeOrdinærAap =
-            Tidslinje.map2(sykdomsvurderinger, bistandsvurderinger) { periode, sykdomsvurdering, bistandsvurdering ->
-                sykdomsvurdering?.erOppfyltOrdinær(kontekst.rettighetsperiode.fom, periode) == true &&
+        val forutgåendeOrdinærAapEllerMedYrkesskade =
+            Tidslinje.map2(sykdomsvurderinger, bistandsvurderinger) { sykdomsvurdering, bistandsvurdering ->
+                sykdomsvurdering?.erOppfyltForOrdinærEllerYrkesskadeSettBortIfraÅrsakssammenhengMedUtlededeFelter() == true &&
                         bistandsvurdering?.erBehovForBistand() == true
             }
                 .fold(
@@ -119,44 +105,40 @@ class OvergangArbeidSteg internal constructor(
                         kontekst.rettighetsperiode,
                         false
                     )
-                ) { forutgåendeOrdinærAap, periode, rettTilOrdinærAap ->
-                    forutgåendeOrdinærAap.or(
+                ) { forutgåendeOrdinærAapEllerMedYrkesskade, periode, rettTilOrdinærAapEllerMedYrkesskade ->
+                    forutgåendeOrdinærAapEllerMedYrkesskade.or(
                         tidslinjeOf(
                             Periode(
                                 periode.fom.plusDays(1),
                                 Tid.MAKS
-                            ) to rettTilOrdinærAap
+                            ) to rettTilOrdinærAapEllerMedYrkesskade
                         )
                     )
                 }
 
-        return Tidslinje.map6(
+        return Tidslinje.map4(
             utfall,
             sykdomsvurderinger,
             bistandsvurderinger,
-            studentVurderinger,
-            overgangUføreVurderinger,
-            forutgåendeOrdinærAap,
-        ) { segmentPeriode, utfall, sykdomsvurdering, bistandsvurdering, studentvurdering, uførevurdering, forutgåendeOrdinærAap ->
+            forutgåendeOrdinærAapEllerMedYrkesskade,
+        ) { utfall, sykdomsvurdering, bistandsvurdering, forutgåendeOrdinærAap ->
             when (utfall) {
                 null -> false
                 TidligereVurderinger.IkkeBehandlingsgrunnlag -> false
                 TidligereVurderinger.UunngåeligAvslag -> false
                 is TidligereVurderinger.PotensieltOppfylt -> {
-                    if (studentvurdering?.erOppfylt() == true) {
-                        return@map6 false
-                    }
+                    when (utfall.rettighetstype) {
+                        null -> {
+                            if (forutgåendeOrdinærAap != true) {
+                                return@map4 false
+                            }
 
-                    if (uførevurdering?.harRettPåAAPMedOvergangUføre() == true) {
-                        return@map6 false
-                    }
+                            sykdomsvurdering?.erOppfyltForOrdinærEllerYrkesskadeSettBortIfraÅrsakssammenhengMedUtlededeFelter() != true ||
+                                    bistandsvurdering?.erBehovForBistand() != true
+                        }
 
-                    if (forutgåendeOrdinærAap != true) {
-                        return@map6 false
+                        else -> false
                     }
-
-                    sykdomsvurdering?.erOppfyltOrdinær(kontekst.rettighetsperiode.fom, segmentPeriode) != true ||
-                            bistandsvurdering?.erBehovForBistand() != true
                 }
             }
         }

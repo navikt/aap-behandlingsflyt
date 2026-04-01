@@ -70,7 +70,7 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::
                             erSkadeSykdomEllerLyteVesentligdel = true,
                             erNedsettelseIArbeidsevneMerEnnHalvparten = true,
                             erNedsettelseIArbeidsevneAvEnVissVarighet = true,
-erNedsettelseMinstHalvparten = null,
+                            erNedsettelseMinstHalvparten = null,
                             erNedsettelseMerEnnYrkesskadegrense = null,
                             erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
                             erArbeidsevnenNedsatt = true,
@@ -168,23 +168,6 @@ erNedsettelseMinstHalvparten = null,
             .bekreftVurderinger()
             .bekreftVurderinger()
             .kvalitetssikre()
-            .medKontekst {
-                assertThat(åpneAvklaringsbehov).anySatisfy { assertThat(it.definisjon).isEqualTo(Definisjon.AVKLAR_SYKEPENGEERSTATNING) }
-            }
-            .løsAvklaringsBehov(
-                PeriodisertAvklarSykepengerErstatningLøsning(
-                    løsningerForPerioder = listOf(
-                        PeriodisertSykepengerVurderingDto(
-                            begrunnelse = "...",
-                            dokumenterBruktIVurdering = emptyList(),
-                            harRettPå = false,
-                            grunn = null,
-                            fom = LocalDate.now(),
-                            tom = null
-                        )
-                    ),
-                )
-            )
             .løsBeregningstidspunkt()
             .løsOppholdskrav(periode.fom)
             .løsAndreStatligeYtelser()
@@ -296,23 +279,11 @@ erNedsettelseMinstHalvparten = null,
                     )
                 )
             )
+            .løsOvergangArbeid(utfall = Utfall.IKKE_OPPFYLT, fom = overgangUførDato.plusMonths(8))
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
             .bekreftVurderinger()
             .kvalitetssikre()
-            .løsAvklaringsBehov(
-                PeriodisertAvklarSykepengerErstatningLøsning(
-                    løsningerForPerioder = listOf(
-                        PeriodisertSykepengerVurderingDto(
-                            begrunnelse = "...",
-                            dokumenterBruktIVurdering = emptyList(),
-                            harRettPå = false,
-                            grunn = null,
-                            fom = LocalDate.now()
-                        )
-                    ),
-                )
-            )
             .løsBeregningstidspunkt()
             .løsOppholdskrav(periode.fom)
             .løsAndreStatligeYtelser()
@@ -323,7 +294,8 @@ erNedsettelseMinstHalvparten = null,
         assertThat(revurdering.årsakTilOpprettelse).isEqualTo(no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse.ENDRING_I_REGISTERDATA)
 
         dataSource.transaction { connection ->
-            val vurderingsbehovOgÅrsaker = BehandlingRepositoryImpl(connection).hentVurderingsbehovOgÅrsaker(revurdering.id)
+            val vurderingsbehovOgÅrsaker =
+                BehandlingRepositoryImpl(connection).hentVurderingsbehovOgÅrsaker(revurdering.id)
             assertThat(vurderingsbehovOgÅrsaker).hasSize(1)
             assertThat(vurderingsbehovOgÅrsaker.first().beskrivelse).isEqualTo(melding.beskrivelseVurderingsbehov())
             assertThat(vurderingsbehovOgÅrsaker.first().vurderingsbehov).hasSize(1)

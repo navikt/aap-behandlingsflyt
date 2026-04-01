@@ -85,12 +85,6 @@ class OvergangArbeidStegTest {
             tidligereVurderinger = FakeTidligereVurderinger(),
             bistandRepository = bistandMock,
             avklaringsbehovService = AvklaringsbehovService(inMemoryRepositoryProvider),
-            studentRepository = mockk<StudentRepository> {
-                every { hentHvisEksisterer(any()) } returns null
-            },
-            overgangUføreRepository = mockk<OvergangUføreRepository> {
-                every { hentHvisEksisterer(any()) } returns null
-            },
         )
 
         steg.utfør(kontekstMedPerioder)

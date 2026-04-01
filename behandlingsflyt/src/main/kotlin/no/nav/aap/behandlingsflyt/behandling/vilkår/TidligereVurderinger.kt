@@ -57,9 +57,7 @@ interface TidligereVurderinger {
     data class PotensieltOppfylt(val rettighetstype: RettighetsType?) : Behandlingsutfall
 
     fun behandlingsutfall(
-        kontekst: FlytKontekstMedPerioder,
-        førSteg: StegType,
-        etterSteg: StegType? = null
+        kontekst: FlytKontekstMedPerioder, førSteg: StegType, etterSteg: StegType? = null
     ): Tidslinje<Behandlingsutfall>
 }
 
@@ -76,8 +74,7 @@ class TidligereVurderingerImpl(
     private val log = LoggerFactory.getLogger(javaClass)
 
     constructor(
-        repositoryProvider: RepositoryProvider,
-        gatewayProvider: GatewayProvider
+        repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider
     ) : this(
         trukketSøknadService = TrukketSøknadService(repositoryProvider),
         vilkårsresultatRepository = repositoryProvider.provide(),
@@ -98,20 +95,16 @@ class TidligereVurderingerImpl(
             Sjekk(StegType.AVBRYT_REVURDERING) { _, kontekst, _ ->
                 Tidslinje(
                     kontekst.rettighetsperiode,
-                    if (avbrytRevurderingService.revurderingErAvbrutt(kontekst.behandlingId))
-                        TidligereVurderinger.IkkeBehandlingsgrunnlag
-                    else
-                        TidligereVurderinger.PotensieltOppfylt(null)
+                    if (avbrytRevurderingService.revurderingErAvbrutt(kontekst.behandlingId)) TidligereVurderinger.IkkeBehandlingsgrunnlag
+                    else TidligereVurderinger.PotensieltOppfylt(null)
                 )
             },
 
             Sjekk(StegType.SØKNAD) { _, kontekst, accBehandlingsutfall ->
                 Tidslinje(
                     kontekst.rettighetsperiode,
-                    if (trukketSøknadService.søknadErTrukket(kontekst.behandlingId))
-                        TidligereVurderinger.IkkeBehandlingsgrunnlag
-                    else
-                        TidligereVurderinger.PotensieltOppfylt(null)
+                    if (trukketSøknadService.søknadErTrukket(kontekst.behandlingId)) TidligereVurderinger.IkkeBehandlingsgrunnlag
+                    else TidligereVurderinger.PotensieltOppfylt(null)
                 )
             },
 
@@ -135,25 +128,22 @@ class TidligereVurderingerImpl(
             },
 
             Sjekk(StegType.AVKLAR_SYKDOM) { _, kontekst, tidligereVurderinger ->
-                val sykdomstidslinje = sykdomRepository.hentHvisEksisterer(kontekst.behandlingId)
-                    ?.somSykdomsvurderingstidslinje().orEmpty()
+                val sykdomstidslinje =
+                    sykdomRepository.hentHvisEksisterer(kontekst.behandlingId)?.somSykdomsvurderingstidslinje()
+                        .orEmpty()
 
                 tidligereVurderinger.leftJoin(sykdomstidslinje) { segmentPeriode, foreløpigUtfall, sykdomsvurdering ->
-                    val sykdomDefinitivtAvslag =
-                        sykdomsvurdering?.erOppfyltOrdinærSettBortIfraVissVarighet() == false
-                                && !sykdomsvurdering.erOppfyltForYrkesskadeSettBortIfraÅrsakssammenhengOgVissVarighet()
+                    val sykdomDefinitivtAvslag = sykdomsvurdering?.erOppfyltOrdinærMedUtlededeFelter() == false
+                                && !sykdomsvurdering.erOppfyltForOrdinærEllerYrkesskadeSettBortIfraÅrsakssammenhengMedUtlededeFelter()
+                                && !sykdomsvurdering.erKonsistentMedSykepengeerstatningSettBortIfraÅrsakssammenheng()
+                                && !potensieltOppfyltOvergangArbeid(kontekst.rettighetsperiode, segmentPeriode, sykdomstidslinje)
 
                     val foreløpigRettighetstype = when (foreløpigUtfall) {
                         is TidligereVurderinger.PotensieltOppfylt -> foreløpigUtfall.rettighetstype
                         else -> null
                     }
 
-                    if (foreløpigRettighetstype == null && sykdomDefinitivtAvslag && !potensieltOppfyltOvergangArbeid(
-                            kontekst.rettighetsperiode,
-                            segmentPeriode,
-                            sykdomstidslinje
-                        )
-                    ) {
+                    if (foreløpigRettighetstype == null && sykdomDefinitivtAvslag) {
                         return@leftJoin TidligereVurderinger.UunngåeligAvslag
 
                     }
@@ -166,18 +156,17 @@ class TidligereVurderingerImpl(
                 val bistandTidslinje =
                     bistandRepository.hentHvisEksisterer(kontekst.behandlingId)?.somBistandsvurderingstidslinje()
                         .orEmpty()
-                val sykdomstidslinje = sykdomRepository.hentHvisEksisterer(kontekst.behandlingId)
-                    ?.somSykdomsvurderingstidslinje().orEmpty()
+                val sykdomstidslinje =
+                    sykdomRepository.hentHvisEksisterer(kontekst.behandlingId)?.somSykdomsvurderingstidslinje()
+                        .orEmpty()
 
                 Tidslinje.map2(
-                    sykdomstidslinje,
-                    bistandTidslinje
+                    sykdomstidslinje, bistandTidslinje
                 ) { segmentPeriode, sykdomvurdering, bistandvurdering ->
                     val erBistandOppfylt = bistandvurdering?.erBehovForBistand() == true
                     val erSykdomOppfyltOrdinærEllerPotensieltYrkesskade =
                         sykdomvurdering?.erOppfyltOrdinærEllerYrkesskadeSettBortIfraÅrsakssammenheng(
-                            kontekst.rettighetsperiode.fom,
-                            segmentPeriode
+                            kontekst.rettighetsperiode.fom, segmentPeriode
                         ) == true
 
                     when {
@@ -202,8 +191,9 @@ class TidligereVurderingerImpl(
             },
 
             Sjekk(StegType.OVERGANG_ARBEID) { vilkårsresultat, kontekst, tidligereVurderinger ->
-                val sykdomstidlinje = sykdomRepository.hentHvisEksisterer(kontekst.behandlingId)
-                    ?.somSykdomsvurderingstidslinje().orEmpty()
+                val sykdomstidlinje =
+                    sykdomRepository.hentHvisEksisterer(kontekst.behandlingId)?.somSykdomsvurderingstidslinje()
+                        .orEmpty()
                 Tidslinje.map3(
                     tidligereVurderinger,
                     vilkårsresultat.tidslinjeFor(Vilkårtype.OVERGANGARBEIDVILKÅRET),
@@ -214,8 +204,7 @@ class TidligereVurderingerImpl(
                             RettighetsType.ARBEIDSSØKER
                         )
 
-                        foreløpigUtfall is TidligereVurderinger.PotensieltOppfylt && foreløpigUtfall.rettighetstype == null && sykdomsvurdering?.erKonsistentMedSykepengeerstatningSettBortIfraÅrsakssammenheng() != true ->
-                            TidligereVurderinger.UunngåeligAvslag
+                        foreløpigUtfall is TidligereVurderinger.PotensieltOppfylt && foreløpigUtfall.rettighetstype == null && sykdomsvurdering?.erKonsistentMedSykepengeerstatningSettBortIfraÅrsakssammenheng() != true -> TidligereVurderinger.UunngåeligAvslag
 
                         else -> TidligereVurderinger.PotensieltOppfylt(null)
                     }
@@ -267,7 +256,7 @@ class TidligereVurderingerImpl(
             },
         )
     )
-    
+
     private fun lagSjekker(definerteSjekker: List<Sjekk>) = buildList {
         val førstegangsbehandling = Førstegangsbehandling.flyt()
         definerteSjekker.windowed(2).forEach { (sjekk1, sjekk2) ->
@@ -293,8 +282,7 @@ class TidligereVurderingerImpl(
     }
 
     private fun gir(
-        kontekst: FlytKontekstMedPerioder,
-        førSteg: StegType
+        kontekst: FlytKontekstMedPerioder, førSteg: StegType
     ): TidligereVurderinger.Behandlingsutfall {
         val utfall = behandlingsutfall(kontekst, førSteg)
         return when {
@@ -321,13 +309,10 @@ class TidligereVurderingerImpl(
 
 
     override fun behandlingsutfall(
-        kontekst: FlytKontekstMedPerioder,
-        førSteg: StegType,
-        etterSteg: StegType?
+        kontekst: FlytKontekstMedPerioder, førSteg: StegType, etterSteg: StegType?
     ): Tidslinje<TidligereVurderinger.Behandlingsutfall> {
         val sjekker = when (kontekst.behandlingType) {
-            TypeBehandling.Førstegangsbehandling,
-            TypeBehandling.Revurdering -> sjekker
+            TypeBehandling.Førstegangsbehandling, TypeBehandling.Revurdering -> sjekker
 
             else -> return tidslinjeOf(
                 kontekst.rettighetsperiode to TidligereVurderinger.PotensieltOppfylt(null)
@@ -336,43 +321,34 @@ class TidligereVurderingerImpl(
 
         val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
 
-        return sjekker
-            .takeWhile { it.steg != førSteg }
-            .takeLastWhile { it.steg != etterSteg }
-            .fold(
-                tidslinjeOf(kontekst.rettighetsperiode to TidligereVurderinger.PotensieltOppfylt(null) as TidligereVurderinger.Behandlingsutfall)
-            ) { foreløpigTidslinje, sjekk ->
-                foreløpigTidslinje.leftJoin(
-                    sjekk.sjekk(
-                        vilkårsresultat,
-                        kontekst,
-                        foreløpigTidslinje
+        return sjekker.takeWhile { it.steg != førSteg }.takeLastWhile { it.steg != etterSteg }.fold(
+            tidslinjeOf(kontekst.rettighetsperiode to TidligereVurderinger.PotensieltOppfylt(null) as TidligereVurderinger.Behandlingsutfall)
+        ) { foreløpigTidslinje, sjekk ->
+            foreløpigTidslinje.leftJoin(
+                sjekk.sjekk(
+                    vilkårsresultat, kontekst, foreløpigTidslinje
+                )
+            ) { foreløpigUtfall, nesteUtfall ->
+                when {
+                    nesteUtfall == null -> foreløpigUtfall
+                    foreløpigUtfall is TidligereVurderinger.IkkeBehandlingsgrunnlag || nesteUtfall is TidligereVurderinger.IkkeBehandlingsgrunnlag -> TidligereVurderinger.IkkeBehandlingsgrunnlag
+                    foreløpigUtfall is TidligereVurderinger.UunngåeligAvslag || nesteUtfall is TidligereVurderinger.UunngåeligAvslag -> TidligereVurderinger.UunngåeligAvslag
+                    foreløpigUtfall is TidligereVurderinger.PotensieltOppfylt && nesteUtfall is TidligereVurderinger.PotensieltOppfylt -> TidligereVurderinger.PotensieltOppfylt(
+                        foreløpigUtfall.rettighetstype ?: nesteUtfall.rettighetstype
                     )
-                ) { foreløpigUtfall, nesteUtfall ->
-                    when {
-                        nesteUtfall == null -> foreløpigUtfall
-                        foreløpigUtfall is TidligereVurderinger.IkkeBehandlingsgrunnlag || nesteUtfall is TidligereVurderinger.IkkeBehandlingsgrunnlag -> TidligereVurderinger.IkkeBehandlingsgrunnlag
-                        foreløpigUtfall is TidligereVurderinger.UunngåeligAvslag || nesteUtfall is TidligereVurderinger.UunngåeligAvslag -> TidligereVurderinger.UunngåeligAvslag
-                        foreløpigUtfall is TidligereVurderinger.PotensieltOppfylt && nesteUtfall is TidligereVurderinger.PotensieltOppfylt -> TidligereVurderinger.PotensieltOppfylt(
-                            foreløpigUtfall.rettighetstype ?: nesteUtfall.rettighetstype
-                        )
 
-                        else -> error("Uventet kombinasjon av utfall: $foreløpigUtfall og $nesteUtfall")
-                    }
-
+                    else -> error("Uventet kombinasjon av utfall: $foreløpigUtfall og $nesteUtfall")
                 }
+
             }
-            .begrensetTil(kontekst.rettighetsperiode)
-            .komprimer()
+        }.begrensetTil(kontekst.rettighetsperiode).komprimer()
     }
 
     override fun girAvslagEllerIngenBehandlingsgrunnlag(
-        kontekst: FlytKontekstMedPerioder,
-        førSteg: StegType
+        kontekst: FlytKontekstMedPerioder, førSteg: StegType
     ): Boolean {
         return (gir(kontekst, førSteg) in listOf(
-            TidligereVurderinger.IkkeBehandlingsgrunnlag,
-            TidligereVurderinger.UunngåeligAvslag
+            TidligereVurderinger.IkkeBehandlingsgrunnlag, TidligereVurderinger.UunngåeligAvslag
         ))
     }
 
@@ -382,12 +358,10 @@ class TidligereVurderingerImpl(
 
 
     override fun girIngenBehandlingsgrunnlag(
-        kontekst: FlytKontekstMedPerioder,
-        førSteg: StegType
+        kontekst: FlytKontekstMedPerioder, førSteg: StegType
     ): Boolean {
         return (gir(
-            kontekst,
-            førSteg
+            kontekst, førSteg
         ) == TidligereVurderinger.IkkeBehandlingsgrunnlag)
     }
 
@@ -395,28 +369,22 @@ class TidligereVurderingerImpl(
         vilkårtype: Vilkårtype,
         vilkårsresultat: Vilkårsresultat,
     ): Tidslinje<TidligereVurderinger.Behandlingsutfall> {
-        return vilkårsresultat.tidslinjeFor(vilkårtype)
-            .mapValue {
-                when (it.utfall) {
-                    IKKE_OPPFYLT -> TidligereVurderinger.UunngåeligAvslag
-                    else -> TidligereVurderinger.PotensieltOppfylt(null)
-                }
+        return vilkårsresultat.tidslinjeFor(vilkårtype).mapValue {
+            when (it.utfall) {
+                IKKE_OPPFYLT -> TidligereVurderinger.UunngåeligAvslag
+                else -> TidligereVurderinger.PotensieltOppfylt(null)
             }
+        }
     }
 
     private fun potensieltOppfyltOvergangArbeid(
-        rettighetsperiode: Periode,
-        segmentPeriode: Periode,
-        sykdomstidslinje: Tidslinje<Sykdomsvurdering>
+        rettighetsperiode: Periode, segmentPeriode: Periode, sykdomstidslinje: Tidslinje<Sykdomsvurdering>
     ): Boolean {
         val harTidligereInnvilgetSykdomsvurdering =
-            sykdomstidslinje
-                .begrensetTil(Periode(Tid.MIN, segmentPeriode.fom.minusDays(1)))
-                .segmenter()
-                .any { it.verdi.erOppfyltForYrkesskadeSettBortIfraÅrsakssammenhengOgVissVarighet() }
+            sykdomstidslinje.begrensetTil(Periode(Tid.MIN, segmentPeriode.fom.minusDays(1))).segmenter()
+                .any { it.verdi.erOppfyltForOrdinærEllerYrkesskadeSettBortIfraÅrsakssammenhengMedUtlededeFelter() }
 
-        val erIkkeFørsteSykdomsvurdering =
-            !Sykdomsvurdering.erFørsteVurdering(rettighetsperiode.fom, segmentPeriode)
+        val erIkkeFørsteSykdomsvurdering = !Sykdomsvurdering.erFørsteVurdering(rettighetsperiode.fom, segmentPeriode)
         return erIkkeFørsteSykdomsvurdering && harTidligereInnvilgetSykdomsvurdering
     }
 }
