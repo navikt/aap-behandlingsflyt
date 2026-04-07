@@ -1,9 +1,9 @@
-package no.nav.aap.behandlingsflyt.hendelse.kafka.sykepenger
+package no.nav.aap.behandlingsflyt.hendelse.kafka.foreldrepenger
 
 import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaConsumerConfig
 import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaKonsument
 import no.nav.aap.behandlingsflyt.hendelse.mottak.MottattHendelseService
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SykepengevedtakKafkaMelding
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ForeldrepengevedtakKafkaMelding
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.IdentGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
@@ -20,9 +20,9 @@ import javax.sql.DataSource
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
-const val SYKEPENGEVEDTAK_EVENT_TOPIC = "tbd.boo"
+const val FORELDREPENGEVEDTAK_EVENT_TOPIC = "teamforeldrepenger.vedtak-ekstern"
 
-class SykepengevedtakKafkaKonsument(
+class ForeldrepengevedtakKafkaKonsument(
     config: KafkaConsumerConfig<String, String>,
     pollTimeout: Duration = 10.seconds,
     closeTimeout: Duration = 30.seconds,
@@ -30,11 +30,11 @@ class SykepengevedtakKafkaKonsument(
     private val repositoryRegistry: RepositoryRegistry,
     private val gatewayProvider: GatewayProvider,
 ) : KafkaKonsument<String, String>(
-    topic = SYKEPENGEVEDTAK_EVENT_TOPIC,
+    topic = FORELDREPENGEVEDTAK_EVENT_TOPIC,
     config = config,
     pollTimeout = pollTimeout,
     closeTimeout = closeTimeout,
-    consumerName = "AapBehandlingsflytSykepengevedtak",
+    consumerName = "AapBehandlingsflytForeldrepengevedtak",
 ) {
     private val log = LoggerFactory.getLogger(javaClass)
 
@@ -44,7 +44,7 @@ class SykepengevedtakKafkaKonsument(
 
     fun håndter(melding: ConsumerRecord<String, String>) {
         log.info(
-            "Behandler sykepengevedtak-record med id: ${melding.key()}, partition ${melding.partition()}, offset: ${melding.offset()}, topic: $topic"
+            "Behandler foreldrepengevedtak-record med id: ${melding.key()}, partition ${melding.partition()}, offset: ${melding.offset()}, topic: $topic"
         )
         val meldingKey = "${melding.partition()}-${melding.offset()}"
         håndter(meldingKey, melding.value())
@@ -56,15 +56,15 @@ class SykepengevedtakKafkaKonsument(
             val sakRepository: SakRepository = repositoryProvider.provide()
             val personRepository: PersonRepository = repositoryProvider.provide()
             val hendelseService = MottattHendelseService(repositoryProvider)
-            val sykepengevedtakMelding = DefaultJsonMapper.fromJson<SykepengevedtakKafkaMelding>(meldingVerdi)
-            val ident = Ident(sykepengevedtakMelding.personidentifikator)
+            val foreldrepengevedtakMelding = DefaultJsonMapper.fromJson<ForeldrepengevedtakKafkaMelding>(meldingVerdi)
+            val ident = Ident(foreldrepengevedtakMelding.personidentifikator)
             val person = personRepository.finn(ident) ?: finnPersonMedIdenterFraPdl(ident, personRepository)
             if (person != null) {
                 val saker = sakRepository.finnSakerFor(person)
                 for (saken in saker) {
-                    log.info("Oppretter mottatt sykepengehendelse for sak ${saken.saksnummer}")
+                    log.info("Oppretter mottatt foreldrepengehendelse for sak ${saken.saksnummer}")
                     hendelseService.registrerMottattHendelse(
-                        dto = sykepengevedtakMelding.tilInnsending(
+                        dto = foreldrepengevedtakMelding.tilInnsending(
                             meldingKey,
                             saken.saksnummer
                         )

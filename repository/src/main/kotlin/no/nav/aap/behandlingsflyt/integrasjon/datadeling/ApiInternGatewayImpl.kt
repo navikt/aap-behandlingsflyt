@@ -8,6 +8,12 @@ import no.nav.aap.api.intern.behandlingsflyt.SakStatusKelvin
 import no.nav.aap.api.intern.behandlingsflyt.SakstatusFraKelvin
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelsePeriode
 import no.nav.aap.behandlingsflyt.datadeling.SakStatus
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.GjeldendeStansEllerOpphør
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.OpphevetStansEllerOpphør
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.Opphør
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.Stans
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.StansEllerOpphørVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.StansOpphørGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.ApiInternGateway
@@ -15,8 +21,12 @@ import no.nav.aap.behandlingsflyt.hendelse.datadeling.ArenaStatusResponse
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.MeldekortPerioderDTO
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.DatadelingDTO
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.DetaljertMeldekortDTO
+import no.nav.aap.behandlingsflyt.kontrakt.datadeling.GjeldendeStansEllerOpphørDTO
+import no.nav.aap.behandlingsflyt.kontrakt.datadeling.OpphevetStansEllerOpphørDTO
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.RettighetsTypePeriode
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.SakDTO
+import no.nav.aap.behandlingsflyt.kontrakt.datadeling.StansEllerOpphørEnumDTO
+import no.nav.aap.behandlingsflyt.kontrakt.datadeling.StansEllerOpphørVurderingDTO
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.TilkjentDTO
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.UnderveisDTO
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
@@ -104,7 +114,8 @@ class ApiInternGatewayImpl : ApiInternGateway {
         beregningsgrunnlag: BigDecimal?,
         underveis: List<Underveisperiode>,
         vedtaksDato: LocalDate,
-        rettighetsTypeTidslinje: Tidslinje<RettighetsType>
+        rettighetsTypeTidslinje: Tidslinje<RettighetsType>,
+        stansOpphørGrunnlag: Set<StansEllerOpphørVurdering>?
     ) {
         log.info("Sender behandling for behandlingId=${behandling.id} med vedtakId=$vedtakId, sak: ${sak.saksnummer}. Beregningsgrunnlag: $beregningsgrunnlag")
         restClient.post(
@@ -161,6 +172,22 @@ class ApiInternGatewayImpl : ApiInternGateway {
                     },
                     vedtakId = vedtakId,
                     samId = samId,
+                    stansOpphørVurdering = stansOpphørGrunnlag?.map {
+                        when(it) {
+                            is GjeldendeStansEllerOpphør -> GjeldendeStansEllerOpphørDTO(
+                                fom = it.fom,
+                                opprettet = it.opprettet,
+                                vurdering = when(it.vurdering) {
+                                    is Stans -> StansEllerOpphørEnumDTO.STANS
+                                    is Opphør -> StansEllerOpphørEnumDTO.OPPHØR
+                                }
+                            )
+                            is OpphevetStansEllerOpphør -> OpphevetStansEllerOpphørDTO(
+                                fom = it.fom,
+                                opprettet = it.opprettet,
+                            )
+                        }
+                    }?.toSet()?:emptySet()
                 ),
             ),
             mapper = { _, _ ->
