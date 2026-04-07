@@ -11,7 +11,7 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.JobbInput
 
-class HåndterSykepengevedtakService(
+class HåndterVedtakHendelseService(
     private val behandlingService: BehandlingService,
     private val trukketSøknadService: TrukketSøknadService,
     private val flytJobbRepository: FlytJobbRepository,
@@ -25,7 +25,7 @@ class HåndterSykepengevedtakService(
         mottaDokumentService = MottaDokumentService(repositoryProvider),
     )
 
-    fun håndterMottattSykepengevedtakHendelse(
+    fun håndterMottattVedtakHendelseOgSjekkInformasjonskravPåNytt(
         sakId: SakId,
         referanse: InnsendingReferanse,
     ) {
