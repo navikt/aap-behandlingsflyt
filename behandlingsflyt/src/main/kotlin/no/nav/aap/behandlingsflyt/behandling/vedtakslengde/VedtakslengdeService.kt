@@ -141,10 +141,10 @@ class VedtakslengdeService(
     ): Set<Avslagsårsak> {
         val stansOpphørGrunnlag = stansOpphørRepository.hentHvisEksisterer(behandlingId)
         val gjeldendeStansEllerOpphør = stansOpphørGrunnlag?.gjeldendeStansOgOpphør()
-        val avslagsårsakerFørsteDagUtenBistandsbehovRettighet = gjeldendeStansEllerOpphør
-            ?.filter { it.fom == stansEllerOpphørFom }
-            ?.flatMap { it.vurdering.årsaker }
-            ?.toSet() ?: emptySet()
+        val avslagsårsakerFørsteDagUtenBistandsbehovRettighet = gjeldendeStansEllerOpphør.orEmpty()
+            .filter { it.fom == stansEllerOpphørFom }
+            .flatMap { it.vurdering.årsaker }
+            .toSet()
 
         return avslagsårsakerFørsteDagUtenBistandsbehovRettighet
     }
