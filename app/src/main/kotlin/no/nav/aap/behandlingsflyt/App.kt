@@ -86,6 +86,9 @@ import no.nav.aap.behandlingsflyt.flyt.behandlingApi
 import no.nav.aap.behandlingsflyt.flyt.flytApi
 import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaConsumerConfig
 import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaKonsument
+import no.nav.aap.behandlingsflyt.hendelse.kafka.foreldrepenger.FORELDREPENGEVEDTAK_EVENT_TOPIC
+import no.nav.aap.behandlingsflyt.hendelse.kafka.foreldrepenger.ForeldrepengevedtakKafkaKonsument
+import no.nav.aap.behandlingsflyt.hendelse.kafka.inst2.INSTITUSJONSOPPHOLD_EVENT_TOPIC
 import no.nav.aap.behandlingsflyt.hendelse.kafka.inst2.InstitusjonsOppholdKafkaKonsument
 import no.nav.aap.behandlingsflyt.hendelse.kafka.klage.KabalKafkaKonsument
 import no.nav.aap.behandlingsflyt.hendelse.kafka.person.PdlHendelseKafkaKonsument
@@ -391,6 +394,17 @@ private fun Application.startKafkakonsumenter(
         )
         startKonsument(
             UførevedtakKafkaKonsument(
+                config = KafkaConsumerConfig(),
+                dataSource = dataSource,
+                repositoryRegistry = repositoryRegistry,
+                closeTimeout = AppConfig.stansArbeidTimeout,
+                gatewayProvider = gatewayProvider
+            )
+        )
+    }
+    if (Miljø.erDev()) {
+        startKonsument(
+            ForeldrepengevedtakKafkaKonsument(
                 config = KafkaConsumerConfig(),
                 dataSource = dataSource,
                 repositoryRegistry = repositoryRegistry,
