@@ -4,14 +4,15 @@ import io.mockk.every
 import io.mockk.mockk
 import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
+import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
+import no.nav.aap.behandlingsflyt.help.flytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
@@ -20,6 +21,8 @@ import no.nav.aap.behandlingsflyt.test.FakeTidligereVurderinger
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryTrukketSøknadRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryVilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.test.modell.genererIdent
 import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
@@ -32,9 +35,18 @@ class ForeslåVedtakStegTest {
     private val random = Random(1235123)
 
     private val avklaringsbehovRepository = InMemoryAvklaringsbehovRepository
-    private val avklaringsbehovService = AvklaringsbehovService(mockk<AvbrytRevurderingService> {
-        every { revurderingErAvbrutt(any()) } returns false
-    })
+    private val avklaringsbehovService = AvklaringsbehovService(
+        mockk<AvbrytRevurderingService> {
+            every { revurderingErAvbrutt(any()) } returns false
+        },
+        avklaringsbehovRepository,
+        behandlingRepository = InMemoryBehandlingRepository,
+        vilkårsresultatRepository = InMemoryVilkårsresultatRepository,
+        trukketSøknadService =
+            TrukketSøknadService(
+                InMemoryTrukketSøknadRepository
+            ),
+    )
     private val steg = ForeslåVedtakSteg(avklaringsbehovRepository, FakeTidligereVurderinger(), avklaringsbehovService)
     private val sakRepository = InMemorySakRepository
 
@@ -57,12 +69,12 @@ class ForeslåVedtakStegTest {
                     årsak = ÅrsakTilOpprettelse.SØKNAD
                 )
             )
-        val kontekstMedPerioder = FlytKontekstMedPerioder(
-            sak.id, behandling.id, behandling.forrigeBehandlingId, behandling.typeBehandling(),
-            vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
-            vurderingsbehovRelevanteForSteg = setOf(Vurderingsbehov.MOTTATT_SØKNAD),
+        val kontekstMedPerioder = flytKontekstMedPerioder {
+            this.behandling = behandling
+            vurderingType = VurderingType.FØRSTEGANGSBEHANDLING
+            vurderingsbehovRelevanteForSteg = setOf(Vurderingsbehov.MOTTATT_SØKNAD)
             rettighetsperiode = Periode(LocalDate.now(), LocalDate.now())
-        )
+        }
 
         val resultat = steg.utfør(kontekstMedPerioder)
 
@@ -87,16 +99,16 @@ class ForeslåVedtakStegTest {
             )
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
         avklaringsbehovene.leggTil(
-            definisjoner = listOf(Definisjon.AVKLAR_SYKDOM),
+            definisjon = Definisjon.AVKLAR_SYKDOM,
             funnetISteg = StegType.AVKLAR_SYKDOM, null, null
         )
         avklaringsbehovene.løsAvklaringsbehov(Definisjon.AVKLAR_SYKDOM, "ja", "TESTEN")
-        val kontekstMedPerioder = FlytKontekstMedPerioder(
-            sak.id, behandling.id, behandling.forrigeBehandlingId, behandling.typeBehandling(),
-            vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
-            vurderingsbehovRelevanteForSteg = setOf(Vurderingsbehov.MOTTATT_SØKNAD),
+        val kontekstMedPerioder = flytKontekstMedPerioder {
+            this.behandling = behandling
+            vurderingType = VurderingType.FØRSTEGANGSBEHANDLING
+            vurderingsbehovRelevanteForSteg = setOf(Vurderingsbehov.MOTTATT_SØKNAD)
             rettighetsperiode = Periode(LocalDate.now(), LocalDate.now())
-        )
+        }
 
         val resultat = steg.utfør(kontekstMedPerioder)
 
@@ -121,16 +133,16 @@ class ForeslåVedtakStegTest {
             )
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
         avklaringsbehovene.leggTil(
-            definisjoner = listOf(Definisjon.FASTSETT_BEREGNINGSTIDSPUNKT),
+            definisjon = Definisjon.FASTSETT_BEREGNINGSTIDSPUNKT,
             funnetISteg = StegType.FASTSETT_BEREGNINGSTIDSPUNKT, null, null
         )
         avklaringsbehovene.løsAvklaringsbehov(Definisjon.FASTSETT_BEREGNINGSTIDSPUNKT, "ja", "TESTEN")
-        val kontekstMedPerioder = FlytKontekstMedPerioder(
-            sak.id, behandling.id, behandling.forrigeBehandlingId, behandling.typeBehandling(),
-            vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
-            vurderingsbehovRelevanteForSteg = setOf(Vurderingsbehov.MOTTATT_SØKNAD),
+        val kontekstMedPerioder = flytKontekstMedPerioder {
+            this.behandling = behandling
+            vurderingType = VurderingType.FØRSTEGANGSBEHANDLING
+            vurderingsbehovRelevanteForSteg = setOf(Vurderingsbehov.MOTTATT_SØKNAD)
             rettighetsperiode = Periode(LocalDate.now(), LocalDate.now())
-        )
+        }
 
         val resultat = steg.utfør(kontekstMedPerioder)
 
@@ -156,21 +168,21 @@ class ForeslåVedtakStegTest {
             )
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
         avklaringsbehovene.leggTil(
-            definisjoner = listOf(Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP),
+            definisjon = Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP,
             funnetISteg = StegType.VURDER_LOVVALG, null, null
         )
         avklaringsbehovene.leggTil(
-            definisjoner = listOf(Definisjon.AVKLAR_SYKDOM),
+            definisjon = Definisjon.AVKLAR_SYKDOM,
             funnetISteg = StegType.AVKLAR_SYKDOM, null, null
         )
         avklaringsbehovene.løsAvklaringsbehov(Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP, "ja", "TESTEN")
         avklaringsbehovene.løsAvklaringsbehov(Definisjon.AVKLAR_SYKDOM, "ja", "TESTEN")
-        val kontekstMedPerioder = FlytKontekstMedPerioder(
-            sak.id, behandling.id, behandling.forrigeBehandlingId, behandling.typeBehandling(),
-            vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
-            vurderingsbehovRelevanteForSteg = setOf(Vurderingsbehov.MOTTATT_SØKNAD),
+        val kontekstMedPerioder = flytKontekstMedPerioder {
+            this.behandling = behandling
+            vurderingType = VurderingType.FØRSTEGANGSBEHANDLING
+            vurderingsbehovRelevanteForSteg = setOf(Vurderingsbehov.MOTTATT_SØKNAD)
             rettighetsperiode = Periode(LocalDate.now(), LocalDate.now())
-        )
+        }
 
         val resultat = steg.utfør(kontekstMedPerioder)
 
@@ -196,16 +208,16 @@ class ForeslåVedtakStegTest {
             )
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
         avklaringsbehovene.leggTil(
-            definisjoner = listOf(Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP),
+            definisjon = Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP,
             funnetISteg = StegType.VURDER_LOVVALG, null, null
         )
         avklaringsbehovene.løsAvklaringsbehov(Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP, "ja", "TESTEN")
-        val kontekstMedPerioder = FlytKontekstMedPerioder(
-            sak.id, behandling.id, behandling.forrigeBehandlingId, behandling.typeBehandling(),
-            vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
-            vurderingsbehovRelevanteForSteg = setOf(Vurderingsbehov.MOTTATT_SØKNAD),
+        val kontekstMedPerioder = flytKontekstMedPerioder {
+            this.behandling = behandling
+            vurderingType = VurderingType.FØRSTEGANGSBEHANDLING
+            vurderingsbehovRelevanteForSteg = setOf(Vurderingsbehov.MOTTATT_SØKNAD)
             rettighetsperiode = Periode(LocalDate.now(), LocalDate.now())
-        )
+        }
 
         val resultat = steg.utfør(kontekstMedPerioder)
 
@@ -214,7 +226,7 @@ class ForeslåVedtakStegTest {
     }
 
     @Test
-    fun `hvis NAY-avklaringsbehov skal foreslå vedtak åpnes også etter tilbakehopp`() {
+    fun `hvis NAY-avklaringsbehov finnes, skal foreslå vedtak åpnes også etter tilbakehopp`() {
         val person =
             Person(PersonId(random.nextLong()), UUID.randomUUID(), listOf(genererIdent(LocalDate.now().minusYears(23))))
 
@@ -231,24 +243,23 @@ class ForeslåVedtakStegTest {
             )
         var avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
         avklaringsbehovene.leggTil(
-            definisjoner = listOf(Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP),
+            definisjon = Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP,
             funnetISteg = StegType.VURDER_LOVVALG,
             null, null
         )
         avklaringsbehovene.løsAvklaringsbehov(Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP, "ja", "TESTEN")
         avklaringsbehovene.leggTil(
-            definisjoner = listOf(Definisjon.FORESLÅ_VEDTAK),
+            definisjon = Definisjon.FORESLÅ_VEDTAK,
             funnetISteg = StegType.FORESLÅ_VEDTAK,
             null, null
         )
 
         avklaringsbehovene.løsAvklaringsbehov(Definisjon.FORESLÅ_VEDTAK, "ja", "TESTEN")
-        val kontekstMedPerioder = FlytKontekstMedPerioder(
-            sak.id, behandling.id, behandling.forrigeBehandlingId, behandling.typeBehandling(),
-            vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
-            vurderingsbehovRelevanteForSteg = setOf(Vurderingsbehov.MOTTATT_SØKNAD),
+        val kontekstMedPerioder = flytKontekstMedPerioder {
+            this.behandling = behandling
+            vurderingType = VurderingType.FØRSTEGANGSBEHANDLING
             rettighetsperiode = Periode(LocalDate.now(), LocalDate.now())
-        )
+        }
 
         val resultatFørTilbakehopp = steg.utfør(kontekstMedPerioder)
         assertThat(resultatFørTilbakehopp).isEqualTo(Fullført)

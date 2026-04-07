@@ -8,6 +8,8 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovServ
 import no.nav.aap.behandlingsflyt.behandling.samordning.AvklaringsType
 import no.nav.aap.behandlingsflyt.behandling.samordning.SamordningService
 import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
+import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
+import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadVurdering
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurdering
@@ -16,7 +18,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevu
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelsePeriode
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
-import no.nav.aap.behandlingsflyt.help.FakePdlGateway
+import no.nav.aap.behandlingsflyt.help.opprettInMemorySak
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
@@ -25,29 +27,28 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedP
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
-import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
-import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryPersonRepository
-import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySamordningRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySamordningVurderingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySamordningYtelseRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryTrukketSøknadRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryVilkårsresultatRepository
-import no.nav.aap.behandlingsflyt.test.inmemoryservice.InMemorySakOgBehandlingService
+import no.nav.aap.behandlingsflyt.test.inmemoryservice.InMemoryBehandlingService
 import no.nav.aap.komponenter.tidslinje.tidslinjeOf
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.verdityper.Prosent
+import no.nav.aap.verdityper.dokument.JournalpostId
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
+import java.time.Instant
 import java.time.LocalDate
 import java.util.stream.Stream
 
@@ -66,6 +67,7 @@ class SamordningStegTest {
 
     private val tidligereVurderinger = mockk<TidligereVurderinger>()
     private val avbrytRevurderingRepository = mockk<AvbrytRevurderingRepository>()
+    private val trukketSøknadRepository = InMemoryTrukketSøknadRepository
 
     private val steg = SamordningSteg(
         samordningService = SamordningService(
@@ -73,14 +75,17 @@ class SamordningStegTest {
             samordningYtelseRepository = InMemorySamordningYtelseRepository,
         ),
         samordningRepository = InMemorySamordningRepository,
-        avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
         tidligereVurderinger = tidligereVurderinger,
-        vilkårsresultatRepository = InMemoryVilkårsresultatRepository,
-        behandlingRepository = InMemoryBehandlingRepository,
         avklaringsbehovService = AvklaringsbehovService(
             AvbrytRevurderingService(
                 avbrytRevurderingRepository
-            )
+            ),
+            InMemoryAvklaringsbehovRepository,
+            InMemoryBehandlingRepository,
+            InMemoryVilkårsresultatRepository,
+            trukketSøknadService = TrukketSøknadService(
+                trukketSøknadRepository
+            ),
         ),
     )
 
@@ -94,8 +99,9 @@ class SamordningStegTest {
             )
         } answers {
             tidslinjeOf(
-                firstArg<FlytKontekstMedPerioder>().rettighetsperiode to TidligereVurderinger.Behandlingsutfall.UKJENT
+                firstArg<FlytKontekstMedPerioder>().rettighetsperiode to TidligereVurderinger.PotensieltOppfylt(null)
             )
+            
         }
         every { avbrytRevurderingRepository.hentHvisEksisterer(any()) } returns null
     }
@@ -236,6 +242,16 @@ class SamordningStegTest {
 
         // Simler trekk av søknad
         simulerTrekkAvSøknad()
+        trukketSøknadRepository.lagreTrukketSøknadVurdering(
+            behandling.id,
+            TrukketSøknadVurdering(
+                journalpostId = JournalpostId("12344321"),
+                begrunnelse = "en grunn",
+                vurdertAv = Bruker("Z00000"),
+                skalTrekkes = true,
+                vurdert = Instant.parse("2020-01-01T12:12:12Z"),
+            )
+        )
 
         // skal tilbakefølre
         steg.utfør(flytKontekstMedPerioder(behandling))
@@ -252,7 +268,7 @@ class SamordningStegTest {
             )
         } answers {
             tidslinjeOf(
-                firstArg<FlytKontekstMedPerioder>().rettighetsperiode to TidligereVurderinger.Behandlingsutfall.IKKE_BEHANDLINGSGRUNNLAG
+                firstArg<FlytKontekstMedPerioder>().rettighetsperiode to TidligereVurderinger.IkkeBehandlingsgrunnlag
             )
         }
     }
@@ -342,15 +358,11 @@ class SamordningStegTest {
         verifiserAvklaringsbehov(behandling, Status.OPPRETTET)
     }
 
-    private fun flytKontekstMedPerioder(behandling: Behandling): FlytKontekstMedPerioder = FlytKontekstMedPerioder(
-        sakId = behandling.sakId,
-        behandlingId = behandling.id,
-        forrigeBehandlingId = behandling.forrigeBehandlingId,
-        behandlingType = behandling.typeBehandling(),
-        vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
-        vurderingsbehovRelevanteForSteg = setOf(Vurderingsbehov.MOTTATT_SØKNAD),
-        rettighetsperiode = Periode(LocalDate.now().minusYears(1), LocalDate.now())
-    )
+    private fun flytKontekstMedPerioder(behandling: Behandling): FlytKontekstMedPerioder =
+        no.nav.aap.behandlingsflyt.help.flytKontekstMedPerioder {
+            this.behandling = behandling
+            this.rettighetsperiode = Periode(LocalDate.now().minusYears(1), LocalDate.now())
+        }
 
     @Test
     fun `skal kunne regne ut samordninggrad også uten registeropplysninger, kun vurderinger`() {
@@ -376,15 +388,11 @@ class SamordningStegTest {
             )
         )
 
-        val kontekst = FlytKontekstMedPerioder(
-            sakId = behandling.sakId,
-            behandlingId = behandling.id,
-            forrigeBehandlingId = behandling.forrigeBehandlingId,
-            behandlingType = behandling.typeBehandling(),
-            vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
-            vurderingsbehovRelevanteForSteg = setOf(Vurderingsbehov.MOTTATT_SØKNAD),
-            rettighetsperiode = Periode(LocalDate.now(), LocalDate.now().plusYears(1))
-        )
+        val kontekst =
+            no.nav.aap.behandlingsflyt.help.flytKontekstMedPerioder {
+                this.behandling = behandling
+                this.rettighetsperiode = Periode(LocalDate.now().minusYears(1), LocalDate.now())
+            }
 
         val res = steg.utfør(kontekst)
 
@@ -421,15 +429,11 @@ class SamordningStegTest {
             )
         )
 
-        val kontekst = FlytKontekstMedPerioder(
-            sakId = behandling.sakId,
-            behandlingId = behandling.id,
-            forrigeBehandlingId = behandling.forrigeBehandlingId,
-            behandlingType = behandling.typeBehandling(),
-            vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
-            vurderingsbehovRelevanteForSteg = setOf(Vurderingsbehov.MOTTATT_SØKNAD),
-            rettighetsperiode = Periode(LocalDate.now(), LocalDate.now().plusYears(1))
-        )
+        val kontekst = no.nav.aap.behandlingsflyt.help.flytKontekstMedPerioder {
+            this.behandling = behandling
+            this.vurderingsbehovRelevanteForSteg = setOf(Vurderingsbehov.MOTTATT_SØKNAD)
+            this.rettighetsperiode = Periode(LocalDate.now().minusYears(1), LocalDate.now())
+        }
 
         val res = steg.utfør(kontekst)
 
@@ -490,15 +494,11 @@ class SamordningStegTest {
     }
 
     private fun nySak(): Sak {
-        return PersonOgSakService(
-            FakePdlGateway,
-            InMemoryPersonRepository,
-            InMemorySakRepository
-        ).finnEllerOpprett(ident(), Periode(LocalDate.now(), LocalDate.now().plusYears(1)))
+        return opprettInMemorySak(LocalDate.now())
     }
 
     private fun opprettBehandling(sak: Sak): Behandling {
-        return InMemorySakOgBehandlingService
+        return InMemoryBehandlingService
             .finnEllerOpprettOrdinærBehandling(
                 sak.id,
                 VurderingsbehovOgÅrsak(

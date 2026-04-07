@@ -3,28 +3,31 @@ package no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.overgang
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovMetadataService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.sykdom.SykdomsvurderingResponse
+import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreSøknadRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
+import no.nav.aap.behandlingsflyt.forretningsflyt.steg.OvergangUføreSteg
+import no.nav.aap.behandlingsflyt.kanLøseBehovSomSkalVæreLåstEtterKvalitetssikring
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.tilgang.kanSaksbehandle
+import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
+import no.nav.aap.komponenter.tidslinje.orEmpty
+import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.getGrunnlag
 import javax.sql.DataSource
-import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
-import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
-import no.nav.aap.komponenter.tidslinje.orEmpty
-import no.nav.aap.komponenter.type.Periode
-import kotlin.collections.orEmpty
 
 fun NormalOpenAPIRoute.overgangUforeGrunnlagApi(
     dataSource: DataSource, repositoryRegistry: RepositoryRegistry,
@@ -41,16 +44,19 @@ fun NormalOpenAPIRoute.overgangUforeGrunnlagApi(
                     val repositoryProvider = repositoryRegistry.provider(connection)
                     val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
                     val overgangUforeRepository = repositoryProvider.provide<OvergangUføreRepository>()
+                    val uføreSøknadRepository = repositoryProvider.provide<UføreSøknadRepository>()
                     val sykdomRepository = repositoryProvider.provide<SykdomRepository>()
                     val vurdertAvService = VurdertAvService(repositoryProvider, gatewayProvider)
                     val sakRepository = repositoryProvider.provide<SakRepository>()
-                    
+                    val overgangUføreSteg = OvergangUføreSteg(repositoryProvider, gatewayProvider)
+                    val avklaringsbehovMetadataService = AvklaringsbehovMetadataService(repositoryProvider, gatewayProvider)
+
                     val behandling: Behandling =
                         BehandlingReferanseService(behandlingRepository).behandling(req)
                     val grunnlag = overgangUforeRepository.hentHvisEksisterer(behandling.id)
                     val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
                     val sak = sakRepository.hent(behandling.sakId)
-
+                    val uføreSøknad = uføreSøknadRepository.hentHvisEksisterer(behandling.id)
                     val gjeldendeSykdomsvurderinger =
                         sykdomRepository.hentHvisEksisterer(behandling.id)?.sykdomsvurderinger.orEmpty()
 
@@ -62,11 +68,11 @@ fun NormalOpenAPIRoute.overgangUforeGrunnlagApi(
                         ?.maxByOrNull { it.opprettet!! }
                         ?.let { OvergangUføreVurderingResponse.fraDomene(it, vurdertAvService) }
 
-                    val avklaringsbehov = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
-                        .hentBehovForDefinisjon(Definisjon.AVKLAR_OVERGANG_UFORE)
+                    val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
+                    val avklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_OVERGANG_UFORE)
 
                     OvergangUføreGrunnlagResponse(
-                        harTilgangTilÅSaksbehandle = kanSaksbehandle(),
+                        harTilgangTilÅSaksbehandle = kanSaksbehandle() && kanLøseBehovSomSkalVæreLåstEtterKvalitetssikring(Definisjon.AVKLAR_OVERGANG_UFORE.løsesISteg, behandling),
                         vurdering = nyesteVurdering, // TODO: Fjern
                         nyeVurderinger = nyeVurderinger,
                         // TODO: Fjern
@@ -92,9 +98,18 @@ fun NormalOpenAPIRoute.overgangUforeGrunnlagApi(
                                 sak.rettighetsperiode.tom
                             )
                         ),
+                        ikkeRelevantePerioder = avklaringsbehovMetadataService.perioderSomSkalFremhevesSomIkkeRelevant(
+                            overgangUføreSteg,
+                            behandling,
+                        ),
                         behøverVurderinger = avklaringsbehov?.perioderVedtaketBehøverVurdering().orEmpty().toList(),
                         perioderSomIkkeErTilstrekkeligVurdert = avklaringsbehov?.perioderSomIkkeErTilstrekkeligVurdert()
-                            .orEmpty().toList()
+                            .orEmpty().toList(),
+                        kvalitetssikretAv = vurdertAvService.kvalitetssikretAv(
+                            Definisjon.AVKLAR_OVERGANG_UFORE,
+                            behandling.id
+                        ),
+                        uføreSøknadOpplysninger = uføreSøknad?.let { UføreSøknadOpplysninger(it.uføreSøknad.soknadsdato) }
                     )
                 }
 

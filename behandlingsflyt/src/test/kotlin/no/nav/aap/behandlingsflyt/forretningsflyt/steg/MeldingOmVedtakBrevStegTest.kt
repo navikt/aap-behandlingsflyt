@@ -10,17 +10,17 @@ import no.nav.aap.behandlingsflyt.behandling.brev.VedtakAktivitetsplikt11_7
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingService
 import no.nav.aap.behandlingsflyt.behandling.trekkklage.TrekkKlageService
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
+import no.nav.aap.behandlingsflyt.help.flytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
-import no.nav.aap.behandlingsflyt.test.FakeUnleash
+import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
@@ -79,7 +79,6 @@ class MeldingOmVedtakBrevStegTest {
                 vurderingsbehov = listOf(
                     VurderingsbehovMedPeriode(
                         Vurderingsbehov.MOTTATT_SØKNAD,
-                        Periode(LocalDate.now().minusDays(1), LocalDate.now().plusYears(1))
                     )
                 ),
                 årsak = ÅrsakTilOpprettelse.SØKNAD,
@@ -87,15 +86,12 @@ class MeldingOmVedtakBrevStegTest {
                 beskrivelse = "unit-test"
             )
         )
-        val kontekst = FlytKontekstMedPerioder(
-            sakId = behandling.sakId,
-            behandlingId = behandling.id,
-            behandlingType = behandling.typeBehandling(),
-            forrigeBehandlingId = behandling.forrigeBehandlingId,
-            vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
-            rettighetsperiode = Periode(LocalDate.now().minusDays(1), LocalDate.now().plusYears(1)),
+        val kontekst = flytKontekstMedPerioder {
+            this.behandling = behandling
+            vurderingType = VurderingType.FØRSTEGANGSBEHANDLING
+            rettighetsperiode = Periode(LocalDate.now().minusDays(1), LocalDate.now().plusYears(1))
             vurderingsbehovRelevanteForSteg = setOf(Vurderingsbehov.MOTTATT_SØKNAD)
-        )
+        }
         val steg = MeldingOmVedtakBrevSteg(
             brevUtlederService = brevUtlederService,
             brevbestillingService = brevbestillingService,
@@ -104,7 +100,7 @@ class MeldingOmVedtakBrevStegTest {
             trekkKlageService = trekkKlageService,
             avklaringsbehovService = avklaringsbehovService,
             avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
-            unleashGateway = FakeUnleash,
+            unleashGateway = AlleAvskruddUnleash,
         )
 
         // Runde-1
@@ -117,7 +113,7 @@ class MeldingOmVedtakBrevStegTest {
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
         val avklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.SKRIV_VEDTAKSBREV)
         assertThat(avklaringsbehov!!.historikk).hasSize(1)
-        assertThat(avklaringsbehov.historikk.get(0).status).isEqualTo(Status.OPPRETTET)
+        assertThat(avklaringsbehov.historikk[0].status).isEqualTo(Status.OPPRETTET)
 
         verify(exactly = 1) { brevbestillingService.bestill(behandling.id, VedtakAktivitetsplikt11_7, allAny(), false) }
 
@@ -157,7 +153,6 @@ class MeldingOmVedtakBrevStegTest {
                 vurderingsbehov = listOf(
                     VurderingsbehovMedPeriode(
                         Vurderingsbehov.MOTTATT_SØKNAD,
-                        Periode(LocalDate.now().minusDays(1), LocalDate.now().plusYears(1))
                     )
                 ),
                 årsak = ÅrsakTilOpprettelse.SØKNAD,
@@ -165,15 +160,13 @@ class MeldingOmVedtakBrevStegTest {
                 beskrivelse = "unit-test"
             )
         )
-        val kontekst = FlytKontekstMedPerioder(
-            sakId = behandling.sakId,
-            behandlingId = behandling.id,
-            behandlingType = behandling.typeBehandling(),
-            forrigeBehandlingId = behandling.forrigeBehandlingId,
-            vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
-            rettighetsperiode = Periode(LocalDate.now().minusDays(1), LocalDate.now().plusYears(1)),
-            vurderingsbehovRelevanteForSteg = setOf(Vurderingsbehov.MOTTATT_SØKNAD)
-        )
+        val kontekst = flytKontekstMedPerioder {
+            this.behandling = behandling
+            this.vurderingType = VurderingType.FØRSTEGANGSBEHANDLING
+            this.rettighetsperiode = Periode(LocalDate.now().minusDays(1), LocalDate.now().plusYears(1))
+            this.vurderingsbehovRelevanteForSteg = setOf(Vurderingsbehov.MOTTATT_SØKNAD)
+        }
+
         val steg = MeldingOmVedtakBrevSteg(
             brevUtlederService = brevUtlederService,
             brevbestillingService = brevbestillingService,
@@ -182,7 +175,7 @@ class MeldingOmVedtakBrevStegTest {
             trekkKlageService = trekkKlageService,
             avklaringsbehovService = avklaringsbehovService,
             avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
-            unleashGateway = FakeUnleash,
+            unleashGateway = AlleAvskruddUnleash,
         )
         every { brevUtlederService.utledBehovForMeldingOmVedtak(any()) } returns null
 
@@ -204,7 +197,6 @@ class MeldingOmVedtakBrevStegTest {
                 vurderingsbehov = listOf(
                     VurderingsbehovMedPeriode(
                         Vurderingsbehov.MOTTATT_SØKNAD,
-                        Periode(LocalDate.now().minusDays(1), LocalDate.now().plusYears(1))
                     )
                 ),
                 årsak = ÅrsakTilOpprettelse.SØKNAD,
@@ -212,15 +204,12 @@ class MeldingOmVedtakBrevStegTest {
                 beskrivelse = "unit-test"
             )
         )
-        val kontekst = FlytKontekstMedPerioder(
-            sakId = behandling.sakId,
-            behandlingId = behandling.id,
-            behandlingType = behandling.typeBehandling(),
-            forrigeBehandlingId = behandling.forrigeBehandlingId,
-            vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
-            rettighetsperiode = Periode(LocalDate.now().minusDays(1), LocalDate.now().plusYears(1)),
-            vurderingsbehovRelevanteForSteg = setOf(Vurderingsbehov.MOTTATT_SØKNAD)
-        )
+        val kontekst = flytKontekstMedPerioder {
+            this.behandling = behandling
+            this.vurderingType = VurderingType.FØRSTEGANGSBEHANDLING
+            this.rettighetsperiode = Periode(LocalDate.now().minusDays(1), LocalDate.now().plusYears(1))
+            this.vurderingsbehovRelevanteForSteg = setOf(Vurderingsbehov.MOTTATT_SØKNAD)
+        }
         val steg = MeldingOmVedtakBrevSteg(
             brevUtlederService = brevUtlederService,
             brevbestillingService = brevbestillingService,
@@ -229,7 +218,7 @@ class MeldingOmVedtakBrevStegTest {
             trekkKlageService = trekkKlageService,
             avklaringsbehovService = avklaringsbehovService,
             avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
-            unleashGateway = FakeUnleash,
+            unleashGateway = AlleAvskruddUnleash,
         )
         every { trekkKlageService.klageErTrukket(any()) } returns true
 

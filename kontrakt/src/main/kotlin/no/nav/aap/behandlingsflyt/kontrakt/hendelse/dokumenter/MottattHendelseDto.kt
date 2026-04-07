@@ -14,6 +14,7 @@ import java.time.LocalDateTime
  * @param kanal Om innsendingen kom via digitale kanaler eller via papir. Dette er relevant for statistikkformål.
  * @param mottattTidspunkt Tidspunktet da dokumentet ble mottatt.
  * @param melding Strukturert melding.
+ * @param digitalisertAvPostmottak Om hendelsen ble digitalisert i postmottak, eller om det ble utført i annet system/kanal
  */
 public class Innsending(
     public val saksnummer: Saksnummer,
@@ -22,6 +23,7 @@ public class Innsending(
     public val kanal: Kanal = Kanal.DIGITAL,
     public val mottattTidspunkt: LocalDateTime,
     public val melding: Melding? = null,
+    public val digitalisertAvPostmottak: Boolean? = null
 ) {
     init {
         when (type) {
@@ -90,13 +92,29 @@ public class Innsending(
             }
 
             InnsendingType.TILBAKEKREVING_HENDELSE -> {
-                require(referanse.type == InnsendingReferanse.Type.TILBAKEKREING_HENDELSE_ID)
+                require(referanse.type == InnsendingReferanse.Type.TILBAKEKREVING_HENDELSE_ID)
                 requireNotNull(melding) {"Melding fra tilbakekreving kan ikke være null"}
-                require(melding is TilbakekrevingHendelse)
+                require(melding is TilbakekrevingHendelseV0)
+            }
+
+            InnsendingType.FAGSYSTEMINFO_BEHOV_HENDELSE -> {
+                require(referanse.type == InnsendingReferanse.Type.FAGSYSTEMINFO_BEHOV_HENDELSE_ID)
+                requireNotNull(melding) {"Melding fra tilbakekreving kan ikke være null"}
+                require(melding is FagsysteminfoBehovV0)
             }
 
             InnsendingType.OPPFØLGINGSOPPGAVE -> {
                 requireNotNull(melding)
+            }
+
+            InnsendingType.INSTITUSJONSOPPHOLD -> {
+                requireNotNull(melding)
+            }
+
+            InnsendingType.SYKEPENGE_VEDTAK_HENDELSE -> {
+                require(referanse.type == InnsendingReferanse.Type.SYKEPENGEVEDTAK_HENDELSE_ID)
+                requireNotNull(melding) {"Melding fra sykepengevedtakhendelse kan ikke være null"}
+                require(melding is SykepengevedtakV0)
             }
 
             InnsendingType.PDL_HENDELSE_DODSFALL_BRUKER, InnsendingType.PDL_HENDELSE_DODSFALL_BARN -> {
@@ -105,6 +123,11 @@ public class Innsending(
                 require(melding is PdlHendelse)
             }
 
+            InnsendingType.UFØRE_VEDTAK_HENDELSE -> {
+                require(referanse.type == InnsendingReferanse.Type.UFØREVEDTAK_HENDELSE_ID)
+                requireNotNull(melding) {"Melding fra uførevedtakhendelse kan ikke være null"}
+                require(melding is UførevedtakV0)
+            }
         }
     }
 }

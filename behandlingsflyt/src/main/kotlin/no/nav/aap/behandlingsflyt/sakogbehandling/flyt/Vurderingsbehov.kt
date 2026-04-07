@@ -26,9 +26,12 @@ enum class Vurderingsbehov {
     REVURDER_SAMORDNING_UFØRE,                    // Samordning uføre
     REVURDER_SAMORDNING_ANDRE_STATLIGE_YTELSER,   // Samordning andre statlige ytelser
     REVURDER_SAMORDNING_ARBEIDSGIVER,             // Samordning arbeidsgiver
+    REVURDER_SAMORDNING_BARNEPENSJON,             
     REVURDER_SAMORDNING_TJENESTEPENSJON,          // Samordning tjenestepensjon
     G_REGULERING,
-    AUTOMATISK_OPPDATER_VILKÅR, // Skal kjøre igjennom behandlinger uten å trigge avklaringsbehov
+    UTVID_VEDTAKSLENGDE, // Skal kjøre igjennom behandlinger uten å trigge avklaringsbehov og vilkårsvurderinger
+    VEDTAKSLENGDE_MANUELT,
+    MIGRER_RETTIGHETSPERIODE, // Skal kjøre igjennom behandlinger uten å trigge avklaringsbehov
     LOVVALG_OG_MEDLEMSKAP,      // Lovvalg og medlemskap
     FORUTGAENDE_MEDLEMSKAP,     // Forutgående medlemskap
     OPPHOLDSKRAV,
@@ -52,7 +55,9 @@ enum class Vurderingsbehov {
     OVERGANG_ARBEID,
     DØDSFALL_BRUKER,
     DØDSFALL_BARN,
-    BARNETILLEGG_SATS_REGULERING
+    BARNETILLEGG_SATS_REGULERING,
+    REVURDER_SYKESTIPEND,
+    ETABLERING_EGEN_VIRKSOMHET
     ;
 
     companion object {
@@ -60,11 +65,7 @@ enum class Vurderingsbehov {
          * Alle med funksjonell verdi, G-regulering holdes utenfor
          */
         fun alle(): List<Vurderingsbehov> {
-            val alle = Vurderingsbehov.entries.toMutableSet()
-
-            alle.remove(G_REGULERING)
-
-            return alle.toList()
+            return Vurderingsbehov.entries.filter { it != G_REGULERING }.toList()
         }
 
         /**
@@ -73,7 +74,7 @@ enum class Vurderingsbehov {
         fun alleInklusivGRegulering(): List<Vurderingsbehov> {
             return Vurderingsbehov.entries.toList()
         }
-        
+
         fun forAktivitetspliktbehandling(): List<Vurderingsbehov> {
             return listOf(
                 AKTIVITETSPLIKT_11_7,
@@ -101,6 +102,7 @@ fun EksponertÅrsak.tilVurderingsbehov() =
         EksponertÅrsak.REVURDER_SAMORDNING_UFØRE -> Vurderingsbehov.REVURDER_SAMORDNING_UFØRE
         EksponertÅrsak.REVURDER_SAMORDNING_ANDRE_STATLIGE_YTELSER -> Vurderingsbehov.REVURDER_SAMORDNING_ANDRE_STATLIGE_YTELSER
         EksponertÅrsak.REVURDER_SAMORDNING_ARBEIDSGIVER -> Vurderingsbehov.REVURDER_SAMORDNING_ARBEIDSGIVER
+        EksponertÅrsak.REVURDER_SAMORDNING_BARNEPENSJON -> Vurderingsbehov.REVURDER_SAMORDNING_BARNEPENSJON
         EksponertÅrsak.REVURDER_SAMORDNING_TJENESTEPENSJON -> Vurderingsbehov.REVURDER_SAMORDNING_TJENESTEPENSJON
         EksponertÅrsak.REVURDER_STUDENT -> Vurderingsbehov.REVURDER_STUDENT
         EksponertÅrsak.KLAGE -> Vurderingsbehov.MOTATT_KLAGE
@@ -132,6 +134,10 @@ fun EksponertÅrsak.tilVurderingsbehov() =
         EksponertÅrsak.OVERGANG_ARBEID -> Vurderingsbehov.OVERGANG_ARBEID
         EksponertÅrsak.DØDSFALL_BRUKER -> Vurderingsbehov.DØDSFALL_BRUKER
         EksponertÅrsak.DØDSFALL_BARN -> Vurderingsbehov.DØDSFALL_BARN
-        EksponertÅrsak.AUTOMATISK_OPPDATER_VILKÅR -> Vurderingsbehov.AUTOMATISK_OPPDATER_VILKÅR
+        EksponertÅrsak.UTVID_VEDTAKSLENGDE -> Vurderingsbehov.UTVID_VEDTAKSLENGDE
+        EksponertÅrsak.VEDTAKSLENGDE_MANUELT -> Vurderingsbehov.VEDTAKSLENGDE_MANUELT
+        EksponertÅrsak.MIGRER_RETTIGHETSPERIODE -> Vurderingsbehov.MIGRER_RETTIGHETSPERIODE
         EksponertÅrsak.BARNETILLEGG_SATS_REGULERING -> Vurderingsbehov.BARNETILLEGG_SATS_REGULERING
+        EksponertÅrsak.REVURDER_SYKESTIPEND -> Vurderingsbehov.REVURDER_SYKESTIPEND
+        EksponertÅrsak.ETABLERING_EGEN_VIRKSOMHET -> Vurderingsbehov.ETABLERING_EGEN_VIRKSOMHET
     }

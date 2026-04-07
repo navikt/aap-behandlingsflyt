@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.behandling.utbetaling
 
+import io.mockk.checkUnnecessaryStub
 import io.mockk.every
-import io.mockk.junit5.MockKExtension
 import io.mockk.mockk
 import no.nav.aap.behandlingsflyt.behandling.vedtak.Vedtak
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakService
@@ -23,27 +23,37 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
-import no.nav.aap.behandlingsflyt.test.FakeUnleash
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.utbetal.kodeverk.AvventÅrsak
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertNull
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.extension.ExtendWith
+import org.junit.jupiter.api.parallel.Execution
+import org.junit.jupiter.api.parallel.ExecutionMode
 import java.time.LocalDate
 import kotlin.test.Test
 
-@ExtendWith(MockKExtension::class)
-@MockKExtension.CheckUnnecessaryStub
+@Execution(ExecutionMode.SAME_THREAD)
 class AvventUtbetalingServiceTest {
+
+    @AfterEach
+    fun afterEach() {
+        checkUnnecessaryStub(
+            refusjonkravRepositoryMock,
+            tjenestepensjonRefusjonsKravVurderingRepositoryMock,
+            samordningAndreStatligeYtelserRepositoryMock,
+            samordningArbeidsgiverRepositoryMock,
+            vedtakServiceMock,
+            behandlingRepositoryMock,
+        )
+    }
 
     val vedtak = Vedtak(
         behandlingId = BehandlingId(123L),
         vedtakstidspunkt = LocalDate.parse("2025-01-15").atStartOfDay(),
         virkningstidspunkt = LocalDate.parse("2025-01-10"),
     )
-
 
     val behandling = Behandling(
         BehandlingId(123L),
@@ -54,34 +64,22 @@ class AvventUtbetalingServiceTest {
         versjon = 1
     )
 
-    private lateinit var refusjonkravRepositoryMock: RefusjonkravRepository
-    private lateinit var tjenestepensjonRefusjonsKravVurderingRepositoryMock: TjenestepensjonRefusjonsKravVurderingRepository
-    private lateinit var samordningAndreStatligeYtelserRepositoryMock: SamordningAndreStatligeYtelserRepository
-    private lateinit var samordningArbeidsgiverRepositoryMock: SamordningArbeidsgiverRepository
-    private lateinit var vedtakServiceMock: VedtakService
-    private lateinit var behandlingRepositoryMock: BehandlingRepository
-    private lateinit var service: AvventUtbetalingService
+    private val refusjonkravRepositoryMock = mockk<RefusjonkravRepository>()
+    private val tjenestepensjonRefusjonsKravVurderingRepositoryMock =
+        mockk<TjenestepensjonRefusjonsKravVurderingRepository>()
+    private val samordningAndreStatligeYtelserRepositoryMock = mockk<SamordningAndreStatligeYtelserRepository>()
+    private val samordningArbeidsgiverRepositoryMock = mockk<SamordningArbeidsgiverRepository>()
+    private val vedtakServiceMock = mockk<VedtakService>()
+    private val behandlingRepositoryMock = mockk<BehandlingRepository>()
 
-    @BeforeEach
-    fun setup() {
-        refusjonkravRepositoryMock = mockk<RefusjonkravRepository>()
-        tjenestepensjonRefusjonsKravVurderingRepositoryMock = mockk<TjenestepensjonRefusjonsKravVurderingRepository>()
-        samordningAndreStatligeYtelserRepositoryMock = mockk<SamordningAndreStatligeYtelserRepository>()
-        samordningArbeidsgiverRepositoryMock = mockk<SamordningArbeidsgiverRepository>()
-        vedtakServiceMock = mockk<VedtakService>()
-        behandlingRepositoryMock = mockk<BehandlingRepository>()
-
-        service = AvventUtbetalingService(
-            refusjonkravRepositoryMock,
-            tjenestepensjonRefusjonsKravVurderingRepositoryMock,
-            samordningAndreStatligeYtelserRepositoryMock,
-            samordningArbeidsgiverRepositoryMock,
-            vedtakServiceMock,
-            behandlingRepositoryMock,
-            FakeUnleash
-        )
-    }
-
+    private val service = AvventUtbetalingService(
+        refusjonkravRepositoryMock,
+        tjenestepensjonRefusjonsKravVurderingRepositoryMock,
+        samordningAndreStatligeYtelserRepositoryMock,
+        samordningArbeidsgiverRepositoryMock,
+        vedtakServiceMock,
+        behandlingRepositoryMock,
+    )
 
 
     @Test
@@ -131,7 +129,7 @@ class AvventUtbetalingServiceTest {
 
 
     @Test
-    fun `Refusjonskrav i revrudering setter riktig refusjons datoer`(){
+    fun `Refusjonskrav i revrudering setter riktig refusjons datoer`() {
 
         /**
          * Skal ha refusjonskrav i perioden virking og vedtak i førstegang behandling
@@ -171,11 +169,10 @@ class AvventUtbetalingServiceTest {
         every { behandlingRepositoryMock.hent(BehandlingId(1L)) } returns førstegangBehandling
         every { vedtakServiceMock.hentVedtak(any()) } returns vedtak
         every { refusjonkravRepositoryMock.hentHvisEksisterer(any()) } returns
-            listOf(RefusjonkravVurdering(true, null, null, "Nav Løten", "saksbehandler"))
+                listOf(RefusjonkravVurdering(true, null, null, "Nav Løten", "saksbehandler"))
         every { tjenestepensjonRefusjonsKravVurderingRepositoryMock.hentHvisEksisterer(any()) } returns null
         every { samordningAndreStatligeYtelserRepositoryMock.hentHvisEksisterer(any()) } returns null
         every { samordningArbeidsgiverRepositoryMock.hentHvisEksisterer(any()) } returns null
-
 
 
         val avventUtbetaling = service.finnEventuellAvventUtbetaling(
@@ -193,9 +190,6 @@ class AvventUtbetalingServiceTest {
 
 
     }
-
-
-
 
     @Test
     fun `Refusjonskrav med åpen tom overlapper med tilkjent ytelse skal føre til avvent utbetaling`() {
@@ -286,8 +280,6 @@ class AvventUtbetalingServiceTest {
     }
 
 
-
-
     @Test
     fun `Samordning med andre statlige ytelser overlapper med tilkjent ytelse skal føre til avvent utbetaling`() {
 
@@ -320,7 +312,7 @@ class AvventUtbetalingServiceTest {
         assertNotNull(avventUtbetaling)
         assertThat(avventUtbetaling?.fom).isEqualTo(LocalDate.parse("2025-01-04"))
         assertThat(avventUtbetaling?.tom).isEqualTo(LocalDate.parse("2025-01-12"))
-        assertThat(avventUtbetaling?.overføres).isNull()
+        assertThat(avventUtbetaling?.overføres).isEqualTo(vedtak.vedtakstidspunkt.toLocalDate().plusDays(42))
         assertThat(avventUtbetaling?.årsak).isEqualTo(AvventÅrsak.AVVENT_AVREGNING)
         assertThat(avventUtbetaling?.feilregistrering).isFalse()
     }
@@ -337,7 +329,7 @@ class AvventUtbetalingServiceTest {
                     vurdering = SamordningArbeidsgiverVurdering(
                         "Har fått sluttpakke",
                         listOf(Periode(LocalDate.of(2025, 1, 4), LocalDate.of(2025, 1, 12))),
-                         vurdertAv = "ident"
+                        vurdertAv = "ident"
                     )
                 )
 
@@ -351,7 +343,7 @@ class AvventUtbetalingServiceTest {
         assertNotNull(avventUtbetaling)
         assertThat(avventUtbetaling?.fom).isEqualTo(LocalDate.parse("2025-01-04"))
         assertThat(avventUtbetaling?.tom).isEqualTo(LocalDate.parse("2025-01-12"))
-        assertThat(avventUtbetaling?.overføres).isNull()
+        assertThat(avventUtbetaling?.overføres).isEqualTo(vedtak.vedtakstidspunkt.toLocalDate().plusDays(42))
         assertThat(avventUtbetaling?.årsak).isEqualTo(AvventÅrsak.AVVENT_AVREGNING)
         assertThat(avventUtbetaling?.feilregistrering).isFalse()
     }

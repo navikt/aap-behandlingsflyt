@@ -1,6 +1,6 @@
 
 plugins {
-    id("behandlingsflyt.conventions")
+    id("aap.conventions")
 }
 
 tasks{
@@ -50,6 +50,7 @@ dependencies {
     api(libs.tilgangPlugin)
     api(libs.tilgangKontrakt)
     api(libs.brevKontrakt)
+    api(libs.oppgaveKontrakt)
     api(libs.meldekortKontrakt)
     api(libs.motor)
     api(libs.gateway)
@@ -61,6 +62,7 @@ dependencies {
     implementation(libs.infrastructure)
     implementation(libs.verdityper)
     implementation(libs.tidslinje)
+    implementation(libs.kafkaClients)
     implementation(kotlin("reflect"))
     implementation(libs.flywayDatabasePostgresql)
     runtimeOnly(libs.postgresql) // låst versjon i root build.gradle.kts

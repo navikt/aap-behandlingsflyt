@@ -34,16 +34,13 @@ import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryVilkårsresultatRepo
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryProvider
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.behandlingsflyt.test.modell.genererIdent
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.Instant
 import java.time.LocalDate
-import java.util.Random
-import java.util.UUID
+import java.util.*
 
 class OvergangArbeidStegTest {
     private val random = Random(1235123)
@@ -87,7 +84,6 @@ class OvergangArbeidStegTest {
             sykdomRepository = sykdomMock,
             tidligereVurderinger = FakeTidligereVurderinger(),
             bistandRepository = bistandMock,
-            behandlingRepository = behandlingRepository,
             avklaringsbehovService = AvklaringsbehovService(inMemoryRepositoryProvider),
             studentRepository = mockk<StudentRepository> {
                 every { hentHvisEksisterer(any()) } returns null
@@ -95,29 +91,14 @@ class OvergangArbeidStegTest {
             overgangUføreRepository = mockk<OvergangUføreRepository> {
                 every { hentHvisEksisterer(any()) } returns null
             },
-            unleashGateway = mockk<UnleashGateway> {
-                every { isDisabled(BehandlingsflytFeature.OvergangArbeid) } returns false
-            }
         )
-        
+
         steg.utfør(kontekstMedPerioder)
         val behov = hentOvergangArbeidBehov(behandling)
         assertThat(behov).isNotNull
         assertThat(behov!!.erÅpent()).isTrue
     }
 
-
-    private fun opprettOgLøsBistandsbehov(behandling: Behandling) {
-        InMemoryAvklaringsbehovRepository.opprett(
-            behandling.id,
-            Definisjon.AVKLAR_BISTANDSBEHOV,
-            Definisjon.AVKLAR_BISTANDSBEHOV.løsesISteg,
-            null,
-            "..."
-        )
-        InMemoryAvklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
-            .løsAvklaringsbehov(Definisjon.AVKLAR_BISTANDSBEHOV, "...", "meg")
-    }
 
     private fun hentOvergangArbeidBehov(behandling: Behandling): Avklaringsbehov? =
         InMemoryAvklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
@@ -129,12 +110,12 @@ class OvergangArbeidStegTest {
         behandling: Behandling,
         vurderingType: VurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
         vurderingsbehov: Set<Vurderingsbehov> = setOf(Vurderingsbehov.MOTTATT_SØKNAD)
-    ): FlytKontekstMedPerioder = FlytKontekstMedPerioder(
-        sak.id, behandling.id, behandling.forrigeBehandlingId, behandling.typeBehandling(),
-        vurderingType = vurderingType,
-        vurderingsbehovRelevanteForSteg = vurderingsbehov,
-        rettighetsperiode = sak.rettighetsperiode
-    )
+    ): FlytKontekstMedPerioder = no.nav.aap.behandlingsflyt.help.flytKontekstMedPerioder {
+        this.behandling = behandling
+        this.vurderingType = vurderingType
+        this.vurderingsbehovRelevanteForSteg = vurderingsbehov
+        this.rettighetsperiode = sak.rettighetsperiode
+    }
 
     private fun behandling(sak: Sak, typeBehandling: TypeBehandling): Behandling =
         behandlingRepository.opprettBehandling(
@@ -186,5 +167,6 @@ class OvergangArbeidStegTest {
         vurdertAv = Bruker("Z00000"),
         opprettet = Instant.now(),
         vurdertIBehandling = BehandlingId(1L),
+        diagnose = null
     )
 }

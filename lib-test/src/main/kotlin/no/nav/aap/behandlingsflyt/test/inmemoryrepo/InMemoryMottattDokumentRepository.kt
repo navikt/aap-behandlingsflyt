@@ -11,7 +11,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 
 object InMemoryMottattDokumentRepository : MottattDokumentRepository {
     private val memory = mutableListOf<MottattDokument>()
-    private val lock = Object()
+    private val lock = Any()
 
 
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
@@ -25,6 +25,7 @@ object InMemoryMottattDokumentRepository : MottattDokumentRepository {
                             sakId = it.sakId,
                             behandlingId = tilBehandling,
                             mottattTidspunkt = it.mottattTidspunkt,
+                            opprettetTid = it.opprettetTid,
                             type = it.type,
                             kanal = it.kanal,
                             status = it.status,
@@ -65,6 +66,7 @@ object InMemoryMottattDokumentRepository : MottattDokumentRepository {
                             sakId = it.sakId,
                             behandlingId = behandlingId,
                             mottattTidspunkt = it.mottattTidspunkt,
+                            opprettetTid = it.opprettetTid,
                             type = it.type,
                             kanal = it.kanal,
                             status = status,
@@ -91,6 +93,7 @@ object InMemoryMottattDokumentRepository : MottattDokumentRepository {
                             sakId = it.sakId,
                             behandlingId = behandlingId,
                             mottattTidspunkt = it.mottattTidspunkt,
+                            opprettetTid = it.opprettetTid,
                             type = it.type,
                             kanal = it.kanal,
                             status = it.status,
@@ -122,6 +125,12 @@ object InMemoryMottattDokumentRepository : MottattDokumentRepository {
         }
     }
 
+    override fun hentDokumenterForSak(sakId: SakId): Set<MottattDokument> {
+        synchronized(lock) {
+            return memory.filter { it.sakId == sakId && it.status == Status.MOTTATT }.toSet()
+        }
+    }
+
     override fun hentDokumenterAvType(
         sakId: SakId,
         type: InnsendingType
@@ -146,6 +155,24 @@ object InMemoryMottattDokumentRepository : MottattDokumentRepository {
     ): Set<MottattDokument> {
         synchronized(lock) {
             return memory.filter { it.type in typer && it.behandlingId == behandlingId }.toSet()
+        }
+    }
+
+    override fun hentAlleUbehandledeDokumenter(): Set<MottattDokument> {
+        synchronized(lock) {
+            return memory.filter { it.status == Status.MOTTATT }.toSet()
+        }
+    }
+
+    override fun hent(innsendingsreferanse: InnsendingReferanse): MottattDokument {
+        synchronized(lock) {
+            return memory.first { it.referanse == innsendingsreferanse }
+        }
+    }
+
+    override fun hentAlleUbehandledeDokumenterAvType(type: InnsendingType): Set<MottattDokument> {
+        synchronized(lock) {
+            return memory.filter { it.status == Status.MOTTATT && it.type == type }.toSet()
         }
     }
 }

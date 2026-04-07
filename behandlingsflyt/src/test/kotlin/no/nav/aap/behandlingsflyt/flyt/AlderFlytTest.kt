@@ -1,6 +1,9 @@
 package no.nav.aap.behandlingsflyt.flyt
 
+import no.nav.aap.behandlingsflyt.behandling.Resultat
+import no.nav.aap.behandlingsflyt.behandling.ResultatUtleder
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
@@ -8,13 +11,12 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.StoppetBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
-import no.nav.aap.behandlingsflyt.test.FakeUnleash
-import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
-class AlderFlytTest: AbstraktFlytOrkestratorTest(FakeUnleash::class) {
+class AlderFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
     @Test
     fun `Ikke oppfylt på grunn av alder på søknadstidspunkt`(hendelser: List<StoppetBehandling>) {
         var (_, behandling) = sendInnFørsteSøknad(person = TestPersoner.PERSON_FOR_UNG())
@@ -49,40 +51,13 @@ class AlderFlytTest: AbstraktFlytOrkestratorTest(FakeUnleash::class) {
     }
 
     @Test
-    fun `stopper opp når søker er over 62 år`() {
-        val fom = LocalDate.now()
-        val periode = Periode(fom, fom.plusYears(3))
-        val person = TestPersoner.PERSON_62()
-
-        val (sak, behandling) = sendInnFørsteSøknad(
-            person = person,
-            mottattTidspunkt = fom.atStartOfDay(),
-            periode = periode,
-        )
-
-        behandling
-            .medKontekst {
-                assertThat(behandling.typeBehandling()).isEqualTo(TypeBehandling.Førstegangsbehandling)
-                assertThat(åpneAvklaringsbehov).isNotEmpty()
-                assertThat(behandling.status()).isEqualTo(Status.UTREDES)
-            }
-            .løsFramTilGrunnlag(sak.rettighetsperiode.fom)
-            .løsBeregningstidspunkt()
-            .medKontekst {
-                assertThat(åpneAvklaringsbehov.map { it.definisjon }).contains(Definisjon.VURDER_INNTEKTSBORTFALL)
-            }
-    }
-
-    @Test
     fun `stopper ikke opp når søker er rett under 62 år gammel`() {
         val fom = LocalDate.now()
         val person = TestPersoner.PERSON_61()
-        val periode = Periode(fom, fom.plusYears(3))
 
         val (sak, behandling) = sendInnFørsteSøknad(
             person = person,
             mottattTidspunkt = fom.atStartOfDay(),
-            periode = periode
         )
 
         behandling
@@ -98,4 +73,41 @@ class AlderFlytTest: AbstraktFlytOrkestratorTest(FakeUnleash::class) {
             }
     }
 
+    @Test
+    fun `stopper opp når søker er over 62 år, og løser behov, avslag ved rett til uttak av alderspensjon`() {
+        val fom = LocalDate.now()
+        val person = TestPersoner.PERSON_62().medInntekter(emptyList())
+
+        val (sak, behandling) = sendInnFørsteSøknad(
+            person = person,
+            mottattTidspunkt = fom.atStartOfDay(),
+        )
+
+        behandling
+            .medKontekst {
+                assertThat(behandling.typeBehandling()).isEqualTo(TypeBehandling.Førstegangsbehandling)
+                assertThat(åpneAvklaringsbehov).isNotEmpty()
+                assertThat(behandling.status()).isEqualTo(Status.UTREDES)
+            }
+            .løsFramTilGrunnlag(sak.rettighetsperiode.fom)
+            .løsBeregningstidspunkt()
+            .løsFastsettManuellInntekt(0)
+            .medKontekst {
+                assertThat(åpneAvklaringsbehov.map { it.definisjon }).contains(Definisjon.VURDER_INNTEKTSBORTFALL)
+            }
+            .løsVurderInntektsbortfall(rettTilUttakAvAldersPensjon = true)
+            .medKontekst {
+                val vilkårsResultat =
+                    repositoryProvider.provide<VilkårsresultatRepository>().hent(behandling.id).finnVilkår(
+                        Vilkårtype.INNTEKTSBORTFALL
+                    )
+
+                assertThat(vilkårsResultat.harPerioderSomErOppfylt()).isFalse
+            }
+            .løsForeslåVedtak()
+            .medKontekst {
+                val resultat = ResultatUtleder(repositoryProvider).utledResultatFørstegangsBehandling(behandling.id)
+                assertThat(resultat).isEqualTo(Resultat.AVSLAG)
+            }
+    }
 }

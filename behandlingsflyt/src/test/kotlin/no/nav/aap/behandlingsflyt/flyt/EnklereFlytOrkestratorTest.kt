@@ -21,7 +21,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.OPPRETT_REVURDERING
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.SEND_FORVALTNINGSMELDING
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.START_BEHANDLING
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.SØKNAD
-import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.SAMORDNING_SYKESTIPEND
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.VURDER_ALDER
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.VURDER_LOVVALG
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.VURDER_RETTIGHETSPERIODE
@@ -38,7 +37,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
-import no.nav.aap.behandlingsflyt.test.inmemoryservice.InMemorySakOgBehandlingService
+import no.nav.aap.behandlingsflyt.test.inmemoryservice.InMemoryBehandlingService
 import no.nav.aap.behandlingsflyt.test.modell.genererIdent
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
@@ -58,7 +57,7 @@ class EnklereFlytOrkestratorTest {
             sakService = sakService,
             behandlingRepository = behandlingRepository,
         ),
-        sakOgBehandlingService = InMemorySakOgBehandlingService,
+        behandlingService = InMemoryBehandlingService,
         informasjonskravGrunnlag = DummyInformasjonskravGrunnlag(),
         sakRepository = sakRepository,
         avklaringsbehovRepository = avklaringsbehovRepository,
@@ -78,7 +77,7 @@ class EnklereFlytOrkestratorTest {
             sakService = sakService,
             behandlingRepository = behandlingRepository,
         ),
-        sakOgBehandlingService = InMemorySakOgBehandlingService,
+        behandlingService = InMemoryBehandlingService,
         informasjonskravGrunnlag = DummyInformasjonskravGrunnlag(),
         sakRepository = sakRepository,
         avklaringsbehovRepository = avklaringsbehovRepository,
@@ -106,7 +105,6 @@ class EnklereFlytOrkestratorTest {
                 vurderingsbehov = listOf(
                     VurderingsbehovMedPeriode(
                         type = Vurderingsbehov.MOTTATT_MELDEKORT,
-                        periode = periode,
                     )
                 ),
                 årsak = ÅrsakTilOpprettelse.MELDEKORT
@@ -174,7 +172,7 @@ class EnklereFlytOrkestratorTest {
     }
 
     @Test
-    fun `skal gå gjennom alle stegene definert i beandlings`() {
+    fun `skal gå gjennom alle stegene definert i behandlingsflyt`() {
         val person = Person(UUID.randomUUID(), listOf(genererIdent(LocalDate.now().minusYears(23))))
 
         val sak = sakRepository.finnEllerOpprett(person, Periode(LocalDate.now(), LocalDate.now().plusYears(1)))
@@ -234,7 +232,7 @@ class EnklereFlytOrkestratorTest {
             sakRepository = sakRepository,
             avklaringsbehovRepository = avklaringsbehovRepository,
             behandlingHendelseService = behandlingHendelseService,
-            sakOgBehandlingService = InMemorySakOgBehandlingService,
+            behandlingService = InMemoryBehandlingService,
             stegOrkestrator = StegOrkestrator(
                 informasjonskravGrunnlag = DummyInformasjonskravGrunnlag(),
                 behandlingRepository = behandlingRepository,
@@ -268,7 +266,7 @@ class EnklereFlytOrkestratorTest {
             )
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
         avklaringsbehovene.leggTil(
-            definisjoner = listOf(Definisjon.AVKLAR_SYKDOM), funnetISteg = AVKLAR_SYKDOM, null, null
+            definisjon = Definisjon.AVKLAR_SYKDOM, funnetISteg = AVKLAR_SYKDOM, null, null
         )
 
         val flytKontekst = flytOrkestrator.opprettKontekst(behandling.sakId, behandling.id)
@@ -289,7 +287,6 @@ class EnklereFlytOrkestratorTest {
                 FASTSETT_MELDEPERIODER,
                 VURDER_ALDER,
                 AVKLAR_STUDENT,
-                SAMORDNING_SYKESTIPEND,
                 AVKLAR_SYKDOM
             )
         )
@@ -313,8 +310,7 @@ class EnklereFlytOrkestratorTest {
                 FASTSETT_MELDEPERIODER,
                 VURDER_ALDER,
                 AVKLAR_STUDENT,
-                SAMORDNING_SYKESTIPEND,
-                AVKLAR_SYKDOM
+                AVKLAR_SYKDOM,
             )
         )
 
@@ -355,11 +351,11 @@ class EnklereFlytOrkestratorTest {
             )
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
         avklaringsbehovene.leggTil(
-            definisjoner = listOf(Definisjon.AVKLAR_STUDENT), funnetISteg = AVKLAR_STUDENT, null, null
+            definisjon = Definisjon.AVKLAR_STUDENT, funnetISteg = AVKLAR_STUDENT, null, null
         )
         avklaringsbehovene.løsAvklaringsbehov(Definisjon.AVKLAR_STUDENT, "asdf", "TESTEN")
         avklaringsbehovene.leggTil(
-            definisjoner = listOf(Definisjon.AVKLAR_SYKDOM), funnetISteg = AVKLAR_SYKDOM, null, null
+            definisjon = Definisjon.AVKLAR_SYKDOM, funnetISteg = AVKLAR_SYKDOM, null, null
         )
 
         val flytKontekst = flytOrkestrator.opprettKontekst(behandling.sakId, behandling.id)
@@ -519,19 +515,6 @@ class EnklereFlytOrkestratorTest {
                     aktiv = false
                 ),
                 StegTilstand(stegType = AVKLAR_STUDENT, stegStatus = StegStatus.AVSLUTTER, aktiv = false),
-                StegTilstand(stegType = SAMORDNING_SYKESTIPEND, stegStatus = StegStatus.START, aktiv = false),
-                StegTilstand(
-                    stegType = SAMORDNING_SYKESTIPEND,
-                    stegStatus = StegStatus.OPPDATER_FAKTAGRUNNLAG,
-                    aktiv = false
-                ),
-                StegTilstand(stegType = SAMORDNING_SYKESTIPEND, stegStatus = StegStatus.UTFØRER, aktiv = false),
-                StegTilstand(
-                    stegType = SAMORDNING_SYKESTIPEND,
-                    stegStatus = StegStatus.AVKLARINGSPUNKT,
-                    aktiv = false
-                ),
-                StegTilstand(stegType = SAMORDNING_SYKESTIPEND, stegStatus = StegStatus.AVSLUTTER, aktiv = false),
                 StegTilstand(stegType = AVKLAR_SYKDOM, stegStatus = StegStatus.START, aktiv = false),
                 StegTilstand(
                     stegType = AVKLAR_SYKDOM,
@@ -706,19 +689,6 @@ class EnklereFlytOrkestratorTest {
                     aktiv = false
                 ),
                 StegTilstand(stegType = AVKLAR_STUDENT, stegStatus = StegStatus.AVSLUTTER, aktiv = false),
-                StegTilstand(stegType = SAMORDNING_SYKESTIPEND, stegStatus = StegStatus.START, aktiv = false),
-                StegTilstand(
-                    stegType = SAMORDNING_SYKESTIPEND,
-                    stegStatus = StegStatus.OPPDATER_FAKTAGRUNNLAG,
-                    aktiv = false
-                ),
-                StegTilstand(stegType = SAMORDNING_SYKESTIPEND, stegStatus = StegStatus.UTFØRER, aktiv = false),
-                StegTilstand(
-                    stegType = SAMORDNING_SYKESTIPEND,
-                    stegStatus = StegStatus.AVKLARINGSPUNKT,
-                    aktiv = false
-                ),
-                StegTilstand(stegType = SAMORDNING_SYKESTIPEND, stegStatus = StegStatus.AVSLUTTER, aktiv = false),
                 StegTilstand(stegType = AVKLAR_SYKDOM, stegStatus = StegStatus.START, aktiv = false),
                 StegTilstand(
                     stegType = AVKLAR_SYKDOM,
@@ -728,7 +698,6 @@ class EnklereFlytOrkestratorTest {
                 StegTilstand(stegType = AVKLAR_SYKDOM, stegStatus = StegStatus.UTFØRER, aktiv = false),
                 StegTilstand(stegType = AVKLAR_SYKDOM, stegStatus = StegStatus.AVKLARINGSPUNKT, aktiv = false),
                 StegTilstand(stegType = AVKLAR_SYKDOM, stegStatus = StegStatus.TILBAKEFØRT, aktiv = false),
-                StegTilstand(stegType = SAMORDNING_SYKESTIPEND, stegStatus = StegStatus.TILBAKEFØRT, aktiv = false),
                 StegTilstand(stegType = AVKLAR_STUDENT, stegStatus = StegStatus.TILBAKEFØRT, aktiv = false),
                 StegTilstand(stegType = AVKLAR_STUDENT, stegStatus = StegStatus.START, aktiv = false),
                 StegTilstand(
@@ -743,19 +712,6 @@ class EnklereFlytOrkestratorTest {
                     aktiv = false
                 ),
                 StegTilstand(stegType = AVKLAR_STUDENT, stegStatus = StegStatus.AVSLUTTER, aktiv = false),
-                StegTilstand(stegType = SAMORDNING_SYKESTIPEND, stegStatus = StegStatus.START, aktiv = false),
-                StegTilstand(
-                    stegType = SAMORDNING_SYKESTIPEND,
-                    stegStatus = StegStatus.OPPDATER_FAKTAGRUNNLAG,
-                    aktiv = false
-                ),
-                StegTilstand(stegType = SAMORDNING_SYKESTIPEND, stegStatus = StegStatus.UTFØRER, aktiv = false),
-                StegTilstand(
-                    stegType = SAMORDNING_SYKESTIPEND,
-                    stegStatus = StegStatus.AVKLARINGSPUNKT,
-                    aktiv = false
-                ),
-                StegTilstand(stegType = SAMORDNING_SYKESTIPEND, stegStatus = StegStatus.AVSLUTTER, aktiv = false),
                 StegTilstand(stegType = AVKLAR_SYKDOM, stegStatus = StegStatus.START, aktiv = false),
                 StegTilstand(
                     stegType = AVKLAR_SYKDOM,
@@ -787,14 +743,14 @@ class EnklereFlytOrkestratorTest {
 
         /* Plasser flyten i steget FASTSETT_ARBEIDSEVNE. */
         avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
-            .leggTil(listOf(Definisjon.FASTSETT_ARBEIDSEVNE), Definisjon.FASTSETT_ARBEIDSEVNE.løsesISteg, null, null)
+            .leggTil(Definisjon.FASTSETT_ARBEIDSEVNE, Definisjon.FASTSETT_ARBEIDSEVNE.løsesISteg, null, null)
         flytOrkestrator.forberedOgProsesserBehandling(flytOrkestrator.opprettKontekst(behandling.sakId, behandling.id))
         behandlingRepository.hent(behandling.id).also {
             assertThat(it.aktivtSteg()).isEqualTo(Definisjon.FASTSETT_ARBEIDSEVNE.løsesISteg)
         }
 
         avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
-            .leggTil(listOf(Definisjon.AVKLAR_BISTANDSBEHOV), Definisjon.AVKLAR_BISTANDSBEHOV.løsesISteg, null, null)
+            .leggTil(Definisjon.AVKLAR_BISTANDSBEHOV, Definisjon.AVKLAR_BISTANDSBEHOV.løsesISteg, null, null)
 
         flytOrkestrator.forberedOgProsesserBehandling(flytOrkestrator.opprettKontekst(behandling.sakId, behandling.id))
 

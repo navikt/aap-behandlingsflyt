@@ -20,7 +20,7 @@ Inneholder domeneobjekter som brukes i kommunikasjon med Behandlingsflyt sine tj
 
 ### sbom/sbom.xml
 Dependency-liste (software bill of materials, sbom). 
-Filen viser avhengigheter til tredjeparts- og NAV-artefakter for hver modul i dette prosjektet. 
+Filen viser avhengigheter til tredjeparts- og NAV-artefakter for hver modul i dette prosjektet. Publiseres til Github Packages, på https://github.com/navikt/aap-behandlingsflyt/packages/2754153
 
 ## Lokalt utviklingsmiljø:
 
@@ -32,6 +32,22 @@ For macOS og Linux anbefaler vi Colima. Det kan være nødvendig med et par tilp
 - `export TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE=$HOME/.colima/docker.sock`
 - `export DOCKER_HOST=unix://$TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE`
 - `export TESTCONTAINERS_RYUK_DISABLED=true`
+
+### Code quality
+
+Prosjektet bruker [detekt](https://detekt.dev/) for statisk kodeanalyse. Detekt er automatisk aktivert på alle moduler.
+
+Kjør detekt på alle moduler:
+```bash
+./gradlew detekt
+```
+
+Eller på en spesifikk modul:
+```bash
+./gradlew kontrakt:detekt
+```
+
+Detekt-konfigurasjonen finnes i `config/detekt/detekt.yml`.
 
 ### Laste ned private pakker
 
@@ -86,6 +102,34 @@ curl -X 'GET' \
   'http://0.0.0.0:8080/drift/api/jobb/rekjorAlleFeilede' \
   -H 'accept: application/json' \
   -H "Authorization: Bearer $token"
+```
+
+Send inn dokument til TestApp:
+
+```shell
+token=$(curl -s -XPOST http://localhost:8081/token/Z12345 | jq -r '.access_token')
+saksnummer=4LDY7G0
+asInnsendingId=$(uuidgen)
+
+curl -X 'POST' \
+  "http://0.0.0.0:8080/api/hendelse/sak/$saksnummer/send" \
+  -H 'accept: application/json' \
+  -H "Authorization: Bearer $token" \
+  -H 'Content-Type: application/json' \
+   -d "{
+    \"kanal\": \"DIGITAL\",
+    \"melding\": {
+      \"meldingType\": \"AnnetRelevantDokumentV0\",
+      \"årsakerTilBehandling\": [\"LEGEERKLÆRING\"]
+    },
+    \"mottattTidspunkt\": \"$(date +%Y-%m-%dT%H:%M:%S)\",
+    \"referanse\": {
+      \"type\": \"JOURNALPOST\",
+      \"verdi\": \"$asInnsendingId\"
+    },
+    \"saksnummer\": \"$saksnummer\",
+    \"type\": \"ANNET_RELEVANT_DOKUMENT\"
+  }"
 ```
 
 #### Testapp mot dev-gcp

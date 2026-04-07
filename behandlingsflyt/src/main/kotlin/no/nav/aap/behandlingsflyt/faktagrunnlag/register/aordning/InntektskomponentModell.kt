@@ -4,11 +4,11 @@ import java.time.LocalDate
 import java.time.YearMonth
 
 data class InntektskomponentData(
-    val arbeidsInntektMaaned: List<ArbeidsInntektMaaned> = emptyList()
+    val arbeidsInntektMåned: List<ArbeidsInntektMåned> = emptyList()
 )
 
-data class ArbeidsInntektMaaned(
-    val aarMaaned: YearMonth,
+data class ArbeidsInntektMåned(
+    val årMåned: YearMonth,
     val arbeidsInntektInformasjon: ArbeidsInntektInformasjon
 )
 
@@ -17,7 +17,7 @@ data class ArbeidsInntektInformasjon(
 )
 
 data class Inntekt(
-    val beloep: Double,
+    val beløp: Double,
     val opptjeningsland: String?,
     val skattemessigBosattLand: String?,
     val opptjeningsperiodeFom: LocalDate?,

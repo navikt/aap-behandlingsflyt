@@ -2,12 +2,12 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.verify
 import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.behandling.beregning.BeregningService
+import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektGrunnlagRepository
@@ -17,7 +17,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.ManuellInntektG
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.ManuellInntektVurdering
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
-import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
@@ -30,10 +29,11 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
-import no.nav.aap.behandlingsflyt.test.FakeUnleash
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryTrukketSøknadRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryVilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.behandlingsflyt.test.modell.genererIdent
 import no.nav.aap.komponenter.type.Periode
@@ -58,6 +58,8 @@ class ManglendeLigningGrunnlagStegTest {
     private lateinit var steg: ManglendeLigningGrunnlagSteg
     private val sakRepository = InMemorySakRepository
     private val behandlingRepository = InMemoryBehandlingRepository
+    private val vilkårsresultatRepository = InMemoryVilkårsresultatRepository
+    private val trukketSøknadRepository = InMemoryTrukketSøknadRepository
     private lateinit var avbrytRevurderingService: AvbrytRevurderingService
     private lateinit var avklaringsbehovService: AvklaringsbehovService
 
@@ -93,7 +95,13 @@ class ManglendeLigningGrunnlagStegTest {
             every { revurderingErAvbrutt(any()) } returns false
         }
 
-        avklaringsbehovService = AvklaringsbehovService(avbrytRevurderingService)
+        avklaringsbehovService = AvklaringsbehovService(
+            avbrytRevurderingService,
+            avklaringsbehovRepository,
+            behandlingRepository,
+            vilkårsresultatRepository,
+            TrukketSøknadService(trukketSøknadRepository)
+        )
 
         steg = ManglendeLigningGrunnlagSteg(
             avklaringsbehovRepository,
@@ -101,8 +109,7 @@ class ManglendeLigningGrunnlagStegTest {
             manuellInntektGrunnlagRepository,
             tidligereVurderinger,
             beregningService,
-            avklaringsbehovService,
-            FakeUnleash
+            avklaringsbehovService
         )
     }
 
@@ -276,9 +283,13 @@ class ManglendeLigningGrunnlagStegTest {
     }
 
     private fun leggTilLøstOgAvsluttetAvklaringsbehov(avklaringsbehovene: Avklaringsbehovene) {
-        avklaringsbehovene.leggTil(listOf(Definisjon.FASTSETT_MANUELL_INNTEKT), StegType.MANGLENDE_LIGNING, null, null)
+        avklaringsbehovene.leggTil(Definisjon.FASTSETT_MANUELL_INNTEKT, StegType.MANGLENDE_LIGNING, null, null)
         avklaringsbehovene.løsAvklaringsbehov(Definisjon.FASTSETT_MANUELL_INNTEKT, "begrunnelse", "saksbehandler")
-        avklaringsbehovene.avslutt(Definisjon.FASTSETT_MANUELL_INNTEKT)
+        avklaringsbehovene.løsAvklaringsbehov(
+            Definisjon.FASTSETT_MANUELL_INNTEKT,
+            begrunnelse = "",
+            endretAv = "Krongov"
+        )
     }
 
     private fun manuelleVurderinger(): Set<ManuellInntektVurdering> = setOf(
@@ -305,19 +316,16 @@ class ManglendeLigningGrunnlagStegTest {
 
     private fun flytKontekstMedPerioder(
         behandling: Behandling, vurderingType: VurderingType? = null
-    ): FlytKontekstMedPerioder = FlytKontekstMedPerioder(
-        behandling.sakId,
-        behandling.id,
-        behandling.forrigeBehandlingId,
-        behandling.typeBehandling(),
-        vurderingType = vurderingType ?: when (behandling.typeBehandling()) {
+    ): FlytKontekstMedPerioder = no.nav.aap.behandlingsflyt.help.flytKontekstMedPerioder {
+        this.behandling = behandling
+        this.vurderingType = vurderingType ?: when (behandling.typeBehandling()) {
             TypeBehandling.Førstegangsbehandling -> VurderingType.FØRSTEGANGSBEHANDLING
             TypeBehandling.Revurdering -> VurderingType.REVURDERING
             else -> VurderingType.IKKE_RELEVANT
-        },
-        vurderingsbehovRelevanteForSteg = behandling.vurderingsbehov().map { it.type }.toSet(),
+        }
+        vurderingsbehovRelevanteForSteg = behandling.vurderingsbehov().map { it.type }.toSet()
         rettighetsperiode = Periode(1 januar 2025, 1 januar 2026)
-    )
+    }
 
     private fun behandling(
         typeBehandling: TypeBehandling,

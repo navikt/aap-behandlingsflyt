@@ -1,10 +1,13 @@
 package no.nav.aap.behandlingsflyt
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.papsign.ktor.openapigen.model.info.InfoModel
 import com.papsign.ktor.openapigen.route.apiRouting
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
+import io.confluent.kafka.serializers.KafkaAvroDeserializer
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.engine.*
@@ -23,7 +26,9 @@ import no.nav.aap.behandlingsflyt.behandling.arbeidsopptrapping.arbeidsopptrappi
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.avklaringsbehovApi
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.fatteVedtakGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.utledSubtypesTilAvklaringsbehovLøsning
+import no.nav.aap.behandlingsflyt.behandling.barnepensjon.barnepensjonGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.barnetillegg.barnetilleggApi
+import no.nav.aap.behandlingsflyt.behandling.bekreftvurderingeroppfølging.bekreftVurderingerOppfølgingApi
 import no.nav.aap.behandlingsflyt.behandling.beregning.beregningsGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.alder.aldersGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.fritakmeldeplikt.meldepliktsgrunnlagApi
@@ -36,9 +41,11 @@ import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.sykepenge
 import no.nav.aap.behandlingsflyt.behandling.beregning.manuellinntekt.manglendeGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.beregning.tidspunkt.beregningVurderingApi
 import no.nav.aap.behandlingsflyt.behandling.brev.sykdomsvurderingForBrevApi
+import no.nav.aap.behandlingsflyt.behandling.etableringegenvirksomhet.etableringEgenVirksomhetApi
 import no.nav.aap.behandlingsflyt.behandling.foreslåvedtak.foreslaaVedtakApi
 import no.nav.aap.behandlingsflyt.behandling.grunnlag.medlemskap.medlemskapsgrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.grunnlag.samordning.samordningGrunnlag
+import no.nav.aap.behandlingsflyt.behandling.inntektsbortfall.inntektsbortfallGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.institusjonsopphold.institusjonApi
 import no.nav.aap.behandlingsflyt.behandling.klage.behandlendeenhet.behandlendeEnhetGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.klage.formkrav.formkravGrunnlagApi
@@ -53,38 +60,46 @@ import no.nav.aap.behandlingsflyt.behandling.kvalitetssikring.kvalitetssikringTi
 import no.nav.aap.behandlingsflyt.behandling.lovvalgmedlemskap.grunnlag.forutgåendeMedlemskapApi
 import no.nav.aap.behandlingsflyt.behandling.lovvalgmedlemskap.grunnlag.lovvalgMedlemskapGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.lovvalgmedlemskap.lovvalgMedlemskapApi
+import no.nav.aap.behandlingsflyt.behandling.meldekort.meldekortApi
 import no.nav.aap.behandlingsflyt.behandling.mellomlagring.mellomlagretVurderingApi
 import no.nav.aap.behandlingsflyt.behandling.oppfolgingsbehandling.avklarOppfolgingsoppgaveGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.oppfolgingsbehandling.oppfølgingsOppgaveApi
 import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.oppholdskravGrunnlagApi
+import no.nav.aap.behandlingsflyt.behandling.rettighet.rettighetApi
+import no.nav.aap.behandlingsflyt.behandling.rettighet.rettighetsinfoApi
 import no.nav.aap.behandlingsflyt.behandling.rettighetsperiode.rettighetsperiodeGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.revurdering.avbrytRevurderingGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.simulering.simuleringApi
 import no.nav.aap.behandlingsflyt.behandling.student.studentgrunnlagApi
+import no.nav.aap.behandlingsflyt.behandling.student.sykestipend.sykestipendGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.svarfraandreinstans.svarfraandreinstans.svarFraAndreinstansGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.søknad.trukketSøknadGrunnlagApi
+import no.nav.aap.behandlingsflyt.behandling.tidligerevurderinger.tidligereVurderingerApi
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.tilkjentYtelseApi
 import no.nav.aap.behandlingsflyt.behandling.underveis.meldepliktOverstyringGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.underveis.underveisVurderingerApi
+import no.nav.aap.behandlingsflyt.behandling.vedtakslengde.vedtakslengdeGrunnlagApi
 import no.nav.aap.behandlingsflyt.drift.driftApi
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.StansEllerOpphørMigrering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.ApplikasjonsVersjon
 import no.nav.aap.behandlingsflyt.flyt.behandlingApi
 import no.nav.aap.behandlingsflyt.flyt.flytApi
 import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaConsumerConfig
 import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaKonsument
-import no.nav.aap.behandlingsflyt.hendelse.kafka.klage.KABAL_EVENT_TOPIC
+import no.nav.aap.behandlingsflyt.hendelse.kafka.inst2.InstitusjonsOppholdKafkaKonsument
 import no.nav.aap.behandlingsflyt.hendelse.kafka.klage.KabalKafkaKonsument
-import no.nav.aap.behandlingsflyt.hendelse.kafka.person.PDL_HENDELSE_TOPIC
 import no.nav.aap.behandlingsflyt.hendelse.kafka.person.PdlHendelseKafkaKonsument
-import no.nav.aap.behandlingsflyt.hendelse.kafka.tilbakekreving.TILBAKEKREVING_EVENT_TOPIC
+import no.nav.aap.behandlingsflyt.hendelse.kafka.sykepenger.SykepengevedtakKafkaKonsument
 import no.nav.aap.behandlingsflyt.hendelse.kafka.tilbakekreving.TilbakekrevingKafkaKonsument
+import no.nav.aap.behandlingsflyt.hendelse.kafka.uføre.UførevedtakKafkaKonsument
 import no.nav.aap.behandlingsflyt.hendelse.mottattHendelseApi
 import no.nav.aap.behandlingsflyt.integrasjon.defaultGatewayProvider
+import no.nav.aap.behandlingsflyt.integrasjon.institusjonsopphold.InstitusjonsoppholdGatewayImpl
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Innsending
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.InstitusjonsOppholdHendelseKafkaMelding
 import no.nav.aap.behandlingsflyt.pip.behandlingsflytPipApi
 import no.nav.aap.behandlingsflyt.prosessering.BehandlingsflytLogInfoProvider
 import no.nav.aap.behandlingsflyt.prosessering.ProsesseringsJobber
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.saksApi
 import no.nav.aap.behandlingsflyt.test.opprettDummySakApi
@@ -104,7 +119,7 @@ import no.nav.aap.komponenter.server.plugins.NavIdentInterceptor
 import no.nav.aap.motor.Motor
 import no.nav.aap.motor.api.motorApi
 import no.nav.aap.motor.retry.RetryService
-import no.nav.person.pdl.leesah.Personhendelse
+import org.apache.kafka.common.serialization.Deserializer
 import org.slf4j.LoggerFactory
 import org.slf4j.bridge.SLF4JBridgeHandler
 import java.net.InetAddress
@@ -118,7 +133,6 @@ import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit
 import java.util.logging.Level
 import java.util.logging.Logger
-import javax.sql.DataSource
 import kotlin.time.Duration.Companion.seconds
 
 
@@ -142,15 +156,16 @@ internal object AppConfig {
     val stansArbeidTimeout = shutdownGracePeriod - 1.seconds
 
     // Vi skrur opp ktor sin default-verdi, som er "antall CPUer", fordi vi har en del venting på IO (db, kafka, http):
-    private val ktorParallellitet = 8
+    private const val ktorParallellitet = 8
+
     // Vi følger ktor sin metodikk for å regne ut tuning parametre som funksjon av parallellitet
     // https://github.com/ktorio/ktor/blob/3.3.1/ktor-server/ktor-server-core/common/src/io/ktor/server/engine/ApplicationEngine.kt#L30
-    val connectionGroupSize = ktorParallellitet / 2 + 1
-    val workerGroupSize = ktorParallellitet / 2 + 1
-    val callGroupSize = 4 * ktorParallellitet
+    const val connectionGroupSize = ktorParallellitet / 2 + 1
+    const val workerGroupSize = ktorParallellitet / 2 + 1
+    const val callGroupSize = 4 * ktorParallellitet
 
     const val ANTALL_WORKERS_FOR_MOTOR = 4
-    val hikariMaxPoolSize = ktorParallellitet + 2 * ANTALL_WORKERS_FOR_MOTOR
+    const val hikariMaxPoolSize = ktorParallellitet + 2 * ANTALL_WORKERS_FOR_MOTOR
 }
 
 fun main() {
@@ -209,15 +224,7 @@ internal fun Application.server(
 
     val motor = startMotor(dataSource, repositoryRegistry, gatewayProvider)
 
-    if (!Miljø.erLokal()) {
-        startKabalKonsument(dataSource, repositoryRegistry)
-    }
-    if (!Miljø.erLokal()) {
-        startPDLHendelseKonsument(dataSource, repositoryRegistry, gatewayProvider)
-    }
-    if (!Miljø.erLokal() && !Miljø.erProd()) {
-        startTilbakekrevingEventKonsument(dataSource, repositoryRegistry, gatewayProvider)
-    }
+    startKafkakonsumenter(dataSource, repositoryRegistry, gatewayProvider)
 
     monitor.subscribe(ApplicationStopPreparing) { environment ->
         environment.log.info("ktor forbereder seg på å stoppe.")
@@ -251,14 +258,18 @@ internal fun Application.server(
                 bistandsgrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
                 meldepliktsgrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
                 meldepliktOverstyringGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
+                vedtakslengdeGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
                 arbeidsevneGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
                 arbeidsopptrappingGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
+                etableringEgenVirksomhetApi(dataSource, repositoryRegistry, gatewayProvider)
                 overgangUforeGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
                 medlemskapsgrunnlagApi(dataSource, repositoryRegistry)
                 studentgrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
+                sykestipendGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
                 sykdomsgrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
                 sykdomsvurderingForBrevApi(dataSource, repositoryRegistry, gatewayProvider)
                 sykepengerGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
+                inntektsbortfallGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
                 oppholdskravGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
                 institusjonApi(dataSource, repositoryRegistry, gatewayProvider)
                 avklaringsbehovApi(dataSource, repositoryRegistry, gatewayProvider)
@@ -275,8 +286,13 @@ internal fun Application.server(
                 behandlingsflytPipApi(dataSource, repositoryRegistry)
                 auditlogApi(dataSource, repositoryRegistry)
                 refusjonGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
-                manglendeGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
+                manglendeGrunnlagApi(dataSource, repositoryRegistry)
                 mellomlagretVurderingApi(dataSource, repositoryRegistry, gatewayProvider)
+                rettighetApi(dataSource, repositoryRegistry)
+                rettighetsinfoApi(dataSource, repositoryRegistry)
+                tidligereVurderingerApi(dataSource, repositoryRegistry, gatewayProvider)
+                barnepensjonGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
+                bekreftVurderingerOppfølgingApi(dataSource, repositoryRegistry, gatewayProvider)
                 // Klage
                 påklagetBehandlingGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
                 fullmektigGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
@@ -294,10 +310,12 @@ internal fun Application.server(
                 // Aktivitetsplikt
                 aktivitetsplikt11_7GrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
                 aktivitetsplikt11_9GrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
+                // Meldekort
+                meldekortApi(dataSource, repositoryRegistry, gatewayProvider)
                 // Flytt
                 brevApi(dataSource, repositoryRegistry, gatewayProvider)
                 dokumentinnhentingApi(dataSource, repositoryRegistry, gatewayProvider)
-                mottattHendelseApi(dataSource, repositoryRegistry, gatewayProvider)
+                mottattHendelseApi(dataSource, repositoryRegistry)
                 underveisVurderingerApi(dataSource, repositoryRegistry)
                 lovvalgMedlemskapApi(dataSource, repositoryRegistry)
                 lovvalgMedlemskapGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
@@ -317,6 +335,90 @@ internal fun Application.server(
 
 }
 
+private fun Application.startKafkakonsumenter(
+    dataSource: HikariDataSource,
+    repositoryRegistry: RepositoryRegistry,
+    gatewayProvider: GatewayProvider
+) {
+    if (!Miljø.erLokal()) {
+        startKonsument(
+            KabalKafkaKonsument(
+                config = KafkaConsumerConfig(),
+                dataSource = dataSource,
+                repositoryRegistry = repositoryRegistry,
+                closeTimeout = AppConfig.stansArbeidTimeout
+            )
+        )
+        startKonsument(
+            PdlHendelseKafkaKonsument(
+                config = KafkaConsumerConfig(
+                    valueDeserializer = KafkaAvroDeserializer::class.java
+                ),
+                dataSource = dataSource,
+                repositoryRegistry = repositoryRegistry,
+                closeTimeout = AppConfig.stansArbeidTimeout,
+                gatewayProvider = gatewayProvider
+            )
+        )
+        startKonsument(
+            TilbakekrevingKafkaKonsument(
+                config = KafkaConsumerConfig(),
+                dataSource = dataSource,
+                repositoryRegistry = repositoryRegistry,
+                closeTimeout = AppConfig.stansArbeidTimeout
+            )
+        )
+        startKonsument(
+            SykepengevedtakKafkaKonsument(
+                config = KafkaConsumerConfig(),
+                dataSource = dataSource,
+                repositoryRegistry = repositoryRegistry,
+                closeTimeout = AppConfig.stansArbeidTimeout,
+                gatewayProvider = gatewayProvider
+            )
+        )
+        startKonsument(
+            InstitusjonsOppholdKafkaKonsument(
+                config = KafkaConsumerConfig(
+                    valueDeserializer = JsonDeserializerInstitusjonsOppholdHendelse::class.java,
+                ),
+                dataSource = dataSource,
+                repositoryRegistry = repositoryRegistry,
+                closeTimeout = AppConfig.stansArbeidTimeout,
+                gatewayProvider = gatewayProvider,
+                institusjonsoppholdKlient = InstitusjonsoppholdGatewayImpl
+            )
+        )
+        startKonsument(
+            UførevedtakKafkaKonsument(
+                config = KafkaConsumerConfig(),
+                dataSource = dataSource,
+                repositoryRegistry = repositoryRegistry,
+                closeTimeout = AppConfig.stansArbeidTimeout,
+                gatewayProvider = gatewayProvider
+            )
+        )
+    }
+}
+
+private fun <K, V> Application.startKonsument(konsument: KafkaKonsument<K, V>) {
+    monitor.subscribe(ApplicationStarted) {
+        val t = Thread {
+            konsument.konsumer()
+        }
+        t.uncaughtExceptionHandler = Thread.UncaughtExceptionHandler { _, e ->
+            log.error("Konsumering av ${konsument.topic} ble lukket pga uhåndtert feil", e)
+        }
+        t.start()
+    }
+    monitor.subscribe(ApplicationStopping) { env ->
+        // ktor sine eventer kjøres synkront, så vi må kjøre dette asynkront for ikke å blokkere nedstengings-sekvensen
+        env.launch(Dispatchers.IO) {
+            konsument.lukk()
+        }
+    }
+}
+
 // Bruker leaderElector for å sikre at kun en pod kjører migreringen og spinner opp en egen tråd for å ikke blokkere.
 private fun utførMigreringer(
     dataSource: HikariDataSource,
@@ -324,21 +426,21 @@ private fun utførMigreringer(
     log: io.ktor.util.logging.Logger
 ): ScheduledExecutorService {
     val scheduler = Executors.newScheduledThreadPool(1)
-    scheduler.schedule(Runnable {
+    /* Prøv på nytt, for å se om vi er elected til leader, hvert 9. minutt. Hvis vi blir elected, så vil metoden
+     * aldri returnere, og med fixed delay, så blir det heller ikke skjedulert flere tasks.
+    **/
+    scheduler.scheduleWithFixedDelay(Runnable {
         val unleashGateway: UnleashGateway = gatewayProvider.provide()
-        val migrerArbeidsevneEnabled = unleashGateway.isEnabled(BehandlingsflytFeature.MigrerArbeidsevne)
         val isLeader = isLeader(log)
-        log.info("isLeader = $isLeader, migrerArbeidsevneEnabled = $migrerArbeidsevneEnabled")
+        log.info("isLeader = $isLeader")
 
-        if (migrerArbeidsevneEnabled && isLeader) {
-            // Kjør migrering
-            dataSource.transaction { connection ->
-                val repository = ArbeidsevneRepositoryImpl(connection)
-                repository.migrerArbeidsevne()
-            }
+
+        if (unleashGateway.isEnabled(BehandlingsflytFeature.MigrerStansOgOpphor) && isLeader) {
+            // kjør migreringer
+            StansEllerOpphørMigrering(dataSource, postgresRepositoryRegistry, gatewayProvider).migrer()
         }
 
-    }, 9, TimeUnit.MINUTES)
+    }, 1, 9, TimeUnit.MINUTES)
     return scheduler
 }
 
@@ -388,91 +490,6 @@ fun Application.startMotor(
     return motor
 }
 
-fun Application.startKabalKonsument(
-    dataSource: DataSource, repositoryRegistry: RepositoryRegistry
-): KafkaKonsument<String, String> {
-    val konsument = KabalKafkaKonsument(
-        config = KafkaConsumerConfig(), dataSource = dataSource, repositoryRegistry = repositoryRegistry,
-        closeTimeout = AppConfig.stansArbeidTimeout
-    )
-    monitor.subscribe(ApplicationStarted) {
-        val t = Thread {
-            konsument.konsumer()
-        }
-        t.uncaughtExceptionHandler = Thread.UncaughtExceptionHandler { _, e ->
-            log.error("Konsumering av $KABAL_EVENT_TOPIC ble lukket pga uhåndtert feil", e)
-        }
-        t.start()
-    }
-    monitor.subscribe(ApplicationStopping) { env ->
-        // ktor sine eventer kjøres synkront, så vi må kjøre dette asynkront for ikke å blokkere nedstengings-sekvensen
-        env.launch(Dispatchers.IO) {
-            konsument.lukk()
-        }
-    }
-
-    return konsument
-}
-
-fun Application.startTilbakekrevingEventKonsument(
-    dataSource: DataSource, repositoryRegistry: RepositoryRegistry, gatewayProvider: GatewayProvider
-): KafkaKonsument<String, String> {
-    val konsument = TilbakekrevingKafkaKonsument(
-        config = KafkaConsumerConfig(), dataSource = dataSource, repositoryRegistry = repositoryRegistry,
-        closeTimeout = AppConfig.stansArbeidTimeout
-    )
-    monitor.subscribe(ApplicationStarted) {
-        val t = Thread {
-            konsument.konsumer()
-        }
-        t.uncaughtExceptionHandler = Thread.UncaughtExceptionHandler { _, e ->
-            log.error("Konsumering av $TILBAKEKREVING_EVENT_TOPIC ble lukket pga uhåndtert feil", e)
-        }
-        t.start()
-    }
-    monitor.subscribe(ApplicationStopping) { env ->
-        // ktor sine eventer kjøres synkront, så vi må kjøre dette asynkront for ikke å blokkere nedstengings-sekvensen
-        env.launch(Dispatchers.IO) {
-            konsument.lukk()
-        }
-    }
-
-    return konsument
-}
-
-fun Application.startPDLHendelseKonsument(
-    dataSource: DataSource,
-    repositoryRegistry: RepositoryRegistry,
-    gatewayProvider: GatewayProvider,
-): KafkaKonsument<String, Personhendelse> {
-    val konsument = PdlHendelseKafkaKonsument(
-        config = KafkaConsumerConfig(
-            keyDeserializer = org.apache.kafka.common.serialization.StringDeserializer::class.java,
-            valueDeserializer = io.confluent.kafka.serializers.KafkaAvroDeserializer::class.java
-        ),
-        closeTimeout = AppConfig.stansArbeidTimeout,
-        dataSource = dataSource,
-        repositoryRegistry = repositoryRegistry,
-        gatewayProvider = gatewayProvider
-    )
-    monitor.subscribe(ApplicationStarted) {
-        val t = Thread {
-            konsument.konsumer()
-        }
-        t.uncaughtExceptionHandler = Thread.UncaughtExceptionHandler { _, e ->
-            log.error("Konsumering av $PDL_HENDELSE_TOPIC ble lukket pga uhåndtert feil", e)
-        }
-        t.start()
-    }
-    monitor.subscribe(ApplicationStopPreparing) { environment ->
-        environment.log.info("Forbereder stopp av applikasjon, lukker PDLHendelseKonsument.")
-
-        konsument.lukk()
-    }
-
-    return konsument
-}
-
 class DbConfig(
     val url: String = System.getenv(
         "NAIS_DATABASE_BEHANDLINGSFLYT_BEHANDLINGSFLYT_JDBC_URL"
@@ -503,3 +520,12 @@ fun initDatasource(dbConfig: DbConfig): HikariDataSource = HikariDataSource(Hika
     connectionTestQuery = "SELECT 1"
     metricRegistry = prometheus
 })
+
+class JsonDeserializerInstitusjonsOppholdHendelse : Deserializer<InstitusjonsOppholdHendelseKafkaMelding> {
+    private val mapper = jacksonObjectMapper()
+
+    override fun deserialize(
+        topic: String?,
+        data: ByteArray,
+    ): InstitusjonsOppholdHendelseKafkaMelding = mapper.readValue(data)
+}

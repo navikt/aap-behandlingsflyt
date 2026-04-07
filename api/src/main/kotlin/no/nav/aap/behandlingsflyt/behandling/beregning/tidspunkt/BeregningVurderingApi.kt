@@ -8,6 +8,7 @@ import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattNavnOgEnhet
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.tilTidslinje
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurdering
@@ -17,6 +18,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.tilgang.kanSaksbehandle
 import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -47,10 +49,12 @@ fun NormalOpenAPIRoute.beregningVurderingApi(
                     val uføreRepository = repositoryProvider.provide<UføreRepository>()
                     val beregningVurderingRepository = repositoryProvider.provide<BeregningVurderingRepository>()
                     val behandling = BehandlingReferanseService(behandlingRepository).behandling(req)
+                    val sak = repositoryProvider.provide<SakRepository>().hent(behandling.sakId)
 
                     // Dette er logikk, burde i egen service
-                    val skalVurdereUføre =
-                        uføreRepository.hentHvisEksisterer(behandling.id)?.vurderinger?.isNotEmpty() == true
+                    val uføreTidslinje = uføreRepository.hentHvisEksisterer(behandling.id)?.vurderinger?.tilTidslinje()
+                    val skalVurdereUføre = uføreTidslinje?.isNotEmpty() == true
+                            && uføreTidslinje.segment(sak.rettighetsperiode.fom) != null
 
                     val beregningGrunnlag =
                         beregningVurderingRepository.hentHvisEksisterer(behandlingId = behandling.id)

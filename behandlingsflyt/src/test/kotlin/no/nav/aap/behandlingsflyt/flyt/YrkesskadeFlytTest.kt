@@ -23,22 +23,32 @@ import no.nav.aap.behandlingsflyt.help.assertTidslinje
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.underveis.UnderveisRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
-import no.nav.aap.behandlingsflyt.test.FakeUnleash
+import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.verdityper.dokument.JournalpostId
+import no.nav.aap.verdityper.dokument.Kanal
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedClass
+import org.junit.jupiter.params.provider.MethodSource
 import java.time.LocalDate
 import java.time.LocalDateTime
+import kotlin.reflect.KClass
 
-class YrkesskadeFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
+@ParameterizedClass
+@MethodSource("unleashTestDataSource")
+class YrkesskadeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
+    AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
     @Test
     fun `skal ikke vise avklaringsbehov for yrkesskade ved avslag i tidligere steg`() {
         val personMedYrkesskade = TestPersoner.PERSON_MED_YRKESSKADE()
@@ -67,7 +77,8 @@ class YrkesskadeFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
                 )
             )
             .løsSykdomsvurderingBrev()
-            .kvalitetssikreOk()
+            .bekreftVurderinger()
+            .kvalitetssikre()
             .fattVedtak()
             .løsVedtaksbrev(typeBrev = TypeBrev.VEDTAK_AVSLAG)
 
@@ -90,7 +101,8 @@ class YrkesskadeFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
             .løsBistand(periode.fom)
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
-            .kvalitetssikreOk()
+            .bekreftVurderinger()
+            .kvalitetssikre()
             .løsAvklaringsBehov(
                 AvklarYrkesskadeLøsning(
                     yrkesskadesvurdering = YrkesskadevurderingDto(
@@ -146,7 +158,8 @@ class YrkesskadeFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
             .løsBistand(periode.fom)
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
-            .kvalitetssikreOk()
+            .bekreftVurderinger()
+            .kvalitetssikre()
             .løsAvklaringsBehov(
                 AvklarYrkesskadeLøsning(
                     yrkesskadesvurdering = YrkesskadevurderingDto(
@@ -218,7 +231,8 @@ class YrkesskadeFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
             .løsBistand(periode.fom)
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
-            .kvalitetssikreOk()
+            .bekreftVurderinger()
+            .kvalitetssikre()
             .løsAvklaringsBehov(
                 AvklarYrkesskadeLøsning(
                     yrkesskadesvurdering = YrkesskadevurderingDto(
@@ -293,15 +307,14 @@ class YrkesskadeFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
                     listOf(
                         RefusjonkravVurderingDto(
                             harKrav = true,
-                            fom = LocalDate.now(),
-                            tom = null,
                             navKontor = "",
                         )
                     )
                 )
             )
             .løsSykdomsvurderingBrev()
-            .kvalitetssikreOk()
+            .bekreftVurderinger()
+            .kvalitetssikre()
             .løsAvklaringsBehov(
                 AvklarYrkesskadeLøsning(
                     yrkesskadesvurdering = YrkesskadevurderingDto(
@@ -427,7 +440,9 @@ class YrkesskadeFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
                 .associateWith { 0.0 }
         )
 
-        behandling = behandling.kvalitetssikreOk()
+        behandling = behandling
+            .bekreftVurderinger()
+            .kvalitetssikre()
             .løsAvklaringsBehov(
                 AvklarYrkesskadeLøsning(
                     yrkesskadesvurdering = YrkesskadevurderingDto(
@@ -515,7 +530,9 @@ class YrkesskadeFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
                 .associateWith { 0.0 }
         )
 
-        behandling = behandling.kvalitetssikreOk()
+        behandling = behandling
+            .bekreftVurderinger()
+            .kvalitetssikre()
             .løsAvklaringsBehov(
                 AvklarYrkesskadeLøsning(
                     yrkesskadesvurdering = YrkesskadevurderingDto(
@@ -545,16 +562,17 @@ class YrkesskadeFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
             .løsAndreStatligeYtelser()
             .medKontekst {
                 // Saken står til en-trinnskontroll hos saksbehandler klar for å bli sendt til beslutter
-                assertThat(åpneAvklaringsbehov).anySatisfy { assertThat(it.definisjon == Definisjon.FORESLÅ_VEDTAK).isTrue() }
+                assertThat(åpneAvklaringsbehov).anySatisfy { assertThat(it.definisjon).isEqualTo(Definisjon.FORESLÅ_VEDTAK) }
                 assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
             }
             .løsAvklaringsBehov(ForeslåVedtakLøsning())
-            .beslutterGodkjennerIkke(returVed = Definisjon.AVKLAR_SYKDOM)
+            .beslutterGodkjennerIkke(underkjennVurderinger = listOf(Definisjon.AVKLAR_SYKDOM))
             .løsSykdom(sak.rettighetsperiode.fom)
             .løsBistand(sak.rettighetsperiode.fom)
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
-            .kvalitetssikreOk()
+            .bekreftVurderinger()
+            .kvalitetssikre()
             .løsAvklaringsBehov(
                 AvklarYrkesskadeLøsning(
                     yrkesskadesvurdering = YrkesskadevurderingDto(
@@ -684,4 +702,115 @@ class YrkesskadeFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
                 assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
             }
     }
+
+    @Test
+    fun `førstegangsbehandling yrkesskade under grense, etterfulgt av revurdering med avslag`() {
+        val fom = LocalDate.now().minusMonths(6)
+        val periode = Periode(fom, fom.plusYears(3))
+
+        val person = TestPersoner.PERSON_MED_YRKESSKADE()
+
+        var (sak, behandling) = sendInnFørsteSøknad(
+            person = person,
+            mottattTidspunkt = fom.atStartOfDay(),
+            periode = periode,
+        )
+
+        val alleAvklaringsbehov = hentAlleAvklaringsbehov(behandling)
+        assertThat(alleAvklaringsbehov).isNotEmpty()
+        assertThat(behandling.status()).isEqualTo(Status.UTREDES)
+
+        behandling = løsAvklaringsBehov(
+            behandling,
+            AvklarSykdomLøsning(
+                løsningerForPerioder = listOf(
+                    SykdomsvurderingLøsningDto(
+                        begrunnelse = "Er ikke syk nok",
+                        dokumenterBruktIVurdering = listOf(JournalpostId("1231299")),
+                        harSkadeSykdomEllerLyte = true,
+                        erArbeidsevnenNedsatt = true,
+                        erSkadeSykdomEllerLyteVesentligdel = null,
+                        erNedsettelseIArbeidsevneAvEnVissVarighet = null,
+                        erNedsettelseIArbeidsevneMerEnnHalvparten = false,
+                        erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = false,
+                        yrkesskadeBegrunnelse = "Skade under grense for yrkesskade",
+                        fom = periode.fom,
+                        tom = null
+                    )
+                )
+            ),
+        )
+            .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
+            .kvalitetssikre()
+            .medKontekst {
+                // Saken står til To-trinnskontroll hos beslutter
+                assertThat(åpneAvklaringsbehov.map { it.definisjon }).containsOnly(Definisjon.FATTE_VEDTAK)
+                assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
+            }
+            .fattVedtak()
+            .medKontekst {
+                assertThat(this.behandling.status()).isEqualTo(Status.IVERKSETTES)
+            }
+
+        val vedtak = hentVedtak(behandling.id)
+        assertThat(vedtak.vedtakstidspunkt.toLocalDate()).isToday
+
+        // Revurdering opprettes fra ny legeerklæring
+        sak.sendInn(
+            referanse = InnsendingReferanse(JournalpostId("1231299")),
+            type = InnsendingType.LEGEERKLÆRING,
+            kanal = Kanal.DIGITAL,
+            mottattTidspunkt = LocalDateTime.now(),
+            melding = null
+        )
+        val revurdering = hentSisteOpprettedeBehandlingForSak(sak.id)
+
+        revurdering
+            .medKontekst { assertThat(this.behandling.id).isNotEqualTo(behandling.id) }
+            .løsAvklaringsBehov(
+                AvklarSykdomLøsning(
+                    løsningerForPerioder = listOf(
+                        SykdomsvurderingLøsningDto(
+                            begrunnelse = "Er ikke syk nok",
+                            dokumenterBruktIVurdering = listOf(JournalpostId("1231299")),
+                            harSkadeSykdomEllerLyte = false, // person er ikke lenger syk
+                            erArbeidsevnenNedsatt = null,
+                            erSkadeSykdomEllerLyteVesentligdel = null,
+                            erNedsettelseIArbeidsevneAvEnVissVarighet = null,
+                            erNedsettelseIArbeidsevneMerEnnHalvparten = null,
+                            erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
+                            yrkesskadeBegrunnelse = null,
+                            fom = LocalDateTime.now().minusDays(5).toLocalDate(),
+                            tom = null
+                        )
+                    )
+                )
+            )
+            .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
+            .medKontekst {
+                assertThat(åpneAvklaringsbehov)
+                    .extracting<Definisjon> { it.definisjon }
+                    .doesNotContainAnyElementsOf(
+                        listOf(
+                            Definisjon.AVKLAR_YRKESSKADE,
+                            Definisjon.FASTSETT_YRKESSKADEINNTEKT
+                        )
+                    )
+            }
+            .medKontekst {
+                // Saken står til To-trinnskontroll hos beslutter
+                assertThat(åpneAvklaringsbehov.map { it.definisjon }).containsOnly(Definisjon.FATTE_VEDTAK)
+                assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
+            }
+            .fattVedtak()
+            .medKontekst {
+                assertThat(this.behandling.status()).isEqualTo(Status.IVERKSETTES)
+            }
+
+        val revurderingVedtak = hentVedtak(revurdering.id)
+        assertThat(revurderingVedtak.vedtakstidspunkt.toLocalDate()).isToday
+    }
+
 }

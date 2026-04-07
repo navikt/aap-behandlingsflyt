@@ -4,6 +4,7 @@ import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovMetadataService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
@@ -12,6 +13,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepos
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Yrkesskadevurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.InnhentetSykdomsOpplysninger
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.RegistrertYrkesskade
+import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderSykdomSteg
+import no.nav.aap.behandlingsflyt.kanLøseBehovSomSkalVæreLåstEtterKvalitetssikring
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
@@ -51,6 +54,8 @@ fun NormalOpenAPIRoute.sykdomsgrunnlagApi(
                     val behandling = BehandlingReferanseService(behandlingRepository).behandling(req)
                     val sakRepository = repositoryProvider.provide<SakRepository>()
                     val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
+                    val vurderSykdomSteg = VurderSykdomSteg(repositoryProvider, gatewayProvider)
+                    val avklaringsbehovMetadataService = AvklaringsbehovMetadataService(repositoryProvider, gatewayProvider)
 
                     val yrkesskadeGrunnlag = yrkesskadeRepository.hentHvisEksisterer(behandlingId = behandling.id)
                     val sykdomGrunnlag = sykdomRepository.hentHvisEksisterer(behandlingId = behandling.id)
@@ -73,9 +78,8 @@ fun NormalOpenAPIRoute.sykdomsgrunnlagApi(
 
                     val sak = sakRepository.hent(behandling.sakId)
 
-                    val avklaringsbehov = avklaringsbehovRepository
-                        .hentAvklaringsbehovene(behandling.id)
-                        .hentBehovForDefinisjon(Definisjon.AVKLAR_SYKDOM)
+                    val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
+                    val avklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_SYKDOM)
 
                     SykdomGrunnlagResponse(
                         opplysninger = InnhentetSykdomsOpplysninger(
@@ -85,23 +89,13 @@ fun NormalOpenAPIRoute.sykdomsgrunnlagApi(
                         skalVurdereYrkesskade = innhentedeYrkesskader.isNotEmpty(),
                         erÅrsakssammenhengYrkesskade = sistVedtatteSykdomGrunnlag?.yrkesskadevurdering?.erÅrsakssammenheng
                             ?: false,
-                        sykdomsvurderinger = nyeVurderinger, // TODO: Fjern
                         nyeVurderinger = nyeVurderinger,
-                        historikkSykdomsvurderinger = sykdomGrunnlag
-                            ?.historiskeSykdomsvurderinger(behandling.id).orEmpty()
-                            .sortedBy { it.opprettet }
-                            .map { SykdomsvurderingResponse.fraDomene(it, vurdertAvService) },
-                        gjeldendeVedtatteSykdomsvurderinger = sisteVedtatte, // TODO: Fjern
                         sisteVedtatteVurderinger = sisteVedtatte,
-                        harTilgangTilÅSaksbehandle = kanSaksbehandle(),
-                        kvalitetssikretAv = vurdertAvService.kvalitetssikretAv(
-                            definisjon = Definisjon.AVKLAR_SYKDOM,
-                            behandlingId = behandling.id,
-                        ),
+                        harTilgangTilÅSaksbehandle = kanSaksbehandle() && kanLøseBehovSomSkalVæreLåstEtterKvalitetssikring(Definisjon.AVKLAR_SYKDOM.løsesISteg, behandling),
                         kanVurderes = listOf(sak.rettighetsperiode),
+                        ikkeRelevantePerioder =
+                            avklaringsbehovMetadataService.perioderSomSkalFremhevesSomIkkeRelevant(vurderSykdomSteg, behandling),
                         behøverVurderinger = avklaringsbehov?.perioderVedtaketBehøverVurdering().orEmpty().toList(),
-                        perioderSomIkkeErTilstrekkeligVurdert = avklaringsbehov?.perioderSomIkkeErTilstrekkeligVurdert()
-                            .orEmpty().toList()
                     )
                 }
 
@@ -131,7 +125,7 @@ fun NormalOpenAPIRoute.sykdomsgrunnlagApi(
                         .map { yrkesskade -> RegistrertYrkesskade(yrkesskade) }
 
                     YrkesskadeVurderingGrunnlagResponse(
-                        harTilgangTilÅSaksbehandle = kanSaksbehandle(),
+                        kanSaksbehandle(),
                         opplysninger = InnhentetSykdomsOpplysninger(
                             oppgittYrkesskadeISøknad = false,
                             innhentedeYrkesskader = innhentedeYrkesskader,

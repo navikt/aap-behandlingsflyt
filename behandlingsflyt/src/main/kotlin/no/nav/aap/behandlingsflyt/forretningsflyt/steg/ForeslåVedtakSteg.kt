@@ -25,9 +25,9 @@ class ForeslåVedtakSteg internal constructor(
 
     private val log = LoggerFactory.getLogger(javaClass)
 
-    constructor(repositoryProvider: RepositoryProvider) : this(
+    constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         avklaringsbehovRepository = repositoryProvider.provide(),
-        tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
+        tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
         avklaringsbehovService = AvklaringsbehovService(repositoryProvider)
     )
 
@@ -35,7 +35,6 @@ class ForeslåVedtakSteg internal constructor(
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
 
         avklaringsbehovService.oppdaterAvklaringsbehov(
-            avklaringsbehovene = avklaringsbehovene,
             definisjon = Definisjon.FORESLÅ_VEDTAK,
             vedtakBehøverVurdering = { vedtakBehøverVurdering(kontekst, avklaringsbehovene) },
             erTilstrekkeligVurdert = { erTilstrekkeligVurdert(avklaringsbehovene) },
@@ -75,7 +74,11 @@ class ForeslåVedtakSteg internal constructor(
             return false
         }
 
-        val nayHarBareLøstLovvalgEllerVentepunkt = avklaringsbehovene.avklaringsbehovLøstAvNay().filterNot { it.erLovvalgOgMedlemskap() }.filterNot { it.erVentepunkt() }.isEmpty()
+        val nayHarBareLøstLovvalgEllerVentepunkt =
+            avklaringsbehovene.avklaringsbehovLøstAvNay()
+                .filterNot { it.erLovvalgOgMedlemskap() }
+                .filterNot { it.erVentepunkt() }
+                .isEmpty()
         if (!nayHarBareLøstLovvalgEllerVentepunkt) {
             return true
         }
@@ -89,7 +92,7 @@ class ForeslåVedtakSteg internal constructor(
             repositoryProvider: RepositoryProvider,
             gatewayProvider: GatewayProvider
         ): BehandlingSteg {
-            return ForeslåVedtakSteg(repositoryProvider)
+            return ForeslåVedtakSteg(repositoryProvider, gatewayProvider)
         }
 
         override fun type(): StegType {

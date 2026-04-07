@@ -1,9 +1,11 @@
-// top-level build gradle
+// Kotlin konfigurasjonen er gitt av pluginen 'aap.conventions' i buildSrc
+// og settings.gradle.kts
 
 plugins {
     base
     `maven-publish`
-    id("org.cyclonedx.bom") version "3.1.0"
+    id("org.cyclonedx.bom") version "3.2.3"
+    id("aap.conventions")
 }
 
 // Produser en SBOM (Software Bill of Materials) og last den opp som et Maven-artifact
@@ -17,6 +19,17 @@ tasks {
 
     cyclonedxBom {
         jsonOutput.unsetConvention() // ikke lag både json og xml
+    }
+}
+
+// cyclonedxDirectBom-tasker resolver classpaths på tvers av subprojects, men
+// deklarerer ikke task-avhengigheter til kompileringstaskene som produserer disse klassene.
+val allCompileTasks = subprojects.flatMap { sub ->
+    sub.tasks.matching { it.name == "compileKotlin" || it.name == "compileJava" }
+}
+subprojects.forEach { sub ->
+    sub.tasks.matching { it.name == "cyclonedxDirectBom" }.configureEach {
+        dependsOn(allCompileTasks)
     }
 }
 
@@ -42,3 +55,50 @@ publishing {
         }
     }
 }
+
+// Call the tasks of the subprojects
+for (taskName in listOf<String>("clean", "build", "check")) {
+    tasks.named(taskName) {
+        dependsOn(subprojects.map { it.tasks.named(taskName) })
+    }
+}
+
+// Merge Detekt reports from all subprojects
+val detektReportMergeSarif by tasks.registering(dev.detekt.gradle.report.ReportMergeTask::class) {
+    output.set(rootProject.layout.buildDirectory.file("reports/detekt/merge.sarif"))
+}
+
+val detektProjectBaseline by tasks.registering(dev.detekt.gradle.DetektCreateBaselineTask::class) {
+    description = "Overrides current baseline for all modules."
+    buildUponDefaultConfig.set(true)
+    ignoreFailures.set(true)
+    parallel.set(true)
+    setSource(files(rootDir))
+    config.setFrom(files("$rootDir/config/detekt/detekt.yml"))
+    baseline.set(file("$rootDir/config/detekt/baseline.xml"))
+    include("**/*.kt")
+    include("**/*.kts")
+    exclude("**/resources/**")
+    exclude("**/build/**")
+}
+
+subprojects {
+    tasks.withType<dev.detekt.gradle.Detekt>().configureEach {
+        finalizedBy(detektReportMergeSarif)
+        detektReportMergeSarif.configure {
+            input.from(reports.sarif.outputLocation)
+        }
+    }
+}
+
+// Call the tasks of the subprojects
+subprojects {
+    // no-op; just ensuring subprojects are configured
+}
+for (taskName in listOf<String>("clean", "build", "assemble", "check")) {
+    tasks.named(taskName) {
+        dependsOn(subprojects.map { it.path + ":$taskName" })
+    }
+}
+
+

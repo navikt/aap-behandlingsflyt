@@ -21,11 +21,10 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
-import no.nav.aap.behandlingsflyt.test.FakeUnleash
+import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.type.Periode
@@ -123,7 +122,7 @@ class AktivitetspliktInformasjonskravTest {
 
             val aktivitetsplikt11_7Informasjonskrav = Aktivitetsplikt11_7Informasjonskrav.konstruer(
                 postgresRepositoryRegistry.provider(connection),
-                createGatewayProvider { register<FakeUnleash>() },
+                createGatewayProvider { register<AlleAvskruddUnleash>() },
             )
             val flytKontekstMedPerioder = flytKontekstMedPerioder(effektueringsbehandling, sak)
 
@@ -168,15 +167,12 @@ class AktivitetspliktInformasjonskravTest {
     }
 
     private fun flytKontekstMedPerioder(behandling: Behandling, sak: Sak) =
-        FlytKontekstMedPerioder(
-            sakId = behandling.sakId,
-            behandlingId = behandling.id,
-            forrigeBehandlingId = behandling.forrigeBehandlingId,
-            behandlingType = TypeBehandling.Førstegangsbehandling,
-            vurderingType = VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
-            vurderingsbehovRelevanteForSteg = setOf(Vurderingsbehov.EFFEKTUER_AKTIVITETSPLIKT),
+        no.nav.aap.behandlingsflyt.help.flytKontekstMedPerioder {
+            this.behandling = behandling
+            vurderingType = VurderingType.EFFEKTUER_AKTIVITETSPLIKT
             rettighetsperiode = sak.rettighetsperiode
-        )
+            vurderingsbehovRelevanteForSteg = setOf(Vurderingsbehov.EFFEKTUER_AKTIVITETSPLIKT)
+        }
 
     private fun opprettAktivitetspliktBehandlingMedVurdering(
         sak: Sak,
@@ -187,11 +183,11 @@ class AktivitetspliktInformasjonskravTest {
         return dataSource.transaction { connection ->
             val repositoryProvider = postgresRepositoryRegistry.provider(connection)
             val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
-            val Aktivitetsplikt11_7Repository = repositoryProvider.provide<Aktivitetsplikt11_7Repository>()
+            val aktivitetsplikt11_7Repository = repositoryProvider.provide<Aktivitetsplikt11_7Repository>()
 
             val behandling = opprettAktivitetspliktBehandling(repositoryProvider, sak, forrige)
 
-            Aktivitetsplikt11_7Repository.lagre(
+            aktivitetsplikt11_7Repository.lagre(
                 behandling.id, listOf(vurdering(behandling.id))
             )
             behandlingRepository.oppdaterBehandlingStatus(behandling.id, status)

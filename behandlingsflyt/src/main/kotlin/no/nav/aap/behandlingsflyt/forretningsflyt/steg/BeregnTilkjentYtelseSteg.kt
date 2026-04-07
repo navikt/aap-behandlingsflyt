@@ -22,13 +22,13 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevu
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.ApplikasjonsVersjon
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.barnepensjon.BarnepensjonRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Tidslinje
@@ -49,6 +49,7 @@ class BeregnTilkjentYtelseSteg private constructor(
     private val tidligereVurderinger: TidligereVurderinger,
     private val reduksjon11_9Repository: Reduksjon11_9Repository,
     private val aktivitetsplikt11_9repository: Aktivitetsplikt11_9Repository,
+    private val barnepensjonRepository: BarnepensjonRepository,
     private val unleashGateway: UnleashGateway,
 
     ) : BehandlingSteg {
@@ -62,9 +63,10 @@ class BeregnTilkjentYtelseSteg private constructor(
         samordningRepository = repositoryProvider.provide(),
         samordningUføreRepository = repositoryProvider.provide(),
         samordningArbeidsgiverRepository = repositoryProvider.provide(),
-        tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
+        tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
         reduksjon11_9Repository = repositoryProvider.provide(),
         aktivitetsplikt11_9repository = repositoryProvider.provide(),
+        barnepensjonRepository = repositoryProvider.provide(),
         unleashGateway = gatewayProvider.provide(),
     )
 
@@ -88,7 +90,8 @@ class BeregnTilkjentYtelseSteg private constructor(
         )
         val samordningUføre = samordningUføreRepository.hentHvisEksisterer(kontekst.behandlingId)
         val samordningArbeidsgiver = samordningArbeidsgiverRepository.hentHvisEksisterer(kontekst.behandlingId)
-
+        val barnepensjonGrunnlag = barnepensjonRepository.hentHvisEksisterer(kontekst.behandlingId)
+        
         val grunnlag = TilkjentYtelseGrunnlag(
             fødselsdato,
             beregningsgrunnlag?.grunnlaget(),
@@ -97,6 +100,7 @@ class BeregnTilkjentYtelseSteg private constructor(
             samordningGrunnlag,
             samordningUføre,
             samordningArbeidsgiver,
+            barnepensjonGrunnlag,
         )
         val beregnetTilkjentYtelse = BeregnTilkjentYtelseService(grunnlag).beregnTilkjentYtelse()
 

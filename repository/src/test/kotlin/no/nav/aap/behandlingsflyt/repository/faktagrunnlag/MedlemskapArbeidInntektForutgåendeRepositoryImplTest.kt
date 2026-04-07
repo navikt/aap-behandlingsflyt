@@ -5,45 +5,38 @@ import no.nav.aap.behandlingsflyt.behandling.lovvalg.EnhetGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForForutgåendeMedlemskap
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.utenlandsopphold.UtenlandsOppholdData
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.ArbeidsInntektInformasjon
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.ArbeidsInntektMaaned
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.ArbeidsInntektMåned
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.Inntekt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.Virksomhet
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.KildesystemKode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.KildesystemMedl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapDataIntern
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapForutgåendeRepositoryImpl
-import no.nav.aap.behandlingsflyt.help.FakePdlGateway
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.help.opprettSak
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.medlemskaplovvalg.MedlemskapArbeidInntektForutgåendeRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.medlemskaplovvalg.MedlemskapArbeidInntektRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.test.desember
-import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.behandlingsflyt.test.mai
 import no.nav.aap.behandlingsflyt.test.november
 import no.nav.aap.behandlingsflyt.test.oktober
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
-import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.verdityper.dokument.JournalpostId
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeAll
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import java.time.LocalDate
@@ -52,7 +45,6 @@ import java.time.YearMonth
 
 internal class MedlemskapArbeidInntektForutgåendeRepositoryImplTest {
     companion object {
-        private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
         private lateinit var dataSource: TestDataSource
 
         @BeforeAll
@@ -69,16 +61,11 @@ internal class MedlemskapArbeidInntektForutgåendeRepositoryImplTest {
     @Test
     fun mapperOrgnavnKorrektTilForutgåendeInntekt() {
         dataSource.transaction { connection ->
-            val personOgSakService = PersonOgSakService(
-                FakePdlGateway,
-                PersonRepositoryImpl(connection),
-                SakRepositoryImpl(connection)
-            )
             val behandlingRepo = BehandlingRepositoryImpl(connection)
             val medlemskapArbeidInntektForutgåendeRepo = MedlemskapArbeidInntektForutgåendeRepositoryImpl(connection)
 
-            val sak =
-                personOgSakService.finnEllerOpprett(ident(), Periode(LocalDate.now(), LocalDate.now().plusYears(3)))
+            val sak = opprettSak(connection,LocalDate.now())
+
             val behandling =
                 behandlingRepo.opprettBehandling(
                     sak.id,
@@ -106,23 +93,11 @@ internal class MedlemskapArbeidInntektForutgåendeRepositoryImplTest {
     @Test
     fun `kan hente siste relevante utenlandsopplysning`() {
         val sak = dataSource.transaction { connection ->
-            val personOgSakService =
-                PersonOgSakService(
-                    FakePdlGateway,
-                    PersonRepositoryImpl(connection),
-                    SakRepositoryImpl(connection)
-                )
-            personOgSakService.finnEllerOpprett(ident(), Periode(LocalDate.now(), LocalDate.now().plusYears(3)))
+            opprettSak(connection,LocalDate.now())
         }
 
         val sak2 = dataSource.transaction { connection ->
-            val personOgSakService =
-                PersonOgSakService(
-                    FakePdlGateway,
-                    PersonRepositoryImpl(connection),
-                    SakRepositoryImpl(connection)
-                )
-            personOgSakService.finnEllerOpprett(ident(), Periode(LocalDate.now(), LocalDate.now().plusYears(3)))
+            opprettSak(connection,LocalDate.now())
         }
 
         dataSource.transaction { connection ->
@@ -173,7 +148,7 @@ internal class MedlemskapArbeidInntektForutgåendeRepositoryImplTest {
     fun `skal kunne lagre og hente manuelle vurderinger over flere perioder`() {
         dataSource.transaction { connection ->
             val medlemskapArbeidInntektForutgåendeRepo = MedlemskapArbeidInntektForutgåendeRepositoryImpl(connection)
-            val sak = opprettSak(connection, periode)
+            val sak = opprettSak(connection,LocalDate.now())
             val behandling = finnEllerOpprettBehandling(connection, sak)
 
             medlemskapArbeidInntektForutgåendeRepo.lagreVurderinger(
@@ -202,7 +177,7 @@ internal class MedlemskapArbeidInntektForutgåendeRepositoryImplTest {
     fun `skal ta med manuelle vurderinger i grunnlag når arbeid og inntekt oppdateres`() {
         dataSource.transaction { connection ->
             val medlemskapArbeidInntektForutgåendeRepo = MedlemskapArbeidInntektForutgåendeRepositoryImpl(connection)
-            val sak = opprettSak(connection, periode)
+            val sak = opprettSak(connection,LocalDate.now())
             val behandling = finnEllerOpprettBehandling(connection, sak)
             val medlemskapRepository = MedlemskapForutgåendeRepositoryImpl(connection)
 
@@ -251,7 +226,7 @@ internal class MedlemskapArbeidInntektForutgåendeRepositoryImplTest {
             val medlemskapArbeidInntektForutgåendeRepo = MedlemskapArbeidInntektForutgåendeRepositoryImpl(connection)
             val medlemskapRepository = MedlemskapForutgåendeRepositoryImpl(connection)
 
-            val sak = opprettSak(connection, periode)
+            val sak = opprettSak(connection,LocalDate.now())
             val behandling = finnEllerOpprettBehandling(connection, sak)
             val vurderinger = listOf(
                 manuellVurdering(
@@ -329,7 +304,7 @@ internal class MedlemskapArbeidInntektForutgåendeRepositoryImplTest {
     fun `test sletting`() {
         dataSource.transaction { connection ->
             val medlemskapArbeidInntektForutgåendeRepo = MedlemskapArbeidInntektForutgåendeRepositoryImpl(connection)
-            val sak = opprettSak(connection, periode)
+            val sak = opprettSak(connection,LocalDate.now())
             val behandling = finnEllerOpprettBehandling(connection, sak)
             val medlemskapRepository = MedlemskapForutgåendeRepositoryImpl(connection)
 
@@ -397,13 +372,13 @@ internal class MedlemskapArbeidInntektForutgåendeRepositoryImplTest {
         )
     )
 
-    private fun inntektGrunnlag(): List<ArbeidsInntektMaaned> = listOf(
-        ArbeidsInntektMaaned(
-            aarMaaned = YearMonth.now(),
+    private fun inntektGrunnlag(): List<ArbeidsInntektMåned> = listOf(
+        ArbeidsInntektMåned(
+            årMåned = YearMonth.now(),
             arbeidsInntektInformasjon = ArbeidsInntektInformasjon(
                 listOf(
                     Inntekt(
-                        beloep = 1.0,
+                        beløp = 1.0,
                         opptjeningsland = null,
                         skattemessigBosattLand = null,
                         opptjeningsperiodeFom = null,
@@ -414,7 +389,7 @@ internal class MedlemskapArbeidInntektForutgåendeRepositoryImplTest {
                         beskrivelse = null
                     ),
                     Inntekt(
-                        beloep = 1.0,
+                        beløp = 1.0,
                         opptjeningsland = null,
                         skattemessigBosattLand = null,
                         opptjeningsperiodeFom = null,
@@ -493,12 +468,12 @@ internal class MedlemskapArbeidInntektForutgåendeRepositoryImplTest {
         forutgåendeRepository.lagreArbeidsforholdOgInntektINorge(
             behandlingId, emptyList(),
             listOf(
-                ArbeidsInntektMaaned(
-                    aarMaaned = YearMonth.now(),
+                ArbeidsInntektMåned(
+                    årMåned = YearMonth.now(),
                     arbeidsInntektInformasjon = ArbeidsInntektInformasjon(
                         listOf(
                             Inntekt(
-                                beloep = 1.0,
+                                beløp = 1.0,
                                 opptjeningsland = null,
                                 skattemessigBosattLand = null,
                                 opptjeningsperiodeFom = null,
@@ -509,7 +484,7 @@ internal class MedlemskapArbeidInntektForutgåendeRepositoryImplTest {
                                 beskrivelse = null
                             ),
                             Inntekt(
-                                beloep = 1.0,
+                                beløp = 1.0,
                                 opptjeningsland = null,
                                 skattemessigBosattLand = null,
                                 opptjeningsperiodeFom = null,

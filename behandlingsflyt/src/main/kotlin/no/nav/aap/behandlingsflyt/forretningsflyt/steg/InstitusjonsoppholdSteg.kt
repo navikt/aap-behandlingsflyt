@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.institusjonsopphold.InstitusjonsoppholdUtlederService
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MapInstitusjonoppholdTilRegel
@@ -16,7 +15,6 @@ import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
@@ -26,31 +24,23 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
 
 class InstitusjonsoppholdSteg(
-    private val avklaringsbehovRepository: AvklaringsbehovRepository,
     private val institusjonsoppholdUtlederService: InstitusjonsoppholdUtlederService,
     private val institusjonsoppholdRepository: InstitusjonsoppholdRepository,
     private val tidligereVurderinger: TidligereVurderinger,
     private val avklaringsbehovService: AvklaringsbehovService,
-    private val vilkårsresultatRepository: VilkårsresultatRepository,
-    private val behandlingRepository: BehandlingRepository
+    private val vilkårsresultatRepository: VilkårsresultatRepository
 ) : BehandlingSteg {
-    constructor(repositoryProvider: RepositoryProvider) : this(
-        avklaringsbehovRepository = repositoryProvider.provide(),
+    constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         institusjonsoppholdRepository = repositoryProvider.provide(),
         institusjonsoppholdUtlederService = InstitusjonsoppholdUtlederService(repositoryProvider),
-        tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
+        tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
         avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
-        vilkårsresultatRepository = repositoryProvider.provide(),
-        behandlingRepository = repositoryProvider.provide(),
+        vilkårsresultatRepository = repositoryProvider.provide()
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
 
         avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkårTilstrekkeligVurdert(
-            avklaringsbehovene = avklaringsbehovene,
-            behandlingRepository = behandlingRepository,
-            vilkårsresultatRepository = vilkårsresultatRepository,
             perioderSomIkkeErTilstrekkeligVurdert = { perioderHelseoppholdIkkeErTilstrekkeligVurdert(kontekst) },
             kontekst = kontekst,
             tilbakestillGrunnlag = {
@@ -59,11 +49,10 @@ class InstitusjonsoppholdSteg(
                 val aktiveVurderinger =
                     institusjonsoppholdRepository.hentHvisEksisterer(kontekst.behandlingId)?.helseoppholdvurderinger?.vurderinger.orEmpty()
                 if (vedtatteVurderinger == null && aktiveVurderinger.isNotEmpty()) {
-                    institusjonsoppholdRepository.lagreHelseVurdering(kontekst.behandlingId, "Kelvin", listOf())
+                    institusjonsoppholdRepository.lagreHelseVurdering(kontekst.behandlingId, listOf())
                 } else if (vedtatteVurderinger != null && vedtatteVurderinger.vurderinger.toSet() != aktiveVurderinger.toSet()) {
                     institusjonsoppholdRepository.lagreHelseVurdering(
                         kontekst.behandlingId,
-                        vedtatteVurderinger.vurdertAv,
                         vedtatteVurderinger.vurderinger
                     )
                 }
@@ -76,9 +65,6 @@ class InstitusjonsoppholdSteg(
 
 
         avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkårTilstrekkeligVurdert(
-            avklaringsbehovene = avklaringsbehovene,
-            behandlingRepository = behandlingRepository,
-            vilkårsresultatRepository = vilkårsresultatRepository,
             nårVurderingErRelevant = ::perioderMedVurderingsbehovSoning,
             perioderSomIkkeErTilstrekkeligVurdert = { perioderSoningOppholdIkkeErTilstrekkeligVurdert(kontekst = kontekst) },
             kontekst = kontekst,
@@ -103,9 +89,13 @@ class InstitusjonsoppholdSteg(
 
         when (kontekst.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING,
-            VurderingType.AUTOMATISK_OPPDATER_VILKÅR,
-            VurderingType.REVURDERING,  -> {
-                val utlederResultat = institusjonsoppholdUtlederService.utled(kontekst.behandlingId, begrensetTilRettighetsperiode = false)
+            VurderingType.MIGRER_RETTIGHETSPERIODE,
+            VurderingType.REVURDERING,
+                -> {
+                val utlederResultat = institusjonsoppholdUtlederService.utled(
+                    kontekst.behandlingId,
+                    begrensetTilRettighetsperiode = false
+                )
 
                 val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
                 StraffegjennomføringVilkår(vilkårsresultat).vurder(
@@ -118,6 +108,7 @@ class InstitusjonsoppholdSteg(
             }
 
             VurderingType.MELDEKORT,
+            VurderingType.UTVID_VEDTAKSLENGDE,
             VurderingType.AUTOMATISK_BREV,
             VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
             VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9,
@@ -150,9 +141,9 @@ class InstitusjonsoppholdSteg(
             .mapValue { (behandlingsutfall, denneBehandling) ->
                 when (behandlingsutfall) {
                     null -> false
-                    TidligereVurderinger.Behandlingsutfall.IKKE_BEHANDLINGSGRUNNLAG -> false
-                    TidligereVurderinger.Behandlingsutfall.UUNGÅELIG_AVSLAG -> false
-                    TidligereVurderinger.Behandlingsutfall.UKJENT -> denneBehandling?.helse != null // Enten er helse vurdert, eller så skal det vurderes
+                    TidligereVurderinger.IkkeBehandlingsgrunnlag -> false
+                    TidligereVurderinger.UunngåeligAvslag -> false
+                    is TidligereVurderinger.PotensieltOppfylt -> denneBehandling?.helse != null // Enten er helse vurdert, eller så skal det vurderes
                 }
             }
     }
@@ -166,20 +157,19 @@ class InstitusjonsoppholdSteg(
             .mapValue { (behandlingsutfall, denneBehandling) ->
                 when (behandlingsutfall) {
                     null -> false
-                    TidligereVurderinger.Behandlingsutfall.IKKE_BEHANDLINGSGRUNNLAG -> false
-                    TidligereVurderinger.Behandlingsutfall.UUNGÅELIG_AVSLAG -> false
-                    TidligereVurderinger.Behandlingsutfall.UKJENT -> denneBehandling?.soning != null // Enten er soning vurdert, eller så skal det vurderes
+                    TidligereVurderinger.IkkeBehandlingsgrunnlag -> false
+                    TidligereVurderinger.UunngåeligAvslag -> false
+                    is TidligereVurderinger.PotensieltOppfylt -> denneBehandling?.soning != null // Enten er soning vurdert, eller så skal det vurderes
                 }
             }
     }
-
 
     companion object : FlytSteg {
         override fun konstruer(
             repositoryProvider: RepositoryProvider,
             gatewayProvider: GatewayProvider
         ): BehandlingSteg {
-            return InstitusjonsoppholdSteg(repositoryProvider)
+            return InstitusjonsoppholdSteg(repositoryProvider, gatewayProvider)
         }
 
         override fun type(): StegType {

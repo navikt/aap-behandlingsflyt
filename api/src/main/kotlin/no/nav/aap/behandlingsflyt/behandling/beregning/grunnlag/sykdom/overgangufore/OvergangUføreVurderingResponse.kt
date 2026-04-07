@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.VurderingDto
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.UføreSøknadVedtakResultat
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import java.time.LocalDate
@@ -11,7 +12,7 @@ import java.time.LocalDate
 data class OvergangUføreVurderingResponse(
     val begrunnelse: String,
     val brukerHarSøktUføretrygd: Boolean,
-    val brukerHarFåttVedtakOmUføretrygd: String?,
+    val brukerHarFåttVedtakOmUføretrygd: UføreSøknadVedtakResultat?,
     val brukerRettPåAAP: Boolean?,
     @Deprecated("Bruk fom")
     val virkningsdato: LocalDate,

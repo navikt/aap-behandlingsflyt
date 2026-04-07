@@ -4,7 +4,6 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKont
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VurderRettighetsperiodeLøsning
 import no.nav.aap.behandlingsflyt.behandling.rettighetsperiode.VurderRettighetsperiodeRepository
 import no.nav.aap.behandlingsflyt.behandling.søknad.DatoFraDokumentUtleder
-import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.rettighetsperiode.RettighetsperiodeVurdering
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
@@ -12,6 +11,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.sak.Status
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.verdityper.Tid
@@ -23,7 +23,7 @@ class VurderRettighetsperiodeLøser(
     private val behandlingRepository: BehandlingRepository,
     private val sakRepository: SakRepository,
     private val rettighetsperiodeRepository: VurderRettighetsperiodeRepository,
-    private val sakOgBehandlingService: SakOgBehandlingService,
+    private val sakService: SakService,
     private val mottattDokumentRepository: MottattDokumentRepository,
 ) : AvklaringsbehovsLøser<VurderRettighetsperiodeLøsning> {
 
@@ -33,7 +33,7 @@ class VurderRettighetsperiodeLøser(
         behandlingRepository = repositoryProvider.provide(),
         sakRepository = repositoryProvider.provide(),
         rettighetsperiodeRepository = repositoryProvider.provide(),
-        sakOgBehandlingService = SakOgBehandlingService(repositoryProvider, gatewayProvider),
+        sakService = SakService(repositoryProvider, gatewayProvider),
         mottattDokumentRepository = repositoryProvider.provide(),
     )
 
@@ -53,32 +53,30 @@ class VurderRettighetsperiodeLøser(
             throw UgyldigForespørselException("Kan ikke endre starttidspunkt til å gjelde ETTER søknadstidspunkt")
         }
 
-        val harRettUtoverSøknadsdato = løsning.rettighetsperiodeVurdering.harRettUtoverSøknadsdato
         rettighetsperiodeRepository.lagreVurdering(
             behandlingId = behandling.id,
             vurdering =
                 RettighetsperiodeVurdering(
                     begrunnelse = løsning.rettighetsperiodeVurdering.begrunnelse,
                     startDato = nyStartDato,
-                    harRettUtoverSøknadsdato = harRettUtoverSøknadsdato,
-                    harKravPåRenter = løsning.rettighetsperiodeVurdering.harKravPåRenter,
+                    harRettUtoverSøknadsdato = løsning.rettighetsperiodeVurdering.harRett,
                     vurdertAv = kontekst.bruker.ident
                 )
         )
 
-        if (harRettUtoverSøknadsdato && nyStartDato != null) {
+        if (løsning.rettighetsperiodeVurdering.harRett.toBoolean() && nyStartDato != null) {
             log.info("Oppdaterer rettighetsperioden til å gjelde fra $ for sak ${sak.id}")
-            sakOgBehandlingService.overstyrRettighetsperioden(
+            sakService.overstyrRettighetsperioden(
                 sakId = sak.id,
                 startDato = nyStartDato,
                 sluttDato = Tid.MAKS
             )
-        } else if (!harRettUtoverSøknadsdato) {
+        } else if (!løsning.rettighetsperiodeVurdering.harRett.toBoolean()) {
             val søknadsdato = finnSøknadsdatoForSak(sak.id)
                 ?: throw UgyldigForespørselException("Forsøker å tilbakestille rettighetsperioden, men finner ingen søknadsdato for saken")
             if (sak.rettighetsperiode.fom != søknadsdato) {
                 log.info("Tilbakestiller rettighetsperioden til å gjelde fra søknadsdato $søknadsdato for sak ${sak.id}")
-                sakOgBehandlingService.overstyrRettighetsperioden(
+                sakService.overstyrRettighetsperioden(
                     sakId = sak.id,
                     startDato = søknadsdato,
                     sluttDato = Tid.MAKS

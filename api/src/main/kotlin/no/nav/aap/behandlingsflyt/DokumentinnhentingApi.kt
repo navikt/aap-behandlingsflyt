@@ -59,7 +59,7 @@ fun NormalOpenAPIRoute.dokumentinnhentingApi(
                     val repositoryProvider = repositoryRegistry.provider(connection)
 
                     LoggingKontekst(
-                        repositoryProvider,
+                        repositoryProvider.provide(),
                         LogKontekst(referanse = BehandlingReferanse(req.behandlingsReferanse))
                     ).use {
                         val låsRepository = repositoryProvider.provide<TaSkriveLåsRepository>()

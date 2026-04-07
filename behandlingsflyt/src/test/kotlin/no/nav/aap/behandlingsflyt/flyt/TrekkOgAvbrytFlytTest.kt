@@ -12,21 +12,22 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.StudentStatus
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadMedlemskapDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadStudentDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadV0
-import no.nav.aap.behandlingsflyt.test.FakeUnleash
-import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.behandlingsflyt.repository.behandling.vedtak.VedtakRepositoryImpl
+import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
+import no.nav.aap.komponenter.dbconnect.transaction
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status as AvklaringsbehovStatus
 
-class TrekkOgAvbrytFlytTest: AbstraktFlytOrkestratorTest(FakeUnleash::class) {
+class TrekkOgAvbrytFlytTest: AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
     @Test
     fun `kan trekke søknad som har passert manuelt vurdert lovvalg`() {
-        val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
+        val fom = LocalDate.now()
 
         val (_, behandling) = sendInnFørsteSøknad(
-            periode = periode,
+            mottattTidspunkt = fom.atStartOfDay(),
             søknad = SøknadV0(
                 student = SøknadStudentDto(StudentStatus.Nei), yrkesskade = "NEI", oppgitteBarn = null,
                 medlemskap = SøknadMedlemskapDto("NEI", "NEI", "NEI", null, null)
@@ -37,7 +38,7 @@ class TrekkOgAvbrytFlytTest: AbstraktFlytOrkestratorTest(FakeUnleash::class) {
             assertTrue(åpneAvklaringsbehov.all { Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP == it.definisjon })
         }
             // Løs lovvalg
-            .løsLovvalg(periode.fom)
+            .løsLovvalg(fom)
             .medKontekst {
                 assertThat(åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
                     .containsExactly(Definisjon.AVKLAR_SYKDOM)
@@ -52,15 +53,18 @@ class TrekkOgAvbrytFlytTest: AbstraktFlytOrkestratorTest(FakeUnleash::class) {
             .medKontekst {
                 assertThat(åpneAvklaringsbehov).isEmpty()
                 assertThat(this.behandling.status()).isEqualTo(Status.AVSLUTTET)
+                dataSource.transaction {
+                    assertThat(VedtakRepositoryImpl(it).hent(this.behandling.id)).isNull()
+                }
             }
     }
 
     @Test
     fun `kan trekke søknad som har passert forutgående medlemskap`() {
-        val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
+        val fom = LocalDate.now()
 
         val (_, behandling) = sendInnFørsteSøknad(
-            periode = periode,
+            mottattTidspunkt = fom.atStartOfDay(),
             søknad = SøknadV0(
                 student = SøknadStudentDto(StudentStatus.Nei), yrkesskade = "NEI", oppgitteBarn = null,
                 medlemskap = SøknadMedlemskapDto("NEI", "NEI", "NEI", null, null)
@@ -68,17 +72,17 @@ class TrekkOgAvbrytFlytTest: AbstraktFlytOrkestratorTest(FakeUnleash::class) {
         )
 
         behandling
-            .løsLovvalg(periode.fom)
+            .løsLovvalg(fom)
             // Løs fram til forutgående
-            .løsFramTilForutgåendeMedlemskap(periode.fom)
+            .løsFramTilForutgåendeMedlemskap(fom)
             .medKontekst {
                 assertThat(åpneAvklaringsbehov)
                     .extracting<Definisjon> { it.definisjon }
                     .contains(Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP)
             }
             // Løs forutgående
-            .løsForutgåendeMedlemskap(periode.fom)
-            .løsOppholdskrav(periode.fom)
+            .løsForutgåendeMedlemskap(fom)
+            .løsOppholdskrav(fom)
             // Trekk søknad
             .leggTilVurderingsbehov(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.SØKNAD_TRUKKET)
             .medKontekst {
@@ -146,8 +150,9 @@ class TrekkOgAvbrytFlytTest: AbstraktFlytOrkestratorTest(FakeUnleash::class) {
         // Avbryt revurdering 1
         revurdering1.leggTilVurderingsbehov(
             no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.REVURDERING_AVBRUTT
-        )
-        assertThat(hentAlleAvklaringsbehov(revurdering1)).anySatisfy { avklaringsbehov -> assertThat(avklaringsbehov.erÅpent() && avklaringsbehov.definisjon == Definisjon.AVBRYT_REVURDERING).isTrue() }
+        ).medKontekst {
+            assertThat(åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }.contains(Definisjon.AVBRYT_REVURDERING)
+        }
 
         løsAvklaringsBehov(
             revurdering1,

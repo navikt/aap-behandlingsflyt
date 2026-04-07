@@ -2,6 +2,9 @@ package no.nav.aap.behandlingsflyt.integrasjon.ufore
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.Uføre
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreRegisterGateway
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreSøknad
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreSøknadRequest
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreSøknadResponse
 import no.nav.aap.behandlingsflyt.prometheus
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.komponenter.config.requiredConfigForKey
@@ -79,8 +82,36 @@ object UføreGateway : UføreRegisterGateway {
         return uføreperioder.map {
             Uføre(
                 virkningstidspunkt = it.virkningstidspunkt,
-                uføregrad = Prosent(it.uforegrad)
+                uføregrad = Prosent(it.uforegrad),
+                uføregradTom = it.uforegradTom
             )
         }.toSet()
+    }
+
+    private fun queryÅpenUføreSøknad(request: UføreSøknadRequest): UføreSøknadResponse? {
+        val httpRequest = PostRequest(
+            additionalHeaders = listOf(
+                Header("Nav-Consumer-Id", "aap-behandlingsflyt"),
+                Header("Accept", "application/json")
+            ),
+            body = request
+        )
+
+        val uri = url.resolve("/api/uforetrygd/ekstern/soknad")
+        try {
+            log.info("Henter åpen uføresøknad")
+            return client.post(
+                uri = uri,
+                request = httpRequest
+            )
+        } catch (e: IkkeFunnetException) {
+            // Om personen ikke ble funnet i PESYS.
+            log.info("Fant ikke person i PESYS. Returnerer null. URL brukt: $uri. Message: ${e.message}")
+            return null
+        }
+    }
+    override fun hentÅpenUføreSøknad(person: Person): UføreSøknad? {
+        val response = queryÅpenUføreSøknad(UføreSøknadRequest(person.aktivIdent().identifikator))
+        return response?.soknad
     }
 }

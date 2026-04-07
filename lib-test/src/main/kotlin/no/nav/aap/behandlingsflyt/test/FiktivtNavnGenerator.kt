@@ -20,7 +20,7 @@ object FiktivtNavnGenerator {
         return PersonNavn(fornavn, Navnelager.randomEtternavn)
     }
 
-    private object Navnelager {
+    object Navnelager {
 
         private val etternavn = loadNames("/etternavn.txt")
         private val fornavnKvinner = loadNames("/fornavn-kvinner.txt")
@@ -42,14 +42,14 @@ object FiktivtNavnGenerator {
             return liste[RANDOM.nextInt(liste.size)]
         }
 
-        private fun loadNames(resourceName: String): List<String> {
+        fun loadNames(resourceName: String): List<String> {
             try {
                 // Try multiple class loaders to find the resource
                 val resourceStream = Thread.currentThread().contextClassLoader.getResourceAsStream(resourceName)
                     ?: Navnelager::class.java.classLoader.getResourceAsStream(resourceName)
                     ?: FiktivtNavnGenerator::class.java.classLoader.getResourceAsStream(resourceName)
                     ?: FiktivtNavnGenerator::class.java.getResourceAsStream(resourceName)
-                    ?: throw RuntimeException("Resource not found: $resourceName")
+                    ?: error("Resource not found: $resourceName")
 
                 BufferedReader(InputStreamReader(resourceStream)).use { br ->
                     val resultat: MutableList<String> =
@@ -62,7 +62,7 @@ object FiktivtNavnGenerator {
                     return resultat
                 }
             } catch (e: IOException) {
-                throw RuntimeException(e)
+                error(e)
             }
         }
     }

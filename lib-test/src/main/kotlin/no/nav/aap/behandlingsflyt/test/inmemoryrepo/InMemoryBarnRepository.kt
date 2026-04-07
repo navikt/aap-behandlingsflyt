@@ -20,7 +20,7 @@ object InMemoryBarnRepository : BarnRepository {
     private val saksbehandlerOppgitteBarn = ConcurrentHashMap<BehandlingId, SaksbehandlerOppgitteBarn>()
     private val registerBarn = ConcurrentHashMap<BehandlingId, List<Barn>>()
     private val vurdertBarn = ConcurrentHashMap<BehandlingId, List<VurdertBarn>>()
-    private val lock = Object()
+    private val lock = Any()
 
     override fun hentHvisEksisterer(behandlingId: BehandlingId): BarnGrunnlag? {
         synchronized(lock) {
@@ -133,11 +133,11 @@ object InMemoryBarnRepository : BarnRepository {
         TODO("Not yet implemented")
     }
 
-    override fun finnSaksbehandlerOppgitteBarn(ident: String): SaksbehandlerOppgitteBarn.SaksbehandlerOppgitteBarn {
+    override fun finnSaksbehandlerOppgitteBarn(ident: Ident): SaksbehandlerOppgitteBarn.SaksbehandlerOppgitteBarn {
         TODO("Not yet implemented")
     }
 
-    override fun finnSøknadsBarn(ident: String): OppgitteBarn.OppgittBarn? {
+    override fun finnSøknadsBarn(ident: Ident): OppgitteBarn.OppgittBarn? {
         TODO("Not yet implemented")
     }
 

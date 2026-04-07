@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.rettighetsperiode.VurderRettighetsperiodeRepository
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
@@ -24,7 +23,6 @@ import org.slf4j.LoggerFactory
 class RettighetsperiodeSteg(
     private val vilkårsresultatRepository: VilkårsresultatRepository,
     private val sakService: SakService,
-    private val avklaringsbehovRepository: AvklaringsbehovRepository,
     private val avklaringsbehovService: AvklaringsbehovService,
     private val tidligereVurderinger: TidligereVurderinger,
     private val rettighetsperiodeRepository: VurderRettighetsperiodeRepository,
@@ -35,11 +33,9 @@ class RettighetsperiodeSteg(
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         logger.info("Utfører rettighetsperiodesteg for behandling=${kontekst.behandlingId}")
 
-        val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
         val rettighetsperiodeVurdering = rettighetsperiodeRepository.hentVurdering(kontekst.behandlingId)
 
         avklaringsbehovService.oppdaterAvklaringsbehov(
-            avklaringsbehovene = avklaringsbehovene,
             kontekst = kontekst,
             definisjon = Definisjon.VURDER_RETTIGHETSPERIODE,
             vedtakBehøverVurdering = {
@@ -51,7 +47,8 @@ class RettighetsperiodeSteg(
 
                     VurderingType.MELDEKORT,
                     VurderingType.AUTOMATISK_BREV,
-                    VurderingType.AUTOMATISK_OPPDATER_VILKÅR,
+                    VurderingType.UTVID_VEDTAKSLENGDE,
+                    VurderingType.MIGRER_RETTIGHETSPERIODE,
                     VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
                     VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9,
                     VurderingType.IKKE_RELEVANT ->
@@ -79,7 +76,8 @@ class RettighetsperiodeSteg(
                     oppdaterVilkårsresultatForNyPeriode(kontekst)
                 }
             }
-            VurderingType.AUTOMATISK_OPPDATER_VILKÅR,
+            VurderingType.UTVID_VEDTAKSLENGDE,
+            VurderingType.MIGRER_RETTIGHETSPERIODE,
             VurderingType.IKKE_RELEVANT,
             VurderingType.MELDEKORT,
             VurderingType.AUTOMATISK_BREV,
@@ -132,9 +130,8 @@ class RettighetsperiodeSteg(
         ): BehandlingSteg {
             return RettighetsperiodeSteg(
                 vilkårsresultatRepository = repositoryProvider.provide(),
-                sakService = SakService(repositoryProvider),
-                avklaringsbehovRepository = repositoryProvider.provide(),
-                tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
+                sakService = SakService(repositoryProvider, gatewayProvider),
+                tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
                 rettighetsperiodeRepository = repositoryProvider.provide(),
                 avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
             )

@@ -24,7 +24,6 @@ class SamordningAndreStatligeYtelserSteg(
 ) : BehandlingSteg {
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         avklaringsbehovService.oppdaterAvklaringsbehov(
-            avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId),
             definisjon = Definisjon.SAMORDNING_ANDRE_STATLIGE_YTELSER,
             vedtakBehøverVurdering = {
                 when (kontekst.vurderingType) {
@@ -35,7 +34,8 @@ class SamordningAndreStatligeYtelserSteg(
                             else -> kontekst.vurderingsbehovRelevanteForSteg.isNotEmpty()
                         }
                     }
-                    VurderingType.AUTOMATISK_OPPDATER_VILKÅR,
+                    VurderingType.UTVID_VEDTAKSLENGDE,
+                    VurderingType.MIGRER_RETTIGHETSPERIODE,
                     VurderingType.MELDEKORT,
                     VurderingType.AUTOMATISK_BREV,
                     VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
@@ -63,7 +63,7 @@ class SamordningAndreStatligeYtelserSteg(
             return SamordningAndreStatligeYtelserSteg(
                 avklaringsbehovRepository = repositoryProvider.provide(),
                 avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
-                tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
+                tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
                 andreStatligeYtelserRepository = repositoryProvider.provide(),
             )
         }

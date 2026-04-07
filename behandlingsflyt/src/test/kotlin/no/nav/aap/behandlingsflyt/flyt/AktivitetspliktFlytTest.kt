@@ -8,7 +8,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VentePåFr
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VurderBrudd11_7Løsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VurderBrudd11_9Løsning
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
-import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7LøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Repository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Vurdering
@@ -38,7 +38,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettels
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.FakePersoner
-import no.nav.aap.behandlingsflyt.test.FakeUnleash
+import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -53,7 +53,7 @@ import java.time.ZoneOffset
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall as VilkårsresultatUtfall
 
 class AktivitetspliktFlytTest :
-    AbstraktFlytOrkestratorTest(FakeUnleash::class) {
+    AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
 
     @Test
     fun `Happy-case flyt for aktivitetsplikt 11_7`() {
@@ -225,7 +225,7 @@ class AktivitetspliktFlytTest :
     }
 
     @Test
-    fun `Åpen behandling skal trekkes tilbake ved effktuering av aktivitetsplikt`() {
+    fun `Åpen behandling skal trekkes tilbake ved effektuering av aktivitetsplikt`() {
         val person = TestPersoner.STANDARD_PERSON()
         val sak = happyCaseFørstegangsbehandling(person = person)
         var åpenBehandling = revurdereFramTilOgMedSykdom(sak, sak.rettighetsperiode.fom, vissVarighet = true)
@@ -279,20 +279,19 @@ class AktivitetspliktFlytTest :
 
         val effektueringsbehandling = dataSource.transaction { connection ->
             val repositoryProvider = postgresRepositoryRegistry.provider(connection)
-            SakOgBehandlingService(repositoryProvider, gatewayProvider).finnEllerOpprettBehandling(
+            BehandlingService(repositoryProvider, gatewayProvider).finnEllerOpprettBehandling(
                 sak.id,
                 VurderingsbehovOgÅrsak(
                     årsak = ÅrsakTilOpprettelse.AKTIVITETSPLIKT, vurderingsbehov = listOf(
                         VurderingsbehovMedPeriode(
                             Vurderingsbehov.EFFEKTUER_AKTIVITETSPLIKT,
-                            periode = sak.rettighetsperiode
                         )
                     )
                 )
             )
         }
 
-        assertThat(effektueringsbehandling is SakOgBehandlingService.MåBehandlesAtomært)
+        assertThat(effektueringsbehandling is BehandlingService.MåBehandlesAtomært)
         dataSource.transaction { connection ->
             ProsesserBehandlingService(
                 postgresRepositoryRegistry.provider(connection),
@@ -306,7 +305,7 @@ class AktivitetspliktFlytTest :
             dataSource.transaction { connection -> BehandlingRepositoryImpl(connection).hent(åpenBehandling.id) }
         assertThat(åpenBehandling.aktivtSteg())
             .describedAs { "Skal trekkes tilbake til steget informasjonskravet står på" }
-            .isEqualTo(StegType.IKKE_OPPFYLT_MELDEPLIKT)
+            .isEqualTo(StegType.EFFEKTUER_11_7)
 
         motor.kjørJobber()
         åpenBehandling =
@@ -348,12 +347,12 @@ class AktivitetspliktFlytTest :
             val repositoryProvider = postgresRepositoryRegistry.provider(connection)
 
             val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
-            val Aktivitetsplikt11_7Repository = repositoryProvider.provide<Aktivitetsplikt11_7Repository>()
+            val aktivitetsplikt11_7Repository = repositoryProvider.provide<Aktivitetsplikt11_7Repository>()
 
             val behandling =
                 opprettAktivitetspliktBehandling(Vurderingsbehov.AKTIVITETSPLIKT_11_7, repositoryProvider, sak)
 
-            Aktivitetsplikt11_7Repository.lagre(
+            aktivitetsplikt11_7Repository.lagre(
                 behandling.id, listOf(vurdering(behandling.id))
             )
             behandlingRepository.oppdaterBehandlingStatus(behandling.id, status)
@@ -487,7 +486,7 @@ class AktivitetspliktFlytTest :
         repositoryProvider: RepositoryProvider,
         sak: Sak,
     ): Behandling {
-        return SakOgBehandlingService(repositoryProvider, gatewayProvider).opprettAktivitetspliktBehandling(
+        return BehandlingService(repositoryProvider, gatewayProvider).opprettAktivitetspliktBehandling(
             sak.id, ÅrsakTilOpprettelse.MANUELL_OPPRETTELSE, vurderingsbehov
         )
     }

@@ -20,7 +20,7 @@ object InMemoryAvklaringsbehovRepository : AvklaringsbehovRepository,
 
     private val idSeq = AtomicLong(10000)
     private val memory = HashMap<BehandlingId, AvklaringsbehovHolder>()
-    private val lock = Object()
+    private val lock = Any()
 
     override fun hentAvklaringsbehovene(behandlingId: BehandlingId): Avklaringsbehovene {
         return Avklaringsbehovene(this, behandlingId)
@@ -98,15 +98,6 @@ object InMemoryAvklaringsbehovRepository : AvklaringsbehovRepository,
     }
 
     override fun endreVentepunkt(
-        avklaringsbehovId: Long,
-        endring: Endring,
-        funnetISteg: StegType
-    ) {
-        oppdaterFunnetISteg(avklaringsbehovId, funnetISteg)
-        endreAvklaringsbehov(avklaringsbehovId, endring)
-    }
-
-    override fun endreSkrivBrev(
         avklaringsbehovId: Long,
         endring: Endring,
         funnetISteg: StegType

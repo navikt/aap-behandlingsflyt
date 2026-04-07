@@ -48,11 +48,7 @@ class DokumentinnhentingGatewayImpl : DokumentinnhentingGateway {
             )
         )
 
-        try {
-            return requireNotNull(client.post(uri = URI.create("$syfoUri/dialogmeldingbestilling"), request))
-        } catch (e: Exception) {
-            throw RuntimeException("Feil ved bestilling av legeerklæring i aap-dokumentinnhenting: ${e.message}")
-        }
+        return requireNotNull(client.post(uri = URI.create("$syfoUri/dialogmeldingbestilling"), request))
     }
 
     override fun purrPåLegeerklæring(purringRequest: LegeerklæringPurringRequest): String {
@@ -63,12 +59,7 @@ class DokumentinnhentingGatewayImpl : DokumentinnhentingGateway {
                 Header("Accept", "application/json")
             )
         )
-
-        try {
-            return requireNotNull(client.post(uri = URI.create("$syfoUri/purring"), request))
-        } catch (e: Exception) {
-            throw RuntimeException("Feil ved purring av legeerklæring i aap-dokumentinnhenting: ${e.message}")
-        }
+        return requireNotNull(client.post(uri = URI.create("$syfoUri/purring"), request))
     }
 
     override fun markerDialogmeldingStatusSomMottatt(markerSomMottattRequest: MarkerDialogmeldingSomMottattRequest): LegeerklæringStatusResponse {
@@ -80,17 +71,13 @@ class DokumentinnhentingGatewayImpl : DokumentinnhentingGateway {
             )
         )
 
-        try {
-            return requireNotNull(
-                client.post(
-                    uri = URI.create("$syfoUri/status/markerbestillingmottatt"),
-                    request = request,
-                    mapper = { body, _ -> DefaultJsonMapper.fromJson(body) }
-                )
+        return requireNotNull(
+            client.post(
+                uri = URI.create("$syfoUri/status/markerbestillingmottatt"),
+                request = request,
+                mapper = { body, _ -> DefaultJsonMapper.fromJson(body) }
             )
-        } catch (e: Exception) {
-            throw RuntimeException("Feil ved setting av MOTTATT dialogmelding-status i aap-dokumentinnhenting: ${e.message}")
-        }
+        )
     }
 
     override fun legeerklæringStatus(saksnummer: String): List<LegeerklæringStatusResponse> {
@@ -101,16 +88,12 @@ class DokumentinnhentingGatewayImpl : DokumentinnhentingGateway {
             )
         )
 
-        try {
-            return requireNotNull(
-                client.get(
-                    uri = URI.create("$syfoUri/status/$saksnummer"),
-                    request = request,
-                    mapper = { body, _ -> DefaultJsonMapper.fromJson(body) })
-            )
-        } catch (e: Exception) {
-            throw RuntimeException("Feil ved innhentning av status til legeerklæring i aap-dokumentinnhenting: ${e.message}")
-        }
+        return requireNotNull(
+            client.get(
+                uri = URI.create("$syfoUri/status/$saksnummer"),
+                request = request,
+                mapper = { body, _ -> DefaultJsonMapper.fromJson(body) })
+        )
     }
 
     override fun forhåndsvisBrev(request: BrevRequest): BrevResponse {
@@ -122,10 +105,6 @@ class DokumentinnhentingGatewayImpl : DokumentinnhentingGateway {
             )
         )
 
-        try {
-            return requireNotNull(client.post(uri = URI.create("$syfoUri/brevpreview"), request))
-        } catch (e: Exception) {
-            throw RuntimeException("Feil ved generering av forhåndsvisning brev i aap-dokumentinnhenting: ${e.message}")
-        }
+        return requireNotNull(client.post(uri = URI.create("$syfoUri/brevpreview"), request))
     }
 }

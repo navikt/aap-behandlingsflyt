@@ -17,7 +17,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadStudentDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.UtenlandsPeriodeDto
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.medlemskaplovvalg.MedlemskapArbeidInntektRepositoryImpl
-import no.nav.aap.behandlingsflyt.test.FakeUnleash
+import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.type.Periode
@@ -26,7 +26,7 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
-class LovvalgOgMedlemskapFlytTest: AbstraktFlytOrkestratorTest(FakeUnleash::class) {
+class LovvalgOgMedlemskapFlytTest: AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
     @Test
     fun `ved førstegangsbehandling med avslag før sykdom ved manglende medlemskap er ikke sykdomsvurdering for brev aktuelt`() {
         val (sak, behandling) = sendInnFørsteSøknad(
@@ -44,7 +44,7 @@ class LovvalgOgMedlemskapFlytTest: AbstraktFlytOrkestratorTest(FakeUnleash::clas
     }
 
     @Test
-    fun `ved førstegangsbehandling og annet lovvalgsland settes saken på vent`() {
+    fun `ved førstegangsbehandling og annet lovvalgsland hopper behandling rett til foreslå vedtak`() {
         val (sak, behandling) = sendInnFørsteSøknad(
             periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3)),
             søknad = TestSøknader.SØKNAD_INGEN_MEDLEMSKAP
@@ -65,7 +65,8 @@ class LovvalgOgMedlemskapFlytTest: AbstraktFlytOrkestratorTest(FakeUnleash::clas
                 )
             )
             .medKontekst {
-                assertThat(åpneAvklaringsbehov.first().definisjon).isEqualTo(Definisjon.VENTE_PÅ_UTENLANDSK_VIDEREFØRING_AVKLARING)
+                assertThat(åpneAvklaringsbehov.size).isEqualTo(1)
+                assertThat(åpneAvklaringsbehov.first().definisjon).isEqualTo(Definisjon.FORESLÅ_VEDTAK)
             }
 
         assertThat(oppdatertBehandling.status()).isEqualTo(Status.UTREDES)
@@ -117,7 +118,8 @@ class LovvalgOgMedlemskapFlytTest: AbstraktFlytOrkestratorTest(FakeUnleash::clas
             .løsBistand(sak.rettighetsperiode.fom)
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
-            .kvalitetssikreOk()
+            .bekreftVurderinger()
+            .kvalitetssikre()
             .løsBeregningstidspunkt()
             .løsForutgåendeMedlemskap(sak.rettighetsperiode.fom)
             .løsOppholdskrav(sak.rettighetsperiode.fom)
@@ -163,7 +165,8 @@ class LovvalgOgMedlemskapFlytTest: AbstraktFlytOrkestratorTest(FakeUnleash::clas
             .løsBistand(sak.rettighetsperiode.fom)
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
-            .kvalitetssikreOk()
+            .bekreftVurderinger()
+            .kvalitetssikre()
             .løsBeregningstidspunkt()
             .løsForutgåendeMedlemskap(sak.rettighetsperiode.fom)
             .løsOppholdskrav(sak.rettighetsperiode.fom)
@@ -194,6 +197,7 @@ class LovvalgOgMedlemskapFlytTest: AbstraktFlytOrkestratorTest(FakeUnleash::clas
             .løsSykdom(sak.rettighetsperiode.fom)
             .løsBistand(sak.rettighetsperiode.fom)
             .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
             .løsBeregningstidspunkt()
             .løsForutgåendeMedlemskap(sak.rettighetsperiode.fom)
             .løsOppholdskrav(nyttTidspunktForOppfyltMedlemskap)

@@ -1,5 +1,8 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis
 
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Kvote
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.VarighetVurdering
+
 enum class UnderveisÅrsak(val konsekvens: Konsekvens) {
     IKKE_GRUNNLEGGENDE_RETT(Konsekvens.KONSEKVENS_FØLGER_AVSLAGSÅRSAK_TIL_RETTIGHETSTYPEN),
     MELDEPLIKT_FRIST_IKKE_PASSERT(Konsekvens.REDUKSJON),
@@ -31,6 +34,16 @@ enum class UnderveisÅrsak(val konsekvens: Konsekvens) {
         basert på verdiene i databasen.
         .""")
     ARBEIDER_MER_ENN_GRENSEVERDI(Konsekvens.REDUKSJON),
+    ;
+
+    companion object {
+        fun fraKvote(kvoteBruktOpp: Kvote): VarighetVurdering.Avslagsårsak {
+            return when (kvoteBruktOpp) {
+                Kvote.ORDINÆR -> VarighetVurdering.Avslagsårsak.ORDINÆRKVOTE_BRUKT_OPP
+                Kvote.SYKEPENGEERSTATNING -> VarighetVurdering.Avslagsårsak.SYKEPENGEERSTATNINGKVOTE_BRUKT_OPP
+            }
+        }
+    }
 }
 
 enum class Konsekvens {

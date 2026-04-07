@@ -2,22 +2,25 @@ package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov
 
 import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklaringsbehovLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.PeriodisertAvklaringsbehovLøsning
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
+import no.nav.aap.behandlingsflyt.utils.toHumanReadable
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
+import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
+import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.somTidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.verdityper.Tid
+import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.tilgang.Rolle
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
-import kotlin.collections.filter
 
 class Avklaringsbehovene(
     private val repository: AvklaringsbehovOperasjonerRepository,
@@ -26,14 +29,6 @@ class Avklaringsbehovene(
     private val log = LoggerFactory.getLogger(javaClass)
     private val avklaringsbehovene: List<Avklaringsbehov>
         get() = repository.hent(behandlingId)
-
-    fun ingenEndring(avklaringsbehov: Avklaringsbehov, bruker: String) {
-        løsAvklaringsbehov(
-            avklaringsbehov.definisjon,
-            "Ingen endring fra forrige vurdering",
-            bruker
-        )
-    }
 
     fun løsAvklaringsbehov(
         definisjon: Definisjon,
@@ -56,7 +51,7 @@ class Avklaringsbehovene(
             if (hentBehovForDefinisjon(definisjon) == null) {
                 // Legger til frivillig behov
                 leggTil(
-                    definisjoner = listOf(definisjon),
+                    definisjon = definisjon,
                     funnetISteg = definisjon.løsesISteg,
                     bruker = bruker,
                     perioderVedtaketBehøverVurdering = null,
@@ -70,7 +65,7 @@ class Avklaringsbehovene(
         if (definisjon.erOverstyring()) {
             if (hentBehovForDefinisjon(definisjon) == null) {
                 leggTil(
-                    definisjoner = listOf(definisjon),
+                    definisjon = definisjon,
                     funnetISteg = definisjon.løsesISteg,
                     bruker = bruker,
                     perioderVedtaketBehøverVurdering = null,
@@ -86,7 +81,7 @@ class Avklaringsbehovene(
      * NB! Dersom avklaringsbehovet finnes fra før og er åpent så ignorerer vi det nye behovet, mens dersom det er avsluttet eller avbrutt så reåpner vi det.
      */
     fun leggTil(
-        definisjoner: List<Definisjon>,
+        definisjon: Definisjon,
         funnetISteg: StegType,
         perioderSomIkkeErTilstrekkeligVurdert: Set<Periode>?,
         perioderVedtaketBehøverVurdering: Set<Periode>?,
@@ -95,45 +90,41 @@ class Avklaringsbehovene(
         grunn: ÅrsakTilSettPåVent? = null,
         bruker: Bruker = SYSTEMBRUKER
     ) {
-        log.info("Legger til avklaringsbehov :: {} - {}", definisjoner, funnetISteg)
-        definisjoner.forEach { definisjon ->
-            val avklaringsbehov = hentBehovForDefinisjon(definisjon)
-            if (avklaringsbehov != null) {
-                if (avklaringsbehov.erAvsluttet()) {
-                    avklaringsbehov.reåpne(
-                        frist = utledFrist(definisjon, frist),
-                        begrunnelse = begrunnelse,
-                        venteårsak = grunn,
-                        bruker = bruker,
-                        perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering,
-                        perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert
-                    )
-                    if (avklaringsbehov.erVentepunkt() || avklaringsbehov.erBrevVentebehov() || avklaringsbehov.erAutomatisk()) {
-                        // TODO: Vurdere om funnet steg bør ligge på endringen...
-                        repository.endreVentepunkt(avklaringsbehov.id, avklaringsbehov.historikk.last(), funnetISteg)
-                    } else if (avklaringsbehov.definisjon == Definisjon.SKRIV_BREV) {
-                        // Midlertidig fiks så lenge vi bruker Definisjon.SKRIV_BREV
-                        repository.endreSkrivBrev(avklaringsbehov.id, avklaringsbehov.historikk.last(), funnetISteg)
-                    } else {
-                        repository.endre(avklaringsbehov.id, avklaringsbehov.historikk.last())
-                    }
-                } else {
-                    log.info("Forsøkte å legge til et avklaringsbehov som allerede eksisterte")
-                }
-            } else {
-                repository.opprett(
-                    behandlingId = behandlingId,
-                    definisjon = definisjon,
-                    funnetISteg = funnetISteg,
+        log.info("Legger til avklaringsbehov :: {} - {}", definisjon, funnetISteg)
+        val avklaringsbehov = hentBehovForDefinisjon(definisjon)
+        if (avklaringsbehov != null) {
+            if (avklaringsbehov.erAvsluttet()) {
+                avklaringsbehov.reåpne(
                     frist = utledFrist(definisjon, frist),
                     begrunnelse = begrunnelse,
-                    grunn = grunn,
-                    perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert,
+                    venteårsak = grunn,
+                    bruker = bruker,
                     perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering,
-                    endretAv = bruker.ident
+                    perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert
                 )
+                if (avklaringsbehov.erVentepunkt() || avklaringsbehov.erBrevVentebehov() || avklaringsbehov.erAutomatisk()) {
+                    // TODO: Vurdere om funnet steg bør ligge på endringen...
+                    repository.endreVentepunkt(avklaringsbehov.id, avklaringsbehov.historikk.last(), funnetISteg)
+                } else {
+                    repository.endre(avklaringsbehov.id, avklaringsbehov.historikk.last())
+                }
+            } else {
+                log.info("Forsøkte å legge til et avklaringsbehov som allerede eksisterte")
             }
+        } else {
+            repository.opprett(
+                behandlingId = behandlingId,
+                definisjon = definisjon,
+                funnetISteg = funnetISteg,
+                frist = utledFrist(definisjon, frist),
+                begrunnelse = begrunnelse,
+                grunn = grunn,
+                perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert,
+                perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering,
+                endretAv = bruker.ident
+            )
         }
+
     }
 
     private fun utledFrist(definisjon: Definisjon, frist: LocalDate?): LocalDate? {
@@ -167,49 +158,19 @@ class Avklaringsbehovene(
         repository.endre(avklaringsbehov.id, avklaringsbehov.historikk.last())
     }
 
-    @Deprecated("Bruk hjelpemetoder i AvklaringsbehovService for å styre avklaringsbehov")
-    fun avbryt(definisjon: Definisjon) {
+    internal fun avbryt(definisjon: Definisjon) {
         val avklaringsbehov = alle().single { it.definisjon == definisjon }
         avklaringsbehov.avbryt()
         repository.endre(avklaringsbehov.id, avklaringsbehov.historikk.last())
     }
 
-    /* Kan fjerne internal-prefikset når deprecated `avbryt` er slettet. */
-    internal fun internalAvbryt(definisjon: Definisjon) {
+    /**
+     *  Brukes for logikk internt for avklaringsbehov. Fra steg, bruk AvklaringsbehovService / løs-metoden.
+     */
+    internal fun avslutt(definisjon: Definisjon, begrunnelse: String) {
         val avklaringsbehov = alle().single { it.definisjon == definisjon }
-        avklaringsbehov.avbryt()
+        avklaringsbehov.avslutt(begrunnelse)
         repository.endre(avklaringsbehov.id, avklaringsbehov.historikk.last())
-    }
-
-    @Deprecated("Styr avklaringsbehov med AvklaringsbehovService")
-    fun avbrytForSteg(steg: StegType) {
-        for (avklaringsbehov in åpne()) {
-            if (avklaringsbehov.skalLøsesISteg(steg)) {
-                avklaringsbehov.avbryt()
-                repository.endre(avklaringsbehov.id, avklaringsbehov.historikk.last())
-            }
-        }
-    }
-
-    @Deprecated("Styr avklaringsbehov med AvklaringsbehovService")
-    fun avslutt(definisjon: Definisjon) {
-        val avklaringsbehov = alle().single { it.definisjon == definisjon }
-        avklaringsbehov.avslutt()
-        repository.endre(avklaringsbehov.id, avklaringsbehov.historikk.last())
-    }
-
-    /* Kan fjerne internal-prefixet når den deperecated avslutt-metoden er borte. */
-    internal fun internalAvslutt(definisjon: Definisjon) {
-        val avklaringsbehov = alle().single { it.definisjon == definisjon }
-        avklaringsbehov.avslutt()
-        repository.endre(avklaringsbehov.id, avklaringsbehov.historikk.last())
-    }
-
-    @Deprecated("Styr avklaringsbehov med AvklaringsbehovService")
-    fun avbrytÅpneAvklaringsbehov() {
-        val avklaringsbehovSomSkalAvbrytes =
-            alle().filter { it.erÅpent() && !(it.erVentepunkt() || it.erBrevVentebehov()) }
-        avklaringsbehovSomSkalAvbrytes.map { it.definisjon }.distinct().forEach { avbryt(it) }
     }
 
 
@@ -231,17 +192,19 @@ class Avklaringsbehovene(
         repository.endre(avklaringsbehov.id, avklaringsbehov.historikk.last())
     }
 
-    fun oppdaterPerioder(
+    internal fun oppdaterPerioder(
         definisjon: Definisjon,
         perioderSomIkkeErTilstrekkeligVurdert: Set<Periode>?,
         perioderVedtaketBehøverVurdering: Set<Periode>?
     ) {
         val avklaringsbehov = alle().single { it.definisjon == definisjon }
-        avklaringsbehov.oppdaterPerioder(
+        val harEndring = avklaringsbehov.oppdaterPerioder(
             perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert,
             perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering
         )
-        repository.endre(avklaringsbehov.id, avklaringsbehov.historikk.last())
+        if (harEndring) {
+            repository.endre(avklaringsbehov.id, avklaringsbehov.historikk.last())
+        }
     }
 
 
@@ -297,21 +260,8 @@ class Avklaringsbehovene(
         return alle().any { it.erIkkeAvbrutt() && it.erTotrinn() }
     }
 
-    fun harHattAvklaringsbehovSomHarKrevdToTrinn(): Boolean {
-        return alle()
-            .filter { avklaringsbehov -> avklaringsbehov.erIkkeAvbrutt() }
-            .any { avklaringsbehov -> avklaringsbehov.erTotrinn() && !avklaringsbehov.erTotrinnsVurdert() }
-    }
-
-    fun harAvklaringsbehovSomKreverToTrinnMenIkkeErVurdert(): Boolean {
+    fun harAvklaringsbehovSomKreverToTrinnMenIkkeErGodkjent(): Boolean {
         return alle().any { it.erIkkeAvbrutt() && it.erTotrinn() && !it.erTotrinnsVurdert() }
-    }
-
-    fun harHattAvklaringsbehovSomKreverKvalitetssikring(): Boolean {
-        return alle()
-            .filter { avklaringsbehov -> avklaringsbehov.kreverKvalitetssikring() }
-            .filter { avklaringsbehov -> avklaringsbehov.erIkkeAvbrutt() }
-            .any { avklaringsbehov -> !avklaringsbehov.erKvalitetssikretTidligere() }
     }
 
     fun harAvklaringsbehovSomKreverKvalitetssikring(): Boolean {
@@ -334,7 +284,7 @@ class Avklaringsbehovene(
             ?.maxOrNull()
     }
 
-    fun validateTilstand(behandling: Behandling, avklaringsbehov: Definisjon? = null) {
+    fun validerTilstand(behandling: Behandling, avklaringsbehov: Definisjon? = null) {
         ValiderBehandlingTilstand.validerTilstandBehandling(
             behandling = behandling,
             avklaringsbehov = avklaringsbehov,
@@ -342,23 +292,37 @@ class Avklaringsbehovene(
         )
     }
 
-    fun validerPerioder(løsning: AvklaringsbehovLøsning) {
-        if (løsning is PeriodisertAvklaringsbehovLøsning<*>) {
-            val perioderDekketAvLøsning = løsning.løsningerForPerioder.sortedBy { it.fom }
-                .somTidslinje { Periode(fom = it.fom, tom = it.tom ?: Tid.MAKS) }.map { true }.komprimer()
+    fun validerPerioder(
+        løsning: PeriodisertAvklaringsbehovLøsning<*>,
+        kontekst: FlytKontekst,
+        repositoryProvider: RepositoryProvider
+    ) {
+        val perioderDekketAvLøsning = løsning.løsningerForPerioder.sortedBy { it.fom }
+            .somTidslinje { Periode(fom = it.fom, tom = it.tom ?: Tid.MAKS) }
+            .map { true }.komprimer()
 
-            val behovForDefinisjon = this.hentBehovForDefinisjon(løsning.definisjon())
-            if (behovForDefinisjon != null) {
-                val perioderSomSkalLøses = behovForDefinisjon.perioderVedtaketBehøverVurdering().orEmpty().somTidslinje { it }
+        val perioderDekkerAvTidligereVurderinger = kontekst.forrigeBehandlingId?.let {
+            løsning.hentLagredeLøstePerioder(it, repositoryProvider)
+                .map { true }.komprimer()
+        } ?: Tidslinje()
 
-                val perioderSomManglerLøsning =
-                    perioderSomSkalLøses.leftJoin(perioderDekketAvLøsning) { _, periodeILøsning ->
-                        periodeILøsning != null
-                    }.filter { !it.verdi }.perioder().toSet()
+        val perioderDekket = perioderDekkerAvTidligereVurderinger.kombiner(
+            perioderDekketAvLøsning,
+            StandardSammenslåere.prioriterHøyreSideCrossJoin()
+        ).komprimer()
 
-                if (perioderSomManglerLøsning.isNotEmpty()) {
-                    throw UgyldigForespørselException("Løsning mangler vurdering for perioder: $perioderSomManglerLøsning")
-                }
+        val behovForDefinisjon = this.hentBehovForDefinisjon(løsning.definisjon())
+        if (behovForDefinisjon != null) {
+            val perioderSomSkalLøses =
+                behovForDefinisjon.perioderVedtaketBehøverVurdering().orEmpty().somTidslinje { it }
+
+            val perioderSomManglerLøsning =
+                perioderSomSkalLøses.leftJoin(perioderDekket) { _, periodeILøsning ->
+                    periodeILøsning != null
+                }.filter { !it.verdi }.perioder().toSet()
+
+            if (perioderSomManglerLøsning.isNotEmpty()) {
+                throw UgyldigForespørselException("Du mangler vurdering for ${perioderSomManglerLøsning.toHumanReadable()}")
             }
         }
     }

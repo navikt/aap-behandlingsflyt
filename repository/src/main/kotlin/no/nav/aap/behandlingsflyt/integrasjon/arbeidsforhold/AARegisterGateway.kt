@@ -54,11 +54,9 @@ class AARegisterGateway : ArbeidsforholdGateway {
     override fun hentAARegisterData(request: ArbeidsforholdRequest): List<ArbeidINorgeGrunnlag> {
         return try {
             query(request)
-        } catch (e: IkkeFunnetException) {
+        } catch (_: IkkeFunnetException) {
             // Fant ikke ident i AAreg, de returnerer 404
             emptyList()
-        } catch (e: Exception) {
-            throw RuntimeException("Feil ved henting av data i AAreg: ${e.message}", e)
         }
     }
 }

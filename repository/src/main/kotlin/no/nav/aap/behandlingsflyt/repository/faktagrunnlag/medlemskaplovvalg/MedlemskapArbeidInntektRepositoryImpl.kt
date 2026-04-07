@@ -9,7 +9,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.MedlemskapDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.utenlandsopphold.UtenlandsOppholdData
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.utenlandsopphold.UtenlandsPeriode
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.ArbeidsInntektMaaned
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.ArbeidsInntektMåned
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.KildesystemKode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.KildesystemMedl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapArbeidInntektRepository
@@ -129,7 +129,7 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
     override fun lagreArbeidsforholdOgInntektINorge(
         behandlingId: BehandlingId,
         arbeidGrunnlag: List<ArbeidINorgeGrunnlag>,
-        inntektGrunnlag: List<ArbeidsInntektMaaned>,
+        inntektGrunnlag: List<ArbeidsInntektMåned>,
         medlId: Long?,
         enhetGrunnlag: List<EnhetGrunnlag>
     ) {
@@ -183,7 +183,7 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
     }
 
     private fun lagreArbeidsInntektGrunnlag(
-        arbeidsInntektGrunnlag: List<ArbeidsInntektMaaned>,
+        arbeidsInntektGrunnlag: List<ArbeidsInntektMåned>,
         enhetGrunnlag: List<EnhetGrunnlag>
     ): Long? {
         if (arbeidsInntektGrunnlag.isEmpty()) return null
@@ -202,7 +202,7 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
             arbeidsInntektGrunnlag.flatMap {
                 it.arbeidsInntektInformasjon.inntektListe.map { inntekt ->
                     Pair(
-                        it.aarMaaned,
+                        it.årMåned,
                         inntekt
                     )
                 }
@@ -213,7 +213,7 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
                 val tomFallback = inntekt.opptjeningsperiodeFom ?: årMåned.atDay(1)
 
                 setString(1, inntekt.virksomhet.identifikator)
-                setDouble(2, inntekt.beloep)
+                setDouble(2, inntekt.beløp)
                 setString(3, inntekt.skattemessigBosattLand)
                 setString(4, inntekt.opptjeningsland)
                 setString(5, inntekt.beskrivelse)
@@ -609,7 +609,7 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
 
     private fun getUtenlandsOppholdIds(behandlingId: BehandlingId): List<Long> = connection.queryList(
         """
-                    SELECT id
+                    SELECT oppgitt_utenlandsopphold_id
                     FROM OPPGITT_UTENLANDSOPPHOLD_GRUNNLAG
                     WHERE behandling_id = ?
                  
@@ -617,7 +617,7 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
     ) {
         setParams { setLong(1, behandlingId.id) }
         setRowMapper { row ->
-            row.getLong("id")
+            row.getLong("oppgitt_utenlandsopphold_id")
         }
     }
 
@@ -647,7 +647,7 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
             vurdertDato = row.getLocalDateTime("opprettet_tid"),
             fom = row.getLocalDate("fom"),
             tom = row.getLocalDateOrNull("tom"),
-            vurdertIBehandling = row.getLong("vurdert_i_behandling").let { BehandlingId(it) }
+            vurdertIBehandling = BehandlingId(row.getLong("vurdert_i_behandling"))
         )
 
     internal data class GrunnlagOppslag(

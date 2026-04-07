@@ -8,22 +8,22 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Utfall
 import no.nav.aap.behandlingsflyt.flyt.steg.FantVentebehov
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.flyt.testutil.FakeBrevbestillingGateway
+import no.nav.aap.behandlingsflyt.help.flytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
-import no.nav.aap.behandlingsflyt.test.FakeUnleash
+import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
+import no.nav.aap.behandlingsflyt.test.FakeOppgavestyringGateway
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAktivitetsplikt11_7Repository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
@@ -38,6 +38,7 @@ import java.time.Instant
 import java.time.LocalDate
 import java.util.*
 
+@Suppress("ClassName")
 class VurderAktivitetsplikt11_7StegTest {
 
     private lateinit var sak: Sak
@@ -62,7 +63,11 @@ class VurderAktivitetsplikt11_7StegTest {
             )
         )
 
-        kontekst = opprettFlyktKontekst(sak = sak, behandlingId = behandling.id)
+        kontekst = flytKontekstMedPerioder {
+            this.behandling = this@VurderAktivitetsplikt11_7StegTest.behandling
+            this.vurderingsbehovRelevanteForSteg = setOf(Vurderingsbehov.AKTIVITETSPLIKT_11_7)
+            this.rettighetsperiode  = sak.rettighetsperiode
+        }
     }
 
     @Test
@@ -261,24 +266,13 @@ class VurderAktivitetsplikt11_7StegTest {
         )
     }
 
-
-    private fun opprettFlyktKontekst(sak: Sak, behandlingId: BehandlingId): FlytKontekstMedPerioder =
-        FlytKontekstMedPerioder(
-            sakId = sak.id,
-            behandlingId = behandlingId,
-            behandlingType = TypeBehandling.Aktivitetsplikt,
-            forrigeBehandlingId = null,
-            vurderingType = VurderingType.IKKE_RELEVANT,
-            rettighetsperiode = sak.rettighetsperiode,
-            vurderingsbehovRelevanteForSteg = setOf(Vurderingsbehov.AKTIVITETSPLIKT_11_7)
-        )
-
     private fun opprettVurderAktivitetsplikt11_7Steg(): VurderAktivitetsplikt11_7Steg =
         VurderAktivitetsplikt11_7Steg.konstruer(
             inMemoryRepositoryProvider,
             createGatewayProvider {
-                register<FakeUnleash>()
+                register<AlleAvskruddUnleash>()
                 register<FakeBrevbestillingGateway>()
+                register<FakeOppgavestyringGateway>()
             }
         )
 }

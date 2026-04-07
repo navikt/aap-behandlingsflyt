@@ -74,11 +74,11 @@ class NomInfoGateway : AnsattInfoGateway {
     }
 
     private fun finnAnsattEnhetsnummer(nomDataRessurs: NomDataRessurs): String {
-        val enhet = nomDataRessurs.orgTilknytning.single {
+        val enhet = nomDataRessurs.orgTilknytning.singleOrNull {
             it.erAktiv() && it.erDagligOppfolging
-        }.orgEnhet
+        }?.orgEnhet
 
-        return checkNotNull(enhet.remedyEnhetId)
+        return checkNotNull(enhet?.remedyEnhetId)
     }
 
     private fun OrgTilknytning.erAktiv(): Boolean {
@@ -108,10 +108,10 @@ class NomInfoGateway : AnsattInfoGateway {
     }
 }
 
-private const val navIdent = $$"$navIdent"
+private const val NAV_IDENT = $$"$navIdent"
 val ressursQuery = """
-    query($navIdent: String!) {
-      ressurs(where: {navident: $navIdent}) {
+    query($NAV_IDENT: String!) {
+      ressurs(where: {navident: $NAV_IDENT}) {
         orgTilknytning {
           orgEnhet {
             remedyEnhetId
@@ -125,10 +125,10 @@ val ressursQuery = """
     }
 """.trimIndent()
 
-private const val navIdenter = $$"$navIdenter"
+private const val NAV_IDENTER = $$"$navIdenter"
 val flereNavnQuery = """
-    query($navIdenter: [String!]) {
-        ressurser(where: {navidenter: $navIdenter}) {
+    query($NAV_IDENTER: [String!]) {
+        ressurser(where: {navidenter: $NAV_IDENTER}) {
             ressurs {
                 navident
                 visningsnavn

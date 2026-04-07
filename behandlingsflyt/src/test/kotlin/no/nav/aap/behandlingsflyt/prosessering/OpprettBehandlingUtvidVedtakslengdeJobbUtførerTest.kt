@@ -1,0 +1,368 @@
+package no.nav.aap.behandlingsflyt.prosessering
+
+import io.mockk.Runs
+import io.mockk.every
+import io.mockk.just
+import io.mockk.mockk
+import io.mockk.verify
+import no.nav.aap.behandlingsflyt.behandling.underveis.RettighetstypeService
+import no.nav.aap.behandlingsflyt.behandling.vedtakslengde.VedtakslengdeService
+import no.nav.aap.behandlingsflyt.behandling.vedtakslengde.VedtakslengdeService.Companion.ANTALL_DAGER_FØR_UTVIDELSE
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.rettighetstype.RettighetstypeGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.rettighetstype.RettighetstypeRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.StansOpphørRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkår
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsperiode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeRepository
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
+import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingMedVedtak
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
+import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
+import no.nav.aap.behandlingsflyt.test.FakeUnleashBaseWithDefaultDisabled
+import no.nav.aap.behandlingsflyt.test.desember
+import no.nav.aap.behandlingsflyt.test.fixedClock
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
+import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Tid
+import no.nav.aap.motor.JobbInput
+import org.junit.jupiter.api.Test
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.util.UUID.randomUUID
+
+class OpprettBehandlingUtvidVedtakslengdeJobbUtførerTest {
+
+    private val dagensDato = 1 desember 2025
+    private val clock = fixedClock(dagensDato)
+    private val sakId = SakId(1L)
+    private val behandlingId = BehandlingId(1L)
+    private val jobbInput = JobbInput(OpprettBehandlingUtvidVedtakslengdeJobbUtfører).forSak(sakId.id)
+
+    private val prosesserBehandlingService = mockk<ProsesserBehandlingService>()
+    private val vedtakslengdeRepository = mockk<VedtakslengdeRepository>()
+    private val underveisRepository = mockk<UnderveisRepository>()
+    private val behandlingService = mockk<BehandlingService>()
+    private val vilkårsresultatRepository = mockk<VilkårsresultatRepository>()
+    private val rettighetestypeRepository = mockk<RettighetstypeRepository>()
+    private val stansOpphørRepository = mockk<StansOpphørRepository>()
+
+    private fun opprettUtfører(unleashGateway: UnleashGateway = AlleAvskruddUnleash) =
+        OpprettBehandlingUtvidVedtakslengdeJobbUtfører(
+            prosesserBehandlingService = prosesserBehandlingService,
+            behandlingService = behandlingService,
+            vedtakslengdeService = VedtakslengdeService(
+                vedtakslengdeRepository = vedtakslengdeRepository,
+                underveisRepository = underveisRepository,
+                vilkårsresultatRepository = vilkårsresultatRepository,
+                rettighetstypeService = RettighetstypeService(rettighetestypeRepository, vilkårsresultatRepository, underveisRepository),
+                stansOpphørRepository = stansOpphørRepository,
+                unleashGateway = AlleAvskruddUnleash,
+                clock = clock
+            ),
+            unleashGateway = unleashGateway,
+        )
+
+
+    @Test
+    fun `skal opprette og sette i gang prosessering av behandling hvis sluttdato er innenfor dagens dato + 28 dager og over ett år ordinær rettighet`() {
+        val sak = sak()
+        val behandling = behandlingMedVedtak()
+        val vilkårsresultat = genererVilkårsresultat(sak.rettighetsperiode)
+
+        every { underveisRepository.hentHvisEksisterer(behandling.id)} returns underveisGrunnlag()
+        every { behandlingService.finnBehandlingMedSisteFattedeVedtak(sakId) } returns behandlingMedVedtak()
+        every { behandlingService.finnEllerOpprettBehandling(sak.id, any()) } returns opprettetBehandling()
+        every { prosesserBehandlingService.triggProsesserBehandling(any<BehandlingService.OpprettetBehandling>()) } just Runs
+        every { vilkårsresultatRepository.hent(behandlingId) } returns vilkårsresultat
+        every { vedtakslengdeRepository.hentHvisEksisterer(behandling.id) } returns null
+        every { rettighetestypeRepository.hentHvisEksisterer(behandling.id) } returns rettighetstypeGrunnlag(vilkårsresultat)
+
+        opprettUtfører().utfør(jobbInput)
+
+        verify(exactly = 1) { prosesserBehandlingService.triggProsesserBehandling(any<BehandlingService.OpprettetBehandling>()) }
+    }
+
+    @Test
+    fun `skal ikke opprette manuell behandling for utvidelse av vedtakslengde hvis toggle er av`() {
+        val sak = sak()
+        val behandling = behandlingMedVedtak()
+        val vilkårsresultat = genererVilkårsresultat(
+            periode = sak.rettighetsperiode,
+            oppfyltBistand = true,
+            bistandPeriode = Periode(sak.rettighetsperiode.fom, sak.rettighetsperiode.fom.plusMonths(14))
+        )
+
+        every { underveisRepository.hentHvisEksisterer(behandling.id)} returns underveisGrunnlag()
+        every { behandlingService.finnBehandlingMedSisteFattedeVedtak(sakId) } returns behandlingMedVedtak()
+        every { vilkårsresultatRepository.hent(behandlingId) } returns vilkårsresultat
+        every { vedtakslengdeRepository.hentHvisEksisterer(behandling.id) } returns null
+        every { rettighetestypeRepository.hentHvisEksisterer(behandling.id) } returns rettighetstypeGrunnlag(vilkårsresultat)
+        every { stansOpphørRepository.hentHvisEksisterer(behandling.id) } returns null
+
+        opprettUtfører().utfør(jobbInput)
+
+        verify(exactly = 0) { prosesserBehandlingService.triggProsesserBehandling(any<BehandlingService.OpprettetBehandling>()) }
+    }
+
+    @Test
+    fun `skal opprette manuell behandling for utvidelse av vedtakslengde hvis toggle er på`() {
+        val sak = sak()
+        val behandling = behandlingMedVedtak()
+        val vilkårsresultat = genererVilkårsresultat(
+            periode = sak.rettighetsperiode,
+            oppfyltBistand = true,
+            bistandPeriode = Periode(sak.rettighetsperiode.fom, sak.rettighetsperiode.fom.plusMonths(14))
+        )
+
+        every { underveisRepository.hentHvisEksisterer(behandling.id)} returns underveisGrunnlag()
+        every { behandlingService.finnBehandlingMedSisteFattedeVedtak(sakId) } returns behandlingMedVedtak()
+        every { behandlingService.finnEllerOpprettBehandling(sak.id, any()) } returns opprettetBehandling()
+        every { prosesserBehandlingService.triggProsesserBehandling(any<BehandlingService.OpprettetBehandling>()) } just Runs
+        every { vilkårsresultatRepository.hent(behandlingId) } returns vilkårsresultat
+        every { vedtakslengdeRepository.hentHvisEksisterer(behandling.id) } returns null
+        every { rettighetestypeRepository.hentHvisEksisterer(behandling.id) } returns rettighetstypeGrunnlag(vilkårsresultat)
+        every { stansOpphørRepository.hentHvisEksisterer(behandling.id) } returns null
+
+        val unleashMedManuellToggle = FakeUnleashBaseWithDefaultDisabled(
+            enabledFlags = listOf(BehandlingsflytFeature.OpprettManuellVedtakslengdeBehandling)
+        )
+        opprettUtfører(unleashMedManuellToggle).utfør(jobbInput)
+
+        verify(exactly = 1) { prosesserBehandlingService.triggProsesserBehandling(any<BehandlingService.OpprettetBehandling>()) }
+    }
+
+    @Test
+    fun `skal ikke opprette og sette i gang prosessering av behandling hvis sluttdato er lenger frem enn dagens dato + 28 dager`() {
+        val behandling = behandlingMedVedtak()
+
+        every { underveisRepository.hentHvisEksisterer(behandling.id)} returns underveisGrunnlag()
+        every { behandlingService.finnBehandlingMedSisteFattedeVedtak(sakId) } returns null
+
+        opprettUtfører().utfør(jobbInput)
+
+        verify(exactly = 0) { prosesserBehandlingService.triggProsesserBehandling(any<BehandlingService.OpprettetBehandling>()) }
+    }
+
+    @Test
+    fun `skal ikke opprette og sette i gang prosessering av behandling hvis hvis det ikke finnes noen siste gjeldende behandling`() {
+        val sak = sak()
+        val behandling = behandlingMedVedtak()
+
+        every { underveisRepository.hentHvisEksisterer(behandling.id)} returns underveisGrunnlag(perioder = underveisPerioderIkkeUtløpt())
+        every { behandlingService.finnBehandlingMedSisteFattedeVedtak(sakId) } returns null
+        every { behandlingService.finnEllerOpprettBehandling(sak.id, any()) } returns opprettetBehandling()
+        every { vilkårsresultatRepository.hent(behandlingId) } returns genererVilkårsresultat(sak.rettighetsperiode)
+
+        opprettUtfører().utfør(jobbInput)
+
+        verify(exactly = 0) { prosesserBehandlingService.triggProsesserBehandling(any<BehandlingService.OpprettetBehandling>()) }
+    }
+
+    @Test
+    fun `skal ikke opprette og sette i gang prosessering av behandling hvis bistandsvilkåret ikke er oppfylt frem i tid`() {
+        val sak = sak()
+        val behandling = behandlingMedVedtak()
+        val vilkårsresultat = genererVilkårsresultat(sak.rettighetsperiode, oppfyltBistand = false)
+
+        every { underveisRepository.hentHvisEksisterer(behandling.id)} returns underveisGrunnlag()
+        every { behandlingService.finnBehandlingMedSisteFattedeVedtak(sakId) } returns behandlingMedVedtak()
+        every { behandlingService.finnEllerOpprettBehandling(sak.id, any()) } returns opprettetBehandling()
+        every { prosesserBehandlingService.triggProsesserBehandling(any<BehandlingService.OpprettetBehandling>()) } just Runs
+        every { vilkårsresultatRepository.hent(behandlingId) } returns vilkårsresultat
+        every { vedtakslengdeRepository.hentHvisEksisterer(behandling.id) } returns null
+        every { rettighetestypeRepository.hentHvisEksisterer(behandling.id) } returns rettighetstypeGrunnlag(vilkårsresultat)
+
+        opprettUtfører().utfør(jobbInput)
+
+        verify(exactly = 0) { prosesserBehandlingService.triggProsesserBehandling(any<BehandlingService.OpprettetBehandling>()) }
+    }
+
+    private fun behandling(status: Status = Status.IVERKSETTES) =
+        Behandling(
+            sakId = sakId,
+            id = behandlingId,
+            referanse = BehandlingReferanse(),
+            typeBehandling = TypeBehandling.Førstegangsbehandling,
+            status = status,
+            opprettetTidspunkt = LocalDateTime.now(clock),
+            årsakTilOpprettelse = ÅrsakTilOpprettelse.SØKNAD,
+            forrigeBehandlingId = null,
+            versjon = 1L
+        )
+
+    private fun behandlingMedVedtak(): BehandlingMedVedtak =
+        BehandlingMedVedtak(
+            saksnummer = Saksnummer("123"),
+            id = behandlingId,
+            referanse = BehandlingReferanse(),
+            typeBehandling = TypeBehandling.Førstegangsbehandling,
+            status = Status.IVERKSETTES,
+            opprettetTidspunkt = LocalDateTime.now(clock),
+            vedtakstidspunkt = LocalDateTime.now(clock),
+            virkningstidspunkt = null,
+            vurderingsbehov = setOf(),
+            årsakTilOpprettelse = ÅrsakTilOpprettelse.SØKNAD
+        )
+
+    private fun sak(rettighetsperiode: Periode = Periode(LocalDate.now(clock).minusDays(180), Tid.MAKS)) =
+        Sak(
+            id = sakId,
+            saksnummer = Saksnummer("123"),
+            person = Person(randomUUID(), emptyList()),
+            rettighetsperiode = rettighetsperiode,
+        )
+
+    private fun underveisGrunnlag(perioder: List<Underveisperiode> = underveisPerioderUtløpt()) =
+        UnderveisGrunnlag(
+            id = 1L,
+            perioder = perioder
+        )
+
+    private fun underveisPerioderUtløpt() =
+        listOf(
+            mockk<Underveisperiode> {
+                every { periode } returns Periode(
+                    fom = dagensDato,
+                    tom = dagensDato.plusDays(10)
+                )
+            },
+            mockk<Underveisperiode> {
+                every { periode } returns Periode(
+                    fom = dagensDato.minusYears(1),
+                    tom = dagensDato.minusDays(1)
+                )
+            },
+        )
+
+    private fun underveisPerioderIkkeUtløpt() =
+        listOf(
+            mockk<Underveisperiode> {
+                every { periode } returns Periode(
+                    fom = dagensDato,
+                    tom = dagensDato.plusDays(ANTALL_DAGER_FØR_UTVIDELSE)
+                )
+            },
+            mockk<Underveisperiode> {
+                every { periode } returns Periode(
+                    fom = dagensDato.minusYears(1),
+                    tom = dagensDato.minusDays(1)
+                )
+            },
+        )
+
+    private fun rettighetstypeGrunnlag(vilkårsresultat: Vilkårsresultat) =
+        RettighetstypeGrunnlag(
+            rettighetstypeTidslinje = vilkårsresultat.rettighetstypeTidslinje()
+        )
+
+
+    private fun opprettetBehandling() =
+        BehandlingService.MåBehandlesAtomært(
+            nyBehandling = behandling(),
+            åpenBehandling = null
+        )
+
+    private fun genererVilkårsresultat(periode: Periode, oppfyltBistand: Boolean = true, bistandPeriode: Periode = periode): Vilkårsresultat {
+        val aldersVilkåret =
+            Vilkår(
+                Vilkårtype.ALDERSVILKÅRET, setOf(
+                    Vilkårsperiode(
+                        periode,
+                        Utfall.OPPFYLT,
+                        false,
+                        null,
+                        faktagrunnlag = null
+                    )
+                )
+            )
+        val sykdomsVilkåret =
+            Vilkår(
+                Vilkårtype.SYKDOMSVILKÅRET, setOf(
+                    Vilkårsperiode(
+                        periode,
+                        Utfall.OPPFYLT,
+                        false,
+                        null,
+                        faktagrunnlag = null
+                    )
+                )
+            )
+        val lovvalgsVilkåret =
+            Vilkår(
+                Vilkårtype.LOVVALG, setOf(
+                    Vilkårsperiode(
+                        periode,
+                        Utfall.OPPFYLT,
+                        false,
+                        null,
+                        faktagrunnlag = null
+                    )
+                )
+            )
+        val medlemskapVilkåret =
+            Vilkår(
+                Vilkårtype.MEDLEMSKAP, setOf(
+                    Vilkårsperiode(
+                        periode,
+                        Utfall.OPPFYLT,
+                        false,
+                        null,
+                        faktagrunnlag = null
+                    )
+                )
+            )
+        val bistandVilkåret =
+            Vilkår(
+                Vilkårtype.BISTANDSVILKÅRET, setOf(
+                    Vilkårsperiode(
+                        bistandPeriode,
+                        if (oppfyltBistand) Utfall.OPPFYLT else Utfall.IKKE_OPPFYLT,
+                        false,
+                        null,
+                        faktagrunnlag = null,
+                        avslagsårsak = if (oppfyltBistand) null else Avslagsårsak.IKKE_BEHOV_FOR_OPPFOLGING
+                    )
+                )
+            )
+        val grunnlagVilkåret = Vilkår(
+            Vilkårtype.GRUNNLAGET, setOf(
+                Vilkårsperiode(
+                    periode,
+                    Utfall.OPPFYLT,
+                    false,
+                    null,
+                    faktagrunnlag = null
+                )
+            )
+        )
+
+        return Vilkårsresultat(
+            vilkår = listOf(
+                aldersVilkåret,
+                lovvalgsVilkåret,
+                sykdomsVilkåret,
+                medlemskapVilkåret,
+                bistandVilkåret,
+                grunnlagVilkåret,
+            )
+        )
+    }
+}

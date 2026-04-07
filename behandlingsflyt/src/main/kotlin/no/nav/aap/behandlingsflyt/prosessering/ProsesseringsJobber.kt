@@ -1,7 +1,11 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
+import no.nav.aap.behandlingsflyt.prosessering.datadeling.DatadelingBehandlingJobbUtfører
+import no.nav.aap.behandlingsflyt.prosessering.datadeling.DatadelingMeldePerioderOgSakStatusJobbUtfører
+import no.nav.aap.behandlingsflyt.prosessering.datadeling.DatadelingMeldekortJobbUtfører
 import no.nav.aap.behandlingsflyt.prosessering.statistikk.ResendStatistikkJobbUtfører
 import no.nav.aap.behandlingsflyt.prosessering.statistikk.StatistikkJobbUtfører
+import no.nav.aap.behandlingsflyt.prosessering.tilbakekreving.SendFagsysteminfoBehovTilTilbakekrevingUtfører
 import no.nav.aap.motor.JobbSpesifikasjon
 
 object ProsesseringsJobber {
@@ -21,15 +25,25 @@ object ProsesseringsJobber {
             MeldeperiodeTilMeldekortBackendJobbUtfører,
             OpprettJobbForFastsattPeriodeJobbUtfører,
             OpprettJobbForFritakMeldepliktJobbUtfører,
+            OpprettJobbUtvidVedtakslengdeJobbUtfører,
             OpprettBehandlingFritakMeldepliktJobbUtfører,
             OpprettBehandlingFastsattPeriodePassertJobbUtfører,
+            OpprettBehandlingUtvidVedtakslengdeJobbUtfører,
             OppdagEndretInformasjonskravJobbUtfører,
             HentSamIdJobbUtfører,
             VarsleVedtakJobbUtfører,
             IverksettUtbetalingJobbUtfører,
             KafkaFeilJobbUtfører,
             TriggBarnetilleggSatsJobbUtfører,
-            OpprettJobbForTriggBarnetilleggSatsJobbUtfører
+            OpprettJobbForTriggBarnetilleggSatsJobbUtfører,
+            OpprettJobbForMigrereRettighetsperiodeJobbUtfører,
+            OppdaterOppgaveMedTilbakekrevingsbehandlingUtfører,
+            OpprettBehandlingMigrereRettighetsperiodeJobbUtfører,
+            SendFagsysteminfoBehovTilTilbakekrevingUtfører,
+            SjekkInstitusjonsOppholdJobbUtfører,
+            HåndterUbehandletDokumentJobbUtfører,
+            DigitaliserteMeldekortTilMeldekortBackendJobbUtfører,
+            HåndterUbehandledeMeldekortForSakJobbUtfører
         )
     }
 }

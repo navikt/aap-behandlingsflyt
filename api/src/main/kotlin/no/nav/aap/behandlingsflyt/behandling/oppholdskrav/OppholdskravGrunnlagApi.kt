@@ -4,8 +4,11 @@ import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovMetadataService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
+import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
+import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderOppholdskravSteg
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
@@ -43,6 +46,9 @@ fun NormalOpenAPIRoute.oppholdskravGrunnlagApi(
                     val oppholdskravRepository = repositoryProvider.provide<OppholdskravGrunnlagRepository>()
                     val sakRepository = repositoryProvider.provide<SakRepository>()
                     val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
+                    val vurdertAvService = VurdertAvService(repositoryProvider, gatewayProvider)
+                    val vurderOppholdskravSteg = VurderOppholdskravSteg.konstruer(repositoryProvider, gatewayProvider)
+                    val avklaringsbehovMetadataService = AvklaringsbehovMetadataService(repositoryProvider, gatewayProvider)
 
                     val behandling: Behandling = BehandlingReferanseService(behandlingRepository).behandling(req)
                     val sak = sakRepository.hent(behandling.sakId)
@@ -58,20 +64,28 @@ fun NormalOpenAPIRoute.oppholdskravGrunnlagApi(
                         harTilgangTilÅSaksbehandle = kanSaksbehandle(),
                         behøverVurderinger = perioderSomTrengerVurdering,
                         kanVurderes = listOf(sak.rettighetsperiode),
-                        nyeVurderinger = vurdering?.tilDto(ansattInfoService) ?: emptyList(),
+                        nyeVurderinger = vurdering?.tilDto(ansattInfoService, vurdertAvService) ?: emptyList(),
                         sisteVedtatteVurderinger = gjeldendeVedtatteVurderinger
                             .komprimer()
                             .segmenter()
                             .map { segment ->
                                 OppholdskravVurderingDto(
-                                    vurdertAv = VurdertAvResponse.fraIdent(segment.verdi.vurdertAv, segment.verdi.opprettet.toLocalDate(), ansattInfoService),
+                                    vurdertAv = VurdertAvResponse.fraIdent(
+                                        segment.verdi.vurdertAv,
+                                        segment.verdi.opprettet.toLocalDate(),
+                                        ansattInfoService
+                                    ),
                                     fom = segment.fom(),
-                                    tom = if (segment.tom().isEqual( Tid.MAKS)) null else segment.tom(),
+                                    tom = if (segment.tom().isEqual(Tid.MAKS)) null else segment.tom(),
                                     begrunnelse = segment.verdi.begrunnelse,
                                     land = segment.verdi.land,
                                     oppfylt = segment.verdi.oppfylt,
                                 )
-                            }
+                            },
+                        ikkeRelevantePerioder = avklaringsbehovMetadataService.perioderSomSkalFremhevesSomIkkeRelevant(
+                            vurderOppholdskravSteg,
+                            behandling,
+                        )
                     )
                 }
             respond(oppholdskravGrunnlag)

@@ -8,7 +8,7 @@ import java.util.concurrent.ConcurrentHashMap
 
 object InMemoryPersonopplysningRepository : PersonopplysningRepository {
     private val personopplysninger = ConcurrentHashMap<BehandlingId, Personopplysning>()
-    private val lock = Object()
+    private val lock = Any()
 
     fun hentHvisEksisterer(behandlingId: BehandlingId): PersonopplysningGrunnlag? {
         synchronized(lock) {
@@ -25,7 +25,9 @@ object InMemoryPersonopplysningRepository : PersonopplysningRepository {
     }
 
     override fun hentBrukerPersonOpplysningHvisEksisterer(behandlingId: BehandlingId): Personopplysning? {
-        TODO("Not yet implemented")
+        return synchronized(lock) {
+            personopplysninger[behandlingId]
+        }
     }
 
     override fun lagre(

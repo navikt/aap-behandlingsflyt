@@ -13,4 +13,5 @@ interface PersonRepository : Repository {
     fun finnEllerOpprett(identer: List<Ident>): Person
     fun hent(personId: PersonId): Person
     fun finn(ident: Ident): Person?
+    fun finn(identer: List<Ident>): Person?
 }

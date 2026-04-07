@@ -45,10 +45,7 @@ class KabalKafkaKonsument(
 
     fun håndter(melding: ConsumerRecord<String, String>) {
         log.info(
-            "Behandler klage-record med id: {}, partition {}, offset: {}",
-            melding.key(),
-            melding.partition(),
-            melding.offset(),
+            "Behandler klage-record med id: ${melding.key()}, partition: ${melding.partition()}, offset: ${melding.offset()}",
         )
         håndter(melding.value())
     }

@@ -33,9 +33,10 @@ class MottaDokumentService(
         mottattTidspunkt: LocalDateTime,
         brevkategori: InnsendingType,
         kanal: Kanal,
-        strukturertDokument: StrukturerteData?
+        strukturertDokument: StrukturerteData?,
+        digitalisertAvPostmottak: Boolean?
     ) {
-        log.info("Lagrer mottatt dokument. Referanse: ${referanse}, SakId: $sakId, Brevkategori: $brevkategori, MottattTidspunkt: $mottattTidspunkt, Kanal: $kanal")
+        log.info("Lagrer mottatt dokument. Referanse: ${referanse}, SakId: $sakId, Brevkategori: $brevkategori, MottattTidspunkt: $mottattTidspunkt, Kanal: $kanal, DigitalisertAvPostmottak: $digitalisertAvPostmottak")
         mottattDokumentRepository.lagre(
             MottattDokument(
                 referanse = referanse,
@@ -45,7 +46,8 @@ class MottaDokumentService(
                 kanal = kanal,
                 status = Status.MOTTATT,
                 behandlingId = null,
-                strukturertDokument = strukturertDokument
+                strukturertDokument = strukturertDokument,
+                digitalisertAvPostmottak = digitalisertAvPostmottak
             )
         )
     }
@@ -59,7 +61,8 @@ class MottaDokumentService(
                 UbehandletMeldekort.fraKontrakt(
                     meldekort = meldekort(it),
                     journalpostId = it.referanse.asJournalpostId,
-                    mottattTidspunkt = it.mottattTidspunkt
+                    mottattTidspunkt = it.mottattTidspunkt,
+                    digitalisertAvPostmottak = it.digitalisertAvPostmottak
                 )
             }
             .toSet()
@@ -67,6 +70,15 @@ class MottaDokumentService(
 
     private fun meldekort(dokument: MottattDokument): Meldekort {
         return requireNotNull(dokument.strukturerteData<Meldekort>()?.data)
+    }
+
+    fun tilUbehandletMeldekort(dokument: MottattDokument): UbehandletMeldekort {
+        return UbehandletMeldekort.fraKontrakt(
+            meldekort = meldekort(dokument),
+            journalpostId = dokument.referanse.asJournalpostId,
+            mottattTidspunkt = dokument.mottattTidspunkt,
+            digitalisertAvPostmottak = dokument.digitalisertAvPostmottak
+        )
     }
 
     fun søknaderSomIkkeHarBlittBehandlet(sakId: SakId): Set<UbehandletSøknad> {

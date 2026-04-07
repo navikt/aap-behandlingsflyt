@@ -2,28 +2,18 @@ package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.andreY
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.AndreUtbetalingerYtelser
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.AndreYtelserSøknad
-import no.nav.aap.behandlingsflyt.help.FakePdlGateway
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
-
-import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
+import no.nav.aap.behandlingsflyt.help.opprettSak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
-import no.nav.aap.behandlingsflyt.test.desember
-import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
-import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
-import java.time.LocalDate
 
 class AndreYtelserRepositoryImplTest {
     private lateinit var dataSource: TestDataSource
@@ -37,15 +27,15 @@ class AndreYtelserRepositoryImplTest {
     fun tearDown() {
         dataSource.close()
     }
-    @Test
-    fun `lagre og kopier, så slette gamle`() {
 
-        val sak = dataSource.transaction { sak(it) }
+    @Test
+    fun `lagre og slett`() {
+        val sak = dataSource.transaction { sakForTestPeriode(it) }
 
         val behandling1 = dataSource.transaction {
             finnEllerOpprettBehandling(it, sak)
         }
-        val stønad = listOf<AndreUtbetalingerYtelser>(
+        val stønad = listOf(
             AndreUtbetalingerYtelser.ØKONOMISK_SOSIALHJELP,
             AndreUtbetalingerYtelser.OMSORGSSTØNAD,
             AndreUtbetalingerYtelser.AFP
@@ -55,7 +45,50 @@ class AndreYtelserRepositoryImplTest {
             stønad = stønad,
             afpKilder = "Arbeidsgiver"
         )
-        val sak2 = dataSource.transaction { sak(it) }
+
+        dataSource.transaction {
+            AndreYtelserOppgittISøknadRepositoryImpl(it).lagre(
+                behandling1.id, andreUtbetalinger
+            )
+        }
+
+        val ytelser = dataSource.transaction {
+            AndreYtelserOppgittISøknadRepositoryImpl(it).hent(
+                behandling1.id
+            )
+        }
+
+
+        assertThat(ytelser).isEqualTo(andreUtbetalinger)
+
+        dataSource.transaction {
+            AndreYtelserOppgittISøknadRepositoryImpl(it).slett(
+                behandling1.id
+            )
+        }
+    }
+
+
+
+    @Test
+    fun `lagre og kopier, så slette gamle`() {
+
+        val sak = dataSource.transaction { sakForTestPeriode(it) }
+
+        val behandling1 = dataSource.transaction {
+            finnEllerOpprettBehandling(it, sak)
+        }
+        val stønad = listOf(
+            AndreUtbetalingerYtelser.ØKONOMISK_SOSIALHJELP,
+            AndreUtbetalingerYtelser.OMSORGSSTØNAD,
+            AndreUtbetalingerYtelser.AFP
+        )
+        val andreUtbetalinger = AndreYtelserSøknad(
+            ekstraLønn = true,
+            stønad = stønad,
+            afpKilder = "Arbeidsgiver"
+        )
+        val sak2 = dataSource.transaction { sakForTestPeriode(it) }
         val behandling2 = dataSource.transaction {
             finnEllerOpprettBehandling(it, sak2)
         }
@@ -107,12 +140,12 @@ class AndreYtelserRepositoryImplTest {
     @Test
     fun `lagre og henter andre ytelser`() {
 
-        val sak = dataSource.transaction { sak(it) }
+        val sak = dataSource.transaction { sakForTestPeriode(it) }
 
         val behandling1 = dataSource.transaction {
             finnEllerOpprettBehandling(it, sak)
         }
-        val stønad1 = listOf<AndreUtbetalingerYtelser>(
+        val stønad1 = listOf(
             AndreUtbetalingerYtelser.ØKONOMISK_SOSIALHJELP,
             AndreUtbetalingerYtelser.OMSORGSSTØNAD
         )
@@ -120,11 +153,11 @@ class AndreYtelserRepositoryImplTest {
             ekstraLønn = true,
             stønad = stønad1
         )
-        val sak2 = dataSource.transaction { sak(it) }
+        val sak2 = dataSource.transaction { sakForTestPeriode(it) }
         val behandling2 = dataSource.transaction {
             finnEllerOpprettBehandling(it, sak2)
         }
-        val stønad2 = listOf<AndreUtbetalingerYtelser>(
+        val stønad2 = listOf(
             AndreUtbetalingerYtelser.OMSORGSSTØNAD,
             AndreUtbetalingerYtelser.INTRODUKSJONSSTØNAD,
         )
@@ -160,11 +193,7 @@ class AndreYtelserRepositoryImplTest {
     }
 
 
-    private fun sak(connection: DBConnection): Sak {
-        return PersonOgSakService(
-            FakePdlGateway,
-            PersonRepositoryImpl(connection),
-            SakRepositoryImpl(connection)
-        ).finnEllerOpprett(ident(), Periode(1 januar 2022, 31.desember(2023)))
+    private fun sakForTestPeriode(connection: DBConnection): Sak {
+        return opprettSak(connection, 1 januar 2022)
     }
 }

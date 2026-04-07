@@ -1,103 +1,217 @@
 package no.nav.aap.behandlingsflyt.flyt
 
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.vedtak.TotrinnsVurdering
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.ForeslåVedtakLøsning
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.KvalitetssikringLøsning
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov
-import no.nav.aap.behandlingsflyt.test.FakeUnleash
-import no.nav.aap.komponenter.type.Periode
-import no.nav.aap.komponenter.verdityper.Bruker
+import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status as AvklaringsbehovStatus
 
-class KvalitetssikringFlytTest() : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
+class KvalitetssikringFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
     @Test
-    fun `Kvalitetssikringssteg - retur fra kvalitetssikrer`() {
+    fun `Kvalitetssikrer godkjenner alle avklaringsbehov`() {
         val fom = LocalDate.now().minusMonths(3)
-        val periode = Periode(fom, fom.plusYears(3))
 
         val person = TestPersoner.STANDARD_PERSON()
 
-        val (_, behandling) = sendInnFørsteSøknad(
-            person = person,
-            periode = periode,
-        )
+        val (_, behandling) = sendInnFørsteSøknad(person = person)
         behandling
             .løsSykdom(fom)
             .løsBistand(fom)
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
-
-        val alleAvklaringsbehov = hentAlleAvklaringsbehov(behandling)
-        løsAvklaringsBehov(
-            behandling,
-            KvalitetssikringLøsning(alleAvklaringsbehov.filter { behov -> behov.erTotrinn() || behov.kreverKvalitetssikring() }
-                .map { behov ->
-                    TotrinnsVurdering(
-                        behov.definisjon.kode, false, "begrunnelse", emptyList()
-                    )
-                }),
-            Bruker("KVALITETSSIKRER"),
-        )
+            .bekreftVurderinger()
+            .kvalitetssikre()
 
         val avklaringsbehovSomKreverKvalitetssikring = hentAlleAvklaringsbehov(behandling)
             .filter { behov -> behov.kreverKvalitetssikring() }
-        assertThat(avklaringsbehovSomKreverKvalitetssikring.any { it.status() == AvklaringsbehovStatus.SENDT_TILBAKE_FRA_KVALITETSSIKRER }).isTrue()
+        assertThat(avklaringsbehovSomKreverKvalitetssikring.all { it.status() == AvklaringsbehovStatus.KVALITETSSIKRET }).isTrue()
     }
 
     @Test
-    fun `Kvalitetssikringssteg - retur fra beslutter`() {
+    fun `Kvalitetssikrer underkjenner alle avklaringsbehov`() {
         val fom = LocalDate.now().minusMonths(3)
-        val periode = Periode(fom, fom.plusYears(3))
 
         val person = TestPersoner.STANDARD_PERSON()
 
-        val (_, behandling) = sendInnFørsteSøknad(
-            person = person,
-            periode = periode,
-        )
+        val (_, behandling) = sendInnFørsteSøknad(person = person)
+        behandling
+            .løsSykdom(fom)
+            .løsBistand(fom)
+            .løsRefusjonskrav()
+            .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
+            .kvalitetssikre(underkjennVurderinger = Definisjon.entries)
+
+        val avklaringsbehovSomKreverKvalitetssikring = hentAlleAvklaringsbehov(behandling)
+            .filter { behov -> behov.kreverKvalitetssikring() }
+        assertThat(avklaringsbehovSomKreverKvalitetssikring.all { it.status() == AvklaringsbehovStatus.SENDT_TILBAKE_FRA_KVALITETSSIKRER }).isTrue()
+    }
+
+    @Test
+    fun `Kvalitetssikrer underkjenner AVKLAR_SYKDOM, men godkjenner de andre avklaringsbehovene`() {
+        val fom = LocalDate.now().minusMonths(3)
+
+        val person = TestPersoner.STANDARD_PERSON()
+
+        val (_, behandling) = sendInnFørsteSøknad(person = person)
+        behandling
+            .løsSykdom(fom)
+            .løsBistand(fom)
+            .løsRefusjonskrav()
+            .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
+            .kvalitetssikre(underkjennVurderinger = listOf(Definisjon.AVKLAR_SYKDOM))
+            .medKontekst {
+                val avklaringsbehovSomKreverKvalitetssikring =
+                    avklaringsbehovene.alle().filter { it.kreverKvalitetssikring() }
+
+                assertThat(avklaringsbehovSomKreverKvalitetssikring)
+                    .filteredOn { it.status() == AvklaringsbehovStatus.SENDT_TILBAKE_FRA_KVALITETSSIKRER }
+                    .extracting("definisjon")
+                    .containsExactlyInAnyOrder(
+                        Definisjon.AVKLAR_SYKDOM
+                    )
+
+                assertThat(avklaringsbehovSomKreverKvalitetssikring)
+                    .filteredOn { it.definisjon != Definisjon.AVKLAR_SYKDOM }
+                    .allMatch { it.status() == AvklaringsbehovStatus.KVALITETSSIKRET }
+
+                assertThat(avklaringsbehovene.hentBehovForDefinisjon(Definisjon.KVALITETSSIKRING))
+                    .extracting { it?.status() }
+                    .isEqualTo(AvklaringsbehovStatus.OPPRETTET)
+            }
+
+        val stegetsEgetBehov = hentAlleAvklaringsbehov(behandling)
+            .filter { behov -> behov.definisjon == Definisjon.KVALITETSSIKRING }
+        assertThat(stegetsEgetBehov.first().status()).isEqualTo(AvklaringsbehovStatus.OPPRETTET)
+    }
+
+    @Test
+    fun `Kvalitetssikrer underkjenner AVKLAR_BISTANDSBEHOV, men tar ikke stilling til de andre avklaringsbehovene`() {
+        val fom = LocalDate.now().minusMonths(3)
+
+        val person = TestPersoner.STANDARD_PERSON()
+
+        val (_, behandling) = sendInnFørsteSøknad(person = person)
+        behandling
+            .løsSykdom(fom)
+            .løsBistand(fom)
+            .løsRefusjonskrav()
+            .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
+            .kvalitetssikre(
+                behovÅKvalitetssikre = listOf(Definisjon.AVKLAR_BISTANDSBEHOV),
+                underkjennVurderinger = listOf(Definisjon.AVKLAR_BISTANDSBEHOV)
+            )
+            .medKontekst {
+                val avklaringsbehovSomKreverKvalitetssikring =
+                    åpneAvklaringsbehov.filter { it.kreverKvalitetssikring() }
+
+                assertThat(avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_BISTANDSBEHOV))
+                    .matches { it?.status() == AvklaringsbehovStatus.SENDT_TILBAKE_FRA_KVALITETSSIKRER }
+
+                assertThat(avklaringsbehovSomKreverKvalitetssikring)
+                    .filteredOn { it.definisjon != Definisjon.AVKLAR_BISTANDSBEHOV }
+                    .allMatch { it.status() == AvklaringsbehovStatus.AVSLUTTET }
+            }
+    }
+
+    @Test
+    fun `Kvalitetssikrer underkjenner AVKLAR_BISTANDSBEHOV, men godkjenner de andre avklaringsbehovene`() {
+        val fom = LocalDate.now().minusMonths(3)
+
+        val person = TestPersoner.STANDARD_PERSON()
+
+        val (_, behandling) = sendInnFørsteSøknad(person = person)
+        behandling
+            .løsSykdom(fom)
+            .løsBistand(fom)
+            .løsRefusjonskrav()
+            .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
+            .kvalitetssikre(underkjennVurderinger = listOf(Definisjon.AVKLAR_BISTANDSBEHOV))
+
+        val avklaringsbehovSomKreverKvalitetssikring = hentAlleAvklaringsbehov(behandling)
+            .filter { behov -> behov.kreverKvalitetssikring() }
+        assertThat(avklaringsbehovSomKreverKvalitetssikring)
+            .anyMatch { it.definisjon == Definisjon.AVKLAR_BISTANDSBEHOV && it.status() == AvklaringsbehovStatus.SENDT_TILBAKE_FRA_KVALITETSSIKRER }
+
+        assertThat(avklaringsbehovSomKreverKvalitetssikring.filter { it.definisjon != Definisjon.AVKLAR_BISTANDSBEHOV })
+            .anyMatch { it.status() == AvklaringsbehovStatus.KVALITETSSIKRET }
+    }
+
+
+    @Test
+    fun `Kvalitetssikrer underkjenner SKRIV_SYKDOMSVURDERING_BREV, men godkjenner de andre avklaringsbehovene`() {
+        val fom = LocalDate.now().minusMonths(3)
+
+        val person = TestPersoner.STANDARD_PERSON()
+
+        val (_, behandling) = sendInnFørsteSøknad(person = person)
+        behandling
+            .løsSykdom(fom)
+            .løsBistand(fom)
+            .løsRefusjonskrav()
+            .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
+            .kvalitetssikre(underkjennVurderinger = listOf(Definisjon.SKRIV_SYKDOMSVURDERING_BREV))
+
+        val avklaringsbehovSomKreverKvalitetssikring = hentAlleAvklaringsbehov(behandling)
+            .filter { behov -> behov.kreverKvalitetssikring() }
+        assertThat(avklaringsbehovSomKreverKvalitetssikring)
+            .anyMatch { it.definisjon == Definisjon.SKRIV_SYKDOMSVURDERING_BREV && it.status() == AvklaringsbehovStatus.SENDT_TILBAKE_FRA_KVALITETSSIKRER }
+        assertThat(avklaringsbehovSomKreverKvalitetssikring.filter { it.definisjon != Definisjon.SKRIV_SYKDOMSVURDERING_BREV })
+            .allMatch { it.status() == AvklaringsbehovStatus.KVALITETSSIKRET }
+
+    }
+
+    @Test
+    fun `Beslutter underkjenner AVKLAR_SYKDOM, kvalitetssikrer godkjenner på nytt, beslutter fatter vedtak`() {
+        val fom = LocalDate.now().minusMonths(3)
+
+        val person = TestPersoner.STANDARD_PERSON()
+
+        val (_, behandling) = sendInnFørsteSøknad(person = person)
 
         behandling
             .løsSykdom(fom)
             .løsBistand(fom)
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
-            .kvalitetssikreOk()
+            .bekreftVurderinger()
+            .kvalitetssikre()
             .løsBeregningstidspunkt()
             .løsOppholdskrav(fom)
             .løsAndreStatligeYtelser()
             .løsAvklaringsBehov(ForeslåVedtakLøsning())
-            // Returner fra beslutter - ikke godkjenn avklar sykdom
-            .beslutterGodkjennerIkke(returVed = Definisjon.AVKLAR_SYKDOM)
+            .beslutterGodkjennerIkke(underkjennVurderinger = listOf(Definisjon.AVKLAR_SYKDOM))
             .løsSykdom(fom)
-
-        motor.kjørJobber()
-        var åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling)
-        assertThat(åpneAvklaringsbehov.firstOrNull { it.definisjon == Definisjon.KVALITETSSIKRING }).isNotNull()
-
-        behandling.kvalitetssikreOk()
+            .medKontekst {
+                assertThat(åpneAvklaringsbehov)
+                    .anyMatch { it.definisjon == Definisjon.KVALITETSSIKRING }
+            }
+            .bekreftVurderinger()
+            .kvalitetssikre()
             .foreslåVedtak()
             .fattVedtak()
-
-        åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling)
-        assertThat(åpneAvklaringsbehov).hasSize(1)
-        assertThat(åpneAvklaringsbehov.first().definisjon).isEqualTo(Definisjon.SKRIV_VEDTAKSBREV)
+            .medKontekst {
+                assertThat(åpneAvklaringsbehov).hasSize(1)
+                    .first().extracting("definisjon").isEqualTo(Definisjon.SKRIV_VEDTAKSBREV)
+            }
     }
 
     @Test
-    fun `Kvalitetssikringssteg - beslutter underkjenner steg før sykdom`() {
+    fun `Beslutter underkjenner kun VURDER_RETTIGHETSPERIODE, ingen ny kvalitetssikring, beslutter fatter vedtak`() {
         val fom = LocalDate.now().minusMonths(3)
-        val periode = Periode(fom, fom.plusYears(3))
 
         val person = TestPersoner.STANDARD_PERSON()
 
-        val (sak, behandling) = sendInnFørsteSøknad(
-            person = person,
-            periode = periode,
-        )
+        val (sak, behandling) = sendInnFørsteSøknad(person = person)
 
         sak.opprettManuellRevurdering(vurderingsbehov = Vurderingsbehov.VURDER_RETTIGHETSPERIODE)
 
@@ -107,20 +221,117 @@ class KvalitetssikringFlytTest() : AbstraktFlytOrkestratorTest(FakeUnleash::clas
             .løsBistand(fom)
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
-            .kvalitetssikreOk()
+            .bekreftVurderinger()
+            .kvalitetssikre()
             .løsBeregningstidspunkt()
             .løsOppholdskrav(fom)
             .løsAndreStatligeYtelser()
             .løsAvklaringsBehov(ForeslåVedtakLøsning())
-            .beslutterGodkjennerIkke(returVed = Definisjon.VURDER_RETTIGHETSPERIODE)
-
-        behandling.løsRettighetsperiodeIngenEndring()
+            .beslutterGodkjennerIkke(underkjennVurderinger = listOf(Definisjon.VURDER_RETTIGHETSPERIODE))
+            // Ingen endring
+            .løsRettighetsperiodeIngenEndring()
             .løsAvklaringsBehov(ForeslåVedtakLøsning())
-
-        val åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling)
-        assertThat(åpneAvklaringsbehov).hasSize(1)
-        assertThat(åpneAvklaringsbehov.any { it.definisjon == Definisjon.FATTE_VEDTAK }).isTrue()
+            .fattVedtak()
+            .medKontekst {
+                assertThat(åpneAvklaringsbehov).hasSize(1)
+                assertThat(åpneAvklaringsbehov.first().definisjon).isEqualTo(Definisjon.SKRIV_VEDTAKSBREV)
+            }
     }
 
+    @Test
+    fun `Ny kvalitetssikring skal skje dersom beslutter underkjenner VURDER_RETTIGHETSPERIODE og AVKLAR_SYKDOM`() {
+        val fom = LocalDate.now().minusMonths(3)
 
+        val person = TestPersoner.STANDARD_PERSON()
+
+        val (sak, behandling) = sendInnFørsteSøknad(person = person)
+
+        sak.opprettManuellRevurdering(vurderingsbehov = Vurderingsbehov.VURDER_RETTIGHETSPERIODE)
+
+        behandling
+            .løsRettighetsperiodeIngenEndring()
+            .løsSykdom(fom)
+            .løsBistand(fom)
+            .løsRefusjonskrav()
+            .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
+            .kvalitetssikre()
+            .løsBeregningstidspunkt()
+            .løsOppholdskrav(fom)
+            .løsAndreStatligeYtelser()
+            .løsAvklaringsBehov(ForeslåVedtakLøsning())
+            .beslutterGodkjennerIkke(
+                underkjennVurderinger = listOf(
+                    Definisjon.VURDER_RETTIGHETSPERIODE,
+                    Definisjon.AVKLAR_SYKDOM
+                )
+            )
+            .løsRettighetsperiodeIngenEndring()
+            .løsSykdom(fom)
+
+        val stegetsEgetBehov = hentAlleAvklaringsbehov(behandling)
+            .filter { behov -> behov.definisjon == Definisjon.KVALITETSSIKRING }
+        assertThat(stegetsEgetBehov.first().status()).isEqualTo(AvklaringsbehovStatus.OPPRETTET)
+    }
+
+    @Test
+    fun `Ny kvalitetssikring skal skje dersom behandlingen blir dratt tilbake til 22-13 og ny startdato settes`() {
+        if (gatewayProvider.provide<UnleashGateway>().isDisabled(BehandlingsflytFeature.KvalitetssikringVed2213)) {
+            return
+        }
+
+        val fom = LocalDate.now().minusMonths(3)
+
+        val person = TestPersoner.STANDARD_PERSON()
+
+        val (sak, behandling) = sendInnFørsteSøknad(person = person)
+        behandling
+            .løsSykdom(fom)
+            .løsBistand(fom)
+            .løsRefusjonskrav()
+            .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
+            .kvalitetssikre()
+
+        val oppdatertBehandling = sak.opprettManuellRevurdering(listOf(Vurderingsbehov.VURDER_RETTIGHETSPERIODE))
+        val nyStartdato = LocalDate.now().minusMonths(5)
+        oppdatertBehandling
+            .løsRettighetsperiode(nyStartdato)
+            .løsSykdom(nyStartdato)
+            .løsBistand(nyStartdato)
+            .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
+
+        val stegetsEgetBehov = hentAlleAvklaringsbehov(oppdatertBehandling)
+            .filter { behov -> behov.definisjon == Definisjon.KVALITETSSIKRING }
+        assertThat(stegetsEgetBehov.first().status()).isEqualTo(AvklaringsbehovStatus.OPPRETTET)
+    }
+
+    @Test
+    fun `Ny kvalitetssikring skal IKKE skje dersom behandlingen blir dratt tilbake til 22-13 og ingen ny startdato settes`() {
+        val fom = LocalDate.now().minusMonths(3)
+
+        val person = TestPersoner.STANDARD_PERSON()
+
+        val (sak, behandling) = sendInnFørsteSøknad(person = person)
+        behandling
+            .løsSykdom(fom)
+            .løsBistand(fom)
+            .løsRefusjonskrav()
+            .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
+            .kvalitetssikre()
+
+        val oppdatertBehandling = sak.opprettManuellRevurdering(listOf(Vurderingsbehov.VURDER_RETTIGHETSPERIODE))
+        oppdatertBehandling
+            .løsRettighetsperiodeIngenEndring()
+
+        val stegetsEgetBehov = hentAlleAvklaringsbehov(oppdatertBehandling)
+            .filter { behov -> behov.definisjon == Definisjon.KVALITETSSIKRING }
+        assertThat(stegetsEgetBehov.first().status()).isEqualTo(AvklaringsbehovStatus.AVSLUTTET)
+
+        val fastsettBeregningstidspunktBehov = hentAlleAvklaringsbehov(oppdatertBehandling)
+            .filter { behov -> behov.definisjon == Definisjon.FASTSETT_BEREGNINGSTIDSPUNKT }
+        assertThat(fastsettBeregningstidspunktBehov.first().status()).isEqualTo(AvklaringsbehovStatus.OPPRETTET)
+    }
 }

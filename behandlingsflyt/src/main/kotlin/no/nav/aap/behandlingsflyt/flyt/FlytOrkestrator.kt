@@ -5,7 +5,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepo
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravGrunnlagImpl
-import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.StegOrkestrator
 import no.nav.aap.behandlingsflyt.flyt.steg.TilbakeførtFraBeslutter
@@ -50,7 +50,7 @@ import org.slf4j.LoggerFactory
  */
 class FlytOrkestrator(
     private val flytKontekstMedPeriodeService: FlytKontekstMedPeriodeService,
-    private val sakOgBehandlingService: SakOgBehandlingService,
+    private val behandlingService: BehandlingService,
     private val informasjonskravGrunnlag: InformasjonskravGrunnlag,
     private val sakRepository: SakRepository,
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
@@ -72,8 +72,8 @@ class FlytOrkestrator(
         informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(repositoryProvider, gatewayProvider),
         sakRepository = repositoryProvider.provide(),
         flytKontekstMedPeriodeService = FlytKontekstMedPeriodeService(repositoryProvider, gatewayProvider),
-        sakOgBehandlingService = SakOgBehandlingService(repositoryProvider, gatewayProvider),
-        behandlingHendelseService = BehandlingHendelseServiceImpl(repositoryProvider),
+        behandlingService = BehandlingService(repositoryProvider, gatewayProvider),
+        behandlingHendelseService = BehandlingHendelseServiceImpl(repositoryProvider, gatewayProvider),
         stegOrkestrator = StegOrkestrator(repositoryProvider, gatewayProvider, markSavepointAt),
         stoppNårStatus = stoppNårStatus,
     )
@@ -102,12 +102,12 @@ class FlytOrkestrator(
 
         val endredeInformasjonskrav = informasjonskravGrunnlag
             .flettOpplysningerFraAtomærBehandling(kontekst, behandlingFlyt.alleInformasjonskravForÅpneSteg())
-        log.info("Endrede informasjonskrav etter atomær behandling: {}", endredeInformasjonskrav)
+        log.info("Endrede informasjonskrav etter atomær behandling: $endredeInformasjonskrav")
         tilbakefør(
             kontekst = kontekst,
             behandling = behandling,
             behandlingFlyt = behandlingFlyt.tilbakeflytEtterEndringer(endredeInformasjonskrav),
-            avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id),
+            avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
         )
     }
 
@@ -120,11 +120,11 @@ class FlytOrkestrator(
         this.prosesserBehandling(kontekst)
     }
 
-    private fun forberedBehandling(kontekst: FlytKontekst, triggere: List<Vurderingsbehov>?) {
+    private fun forberedBehandling(kontekst: FlytKontekst, triggere: List<Vurderingsbehov>) {
         val behandling = behandlingRepository.hent(kontekst.behandlingId)
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
 
-        avklaringsbehovene.validateTilstand(behandling = behandling)
+        avklaringsbehovene.validerTilstand(behandling = behandling)
 
         val behandlingFlyt = behandling.flyt()
 
@@ -144,9 +144,9 @@ class FlytOrkestrator(
                 val tilbakeflyt = behandlingFlyt.tilbakeflyt(behovSomBleLøst)
                 if (!tilbakeflyt.erTom()) {
                     log.info(
-                        "Tilbakeført etter tatt av vent fra '{}' til '{}'",
-                        behandling.aktivtSteg(),
-                        tilbakeflyt.stegene().last()
+                        "Tilbakeført etter tatt av vent fra '${behandling.aktivtSteg()}' til '${
+                            tilbakeflyt.stegene().last()
+                        }'",
                     )
                 }
                 tilbakefør(kontekst, behandling, tilbakeflyt, avklaringsbehovene)
@@ -167,13 +167,11 @@ class FlytOrkestrator(
 
         if (!tilbakeføringsflyt.erTom()) {
             log.info(
-                "Tilbakeført etter oppdatering av registeropplysninger fra '{}' til '{}'. " +
-                        "Oppdatert faktagrunnlag for kravliste: {} " +
-                        "Med triggere: {}",
-                behandling.aktivtSteg(),
-                tilbakeføringsflyt.stegene().last(),
-                oppdaterFaktagrunnlagForKravliste.joinToString { it.navn.toString() },
-                triggere?.joinToString { it.toString() }
+                "Tilbakeført etter oppdatering av registeropplysninger fra '${behandling.aktivtSteg()}' til '${
+                    tilbakeføringsflyt.stegene().last()
+                }'. " +
+                        "Oppdatert faktagrunnlag for kravliste: ${oppdaterFaktagrunnlagForKravliste.joinToString { it.navn.toString() }} " +
+                        "Med triggere: ${triggere.joinToString { it.toString() }}",
             )
         }
         tilbakefør(kontekst, behandling, tilbakeføringsflyt, avklaringsbehovene)
@@ -215,7 +213,7 @@ class FlytOrkestrator(
         val behandling = behandlingRepository.hent(kontekst.behandlingId)
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
 
-        avklaringsbehovene.validateTilstand(behandling = behandling)
+        avklaringsbehovene.validerTilstand(behandling = behandling)
 
         val behandlingFlyt = behandling.flyt()
         var gjeldendeSteg = finnGjeldendeSteg(behandling, behandlingFlyt)
@@ -247,11 +245,9 @@ class FlytOrkestrator(
                     }
                 }
                 log.info(
-                    "Tilbakeført fra '{}' til '{}'",
-                    gjeldendeSteg.type(),
-                    tilbakeføringsflyt.stegene().last()
+                    "Tilbakeført fra '${gjeldendeSteg.type()}' til '${tilbakeføringsflyt.stegene().last()}'"
                 )
-                tilbakefør(kontekst, behandling, tilbakeføringsflyt, avklaringsbehovene, false)
+                tilbakefør(kontekst, behandling, tilbakeføringsflyt, avklaringsbehovene)
             }
 
             validerPlassering(behandlingFlyt, avklaringsbehovene.åpne())
@@ -264,7 +260,7 @@ class FlytOrkestrator(
                 if (neste == null) {
                     log.info("Behandlingen har nådd slutten, avslutter behandling")
 
-                    sakOgBehandlingService.lukkBehandling(behandling.id)
+                    behandlingService.lukkBehandling(behandling.id)
 
                     validerAtAvklaringsBehovErLukkede(avklaringsbehovene)
                 } else {
@@ -344,9 +340,8 @@ class FlytOrkestrator(
             kontekst,
             behandling,
             tilbakeføringsflyt,
-            avklaringsbehovene,
-            harHeltStoppet = false
-        ) // Setter til false for å ikke trigge unødvendig event
+            avklaringsbehovene
+        )
 
         val skulleVærtISteg = flyt.skalTilStegForBehov(behovForLøsninger)
         // Skal få lov å løse ventebehov overalt i flyten
@@ -367,28 +362,20 @@ class FlytOrkestrator(
         kontekst: FlytKontekst,
         behandling: Behandling,
         behandlingFlyt: BehandlingFlyt,
-        avklaringsbehovene: Avklaringsbehovene,
-        harHeltStoppet: Boolean = true
+        avklaringsbehovene: Avklaringsbehovene
     ) {
         if (behandlingFlyt.erTom()) {
             return
         }
 
         log.info(
-            "Tilbakefører {} for behandling {} med flyt {}",
-            behandling.aktivtSteg(),
-            behandling.referanse,
-            behandlingFlyt
+            "Tilbakefører ${behandling.aktivtSteg()} for behandling ${behandling.referanse}. Vurderingsbehov: ${behandling.vurderingsbehov().map { it.type }}."
         )
-
         var neste: FlytSteg? = behandlingFlyt.aktivtSteg()
         while (true) {
 
             if (neste == null) {
                 loggStopp(behandling, avklaringsbehovene)
-                if (harHeltStoppet) {
-                    behandlingHendelseService.stoppet(behandling, avklaringsbehovene)
-                }
                 return
             }
             stegOrkestrator.utførTilbakefør(
@@ -405,9 +392,7 @@ class FlytOrkestrator(
         avklaringsbehovene: Avklaringsbehovene
     ) {
         log.info(
-            "Stopper opp ved {} med {}",
-            behandling.aktivtSteg(),
-            avklaringsbehovene.åpne()
+            "Stopper opp ved ${behandling.aktivtSteg()} med ${avklaringsbehovene.åpne()}"
         )
     }
 

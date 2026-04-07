@@ -124,7 +124,7 @@ internal fun beregningDTO(beregning: Beregningsgrunnlag, behandlingOpprettet: Lo
         is Grunnlag11_19 -> {
             BeregningDTO(
                 beregningstypeDTO = BeregningstypeDTO.STANDARD,
-                grunnlag11_19 = grunnlag11_19_to_DTO(beregning),
+                grunnlag11_19 = grunnlag11_19tilDTO(beregning),
                 gjeldendeGrunnbeløp = gjeldendeGrunnbeløp
             )
         }
@@ -138,7 +138,7 @@ private fun hentGjeldendeGrunnbeløp(behandlingOpprettet: LocalDate): GjeldendeG
     )
 }
 
-private fun grunnlag11_19_to_DTO(grunnlag: Grunnlag11_19): Grunnlag11_19DTO {
+private fun grunnlag11_19tilDTO(grunnlag: Grunnlag11_19): Grunnlag11_19DTO {
     val inntekter = inntekterTilDTO(grunnlag.inntekter())
     return Grunnlag11_19DTO(
         inntekter = inntekter,
@@ -175,20 +175,19 @@ private fun inntekterTilUføreDTO(uføreInntekt: UføreInntekt, grunnlagInntekt:
         justertTilMaks6G = grunnlagInntekt.inntekt6GBegrenset.verdi(),
         justertForUføreGrad = grunnlagInntekt.inntektIKroner.verdi(),
         justertForUføreGradiG = grunnlagInntekt.inntektIG.verdi(),
-        uføreGrad = uføreInntekt.inntektsPerioder.maxBy { it.periode.fom }.uføregrad.prosentverdi(),
         inntektsPerioder = uføreInntekt.inntektsPerioder
             .somTidslinje({ it.periode }, { Triple(it.inntektIKroner, it.uføregrad, it.inntektJustertForUføregrad) })
             .komprimer()
             .segmenter()
             .map { (periode, triple) ->
                 val (inntektIKroner, uføregrad, inntektJustertForUføregrad) = triple
-                val antallMånender =
+                val antallMåneder =
                     ChronoUnit.MONTHS.between(periode.fom.withDayOfMonth(1), periode.tom.withDayOfMonth(1)).toInt()
                 UføreInntektPeriodisertDTO(
                     periode = periode,
-                    inntektIKroner = inntektIKroner.multiplisert(antallMånender),
+                    inntektIKroner = inntektIKroner.multiplisert(antallMåneder),
                     uføregrad = uføregrad.prosentverdi(),
-                    inntektJustertForUføregrad = inntektJustertForUføregrad.multiplisert(antallMånender)
+                    inntektJustertForUføregrad = inntektJustertForUføregrad.multiplisert(antallMåneder)
                 )
             }
     )

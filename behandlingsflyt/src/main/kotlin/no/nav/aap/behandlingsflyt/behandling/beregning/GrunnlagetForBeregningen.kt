@@ -23,7 +23,7 @@ class GrunnlagetForBeregningen(
         inntekter.toSortedSet().reversed()
 
     init {
-        require(this.inntekter.size == 3) { "Må oppgi tre inntekter" }
+        require(this.inntekter.size == 3) { "Må oppgi tre inntekter, fikk ${this.inntekter.size}." }
         require(this.inntekter.first().år == this.inntekter.last().år.plusYears(2)) { "Inntektene må representere tre sammenhengende år" }
     }
 
@@ -97,21 +97,17 @@ class GrunnlagetForBeregningen(
     }
 
     private fun beregnInntekt(inntektPerÅr: InntektPerÅr): GrunnlagInntektForBeregning {
-        val år = inntektPerÅr.år
-        val inntektIKroner = inntektPerÅr.beløp
         // Inntekter justeres etter størrelsen på G-beløpet i de aktuelle årene.
         val benyttetGjennomsnittsbeløp = inntektPerÅr.gUnit()
         val inntektIG = benyttetGjennomsnittsbeløp.gUnit
-        val grunnbeløp = benyttetGjennomsnittsbeløp.beløp
         val inntekt6GBegrenset = inntektIG.begrensTil6GUnits()
-        val er6GBegrenset = inntektIG > inntekt6GBegrenset
         return GrunnlagInntektForBeregning(
-            år = år,
-            inntektIKroner = inntektIKroner,
-            grunnbeløp = grunnbeløp,
+            år = inntektPerÅr.år,
+            inntektIKroner = inntektPerÅr.beløp,
+            grunnbeløp = benyttetGjennomsnittsbeløp.beløp,
             inntektIG = inntektIG,
             inntekt6GBegrenset = inntekt6GBegrenset,
-            er6GBegrenset = er6GBegrenset,
+            er6GBegrenset = inntektIG > inntekt6GBegrenset,
         )
     }
 }

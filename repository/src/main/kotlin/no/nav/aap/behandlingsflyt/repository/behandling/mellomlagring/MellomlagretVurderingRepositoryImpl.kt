@@ -38,6 +38,31 @@ class MellomlagretVurderingRepositoryImpl(private val connection: DBConnection) 
             }
         }
     }
+    
+    override fun hentForAvklaringsbehov(
+        behandlingId: BehandlingId,
+        avklaringsbehovKoder: List<AvklaringsbehovKode>
+    ): List<MellomlagretVurdering> {
+        return connection.queryList(
+            """
+            SELECT * FROM MELLOMLAGRET_VURDERING WHERE behandling_id = ? AND avklaringsbehov_kode = ANY(?::text[]);
+        """.trimIndent()
+        ) {
+            setParams {
+                setLong(1, behandlingId.id)
+                setArray(2, avklaringsbehovKoder.map{it.name})
+            }
+            setRowMapper { row ->
+                MellomlagretVurdering(
+                    behandlingId = BehandlingId(row.getLong("behandling_id")),
+                    avklaringsbehovKode = row.getEnum("avklaringsbehov_kode"),
+                    data = row.getString("data"),
+                    vurdertAv = row.getString("vurdert_av"),
+                    vurdertDato = row.getLocalDateTime("vurdert_dato"),
+                )
+            }
+        }
+    }
 
     override fun slett(
         behandlingId: BehandlingId,
@@ -68,21 +93,14 @@ class MellomlagretVurderingRepositoryImpl(private val connection: DBConnection) 
     }
 
     override fun lagre(mellomlagretVurdering: MellomlagretVurdering): MellomlagretVurdering {
-
-        connection.execute(
-            """ 
-            DELETE FROM MELLOMLAGRET_VURDERING WHERE behandling_id = ? AND avklaringsbehov_kode = ?
-        """.trimIndent()
-        ) {
-            setParams {
-                setLong(1, mellomlagretVurdering.behandlingId.id)
-                setEnumName(2, mellomlagretVurdering.avklaringsbehovKode)
-            }
-        }
         connection.execute(
             """
             INSERT INTO MELLOMLAGRET_VURDERING (behandling_id, avklaringsbehov_kode, data, vurdert_av, vurdert_dato)
             VALUES (?, ?, ?::jsonb, ?, ?)
+            ON CONFLICT (behandling_id, avklaringsbehov_kode) DO UPDATE SET
+                data        = EXCLUDED.data,
+                vurdert_av  = EXCLUDED.vurdert_av,
+                vurdert_dato = EXCLUDED.vurdert_dato
         """.trimIndent()
         ) {
             setParams {

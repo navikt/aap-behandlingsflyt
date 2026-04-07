@@ -136,26 +136,28 @@ spec:
           namespace: team-rocket
         - application: logging
           namespace: nais-system
+        - application: dp-datadeling
+          namespace: teamdagpenger
+        - application: tiltakspenger-datadeling
+          namespace: tpts
 
   env:
     - name: INTEGRASJON_PDL_URL
       value: https://pdl-api.dev-fss-pub.nais.io/graphql
     - name: INTEGRASJON_PDL_SCOPE
       value: api://dev-fss.pdl.pdl-api/.default
-    - name: INTEGRASJON_SAF_URL_GRAPHQL
-      value: https://saf-q2.dev-fss-pub.nais.io/graphql
-    - name: INTEGRASJON_SAF_URL_REST
-      value: https://saf-q2.dev-fss-pub.nais.io/rest
-    - name: INTEGRASJON_SAF_SCOPE
-      value: api://dev-fss.teamdokumenthandtering.saf/.default
     - name: INTEGRASJON_YRKESSKADE_URL
       value: http://yrkesskade-saker.yrkesskade/api/v1/saker/
     - name: INTEGRASJON_YRKESSKADE_SCOPE
       value: api://dev-gcp.yrkesskade.yrkesskade-saker/.default
     - name: INTEGRASJON_INSTITUSJONSOPPHOLD_URL
       value: https://inst2-q2.dev-fss-pub.nais.io/api/v1/person/institusjonsopphold/soek
+    - name: INTEGRASJON_INSTITUSJONSOPPHOLDENKELT_URL
+      value: https://inst2-q2.dev-fss-pub.nais.io/api/v1/person/institusjonsopphold
     - name: INTEGRASJON_INSTITUSJONSOPPHOLD_SCOPE
       value: api://dev-fss.team-rocket.inst2-q2/.default
+    - name: INTEGRASJON_INSTITUSJONSOPPHOLD_EVENT_TOPIC
+      value: team-rocket.institusjon-opphold-hendelser-q2
     - name: INTEGRASJON_INNTEKT_URL
       value: https://pensjon-popp-q2.dev-fss-pub.nais.io/popp/api/inntekt/sumPi
     - name: INTEGRASJON_INNTEKT_SCOPE
@@ -172,6 +174,8 @@ spec:
       value: https://pensjon-pen-q2.dev-fss-pub.nais.io
     - name: INTEGRASJON_PESYS_SCOPE
       value: api://dev-fss.pensjon-q2.pensjon-pen-q2/.default
+    - name: INTEGRASJON_UFORE_VEDTAK_TOPIC
+      value: pensjon-q2.uforevedtak-aap-q2
     - name: INTEGRASJON_TILGANG_URL
       value: http://tilgang
     - name: INTEGRASJON_TILGANG_SCOPE
@@ -254,3 +258,11 @@ spec:
       value: api://dev-fss.pensjonsamhandling.sam-q2/.default
     - name: INTEGRASJON_SAM_URL
       value: https://sam-q2.dev-fss-pub.nais.io
+    - name: INTEGRASJON_DAGPENGER_URL
+      value: http://dp-datadeling.teamdagpenger
+    - name: INTEGRASJON_DAGPENGER_SCOPE
+      value: api://dev-gcp.teamdagpenger.dp-datadeling/.default
+    - name: INTEGRASJON_TILTAKSPENGER_URL
+      value: http://tiltakspenger-datadeling.tpts
+    - name: INTEGRASJON_TILTAKSPENGER_SCOPE
+      value: api://dev-gcp.tpts.tiltakspenger-datadeling/.default

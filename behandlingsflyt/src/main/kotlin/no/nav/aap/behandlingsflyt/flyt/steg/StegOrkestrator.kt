@@ -150,9 +150,7 @@ class StegOrkestrator(
         val behandlingSteg = stegKonstruktør.konstruer(aktivtSteg)
 
         log.debug(
-            "Behandler steg({}) med status({})",
-            aktivtSteg.type(),
-            gjeldendeStegStatus
+            "Behandler steg(${aktivtSteg.type()}) med status(${gjeldendeStegStatus})"
         )
 
         val transisjon = when (gjeldendeStegStatus) {
@@ -214,9 +212,9 @@ class StegOrkestrator(
                 resultat.ventebehov()
             )
             val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekstMedPerioder.behandlingId)
-            resultat.ventebehov().forEach {
+            resultat.ventebehov().let {
                 avklaringsbehovene.leggTil(
-                    definisjoner = listOf(it.definisjon),
+                    definisjon = it.definisjon,
                     funnetISteg = aktivtSteg.type(),
                     frist = it.frist,
                     grunn = it.grunn,

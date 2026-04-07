@@ -19,10 +19,6 @@ data class BistandGrunnlag(
         return filtrertBistandstidslinje(maksDato) { true }
     }
 
-    fun gjeldendeBistandsvurderinger(maksDato: LocalDate = Tid.MAKS): List<Bistandsvurdering> {
-        return somBistandsvurderingstidslinje(maksDato).segmenter().map { it.verdi }
-    }
-
     fun bistandsvurderingerVurdertIBehandling(behandlingId: BehandlingId): List<Bistandsvurdering> {
         return vurderinger.filter { it.vurdertIBehandling == behandlingId }
     }
@@ -38,13 +34,6 @@ data class BistandGrunnlag(
         return filtrertBistandstidslinje(maksDato) { it.vurdertIBehandling != behandlingId }
     }
 
-    fun gjeldendeVedtatteBistandsvurderinger(
-        behandlingId: BehandlingId,
-        maksDato: LocalDate = Tid.MAKS
-    ): List<Bistandsvurdering> {
-        return vedtattBistandstidslinje(behandlingId, maksDato).segmenter().map { it.verdi }
-    }
-
     private fun filtrertBistandstidslinje(
         maksDato: LocalDate = Tid.MAKS,
         filter: (bistandsvurdering: Bistandsvurdering) -> Boolean
@@ -55,7 +44,8 @@ data class BistandGrunnlag(
             .values
             .sortedBy { it[0].opprettet }
             .flatMap { vurderingerForBehandling -> vurderingerForBehandling.sortedBy { it.vurderingenGjelderFra } }
-            .somTidslinje { Periode(it.vurderingenGjelderFra, it.tom ?: maksDato) }
+            .somTidslinje { Periode(it.vurderingenGjelderFra, it.tom ?: Tid.MAKS) }
             .komprimer()
+            .begrensetTil(Periode(Tid.MIN, maksDato))
     }
 }

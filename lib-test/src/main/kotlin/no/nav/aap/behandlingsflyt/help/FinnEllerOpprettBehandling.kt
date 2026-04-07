@@ -1,11 +1,9 @@
 package no.nav.aap.behandlingsflyt.help
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
-import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
@@ -14,7 +12,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
-import no.nav.aap.behandlingsflyt.test.FakeUnleash
+import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
+import no.nav.aap.behandlingsflyt.test.FakeApiInternGateway
 import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.gateway.GatewayProvider
@@ -28,7 +27,7 @@ fun finnEllerOpprettBehandling(
     vurderingsbehov: List<VurderingsbehovMedPeriode> = listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_SØKNAD)),
     årsakTilOpprettelse: ÅrsakTilOpprettelse = ÅrsakTilOpprettelse.SØKNAD,
     gatewayProvider: GatewayProvider = createGatewayProvider {
-        register<FakeUnleash>()
+        register<AlleAvskruddUnleash>()
     }
 ): Behandling = finnEllerOpprettBehandling(
     repositoryProvider = postgresRepositoryRegistry.provider(connection),
@@ -44,7 +43,7 @@ fun finnEllerOpprettBehandling(
     vurderingsbehov: Vurderingsbehov,
     årsakTilOpprettelse: ÅrsakTilOpprettelse = ÅrsakTilOpprettelse.SØKNAD,
     gatewayProvider: GatewayProvider = createGatewayProvider {
-        register<FakeUnleash>()
+        register<AlleAvskruddUnleash>()
     }
 ): Behandling = finnEllerOpprettBehandling(
     connection = connection,
@@ -62,20 +61,44 @@ fun finnEllerOpprettBehandling(
     årsakTilOpprettelse: ÅrsakTilOpprettelse = ÅrsakTilOpprettelse.SØKNAD,
 ): Behandling {
     val sak = repositoryProvider.provide<SakRepository>().hent(saksnummer)
-    return SakOgBehandlingService(repositoryProvider, gatewayProvider)
+    return BehandlingService(repositoryProvider, gatewayProvider)
         .finnEllerOpprettOrdinærBehandling(sak.id, VurderingsbehovOgÅrsak(vurderingsbehov, årsakTilOpprettelse))
 }
 
-fun sak(connection: DBConnection, periode: Periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))): Sak {
-    return sak(postgresRepositoryRegistry.provider(connection), periode)
+fun sak(connection: DBConnection, søknadsdato: LocalDate = LocalDate.now()): Sak {
+    return sak(postgresRepositoryRegistry.provider(connection), søknadsdato)
 }
 
 fun sak(
     repositoryProvider: RepositoryProvider,
-    periode: Periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
+    søknadsdato: LocalDate = LocalDate.now(),
 ): Sak {
     return PersonOgSakService(
         FakePdlGateway,
+        FakeApiInternGateway.konstruer(),
+        repositoryProvider.provide(),
+        repositoryProvider.provide()
+    ).finnEllerOpprett(ident(), søknadsdato)
+}
+
+@Deprecated("Sluttdato for rettighetesperiode er alltid Tid.MAKS for nye/migrerte saker. Send kun med søknadsdato, med mindre du tester koden din for ikke-migrerte saker.")
+fun sak(
+    connection: DBConnection,
+    periode: Periode,
+): Sak {
+    @Suppress("DEPRECATION")
+    return sak(postgresRepositoryRegistry.provider(connection), periode)
+}
+
+@Deprecated("Sluttdato for rettighetesperiode er alltid Tid.MAKS for nye/migrerte saker. Send kun med søknadsdato, med mindre du tester koden din for ikke-migrerte saker.")
+fun sak(
+    repositoryProvider: RepositoryProvider,
+    periode: Periode,
+): Sak {
+    @Suppress("DEPRECATION")
+    return PersonOgSakService(
+        FakePdlGateway,
+        FakeApiInternGateway.konstruer(),
         repositoryProvider.provide(),
         repositoryProvider.provide()
     ).finnEllerOpprett(ident(), periode)

@@ -15,6 +15,7 @@ import no.nav.aap.komponenter.httpklient.exception.ApiException
 import no.nav.aap.komponenter.httpklient.exception.IkkeTillattException
 import no.nav.aap.komponenter.httpklient.exception.InternfeilException
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
+import no.nav.aap.komponenter.httpklient.exception.VerdiIkkeFunnetException
 import no.nav.aap.komponenter.httpklient.httpclient.error.IkkeFunnetException
 import no.nav.aap.komponenter.httpklient.httpclient.error.ManglerTilgangException
 import no.nav.aap.komponenter.json.DeserializationException
@@ -33,6 +34,11 @@ object StatusPagesConfigHelper {
             when (cause) {
                 is InternfeilException -> {
                     logger.error(cause.cause?.message ?: cause.message)
+                    call.respondWithError(cause)
+                }
+
+                is VerdiIkkeFunnetException -> {
+                    logger.info("Fant ikke verdi. Leverer 404. ${cause.message}", cause)
                     call.respondWithError(cause)
                 }
 

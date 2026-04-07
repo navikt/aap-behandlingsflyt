@@ -4,8 +4,8 @@ import no.nav.aap.behandlingsflyt.behandling.Resultat
 import no.nav.aap.behandlingsflyt.behandling.ResultatUtleder
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarOvergangUføreLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSykdomLøsning
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSykepengerErstatningLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.ForeslåVedtakLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.PeriodisertAvklarSykepengerErstatningLøsning
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companion.antallHverdager
@@ -18,18 +18,18 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Re
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.UføreSøknadVedtakResultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.flate.OvergangUføreLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerGrunn
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.PeriodisertSykepengerVurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.SykdomsvurderingLøsningDto
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.SykepengerVurderingDto
 import no.nav.aap.behandlingsflyt.help.assertTidslinje
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
+import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.underveis.UnderveisRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
-import no.nav.aap.behandlingsflyt.test.FakeUnleash
 import no.nav.aap.behandlingsflyt.test.april
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.tidslinje.Segment
@@ -39,10 +39,15 @@ import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.verdityper.dokument.JournalpostId
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedClass
+import org.junit.jupiter.params.provider.MethodSource
 import java.time.LocalDate
+import kotlin.reflect.KClass
 
-class SykepengeerstatningFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
-
+@ParameterizedClass
+@MethodSource("unleashTestDataSource")
+class SykepengeerstatningFlytTest(val unleashGateway: KClass<UnleashGateway>) :
+    AbstraktFlytOrkestratorTest(unleashGateway) {
     @Test
     fun `Sykepengeerstatning med yrkesskade`() {
         val fom = 1 april 2025
@@ -70,7 +75,8 @@ class SykepengeerstatningFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::cla
             }
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
-            .kvalitetssikreOk()
+            .bekreftVurderinger()
+            .kvalitetssikre()
             .medKontekst {
                 assertThat(åpneAvklaringsbehov.map { it.definisjon }).describedAs(
                     "Person med yrkesskade skal gi avklaringsbehov for yrkesskade"
@@ -83,13 +89,16 @@ class SykepengeerstatningFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::cla
                 ).containsExactly(Definisjon.AVKLAR_SYKEPENGEERSTATNING)
             }
             .løsAvklaringsBehov(
-                AvklarSykepengerErstatningLøsning(
-                    sykepengeerstatningVurdering = SykepengerVurderingDto(
-                        begrunnelse = "...",
-                        dokumenterBruktIVurdering = emptyList(),
-                        harRettPå = true,
-                        grunn = SykepengerGrunn.SYKEPENGER_IGJEN_ARBEIDSUFOR,
-                        gjelderFra = periode.fom
+                PeriodisertAvklarSykepengerErstatningLøsning(
+                    løsningerForPerioder = listOf(
+                        PeriodisertSykepengerVurderingDto(
+                            begrunnelse = "...",
+                            dokumenterBruktIVurdering = emptyList(),
+                            harRettPå = true,
+                            grunn = SykepengerGrunn.SYKEPENGER_IGJEN_ARBEIDSUFOR,
+                            fom = periode.fom,
+                            tom = null
+                        )
                     ),
                 )
             )
@@ -107,13 +116,13 @@ class SykepengeerstatningFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::cla
             .assertRettighetstype(
                 Periode(
                     sak.rettighetsperiode.fom,
-                    sak.rettighetsperiode.fom.plusHverdager(Hverdager(130)).minusDays(1),
+                    sak.rettighetsperiode.fom.plusHverdager(Hverdager(131)).minusDays(1),
                 ) to RettighetsType.SYKEPENGEERSTATNING,
             )
             .medKontekst {
                 assertThat(this.behandling.status()).isEqualTo(Status.IVERKSETTES)
 
-                val resultat = ResultatUtleder(repositoryProvider).utledResultat(behandling.id)
+                val resultat = ResultatUtleder(repositoryProvider).utledResultatFørstegangsBehandling(behandling.id)
                 assertThat(resultat).isEqualTo(Resultat.INNVILGELSE)
             }
 
@@ -158,7 +167,7 @@ class SykepengeerstatningFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::cla
                         OvergangUføreLøsningDto(
                             begrunnelse = "Løsning",
                             brukerHarSøktOmUføretrygd = true,
-                            brukerHarFåttVedtakOmUføretrygd = "NEI",
+                            brukerHarFåttVedtakOmUføretrygd = UføreSøknadVedtakResultat.NEI,
                             brukerRettPåAAP = true,
                             fom = nå,
                             tom = null,
@@ -169,7 +178,8 @@ class SykepengeerstatningFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::cla
             )
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
-            .kvalitetssikreOk()
+            .bekreftVurderinger()
+            .kvalitetssikre()
             .medKontekst {
                 assertThat(åpneAvklaringsbehov).anySatisfy { assertThat(it.definisjon).isEqualTo(Definisjon.AVKLAR_SYKEPENGEERSTATNING) }
                 val avklaringsbehov =
@@ -180,13 +190,16 @@ class SykepengeerstatningFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::cla
                     .containsExactly(periode.fom.plusMonths(8))
             }
             .løsAvklaringsBehov(
-                AvklarSykepengerErstatningLøsning(
-                    sykepengeerstatningVurdering = SykepengerVurderingDto(
-                        begrunnelse = "...",
-                        dokumenterBruktIVurdering = emptyList(),
-                        harRettPå = true,
-                        grunn = SykepengerGrunn.SYKEPENGER_IGJEN_ARBEIDSUFOR,
-                        gjelderFra = periode.fom.plusMonths(8)
+                PeriodisertAvklarSykepengerErstatningLøsning(
+                    løsningerForPerioder = listOf(
+                        PeriodisertSykepengerVurderingDto(
+                            begrunnelse = "...",
+                            dokumenterBruktIVurdering = emptyList(),
+                            harRettPå = true,
+                            grunn = SykepengerGrunn.SYKEPENGER_IGJEN_ARBEIDSUFOR,
+                            fom = periode.fom.plusMonths(8),
+                            tom = null
+                        )
                     ),
                 )
             )
@@ -206,7 +219,7 @@ class SykepengeerstatningFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::cla
             .fattVedtak()
             .medKontekst {
                 assertThat(this.behandling.status()).isEqualTo(Status.IVERKSETTES)
-                val resultat = ResultatUtleder(repositoryProvider).utledResultat(behandling.id)
+                val resultat = ResultatUtleder(repositoryProvider).utledResultatFørstegangsBehandling(behandling.id)
                 assertThat(resultat).isEqualTo(Resultat.INNVILGELSE)
             }
 
@@ -227,7 +240,11 @@ class SykepengeerstatningFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::cla
             })
 
         val resultat =
-            dataSource.transaction { ResultatUtleder(postgresRepositoryRegistry.provider(it)).utledResultat(behandling.id) }
+            dataSource.transaction {
+                ResultatUtleder(postgresRepositoryRegistry.provider(it)).utledResultatFørstegangsBehandling(
+                    behandling.id
+                )
+            }
 
         assertThat(resultat).isEqualTo(Resultat.INNVILGELSE)
         val underveisPeriode = dataSource.transaction {
@@ -253,6 +270,7 @@ class SykepengeerstatningFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::cla
         revurdereFramTilOgMedSykdom(sak, gjelderFra)
             .løsBistand(gjelderFra)
             .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
             .medKontekst {
                 assertThat(this.åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
                     .describedAs("Siden vurderingenGjelderFra ikke er lik kravdato (rettighetsperiode.fom), så skal man ikke vurdere 11-13")
@@ -301,19 +319,23 @@ class SykepengeerstatningFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::cla
         )
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
-            .kvalitetssikreOk()
+            .bekreftVurderinger()
+            .kvalitetssikre()
             .medKontekst {
                 assertThat(åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
                     .contains(Definisjon.AVKLAR_SYKEPENGEERSTATNING)
             }
             .løsAvklaringsBehov(
-                AvklarSykepengerErstatningLøsning(
-                    sykepengeerstatningVurdering = SykepengerVurderingDto(
-                        begrunnelse = "...",
-                        dokumenterBruktIVurdering = emptyList(),
-                        harRettPå = true,
-                        grunn = SykepengerGrunn.SYKEPENGER_IGJEN_ARBEIDSUFOR,
-                        gjelderFra = sak.rettighetsperiode.fom
+                PeriodisertAvklarSykepengerErstatningLøsning(
+                    løsningerForPerioder = listOf(
+                        PeriodisertSykepengerVurderingDto(
+                            begrunnelse = "...",
+                            dokumenterBruktIVurdering = emptyList(),
+                            harRettPå = true,
+                            grunn = SykepengerGrunn.SYKEPENGER_IGJEN_ARBEIDSUFOR,
+                            fom = sak.rettighetsperiode.fom,
+                            tom = null
+                        )
                     ),
                 )
             )
@@ -337,7 +359,7 @@ class SykepengeerstatningFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::cla
             .medKontekst {
                 assertThat(this.behandling.status()).isEqualTo(Status.IVERKSETTES)
 
-                val resultat = ResultatUtleder(repositoryProvider).utledResultat(behandling.id)
+                val resultat = ResultatUtleder(repositoryProvider).utledResultatFørstegangsBehandling(behandling.id)
                 assertThat(resultat).isEqualTo(Resultat.INNVILGELSE)
             }
             .løsVedtaksbrev()
@@ -351,24 +373,21 @@ class SykepengeerstatningFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::cla
                     .extracting(Vilkårsperiode::erOppfylt, Vilkårsperiode::innvilgelsesårsak)
                     .containsExactly(true, null)
 
-                val resultat = ResultatUtleder(repositoryProvider).utledResultat(behandling.id)
-
-                val underveisGrunnlag = repositoryProvider.provide<UnderveisRepository>().hent(behandling.id)
+                val resultat = ResultatUtleder(repositoryProvider).utledResultatFørstegangsBehandling(behandling.id)
 
                 assertThat(resultat).isEqualTo(Resultat.INNVILGELSE)
-
-                assertTidslinje(
-                    vilkårsresultat.rettighetstypeTidslinje()
-                        .begrensetTil(underveisGrunnlag.somTidslinje().helePerioden()),
-                    Periode(periode.fom, periode.fom.plussEtÅrMedHverdager(ÅrMedHverdager.FØRSTE_ÅR)) to {
-                        assertThat(it).isEqualTo(RettighetsType.SYKEPENGEERSTATNING)
-                    })
             }
+            .assertRettighetstype(
+                Periode(
+                    sak.rettighetsperiode.fom,
+                    sak.rettighetsperiode.fom.plusHverdager(Hverdager(131)).minusDays(1)
+                ) to RettighetsType.SYKEPENGEERSTATNING
+            )
 
         // Verifisere at det går an å kun 1 mnd med sykepengeerstatning
         val revurderingFom = LocalDate.now().plusMonths(1)
         val revurdering = sak.opprettManuellRevurdering(
-            listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND),
+            listOf(Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND),
         )
             .løsSykdom(vurderingGjelderFra = revurderingFom)
             .løsBistand(revurderingFom)
@@ -376,6 +395,7 @@ class SykepengeerstatningFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::cla
                 assertThat(this.åpneAvklaringsbehov.map { it.definisjon }).containsOnly(Definisjon.SKRIV_SYKDOMSVURDERING_BREV)
             }
             .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
             .medKontekst {
                 assertThat(this.åpneAvklaringsbehov.map { it.definisjon }).containsOnly(Definisjon.FATTE_VEDTAK)
 
@@ -391,19 +411,19 @@ class SykepengeerstatningFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::cla
                 // Oppfylt ut rettighetsperioden
                 assertThat(oppfyltPeriode.tom).isEqualTo(periode.fom.plussEtÅrMedHverdager(ÅrMedHverdager.FØRSTE_ÅR))
                 assertThat(underveisTidslinje.helePerioden().fom).isEqualTo(rettighetstypeTidslinje.helePerioden().fom)
-
-                assertTidslinje(
-                    rettighetstypeTidslinje.begrensetTil(underveisTidslinje.helePerioden()),
-                    Periode(periode.fom, periode.fom.plusMonths(1).minusDays(1)) to {
-                        assertThat(it).isEqualTo(RettighetsType.SYKEPENGEERSTATNING)
-                    },
-                    Periode(periode.fom.plusMonths(1), oppfyltPeriode.tom) to {
-                        assertThat(it).isEqualTo(RettighetsType.BISTANDSBEHOV)
-                    }
-                )
             }
             .fattVedtak()
             .løsVedtaksbrev(TypeBrev.VEDTAK_ENDRING)
+            .assertRettighetstype(
+                Periode(
+                    sak.rettighetsperiode.fom,
+                    sak.rettighetsperiode.fom.plusMonths(1).minusDays(1)
+                ) to RettighetsType.SYKEPENGEERSTATNING,
+                Periode(
+                    revurderingFom,
+                    sak.rettighetsperiode.fom.plussEtÅrMedHverdager(ÅrMedHverdager.FØRSTE_ÅR)
+                ) to RettighetsType.BISTANDSBEHOV
+            )
 
         // Revurdering nr 2, innvilger sp-erstatning på nytt
         val førstePeriodeSykepengeerstatning = Periode(periode.fom, periode.fom.plusMonths(1).minusDays(1))
@@ -436,21 +456,21 @@ class SykepengeerstatningFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::cla
             )
             // Nei på 11-6
             .løsBistand(revurdering2Fom, false)
-            .løsOvergangUføre()
-            .apply {
-                if (gatewayProvider.provide<UnleashGateway>().isEnabled(BehandlingsflytFeature.OvergangArbeid)) {
-                    løsOvergangArbeid(Utfall.IKKE_OPPFYLT, periode.fom)
-                }
-            }
+            .løsOvergangUføre(revurdering2Fom)
+            .løsOvergangArbeid(Utfall.IKKE_OPPFYLT, periode.fom)
             .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
             .løsAvklaringsBehov(
-                AvklarSykepengerErstatningLøsning(
-                    sykepengeerstatningVurdering = SykepengerVurderingDto(
-                        begrunnelse = "...",
-                        dokumenterBruktIVurdering = emptyList(),
-                        harRettPå = true,
-                        grunn = SykepengerGrunn.SYKEPENGER_IGJEN_ARBEIDSUFOR,
-                        gjelderFra = LocalDate.now().plusMonths(2)
+                PeriodisertAvklarSykepengerErstatningLøsning(
+                    løsningerForPerioder = listOf(
+                        PeriodisertSykepengerVurderingDto(
+                            begrunnelse = "...",
+                            dokumenterBruktIVurdering = emptyList(),
+                            harRettPå = true,
+                            grunn = SykepengerGrunn.SYKEPENGER_IGJEN_ARBEIDSUFOR,
+                            fom = LocalDate.now().plusMonths(2),
+                            tom = null
+                        )
                     ),
                 )
             )
@@ -462,11 +482,72 @@ class SykepengeerstatningFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::cla
                 Periode(
                     periode.fom.plusMonths(2),
                     periode.fom.plusMonths(2).plusHverdager(
-                        Hverdager(130) - førstePeriodeSykepengeerstatning.antallHverdager()
+                        Hverdager(131) - førstePeriodeSykepengeerstatning.antallHverdager()
                     ).minusDays(1)
                 ) to
                         RettighetsType.SYKEPENGEERSTATNING,
             )
+    }
+
+
+    @Test
+    fun `ikke sykdom viss varighet, endrer rettighetsperiode etter 11-5 - skal ikke få spørsmål om 11-6`() {
+        val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
+
+        // Sender inn en søknad
+        var (sak, behandling) = sendInnFørsteSøknad(periode = periode, mottattTidspunkt = periode.fom.atStartOfDay())
+
+        assertThat(behandling.status()).isEqualTo(Status.UTREDES)
+
+        val nyStartDato = periode.fom.minusDays(7)
+        behandling = behandling.løsAvklaringsBehov(
+            AvklarSykdomLøsning(
+                løsningerForPerioder = listOf(
+                    SykdomsvurderingLøsningDto(
+                        begrunnelse = "Er syk nok",
+                        dokumenterBruktIVurdering = listOf(JournalpostId("123123")),
+                        harSkadeSykdomEllerLyte = true,
+                        erSkadeSykdomEllerLyteVesentligdel = true,
+                        erNedsettelseIArbeidsevneMerEnnHalvparten = true,
+                        // Nei på denne gir mulighet til å innvilge på 11-13
+                        erNedsettelseIArbeidsevneAvEnVissVarighet = false,
+                        erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
+                        erArbeidsevnenNedsatt = true,
+                        yrkesskadeBegrunnelse = null,
+                        fom = sak.rettighetsperiode.fom,
+                        tom = null
+                    )
+                )
+            ),
+        )
+        behandling = sak.opprettManuellRevurdering(
+            vurderingsbehov = listOf(Vurderingsbehov.VURDER_RETTIGHETSPERIODE),
+        )
+        behandling.løsRettighetsperiode(nyStartDato)
+            .løsAvklaringsBehov(
+                AvklarSykdomLøsning(
+                    løsningerForPerioder = listOf(
+                        SykdomsvurderingLøsningDto(
+                            begrunnelse = "Er syk nok",
+                            dokumenterBruktIVurdering = listOf(JournalpostId("123123")),
+                            harSkadeSykdomEllerLyte = true,
+                            erSkadeSykdomEllerLyteVesentligdel = true,
+                            erNedsettelseIArbeidsevneMerEnnHalvparten = true,
+                            // Nei på denne gir mulighet til å innvilge på 11-13
+                            erNedsettelseIArbeidsevneAvEnVissVarighet = false,
+                            erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
+                            erArbeidsevnenNedsatt = true,
+                            yrkesskadeBegrunnelse = null,
+                            fom = nyStartDato,
+                            tom = null
+                        )
+                    )
+                ),
+            ).medKontekst {
+                assertThat(åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
+                    .doesNotContain(Definisjon.AVKLAR_BISTANDSBEHOV)
+            }
+
     }
 
     @Test
@@ -475,19 +556,23 @@ class SykepengeerstatningFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::cla
 
         revurdereFramTilOgMedSykdom(sak, sak.rettighetsperiode.fom, vissVarighet = false)
             .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
             .medKontekst {
                 assertThat(this.åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
                     .describedAs("Siden vurderingenGjelderFra er lik kravdato (rettighetsperiode.fom), så kan man revurdere 11-13")
                     .containsExactlyInAnyOrder(Definisjon.AVKLAR_SYKEPENGEERSTATNING)
             }
             .løsAvklaringsBehov(
-                AvklarSykepengerErstatningLøsning(
-                    sykepengeerstatningVurdering = SykepengerVurderingDto(
-                        begrunnelse = "...",
-                        dokumenterBruktIVurdering = emptyList(),
-                        harRettPå = true,
-                        grunn = SykepengerGrunn.SYKEPENGER_IGJEN_ARBEIDSUFOR,
-                        gjelderFra = sak.rettighetsperiode.fom
+                PeriodisertAvklarSykepengerErstatningLøsning(
+                    løsningerForPerioder = listOf(
+                        PeriodisertSykepengerVurderingDto(
+                            begrunnelse = "...",
+                            dokumenterBruktIVurdering = emptyList(),
+                            harRettPå = true,
+                            grunn = SykepengerGrunn.SYKEPENGER_IGJEN_ARBEIDSUFOR,
+                            fom = sak.rettighetsperiode.fom,
+                            tom = null
+                        )
                     ),
                 )
             )
@@ -500,7 +585,7 @@ class SykepengeerstatningFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::cla
             .assertRettighetstype(
                 Periode(
                     sak.rettighetsperiode.fom,
-                    sak.rettighetsperiode.fom.plusHverdager(Hverdager(130)).minusDays(1)
+                    sak.rettighetsperiode.fom.plusHverdager(Hverdager(131)).minusDays(1)
                 ) to
                         RettighetsType.SYKEPENGEERSTATNING
             )

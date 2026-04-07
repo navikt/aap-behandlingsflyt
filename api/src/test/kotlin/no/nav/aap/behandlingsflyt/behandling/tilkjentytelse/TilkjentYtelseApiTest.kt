@@ -66,10 +66,13 @@ class TilkjentYtelseApiTest : BaseApiTest() {
                 ),
                 grunnlagsfaktor = GUnit("1.5"),
                 grunnbeløp = Beløp(106399),
+                barnepensjonDagsats = Beløp(0),
                 antallBarn = 2,
                 barnetilleggsats = Beløp(36),
                 barnetillegg = Beløp(72),
-                utbetalingsdato = rettighetsperiode.fom
+                utbetalingsdato = rettighetsperiode.fom,
+                minsteSats = Minstesats.MINSTESATS_UNDER_25,
+                redusertDagsats = Beløp(236)
             )
 
             val tilkjentYtelsePerioder = perioder.mapIndexed { index, periode ->
@@ -79,12 +82,19 @@ class TilkjentYtelseApiTest : BaseApiTest() {
                         fom = periode.fom,
                         tom = periode.tom,
                     ),
-                    tilkjent = tilkjentYtelseVerdi.copy(dagsats = Beløp(400 + index * 100.00.toLong()))
+                    tilkjent = tilkjentYtelseVerdi.copy(
+                        dagsats = Beløp(400 + index * 100.00.toLong()),
+                        redusertDagsats = null
+                    )
                 )
             }
 
             InMemoryTilkjentYtelseRepository.lagre(
-                behandling.id, tilkjent = tilkjentYtelsePerioder, faktagrunnlag = tomtTilkjentYtelseGrunnlag, versjon = "")
+                behandling.id,
+                tilkjent = tilkjentYtelsePerioder,
+                faktagrunnlag = tomtTilkjentYtelseGrunnlag,
+                versjon = ""
+            )
 
             InMemoryMeldekortRepository.lagre(
                 behandling.id, setOf(
@@ -154,7 +164,9 @@ class TilkjentYtelseApiTest : BaseApiTest() {
                                         institusjonGradering = 50,
                                         totalReduksjon = 50,
                                         effektivDagsats = 236.0,
-                                        arbeidsgiverGradering = 50
+                                        arbeidsgiverGradering = 50,
+                                        barnepensjonDagsats = 0.0
+
                                     )
                                 )
                             ),
@@ -185,7 +197,9 @@ class TilkjentYtelseApiTest : BaseApiTest() {
                                         institusjonGradering = 50,
                                         totalReduksjon = 50,
                                         effektivDagsats = 286.0,
-                                        arbeidsgiverGradering = 50
+                                        arbeidsgiverGradering = 50,
+                                        barnepensjonDagsats = 0.0
+
                                     )
                                 )
                             ),
@@ -213,7 +227,8 @@ class TilkjentYtelseApiTest : BaseApiTest() {
                                         institusjonGradering = 50,
                                         totalReduksjon = 50,
                                         effektivDagsats = 336.0,
-                                        arbeidsgiverGradering = 50
+                                        arbeidsgiverGradering = 50,
+                                        barnepensjonDagsats = 0.0
                                     )
                                 )
                             ),

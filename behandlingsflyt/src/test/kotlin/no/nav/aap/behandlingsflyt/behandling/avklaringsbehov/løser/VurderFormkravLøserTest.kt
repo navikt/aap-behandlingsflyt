@@ -1,7 +1,8 @@
 package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser
 
+import io.mockk.checkUnnecessaryStub
+import io.mockk.clearMocks
 import io.mockk.every
-import io.mockk.junit5.MockKExtension
 import io.mockk.mockk
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
@@ -16,17 +17,20 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
-import org.junit.jupiter.api.extension.ExtendWith
 
-@ExtendWith(MockKExtension::class)
-@MockKExtension.CheckUnnecessaryStub
 class VurderFormkravLøserTest {
     private val formkravRepositoryMock = mockk<FormkravRepository>()
     private val avklaringsbehovRepositoryMock = mockk<AvklaringsbehovRepository>()
     private val avklaringsbehoveneMock = mockk<Avklaringsbehovene>()
 
+    @AfterEach
+    fun tearDown() {
+        checkUnnecessaryStub(formkravRepositoryMock, avklaringsbehovRepositoryMock, avklaringsbehoveneMock)
+        clearMocks(formkravRepositoryMock, avklaringsbehovRepositoryMock, avklaringsbehoveneMock)
+    }
 
     @Test
     fun `løs skal returnere et løsningsresultat om alle verdier er satt`() {

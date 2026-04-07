@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.overga
 import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingVurdering
 import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingÅrsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.UføreSøknadVedtakResultat
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.help.sak
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
@@ -66,7 +67,7 @@ internal class OvergangUføreRepositoryImplTest {
             val expected = OvergangUføreVurdering(
                 begrunnelse = "test",
                 brukerHarSøktOmUføretrygd = true,
-                brukerHarFåttVedtakOmUføretrygd = "NEI",
+                brukerHarFåttVedtakOmUføretrygd = UføreSøknadVedtakResultat.NEI,
                 brukerRettPåAAP = true,
                 fom = testDate,
                 tom = null,
@@ -97,7 +98,7 @@ internal class OvergangUføreRepositoryImplTest {
                         OvergangUføreVurdering(
                             begrunnelse = "test",
                             brukerHarSøktOmUføretrygd = true,
-                            brukerHarFåttVedtakOmUføretrygd = "NEI",
+                            brukerHarFåttVedtakOmUføretrygd = UføreSøknadVedtakResultat.NEI,
                             brukerRettPåAAP = true,
                             fom = LocalDate.now(),
                             tom = null,
@@ -113,7 +114,7 @@ internal class OvergangUføreRepositoryImplTest {
                         OvergangUføreVurdering(
                             begrunnelse = "test",
                             brukerHarSøktOmUføretrygd = true,
-                            brukerHarFåttVedtakOmUføretrygd = "NEI",
+                            brukerHarFåttVedtakOmUføretrygd = UføreSøknadVedtakResultat.NEI,
                             brukerRettPåAAP = true,
                             fom = LocalDate.now(),
                             tom = null,
@@ -133,7 +134,7 @@ internal class OvergangUføreRepositoryImplTest {
             OvergangUføreVurdering(
                 begrunnelse = "B1",
                 brukerHarSøktOmUføretrygd = true,
-                brukerHarFåttVedtakOmUføretrygd = "NEI",
+                brukerHarFåttVedtakOmUføretrygd = UføreSøknadVedtakResultat.NEI,
                 brukerRettPåAAP = true,
                 fom = LocalDate.of(2024, 5, 22),
                 tom = null,
@@ -145,7 +146,7 @@ internal class OvergangUføreRepositoryImplTest {
             OvergangUføreVurdering(
                 begrunnelse = "B2",
                 brukerHarSøktOmUføretrygd = true,
-                brukerHarFåttVedtakOmUføretrygd = "JA",
+                brukerHarFåttVedtakOmUføretrygd = UføreSøknadVedtakResultat.JA_INNVILGET_FULL,
                 brukerRettPåAAP = true,
                 fom = LocalDate.of(2024, 5, 1),
                 tom = null,
@@ -157,7 +158,7 @@ internal class OvergangUføreRepositoryImplTest {
             OvergangUføreVurdering(
                 begrunnelse = "B3",
                 brukerHarSøktOmUføretrygd = true,
-                brukerHarFåttVedtakOmUføretrygd = "NEI",
+                brukerHarFåttVedtakOmUføretrygd = UføreSøknadVedtakResultat.JA_INNVILGET_FULL,
                 brukerRettPåAAP = true,
                 fom = LocalDate.of(2024, 4, 15),
                 tom = null,

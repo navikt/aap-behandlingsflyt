@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.test.inmemoryrepo
 
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.*
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import java.time.LocalDateTime
@@ -10,7 +11,7 @@ import java.util.concurrent.atomic.AtomicLong
 object InMemoryBrevbestillingRepository: BrevbestillingRepository {
     private val bestilling = CopyOnWriteArrayList<Brevbestilling>()
     private val id = AtomicLong()
-    private val lock = Object()
+    private val lock = Any()
 
     override fun hent(
         sakId: SakId,
@@ -26,9 +27,9 @@ object InMemoryBrevbestillingRepository: BrevbestillingRepository {
         }
     }
 
-    override fun hent(brevbestillingReferanse: BrevbestillingReferanse): Brevbestilling {
+    override fun hent(brevbestillingReferanse: BrevbestillingReferanse): Brevbestilling? {
         synchronized(lock) {
-            return bestilling.first { it.referanse == brevbestillingReferanse }
+            return bestilling.firstOrNull { it.referanse == brevbestillingReferanse }
         }
     }
 
@@ -67,5 +68,9 @@ object InMemoryBrevbestillingRepository: BrevbestillingRepository {
 
     fun clearMemory() {
         bestilling.clear()
+    }
+
+    override fun hentBehandlingsreferanseForBestilling(referanse: BrevbestillingReferanse): BehandlingReferanse {
+        TODO("Not yet implemented")
     }
 }

@@ -7,7 +7,7 @@ import no.nav.aap.behandlingsflyt.hendelse.mottak.BehandlingSattPåVent
 import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
 import no.nav.aap.behandlingsflyt.prosessering.VarsleOppgaveOmHendelseJobbUtFører
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
-import no.nav.aap.behandlingsflyt.test.FakeUnleash
+import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
@@ -39,7 +39,7 @@ class AvklaringsbehovOrkestratorTest {
         val uthentedeJobber = dataSource.transaction { connection ->
             val avklaringsbehovOrkestrator = AvklaringsbehovOrkestrator(
                 postgresRepositoryRegistry.provider(connection),
-                createGatewayProvider { register<FakeUnleash>() },
+                createGatewayProvider { register<AlleAvskruddUnleash>() },
             )
             val sak = sak(connection)
             val behandling = finnEllerOpprettBehandling(connection, sak)

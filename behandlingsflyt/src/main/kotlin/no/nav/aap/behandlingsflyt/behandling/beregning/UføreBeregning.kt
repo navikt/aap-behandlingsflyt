@@ -9,21 +9,23 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.Uføre
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.tilTidslinje
 import no.nav.aap.komponenter.tidslinje.Tidslinje
-import no.nav.aap.komponenter.tidslinje.somTidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.Prosent
-import no.nav.aap.komponenter.verdityper.Tid
 import org.slf4j.LoggerFactory
+import java.time.LocalDate
 import java.time.Year
 import java.time.YearMonth
 
+// TODO: ta inn både månedsinntekt og årsinntekt, og velg basert på uføre-grad
 class UføreBeregning(
     private val grunnlag: Grunnlag11_19,
     private val uføregrader: Set<Uføre>,
-    private val relevanteÅr: Set<Year>,
     private val inntektsPerioder: Set<Månedsinntekt>,
+    ytterligereNedsattDato: LocalDate,
 ) {
+    private val relevanteÅr = Beregning.treÅrForutFor(ytterligereNedsattDato)
+    private val ytterligereNedsattÅr = Year.from(ytterligereNedsattDato)
 
     private val log = LoggerFactory.getLogger(javaClass)
 
@@ -33,20 +35,21 @@ class UføreBeregning(
         }
     }
 
-    fun beregnUføre(ytterligereNedsattÅr: Year): GrunnlagUføre {
+    fun beregnUføre(): GrunnlagUføre {
         // tidslinjelogikken er basert på antagelsen om at uføre alltid har virkningstidspunkt på den første i måneden
         // og at vi får inntekt fra inntektskomponenten per måned
         val uføreTidslinje = uføregrader.tilTidslinje()
 
-        require(inntektsPerioder
-            .filter { Year.of(it.årMåned.year) in relevanteÅr }
-            .groupingBy { it.årMåned.year }
-            .eachCount().values.all { it == 12 }) { "Krever inntekter for alle måneder i relevante år." }
 
-        val inntektPerMåned = inntektsPerioder
+        val inntektPerMånedUtenDefaults = inntektsPerioder
             .filter { Year.of(it.årMåned.year) in relevanteÅr }
             .groupingBy { it.årMåned }
             .fold(Beløp(0)) { acc, curr -> acc.pluss(curr.beløp) }
+
+        val inntektPerMåned = generateSequence(relevanteÅr.min().atMonth(1)) { it.plusMonths(1) }
+            .takeWhile { Year.of(it.year) in relevanteÅr }
+            .associateWith { Beløp(0) }
+            .mapValues { (årMåned,beløp) -> inntektPerMånedUtenDefaults[årMåned] ?: beløp }
 
         val oppjusterteInntekter =
             oppjusterMhpUføregradPeriodisertInntekt(
@@ -122,6 +125,7 @@ class UføreBeregning(
             }.values.toList()
     }
 
+    @Suppress("FunctionName")
     private fun beregn11_19Grunnlag(
         oppjusterteInntekter: List<UføreInntekt>
     ): Grunnlag11_19 {
@@ -136,6 +140,4 @@ class UføreBeregning(
 
     private fun gUnit(år: Year, beløp: Beløp): Grunnbeløp.BenyttetGjennomsnittsbeløp =
         Grunnbeløp.finnGUnit(år, beløp)
-
-
 }

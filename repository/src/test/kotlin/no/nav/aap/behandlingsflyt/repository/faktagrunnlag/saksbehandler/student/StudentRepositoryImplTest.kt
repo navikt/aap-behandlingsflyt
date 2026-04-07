@@ -4,19 +4,20 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.ErStudentS
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.OppgittStudent
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.SkalGjenopptaStudieStatus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Diagnose
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.help.sak
 import no.nav.aap.behandlingsflyt.test.april
-import no.nav.aap.behandlingsflyt.test.desember
 import no.nav.aap.behandlingsflyt.test.februar
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
-import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
+import java.time.LocalDateTime
+import java.time.temporal.ChronoUnit
 
 class StudentRepositoryImplTest {
     companion object {
@@ -36,7 +37,7 @@ class StudentRepositoryImplTest {
 
     @Test
     fun `lagre, hente ut, slette`() {
-        val sak = dataSource.transaction { sak(it, Periode(1 januar 2022, 31.desember(2023))) }
+        val sak = dataSource.transaction { sak(it, 1 januar 2022) }
 
         val behandling = dataSource.transaction {
             finnEllerOpprettBehandling(it, sak)
@@ -63,23 +64,44 @@ class StudentRepositoryImplTest {
             avbruttStudieDato = 13 februar 1989,
             avbruddMerEnn6Måneder = true,
             vurdertAv = "Gokken Gokkestad",
+            vurdertTidspunkt = LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS),
+            diagnose = Diagnose("ICD-10", "A00.0", listOf("KOLERA")),
             vurdertIBehandling = behandling.id
         )
+        val studentvurdering2 = StudentVurdering(
+            fom = 2 april 2020,
+            tom = null,
+            begrunnelse = "Nei",
+            harAvbruttStudie = false,
+            godkjentStudieAvLånekassen = null,
+            avbruttPgaSykdomEllerSkade = null,
+            harBehovForBehandling = null,
+            avbruttStudieDato = null,
+            avbruddMerEnn6Måneder = true,
+            vurdertAv = "Gokken Gokkestad",
+            vurdertTidspunkt = LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS),
+            vurdertIBehandling = behandling.id,
+            diagnose = null
+        )
+
         dataSource.transaction {
             StudentRepositoryImpl(it).lagre(
-                behandling.id, setOf(studentvurdering)
+                behandling.id, setOf(studentvurdering, studentvurdering2)
             )
         }
 
         val uthentet = dataSource.transaction {
             StudentRepositoryImpl(it).hent(behandling.id)
         }
-        assertThat(uthentet.vurderinger).hasSize(1)
-        assertThat(uthentet.vurderinger!!.single())
-            .usingRecursiveComparison().ignoringFields("id", "vurdertTidspunkt")
+        assertThat(uthentet.vurderinger).hasSize(2)
+        assertThat(uthentet.vurderinger!!.first { it.fom.isEqual(1 januar 2020) })
+            .usingRecursiveComparison().ignoringFields("id")
             .isEqualTo(studentvurdering)
+        assertThat(uthentet.vurderinger!!.first { it.fom.isEqual(2 april 2020) })
+            .usingRecursiveComparison().ignoringFields("id")
+            .isEqualTo(studentvurdering2)
         assertThat(uthentet.oppgittStudent)
-            .usingRecursiveComparison().ignoringFields("id", "vurdertTidspunkt")
+            .usingRecursiveComparison().ignoringFields("id")
             .isEqualTo(oppgittStudent)
 
         // SLETT

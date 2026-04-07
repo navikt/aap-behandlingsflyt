@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.KildesystemMedl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.AdresseType
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.GyldigPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonStatus
 import no.nav.aap.komponenter.type.Periode
 import java.time.LocalDate
@@ -48,9 +49,9 @@ data class MottarSykepengerGrunnlag(
 
 data class ManglerStatsborgerskapGrunnlag(
     val land: String,
-    val gyldigFraOgMed: LocalDate? = null,
-    val gyldigTilOgMed: LocalDate? = null,
-)
+    override val gyldigFraOgMed: LocalDate? = null,
+    override val gyldigTilOgMed: LocalDate? = null,
+) : GyldigPeriode
 
 data class OppgittJobbetIUtlandGrunnlag(
     val land: String?,
@@ -94,7 +95,7 @@ enum class Indikasjon {
 }
 
 enum class VurdertPeriode(val beskrivelse: String) {
-    INNEVÆRENDE_OG_FORRIGE_MND("Inneværende og forrige måned"),
+    INNEVÆRENDE_OG_FORRIGE_MND("Inneværende og to forrige måneder"),
     SØKNADSTIDSPUNKT("Søknadstidspunkt"),
     SISTE_5_ÅR("Siste 5 år")
 }

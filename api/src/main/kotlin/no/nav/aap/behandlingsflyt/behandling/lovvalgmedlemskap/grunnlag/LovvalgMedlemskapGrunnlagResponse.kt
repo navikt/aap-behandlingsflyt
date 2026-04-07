@@ -18,6 +18,7 @@ data class PeriodisertLovvalgMedlemskapGrunnlagResponse(
     override val sisteVedtatteVurderinger: List<PeriodisertManuellVurderingForLovvalgMedlemskapResponse>,
     override val nyeVurderinger: List<PeriodisertManuellVurderingForLovvalgMedlemskapResponse>,
     override val kanVurderes: List<Periode>,
+    override val ikkeRelevantePerioder: List<Periode>,
     override val behøverVurderinger: List<Periode>,
     val overstyrt: Boolean = false
 ): PeriodiserteVurderingerDto<PeriodisertManuellVurderingForLovvalgMedlemskapResponse>

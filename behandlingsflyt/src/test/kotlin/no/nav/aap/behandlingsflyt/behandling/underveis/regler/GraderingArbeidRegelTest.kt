@@ -9,6 +9,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.Fritaks
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktGrunnlag
 import no.nav.aap.behandlingsflyt.help.assertTidslinjeEquals
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
@@ -35,6 +36,56 @@ class GraderingArbeidRegelTest {
 
             forventetAndelArbeid = Prosent(12),
             forventetGradering = `50_PROSENT`,
+        )
+    }
+
+    @Test
+    fun `Tom mengde timer arbeidet skal ikke overskrive leverte timer arbeidet`() {
+        val rettighetsperiode = Periode(1 januar 2024, 1 januar 2025)
+        val meldekortperiode = Periode(rettighetsperiode.fom, rettighetsperiode.fom.plusDays(13))
+
+        val dagsperioder =
+            (meldekortperiode.fom.dayOfMonth..meldekortperiode.tom.dayOfMonth).map { Periode(it januar 2024, it januar 2024) }
+
+        val arbeidetPerDag = dagsperioder.map {
+            ArbeidIPeriode(
+                periode = it,
+                TimerArbeid(antallTimer = BigDecimal(1))
+            )
+        }.toSet()
+
+        val forventetGradering = Tidslinje(dagsperioder.map { Segment(it, Prosent(70)) })
+        val forventetAndelArbeid = Tidslinje(dagsperioder.map { Segment(it, Prosent(19)) })
+        
+        val input = underveisInput(
+            rettighetsperiode = rettighetsperiode,
+            fastsattArbeidsevne = Prosent.`30_PROSENT`,
+            opptrappingPerioder = emptyList(),
+            meldekort = listOf(
+                Meldekort(
+                    journalpostId = JournalpostId(1010.toString()),
+                    timerArbeidPerPeriode = arbeidetPerDag,
+                    mottattTidspunkt = (1 januar 2024).atStartOfDay(),
+                ),
+                Meldekort(
+                    journalpostId = JournalpostId(1011.toString()),
+                    timerArbeidPerPeriode = emptySet(),
+                    mottattTidspunkt = (2 januar 2024).atStartOfDay(),
+                )
+            )
+        )
+        val vurdering = vurder(input)
+
+        assertTidslinjeEquals(
+            vurdering.map { it.arbeidsgradering().gradering }.begrensetTil(meldekortperiode),
+            forventetGradering,
+            "forventet gradering arbeid",
+        )
+
+        assertTidslinjeEquals(
+            vurdering.map { it.arbeidsgradering().andelArbeid }.begrensetTil(meldekortperiode),
+            forventetAndelArbeid,
+            "forventet andel arbeid",
         )
     }
 
@@ -254,7 +305,7 @@ class GraderingArbeidRegelTest {
         assertEquals(Prosent.`70_PROSENT`, vurdering.segment(meldeperiode2.fom)?.verdi?.arbeidsgradering()?.gradering)
     }
 
-        @Test
+    @Test
     fun `Fritak for meldeperiode som er passert skal gi null timer med opplysningstidspunkt satt, fritak som kommer senere skal ikke ha satt opplysninger mottatt tidspunkt`() {
         val rettighetsperiode = Periode(LocalDate.now().minusMonths(1), LocalDate.now().plusMonths(11).minusDays(1))
         val input = underveisInput(
@@ -268,6 +319,7 @@ class GraderingArbeidRegelTest {
                         fraDato = rettighetsperiode.fom,
                         begrunnelse = "kan ikke",
                         vurdertAv = "saksbehandler",
+                        vurdertIBehandling = BehandlingId(1),
                         opprettetTid = rettighetsperiode.fom.atStartOfDay(),
                     )
                 )

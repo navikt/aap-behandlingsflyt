@@ -14,5 +14,7 @@ object InMemoryFlytJobbRepository: FlytJobbRepository {
     override fun hentJobberForBehandling(id: Long) =
         jobber.filter { it.behandlingIdOrNull() == id }
 
+    override fun hentJobberForSak(id: Long) = jobber.filter { it.sakId() == id }
+
     override fun hentFeilmeldingForOppgave(id: Long) = ""
 }

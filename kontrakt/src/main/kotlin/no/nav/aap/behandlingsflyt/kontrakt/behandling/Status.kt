@@ -13,4 +13,8 @@ public enum class Status {
     public fun erÅpen(): Boolean {
         return this == OPPRETTET || this == UTREDES
     }
+
+    public fun erVedtatt(): Boolean {
+        return this == AVSLUTTET || this == IVERKSETTES
+    }
 }

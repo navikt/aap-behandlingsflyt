@@ -1,8 +1,7 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovMetadataUtleder
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
-import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.OppholdskravGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.OppholdskravGrunnlagRepository
 import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.tilTidslinje
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
@@ -16,7 +15,6 @@ import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
@@ -28,26 +26,19 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 class VurderOppholdskravSteg private constructor(
     private val oppholdskravGrunnlagRepository: OppholdskravGrunnlagRepository,
     private val avklaringsbehovService: AvklaringsbehovService,
-    private val avklaringsbehovRepository: AvklaringsbehovRepository,
     private val tidligereVurderinger: TidligereVurderinger,
-    private val behandlingRepository: BehandlingRepository,
     private val vilkårsresultatRepository: VilkårsresultatRepository
-) : BehandlingSteg {
+) : BehandlingSteg, AvklaringsbehovMetadataUtleder {
 
-    constructor(repositoryProvider: RepositoryProvider) : this(
+    constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         oppholdskravGrunnlagRepository = repositoryProvider.provide(),
         avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
-        avklaringsbehovRepository = repositoryProvider.provide(),
-        tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
-        behandlingRepository = repositoryProvider.provide(),
+        tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
         vilkårsresultatRepository = repositoryProvider.provide(),
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
-            avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId),
-            behandlingRepository = behandlingRepository,
-            vilkårsresultatRepository = vilkårsresultatRepository,
             kontekst = kontekst,
             definisjon = Definisjon.AVKLAR_OPPHOLDSKRAV,
             tvingerAvklaringsbehov = setOf(Vurderingsbehov.OPPHOLDSKRAV),
@@ -63,7 +54,7 @@ class VurderOppholdskravSteg private constructor(
 
         when (kontekst.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING,
-            VurderingType.AUTOMATISK_OPPDATER_VILKÅR,
+            VurderingType.MIGRER_RETTIGHETSPERIODE,
             VurderingType.REVURDERING -> {
                 val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
                 Oppholdskravvilkår(vilkårsresultat).vurder(OppholdskravvilkårGrunnlag(
@@ -74,6 +65,7 @@ class VurderOppholdskravSteg private constructor(
             }
 
             VurderingType.MELDEKORT,
+            VurderingType.UTVID_VEDTAKSLENGDE,
             VurderingType.AUTOMATISK_BREV,
             VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
             VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9,
@@ -84,15 +76,15 @@ class VurderOppholdskravSteg private constructor(
         return Fullført
     }
 
-    private fun nårVurderingErRelevant(
+    override fun nårVurderingErRelevant(
         kontekst: FlytKontekstMedPerioder,
     ): Tidslinje<Boolean> {
         val tidligereVurderingsutfall = tidligereVurderinger.behandlingsutfall(kontekst, type())
         return tidligereVurderingsutfall.mapValue { behandlingsutfall ->
             when (behandlingsutfall) {
-                TidligereVurderinger.Behandlingsutfall.IKKE_BEHANDLINGSGRUNNLAG -> false
-                TidligereVurderinger.Behandlingsutfall.UUNGÅELIG_AVSLAG -> false
-                TidligereVurderinger.Behandlingsutfall.UKJENT -> true
+                TidligereVurderinger.IkkeBehandlingsgrunnlag -> false
+                TidligereVurderinger.UunngåeligAvslag -> false
+                is TidligereVurderinger.PotensieltOppfylt -> true
             }
         }
     }
@@ -104,12 +96,14 @@ class VurderOppholdskravSteg private constructor(
         return grunnlag?.vurderinger?.tilTidslinje().orEmpty().mapValue { true }
     }
 
+    override val stegType = type()
+
     companion object : FlytSteg {
         override fun konstruer(
             repositoryProvider: RepositoryProvider,
             gatewayProvider: GatewayProvider
-        ): BehandlingSteg {
-            return VurderOppholdskravSteg(repositoryProvider)
+        ): VurderOppholdskravSteg {
+            return VurderOppholdskravSteg(repositoryProvider, gatewayProvider)
         }
 
         override fun type(): StegType {

@@ -9,6 +9,7 @@ import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.tilTidslinje
 import no.nav.aap.behandlingsflyt.behandling.vedtak.Vedtak
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakRepository
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakService
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.meldeperiode.MeldeperiodeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.SamordningAndreStatligeYtelserRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.arbeidsgiver.SamordningArbeidsgiverRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
@@ -22,7 +23,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
@@ -46,6 +46,7 @@ class UtbetalingService(
     private val underveisRepository: UnderveisRepository,
     private val reduksjon11_9Repository: Reduksjon11_9Repository,
     private val avventUtbetalingService: AvventUtbetalingService,
+    private val meldeperiodeRepository: MeldeperiodeRepository,
 ) {
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -66,10 +67,10 @@ class UtbetalingService(
             tjenestepensjonRefusjonsKravVurderingRepository = repositoryProvider.provide<TjenestepensjonRefusjonsKravVurderingRepository>(),
             samordningAndreStatligeYtelserRepository = repositoryProvider.provide<SamordningAndreStatligeYtelserRepository>(),
             samordningArbeidsgiverYtelserRepository = repositoryProvider.provide<SamordningArbeidsgiverRepository>(),
-            unleashGateway = gatewayProvider.provide<UnleashGateway>(),
             vedtakService = VedtakService(repositoryProvider),
             behandlingRepository = repositoryProvider.provide<BehandlingRepository>(),
         ),
+        meldeperiodeRepository = repositoryProvider.provide<MeldeperiodeRepository>(),
     )
 
 
@@ -92,7 +93,9 @@ class UtbetalingService(
             forrigeBehandling?.id?.let { tilkjentYtelseRepository.hentHvisEksisterer(forrigeBehandling.id) }
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId)
 
-        return if (tilkjentYtelse != null) {
+        return if (tilkjentYtelse != null && tilkjentYtelse.isNotEmpty()) {
+            val helePerioden = tilkjentYtelse.minMaxPeriode()
+            val meldeperioder = meldeperiodeRepository.hentMeldeperioder(behandlingId, helePerioden)
             val saksnummer = sak.saksnummer.toString()
             val behandlingsreferanse = behandling.referanse.referanse
             val forrigeBehandlingRef = forrigeBehandling?.referanse?.referanse
@@ -128,7 +131,7 @@ class UtbetalingService(
                 vedtakstidspunkt = vedtakstidspunkt,
                 beslutterId = beslutterIdent,
                 saksbehandlerId = saksbehandlerIdent,
-                perioder = tilkjentYtelse.tilTilkjentYtelsePeriodeDtoer(),
+                perioder = tilkjentYtelse.tilTilkjentYtelsePeriodeDtoer(meldeperioder),
                 avvent = avventUtbetaling,
                 trekk = reduksjoner.tilTilkjentYtelseTrekkDtoer(),
                 nyMeldeperiode = nyMeldeperiode
@@ -230,10 +233,11 @@ class UtbetalingService(
             tom = this.maxOf { it.periode.tom }
         )
 
-    private fun List<TilkjentYtelsePeriode>.tilTilkjentYtelsePeriodeDtoer() =
+    private fun List<TilkjentYtelsePeriode>.tilTilkjentYtelsePeriodeDtoer(meldeperioder: List<Periode>)  =
         map { segment ->
             val periode = segment.periode
             val detaljer = segment.tilkjent
+            val meldeperiode = meldeperioder.firstOrNull {Periode(it.fom, it.tom).inneholder(periode)}
             TilkjentYtelsePeriodeDto(
                 fom = periode.fom,
                 tom = periode.tom,
@@ -247,7 +251,9 @@ class UtbetalingService(
                     antallBarn = detaljer.antallBarn,
                     barnetilleggsats = detaljer.barnetilleggsats.verdi(),
                     barnetillegg = detaljer.barnetillegg.verdi(),
-                    utbetalingsdato = detaljer.utbetalingsdato
+                    utbetalingsdato = detaljer.utbetalingsdato,
+                    meldeperiode = meldeperiode?.let { MeldeperiodeDto(it.fom, it.tom) },
+                    barnepensjonDagsats = detaljer.barnepensjonDagsats.verdi()
                 )
             )
         }
@@ -259,5 +265,17 @@ class UtbetalingService(
                 it.dagsats.verdi().intValueExact()
             )
         }
+
+}
+
+private fun List<Periode>.first(periode: Periode): Periode {
+    return this.first {Periode(it.fom, it.tom).inneholder(periode)}
+}
+
+private fun List<TilkjentYtelsePeriode>.minMaxPeriode(): Periode {
+    return Periode(
+        fom = this.minOf { it.periode.fom },
+        tom = this.maxOf { it.periode.tom }
+    )
 
 }

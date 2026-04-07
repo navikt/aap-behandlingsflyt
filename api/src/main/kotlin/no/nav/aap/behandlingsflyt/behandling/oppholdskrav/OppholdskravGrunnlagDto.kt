@@ -4,6 +4,8 @@ import no.nav.aap.behandlingsflyt.PeriodiserteVurderingerDto
 import no.nav.aap.behandlingsflyt.VurderingDto
 import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
+import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.komponenter.type.Periode
 import java.time.LocalDate
 
@@ -12,6 +14,7 @@ data class OppholdskravGrunnlagResponse(
     override val sisteVedtatteVurderinger: List<OppholdskravVurderingDto>,
     override val nyeVurderinger: List<OppholdskravVurderingDto>,
     override val kanVurderes: List<Periode>,
+    override val ikkeRelevantePerioder: List<Periode>,
     override val behøverVurderinger: List<Periode>
 ) : PeriodiserteVurderingerDto<OppholdskravVurderingDto>
 
@@ -26,7 +29,10 @@ data class OppholdskravVurderingDto(
     override val besluttetAv: VurdertAvResponse? = null
 ): VurderingDto
 
-fun OppholdskravVurdering.tilDto(ansattInfoService: AnsattInfoService): List<OppholdskravVurderingDto> =
+fun OppholdskravVurdering.tilDto(
+    ansattInfoService: AnsattInfoService,
+    vurdertAvService: VurdertAvService
+): List<OppholdskravVurderingDto> =
     perioder.map {
         OppholdskravVurderingDto(
             oppfylt = it.oppfylt,
@@ -34,6 +40,7 @@ fun OppholdskravVurdering.tilDto(ansattInfoService: AnsattInfoService): List<Opp
             land = it.land,
             fom = it.fom,
             tom = it.tom,
-            vurdertAv = VurdertAvResponse.fraIdent(vurdertAv, opprettet.toLocalDate(), ansattInfoService)
+            vurdertAv = VurdertAvResponse.fraIdent(vurdertAv, opprettet.toLocalDate(), ansattInfoService),
+            besluttetAv = vurdertAvService.besluttetAv(Definisjon.AVKLAR_OPPHOLDSKRAV, vurdertIBehandling)
         )
     }

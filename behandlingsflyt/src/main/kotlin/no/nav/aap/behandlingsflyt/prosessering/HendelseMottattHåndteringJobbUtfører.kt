@@ -3,7 +3,12 @@ package no.nav.aap.behandlingsflyt.prosessering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.UnparsedStrukturertDokument
+import no.nav.aap.behandlingsflyt.hendelse.mottak.HåndterDialogMeldingService
+import no.nav.aap.behandlingsflyt.hendelse.mottak.HåndterKlageService
 import no.nav.aap.behandlingsflyt.hendelse.mottak.HåndterMottattDokumentService
+import no.nav.aap.behandlingsflyt.hendelse.mottak.HåndterSykepengevedtakService
+import no.nav.aap.behandlingsflyt.hendelse.mottak.HåndterTilbakekrevingHendelseService
+import no.nav.aap.behandlingsflyt.hendelse.mottak.HåndterUførevedtakService
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
@@ -12,6 +17,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Melding
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.NyÅrsakTilBehandlingV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.OmgjøringKlageRevurdering
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.TilbakekrevingHendelse
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.UførevedtakV0
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.gateway.GatewayProvider
@@ -29,12 +35,18 @@ private const val BREVKODE = "brevkode"
 private const val KANAL = "kanal"
 private const val MOTTATT_DOKUMENT_REFERANSE = "referanse"
 private const val MOTTATT_TIDSPUNKT = "mottattTidspunkt"
+private const val DIGITALISERT_AV_POSTMOTTAK = "digitalisertAvPostmottak"
 
 class HendelseMottattHåndteringJobbUtfører(
     private val låsRepository: TaSkriveLåsRepository,
     private val håndterMottattDokumentService: HåndterMottattDokumentService,
     private val mottaDokumentService: MottaDokumentService,
-    private val mottattDokumentRepository: MottattDokumentRepository
+    private val mottattDokumentRepository: MottattDokumentRepository,
+    private val håndterKlageService:HåndterKlageService,
+    private val håndterTilbakekrevingHendelse: HåndterTilbakekrevingHendelseService,
+    private val håndterDialogMeldingService: HåndterDialogMeldingService,
+    private val håndterSykepengevedtakService: HåndterSykepengevedtakService,
+    private val håndterUførevedtakService: HåndterUførevedtakService,
 ) : JobbUtfører {
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -54,6 +66,10 @@ class HendelseMottattHåndteringJobbUtfører(
 
         val referanse = DefaultJsonMapper.fromJson<InnsendingReferanse>(input.parameter(MOTTATT_DOKUMENT_REFERANSE))
 
+        val digitalisertAvPostmottak = input.optionalParameter(DIGITALISERT_AV_POSTMOTTAK)?.let {
+            DefaultJsonMapper.fromJson<Boolean?>(it)
+        }
+
         if (kjennerTilDokumentFraFør(referanse, innsendingType, sakId)) {
             log.warn("Allerede håndtert dokument med referanse {}", referanse)
             return
@@ -66,9 +82,22 @@ class HendelseMottattHåndteringJobbUtfører(
             mottattTidspunkt = mottattTidspunkt,
             brevkategori = innsendingType,
             kanal = kanal,
-            strukturertDokument = if (payloadAsString != null) UnparsedStrukturertDokument(payloadAsString) else null
+            strukturertDokument = if (payloadAsString != null) UnparsedStrukturertDokument(payloadAsString) else null,
+            digitalisertAvPostmottak = digitalisertAvPostmottak
         )
 
+        håndterMottattDokument(innsendingType, parsedMelding, sakId, referanse, mottattTidspunkt)
+
+        låsRepository.verifiserSkrivelås(sakSkrivelås)
+    }
+
+    private fun håndterMottattDokument(
+        innsendingType: InnsendingType,
+        parsedMelding: Melding?,
+        sakId: SakId,
+        referanse: InnsendingReferanse,
+        mottattTidspunkt: LocalDateTime
+    ) {
         when (innsendingType) {
             InnsendingType.NY_ÅRSAK_TIL_BEHANDLING -> {
                 require(parsedMelding is NyÅrsakTilBehandlingV0) { "Melding må være av typen NyÅrsakTilBehandlingV0" }
@@ -80,37 +109,37 @@ class HendelseMottattHåndteringJobbUtfører(
                     referanse = referanse
                 )
             }
+
             InnsendingType.KLAGE -> {
-                håndterMottattDokumentService.håndterMottatteKlage(
+                håndterKlageService.håndterMottatteKlage(
                     sakId = sakId,
                     referanse = referanse,
                     mottattTidspunkt = mottattTidspunkt,
                     brevkategori = innsendingType,
-                    melding = parsedMelding as Klage
+                    melding = parsedMelding as Klage,
                 )
             }
 
-            InnsendingType.TILBAKEKREVING_HENDELSE -> {
-                håndterMottattDokumentService.håndterMottattTilbakekrevingHendelse(
+            InnsendingType.TILBAKEKREVING_HENDELSE,
+            InnsendingType.FAGSYSTEMINFO_BEHOV_HENDELSE -> {
+                håndterTilbakekrevingHendelse.håndterMottattTilbakekrevingHendelse(
                     sakId = sakId,
                     referanse = referanse,
-                    mottattTidspunkt = mottattTidspunkt,
-                    brevkategori = innsendingType,
                     melding = parsedMelding as TilbakekrevingHendelse,
                 )
             }
 
             InnsendingType.DIALOGMELDING -> {
-                    håndterMottattDokumentService.håndterMottattDialogMelding(
-                        sakId = sakId,
-                        referanse = referanse,
-                        mottattTidspunkt = mottattTidspunkt,
-                        brevkategori = innsendingType,
-                        melding = parsedMelding,
-                    )
+                håndterDialogMeldingService.håndterMottattDialogMelding(
+                    sakId = sakId,
+                    referanse = referanse,
+                    brevkategori = innsendingType,
+                    melding = parsedMelding,
+                )
             }
+
             InnsendingType.OMGJØRING_KLAGE_REVURDERING -> {
-                håndterMottattDokumentService.håndterMottattOmgjøringEtterKlage(
+                håndterKlageService.håndterMottattOmgjøringEtterKlage(
                     sakId = sakId,
                     referanse = referanse,
                     mottattTidspunkt = mottattTidspunkt,
@@ -118,6 +147,23 @@ class HendelseMottattHåndteringJobbUtfører(
                     melding = parsedMelding as OmgjøringKlageRevurdering,
                 )
             }
+
+            InnsendingType.SYKEPENGE_VEDTAK_HENDELSE -> {
+                håndterSykepengevedtakService.håndterMottattSykepengevedtakHendelse(
+                    sakId = sakId,
+                    referanse = referanse,
+                )
+            }
+
+            InnsendingType.UFØRE_VEDTAK_HENDELSE -> {
+                håndterUførevedtakService.håndterMottattUførevedtakHendelse(
+                    sakId = sakId,
+                    referanse = referanse,
+                    uførevedtak = parsedMelding as UførevedtakV0,
+                    mottattTidspunkt = mottattTidspunkt,
+                )
+            }
+
             else -> {
                 håndterMottattDokumentService.håndterMottatteDokumenter(
                     sakId,
@@ -128,8 +174,6 @@ class HendelseMottattHåndteringJobbUtfører(
                 )
             }
         }
-
-        låsRepository.verifiserSkrivelås(sakSkrivelås)
     }
 
     private fun kjennerTilDokumentFraFør(
@@ -149,7 +193,8 @@ class HendelseMottattHåndteringJobbUtfører(
             brevkategori: InnsendingType,
             kanal: Kanal,
             melding: Melding? = null,
-            mottattTidspunkt: LocalDateTime
+            mottattTidspunkt: LocalDateTime,
+            digitalisertAvPostmottak: Boolean? = null
         ) = JobbInput(HendelseMottattHåndteringJobbUtfører)
             .apply {
                 forSak(sakId.toLong())
@@ -158,6 +203,7 @@ class HendelseMottattHåndteringJobbUtfører(
                 medParameter(BREVKODE, brevkategori.name)
                 medParameter(KANAL, kanal.name)
                 medParameter(MOTTATT_TIDSPUNKT, DefaultJsonMapper.toJson(mottattTidspunkt))
+                medParameter(DIGITALISERT_AV_POSTMOTTAK, DefaultJsonMapper.toJson(digitalisertAvPostmottak ?: false))
                 medPayload(melding)
             }
 
@@ -166,7 +212,12 @@ class HendelseMottattHåndteringJobbUtfører(
                 låsRepository = repositoryProvider.provide(),
                 håndterMottattDokumentService = HåndterMottattDokumentService(repositoryProvider, gatewayProvider),
                 mottaDokumentService = MottaDokumentService(repositoryProvider),
-                mottattDokumentRepository = repositoryProvider.provide()
+                mottattDokumentRepository = repositoryProvider.provide(),
+                håndterKlageService = HåndterKlageService(repositoryProvider, gatewayProvider),
+                håndterTilbakekrevingHendelse = HåndterTilbakekrevingHendelseService(repositoryProvider, gatewayProvider),
+                håndterDialogMeldingService = HåndterDialogMeldingService(repositoryProvider, gatewayProvider),
+                håndterSykepengevedtakService = HåndterSykepengevedtakService(repositoryProvider, gatewayProvider),
+                håndterUførevedtakService = HåndterUførevedtakService(repositoryProvider, gatewayProvider),
             )
         }
 

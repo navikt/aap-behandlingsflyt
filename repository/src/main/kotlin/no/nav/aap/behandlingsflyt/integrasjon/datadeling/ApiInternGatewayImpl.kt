@@ -1,0 +1,213 @@
+package no.nav.aap.behandlingsflyt.integrasjon.datadeling
+
+import com.github.benmanes.caffeine.cache.Caffeine
+import no.nav.aap.api.intern.PersonEksistererIAAPArena
+import no.nav.aap.api.intern.SakerRequest
+import no.nav.aap.api.intern.behandlingsflyt.OppdaterIdenterDto
+import no.nav.aap.api.intern.behandlingsflyt.SakStatusKelvin
+import no.nav.aap.api.intern.behandlingsflyt.SakstatusFraKelvin
+import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelsePeriode
+import no.nav.aap.behandlingsflyt.datadeling.SakStatus
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
+import no.nav.aap.behandlingsflyt.hendelse.datadeling.ApiInternGateway
+import no.nav.aap.behandlingsflyt.hendelse.datadeling.ArenaStatusResponse
+import no.nav.aap.behandlingsflyt.hendelse.datadeling.MeldekortPerioderDTO
+import no.nav.aap.behandlingsflyt.kontrakt.datadeling.DatadelingDTO
+import no.nav.aap.behandlingsflyt.kontrakt.datadeling.DetaljertMeldekortDTO
+import no.nav.aap.behandlingsflyt.kontrakt.datadeling.RettighetsTypePeriode
+import no.nav.aap.behandlingsflyt.kontrakt.datadeling.SakDTO
+import no.nav.aap.behandlingsflyt.kontrakt.datadeling.TilkjentDTO
+import no.nav.aap.behandlingsflyt.kontrakt.datadeling.UnderveisDTO
+import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
+import no.nav.aap.behandlingsflyt.prometheus
+import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
+import no.nav.aap.komponenter.config.requiredConfigForKey
+import no.nav.aap.komponenter.gateway.Factory
+import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
+import no.nav.aap.komponenter.httpklient.httpclient.RestClient
+import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
+import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
+import no.nav.aap.komponenter.json.DefaultJsonMapper
+import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.type.Periode
+import org.slf4j.LoggerFactory
+import java.math.BigDecimal
+import java.net.URI
+import java.time.Duration
+import java.time.LocalDate
+
+class ApiInternGatewayImpl : ApiInternGateway {
+
+    companion object : Factory<ApiInternGateway> {
+        override fun konstruer(): ApiInternGateway {
+            return ApiInternGatewayImpl()
+        }
+
+        private val arenaStatusCache = Caffeine.newBuilder()
+            .expireAfterWrite(Duration.ofHours(2))
+            .maximumSize(10_000)
+            .build<Set<String>, ArenaStatusResponse>()
+    }
+
+    private val log = LoggerFactory.getLogger(javaClass)
+
+    private val restClient = RestClient.withDefaultResponseHandler(
+        config = ClientConfig(scope = requiredConfigForKey("integrasjon.datadeling.scope")),
+        tokenProvider = ClientCredentialsTokenProvider,
+        prometheus = prometheus
+    )
+
+    private val uri = URI.create(requiredConfigForKey("integrasjon.datadeling.url"))
+
+    override fun sendPerioder(ident: String, perioder: List<Periode>) {
+        restClient.post(
+            uri = uri.resolve("/api/insert/meldeperioder"),
+            request = PostRequest(body = MeldekortPerioderDTO(ident, perioder)),
+            mapper = { _, _ ->
+            })
+    }
+
+    override fun sendSakStatus(ident: String, sakStatus: SakStatus) {
+        restClient.post(
+            uri = uri.resolve("/api/insert/sakStatus"),
+            request = PostRequest(
+                body = SakStatusKelvin(
+                    ident = ident, status = no.nav.aap.api.intern.behandlingsflyt.SakStatus(
+                        sakId = sakStatus.sakId,
+                        statusKode = when (sakStatus.status) {
+                            SakStatus.DatadelingBehandlingStatus.SOKNAD_UNDER_BEHANDLING -> SakstatusFraKelvin.SOKNAD_UNDER_BEHANDLING
+                            SakStatus.DatadelingBehandlingStatus.REVURDERING_UNDER_BEHANDLING -> SakstatusFraKelvin.REVURDERING_UNDER_BEHANDLING
+                            SakStatus.DatadelingBehandlingStatus.FERDIGBEHANDLET -> SakstatusFraKelvin.FERDIGBEHANDLET
+                        },
+                        periode = no.nav.aap.api.intern.behandlingsflyt.Periode(
+                            fom = sakStatus.periode.fom,
+                            tom = sakStatus.periode.tom
+                        )
+                    )
+                )
+            ),
+            mapper = { _, _ ->
+            })
+    }
+
+    override fun sendBehandling(
+        sak: Sak,
+        behandling: Behandling,
+        vedtakId: Long,
+        samId: String?,
+        tilkjent: List<TilkjentYtelsePeriode>,
+        beregningsgrunnlag: BigDecimal?,
+        underveis: List<Underveisperiode>,
+        vedtaksDato: LocalDate,
+        rettighetsTypeTidslinje: Tidslinje<RettighetsType>
+    ) {
+        log.info("Sender behandling for behandlingId=${behandling.id} med vedtakId=$vedtakId, sak: ${sak.saksnummer}. Beregningsgrunnlag: $beregningsgrunnlag")
+        restClient.post(
+            uri = uri.resolve("/api/insert/vedtak"),
+            request = PostRequest(
+                body = DatadelingDTO(
+                    behandlingsId = behandling.id.id.toString(),
+                    behandlingsReferanse = behandling.referanse.toString(),
+                    underveisperiode = underveis.map {
+                        UnderveisDTO(
+                            underveisFom = it.periode.fom,
+                            underveisTom = it.periode.tom,
+                            meldeperiodeFom = it.meldePeriode.fom,
+                            meldeperiodeTom = it.meldePeriode.tom,
+                            utfall = it.utfall.name,
+                            rettighetsType = it.rettighetsType?.name,
+                            avslagsårsak = it.avslagsårsak?.name
+                        )
+                    },
+                    rettighetsPeriodeFom = sak.rettighetsperiode.fom,
+                    rettighetsPeriodeTom = sak.rettighetsperiode.tom,
+                    behandlingStatus = behandling.status(),
+                    vedtaksDato = vedtaksDato,
+                    beregningsgrunnlag = beregningsgrunnlag,
+                    sak = SakDTO(
+                        saksnummer = sak.saksnummer.toString(),
+                        status = sak.status(),
+                        fnr = sak.person.identer().map { ident -> ident.identifikator },
+                        opprettetTidspunkt = sak.opprettetTidspunkt
+                    ),
+                    tilkjent = tilkjent.map { tilkjentPeriode ->
+                        TilkjentDTO(
+                            tilkjentFom = tilkjentPeriode.periode.fom,
+                            tilkjentTom = tilkjentPeriode.periode.tom,
+                            dagsats = tilkjentPeriode.tilkjent.dagsats.verdi.toInt(),
+                            // legg til redusert dagsats
+                            gradering = tilkjentPeriode.tilkjent.gradering.prosentverdi(),
+                            samordningUføregradering = tilkjentPeriode.tilkjent.graderingGrunnlag.samordningUføregradering.prosentverdi(),
+                            // TODO: fjern
+                            grunnlag = tilkjentPeriode.tilkjent.dagsats.verdi,
+                            grunnlagsfaktor = tilkjentPeriode.tilkjent.grunnlagsfaktor.verdi(),
+                            grunnbeløp = tilkjentPeriode.tilkjent.grunnbeløp.verdi,
+                            antallBarn = tilkjentPeriode.tilkjent.antallBarn,
+                            barnetilleggsats = tilkjentPeriode.tilkjent.barnetilleggsats.verdi,
+                            barnetillegg = tilkjentPeriode.tilkjent.barnetillegg.verdi,
+                        )
+                    },
+                    rettighetsTypeTidsLinje = rettighetsTypeTidslinje.segmenter().map { segment ->
+                        RettighetsTypePeriode(
+                            segment.periode.fom,
+                            segment.periode.tom,
+                            segment.verdi.toString()
+                        )
+                    },
+                    vedtakId = vedtakId,
+                    samId = samId,
+                ),
+            ),
+            mapper = { _, _ ->
+            })
+    }
+
+    override fun sendDetaljertMeldekortListe(
+        detaljertMeldekortListe: List<DetaljertMeldekortDTO>,
+        sakId: SakId,
+        behandlingId: BehandlingId
+    ) {
+        log.info("Sender meldekort-detaljer for sakId=${sakId}, behandlingId=${behandlingId}")
+
+        restClient.post(
+            uri.resolve("/api/insert/meldekort-detaljer"),
+            PostRequest(body = detaljertMeldekortListe),
+            mapper = { _, _ -> }
+        )
+    }
+
+    override fun hentArenaStatus(personidentifikatorer: Set<String>): ArenaStatusResponse {
+        // Kalles ofte fra saksbehandling, så cache den
+        return arenaStatusCache.get(personidentifikatorer) {
+            val sakerRequest = SakerRequest(personidentifikatorer = personidentifikatorer.toList())
+            doHentArenaStatus(sakerRequest)
+        }
+    }
+
+    override fun oppdaterIdenter(
+        saksnummer: Saksnummer,
+        identer: List<Ident>
+    ) {
+        log.info("Oppdaterer identer for sak $saksnummer.")
+        restClient.post(
+            uri.resolve("/api/insert/oppdater-identer"),
+            PostRequest(body = OppdaterIdenterDto(saksnummer.toString(), identer.map(Ident::identifikator))),
+            mapper = { _, _ -> }
+        )
+    }
+
+    private fun doHentArenaStatus(sakerRequest: SakerRequest): ArenaStatusResponse {
+        val remoteResponse: PersonEksistererIAAPArena? = restClient.post(
+            uri.resolve("/arena/person/aap/eksisterer"),
+            PostRequest(body = sakerRequest),
+            mapper = { body, _ -> DefaultJsonMapper.fromJson(body) }
+        )
+        requireNotNull(remoteResponse) { "Fikk ikke gyldig svar på om personen eksisterer i AAP-Arena" }
+        return ArenaStatusResponse(remoteResponse.eksisterer)
+    }
+}

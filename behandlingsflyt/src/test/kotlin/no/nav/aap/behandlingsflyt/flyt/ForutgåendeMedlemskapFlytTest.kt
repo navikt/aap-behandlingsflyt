@@ -9,7 +9,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.PeriodisertManuellVurderingForForutgåendeMedlemskapDto
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
-import no.nav.aap.behandlingsflyt.test.FakeUnleash
+import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
@@ -18,7 +18,7 @@ import org.junit.jupiter.api.Test
  * TestPerson i denne testen har ingen inntekter for å kunne trigge steget. For om inntekter settes, finner
  * steget inntekt fra A-Inntekt, og da hoppes det over steget.
  */
-class ForutgåendeMedlemskapFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
+class ForutgåendeMedlemskapFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
 
     @Test
     fun `Trenger ikke manuell vurdering av forutgående medlemskap dersom automatisk vurdering er oppfylt`() {

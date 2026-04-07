@@ -1,12 +1,12 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.behandlingstyper
 
-import no.nav.aap.behandlingsflyt.behandling.trekkklage.TrekkKlageInformasjonskrav
 import no.nav.aap.behandlingsflyt.flyt.BehandlingFlyt
 import no.nav.aap.behandlingsflyt.flyt.BehandlingFlytBuilder
 import no.nav.aap.behandlingsflyt.flyt.BehandlingType
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.FatteVedtakSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.KvalitetssikringsSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.MeldingOmVedtakBrevSteg
+import no.nav.aap.behandlingsflyt.forretningsflyt.steg.SendForvaltningsmeldingSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.klage.FastsettBehandlendeEnhetSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.klage.FormkravSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.klage.FullmektigSteg
@@ -26,21 +26,25 @@ object Klage : BehandlingType {
             .medSteg(
                 steg = TrekkKlageSteg,
                 vurderingsbehovRelevanteForSteg = listOf(Vurderingsbehov.KLAGE_TRUKKET),
-                informasjonskrav = listOf(TrekkKlageInformasjonskrav)
             )
-            .medSteg(steg = PåklagetBehandlingSteg)
-            .medSteg(steg = FullmektigSteg)
-            .medSteg(steg = FormkravSteg)
-            .medSteg(steg = FastsettBehandlendeEnhetSteg)
-            .medSteg(steg = KlagebehandlingKontorSteg)
-            .medSteg(steg = KvalitetssikringsSteg)
-            .medSteg(steg = KlagebehandlingNaySteg)
-            .medSteg(steg = KlagebehandlingNayOppsummeringSteg)
+            .medSteg(
+                steg = SendForvaltningsmeldingSteg,
+                vurderingsbehovRelevanteForSteg = listOf(Vurderingsbehov.MOTATT_KLAGE)
+                // TODO: informasjonskrav - behov ? snakker vi her om postadresse e.l. til brevbestilling?
+            )
+            .medSteg(steg = PåklagetBehandlingSteg, vurderingsbehovRelevanteForSteg = Vurderingsbehov.alle())
+            .medSteg(steg = FullmektigSteg, vurderingsbehovRelevanteForSteg = Vurderingsbehov.alle())
+            .medSteg(steg = FormkravSteg, vurderingsbehovRelevanteForSteg = Vurderingsbehov.alle())
+            .medSteg(steg = FastsettBehandlendeEnhetSteg, vurderingsbehovRelevanteForSteg = Vurderingsbehov.alle())
+            .medSteg(steg = KlagebehandlingKontorSteg, vurderingsbehovRelevanteForSteg = Vurderingsbehov.alle())
+            .medSteg(steg = KvalitetssikringsSteg, vurderingsbehovRelevanteForSteg = Vurderingsbehov.alle())
+            .medSteg(steg = KlagebehandlingNaySteg, vurderingsbehovRelevanteForSteg = Vurderingsbehov.alle())
+            .medSteg(steg = KlagebehandlingNayOppsummeringSteg, vurderingsbehovRelevanteForSteg = Vurderingsbehov.alle())
             .sluttÅOppdatereFaktagrunnlag()
-            .medSteg(steg = FatteVedtakSteg)
-            .medSteg(steg = OmgjøringSteg)
-            .medSteg(steg = OpprettholdelseSteg)
-            .medSteg(steg = MeldingOmVedtakBrevSteg)
+            .medSteg(steg = FatteVedtakSteg, vurderingsbehovRelevanteForSteg = Vurderingsbehov.alle())
+            .medSteg(steg = OmgjøringSteg, vurderingsbehovRelevanteForSteg = Vurderingsbehov.alle())
+            .medSteg(steg = MeldingOmVedtakBrevSteg, vurderingsbehovRelevanteForSteg = Vurderingsbehov.alle())
+            .medSteg(steg = OpprettholdelseSteg, vurderingsbehovRelevanteForSteg = Vurderingsbehov.alle())
             .build()
     }
 }

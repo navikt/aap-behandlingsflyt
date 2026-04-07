@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovMetadataUtleder
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
@@ -17,9 +17,9 @@ import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.orEmpty
@@ -31,33 +31,27 @@ class VurderBistandsbehovSteg(
     private val studentRepository: StudentRepository,
     private val sykdomsRepository: SykdomRepository,
     private val vilkårsresultatRepository: VilkårsresultatRepository,
-    private val avklaringsbehovRepository: AvklaringsbehovRepository,
     private val tidligereVurderinger: TidligereVurderinger,
-    private val behandlingRepository: BehandlingRepository,
-    private val avklaringsbehovService: AvklaringsbehovService
-) : BehandlingSteg {
-    constructor(repositoryProvider: RepositoryProvider) : this(
+    private val avklaringsbehovService: AvklaringsbehovService,
+    private val unleashGateway: UnleashGateway
+) : BehandlingSteg, AvklaringsbehovMetadataUtleder {
+    constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         bistandRepository = repositoryProvider.provide(),
         studentRepository = repositoryProvider.provide(),
         sykdomsRepository = repositoryProvider.provide(),
         vilkårsresultatRepository = repositoryProvider.provide(),
-        avklaringsbehovRepository = repositoryProvider.provide(),
-        tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
-        behandlingRepository = repositoryProvider.provide(),
-        avklaringsbehovService = AvklaringsbehovService(repositoryProvider)
+        tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
+        avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
+        unleashGateway = gatewayProvider.provide()
     )
 
     private val log = LoggerFactory.getLogger(javaClass)
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
         avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
-            avklaringsbehovene = avklaringsbehovene,
-            behandlingRepository = behandlingRepository,
-            vilkårsresultatRepository = vilkårsresultatRepository,
             definisjon = Definisjon.AVKLAR_BISTANDSBEHOV,
             tvingerAvklaringsbehov = kontekst.vurderingsbehovRelevanteForSteg,
-            nårVurderingErRelevant = ::perioderHvorBistandsvilkåretErRelevant,
+            nårVurderingErRelevant = ::nårVurderingErRelevant,
             nårVurderingErGyldig = {
                 bistandRepository.hentHvisEksisterer(kontekst.behandlingId)
                     ?.somBistandsvurderingstidslinje()
@@ -82,13 +76,17 @@ class VurderBistandsbehovSteg(
         )
 
         when (kontekst.vurderingType) {
-            VurderingType.FØRSTEGANGSBEHANDLING, VurderingType.REVURDERING, VurderingType.AUTOMATISK_OPPDATER_VILKÅR -> vurderBistandsvilkår(kontekst)
+            VurderingType.FØRSTEGANGSBEHANDLING, VurderingType.REVURDERING, VurderingType.MIGRER_RETTIGHETSPERIODE -> vurderBistandsvilkår(
+                kontekst
+            )
+
             VurderingType.MELDEKORT,
+            VurderingType.UTVID_VEDTAKSLENGDE,
             VurderingType.AUTOMATISK_BREV,
             VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
             VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9,
             VurderingType.IKKE_RELEVANT -> {
-            /* noop */
+                /* noop */
             }
         }
 
@@ -108,8 +106,8 @@ class VurderBistandsbehovSteg(
         vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
     }
 
-    private fun perioderHvorBistandsvilkåretErRelevant(kontekst: FlytKontekstMedPerioder): Tidslinje<Boolean> {
-        val tidligereVurderingsutfall = tidligereVurderinger.behandlingsutfall(kontekst, type())
+    override fun nårVurderingErRelevant(kontekst: FlytKontekstMedPerioder): Tidslinje<Boolean> {
+        val tidligereVurderingsutfall = tidligereVurderinger.behandlingsutfall(kontekst, type()).komprimer()
 
         val sykdomsvurderinger = sykdomsRepository.hentHvisEksisterer(kontekst.behandlingId)
             ?.somSykdomsvurderingstidslinje()
@@ -117,37 +115,42 @@ class VurderBistandsbehovSteg(
             .orEmpty()
 
         val studentvurderinger = studentRepository.hentHvisEksisterer(kontekst.behandlingId)
-            ?.somTidslinje(kontekst.rettighetsperiode)
+            ?.somStudenttidslinje(kontekst.rettighetsperiode.tom)
             .orEmpty()
+
 
         return Tidslinje.map3(tidligereVurderingsutfall, sykdomsvurderinger, studentvurderinger)
         { segmentPeriode, behandlingsutfall, sykdomsvurdering, studentvurdering ->
             when (behandlingsutfall) {
                 null -> false
-                TidligereVurderinger.Behandlingsutfall.IKKE_BEHANDLINGSGRUNNLAG -> false
-                TidligereVurderinger.Behandlingsutfall.UUNGÅELIG_AVSLAG -> false
-                TidligereVurderinger.Behandlingsutfall.UKJENT -> {
-                    studentvurdering?.erOppfylt() != true &&
-                            (sykdomsvurdering?.erOppfyltOrdinær(
-                                kravdato = kontekst.rettighetsperiode.fom,
-                                segmentPeriode
-                            ) == true
-                                    || sykdomsvurdering?.erOppfyltForYrkesskadeSettBortIfraÅrsakssammenheng(
-                                kravdato = kontekst.rettighetsperiode.fom, segmentPeriode
-                            ) == true)
+                TidligereVurderinger.IkkeBehandlingsgrunnlag -> false
+                TidligereVurderinger.UunngåeligAvslag -> false
+                is TidligereVurderinger.PotensieltOppfylt -> {
+                    when (behandlingsutfall.rettighetstype) {
+                        null -> (sykdomsvurdering?.erOppfyltOrdinær(
+                            kravdato = kontekst.rettighetsperiode.fom,
+                            segmentPeriode
+                        ) == true
+                                || sykdomsvurdering?.erOppfyltForYrkesskadeSettBortIfraÅrsakssammenheng(
+                            kravdato = kontekst.rettighetsperiode.fom, segmentPeriode
+                        ) == true)
 
+                        else -> false
+                    }
                 }
             }
         }
     }
 
 
+    override val stegType = type()
+
     companion object : FlytSteg {
         override fun konstruer(
             repositoryProvider: RepositoryProvider,
             gatewayProvider: GatewayProvider
-        ): BehandlingSteg {
-            return VurderBistandsbehovSteg(repositoryProvider)
+        ): VurderBistandsbehovSteg {
+            return VurderBistandsbehovSteg(repositoryProvider, gatewayProvider)
         }
 
         override fun type(): StegType {

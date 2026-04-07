@@ -6,45 +6,15 @@ import com.fasterxml.jackson.annotation.JsonTypeName
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.AvklarSykepengerErstatningLøser
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.LøsningsResultat
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerErstatningRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.PeriodisertSykepengerVurderingDto
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.SykepengerVurderingDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.somTidslinje
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.VURDER_SYKEPENGEERSTATNING_KODE
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.lookup.repository.RepositoryProvider
-
-@JsonIgnoreProperties(ignoreUnknown = true)
-@JsonTypeName(value = VURDER_SYKEPENGEERSTATNING_KODE)
-@Deprecated("Bruk heller PeriodisertAvklarSykepengerErstatningLøsning")
-class AvklarSykepengerErstatningLøsning(
-    @param:JsonProperty(
-        "sykepengeerstatningVurdering",
-        required = true
-    ) val sykepengeerstatningVurdering: SykepengerVurderingDto,
-    @param:JsonProperty(
-        "behovstype",
-        required = true,
-        defaultValue = VURDER_SYKEPENGEERSTATNING_KODE
-    ) val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`5007`
-) : EnkeltAvklaringsbehovLøsning {
-    override fun løs(
-        repositoryProvider: RepositoryProvider,
-        kontekst: AvklaringsbehovKontekst,
-        gatewayProvider: GatewayProvider
-    ): LøsningsResultat {
-        return AvklarSykepengerErstatningLøser(repositoryProvider, gatewayProvider).løs(kontekst, PeriodisertAvklarSykepengerErstatningLøsning(
-            behovstype = behovstype,
-            løsningerForPerioder = listOf(PeriodisertSykepengerVurderingDto(
-                begrunnelse = sykepengeerstatningVurdering.begrunnelse,
-                dokumenterBruktIVurdering = sykepengeerstatningVurdering.dokumenterBruktIVurdering,
-                harRettPå = sykepengeerstatningVurdering.harRettPå,
-                grunn = sykepengeerstatningVurdering.grunn,
-                fom = sykepengeerstatningVurdering.gjelderFra,
-                tom = null,
-            ))
-        ))
-    }
-}
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeName(value = VURDER_SYKEPENGEERSTATNING_KODE)
@@ -62,5 +32,13 @@ class PeriodisertAvklarSykepengerErstatningLøsning(
         gatewayProvider: GatewayProvider
     ): LøsningsResultat {
         return AvklarSykepengerErstatningLøser(repositoryProvider, gatewayProvider).løs(kontekst, this)
+    }
+
+    override fun hentLagredeLøstePerioder(
+        behandlingId: BehandlingId,
+        repositoryProvider: RepositoryProvider
+    ): Tidslinje<*> {
+        val repository = repositoryProvider.provide<SykepengerErstatningRepository>()
+        return repository.hentHvisEksisterer(behandlingId)?.vurderinger?.somTidslinje() ?: Tidslinje<Unit>()
     }
 }

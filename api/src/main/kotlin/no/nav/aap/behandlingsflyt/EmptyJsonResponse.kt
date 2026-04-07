@@ -1,3 +1,3 @@
 package no.nav.aap.behandlingsflyt
 
-val EMPTY_JSON_RESPONSE = "{}"
+const val EMPTY_JSON_RESPONSE = "{}"

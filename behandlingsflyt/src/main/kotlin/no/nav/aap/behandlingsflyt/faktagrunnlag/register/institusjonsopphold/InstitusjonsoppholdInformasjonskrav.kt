@@ -11,7 +11,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravOppdatert
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravRegisterdata
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.KanTriggeRevurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.ikkeKjørtSisteKalenderdag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.ikkeKjørtSisteKalenderdagForBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
@@ -19,8 +19,10 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
+import org.slf4j.LoggerFactory
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdGateway as IInstitusjonsoppholdGateway
 
 class InstitusjonsoppholdInformasjonskrav private constructor(
@@ -28,8 +30,12 @@ class InstitusjonsoppholdInformasjonskrav private constructor(
     private val institusjonsoppholdRepository: InstitusjonsoppholdRepository,
     private val institusjonsoppholdRegisterGateway: IInstitusjonsoppholdGateway,
     private val tidligereVurderinger: TidligereVurderinger,
+    private val unleashGateway: UnleashGateway
 ) : Informasjonskrav<InstitusjonsoppholdInformasjonskrav.Input, InstitusjonsoppholdInformasjonskrav.InstitusjonsoppholdRegisterdata>,
     KanTriggeRevurdering {
+
+    private val logger = LoggerFactory.getLogger(this::class.java)
+
     override val navn = Companion.navn
 
     override fun erRelevant(
@@ -37,9 +43,12 @@ class InstitusjonsoppholdInformasjonskrav private constructor(
         steg: StegType,
         oppdatert: InformasjonskravOppdatert?
     ): Boolean {
+
         return kontekst.erFørstegangsbehandlingEllerRevurdering()
                 && !tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, steg)
-                && (oppdatert.ikkeKjørtSisteKalenderdag() || kontekst.rettighetsperiode != oppdatert?.rettighetsperiode)
+                && (oppdatert.ikkeKjørtSisteKalenderdagForBehandling(kontekst.behandlingId) || kontekst.rettighetsperiode != oppdatert?.rettighetsperiode || kontekst.erVurderingsbehovEndretEtterOppdatertInformasjonskrav(
+            oppdatert
+        ))
     }
 
     data class Input(val sak: Sak) : InformasjonskravInput
@@ -51,13 +60,9 @@ class InstitusjonsoppholdInformasjonskrav private constructor(
     }
 
     override fun hentData(input: Input): InstitusjonsoppholdRegisterdata {
-        val sak = input.sak
+        val institusjonsopphold = hentInstitusjonsopphold(input.sak)
 
-        return InstitusjonsoppholdRegisterdata(
-            opphold = institusjonsoppholdRegisterGateway
-                .innhent(sak.person)
-                .filter { it.periode().overlapper(sak.rettighetsperiode) }
-        )
+        return InstitusjonsoppholdRegisterdata(institusjonsopphold)
     }
 
     override fun oppdater(
@@ -67,17 +72,29 @@ class InstitusjonsoppholdInformasjonskrav private constructor(
     ): Informasjonskrav.Endret {
         val eksisterendeGrunnlag = hentHvisEksisterer(kontekst.behandlingId)
         val institusjonsopphold = registerdata.opphold
-
-        // TODO: lagre kun hvis forskjell!
-        institusjonsoppholdRepository.lagreOpphold(kontekst.behandlingId, institusjonsopphold)
-
-        return if (erEndret(eksisterendeGrunnlag, institusjonsopphold)) ENDRET else IKKE_ENDRET
+        logger.info("Har hentet instopphold " + institusjonsopphold.size)
+        val institusjonsoppholdErEndret = erEndret(eksisterendeGrunnlag, institusjonsopphold)
+        if (institusjonsoppholdErEndret) {
+            institusjonsoppholdRepository.lagreOpphold(kontekst.behandlingId, institusjonsopphold)
+            logger.info("Har lagret instopphold ")
+        }
+        return if (institusjonsoppholdErEndret) ENDRET else IKKE_ENDRET
     }
 
-    private fun hentInstitusjonsopphold(behandlingId: BehandlingId): List<Institusjonsopphold> {
-        val sak = sakService.hentSakFor(behandlingId)
-        return institusjonsoppholdRegisterGateway.innhent(sak.person)
-            .filter { it.periode().overlapper(sak.rettighetsperiode) }
+    private fun hentInstitusjonsopphold(sak: Sak): List<Institusjonsopphold> {
+        return institusjonsoppholdRegisterGateway
+            .innhent(sak.person)
+            .filter {
+                try {
+                    it.periode().overlapper(sak.rettighetsperiode)
+                } catch (e: IllegalArgumentException) {
+                    logger.error(
+                        "Ugyldig periode for institusjonsopphold funnet i sak ${sak.id} og ignoreres (startdato=${it.startdato}, sluttdato=${it.sluttdato}",
+                        e
+                    )
+                    false
+                }
+            }
     }
 
     fun hentHvisEksisterer(behandlingId: BehandlingId): InstitusjonsoppholdGrunnlag? {
@@ -86,7 +103,8 @@ class InstitusjonsoppholdInformasjonskrav private constructor(
 
     override fun behovForRevurdering(behandlingId: BehandlingId): List<VurderingsbehovMedPeriode> {
         val eksisterendeGrunnlag = hentHvisEksisterer(behandlingId)
-        val institusjonsopphold = hentInstitusjonsopphold(behandlingId)
+        val sak = sakService.hentSakFor(behandlingId)
+        val institusjonsopphold = hentInstitusjonsopphold(sak)
 
         return if (erEndret(eksisterendeGrunnlag, institusjonsopphold))
             listOf(VurderingsbehovMedPeriode(Vurderingsbehov.INSTITUSJONSOPPHOLD))
@@ -102,10 +120,11 @@ class InstitusjonsoppholdInformasjonskrav private constructor(
             gatewayProvider: GatewayProvider
         ): InstitusjonsoppholdInformasjonskrav {
             return InstitusjonsoppholdInformasjonskrav(
-                SakService(repositoryProvider),
-                repositoryProvider.provide(),
-                gatewayProvider.provide(),
-                TidligereVurderingerImpl(repositoryProvider),
+                sakService = SakService(repositoryProvider, gatewayProvider),
+                institusjonsoppholdRepository = repositoryProvider.provide(),
+                institusjonsoppholdRegisterGateway = gatewayProvider.provide(),
+                tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
+                unleashGateway = gatewayProvider.provide<UnleashGateway>()
             )
         }
 

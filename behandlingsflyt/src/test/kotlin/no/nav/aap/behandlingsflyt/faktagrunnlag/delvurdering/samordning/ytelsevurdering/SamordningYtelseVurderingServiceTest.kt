@@ -2,6 +2,8 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsev
 
 import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
+import no.nav.aap.behandlingsflyt.help.flytKontekstMedPerioder
+import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
 import no.nav.aap.behandlingsflyt.integrasjon.samordning.AbakusForeldrepengerGateway
 import no.nav.aap.behandlingsflyt.integrasjon.samordning.AbakusSykepengerGateway
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
@@ -19,11 +21,10 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettels
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.test.FakePersoner
 import no.nav.aap.behandlingsflyt.test.FakeTidligereVurderinger
-import no.nav.aap.behandlingsflyt.test.FakeUnleash
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.komponenter.dbconnect.DBConnection
@@ -88,8 +89,7 @@ class SamordningYtelseVurderingServiceTest {
                 FakeTidligereVurderinger(),
                 AbakusForeldrepengerGateway(),
                 AbakusSykepengerGateway(),
-                SakService(postgresRepositoryRegistry.provider(connection)),
-                FakeUnleash
+                SakService(postgresRepositoryRegistry.provider(connection), createGatewayProvider {  })
             )
             val foreldrePerson = PersonRepositoryImpl(connection).finnEllerOpprett(
                 listOf(
@@ -137,8 +137,7 @@ class SamordningYtelseVurderingServiceTest {
                 FakeTidligereVurderinger(),
                 AbakusForeldrepengerGateway(),
                 AbakusSykepengerGateway(),
-                SakService(postgresRepositoryRegistry.provider(connection)),
-                FakeUnleash
+                SakService(postgresRepositoryRegistry.provider(connection), createGatewayProvider {  }),
             )
             val sykepengerPerson = PersonRepositoryImpl(connection).finnEllerOpprett(
                 listOf(
@@ -178,8 +177,7 @@ class SamordningYtelseVurderingServiceTest {
                 FakeTidligereVurderinger(),
                 AbakusForeldrepengerGateway(),
                 AbakusSykepengerGateway(),
-                SakService(postgresRepositoryRegistry.provider(connection)),
-                FakeUnleash
+                SakService(postgresRepositoryRegistry.provider(connection), createGatewayProvider {  }),
             )
             val sykepengerPerson = PersonRepositoryImpl(connection).finnEllerOpprett(
                 listOf(
@@ -211,8 +209,7 @@ class SamordningYtelseVurderingServiceTest {
                 FakeTidligereVurderinger(),
                 AbakusForeldrepengerGateway(),
                 AbakusSykepengerGateway(),
-                SakService(postgresRepositoryRegistry.provider(connection)),
-                FakeUnleash
+                SakService(postgresRepositoryRegistry.provider(connection), createGatewayProvider {  }),
             )
             val kontekst = opprettSakdata(connection)
 
@@ -385,9 +382,13 @@ class SamordningYtelseVurderingServiceTest {
                 årsak = ÅrsakTilOpprettelse.SØKNAD,
             ),
         ).id
-        return FlytKontekstMedPerioder(
-            sakId, behandlingId, null, TypeBehandling.Førstegangsbehandling,
-            VurderingType.FØRSTEGANGSBEHANDLING, rettighetsperiode, emptySet()
-        )
+        return flytKontekstMedPerioder {
+            this.sakId = sakId
+            this.behandlingId = behandlingId
+            this.rettighetsperiode = rettighetsperiode
+            this.behandlingType = TypeBehandling.Førstegangsbehandling
+            this.vurderingType = VurderingType.FØRSTEGANGSBEHANDLING
+            this.vurderingsbehovRelevanteForSteg = setOf(Vurderingsbehov.MOTTATT_SØKNAD)
+        }
     }
 }

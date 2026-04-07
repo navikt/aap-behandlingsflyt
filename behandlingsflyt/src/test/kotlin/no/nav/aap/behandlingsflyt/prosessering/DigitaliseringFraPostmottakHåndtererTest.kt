@@ -1,0 +1,115 @@
+package no.nav.aap.behandlingsflyt.prosessering
+
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.UnparsedStrukturertDokument
+import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
+import no.nav.aap.behandlingsflyt.help.opprettSak
+import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ArbeidIPeriodeV0
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Meldekort
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.MeldekortV0
+import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
+import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
+import no.nav.aap.behandlingsflyt.test.januar
+import no.nav.aap.komponenter.dbconnect.transaction
+import no.nav.aap.komponenter.dbtest.TestDataSource
+import no.nav.aap.komponenter.json.DefaultJsonMapper
+import no.nav.aap.verdityper.dokument.JournalpostId
+import no.nav.aap.verdityper.dokument.Kanal
+import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.BeforeAll
+import java.time.LocalDateTime
+import kotlin.test.Test
+
+class DigitaliseringFraPostmottakHåndtererTest {
+    companion object {
+        private val gatewayProvider = createGatewayProvider {
+            register<AlleAvskruddUnleash>()
+        }
+        private lateinit var dataSource: TestDataSource
+
+        @BeforeAll
+        @JvmStatic
+        fun setup() {
+            dataSource = TestDataSource()
+        }
+
+        @AfterAll
+        @JvmStatic
+        fun tearDown() = dataSource.close()
+    }
+
+    @Test
+    fun `Skal ikke inneholde informasjon om digitalisering i postmottak om ikke satt `() {
+        val førstegangsbehandlingen = dataSource.transaction { connection ->
+            val repositoryProvider = postgresRepositoryRegistry.provider(connection)
+            val sak = opprettSak(connection, 1 januar 2020)
+            val førstegangsbehandlingen = finnEllerOpprettBehandling(connection, sak)
+            repositoryProvider.provide<BehandlingRepository>()
+                .oppdaterBehandlingStatus(førstegangsbehandlingen.id, Status.AVSLUTTET)
+            førstegangsbehandlingen
+        }
+
+        lagreMeldekortMottatt(
+            referanse = InnsendingReferanse(JournalpostId("101")),
+            mottattTidspunkt = (27 januar 2020).atStartOfDay(),
+            meldekort = MeldekortV0(
+                harDuArbeidet = true,
+                timerArbeidPerPeriode = listOf(
+                    ArbeidIPeriodeV0(
+                        fraOgMedDato = 13 januar 2020,
+                        tilOgMedDato = 24 januar 2020,
+                        timerArbeid = 25.0,
+                    )
+                )
+            ),
+            førstegangsbehandlingen
+        )
+
+        dataSource.transaction { connection ->
+            val repoprovider = postgresRepositoryRegistry.provider(connection)
+            val mottattDokumentRepository = repoprovider
+                .provide<MottattDokumentRepository>()
+            val ubehandledeMeldekort = mottattDokumentRepository.hentAlleUbehandledeDokumenter()
+
+            HåndterUbehandledeMeldekortForSakJobbUtfører
+                .konstruer(repoprovider, gatewayProvider)
+                .utfør(HåndterUbehandledeMeldekortForSakJobbUtfører.nyJobb(førstegangsbehandlingen.sakId))
+
+            assertThat(ubehandledeMeldekort.first().digitalisertAvPostmottak).isNull()
+        }
+    }
+
+    private fun lagreMeldekortMottatt(
+        referanse: InnsendingReferanse,
+        mottattTidspunkt: LocalDateTime,
+        meldekort: Meldekort,
+        behandling: Behandling
+    ) {
+
+        val mottattMeldekort = MottattDokument(
+            referanse = referanse,
+            sakId = behandling.sakId,
+            behandlingId = behandling.id,
+            mottattTidspunkt = mottattTidspunkt,
+            type = InnsendingType.MELDEKORT,
+            kanal = Kanal.DIGITAL,
+            status = no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Status.MOTTATT,
+            strukturertDokument = UnparsedStrukturertDokument(
+                DefaultJsonMapper.toJson(meldekort)
+            )
+        )
+        dataSource.transaction { connection ->
+            postgresRepositoryRegistry.provider(connection)
+                .provide<MottattDokumentRepository>()
+                .lagre(mottattMeldekort)
+        }
+    }
+}

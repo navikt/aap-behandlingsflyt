@@ -27,6 +27,7 @@ import no.nav.aap.behandlingsflyt.datadeling.sam.HentSamIdResponse
 import no.nav.aap.behandlingsflyt.datadeling.sam.SamordneVedtakRequest
 import no.nav.aap.behandlingsflyt.datadeling.sam.SamordneVedtakRespons
 import no.nav.aap.behandlingsflyt.datadeling.sam.SamordningsmeldingApi
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.gateway.TiltakspengerYtelseType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.gateway.TjenestePensjonRespons
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.Anvist
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.ForeldrepengerRequest
@@ -42,6 +43,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.adapter.Inntekt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.adapter.InntektRequest
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.adapter.InntektResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreSøknadRequest
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreSøknadResponse
 import no.nav.aap.behandlingsflyt.integrasjon.ident.IDENT_QUERY
 import no.nav.aap.behandlingsflyt.integrasjon.ident.PdlPersoninfoGateway
 import no.nav.aap.behandlingsflyt.integrasjon.institusjonsopphold.InstitusjonoppholdRequest
@@ -73,8 +76,6 @@ import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlIdenterData
 import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlIdenterDataResponse
 import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlNavn
 import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlNavnData
-import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlNavnDataBolk
-import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlPersonBolk
 import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlPersonNavnDataResponse
 import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlPersoninfo
 import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlPersoninfoData
@@ -84,6 +85,12 @@ import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlRelasjonDataResponse
 import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlRequest
 import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlStatsborgerskap
 import no.nav.aap.behandlingsflyt.integrasjon.pdl.PersonStatus
+import no.nav.aap.behandlingsflyt.integrasjon.samordning.DagpengerPeriodeResponse
+import no.nav.aap.behandlingsflyt.integrasjon.samordning.DagpengerRequest
+import no.nav.aap.behandlingsflyt.integrasjon.samordning.DagpengerResponse
+import no.nav.aap.behandlingsflyt.integrasjon.samordning.TiltakspengerPeriodeResponse
+import no.nav.aap.behandlingsflyt.integrasjon.samordning.TiltakspengerRequest
+import no.nav.aap.behandlingsflyt.integrasjon.samordning.TiltakspengerVedtakResponse
 import no.nav.aap.behandlingsflyt.integrasjon.ufore.UføreHistorikkRespons
 import no.nav.aap.behandlingsflyt.integrasjon.ufore.UførePeriode
 import no.nav.aap.behandlingsflyt.integrasjon.ufore.UføreRequest
@@ -119,6 +126,7 @@ import no.nav.aap.brev.kontrakt.Tekstbolk
 import no.nav.aap.komponenter.json.DefaultJsonMapper
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.meldekort.kontrakt.sak.MeldeperioderV0
+import no.nav.aap.oppgave.enhet.OppgaveEnhetResponse
 import no.nav.aap.tilgang.BehandlingTilgangRequest
 import no.nav.aap.tilgang.JournalpostTilgangRequest
 import no.nav.aap.tilgang.Operasjon
@@ -129,7 +137,6 @@ import no.nav.aap.utbetal.trekk.TrekkPosteringDto
 import no.nav.aap.utbetal.trekk.TrekkResponsDto
 import org.intellij.lang.annotations.Language
 import org.slf4j.LoggerFactory
-import java.io.ByteArrayInputStream
 import java.math.MathContext
 import java.math.RoundingMode
 import java.time.LocalDate
@@ -149,7 +156,6 @@ object FakeServers : AutoCloseable {
     private val yrkesskade = embeddedServer(Netty, port = 0, module = { yrkesskadeFake() })
     private val inntekt = embeddedServer(Netty, port = 0, module = { poppFake() })
     private val oppgavestyring = embeddedServer(Netty, port = 0, module = { oppgavestyringFake() })
-    private val saf = embeddedServer(Netty, port = 0, module = { safFake() })
     private val inst2 = embeddedServer(Netty, port = 0, module = { inst2Fake() })
     private val medl = embeddedServer(Netty, port = 0, module = { medlFake() })
     private val pesysFake = embeddedServer(Netty, port = 0, module = { pesysFake() })
@@ -172,9 +178,13 @@ object FakeServers : AutoCloseable {
     private val sam = embeddedServer(Netty, port = 0, module = { sam() })
     private val gosys = embeddedServer(Netty, port = 0, module = { gosysFake() })
     private val leaderElector = embeddedServer(Netty, port = 0, module = { leaderElectorFake() })
+    private val dagpenger = embeddedServer(Netty, port = 0, module = { dagpengerFake() })
+    private val tiltakspenger = embeddedServer(Netty, port = 0, module = { tiltakspengerFake() })
 
     internal val statistikkHendelser = mutableListOf<StoppetBehandling>()
     internal val legeerklæringStatuser = mutableListOf<LegeerklæringStatusResponse>()
+
+    private lateinit var fakePersoner: TestPersonService
 
     private val started = AtomicBoolean(false)
 
@@ -183,8 +193,7 @@ object FakeServers : AutoCloseable {
         install(StatusPages) {
             exception<Throwable> { call, cause ->
                 this@oppgavestyringFake.log.info(
-                    "Inntekt :: Ukjent feil ved kall til '{}'",
-                    call.request.local.uri,
+                    "Inntekt :: Ukjent feil ved kall til '${call.request.local.uri}'",
                     cause
                 )
                 call.respond(
@@ -199,8 +208,11 @@ object FakeServers : AutoCloseable {
                 val åpneBehov = received.avklaringsbehov.filter { it.status.erÅpent() }
                     .map { Pair(it.avklaringsbehovDefinisjon.name, it.status) }
                 FakeServers.log.info("Åpne behov $åpneBehov")
-                FakeServers.log.info("Fikk oppgave-oppdatering: {}", received)
+                FakeServers.log.info("Fikk oppgave-oppdatering: $received")
                 call.respond(HttpStatusCode.NoContent)
+            }
+            get("/{referanse}/hent-oppgave-enhet") {
+                call.respond(OppgaveEnhetResponse(emptyList()))
             }
         }
     }
@@ -209,7 +221,7 @@ object FakeServers : AutoCloseable {
         installerContentNegotiation()
         install(StatusPages) {
             exception<Throwable> { call, cause ->
-                this@pesysFake.log.info("Inntekt :: Ukjent feil ved kall til '{}'", call.request.local.uri, cause)
+                this@pesysFake.log.info("Inntekt :: Ukjent feil ved kall til '${call.request.local.uri}'", cause)
                 call.respond(
                     status = HttpStatusCode.InternalServerError,
                     message = ErrorRespons(cause.message)
@@ -219,7 +231,7 @@ object FakeServers : AutoCloseable {
         routing() {
             post("/api/uforetrygd/uforehistorikk/perioder") {
                 val body = call.receive<UføreRequest>()
-                val hentPerson = FakePersoner.hentPerson(body.fnr)
+                val hentPerson = fakePersoner.hentPerson(body.fnr)
                 if (hentPerson == null) {
                     call.respond(HttpStatusCode.NotFound, "Fant ikke person med fnr ${body.fnr}")
                     return@post
@@ -243,6 +255,15 @@ object FakeServers : AutoCloseable {
                     )
                 }
             }
+            post("/api/uforetrygd/ekstern/soknad") {
+                val body = call.receive<UføreSøknadRequest>()
+                val hentPerson = fakePersoner.hentPerson(body.pid)
+                if (hentPerson == null) {
+                    call.respond(HttpStatusCode.NotFound, "Fant ikke person med fnr ${body.pid}")
+                    return@post
+                }
+                call.respond(HttpStatusCode.OK, UføreSøknadResponse(hentPerson.uføreSøknad))
+            }
 
         }
     }
@@ -252,7 +273,7 @@ object FakeServers : AutoCloseable {
 
         install(StatusPages) {
             exception<Throwable> { call, cause ->
-                this@sam.log.info("Inntekt :: Ukjent feil ved kall til '{}'", call.request.local.uri, cause)
+                this@sam.log.info("Inntekt :: Ukjent feil ved kall til '${call.request.local.uri}'", cause)
                 call.respond(
                     status = HttpStatusCode.InternalServerError,
                     message = ErrorRespons(cause.message)
@@ -345,6 +366,72 @@ object FakeServers : AutoCloseable {
         }
     }
 
+    private fun Application.dagpengerFake() {
+
+        installerContentNegotiation()
+        routing {
+            route("/dagpenger/datadeling/v1/perioder") {
+                post {
+                    val body = call.receive<DagpengerRequest>()
+                    val hentPerson = fakePersoner.hentPerson(body.personIdent)
+                    val dagpenger = hentPerson?.dagpenger
+                    if (hentPerson != null && dagpenger != null) {
+                        call.respond(
+                            DagpengerResponse(
+                                personIdent = body.personIdent,
+                                perioder = dagpenger.map { dp ->
+                                    DagpengerPeriodeResponse(
+                                        fraOgMedDato = dp.periode.fom,
+                                        tilOgMedDato = dp.periode.tom,
+                                        kilde = dp.kilde,
+                                        ytelseType = dp.dagpengerYtelseType
+                                    )
+                                }.toList()
+                            )
+                        )
+                        return@post
+                    }
+
+                    call.respond(
+                        DagpengerResponse(
+                            perioder = emptyList(),
+                            personIdent = body.personIdent
+                        )
+                    )
+
+                }
+            }
+        }
+    }
+
+    private fun Application.tiltakspengerFake() {
+        installerContentNegotiation()
+        routing {
+            route("/vedtak/perioder") {
+                post {
+                    val body = call.receive<TiltakspengerRequest>()
+                    val hentPerson = fakePersoner.hentPerson(body.ident)
+                    val tiltakspenger = hentPerson?.tiltakspenger
+                    if (hentPerson != null && tiltakspenger != null) {
+                        call.respond(tiltakspenger.map { tp ->
+                            TiltakspengerVedtakResponse(
+                                periode = TiltakspengerPeriodeResponse(
+                                    fraOgMed = tp.periode.fom,
+                                    tilOgMed = tp.periode.tom
+                                ),
+                                kilde = tp.kilde,
+                                rettighet = TiltakspengerYtelseType.TILTAKSPENGER
+                            )
+                        })
+                        return@post
+                    }
+
+                    call.respond(emptyList<TiltakspengerVedtakResponse>())
+                }
+            }
+        }
+    }
+
     private fun Application.leaderElectorFake() {
         installerContentNegotiation()
         routing {
@@ -378,7 +465,6 @@ object FakeServers : AutoCloseable {
                     PERSON_QUERY -> call.respond(personopplysninger(req))
                     PERSON_QUERY_HISTORIKK -> call.respond(personopplysningerHistorikk(req))
                     PdlPersoninfoGateway.PERSONINFO_QUERY -> call.respond(navn(req))
-                    PdlPersoninfoGateway.PERSONINFO_BOLK_QUERY -> call.respond(bolknavn(req))
                     BARN_RELASJON_QUERY -> call.respond(barnRelasjoner(req))
                     PERSON_BOLK_QUERY -> call.respond(barn(req))
                     else -> call.respond(HttpStatusCode.BadRequest)
@@ -402,7 +488,7 @@ object FakeServers : AutoCloseable {
         routing {
             get("/api/tjenestepensjon/getActiveForholdMedActiveYtelser") {
                 val ident = call.request.headers["fnr"] ?: ""
-                val fakePerson = FakePersoner.hentPerson(ident)
+                val fakePerson = fakePersoner.hentPerson(ident)
 
                 if (fakePerson != null && fakePerson.tjenestePensjon != null) {
                     call.respond(fakePerson.tjenestePensjon)
@@ -607,7 +693,7 @@ object FakeServers : AutoCloseable {
             post("/hent-ytelse-vedtak") {
                 val req = call.receive<ForeldrepengerRequest>()
                 val ident = req.ident.verdi
-                val fakePerson = FakePersoner.hentPerson(ident)
+                val fakePerson = fakePersoner.hentPerson(ident)
                 if (fakePerson?.foreldrepenger != null) {
                     val foreldrepenger = fakePerson.foreldrepenger
 
@@ -776,7 +862,7 @@ object FakeServers : AutoCloseable {
             data class SykepengerRequest(val personidentifikatorer: Set<String>)
             post("/utbetalte-perioder-aap") {
                 val request = call.receive<SykepengerRequest>()
-                val fakePerson = FakePersoner.hentPerson(request.personidentifikatorer.first())
+                val fakePerson = fakePersoner.hentPerson(request.personidentifikatorer.first())
                 if (fakePerson?.sykepenger != null) {
                     call.respond(
                         SykepengerResponse(
@@ -1065,7 +1151,7 @@ object FakeServers : AutoCloseable {
         routing {
             post("/hentinntektliste") {
                 val request = call.receive<Map<String, Any>>()
-                val person = FakePersoner.hentPerson((request["ident"] as Map<*, *>)["identifikator"] as String)
+                val person = fakePersoner.hentPerson((request["ident"] as Map<*, *>)["identifikator"] as String)
 
                 val z = person!!.inntekter().flatMap { inntektPerÅr ->
                     (1..12).map { mnd ->
@@ -1116,148 +1202,6 @@ object FakeServers : AutoCloseable {
         }
     }
 
-    private fun Application.safFake() {
-        installerContentNegotiation()
-        routing {
-            get("/rest/hentdokument/{journalpostId}/{dokumentInfoId}/{variantFormat}") {
-                call.response.header(
-                    HttpHeaders.ContentDisposition,
-                    ContentDisposition.Attachment.withParameter(
-                        ContentDisposition.Parameters.FileName,
-                        "ktor_logo.pdf"
-                    )
-                        .toString()
-                )
-                call.response.header(HttpHeaders.ContentType, ContentType.Application.Pdf.toString())
-                // Smallest possible PDF
-                // https://stackoverflow.com/a/17280876/1013553
-                val base64Pdf =
-                    "JVBERi0xLjAKMSAwIG9iajw8L1BhZ2VzIDIgMCBSPj5lbmRvYmogMiAwIG9iajw8L0tpZHNbMyAwIFJdL0NvdW50IDE+PmVuZG9iaiAzIDAgb2JqPDwvTWVkaWFCb3hbMCAwIDMgM10+PmVuZG9iagp0cmFpbGVyPDwvUm9vdCAxIDAgUj4+Cg=="
-                call.respondOutputStream {
-                    val decode = Base64.getDecoder().decode(base64Pdf)
-                    ByteArrayInputStream(decode).copyTo(this)
-                }
-            }
-            post("/graphql") {
-                val body = call.receive<String>()
-
-                if ("dokumentoversiktFagsak" in body) {
-                    @Language("JSON")
-                    val expression = """
-                            {
-                              "data": {
-                                "dokumentoversiktFagsak": {
-                                  "journalposter": [
-                                    {
-                                      "journalpostId": "453877977",
-                                      "journalstatus": "FERDIGSTILT",
-                                      "journalposttype": "I",
-                                      "behandlingstema": null,
-                                      "antallRetur": null,
-                                      "kanal": "NAV_NO",
-                                      "innsynsregelBeskrivelse": "Standardreglene avgjør om dokumentet vises",
-                                      "datoOpprettet": "2024-10-07T12:39:27",
-                                      "relevanteDatoer": [],
-                                      "dokumenter": [
-                                        {
-                                          "dokumentInfoId": "454273798",
-                                          "tittel": "Søknad om Arbeidsavklaringspenger",
-                                          "brevkode": "NAV 11-13.05",
-                                          "dokumentstatus": null,
-                                          "datoFerdigstilt": null,
-                                          "originalJournalpostId": "453877971",
-                                          "skjerming": null,
-                                          "logiskeVedlegg": [],
-                                          "dokumentvarianter": [
-                                            {
-                                              "variantformat": "ARKIV",
-                                              "saksbehandlerHarTilgang": true,
-                                              "skjerming": null
-                                            },
-                                            {
-                                              "variantformat": "ORIGINAL",
-                                              "saksbehandlerHarTilgang": true,
-                                              "skjerming": null
-                                            }
-                                          ]
-                                        },
-                                        {
-                                          "dokumentInfoId": "454273829",
-                                          "tittel": "Annen dokumentasjon",
-                                          "brevkode": null,
-                                          "dokumentstatus": null,
-                                          "datoFerdigstilt": null,
-                                          "originalJournalpostId": "453877977",
-                                          "skjerming": null,
-                                          "logiskeVedlegg": [],
-                                          "dokumentvarianter": [
-                                            {
-                                              "variantformat": "ARKIV",
-                                              "saksbehandlerHarTilgang": true,
-                                              "skjerming": null
-                                            }
-                                          ]
-                                        }
-                                      ]
-                                    },
-                                    {
-                                      "journalpostId": "453873496",
-                                      "journalstatus": "FERDIGSTILT",
-                                      "journalposttype": "I",
-                                      "behandlingstema": null,
-                                      "antallRetur": null,
-                                      "kanal": "NAV_NO",
-                                      "innsynsregelBeskrivelse": "Standardreglene avgjør om dokumentet vises",
-                                      "datoOpprettet": "2024-10-07T12:39:27",
-                                      "relevanteDatoer": [],
-                                      "dokumenter": [
-                                        {
-                                          "dokumentInfoId": "454268545",
-                                          "tittel": "Søknad om Arbeidsavklaringspenger",
-                                          "brevkode": "NAV 11-13.05",
-                                          "dokumentstatus": null,
-                                          "datoFerdigstilt": null,
-                                          "originalJournalpostId": "453873496",
-                                          "skjerming": null,
-                                          "logiskeVedlegg": [],
-                                          "dokumentvarianter": [
-                                            {
-                                              "variantformat": "ARKIV",
-                                              "saksbehandlerHarTilgang": true,
-                                              "skjerming": null
-                                            },
-                                            {
-                                              "variantformat": "ORIGINAL",
-                                              "saksbehandlerHarTilgang": true,
-                                              "skjerming": null
-                                            }
-                                          ]
-                                        }
-                                      ]
-                                    }
-                                  ],
-                                  "sideInfo": {
-                                    "sluttpeker": "NDUzODczNDk2",
-                                    "finnesNesteSide": false,
-                                    "antall": 2,
-                                    "totaltAntall": 2
-                                  }
-                                }
-                              }
-                            }
-                """
-                    call.respondText(
-                        expression.trimIndent(),
-                        contentType = ContentType.Application.Json
-                    )
-                } else {
-                    print("FEIL KALL")
-                    call.respond(HttpStatusCode.BadRequest)
-                }
-            }
-        }
-    }
-
     private fun Application.inst2Fake() {
         install(ContentNegotiation) {
             jackson {
@@ -1278,7 +1222,7 @@ object FakeServers : AutoCloseable {
                 val body = call.receive<InstitusjonoppholdRequest>()
                 val ident = body.personident
 
-                val fakePerson = FakePersoner.hentPerson(ident)
+                val fakePerson = fakePersoner.hentPerson(ident)
 
                 if (fakePerson != null) {
                     call.respond(fakePerson.institusjonsopphold)
@@ -1311,7 +1255,7 @@ object FakeServers : AutoCloseable {
                 val body = call.receive<MedlemskapRequest>()
                 val ident = body.personident
 
-                val fakePerson = FakePersoner.hentPerson(ident)
+                val fakePerson = fakePersoner.hentPerson(ident)
 
                 if (fakePerson != null) {
                     call.respond(fakePerson.medlStatus)
@@ -1389,7 +1333,7 @@ object FakeServers : AutoCloseable {
     }
 
     private fun mapIdentBolk(it: String): HentPersonBolkResult? {
-        val person = FakePersoner.hentPerson(it) ?: return null
+        val person = fakePersoner.hentPerson(it) ?: return null
         return HentPersonBolkResult(
             ident = person.identer.first().identifikator,
             person = PdlPersoninfo(
@@ -1457,9 +1401,10 @@ object FakeServers : AutoCloseable {
     }
 
     private fun hentEllerGenererTestPerson(forespurtIdent: String): TestPerson {
-        val person = FakePersoner.hentPerson(forespurtIdent)
+        val person = fakePersoner.hentPerson(forespurtIdent)
         if (person == null) {
-            FakePersoner.leggTil(
+            log.info("Fant ikke testperson med ident $forespurtIdent.")
+            fakePersoner.leggTil(
                 TestPerson(
                     identer = setOf(Ident(forespurtIdent)),
                     fødselsdato = Fødselsdato(LocalDate.now().minusYears(30))
@@ -1467,7 +1412,7 @@ object FakeServers : AutoCloseable {
             )
         }
 
-        return FakePersoner.hentPerson(forespurtIdent)!!
+        return fakePersoner.hentPerson(forespurtIdent)!!
     }
 
     private fun mapIdent(person: TestPerson?): List<PdlIdent> {
@@ -1542,31 +1487,6 @@ object FakeServers : AutoCloseable {
                     )
                 )
             ),
-        )
-    }
-
-    private fun bolknavn(req: PdlRequest): PdlPersonNavnDataResponse {
-        val navnData = req.variables.identer?.map {
-            val testPerson = hentEllerGenererTestPerson(it)
-            PdlNavnDataBolk(
-                ident = testPerson.identer.first().identifikator,
-                person =
-                    PdlPersonBolk(
-                        navn = listOf(
-                            PdlNavn(
-                                fornavn = testPerson.navn.fornavn,
-                                mellomnavn = null,
-                                etternavn = testPerson.navn.etternavn
-                            )
-                        )
-                    )
-            )
-        }
-
-        return PdlPersonNavnDataResponse(
-            errors = null,
-            extensions = null,
-            data = HentPerson(hentPersonBolk = navnData)
         )
     }
 
@@ -1792,7 +1712,7 @@ object FakeServers : AutoCloseable {
             }
         }
 
-        val brevStore = mutableListOf<BrevbestillingResponse>()
+        val brevStore = mutableMapOf<String, BrevbestillingResponse>()
         val mutex = Any()
         fun brevbestilling(
             brevbestillingReferanse: UUID,
@@ -1819,34 +1739,41 @@ object FakeServers : AutoCloseable {
             route("/api") {
                 post("/v2/bestill") {
                     val request = call.receive<BestillBrevV2Request>()
-                    val brevbestillingReferanse = UUID.randomUUID()
+                    val eksisterende = brevStore[request.unikReferanse]
+                    if (eksisterende != null) {
+                        call.respond(status = HttpStatusCode.Conflict, BestillBrevResponse(eksisterende.referanse))
+                        return@post
+                    }
 
+                    val brevbestillingReferanse = UUID.randomUUID()
                     val status = if (request.ferdigstillAutomatisk) {
                         Status.FERDIGSTILT
                     } else {
                         Status.UNDER_ARBEID
                     }
                     synchronized(mutex) {
-                        brevStore += brevbestilling(
-                            brevbestillingReferanse = brevbestillingReferanse,
-                            status = status,
-                            brevtype = request.brevtype,
-                            brev = Brev(
-                                kanSendesAutomatisk = false,
-                                journalpostTittel = "En tittel",
-                                overskrift = "Overskrift H1",
-                                kanOverstyreBrevtittel = false,
-                                tekstbolker = listOf(
-                                    Tekstbolk(
-                                        id = UUID.randomUUID(),
-                                        overskrift = "Overskrift H2",
-                                        innhold = listOf(
-                                            Innhold(
-                                                id = UUID.randomUUID(),
-                                                overskrift = "Overskrift H3",
-                                                blokker = emptyList(),
-                                                kanRedigeres = true,
-                                                erFullstendig = false
+                        brevStore.put(
+                            request.unikReferanse, brevbestilling(
+                                brevbestillingReferanse = brevbestillingReferanse,
+                                status = status,
+                                brevtype = request.brevtype,
+                                brev = Brev(
+                                    kanSendesAutomatisk = false,
+                                    journalpostTittel = "En tittel",
+                                    overskrift = "Overskrift H1",
+                                    kanOverstyreBrevtittel = false,
+                                    tekstbolker = listOf(
+                                        Tekstbolk(
+                                            id = UUID.randomUUID(),
+                                            overskrift = "Overskrift H2",
+                                            innhold = listOf(
+                                                Innhold(
+                                                    id = UUID.randomUUID(),
+                                                    overskrift = "Overskrift H3",
+                                                    blokker = emptyList(),
+                                                    kanRedigeres = true,
+                                                    erFullstendig = false
+                                                )
                                             )
                                         )
                                     )
@@ -1858,8 +1785,13 @@ object FakeServers : AutoCloseable {
                 }
                 post("/v3/bestill") {
                     val request = call.receive<BestillBrevV2Request>()
-                    val brevbestillingReferanse = UUID.randomUUID()
+                    val eksisterende = brevStore[request.unikReferanse]
+                    if (eksisterende != null) {
+                        call.respond(status = HttpStatusCode.Conflict, BestillBrevResponse(eksisterende.referanse))
+                        return@post
+                    }
 
+                    val brevbestillingReferanse = UUID.randomUUID()
                     val status = if (request.ferdigstillAutomatisk) {
                         Status.FERDIGSTILT
                     } else {
@@ -1905,18 +1837,20 @@ object FakeServers : AutoCloseable {
                         }
                     """.trimIndent()
                     synchronized(mutex) {
-                        brevStore += brevbestilling(
-                            brevbestillingReferanse = brevbestillingReferanse,
-                            status = status,
-                            brevtype = request.brevtype,
-                            brevmal = brevmal,
-                            brevdata = BrevdataDto(
-                                delmaler = emptyList(),
-                                faktagrunnlag = emptyList(),
-                                periodetekster = emptyList(),
-                                valg = emptyList(),
-                                betingetTekst = emptyList(),
-                                fritekster = emptyList(),
+                        brevStore.put(
+                            request.unikReferanse, brevbestilling(
+                                brevbestillingReferanse = brevbestillingReferanse,
+                                status = status,
+                                brevtype = request.brevtype,
+                                brevmal = brevmal,
+                                brevdata = BrevdataDto(
+                                    delmaler = emptyList(),
+                                    faktagrunnlag = emptyList(),
+                                    periodetekster = emptyList(),
+                                    valg = emptyList(),
+                                    betingetTekst = emptyList(),
+                                    fritekster = emptyList(),
+                                )
                             )
                         )
                     }
@@ -1928,7 +1862,7 @@ object FakeServers : AutoCloseable {
 
                         call.respond(
                             synchronized(mutex) {
-                                brevStore.find { it.referanse == ref }!!
+                                brevStore.values.find { it.referanse == ref }!!
                             }
                         )
                     }
@@ -1941,12 +1875,15 @@ object FakeServers : AutoCloseable {
                         val ref = UUID.fromString(call.pathParameters["referanse"])!!
                         val brev = call.receive<Brev>()
 
-                        val i = brevStore.indexOfFirst { it.referanse == ref }
-                        if (brevStore[i].status != Status.UNDER_ARBEID) {
+                        val key = brevStore.entries.find { it.value.referanse == ref }?.key ?: return@put call.respond(
+                            HttpStatusCode.BadRequest
+                        )
+                        val value = brevStore.getValue(key)
+                        if (value.status != Status.UNDER_ARBEID) {
                             call.respond(HttpStatusCode.BadRequest)
                         } else {
                             synchronized(mutex) {
-                                brevStore[i] = brevStore[i].copy(brev = brev)
+                                brevStore.replace(key, value.copy(brev = brev))
                             }
                             call.respond(HttpStatusCode.NoContent, Unit)
                         }
@@ -1955,12 +1892,15 @@ object FakeServers : AutoCloseable {
                         val ref = UUID.fromString(call.pathParameters["referanse"])!!
                         val brevdata = call.receive<BrevdataDto>()
 
-                        val i = brevStore.indexOfFirst { it.referanse == ref }
-                        if (brevStore[i].status != Status.UNDER_ARBEID) {
+                        val key = brevStore.entries.find { it.value.referanse == ref }?.key ?: return@put call.respond(
+                            HttpStatusCode.BadRequest
+                        )
+                        val value = brevStore.getValue(key)
+                        if (value.status != Status.UNDER_ARBEID) {
                             call.respond(HttpStatusCode.BadRequest)
                         } else {
                             synchronized(mutex) {
-                                brevStore[i] = brevStore[i].copy(brevdata = brevdata)
+                                brevStore.replace(key, value.copy(brevdata = brevdata))
                             }
                             call.respond(HttpStatusCode.NoContent, Unit)
                         }
@@ -1968,17 +1908,23 @@ object FakeServers : AutoCloseable {
                 }
                 post("/avbryt") {
                     val ref = call.receive<AvbrytBrevbestillingRequest>().referanse
+                    val key = brevStore.entries.find { it.value.referanse == ref }?.key ?: return@post call.respond(
+                        HttpStatusCode.BadRequest
+                    )
                     synchronized(mutex) {
-                        val i = brevStore.indexOfFirst { it.referanse == ref }
-                        brevStore[i] = brevStore[i].copy(status = Status.AVBRUTT)
+                        val value = brevStore.getValue(key)
+                        brevStore.replace(key, value.copy(status = Status.AVBRUTT))
                     }
                     call.respond(HttpStatusCode.Accepted, Unit)
                 }
                 post("/ferdigstill") {
                     val ref = call.receive<FerdigstillBrevRequest>().referanse
+                    val key = brevStore.entries.find { it.value.referanse == ref }?.key ?: return@post call.respond(
+                        HttpStatusCode.BadRequest
+                    )
                     synchronized(mutex) {
-                        val i = brevStore.indexOfFirst { it.referanse == ref }
-                        brevStore[i] = brevStore[i].copy(status = Status.FERDIGSTILT)
+                        val value = brevStore.getValue(key)
+                        brevStore.replace(key, value.copy(status = Status.FERDIGSTILT))
                     }
                     call.respond(HttpStatusCode.Accepted, Unit)
                 }
@@ -2006,7 +1952,7 @@ object FakeServers : AutoCloseable {
         }
     }
 
-    @Suppress("PropertyName")
+    @Suppress("PropertyName", "ConstructorParameterNaming")
     data class TestToken(
         val access_token: String,
         val refresh_token: String = "very.secure.token",
@@ -2017,10 +1963,12 @@ object FakeServers : AutoCloseable {
     )
 
 
-    fun start() {
+    fun start(testPersonService: TestPersonService = FakePersoner) {
         if (started.get()) {
             return
         }
+
+        fakePersoner = testPersonService
 
         azure.start()
         setAzureProperties()
@@ -2030,7 +1978,6 @@ object FakeServers : AutoCloseable {
         pdl.start()
         inntekt.start()
         oppgavestyring.start()
-        saf.start()
         inst2.start()
         sam.start()
         medl.start()
@@ -2051,6 +1998,8 @@ object FakeServers : AutoCloseable {
         norg.start()
         kabal.start()
         ereg.start()
+        dagpenger.start()
+        tiltakspenger.start()
         gosys.start()
         leaderElector.start()
 
@@ -2094,10 +2043,6 @@ object FakeServers : AutoCloseable {
         System.setProperty("integrasjon.oppgavestyring.scope", "oppgavestyring")
         System.setProperty("integrasjon.oppgavestyring.url", "http://localhost:${oppgavestyring.port()}")
 
-        // Saf
-        System.setProperty("integrasjon.saf.url.graphql", "http://localhost:${saf.port()}/graphql")
-        System.setProperty("integrasjon.saf.scope", "saf")
-        System.setProperty("integrasjon.saf.url.rest", "http://localhost:${saf.port()}/rest")
 
         // MEDL
         System.setProperty("integrasjon.medl.url", "http://localhost:${medl.port()}")
@@ -2105,6 +2050,7 @@ object FakeServers : AutoCloseable {
 
         // Inst
         System.setProperty("integrasjon.institusjonsopphold.url", "http://localhost:${inst2.port()}")
+        System.setProperty("integrasjon.institusjonsoppholdenkelt.url", "http://localhost:${inst2.port()}")
         System.setProperty("integrasjon.institusjonsopphold.scope", "inst2")
 
         // Statistikk-app
@@ -2130,6 +2076,14 @@ object FakeServers : AutoCloseable {
         // Dokumentinnhenting
         System.setProperty("integrasjon.dokumentinnhenting.url", "http://localhost:${dokumentinnhenting.port()}")
         System.setProperty("integrasjon.dokumentinnhenting.scope", "scope")
+
+        // Dagpenger
+        System.setProperty("integrasjon.dagpenger.url", "http://localhost:${dagpenger.port()}")
+        System.setProperty("integrasjon.dagpenger.scope", "scope")
+
+        // Tiltakspenger
+        System.setProperty("integrasjon.tiltakspenger.url", "http://localhost:${tiltakspenger.port()}")
+        System.setProperty("integrasjon.tiltakspenger.scope", "scope")
 
         // AAregisteret
         System.setProperty("integrasjon.aareg.url", "http://localhost:${aareg.port()}")
@@ -2210,7 +2164,6 @@ object FakeServers : AutoCloseable {
         brev.stop(0L, 0L)
         inntekt.stop(0L, 0L)
         oppgavestyring.stop(0L, 0L)
-        saf.stop(0L, 0L)
         inst2.stop(0L, 0L)
         medl.stop(0L, 0L)
         tilgang.stop(0L, 0L)
@@ -2228,6 +2181,8 @@ object FakeServers : AutoCloseable {
         norg.stop(0L, 0L)
         kabal.stop(0L, 0L)
         ereg.stop(0L, 0L)
+        dagpenger.stop(0L, 0L)
+        tiltakspenger.stop(0L, 0L)
         leaderElector.stop(0L, 0L)
     }
 }

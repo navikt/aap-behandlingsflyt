@@ -7,14 +7,18 @@ import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurdering
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.GraderingGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.MINSTE_ÅRLIG_YTELSE_TIDSLINJE
+import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Minstesats
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Tilkjent
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelsePeriode
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
 import no.nav.aap.behandlingsflyt.behandling.vedtak.Vedtak
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakRepository
+import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
+import no.nav.aap.behandlingsflyt.behandling.vedtakslengde.VedtakslengdeService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Grunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Repository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Vurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Beregningsgrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag11_19
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagInntekt
@@ -22,14 +26,24 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.ArbeidsGr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisÅrsak
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageresultatUtleder
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsopptrapping.ArbeidsopptrappingGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsopptrapping.ArbeidsopptrappingRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsopptrapping.ArbeidsopptrappingVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.UføreSøknadVedtakResultat
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdomsvurderingbrev.SykdomsvurderingForBrev
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdomsvurderingbrev.SykdomsvurderingForBrevRepository
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
@@ -39,8 +53,15 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedP
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
+import no.nav.aap.behandlingsflyt.test.april
+import no.nav.aap.behandlingsflyt.test.august
 import no.nav.aap.behandlingsflyt.test.desember
+import no.nav.aap.behandlingsflyt.test.februar
 import no.nav.aap.behandlingsflyt.test.januar
+import no.nav.aap.behandlingsflyt.test.juli
+import no.nav.aap.behandlingsflyt.test.juni
+import no.nav.aap.behandlingsflyt.test.mai
+import no.nav.aap.behandlingsflyt.test.september
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.type.Periode
@@ -50,13 +71,20 @@ import no.nav.aap.komponenter.verdityper.GUnit
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.komponenter.verdityper.TimerArbeid
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.Arguments
+import org.junit.jupiter.params.provider.MethodSource
 import java.math.BigDecimal
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.Year
+import java.time.temporal.ChronoUnit
+import java.util.stream.Stream
 import kotlin.random.Random
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
@@ -71,8 +99,11 @@ class BrevUtlederServiceTest {
     val beregningVurderingRepository = mockk<BeregningVurderingRepository>()
     val aktivitetspliktRepository = mockk<Aktivitetsplikt11_7Repository>()
     val arbeidsopptrappingRepository = mockk<ArbeidsopptrappingRepository>()
+    val sykdomsvurderingForBrevRepository = mockk<SykdomsvurderingForBrevRepository>()
     val underveisRepository = mockk<UnderveisRepository>()
+    val overgangUføreRepository = mockk<OvergangUføreRepository>()
     val avbrytRevurderingService = mockk<AvbrytRevurderingService>()
+    val vedtakslengdeService = mockk<VedtakslengdeService>()
     val unleashGateway = mockk<UnleashGateway>()
     val brevUtlederService = BrevUtlederService(
         resultatUtleder = ResultatUtleder(
@@ -90,361 +121,681 @@ class BrevUtlederServiceTest {
         underveisRepository = underveisRepository,
         aktivitetsplikt11_7Repository = aktivitetspliktRepository,
         arbeidsopptrappingRepository = arbeidsopptrappingRepository,
+        sykdomsvurderingForBrevRepository = sykdomsvurderingForBrevRepository,
+        overgangUføreRepository = overgangUføreRepository,
+        vedtakslengdeService = vedtakslengdeService,
         unleashGateway = unleashGateway,
     )
+    val virkningstidspunkt = 1 januar 2025
 
-    val førsteTilkjentYtelsePeriode = Periode(LocalDate.of(2025, 1, 1), LocalDate.of(2025, 12, 31))
-
-    /**
-     * Testen vil bli utdatert når ny brevbygger er implementert, da automatisering av beløpsvalg forventes innført
-     *
-     * Dette er kun for å sjekke at BrevUtlederService legger ved disse 3 årlige ytelse beløpene
-     */
-    @Test
-    fun `utledBehov legger ved 3 alternative beløp for årlig ytelse`() {
-        val virkningstidspunkt = LocalDate.of(2025, 1, 1)
-        val førstegangsbehandling = behandling(typeBehandling = TypeBehandling.Førstegangsbehandling)
-        every { vedtakRepository.hent(any<BehandlingId>()) } returns Vedtak(
-            behandlingId = førstegangsbehandling.id,
-            vedtakstidspunkt = LocalDateTime.of(2025,1,1, 0, 0,0),
-            virkningstidspunkt = virkningstidspunkt,
-        )
-        every { beregningsgrunnlagRepository.hentHvisEksisterer(førstegangsbehandling.id) } returns Grunnlag11_19(
-            grunnlaget = GUnit(2),
-            erGjennomsnitt = false,
-            gjennomsnittligInntektIG = GUnit(0),
-            inntekter = listOf(
-                grunnlagInntekt(2024, 220_000),
-                grunnlagInntekt(2023, 210_000),
-                grunnlagInntekt(2022, 200_000),
-            )
-        )
-        every { beregningVurderingRepository.hentHvisEksisterer(førstegangsbehandling.id) } returns BeregningGrunnlag(
-            BeregningstidspunktVurdering(
-                begrunnelse = "",
-                nedsattArbeidsevneEllerStudieevneDato = LocalDate.of(2025, 1, 1),
-                ytterligereNedsattBegrunnelse = null,
-                ytterligereNedsattArbeidsevneDato = null,
-                vurdertAv = ""
-            ), null
-        )
-        every { behandlingRepository.hent(any<BehandlingId>()) } returns førstegangsbehandling
+    @BeforeEach
+    fun setup() {
+        // felles random mocks/stubs, override i test ved behov
+        every { arbeidsopptrappingRepository.hentHvisEksisterer(any<BehandlingId>()) } returns null
+        every { beregningsgrunnlagRepository.hentHvisEksisterer(any<BehandlingId>()) } returns stubGrunnlag11_19()
+        every { beregningVurderingRepository.hentHvisEksisterer(any<BehandlingId>()) } returns stubBeregningGrunnlag()
+        every { overgangUføreRepository.hentHvisEksisterer(any<BehandlingId>()) } returns null
+        every { sykdomsvurderingForBrevRepository.hent(any<BehandlingId>())} returns sykdomsvurderingForBrevGrunnlag()
+        every { tilkjentYtelseRepository.hentHvisEksisterer(any<BehandlingId>()) } returns stubTilkjentYtelse()
         every { trukketSøknadService.søknadErTrukket(any<BehandlingId>()) } returns false
-        every { underveisRepository.hent(førstegangsbehandling.id) } returns underveisGrunnlag()
-        every { arbeidsopptrappingRepository.hentPerioder(any<BehandlingId>()) } returns emptyList()
-
-        val dagsats = Beløp("1000.00")
-        every { tilkjentYtelseRepository.hentHvisEksisterer(førstegangsbehandling.id)} returns tilkjentYtelseForFørstegangsbehandling(dagsats)
-        every { underveisRepository.hentHvisEksisterer(førstegangsbehandling.id) } returns underveisGrunnlag()
-
-        val resultat = brevUtlederService.utledBehovForMeldingOmVedtak(førstegangsbehandling.id)
-
-        assertIs<Innvilgelse>(resultat, "forventer brevbehov er av typen Innvilgelse")
-
-        assertNotNull(resultat.tilkjentYtelse, "tilkjent ytelse må eksistere")
-        // Gitt tilkjent dagsats på 1000.00 NOK, så skal årligYtelse være dagsats x 260 dager for fullt år
-        val forventetÅrligYtelse = dagsats.multiplisert(260)
-        assertEquals(forventetÅrligYtelse, resultat.tilkjentYtelse.årligYtelse)
-
-        val minsteÅrligeYtelseGUnit: GUnit = MINSTE_ÅRLIG_YTELSE_TIDSLINJE.segment(virkningstidspunkt)?.verdi!!
-        // MinsteÅrligYtelse som faktagrunnlag til brevforhåndsvisning er et statisk beløp og sammenfaller kun med
-        // beregnet dagsats når dagsats også er beregnet fra minstesats. testen hardkoder dagsats til 1000.00 NOK
-        val grunnbeløp = Grunnbeløp.tilTidslinje().segment(virkningstidspunkt)?.verdi
-        val forventetMinsteÅrligYtelse = grunnbeløp?.multiplisert(minsteÅrligeYtelseGUnit)
-        assertEquals(forventetMinsteÅrligYtelse, resultat.tilkjentYtelse.minsteÅrligYtelse)
-
-        val forventetMinsteÅrligYtelseUnder25 = grunnbeløp?.multiplisert(minsteÅrligeYtelseGUnit.toTredjedeler())
-        assertEquals(forventetMinsteÅrligYtelseUnder25, resultat.tilkjentYtelse.minsteÅrligYtelseUnder25)
     }
 
-    @Test
-    fun `skal feile ved utleding av brevtype dersom det aktivitetsplikt mangler`() {
-        every { behandlingRepository.hent(any<BehandlingId>()) } returns aktivitetspliktBehandling
-        every { aktivitetspliktRepository.hentHvisEksisterer(aktivitetspliktBehandling.id) } returns null
-        every { arbeidsopptrappingRepository.hentPerioder(aktivitetspliktBehandling.id) } returns emptyList()
-        assertThrows<IllegalStateException> {
-            brevUtlederService.utledBehovForMeldingOmVedtak(aktivitetspliktBehandling.id)
+    @Nested
+    inner class TestGruppe_UtvidVedtakslengde {
+        
+        @Test
+        fun `utledBehov legger ved sisteDagMedYtelse & fomDato i faktagrunnlag for UtvidVedtakslengde brev ved revurdering`() {
+            val sisteDagFørstegang = 31 august 2025
+            val sisteDagRevurdering = 31 desember 2025
+            val (_, revurdering) = stubUtvidVedtakslengdeBehandlinger(
+                sisteDagMedYtelseFørstegangsbehandling = sisteDagFørstegang,
+                sisteDagMedYtelseRevurdering = sisteDagRevurdering,
+            )
+
+            every { vedtakslengdeService.hentAvslagsårsakerVedStansEllerOpphør(revurdering.id, any()) } returns emptySet()
+            every { unleashGateway.isEnabled(BehandlingsflytFeature.UtvidVedtakslengdeUnderEttAr) } returns true
+
+            val resultat = brevUtlederService.utledBehovForMeldingOmVedtak(revurdering.id)
+
+            assertIs<UtvidVedtakslengde>(resultat, "forventer brevbehov er av typen UtvidVedtakslengdeBrev")
+            assertEquals(TypeBrev.VEDTAK_UTVID_VEDTAKSLENGDE, resultat.vedtakslengdeTypeBrev)
+            assertEquals(sisteDagRevurdering, resultat.sisteDagMedYtelse)
+            assertEquals(sisteDagFørstegang.plusDays(1), resultat.utvidetAapFomDato)
+        }
+
+        @ParameterizedTest(name = "skal utlede brevtype {1} for avslagsårsak {0}")
+        @MethodSource("no.nav.aap.behandlingsflyt.behandling.brev.BrevUtlederServiceTest#avslagsårsakTilBrevBehov")
+        fun `skal utlede riktig brevbehov for avslagsårsak ved utvidelse under ett år`(
+            avslagsårsak: Avslagsårsak,
+            forventetTypeBrev: TypeBrev
+        ) {
+            val (_, revurdering) = stubUtvidVedtakslengdeBehandlinger()
+
+            every { vedtakslengdeService.hentAvslagsårsakerVedStansEllerOpphør(revurdering.id, any()) } returns setOf(avslagsårsak)
+            every { unleashGateway.isEnabled(BehandlingsflytFeature.UtvidVedtakslengdeUnderEttAr) } returns true
+
+            val resultat = brevUtlederService.utledBehovForMeldingOmVedtak(revurdering.id)
+
+            assertIs<UtvidVedtakslengde>(resultat)
+            assertEquals(forventetTypeBrev, resultat.vedtakslengdeTypeBrev)
+        }
+
+        @Test
+        fun `skal feile ved ustøttet avslagsårsak ved utvidelse under ett år`() {
+            val (_, revurdering) = stubUtvidVedtakslengdeBehandlinger()
+
+            every { vedtakslengdeService.hentAvslagsårsakerVedStansEllerOpphør(revurdering.id, any()) } returns setOf(Avslagsårsak.MANGLENDE_DOKUMENTASJON)
+            every { unleashGateway.isEnabled(BehandlingsflytFeature.UtvidVedtakslengdeUnderEttAr) } returns true
+
+            assertThrows<IllegalArgumentException> {
+                brevUtlederService.utledBehovForMeldingOmVedtak(revurdering.id)
+            }
+        }
+
+        @Test
+        fun `skal prioritere avslagsårsak med høyest prioritet ved flere avslagsårsaker`() {
+            val (_, revurdering) = stubUtvidVedtakslengdeBehandlinger()
+
+            every { vedtakslengdeService.hentAvslagsårsakerVedStansEllerOpphør(revurdering.id, any()) } returns setOf(
+                Avslagsårsak.ANNEN_FULL_YTELSE,
+                Avslagsårsak.BRUKER_OVER_67
+            )
+            every { unleashGateway.isEnabled(BehandlingsflytFeature.UtvidVedtakslengdeUnderEttAr) } returns true
+
+            val resultat = brevUtlederService.utledBehovForMeldingOmVedtak(revurdering.id)
+
+            assertIs<UtvidVedtakslengde>(resultat)
+            assertEquals(TypeBrev.VEDTAK_FORLENGELSE_UNDER_ETT_ÅR_11_4, resultat.vedtakslengdeTypeBrev)
+        }
+
+        private fun stubUtvidVedtakslengdeBehandlinger(
+            sisteDagMedYtelseFørstegangsbehandling: LocalDate = 31 august 2025,
+            sisteDagMedYtelseRevurdering: LocalDate = 31 desember 2025,
+        ): Pair<Behandling, Behandling> {
+            val førstegangsbehandling = stubBehandling(
+                typeBehandling = TypeBehandling.Førstegangsbehandling,
+                status = Status.AVSLUTTET,
+                årsakTilOpprettelse = ÅrsakTilOpprettelse.SØKNAD,
+                vurderingsbehov = emptyList()
+            )
+            every { vedtakRepository.hent(førstegangsbehandling.id) } returns stubVedtak(førstegangsbehandling.id)
+            every { behandlingRepository.hent(førstegangsbehandling.id) } returns førstegangsbehandling
+            val førstegangUnderveisGrunnlag = stubDynamiskUnderveisGrunnlag(
+                sisteDagMedYtelse = sisteDagMedYtelseFørstegangsbehandling,
+                rettighetsType = RettighetsType.BISTANDSBEHOV
+            )
+            every { underveisRepository.hent(førstegangsbehandling.id) } returns førstegangUnderveisGrunnlag
+            every { underveisRepository.hentHvisEksisterer(førstegangsbehandling.id) } returns førstegangUnderveisGrunnlag
+
+            val revurdering = stubBehandling(
+                typeBehandling = TypeBehandling.Revurdering,
+                status = Status.OPPRETTET,
+                årsakTilOpprettelse = ÅrsakTilOpprettelse.UTVID_VEDTAKSLENGDE,
+                vurderingsbehov = listOf(Vurderingsbehov.UTVID_VEDTAKSLENGDE),
+                forrigeBehandlingId = førstegangsbehandling.id
+            )
+            every { vedtakRepository.hent(revurdering.id) } returns stubVedtak(revurdering.id)
+            every { behandlingRepository.hent(revurdering.id) } returns revurdering
+            val revurderingUnderveisGrunnlag = stubDynamiskUnderveisGrunnlag(
+                førsteDagMedYtelse = sisteDagMedYtelseFørstegangsbehandling.plusDays(1),
+                sisteDagMedYtelse = sisteDagMedYtelseRevurdering,
+                rettighetsType = RettighetsType.BISTANDSBEHOV
+            )
+            every { underveisRepository.hent(revurdering.id) } returns revurderingUnderveisGrunnlag
+            every { underveisRepository.hentHvisEksisterer(revurdering.id) } returns revurderingUnderveisGrunnlag
+            every { avbrytRevurderingService.revurderingErAvbrutt(any<BehandlingId>()) } returns false
+
+            return Pair(førstegangsbehandling, revurdering)
         }
     }
 
-    @Test
-    fun `skal utlede brevtype VedtakAktivitetsplikt11_7 når det iverksettes brudd på 11_7`() {
-        every { behandlingRepository.hent(any<BehandlingId>()) } returns aktivitetspliktBehandling
-        every { aktivitetspliktRepository.hentHvisEksisterer(aktivitetspliktBehandling.id) } returns Aktivitetsplikt11_7Grunnlag(
-            vurderinger = listOf(aktivitetspliktBrudd(aktivitetspliktBehandling.id))
-        )
-        every { arbeidsopptrappingRepository.hentPerioder(aktivitetspliktBehandling.id) } returns emptyList()
 
-        assertThat(brevUtlederService.utledBehovForMeldingOmVedtak(aktivitetspliktBehandling.id)).isEqualTo(
-            VedtakAktivitetsplikt11_7
-        )
-    }
-
-    @Test
-    fun `skal utlede brevtype VedtakEndring når et aktivitetsplikt brudd omgjøres`() {
-        every { behandlingRepository.hent(any<BehandlingId>()) } returns aktivitetspliktBehandling
-        every { aktivitetspliktRepository.hentHvisEksisterer(aktivitetspliktBehandling.id) } returns Aktivitetsplikt11_7Grunnlag(
-            vurderinger = listOf(aktivitetspliktBruddOppfylt(aktivitetspliktBehandling.id))
-        )
-        every { arbeidsopptrappingRepository.hentPerioder(aktivitetspliktBehandling.id) } returns emptyList()
-
-        assertThat(brevUtlederService.utledBehovForMeldingOmVedtak(aktivitetspliktBehandling.id)).isEqualTo(
-            VedtakEndring
-        )
-    }
-
-    @Test
-    fun `skal utlede brevtype VedtakEndring når nyeste aktivitetsplikt brudd omgjøres`() {
-        every { behandlingRepository.hent(any<BehandlingId>()) } returns aktivitetspliktBehandling
-
-        val gammelBruddDato = LocalDate.now().minusDays(100)
-        every { aktivitetspliktRepository.hentHvisEksisterer(aktivitetspliktBehandling.id) } returns Aktivitetsplikt11_7Grunnlag(
-            vurderinger = listOf(
-                aktivitetspliktBrudd(BehandlingId(100), fra = gammelBruddDato),
-                aktivitetspliktBrudd(BehandlingId(101), fra = gammelBruddDato.plusDays(1)),
-                aktivitetspliktBrudd(BehandlingId(102)),
-                aktivitetspliktBruddOppfylt(aktivitetspliktBehandling.id)
+    
+    @Nested
+    inner class TestGruppe_Arbeidssøkerbrev_11_17 {
+        @Test
+        fun `utledBehov legger ved sisteDagMedYtelse & datoAvklartForJobbsøk i faktagrunnlag for 11-17 brev ved revurdering`() {
+            val førstegangsbehandling = stubBehandling(
+                typeBehandling = TypeBehandling.Førstegangsbehandling,
+                status = Status.AVSLUTTET,
+                årsakTilOpprettelse = ÅrsakTilOpprettelse.SØKNAD,
+                vurderingsbehov = emptyList()
             )
-        )
-        every { arbeidsopptrappingRepository.hentPerioder(aktivitetspliktBehandling.id) } returns emptyList()
-
-        assertThat(brevUtlederService.utledBehovForMeldingOmVedtak(aktivitetspliktBehandling.id)).isEqualTo(
-            VedtakEndring
-        )
-    }
-
-    @Test
-    fun `skal utlede brevtype Aktivitetspliktbrudd når nyeste aktivitetsplikt brudd er stans`() {
-        every { behandlingRepository.hent(any<BehandlingId>()) } returns aktivitetspliktBehandling
-
-        val gammelBruddDato = LocalDate.now().minusDays(100)
-        every { aktivitetspliktRepository.hentHvisEksisterer(aktivitetspliktBehandling.id) } returns Aktivitetsplikt11_7Grunnlag(
-            vurderinger = listOf(
-                aktivitetspliktBrudd(BehandlingId(100), fra = gammelBruddDato),
-                aktivitetspliktBrudd(BehandlingId(101), fra = gammelBruddDato.plusDays(1)),
-                aktivitetspliktBruddOppfylt(BehandlingId(102)),
-                aktivitetspliktBrudd(aktivitetspliktBehandling.id)
+            every { vedtakRepository.hent(førstegangsbehandling.id) } returns stubVedtak(førstegangsbehandling.id)
+            every { behandlingRepository.hent(førstegangsbehandling.id) } returns førstegangsbehandling
+            val førstegangsUnderveisGrunnlag = stubUnderveisGrunnlag(rettighetsType = RettighetsType.BISTANDSBEHOV)
+            every { underveisRepository.hent(førstegangsbehandling.id) } returns førstegangsUnderveisGrunnlag
+            every { underveisRepository.hentHvisEksisterer(førstegangsbehandling.id) } returns førstegangsUnderveisGrunnlag
+            val revurdering = stubBehandling(
+                typeBehandling = TypeBehandling.Revurdering,
+                status = Status.OPPRETTET,
+                årsakTilOpprettelse = ÅrsakTilOpprettelse.HELSEOPPLYSNINGER,
+                vurderingsbehov = listOf(Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND),
+                forrigeBehandlingId = førstegangsbehandling.id
             )
-        )
-        every { arbeidsopptrappingRepository.hentPerioder(aktivitetspliktBehandling.id) } returns emptyList()
+            every { vedtakRepository.hent(revurdering.id) } returns stubVedtak(revurdering.id)
+            every { behandlingRepository.hent(revurdering.id) } returns revurdering
+            val datoAvklartForJobbsøk = 2 januar 2025
+            val sisteDagMedYtelse = 31 august 2025
+            val underveisGrunnlag = stubUnderveisGrunnlag(datoAvklartForJobbsøk, sisteDagMedYtelse, RettighetsType.ARBEIDSSØKER)
+            every { underveisRepository.hent(revurdering.id) } returns underveisGrunnlag
+            every { underveisRepository.hentHvisEksisterer(revurdering.id) } returns underveisGrunnlag
+            every { avbrytRevurderingService.revurderingErAvbrutt(any<BehandlingId>()) } returns false
 
-        assertThat(brevUtlederService.utledBehovForMeldingOmVedtak(aktivitetspliktBehandling.id)).isEqualTo(
-            VedtakAktivitetsplikt11_7
-        )
-    }
+            val resultat = brevUtlederService.utledBehovForMeldingOmVedtak(revurdering.id)
 
-    @Test
-    fun `skal utlede brev etter rettighetstype § 11-17 ved innvilgelse av revurdering`() {
-        val førstegangsbehandling = behandling(typeBehandling = TypeBehandling.Førstegangsbehandling)
-        val revurdering = behandling(
-            typeBehandling = TypeBehandling.Revurdering,
-            forrigeBehandlingId = førstegangsbehandling.id,
-            vurderingsbehov = listOf(Vurderingsbehov.OVERGANG_ARBEID)
-        )
-        every { unleashGateway.isEnabled(BehandlingsflytFeature.NyBrevtype11_17) } returns true
-        every { underveisRepository.hentHvisEksisterer(førstegangsbehandling.id) } returns underveisGrunnlag(
-            underveisperiode(
-                periode = Periode(1 januar 2023, 31 desember 2023),
-                rettighetsType = RettighetsType.BISTANDSBEHOV,
-                utfall = Utfall.OPPFYLT,
+            assertIs<Arbeidssøker>(resultat, "forventer brevbehov er av typen Arbeidssøker (11-17)")
+            assertEquals(sisteDagMedYtelse, resultat.sisteDagMedYtelse)
+            assertEquals(datoAvklartForJobbsøk, resultat.datoAvklartForJobbsøk)
+        }
+
+        @Test
+        fun `skal utlede brev etter rettighetstype § 11-17 ved innvilgelse av revurdering`() {
+            val førstegangsbehandling = stubBehandling(TypeBehandling.Førstegangsbehandling)
+            every { behandlingRepository.hent(førstegangsbehandling.id) } returns førstegangsbehandling
+            every { vedtakRepository.hent(førstegangsbehandling.id) } returns stubVedtak(førstegangsbehandling.id)
+            val underveisGrunnlagAvslag = underveisgrunnlagAvslag()
+            every { underveisRepository.hent(førstegangsbehandling.id) } returns underveisGrunnlagAvslag
+            every { underveisRepository.hentHvisEksisterer(førstegangsbehandling.id) } returns underveisGrunnlagAvslag
+            every { sykdomsvurderingForBrevRepository.hent(førstegangsbehandling.id) } returns null
+            val revurdering = stubBehandling(
+                typeBehandling = TypeBehandling.Revurdering,
+                forrigeBehandlingId = førstegangsbehandling.id,
+                vurderingsbehov = listOf(Vurderingsbehov.OVERGANG_ARBEID)
             )
-        )
-        every { behandlingRepository.hent(revurdering.id) } returns revurdering
-        every { avbrytRevurderingService.revurderingErAvbrutt(revurdering.id) } returns false
-        every { arbeidsopptrappingRepository.hentPerioder(revurdering.id) } returns emptyList()
-        every { arbeidsopptrappingRepository.hentPerioder(revurdering.forrigeBehandlingId!!) } returns emptyList()
-        every { underveisRepository.hentHvisEksisterer(revurdering.id) } returns underveisGrunnlag(
-            underveisperiode(
-                periode = Periode(1 januar 2023, 31 desember 2023),
-                rettighetsType = RettighetsType.ARBEIDSSØKER,
-                utfall = Utfall.OPPFYLT,
-            )
-        )
-
-        assertThat(brevUtlederService.utledBehovForMeldingOmVedtak(revurdering.id)).isEqualTo(Arbeidssøker)
-    }
-
-    @Test
-    fun `skal ikke utlede brev etter rettighetstype § 11-17 ved innvilgelse av revurdering dersom det samme gjelder forrige behandling`() {
-        val forrigeBehandling = behandling(typeBehandling = TypeBehandling.Revurdering)
-        val revurdering = behandling(
-            typeBehandling = TypeBehandling.Revurdering,
-            forrigeBehandlingId = forrigeBehandling.id,
-            vurderingsbehov = listOf(Vurderingsbehov.OVERGANG_ARBEID)
-        )
-        every { unleashGateway.isEnabled(BehandlingsflytFeature.NyBrevtype11_17) } returns true
-        every { underveisRepository.hentHvisEksisterer(forrigeBehandling.id) } returns underveisGrunnlag(
-            underveisperiode(
-                periode = Periode(1 januar 2023, 31 desember 2023),
-                rettighetsType = RettighetsType.ARBEIDSSØKER,
-                utfall = Utfall.OPPFYLT,
-            )
-        )
-        every { behandlingRepository.hent(revurdering.id) } returns revurdering
-        every { avbrytRevurderingService.revurderingErAvbrutt(revurdering.id) } returns false
-        every { arbeidsopptrappingRepository.hentPerioder(revurdering.id) } returns emptyList()
-        every { arbeidsopptrappingRepository.hentPerioder(revurdering.forrigeBehandlingId!!) } returns emptyList()
-        every { underveisRepository.hentHvisEksisterer(revurdering.id) } returns underveisGrunnlag(
-            underveisperiode(
-                periode = Periode(1 januar 2023, 31 desember 2023),
-                rettighetsType = RettighetsType.ARBEIDSSØKER,
-                utfall = Utfall.OPPFYLT,
-            )
-        )
-
-        assertThat(brevUtlederService.utledBehovForMeldingOmVedtak(revurdering.id)).isEqualTo(VedtakEndring)
-    }
-
-    @Test
-    fun `skal utlede brev for § 11-23 sjette ledd ved arbeidsopptrapping på gjeldende behandling og ikke på forrige behandling`() {
-        val revurdering = behandling(
-            typeBehandling = TypeBehandling.Revurdering,
-            forrigeBehandlingId = BehandlingId(Random.nextLong()),
-            vurderingsbehov = listOf(Vurderingsbehov.OVERGANG_ARBEID)
-        )
-        every { unleashGateway.isEnabled(BehandlingsflytFeature.NyBrevtype11_17) } returns true
-        every { behandlingRepository.hent(revurdering.id) } returns revurdering
-        every { avbrytRevurderingService.revurderingErAvbrutt(revurdering.id) } returns false
-        every { arbeidsopptrappingRepository.hentPerioder(revurdering.id) } returns listOf(Periode(1 januar 2024, 31 desember 2024))
-        every { arbeidsopptrappingRepository.hentPerioder(revurdering.forrigeBehandlingId!!) } returns emptyList()
-        every { underveisRepository.hentHvisEksisterer(revurdering.id) } returns underveisGrunnlag(
-            underveisperiode(
-                periode = Periode(1 januar 2024, 31 desember 2024),
-                rettighetsType = RettighetsType.ARBEIDSSØKER,
-                utfall = Utfall.OPPFYLT,
-            )
-        )
-
-        assertThat(brevUtlederService.utledBehovForMeldingOmVedtak(revurdering.id))
-            .isEqualTo(VedtakArbeidsopptrapping11_23_sjette_ledd)
-    }
-
-    @Test
-    fun `skal ikke utlede brev for § 11-23 sjette ledd ved arbeidsopptrapping på gjeldende behandling i tillegg til forrige behandling`() {
-        val revurdering = behandling(
-            typeBehandling = TypeBehandling.Revurdering,
-            forrigeBehandlingId = BehandlingId(Random.nextLong()),
-            vurderingsbehov = listOf(Vurderingsbehov.OVERGANG_ARBEID)
-        )
-        every { unleashGateway.isEnabled(BehandlingsflytFeature.NyBrevtype11_17) } returns true
-        every { behandlingRepository.hent(revurdering.id) } returns revurdering
-        every { avbrytRevurderingService.revurderingErAvbrutt(revurdering.id) } returns false
-        every { arbeidsopptrappingRepository.hentPerioder(revurdering.id) } returns listOf(Periode(1 januar 2024, 31 desember 2024))
-        every { arbeidsopptrappingRepository.hentPerioder(revurdering.forrigeBehandlingId!!) } returns listOf(Periode(1 januar 2023, 31 desember 2023))
-        every { underveisRepository.hentHvisEksisterer(revurdering.id) } returns underveisGrunnlag(
-            underveisperiode(
-                periode = Periode(1 januar 2024, 31 desember 2024),
-                rettighetsType = RettighetsType.ARBEIDSSØKER,
-                utfall = Utfall.OPPFYLT,
-            )
-        )
-        every { underveisRepository.hentHvisEksisterer(revurdering.forrigeBehandlingId!!) } returns underveisGrunnlag(
-            underveisperiode(
-                periode = Periode(1 januar 2023, 31 desember 2023),
-                rettighetsType = RettighetsType.ARBEIDSSØKER,
-                utfall = Utfall.OPPFYLT,
-            )
-        )
-
-        assertThat(brevUtlederService.utledBehovForMeldingOmVedtak(revurdering.id))
-            .isNotEqualTo(VedtakArbeidsopptrapping11_23_sjette_ledd)
-    }
-
-    @Test
-    fun `skal utlede brev etter rettighetstype § 11-18 ved innvilgelse av revurdering`() {
-        val førstegangsbehandling = behandling(typeBehandling = TypeBehandling.Førstegangsbehandling)
-        val revurdering = behandling(
-            typeBehandling = TypeBehandling.Revurdering,
-            forrigeBehandlingId = førstegangsbehandling.id,
-            vurderingsbehov = listOf(Vurderingsbehov.OVERGANG_UFORE)
-        )
-        every { underveisRepository.hentHvisEksisterer(førstegangsbehandling.id) } returns underveisGrunnlag(
-            underveisperiode(
-                periode = Periode(1 januar 2023, 31 desember 2023),
-                rettighetsType = RettighetsType.BISTANDSBEHOV,
-                utfall = Utfall.OPPFYLT,
-            )
-        )
-        every { behandlingRepository.hent(revurdering.id) } returns revurdering
-        every { arbeidsopptrappingRepository.hentPerioder(revurdering.id) } returns emptyList()
-        every { arbeidsopptrappingRepository.hentPerioder(revurdering.forrigeBehandlingId!!) } returns emptyList()
-        every { avbrytRevurderingService.revurderingErAvbrutt(revurdering.id) } returns false
-        every { underveisRepository.hentHvisEksisterer(revurdering.id) } returns underveisGrunnlag(
-            underveisperiode(
-                periode = Periode(1 januar 2023, 31 desember 2023),
-                rettighetsType = RettighetsType.VURDERES_FOR_UFØRETRYGD,
-                utfall = Utfall.OPPFYLT,
-            )
-        )
-        every { beregningsgrunnlagRepository.hentHvisEksisterer(revurdering.id) } returns Grunnlag11_19(
-            grunnlaget = GUnit(2),
-            erGjennomsnitt = false,
-            gjennomsnittligInntektIG = GUnit(0),
-            inntekter = listOf(
-                grunnlagInntekt(2024, 220_000),
-                grunnlagInntekt(2023, 210_000),
-                grunnlagInntekt(2022, 200_000),
-            )
-        )
-        every { beregningVurderingRepository.hentHvisEksisterer(revurdering.id) } returns BeregningGrunnlag(
-            BeregningstidspunktVurdering(
-                begrunnelse = "",
-                nedsattArbeidsevneEllerStudieevneDato = LocalDate.of(2023, 2, 20),
-                ytterligereNedsattBegrunnelse = null,
-                ytterligereNedsattArbeidsevneDato = null,
-                vurdertAv = ""
-            ), null
-        )
-
-        assertThat(brevUtlederService.utledBehovForMeldingOmVedtak(revurdering.id)).isEqualTo(
-            VurderesForUføretrygd(
-                GrunnlagBeregning(
-                    beregningstidspunkt = LocalDate.of(2023, 2, 20),
-                    inntekterPerÅr = listOf(
-                        InntektPerÅr(Year.of(2024), inntekt = BigDecimal("220000.00")),
-                        InntektPerÅr(Year.of(2023), inntekt = BigDecimal("210000.00")),
-                        InntektPerÅr(Year.of(2022), inntekt = BigDecimal("200000.00")),
-                    ),
-                    beregningsgrunnlag = null
+            every { underveisRepository.hentHvisEksisterer(førstegangsbehandling.id) } returns underveisGrunnlag(
+                underveisperiode(
+                    periode = Periode(1 januar 2023, 31 desember 2023),
+                    rettighetsType = RettighetsType.BISTANDSBEHOV,
+                    utfall = Utfall.OPPFYLT,
                 )
-
             )
-        )
+            every { behandlingRepository.hent(revurdering.id) } returns revurdering
+            every { vedtakRepository.hent(revurdering.id) } returns stubVedtak(revurdering.id)
+            every { avbrytRevurderingService.revurderingErAvbrutt(revurdering.id) } returns false
+            every { arbeidsopptrappingRepository.hentHvisEksisterer(revurdering.id) } returns null
+            every { arbeidsopptrappingRepository.hentHvisEksisterer(revurdering.forrigeBehandlingId!!) } returns null
+            val underveisGrunnlag = underveisGrunnlag(
+                underveisperiode(
+                    periode = Periode(1 januar 2023, 31 desember 2023),
+                    rettighetsType = RettighetsType.ARBEIDSSØKER,
+                    utfall = Utfall.OPPFYLT,
+                )
+            )
+            every { underveisRepository.hent(revurdering.id) } returns underveisGrunnlag
+            every { underveisRepository.hentHvisEksisterer(revurdering.id) } returns underveisGrunnlag
+
+            val resultat = brevUtlederService.utledBehovForMeldingOmVedtak(revurdering.id)
+
+            assertIs<Arbeidssøker>(resultat, "brevbehov er av type Arbeidssøker")
+        }
     }
 
-    @Test
-    fun `skal ikke utlede brev etter rettighetstype § 11-18 ved innvilgelse av revurdering dersom det samme gjelder forrige behandling`() {
-        val førstegangsbehandling = behandling(typeBehandling = TypeBehandling.Førstegangsbehandling)
-        val revurdering = behandling(
-            typeBehandling = TypeBehandling.Revurdering,
-            forrigeBehandlingId = førstegangsbehandling.id,
-            vurderingsbehov = listOf(Vurderingsbehov.OVERGANG_UFORE)
-        )
-        every { unleashGateway.isEnabled(BehandlingsflytFeature.NyBrevtype11_17) } returns true
-        every { underveisRepository.hentHvisEksisterer(førstegangsbehandling.id) } returns underveisGrunnlag(
-            underveisperiode(
-                periode = Periode(1 januar 2023, 31 desember 2023),
-                rettighetsType = RettighetsType.VURDERES_FOR_UFØRETRYGD,
-                utfall = Utfall.OPPFYLT,
+    @Nested
+    inner class TestGruppe_VurderesForUføreBrev_11_18 {
+        @Test
+        fun `utledBehov legger ved sisteDagMedYtelse & kravdatoUføretrygd i faktagrunnlag for 11-18 brev`() {
+            val kravdatoUføretrygd = 20 februar 2023
+            val behandling = stubBehandling(TypeBehandling.Førstegangsbehandling)
+            every { behandlingRepository.hent(behandling.id) } returns behandling
+            every { vedtakRepository.hent(behandling.id) } returns stubVedtak(behandling.id)
+            val sisteDagMedYtelse = 31 august 2025
+            val underveisGrunnlag = stubUnderveisGrunnlag(
+                sisteDagMedYtelse = sisteDagMedYtelse,
+                rettighetsType = RettighetsType.VURDERES_FOR_UFØRETRYGD
             )
-        )
-        every { behandlingRepository.hent(revurdering.id) } returns revurdering
-        every { avbrytRevurderingService.revurderingErAvbrutt(revurdering.id) } returns false
-        every { arbeidsopptrappingRepository.hentPerioder(revurdering.id) } returns emptyList()
-        every { arbeidsopptrappingRepository.hentPerioder(revurdering.forrigeBehandlingId!!) } returns emptyList()
-        every { underveisRepository.hentHvisEksisterer(revurdering.id) } returns underveisGrunnlag(
-            underveisperiode(
-                periode = Periode(1 januar 2023, 31 desember 2023),
-                rettighetsType = RettighetsType.VURDERES_FOR_UFØRETRYGD,
-                utfall = Utfall.OPPFYLT,
+            every { underveisRepository.hent(behandling.id) } returns underveisGrunnlag
+            every { underveisRepository.hentHvisEksisterer(behandling.id) } returns underveisGrunnlag
+            every { overgangUføreRepository.hentHvisEksisterer(behandling.id) } returns OvergangUføreGrunnlag(
+                vurderinger = listOf(
+                    OvergangUføreVurdering(
+                        begrunnelse = "test",
+                        brukerHarSøktOmUføretrygd = true,
+                        brukerHarFåttVedtakOmUføretrygd = UføreSøknadVedtakResultat.NEI,
+                        brukerRettPåAAP = true,
+                        fom = kravdatoUføretrygd,
+                        tom = sisteDagMedYtelse,
+                        vurdertAv = "meg",
+                        vurdertIBehandling = behandling.id,
+                    )
+                )
             )
-        )
 
-        assertThat(brevUtlederService.utledBehovForMeldingOmVedtak(revurdering.id)).isEqualTo(
-            VedtakEndring
-        )
+            val resultat = brevUtlederService.utledBehovForMeldingOmVedtak(behandling.id)
+
+            assertIs<VurderesForUføretrygd>(resultat, "forventer brevbehov er av typen 11-18")
+            assertEquals(sisteDagMedYtelse, resultat.sisteDagMedYtelse)
+            assertEquals(kravdatoUføretrygd, resultat.kravdatoUføretrygd)
+        }
+
+        @Test
+        fun `skal utlede brev etter rettighetstype § 11-18 ved innvilgelse av revurdering`() {
+            val førstegangsbehandling = stubBehandling(TypeBehandling.Førstegangsbehandling)
+            val revurdering = stubBehandling(
+                typeBehandling = TypeBehandling.Revurdering,
+                forrigeBehandlingId = førstegangsbehandling.id,
+                vurderingsbehov = listOf(Vurderingsbehov.OVERGANG_UFORE)
+            )
+            every { underveisRepository.hentHvisEksisterer(førstegangsbehandling.id) } returns underveisGrunnlag(
+                underveisperiode(
+                    periode = Periode(1 januar 2023, 31 desember 2023),
+                    rettighetsType = RettighetsType.BISTANDSBEHOV,
+                    utfall = Utfall.OPPFYLT,
+                )
+            )
+            every { behandlingRepository.hent(revurdering.id) } returns revurdering
+            every { arbeidsopptrappingRepository.hentHvisEksisterer(revurdering.id) } returns null
+            every { arbeidsopptrappingRepository.hentHvisEksisterer(revurdering.forrigeBehandlingId!!) } returns null
+            every { avbrytRevurderingService.revurderingErAvbrutt(revurdering.id) } returns false
+            val sisteDagMedYtelse = 31 desember 2023
+            val underveisGrunnlag = underveisGrunnlag(
+                underveisperiode(
+                    periode = Periode(1 januar 2023, sisteDagMedYtelse),
+                    rettighetsType = RettighetsType.VURDERES_FOR_UFØRETRYGD,
+                    utfall = Utfall.OPPFYLT,
+                )
+            )
+            every { underveisRepository.hentHvisEksisterer(revurdering.id) } returns underveisGrunnlag
+            every { underveisRepository.hent(revurdering.id) } returns underveisGrunnlag
+            every { beregningsgrunnlagRepository.hentHvisEksisterer(revurdering.id) } returns Grunnlag11_19(
+                grunnlaget = GUnit(2),
+                erGjennomsnitt = false,
+                gjennomsnittligInntektIG = GUnit(0),
+                inntekter = listOf(
+                    grunnlagInntekt(2024, 220_000),
+                    grunnlagInntekt(2023, 210_000),
+                    grunnlagInntekt(2022, 200_000),
+                )
+            )
+            val kravdatoUføretrygd = LocalDate.of(2023, 2, 20)
+            every { beregningVurderingRepository.hentHvisEksisterer(revurdering.id) } returns BeregningGrunnlag(
+                BeregningstidspunktVurdering(
+                    begrunnelse = "",
+                    nedsattArbeidsevneEllerStudieevneDato = kravdatoUføretrygd,
+                    ytterligereNedsattBegrunnelse = null,
+                    ytterligereNedsattArbeidsevneDato = null,
+                    vurdertAv = ""
+                ), null
+            )
+            every { vedtakRepository.hent(revurdering.id) } returns Vedtak(revurdering.id, LocalDateTime.now(), kravdatoUføretrygd)
+            every { tilkjentYtelseRepository.hentHvisEksisterer(revurdering.id) } returns null
+            every { unleashGateway.isEnabled(any()) } returns false
+            every { overgangUføreRepository.hentHvisEksisterer(revurdering.id) } returns OvergangUføreGrunnlag(
+                vurderinger = listOf(
+                    OvergangUføreVurdering(
+                        begrunnelse = "test",
+                        brukerHarSøktOmUføretrygd = true,
+                        brukerHarFåttVedtakOmUføretrygd = UføreSøknadVedtakResultat.NEI,
+                        brukerRettPåAAP = true,
+                        fom = kravdatoUføretrygd,
+                        tom = sisteDagMedYtelse,
+                        vurdertAv = "meg",
+                        vurdertIBehandling = revurdering.id,
+                    )
+                )
+            )
+
+            assertThat(brevUtlederService.utledBehovForMeldingOmVedtak(revurdering.id)).isEqualTo(
+                VurderesForUføretrygd(
+                    kravdatoUføretrygd = kravdatoUføretrygd,
+                    sisteDagMedYtelse = sisteDagMedYtelse,
+                    grunnlagBeregning = GrunnlagBeregning(
+                        beregningstidspunkt = LocalDate.of(2023, 2, 20),
+                        inntekterPerÅr = listOf(
+                            InntektPerÅr(Year.of(2024), inntekt = BigDecimal("220000.00")),
+                            InntektPerÅr(Year.of(2023), inntekt = BigDecimal("210000.00")),
+                            InntektPerÅr(Year.of(2022), inntekt = BigDecimal("200000.00")),
+                        ),
+                        beregningsgrunnlag = null
+                    ),
+                    tilkjentYtelse = null
+                )
+            )
+        }
+
     }
 
+    @Nested
+    inner class TestGruppe_VedtakEndring {
+
+        @Test
+        fun `skal ikke utlede brev etter rettighetstype § 11-18 ved innvilgelse av revurdering dersom det samme gjelder forrige behandling`() {
+            val førstegangsbehandling = stubBehandling(TypeBehandling.Førstegangsbehandling)
+            val revurdering = stubBehandling(
+                typeBehandling = TypeBehandling.Revurdering,
+                forrigeBehandlingId = førstegangsbehandling.id,
+                vurderingsbehov = listOf(Vurderingsbehov.OVERGANG_UFORE)
+            )
+            every { underveisRepository.hentHvisEksisterer(førstegangsbehandling.id) } returns underveisGrunnlag(
+                underveisperiode(
+                    periode = Periode(1 januar 2023, 31 desember 2023),
+                    rettighetsType = RettighetsType.VURDERES_FOR_UFØRETRYGD,
+                    utfall = Utfall.OPPFYLT,
+                )
+            )
+            every { behandlingRepository.hent(revurdering.id) } returns revurdering
+            every { avbrytRevurderingService.revurderingErAvbrutt(revurdering.id) } returns false
+            every { arbeidsopptrappingRepository.hentHvisEksisterer(revurdering.id) } returns null
+            every { arbeidsopptrappingRepository.hentHvisEksisterer(revurdering.forrigeBehandlingId!!) } returns null
+            every { underveisRepository.hentHvisEksisterer(revurdering.id) } returns underveisGrunnlag(
+                underveisperiode(
+                    periode = Periode(1 januar 2023, 31 desember 2023),
+                    rettighetsType = RettighetsType.VURDERES_FOR_UFØRETRYGD,
+                    utfall = Utfall.OPPFYLT,
+                )
+            )
+
+            assertThat(brevUtlederService.utledBehovForMeldingOmVedtak(revurdering.id)).isEqualTo(
+                VedtakEndring
+            )
+        }
+
+        @Test
+        fun `skal ikke utlede brev etter rettighetstype § 11-17 ved innvilgelse av revurdering dersom det samme gjelder forrige behandling`() {
+            val forrigeBehandling = stubBehandling(typeBehandling = TypeBehandling.Revurdering)
+            val revurdering = stubBehandling(
+                typeBehandling = TypeBehandling.Revurdering,
+                forrigeBehandlingId = forrigeBehandling.id,
+                vurderingsbehov = listOf(Vurderingsbehov.OVERGANG_ARBEID)
+            )
+            every { underveisRepository.hentHvisEksisterer(forrigeBehandling.id) } returns underveisGrunnlag(
+                underveisperiode(
+                    periode = Periode(1 januar 2023, 31 desember 2023),
+                    rettighetsType = RettighetsType.ARBEIDSSØKER,
+                    utfall = Utfall.OPPFYLT,
+                )
+            )
+            every { behandlingRepository.hent(revurdering.id) } returns revurdering
+            every { avbrytRevurderingService.revurderingErAvbrutt(revurdering.id) } returns false
+            every { arbeidsopptrappingRepository.hentHvisEksisterer(revurdering.id) } returns null
+            every { arbeidsopptrappingRepository.hentHvisEksisterer(revurdering.forrigeBehandlingId!!) } returns null
+            every { underveisRepository.hentHvisEksisterer(revurdering.id) } returns underveisGrunnlag(
+                underveisperiode(
+                    periode = Periode(1 januar 2023, 31 desember 2023),
+                    rettighetsType = RettighetsType.ARBEIDSSØKER,
+                    utfall = Utfall.OPPFYLT,
+                )
+            )
+
+            assertThat(brevUtlederService.utledBehovForMeldingOmVedtak(revurdering.id)).isEqualTo(VedtakEndring)
+        }
+
+        @Test
+        fun `skal utlede brevtype VedtakEndring når et aktivitetsplikt brudd omgjøres`() {
+            every { behandlingRepository.hent(any<BehandlingId>()) } returns aktivitetspliktBehandling
+            every { aktivitetspliktRepository.hentHvisEksisterer(aktivitetspliktBehandling.id) } returns Aktivitetsplikt11_7Grunnlag(
+                vurderinger = listOf(aktivitetspliktBruddOppfylt(aktivitetspliktBehandling.id))
+            )
+            every { arbeidsopptrappingRepository.hentHvisEksisterer(aktivitetspliktBehandling.id) } returns null
+
+            assertThat(brevUtlederService.utledBehovForMeldingOmVedtak(aktivitetspliktBehandling.id)).isEqualTo(
+                VedtakEndring
+            )
+        }
+
+        @Test
+        fun `skal utlede brevtype VedtakEndring når nyeste aktivitetsplikt brudd omgjøres`() {
+            every { behandlingRepository.hent(any<BehandlingId>()) } returns aktivitetspliktBehandling
+
+            val gammelBruddDato = LocalDate.now().minusDays(100)
+            every { aktivitetspliktRepository.hentHvisEksisterer(aktivitetspliktBehandling.id) } returns Aktivitetsplikt11_7Grunnlag(
+                vurderinger = listOf(
+                    aktivitetspliktBrudd(BehandlingId(100), fra = gammelBruddDato),
+                    aktivitetspliktBrudd(BehandlingId(101), fra = gammelBruddDato.plusDays(1)),
+                    aktivitetspliktBrudd(BehandlingId(102)),
+                    aktivitetspliktBruddOppfylt(aktivitetspliktBehandling.id)
+                )
+            )
+            every { arbeidsopptrappingRepository.hentHvisEksisterer(aktivitetspliktBehandling.id) } returns null
+
+            assertThat(brevUtlederService.utledBehovForMeldingOmVedtak(aktivitetspliktBehandling.id)).isEqualTo(
+                VedtakEndring
+            )
+        }
+
+    }
+
+    @Nested
+    inner class TestGruppe_InnvilgelseBrev {
+        @Test
+        fun `utledBehov legger ved sisteDagMedYtelse i faktagrunnlag for Innvilgelse-brev`() {
+            val behandling = stubBehandling(TypeBehandling.Førstegangsbehandling)
+            every { behandlingRepository.hent(behandling.id) } returns behandling
+            every { vedtakRepository.hent(behandling.id) } returns stubVedtak(behandling.id)
+            val sisteDagMedYtelse = 31 august 2025
+            val underveisGrunnlag = stubUnderveisGrunnlag(
+                sisteDagMedYtelse = sisteDagMedYtelse,
+                rettighetsType = RettighetsType.BISTANDSBEHOV
+            )
+            every { underveisRepository.hent(behandling.id) } returns underveisGrunnlag
+            every { underveisRepository.hentHvisEksisterer(behandling.id) } returns underveisGrunnlag
+
+            val resultat = brevUtlederService.utledBehovForMeldingOmVedtak(behandling.id)
+
+            assertIs<Innvilgelse>(resultat, "forventer brevbehov er av typen Innvilgelse")
+            assertEquals(sisteDagMedYtelse, resultat.sisteDagMedYtelse)
+        }
+
+        @Test
+        fun `utledBehov legger ved 3 alternative beløp for årlig ytelse i faktagrunnlag for Innvilgelse-brev`() {
+            val behandling = stubBehandling(TypeBehandling.Førstegangsbehandling)
+            every { behandlingRepository.hent(behandling.id) } returns behandling
+            every { vedtakRepository.hent(behandling.id) } returns stubVedtak(behandling.id)
+            val underveisGrunnlag = stubUnderveisGrunnlag()
+            every { underveisRepository.hent(behandling.id) } returns underveisGrunnlag
+            every { underveisRepository.hentHvisEksisterer(behandling.id) } returns underveisGrunnlag
+            val dagsats = Beløp("1000.00")
+            every { tilkjentYtelseRepository.hentHvisEksisterer(behandling.id) } returns stubTilkjentYtelse(dagsats)
+
+            val resultat = brevUtlederService.utledBehovForMeldingOmVedtak(behandling.id)
+
+            assertIs<Innvilgelse>(resultat, "forventer brevbehov er av typen Innvilgelse")
+
+            assertNotNull(resultat.tilkjentYtelse, "tilkjent ytelse må eksistere")
+            // Gitt tilkjent dagsats på 1000.00 NOK, så skal årligYtelse være dagsats x 260 dager for fullt år
+            val forventetÅrligYtelse = dagsats.multiplisert(260)
+            assertEquals(forventetÅrligYtelse, resultat.tilkjentYtelse.årligYtelse)
+
+            val minsteÅrligeYtelseGUnit: GUnit = MINSTE_ÅRLIG_YTELSE_TIDSLINJE.segment(virkningstidspunkt)?.verdi!!
+            // MinsteÅrligYtelse som faktagrunnlag til brevforhåndsvisning er et statisk beløp og sammenfaller kun med
+            // beregnet dagsats når dagsats også er beregnet fra minstesats. testen hardkoder dagsats til 1000.00 NOK
+            val grunnbeløp = Grunnbeløp.tilTidslinje().segment(virkningstidspunkt)?.verdi
+            val forventetMinsteÅrligYtelse = grunnbeløp?.multiplisert(minsteÅrligeYtelseGUnit)
+            assertEquals(forventetMinsteÅrligYtelse, resultat.tilkjentYtelse.minsteÅrligYtelse)
+
+            val forventetMinsteÅrligYtelseUnder25 = grunnbeløp?.multiplisert(minsteÅrligeYtelseGUnit.toTredjedeler())
+            assertEquals(forventetMinsteÅrligYtelseUnder25, resultat.tilkjentYtelse.minsteÅrligYtelseUnder25)
+        }
+
+        @Test
+        fun `skal hente ut sykdomsvurdering ved innvilgelse`() {
+            val behandling = stubBehandling(TypeBehandling.Førstegangsbehandling)
+            every { behandlingRepository.hent(behandling.id) } returns behandling
+            every { vedtakRepository.hent(behandling.id) } returns stubVedtak(behandling.id)
+            val underveisGrunnlag = stubUnderveisGrunnlag()
+            every { underveisRepository.hent(behandling.id) } returns underveisGrunnlag
+            every { underveisRepository.hentHvisEksisterer(behandling.id) } returns underveisGrunnlag
+            every { sykdomsvurderingForBrevRepository.hent(behandling.id)} returns sykdomsvurderingForBrevGrunnlag()
+
+            val resultat = brevUtlederService.utledBehovForMeldingOmVedtak(behandling.id)
+
+            assertIs<Innvilgelse>(resultat, "brevbehov er av type Innvilgelse")
+            assertEquals(resultat.sykdomsvurdering, "Vurdering av sykdom")
+        }
+    }
+
+
+    @Nested
+    inner class TestGruppe_AvslagBrev {
+
+        @Test
+        fun `skal hente ut sykdomsvurdering ved avslag`() {
+            val behandling = stubBehandling(TypeBehandling.Førstegangsbehandling)
+            every { behandlingRepository.hent(behandling.id) } returns behandling
+            every { vedtakRepository.hent(behandling.id) } returns stubVedtak(behandling.id)
+            val underveisGrunnlag = underveisgrunnlagAvslag()
+            every { underveisRepository.hent(behandling.id) } returns underveisGrunnlag
+            every { underveisRepository.hentHvisEksisterer(behandling.id) } returns underveisGrunnlag
+            every { sykdomsvurderingForBrevRepository.hent(behandling.id) } returns sykdomsvurderingForBrevGrunnlag()
+
+            val resultat = brevUtlederService.utledBehovForMeldingOmVedtak(behandling.id)
+
+            assertIs<Avslag>(resultat, "brevbehov er av type Avslag")
+            assertEquals(resultat.sykdomsvurdering, "Vurdering av sykdom")
+        }
+
+        @Test
+        fun `faktagrunnlag for sykdomsvurdering settes til null hvis det ikke finnes`() {
+            val behandling = stubBehandling(TypeBehandling.Førstegangsbehandling)
+            every { behandlingRepository.hent(behandling.id) } returns behandling
+            every { vedtakRepository.hent(behandling.id) } returns stubVedtak(behandling.id)
+            val underveisGrunnlagAvslag = underveisgrunnlagAvslag()
+            every { underveisRepository.hent(behandling.id) } returns underveisGrunnlagAvslag
+            every { underveisRepository.hentHvisEksisterer(behandling.id) } returns underveisGrunnlagAvslag
+            every { sykdomsvurderingForBrevRepository.hent(behandling.id) } returns null
+
+            val resultat = brevUtlederService.utledBehovForMeldingOmVedtak(behandling.id)
+
+            assertIs<Avslag>(resultat, "brevbehov er av type Avslag")
+            assertEquals(null, resultat.sykdomsvurdering)
+        }
+    }
+
+    @Nested
+    inner class TestGruppe_VedtakAktivitetsplikt {
+
+        @Test
+        fun `skal feile ved utleding av brevtype dersom aktivitetsplikt mangler`() {
+            every { behandlingRepository.hent(any<BehandlingId>()) } returns aktivitetspliktBehandling
+            every { aktivitetspliktRepository.hentHvisEksisterer(aktivitetspliktBehandling.id) } returns null
+            every { arbeidsopptrappingRepository.hentHvisEksisterer(aktivitetspliktBehandling.id) } returns null
+            assertThrows<IllegalStateException> {
+                brevUtlederService.utledBehovForMeldingOmVedtak(aktivitetspliktBehandling.id)
+            }
+        }
+
+        @Test
+        fun `skal utlede brevtype VedtakAktivitetsplikt11_7 når det iverksettes brudd på 11_7`() {
+            every { behandlingRepository.hent(any<BehandlingId>()) } returns aktivitetspliktBehandling
+            every { aktivitetspliktRepository.hentHvisEksisterer(aktivitetspliktBehandling.id) } returns Aktivitetsplikt11_7Grunnlag(
+                vurderinger = listOf(aktivitetspliktBrudd(aktivitetspliktBehandling.id))
+            )
+            every { arbeidsopptrappingRepository.hentHvisEksisterer(aktivitetspliktBehandling.id) } returns null
+
+            assertThat(brevUtlederService.utledBehovForMeldingOmVedtak(aktivitetspliktBehandling.id)).isEqualTo(
+                VedtakAktivitetsplikt11_7
+            )
+        }
+
+        @Test
+        fun `skal utlede brevtype Aktivitetspliktbrudd når nyeste aktivitetsplikt brudd er stans`() {
+            every { behandlingRepository.hent(any<BehandlingId>()) } returns aktivitetspliktBehandling
+
+            val gammelBruddDato = LocalDate.now().minusDays(100)
+            every { aktivitetspliktRepository.hentHvisEksisterer(aktivitetspliktBehandling.id) } returns Aktivitetsplikt11_7Grunnlag(
+                vurderinger = listOf(
+                    aktivitetspliktBrudd(BehandlingId(100), fra = gammelBruddDato),
+                    aktivitetspliktBrudd(BehandlingId(101), fra = gammelBruddDato.plusDays(1)),
+                    aktivitetspliktBruddOppfylt(BehandlingId(102)),
+                    aktivitetspliktBrudd(aktivitetspliktBehandling.id)
+                )
+            )
+            every { arbeidsopptrappingRepository.hentHvisEksisterer(aktivitetspliktBehandling.id) } returns null
+
+            assertThat(brevUtlederService.utledBehovForMeldingOmVedtak(aktivitetspliktBehandling.id)).isEqualTo(
+                VedtakAktivitetsplikt11_7
+            )
+        }
+    }
+
+
+    @Nested
+    inner class TestGruppe_VedtakArbeidsopptrapping11_23_sjetteLedd {
+
+        @Test
+        fun `skal utlede brev for § 11-23 sjette ledd ved arbeidsopptrapping på gjeldende behandling og ikke på forrige behandling`() {
+            val revurdering = stubBehandling(
+                typeBehandling = TypeBehandling.Revurdering,
+                forrigeBehandlingId = BehandlingId(Random.nextLong()),
+                vurderingsbehov = listOf(Vurderingsbehov.OVERGANG_ARBEID)
+            )
+            every { behandlingRepository.hent(revurdering.id) } returns revurdering
+            every { avbrytRevurderingService.revurderingErAvbrutt(revurdering.id) } returns false
+            every { arbeidsopptrappingRepository.hentHvisEksisterer(revurdering.id) } returns arbeidsopptrappingGrunnlag(
+                revurdering,
+                1 januar 2024,
+                31 desember 2024
+            )
+            every { arbeidsopptrappingRepository.hentHvisEksisterer(revurdering.forrigeBehandlingId!!) } returns null
+            every { underveisRepository.hentHvisEksisterer(revurdering.id) } returns underveisGrunnlag(
+                underveisperiode(
+                    periode = Periode(1 januar 2024, 31 desember 2024),
+                    rettighetsType = RettighetsType.ARBEIDSSØKER,
+                    utfall = Utfall.OPPFYLT,
+                )
+            )
+
+            assertThat(brevUtlederService.utledBehovForMeldingOmVedtak(revurdering.id))
+                .isEqualTo(VedtakArbeidsopptrapping11_23SjetteLedd)
+        }
+
+        @Test
+        fun `skal ikke utlede brev for § 11-23 sjette ledd ved arbeidsopptrapping på gjeldende behandling i tillegg til forrige behandling`() {
+            val revurdering = stubBehandling(
+                typeBehandling = TypeBehandling.Revurdering,
+                forrigeBehandlingId = BehandlingId(Random.nextLong()),
+                vurderingsbehov = listOf(Vurderingsbehov.OVERGANG_ARBEID)
+            )
+            every { behandlingRepository.hent(revurdering.id) } returns revurdering
+            every { avbrytRevurderingService.revurderingErAvbrutt(revurdering.id) } returns false
+            every { arbeidsopptrappingRepository.hentHvisEksisterer(revurdering.id) } returns arbeidsopptrappingGrunnlag(
+                revurdering,
+                1 januar 2024,
+                31 desember 2024
+            )
+            every { arbeidsopptrappingRepository.hentHvisEksisterer(revurdering.forrigeBehandlingId!!) } returns arbeidsopptrappingGrunnlag(
+                revurdering,
+                1 januar 2023,
+                31 desember 2023
+            )
+            every { underveisRepository.hentHvisEksisterer(revurdering.id) } returns underveisGrunnlag(
+                underveisperiode(
+                    periode = Periode(1 januar 2024, 31 desember 2024),
+                    rettighetsType = RettighetsType.ARBEIDSSØKER,
+                    utfall = Utfall.OPPFYLT,
+                )
+            )
+            every { underveisRepository.hentHvisEksisterer(revurdering.forrigeBehandlingId!!) } returns underveisGrunnlag(
+                underveisperiode(
+                    periode = Periode(1 januar 2023, 31 desember 2023),
+                    rettighetsType = RettighetsType.ARBEIDSSØKER,
+                    utfall = Utfall.OPPFYLT,
+                )
+            )
+
+            assertThat(brevUtlederService.utledBehovForMeldingOmVedtak(revurdering.id))
+                .isNotEqualTo(VedtakArbeidsopptrapping11_23SjetteLedd)
+        }
+    }
+
+    private fun arbeidsopptrappingGrunnlag(
+        revurdering: Behandling,
+        fraDato: LocalDate,
+        tilDato: LocalDate
+    ): ArbeidsopptrappingGrunnlag = ArbeidsopptrappingGrunnlag(
+        listOf(
+            ArbeidsopptrappingVurdering(
+                begrunnelse = "...",
+                vurderingenGjelderFra = fraDato,
+                reellMulighetTilOpptrapping = true,
+                rettPaaAAPIOpptrapping = true,
+                vurdertAv = "Bruker",
+                opprettetTid = Instant.now(),
+                vurdertIBehandling = revurdering.id,
+                vurderingenGjelderTil = tilDato
+            )
+        )
+    )
 
     private fun grunnlagInntekt(år: Int, inntekt: Int): GrunnlagInntekt {
         return GrunnlagInntekt(
@@ -477,14 +828,14 @@ class BrevUtlederServiceTest {
         )
     }
 
-    val aktivitetspliktBehandling = behandling(
+    val aktivitetspliktBehandling = stubBehandling(
         typeBehandling = TypeBehandling.Aktivitetsplikt,
         status = Status.OPPRETTET,
         årsakTilOpprettelse = ÅrsakTilOpprettelse.AKTIVITETSPLIKT,
     )
 
-    private fun behandling(
-        typeBehandling: TypeBehandling,
+    private fun stubBehandling(
+        typeBehandling: TypeBehandling = TypeBehandling.Førstegangsbehandling,
         id: BehandlingId = BehandlingId(Random.nextLong()),
         forrigeBehandlingId: BehandlingId? = null,
         sakId: SakId = SakId(Random.nextLong()),
@@ -514,14 +865,15 @@ class BrevUtlederServiceTest {
     private fun underveisperiode(
         periode: Periode,
         rettighetsType: RettighetsType,
-        utfall: Utfall
+        utfall: Utfall,
+        avslagsårsak: UnderveisÅrsak? = null,
     ): Underveisperiode {
         return Underveisperiode(
             periode = periode,
             meldePeriode = periode,
             utfall = utfall,
             rettighetsType = rettighetsType,
-            avslagsårsak = null,
+            avslagsårsak = avslagsårsak,
             grenseverdi = Prosent.`100_PROSENT`,
             institusjonsoppholdReduksjon = Prosent.`0_PROSENT`,
             arbeidsgradering = ArbeidsGradering(
@@ -538,22 +890,126 @@ class BrevUtlederServiceTest {
         )
     }
 
-    private fun underveisGrunnlag(): UnderveisGrunnlag {
+    private fun stubUnderveisGrunnlag(
+        førsteDagMedYtelse : LocalDate = 1 januar 2025,
+        sisteDagMedYtelse : LocalDate = 31 august 2025,
+        rettighetsType: RettighetsType = RettighetsType.BISTANDSBEHOV,
+    ): UnderveisGrunnlag {
         return underveisGrunnlag(
             underveisperiode(
-                periode = Periode(1 januar 2025, 31 desember 2025),
-                rettighetsType = RettighetsType.BISTANDSBEHOV,
+                periode = Periode(førsteDagMedYtelse, 30 april 2025),
+                rettighetsType = rettighetsType,
                 utfall = Utfall.OPPFYLT,
+            ),
+            underveisperiode(
+                periode = Periode(1 mai 2025, sisteDagMedYtelse),
+                rettighetsType = rettighetsType,
+                utfall = Utfall.OPPFYLT,
+            ),
+            underveisperiode(
+                periode = Periode(1 september 2025, 31 desember 2025),
+                rettighetsType = rettighetsType,
+                utfall = Utfall.IKKE_VURDERT,
             )
         )
     }
 
-    private fun tilkjentYtelseForFørstegangsbehandling(dagsats: Beløp): List<TilkjentYtelsePeriode> = listOf(
-        TilkjentYtelsePeriode(
-            periode = førsteTilkjentYtelsePeriode,
-            tilkjent = tilkjentYtelseDto(dagsats, førsteTilkjentYtelsePeriode.tom)
+    private fun stubDynamiskUnderveisGrunnlag(
+        førsteDagMedYtelse : LocalDate = 1 januar 2025,
+        sisteDagMedYtelse : LocalDate = 31 august 2025,
+        rettighetsType: RettighetsType = RettighetsType.BISTANDSBEHOV,
+    ): UnderveisGrunnlag {
+        val antallDager = ChronoUnit.DAYS.between(førsteDagMedYtelse, sisteDagMedYtelse)
+        val midtMellomDag = førsteDagMedYtelse.plusDays(antallDager / 2)
+        return underveisGrunnlag(
+            underveisperiode(
+                periode = Periode(førsteDagMedYtelse, midtMellomDag),
+                rettighetsType = rettighetsType,
+                utfall = Utfall.OPPFYLT,
+            ),
+            underveisperiode(
+                periode = Periode(midtMellomDag, sisteDagMedYtelse),
+                rettighetsType = rettighetsType,
+                utfall = Utfall.OPPFYLT,
+            ),
+            underveisperiode(
+                periode = Periode(sisteDagMedYtelse.plusDays(1), sisteDagMedYtelse.plusMonths(4)),
+                rettighetsType = rettighetsType,
+                utfall = Utfall.IKKE_VURDERT,
+            )
         )
-    )
+    }
+
+    private fun sykdomsvurderingForBrevGrunnlag(): SykdomsvurderingForBrev {
+        return SykdomsvurderingForBrev(
+            behandlingId = BehandlingId(Random.nextLong()),
+            vurdering = "Vurdering av sykdom",
+            vurdertAv = "Veileder",
+            vurdertTidspunkt = LocalDateTime.now(),
+        )
+    }
+
+    private fun underveisgrunnlagAvslag(): UnderveisGrunnlag {
+        return underveisGrunnlag(
+            underveisperiode(
+                periode = Periode(1 januar 2025, 31 desember 2025),
+                rettighetsType = RettighetsType.BISTANDSBEHOV,
+                utfall = Utfall.IKKE_OPPFYLT,
+                avslagsårsak = UnderveisÅrsak.IKKE_GRUNNLEGGENDE_RETT
+            ),
+        )
+    }
+
+    private fun stubTilkjentYtelse(
+        dagsats: Beløp = Beløp("1000.00")
+    ): List<TilkjentYtelsePeriode> {
+        val førstePeriode = Periode(1 januar 2025, 30 juni 2025)
+        val andrePeriode = Periode(1 juli 2025, 30 desember 2025)
+        return listOf(
+            TilkjentYtelsePeriode(
+                periode = førstePeriode,
+                tilkjent = tilkjentYtelseDto(dagsats, førstePeriode.tom)
+            ),
+            TilkjentYtelsePeriode(
+                periode = andrePeriode,
+                tilkjent = tilkjentYtelseDto(dagsats, andrePeriode.tom)
+            )
+        )
+    }
+
+    private fun stubBeregningGrunnlag(): BeregningGrunnlag {
+        return BeregningGrunnlag(
+            tidspunktVurdering = BeregningstidspunktVurdering(
+                begrunnelse = "",
+                nedsattArbeidsevneEllerStudieevneDato = virkningstidspunkt,
+                ytterligereNedsattBegrunnelse = null,
+                ytterligereNedsattArbeidsevneDato = null,
+                vurdertAv = ""
+            ),
+            yrkesskadeBeløpVurdering = null
+        )
+    }
+
+    private fun stubGrunnlag11_19(): Beregningsgrunnlag {
+        return Grunnlag11_19(
+            grunnlaget = GUnit(2),
+            erGjennomsnitt = false,
+            gjennomsnittligInntektIG = GUnit(0),
+            inntekter = listOf(
+                grunnlagInntekt(2024, 220_000),
+                grunnlagInntekt(2023, 210_000),
+                grunnlagInntekt(2022, 200_000),
+            )
+        )
+    }
+
+    private fun stubVedtak(behandlingId : BehandlingId): Vedtak {
+        return Vedtak(
+            behandlingId = behandlingId,
+            vedtakstidspunkt = virkningstidspunkt.atStartOfDay(),
+            virkningstidspunkt = virkningstidspunkt,
+        )
+    }
 
     private fun tilkjentYtelseDto(dagsats: Beløp, utbetalingsdato: LocalDate): Tilkjent {
         return Tilkjent(
@@ -569,10 +1025,25 @@ class BrevUtlederServiceTest {
             ),
             grunnlagsfaktor = GUnit(1),
             grunnbeløp = Beløp(300000),
+            barnepensjonDagsats = Beløp(0),
             antallBarn = 0,
             barnetilleggsats = Beløp(0),
             barnetillegg = Beløp(0),
-            utbetalingsdato = utbetalingsdato
+            utbetalingsdato = utbetalingsdato,
+            minsteSats = Minstesats.IKKE_MINSTESATS,
+            redusertDagsats = dagsats
+        )
+    }
+
+    companion object {
+        @JvmStatic
+        fun avslagsårsakTilBrevBehov(): Stream<Arguments> = Stream.of(
+            Arguments.of(Avslagsårsak.BRUKER_OVER_67, TypeBrev.VEDTAK_FORLENGELSE_UNDER_ETT_ÅR_11_4),
+            Arguments.of(Avslagsårsak.IKKE_MEDLEM, TypeBrev.VEDTAK_FORLENGELSE_UNDER_ETT_ÅR_MEDLEMSKAP),
+            Arguments.of(Avslagsårsak.ORDINÆRKVOTE_BRUKT_OPP, TypeBrev.VEDTAK_FORLENGELSE_UNDER_ETT_ÅR_11_12),
+            Arguments.of(Avslagsårsak.BRUDD_PÅ_OPPHOLDSKRAV_STANS, TypeBrev.VEDTAK_FORLENGELSE_UNDER_ETT_ÅR_11_3),
+            Arguments.of(Avslagsårsak.IKKE_RETT_UNDER_STRAFFEGJENNOMFØRING, TypeBrev.VEDTAK_FORLENGELSE_UNDER_ETT_ÅR_11_26),
+            Arguments.of(Avslagsårsak.ANNEN_FULL_YTELSE, TypeBrev.VEDTAK_FORLENGELSE_UNDER_ETT_ÅR_11_27),
         )
     }
 }

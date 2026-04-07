@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.kontrakt.statistikk
 
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.AvklaringsbehovHendelseDto
 import no.nav.aap.verdityper.dokument.JournalpostId
 import no.nav.aap.verdityper.dokument.Kanal
@@ -19,16 +20,19 @@ import no.nav.aap.behandlingsflyt.kontrakt.sak.Status as SakStatus
  * @param saksnummer Saksnummer.
  * @param behandlingReferanse Behandlingsreferanse
  * @param relatertBehandling Hvis behandlingen har oppsått med bakgrunn i en annen, skal den foregående behandlingen refereres til her. Dette er tolket som forrige behandling på samme sak.
+ * @param relatertFagsystem Stort sett Kelvin, men om behandlingen har oppstått f.eks fra en klagebehandling i Kabal, skal dette refereres her.
  * @param mottattTid Dato for første søknad mottatt for behandlingen.
  * @param behandlingStatus Behandlingstatus. Ikke det samme som sakstatus.
  * @param identerForSak Identer på sak. Brukes for å filtrere kode 6-personer.
  * @param tidspunktSisteEndring Brukes i statistikk-appen for å utlede avsluttet-tid for automatiske behandlinger.
+ * @param hendelsesTidspunkt Når denne hendelsen ble opprettet i Behandlingsflyt.
  */
 public data class StoppetBehandling(
     val saksnummer: String,
     val sakStatus: SakStatus,
     val behandlingReferanse: UUID,
     val relatertBehandling: UUID? = null,
+    val relatertFagsystem: String? = "KELVIN",
     val behandlingOpprettetTidspunkt: LocalDateTime,
     val mottattTid: LocalDateTime,
     val tidspunktSisteEndring: LocalDateTime? = null,
@@ -38,6 +42,7 @@ public data class StoppetBehandling(
     val ident: String,
     val versjon: String,
     val vurderingsbehov: List<Vurderingsbehov>,
+    val årsakTilOpprettelse: ÅrsakTilOpprettelse,
     val avklaringsbehov: List<AvklaringsbehovHendelseDto>,
     val hendelsesTidspunkt: LocalDateTime,
     val avsluttetBehandling: AvsluttetBehandlingDTO? = null,
@@ -87,6 +92,7 @@ public enum class Vurderingsbehov {
     REVURDER_SAMORDNING_UFØRE,
     REVURDER_SAMORDNING_ANDRE_STATLIGE_YTELSER,
     REVURDER_SAMORDNING_ARBEIDSGIVER,
+    REVURDER_SAMORDNING_BARNEPENSJON,
     REVURDER_SAMORDNING_TJENESTEPENSJON,
     REFUSJONSKRAV,              // Refusjonskrav
     UTENLANDSOPPHOLD_FOR_SOKNADSTIDSPUNKT, // Utenlandsopphold før søknadstidspunkt
@@ -109,7 +115,11 @@ public enum class Vurderingsbehov {
     OPPHOLDSKRAV,
     EFFEKTUER_AKTIVITETSPLIKT,
     EFFEKTUER_AKTIVITETSPLIKT_11_9,
-    AUTOMATISK_OPPDATER_VILKÅR;
+    UTVID_VEDTAKSLENGDE,
+    VEDTAKSLENGDE_MANUELT,
+    MIGRER_RETTIGHETSPERIODE,
+    REVURDER_SYKESTIPEND,
+    ETABLERING_EGEN_VIRKSOMHET;
 }
 
 /**

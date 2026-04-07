@@ -9,13 +9,16 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveis
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisperiodeId
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.ApplikasjonsVersjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
 import no.nav.aap.komponenter.verdityper.Dagsatser
 import no.nav.aap.komponenter.verdityper.Prosent
+import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.komponenter.verdityper.TimerArbeid
 import no.nav.aap.lookup.repository.Factory
 import org.slf4j.LoggerFactory
+import java.time.LocalDate
 
 class UnderveisRepositoryImpl(private val connection: DBConnection) : UnderveisRepository {
 
@@ -111,6 +114,33 @@ class UnderveisRepositoryImpl(private val connection: DBConnection) : UnderveisR
 
             lagreNyttGrunnlag(behandlingId, underveisperioder, input)
         }
+    }
+
+    override fun hentSakerMedSisteUnderveisperiodeFørDato(sisteUnderveisDato: LocalDate): Set<SakId> {
+        val query = """
+            WITH siste_underveisperiode AS (SELECT ug.behandling_id, max(upper(periode)) AS siste_dato
+                FROM underveis_grunnlag ug
+                    JOIN underveis_periode on ug.perioder_id = underveis_periode.perioder_id
+                    JOIN underveis_perioder on underveis_periode.perioder_id = underveis_perioder.id
+                    JOIN gjeldende_vedtatte_behandlinger gvb ON gvb.behandling_id = ug.behandling_id
+                WHERE ug.aktiv = true
+                GROUP BY ug.behandling_id
+            )
+            SELECT s.id as sakId FROM siste_underveisperiode sup
+                JOIN behandling b ON sup.behandling_id = b.id
+                JOIN sak s ON b.sak_id = s.id
+            WHERE sup.siste_dato < ? AND upper(s.rettighetsperiode) >= ?;
+        """.trimIndent()
+
+        return connection.queryList(query) {
+            setParams {
+                setLocalDate(1, sisteUnderveisDato)
+                setLocalDate(2, Tid.MAKS)
+            }
+            setRowMapper {
+                SakId(it.getLong("sakId"))
+            }
+        }.toSet()
     }
 
     override fun slett(behandlingId: BehandlingId) {

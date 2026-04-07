@@ -8,7 +8,7 @@ import java.util.concurrent.ConcurrentHashMap
 
 object InMemoryMellomlagretVurderingRepository : MellomlagretVurderingRepository {
     private val vurderinger = ConcurrentHashMap<Pair<BehandlingId, AvklaringsbehovKode>, MellomlagretVurdering>()
-    private val lock = Object()
+    private val lock = Any()
 
     override fun hentHvisEksisterer(
         behandlingId: BehandlingId,
@@ -38,5 +38,16 @@ object InMemoryMellomlagretVurderingRepository : MellomlagretVurderingRepository
         val (behandlingId, avklaringsbehovKode) = mellomlagretVurdering
         synchronized(lock) { vurderinger[Pair(behandlingId, avklaringsbehovKode)] = mellomlagretVurdering }
         return mellomlagretVurdering
+    }
+
+    override fun hentForAvklaringsbehov(
+        behandlingId: BehandlingId,
+        avklaringsbehovKoder: List<AvklaringsbehovKode>
+    ): List<MellomlagretVurdering> {
+        synchronized(lock) {
+            return vurderinger.filter { (key, _) ->
+                key.first == behandlingId && avklaringsbehovKoder.contains(key.second)
+            }.values.toList()
+        }
     }
 }

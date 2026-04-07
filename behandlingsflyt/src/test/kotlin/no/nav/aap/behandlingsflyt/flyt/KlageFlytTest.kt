@@ -19,6 +19,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VurderForm
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VurderKlageKontorLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VurderKlageNayLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.ÅrsakTilRetur
+import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.behandling.trekkklage.flate.TrekkKlageVurderingDto
 import no.nav.aap.behandlingsflyt.behandling.trekkklage.flate.TrekkKlageÅrsakDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
@@ -46,7 +47,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.KabalHendelseV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.KlageUtfall
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.KlageV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.KlagebehandlingAvsluttetDetaljer
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.OmgjøringKlageRevurderingV0
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.OmgjøringKlageRevurdering
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.StudentStatus
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadMedlemskapDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadStudentDto
@@ -59,10 +60,9 @@ import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.SØKNAD
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.VURDER_RETTIGHETSPERIODE
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.klage.FormkravRepositoryImpl
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
-import no.nav.aap.behandlingsflyt.test.FakeUnleash
+import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
@@ -75,7 +75,7 @@ import java.time.LocalDateTime
 import java.util.*
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status as AvklaringsbehovStatus
 
-class KlageFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
+class KlageFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
     @Test
     fun `Teste Klageflyt - Omgjøring av 22-13 og revurdering genereres `() {
         val periode = Periode(LocalDate.now().minusMonths(3), LocalDate.now().plusYears(3))
@@ -200,7 +200,7 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
         assertThat(åpneAvklaringsbehov).hasSize(1)
         assertThat(åpneAvklaringsbehov.first().definisjon).isEqualTo(Definisjon.KVALITETSSIKRING)
 
-        kvalitetssikreOk(klagebehandling)
+        klagebehandling.kvalitetssikre()
 
         // KlagebehandlingNaySteg
         åpneAvklaringsbehov = hentÅpneAvklaringsbehov(klagebehandling.id)
@@ -279,14 +279,14 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
                 .extracting(MottattDokument::strukturertDokument)
                 .isNotNull
             assertThat(
-                omgjøringKlageRevurdering.first().strukturerteData<OmgjøringKlageRevurderingV0>()?.data?.beskrivelse
+                omgjøringKlageRevurdering.first().strukturerteData<OmgjøringKlageRevurdering>()?.data?.beskrivelse
             ).isEqualTo("Revurdering etter klage som tas til følge. Følgende vilkår omgjøres: § 22-13")
         }
 
         val revurdering = hentSisteOpprettedeBehandlingForSak(klagebehandling.sakId, listOf(TypeBehandling.Revurdering))
-        assertThat(revurdering.vurderingsbehov()).containsExactly(
-            VurderingsbehovMedPeriode(type = Vurderingsbehov.VURDER_RETTIGHETSPERIODE, periode = null),
-            VurderingsbehovMedPeriode(type = Vurderingsbehov.HELHETLIG_VURDERING, periode = null)
+        assertThat(revurdering.vurderingsbehov().map { it.type }).containsExactly(
+            Vurderingsbehov.VURDER_RETTIGHETSPERIODE,
+            Vurderingsbehov.HELHETLIG_VURDERING
         )
 
         dataSource.transaction { connection ->
@@ -428,7 +428,7 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
                 assertThat(åpneAvklaringsbehov).hasSize(1)
                 assertThat(åpneAvklaringsbehov.first().definisjon).isEqualTo(Definisjon.KVALITETSSIKRING)
             }
-            .kvalitetssikreOk()
+            .kvalitetssikre()
             .medKontekst {
                 // KlagebehandlingNaySteg
                 assertThat(åpneAvklaringsbehov).hasSize(1)
@@ -497,12 +497,12 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
                 .extracting(MottattDokument::strukturertDokument)
                 .isNotNull
             assertThat(
-                omgjøringKlageRevurdering.first().strukturerteData<OmgjøringKlageRevurderingV0>()?.data?.beskrivelse
+                omgjøringKlageRevurdering.first().strukturerteData<OmgjøringKlageRevurdering>()?.data?.beskrivelse
             ).isEqualTo("Revurdering etter klage som tas til følge. Følgende vilkår omgjøres: Kapittel 2")
         }
 
         val revurdering = hentSisteOpprettedeBehandlingForSak(klagebehandling.sakId, listOf(TypeBehandling.Revurdering))
-        assertThat(revurdering.vurderingsbehov()).containsExactly(VurderingsbehovMedPeriode(Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP))
+        assertThat(revurdering.vurderingsbehov().map { it.type }).containsExactly(Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP)
 
         // OpprettholdelseSteg
         val steghistorikk = hentStegHistorikk(klagebehandling.id)
@@ -635,7 +635,7 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
         assertThat(åpneAvklaringsbehov).hasSize(1)
         assertThat(åpneAvklaringsbehov.first().definisjon).isEqualTo(Definisjon.KVALITETSSIKRING)
 
-        kvalitetssikreOk(klagebehandling)
+        klagebehandling.kvalitetssikre()
 
         // KlagebehandlingNaySteg
         åpneAvklaringsbehov = hentÅpneAvklaringsbehov(klagebehandling.id)
@@ -713,22 +713,27 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
                 .extracting(MottattDokument::strukturertDokument)
                 .isNotNull
             assertThat(
-                omgjøringKlageRevurdering.first().strukturerteData<OmgjøringKlageRevurderingV0>()?.data?.beskrivelse
+                omgjøringKlageRevurdering.first().strukturerteData<OmgjøringKlageRevurdering>()?.data?.beskrivelse
             ).isEqualTo("Revurdering etter klage som tas til følge. Følgende vilkår omgjøres: § 11-5")
         }
 
         val revurdering = hentSisteOpprettedeBehandlingForSak(klagebehandling.sakId, listOf(TypeBehandling.Revurdering))
-        assertThat(revurdering.vurderingsbehov()).containsExactly(VurderingsbehovMedPeriode(Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND))
+        assertThat(
+            revurdering.vurderingsbehov()
+                .map { it.type }).containsExactly(Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND)
+
+        // MeldingOmVedtakBrevSteg
+        åpneAvklaringsbehov = hentÅpneAvklaringsbehov(klagebehandling.id)
+        assertThat(åpneAvklaringsbehov).hasSize(1)
+        assertThat(åpneAvklaringsbehov.first().definisjon).isEqualTo(Definisjon.SKRIV_VEDTAKSBREV)
+
+        klagebehandling.løsVedtaksbrev(TypeBrev.KLAGE_OPPRETTHOLDELSE)
 
         // OpprettholdelseSteg
         val steghistorikk = hentStegHistorikk(klagebehandling.id)
         assertThat(steghistorikk)
             .anySatisfy { assertThat(it.steg() == StegType.OPPRETTHOLDELSE && it.status() == StegStatus.AVSLUTTER).isTrue }
 
-        // MeldingOmVedtakBrevSteg
-        åpneAvklaringsbehov = hentÅpneAvklaringsbehov(klagebehandling.id)
-        assertThat(åpneAvklaringsbehov).hasSize(1)
-        assertThat(åpneAvklaringsbehov.first().definisjon).isEqualTo(Definisjon.SKRIV_VEDTAKSBREV)
     }
 
     @Test
@@ -1155,7 +1160,7 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
         assertThat(åpneAvklaringsbehov).hasSize(1)
         assertThat(åpneAvklaringsbehov.first().definisjon).isEqualTo(Definisjon.KVALITETSSIKRING)
 
-        kvalitetssikreOk(klagebehandling)
+        klagebehandling.kvalitetssikre()
 
         // KlagebehandlingNaySteg
         åpneAvklaringsbehov = hentÅpneAvklaringsbehov(klagebehandling.id)

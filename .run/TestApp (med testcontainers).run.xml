@@ -4,7 +4,7 @@
       <env name="NAIS_CLUSTER_NAME" value="LOCAL" />
     </envs>
     <option name="MAIN_CLASS_NAME" value="no.nav.aap.behandlingsflyt.TestAppKt" />
-    <module name="aap-behandlingsflyt.app.test" />
+    <module name="behandlingsflyt.app.test" />
     <extension name="coverage">
       <pattern>
         <option name="PATTERN" value="no.nav.aap.behandlingsflyt.*" />

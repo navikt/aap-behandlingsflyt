@@ -11,13 +11,13 @@ import no.nav.aap.komponenter.tidslinje.Tidslinje
 interface KravspesifikasjonForRettighetsType {
     val rettighetstype: RettighetsType
 
+    val kravStudent: Krav
     val kravBistand: Krav
     val kravForutgåendeMedlemskap: Krav
     val kravSykdom: Krav
     val kravOvergangUfør: Krav
     val kravOvergangArbeid: Krav
     val kravSykepengeerstatning: Krav
-
     val forutgåendeAap: ForutgåendeKrav
 
     /** Krav som gjelder for perioden som vurderes. */
@@ -107,7 +107,7 @@ interface KravspesifikasjonForRettighetsType {
                   * brukes det svakere kravet `SkalIkkeGiAvslag`.
                   *
                   * Betingelse for å bytte til "MåVæreOppfylt": alle åpne behandlinger har vurdering
-                  * for vilkåret `AKTITETSPLILT` hvor det er en periode med OPPFYLT
+                  * for vilkåret `AKTIVITETSPLIKT` hvor det er en periode med OPPFYLT
                   * eller IKKE_OPPFYLT.
                  */
                 && SkalIkkeGiAvslag.oppfyllesAv(vilkårsresultat[Vilkårtype.AKTIVITETSPLIKT])
@@ -116,10 +116,12 @@ interface KravspesifikasjonForRettighetsType {
                   * brukes det svakere kravet `SkalIkkeGiAvslag`.
                   *
                   * Betingelse for å bytte til "MåVæreOppfylt": alle åpne behandlinger har vurdering
-                  * for vilkåret `AKTITETSPLILT` hvor det er en periode med OPPFYLT
+                  * for vilkåret `OPPHOLDSKRAV` hvor det er en periode med OPPFYLT
                   * eller IKKE_OPPFYLT.
                  */
                 && SkalIkkeGiAvslag.oppfyllesAv(vilkårsresultat[Vilkårtype.OPPHOLDSKRAV])
+                && SkalIkkeGiAvslag.oppfyllesAv(vilkårsresultat[Vilkårtype.SAMORDNING_ANNEN_LOVGIVNING])
+                && SkalIkkeGiAvslag.oppfyllesAv(vilkårsresultat[Vilkårtype.INNTEKTSBORTFALL])
                 && kravForutgåendeMedlemskap.oppfyllesAv(vilkårsresultat[Vilkårtype.MEDLEMSKAP])
                 && MåVæreOppfylt().oppfyllesAv(vilkårsresultat[Vilkårtype.LOVVALG])
                 && kravSykdom.oppfyllesAv(vilkårsresultat[Vilkårtype.SYKDOMSVILKÅRET])
@@ -127,6 +129,7 @@ interface KravspesifikasjonForRettighetsType {
                 && kravOvergangUfør.oppfyllesAv(vilkårsresultat[Vilkårtype.OVERGANGUFØREVILKÅRET])
                 && kravSykepengeerstatning.oppfyllesAv(vilkårsresultat[Vilkårtype.SYKEPENGEERSTATNING])
                 && forutgåendeAap.oppfyllesAv(forutgåendeRettighetstyper)
+                && kravStudent.oppfyllesAv(vilkårsresultat[Vilkårtype.STUDENT])
     }
 
     /** Her mangler  stans/opphør fra underveis. */
@@ -135,6 +138,7 @@ interface KravspesifikasjonForRettighetsType {
                 kravBistand.avslagsårsaker(vilkårsresultat[Vilkårtype.BISTANDSVILKÅRET]) +
                 MåVæreOppfylt().avslagsårsaker(vilkårsresultat[Vilkårtype.GRUNNLAGET]) +
                 SkalIkkeGiAvslag.avslagsårsaker(vilkårsresultat[Vilkårtype.SAMORDNING]) +
+                SkalIkkeGiAvslag.avslagsårsaker(vilkårsresultat[Vilkårtype.SAMORDNING_ANNEN_LOVGIVNING]) +
                 SkalIkkeGiAvslag.avslagsårsaker(vilkårsresultat[Vilkårtype.STRAFFEGJENNOMFØRING]) +
                 SkalIkkeGiAvslag.avslagsårsaker(vilkårsresultat[Vilkårtype.AKTIVITETSPLIKT]) +
                 SkalIkkeGiAvslag.avslagsårsaker(vilkårsresultat[Vilkårtype.OPPHOLDSKRAV]) +
@@ -142,6 +146,8 @@ interface KravspesifikasjonForRettighetsType {
                 MåVæreOppfylt().avslagsårsaker(vilkårsresultat[Vilkårtype.LOVVALG]) +
                 kravSykdom.avslagsårsaker(vilkårsresultat[Vilkårtype.SYKDOMSVILKÅRET]) +
                 kravOvergangArbeid.avslagsårsaker(vilkårsresultat[Vilkårtype.OVERGANGARBEIDVILKÅRET]) +
-                kravOvergangUfør.avslagsårsaker(vilkårsresultat[Vilkårtype.OVERGANGUFØREVILKÅRET])
+                kravOvergangUfør.avslagsårsaker(vilkårsresultat[Vilkårtype.OVERGANGUFØREVILKÅRET]) +
+                SkalIkkeGiAvslag.avslagsårsaker(vilkårsresultat[Vilkårtype.INNTEKTSBORTFALL]) +
+                kravStudent.avslagsårsaker(vilkårsresultat[Vilkårtype.STUDENT])
     }
 }

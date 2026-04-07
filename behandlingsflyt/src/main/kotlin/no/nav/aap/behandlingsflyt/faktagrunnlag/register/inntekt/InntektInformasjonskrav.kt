@@ -11,12 +11,11 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravNavn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravOppdatert
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravRegisterdata
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år.Inntektsbehov
+import no.nav.aap.behandlingsflyt.behandling.beregning.Beregning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.ikkeKjørtSisteKalenderdag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.InntektkomponentenGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.InntektskomponentData
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentRepository
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
@@ -31,7 +30,6 @@ import java.time.Year
 class InntektInformasjonskrav(
     private val sakService: SakService,
     private val inntektGrunnlagRepository: InntektGrunnlagRepository,
-    private val studentRepository: StudentRepository,
     private val beregningVurderingRepository: BeregningVurderingRepository,
     private val inntektRegisterGateway: InntektRegisterGateway,
     private val inntektkomponentenGateway: InntektkomponentenGateway,
@@ -91,10 +89,10 @@ class InntektInformasjonskrav(
     }
 
     private fun summerArbeidsinntektPerMåned(inntekter: InntektskomponentData): Set<Månedsinntekt> {
-        return inntekter.arbeidsInntektMaaned.map {
+        return inntekter.arbeidsInntektMåned.map {
             Pair(
                 it.arbeidsInntektInformasjon.inntektListe,
-                it.aarMaaned
+                it.årMåned
             )
         }
             .groupBy { (_, årMåned) -> årMåned }
@@ -106,7 +104,7 @@ class InntektInformasjonskrav(
                             log.info("Fant færre enn 12 inntekter for år ${årMåned.year}. Fant ${it.size}.")
                         }
                     }
-                    .sumOf { it.beloep }
+                    .sumOf { it.beløp }
             }
             .map { (årMåned, beløp) ->
                 Månedsinntekt(
@@ -164,9 +162,9 @@ class InntektInformasjonskrav(
 
     private fun utledAlleRelevanteÅr(behandlingId: BehandlingId): Pair<Set<Year>, Set<Year>> {
         val beregningGrunnlag = beregningVurderingRepository.hentHvisEksisterer(behandlingId)
-        val relevanteUføreInntektÅr = Inntektsbehov.utledRelevanteYtterligereNedsattÅr(beregningGrunnlag)
+        val relevanteUføreInntektÅr = Beregning.utledRelevanteYtterligereNedsattÅr(beregningGrunnlag)
 
-        return Pair(Inntektsbehov.utledAlleRelevanteÅr(beregningGrunnlag), relevanteUføreInntektÅr)
+        return Pair(Beregning.utledAlleRelevanteÅr(beregningGrunnlag), relevanteUføreInntektÅr)
     }
 
     companion object : Informasjonskravkonstruktør {
@@ -179,13 +177,12 @@ class InntektInformasjonskrav(
             val beregningVurderingRepository = repositoryProvider.provide<BeregningVurderingRepository>()
 
             return InntektInformasjonskrav(
-                sakService = SakService(repositoryProvider),
+                sakService = SakService(repositoryProvider, gatewayProvider),
                 inntektGrunnlagRepository = repositoryProvider.provide(),
-                studentRepository = repositoryProvider.provide(),
                 beregningVurderingRepository = beregningVurderingRepository,
                 inntektRegisterGateway = gatewayProvider.provide(),
                 inntektkomponentenGateway = gatewayProvider.provide(),
-                tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
+                tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
             )
         }
     }

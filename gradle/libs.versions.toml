@@ -1,11 +1,12 @@
 [versions]
-ktor = "3.3.3"
-komponenter = "1.0.475"
-tilgang = "1.0.176"
-utbetaling = "0.0.69"
-brev = "0.0.209"
-meldekort = "0.0.165"
-apiIntern = "0.0.22"
+ktor = "3.4.0"
+komponenter = "2.0.25"
+tilgang = "1.0.184"
+utbetaling = "0.0.91"
+brev = "0.0.246"
+oppgave = "0.0.167"
+meldekort = "0.0.195"
+apiIntern = "0.0.34"
 junit = "6.0.1"
 testcontainers = "2.0.2"
 
@@ -36,6 +37,7 @@ tilgangKontrakt = { module = "no.nav.aap.tilgang:api-kontrakt", version.ref = "t
 tilgangPlugin = { module = "no.nav.aap.tilgang:plugin", version.ref = "tilgang" }
 utbetalKontrakt = { module = "no.nav.aap.utbetal:api-kontrakt", version.ref = "utbetaling" }
 brevKontrakt = { module = "no.nav.aap.brev:kontrakt", version.ref = "brev" }
+oppgaveKontrakt = { module = "no.nav.aap.oppgave:api-kontrakt", version.ref = "oppgave" }
 meldekortKontrakt = { module = "no.nav.aap.meldekort:kontrakt", version.ref = "meldekort" }
 apiInternKontrakt = { module = "no.nav.aap.api.intern:kontrakt", version.ref = "apiIntern"}
 
@@ -77,7 +79,7 @@ testcontainersKafka = { module = "org.testcontainers:testcontainers-kafka", vers
 mockOauth2Server = { module = "no.nav.security:mock-oauth2-server", version = "3.0.1" }
 mockk = { module = "io.mockk:mockk", version = "1.14.6" }
 
-ktorOpenApiGenerator = { module = "no.nav:ktor-openapi-generator", version = "1.0.134" }
+ktorOpenApiGenerator = { module = "no.nav.aap.kelvin:ktor-openapi-generator", version.ref = "komponenter" }
 
 [bundles]
 junit = ["junitApi", "junitJupiterEngine", "junitJupiterParams", "assertJ"]

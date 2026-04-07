@@ -1,7 +1,5 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid
 
-import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
-import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.ENDRET
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.IKKE_ENDRET
@@ -13,6 +11,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.IngenRegisterData
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
+import no.nav.aap.behandlingsflyt.prosessering.DigitaliserteMeldekortTilMeldekortBackendJobbUtfører
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType.FØRSTEGANGSBEHANDLING
@@ -20,11 +19,13 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType.MELDEKORT
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType.REVURDERING
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
+import no.nav.aap.motor.FlytJobbRepository
+import no.nav.aap.motor.JobbInput
 
 class MeldekortInformasjonskrav private constructor(
     private val mottaDokumentService: MottaDokumentService,
     private val meldekortRepository: MeldekortRepository,
-    private val tidligereVurderinger: TidligereVurderinger,
+    private val flytJobbRepository: FlytJobbRepository
 ) : Informasjonskrav<IngenInput, IngenRegisterData> {
     override val navn = Companion.navn
 
@@ -38,7 +39,7 @@ class MeldekortInformasjonskrav private constructor(
             return MeldekortInformasjonskrav(
                 MottaDokumentService(repositoryProvider),
                 repositoryProvider.provide<MeldekortRepository>(),
-                TidligereVurderingerImpl(repositoryProvider),
+                repositoryProvider.provide<FlytJobbRepository>()
             )
         }
     }
@@ -48,8 +49,7 @@ class MeldekortInformasjonskrav private constructor(
         steg: StegType,
         oppdatert: InformasjonskravOppdatert?
     ): Boolean {
-        return kontekst.vurderingType in setOf(FØRSTEGANGSBEHANDLING, REVURDERING, MELDEKORT) &&
-                !tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, steg)
+        return kontekst.vurderingType in setOf(FØRSTEGANGSBEHANDLING, REVURDERING, MELDEKORT)
     }
 
     override fun klargjør(kontekst: FlytKontekstMedPerioder) = IngenInput
@@ -75,15 +75,22 @@ class MeldekortInformasjonskrav private constructor(
             val nyttMeldekort = Meldekort(
                 journalpostId = ubehandletMeldekort.journalpostId,
                 timerArbeidPerPeriode = ubehandletMeldekort.timerArbeidPerPeriode,
-                mottattTidspunkt = ubehandletMeldekort.mottattTidspunkt
+                mottattTidspunkt = ubehandletMeldekort.mottattTidspunkt,
             )
             mottaDokumentService.markerSomBehandlet(
                 sakId = kontekst.sakId,
                 behandlingId = kontekst.behandlingId,
                 referanse = InnsendingReferanse(ubehandletMeldekort.journalpostId)
             )
-
             allePlussNye.add(nyttMeldekort)
+
+            if (ubehandletMeldekort.digitalisertAvPostmottak == true) {
+                flytJobbRepository.leggTil(
+                    JobbInput(jobb = DigitaliserteMeldekortTilMeldekortBackendJobbUtfører).medPayload(
+                        ubehandletMeldekort.journalpostId
+                    ).forSak(sakId = kontekst.sakId.id)
+                )
+            }
         }
 
         meldekortRepository.lagre(behandlingId = kontekst.behandlingId, meldekortene = allePlussNye)

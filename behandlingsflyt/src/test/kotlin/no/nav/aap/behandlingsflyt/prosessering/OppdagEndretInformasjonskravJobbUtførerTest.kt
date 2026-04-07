@@ -2,7 +2,7 @@ package no.nav.aap.behandlingsflyt.prosessering
 
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
-import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjonForhold
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjonInformasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.gateway.TjenestePensjonGateway
@@ -13,6 +13,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevu
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.SykepengerGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.SykepengerResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.UtbetaltePerioder
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnInformasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.adapter.BarnInnhentingRespons
@@ -30,8 +31,11 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Pers
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.Uføre
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreInformasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreRegisterGateway
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreSøknad
 import no.nav.aap.behandlingsflyt.help.FakePdlGateway
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
+import no.nav.aap.behandlingsflyt.help.genererVilkårsresultat
+import no.nav.aap.behandlingsflyt.help.flytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.help.sak
 import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
@@ -41,16 +45,17 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
-import no.nav.aap.behandlingsflyt.test.FakeUnleash
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
+import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
+import no.nav.aap.behandlingsflyt.test.fixedClock
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
+import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.JobbType
 import org.assertj.core.api.Assertions.assertThat
@@ -104,11 +109,15 @@ class OppdagEndretInformasjonskravJobbUtførerTest {
     object FakeUføreRegisterGateway : UføreRegisterGateway {
         var response: Set<Uføre> = emptySet()
         override fun innhentMedHistorikk(person: Person, fraDato: LocalDate) = response
+        override fun hentÅpenUføreSøknad(person: Person): UføreSøknad? = null
     }
 
     object FakeInstitusjonsoppholdGateway : InstitusjonsoppholdGateway {
         var response: List<Institusjonsopphold> = emptyList()
         override fun innhent(person: Person) = response
+        override fun hentDataForHendelse(oppholdId: Long): Institusjonsopphold {
+            TODO("Not yet implemented")
+        }
     }
 
     object FakePersonopplysningGateway : PersonopplysningGateway {
@@ -132,7 +141,7 @@ class OppdagEndretInformasjonskravJobbUtførerTest {
         register<FakeUføreRegisterGateway>()
         register<FakeInstitusjonsoppholdGateway>()
         register<FakePersonopplysningGateway>()
-        register<FakeUnleash>()
+        register<AlleAvskruddUnleash>()
     }
 
     companion object {
@@ -152,7 +161,7 @@ class OppdagEndretInformasjonskravJobbUtførerTest {
 
     @Test
     fun `endring i register fører til revurdering og deduplisering av vurderingsbehov`() {
-        val førstegangsbehandlingen = settOppFørstegangsvurdering()
+        val (sak, førstegangsbehandlingen) = settOppFørstegangsvurdering()
 
         dataSource.transaction { connection ->
             val repositoryProvider = postgresRepositoryRegistry.provider(connection)
@@ -185,15 +194,20 @@ class OppdagEndretInformasjonskravJobbUtførerTest {
                 )
             )
 
-            OppdagEndretInformasjonskravJobbUtfører.konstruer(repositoryProvider, gatewayProvider)
+            val klokke = fixedClock(sak.rettighetsperiode.fom.plusWeeks(2))
+
+            OppdagEndretInformasjonskravJobbUtfører.konstruerMedKlokke(repositoryProvider, gatewayProvider, klokke)
                 .utfør(førstegangsbehandlingen.sakId)
 
-            val sisteYtelsesbehandling = SakOgBehandlingService(repositoryProvider, gatewayProvider)
+            val sisteYtelsesbehandling = BehandlingService(repositoryProvider, gatewayProvider)
                 .finnSisteYtelsesbehandlingFor(førstegangsbehandlingen.sakId)!!
             assertThat(sisteYtelsesbehandling.id)
                 .isNotEqualTo(førstegangsbehandlingen.id)
             assertThat(sisteYtelsesbehandling.vurderingsbehov()).hasSize(3)
             assertThat(sisteYtelsesbehandling.vurderingsbehov().toSet())
+                .usingRecursiveComparison()
+                .ignoringCollectionOrder()
+                .ignoringFields("oppdatertTid")
                 .isEqualTo(
                     setOf(
                         VurderingsbehovMedPeriode(Vurderingsbehov.REVURDER_SAMORDNING_ANDRE_FOLKETRYGDYTELSER),
@@ -213,40 +227,38 @@ class OppdagEndretInformasjonskravJobbUtførerTest {
 
     @Test
     fun `ingen endring i register fører til ingen ny revurdering`() {
-        val førstegangsbehandlingen = settOppFørstegangsvurdering()
+        val (sak, førstegangsbehandlingen) = settOppFørstegangsvurdering()
+        val klokke = fixedClock(sak.rettighetsperiode.fom.plusWeeks(2))
 
         dataSource.transaction { connection ->
             val repositoryProvider = postgresRepositoryRegistry.provider(connection)
 
-            val oppdagEndretInformasjonskravJobbUtfører = OppdagEndretInformasjonskravJobbUtfører.konstruer(
+            val oppdagEndretInformasjonskravJobbUtfører = OppdagEndretInformasjonskravJobbUtfører.konstruerMedKlokke(
                 repositoryProvider = repositoryProvider,
                 gatewayProvider = gatewayProvider,
+                klokke = klokke
             )
 
             oppdagEndretInformasjonskravJobbUtfører.utfør(førstegangsbehandlingen.sakId)
 
-            val sisteYtelsesbehandling = SakOgBehandlingService(repositoryProvider, gatewayProvider)
+            val sisteYtelsesbehandling = BehandlingService(repositoryProvider, gatewayProvider)
                 .finnSisteYtelsesbehandlingFor(førstegangsbehandlingen.sakId)
             assertThat(sisteYtelsesbehandling?.id)
                 .isEqualTo(førstegangsbehandlingen.id)
         }
     }
 
-    private fun settOppFørstegangsvurdering(): Behandling {
+    private fun settOppFørstegangsvurdering(): Pair<Sak, Behandling> {
         return dataSource.transaction { connection ->
             val repositoryProvider = postgresRepositoryRegistry.provider(connection)
             val sak = sak(connection, periode)
             val førstegangsbehandlingen = finnEllerOpprettBehandling(connection, sak)
 
-            val kontekst = FlytKontekstMedPerioder(
-                sakId = sak.id,
-                behandlingId = førstegangsbehandlingen.id,
-                forrigeBehandlingId = null,
-                behandlingType = TypeBehandling.Førstegangsbehandling,
-                vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
-                rettighetsperiode = sak.rettighetsperiode,
-                vurderingsbehovRelevanteForSteg = emptySet()
-            )
+            val kontekst = flytKontekstMedPerioder {
+                this.behandling = førstegangsbehandlingen
+                this.rettighetsperiode = sak.rettighetsperiode
+                this.vurderingsbehovRelevanteForSteg = emptySet()
+            }
 
             fun klargjørInformasjonskrav(informasjonskrav: List<Informasjonskravkonstruktør>) {
                 informasjonskrav.forEach {
@@ -267,10 +279,16 @@ class OppdagEndretInformasjonskravJobbUtførerTest {
             ).let(::klargjørInformasjonskrav)
 
 
-            repositoryProvider.provide<VedtakRepository>().lagre(førstegangsbehandlingen.id, LocalDateTime.now(), LocalDate.now())
+            repositoryProvider.provide<VilkårsresultatRepository>().lagre(
+                førstegangsbehandlingen.id,
+                genererVilkårsresultat(Periode(sak.rettighetsperiode.fom, Tid.MAKS))
+
+            )
+            repositoryProvider.provide<VedtakRepository>()
+                .lagre(førstegangsbehandlingen.id, LocalDateTime.now(), LocalDate.now())
             repositoryProvider.provide<BehandlingRepository>()
                 .oppdaterBehandlingStatus(førstegangsbehandlingen.id, Status.AVSLUTTET)
-            førstegangsbehandlingen
+            Pair(sak, førstegangsbehandlingen)
         }
     }
 }

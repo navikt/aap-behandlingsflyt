@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.sykdom
 
 import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingVurdering
 import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingÅrsak
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Diagnose
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.YrkesskadeSak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Yrkesskadevurdering
@@ -46,7 +47,6 @@ internal class SykdomRepositoryImplTest {
         @JvmStatic
         fun tearDown() = dataSource.close()
 
-        private val fom = LocalDate.of(2020, 1, 1)
         private fun sykdomsvurdering1(behandlingId: BehandlingId = BehandlingId(1L)) = Sykdomsvurdering(
             begrunnelse = "b1",
             vurderingenGjelderFra = 1 januar 2020,
@@ -61,6 +61,7 @@ internal class SykdomRepositoryImplTest {
             erArbeidsevnenNedsatt = true,
             vurdertAv = Bruker("Z00000"),
             opprettet = Instant.now(),
+            diagnose = Diagnose("ICDP", "PEST", listOf("KOLERA", "ARGUSØYNE")),
             vurdertIBehandling = behandlingId,
         )
 
@@ -81,6 +82,7 @@ internal class SykdomRepositoryImplTest {
             erArbeidsevnenNedsatt = true,
             vurdertAv = Bruker("Z00000"),
             opprettet = Instant.now(),
+            diagnose = null,
             vurdertIBehandling = behandlingId,
         )
 
@@ -98,6 +100,7 @@ internal class SykdomRepositoryImplTest {
             erArbeidsevnenNedsatt = true,
             vurdertAv = Bruker("Z00000"),
             opprettet = Instant.now(),
+            diagnose = null,
             vurdertIBehandling = behandlingId,
         )
     }
@@ -269,6 +272,7 @@ internal class SykdomRepositoryImplTest {
                             erArbeidsevnenNedsatt = true,
                             vurdertAv = Bruker("Z00000"),
                             vurdertIBehandling = behandling.id,
+                            diagnose = null,
                             opprettet = Instant.now(),
                         )
                     )

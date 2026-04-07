@@ -1,5 +1,8 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 
+import no.nav.aap.behandlingsflyt.behandling.rettighetstype.KvoteBruktOpp
+import no.nav.aap.behandlingsflyt.behandling.rettighetstype.KvoteOk
+import no.nav.aap.behandlingsflyt.behandling.rettighetstype.KvoteVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.ArbeidsGradering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisÅrsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
@@ -20,6 +23,7 @@ data class Vurdering(
     internal val institusjonVurdering: InstitusjonVurdering? = null,
     private val meldeperiode: Periode? = null,
     val varighetVurdering: VarighetVurdering? = null,
+    val kvoteVurdering: KvoteVurdering? = null,
 ) {
     fun leggTilRettighetstype(rettighetstype: RettighetsType): Vurdering {
         return copy(fårAapEtter = rettighetstype)
@@ -47,6 +51,21 @@ data class Vurdering(
 
     fun leggTilVarighetVurdering(varighetVurdering: VarighetVurdering): Vurdering {
         return copy(varighetVurdering = varighetVurdering)
+    }
+
+    fun leggTilVarighetVurdering(kvotevurdering: KvoteVurdering): Vurdering {
+        return copy(
+            varighetVurdering = when (kvotevurdering) {
+                is KvoteOk ->
+                    Oppfylt(setOfNotNull(kvotevurdering.brukerKvote))
+
+                is KvoteBruktOpp ->
+                    Avslag(
+                        brukerAvKvoter = setOfNotNull(kvotevurdering.kvoteBruktOpp),
+                        avslagsårsaker = setOf(UnderveisÅrsak.fraKvote(kvotevurdering.kvoteBruktOpp))
+                    )
+            }
+        )
     }
 
     fun harRett(): Boolean {
@@ -96,11 +115,12 @@ data class Vurdering(
             return null
         }
 
-        if (fårAapEtter == null) {
-            return UnderveisÅrsak.IKKE_GRUNNLEGGENDE_RETT
-        } else if (!varighetsvurderingOppfylt()) {
+        if (!varighetsvurderingOppfylt()) {
             return UnderveisÅrsak.VARIGHETSKVOTE_BRUKT_OPP
+        } else if (fårAapEtter == null) {
+            return UnderveisÅrsak.IKKE_GRUNNLEGGENDE_RETT
         }
+
         throw IllegalStateException("Ukjent avslagsårsak")
     }
 

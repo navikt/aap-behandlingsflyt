@@ -17,11 +17,11 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedP
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
+import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.test.FakeTidligereVurderinger
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
@@ -71,10 +71,11 @@ class VurderBistandsbehovStegTest {
         val person = person()
         val sak = sak(person, nyRettighetsperiode)
         val behandling = behandling(sak, typeBehandling = TypeBehandling.Førstegangsbehandling)
-        val kontekstMedPerioder = flytKontekstMedPerioder(sak, behandling, VurderingType.FØRSTEGANGSBEHANDLING)
+        val kontekstMedPerioder = flytKontekstMedPerioder(sak, behandling)
 
 
         val steg = VurderBistandsbehovSteg(
+            unleashGateway = AlleAvskruddUnleash,
             bistandRepository = bistandMock,
             studentRepository = mockk {
                 every { hentHvisEksisterer(any()) } returns null
@@ -98,14 +99,13 @@ class VurderBistandsbehovStegTest {
                             vurdertAv = Bruker("Z00000"),
                             opprettet = Instant.now(),
                             vurdertIBehandling = behandling.id,
+                            diagnose = null
                         )
                     )
                 )
             },
             vilkårsresultatRepository = InMemoryVilkårsresultatRepository,
-            avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
             tidligereVurderinger = FakeTidligereVurderinger(),
-            behandlingRepository = behandlingRepository,
             avklaringsbehovService = AvklaringsbehovService(inMemoryRepositoryProvider),
         )
 
@@ -136,15 +136,11 @@ class VurderBistandsbehovStegTest {
 
     private fun flytKontekstMedPerioder(
         sak: Sak,
-        behandling: Behandling,
-        vurderingType: VurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
-        vurderingsbehov: Set<Vurderingsbehov> = setOf(Vurderingsbehov.MOTTATT_SØKNAD)
-    ): FlytKontekstMedPerioder = FlytKontekstMedPerioder(
-        sak.id, behandling.id, behandling.forrigeBehandlingId, behandling.typeBehandling(),
-        vurderingType = vurderingType,
-        vurderingsbehovRelevanteForSteg = vurderingsbehov,
-        rettighetsperiode = sak.rettighetsperiode
-    )
+        behandling: Behandling
+    ): FlytKontekstMedPerioder = no.nav.aap.behandlingsflyt.help.flytKontekstMedPerioder {
+        this.behandling = behandling
+        this.rettighetsperiode = sak.rettighetsperiode
+    }
 
     private fun behandling(sak: Sak, typeBehandling: TypeBehandling): Behandling =
         behandlingRepository.opprettBehandling(

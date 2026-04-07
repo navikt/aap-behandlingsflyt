@@ -24,6 +24,8 @@ data class OpprettTestcaseDTO(
     @param:NotNull @param:JsonProperty(value = "yrkesskade", defaultValue = "false") val yrkesskade: Boolean,
     @param:JsonProperty(value = "uføre") val uføre: Int?,
     @param:JsonProperty(value = "uføretidspunkt") val uføreTidspunkt: LocalDate?,
+    @param:JsonProperty(value = "uføregradTom") val uføregradTom: LocalDate?,
+    @param:JsonProperty(value = "uføreSøknadDato") val uføreSøknadDato: LocalDate?,
     @param:NotNull @param:JsonProperty(value = "student", defaultValue = "false") val student: Boolean,
     @param:NotNull @param:JsonProperty(value = "barn") val barn: List<TestBarn> = emptyList(),
     @param:NotNull @param:JsonProperty(value = "medlemskap", defaultValue = "true") val medlemskap: Boolean,
@@ -31,6 +33,8 @@ data class OpprettTestcaseDTO(
     @param:JsonProperty(value = "tjenestePensjon") val tjenestePensjon: Boolean? = null,
     val institusjoner: Institusjoner = Institusjoner(),
     val sykepenger: List<TestPerson.Sykepenger> = emptyList(),
+    val dagpenger: List<TestPerson.Dagpenger> = emptyList(),
+    val tiltakspenger: List<TestPerson.Tiltakspenger> = emptyList(),
     val søknadsdato: LocalDate? = null,
     val andreUtbetalinger: AndreUtbetalingerDto? = null,
     val steg: StegType? = null,
@@ -39,6 +43,11 @@ data class OpprettTestcaseDTO(
 )
 
 data class LeggTilInstitusjonsoppholdDTO(
+    @param:JsonProperty(value = "opphold", required = true)
+    val opphold: List<InstitusjonsoppholdItemDTO>
+)
+
+data class InstitusjonsoppholdItemDTO(
     @param:JsonProperty(value = "institusjonstype", required = true) val institusjonstype: Institusjonstype,
     @param:JsonProperty(value = "oppholdstype", required = true) val oppholdstype: Oppholdstype,
     @param:JsonProperty(value = "oppholdFom", required = true) val oppholdFom: LocalDate,

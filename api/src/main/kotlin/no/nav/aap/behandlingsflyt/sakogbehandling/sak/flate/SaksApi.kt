@@ -12,7 +12,7 @@ import no.nav.aap.behandlingsflyt.Tags
 import no.nav.aap.behandlingsflyt.behandling.Resultat
 import no.nav.aap.behandlingsflyt.behandling.ResultatUtleder
 import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Status
@@ -21,10 +21,7 @@ import no.nav.aap.behandlingsflyt.medAzureTokenGen
 import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.IdentGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersoninfoGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
@@ -57,7 +54,6 @@ fun NormalOpenAPIRoute.saksApi(
     gatewayProvider: GatewayProvider,
 ) {
     val tilgangGateway = gatewayProvider.provide<TilgangGateway>()
-    val identGateway = gatewayProvider.provide(IdentGateway::class)
     val personinfoGateway = gatewayProvider.provide(PersoninfoGateway::class)
     val ansattInfoService = AnsattInfoService(gatewayProvider)
 
@@ -65,45 +61,7 @@ fun NormalOpenAPIRoute.saksApi(
         route("/ekstern/finn").authorizedPost<Unit, List<SaksinfoDTO>, FinnSakForIdentDTO>(
             AuthorizationMachineToMachineConfig(authorizedRoles = listOf("finn-sak"))
         ) { _, dto ->
-            val saker: List<SaksinfoDTO> = dataSource.transaction(readOnly = true) { connection ->
-                val repositoryProvider = repositoryRegistry.provider(connection)
-                val ident = Ident(dto.ident)
-                val person = repositoryProvider.provide<PersonRepository>().finn(ident)
-                val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
-                val resultatUtleder = ResultatUtleder(repositoryProvider)
-
-                if (person == null) {
-                    emptyList()
-                } else {
-                    repositoryProvider.provide<SakRepository>().finnSakerFor(person).map { sak ->
-                        val førstegangsbehandling = if (sak.status() == Status.AVSLUTTET) {
-                            behandlingRepository.hentAlleFor(sak.id).first {
-                                it.typeBehandling() == TypeBehandling.Førstegangsbehandling
-                            }
-                        } else null
-
-                        val resultat = if (førstegangsbehandling != null) {
-                            resultatUtleder.utledResultatFørstegangsBehandling(førstegangsbehandling)
-                        } else null
-
-                        SaksinfoDTO(
-                            saksnummer = sak.saksnummer.toString(),
-                            opprettetTidspunkt = sak.opprettetTidspunkt,
-                            periode = sak.rettighetsperiode,
-                            ident = sak.person.aktivIdent().identifikator,
-                            resultat = resultat.let {
-                                when (it) {
-                                    Resultat.INNVILGELSE -> ResultatKode.INNVILGET
-                                    Resultat.AVSLAG -> ResultatKode.AVSLAG
-                                    Resultat.TRUKKET -> ResultatKode.TRUKKET
-                                    Resultat.AVBRUTT -> ResultatKode.AVBRUTT
-                                    null -> null
-                                }
-                            })
-                    }
-                }
-
-            }
+            val saker: List<SaksinfoDTO> = finnSaksinfo(dataSource, repositoryRegistry, dto)
             respond(saker)
         }
         route("/{saksnummer}/opprettAktivitetspliktBehandling")
@@ -120,9 +78,9 @@ fun NormalOpenAPIRoute.saksApi(
                     val sakRepository = repositoryProvider.provide<SakRepository>()
                     val sakId = sakRepository.hent(Saksnummer(req.saksnummer)).id
 
-                    val sakOgBehandlingService = SakOgBehandlingService(repositoryProvider, gatewayProvider)
+                    val behandlingService = BehandlingService(repositoryProvider, gatewayProvider)
 
-                    val behandling = sakOgBehandlingService.opprettAktivitetspliktBehandling(
+                    val behandling = behandlingService.opprettAktivitetspliktBehandling(
                         sakId, ÅrsakTilOpprettelse.MANUELL_OPPRETTELSE, body.vurderingsbehov.tilVurderingsbehov()
                     )
 
@@ -138,48 +96,8 @@ fun NormalOpenAPIRoute.saksApi(
 
 
         @Suppress("UnauthorizedPost") route("/finn").post<Unit, List<SaksinfoDTO>, FinnSakForIdentDTO> { _, dto ->
-            val saker: List<SaksinfoDTO> = dataSource.transaction(readOnly = true) { connection ->
-                val repositoryProvider = repositoryRegistry.provider(connection)
-                val ident = Ident(dto.ident)
-                val person = repositoryProvider.provide<PersonRepository>().finn(ident)
-                val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
-                val resultatUtleder = ResultatUtleder(repositoryProvider)
+            val saker = finnSaksinfo(dataSource, repositoryRegistry, dto)
 
-                if (person == null) {
-                    emptyList()
-                } else {
-                    // Her skal vi strengt tatt bare ha én sak?
-                    val saker = repositoryProvider.provide<SakRepository>().finnSakerFor(person)
-
-                    saker.map { sak ->
-                        val førstegangsbehandling = if (sak.status() == Status.AVSLUTTET) {
-                            behandlingRepository.hentAlleFor(sak.id).first {
-                                it.typeBehandling() == TypeBehandling.Førstegangsbehandling
-                            }
-                        } else null
-
-                        val resultat = if (førstegangsbehandling != null) {
-                            resultatUtleder.utledResultatFørstegangsBehandling(førstegangsbehandling)
-                        } else null
-
-                        SaksinfoDTO(
-                            saksnummer = sak.saksnummer.toString(),
-                            opprettetTidspunkt = sak.opprettetTidspunkt,
-                            periode = sak.rettighetsperiode,
-                            ident = sak.person.aktivIdent().identifikator,
-                            resultat = resultat.let {
-                                when (it) {
-                                    Resultat.INNVILGELSE -> ResultatKode.INNVILGET
-                                    Resultat.AVSLAG -> ResultatKode.AVSLAG
-                                    Resultat.TRUKKET -> ResultatKode.TRUKKET
-                                    Resultat.AVBRUTT -> ResultatKode.AVBRUTT
-                                    null -> null
-                                }
-                            })
-                    }
-                }
-
-            }
             // Midlertidig fiks for ikke å brekke postmottak
             val token = token()
             if (token.isClientCredentials()) {
@@ -211,7 +129,6 @@ fun NormalOpenAPIRoute.saksApi(
             ) { _, dto ->
                 val behandlinger: SakOgBehandlingDTO? = dataSource.transaction(readOnly = true) { connection ->
                     val repositoryProvider = repositoryRegistry.provider(connection)
-                    val sakOgBehandlingService = SakOgBehandlingService(repositoryProvider, gatewayProvider)
                     val ident = Ident(dto.ident)
                     val person = repositoryProvider.provide<PersonRepository>().finn(ident)
 
@@ -230,13 +147,8 @@ fun NormalOpenAPIRoute.saksApi(
                             log.info("Fant ingen aktive saker for person. Rettighetsperioder: ${sakerForPerson.map { it.rettighetsperiode }}")
                             null
                         } else {
-                            val behandling = sakOgBehandlingService.finnSisteYtelsesbehandlingFor(sak.id)
-
                             SakOgBehandlingDTO(
-                                personIdent = sak.person.aktivIdent().toString(),
                                 saksnummer = sak.saksnummer.toString(),
-                                status = sak.status().toString(),
-                                sisteBehandlingStatus = behandling?.status().toString()
                             )
                         }
                     }
@@ -258,14 +170,17 @@ fun NormalOpenAPIRoute.saksApi(
                 val saken: SaksinfoDTO = dataSource.transaction { connection ->
                     val repositoryProvider = repositoryRegistry.provider(connection)
                     val ident = Ident(dto.ident)
+
+                    // Setter 'fra og med' til dagens dato, 'til og med' et år frem i tid minus en dag.
+                    // Dette tilsvarer "vedtakslengde" i forskriften.
                     val periode = Periode(
                         dto.søknadsdato, dto.søknadsdato.plusYears(1).minusDays(1)
-                    ) // Setter til fra og med dagens dato, til og med et år frem i tid minus en dag som er tilsvarende "vedtakslengde" i forskriften
-                    val sak = PersonOgSakService(
-                        pdlGateway = identGateway,
-                        personRepository = repositoryProvider.provide<PersonRepository>(),
-                        sakRepository = repositoryProvider.provide<SakRepository>()
-                    ).finnEllerOpprett(ident = ident, periode = periode)
+                    )
+
+                    val sak = PersonOgSakService(gatewayProvider, repositoryProvider).finnEllerOpprett(
+                        ident = ident,
+                        periode = periode
+                    )
 
                     SaksinfoDTO(
                         saksnummer = sak.saksnummer.toString(),
@@ -445,4 +360,45 @@ fun NormalOpenAPIRoute.saksApi(
             respond(historikkMedVisningsnavn)
         }
     }
+}
+
+private fun finnSaksinfo(
+    dataSource: DataSource,
+    repositoryRegistry: RepositoryRegistry,
+    dto: FinnSakForIdentDTO
+): List<SaksinfoDTO> {
+    val saker: List<SaksinfoDTO> = dataSource.transaction(readOnly = true) { connection ->
+        val repositoryProvider = repositoryRegistry.provider(connection)
+        val ident = Ident(dto.ident)
+        val person = repositoryProvider.provide<PersonRepository>().finn(ident)
+        val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+        val resultatUtleder = ResultatUtleder(repositoryProvider)
+
+        if (person == null) {
+            emptyList()
+        } else {
+            repositoryProvider.provide<SakRepository>().finnSakerFor(person).map { sak ->
+                val resultat = behandlingRepository.finnGjeldendeVedtattBehandlingForSak(sak.id)
+                    ?.let { behandlingRepository.hent(it.behandlingId) }
+                    ?.let { resultatUtleder.utledResultat(it) }
+
+                SaksinfoDTO(
+                    saksnummer = sak.saksnummer.toString(),
+                    opprettetTidspunkt = sak.opprettetTidspunkt,
+                    periode = sak.rettighetsperiode,
+                    ident = sak.person.aktivIdent().identifikator,
+                    resultat = resultat.let {
+                        when (it) {
+                            Resultat.INNVILGELSE -> ResultatKode.INNVILGET
+                            Resultat.AVSLAG -> ResultatKode.AVSLAG
+                            Resultat.TRUKKET -> ResultatKode.TRUKKET
+                            Resultat.AVBRUTT -> ResultatKode.AVBRUTT
+                            null -> null
+                        }
+                    })
+            }
+        }
+
+    }
+    return saker
 }

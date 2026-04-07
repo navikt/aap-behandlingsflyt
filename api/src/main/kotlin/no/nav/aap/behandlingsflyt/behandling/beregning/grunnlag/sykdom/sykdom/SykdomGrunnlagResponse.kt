@@ -9,7 +9,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.Innhe
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
-import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.verdityper.dokument.JournalpostId
 import java.time.LocalDate
 
@@ -18,18 +17,11 @@ data class SykdomGrunnlagResponse(
     val skalVurdereYrkesskade: Boolean,
     val erÅrsakssammenhengYrkesskade: Boolean,
     val opplysninger: InnhentetSykdomsOpplysninger,
-    @Deprecated("Bruk nyeVurderinger")
-    val sykdomsvurderinger: List<SykdomsvurderingResponse>,
     override val nyeVurderinger: List<SykdomsvurderingResponse>,
-    val historikkSykdomsvurderinger: List<SykdomsvurderingResponse>,
-    @Deprecated("Bruk sisteVedtatteVurderinger")
-    val gjeldendeVedtatteSykdomsvurderinger: List<SykdomsvurderingResponse>,
     override val sisteVedtatteVurderinger: List<SykdomsvurderingResponse>,
-    @Deprecated("Ligger på vurderingsnivå")
-    val kvalitetssikretAv: VurdertAvResponse?,
     override val kanVurderes: List<Periode>,
+    override val ikkeRelevantePerioder: List<Periode>,
     override val behøverVurderinger: List<Periode>,
-    val perioderSomIkkeErTilstrekkeligVurdert: List<Periode>
     ): PeriodiserteVurderingerDto<SykdomsvurderingResponse>
 
 data class SykdomsvurderingResponse(
@@ -90,9 +82,9 @@ data class SykdomsvurderingResponse(
             erNedsettelseIArbeidsevneMerEnnHalvparten = sykdomsvurdering.erNedsettelseIArbeidsevneMerEnnHalvparten,
             erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = sykdomsvurdering.erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense,
             yrkesskadeBegrunnelse = sykdomsvurdering.yrkesskadeBegrunnelse,
-            kodeverk = sykdomsvurdering.kodeverk,
-            hoveddiagnose = sykdomsvurdering.hoveddiagnose,
-            bidiagnoser = sykdomsvurdering.bidiagnoser,
+            kodeverk = sykdomsvurdering.diagnose?.kodeverk,
+            hoveddiagnose = sykdomsvurdering.diagnose?.hoveddiagnose,
+            bidiagnoser = sykdomsvurdering.diagnose?.bidiagnoser.orEmpty(),
             fom = fom,
             tom = tom,
             vurdertAv = vurdertAvService.medNavnOgEnhet(sykdomsvurdering.vurdertAv.ident, sykdomsvurdering.opprettet),

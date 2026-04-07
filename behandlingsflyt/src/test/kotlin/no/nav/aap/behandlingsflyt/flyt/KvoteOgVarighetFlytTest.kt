@@ -5,18 +5,18 @@ import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Kvote
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.ÅrMedHverdager
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.G_REGULERING
-import no.nav.aap.behandlingsflyt.test.FakeUnleash
+import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 
-class KvoteOgVarighetFlytTest: AbstraktFlytOrkestratorTest(FakeUnleash::class) {
+class KvoteOgVarighetFlytTest: AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
     @Test
     fun `manglende meldekort tolkes som reduksjon`() {
         val kravdato = 20 januar 2025 /* mandag */
-        val sak = happyCaseFørstegangsbehandling(fom = kravdato, periode = Periode(kravdato, kravdato.plusYears(4)))
+        val sak = happyCaseFørstegangsbehandling(fom = kravdato)
         val førstegangsbehandling = hentSisteOpprettedeBehandlingForSak(sak.saksnummer)
 
         førstegangsbehandling.assertUnderveis(

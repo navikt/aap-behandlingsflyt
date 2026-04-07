@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
+import no.nav.aap.behandlingsflyt.sakogbehandling.SakOgBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingMedVedtak
@@ -22,7 +23,7 @@ object InMemoryBehandlingRepository : BehandlingRepository {
     private val idSeq = AtomicLong(10000)
     private val memory = HashMap<BehandlingId, Behandling>()
     private val memoryStegHistorikk = HashMap<BehandlingId, List<StegTilstand>>()
-    private val lock = Object()
+    private val lock = Any()
 
     override fun opprettBehandling(
         sakId: SakId,
@@ -53,15 +54,18 @@ object InMemoryBehandlingRepository : BehandlingRepository {
         }
     }
 
-    override fun finnFørstegangsbehandling(sakId: SakId): Behandling? {
+    override fun finnFørstegangsbehandling(sakId: SakId): Behandling {
         synchronized(lock) {
             return memory.values
                 .filter { behandling -> behandling.sakId == sakId }
-                .firstOrNull { behandling -> behandling.typeBehandling() == TypeBehandling.Førstegangsbehandling }
+                .firstOrNull { behandling -> behandling.typeBehandling() == TypeBehandling.Førstegangsbehandling }!!
         }
     }
 
-    override fun finnSisteOpprettedeBehandlingFor(sakId: SakId, behandlingstypeFilter: List<TypeBehandling>): Behandling? {
+    override fun finnSisteOpprettedeBehandlingFor(
+        sakId: SakId,
+        behandlingstypeFilter: List<TypeBehandling>
+    ): Behandling? {
         synchronized(lock) {
             return memory.values
                 .filter { behandling -> behandling.sakId == sakId }
@@ -144,8 +148,32 @@ object InMemoryBehandlingRepository : BehandlingRepository {
     override fun hentAlleMedVedtakFor(
         person: Person,
         behandlingstypeFilter: List<TypeBehandling>
-    ): List<BehandlingMedVedtak> {
-        TODO("Not yet implemented")
+    ): List<BehandlingMedVedtak> = synchronized(lock) {
+        memory.values.mapNotNull { behandling ->
+            if (behandling.typeBehandling() !in behandlingstypeFilter) {
+                return@mapNotNull null
+            }
+
+            val sak = InMemorySakRepository.hent(behandling.sakId)
+            if (sak.person.id != person.id) {
+                return@mapNotNull null
+            }
+            val vedtak = InMemoryVedtakRepository.hent(behandling.id)
+                ?: return@mapNotNull null
+
+            BehandlingMedVedtak(
+                saksnummer = sak.saksnummer,
+                id = behandling.id,
+                referanse = behandling.referanse,
+                typeBehandling = behandling.typeBehandling(),
+                status = behandling.status(),
+                opprettetTidspunkt = behandling.opprettetTidspunkt,
+                vedtakstidspunkt = vedtak.vedtakstidspunkt,
+                virkningstidspunkt = vedtak.virkningstidspunkt,
+                vurderingsbehov = behandling.vurderingsbehov().map { it.type }.toSet(),
+                årsakTilOpprettelse = behandling.årsakTilOpprettelse,
+            )
+        }
     }
 
     override fun leggTilNyttAktivtSteg(
@@ -188,6 +216,14 @@ object InMemoryBehandlingRepository : BehandlingRepository {
     }
 
     override fun finnSaksnummer(referanse: BehandlingReferanse): Saksnummer {
+        TODO("Not yet implemented")
+    }
+
+    override fun finnAlleGjeldendeVedtatteBehandlinger(): List<SakOgBehandling> {
+        TODO("Not yet implemented")
+    }
+
+    override fun finnGjeldendeVedtattBehandlingForSak(sakId: SakId): SakOgBehandling? {
         TODO("Not yet implemented")
     }
 

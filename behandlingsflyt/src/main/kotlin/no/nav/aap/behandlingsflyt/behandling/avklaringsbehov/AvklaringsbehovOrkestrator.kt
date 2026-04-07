@@ -3,20 +3,17 @@ package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklaringsbehovLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.PeriodisertAvklaringsbehovLøsning
+import no.nav.aap.behandlingsflyt.behandling.mellomlagring.MellomlagretVurderingRepository
 import no.nav.aap.behandlingsflyt.flyt.FlytOrkestrator
 import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseService
 import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseServiceImpl
 import no.nav.aap.behandlingsflyt.hendelse.mottak.BehandlingSattPåVent
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingService
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
 import no.nav.aap.komponenter.gateway.GatewayProvider
-import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
-import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
@@ -29,113 +26,64 @@ class AvklaringsbehovOrkestrator(
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
     private val behandlingRepository: BehandlingRepository,
     private val prosesserBehandling: ProsesserBehandlingService,
-    private val gatewayProvider: GatewayProvider
+    private val gatewayProvider: GatewayProvider,
+    private val mellomlagretVurderingRepository: MellomlagretVurderingRepository,
 ) {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         repositoryProvider = repositoryProvider,
-        behandlingHendelseService = BehandlingHendelseServiceImpl(repositoryProvider),
+        behandlingHendelseService = BehandlingHendelseServiceImpl(repositoryProvider, gatewayProvider),
         flytOrkestrator = FlytOrkestrator(repositoryProvider, gatewayProvider),
         avklaringsbehovRepository = repositoryProvider.provide(),
         behandlingRepository = repositoryProvider.provide(),
         prosesserBehandling = ProsesserBehandlingService(repositoryProvider, gatewayProvider),
-        gatewayProvider = gatewayProvider
+        gatewayProvider = gatewayProvider,
+        mellomlagretVurderingRepository = repositoryProvider.provide(),
     )
 
     private val log = LoggerFactory.getLogger(javaClass)
 
     fun løsAvklaringsbehovOgFortsettProsessering(
-        kontekst: FlytKontekst,
-        avklaringsbehov: AvklaringsbehovLøsning,
-        ingenEndringIGruppe: Boolean,
-        bruker: Bruker
-    ) {
-        val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
-        val behandling = behandlingRepository.hent(kontekst.behandlingId)
-        løsAvklaringsbehov(
-            kontekst, avklaringsbehovene, avklaringsbehov, bruker, behandling
-        )
-        markerAvklaringsbehovISammeGruppeForLøst(
-            kontekst, ingenEndringIGruppe, avklaringsbehovene, bruker
-        )
-
-        fortsettProsessering(kontekst)
-    }
-
-    private fun fortsettProsessering(kontekst: FlytKontekst) {
-        prosesserBehandling.triggProsesserBehandling(kontekst.sakId, kontekst.behandlingId)
-    }
-
-    private fun markerAvklaringsbehovISammeGruppeForLøst(
-        kontekst: FlytKontekst, ingenEndringIGruppe: Boolean, avklaringsbehovene: Avklaringsbehovene, bruker: Bruker
-    ) {
-        val behandling = behandlingRepository.hent(kontekst.behandlingId)
-
-        if (ingenEndringIGruppe && avklaringsbehovene.harVærtSendtTilbakeFraBeslutterTidligere()) {
-            val flyt = behandling.flyt()
-
-            flyt.forberedFlyt(behandling.aktivtSteg())
-            val gjenståendeStegIGruppe = flyt.gjenståendeStegIAktivGruppe()
-
-            val behovSomSkalSettesTilAvsluttet = avklaringsbehovene.alle()
-                .filter { behov -> gjenståendeStegIGruppe.any { stegType -> behov.løsesISteg() == stegType } }
-            log.info("Markerer påfølgende avklaringsbehov[${behovSomSkalSettesTilAvsluttet}] på behandling[${behandling.referanse}] som avsluttet")
-
-            behovSomSkalSettesTilAvsluttet.forEach { avklaringsbehovene.ingenEndring(it, bruker.ident) }
-        }
-    }
-
-    private fun løsAvklaringsbehov(
-        kontekst: FlytKontekst,
-        avklaringsbehovene: Avklaringsbehovene,
-        avklaringsbehov: AvklaringsbehovLøsning,
-        bruker: Bruker,
-        behandling: Behandling
-    ) {
-        val definisjoner = avklaringsbehov.definisjon()
-        log.info("Forsøker å løse avklaringsbehov[${definisjoner}] på behandling[${behandling.referanse}]")
-
-        avklaringsbehovene.validateTilstand(
-            behandling = behandling, avklaringsbehov = definisjoner
-        )
-
-        avklaringsbehovene.validerPerioder(
-            avklaringsbehov
-        )
-
-        // løses det behov som fremtvinger tilbakehopp?
-        flytOrkestrator.forberedLøsingAvBehov(definisjoner, behandling, kontekst, bruker)
-
-        // Bør ideelt kalle på
-        løsFaktiskAvklaringsbehov(kontekst, avklaringsbehovene, avklaringsbehov, bruker)
-        log.info("Løste avklaringsbehov[${definisjoner}] på behandling[${behandling.referanse}]")
-    }
-
-    private fun løsFaktiskAvklaringsbehov(
-        kontekst: FlytKontekst,
-        avklaringsbehovene: Avklaringsbehovene,
+        behandlingId: BehandlingId,
         avklaringsbehovLøsning: AvklaringsbehovLøsning,
         bruker: Bruker
     ) {
-        log.info("Mottok løsning for avklaringsbehov ${avklaringsbehovLøsning.definisjon()}.")
-        val løsningsResultat =
-            avklaringsbehovLøsning.løs(repositoryProvider, AvklaringsbehovKontekst(bruker, kontekst), gatewayProvider)
+        val definisjon = avklaringsbehovLøsning.definisjon()
+        val behandling = behandlingRepository.hent(behandlingId)
+        val kontekst = behandling.flytKontekst()
+        val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
 
+        log.info("Forsøker å løse avklaringsbehov[$definisjon] på behandling[${behandling.referanse}]")
+        avklaringsbehovene.validerTilstand(behandling, definisjon)
+        if (avklaringsbehovLøsning is PeriodisertAvklaringsbehovLøsning<*>) {
+            avklaringsbehovene.validerPerioder(avklaringsbehovLøsning, kontekst, repositoryProvider)
+        }
+
+        // løses det behov som fremtvinger tilbakehopp?
+        flytOrkestrator.forberedLøsingAvBehov(definisjon, behandling, kontekst, bruker)
+
+        // Bør ideelt kalle på
+        log.info("Mottok løsning for avklaringsbehov $definisjon.")
+        val løsningsResultat = avklaringsbehovLøsning.løs(repositoryProvider, AvklaringsbehovKontekst(bruker, kontekst), gatewayProvider)
         avklaringsbehovene.løsAvklaringsbehov(
             avklaringsbehovLøsning.definisjon(),
             løsningsResultat.begrunnelse,
             bruker.ident,
             løsningsResultat.kreverToTrinn
         )
+        log.info("Løste avklaringsbehov[$definisjon] på behandling[${behandling.referanse}]")
+
+        prosesserBehandling.triggProsesserBehandling(behandling)
+        mellomlagretVurderingRepository.slett(behandlingId, definisjon.kode)
     }
 
     fun settBehandlingPåVent(behandlingId: BehandlingId, hendelse: BehandlingSattPåVent) {
         val behandling = behandlingRepository.hent(behandlingId)
 
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId)
-        avklaringsbehovene.validateTilstand(behandling = behandling)
+        avklaringsbehovene.validerTilstand(behandling = behandling)
 
         avklaringsbehovene.leggTil(
-            definisjoner = listOf(Definisjon.MANUELT_SATT_PÅ_VENT),
+            definisjon = Definisjon.MANUELT_SATT_PÅ_VENT,
             funnetISteg = behandling.aktivtSteg(),
             frist = hendelse.frist,
             begrunnelse = hendelse.begrunnelse,
@@ -145,7 +93,7 @@ class AvklaringsbehovOrkestrator(
             perioderSomIkkeErTilstrekkeligVurdert = null
         )
 
-        avklaringsbehovene.validateTilstand(behandling = behandling)
+        avklaringsbehovene.validerTilstand(behandling = behandling)
         avklaringsbehovene.validerPlassering(behandling = behandling)
         behandlingHendelseService.stoppet(behandling, avklaringsbehovene)
     }
@@ -154,10 +102,10 @@ class AvklaringsbehovOrkestrator(
         val behandling = behandlingRepository.hent(behandlingId)
 
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId)
-        avklaringsbehovene.validateTilstand(behandling = behandling)
+        avklaringsbehovene.validerTilstand(behandling = behandling)
 
         avklaringsbehovene.leggTil(
-            definisjoner = listOf(Definisjon.BESTILL_LEGEERKLÆRING),
+            definisjon = Definisjon.BESTILL_LEGEERKLÆRING,
             funnetISteg = behandling.aktivtSteg(),
             grunn = ÅrsakTilSettPåVent.VENTER_PÅ_MEDISINSKE_OPPLYSNINGER,
             bruker = bruker,
@@ -165,7 +113,7 @@ class AvklaringsbehovOrkestrator(
             perioderVedtaketBehøverVurdering = null,
             perioderSomIkkeErTilstrekkeligVurdert = null
         )
-        avklaringsbehovene.validateTilstand(behandling = behandling)
+        avklaringsbehovene.validerTilstand(behandling = behandling)
         avklaringsbehovene.validerPlassering(behandling = behandling)
 
         behandlingHendelseService.stoppet(behandling, avklaringsbehovene)

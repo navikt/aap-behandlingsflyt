@@ -1,8 +1,9 @@
 package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser
 
-import io.mockk.junit5.MockKExtension
-import io.mockk.mockk
+import io.mockk.checkUnnecessaryStub
+import io.mockk.clearMocks
 import io.mockk.every
+import io.mockk.mockk
 import io.mockk.verify
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSykdomLøsning
@@ -16,25 +17,27 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.test.februar
 import no.nav.aap.behandlingsflyt.test.januar
-import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.ExtendWith
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZoneOffset
 
-@ExtendWith(MockKExtension::class)
-@MockKExtension.CheckUnnecessaryStub
 class AvklarSykdomLøserTest {
 
     private val behandlingMock = mockk<BehandlingRepository>()
     private val sykdomMock = mockk<SykdomRepository>(relaxed = true)
     private val yrkesskadeMock = mockk<YrkesskadeRepository>()
+
+    @AfterEach
+    fun tearDown() {
+        checkUnnecessaryStub(behandlingMock, sykdomMock, yrkesskadeMock)
+        clearMocks(behandlingMock, sykdomMock, yrkesskadeMock)
+    }
 
     @Test
     fun `Skal lagre iverksatte vurderinger + nye`() {
@@ -115,7 +118,8 @@ private fun sykdomsvurdering(
     vurderingenGjelderTil = vurderingenGjelderTil,
     vurdertAv = Bruker("Z00000"),
     opprettet = opprettet.toInstant(ZoneOffset.UTC),
-    vurdertIBehandling = vurdertIBehandling
+    vurdertIBehandling = vurdertIBehandling,
+    diagnose = null
 )
 
 private fun lagAvklaringsbehovKontekst(): AvklaringsbehovKontekst =

@@ -1,10 +1,7 @@
 package no.nav.aap.behandlingsflyt
 
-import no.nav.aap.behandlingsflyt.PdlHendelseKafkaKonsumentTest.Companion.repositoryRegistry
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovHendelseHåndterer
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovOrkestrator
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.LøsAvklaringsbehovHendelse
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.vedtak.TotrinnsVurdering
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarBarnetilleggLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarBistandsbehovLøsning
@@ -18,6 +15,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarStud
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSykdomLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarYrkesskadeLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklaringsbehovLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.BekreftVurderingerOppfølgingLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FastsettBeregningstidspunktLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FastsettYrkesskadeInntektLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FatteVedtakLøsning
@@ -62,7 +60,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.repository.avklaringsbehov.AvklaringsbehovRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.brev.bestilling.BrevbestillingRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.behandling.mellomlagring.MellomlagretVurderingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
@@ -180,8 +177,6 @@ class TestScenarioOrkestrator(
                 listOf(
                     RefusjonkravVurderingDto(
                         harKrav = true,
-                        fom = LocalDate.now(),
-                        tom = null,
                         navKontor = "",
                     )
                 )
@@ -195,6 +190,13 @@ class TestScenarioOrkestrator(
             avklaringsBehovLøsning = SykdomsvurderingForBrevLøsning(
                 vurdering = "Denne vurderingen skal vises i brev"
             )
+        )
+    }
+
+    fun løsVurderingerOppfølgning(behandling: Behandling): Behandling {
+        return løsAvklaringsBehov(
+            behandling,
+            avklaringsBehovLøsning = BekreftVurderingerOppfølgingLøsning()
         )
     }
 
@@ -274,7 +276,7 @@ class TestScenarioOrkestrator(
         // Henter ut ident,fødselsdato og navn fra db.
         var vurderteBarnListe = listOf<VurdertBarnDto>()
         datasource.transaction { connection ->
-            val repositoryProvider = repositoryRegistry.provider(connection)
+            val repositoryProvider = postgresRepositoryRegistry.provider(connection)
             val barnRepository = repositoryProvider.provide<BarnRepository>()
             val barnGrunnlag = barnRepository.hent(behandling.id)
             val oppgitteBarnListe = barnGrunnlag.oppgitteBarn?.oppgitteBarn ?: emptyList()
@@ -431,22 +433,10 @@ class TestScenarioOrkestrator(
         behandling: Behandling,
         avklaringsBehovLøsning: AvklaringsbehovLøsning,
         bruker: Bruker = Bruker("SAKSBEHANDLER"),
-        ingenEndringIGruppe: Boolean = false,
     ): Behandling {
         datasource.transaction {
-            AvklaringsbehovHendelseHåndterer(
-                AvklaringsbehovOrkestrator(postgresRepositoryRegistry.provider(it), gatewayProvider),
-                AvklaringsbehovRepositoryImpl(it),
-                BehandlingRepositoryImpl(it),
-                MellomlagretVurderingRepositoryImpl(it),
-            ).håndtere(
-                behandling.id, LøsAvklaringsbehovHendelse(
-                    løsning = avklaringsBehovLøsning,
-                    behandlingVersjon = behandling.versjon,
-                    bruker = bruker,
-                    ingenEndringIGruppe = ingenEndringIGruppe
-                )
-            )
+            AvklaringsbehovOrkestrator(postgresRepositoryRegistry.provider(it), gatewayProvider)
+                .løsAvklaringsbehovOgFortsettProsessering(behandling.id, avklaringsBehovLøsning, bruker)
         }
         motor.kjørJobber()
         return hentBehandling(behandling.referanse, datasource)
@@ -479,7 +469,7 @@ class TestScenarioOrkestrator(
     private fun hentFørsteYrkesskadeMedSkadeDato(behandlingId: BehandlingId): Yrkesskade? {
         var yrkesskadeUtenSkadedato: Yrkesskade? = null
         datasource.transaction { connection ->
-            val repositoryProvider = repositoryRegistry.provider(connection)
+            val repositoryProvider = postgresRepositoryRegistry.provider(connection)
             val yrkesskadeRepository = repositoryProvider.provide<YrkesskadeRepository>()
             yrkesskadeUtenSkadedato =
                 yrkesskadeRepository.hentHvisEksisterer(behandlingId)?.yrkesskader?.yrkesskader?.first { it.skadedato != null }

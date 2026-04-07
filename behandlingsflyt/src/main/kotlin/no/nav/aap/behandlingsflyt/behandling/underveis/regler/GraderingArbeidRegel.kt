@@ -65,6 +65,14 @@ class GraderingArbeidRegel : UnderveisRegel {
         val grenseverdi: Prosent? = null,
         val meldeperiode: Periode? = null,
     ) {
+        fun harRettOgLevertTimer(): Boolean {
+            return harRett == true && timerArbeid != null
+        }
+
+        fun harLevertTimer(): Boolean {
+            return timerArbeid != null
+        }
+
         companion object {
             fun mergePrioriterHøyre(venstre: OpplysningerOmArbeid?, høyre: OpplysningerOmArbeid?) =
                 OpplysningerOmArbeid(
@@ -130,7 +138,7 @@ class GraderingArbeidRegel : UnderveisRegel {
             if (fritaksvurdering?.harFritak == true && harPassertMeldeperiodeITid) {
                 OpplysningerOmArbeid(
                     timerArbeid = TimerArbeid(BigDecimal.ZERO),
-                    opplysningerFørstMottatt = unntakFritaksUtbetalingDato[meldeperiode.tom.plusDays(3)]
+                    opplysningerFørstMottatt = helligdagsunntakFritaksUtbetalingDato[meldeperiode.tom.plusDays(3)]
                         ?: meldeperiode.tom.plusDays(3)
                 )
             } else {
@@ -170,70 +178,56 @@ class GraderingArbeidRegel : UnderveisRegel {
     ): Tidslinje<ArbeidsGradering> {
         val antallHverdager = opplysningerOmArbeid
             .segmenter().sumOf {
-                if (it.verdi.harRett == true)
+                if (it.verdi.harRettOgLevertTimer())
                     BigDecimal(it.periode.antallHverdager().asInt)
                 else
                     BigDecimal.ZERO
             }
 
-        if (antallHverdager == BigDecimal.ZERO || opplysningerOmArbeid.segmenter()
-                .any { it.verdi.harRett == true && it.verdi.timerArbeid == null }
-        ) {
-            /* mangler opplysninger for hele perioden, vet derfor ikke hva som er
-             * totalt antall timer.
-             */
-            return opplysningerOmArbeid.mapValue {
-                ArbeidsGradering(
-                    totaltAntallTimer = TimerArbeid(BigDecimal.ZERO),
-                    andelArbeid = `0_PROSENT`,
-                    fastsattArbeidsevne = it.arbeidsevne ?: `0_PROSENT`,
-                    gradering = `0_PROSENT`,
-                    opplysningerMottatt = opplysningerOmArbeid.segmenter()
-                        .mapNotNull { it.verdi.opplysningerFørstMottatt }
-                        /* Høyeste dato er datoen første dato vi hadde opplysninger for *hele* meldeperioden. */
-                        .maxOrNull(),
-                )
-            }
-        }
-
-
         val timerArbeidet = opplysningerOmArbeid.segmenter().sumOf {
-            if (it.verdi.harRett == true)
+            if (it.verdi.harRettOgLevertTimer())
                 it.verdi.timerArbeid!!.antallTimer * BigDecimal(it.periode.antallDager())
             else
                 BigDecimal.ZERO
         }
 
-
         // En meldeperiode har ikke nødvendigvis 10 hverdager, f.eks. ved start og stopp.
         // Vi skalerer derfor antall timer i meldeperiode med hvor lang meldeperioden faktisk er, altså:
         // (antall timer arbeidet) / (antall timer i meldeperiode * (antall faktiske timer i meldeperioden / 10))
         // men for å bevare presisjon er formelen stokket om.
-        val andelArbeid = Prosent.fraDesimal(
-            minOf(
-                BigDecimal.ONE,
-                (timerArbeidet * HVERDAGER_I_FULL_MELDEPERIODE).divide(
-                    ANTALL_TIMER_I_MELDEPERIODE * antallHverdager,
-                    3,
-                    RoundingMode.HALF_UP
+
+        // Dersom det er levert timer for deler av meldeperioden, men ikke hele så må det beregnes
+        // for de dagene det er levert timer for. Dette kan skje ved utvidelse av AAP-retten fra start eller slutt
+        // etter at delvis meldekort er mottatt for perioden
+
+        val andelArbeid = if (antallHverdager == BigDecimal.ZERO) {
+            `0_PROSENT`
+        } else {
+            Prosent.fraDesimal(
+                minOf(
+                    BigDecimal.ONE,
+                    (timerArbeidet * HVERDAGER_I_FULL_MELDEPERIODE).divide(
+                        ANTALL_TIMER_I_MELDEPERIODE * antallHverdager,
+                        3,
+                        RoundingMode.HALF_UP
+                    )
                 )
             )
-        )
+        }
         return opplysningerOmArbeid.mapValue { arbeid ->
             requireNotNull(arbeid.grenseverdi) {
                 "grenseverdi for hvor mye medlemmet har  lov til å jobbe må være satt for å kunne gradere basert på timer arbeidet"
             }
             val fastsattArbeidsevne = arbeid.arbeidsevne ?: `0_PROSENT`
+            val andelArbeidGittLeverteTimer = if (arbeid.harLevertTimer()) andelArbeid else `0_PROSENT`
             ArbeidsGradering(
                 totaltAntallTimer = arbeid.timerArbeid ?: TimerArbeid(BigDecimal.ZERO),
-                andelArbeid = andelArbeid,
+                andelArbeid = andelArbeidGittLeverteTimer,
                 fastsattArbeidsevne = fastsattArbeidsevne,
                 gradering = when {
-                    arbeid.grenseverdi < andelArbeid ->
-                        `0_PROSENT`
-
-                    else ->
-                        Prosent.`100_PROSENT`.minus(
+                    !arbeid.harLevertTimer() -> `0_PROSENT`
+                    arbeid.grenseverdi < andelArbeid -> `0_PROSENT`
+                    else -> Prosent.`100_PROSENT`.minus(
                             Prosent.max(andelArbeid, fastsattArbeidsevne)
                         )
 

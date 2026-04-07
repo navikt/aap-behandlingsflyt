@@ -8,16 +8,19 @@ import no.nav.aap.komponenter.type.Periode
 import java.time.LocalDate
 
 data class InstitusjonsoppholdDto(
+    val oppholdId: String?,
     val institusjonstype: String,
     val oppholdstype: String,
     val status: String,
     val oppholdFra: LocalDate,
-    val avsluttetDato: LocalDate?,
-    val kildeinstitusjon: String
+    val avsluttetDato: LocalDate,
+    val kildeinstitusjon: String,
+    val tidligsteReduksjonsdato: LocalDate?,  // null dersom ikke beregnet (f.eks. soningsopphold)
 ) {
     companion object {
         fun institusjonToDto(institusjonsopphold: Segment<Institusjon>) =
             InstitusjonsoppholdDto(
+                oppholdId = lagOppholdId(institusjonsopphold.verdi.navn, institusjonsopphold.periode.fom),
                 institusjonstype = institusjonsopphold.verdi.type.beskrivelse,
                 oppholdstype = institusjonsopphold.verdi.kategori.beskrivelse,
                 status =
@@ -31,7 +34,8 @@ data class InstitusjonsoppholdDto(
                 // TODO skal muligens være start av rettighetsperiode i seteden for dd
                 kildeinstitusjon = institusjonsopphold.verdi.navn,
                 oppholdFra = institusjonsopphold.periode.fom,
-                avsluttetDato = institusjonsopphold.periode.tom
+                avsluttetDato = institusjonsopphold.periode.tom,
+                tidligsteReduksjonsdato = null
             )
     }
 }
@@ -40,21 +44,25 @@ data class HelseinstitusjonGrunnlagDto(
     val harTilgangTilÅSaksbehandle: Boolean,
     val opphold: List<InstitusjonsoppholdDto>,
     val vurderinger: List<HelseoppholdDto>,
-    val vurdertAv: VurdertAvResponse?
+    val vedtatteVurderinger: List<HelseoppholdDto>
 )
 
 data class HelseoppholdDto(
     val periode: Periode,
+    val oppholdId: String?,
     val vurderinger: List<HelseinstitusjonVurderingDto>?,
     val status: OppholdVurderingDto
 )
 
 data class HelseinstitusjonVurderingDto(
+    val oppholdId: String?,
     val begrunnelse: String,
     val faarFriKostOgLosji: Boolean,
     val forsoergerEktefelle: Boolean? = null,
     val harFasteUtgifter: Boolean? = null,
     val periode: Periode,
+    val vurdertAv: VurdertAvResponse?,
+    val besluttetAv: VurdertAvResponse?
 )
 
 data class SoningsGrunnlagDto(

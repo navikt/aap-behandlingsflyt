@@ -1,12 +1,8 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.databind.SerializationFeature
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
+import no.nav.aap.komponenter.json.DefaultJsonMapper
 
-private val mapper = ObjectMapper()
-    .registerModule(JavaTimeModule())
-    .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+private val mapper = DefaultJsonMapper.objectMapper()
 
 interface Faktagrunnlag {
     fun hent(): String? {

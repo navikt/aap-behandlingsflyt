@@ -18,7 +18,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevu
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.SykepengerGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.UtbetaltePerioder
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.Ytelser
-import no.nav.aap.behandlingsflyt.faktagrunnlag.ikkeKjørtSisteKalenderdag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.ikkeKjørtSisteKalenderdagForBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
@@ -26,10 +26,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
-import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.somTidslinje
 import no.nav.aap.komponenter.type.Periode
@@ -47,7 +44,6 @@ class SamordningYtelseVurderingInformasjonskrav(
     private val fpGateway: ForeldrepengerGateway,
     private val spGateway: SykepengerGateway,
     private val sakService: SakService,
-    private val unleashGateway: UnleashGateway
 ) : Informasjonskrav<SamordningInput, SamordningRegisterdata>, KanTriggeRevurdering {
     private val log = LoggerFactory.getLogger(javaClass)
 
@@ -58,7 +54,7 @@ class SamordningYtelseVurderingInformasjonskrav(
     ): Boolean {
         return kontekst.erFørstegangsbehandlingEllerRevurdering() && !tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(
             kontekst, steg
-        ) && (oppdatert.ikkeKjørtSisteKalenderdag() || kontekst.rettighetsperiode != oppdatert?.rettighetsperiode)
+        ) && (oppdatert.ikkeKjørtSisteKalenderdagForBehandling(kontekst.behandlingId) || kontekst.rettighetsperiode != oppdatert?.rettighetsperiode || kontekst.erVurderingsbehovEndretEtterOppdatertInformasjonskrav(oppdatert))
     }
 
 
@@ -137,15 +133,10 @@ class SamordningYtelseVurderingInformasjonskrav(
     }
 
     private fun hentYtelseSykepenger(personIdent: String, oppslagsPeriode: Periode): List<UtbetaltePerioder> {
-        return if (unleashGateway.isEnabled(BehandlingsflytFeature.HentSykepengerVedOverlapp)) {
-            spGateway.hentYtelseSykepenger(
+        return spGateway.hentYtelseSykepenger(
                 setOf(personIdent), oppslagsPeriode.fom, oppslagsPeriode.tom
             ).filter { oppslagsPeriode.overlapper((Periode(it.fom, it.tom))) }
-        } else {
-            spGateway.hentYtelseSykepenger(
-                setOf(personIdent), oppslagsPeriode.fom, oppslagsPeriode.tom
-            ).filter { oppslagsPeriode.inneholder((Periode(it.fom, it.tom))) }
-        }
+
     }
 
     private fun mapTilSamordningYtelse(
@@ -221,13 +212,12 @@ class SamordningYtelseVurderingInformasjonskrav(
             repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider
         ): SamordningYtelseVurderingInformasjonskrav {
             return SamordningYtelseVurderingInformasjonskrav(
-                repositoryProvider.provide(),
-                repositoryProvider.provide(),
-                TidligereVurderingerImpl(repositoryProvider),
-                gatewayProvider.provide(),
-                gatewayProvider.provide(),
-                SakService(repositoryProvider),
-                gatewayProvider.provide()
+                samordningYtelseRepository = repositoryProvider.provide(),
+                samordningVurderingRepository = repositoryProvider.provide(),
+                tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
+                fpGateway = gatewayProvider.provide(),
+                spGateway = gatewayProvider.provide(),
+                sakService = SakService(repositoryProvider, gatewayProvider),
             )
         }
 

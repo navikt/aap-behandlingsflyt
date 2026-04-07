@@ -28,7 +28,6 @@ class RefusjonkravLøsning(
     override fun løs(repositoryProvider: RepositoryProvider, kontekst: AvklaringsbehovKontekst, gatewayProvider: GatewayProvider): LøsningsResultat {
         return RefusjonkravLøser(
             repositoryProvider = repositoryProvider,
-            gatewayProvider = gatewayProvider
         ).løs(kontekst, this)
     }
 }

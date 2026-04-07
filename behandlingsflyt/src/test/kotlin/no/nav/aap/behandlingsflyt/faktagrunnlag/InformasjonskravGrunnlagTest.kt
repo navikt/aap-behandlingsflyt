@@ -1,14 +1,16 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag
 
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.LovvalgInformasjonskrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnInformasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonStatus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Personopplysning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Statsborgerskap
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeInformasjonskrav
-import no.nav.aap.behandlingsflyt.help.FakePdlGateway
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
+import no.nav.aap.behandlingsflyt.help.flytKontekstMedPerioder
+import no.nav.aap.behandlingsflyt.help.opprettSak
 import no.nav.aap.behandlingsflyt.integrasjon.aordning.InntektkomponentenGatewayImpl
 import no.nav.aap.behandlingsflyt.integrasjon.arbeidsforhold.AARegisterGateway
 import no.nav.aap.behandlingsflyt.integrasjon.arbeidsforhold.EREGGateway
@@ -21,16 +23,16 @@ import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.InformasjonskravRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.medlemskaplovvalg.MedlemskapArbeidInntektRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.personopplysning.PersonopplysningRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.yrkesskade.YrkesskadeRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
-import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
+import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.test.FakePersoner
-import no.nav.aap.behandlingsflyt.test.FakeUnleash
+import no.nav.aap.behandlingsflyt.test.FakeTidligereVurderinger
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
@@ -38,7 +40,9 @@ import no.nav.aap.behandlingsflyt.test.modell.TestYrkesskade
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.lookup.repository.RepositoryProvider
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
@@ -49,7 +53,6 @@ import java.time.LocalDate
 class InformasjonskravGrunnlagTest {
 
     companion object {
-        private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
         private lateinit var dataSource: TestDataSource
 
         @BeforeAll
@@ -70,7 +73,7 @@ class InformasjonskravGrunnlagTest {
         register<YrkesskadeRegisterGatewayImpl>()
         register<PdlBarnGateway>()
         register<PdlIdentGateway>()
-        register<FakeUnleash>()
+        register<AlleAvskruddUnleash>()
         register<InntektkomponentenGatewayImpl>()
     }
 
@@ -78,9 +81,10 @@ class InformasjonskravGrunnlagTest {
     fun `Yrkesskadedata er oppdatert`() {
         dataSource.transaction { connection ->
             val (ident, kontekst) = klargjør(connection)
+            val repositoryProvider = postgresRepositoryRegistry.provider(connection)
             val informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(
                 InformasjonskravRepositoryImpl(connection),
-                postgresRepositoryRegistry.provider(connection),
+                repositoryProvider,
                 gatewayProvider
             )
 
@@ -92,17 +96,20 @@ class InformasjonskravGrunnlagTest {
                 )
             )
 
+            val yrkesskadeInformasjonskravKonstruktørMedTidligereVurderingerFake = genererKonstruktørMedFake(connection)
+
+
             val initiell = informasjonskravGrunnlag.oppdaterFaktagrunnlagForKravliste(
-                listOf(StegType.VURDER_YRKESSKADE to YrkesskadeInformasjonskrav),
+                listOf(StegType.VURDER_YRKESSKADE to yrkesskadeInformasjonskravKonstruktørMedTidligereVurderingerFake),
                 kontekst
             )
 
             assertThat(initiell)
                 .hasSize(1)
-                .allMatch { it === YrkesskadeInformasjonskrav }
+                .allMatch { it === yrkesskadeInformasjonskravKonstruktørMedTidligereVurderingerFake }
 
             val erOppdatert = informasjonskravGrunnlag.oppdaterFaktagrunnlagForKravliste(
-                listOf(StegType.VURDER_YRKESSKADE to YrkesskadeInformasjonskrav),
+                listOf(StegType.VURDER_YRKESSKADE to yrkesskadeInformasjonskravKonstruktørMedTidligereVurderingerFake),
                 kontekst
             )
 
@@ -120,6 +127,8 @@ class InformasjonskravGrunnlagTest {
                 gatewayProvider
             )
 
+            val yrkesskadeInformasjonskravKonstruktørMedTidligereVurderingerFake = genererKonstruktørMedFake(connection)
+
             FakePersoner.leggTil(
                 TestPerson(
                     identer = setOf(ident),
@@ -129,13 +138,13 @@ class InformasjonskravGrunnlagTest {
             )
 
             val erOppdatert = informasjonskravGrunnlag.oppdaterFaktagrunnlagForKravliste(
-                listOf(StegType.VURDER_YRKESSKADE to YrkesskadeInformasjonskrav),
+                listOf(StegType.VURDER_YRKESSKADE to yrkesskadeInformasjonskravKonstruktørMedTidligereVurderingerFake),
                 kontekst
             )
 
             assertThat(erOppdatert)
                 .hasSize(1)
-                .allMatch { it === YrkesskadeInformasjonskrav }
+                .allMatch { it === yrkesskadeInformasjonskravKonstruktørMedTidligereVurderingerFake }
         }
     }
 
@@ -149,8 +158,10 @@ class InformasjonskravGrunnlagTest {
                 gatewayProvider
             )
 
+            val yrkesskadeInformasjonskravKonstruktørMedTidligereVurderingerFake = genererKonstruktørMedFake(connection)
+
             val erOppdatert = informasjonskravGrunnlag.oppdaterFaktagrunnlagForKravliste(
-                listOf(StegType.VURDER_YRKESSKADE to YrkesskadeInformasjonskrav),
+                listOf(StegType.VURDER_YRKESSKADE to yrkesskadeInformasjonskravKonstruktørMedTidligereVurderingerFake),
                 kontekst
             )
 
@@ -160,9 +171,9 @@ class InformasjonskravGrunnlagTest {
 
     @Test
     fun `Lovvalg og medlemskap er oppdatert`() {
-        val (ident, kontekst) = dataSource.transaction { connection ->
+        val (ident, kontekst, lovvalgKonstruktør) = dataSource.transaction { connection ->
             val (ident, kontekst) = klargjør(connection)
-            Pair(ident, kontekst)
+            Triple(ident, kontekst, genererLovvalgKonstruktørMedFake())
         }
 
         FakePersoner.leggTil(
@@ -178,20 +189,20 @@ class InformasjonskravGrunnlagTest {
                 postgresRepositoryRegistry.provider(it),
                 gatewayProvider
             ).oppdaterFaktagrunnlagForKravliste(
-                listOf(StegType.VURDER_LOVVALG to LovvalgInformasjonskrav),
+                listOf(StegType.VURDER_LOVVALG to lovvalgKonstruktør),
                 kontekst
             )
         }
         assertThat(initiell)
             .hasSize(1)
-            .allMatch { it === LovvalgInformasjonskrav }
+            .allMatch { it === lovvalgKonstruktør }
 
         val erOppdatert = dataSource.transaction {
             InformasjonskravGrunnlagImpl(
                 postgresRepositoryRegistry.provider(it),
                 gatewayProvider
             ).oppdaterFaktagrunnlagForKravliste(
-                listOf(StegType.VURDER_LOVVALG to LovvalgInformasjonskrav),
+                listOf(StegType.VURDER_LOVVALG to lovvalgKonstruktør),
                 kontekst
             )
         }
@@ -213,7 +224,8 @@ class InformasjonskravGrunnlagTest {
                 postgresRepositoryRegistry.provider(connection),
                 gatewayProvider
             )
-            val kravKonstruktører = listOf(StegType.BARNETILLEGG to BarnInformasjonskrav)
+            val barnKonstruktør = genererBarnKonstruktørMedFake()
+            val kravKonstruktører = listOf(StegType.BARNETILLEGG to barnKonstruktør)
 
             leggTilBarnPåPerson(ident)
 
@@ -221,7 +233,7 @@ class InformasjonskravGrunnlagTest {
 
             assertThat(initiell)
                 .hasSize(1)
-                .allMatch { it === BarnInformasjonskrav }
+                .allMatch { it === barnKonstruktør }
 
             val erOppdatert = informasjonskravGrunnlag.oppdaterFaktagrunnlagForKravliste(kravKonstruktører, kontekst)
 
@@ -242,7 +254,8 @@ class InformasjonskravGrunnlagTest {
                 postgresRepositoryRegistry.provider(connection),
                 gatewayProvider
             )
-            val kravKonstruktører = listOf(StegType.BARNETILLEGG to BarnInformasjonskrav)
+            val barnKonstruktør = genererBarnKonstruktørMedFake()
+            val kravKonstruktører = listOf(StegType.BARNETILLEGG to barnKonstruktør)
 
             leggTilBarnPåPerson(ident)
 
@@ -250,7 +263,7 @@ class InformasjonskravGrunnlagTest {
 
             assertThat(initiell)
                 .hasSize(1)
-                .allMatch { it === BarnInformasjonskrav }
+                .allMatch { it === barnKonstruktør }
 
             val erOppdatert = informasjonskravGrunnlag.oppdaterFaktagrunnlagForKravliste(kravKonstruktører, kontekst)
 
@@ -271,7 +284,8 @@ class InformasjonskravGrunnlagTest {
                 postgresRepositoryRegistry.provider(connection),
                 gatewayProvider
             )
-            val kravKonstruktører = listOf(StegType.BARNETILLEGG to BarnInformasjonskrav)
+            val barnKonstruktør = genererBarnKonstruktørMedFake()
+            val kravKonstruktører = listOf(StegType.BARNETILLEGG to barnKonstruktør)
 
             leggTilBarnPåPerson(ident)
 
@@ -288,11 +302,7 @@ class InformasjonskravGrunnlagTest {
 
     ): Pair<Ident, FlytKontekstMedPerioder> {
         val ident = ident()
-        val sak = PersonOgSakService(
-            FakePdlGateway,
-            PersonRepositoryImpl(connection),
-            SakRepositoryImpl(connection)
-        ).finnEllerOpprett(ident, periode)
+        val sak = opprettSak(connection, ident, LocalDate.now())
         val behandling = finnEllerOpprettBehandling(connection, sak)
         val personopplysningRepository = PersonopplysningRepositoryImpl(connection)
         personopplysningRepository.lagre(
@@ -304,16 +314,12 @@ class InformasjonskravGrunnlagTest {
             )
         )
 
-        val flytKontekst = behandling.flytKontekst()
-        return ident to FlytKontekstMedPerioder(
-            flytKontekst.sakId,
-            flytKontekst.behandlingId,
-            flytKontekst.forrigeBehandlingId,
-            behandling.typeBehandling(),
-            vurderingType = vurderingType,
-            vurderingsbehovRelevanteForSteg = årsakerTilBehandling,
-            rettighetsperiode = Periode(LocalDate.now(), LocalDate.now()),
-        )
+        return ident to flytKontekstMedPerioder {
+            this.behandling = behandling
+            this.vurderingType = vurderingType
+            vurderingsbehovRelevanteForSteg = årsakerTilBehandling
+            rettighetsperiode = Periode(LocalDate.now(), LocalDate.now())
+        }
     }
 
     private fun leggTilBarnPåPerson(ident: Ident) {
@@ -328,4 +334,70 @@ class InformasjonskravGrunnlagTest {
             )
         )
     }
+
+    private fun genererKonstruktørMedFake(connection: DBConnection) =
+
+        object : Informasjonskravkonstruktør {
+            override val navn: InformasjonskravNavn
+                get() = YrkesskadeInformasjonskrav.navn
+
+            override fun konstruer(
+                repositoryProvider: RepositoryProvider,
+                gatewayProvider: GatewayProvider
+            ): YrkesskadeInformasjonskrav {
+                return YrkesskadeInformasjonskrav(
+                    sakService = SakService(
+                        repositoryProvider,
+                        gatewayProvider
+                    ),
+                    yrkesskadeRepository = YrkesskadeRepositoryImpl(connection),
+                    personopplysningRepository = PersonopplysningRepositoryImpl(connection),
+                    yrkesskadeRegisterGateway = gatewayProvider.provide(),
+                    mottattDokumentRepository = MottattDokumentRepositoryImpl(connection),
+                    tidligereVurderinger = FakeTidligereVurderinger()
+                )
+            }
+        }
+
+    private fun genererLovvalgKonstruktørMedFake() =
+        object : Informasjonskravkonstruktør {
+            override val navn: InformasjonskravNavn
+                get() = LovvalgInformasjonskrav.navn
+
+            override fun konstruer(
+                repositoryProvider: RepositoryProvider,
+                gatewayProvider: GatewayProvider
+            ): LovvalgInformasjonskrav {
+                return LovvalgInformasjonskrav(
+                    sakService = SakService(repositoryProvider, gatewayProvider),
+                    medlemskapArbeidInntektRepository = repositoryProvider.provide(),
+                    medlemskapRepository = repositoryProvider.provide(),
+                    tidligereVurderinger = FakeTidligereVurderinger(),
+                    medlemskapGateway = gatewayProvider.provide(),
+                    arbeidsForholdGateway = gatewayProvider.provide(),
+                    enhetsregisteretGateway = gatewayProvider.provide(),
+                    inntektskomponentenGateway = gatewayProvider.provide(),
+                )
+            }
+        }
+
+    private fun genererBarnKonstruktørMedFake() =
+        object : Informasjonskravkonstruktør {
+            override val navn: InformasjonskravNavn
+                get() = BarnInformasjonskrav.navn
+
+            override fun konstruer(
+                repositoryProvider: RepositoryProvider,
+                gatewayProvider: GatewayProvider
+            ): BarnInformasjonskrav {
+                return BarnInformasjonskrav(
+                    barnRepository = repositoryProvider.provide(),
+                    personRepository = repositoryProvider.provide(),
+                    barnGateway = gatewayProvider.provide(),
+                    identGateway = gatewayProvider.provide(),
+                    tidligereVurderinger = FakeTidligereVurderinger(),
+                    sakService = SakService(repositoryProvider, gatewayProvider),
+                )
+            }
+        }
 }

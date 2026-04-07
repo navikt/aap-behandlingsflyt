@@ -24,7 +24,6 @@ import no.nav.aap.behandlingsflyt.mdc.LogKontekst
 import no.nav.aap.behandlingsflyt.mdc.LoggingKontekst
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersoninfoGateway
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.DokumentResponsDTO
 import no.nav.aap.behandlingsflyt.tilgang.TilgangGateway
@@ -37,6 +36,7 @@ import no.nav.aap.brev.kontrakt.KanDistribuereBrevReponse
 import no.nav.aap.brev.kontrakt.KanDistribuereBrevRequest
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.komponenter.httpklient.exception.VerdiIkkeFunnetException
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.komponenter.server.auth.bruker
@@ -71,9 +71,10 @@ fun NormalOpenAPIRoute.brevApi(
                     val repositoryProvider = repositoryRegistry.provider(connection)
                     val brevbestillingRepository = repositoryProvider.provide<BrevbestillingRepository>()
                     val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
-                    val behandlingId = brevbestillingRepository.hent(brevbestillingReferanse).behandlingId
+                    val bestilling = brevbestillingRepository.hent(brevbestillingReferanse)
+                        ?: throw VerdiIkkeFunnetException("Fant ikke brevbestilling med referanse $brevbestillingReferanse")
 
-                    behandlingRepository.hent(behandlingId).referanse.referanse
+                    behandlingRepository.hent(bestilling.behandlingId).referanse.referanse
                 }
             })
     )
@@ -98,22 +99,14 @@ fun NormalOpenAPIRoute.brevApi(
                     val brevGrunnlag = dataSource.transaction(readOnly = true) { connection ->
                         val repositoryProvider = repositoryRegistry.provider(connection)
                         val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
-                        val sakRepository = repositoryProvider.provide<SakRepository>()
-                        val brevbestillingRepository = repositoryProvider.provide<BrevbestillingRepository>()
                         val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
-                        val signaturService = SignaturService(avklaringsbehovRepository = avklaringsbehovRepository)
-                        val brevbestillingService = BrevbestillingService(
-                            signaturService = signaturService,
-                            brevbestillingGateway = brevbestillingGateway,
-                            brevbestillingRepository = brevbestillingRepository,
-                            behandlingRepository = behandlingRepository,
-                            sakRepository = sakRepository
-                        )
+                        val signaturService = SignaturService(repositoryProvider, gatewayProvider)
+                        val brevbestillingService = BrevbestillingService(repositoryProvider, gatewayProvider)
                         val brevbestillinger = brevbestillingService.hentBrevbestillinger(behandlingReferanse)
 
                         val behandling = behandlingRepository.hent(behandlingReferanse)
                         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
-                        val sak = SakService(repositoryProvider).hent(behandling.sakId)
+                        val sak = SakService(repositoryProvider, gatewayProvider).hent(behandling.sakId)
                         val personIdent = sak.person.aktivIdent()
                         val personinfo = personinfoGateway.hentPersoninfoForIdent(personIdent, token())
 
@@ -221,7 +214,7 @@ fun NormalOpenAPIRoute.brevApi(
                         val repositoryProvider = repositoryRegistry.provider(connection)
 
                         LoggingKontekst(
-                            repositoryProvider,
+                            repositoryProvider.provide(),
                             LogKontekst(referanse = req.behandlingsReferanse)
                         ).use {
                             val behandlingRepository =
@@ -268,11 +261,11 @@ fun NormalOpenAPIRoute.brevApi(
                         val repositoryProvider = repositoryRegistry.provider(connection)
                         val brevbestillingRepository =
                             repositoryProvider.provide<BrevbestillingRepository>()
-                        val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
 
                         val brevbestilling = brevbestillingRepository.hent(brevbestillingReferanse)
+                            ?: throw VerdiIkkeFunnetException("Fant ikke brevbestilling med referanse $brevbestillingReferanse")
 
-                        val signaturService = SignaturService(avklaringsbehovRepository = avklaringsbehovRepository)
+                        val signaturService = SignaturService(repositoryProvider, gatewayProvider)
                         brevbestillingGateway.forhåndsvis(
                             bestillingReferanse = brevbestillingReferanse,
                             signaturer = signaturService.finnSignaturGrunnlag(brevbestilling, bruker()),

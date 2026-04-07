@@ -1,18 +1,25 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis
 
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 
 class Kvoter(
     val ordinærkvote: Hverdager,
-    val studentkvote: Hverdager,
     val sykepengeerstatningkvote: Hverdager
 ) {
     companion object {
-        fun create(ordinærkvote: Int, studentkvote: Int, sykepengeerstatningkvote: Int) = Kvoter(
+        fun create(ordinærkvote: Int, sykepengeerstatningkvote: Int) = Kvoter(
             ordinærkvote = Hverdager(ordinærkvote),
-            studentkvote = Hverdager(studentkvote),
             sykepengeerstatningkvote = Hverdager(sykepengeerstatningkvote)
         )
+    }
+
+    fun hentKvoteForRettighetstype(type: RettighetsType): Hverdager? {
+        return when (type) {
+            RettighetsType.BISTANDSBEHOV -> this.ordinærkvote
+            RettighetsType.SYKEPENGEERSTATNING -> this.sykepengeerstatningkvote
+            else -> null
+        }
     }
 
     override fun equals(other: Any?): Boolean {
@@ -22,7 +29,6 @@ class Kvoter(
         other as Kvoter
 
         if (ordinærkvote != other.ordinærkvote) return false
-        if (studentkvote != other.studentkvote) return false
         if (sykepengeerstatningkvote != other.sykepengeerstatningkvote) return false
 
         return true
@@ -30,14 +36,11 @@ class Kvoter(
 
     override fun hashCode(): Int {
         var result = ordinærkvote.hashCode()
-        result = 31 * result + studentkvote.hashCode()
         result = 31 * result + sykepengeerstatningkvote.hashCode()
         return result
     }
 
     override fun toString(): String {
-        return "Kvoter(ordinærkvote=$ordinærkvote, studentkvote=$studentkvote, sykepengeerstatningkvote=$sykepengeerstatningkvote)"
+        return "Kvoter(ordinærkvote=$ordinærkvote, sykepengeerstatningkvote=$sykepengeerstatningkvote)"
     }
 }
-
-

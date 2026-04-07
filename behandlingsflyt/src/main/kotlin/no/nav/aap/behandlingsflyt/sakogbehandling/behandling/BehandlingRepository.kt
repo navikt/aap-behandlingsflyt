@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
+import no.nav.aap.behandlingsflyt.sakogbehandling.SakOgBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.lookup.repository.Repository
@@ -17,8 +18,13 @@ interface BehandlingRepository : Repository {
         vurderingsbehovOgÅrsak: VurderingsbehovOgÅrsak
     ): Behandling
 
-    fun finnFørstegangsbehandling(sakId: SakId): Behandling?
-    
+    fun finnFørstegangsbehandling(sakId: SakId): Behandling
+
+    /**
+     * Denne må brukes med omhu, da siste opprettede behandling ikke nødvendigvis er siste behandling
+     * i den lenkede listen av behandlinger. Ref. fasttrack/atomære behandlinger. Den returnerer også avbrutte behandlinger.
+     */
+    @Deprecated("Mest sannsynlig ønsker du å bruke BehandlingService.finnSisteYtelsesbehandlingFor eller BehandlingService.finnBehandlingMedSisteFattedeVedtak")
     fun finnSisteOpprettedeBehandlingFor(sakId: SakId, behandlingstypeFilter: List<TypeBehandling>): Behandling?
 
     fun hentStegHistorikk(behandlingId: BehandlingId): List<StegTilstand>
@@ -54,5 +60,9 @@ interface BehandlingRepository : Repository {
     fun markerSavepoint()
 
     fun finnSaksnummer(referanse: BehandlingReferanse): Saksnummer
+
+    fun finnAlleGjeldendeVedtatteBehandlinger(): List<SakOgBehandling>
+
+    fun finnGjeldendeVedtattBehandlingForSak(sakId: SakId): SakOgBehandling?
 }
 

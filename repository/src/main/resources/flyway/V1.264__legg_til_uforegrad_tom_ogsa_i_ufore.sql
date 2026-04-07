@@ -1,0 +1,2 @@
+ALTER TABLE ufore_gradering
+    ADD COLUMN UFOREGRAD_TOM DATE NULL;

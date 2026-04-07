@@ -6,6 +6,8 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 
 /**
+ * Sendes til statistikkappen når en behandling avsluttes.
+ *
  * @param beregningsGrunnlag Beregningsgrunnlag. Kan være null om behandlingen avsluttes før inntekt hentes inn.
  */
 public data class AvsluttetBehandlingDTO(
@@ -15,7 +17,17 @@ public data class AvsluttetBehandlingDTO(
     val diagnoser: Diagnoser? = null,
     val rettighetstypePerioder: List<RettighetstypePeriode>,
     val resultat: ResultatKode?,
-    val vedtakstidspunkt: LocalDateTime?
+    val vedtakstidspunkt: LocalDateTime?,
+    val fritaksvurderinger: Iterable<Fritakvurdering>? = null,
+    val perioderMedArbeidsopptrapping: List<PeriodeDTO>,
+)
+
+public data class PeriodeDTO(val fom: LocalDate, val tom: LocalDate)
+
+public data class Fritakvurdering(
+    val harFritak: Boolean,
+    val fraDato: LocalDate,
+    val tilDato: LocalDate? = null,
 )
 
 public enum class ResultatKode {
@@ -57,10 +69,14 @@ public data class TilkjentYtelsePeriodeDTO(
     val gradering: Double,
     val redusertDagsats: Double,
     val antallBarn: Int,
+    val barnepensjonDagsats: Double,
     val barnetilleggSats: Double,
     val barnetillegg: Double,
-    val utbetalingsdato: LocalDate
+    val utbetalingsdato: LocalDate,
+    val minsteSats: Minstesats,
 )
+
+public enum class Minstesats { IKKE_MINSTESATS, MINSTESATS_OVER_25, MINSTESATS_UNDER_25 }
 
 public data class VilkårsResultatDTO(
     val typeBehandling: TypeBehandling, val vilkår: List<VilkårDTO>
@@ -85,11 +101,13 @@ public enum class Vilkårtype {
     STRAFFEGJENNOMFØRING,
     AKTIVITETSPLIKT,
     OPPHOLDSKRAV,
-
-    @Deprecated("Skal fases ut.")
     SYKEPENGEERSTATNING,
     SAMORDNING,
-    INNTEKTSBORTFALL
+    INNTEKTSBORTFALL,
+    SAMORDNING_ANNEN_LOVGIVNING,
+    STUDENT,
+    ORDINÆR_KVOTE,
+    SYKEPENGEERSTATNING_KVOTE
 }
 
 public data class VilkårsPeriodeDTO(

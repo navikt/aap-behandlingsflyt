@@ -7,6 +7,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.time.Instant
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.ZoneId
 
 class InformasjonskravOppdatert(
@@ -29,6 +30,9 @@ class InformasjonskravOppdatert(
     val datoOppdatert: LocalDate
         get() = oppdatert.atZone(ZoneId.of("Europe/Oslo")).toLocalDate()
 
+    val tidOppdatert: LocalDateTime
+        get() = oppdatert.atZone(ZoneId.of("Europe/Oslo")).toLocalDateTime()
+
     inline fun <reified E> forrigeInput(): E? {
         return forrigeInput
             ?.runCatching { DefaultJsonMapper.fromJson<E>(forrigeInput) }
@@ -41,3 +45,6 @@ class InformasjonskravOppdatert(
 
 fun InformasjonskravOppdatert?.ikkeKjørtSisteKalenderdag(): Boolean =
     this == null || datoOppdatert != LocalDate.now()
+
+fun InformasjonskravOppdatert?.ikkeKjørtSisteKalenderdagForBehandling(gjeldendeBehandlingId: BehandlingId): Boolean =
+    this == null || datoOppdatert != LocalDate.now() || behandlingId != gjeldendeBehandlingId

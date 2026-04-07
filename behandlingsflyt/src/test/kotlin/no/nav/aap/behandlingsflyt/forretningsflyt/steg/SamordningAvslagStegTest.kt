@@ -1,11 +1,7 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
-import io.mockk.Runs
 import io.mockk.every
-import io.mockk.junit5.MockKExtension
-import io.mockk.just
 import io.mockk.mockk
-import io.mockk.slot
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.samordning.SamordningGradering
 import no.nav.aap.behandlingsflyt.behandling.samordning.SamordningService
@@ -28,9 +24,7 @@ import no.nav.aap.komponenter.verdityper.Prosent
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.ExtendWith
 
-@ExtendWith(MockKExtension::class)
 class SamordningAvslagStegTest {
 
     val samordningService = mockk<SamordningService>()
@@ -67,10 +61,12 @@ class SamordningAvslagStegTest {
         )
         every { samordningService.tidslinje(any()) } returns Tidslinje(periode, samordningGradering)
         every { uføreService.tidslinje(any()) } returns Tidslinje.empty()
-        val vilkårSlot = slot<Vilkårsresultat>()
-        every { vilkårsresultatRepository.lagre(any(), capture(vilkårSlot)) } just Runs
+        var capturedVilkår: Vilkårsresultat? = null
+        every { vilkårsresultatRepository.lagre(any(), any()) } answers {
+            capturedVilkår = secondArg()
+        }
         steg.utfør(kontekst = kontekst)
-        val vilkårTidslinje = vilkårSlot.captured.finnVilkår(Vilkårtype.SAMORDNING).tidslinje()
+        val vilkårTidslinje = capturedVilkår!!.finnVilkår(Vilkårtype.SAMORDNING).tidslinje()
         assertThat(vilkårTidslinje.segmenter().count()).isEqualTo(1)
         assertThat(vilkårTidslinje.segmenter().first().verdi.utfall).isEqualTo(Utfall.IKKE_OPPFYLT)
         assertThat(vilkårTidslinje.segmenter().first().periode).isEqualTo(periode)
@@ -80,10 +76,12 @@ class SamordningAvslagStegTest {
     fun `skal avslå hvis samordning uføre er 100 i en periode`() {
         every { samordningService.tidslinje(any()) } returns Tidslinje.empty()
         every { uføreService.tidslinje(any()) } returns Tidslinje(periode, Prosent.`100_PROSENT`)
-        val vilkårSlot = slot<Vilkårsresultat>()
-        every { vilkårsresultatRepository.lagre(any(), capture(vilkårSlot)) } just Runs
+        var capturedVilkår: Vilkårsresultat? = null
+        every { vilkårsresultatRepository.lagre(any(), any()) } answers {
+            capturedVilkår = secondArg()
+        }
         steg.utfør(kontekst = kontekst)
-        val vilkårTidslinje = vilkårSlot.captured.finnVilkår(Vilkårtype.SAMORDNING).tidslinje()
+        val vilkårTidslinje = capturedVilkår!!.finnVilkår(Vilkårtype.SAMORDNING).tidslinje()
         assertThat(vilkårTidslinje.segmenter().count()).isEqualTo(1)
         assertThat(vilkårTidslinje.segmenter().first().verdi.utfall).isEqualTo(Utfall.IKKE_OPPFYLT)
         assertThat(vilkårTidslinje.segmenter().first().periode).isEqualTo(periode)
@@ -98,10 +96,12 @@ class SamordningAvslagStegTest {
         )
         every { samordningService.tidslinje(any()) } returns Tidslinje(periode, samordningGradering)
         every { uføreService.tidslinje(any()) } returns Tidslinje(periode, Prosent.`50_PROSENT`)
-        val vilkårSlot = slot<Vilkårsresultat>()
-        every { vilkårsresultatRepository.lagre(any(), capture(vilkårSlot)) } just Runs
+        var capturedVilkår: Vilkårsresultat? = null
+        every { vilkårsresultatRepository.lagre(any(), any()) } answers {
+            capturedVilkår = secondArg()
+        }
         steg.utfør(kontekst = kontekst)
-        val vilkårTidslinje = vilkårSlot.captured.finnVilkår(Vilkårtype.SAMORDNING).tidslinje()
+        val vilkårTidslinje = capturedVilkår!!.finnVilkår(Vilkårtype.SAMORDNING).tidslinje()
         assertThat(vilkårTidslinje.segmenter().count()).isEqualTo(1)
         assertThat(vilkårTidslinje.segmenter().first().verdi.utfall).isEqualTo(Utfall.IKKE_VURDERT)
         assertThat(vilkårTidslinje.segmenter().first().periode).isEqualTo(periode)

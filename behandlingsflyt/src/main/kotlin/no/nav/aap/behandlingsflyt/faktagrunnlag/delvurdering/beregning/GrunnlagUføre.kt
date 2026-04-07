@@ -3,8 +3,6 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Faktagrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.Uføre
 import no.nav.aap.komponenter.verdityper.GUnit
-import no.nav.aap.komponenter.verdityper.Prosent
-import java.math.BigDecimal
 import java.time.Year
 
 /**
@@ -37,11 +35,25 @@ data class GrunnlagUføre(
 
     override fun faktagrunnlag(): Faktagrunnlag {
         return Fakta(
-            grunnlaget = grunnlaget.verdi(),
-            grunnlag = grunnlag.faktagrunnlag(),
-            grunnlagYtterligereNedsatt = grunnlagYtterligereNedsatt.faktagrunnlag()
+            grunnlaget = grunnlaget(),
+            type = type,
+            grunnlag = grunnlag,
+            grunnlagYtterligereNedsatt = grunnlagYtterligereNedsatt,
+            uføreInntekterFraForegåendeÅr = uføreInntekterFraForegåendeÅr,
+            uføreYtterligereNedsattArbeidsevneÅr = uføreYtterligereNedsattArbeidsevneÅr,
+            uføregrader = uføregrader
         )
     }
+
+    internal data class Fakta(
+        private val grunnlaget: GUnit,
+        private val type: Type,
+        private val grunnlag: Grunnlag11_19,
+        private val grunnlagYtterligereNedsatt: Grunnlag11_19,
+        private val uføreInntekterFraForegåendeÅr: List<UføreInntekt>,
+        private val uføreYtterligereNedsattArbeidsevneÅr: Year,
+        private val uføregrader: Set<Uføre>
+    ) : Faktagrunnlag
 
     fun uføregrader(): Set<Uføre> {
         return uføregrader
@@ -54,12 +66,6 @@ data class GrunnlagUføre(
     fun uføreYtterligereNedsattArbeidsevneÅr(): Year {
         return uføreYtterligereNedsattArbeidsevneÅr
     }
-
-    internal data class Fakta(
-        val grunnlaget: BigDecimal,
-        val grunnlag: Faktagrunnlag,
-        val grunnlagYtterligereNedsatt: Faktagrunnlag
-    ) : Faktagrunnlag
 
     fun type(): Type {
         return type

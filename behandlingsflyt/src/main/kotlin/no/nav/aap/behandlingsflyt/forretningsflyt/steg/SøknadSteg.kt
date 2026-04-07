@@ -43,7 +43,6 @@ class SøknadSteg(
         val harTrukketSøknad = vurderinger.any { it.skalTrekkes }
 
         avklaringsbehovService.oppdaterAvklaringsbehov(
-            avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId),
             definisjon = Definisjon.VURDER_TREKK_AV_SØKNAD,
             vedtakBehøverVurdering = {
                 // Her gir det faktisk mening å sjekke på behandlingstype, siden man ikke kan trekke søknad

@@ -42,9 +42,12 @@ class VilkårsresultatTest {
         }
 
         @Test
-        fun `om sykdomsvilkåret er innvilget som student, så er rettighetstype 11-5_11-14`() {
+        fun `avslag på Inntektsbortfall gir avslag`() {
             val v = tomVurdering()
-            val periode = Periode(LocalDate.now(), LocalDate.now().plusDays(10))
+            val startDag = LocalDate.now()
+            val sluttDag = startDag.plusDays(10)
+            val periode = Periode(startDag, sluttDag)
+            val avslagsperiode = Periode(startDag.plusDays(5), sluttDag)
             Vilkårtype.entries.forEach {
                 val vilkår = v.leggTilHvisIkkeEksisterer(it)
                 vilkår.leggTilVurdering(
@@ -52,15 +55,23 @@ class VilkårsresultatTest {
                         periode,
                         utfall = Utfall.OPPFYLT,
                         begrunnelse = null,
-                        innvilgelsesårsak = if (it in listOf(SYKDOMSVILKÅRET)) Innvilgelsesårsak.STUDENT else null,
+                        innvilgelsesårsak = null,
                     )
                 )
             }
+            v.leggTilHvisIkkeEksisterer(Vilkårtype.INNTEKTSBORTFALL).leggTilVurdering(
+                Vilkårsperiode(
+                    avslagsperiode,
+                    utfall = Utfall.IKKE_OPPFYLT,
+                    begrunnelse = null,
+                    avslagsårsak = Avslagsårsak.HAR_RETT_TIL_FULLT_UTTAK_ALDERSPENSJON
+                )
+            )
 
             val tidslinje = v.rettighetstypeTidslinje()
             assertThat(tidslinje.segmenter()).hasSize(1)
             assertThat(tidslinje.segmenter().first().verdi).isEqualTo(RettighetsType.STUDENT)
-            assertThat(tidslinje.helePerioden()).isEqualTo(periode)
+            assertThat(tidslinje.helePerioden()).isEqualTo(Periode(startDag, startDag.plusDays(4)))
         }
 
         @Test
@@ -122,11 +133,10 @@ class VilkårsresultatTest {
                 )
             )
             val andrePeriode = Periode(dagensDato.plusDays(1), dagensDato.plusDays(15))
-            v.leggTilHvisIkkeEksisterer(SYKDOMSVILKÅRET).leggTilVurdering(
+            v.leggTilHvisIkkeEksisterer(Vilkårtype.STUDENT).leggTilVurdering(
                 Vilkårsperiode(
                     andrePeriode,
                     utfall = Utfall.OPPFYLT,
-                    innvilgelsesårsak = Innvilgelsesårsak.STUDENT,
                     begrunnelse = null,
                 )
             )

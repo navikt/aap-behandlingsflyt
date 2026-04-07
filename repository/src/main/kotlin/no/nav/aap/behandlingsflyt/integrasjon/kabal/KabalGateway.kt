@@ -14,6 +14,7 @@ import no.nav.aap.komponenter.gateway.Factory
 import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
 import no.nav.aap.komponenter.httpklient.httpclient.Header
 import no.nav.aap.komponenter.httpklient.httpclient.RestClient.Companion.withDefaultResponseHandler
+import no.nav.aap.komponenter.httpklient.httpclient.error.ConflictHttpResponseException
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
 import org.slf4j.LoggerFactory
@@ -81,7 +82,11 @@ class KabalGateway : AndreinstansGateway {
         val url = baseUri.resolve("/api/oversendelse/v4/sak")
 
         log.info("Oversender klage til Kabal")
-        client.post(uri = url, request = request, mapper = { _, _ -> })
+        try {
+            client.post(uri = url, request = request, mapper = { _, _ -> })
+        } catch (conflictException: ConflictHttpResponseException) {
+            log.info("Klage med saksnummer $saksnummer og behandlingsreferanse $behandlingsreferanse er allerede oversendt til Kabal", conflictException)
+        }
     }
 }
 
@@ -159,7 +164,7 @@ data class OversendtAdresseV4(
 
 internal fun IdentMedType.tilOversendtPartId(): OversendtPartId? {
     return if (type == IdentType.UTL_ORG) {
-        return null
+        null
     } else {
         OversendtPartId(
             type = type.tilOversendtPartIdType(),

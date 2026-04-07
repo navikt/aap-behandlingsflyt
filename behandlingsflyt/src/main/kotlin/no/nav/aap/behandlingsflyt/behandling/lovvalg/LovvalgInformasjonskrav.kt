@@ -14,7 +14,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.ikkeKjørtSisteKalenderdag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aaregisteret.ARBEIDSFORHOLDSTATUSER
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aaregisteret.ArbeidsforholdGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aaregisteret.ArbeidsforholdRequest
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.ArbeidsInntektMaaned
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.ArbeidsInntektMåned
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.InntektkomponentenGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.ereg.EnhetsregisteretGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.ereg.Organisasjonsnummer
@@ -36,7 +36,7 @@ import java.util.concurrent.CompletableFuture
 import java.util.concurrent.Executors
 
 
-class LovvalgInformasjonskrav private constructor(
+class LovvalgInformasjonskrav internal constructor(
     private val sakService: SakService,
     private val medlemskapArbeidInntektRepository: MedlemskapArbeidInntektRepository,
     private val medlemskapRepository: MedlemskapRepository,
@@ -56,7 +56,7 @@ class LovvalgInformasjonskrav private constructor(
     data class LovvalgRegisterData(
         val medlemskapPerioder: List<MedlemskapDataIntern>,
         val arbeidGrunnlag: List<ArbeidINorgeGrunnlag>,
-        val inntektGrunnlag: List<ArbeidsInntektMaaned>,
+        val inntektGrunnlag: List<ArbeidsInntektMåned>,
         val enhetGrunnlag: List<EnhetGrunnlag>
     ) : InformasjonskravRegisterdata
 
@@ -133,7 +133,7 @@ class LovvalgInformasjonskrav private constructor(
         return arbeidsForholdGateway.hentAARegisterData(request)
     }
 
-    private fun innhentEREGGrunnlag(inntektGrunnlag: List<ArbeidsInntektMaaned>): List<EnhetGrunnlag> {
+    private fun innhentEREGGrunnlag(inntektGrunnlag: List<ArbeidsInntektMåned>): List<EnhetGrunnlag> {
         if (inntektGrunnlag.isEmpty()) return emptyList()
 
         val orgnumre = inntektGrunnlag.flatMap {
@@ -157,19 +157,19 @@ class LovvalgInformasjonskrav private constructor(
         return futures.mapNotNull { it.get() }
     }
 
-    private fun innhentAInntektGrunnlag(sak: Sak): List<ArbeidsInntektMaaned> {
+    private fun innhentAInntektGrunnlag(sak: Sak): List<ArbeidsInntektMåned> {
         return inntektskomponentenGateway.hentAInntekt(
-            sak.person.aktivIdent().identifikator,
-            YearMonth.from(sak.rettighetsperiode.fom.minusMonths(1)),
-            YearMonth.from(sak.rettighetsperiode.fom)
-        ).arbeidsInntektMaaned
+            fnr = sak.person.aktivIdent().identifikator,
+            fom = YearMonth.from(sak.rettighetsperiode.fom.minusMonths(2)),
+            tom = YearMonth.from(sak.rettighetsperiode.fom)
+        ).arbeidsInntektMåned
     }
 
     private fun lagre(
         behandlingId: BehandlingId,
         medlemskapGrunnlag: List<MedlemskapDataIntern>,
         arbeidGrunnlag: List<ArbeidINorgeGrunnlag>,
-        inntektGrunnlag: List<ArbeidsInntektMaaned>,
+        inntektGrunnlag: List<ArbeidsInntektMåned>,
         enhetGrunnlag: List<EnhetGrunnlag>,
     ) {
         val perioder = medlemskapGrunnlag.map { Pair(it.fraOgMed, it.tilOgMed) }
@@ -201,14 +201,14 @@ class LovvalgInformasjonskrav private constructor(
         ): LovvalgInformasjonskrav {
             val medlemskapArbeidInntektRepository = repositoryProvider.provide<MedlemskapArbeidInntektRepository>()
             return LovvalgInformasjonskrav(
-                SakService(repositoryProvider),
-                medlemskapArbeidInntektRepository,
-                repositoryProvider.provide<MedlemskapRepository>(),
-                TidligereVurderingerImpl(repositoryProvider),
-                gatewayProvider.provide(),
-                gatewayProvider.provide(),
-                gatewayProvider.provide(),
-                gatewayProvider.provide(),
+                sakService = SakService(repositoryProvider, gatewayProvider),
+                medlemskapArbeidInntektRepository = medlemskapArbeidInntektRepository,
+                medlemskapRepository = repositoryProvider.provide<MedlemskapRepository>(),
+                tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
+                medlemskapGateway = gatewayProvider.provide(),
+                arbeidsForholdGateway = gatewayProvider.provide(),
+                enhetsregisteretGateway = gatewayProvider.provide(),
+                inntektskomponentenGateway = gatewayProvider.provide(),
             )
         }
     }

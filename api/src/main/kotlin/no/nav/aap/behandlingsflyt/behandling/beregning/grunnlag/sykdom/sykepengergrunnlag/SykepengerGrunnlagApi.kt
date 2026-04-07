@@ -3,11 +3,13 @@ package no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.sykepeng
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovMetadataService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerErstatningRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.somTidslinje
+import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderSykepengeErstatningSteg
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
@@ -22,7 +24,6 @@ import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.getGrunnlag
 import javax.sql.DataSource
-import kotlin.collections.orEmpty
 
 
 fun NormalOpenAPIRoute.sykepengerGrunnlagApi(
@@ -45,6 +46,10 @@ fun NormalOpenAPIRoute.sykepengerGrunnlagApi(
                     val sakRepository = repositoryProvider.provide<SakRepository>()
                     val vurdertAvService = VurdertAvService(repositoryProvider, gatewayProvider)
                     val behandling: Behandling = BehandlingReferanseService(behandlingRepository).behandling(req)
+                    val vurderSykepengeErstatningSteg =
+                        VurderSykepengeErstatningSteg(repositoryProvider, gatewayProvider)
+                    val avklaringsbehovMetadataService =
+                        AvklaringsbehovMetadataService(repositoryProvider, gatewayProvider)
 
                     val grunnlag = sykepengerErstatningRepository.hentHvisEksisterer(behandling.id)
                     val sak = sakRepository.hent(behandling.sakId)
@@ -52,7 +57,6 @@ fun NormalOpenAPIRoute.sykepengerGrunnlagApi(
                     val nyeVurderinger = grunnlag?.vurderinger?.filter { it.vurdertIBehandling == behandling.id }.orEmpty()
 
                     val avklaringsbehov = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
-                    val kanVurderes = listOf(sak.rettighetsperiode)
                     val perioderSomTrengerVurdering = avklaringsbehov.hentBehovForDefinisjon(Definisjon.AVKLAR_SYKEPENGEERSTATNING)?.perioderVedtaketBehøverVurdering().orEmpty()
 
                     val sisteVedtatteVurderinger = vedtatteVurderinger
@@ -66,7 +70,11 @@ fun NormalOpenAPIRoute.sykepengerGrunnlagApi(
                         vedtatteVurderinger = vedtatteVurderinger.map { it.tilResponse(vurdertAvService) },
                         sisteVedtatteVurderinger = sisteVedtatteVurderinger,
                         nyeVurderinger = nyeVurderinger.map { it.tilResponse(vurdertAvService) },
-                        kanVurderes = kanVurderes,
+                        kanVurderes = listOf(sak.rettighetsperiode),
+                        ikkeRelevantePerioder = avklaringsbehovMetadataService.perioderSomSkalFremhevesSomIkkeRelevant(
+                            vurderSykepengeErstatningSteg,
+                            behandling,
+                        ),
                         behøverVurderinger = perioderSomTrengerVurdering.toList()
                     )
                 }
@@ -86,11 +94,17 @@ private fun SykepengerVurdering.tilResponse(vurdertAvService: VurdertAvService):
         tom = gjelderTom,
         gjelderFra = gjelderFra,
         gjelderTom = gjelderTom,
-        opprettet = vurdertTidspunkt ?: error("Mangler dato for sykepengervurdering") ,
+        opprettet = vurdertTidspunkt ?: error("Mangler dato for sykepengervurdering"),
         vurdertIBehandling = vurdertIBehandling,
         besluttetAv = vurdertAvService.besluttetAv(Definisjon.AVKLAR_SYKEPENGEERSTATNING, vurdertIBehandling),
-        kvalitetssikretAv = vurdertAvService.kvalitetssikretAv(Definisjon.AVKLAR_SYKEPENGEERSTATNING, vurdertIBehandling),
-        vurdertAv = vurdertAvService.medNavnOgEnhet(ident = vurdertAv, vurdertTidspunkt ?: error("Mangler dato for sykepengervurdering"))
+        kvalitetssikretAv = vurdertAvService.kvalitetssikretAv(
+            Definisjon.AVKLAR_SYKEPENGEERSTATNING,
+            vurdertIBehandling
+        ),
+        vurdertAv = vurdertAvService.medNavnOgEnhet(
+            ident = vurdertAv,
+            vurdertTidspunkt ?: error("Mangler dato for sykepengervurdering")
+        )
     )
 }
 

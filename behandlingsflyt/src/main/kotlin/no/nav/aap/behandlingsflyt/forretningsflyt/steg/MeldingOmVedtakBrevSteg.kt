@@ -5,7 +5,9 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovServ
 import no.nav.aap.behandlingsflyt.behandling.brev.BarnetilleggSatsRegulering
 import no.nav.aap.behandlingsflyt.behandling.brev.BrevBehov
 import no.nav.aap.behandlingsflyt.behandling.brev.BrevUtlederService
+import no.nav.aap.behandlingsflyt.behandling.brev.UtvidVedtakslengde
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingService
+import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.behandling.trekkklage.TrekkKlageService
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
@@ -23,6 +25,7 @@ import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
+import java.time.format.DateTimeFormatter
 
 private val log = LoggerFactory.getLogger("BrevSteg")
 
@@ -47,23 +50,11 @@ class MeldingOmVedtakBrevSteg(
         unleashGateway = gatewayProvider.provide(),
     )
 
-    /**
-     * TODO: AAP-1676 : vurder å gjøre teoretisk tilbakestillGrunnlag() fullt funksjonell
-     *
-     * En behandling kan kun ha ett vedtaksbrev og ny brevbestilling per i dag er ikke mulig hvis det finnes et avbrutt
-     * vedtaksbrev. Da må avbrutt vedtaksbrev isteden endre status fra AVBRUTT til FORHÅNDSVISNING_KLAR slik at det
-     * kan sparkes igang igjen med nytt kall til fremtidig API-endepunkt brevbestilling/gjenoppta-bestilling i aap-brev.
-     * Først da vil brevet kunne behandles videre igjen. Hvis brev-steg plutselig blir mulig å tilbakestille med nåværende
-     * tilbakestillGrunnlag() logikk, så vil utfør() feile når ny runde i BrevSteg.utfør() trigges da vedtaksbrev med
-     * status AVBRUTT må kunne gjenopptas og settes tilbake til FORHÅNDSVISNING_KLAR i aap-behandlingsflyt og aap-brev
-     * må motta API-kall /gjenoppta-bestilling slik at brevet igjen får status UNDER_ARBEID i aap-brev
-     */
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val klageErTrukket = trekkKlageService.klageErTrukket(kontekst.behandlingId)
         val brevBehov = brevUtlederService.utledBehovForMeldingOmVedtak(kontekst.behandlingId)
         val harBestillingOmVedtakBrev = brevbestillingService.harBestillingOmVedtak(kontekst.behandlingId)
         avklaringsbehovService.oppdaterAvklaringsbehov(
-            avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId),
             Definisjon.SKRIV_VEDTAKSBREV,
             vedtakBehøverVurdering = { vedtakBehøverVurdering(klageErTrukket, brevBehov) },
             erTilstrekkeligVurdert = { brevbestillingService.erAlleBestillingerOmVedtakIEndeTilstand(kontekst.behandlingId) },
@@ -82,7 +73,6 @@ class MeldingOmVedtakBrevSteg(
      *
      * BrevBestillinger i tilstand FORHÅNDSVISNING_KLAR og SENDT kan i teorien tilbakestilles. Den praktiske
      * begrensningen per i dag er at selve brev steget ikke kan tilbakestilles (ingen fremtidige scenarior for dette foreløpig)
-     * og i tillegg at funsjonalitet for å gjenoppta-brevbestilling via aap-brev må implementeres (AAP-1676)
      */
     private fun tilbakestillGrunnlag(behandlingId: BehandlingId) {
         if (!brevbestillingService.erAlleBestillingerOmVedtakIEndeTilstand(behandlingId)) {
@@ -95,47 +85,46 @@ class MeldingOmVedtakBrevSteg(
     }
 
     private fun vedtakBehøverVurdering(klageErTrukket: Boolean, brevBehov: BrevBehov?): Boolean {
-        return !klageErTrukket && brevBehov != null && brevBehov != BarnetilleggSatsRegulering
+        return !klageErTrukket && brevBehov != null && !brevBehov.typeBrev.erAutomatiskBrev()
     }
 
     private fun bestillBrev(kontekst: FlytKontekstMedPerioder, brevBehov: BrevBehov) {
-        if (brevBehov == BarnetilleggSatsRegulering) {
-            val alleredeBestilt =
-                brevbestillingService.hentBestillingerForSak(kontekst.sakId, brevBehov.typeBrev).isNotEmpty()
-            if (alleredeBestilt) {
-                log.info("Har allerede bestilt automatisk brev om barnetillegg sats endring for sak ${kontekst.sakId}.")
-                return
-            }
-            log.info("Bestiller automatisk brev om barnetillegg sats endring for sak ${kontekst.sakId}.")
-            val sak = sakRepository.hent(kontekst.sakId)
-            val unikReferanse =
+        val automatisk = brevBehov.typeBrev.erAutomatiskBrev()
+        log.info("Bestiller${if (automatisk) " automatisk" else ""} brev for behandling ${kontekst.behandlingId}.")
+        brevbestillingService.bestill(
+            behandlingId = kontekst.behandlingId,
+            brevBehov = brevBehov,
+            unikReferanse = unikReferanse(brevBehov, kontekst),
+            ferdigstillAutomatisk = automatisk,
+            brukApiV3 = brukApiV3(kontekst.behandlingId, brevBehov.typeBrev)
+        )
+    }
+
+    private fun unikReferanse(brevBehov: BrevBehov, kontekst: FlytKontekstMedPerioder): String {
+        val behandling = behandlingRepository.hent(kontekst.behandlingId)
+
+        return when (brevBehov) {
+            is BarnetilleggSatsRegulering -> {
+                val sak = sakRepository.hent(kontekst.sakId)
                 "${sak.saksnummer}-${brevBehov.typeBrev}-${OpprettJobbForTriggBarnetilleggSatsJobbUtfører.jobbKonfigurasjon.unikBrevreferanseForSak}"
-            brevbestillingService.bestill(
-                behandlingId = kontekst.behandlingId,
-                brevBehov = brevBehov,
-                unikReferanse = unikReferanse,
-                ferdigstillAutomatisk = true,
-                brukApiV3 = false
-            )
-        } else {
-            log.info("Bestiller brev for sak ${kontekst.sakId}.")
-            val behandling = behandlingRepository.hent(kontekst.behandlingId)
-            val unikReferanse = "${behandling.referanse}-${brevBehov.typeBrev}"
-            brevbestillingService.bestill(
-                behandlingId = kontekst.behandlingId,
-                brevBehov = brevBehov,
-                unikReferanse = unikReferanse,
-                ferdigstillAutomatisk = false,
-                brukApiV3 = brukApiV3(kontekst.behandlingId)
-            )
+            }
+
+            is UtvidVedtakslengde -> {
+                val sak = sakRepository.hent(kontekst.sakId)
+                "${sak.saksnummer}-${brevBehov.typeBrev}-${brevBehov.sisteDagMedYtelse.format(DateTimeFormatter.ISO_DATE)}"
+            }
+
+            else -> {
+                "${behandling.referanse}-${brevBehov.typeBrev}"
+            }
         }
     }
 
-    private fun brukApiV3(behandlingId: BehandlingId): Boolean {
+    private fun brukApiV3(behandlingId: BehandlingId, typeBrev: TypeBrev): Boolean {
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId)
         val avklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.FATTE_VEDTAK) ?: return false
         val endretAv = avklaringsbehov.endretAv()
-        return unleashGateway.isEnabled(BehandlingsflytFeature.NyBrevbyggerV3, endretAv)
+        return unleashGateway.isEnabled(BehandlingsflytFeature.NyBrevbyggerV3, endretAv, typeBrev)
     }
 
     companion object : FlytSteg {

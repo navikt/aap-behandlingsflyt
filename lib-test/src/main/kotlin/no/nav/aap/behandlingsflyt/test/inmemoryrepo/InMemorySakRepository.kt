@@ -9,6 +9,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Tid
 import java.time.LocalDate
 import java.util.concurrent.atomic.AtomicLong
 
@@ -16,15 +17,29 @@ object InMemorySakRepository : SakRepository {
 
     private val idSeq = AtomicLong(10000)
     private val memory = HashMap<SakId, Sak>()
-    private val lock = Object()
+    private val lock = Any()
 
+    override fun finnEllerOpprett(
+        person: Person,
+        søknadsdato: LocalDate
+    ): Sak {
+        @Suppress("DEPRECATION") // inline og forenkl når deperecated metode slettes
+        return finnEllerOpprett(person, Periode(søknadsdato, Tid.MAKS))
+    }
+
+    @Deprecated("Sluttdato for rettighetsperiode er alltid Tid.MAKS for nye/migrerte saker. Send kun med søknadsdato, med mindre du tester koden din for ikke-migrerte saker.")
     override fun finnEllerOpprett(
         person: Person,
         periode: Periode
     ): Sak {
         synchronized(lock) {
             val eksisterendeSak = memory.values.filter { sak -> sak.person == person }
-                .singleOrNull { sak -> sak.rettighetsperiode.overlapper(periode) }
+                .singleOrNull { sak ->
+                    InMemoryBehandlingRepository.hentAlleFor(sak.id)
+                        .none { behandling ->
+                            InMemoryTrukketSøknadRepository.hentTrukketSøknadVurderinger(behandling.id).isEmpty()
+                        }
+                }
             if (eksisterendeSak != null) {
                 return eksisterendeSak
             } else {
@@ -34,7 +49,7 @@ object InMemorySakRepository : SakRepository {
                         id = id,
                         saksnummer = Saksnummer.valueOf(id.id),
                         person = person,
-                        rettighetsperiode = periode
+                        rettighetsperiode = periode,
                     )
                 memory.put(id, sak)
 
@@ -85,6 +100,7 @@ object InMemorySakRepository : SakRepository {
     }
 
     override fun slett(behandlingId: BehandlingId) {
+        // Sletter ikke saker.
     }
 
     override fun oppdaterSakStatus(
@@ -111,7 +127,11 @@ object InMemorySakRepository : SakRepository {
         TODO("Not yet implemented")
     }
 
-    override fun finnSakerMedUtenRiktigSluttdatoPåRettighetsperiode(): List<Sak> {
+    override fun finnSakerMedInstitusjonsOpphold(): List<Sak> {
+        TODO("Not yet implemented")
+    }
+
+    override fun finnSakerMedAvsluttedeBehandlingerUtenRiktigSluttdatoPåRettighetsperiode(): List<Sak> {
         TODO("Not yet implemented")
     }
 

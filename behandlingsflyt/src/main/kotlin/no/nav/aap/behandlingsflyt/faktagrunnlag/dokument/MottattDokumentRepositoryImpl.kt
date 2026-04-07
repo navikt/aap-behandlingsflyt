@@ -22,8 +22,8 @@ class MottattDokumentRepositoryImpl(private val connection: DBConnection) : Mott
     override fun lagre(mottattDokument: MottattDokument) {
         val query = """
             INSERT INTO MOTTATT_DOKUMENT (sak_id, MOTTATT_TID, type, status, strukturert_dokument, referanse,
-                                          referanse_type, behandling_id, kanal)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                                          referanse_type, behandling_id, kanal, DIGITALISERT_MANUELT_POSTMOTTAK)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """.trimIndent()
 
         connection.execute(query) {
@@ -37,6 +37,23 @@ class MottattDokumentRepositoryImpl(private val connection: DBConnection) : Mott
                 setEnumName(7, mottattDokument.referanse.type)
                 setLong(8, mottattDokument.behandlingId?.toLong())
                 setEnumName(9, mottattDokument.kanal)
+                setBoolean(10, mottattDokument.digitalisertAvPostmottak)
+            }
+        }
+    }
+
+    override fun hent(innsendingsreferanse: InnsendingReferanse): MottattDokument {
+        val query = """
+            SELECT * FROM MOTTATT_DOKUMENT WHERE referanse = ? and referanse_type = ?
+        """.trimIndent()
+        
+        return connection.queryFirst(query) {
+            setParams {
+                setString(1, innsendingsreferanse.verdi)
+                setEnumName(2, innsendingsreferanse.type)
+            }
+            setRowMapper { row ->
+                mapMottattDokument(row)
             }
         }
     }
@@ -122,10 +139,12 @@ class MottattDokumentRepositoryImpl(private val connection: DBConnection) : Mott
             sakId = SakId(row.getLong("sak_id")),
             behandlingId = row.getLongOrNull("BEHANDLING_ID")?.let { BehandlingId(it) },
             mottattTidspunkt = row.getLocalDateTime("MOTTATT_TID"),
+            opprettetTid = row.getLocalDateTime("OPPRETTET_TID"),
             type = brevkategori,
             kanal = row.getEnum("kanal"),
             status = row.getEnum("status"),
             strukturertDokument = LazyStrukturertDokument(referanse, connection),
+            digitalisertAvPostmottak = row.getBooleanOrNull("DIGITALISERT_MANUELT_POSTMOTTAK")
         )
     }
 
@@ -150,6 +169,19 @@ class MottattDokumentRepositoryImpl(private val connection: DBConnection) : Mott
                     mapDokumentReferanse(it),
                     it.getLocalDateTime("mottatt_tid")
                 )
+            }
+        }
+    }
+
+    override fun hentDokumenterForSak(sakId: SakId): Set<MottattDokument> {
+        val query = "SELECT * FROM MOTTATT_DOKUMENT WHERE sak_id = ?"
+
+        return connection.querySet(query) {
+            setParams {
+                setLong(1, sakId.toLong())
+            }
+            setRowMapper { row ->
+                mapMottattDokument(row)
             }
         }
     }
@@ -203,6 +235,38 @@ class MottattDokumentRepositoryImpl(private val connection: DBConnection) : Mott
             }
         }
     }
+
+    override fun hentAlleUbehandledeDokumenter(): Set<MottattDokument> {
+        val query = """
+            SELECT * FROM MOTTATT_DOKUMENT WHERE status = ?
+        """.trimIndent()
+
+        return connection.queryList(query) {
+            setParams {
+                setEnumName(1, Status.MOTTATT)
+            }
+            setRowMapper { row ->
+                mapMottattDokument(row)
+            }
+        }.toSet()
+    }
+
+    override fun hentAlleUbehandledeDokumenterAvType(type: InnsendingType): Set<MottattDokument> {
+        val query = """
+            SELECT * FROM MOTTATT_DOKUMENT WHERE status = ? and type = ?
+        """.trimIndent()
+
+        return connection.queryList(query) {
+            setParams {
+                setEnumName(1, Status.MOTTATT)
+                setEnumName(2, type)
+            }
+            setRowMapper { row ->
+                mapMottattDokument(row)
+            }
+        }.toSet()
+    }
+
 
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
         // Denne trengs ikke implementeres

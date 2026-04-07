@@ -1,0 +1,166 @@
+package no.nav.aap.behandlingsflyt.prosessering
+
+import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
+import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.lookup.repository.RepositoryProvider
+import no.nav.aap.motor.JobbInput
+import no.nav.aap.motor.JobbUtfører
+import no.nav.aap.motor.ProvidersJobbSpesifikasjon
+import no.nav.aap.motor.cron.CronExpression
+import org.slf4j.LoggerFactory
+import java.time.LocalDate
+import kotlin.collections.all
+
+class SjekkInstitusjonsOppholdJobbUtfører(
+    private val prosesserBehandlingService: ProsesserBehandlingService,
+    private val sakRepository: SakRepository,
+    private val institusjonsOppholdRepository: InstitusjonsoppholdRepository,
+    private val behandlingService: BehandlingService,
+    private val trukketSøknadService: TrukketSøknadService,
+    private val behandlingRepository: BehandlingRepository,
+    private val underveisgrunnlagRepository: UnderveisRepository,
+    private val unleashGateway: UnleashGateway,
+) : JobbUtfører {
+
+    private val log = LoggerFactory.getLogger(javaClass)
+
+    override fun utfør(input: JobbInput) {
+
+        //Logikk for hvilke institusjonsopphold som skal legges til
+        val sakerMedInstitusjonsOpphold = sakRepository.finnSakerMedInstitusjonsOpphold()
+
+        log.info("Fant ${sakerMedInstitusjonsOpphold.size} kandidater for institusjonsopphold")
+
+
+        if (unleashGateway.isEnabled(BehandlingsflytFeature.InstitusjonsoppholdJobb)) {
+            val resultat = sakerMedInstitusjonsOpphold
+                .map { sak ->
+
+                    val sisteYtelsesBehandling = behandlingService.finnSisteYtelsesbehandlingFor(sak.id)
+
+                    if (sisteYtelsesBehandling != null) {
+                        val sak = sakRepository.hent(sak.id)
+                        if (erKandidatForVurderingAvInstitusjonsopphold(sisteYtelsesBehandling.id)) {
+                            val underveisgrunnlag =
+                                underveisgrunnlagRepository.hentHvisEksisterer(sisteYtelsesBehandling.id)
+                            if (underveisgrunnlag == null) {
+                                log.info("Finner ikke underveisgrunnlag for behandlingId ${sisteYtelsesBehandling.id}")
+                            } else {
+                                val søknadErTrukket = trukketSøknadService.søknadErTrukket(sisteYtelsesBehandling.id)
+                                if (søknadErTrukket) {
+                                    log.info("Institusjonsopphold oppdateres ikke, da sak med ${sak.id} er trukket")
+                                } else {
+                                    val alleIkkeOppfylt =
+                                        underveisgrunnlag
+                                            .somTidslinje()
+                                            .segmenter()
+                                            .all { it.verdi.utfall == Utfall.IKKE_OPPFYLT }
+                                    if (alleIkkeOppfylt) {
+                                        log.info("Vurderingsbehov for institusjonsopphold opprettes ikke, da det er avslag overalt for ${sak.id}")
+                                    } else {
+                                        log.info("Fant sak med institusjonsopphold ${sak.id}")
+                                        val opprettInstitusjonsOppholdBehandling = opprettNyBehandling(sak)
+                                        log.info("Opprettet behandling for instopphold for ${opprettInstitusjonsOppholdBehandling.id} og ${opprettInstitusjonsOppholdBehandling.forrigeBehandlingId}")
+                                        prosesserBehandlingService.triggProsesserBehandling(
+                                            opprettInstitusjonsOppholdBehandling
+                                        )
+                                        log.info("Ferdig med å trigge instopphold for ${sak.id}")
+                                    }
+                                }
+                            }
+                        }
+                    } else {
+                        log.info("Sak med id ${sak.id} har ikke behandling, hopper over")
+                    }
+
+                }
+
+            log.info("Jobb for sjekk av institusjonsopphold fullført for ${resultat.count()} av ${sakerMedInstitusjonsOpphold.size} saker")
+        }
+    }
+
+
+    private fun erKandidatForVurderingAvInstitusjonsopphold(behandlingId: BehandlingId): Boolean {
+
+        val opphold = institusjonsOppholdRepository.hentHvisEksisterer(behandlingId)?.oppholdene?.opphold
+        val matchendeOpphold =
+            opphold?.firstOrNull { oppholdPeriode ->
+                periodeErMinstFireMaanederOgFomVartIToMaaneder(oppholdPeriode.periode)
+            }
+
+        if (matchendeOpphold != null) {
+            log.info(
+                "Behandling $behandlingId er kandidat for vurdering av institusjonsopphold: opphold med fom=${matchendeOpphold.periode.fom} og tom=${matchendeOpphold.periode.tom} oppfyller kravene"
+            )
+            return true
+        }
+
+        log.info(
+            "Behandling $behandlingId er ikke kandidat for vurdering av institusjonsopphold: ingen opphold oppfyller kravene"
+        )
+        return false
+    }
+
+    private fun periodeErMinstFireMaanederOgFomVartIToMaaneder(periode: Periode): Boolean {
+        val now = LocalDate.now()
+
+        val varighetPaMinstFireMaaneder =
+            !periode.tom.isBefore(periode.fom.plusMonths(4))
+
+        val fomToMaanederSiden =
+            periode.fom == now.minusMonths(2)
+
+        return varighetPaMinstFireMaaneder && fomToMaanederSiden
+    }
+
+    private fun opprettNyBehandling(sak: Sak): Behandling =
+        behandlingService.finnEllerOpprettOrdinærBehandling(
+            sakId = sak.id,
+            vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
+                årsak = ÅrsakTilOpprettelse.ENDRING_I_REGISTERDATA,
+                vurderingsbehov = listOf(VurderingsbehovMedPeriode(type = Vurderingsbehov.INSTITUSJONSOPPHOLD))
+            ),
+        )
+
+    companion object : ProvidersJobbSpesifikasjon {
+        override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): JobbUtfører {
+            return SjekkInstitusjonsOppholdJobbUtfører(
+                prosesserBehandlingService = ProsesserBehandlingService(repositoryProvider, gatewayProvider),
+                sakRepository = repositoryProvider.provide(),
+                institusjonsOppholdRepository = repositoryProvider.provide(),
+                behandlingService = BehandlingService(repositoryProvider, gatewayProvider),
+                trukketSøknadService = TrukketSøknadService(repositoryProvider),
+                behandlingRepository = repositoryProvider.provide(),
+                underveisgrunnlagRepository = repositoryProvider.provide(),
+                unleashGateway = gatewayProvider.provide(),
+            )
+        }
+
+        override val type = "batch.InstitusjonsOppholdJobbUtfører"
+
+        override val navn = "Sjekker om institusjonsopphold skal vurderes"
+
+        override val beskrivelse = "Skal trigge behandling som vurderer institusjonsopphold"
+
+        /**
+         * Kjøres en gang hver dag, slås av og på med Feature Toggle
+         */
+        override val cron = CronExpression.createWithoutSeconds("0 3 * * *")
+    }
+}

@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.test
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PdlQueryException
+import no.nav.aap.behandlingsflyt.hendelse.datadeling.ApiInternGateway
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.StudentStatus
@@ -18,8 +19,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.miljo.Miljø
 import no.nav.aap.komponenter.repository.RepositoryProvider
-import no.nav.aap.komponenter.type.Periode
-import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.verdityper.dokument.JournalpostId
 import no.nav.aap.verdityper.dokument.Kanal
@@ -30,20 +29,22 @@ class TestSakService(
     private val sakRepository: SakRepository,
     private val personRepository: PersonRepository,
     private val flytJobbRepository: FlytJobbRepository,
-    private val identGateway: IdentGateway
+    private val identGateway: IdentGateway,
+    private val apiInternGateway: ApiInternGateway
 ) {
 
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         sakRepository = repositoryProvider.provide(),
         personRepository = repositoryProvider.provide(),
         flytJobbRepository = repositoryProvider.provide(),
-        identGateway = gatewayProvider.provide()
+        identGateway = gatewayProvider.provide(),
+        apiInternGateway = gatewayProvider.provide()
     )
 
 
     fun opprettTestSak(ident: Ident, erStudent: Boolean, harYrkesskade: Boolean, harMedlemskap: Boolean,andreUtbetalinger: AndreUtbetalingerDto?): Sak {
         if (Miljø.erProd()) {
-            throw RuntimeException("Man kan ikke opprette testtsaker i produskjon")
+            throw RuntimeException("Man kan ikke opprette testsaker i produksjon")
         }
 
         val identer = try {
@@ -59,23 +60,23 @@ class TestSakService(
             throw OpprettTestSakException("Fant ikke ident i PDL. Har man brukt en gyldig bruker fra Dolly?")
         }
 
-        val sakService = PersonOgSakService(
+        val personOgSakService = PersonOgSakService(
             identGateway,
+            apiInternGateway,
             personRepository,
             sakRepository
         )
 
-        val periode = Periode(
-            LocalDate.now(),
-            Tid.MAKS
-        )
-
-        val eksisterendeSaker = sakService.finnSakerFor(ident)
+        val eksisterendeSaker = personOgSakService.finnSakerFor(ident)
         if (eksisterendeSaker.isNotEmpty()) {
-            throw OpprettTestSakException("Det finnes allerede en eller flere saker for bruker ${ident.getMasked()}. Fant sak med saksnummer: ${eksisterendeSaker.first().saksnummer}. Vennligst bruk en annen testbruker eller gjenbruk den åpne saken.")
+            throw OpprettTestSakException(
+                "Det finnes allerede en eller flere saker for bruker ${ident.getMasked()}. " +
+                        "Fant sak med saksnummer: ${eksisterendeSaker.first().saksnummer}. " +
+                        "Vennligst bruk en annen testbruker eller gjenbruk den åpne saken."
+            )
         }
 
-        val sak = sakService.finnEllerOpprett(ident, periode)
+        val sak = personOgSakService.finnEllerOpprett(ident, LocalDate.now())
 
         val melding = SøknadV0(
             student = SøknadStudentDto(erStudent = erStudent.toJaNei()),

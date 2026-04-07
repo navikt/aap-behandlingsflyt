@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.repository.sak
 
 import io.opentelemetry.instrumentation.annotations.WithSpan
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Status
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
@@ -29,24 +30,27 @@ class SakRepositoryImpl(private val connection: DBConnection) : SakRepository {
     private val personRepository = PersonRepositoryImpl(connection)
 
     @WithSpan
-    override fun finnEllerOpprett(person: Person, periode: Periode): Sak {
-        val relevantesaker = finnSakerFor(person, periode)
+    override fun finnEllerOpprett(person: Person, søknadsdato: LocalDate): Sak {
+        val relevantesaker = finnRelevanteSaker(person)
 
         if (relevantesaker.isEmpty()) {
-            return opprett(person, Periode(periode.fom, Tid.MAKS))
+            return opprett(person, søknadsdato)
         }
 
-        return relevantesaker.first()
+        return relevantesaker
+            .firstOrNull { it.rettighetsperiode.inneholder(søknadsdato) }
+            ?: relevantesaker.first()
     }
 
     @WithSpan
-    private fun opprett(person: Person, periode: Periode): Sak {
+    private fun opprett(person: Person, søknadsdato: LocalDate): Sak {
         val sakId = connection.queryFirst("SELECT nextval('SEQ_SAKSNUMMER') as nextval") {
             setRowMapper { row ->
                 row.getLong("nextval")
             }
         }
         val saksnummer = Saksnummer.valueOf(sakId)
+        val periode = Periode(søknadsdato, Tid.MAKS)
         val keys = connection.executeReturnKey(
             """INSERT INTO SAK (saksnummer, person_id, rettighetsperiode, status) VALUES (?, ?, ?::daterange, ?)"""
         ) {
@@ -106,13 +110,25 @@ class SakRepositoryImpl(private val connection: DBConnection) : SakRepository {
         }
     }
 
-    private fun finnSakerFor(person: Person, periode: Periode): List<Sak> {
+    private fun finnRelevanteSaker(person: Person): List<Sak> {
         return connection.queryList(
-            """SELECT * FROM SAK WHERE person_id = ? AND rettighetsperiode && ?::daterange"""
+            """
+            select * from sak
+            where person_id = ? 
+            and not exists(
+                select true 
+                from behandling
+                join trukket_soknad_grunnlag on behandling.id = trukket_soknad_grunnlag.behandling_id
+                join trukket_soknad_vurderinger on trukket_soknad_grunnlag.vurderinger_id = trukket_soknad_vurderinger.id
+                join trukket_soknad_vurdering on trukket_soknad_vurderinger.id = trukket_soknad_vurdering.vurderinger_id
+                where trukket_soknad_grunnlag.aktiv
+                and trukket_soknad_vurdering.skal_trekkes
+                and sak.id = behandling.sak_id
+            )
+        """.trimIndent()
         ) {
             setParams {
                 setLong(1, person.id.id)
-                setPeriode(2, periode)
             }
             setRowMapper { row ->
                 mapSak(row)
@@ -199,35 +215,75 @@ class SakRepositoryImpl(private val connection: DBConnection) : SakRepository {
 
     override fun finnSakerMedFritakMeldeplikt(): List<SakId> {
         val sql = """
-            select s.id from sak s, behandling b where s.id = b.sak_id and  b.id in (
-                select g.behandling_id
-                from meldeplikt_fritak_grunnlag g, public.meldeplikt_fritak_vurdering v
-                where g.meldeplikt_id = v.meldeplikt_id and g.aktiv = true and g.id in (
-                    select id
-                    from meldeplikt_fritak_grunnlag
-                    where aktiv = true and behandling_id in (
-                        select id from behandling where id not in (
-                            select forrige_id from behandling where forrige_id is not null
-                        )
-                    )
-                )
-            )
+            select distinct gvb.sak_id as sak_id
+            from gjeldende_vedtatte_behandlinger gvb
+                join meldeplikt_fritak_grunnlag g on gvb.behandling_id = g.behandling_id
+                join meldeplikt_fritak_vurdering v on g.meldeplikt_id = v.meldeplikt_id
+            where g.aktiv = true and v.har_fritak = true;
         """.trimIndent()
 
         return connection.queryList(sql) {
             setRowMapper {
-                SakId(it.getLong("id"))
+                SakId(it.getLong("sak_id"))
             }
         }
     }
-    override fun finnSakerMedUtenRiktigSluttdatoPåRettighetsperiode(): List<Sak> {
+
+    override fun finnSakerMedInstitusjonsOpphold(): List<Sak> {
         val sql = """
-            select * from sak s
-            where upper(s.rettighetsperiode) < ?
+       select distinct
+    s.id,
+    s.person_id,
+    s.rettighetsperiode,
+    s.saksnummer,
+    s.status,
+    s.opprettet_tid
+from sak s
+         join behandling b on b.sak_id = s.id
+where not exists (
+    select 1
+    from behandling b_forrige
+    where b_forrige.forrige_id = b.id
+)
+  and exists (
+    select 1
+    from opphold_grunnlag g
+    where g.behandling_id = b.id
+      and g.aktiv = true
+      and (
+        g.helseopphold_vurderinger_id is null
+            or exists (
+            select 1
+            from helseopphold_vurderinger v
+            where v.id = g.helseopphold_vurderinger_id
+        )
+        )
+)
+  and exists (
+    select 1
+    from opphold o
+             join opphold_grunnlag g2 on g2.opphold_person_id = o.opphold_person_id
+    where g2.behandling_id = b.id
+)
         """.trimIndent()
 
         return connection.queryList(sql) {
-            setParams { setLocalDate(1, Tid.MAKS) }
+            setRowMapper { row -> mapSak(row) }
+        }
+    }
+
+    override fun finnSakerMedAvsluttedeBehandlingerUtenRiktigSluttdatoPåRettighetsperiode(): List<Sak> {
+        val sql = """
+            select * from sak s
+                where s.id not in (select sak_id from behandling where status not in ('AVSLUTTET', 'IVERKSETTES') and type = ANY(?::text[]))
+            AND upper(s.rettighetsperiode) < ? AND upper(rettighetsperiode)-lower(rettighetsperiode) > 1;
+        """.trimIndent()
+
+        return connection.queryList(sql) {
+            setParams {
+                setArray(1, listOf(TypeBehandling.Førstegangsbehandling, TypeBehandling.Revurdering).map { it.identifikator() })
+                setLocalDate(2, Tid.MAKS)
+            }
             setRowMapper { row -> mapSak(row) }
         }
     }

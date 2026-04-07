@@ -36,7 +36,9 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.tilgang.TilgangGateway
 import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
@@ -45,10 +47,10 @@ import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.httpklient.exception.IkkeTillattException
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
-import no.nav.aap.komponenter.verdityper.Bruker
-import no.nav.aap.komponenter.server.auth.bruker
 import no.nav.aap.komponenter.repository.RepositoryRegistry
+import no.nav.aap.komponenter.server.auth.bruker
 import no.nav.aap.komponenter.server.auth.token
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.motor.JobbStatus
@@ -82,6 +84,7 @@ fun NormalOpenAPIRoute.flytApi(
             ) { req ->
                 val dto = dataSource.transaction(readOnly = true) { connection ->
                     val repositoryProvider = repositoryRegistry.provider(connection)
+                    val sakRepository = repositoryProvider.provide<SakRepository>()
                     val resultatUtleder = ResultatUtleder(repositoryProvider)
                     val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
                     val vilkårsresultatRepository =
@@ -90,6 +93,7 @@ fun NormalOpenAPIRoute.flytApi(
                         repositoryProvider.provide<AvklaringsbehovRepository>()
 
                     var behandling = behandling(behandlingRepository, req)
+                    val sak = sakRepository.hent(behandling.sakId)
                     val avklaringsbehovene = avklaringsbehov(
                         avklaringsbehovRepository,
                         behandling.id
@@ -140,13 +144,14 @@ fun NormalOpenAPIRoute.flytApi(
                     val alleAvklaringsbehov = alleAvklaringsbehovInkludertFrivillige.alle()
                     val resultatKode = when {
                         ((behandling.typeBehandling() == TypeBehandling.Revurdering) && (resultatUtleder.utledResultatRevurderingsBehandling(
-                            behandling) == Resultat.AVBRUTT)) -> ResultatKode.AVBRUTT
+                            behandling
+                        ) == Resultat.AVBRUTT)) -> ResultatKode.AVBRUTT
 
                         else -> null
                     }
 
                     LoggingKontekst(
-                        repositoryProvider,
+                        repositoryProvider.provide(),
                         LogKontekst(referanse = BehandlingReferanse(req.referanse))
                     ).use {
                         val behandlingVersjon = behandling.versjon
@@ -156,7 +161,7 @@ fun NormalOpenAPIRoute.flytApi(
 
                     BehandlingFlytOgTilstandDto(
                         flyt = stegGrupper.map { (gruppe, steg) ->
-                            erFullført = erFullført && gruppe != aktivtSteg.gruppe
+                            erFullført = erFullført && erStegGruppeFullført(gruppe, aktivtSteg, behandling)
                             FlytGruppe(
                                 stegGruppe = gruppe,
                                 skalVises = gruppeVisningService.skalVises(gruppe, behandling.id),
@@ -172,9 +177,8 @@ fun NormalOpenAPIRoute.flytApi(
                                             }
                                             .map { behov ->
                                                 AvklaringsbehovDTO(
-                                                    behov.definisjon,
-                                                    behov.status(),
-                                                    emptyList()
+                                                    avklaringsbehov = behov,
+                                                    kravdato = sak.rettighetsperiode.fom,
                                                 )
                                             },
                                         vilkårDTO = hentUtRelevantVilkårForSteg(
@@ -243,7 +247,7 @@ fun NormalOpenAPIRoute.flytApi(
                 dataSource.transaction { connection ->
                     val repositoryProvider = repositoryRegistry.provider(connection)
                     LoggingKontekst(
-                        repositoryProvider,
+                        repositoryProvider.provide(),
                         LogKontekst(referanse = BehandlingReferanse(request.referanse))
                     ).use {
                         val behandlingRepository =
@@ -258,9 +262,15 @@ fun NormalOpenAPIRoute.flytApi(
                         )
                         val avklaringsbehovRepository =
                             repositoryProvider.provide<AvklaringsbehovRepository>()
-                        val behandlingId = behandling(behandlingRepository, request).id
-                        val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId)
-                        sjekkTilgangTilSettPåVent(avklaringsbehovene, tilgangGateway, request.referanse, token())
+                        val behandling = behandling(behandlingRepository, request)
+                        val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
+                        sjekkTilgangTilSettPåVent(
+                            avklaringsbehovene = avklaringsbehovene,
+                            behandling = behandling,
+                            tilgangGateway = tilgangGateway,
+                            token = token(),
+                            behandlingsreferanse = request.referanse,
+                        )
 
 
                         val taSkriveLåsRepository =
@@ -325,13 +335,26 @@ fun NormalOpenAPIRoute.flytApi(
     }
 }
 
+private fun erStegGruppeFullført(
+    gruppe: StegGruppe,
+    aktivtSteg: StegType,
+    behandling: Behandling
+): Boolean {
+    if (gruppe == aktivtSteg.gruppe) {
+        return behandling.aktivtStegTilstand().status() == StegStatus.AVSLUTTER
+    }
+    return true
+}
+
 private fun sjekkTilgangTilSettPåVent(
     avklaringsbehovene: Avklaringsbehovene,
+    behandling: Behandling,
     tilgangGateway: TilgangGateway,
+    token: OidcToken,
     behandlingsreferanse: UUID,
-    token: OidcToken
 ) {
-    val åpentAvklaringsbehov = avklaringsbehovene.åpne().first().definisjon
+    val åpentAvklaringsbehov = avklaringsbehovene.åpne().filterNot { it.erVentepunkt() }
+        .sortedWith(behandling.flyt().avklaringsbehovComparator).first().definisjon
     val harTilgang =
         tilgangGateway.sjekkTilgangTilBehandling(
             behandlingsreferanse,
@@ -445,10 +468,8 @@ private fun utledVisning(
     val visKvalitetssikringKort = utledVisningAvKvalitetsikrerKort(alleAvklaringsbehovInkludertFrivillige)
     val kvalitetssikringReadOnly = visKvalitetssikringKort && flyt.erStegFør(aktivtSteg, StegType.KVALITETSSIKRING)
     val visBrevkort =
-        alleAvklaringsbehovInkludertFrivillige.hentBehovForDefinisjon(Definisjon.SKRIV_BREV)?.erÅpent() == true
-                || alleAvklaringsbehovInkludertFrivillige.hentBehovForDefinisjon(Definisjon.SKRIV_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT_BREV)
-            ?.erÅpent() == true
-                || alleAvklaringsbehovInkludertFrivillige.hentBehovForDefinisjon(Definisjon.SKRIV_FORHÅNDSVARSEL_KLAGE_FORMKRAV_BREV)
+        alleAvklaringsbehovInkludertFrivillige.hentBehovForDefinisjon(Definisjon.SKRIV_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT_BREV)
+            ?.erÅpent() == true || alleAvklaringsbehovInkludertFrivillige.hentBehovForDefinisjon(Definisjon.SKRIV_FORHÅNDSVARSEL_KLAGE_FORMKRAV_BREV)
             ?.erÅpent() == true
 
     if (jobberEllerFeilet) {

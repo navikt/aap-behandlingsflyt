@@ -7,7 +7,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Relasjon
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.ErStudentStatus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.SkalGjenopptaStudieStatus
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.KommeTilbake
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.JaNeiVetIkke
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.AndreUtbetalingerDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ManueltOppgittBarn
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.StudentStatus
@@ -74,11 +74,11 @@ data class UbehandletSøknad(
         }
 
 
-        private fun skalGjennopptaStudie(kommeTilbake: KommeTilbake?): SkalGjenopptaStudieStatus {
-            return when (kommeTilbake) {
-                KommeTilbake.Ja -> SkalGjenopptaStudieStatus.JA
-                KommeTilbake.Nei -> SkalGjenopptaStudieStatus.NEI
-                KommeTilbake.VetIkke -> SkalGjenopptaStudieStatus.VET_IKKE
+        private fun skalGjennopptaStudie(jaNeiVetIkke: JaNeiVetIkke?): SkalGjenopptaStudieStatus {
+            return when (jaNeiVetIkke) {
+                JaNeiVetIkke.Ja -> SkalGjenopptaStudieStatus.JA
+                JaNeiVetIkke.Nei -> SkalGjenopptaStudieStatus.NEI
+                JaNeiVetIkke.VetIkke -> SkalGjenopptaStudieStatus.VET_IKKE
                 null -> SkalGjenopptaStudieStatus.IKKE_OPPGITT
             }
         }

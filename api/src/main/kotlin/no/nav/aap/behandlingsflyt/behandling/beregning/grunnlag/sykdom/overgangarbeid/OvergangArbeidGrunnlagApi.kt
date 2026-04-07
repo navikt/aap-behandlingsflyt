@@ -3,13 +3,15 @@ package no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.overgang
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
-import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovMetadataService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.sykdom.SykdomsvurderingResponse
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangarbeid.OvergangArbeidGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangarbeid.OvergangArbeidRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
+import no.nav.aap.behandlingsflyt.forretningsflyt.steg.OvergangArbeidSteg
+import no.nav.aap.behandlingsflyt.kanLøseBehovSomSkalVæreLåstEtterKvalitetssikring
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
@@ -23,7 +25,6 @@ import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.getGrunnlag
 import javax.sql.DataSource
-import kotlin.collections.orEmpty
 
 fun NormalOpenAPIRoute.overgangArbeidGrunnlagApi(
     dataSource: DataSource, repositoryRegistry: RepositoryRegistry,
@@ -45,6 +46,8 @@ fun NormalOpenAPIRoute.overgangArbeidGrunnlagApi(
                     val sykdomRepository = repositoryProvider.provide<SykdomRepository>()
                     val sakRepository = repositoryProvider.provide<SakRepository>()
                     val behandlingReferanseService = BehandlingReferanseService(behandlingRepository)
+                    val overgangArbeidSteg = OvergangArbeidSteg.konstruer(repositoryProvider, gatewayProvider)
+                    val avklaringsbehovMetadataService = AvklaringsbehovMetadataService(repositoryProvider, gatewayProvider)
 
                     val behandling = behandlingReferanseService.behandling(req)
                     val sak = sakRepository.hent(behandling.sakId)
@@ -53,11 +56,11 @@ fun NormalOpenAPIRoute.overgangArbeidGrunnlagApi(
                         ?.let { overgangArbeidRepository.hentHvisEksisterer(it) }
                         ?: OvergangArbeidGrunnlag(emptyList())
 
-                    val avklaringsbehov = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
-                    val perioderSomTrengerVurdering = avklaringsbehov.hentBehovForDefinisjon(Definisjon.AVKLAR_OVERGANG_ARBEID)?.perioderVedtaketBehøverVurdering().orEmpty()
+                    val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
+                    val perioderSomTrengerVurdering = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_OVERGANG_ARBEID)?.perioderVedtaketBehøverVurdering().orEmpty()
 
                     OvergangArbeidGrunnlagResponse(
-                        harTilgangTilÅSaksbehandle = kanSaksbehandle(),
+                        harTilgangTilÅSaksbehandle = kanSaksbehandle() && kanLøseBehovSomSkalVæreLåstEtterKvalitetssikring(Definisjon.AVKLAR_OVERGANG_ARBEID.løsesISteg,behandling),
                         sisteVedtatteVurderinger = OvergangArbeidVurderingResponse.fraDomene(
                             forrigeGrunnlag.gjeldendeVurderinger(),
                             vurdertAvService,
@@ -70,6 +73,10 @@ fun NormalOpenAPIRoute.overgangArbeidGrunnlagApi(
                         gjeldendeSykdsomsvurderinger = sykdomRepository.hentHvisEksisterer(behandling.id)
                             ?.gjeldendeSykdomsvurderinger().orEmpty()
                             .map { SykdomsvurderingResponse.fraDomene(it, vurdertAvService) },
+                        ikkeRelevantePerioder = avklaringsbehovMetadataService.perioderSomSkalFremhevesSomIkkeRelevant(
+                            overgangArbeidSteg,
+                            behandling,
+                        )
                     )
                 }
 

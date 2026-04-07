@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.kontrakt.hendelse
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import java.time.LocalDateTime
@@ -21,7 +22,7 @@ public data class BehandlingFlytStoppetHendelse(
     @Deprecated("Kan fjernes når oppgave har byttet til å bruke vurderingsbehov")
     val årsakerTilBehandling: List<String>,
     val vurderingsbehov: List<String>,
-    val årsakTilOpprettelse: String,
+    val årsakTilOpprettelse: ÅrsakTilOpprettelse,
     val status: Status,
     val aktivtSteg: StegType? = null,
     val avklaringsbehov: List<AvklaringsbehovHendelseDto>,

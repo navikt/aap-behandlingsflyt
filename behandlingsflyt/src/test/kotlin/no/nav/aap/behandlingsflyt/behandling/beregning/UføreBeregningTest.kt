@@ -1,5 +1,3 @@
-@file:Suppress("IDENTITY_SENSITIVE_OPERATIONS_WITH_VALUE_TYPE")
-
 package no.nav.aap.behandlingsflyt.behandling.beregning
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag11_19
@@ -28,15 +26,15 @@ class UføreBeregningTest {
                 1 januar 2021 to Prosent.`100_PROSENT`,
                 1 januar 2022 to Prosent.`30_PROSENT`
             ),
-            relevanteÅr = relevanteÅr(2020, 2021, 2022),
             inntektsPerioder = genererInntektsPerioder(
                 2022 to 0.7 * 5 * 109_784 / 12.0,
                 2021 to 0.7 * 5 * 104_716 / 12,
                 2020 to 0.7 * 5 * 100_853 / 12
-            )
+            ),
+            ytterligereNedsattDato = LocalDate.of(2023, 10, 1),
         )
 
-        val resultat = uføreBeregning.beregnUføre(Year.of(2023))
+        val resultat = uføreBeregning.beregnUføre()
 
         val uføreInntekt2021 = resultat.uføreInntekterFraForegåendeÅr().first { it.år == Year.of(2021) }
         val uføreInntekt2022 = resultat.uføreInntekterFraForegåendeÅr().first { it.år == Year.of(2022) }
@@ -53,15 +51,15 @@ class UføreBeregningTest {
         val uføreBeregning = UføreBeregning(
             grunnlag = elleveNittenGrunnlag(),
             uføregrader = uføreGrader(LocalDate.of(2017, 1, 1) to Prosent.`30_PROSENT`),
-            relevanteÅr = relevanteÅr(2020, 2021, 2022),
             inntektsPerioder = genererInntektsPerioder(
                 2022 to 0.7 * 5 * 109_784 / 12,
                 2021 to 0.7 * 5 * 104_716 / 12,
                 2020 to 0.7 * 5 * 100_853 / 12
-            )
+            ),
+            ytterligereNedsattDato= LocalDate.of(2023, 1, 1),
         )
 
-        val grunnlagUføre = uføreBeregning.beregnUføre(Year.of(2023))
+        val grunnlagUføre = uføreBeregning.beregnUføre()
 
         assertThat(grunnlagUføre.grunnlaget().verdi()).isCloseTo(BigDecimal(5), Percentage.withPercentage(0.001))
         assertThat(grunnlagUføre.type()).isEqualTo(GrunnlagUføre.Type.YTTERLIGERE_NEDSATT)
@@ -75,15 +73,15 @@ class UføreBeregningTest {
         val uføreBeregning = UføreBeregning(
             grunnlag = elleveNittenGrunnlag(6),
             uføregrader = uføreGrader(LocalDate.of(2019, 7, 1) to Prosent.`30_PROSENT`),
-            relevanteÅr = relevanteÅr(2020, 2021, 2022),
             inntektsPerioder = genererInntektsPerioder(
                 2022 to 200_000 / 12,
                 2021 to 300_000 / 12,
                 2020 to 400_000 / 12
-            )
+            ),
+            ytterligereNedsattDato = LocalDate.of(2023, 1, 1),
         )
 
-        val grunnlagUføre = uføreBeregning.beregnUføre(Year.of(2023))
+        val grunnlagUføre = uføreBeregning.beregnUføre()
 
         assertThat(grunnlagUføre.grunnlaget()).isEqualTo(GUnit(6))
         assertThat(grunnlagUføre.type()).isEqualTo(GrunnlagUføre.Type.STANDARD)
@@ -94,16 +92,16 @@ class UføreBeregningTest {
         val uføreBeregning = UføreBeregning(
             grunnlag = elleveNittenGrunnlag(2),
             uføregrader = uføreGrader(LocalDate.of(2022, 7, 1) to Prosent.`50_PROSENT`),
-            relevanteÅr = relevanteÅr(2020, 2021, 2022),
             inntektsPerioder = genererInntektsPerioder(
                 // Månedsinntekt på 20_000
                 2022 to 20_000,
                 2021 to 20_000,
                 2020 to 20_000
-            )
+            ),
+            ytterligereNedsattDato = LocalDate.of(2023, 8, 4),
         )
 
-        val grunnlagUføre = uføreBeregning.beregnUføre(Year.of(2023))
+        val grunnlagUføre = uføreBeregning.beregnUføre()
 
         assertThat(grunnlagUføre.type()).isEqualTo(GrunnlagUføre.Type.YTTERLIGERE_NEDSATT)
         val uføreInntekterFra2022 = grunnlagUføre.uføreInntekterFraForegåendeÅr().first { it.år == Year.of(2022) }
@@ -120,15 +118,15 @@ class UføreBeregningTest {
                 LocalDate.of(2022, 7, 1) to Prosent.`50_PROSENT`,
                 LocalDate.of(2021, 2, 1) to Prosent(80)
             ),
-            relevanteÅr = relevanteÅr(2020, 2021, 2022),
             inntektsPerioder = genererInntektsPerioder(
                 2022 to 10_000,
                 2021 to 5_000,
                 2020 to 20_000
-            )
+            ),
+            ytterligereNedsattDato = LocalDate.of(2023, 4, 2),
         )
 
-        val grunnlagUføre = uføreBeregning.beregnUføre(Year.of(2023))
+        val grunnlagUføre = uføreBeregning.beregnUføre()
 
         // 6 mnd 50% uføre, 6 mnd 80% uføre
         val uføreInntekterFraForegåendeÅr = grunnlagUføre.uføreInntekterFraForegåendeÅr()
@@ -154,26 +152,47 @@ class UføreBeregningTest {
                 LocalDate.of(2020, 1, 1) to Prosent.`50_PROSENT`,
                 LocalDate.of(2022, 7, 1) to Prosent.`0_PROSENT`
             ),
-            relevanteÅr = relevanteÅr(2020, 2021, 2022),
             inntektsPerioder =
                 genererInntektsPerioder(
                     2022 to 10_000,
                     2021 to 15_000,
                     2020 to 20_000
                 ),
+            ytterligereNedsattDato = LocalDate.of(2023, 4, 9),
         )
 
-        val grunnlag = uføreBeregning.beregnUføre(Year.of(2023))
+        val grunnlag = uføreBeregning.beregnUføre()
 
         val uføreInntekt2022 = grunnlag.uføreInntekterFraForegåendeÅr().first { it.år == Year.of(2022) }
 
         assertThat(uføreInntekt2022.inntektIKroner.verdi.toDouble()).isEqualTo(10_000 * 12.0)
         // Halve året skal oppjusteres med uføregraden
         assertThat(uføreInntekt2022.inntektJustertForUføregrad.verdi.toDouble()).isEqualTo(10_000 * 6 + 10_000 * 6 / 0.5)
-
     }
 
-    private fun relevanteÅr(vararg år: Int): Set<Year> = år.map(Year::of).toSet()
+    @Test
+    fun `manglende inntekt fra A-inntekt tolkes som null kroner`() {
+        // https://nav-it.slack.com/archives/C08PX5Z14ER/p1770790411910569?thread_ts=1770729919.721449&cid=C08PX5Z14ER
+        val uføreBeregning = UføreBeregning(
+            grunnlag = elleveNittenGrunnlag(0),
+            uføregrader = uføreGrader(
+                LocalDate.of(2020, 1, 1) to Prosent.`0_PROSENT`,
+                LocalDate.of(2022, 7, 1) to Prosent.`50_PROSENT`
+            ),
+            inntektsPerioder = emptySet(),
+            ytterligereNedsattDato = LocalDate.of(2023, 8, 4),
+        )
+
+        val grunnlag = uføreBeregning.beregnUføre()
+
+        assertThat(grunnlag.grunnlaget()).isEqualTo(GUnit(0))
+
+        val uføreInntekt2022 = grunnlag.uføreInntekterFraForegåendeÅr().first { it.år == Year.of(2022) }
+
+        assertThat(uføreInntekt2022.inntektIKroner.verdi.toDouble()).isEqualTo(0.0)
+        // Halve året skal oppjusteres med uføregraden
+        assertThat(uføreInntekt2022.inntektJustertForUføregrad.verdi.toDouble()).isEqualTo(0.0)
+    }
 
     private fun uføreGrader(vararg gradering: Pair<LocalDate, Prosent>): Set<Uføre> {
         return gradering.map { (virkningstidspunkt, uføregrad) ->
@@ -192,8 +211,8 @@ class UføreBeregningTest {
     )
 
     private fun genererInntektsPerioder(vararg månedsInntektPerÅr: Pair<Int, Number>): Set<Månedsinntekt> {
-        return månedsInntektPerÅr.toList().map { (år, beløp) -> oppsplittetInntekt(år, Beløp(beløp.toDouble().toBigDecimal())) }
-            .flatten().toSet()
+        return månedsInntektPerÅr.toList()
+            .flatMap { (år, beløp) -> oppsplittetInntekt(år, Beløp(beløp.toDouble().toBigDecimal())) }.toSet()
     }
 
     private fun oppsplittetInntekt(år: Int, månedsInntekt: Beløp): List<Månedsinntekt> {

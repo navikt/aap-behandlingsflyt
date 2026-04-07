@@ -34,7 +34,7 @@ fun NormalOpenAPIRoute.mellomlagretVurderingApi(
     gatewayProvider: GatewayProvider
 ) {
     route("/api/behandling").tag(Tags.Behandling) {
-        route("/mellomlagret-vurdering") {
+        route("/mellomlagret-vurdering/{referanse}") {
             authorizedPost<Unit, MellomlagretVurderingResponse, MellomlagretVurderingRequest>(
                 AuthorizationBodyPathConfig(
                     operasjon = Operasjon.SAKSBEHANDLE,
@@ -50,7 +50,7 @@ fun NormalOpenAPIRoute.mellomlagretVurderingApi(
                     val behandling = behandlingRepository.hent(referanse)
 
                     LoggingKontekst(
-                        repositoryProvider,
+                        repositoryProvider.provide(),
                         LogKontekst(referanse = referanse)
                     ).use {
                         if (behandling.status().erAvsluttet()) {
@@ -73,9 +73,11 @@ fun NormalOpenAPIRoute.mellomlagretVurderingApi(
                         )
                     }
                 }
+
                 respond(response)
             }
         }
+
         route("/mellomlagret-vurdering/{referanse}/{avklaringsbehovkode}") {
             authorizedGet<BehandlingReferanseMedAvklaringsbehov, MellomlagretVurderingResponse>(
                 AuthorizationParamPathConfig(
@@ -91,7 +93,7 @@ fun NormalOpenAPIRoute.mellomlagretVurderingApi(
                     val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
                     val behandling = behandlingRepository.hent(behandlingsreferanse)
                     LoggingKontekst(
-                        repositoryProvider,
+                        repositoryProvider.provide(),
                         LogKontekst(referanse = behandlingsreferanse)
                     ).use {
                         val mellomlagretVurdering = mellomlagretVurderingRepository.hentHvisEksisterer(
@@ -122,7 +124,7 @@ fun NormalOpenAPIRoute.mellomlagretVurderingApi(
                     val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
                     val behandling = behandlingRepository.hent(behandlingsreferanse)
                     LoggingKontekst(
-                        repositoryProvider,
+                        repositoryProvider.provide(),
                         LogKontekst(referanse = behandlingsreferanse)
                     ).use {
                         mellomlagretVurderingRepository.slett(

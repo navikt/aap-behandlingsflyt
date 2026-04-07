@@ -116,6 +116,7 @@ enum class Utfall {
         fun fraOmgjøringsUtfall(omgjøringsUtfall: OmgjoeringsUtfall): Utfall {
             return when (omgjøringsUtfall) {
                 OmgjoeringsUtfall.MEDHOLD_ETTER_FVL_35 -> MEDHOLD_ETTER_FVL_35
+                OmgjoeringsUtfall.UGUNST -> UGUNST
             }
         }
     }

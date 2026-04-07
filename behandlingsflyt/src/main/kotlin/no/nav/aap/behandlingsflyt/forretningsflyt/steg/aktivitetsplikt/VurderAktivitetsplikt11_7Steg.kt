@@ -47,7 +47,6 @@ class VurderAktivitetsplikt11_7Steg(
             avklaringsbehovene.hentBehovForDefinisjon(Definisjon.VENTE_PÅ_FRIST_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT)
 
         avklaringsbehovService.oppdaterAvklaringsbehov(
-            avklaringsbehovene = avklaringsbehovene,
             definisjon = Definisjon.VURDER_BRUDD_11_7,
             vedtakBehøverVurdering = { vedtakBehøver11_7Vurdering(kontekst) },
             erTilstrekkeligVurdert = { er11_7TilstrekkeligVurdert(kontekst, vurderingForBehandling, venteBehov) },
@@ -56,7 +55,6 @@ class VurderAktivitetsplikt11_7Steg(
         )
 
         avklaringsbehovService.oppdaterAvklaringsbehov(
-            avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId),
             definisjon = Definisjon.SKRIV_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT_BREV,
             vedtakBehøverVurdering = { vedtakBehøverForhåndsvarselVurdering(vurderingForBehandling, kontekst) },
             erTilstrekkeligVurdert = { erForhåndsvarselTilstrekkeligVurdert(kontekst) },
@@ -143,7 +141,7 @@ class VurderAktivitetsplikt11_7Steg(
             return false
         } else if (vurderingForBehandling.erOppfylt) {
             return true
-        } else if (erTattAvVentFørFristenPåForhåndsvarsel(kontekst, vurderingForBehandling, venteBehov)) {
+        } else if (erForhåndsvarselTilstrekkeligVurdert(kontekst)  && erTattAvVentFørFristenPåForhåndsvarsel(kontekst, vurderingForBehandling, venteBehov)) {
             return false
         }
         return true

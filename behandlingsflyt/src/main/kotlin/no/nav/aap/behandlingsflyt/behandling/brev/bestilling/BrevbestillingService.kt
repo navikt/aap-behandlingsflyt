@@ -12,8 +12,10 @@ import no.nav.aap.brev.kontrakt.MottakerDto
 import no.nav.aap.brev.kontrakt.Vedlegg
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
+import no.nav.aap.komponenter.httpklient.exception.VerdiIkkeFunnetException
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.lookup.repository.RepositoryProvider
+import org.slf4j.LoggerFactory
 import java.util.*
 
 class BrevbestillingService(
@@ -24,12 +26,14 @@ class BrevbestillingService(
     private val sakRepository: SakRepository,
 ) {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
-        signaturService = SignaturService(repositoryProvider),
+        signaturService = SignaturService(repositoryProvider, gatewayProvider),
         brevbestillingGateway = gatewayProvider.provide(),
         brevbestillingRepository = repositoryProvider.provide(),
         behandlingRepository = repositoryProvider.provide(),
-        sakRepository = repositoryProvider.provide(),
+        sakRepository = repositoryProvider.provide()
     )
+
+    private val log = LoggerFactory.getLogger(javaClass)
 
     fun harBestillingOmVedtak(behandlingId: BehandlingId): Boolean {
         return brevbestillingRepository.hent(behandlingId).any { it.typeBrev.erVedtak() }
@@ -73,6 +77,11 @@ class BrevbestillingService(
             ferdigstillAutomatisk = ferdigstillAutomatisk,
             brukApiV3 = brukApiV3,
         )
+        val alleredeLagretBestilling = brevbestillingRepository.hent(bestillingReferanse)
+        if (alleredeLagretBestilling != null) {
+            log.warn("Bestilling med referanse $bestillingReferanse er allerede lagret.")
+            return bestillingReferanse.brevbestillingReferanse
+        }
 
         val status = if (ferdigstillAutomatisk) {
             Status.FULLFØRT
@@ -112,6 +121,7 @@ class BrevbestillingService(
         mottakere: List<MottakerDto> = emptyList()
     ) {
         val brevbestilling = brevbestillingRepository.hent(brevbestillingReferanse)
+            ?: throw VerdiIkkeFunnetException("Fant ikke brevbestilling med referanse $brevbestillingReferanse")
         val signaturer = signaturService.finnSignaturGrunnlag(brevbestilling, bruker)
         val ferdigstilt = brevbestillingGateway.ferdigstill(brevbestillingReferanse, signaturer, mottakere)
         if (!ferdigstilt) {

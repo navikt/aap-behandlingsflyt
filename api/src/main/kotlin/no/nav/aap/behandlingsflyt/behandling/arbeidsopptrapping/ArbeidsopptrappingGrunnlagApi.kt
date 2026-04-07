@@ -10,6 +10,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandGru
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
+import no.nav.aap.behandlingsflyt.kanLøseBehovSomSkalVæreLåstEtterKvalitetssikring
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
@@ -28,8 +29,6 @@ import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.getGrunnlag
 import java.time.LocalDate
 import javax.sql.DataSource
-import kotlin.collections.map
-import kotlin.collections.orEmpty
 
 fun NormalOpenAPIRoute.arbeidsopptrappingGrunnlagApi(
     dataSource: DataSource,
@@ -67,7 +66,7 @@ fun NormalOpenAPIRoute.arbeidsopptrappingGrunnlagApi(
                             ?: ArbeidsopptrappingGrunnlag(emptyList())
 
                     ArbeidsopptrappingGrunnlagResponse(
-                        harTilgangTilÅSaksbehandle = kanSaksbehandle(),
+                        harTilgangTilÅSaksbehandle = kanSaksbehandle() && kanLøseBehovSomSkalVæreLåstEtterKvalitetssikring(Definisjon.ARBEIDSOPPTRAPPING.løsesISteg, behandling),
                         sisteVedtatteVurderinger = ArbeidsopptrappingVurderingResponse.fraDomene(
                             forrigeGrunnlag.gjeldendeVurderinger(),
                             vurdertAvService
@@ -77,7 +76,12 @@ fun NormalOpenAPIRoute.arbeidsopptrappingGrunnlagApi(
                             .map { ArbeidsopptrappingVurderingResponse.fraDomene(it, vurdertAvService) },
                         kanVurderes = listOf(sak.rettighetsperiode),
                         behøverVurderinger = listOf(),
-                        ikkeVurderbarePerioder = ikkeVurderbarePerioder
+                        ikkeVurderbarePerioder = ikkeVurderbarePerioder,
+                        kvalitetssikretAv = vurdertAvService.kvalitetssikretAv(
+                            Definisjon.ARBEIDSOPPTRAPPING,
+                            behandling.id
+                        ),
+                        ikkeRelevantePerioder = emptyList(/* Avklaringsbehovet er frivillig, så vi har ikke denne opplysningen lett tilgjengelig. */),
                     )
                 }
 

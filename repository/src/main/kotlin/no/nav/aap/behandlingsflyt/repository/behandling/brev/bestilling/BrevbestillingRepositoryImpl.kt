@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.repository.behandling.brev.bestilling
 
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.*
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.dbconnect.DBConnection
@@ -54,7 +55,7 @@ class BrevbestillingRepositoryImpl(private val connection: DBConnection) :
         }
     }
 
-    override fun hent(brevbestillingReferanse: BrevbestillingReferanse): Brevbestilling {
+    override fun hent(brevbestillingReferanse: BrevbestillingReferanse): Brevbestilling? {
         val query =
             """
                 SELECT *
@@ -62,11 +63,28 @@ class BrevbestillingRepositoryImpl(private val connection: DBConnection) :
                 WHERE REFERANSE = ?
             """.trimIndent()
 
-        return connection.queryFirst(query) {
+        return connection.queryFirstOrNull(query) {
             setParams {
                 setUUID(1, brevbestillingReferanse.brevbestillingReferanse)
             }
             setRowMapper { rowMapper(it) }
+        }
+    }
+
+    override fun hentBehandlingsreferanseForBestilling(referanse: BrevbestillingReferanse): BehandlingReferanse {
+        val query =
+            """
+                SELECT b.referanse as behandling_referanse
+                FROM BEHANDLING b
+                inner join BREVBESTILLING bb on bb.behandling_id = b.id
+                WHERE bb.referanse = ?
+            """.trimIndent()
+
+        return connection.queryFirst(query) {
+            setParams {
+                setUUID(1, referanse.brevbestillingReferanse)
+            }
+            setRowMapper { row -> BehandlingReferanse(row.getUUID("behandling_referanse")) }
         }
     }
 

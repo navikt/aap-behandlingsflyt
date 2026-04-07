@@ -1,0 +1,41 @@
+package no.nav.aap.behandlingsflyt.kontrakt.behandling
+
+public enum class ÅrsakTilOpprettelse {
+    SØKNAD,
+    MANUELL_OPPRETTELSE,
+    HELSEOPPLYSNINGER,
+    ANNET_RELEVANT_DOKUMENT,
+    OMGJØRING_ETTER_KLAGE,
+    OMGJØRING_ETTER_SVAR_FRA_KLAGEINSTANS,
+    ENDRING_I_REGISTERDATA,
+
+    // Satsjustering
+    BARNETILLEGG_SATSENDRING,
+
+    // Meldeperioder og aktivitet
+    FASTSATT_PERIODE_PASSERT,
+    FRITAK_MELDEPLIKT,
+    MELDEKORT,
+    AKTIVITETSMELDING,
+    UTVID_VEDTAKSLENGDE,
+    MIGRER_RETTIGHETSPERIODE,
+
+    // Oppfølgingsbehandling
+    OPPFØLGINGSOPPGAVE,
+    OPPFØLGINGSOPPGAVE_SAMORDNING_GRADERING,
+
+    // Klage-behandling
+    SVAR_FRA_KLAGEINSTANS,
+    KLAGE,
+
+    // Aktivitetsplikt
+    AKTIVITETSPLIKT, // 11-7
+    AKTIVITETSPLIKT_11_9,
+
+    // Tilbakekreving
+    TILBAKEKREVING_HENDELSE,
+    FAGSYSTEMINFO_BEHOV_HENDELSE,
+
+    // Udefinert
+    UDEFINERT
+}

@@ -4,7 +4,8 @@ import no.nav.aap.behandlingsflyt.flyt.testutil.FakeBrevbestillingGateway
 import no.nav.aap.behandlingsflyt.flyt.testutil.FakeEregGateway
 import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
-import no.nav.aap.behandlingsflyt.test.FakeUnleash
+import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
+import no.nav.aap.behandlingsflyt.test.FakeOppgavestyringGateway
 import no.nav.aap.behandlingsflyt.test.MockConnection
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.assertj.core.api.Assertions
@@ -26,9 +27,10 @@ internal class AvklaringsbehovsLøserTest {
                 con.call(
                     repositoryProvider,
                     createGatewayProvider {
-                        register<FakeUnleash>()
+                        register<AlleAvskruddUnleash>()
                         register<FakeBrevbestillingGateway>()
                         register<FakeEregGateway>()
+                        register<FakeOppgavestyringGateway>()
                     }
                 ).forBehov()
             }

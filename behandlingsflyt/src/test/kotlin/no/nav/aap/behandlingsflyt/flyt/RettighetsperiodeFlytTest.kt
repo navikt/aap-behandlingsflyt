@@ -11,7 +11,6 @@ import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companio
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.ÅrMedHverdager
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.EØSLandEllerLandMedAvtale
 import no.nav.aap.behandlingsflyt.drift.Driftfunksjoner
-import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
@@ -27,33 +26,43 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
-import no.nav.aap.behandlingsflyt.prosessering.OpprettBehandlingMigrerRettighetsperiodeJobbUtfører
 import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingService
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.tilkjentytelse.TilkjentYtelseRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.underveis.UnderveisRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
-import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
-import no.nav.aap.behandlingsflyt.test.FakeUnleash
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.tidslinje.somTidslinje
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Beløp
+import no.nav.aap.komponenter.verdityper.Prosent.Companion.`0_PROSENT`
+import no.nav.aap.komponenter.verdityper.Prosent.Companion.`100_PROSENT`
 import no.nav.aap.komponenter.verdityper.Tid
-import no.nav.aap.motor.JobbInput
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import org.junit.jupiter.params.ParameterizedClass
+import org.junit.jupiter.params.provider.MethodSource
+import java.math.BigDecimal
 import java.time.LocalDate
+import kotlin.reflect.KClass
 
-class RettighetsperiodeFlytTest() : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
+
+@ParameterizedClass
+@MethodSource("unleashTestDataSource")
+class RettighetsperiodeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
+    AbstraktFlytOrkestratorTest(unleashGateway) {
 
     @Test
     fun `Skal ikke kunne overstyre rettighetsperioden på en revurdering ved å innskrenke fra søknadsdato`() {
@@ -90,6 +99,7 @@ class RettighetsperiodeFlytTest() : AbstraktFlytOrkestratorTest(FakeUnleash::cla
             .løsSykdom(førsteOverstyring)
             .løsBistand(førsteOverstyring)
             .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
             .løsBeregningstidspunkt(LocalDate.now())
             .løsOppholdskrav(førsteOverstyring)
             .løsUtenSamordning()
@@ -115,9 +125,6 @@ class RettighetsperiodeFlytTest() : AbstraktFlytOrkestratorTest(FakeUnleash::cla
                 assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
             }
             .løsRettighetsperiode(andreOverstyring)
-            .løsSykdom(sak.rettighetsperiode.fom)
-            .løsBistand(sak.rettighetsperiode.fom)
-            .løsSykdomsvurderingBrev()
             .løsBeregningstidspunkt(LocalDate.now())
             .løsUtenSamordning()
             .løsAndreStatligeYtelser()
@@ -160,6 +167,7 @@ class RettighetsperiodeFlytTest() : AbstraktFlytOrkestratorTest(FakeUnleash::cla
             .løsSykdom(nyStartDato)
             .løsBistand(nyStartDato)
             .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
             .løsBeregningstidspunkt(nyStartDato)
             .løsOppholdskrav(nyStartDato)
             .løsUtenSamordning()
@@ -204,7 +212,8 @@ class RettighetsperiodeFlytTest() : AbstraktFlytOrkestratorTest(FakeUnleash::cla
             .løsBistand(sak.rettighetsperiode.fom)
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
-            .kvalitetssikreOk()
+            .bekreftVurderinger()
+            .kvalitetssikre()
             .løsBeregningstidspunkt()
             .løsForutgåendeMedlemskap(sak.rettighetsperiode.fom)
             .løsOppholdskrav(sak.rettighetsperiode.fom)
@@ -240,6 +249,7 @@ class RettighetsperiodeFlytTest() : AbstraktFlytOrkestratorTest(FakeUnleash::cla
             .løsSykdom(nyStartDato)
             .løsBistand(nyStartDato)
             .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
             .løsBeregningstidspunkt()
             .løsForutgåendeMedlemskap(nyStartDato)
             .løsOppholdskrav(nyStartDato)
@@ -297,7 +307,8 @@ class RettighetsperiodeFlytTest() : AbstraktFlytOrkestratorTest(FakeUnleash::cla
             .løsBistand(sak.rettighetsperiode.fom)
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
-            .kvalitetssikreOk()
+            .bekreftVurderinger()
+            .kvalitetssikre()
 
         var oppdatertBehandling = sak.opprettManuellRevurdering(
             listOf(Vurderingsbehov.VURDER_RETTIGHETSPERIODE),
@@ -316,6 +327,30 @@ class RettighetsperiodeFlytTest() : AbstraktFlytOrkestratorTest(FakeUnleash::cla
             }
             .løsSykdom(nyStartDato)
             .løsBistand(nyStartDato)
+            .medKontekst {
+                val åpneAvklaringsbehov = hentÅpneAvklaringsbehov(oppdatertBehandling.id)
+                assertThat(åpneAvklaringsbehov).hasSize(2)
+                assertThat(åpneAvklaringsbehov).anySatisfy {
+                    assertThat(it.definisjon).isEqualTo(Definisjon.SKRIV_SYKDOMSVURDERING_BREV)
+                }
+
+            }
+            .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
+            .medKontekst {
+                val åpneAvklaringsbehov = hentÅpneAvklaringsbehov(oppdatertBehandling.id)
+                if (unleashGateway.objectInstance?.isEnabled(BehandlingsflytFeature.KvalitetssikringVed2213) == true) {
+                    assertThat(åpneAvklaringsbehov).hasSize(2)
+                    assertThat(åpneAvklaringsbehov).anySatisfy {
+                        assertThat(it.definisjon).isEqualTo(Definisjon.KVALITETSSIKRING)
+                    }
+                } else {
+                    assertThat(åpneAvklaringsbehov).hasSize(1)
+                    assertThat(åpneAvklaringsbehov.first().definisjon).isEqualTo(Definisjon.FASTSETT_BEREGNINGSTIDSPUNKT)
+                }
+            }
+            .bekreftVurderinger()
+            .kvalitetssikre()
             .løsBeregningstidspunkt(nyStartDato)
             .løsOppholdskrav(nyStartDato)
             .løsAndreStatligeYtelser()
@@ -344,6 +379,77 @@ class RettighetsperiodeFlytTest() : AbstraktFlytOrkestratorTest(FakeUnleash::cla
     }
 
     @Test
+    fun `Når rettighetsperioden flyttes tilbake etter innlevert meldekort skal Kelvin utbetale samme beløp for meldeperioden som er delvis levert`() {
+
+        val søknadsdato = LocalDate.of(2026, 1, 8) // Torsdag
+        val justertDato = LocalDate.of(2026, 1, 7) // Onsdag - utvides i samme meldeperiode
+
+        val sak = happyCaseFørstegangsbehandling(søknadsdato, sendMeldekort = true)
+
+        val (underveisGrunnlagFørEndring, tilkjentYtelseFørEndring) = dataSource.transaction {
+            val repositoryProvider = postgresRepositoryRegistry.provider(it)
+            val behandlingService = BehandlingService(repositoryProvider, gatewayProvider)
+            val behandling = behandlingService.finnSisteYtelsesbehandlingFor(sak.id) ?: error("Fant ikke behandling")
+            val underveisGrunnlag = UnderveisRepositoryImpl(it).hent(behandling.id)
+            val tilkjentYtelse = TilkjentYtelseRepositoryImpl(it).hentHvisEksisterer(behandling.id) ?: error("Fant ikke tilkjent ytelse")
+            Pair(underveisGrunnlag, tilkjentYtelse)
+        }
+
+        val underveisPeriodeForUkjentDatoFørEndring = underveisGrunnlagFørEndring.perioder.find { it.periode.inneholder(justertDato) }
+        val underveisPeriodeForSøknadsdatoFørEndring = underveisGrunnlagFørEndring.perioder.find { it.periode.inneholder(søknadsdato) } ?: error("Fant ikke underveisperiode for søknadstidspunkt")
+        assertThat(underveisPeriodeForUkjentDatoFørEndring).isNull()
+        assertThat(underveisPeriodeForSøknadsdatoFørEndring.arbeidsgradering.andelArbeid).isEqualTo(`0_PROSENT`)
+        assertThat(underveisPeriodeForSøknadsdatoFørEndring.arbeidsgradering.gradering).isEqualTo(`100_PROSENT`)
+
+        val tilkjentPeriodeForUkjentDatoFørEndring = tilkjentYtelseFørEndring.find { it.periode.inneholder(justertDato) }
+        val tilkjentPeriodeForSøknadsdatoFørEndring = tilkjentYtelseFørEndring.find { it.periode.inneholder(søknadsdato) } ?: error("Fant ikke tilkjentperiode for søknadstidspunkt")
+        assertThat(tilkjentPeriodeForUkjentDatoFørEndring).isNull()
+        assertThat(tilkjentPeriodeForSøknadsdatoFørEndring.tilkjent.redusertDagsats().verdi).isGreaterThan(BigDecimal.ZERO)
+
+        val avklaringsbehovManuellRevurdering =
+            listOf(Vurderingsbehov.VURDER_RETTIGHETSPERIODE)
+        val revurdering = sak.opprettManuellRevurdering(avklaringsbehovManuellRevurdering)
+            .medKontekst {
+                assertThat(this.behandling.typeBehandling()).isEqualTo(TypeBehandling.Revurdering)
+                assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
+            }.løsRettighetsperiode(justertDato)
+            .løsSykdom(justertDato)
+            .løsBistand(justertDato)
+            .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
+            .løsBeregningstidspunkt(LocalDate.now())
+            .løsOppholdskrav(justertDato)
+            .løsUtenSamordning()
+            .løsAndreStatligeYtelser()
+            .løsAvklaringsBehov(ForeslåVedtakLøsning())
+            .fattVedtak()
+            .løsVedtaksbrev(TypeBrev.VEDTAK_ENDRING)
+
+        val (underveisGrunnlag, tilkjentYtelse) = dataSource.transaction {
+            val repositoryProvider = postgresRepositoryRegistry.provider(it)
+            val behandlingService = BehandlingService(repositoryProvider, gatewayProvider)
+            val behandling = behandlingService.finnSisteYtelsesbehandlingFor(sak.id) ?: error("Fant ikke behandling")
+            val underveisGrunnlag = UnderveisRepositoryImpl(it).hent(revurdering.id)
+            val tilkjentYtelse = TilkjentYtelseRepositoryImpl(it).hentHvisEksisterer(revurdering.id) ?: error("Fant ikke tilkjent ytelse")
+            Pair(underveisGrunnlag, tilkjentYtelse)
+        }
+
+        val underveisPeriodeForUkjentDato = underveisGrunnlag.perioder.find { it.periode.inneholder(justertDato) } ?: error("Fant ikke underveisperiode for nytt starttidspunkt")
+        val underveisPeriodeForSøknadsdato = underveisGrunnlag.perioder.find { it.periode.inneholder(søknadsdato) } ?: error("Fant ikke underveisperiode for søknadstidspunkt")
+        assertThat(underveisPeriodeForUkjentDato.arbeidsgradering.andelArbeid).isEqualTo(`100_PROSENT`)
+        assertThat(underveisPeriodeForUkjentDato.arbeidsgradering.gradering).isEqualTo(`0_PROSENT`)
+        assertThat(underveisPeriodeForSøknadsdato.arbeidsgradering.andelArbeid).isEqualTo(`0_PROSENT`)
+        assertThat(underveisPeriodeForSøknadsdato.arbeidsgradering.gradering).isEqualTo(`100_PROSENT`)
+
+        val tilkjentPeriodeForUkjentDato = tilkjentYtelse.find { it.periode.inneholder(justertDato) }?: error("Fant ikke tilkjentperiode for nytt starttidspunkt")
+        val tilkjentPeriodeForSøknadsdato = tilkjentYtelse.find { it.periode.inneholder(søknadsdato) } ?: error("Fant ikke tilkjentperiode for søknadstidspunkt")
+        assertThat(tilkjentPeriodeForUkjentDato.tilkjent.redusertDagsats().verdi).isEqualTo(Beløp(0).verdi)
+        assertThat(tilkjentPeriodeForSøknadsdato.tilkjent.redusertDagsats().verdi).isGreaterThan(Beløp(0).verdi)
+
+    }
+
+
+    @Test
     fun `Skal kunne migrere rettighetsperioden automatisk og utvide vilkårslengden`() {
         /**
          * Begrenser rettighetsperioden til 1 år for å simulere eksisterende behandlinger fra tidligere
@@ -359,7 +465,8 @@ class RettighetsperiodeFlytTest() : AbstraktFlytOrkestratorTest(FakeUnleash::cla
             .løsBistand(startDato)
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
-            .kvalitetssikreOk()
+            .bekreftVurderinger()
+            .kvalitetssikre()
             .løsBeregningstidspunkt(startDato)
             .løsOppholdskrav(startDato)
             .løsAndreStatligeYtelser()
@@ -402,6 +509,108 @@ class RettighetsperiodeFlytTest() : AbstraktFlytOrkestratorTest(FakeUnleash::cla
     }
 
     @Test
+    fun `Skal kunne migrere rettighetsperioden manuelt og utvide vilkårslengden for en åpen førstegangsbehandling uten å endre avklaringsbehovene`() {
+        /**
+         * Begrenser rettighetsperioden til 1 år for å simulere eksisterende behandlinger fra tidligere
+         */
+        val gammelRettighetsperiode = Periode(LocalDate.now(), LocalDate.now().plusMonths(12).minusDays(1))
+        val (midlertidigSak, behandling) = sendInnFørsteSøknad()
+        settRettighetsperiodeOgRekjørFraStart(midlertidigSak, gammelRettighetsperiode, behandling)
+        val sak = hentSak(behandling)
+        val startDato = sak.rettighetsperiode.fom
+
+        behandling
+            .løsSykdom(startDato)
+            .løsBistand(startDato)
+            .løsRefusjonskrav()
+            .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
+
+        val åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling)
+        dataSource.transaction { connection ->
+            val driftfunksjoner = Driftfunksjoner(postgresRepositoryRegistry.provider(connection), gatewayProvider)
+            val oppdatertBehandling = BehandlingRepositoryImpl(connection).hent(behandling.id)
+            driftfunksjoner.utvidRettghetsperiodeOgKjørFraStart(oppdatertBehandling)
+        }
+
+        val oppdaterteAvklaringsbehovEtterUtvidelse = hentÅpneAvklaringsbehov(behandling.id)
+        assertThat(åpneAvklaringsbehov).hasSize(1)
+        assertThat(oppdaterteAvklaringsbehovEtterUtvidelse).hasSize(1)
+        assertThat(åpneAvklaringsbehov.first().definisjon).isEqualTo(oppdaterteAvklaringsbehovEtterUtvidelse.first().definisjon)
+        assertThat(åpneAvklaringsbehov.first().status()).isEqualTo(
+            oppdaterteAvklaringsbehovEtterUtvidelse.first().status()
+        )
+
+        behandling.kvalitetssikre()
+            .løsBeregningstidspunkt(startDato)
+            .løsOppholdskrav(startDato)
+            .løsAndreStatligeYtelser()
+            .løsAvklaringsBehov(ForeslåVedtakLøsning())
+            .fattVedtak()
+            .løsVedtaksbrev(TypeBrev.VEDTAK_INNVILGELSE)
+
+        val vilkårsresultat = dataSource.transaction { VilkårsresultatRepositoryImpl(it).hent(behandling.id) }
+        vilkårsresultat.alle()
+            .filterNot { it.type in vilkårSomIkkeAutomatiskUtvides() }
+            .forEach { vilkår ->
+                val vilkårSluttdato = vilkår.tidslinje().perioder().max().tom
+                assertThat(vilkårSluttdato)
+                    .withFailMessage { "til-dato for vilkår ${vilkår.type} er ikke Tid.MAKS men $vilkårSluttdato" }
+                    .isEqualTo(Tid.MAKS)
+            }
+    }
+
+    @Test
+    fun `Skal feile ved migrering av rettighetsperioden manuelt på en revurdering ettersom vi løfter unødige avklaringsbehov på periodiserte vilkår`() {
+        /**
+         * Begrenser rettighetsperioden til 1 år for å simulere eksisterende behandlinger fra tidligere
+         */
+        val gammelRettighetsperiode = Periode(LocalDate.now(), LocalDate.now().plusMonths(12).minusDays(1))
+        val (midlertidigSak, behandling) = sendInnFørsteSøknad()
+        settRettighetsperiodeOgRekjørFraStart(midlertidigSak, gammelRettighetsperiode, behandling)
+        val sak = hentSak(behandling)
+        val startDato = sak.rettighetsperiode.fom
+
+        behandling
+            .løsSykdom(startDato)
+            .løsBistand(startDato)
+            .løsRefusjonskrav()
+            .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
+            .kvalitetssikre()
+            .løsBeregningstidspunkt(startDato)
+            .løsOppholdskrav(startDato)
+            .løsAndreStatligeYtelser()
+            .løsAvklaringsBehov(ForeslåVedtakLøsning())
+            .fattVedtak()
+            .løsVedtaksbrev(TypeBrev.VEDTAK_INNVILGELSE)
+
+        val oppdatertBehandlingFørUtvidelse = sak.opprettManuellRevurdering(
+            listOf(Vurderingsbehov.REVURDER_SAMORDNING_ANDRE_STATLIGE_YTELSER),
+        )
+        val åpneAvklaringsbehov = hentÅpneAvklaringsbehov(oppdatertBehandlingFørUtvidelse)
+        val aktivtStegFørOppdatering = oppdatertBehandlingFørUtvidelse.aktivtSteg()
+        val feilException = assertThrows<UgyldigForespørselException> {
+            dataSource.transaction { connection ->
+                val driftfunksjoner = Driftfunksjoner(postgresRepositoryRegistry.provider(connection), gatewayProvider)
+                driftfunksjoner.utvidRettghetsperiodeOgKjørFraStart(oppdatertBehandlingFørUtvidelse)
+            }
+        }
+        assertThat(feilException.message).contains("Aktivt steg er ulikt etter utvidelse")
+        val åpneAvklaringsbehovEtterKjøring = hentÅpneAvklaringsbehov(oppdatertBehandlingFørUtvidelse)
+        assertThat(åpneAvklaringsbehov).hasSize(åpneAvklaringsbehovEtterKjøring.size)
+        assertThat(åpneAvklaringsbehov.first().definisjon).isEqualTo(åpneAvklaringsbehovEtterKjøring.first().definisjon)
+        assertThat(åpneAvklaringsbehov.first().status()).isEqualTo(åpneAvklaringsbehovEtterKjøring.first().status())
+        assertThat(åpneAvklaringsbehov.first().historikk).isEqualTo(åpneAvklaringsbehovEtterKjøring.first().historikk)
+
+        dataSource.transaction { connection ->
+            val aktivtStegEtterOppdatering =
+                BehandlingRepositoryImpl(connection).hentAktivtSteg(oppdatertBehandlingFørUtvidelse.id)
+            assertThat(aktivtStegEtterOppdatering!!.steg()).isEqualTo(aktivtStegFørOppdatering)
+        }
+    }
+
+    @Test
     fun `skal kunne migrere rettighetsperioder med samordning på starten av perioden`() {
         /**
          * Begrenser rettighetsperioden til 1 år for å simulere eksisterende behandlinger fra tidligere
@@ -418,7 +627,8 @@ class RettighetsperiodeFlytTest() : AbstraktFlytOrkestratorTest(FakeUnleash::cla
             .løsBistand(startDato)
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
-            .kvalitetssikreOk()
+            .bekreftVurderinger()
+            .kvalitetssikre()
             .løsBeregningstidspunkt(startDato)
             .løsOppholdskrav(startDato)
             .løsAvklaringsBehov(medSamordningSykepenger(startDato, startDatoRettTilYtelse))
@@ -460,7 +670,7 @@ class RettighetsperiodeFlytTest() : AbstraktFlytOrkestratorTest(FakeUnleash::cla
             ) to { assertThat(it).isEqualTo(Utfall.IKKE_OPPFYLT) },
             Periode(
                 startDatoRettTilYtelse,
-                startDatoRettTilYtelse.plussEtÅrMedHverdager(ÅrMedHverdager.FØRSTE_ÅR)
+                oppdatertUtfallTidslinje.maxDato()
             ) to { assertThat(it).isEqualTo(Utfall.OPPFYLT) },
         )
         val vilkårsresultat = dataSource.transaction { VilkårsresultatRepositoryImpl(it).hent(sisteBehandling.id) }
@@ -474,97 +684,6 @@ class RettighetsperiodeFlytTest() : AbstraktFlytOrkestratorTest(FakeUnleash::cla
             }
 
     }
-
-    @Test
-    fun `skal fange opp og migrere sak med feil rettighetsperiode via jobb`() {
-        /**
-         * Begrenser rettighetsperioden til 1 år for å simulere eksisterende behandlinger fra tidligere
-         */
-        val gammelRettighetsperiode = Periode(LocalDate.now(), LocalDate.now().plusMonths(12).minusDays(1))
-        val (midlertidigSak, behandling) = sendInnFørsteSøknad()
-        val sakMedUtvidetRettighetsperiode = happyCaseFørstegangsbehandling()
-        val behandlingForSakMedUtvidetRettighetsperiode =
-            hentSisteOpprettedeBehandlingForSak(sakMedUtvidetRettighetsperiode.id)
-        assertThat(sakMedUtvidetRettighetsperiode.id).isNotEqualTo(midlertidigSak.id)
-
-        settRettighetsperiodeOgRekjørFraStart(midlertidigSak, gammelRettighetsperiode, behandling)
-        val sak = hentSak(behandling)
-        val startDato = sak.rettighetsperiode.fom
-        val startDatoRettTilYtelse = sak.rettighetsperiode.fom.plusMonths(2)
-
-        behandling
-            .løsSykdom(startDato)
-            .løsBistand(startDato)
-            .løsRefusjonskrav()
-            .løsSykdomsvurderingBrev()
-            .kvalitetssikreOk()
-            .løsBeregningstidspunkt(startDato)
-            .løsOppholdskrav(startDato)
-            .løsAvklaringsBehov(medSamordningSykepenger(startDato, startDatoRettTilYtelse))
-            .løsAndreStatligeYtelser()
-            .løsAvklaringsBehov(ForeslåVedtakLøsning())
-            .fattVedtak()
-            .løsVedtaksbrev(TypeBrev.VEDTAK_INNVILGELSE)
-
-
-        dataSource.transaction { connection ->
-
-            val repositoryProvider = postgresRepositoryRegistry.provider(connection)
-            val migrerRettighetsperiodeJobbUtfører = OpprettBehandlingMigrerRettighetsperiodeJobbUtfører(
-                prosesserBehandlingService = ProsesserBehandlingService(repositoryProvider, gatewayProvider),
-                sakRepository = SakRepositoryImpl(connection),
-                behandlingRepository = BehandlingRepositoryImpl(connection),
-                sakOgBehandlingService = SakOgBehandlingService(repositoryProvider, gatewayProvider),
-                unleashGateway = FakeUnleash
-            )
-            migrerRettighetsperiodeJobbUtfører.utfør(JobbInput(OpprettBehandlingMigrerRettighetsperiodeJobbUtfører))
-        }
-
-        /**
-         * Sak med utvidet rettighetsperiode fra start skal ikke migreres
-         */
-        val sisteBehandlingForSakMedUtvidetRettighetsperiode =
-            hentSisteOpprettedeBehandlingForSak(sakMedUtvidetRettighetsperiode.id)
-        assertThat(sisteBehandlingForSakMedUtvidetRettighetsperiode.id).isEqualTo(
-            behandlingForSakMedUtvidetRettighetsperiode.id
-        )
-
-        /**
-         * Sak med begrenset rettighetsperiode fra start skal migreres
-         */
-        val sisteBehandling = hentSisteOpprettedeBehandlingForSak(sak.id)
-        assertThat(sisteBehandling.id).isNotEqualTo(behandling.id)
-        val oppdatertSak = hentSak(sisteBehandling)
-        assertThat(oppdatertSak.rettighetsperiode).isEqualTo(Periode(sak.rettighetsperiode.fom, Tid.MAKS))
-
-        val vilkårsResultat = dataSource.transaction { VilkårsresultatRepositoryImpl(it).hent(sisteBehandling.id) }
-        assertThat(vilkårsResultat).isNotNull
-        val oppdatertUtfallTidslinje =
-            dataSource.transaction { UnderveisRepositoryImpl(it).hent(sisteBehandling.id) }
-                .perioder.somTidslinje { it.periode }.map { it.utfall }.komprimer()
-        assertTidslinje(
-            oppdatertUtfallTidslinje,
-            Periode(
-                startDato,
-                startDatoRettTilYtelse.minusDays(1)
-            ) to { assertThat(it).isEqualTo(Utfall.IKKE_OPPFYLT) },
-            Periode(
-                startDatoRettTilYtelse,
-                startDatoRettTilYtelse.plussEtÅrMedHverdager(ÅrMedHverdager.FØRSTE_ÅR)
-            ) to { assertThat(it).isEqualTo(Utfall.OPPFYLT) },
-        )
-        val vilkårsresultat = dataSource.transaction { VilkårsresultatRepositoryImpl(it).hent(sisteBehandling.id) }
-        vilkårsresultat.alle()
-            .filterNot { it.type in vilkårSomIkkeAutomatiskUtvides() }
-            .forEach { vilkår ->
-                val vilkårSluttdato = vilkår.tidslinje().perioder().max().tom
-                assertThat(vilkårSluttdato)
-                    .withFailMessage { "til-dato for vilkår ${vilkår.type} er ikke Tid.MAKS men $vilkårSluttdato" }
-                    .isEqualTo(Tid.MAKS)
-            }
-
-    }
-
 
     /**
      * TODO: Disse burde ideellt sett også blitt utvidet (minus samordning) ved
@@ -574,7 +693,10 @@ class RettighetsperiodeFlytTest() : AbstraktFlytOrkestratorTest(FakeUnleash::cla
         Vilkårtype.OVERGANGUFØREVILKÅRET,
         Vilkårtype.OVERGANGARBEIDVILKÅRET,
         Vilkårtype.SYKEPENGEERSTATNING,
-        Vilkårtype.SAMORDNING
+        Vilkårtype.SAMORDNING,
+        Vilkårtype.STUDENT,
+        Vilkårtype.ORDINÆR_KVOTE,
+        Vilkårtype.SYKEPENGEERSTATNING_KVOTE
     )
 
 
@@ -638,18 +760,16 @@ class RettighetsperiodeFlytTest() : AbstraktFlytOrkestratorTest(FakeUnleash::cla
     private fun opprettAtomærAutomatiskOppdaterVilkårBehandling(sak: Sak) {
         dataSource.transaction { connection ->
             val repositoryProvider = postgresRepositoryRegistry.provider(connection)
-            val sakOgBehandlingService = SakOgBehandlingService(repositoryProvider, gatewayProvider)
+            val behandlingService = BehandlingService(repositoryProvider, gatewayProvider)
             val prosesserBehandlingService = ProsesserBehandlingService(repositoryProvider, gatewayProvider)
-            val behandling = sakOgBehandlingService.finnEllerOpprettBehandling(
+            val behandling = behandlingService.finnEllerOpprettBehandling(
                 sakId = sak.id,
                 vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
-                    årsak = ÅrsakTilOpprettelse.AUTOMATISK_OPPDATER_VILKÅR,
-                    vurderingsbehov = listOf(VurderingsbehovMedPeriode(type = no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.AUTOMATISK_OPPDATER_VILKÅR))
+                    årsak = ÅrsakTilOpprettelse.MIGRER_RETTIGHETSPERIODE,
+                    vurderingsbehov = listOf(VurderingsbehovMedPeriode(type = no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.MIGRER_RETTIGHETSPERIODE))
                 ),
             )
             prosesserBehandlingService.triggProsesserBehandling(behandling)
         }
     }
-
-
 }

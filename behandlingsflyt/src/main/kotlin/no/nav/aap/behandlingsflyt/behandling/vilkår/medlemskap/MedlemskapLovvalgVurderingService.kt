@@ -7,6 +7,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.utenlandsoppho
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapUnntakGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonStatus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Personopplysning
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.erGyldigIPeriode
 import no.nav.aap.komponenter.type.Periode
 
 class MedlemskapLovvalgVurderingService {
@@ -158,9 +159,9 @@ class MedlemskapLovvalgVurderingService {
     }
 
     private fun utenlandskAdresse(grunnlag: Personopplysning?, rettighetsPeriode: Periode): TilhørighetVurdering {
-        val bosattUtenforNorge = grunnlag?.status != PersonStatus.bosatt
+        val bosattUtenforNorge = grunnlag?.status != PersonStatus.bosatt && grunnlag?.status != PersonStatus.doed
 
-        val adresser = grunnlag?.utenlandsAddresser?.map {
+        val adresser = grunnlag?.utenlandsAddresser?.filter { it.erGyldigIPeriode(rettighetsPeriode) }?.map {
             UtenlandskAdresseDto(
                 gyldigFraOgMed = it.gyldigFraOgMed,
                 gyldigTilOgMed = it.gyldigTilOgMed,
@@ -170,10 +171,6 @@ class MedlemskapLovvalgVurderingService {
                 landkode = it.landkode,
                 adresseType = it.adresseType
             )
-        }?.filter {
-            (it.gyldigTilOgMed == null)
-                    || rettighetsPeriode.inneholder(it.gyldigTilOgMed)
-                    || (it.gyldigFraOgMed != null && rettighetsPeriode.inneholder(it.gyldigFraOgMed))
         }
 
         return TilhørighetVurdering(
@@ -214,20 +211,17 @@ class MedlemskapLovvalgVurderingService {
         grunnlag: Personopplysning?,
         rettighetsPeriode: Periode
     ): TilhørighetVurdering {
+
         val manglerEØS =
             grunnlag?.statsborgerskap
-                ?.none { it.land in EØSLandEllerLandMedAvtale.gyldigeEØSLand.map { eøsLand -> eøsLand.name } }
+                ?.none { it.land in EØSLandEllerLandMedAvtale.gyldigeEØSLand.map { it.name } }
 
-        val manglerStatsborgerskapGrunnlag = grunnlag?.statsborgerskap?.map {
+        val manglerStatsborgerskapGrunnlag = grunnlag?.statsborgerskap?.filter { it.erGyldigIPeriode(rettighetsPeriode) }?.map {
             ManglerStatsborgerskapGrunnlag(
                 land = it.land,
                 gyldigFraOgMed = it.gyldigFraOgMed,
                 gyldigTilOgMed = it.gyldigTilOgMed
             )
-        }?.filter {
-            (it.gyldigTilOgMed == null)
-                    || rettighetsPeriode.inneholder(it.gyldigTilOgMed)
-                    || (it.gyldigFraOgMed != null && rettighetsPeriode.inneholder(it.gyldigFraOgMed))
         }
 
         return TilhørighetVurdering(
@@ -264,7 +258,6 @@ class MedlemskapLovvalgVurderingService {
     }
 
     private fun harArbeidInntektINorge(grunnlag: MedlemskapArbeidInntektGrunnlag?): TilhørighetVurdering {
-        //val eksistererArbeidsforhold = grunnlag?.arbeiderINorgeGrunnlag?.any() ?: false
         val arbeidInntektINorgeGrunnlag =
             grunnlag?.inntekterINorgeGrunnlag?.map {
                 ArbeidInntektINorgeGrunnlag(
@@ -305,4 +298,5 @@ class MedlemskapLovvalgVurderingService {
             vurdertPeriode = VurdertPeriode.SØKNADSTIDSPUNKT.beskrivelse
         )
     }
+
 }

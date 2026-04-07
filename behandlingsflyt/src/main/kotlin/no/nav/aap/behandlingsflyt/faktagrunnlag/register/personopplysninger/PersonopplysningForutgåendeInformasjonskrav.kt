@@ -13,7 +13,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Innvilgelsesårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
-import no.nav.aap.behandlingsflyt.faktagrunnlag.ikkeKjørtSisteKalenderdag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.ikkeKjørtSisteKalenderdagForBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
@@ -36,7 +36,7 @@ class PersonopplysningForutgåendeInformasjonskrav private constructor(
         oppdatert: InformasjonskravOppdatert?
     ): Boolean {
         return kontekst.erFørstegangsbehandlingEllerRevurdering() &&
-                oppdatert.ikkeKjørtSisteKalenderdag() &&
+                oppdatert.ikkeKjørtSisteKalenderdagForBehandling(kontekst.behandlingId) &&
                 !tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, steg)
     }
 
@@ -88,11 +88,11 @@ class PersonopplysningForutgåendeInformasjonskrav private constructor(
             val personopplysningRepository = repositoryProvider.provide<PersonopplysningForutgåendeRepository>()
             val vilkårsresultatRepository = repositoryProvider.provide<VilkårsresultatRepository>()
             return PersonopplysningForutgåendeInformasjonskrav(
-                SakService(repositoryProvider),
-                personopplysningRepository,
-                gatewayProvider.provide(),
-                vilkårsresultatRepository,
-                TidligereVurderingerImpl(repositoryProvider),
+                sakService = SakService(repositoryProvider, gatewayProvider),
+                personopplysningForutgåendeRepository = personopplysningRepository,
+                personopplysningGateway = gatewayProvider.provide(),
+                vilkårsresultatRepository = vilkårsresultatRepository,
+                tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
             )
         }
     }
