@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.kontrakt.datadeling
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Status
 import java.math.BigDecimal
+import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -22,8 +23,32 @@ public data class DatadelingDTO(
     val behandlingsReferanse: String,
     val samId: String? = null,
     val vedtakId: Long,
-    val beregningsgrunnlag: BigDecimal?
+    val beregningsgrunnlag: BigDecimal?,
+    val stansOpphørVurdering: Set<StansEllerOpphørVurderingDTO>?
 )
+
+public sealed interface StansEllerOpphørVurderingDTO {
+    /** Stans/opphør gjelder fra og med [fom]. */
+    val fom: LocalDate
+    val opprettet: Instant
+}
+
+public data class GjeldendeStansEllerOpphørDTO(
+    override val fom: LocalDate,
+    override val opprettet: Instant,
+    val vurdering: StansEllerOpphørEnumDTO,
+) : StansEllerOpphørVurderingDTO
+
+public data class OpphevetStansEllerOpphørDTO(
+    override val fom: LocalDate,
+    override val opprettet: Instant,
+) : StansEllerOpphørVurderingDTO
+
+public enum class StansEllerOpphørEnumDTO {
+    STANS,
+    OPPHØR
+}
+
 
 public data class RettighetsTypePeriode(
     val fom: LocalDate,
