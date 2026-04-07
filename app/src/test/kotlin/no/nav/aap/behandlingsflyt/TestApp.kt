@@ -55,9 +55,7 @@ import no.nav.aap.behandlingsflyt.test.testGatewayProvider
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
-import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
-import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.testutil.ManuellMotorImpl
 import no.nav.aap.verdityper.dokument.JournalpostId
@@ -72,6 +70,7 @@ import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 import java.util.concurrent.TimeUnit
 import javax.sql.DataSource
+import kotlin.collections.map
 import kotlin.random.Random
 
 private val log = LoggerFactory.getLogger("TestApp")
@@ -358,6 +357,13 @@ private fun sendInnSøknad(dto: OpprettTestcaseDTO, gatewayProvider: GatewayProv
                     dagpengerYtelseType = it.dagpengerYtelseType
                 )
             },
+            tiltakspenger = dto.tiltakspenger.map {
+                TestPerson.Tiltakspenger(
+                    periode = it.periode,
+                    kilde = it.kilde,
+                    ytelseType = it.ytelseType
+                )
+            },
             tjenestePensjon = if (dto.tjenestePensjon != null && dto.tjenestePensjon) TjenestePensjonRespons(
                 fnr = ident.identifikator,
                 forhold = listOf(
@@ -381,14 +387,11 @@ private fun sendInnSøknad(dto: OpprettTestcaseDTO, gatewayProvider: GatewayProv
             ) else null,
         )
     )
-    val periode = Periode(
-        LocalDate.now(),
-        Tid.MAKS
-    )
+
     val sak = datasource.transaction { connection ->
         val repositoryProvider = repositoryRegistry.provider(connection)
         val sakService = PersonOgSakService(gatewayProvider, repositoryProvider)
-        val sak = sakService.finnEllerOpprett(ident, periode)
+        val sak = sakService.finnEllerOpprett(ident, LocalDate.now())
 
         val flytJobbRepository = FlytJobbRepository(connection)
 

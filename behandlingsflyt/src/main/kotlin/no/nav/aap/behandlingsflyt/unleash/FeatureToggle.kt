@@ -10,25 +10,22 @@ enum class BehandlingsflytFeature : FeatureToggle {
     NyBrevbyggerV3,
     LagreVedtakIFatteVedtak,
     Under18,
-    SendBrevVedMottattKlage,
     InstitusjonsoppholdJobb,
     TrekkSoeknadOpprettetFraLegeerklaering,
     KvalitetssikringVed2213,
-    tilbakekrevingsOppgaverTilOppgave,
-    HentingAvInstitusjonsOpphold,
     VisIkkeRelevantPeriode,
     BekreftVurderingerOppfolging,
     LagreStansOgOpphor,
     MigrerStansOgOpphor,
     SamordningBarnepensjon,
-    RefusjonkravIRevurdering,
     SignaturEnhetFraOppgave,
     VedtakslengdeAvklaringsbehov,
     hentDagpengerPerioder,
+    hentTiltakspengerPerioder,
     hentUforesoknadsdata,
     UtvidVedtakslengdeUnderEttAr,
     OpprettManuellVedtakslengdeBehandling,
-    AvslagLovvalgMedlemskap,
+    AvslagLovvalgMedlemskap
     ;
 
     override fun key(): String = name

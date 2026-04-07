@@ -5,6 +5,8 @@ import no.nav.aap.behandlingsflyt.datadeling.SakStatus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.DetaljertMeldekortDTO
+import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
+import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
@@ -40,6 +42,8 @@ interface ApiInternGateway : Gateway {
         sakId: SakId,
         behandlingId: BehandlingId
     )
+
+    fun oppdaterIdenter(saksnummer: Saksnummer, identer: List<Ident>)
 
     fun hentArenaStatus(personidentifikatorer: Set<String>): ArenaStatusResponse
 }

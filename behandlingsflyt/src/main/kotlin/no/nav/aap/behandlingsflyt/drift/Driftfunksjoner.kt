@@ -8,6 +8,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivVedta
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingReferanse
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingRepository
 import no.nav.aap.behandlingsflyt.flyt.FlytOrkestrator
+import no.nav.aap.behandlingsflyt.hendelse.datadeling.ApiInternGateway
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
@@ -45,6 +46,7 @@ class Driftfunksjoner(
     private val personRepository: PersonRepository,
     private val identGateway: IdentGateway,
     private val meldekortGateway: MeldekortGateway,
+    private val apiInternGateway: ApiInternGateway,
 ) {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         sakRepository = repositoryProvider.provide(),
@@ -62,6 +64,7 @@ class Driftfunksjoner(
         personRepository = repositoryProvider.provide(),
         identGateway = gatewayProvider.provide(),
         meldekortGateway = gatewayProvider.provide(),
+        apiInternGateway = gatewayProvider.provide(),
     )
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -166,14 +169,16 @@ class Driftfunksjoner(
 
         if (nyeIdenter.isNotEmpty() || erNyAktiv) {
             log.info(
-                "Oppdaterer identer for person i sak ${sak.saksnummer} med ${nyeIdenter.size} ny(e) identer fra" +
-                        "  ${sak.saksnummer} PDL. Er aktiv ident endret: $erNyAktiv."
+                "Oppdaterer identer for person i sak ${sak.saksnummer} med ${nyeIdenter.size} ny(e) identer fra PDL." +
+                        " Er aktiv ident endret: $erNyAktiv."
             )
-            val person = personRepository.finnEllerOpprett(identliste)
-            meldekortGateway.oppdaterIdenter(saksnummer = sak.saksnummer, identer = person.identer())
         } else {
             log.info("Fant ingen nye identer eller ny aktiv ident i PDL for person i sak ${sak.saksnummer}.")
         }
+
+        val person = personRepository.finnEllerOpprett(identliste)
+        meldekortGateway.oppdaterIdenter(saksnummer = sak.saksnummer, identer = person.identer())
+        apiInternGateway.oppdaterIdenter(sak.saksnummer, person.identer())
     }
 
     private fun validerGyldigTilstandFørUtvidelseAvRettighetsperiode(

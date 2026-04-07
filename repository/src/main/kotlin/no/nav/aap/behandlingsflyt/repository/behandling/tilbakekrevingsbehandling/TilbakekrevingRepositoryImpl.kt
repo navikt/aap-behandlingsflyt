@@ -152,7 +152,8 @@ class TilbakekrevingRepositoryImpl(private val connection: DBConnection) : Tilba
             varselSendt = row.getLocalDateOrNull("VARSEL_SENDT"),
             behandlingsstatus = row.getEnum("BEHANDLINGSSTATUS"),
             totaltFeilutbetaltBeløp = Beløp(row.getBigDecimal("TOTALT_FEILUTBETALT_BELOP")),
-            saksbehandlingURL = URI.create(row.getString("TILBAKEKREVING_SAKSBEHANDLING_URL")), fullstendigPeriode = row.getPeriode("FULLSTENDIG_PERIODE")
+            saksbehandlingURL = URI.create(row.getString("TILBAKEKREVING_SAKSBEHANDLING_URL")),
+            fullstendigPeriode = row.getPeriode("FULLSTENDIG_PERIODE")
         )
 
     override fun kopier(

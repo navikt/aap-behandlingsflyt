@@ -50,17 +50,6 @@ class MeldingOmVedtakBrevSteg(
         unleashGateway = gatewayProvider.provide(),
     )
 
-    /**
-     * TODO: AAP-1676 : vurder å gjøre teoretisk tilbakestillGrunnlag() fullt funksjonell
-     *
-     * En behandling kan kun ha ett vedtaksbrev og ny brevbestilling per i dag er ikke mulig hvis det finnes et avbrutt
-     * vedtaksbrev. Da må avbrutt vedtaksbrev isteden endre status fra AVBRUTT til FORHÅNDSVISNING_KLAR slik at det
-     * kan sparkes igang igjen med nytt kall til fremtidig API-endepunkt brevbestilling/gjenoppta-bestilling i aap-brev.
-     * Først da vil brevet kunne behandles videre igjen. Hvis brev-steg plutselig blir mulig å tilbakestille med nåværende
-     * tilbakestillGrunnlag() logikk, så vil utfør() feile når ny runde i BrevSteg.utfør() trigges da vedtaksbrev med
-     * status AVBRUTT må kunne gjenopptas og settes tilbake til FORHÅNDSVISNING_KLAR i aap-behandlingsflyt og aap-brev
-     * må motta API-kall /gjenoppta-bestilling slik at brevet igjen får status UNDER_ARBEID i aap-brev
-     */
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val klageErTrukket = trekkKlageService.klageErTrukket(kontekst.behandlingId)
         val brevBehov = brevUtlederService.utledBehovForMeldingOmVedtak(kontekst.behandlingId)
@@ -84,7 +73,6 @@ class MeldingOmVedtakBrevSteg(
      *
      * BrevBestillinger i tilstand FORHÅNDSVISNING_KLAR og SENDT kan i teorien tilbakestilles. Den praktiske
      * begrensningen per i dag er at selve brev steget ikke kan tilbakestilles (ingen fremtidige scenarior for dette foreløpig)
-     * og i tillegg at funsjonalitet for å gjenoppta-brevbestilling via aap-brev må implementeres (AAP-1676)
      */
     private fun tilbakestillGrunnlag(behandlingId: BehandlingId) {
         if (!brevbestillingService.erAlleBestillingerOmVedtakIEndeTilstand(behandlingId)) {

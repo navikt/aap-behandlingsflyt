@@ -32,7 +32,7 @@ jobs:
       - name: Bygg & test
         run: ./gradlew clean build --continue --stacktrace
 
-      - uses: dorny/test-reporter@v2.6.0
+      - uses: dorny/test-reporter@v3.0.0
         if: success() || failure()
         with:
           name: test
@@ -104,7 +104,7 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
 
 
   publiser-kontrakt:
@@ -121,7 +121,7 @@ jobs:
             with:
                 fetch-depth: 0
             #  Ha denne tidlig, så action kan skippe raskt om ingen endringer.
-          - uses: paulhatch/semantic-version@v6.0.1
+          - uses: paulhatch/semantic-version@v6.0.2
             id: tag
             with:
                 change_path: "kontrakt/"
