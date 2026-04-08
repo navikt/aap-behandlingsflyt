@@ -24,26 +24,15 @@ public data class DatadelingDTO(
     val samId: String? = null,
     val vedtakId: Long,
     val beregningsgrunnlag: BigDecimal?,
-    val stansOpphørVurdering: Set<StansEllerOpphørVurderingDTO>?
+    val stansOpphørVurdering: Set<GjeldendeStansEllerOpphørDTO>?
 )
 
-public sealed interface StansEllerOpphørVurderingDTO {
-    /** Stans/opphør gjelder fra og med [fom]. */
-    val fom: LocalDate
-    val opprettet: Instant
-}
 
 public data class GjeldendeStansEllerOpphørDTO(
-    override val fom: LocalDate,
-    override val opprettet: Instant,
+    val fom: LocalDate,
+    val opprettet: Instant,
     val vurdering: StansEllerOpphørEnumDTO,
-) : StansEllerOpphørVurderingDTO
-
-public data class OpphevetStansEllerOpphørDTO(
-    override val fom: LocalDate,
-    override val opprettet: Instant,
-) : StansEllerOpphørVurderingDTO
-
+)
 public enum class StansEllerOpphørEnumDTO {
     STANS,
     OPPHØR

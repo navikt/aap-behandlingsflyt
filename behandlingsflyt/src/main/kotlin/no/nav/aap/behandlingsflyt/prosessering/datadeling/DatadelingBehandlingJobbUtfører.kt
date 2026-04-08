@@ -73,7 +73,7 @@ class DatadelingBehandlingJobbUtfører(
 
         val beregningsgrunnlagIKroner = beregningsgrunnlagGUnit?.multiplisert(grunnbeløpVedSakensStart)?.verdi
 
-        val stansOpphør = stansOpphørRepository.hentHvisEksisterer(behandling.id)?.stansOgOpphør
+        val stansOpphør = stansOpphørRepository.hentHvisEksisterer(behandling.id)?.gjeldendeStansOgOpphør()
 
         apiInternGateway.sendBehandling(
             sak,
