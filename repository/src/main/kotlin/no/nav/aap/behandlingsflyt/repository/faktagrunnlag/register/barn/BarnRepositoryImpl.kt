@@ -583,6 +583,18 @@ class BarnRepositoryImpl(private val connection: DBConnection) : BarnRepository 
         }
     }
 
+    override fun finnFødselsdatoForRegisterBarn(ident: Ident): Fødselsdato? =
+        connection.queryFirstOrNull(
+            """
+        SELECT fodselsdato
+        FROM barnopplysning
+        WHERE ident = ? AND ident IS NOT NULL
+        """.trimIndent()
+        ) {
+            setParams { setString(1, ident.identifikator) }
+            setRowMapper { row -> row.getLocalDateOrNull("fodselsdato")?.let(::Fødselsdato) }
+        }
+
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
         require(fraBehandling != tilBehandling)
         val query = """
