@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonId
 import no.nav.aap.lookup.repository.Repository
+import java.util.UUID
 
 interface PersonRepository : Repository {
     /**
@@ -12,6 +13,7 @@ interface PersonRepository : Repository {
      */
     fun finnEllerOpprett(identer: List<Ident>): Person
     fun hent(personId: PersonId): Person
+    fun hent(identifikator: UUID): Person
     fun finn(ident: Ident): Person?
     fun finn(identer: List<Ident>): Person?
 }
