@@ -401,8 +401,6 @@ private fun Application.startKafkakonsumenter(
                 gatewayProvider = gatewayProvider
             )
         )
-    }
-    if (Miljø.erDev()) {
         startKonsument(
             ForeldrepengevedtakKafkaKonsument(
                 config = KafkaConsumerConfig(),
