@@ -22,7 +22,6 @@ enum class BehandlingsflytFeature : FeatureToggle {
     VedtakslengdeAvklaringsbehov,
     hentDagpengerPerioder,
     hentTiltakspengerPerioder,
-    hentUforesoknadsdata,
     UtvidVedtakslengdeUnderEttAr,
     OpprettManuellVedtakslengdeBehandling,
     AvslagLovvalgMedlemskap

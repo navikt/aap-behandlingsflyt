@@ -49,7 +49,6 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.hentTiltakspengerPerioder to true,
         BehandlingsflytFeature.VedtakslengdeAvklaringsbehov to true,
         BehandlingsflytFeature.UtvidVedtakslengdeUnderEttAr to true,
-        BehandlingsflytFeature.hentUforesoknadsdata to true,
         BehandlingsflytFeature.OpprettManuellVedtakslengdeBehandling to true,
         BehandlingsflytFeature.AvslagLovvalgMedlemskap to true
         )
