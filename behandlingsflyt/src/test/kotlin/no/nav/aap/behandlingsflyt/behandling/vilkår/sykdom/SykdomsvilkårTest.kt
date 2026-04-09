@@ -62,7 +62,7 @@ class SykdomsvilkårTest {
         )
         Sykdomsvilkår(vilkårsresultat).vurder(faktagrunnlag)
         val nyttOgGammelVilkårsresultat = SykdomsvilkårUtenVissVarighet(vilkårsresultat).vurderOgSammenlign(faktagrunnlag, vilkårsresultat)
-        assertThat(nyttOgGammelVilkårsresultat.harDiff()).isTrue
+        assertThat(nyttOgGammelVilkårsresultat.harDiff()).isFalse
 
         assertThat(vilkår.vilkårsperioder()).hasSize(1).allMatch { periode -> periode.utfall == Utfall.IKKE_OPPFYLT }
     }
@@ -93,8 +93,8 @@ class SykdomsvilkårTest {
         Sykdomsvilkår(vilkårsresultat).vurder(faktagrunnlag)
 
         val vilkår = vilkårsresultat.finnVilkår(Vilkårtype.SYKDOMSVILKÅRET)
-        val diff = SykdomsvilkårUtenVissVarighet(vilkårsresultat).vurderOgSammenlign(faktagrunnlag, vilkårsresultat)
-        assertThat(diff.segmenter().none { it.verdi.gammel != it.verdi.ny }).isTrue
+        val sammenlignedeVilkårsvurderinger = SykdomsvilkårUtenVissVarighet(vilkårsresultat).vurderOgSammenlign(faktagrunnlag, vilkårsresultat)
+        assertThat(sammenlignedeVilkårsvurderinger.harDiff()).isFalse
 
         assertThat(vilkår.vilkårsperioder()).hasSize(2)
 
@@ -156,7 +156,7 @@ class SykdomsvilkårTest {
         val vilkår = vilkårsresultat.finnVilkår(Vilkårtype.SYKDOMSVILKÅRET)
 
         val sammenlignetVilkårsvurdering = SykdomsvilkårUtenVissVarighet(vilkårsresultat).vurderOgSammenlign(faktagrunnlag, vilkårsresultat)
-        assertThat(sammenlignetVilkårsvurdering.harDiff()).isTrue
+        assertThat(sammenlignetVilkårsvurdering.harDiff()).isFalse
 
         assertThat(vilkår.vilkårsperioder()).hasSize(1)
 
@@ -198,7 +198,7 @@ class SykdomsvilkårTest {
 
         val vilkår = vilkårsresultat.finnVilkår(Vilkårtype.SYKDOMSVILKÅRET)
         val sammenlignetVilkårsvurdering = SykdomsvilkårUtenVissVarighet(vilkårsresultat).vurderOgSammenlign(faktagrunnlag, vilkårsresultat)
-        assertThat(sammenlignetVilkårsvurdering.harDiff()).isTrue
+        assertThat(sammenlignetVilkårsvurdering.harDiff()).isFalse
 
         assertThat(vilkår.vilkårsperioder()).hasSize(2)
 

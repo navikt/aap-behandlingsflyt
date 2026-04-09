@@ -205,7 +205,7 @@ class Sykdomsvilk책rUtenVissVarighet(vilk책rsresultat: Vilk책rsresultat) : Vilk�
 data class SammenlignetSegment(val gammel: SammenlignbarVurdering?, val ny: SammenlignbarVurdering?)
 
 fun Tidslinje<SammenlignetSegment>.diff() = this.segmenter().filter { it.verdi.gammel != it.verdi.ny }
-fun Tidslinje<SammenlignetSegment>.harDiff() = this.segmenter().none { it.verdi.gammel != it.verdi.ny }
+fun Tidslinje<SammenlignetSegment>.harDiff() = this.segmenter().any { it.verdi.gammel != it.verdi.ny }
 data class SammenlignbarVurdering(
     val utfall: Utfall,
     val innvilgelses책rsak: Innvilgelses책rsak?,
