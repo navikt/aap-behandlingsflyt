@@ -1,5 +1,8 @@
 package no.nav.aap.behandlingsflyt.behandling.mellomlagring
 
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
@@ -12,11 +15,13 @@ import kotlin.collections.filter
 
 class MellomlagretVurderingService(
     private val mellomlagretVurderingRepository: MellomlagretVurderingRepository,
-    private val behandlingRepository: BehandlingRepository
+    private val behandlingRepository: BehandlingRepository,
+    private val avklaringsbehovRepository: AvklaringsbehovRepository
 ) {
     constructor(repositoryProvider: RepositoryProvider) : this(
         mellomlagretVurderingRepository = repositoryProvider.provide(),
-        behandlingRepository = repositoryProvider.provide()
+        behandlingRepository = repositoryProvider.provide(),
+        avklaringsbehovRepository = repositoryProvider.provide()
     )
 
     fun hentMellomlagredeVurderingerFørSteg(
@@ -51,5 +56,28 @@ class MellomlagretVurderingService(
     ): List<MellomlagretVurdering> {
         val behandling = behandlingRepository.hent(behandlingId)
         return hentMellomlagredeVurderingerFørSteg(behandling, steg, løsesAv)
+    }
+
+    fun hentMellomlagredeVurderingerForAktiveBehovFørSteg(
+        behandlingsreferanse: BehandlingReferanse,
+        steg: StegType,
+        løsesAv: List<Rolle>
+    ): List<MellomlagretVurdering> {
+        val behandling = behandlingRepository.hent(behandlingsreferanse)
+        return hentMellomlagredeVurderingerForAktiveBehovFørSteg(behandling.id, steg, løsesAv)
+    }
+
+    fun hentMellomlagredeVurderingerForAktiveBehovFørSteg(
+        behandlingId: BehandlingId,
+        steg: StegType,
+        løsesAv: List<Rolle>,
+    ): List<MellomlagretVurdering> {
+        val mellomlagredeVurderinger = hentMellomlagredeVurderingerFørSteg(behandlingId, steg, løsesAv)
+        val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId)
+        val ikkeAvbrutteBehov = avklaringsbehovene.alle().filter { it.erIkkeAvbrutt() }.map { it.definisjon.kode }
+
+        return mellomlagredeVurderinger.filter { mellomlagretVurdering ->
+            ikkeAvbrutteBehov.contains(mellomlagretVurdering.avklaringsbehovKode)
+        }
     }
 }

@@ -7,6 +7,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.OppgitteBarn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.RegisterBarn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.SaksbehandlerOppgitteBarn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.VurderteBarn
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurdertBarn
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
@@ -130,6 +131,10 @@ object InMemoryBarnRepository : BarnRepository {
     }
 
     override fun hentBehandlingIdForSakSomFårBarnetilleggForSøknadsBarn(ident: Ident): List<BehandlingId> {
+        TODO("Not yet implemented")
+    }
+
+    override fun finnFødselsdatoForRegisterBarn(ident: Ident): Fødselsdato? {
         TODO("Not yet implemented")
     }
 

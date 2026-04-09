@@ -74,7 +74,7 @@ internal data class Telleverk(
  */
 fun utledRettighetstypevurderinger(vilkårsresultat: Vilkårsresultat): Tidslinje<RettighetstypeVurdering> {
     return vilkårsresultat.somTidslinje()
-        .fold(Tidslinje<RettighetstypeVurdering>()) { forutgåendeTidslinje, periode, vilkårsvurderinger ->
+        .fold(Tidslinje()) { forutgåendeTidslinje, periode, vilkårsvurderinger ->
             /* NB: Vi har ikke noen mekanismer for å identifisere opphør. Når vi får opphør, så skal [forutgåendeTidslinje]
             *   begrenses til perioden etter opphør når den sendes inn til oppfylles av. */
             val forutgåendeRettighetstyper =
@@ -177,7 +177,7 @@ fun vurderRettighetstypeOgKvoter(
  * NB1. Funksjonen handler kun om stans og opphør, ikke om avslag.
  *
  * NB2. Det skjer ytterligere vilkårsvurdering i Underveissteget. Disse opplysningene er ikke tilgjengelig her,
- * så for å helt korrekt svar, må denne vurderingen brukes som et ledd i underveissteget. Ideelt sett hadde
+ * så for å gi helt korrekt svar, må denne vurderingen brukes som et ledd i underveissteget. Ideelt sett hadde
  * vi greid å hente ut alle vilkårsvurderingen som fører til stans eller opphør ut fra underveissteget og inn
  * i egne vilkår, slik at vi ikke trenger å splitte utregningen i to.
  *
@@ -191,7 +191,7 @@ fun vurderRettighetstypeOgKvoter(
  * første dag uten rett.
  *
  * I perioden etter en stans eller et opphør kan det være varierende grunner til at medlemmet ikke har rett til AAP. Når disse varierer etter stans eller opphør,
- * så er ikke dette nye opphør eller stans – for meldemmet har ikke AAP å stanse eller opphøre.
+ * så er ikke dette nye opphør eller stans – for medlemmet har ikke AAP å stanse eller opphøre.
  */
 fun utledStansEllerOpphør(
     vilkårsresultat: Vilkårsresultat,

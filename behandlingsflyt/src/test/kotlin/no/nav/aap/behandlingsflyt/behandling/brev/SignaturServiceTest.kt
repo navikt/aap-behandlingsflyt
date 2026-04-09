@@ -32,7 +32,6 @@ import no.nav.aap.oppgave.enhet.OppgaveEnhetResponse
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.params.ParameterizedClass
 import org.junit.jupiter.params.provider.ValueSource
 import java.time.LocalDateTime

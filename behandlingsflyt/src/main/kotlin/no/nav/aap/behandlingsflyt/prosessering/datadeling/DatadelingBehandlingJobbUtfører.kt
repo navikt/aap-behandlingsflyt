@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseReposi
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.samid.SamIdRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.StansOpphørRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.ApiInternGateway
@@ -29,6 +30,7 @@ class DatadelingBehandlingJobbUtfører(
     private val underveisRepository: UnderveisRepository,
     private val vedtakRepository: VedtakRepository,
     private val samIdRepository: SamIdRepository,
+    private val stansOpphørRepository: StansOpphørRepository,
     private val beregningsgrunnlagRepository: BeregningsgrunnlagRepository,
 ) : JobbUtfører {
     private val log = LoggerFactory.getLogger(javaClass)
@@ -71,6 +73,8 @@ class DatadelingBehandlingJobbUtfører(
 
         val beregningsgrunnlagIKroner = beregningsgrunnlagGUnit?.multiplisert(grunnbeløpVedSakensStart)?.verdi
 
+        val stansOpphør = stansOpphørRepository.hentHvisEksisterer(behandling.id)?.gjeldendeStansOgOpphør()
+
         apiInternGateway.sendBehandling(
             sak,
             behandling,
@@ -80,7 +84,8 @@ class DatadelingBehandlingJobbUtfører(
             beregningsgrunnlagIKroner,
             underveis?.perioder.orEmpty(),
             vedtaksTidspunkt.toLocalDate(),
-            vilkårsresultatTidslinje
+            vilkårsresultatTidslinje,
+            stansOpphør
         )
     }
 
@@ -99,6 +104,7 @@ class DatadelingBehandlingJobbUtfører(
                 vedtakRepository = repositoryProvider.provide(),
                 samIdRepository = repositoryProvider.provide(),
                 beregningsgrunnlagRepository = repositoryProvider.provide(),
+                stansOpphørRepository = repositoryProvider.provide(),
             )
         }
     }
