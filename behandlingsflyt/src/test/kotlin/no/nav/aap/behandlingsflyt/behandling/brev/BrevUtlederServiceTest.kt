@@ -885,7 +885,6 @@ class BrevUtlederServiceTest {
                 forrigeBehandlingId = BehandlingId(Random.nextLong()),
                 vurderingsbehov = listOf(Vurderingsbehov.OVERGANG_ARBEID)
             )
-            every { behandlingRepository.hent(revurdering.id) } returns revurdering
             every { arbeidsopptrappingRepository.hentHvisEksisterer(revurdering.id) } returns arbeidsopptrappingGrunnlag(
                 revurdering,
                 1 januar 2024,
