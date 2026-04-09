@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.prosessering.statistikk
 
 import no.nav.aap.behandlingsflyt.behandling.Resultat
 import no.nav.aap.behandlingsflyt.behandling.ResultatUtleder
+import no.nav.aap.behandlingsflyt.behandling.StansOpphørService
 import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingService
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
@@ -41,6 +42,12 @@ import no.nav.aap.behandlingsflyt.kontrakt.statistikk.VilkårDTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.VilkårsPeriodeDTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.VilkårsResultatDTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vilkårtype
+import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Avslagstype as AvslagstypeDTO
+import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Avslagsårsak as AvslagsårsakDTO
+import no.nav.aap.behandlingsflyt.kontrakt.statistikk.StansEllerOpphør as StansEllerOpphørDTO
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.GjeldendeStansEllerOpphør
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.Stans
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.Opphør
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
@@ -64,6 +71,7 @@ class AvsluttetBehandlingTilStatistikk(
     avbrytRevurderingService: AvbrytRevurderingService,
     private val meldepliktRepository: MeldepliktRepository,
     private val arbeidsopptrappingRepository: ArbeidsopptrappingRepository,
+    private val stansOpphørService: StansOpphørService,
 ) {
 
     constructor(repositoryProvider: RepositoryProvider) : this(
@@ -79,7 +87,8 @@ class AvsluttetBehandlingTilStatistikk(
         klageresultatUtleder = KlageresultatUtleder(repositoryProvider),
         avbrytRevurderingService = AvbrytRevurderingService(repositoryProvider),
         meldepliktRepository = repositoryProvider.provide(),
-        arbeidsopptrappingRepository = repositoryProvider.provide()
+        arbeidsopptrappingRepository = repositoryProvider.provide(),
+        stansOpphørService = StansOpphørService(repositoryProvider.provide(), repositoryProvider.provide())
     )
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -122,6 +131,8 @@ class AvsluttetBehandlingTilStatistikk(
         val perioderMedArbeidsopptrapping =
             arbeidsopptrappingRepository.hentHvisEksisterer(behandling.id).perioderMedArbeidsopptrapping()
 
+        val vedtattStansOpphør = stansOpphørService.vedtattStansOpphør(behandling.id)
+
         return AvsluttetBehandlingDTO(
             vilkårsResultat = VilkårsResultatDTO(
                 typeBehandling = behandling.typeBehandling(), vilkår = vilkårsresultat.alle().map { res ->
@@ -145,7 +156,8 @@ class AvsluttetBehandlingTilStatistikk(
             resultat = hentResultat(behandling),
             vedtakstidspunkt = vedtakTidspunkt,
             fritaksvurderinger = fritaksvurderinger,
-            perioderMedArbeidsopptrapping = perioderMedArbeidsopptrapping.map { PeriodeDTO(it.fom, it.tom) }
+            perioderMedArbeidsopptrapping = perioderMedArbeidsopptrapping.map { PeriodeDTO(it.fom, it.tom) },
+            vedtattStansOpphør = vedtattStansOpphør.map { it.tilKontrakt() }
         )
     }
 
@@ -307,5 +319,17 @@ class AvsluttetBehandlingTilStatistikk(
         er6GBegrenset = beregningsgrunnlag.inntekter().any { it.er6GBegrenset },
         erGjennomsnitt = beregningsgrunnlag.erGjennomsnitt(),
     )
+
+    private fun GjeldendeStansEllerOpphør.tilKontrakt(): StansEllerOpphørDTO {
+        val type = when (vurdering) {
+            is Stans -> AvslagstypeDTO.STANS
+            is Opphør -> AvslagstypeDTO.OPPHØR
+        }
+        return StansEllerOpphørDTO(
+            type = type,
+            fom = fom,
+            årsaker = vurdering.årsaker.map { AvslagsårsakDTO.valueOf(it.name) }.toSet()
+        )
+    }
 
 }
