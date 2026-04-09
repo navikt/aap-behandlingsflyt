@@ -9,7 +9,7 @@ data class RettighetsperiodeVurdering(
     val begrunnelse: String,
     val harRettUtoverSøknadsdato: RettighetsperiodeHarRett,
     val vurdertAv: String,
-    val vurdertDato: LocalDateTime? = null
+    val vurdertDato: LocalDateTime = LocalDateTime.now()
 )
 
 data class RettighetsperiodeVurderingDTO(
