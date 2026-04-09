@@ -83,7 +83,7 @@ fun InntektsbortfallVurdering.tilDto(fom: LocalDate, vurdertAvService: VurdertAv
             definisjon = Definisjon.FRITAK_MELDEPLIKT,
             behandlingId = vurdertIBehandling
         ),
-        kvalitetssikretAv = vurdertAvService.besluttetAv(
+        kvalitetssikretAv = vurdertAvService.kvalitetssikretAv(
             definisjon = Definisjon.FRITAK_MELDEPLIKT,
             behandlingId = vurdertIBehandling
         ),
