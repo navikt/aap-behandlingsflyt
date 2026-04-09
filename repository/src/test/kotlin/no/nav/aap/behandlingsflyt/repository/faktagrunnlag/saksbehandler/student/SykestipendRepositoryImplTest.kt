@@ -39,7 +39,7 @@ class SykestipendRepositoryImplTest {
 
     @Test
     fun `lagre, hente ut, slette`() {
-        val sak = dataSource.transaction { sak(it, Periode(1 januar 2022, 31.desember(2023))) }
+        val sak = dataSource.transaction { sak(it, 1 januar 2022) }
 
         val behandling = dataSource.transaction {
             finnEllerOpprettBehandling(it, sak)
@@ -87,7 +87,7 @@ class SykestipendRepositoryImplTest {
 
     @Test
     fun `Kopier sykestipend`() {
-        val sak = dataSource.transaction { sak(it, Periode(1 januar 2022, 31.desember(2023))) }
+        val sak = dataSource.transaction { sak(it, 1 januar 2022) }
 
         val behandling = dataSource.transaction {
             finnEllerOpprettBehandling(it, sak)

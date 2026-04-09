@@ -9,6 +9,9 @@ import java.time.LocalDateTime
 public data class TilbakekrevingsbehandlingOppdatertHendelse(
     val personIdent: String,
     val saksnummer: Saksnummer,
+    /**
+     * Refererer til en ekstern behandlingsreferanse, til tross for at BehandlingReferanse-typen er brukt her.
+     */
     val behandlingref: BehandlingReferanse,
     val behandlingStatus: TilbakekrevingBehandlingsstatus,
     val sakOpprettet: LocalDateTime,

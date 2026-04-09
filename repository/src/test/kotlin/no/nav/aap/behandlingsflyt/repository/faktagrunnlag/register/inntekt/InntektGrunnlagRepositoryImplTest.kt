@@ -4,11 +4,9 @@ import no.nav.aap.behandlingsflyt.behandling.beregning.Månedsinntekt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.help.sak
-import no.nav.aap.behandlingsflyt.test.desember
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
-import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
@@ -34,7 +32,7 @@ class InntektGrunnlagRepositoryImplTest {
     @Test
     fun `lagre og hente ut igjen`() {
         val behandling = dataSource.transaction {
-            val sak = sak(it, Periode(1 januar 2023, 31 desember 2023))
+            val sak = sak(it, 1 januar 2023)
             finnEllerOpprettBehandling(it, sak)
         }
 

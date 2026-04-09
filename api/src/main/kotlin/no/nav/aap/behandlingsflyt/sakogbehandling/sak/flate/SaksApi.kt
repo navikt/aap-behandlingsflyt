@@ -179,7 +179,7 @@ fun NormalOpenAPIRoute.saksApi(
 
                     val sak = PersonOgSakService(gatewayProvider, repositoryProvider).finnEllerOpprett(
                         ident = ident,
-                        periode = periode
+                        søknadsdato = dto.søknadsdato
                     )
 
                     SaksinfoDTO(

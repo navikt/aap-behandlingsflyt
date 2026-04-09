@@ -29,12 +29,12 @@ jobs:
                     distribution: 'temurin'
 
             - name: Setup Gradle for a non-wrapper project
-              uses: gradle/actions/setup-gradle@v5
+              uses: gradle/actions/setup-gradle@v6
               with:
                   gradle-version: wrapper
             - name: Bygg og test (${{matrix.gradle_args}})
               run: ./gradlew ${{matrix.gradle_args}} --continue --stacktrace
-            - uses: dorny/test-reporter@v2.6.0
+            - uses: dorny/test-reporter@v3.0.0
               if: success() || failure()
               with:
                 name: test
