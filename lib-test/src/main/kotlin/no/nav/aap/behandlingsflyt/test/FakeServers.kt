@@ -1846,7 +1846,6 @@ object FakeServers : AutoCloseable {
                                 brevdata = BrevdataDto(
                                     delmaler = emptyList(),
                                     faktagrunnlag = emptyList(),
-                                    periodetekster = emptyList(),
                                     valg = emptyList(),
                                     betingetTekst = emptyList(),
                                     fritekster = emptyList(),
