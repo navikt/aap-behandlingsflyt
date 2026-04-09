@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.Faktagrunnlag
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.komponenter.type.Periode
@@ -11,6 +12,17 @@ class VilkårService(
     constructor(repositoryProvider: RepositoryProvider) : this(
         vilkårsresultatRepository = repositoryProvider.provide()
     )
+
+    fun <F: Faktagrunnlag> vurderVilkår(
+        behandlingId: BehandlingId,
+        faktagrunnlag: F,
+        vilkårsvurderer: Vilkårsvurderer<F>,
+    ) {
+        val vilkårsresultat = vilkårsresultatRepository.hent(behandlingId)
+        val vilkår = vilkårsresultat.leggTilHvisIkkeEksisterer(vilkårsvurderer.vilkårtype)
+        vilkår.setVilkårTidslinje(vilkårsvurderer.vurder(faktagrunnlag))
+        vilkårsresultatRepository.lagre(behandlingId, vilkårsresultat)
+    }
 
     /** Fyll hull i vilkårsvurderingene for [vilkårtype] som `IKKE_VURDERT`. */
     fun ingenNyeVurderinger(
