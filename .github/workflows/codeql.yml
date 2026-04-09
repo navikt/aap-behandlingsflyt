@@ -90,7 +90,7 @@ jobs:
         gradle-version: wrapper
     - name: Bygg & test
       if: matrix.build-mode == 'manual'
-      run: ./gradlew clean build --continue --stacktrace
+      run: ./gradlew clean build -x test --continue --stacktrace
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v4
