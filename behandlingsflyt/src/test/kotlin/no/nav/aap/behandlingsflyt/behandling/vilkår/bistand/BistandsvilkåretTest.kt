@@ -48,8 +48,7 @@ import java.time.LocalDate
 
 class BistandsvilkåretTest {
     companion object {
-        private val now = LocalDate.now()
-        private val periode = Periode(now, LocalDate.now().plusYears(3))
+        private val søknadsdato = LocalDate.now()
 
         private lateinit var dataSource: TestDataSource
 
@@ -133,7 +132,7 @@ class BistandsvilkåretTest {
     fun `Skal bygge tidslinje på tvers av behandlinger`() {
         val (førstegangsbehandling, sak) = dataSource.transaction { connection ->
             val bistandRepo = BistandRepositoryImpl(connection)
-            val sak = sak(connection, periode)
+            val sak = sak(connection, søknadsdato)
             val førstegangsbehandling = finnEllerOpprettBehandling(connection, sak)
 
             val bistandsvurdering1 = Bistandsvurdering(
@@ -194,7 +193,7 @@ class BistandsvilkåretTest {
         dataSource.transaction { connection ->
             // Må lagre ned sykdomsvurdering for behandlingen da vurderingenGjelderFra for 11-6 skal være lik den for 11-5 i samme behandling
             val sykdomsvurdering = sykdomsvurdering(
-                vurderingenGjelderFra = now.plusDays(10),
+                vurderingenGjelderFra = søknadsdato.plusDays(10),
                 behandlingId = revurdering.id
             )
             postgresRepositoryRegistry.provider(connection).provide<SykdomRepository>()
@@ -250,11 +249,11 @@ class BistandsvilkåretTest {
 
         val segment1 = vilkåret.vilkårsperioder().first()
         val segment2 = vilkåret.vilkårsperioder().last()
-        assertThat(segment1.periode).isEqualTo(Periode(now, now.plusDays(9)))
+        assertThat(segment1.periode).isEqualTo(Periode(søknadsdato, søknadsdato.plusDays(9)))
         assertThat(segment1.utfall).isEqualTo(Utfall.OPPFYLT)
         assertThat(segment2.periode).isEqualTo(
             Periode(
-                now.plusDays(10),
+                søknadsdato.plusDays(10),
                 sak.rettighetsperiode.tom
             )
         )

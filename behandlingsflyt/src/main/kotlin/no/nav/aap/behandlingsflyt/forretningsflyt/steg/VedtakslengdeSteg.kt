@@ -57,7 +57,7 @@ class VedtakslengdeSteg(
                                     Vurderingsbehov.VEDTAKSLENGDE_MANUELT in kontekst.vurderingsbehovRelevanteForSteg
                             }
                         },
-                        erTilstrekkeligVurdert = { true },
+                        erTilstrekkeligVurdert = { true }, // <-- vil ikke dette lukke behovet igjen med en gang?
                         tilbakestillGrunnlag = { },
                         kontekst = kontekst
                     )

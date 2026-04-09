@@ -251,7 +251,7 @@ class OppdagEndretInformasjonskravJobbUtførerTest {
     private fun settOppFørstegangsvurdering(): Pair<Sak, Behandling> {
         return dataSource.transaction { connection ->
             val repositoryProvider = postgresRepositoryRegistry.provider(connection)
-            val sak = sak(connection, periode)
+            val sak = sak(connection, periode.fom)
             val førstegangsbehandlingen = finnEllerOpprettBehandling(connection, sak)
 
             val kontekst = flytKontekstMedPerioder {

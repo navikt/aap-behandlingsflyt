@@ -424,7 +424,7 @@ class InMemorySamordningYtelseRepositoryTest {
             FakeApiInternGateway.konstruer(),
             InMemoryPersonRepository,
             InMemorySakRepository
-        ).finnEllerOpprett(ident(), Periode(LocalDate.now(), LocalDate.now().plusYears(1)))
+        ).finnEllerOpprett(ident(), LocalDate.now())
     }
 
     private fun opprettBehandling(sak: Sak): Behandling {
