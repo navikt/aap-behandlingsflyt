@@ -449,7 +449,9 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
                         erArbeidsevnenNedsatt = true.takeIf { erOppfylt },
                         yrkesskadeBegrunnelse = if (erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense != null) "test" else null,
                         fom = vurderingGjelderFra,
-                        tom = null
+                        tom = null,
+                        erNedsettelseMinstHalvparten = null,
+                        erNedsettelseMerEnnYrkesskadegrense = null,
                     )
                 )
             ),
