@@ -150,8 +150,6 @@ class SykepengeerstatningFlytTest(val unleashGateway: KClass<UnleashGateway>) :
                             erSkadeSykdomEllerLyteVesentligdel = true,
                             erNedsettelseIArbeidsevneMerEnnHalvparten = true,
                             erNedsettelseIArbeidsevneAvEnVissVarighet = true,
-erNedsettelseMinstHalvparten = null,
-                            erNedsettelseMerEnnYrkesskadegrense = null,
                             erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
                             erArbeidsevnenNedsatt = true,
                             yrkesskadeBegrunnelse = null,
@@ -314,9 +312,7 @@ erNedsettelseMinstHalvparten = null,
                         erArbeidsevnenNedsatt = true,
                         yrkesskadeBegrunnelse = null,
                         fom = sak.rettighetsperiode.fom,
-                        tom = null,
-                        erNedsettelseMinstHalvparten = null,
-                        erNedsettelseMerEnnYrkesskadegrense = null,
+                        tom = null
                     )
                 )
             ),
@@ -453,9 +449,7 @@ erNedsettelseMinstHalvparten = null,
                             erArbeidsevnenNedsatt = true,
                             yrkesskadeBegrunnelse = null,
                             fom = revurdering2Fom,
-                            tom = null,
-                            erNedsettelseMinstHalvparten = null,
-                            erNedsettelseMerEnnYrkesskadegrense = null,
+                            tom = null
                         )
                     )
                 )
@@ -521,9 +515,7 @@ erNedsettelseMinstHalvparten = null,
                         erArbeidsevnenNedsatt = true,
                         yrkesskadeBegrunnelse = null,
                         fom = sak.rettighetsperiode.fom,
-                        tom = null,
-                        erNedsettelseMinstHalvparten = null,
-                        erNedsettelseMerEnnYrkesskadegrense = null,
+                        tom = null
                     )
                 )
             ),
@@ -547,9 +539,7 @@ erNedsettelseMinstHalvparten = null,
                             erArbeidsevnenNedsatt = true,
                             yrkesskadeBegrunnelse = null,
                             fom = nyStartDato,
-                            tom = null,
-                            erNedsettelseMinstHalvparten = null,
-                            erNedsettelseMerEnnYrkesskadegrense = null,
+                            tom = null
                         )
                     )
                 ),

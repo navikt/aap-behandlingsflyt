@@ -3,8 +3,6 @@ package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.sykdom
 import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingVurdering
 import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingÅrsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Diagnose
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ErNedsettelseMerEnnYrkesskadegrenseValg
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ErNedsettelseMinstHalvpartenValg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.YrkesskadeSak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Yrkesskadevurdering
@@ -59,8 +57,6 @@ internal class SykdomRepositoryImplTest {
             erNedsettelseIArbeidsevneAvEnVissVarighet = true,
             erNedsettelseIArbeidsevneMerEnnHalvparten = true,
             erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = true,
-            erNedsettelseMinstHalvparten = ErNedsettelseMinstHalvpartenValg.JA,
-            erNedsettelseMerEnnYrkesskadegrense = null,
             yrkesskadeBegrunnelse = "b",
             erArbeidsevnenNedsatt = true,
             vurdertAv = Bruker("Z00000"),
@@ -80,10 +76,8 @@ internal class SykdomRepositoryImplTest {
             harSkadeSykdomEllerLyte = true,
             erSkadeSykdomEllerLyteVesentligdel = true,
             erNedsettelseIArbeidsevneAvEnVissVarighet = true,
-            erNedsettelseIArbeidsevneMerEnnHalvparten = false,
+            erNedsettelseIArbeidsevneMerEnnHalvparten = true,
             erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = true,
-            erNedsettelseMinstHalvparten = ErNedsettelseMinstHalvpartenValg.NEI,
-            erNedsettelseMerEnnYrkesskadegrense = ErNedsettelseMerEnnYrkesskadegrenseValg.JA,
             yrkesskadeBegrunnelse = null,
             erArbeidsevnenNedsatt = true,
             vurdertAv = Bruker("Z00000"),
@@ -102,8 +96,6 @@ internal class SykdomRepositoryImplTest {
             erNedsettelseIArbeidsevneAvEnVissVarighet = true,
             erNedsettelseIArbeidsevneMerEnnHalvparten = true,
             erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = true,
-            erNedsettelseMinstHalvparten = null,
-            erNedsettelseMerEnnYrkesskadegrense = null,
             yrkesskadeBegrunnelse = "y",
             erArbeidsevnenNedsatt = true,
             vurdertAv = Bruker("Z00000"),
@@ -273,11 +265,9 @@ internal class SykdomRepositoryImplTest {
                             dokumenterBruktIVurdering = listOf(JournalpostId("1")),
                             harSkadeSykdomEllerLyte = true,
                             erSkadeSykdomEllerLyteVesentligdel = true,
-                            erNedsettelseIArbeidsevneAvEnVissVarighet = false,
+                            erNedsettelseIArbeidsevneAvEnVissVarighet = true,
                             erNedsettelseIArbeidsevneMerEnnHalvparten = true,
-                            erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
-                            erNedsettelseMinstHalvparten = ErNedsettelseMinstHalvpartenValg.JA_FORBIGÅENDE_PROBLEMER,
-                            erNedsettelseMerEnnYrkesskadegrense = null,
+                            erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = true,
                             yrkesskadeBegrunnelse = "b",
                             erArbeidsevnenNedsatt = true,
                             vurdertAv = Bruker("Z00000"),

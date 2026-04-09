@@ -91,8 +91,6 @@ class VurderBistandsbehovStegTest {
                             erSkadeSykdomEllerLyteVesentligdel = true,
                             erNedsettelseIArbeidsevneMerEnnHalvparten = true,
                             erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
-                            erNedsettelseMinstHalvparten = null,
-                            erNedsettelseMerEnnYrkesskadegrense = null,
                             erArbeidsevnenNedsatt = true,
                             yrkesskadeBegrunnelse = null,
                             erNedsettelseIArbeidsevneAvEnVissVarighet = true,

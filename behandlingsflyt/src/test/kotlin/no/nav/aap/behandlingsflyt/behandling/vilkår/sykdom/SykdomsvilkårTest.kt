@@ -25,12 +25,12 @@ class SykdomsvilkårTest {
     // TODO: 
     //  Sykdomsvurderinger som gjelder fra dato før rettighetsperiodens start gir avslag på sykdomsvilkåret
     //  Vilkåret bør vel kun bry seg om vurderinger innenfor rettighetsperioden?
-
+    
     @Test
     fun `Nye vurderinger skal overskrive`() {
         val vilkårsresultat = Vilkårsresultat()
         vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.SYKDOMSVILKÅRET)
-
+        
         val kravdato = LocalDate.now()
         Sykdomsvilkår(vilkårsresultat).vurder(
             SykdomsFaktagrunnlag(
@@ -49,20 +49,19 @@ class SykdomsvilkårTest {
 
         assertThat(vilkår.vilkårsperioder()).hasSize(1).allMatch { periode -> periode.utfall == Utfall.OPPFYLT }
 
-        val faktagrunnlag = SykdomsFaktagrunnlag(
-            kravDato = kravdato,
-            sisteDagMedMuligYtelse = kravdato.plusYears(3),
-            yrkesskadevurdering = null,
-            sykdomsvurderinger = listOf(
-                sykdomsvurdering(vurderingenGjelderFra = kravdato, erNedsettelseIArbeidsevneMerEnnHalvparten = false)
-            ),
-            sykepengerErstatningFaktagrunnlag = null,
-            bistandvurderingFaktagrunnlag = null,
-            sykepengeerstatningVilkår = Tidslinje()
+        Sykdomsvilkår(vilkårsresultat).vurder(
+            SykdomsFaktagrunnlag(
+                kravDato = kravdato,
+                sisteDagMedMuligYtelse = kravdato.plusYears(3),
+                yrkesskadevurdering = null,
+                sykdomsvurderinger = listOf(
+                    sykdomsvurdering(vurderingenGjelderFra = kravdato, erNedsettelseIArbeidsevneMerEnnHalvparten = false)
+                ),
+                sykepengerErstatningFaktagrunnlag = null,
+                bistandvurderingFaktagrunnlag = null,
+                sykepengeerstatningVilkår = Tidslinje()
+            )
         )
-        Sykdomsvilkår(vilkårsresultat).vurder(faktagrunnlag)
-        val nyttOgGammelVilkårsresultat = SykdomsvilkårUtenVissVarighet(vilkårsresultat).vurderOgSammenlign(faktagrunnlag, vilkårsresultat)
-        assertThat(nyttOgGammelVilkårsresultat.harDiff()).isFalse
 
         assertThat(vilkår.vilkårsperioder()).hasSize(1).allMatch { periode -> periode.utfall == Utfall.IKKE_OPPFYLT }
     }
@@ -73,28 +72,26 @@ class SykdomsvilkårTest {
         vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.SYKDOMSVILKÅRET)
         val startDato = 1 januar 2024
         val opprettet = LocalDateTime.now()
-
-        val faktagrunnlag = SykdomsFaktagrunnlag(
-            kravDato = startDato,
-            sisteDagMedMuligYtelse = startDato.plusYears(3),
-            yrkesskadevurdering = null,
-            sykdomsvurderinger = listOf(
-                sykdomsvurdering(opprettet = opprettet, vurderingenGjelderFra = startDato),
-                sykdomsvurdering(
-                    erNedsettelseIArbeidsevneMerEnnHalvparten = false,
-                    vurderingenGjelderFra = startDato.plusWeeks(1),
-                    opprettet = opprettet.plusSeconds(50)
-                )
-            ),
-            sykepengerErstatningFaktagrunnlag = null,
-            bistandvurderingFaktagrunnlag = bistandGrunnlag(startDato),
-            sykepengeerstatningVilkår = Tidslinje()
+        Sykdomsvilkår(vilkårsresultat).vurder(
+            SykdomsFaktagrunnlag(
+                kravDato = startDato,
+                sisteDagMedMuligYtelse = startDato.plusYears(3),
+                yrkesskadevurdering = null,
+                sykdomsvurderinger = listOf(
+                    sykdomsvurdering(opprettet = opprettet, vurderingenGjelderFra = startDato),
+                    sykdomsvurdering(
+                        erNedsettelseIArbeidsevneMerEnnHalvparten = false,
+                        vurderingenGjelderFra = startDato.plusWeeks(1),
+                        opprettet = opprettet.plusSeconds(50)
+                    )
+                ),
+                sykepengerErstatningFaktagrunnlag = null,
+                bistandvurderingFaktagrunnlag = bistandGrunnlag(startDato),
+                sykepengeerstatningVilkår = Tidslinje()
+            )
         )
-        Sykdomsvilkår(vilkårsresultat).vurder(faktagrunnlag)
 
         val vilkår = vilkårsresultat.finnVilkår(Vilkårtype.SYKDOMSVILKÅRET)
-        val sammenlignedeVilkårsvurderinger = SykdomsvilkårUtenVissVarighet(vilkårsresultat).vurderOgSammenlign(faktagrunnlag, vilkårsresultat)
-        assertThat(sammenlignedeVilkårsvurderinger.harDiff()).isFalse
 
         assertThat(vilkår.vilkårsperioder()).hasSize(2)
 
@@ -132,31 +129,26 @@ class SykdomsvilkårTest {
         vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.SYKDOMSVILKÅRET)
         val startDato = 1 januar 2024
         val opprettet = LocalDateTime.now()
-
-        val faktagrunnlag = SykdomsFaktagrunnlag(
-            kravDato = startDato,
-            sisteDagMedMuligYtelse = startDato.plusYears(3),
-            yrkesskadevurdering = null,
-            sykdomsvurderinger = listOf(
-                sykdomsvurdering(vurderingenGjelderFra = startDato, opprettet = opprettet),
-                sykdomsvurdering(
-                    erNedsettelseIArbeidsevneAvEnVissVarighet = false,
-                    vurderingenGjelderFra = startDato,
-                    opprettet = opprettet.plusSeconds(50)
-                )
-            ),
-            sykepengerErstatningFaktagrunnlag = null,
-            bistandvurderingFaktagrunnlag = bistandGrunnlag(startDato),
-            sykepengeerstatningVilkår = Tidslinje()
-        )
         Sykdomsvilkår(vilkårsresultat).vurder(
-            faktagrunnlag
+            SykdomsFaktagrunnlag(
+                kravDato = startDato,
+                sisteDagMedMuligYtelse = startDato.plusYears(3),
+                yrkesskadevurdering = null,
+                sykdomsvurderinger = listOf(
+                    sykdomsvurdering(vurderingenGjelderFra = startDato, opprettet = opprettet),
+                    sykdomsvurdering(
+                        erNedsettelseIArbeidsevneAvEnVissVarighet = false,
+                        vurderingenGjelderFra = startDato,
+                        opprettet = opprettet.plusSeconds(50)
+                    )
+                ),
+                sykepengerErstatningFaktagrunnlag = null,
+                bistandvurderingFaktagrunnlag = bistandGrunnlag(startDato),
+                sykepengeerstatningVilkår = Tidslinje()
+            )
         )
 
         val vilkår = vilkårsresultat.finnVilkår(Vilkårtype.SYKDOMSVILKÅRET)
-
-        val sammenlignetVilkårsvurdering = SykdomsvilkårUtenVissVarighet(vilkårsresultat).vurderOgSammenlign(faktagrunnlag, vilkårsresultat)
-        assertThat(sammenlignetVilkårsvurdering.harDiff()).isFalse
 
         assertThat(vilkår.vilkårsperioder()).hasSize(1)
 
@@ -173,8 +165,7 @@ class SykdomsvilkårTest {
         vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.SYKDOMSVILKÅRET)
         val startDato = 1 januar 2024
         val opprettet = LocalDateTime.now()
-
-        val faktagrunnlag =
+        Sykdomsvilkår(vilkårsresultat).vurder(
             SykdomsFaktagrunnlag(
                 kravDato = startDato,
                 sisteDagMedMuligYtelse = startDato.plusYears(3),
@@ -191,14 +182,9 @@ class SykdomsvilkårTest {
                 bistandvurderingFaktagrunnlag = bistandGrunnlag(startDato),
                 sykepengeerstatningVilkår = Tidslinje()
             )
-
-        Sykdomsvilkår(vilkårsresultat).vurder(
-            faktagrunnlag
         )
 
         val vilkår = vilkårsresultat.finnVilkår(Vilkårtype.SYKDOMSVILKÅRET)
-        val sammenlignetVilkårsvurdering = SykdomsvilkårUtenVissVarighet(vilkårsresultat).vurderOgSammenlign(faktagrunnlag, vilkårsresultat)
-        assertThat(sammenlignetVilkårsvurdering.harDiff()).isFalse
 
         assertThat(vilkår.vilkårsperioder()).hasSize(2)
 
@@ -231,8 +217,6 @@ class SykdomsvilkårTest {
         erNedsettelseIArbeidsevneMerEnnHalvparten = erNedsettelseIArbeidsevneMerEnnHalvparten,
         erNedsettelseIArbeidsevneAvEnVissVarighet = erNedsettelseIArbeidsevneAvEnVissVarighet,
         erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense,
-        erNedsettelseMinstHalvparten = null,
-        erNedsettelseMerEnnYrkesskadegrense = null,
         erArbeidsevnenNedsatt = erArbeidsevnenNedsatt,
         yrkesskadeBegrunnelse = null,
         vurderingenGjelderFra = vurderingenGjelderFra,
