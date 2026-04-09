@@ -72,6 +72,8 @@ class YrkesskadeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
                             yrkesskadeBegrunnelse = null,
                             fom = sak.rettighetsperiode.fom,
                             tom = null,
+                            erNedsettelseMinstHalvparten = null,
+                            erNedsettelseMerEnnYrkesskadegrense = null,
                         )
                     )
                 )
@@ -688,6 +690,8 @@ class YrkesskadeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
                             erSkadeSykdomEllerLyteVesentligdel = true,
                             erNedsettelseIArbeidsevneMerEnnHalvparten = true,
                             erNedsettelseIArbeidsevneAvEnVissVarighet = true,
+                            erNedsettelseMinstHalvparten = null,
+                            erNedsettelseMerEnnYrkesskadegrense = null,
                             erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
                             erArbeidsevnenNedsatt = true,
                             yrkesskadeBegrunnelse = null,
@@ -732,6 +736,8 @@ class YrkesskadeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
                         erSkadeSykdomEllerLyteVesentligdel = null,
                         erNedsettelseIArbeidsevneAvEnVissVarighet = null,
                         erNedsettelseIArbeidsevneMerEnnHalvparten = false,
+                        erNedsettelseMinstHalvparten = null,
+                        erNedsettelseMerEnnYrkesskadegrense = null,
                         erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = false,
                         yrkesskadeBegrunnelse = "Skade under grense for yrkesskade",
                         fom = periode.fom,
@@ -782,7 +788,9 @@ class YrkesskadeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
                             erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
                             yrkesskadeBegrunnelse = null,
                             fom = LocalDateTime.now().minusDays(5).toLocalDate(),
-                            tom = null
+                            tom = null,
+                            erNedsettelseMinstHalvparten = null,
+                            erNedsettelseMerEnnYrkesskadegrense = null,
                         )
                     )
                 )
