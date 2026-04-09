@@ -78,17 +78,19 @@ jobs:
         # For more details on CodeQL's query packs, refer to: https://docs.github.com/en/code-security/code-scanning/automatically-scanning-your-code-for-vulnerabilities-and-errors/configuring-code-scanning#using-queries-in-ql-packs
         # queries: security-extended,security-and-quality
 
-    # If the analyze step fails for one of the languages you are analyzing with
-    # "We were unable to automatically build your code", modify the matrix above
-    # to set the build mode to "manual" for that language. Then modify this step
-    # to build your code.
-    # ℹ️ Command-line programs to run using the OS shell.
-    # 📚 See https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idstepsrun
-    - name: Run manual build steps
+    - uses: actions/setup-java@v5
       if: matrix.build-mode == 'manual'
-      shell: bash
-      run: |
-        ./gradlew build
+      with:
+        java-version: 25
+        distribution: 'temurin'
+    - name: Setup Gradle
+      if: matrix.build-mode == 'manual'
+      uses: gradle/actions/setup-gradle@v6
+      with:
+        gradle-version: wrapper
+    - name: Bygg & test
+      if: matrix.build-mode == 'manual'
+      run: ./gradlew clean build --continue --stacktrace
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v4
