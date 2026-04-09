@@ -146,8 +146,6 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(VedtakslengdeFlytUnlea
                             erSkadeSykdomEllerLyteVesentligdel = true,
                             erNedsettelseIArbeidsevneMerEnnHalvparten = true,
                             erNedsettelseIArbeidsevneAvEnVissVarighet = true,
-                            erNedsettelseMinstHalvparten = null,
-                            erNedsettelseMerEnnYrkesskadegrense = null,
                             erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
                             erArbeidsevnenNedsatt = true,
                             yrkesskadeBegrunnelse = null,
@@ -162,8 +160,6 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(VedtakslengdeFlytUnlea
                             erNedsettelseIArbeidsevneMerEnnHalvparten = false,
                             erNedsettelseIArbeidsevneAvEnVissVarighet = false,
                             erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
-                            erNedsettelseMinstHalvparten = null,
-                            erNedsettelseMerEnnYrkesskadegrense = null,
                             erArbeidsevnenNedsatt = false,
                             yrkesskadeBegrunnelse = null,
                             fom = overgangDato,
@@ -234,8 +230,6 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(VedtakslengdeFlytUnlea
                             erSkadeSykdomEllerLyteVesentligdel = true,
                             erNedsettelseIArbeidsevneMerEnnHalvparten = true,
                             erNedsettelseIArbeidsevneAvEnVissVarighet = true,
-                            erNedsettelseMinstHalvparten = null,
-                            erNedsettelseMerEnnYrkesskadegrense = null,
                             erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
                             erArbeidsevnenNedsatt = true,
                             yrkesskadeBegrunnelse = null,
@@ -250,8 +244,6 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(VedtakslengdeFlytUnlea
                             erNedsettelseIArbeidsevneMerEnnHalvparten = false,
                             erNedsettelseIArbeidsevneAvEnVissVarighet = false,
                             erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
-                            erNedsettelseMinstHalvparten = null,
-                            erNedsettelseMerEnnYrkesskadegrense = null,
                             erArbeidsevnenNedsatt = false,
                             yrkesskadeBegrunnelse = null,
                             fom = overgangDato,
@@ -323,8 +315,6 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(VedtakslengdeFlytUnlea
                             erSkadeSykdomEllerLyteVesentligdel = true,
                             erNedsettelseIArbeidsevneMerEnnHalvparten = true,
                             erNedsettelseIArbeidsevneAvEnVissVarighet = true,
-                            erNedsettelseMinstHalvparten = null,
-                            erNedsettelseMerEnnYrkesskadegrense = null,
                             erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
                             erArbeidsevnenNedsatt = true,
                             yrkesskadeBegrunnelse = null,
@@ -338,8 +328,6 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(VedtakslengdeFlytUnlea
                             erSkadeSykdomEllerLyteVesentligdel = false,
                             erNedsettelseIArbeidsevneMerEnnHalvparten = false,
                             erNedsettelseIArbeidsevneAvEnVissVarighet = false,
-                            erNedsettelseMinstHalvparten = null,
-                            erNedsettelseMerEnnYrkesskadegrense = null,
                             erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
                             erArbeidsevnenNedsatt = false,
                             yrkesskadeBegrunnelse = null,
@@ -353,8 +341,6 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(VedtakslengdeFlytUnlea
                             erSkadeSykdomEllerLyteVesentligdel = true,
                             erNedsettelseIArbeidsevneMerEnnHalvparten = true,
                             erNedsettelseIArbeidsevneAvEnVissVarighet = true,
-                            erNedsettelseMinstHalvparten = null,
-                            erNedsettelseMerEnnYrkesskadegrense = null,
                             erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
                             erArbeidsevnenNedsatt = true,
                             yrkesskadeBegrunnelse = null,
@@ -856,11 +842,7 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(VedtakslengdeFlytUnlea
 
             val underveisGrunnlag = UnderveisRepositoryImpl(connection).hentHvisEksisterer(førstegangsbehandling.id)
             val sisteUnderveisperiode = underveisGrunnlag?.perioder?.maxBy { it.periode.fom }!!
-            assertThat(sisteUnderveisperiode.periode.tom).isEqualTo(
-                rettighetsperiode.fom.plussEtÅrMedHverdager(
-                    ÅrMedHverdager.FØRSTE_ÅR
-                )
-            )
+            assertThat(sisteUnderveisperiode.periode.tom).isEqualTo(rettighetsperiode.fom.plussEtÅrMedHverdager(ÅrMedHverdager.FØRSTE_ÅR))
             assertThat(sisteUnderveisperiode.utfall).isEqualTo(Utfall.OPPFYLT)
             assertThat(sisteUnderveisperiode.rettighetsType).isEqualTo(RettighetsType.BISTANDSBEHOV)
         }
@@ -873,17 +855,11 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(VedtakslengdeFlytUnlea
                 gatewayProvider
             ).finnBehandlingMedSisteFattedeVedtak(sak.id)!!
 
-            val vedtakslengdeVurdering =
-                VedtakslengdeRepositoryImpl(connection).hentHvisEksisterer(behandlingMedSisteFattedeVedtak.id)
+            val vedtakslengdeVurdering = VedtakslengdeRepositoryImpl(connection).hentHvisEksisterer(behandlingMedSisteFattedeVedtak.id)
             assertThat(vedtakslengdeVurdering).isNotNull()
-            assertThat(vedtakslengdeVurdering?.gjeldendeVurdering()?.sluttdato).isEqualTo(
-                datoOppholdskravIkkeOppfyltFra.minusDays(
-                    1
-                )
-            )
+            assertThat(vedtakslengdeVurdering?.gjeldendeVurdering()?.sluttdato).isEqualTo(datoOppholdskravIkkeOppfyltFra.minusDays(1))
 
-            val underveisGrunnlag =
-                UnderveisRepositoryImpl(connection).hentHvisEksisterer(behandlingMedSisteFattedeVedtak.id)
+            val underveisGrunnlag = UnderveisRepositoryImpl(connection).hentHvisEksisterer(behandlingMedSisteFattedeVedtak.id)
             val sisteUnderveisperiode = underveisGrunnlag?.perioder?.maxBy { it.periode.fom }!!
             assertThat(sisteUnderveisperiode.periode.tom).isEqualTo(datoOppholdskravIkkeOppfyltFra.minusDays(1))
         }
@@ -948,8 +924,7 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(VedtakslengdeFlytUnlea
         dataSource.transaction { connection ->
             val førstegangsbehandling = BehandlingRepositoryImpl(connection).finnFørstegangsbehandling(sak.id)
 
-            val vedtakslengdeVurdering =
-                VedtakslengdeRepositoryImpl(connection).hentHvisEksisterer(førstegangsbehandling.id)
+            val vedtakslengdeVurdering = VedtakslengdeRepositoryImpl(connection).hentHvisEksisterer(førstegangsbehandling.id)
             assertThat(vedtakslengdeVurdering).isNotNull()
             assertThat(vedtakslengdeVurdering?.gjeldendeVurdering()?.sluttdato).isEqualTo(forventetSluttdato)
         }
@@ -962,8 +937,7 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(VedtakslengdeFlytUnlea
                 gatewayProvider
             ).finnBehandlingMedSisteFattedeVedtak(sak.id)!!
 
-            val vedtakslengdeVurdering =
-                VedtakslengdeRepositoryImpl(connection).hentHvisEksisterer(behandlingMedSisteFattedeVedtak.id)
+            val vedtakslengdeVurdering = VedtakslengdeRepositoryImpl(connection).hentHvisEksisterer(behandlingMedSisteFattedeVedtak.id)
             assertThat(vedtakslengdeVurdering).isNotNull()
             assertThat(vedtakslengdeVurdering?.gjeldendeVurdering()?.sluttdato).isEqualTo(forventetSluttdato)
         }
@@ -1234,14 +1208,12 @@ class AvklarVedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(AvklarVedtakslen
             }
             .løsAvklaringsBehov(
                 AvklarVedtakslengdeLøsning(
-                    løsningerForPerioder = listOf(
-                        VedtakslengdeVurderingDto(
-                            fom = startDato,
-                            tom = manueltOverstyrtSluttdato,
-                            sluttdato = manueltOverstyrtSluttdato,
-                            begrunnelse = "Vurdert vedtakslengde manuelt"
-                        )
-                    )
+                    løsningerForPerioder = listOf(VedtakslengdeVurderingDto(
+                        fom = startDato,
+                        tom = manueltOverstyrtSluttdato,
+                        sluttdato = manueltOverstyrtSluttdato,
+                        begrunnelse = "Vurdert vedtakslengde manuelt"
+                    ))
                 )
             )
             .løsAvklaringsBehov(ForeslåVedtakLøsning())
@@ -1285,14 +1257,12 @@ class AvklarVedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(AvklarVedtakslen
             }
             .løsAvklaringsBehov(
                 AvklarVedtakslengdeLøsning(
-                    løsningerForPerioder = listOf(
-                        VedtakslengdeVurderingDto(
-                            fom = automatiskSluttdato.plusDays(1),
-                            tom = nyManuellSluttdato,
-                            sluttdato = nyManuellSluttdato,
-                            begrunnelse = nyBegrunnelse
-                        )
-                    )
+                    løsningerForPerioder = listOf(VedtakslengdeVurderingDto(
+                        fom = automatiskSluttdato.plusDays(1),
+                        tom = nyManuellSluttdato,
+                        sluttdato = nyManuellSluttdato,
+                        begrunnelse = nyBegrunnelse
+                    ))
                 )
             )
             .medKontekst {
@@ -1335,14 +1305,12 @@ class AvklarVedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(AvklarVedtakslen
             // Overstyrer likevel manuelt til 15 måneder
             .løsAvklaringsBehov(
                 AvklarVedtakslengdeLøsning(
-                    løsningerForPerioder = listOf(
-                        VedtakslengdeVurderingDto(
-                            fom = startDato,
-                            tom = manueltOverstyrtSluttdato,
-                            sluttdato = manueltOverstyrtSluttdato,
-                            begrunnelse = "Vurdert vedtakslengde manuelt"
-                        )
-                    )
+                    løsningerForPerioder = listOf(VedtakslengdeVurderingDto(
+                        fom = startDato,
+                        tom = manueltOverstyrtSluttdato,
+                        sluttdato = manueltOverstyrtSluttdato,
+                        begrunnelse = "Vurdert vedtakslengde manuelt"
+                    ))
                 )
             )
             .løsAvklaringsBehov(ForeslåVedtakLøsning())
@@ -1421,8 +1389,7 @@ class AvklarVedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(AvklarVedtakslen
         dataSource.transaction { connection ->
             val førstegangsbehandling = BehandlingRepositoryImpl(connection).finnFørstegangsbehandling(sak.id)
 
-            val vedtakslengdeVurdering =
-                VedtakslengdeRepositoryImpl(connection).hentHvisEksisterer(førstegangsbehandling.id)
+            val vedtakslengdeVurdering = VedtakslengdeRepositoryImpl(connection).hentHvisEksisterer(førstegangsbehandling.id)
             assertThat(vedtakslengdeVurdering).isNotNull()
             assertThat(vedtakslengdeVurdering?.gjeldendeVurdering()?.sluttdato).isEqualTo(forventetSluttdato)
         }
@@ -1445,14 +1412,12 @@ class AvklarVedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(AvklarVedtakslen
         manuellBehandlingMedVurderingsbehovVedtakslengdeManuelt
             .løsAvklaringsBehov(
                 AvklarVedtakslengdeLøsning(
-                    løsningerForPerioder = listOf(
-                        VedtakslengdeVurderingDto(
-                            fom = forventetSluttdato.plusDays(1),
-                            tom = forlengelseFom,
-                            sluttdato = forlengelseFom,
-                            begrunnelse = "Vurdert vedtakslengde manuelt"
-                        )
-                    )
+                    løsningerForPerioder = listOf(VedtakslengdeVurderingDto(
+                        fom = forventetSluttdato.plusDays(1),
+                        tom = forlengelseFom,
+                        sluttdato = forlengelseFom,
+                        begrunnelse = "Vurdert vedtakslengde manuelt"
+                    ))
                 )
             )
             .løsAvklaringsBehov(ForeslåVedtakLøsning())

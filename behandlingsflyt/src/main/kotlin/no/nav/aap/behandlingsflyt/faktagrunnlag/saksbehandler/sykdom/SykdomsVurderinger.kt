@@ -17,14 +17,9 @@ data class Sykdomsvurdering(
     val dokumenterBruktIVurdering: List<JournalpostId>,
     val harSkadeSykdomEllerLyte: Boolean,
     val erSkadeSykdomEllerLyteVesentligdel: Boolean?,
-    @Deprecated("Bakes inn i erNedsettelseMinstHalvparten og erNedsettelseMerEnnYrkesskadegrense")
     val erNedsettelseIArbeidsevneAvEnVissVarighet: Boolean?,
-    @Deprecated("Erstattes av erNedsettelseMinstHalvparten etter migrering")
     val erNedsettelseIArbeidsevneMerEnnHalvparten: Boolean?,
-    val erNedsettelseMinstHalvparten: ErNedsettelseMinstHalvpartenValg?,
-    @Deprecated("Erstattes av erNedsettelseMerEnnYrkesskadegrense")
     val erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense: Boolean?,
-    val erNedsettelseMerEnnYrkesskadegrense: ErNedsettelseMerEnnYrkesskadegrenseValg?,
     val yrkesskadeBegrunnelse: String?,
     val erArbeidsevnenNedsatt: Boolean?,
     val diagnose: Diagnose?,
@@ -51,38 +46,28 @@ data class Sykdomsvurdering(
                 && (
                 erNedsettelseIArbeidsevneMerEnnHalvparten == true ||
                         ((yrkesskadevurdering?.erÅrsakssammenheng ?: false) &&
-                                erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense == true)
+                               erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense == true)
                 )
     }
-
+    
     fun erOppfyltOrdinær(kravdato: LocalDate, periodenVurderingenGjelderFor: Periode): Boolean {
         return erOppfyltOrdinærSettBortIfraVissVarighet() &&
-                if (erFørsteVurdering(
-                        kravdato,
-                        periodenVurderingenGjelderFor
-                    )
-                ) erNedsettelseIArbeidsevneAvEnVissVarighet == true
+                if (erFørsteVurdering(kravdato, periodenVurderingenGjelderFor)) erNedsettelseIArbeidsevneAvEnVissVarighet == true
                 else true
     }
 
-    fun erOppfyltForYrkesskadeSettBortIfraÅrsakssammenheng(
-        kravdato: LocalDate,
-        periodenVurderingenGjelderFor: Periode
-    ): Boolean {
+    fun erOppfyltForYrkesskadeSettBortIfraÅrsakssammenheng(kravdato: LocalDate, periodenVurderingenGjelderFor: Periode): Boolean {
         val erTilstrekkeligNedsattArbeidsevne = erNedsettelseIArbeidsevneMerEnnHalvparten == true
                 || erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense == true
-
+        
         return harSkadeSykdomEllerLyte
                 && erArbeidsevnenNedsatt == true
                 && erSkadeSykdomEllerLyteVesentligdel == true
                 && erTilstrekkeligNedsattArbeidsevne
                 && erVissVarighetOmRelevant(kravdato, periodenVurderingenGjelderFor)
     }
-
-    fun erOppfyltOrdinærEllerYrkesskadeSettBortIfraÅrsakssammenheng(
-        kravDato: LocalDate,
-        periodenVurderingenGjelderFor: Periode
-    ): Boolean {
+    
+    fun erOppfyltOrdinærEllerYrkesskadeSettBortIfraÅrsakssammenheng(kravDato: LocalDate, periodenVurderingenGjelderFor: Periode): Boolean {
         return erOppfyltForYrkesskadeSettBortIfraÅrsakssammenheng(
             kravDato,
             periodenVurderingenGjelderFor
@@ -102,13 +87,13 @@ data class Sykdomsvurdering(
                 && erSkadeSykdomEllerLyteVesentligdel == true
                 && erTilstrekkeligNedsattArbeidsevne
     }
-
+    
     private fun erVissVarighetOmRelevant(kravdato: LocalDate, periodenVurderingenGjelderFor: Periode): Boolean {
         return if (erFørsteVurdering(kravdato, periodenVurderingenGjelderFor))
             erNedsettelseIArbeidsevneAvEnVissVarighet == true
         else true
     }
-
+    
     fun erOppfyltOrdinærSettBortIfraVissVarighet(): Boolean {
         return harSkadeSykdomEllerLyte
                 && erArbeidsevnenNedsatt == true
@@ -135,82 +120,7 @@ data class Sykdomsvurdering(
         }
         return true
     }
-
-    fun erOppfyltOrdinærMedUtlededeFelter(): Boolean {
-        val nedsettelse = utledErNedsettelseMinstHalvparten()
-        return harSkadeSykdomEllerLyte
-                && erArbeidsevnenNedsatt == true
-                && erSkadeSykdomEllerLyteVesentligdel == true
-                && nedsettelse == ErNedsettelseMinstHalvpartenValg.JA
-    }
-
-    fun skalVurderesForSykepengeerstatningMedUtlededeFelter(): Boolean {
-        val nedsettelseHalvparten = utledErNedsettelseMinstHalvparten()
-        val nedsetteYrkesskade = utledErNedsettelseMerEnnYrkesskadegrense()
-        return harSkadeSykdomEllerLyte
-                && erArbeidsevnenNedsatt == true
-                && erSkadeSykdomEllerLyteVesentligdel == true
-                && (nedsettelseHalvparten == ErNedsettelseMinstHalvpartenValg.JA_FORBIGÅENDE_PROBLEMER || nedsetteYrkesskade == ErNedsettelseMerEnnYrkesskadegrenseValg.JA_FORBIGÅENDE_PROBLEMER)
-    }
-
-    fun erOppfyltForYrkesskadeSettBortIfraÅrsakssammenhengMedUtlededeFelter(): Boolean {
-        val nedsettelseHalvparten = utledErNedsettelseMinstHalvparten()
-        val nedsettelseYrkesskade = utledErNedsettelseMerEnnYrkesskadegrense()
-
-        val erTilstrekkeligNedsattArbeidsevne =
-            nedsettelseHalvparten == ErNedsettelseMinstHalvpartenValg.JA ||
-                    nedsettelseYrkesskade == ErNedsettelseMerEnnYrkesskadegrenseValg.JA
-
-        return harSkadeSykdomEllerLyte
-                && erArbeidsevnenNedsatt == true
-                && erSkadeSykdomEllerLyteVesentligdel == true
-                && erTilstrekkeligNedsattArbeidsevne
-    }
-
-    fun utledErNedsettelseMinstHalvparten(): ErNedsettelseMinstHalvpartenValg? {
-        if (erNedsettelseMinstHalvparten != null) {
-            return erNedsettelseMinstHalvparten
-        }
-
-        return when (erNedsettelseIArbeidsevneMerEnnHalvparten) {
-            true if erNedsettelseIArbeidsevneAvEnVissVarighet == true ->
-                ErNedsettelseMinstHalvpartenValg.JA
-
-            true if erNedsettelseIArbeidsevneAvEnVissVarighet == false ->
-                ErNedsettelseMinstHalvpartenValg.JA_FORBIGÅENDE_PROBLEMER
-
-            true if erSkadeSykdomEllerLyteVesentligdel == true ->
-                ErNedsettelseMinstHalvpartenValg.JA
-
-            false ->
-                ErNedsettelseMinstHalvpartenValg.NEI
-
-            else -> null
-        }
-    }
-
-    fun utledErNedsettelseMerEnnYrkesskadegrense(): ErNedsettelseMerEnnYrkesskadegrenseValg? {
-        if (erNedsettelseMerEnnYrkesskadegrense != null) {
-            return erNedsettelseMerEnnYrkesskadegrense
-        }
-
-        return when (erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense) {
-            true if erNedsettelseIArbeidsevneAvEnVissVarighet == true ->
-                ErNedsettelseMerEnnYrkesskadegrenseValg.JA
-
-            true if erNedsettelseIArbeidsevneAvEnVissVarighet == false ->
-                ErNedsettelseMerEnnYrkesskadegrenseValg.JA_FORBIGÅENDE_PROBLEMER
-
-            true if erSkadeSykdomEllerLyteVesentligdel == true ->
-                ErNedsettelseMerEnnYrkesskadegrenseValg.JA
-
-            false ->
-                ErNedsettelseMerEnnYrkesskadegrenseValg.NEI
-
-            else -> null
-        }
-    }
-
+    
     companion object {
         fun erFørsteVurdering(kravdato: LocalDate, periodenVurderingenGjelderFor: Periode): Boolean {
             return periodenVurderingenGjelderFor.inneholder(kravdato)

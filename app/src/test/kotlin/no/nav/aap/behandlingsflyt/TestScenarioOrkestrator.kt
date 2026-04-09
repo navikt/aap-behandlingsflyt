@@ -122,8 +122,6 @@ class TestScenarioOrkestrator(
                         erNedsettelseIArbeidsevneAvEnVissVarighet = true,
                         erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense,
                         yrkesskadeBegrunnelse = if (erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense != null) "test" else null,
-                        erNedsettelseMinstHalvparten = null,
-                        erNedsettelseMerEnnYrkesskadegrense = null,
                         fom = vurderingGjelderFra,
                         tom = null
                     )

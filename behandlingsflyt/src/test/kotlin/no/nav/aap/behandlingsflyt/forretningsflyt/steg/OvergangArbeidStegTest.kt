@@ -159,8 +159,6 @@ class OvergangArbeidStegTest {
         erSkadeSykdomEllerLyteVesentligdel = erSyk,
         erNedsettelseIArbeidsevneMerEnnHalvparten = erSyk,
         erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
-        erNedsettelseMinstHalvparten = null,
-        erNedsettelseMerEnnYrkesskadegrense = null,
         erArbeidsevnenNedsatt = true,
         yrkesskadeBegrunnelse = null,
         erNedsettelseIArbeidsevneAvEnVissVarighet = true,

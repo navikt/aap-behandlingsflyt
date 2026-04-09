@@ -109,9 +109,7 @@ class OrdinærAapFlytTest(val unleashGateway: KClass<UnleashGateway>) : Abstrakt
                         erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
                         yrkesskadeBegrunnelse = null,
                         fom = periode.fom,
-                        tom = null,
-                        erNedsettelseMinstHalvparten = null,
-                        erNedsettelseMerEnnYrkesskadegrense = null,
+                        tom = null
                     )
                 )
             ),
