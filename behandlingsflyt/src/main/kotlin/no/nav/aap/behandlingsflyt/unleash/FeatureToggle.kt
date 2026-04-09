@@ -25,7 +25,6 @@ enum class BehandlingsflytFeature : FeatureToggle {
     hentUforesoknadsdata,
     UtvidVedtakslengdeUnderEttAr,
     OpprettManuellVedtakslengdeBehandling,
-    AvslagLovvalgMedlemskap
     ;
 
     override fun key(): String = name
