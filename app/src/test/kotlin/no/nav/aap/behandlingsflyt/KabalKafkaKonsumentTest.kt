@@ -23,10 +23,10 @@ import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
+import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.test.FakeAnsattInfoGateway
 import no.nav.aap.behandlingsflyt.test.FakeEnhetGateway
 import no.nav.aap.behandlingsflyt.test.FakeOppgavestyringGateway
-import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
@@ -104,7 +104,7 @@ class KabalKafkaKonsumentTest {
     fun `Kan motta og lagre ned hendelse fra Kabal`() {
         val testTopic = KABAL_EVENT_TOPIC + "test2"
         
-        val sak = dataSource.transaction { sak(it, periode) }
+        val sak = dataSource.transaction { sak(it, periode.fom) }
         dataSource.transaction { finnEllerOpprettBehandling(it, sak) }
         val klagebehandling = dataSource.transaction { connection ->
             finnEllerOpprettBehandling(connection, sak, Vurderingsbehov.MOTATT_KLAGE)
@@ -175,7 +175,7 @@ class KabalKafkaKonsumentTest {
 
     @Test
     fun `Skal ikke konsumere neste melding dersom håndtering feiler`() {
-        val sak = dataSource.transaction { sak(it, periode) }
+        val sak = dataSource.transaction { sak(it, periode.fom) }
         dataSource.transaction { finnEllerOpprettBehandling(it, sak) }
         val klagebehandling = dataSource.transaction { connection ->
             finnEllerOpprettBehandling(connection, sak, Vurderingsbehov.MOTATT_KLAGE)
