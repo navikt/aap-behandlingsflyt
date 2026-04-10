@@ -141,10 +141,10 @@ class VedtakslengdeService(
     ): Set<Avslagsårsak> {
         val stansOpphørGrunnlag = stansOpphørRepository.hentHvisEksisterer(behandlingId)
         val gjeldendeStansEllerOpphør = stansOpphørGrunnlag?.gjeldendeStansOgOpphør()
-        val avslagsårsakerFørsteDagUtenBistandsbehovRettighet = gjeldendeStansEllerOpphør
-            ?.filter { it.fom == stansEllerOpphørFom }
-            ?.flatMap { it.vurdering.årsaker }
-            ?.toSet() ?: emptySet()
+        val avslagsårsakerFørsteDagUtenBistandsbehovRettighet = gjeldendeStansEllerOpphør.orEmpty()
+            .filter { it.fom == stansEllerOpphørFom }
+            .flatMap { it.vurdering.årsaker }
+            .toSet()
 
         return avslagsårsakerFørsteDagUtenBistandsbehovRettighet
     }
@@ -358,9 +358,9 @@ class VedtakslengdeService(
         )
 }
 
-private sealed class BistandsbehovRettighetsperioder {
-    data object IngenPerioder : BistandsbehovRettighetsperioder()
-    data class EnSammenhengendePeriodeFraAngittDato(val periode: Periode) : BistandsbehovRettighetsperioder()
-    data class EnSammenhengendePeriodeFraSenereDato(val periode: Periode) : BistandsbehovRettighetsperioder()
-    data class FlereIkkeSammenhengendePerioder(val perioder: List<Periode>) : BistandsbehovRettighetsperioder()
+private sealed interface BistandsbehovRettighetsperioder {
+    data object IngenPerioder : BistandsbehovRettighetsperioder
+    data class EnSammenhengendePeriodeFraAngittDato(val periode: Periode) : BistandsbehovRettighetsperioder
+    data class EnSammenhengendePeriodeFraSenereDato(val periode: Periode) : BistandsbehovRettighetsperioder
+    data class FlereIkkeSammenhengendePerioder(val perioder: List<Periode>) : BistandsbehovRettighetsperioder
 }

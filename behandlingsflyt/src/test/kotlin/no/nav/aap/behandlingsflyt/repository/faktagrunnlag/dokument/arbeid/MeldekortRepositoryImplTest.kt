@@ -46,7 +46,7 @@ class MeldekortRepositoryImplTest {
     @Test
     fun `Skal lagre ned meldekort på sak`() {
         dataSource.transaction { connection ->
-            val sak = sak(connection, periode)
+            val sak = sak(connection, periode.fom)
             val behandling = finnEllerOpprettBehandling(connection, sak)
 
             val meldekortRepositoryImpl = MeldekortRepositoryImpl(connection)

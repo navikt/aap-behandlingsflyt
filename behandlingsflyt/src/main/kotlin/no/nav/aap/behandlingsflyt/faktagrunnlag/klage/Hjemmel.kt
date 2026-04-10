@@ -5,6 +5,8 @@ import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov
 // TODO: Hjemler her som er markert som TODO er ting som kan klages på
 // men det er ikke implementert noen revurdering på de, så det vil feile
 enum class Hjemmel(val hjemmel: String) {
+    EOES_883_2004("EØS-forordningen (lovvalg / medlemskap)"),
+    
     FOLKETRYGDLOVEN_KAPITTEL_2("Kapittel 2"),
     FOLKETRYGDLOVEN_11_2("§ 11-2"),
 
@@ -62,6 +64,7 @@ enum class Hjemmel(val hjemmel: String) {
             FOLKETRYGDLOVEN_11_9 -> listOf(Vurderingsbehov.AKTIVITETSPLIKT_11_9)
             
             // Førstegangsbehandling / Revurdering
+            EOES_883_2004 -> listOf(Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP)
             FOLKETRYGDLOVEN_11_2 -> listOf(Vurderingsbehov.FORUTGAENDE_MEDLEMSKAP)
             FOLKETRYGDLOVEN_11_3 -> listOf(Vurderingsbehov.OPPHOLDSKRAV)
 

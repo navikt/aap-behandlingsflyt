@@ -68,7 +68,7 @@ class VedtakslengdeStegTest {
     fun `Skal forlenge sluttdato med 261 dager for fremtidig rett på ordinær`() {
         val rettighetsperiode = Periode(1 januar 2020, Tid.MAKS)
         val person = person()
-        val sak = sak(person, rettighetsperiode)
+        val sak = sak(person, rettighetsperiode.fom)
         val forrigeBehandling = førstegangsbehandling(sak.id)
 
         val ikkeOppfyltPeriode = Periode(2 desember 2020, 1 januar 2021)
@@ -85,7 +85,7 @@ class VedtakslengdeStegTest {
             underveisperioder = vedtatteUnderveisperioder,
             input = object : Faktagrunnlag {}
         )
-        
+
         val vedtakslengdeRepository = InMemoryVedtakslengdeRepository
 
         val inneværendeBehandling = revurdering(
@@ -131,7 +131,11 @@ class VedtakslengdeStegTest {
                 vedtakslengdeRepository = InMemoryVedtakslengdeRepository,
                 underveisRepository = InMemoryUnderveisRepository,
                 vilkårsresultatRepository = InMemoryVilkårsresultatRepository,
-                rettighetstypeService = RettighetstypeService(InMemoryRettighetstypeRepository, InMemoryVilkårsresultatRepository, InMemoryUnderveisRepository),
+                rettighetstypeService = RettighetstypeService(
+                    InMemoryRettighetstypeRepository,
+                    InMemoryVilkårsresultatRepository,
+                    InMemoryUnderveisRepository
+                ),
                 stansOpphørRepository = mockk(),
                 unleashGateway = AlleAvskruddUnleash,
                 clock = fixedClock(dagensDato),
@@ -142,7 +146,7 @@ class VedtakslengdeStegTest {
         )
 
         steg.utfør(kontekst)
-        
+
         assertThat(vedtakslengdeRepository.hentHvisEksisterer(inneværendeBehandling.id)).isNotNull
     }
 
@@ -172,8 +176,8 @@ class VedtakslengdeStegTest {
 
     }
 
-    private fun sak(person: Person, periode: Periode): Sak =
-        sakRepository.finnEllerOpprett(person, periode)
+    private fun sak(person: Person, start: LocalDate): Sak =
+        sakRepository.finnEllerOpprett(person, start)
 
 
     private fun person(): Person =
@@ -251,7 +255,7 @@ class VedtakslengdeStegTest {
                 )
             )
         )
-        
+
         val straffegjennomføringVilkår = Vilkår(
             Vilkårtype.STRAFFEGJENNOMFØRING, setOf(
                 Vilkårsperiode(

@@ -12,7 +12,7 @@ data class StansOpphørGrunnlag(
     fun gjeldendeStansOgOpphør(): Set<GjeldendeStansEllerOpphør> {
         return stansOgOpphør
             .groupBy { it.fom }
-            .mapNotNull { (_, vedtak) -> vedtak.maxByOrNull { it.opprettet }!! }
+            .mapNotNull { (_, vedtak) -> vedtak.maxBy { it.opprettet } }
             .mapNotNull {
                 when (it) {
                     is GjeldendeStansEllerOpphør -> it
@@ -35,7 +35,7 @@ data class StansOpphørGrunnlag(
         clock: Clock = Clock.systemDefaultZone(),
     ): StansOpphørGrunnlag {
         val endringer = mergeNotNull(
-            gjeldendeStansOgOpphør().associate { it.fom to  it.vurdering},
+            gjeldendeStansOgOpphør().associate { it.fom to it.vurdering },
             utlededeStansOgOpphør,
         ) { dato, vedtattStans, utledetStans ->
             if (utledetStans != null && vedtattStans != utledetStans) {
