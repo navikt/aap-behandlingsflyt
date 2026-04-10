@@ -13,9 +13,11 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.komponenter.miljo.Miljø
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
+import java.time.LocalDate
 import javax.sql.DataSource
 
 class StansEllerOpphørMigrering(
@@ -57,14 +59,15 @@ class StansEllerOpphørMigrering(
                           AND trukket_soknad_grunnlag.aktiv
                           AND trukket_soknad_vurdering.skal_trekkes
                     )
-                      AND sak.opprettet_tid >= '2025-04-01'
+                      AND sak.opprettet_tid >= ?
                       AND sak.id > ?
                     ORDER BY sak.id
                     LIMIT 1
                 """.trimIndent()
                 ) {
                     setParams {
-                        setLong(1, sisteMigrerte)
+                        setLocalDate(1, if (Miljø.erDev()) LocalDate.parse("2025-04-01") else LocalDate.parse("2020-01-01"))
+                        setLong(2, sisteMigrerte)
                     }
                     setRowMapper {
                         SakId(it.getLong("sak_id"))
