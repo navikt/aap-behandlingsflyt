@@ -32,18 +32,24 @@ class SykdomsvilkårUtenVissVarighet(vilkårsresultat: Vilkårsresultat) : Vilk�
         grunnlag: SykdomsFaktagrunnlag,
         eksisterendeVilkårsresultat: Vilkårsresultat
     ): Tidslinje<SammenlignetSegment> {
-        val nyTidslinje = vurderVilkårUtenMutering(grunnlag)
-        val nySammenlignbarTidslinje =
-            nyTidslinje.mapValue { SammenlignbarVurdering(it.utfall, it.innvilgelsesårsak, it.avslagsårsak) }
+
+        val nySammenlignbarVilkårsvurderingTidslinje =
+            vurderVilkårUtenMutering(grunnlag).mapValue {
+                SammenlignbarVurdering(
+                    it.utfall,
+                    it.innvilgelsesårsak,
+                    it.avslagsårsak
+                )
+            }
                 .komprimer()
 
-        val gammelTidslinje =
+        val gammelSammenlignbarVilkårsvurderingTidslinje =
             eksisterendeVilkårsresultat.optionalVilkår(Vilkårtype.SYKDOMSVILKÅRET)?.tidslinje().orEmpty()
-        val gammelSammenlignbarTidslinje =
-            gammelTidslinje.mapValue { SammenlignbarVurdering(it.utfall, it.innvilgelsesårsak, it.avslagsårsak) }
+                .mapValue { SammenlignbarVurdering(it.utfall, it.innvilgelsesårsak, it.avslagsårsak) }
                 .komprimer()
 
-        return nySammenlignbarTidslinje.outerJoin(gammelSammenlignbarTidslinje) { gammel, ny ->
+
+        return gammelSammenlignbarVilkårsvurderingTidslinje.outerJoin(nySammenlignbarVilkårsvurderingTidslinje) { gammel, ny ->
             SammenlignetSegment(gammel, ny)
         }.komprimer()
     }
@@ -199,7 +205,7 @@ class SykdomsvilkårUtenVissVarighet(vilkårsresultat: Vilkårsresultat) : Vilk�
 data class SammenlignetSegment(val gammel: SammenlignbarVurdering?, val ny: SammenlignbarVurdering?)
 
 fun Tidslinje<SammenlignetSegment>.diff() = this.segmenter().filter { it.verdi.gammel != it.verdi.ny }
-fun Tidslinje<SammenlignetSegment>.harDiff() = this.segmenter().none { it.verdi.gammel != it.verdi.ny }
+fun Tidslinje<SammenlignetSegment>.harDiff() = this.segmenter().any { it.verdi.gammel != it.verdi.ny }
 data class SammenlignbarVurdering(
     val utfall: Utfall,
     val innvilgelsesårsak: Innvilgelsesårsak?,

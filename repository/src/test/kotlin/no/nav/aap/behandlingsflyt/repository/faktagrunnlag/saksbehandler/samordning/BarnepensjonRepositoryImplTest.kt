@@ -1,17 +1,15 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.samordning
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.barnepensjon.BarnepensjonGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.barnepensjon.BarnepensjonVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.barnepensjon.BarnepensjonPeriode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.barnepensjon.BarnepensjonVurdering
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.help.sak
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
-import no.nav.aap.behandlingsflyt.test.desember
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
-import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
@@ -42,7 +40,7 @@ class BarnepensjonRepositoryImplTest {
 
     @Test
     fun `lagre, hente ut, slette`() {
-        val sak = dataSource.transaction { sak(it, Periode(1 januar 2022, 31.desember(2023))) }
+        val sak = dataSource.transaction { sak(it, 1 januar 2022) }
 
         val behandling = dataSource.transaction {
             finnEllerOpprettBehandling(it, sak)
@@ -94,7 +92,7 @@ class BarnepensjonRepositoryImplTest {
 
     @Test
     fun `hentHistoriskeVurderinger returnerer vurderinger fra tidligere behandlinger`() {
-        val sak = dataSource.transaction { sak(it, Periode(1 januar 2022, 31.desember(2023))) }
+        val sak = dataSource.transaction { sak(it, 1 januar 2022) }
 
         // Opprett første behandling og lagre en barnepensjonvurdering
         val behandling1 = dataSource.transaction {
@@ -141,7 +139,7 @@ class BarnepensjonRepositoryImplTest {
 
     @Test
     fun `Kopier barnepensjon`() {
-        val sak = dataSource.transaction { sak(it, Periode(1 januar 2022, 31.desember(2023))) }
+        val sak = dataSource.transaction { sak(it, 1 januar 2022) }
 
         val behandling = dataSource.transaction {
             finnEllerOpprettBehandling(it, sak)

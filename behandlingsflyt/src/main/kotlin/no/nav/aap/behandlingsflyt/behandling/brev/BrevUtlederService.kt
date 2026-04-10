@@ -231,7 +231,7 @@ class BrevUtlederService(
             )
 
             if (avslagsårsaker.isNotEmpty()) {
-                // Støtter kun en avslagsårsakk i brev - henter ut høyest prioritert
+                // Støtter kun en avslagsårsak i brev - henter ut høyest prioritert
                 val prioritertAvslagsårsak = requireNotNull(prioriterAvslagsårsak(avslagsårsaker)) {
                     "Fant avslagsårsaker $avslagsårsaker for behandling ${behandling.id}, men ingen av dem er støttet for utvidelse under ett år"
                 }

@@ -51,11 +51,8 @@ class VurderLovvalgSteg private constructor(
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val grunnlag = lazy { hentGrunnlag(kontekst.sakId, kontekst.behandlingId) }
 
-        val tvingerAvklaringsbehov = if (unleashGateway.isEnabled(BehandlingsflytFeature.AvslagLovvalgMedlemskap)) {
+        val tvingerAvklaringsbehov =
             vurderingsbehovSomTvingerAvklaringsbehov()  // med MOTTATT_SØKNAD
-        } else {
-            vurderingsbehovSomTvingerAvklaringsbehovOld()  // uten MOTTATT_SØKNAD
-        }
         avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
             kontekst = kontekst,
             definisjon = Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP,
@@ -105,57 +102,33 @@ class VurderLovvalgSteg private constructor(
     }
 
     override fun nårVurderingErRelevant(kontekst: FlytKontekstMedPerioder): Tidslinje<Boolean> {
-        if (unleashGateway.isEnabled(BehandlingsflytFeature.AvslagLovvalgMedlemskap)) {
-            val grunnlag = hentGrunnlag(kontekst.sakId, kontekst.behandlingId)
-            val tidligereVurderingsutfall = tidligereVurderinger.behandlingsutfall(kontekst, type())
-            val automatiskVilkårsvurderingLovvalg = vilkårsvurderingLovvalgUtenManuelleVurderinger(kontekst, grunnlag)
 
-            val forrigeHaddeAvslagPåLovvalg = kontekst.forrigeBehandlingId?.let { forrigeId ->
-                vilkårsresultatRepository.hent(forrigeId)
-                    .finnVilkår(Vilkårtype.LOVVALG)
-                    .vilkårsperioder()
-                    .lastOrNull()?.erOppfylt() == false
-            } ?: false
+        val grunnlag = hentGrunnlag(kontekst.sakId, kontekst.behandlingId)
+        val tidligereVurderingsutfall = tidligereVurderinger.behandlingsutfall(kontekst, type())
+        val automatiskVilkårsvurderingLovvalg = vilkårsvurderingLovvalgUtenManuelleVurderinger(kontekst, grunnlag)
 
-            val tvingerRelevans = kontekst.vurderingsbehovRelevanteForSteg.any {
-                it in vurderingsbehovSomGjørAtRevurderingSkalTvinges()
-            } || (forrigeHaddeAvslagPåLovvalg && Vurderingsbehov.MOTTATT_SØKNAD in kontekst.vurderingsbehovRelevanteForSteg)
+        val forrigeHaddeAvslagPåLovvalg = kontekst.forrigeBehandlingId?.let { forrigeId ->
+            vilkårsresultatRepository.hent(forrigeId)
+                .finnVilkår(Vilkårtype.LOVVALG)
+                .vilkårsperioder()
+                .lastOrNull()?.erOppfylt() == false
+        } ?: false
 
-            return Tidslinje.zip2(tidligereVurderingsutfall, automatiskVilkårsvurderingLovvalg)
-                .mapValue { (behandlingsutfall, automatiskVilkårsvurderingLovvalg) ->
-                    val automatiskIkkeOppfylt = automatiskVilkårsvurderingLovvalg?.erOppfylt() == false
-                    when (behandlingsutfall) {
-                        null -> false
-                        TidligereVurderinger.IkkeBehandlingsgrunnlag -> false
-                        TidligereVurderinger.UunngåeligAvslag -> false
-                        is TidligereVurderinger.PotensieltOppfylt -> automatiskIkkeOppfylt || tvingerRelevans
-                    }
+        val tvingerRelevans = kontekst.vurderingsbehovRelevanteForSteg.any {
+            it in vurderingsbehovSomGjørAtRevurderingSkalTvinges()
+        } || (forrigeHaddeAvslagPåLovvalg && Vurderingsbehov.MOTTATT_SØKNAD in kontekst.vurderingsbehovRelevanteForSteg)
+
+        return Tidslinje.zip2(tidligereVurderingsutfall, automatiskVilkårsvurderingLovvalg)
+            .mapValue { (behandlingsutfall, automatiskVilkårsvurderingLovvalg) ->
+                val automatiskIkkeOppfylt = automatiskVilkårsvurderingLovvalg?.erOppfylt() == false
+                when (behandlingsutfall) {
+                    null -> false
+                    TidligereVurderinger.IkkeBehandlingsgrunnlag -> false
+                    TidligereVurderinger.UunngåeligAvslag -> false
+                    is TidligereVurderinger.PotensieltOppfylt -> automatiskIkkeOppfylt || tvingerRelevans
                 }
-        } else {
-            val grunnlag = hentGrunnlag(kontekst.sakId, kontekst.behandlingId)
-            val tidligereVurderingsutfall = tidligereVurderinger.behandlingsutfall(kontekst, type())
-            val automatiskVilkårsvurderingLovvalg = vilkårsvurderingLovvalgUtenManuelleVurderinger(kontekst, grunnlag)
+            }
 
-            return Tidslinje.zip2(tidligereVurderingsutfall, automatiskVilkårsvurderingLovvalg)
-                .mapValue { (behandlingsutfall, automatiskVilkårsvurderingLovvalg) ->
-                    when (behandlingsutfall) {
-                        null -> false
-                        TidligereVurderinger.IkkeBehandlingsgrunnlag -> false
-                        TidligereVurderinger.UunngåeligAvslag -> false
-                        is TidligereVurderinger.PotensieltOppfylt -> {
-                            val automatiskVilkårsvurderinglovvalgIkkeOppfylt =
-                                automatiskVilkårsvurderingLovvalg?.erOppfylt() == false
-
-                            // Må gjøres slik for å trigge overstyrt avklaringsbehov hvis allerede automatisk oppfylt
-                            val tvingerAvklaringsbehov = kontekst.vurderingsbehovRelevanteForSteg.any {
-                                it in vurderingsbehovSomTvingerAvklaringsbehovOld()
-                            }
-
-                            automatiskVilkårsvurderinglovvalgIkkeOppfylt || tvingerAvklaringsbehov
-                        }
-                    }
-                }
-        }
     }
 
 
@@ -201,11 +174,6 @@ class VurderLovvalgSteg private constructor(
 
     private fun vurderingsbehovSomTvingerAvklaringsbehov(): Set<Vurderingsbehov> =
         setOf(Vurderingsbehov.REVURDER_LOVVALG, Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP, Vurderingsbehov.MOTTATT_SØKNAD)
-
-
-    private fun vurderingsbehovSomTvingerAvklaringsbehovOld(): Set<Vurderingsbehov> =
-        setOf(Vurderingsbehov.REVURDER_LOVVALG, Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP)
-
 
     private fun hentGrunnlag(sakId: SakId, behandlingId: BehandlingId): MedlemskapLovvalgGrunnlag {
         val medlemskapArbeidInntektGrunnlag =
