@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ErNedsettel
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomsvurderingMedId
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.YrkesskadeSak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Yrkesskadevurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
@@ -467,6 +468,89 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
                 setLong(2, behandlingId.id)
             }
             setRowMapper(::sykdomsvurderingRowmapper)
+        }
+    }
+
+    override fun hentBehandlingIderMedUmigrerteSykdomsvurderinger(sisteBehandlingId: Long): List<BehandlingId> {
+        val query = """
+            SELECT DISTINCT sg.behandling_id
+            FROM sykdom_grunnlag sg
+            JOIN sykdom_vurdering sv ON sv.sykdom_vurderinger_id = sg.sykdom_vurderinger_id
+            WHERE sg.aktiv = TRUE
+              AND sg.behandling_id > ?
+              AND sv.er_nedsettelse_minst_halvparten IS NULL
+              AND sv.er_nedsettelse_mer_enn_yrkesskadegrense IS NULL
+            ORDER BY sg.behandling_id
+            LIMIT 1
+        """.trimIndent()
+
+        return connection.queryList(query) {
+            setParams {
+                setLong(1, sisteBehandlingId)
+            }
+            setRowMapper { row ->
+                BehandlingId(row.getLong("behandling_id"))
+            }
+        }
+    }
+
+    override fun oppdaterNyeFelter(
+        sykdomVurderingId: Long,
+        erNedsettelseMinstHalvparten: ErNedsettelseMinstHalvpartenValg?,
+        erNedsettelseMerEnnYrkesskadegrense: ErNedsettelseMerEnnYrkesskadegrenseValg?
+    ) {
+        val query = """
+            UPDATE sykdom_vurdering
+            SET er_nedsettelse_minst_halvparten = ?,
+                er_nedsettelse_mer_enn_yrkesskadegrense = ?
+            WHERE id = ?
+        """.trimIndent()
+
+        connection.execute(query) {
+            setParams {
+                setEnumName(1, erNedsettelseMinstHalvparten)
+                setEnumName(2, erNedsettelseMerEnnYrkesskadegrense)
+                setLong(3, sykdomVurderingId)
+            }
+        }
+    }
+
+    override fun hentSykdomsvurderingMedId(behandlingId: BehandlingId): List<SykdomsvurderingMedId> {
+        val sykdomVurderingerIds = getSykdomVurderingerIds(behandlingId)
+        
+        return connection.queryList(
+            """
+            SELECT id,
+                   BEGRUNNELSE,
+                   VURDERINGEN_GJELDER_FRA,
+                   HAR_SYKDOM_SKADE_LYTE,
+                   ER_SYKDOM_SKADE_LYTE_VESETLING_DEL,
+                   ER_NEDSETTELSE_MER_ENN_HALVPARTEN,
+                   ER_NEDSETTELSE_MER_ENN_YRKESSKADE_GRENSE,
+                   ER_NEDSETTELSE_AV_EN_VISS_VARIGHET,
+                   ER_NEDSETTELSE_MINST_HALVPARTEN, 
+                   ER_NEDSETTELSE_MER_ENN_YRKESSKADEGRENSE,
+                   ER_ARBEIDSEVNE_NEDSATT,
+                   YRKESSKADE_BEGRUNNELSE,
+                   KODEVERK,
+                   DIAGNOSE,
+                   OPPRETTET_TID,
+                   VURDERT_AV_IDENT,
+                   VURDERT_I_BEHANDLING,
+                   VURDERINGEN_GJELDER_TIL
+            FROM SYKDOM_VURDERING
+            WHERE SYKDOM_VURDERINGER_ID = ANY(?::bigint[])
+            """.trimIndent()
+        ) {
+            setParams {
+                setLongArray(1, sykdomVurderingerIds)
+            }
+            setRowMapper { row ->
+                SykdomsvurderingMedId(
+                    id = row.getLong("id"),
+                    sykdomsvurdering = sykdomsvurderingRowmapper(row)
+                )
+            }
         }
     }
 

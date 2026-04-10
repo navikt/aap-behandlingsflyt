@@ -81,6 +81,7 @@ import no.nav.aap.behandlingsflyt.behandling.underveis.underveisVurderingerApi
 import no.nav.aap.behandlingsflyt.behandling.vedtakslengde.vedtakslengdeGrunnlagApi
 import no.nav.aap.behandlingsflyt.drift.driftApi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.StansEllerOpphørMigrering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomsvurderingMigrering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.ApplikasjonsVersjon
 import no.nav.aap.behandlingsflyt.flyt.behandlingApi
 import no.nav.aap.behandlingsflyt.flyt.flytApi
@@ -450,6 +451,10 @@ private fun utførMigreringer(
         if (unleashGateway.isEnabled(BehandlingsflytFeature.MigrerStansOgOpphor) && isLeader) {
             // kjør migreringer
             StansEllerOpphørMigrering(dataSource, postgresRepositoryRegistry, gatewayProvider).migrer()
+        }
+
+        if (unleashGateway.isEnabled(BehandlingsflytFeature.MigrerSykdomsvurdering) && isLeader) {
+            SykdomsvurderingMigrering(dataSource, postgresRepositoryRegistry, gatewayProvider).migrer()
         }
 
     }, 1, 9, TimeUnit.MINUTES)
