@@ -45,6 +45,7 @@ class StansOpphørServiceTest {
     fun `skal beholde stans-opphør som er innenfor vedtaksperioden`() {
         val behandling = nyBehandling(LocalDate.now())
         lagreVedtakslengde(behandling, sluttdato = LocalDate.now().plusYears(1))
+        lagreUnderveis(behandling, LocalDate.now(), LocalDate.now().plusYears(3))
         InMemoryStansOpphørRepository.lagre(
             behandling.id, StansOpphørGrunnlag(
                 stansOgOpphør = setOf(
@@ -92,6 +93,7 @@ class StansOpphørServiceTest {
     fun `skal filtrere bort stans-opphør som er for langt fram i tid`() {
         val behandling = nyBehandling(LocalDate.now())
         lagreVedtakslengde(behandling, sluttdato = LocalDate.now().plusYears(1))
+        lagreUnderveis(behandling, LocalDate.now(), LocalDate.now().plusYears(3))
         InMemoryStansOpphørRepository.lagre(
             behandling.id, StansOpphørGrunnlag(
                 stansOgOpphør = setOf(

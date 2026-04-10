@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveis
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.komponenter.tidslinje.orEmpty
 import java.time.LocalDate
 
 class StansOpphørService(
@@ -37,11 +38,11 @@ class StansOpphørService(
         val sluttDato = gjeldendeVarighet?.sluttdato
 
         val underveisMaksdato = underveisRepository.hentHvisEksisterer(behandlingId)
-            ?.somTidslinje()
-            ?.filter { it.verdi.utfall == Utfall.OPPFYLT }
-            ?.helePerioden()?.tom
+            ?.somTidslinje().orEmpty()
+            .filter { it.verdi.utfall == Utfall.OPPFYLT }
+            .helePerioden().tom
 
-        return listOfNotNull(sluttDato, underveisMaksdato).max()
+        return sluttDato ?: underveisMaksdato
     }
 
 }
