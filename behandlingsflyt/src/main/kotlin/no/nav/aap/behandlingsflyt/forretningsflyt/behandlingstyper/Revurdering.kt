@@ -143,6 +143,7 @@ object Revurdering : BehandlingType {
                     Vurderingsbehov.DØDSFALL_BRUKER,
                     Vurderingsbehov.REVURDER_LOVVALG,
                     Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP,
+                    Vurderingsbehov.OVERGANG_ARBEID,
                 )
             )
             .medSteg(
@@ -155,6 +156,7 @@ object Revurdering : BehandlingType {
                     Vurderingsbehov.DØDSFALL_BRUKER,
                     Vurderingsbehov.REVURDER_LOVVALG,
                     Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP,
+                    Vurderingsbehov.OVERGANG_UFORE,
                 )
             )
             .medSteg(
@@ -210,6 +212,7 @@ object Revurdering : BehandlingType {
                     Vurderingsbehov.HELHETLIG_VURDERING,
                     Vurderingsbehov.REVURDER_LOVVALG,
                     Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP,
+                    Vurderingsbehov.OVERGANG_UFORE,
                 )
             )
             .medSteg(
@@ -222,6 +225,7 @@ object Revurdering : BehandlingType {
                     Vurderingsbehov.HELHETLIG_VURDERING,
                     Vurderingsbehov.REVURDER_LOVVALG,
                     Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP,
+                    Vurderingsbehov.OVERGANG_ARBEID,
                 )
             )
             .medSteg(
