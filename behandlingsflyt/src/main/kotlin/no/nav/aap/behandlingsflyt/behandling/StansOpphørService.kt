@@ -37,10 +37,17 @@ class StansOpphørService(
         val gjeldendeVarighet = vedtakslengdeGrunnlag?.gjeldendeVurdering()
         val sluttDato = gjeldendeVarighet?.sluttdato
 
-        val underveisMaksdato = underveisRepository.hentHvisEksisterer(behandlingId)
+        val underveisTidslinje = underveisRepository.hentHvisEksisterer(behandlingId)
             ?.somTidslinje().orEmpty()
-            .filter { it.verdi.utfall == Utfall.OPPFYLT }
-            .helePerioden().tom
+
+        val oppfyltUnderveis = underveisTidslinje.filter { it.verdi.utfall == Utfall.OPPFYLT }
+
+        // Hvis *ingen* dager er oppfylt, definerer vi underveis-sluttdatoen til å være dagen før søknadsdato.
+        val underveisMaksdato = if (oppfyltUnderveis.isEmpty()) {
+            underveisTidslinje.helePerioden().fom.minusDays(1)
+        } else {
+            oppfyltUnderveis.helePerioden().tom
+        }
 
         return sluttDato ?: underveisMaksdato
     }
