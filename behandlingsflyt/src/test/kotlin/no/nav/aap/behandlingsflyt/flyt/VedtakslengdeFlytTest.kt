@@ -62,7 +62,6 @@ import java.time.LocalDateTime
 object VedtakslengdeFlytUnleash : FakeUnleashBaseWithDefaultDisabled(
     enabledFlags = listOf(
         BehandlingsflytFeature.UtvidVedtakslengdeUnderEttAr,
-        BehandlingsflytFeature.LagreStansOgOpphor
     )
 )
 
@@ -111,7 +110,7 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(VedtakslengdeFlytUnlea
 
         /* Gir AAP som arbeidssøker. */
         sak.opprettManuellRevurdering(
-            no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND
+            Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND
         )
             .løsSykdom(vurderingGjelderFra = endringsdato, erOppfylt = true)
             .løsBistand(endringsdato, erOppfylt = true)
@@ -425,7 +424,7 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(VedtakslengdeFlytUnlea
 
         /* Gir AAP som arbeidssøker. */
         sak.opprettManuellRevurdering(
-            no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND
+            Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND
         )
             .løsSykdom(vurderingGjelderFra = endringsdato, erOppfylt = false)
             .løsBistand(endringsdato, erOppfylt = false)
@@ -556,7 +555,7 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(VedtakslengdeFlytUnlea
 
         /* Gir AAP som arbeidssøker. */
         sak.opprettManuellRevurdering(
-            no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND
+            Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND
         )
             .løsSykdom(vurderingGjelderFra = endringsdato, erOppfylt = false)
             .løsBistand(endringsdato, erOppfylt = false)
@@ -1132,7 +1131,7 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(VedtakslengdeFlytUnlea
         val endringsdato = LocalDate.now(clock).plusYears(1).plusMonths(2)
 
         sak.opprettManuellRevurdering(
-            no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND
+            Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND
         )
             .løsSykdom(vurderingGjelderFra = endringsdato, erOppfylt = false)
             .løsBistand(endringsdato, erOppfylt = false)
@@ -1152,7 +1151,7 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(VedtakslengdeFlytUnlea
 
         // Gjør om fra arbeidssøker tilbake til bistandsbehov - skal behoholde sluttdatoen
         sak.opprettManuellRevurdering(
-            no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND
+            Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND
         )
             .løsSykdom(vurderingGjelderFra = endringsdato, erOppfylt = true)
             .løsBistand(endringsdato, erOppfylt = true)
