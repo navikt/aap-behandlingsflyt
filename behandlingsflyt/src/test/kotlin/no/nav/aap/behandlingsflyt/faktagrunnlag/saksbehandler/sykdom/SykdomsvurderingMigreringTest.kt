@@ -68,6 +68,7 @@ class SykdomsvurderingMigreringTest : AbstraktFlytOrkestratorTest(Sykdomsvurderi
             vurderingerMedId.forEach { vurderingMedId ->
                 val vurdering = vurderingMedId.sykdomsvurdering
                 assertThat(vurdering.erNedsettelseMinstHalvparten).isEqualTo(ErNedsettelseMinstHalvpartenValg.JA)
+                assertThat(vurdering.erNedsettelseMerEnnYrkesskadegrense).isNull()
             }
         }
     }
