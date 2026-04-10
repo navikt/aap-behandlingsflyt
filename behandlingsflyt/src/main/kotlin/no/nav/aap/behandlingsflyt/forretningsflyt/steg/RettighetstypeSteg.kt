@@ -23,6 +23,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.type.Periode
@@ -80,14 +81,14 @@ class RettighetstypeSteg(
         when (kontekst.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING,
             VurderingType.REVURDERING ->
-
-                lagreStansOgOpphør(
-                    behandlingId,
-                    kontekst.forrigeBehandlingId,
-                    kontekst.behandlingType,
-                    kontekst.rettighetsperiode
-                )
-
+                if (unleashGateway.isEnabled(BehandlingsflytFeature.LagreStansOgOpphor)) {
+                    lagreStansOgOpphør(
+                        behandlingId,
+                        kontekst.forrigeBehandlingId,
+                        kontekst.behandlingType,
+                        kontekst.rettighetsperiode
+                    )
+                }
 
             else -> {
             }
