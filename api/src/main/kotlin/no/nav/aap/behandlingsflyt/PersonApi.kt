@@ -32,7 +32,7 @@ fun NormalOpenAPIRoute.personApi(
     repositoryRegistry: RepositoryRegistry,
     gatewayProvider: GatewayProvider,
 ) {
-    route("/api/person") {
+    route("/api/person/ident") {
         post<Unit, PersonIdentResponse, PersonIdentRequest> { _, request ->
             try {
                 val personIdent = dataSource.transaction(readOnly = true) { connection ->
@@ -45,7 +45,7 @@ fun NormalOpenAPIRoute.personApi(
                     throw IkkeTillattException("Har ikke tilgang til person")
                 }
                 respond(PersonIdentResponse(personIdent.identifikator), HttpStatusCode.OK)
-            } catch (e: Exception) {
+            } catch (e: NoSuchElementException) {
                 log.warn("Fant ikke ident for identifikator: ${request.identifikator}", e)
                 throw VerdiIkkeFunnetException("Fant ingen person for identifikator: ${request.identifikator}")
             }
