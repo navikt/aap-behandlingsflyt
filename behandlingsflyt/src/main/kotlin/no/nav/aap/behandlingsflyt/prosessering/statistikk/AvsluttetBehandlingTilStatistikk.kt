@@ -88,7 +88,10 @@ class AvsluttetBehandlingTilStatistikk(
         avbrytRevurderingService = AvbrytRevurderingService(repositoryProvider),
         meldepliktRepository = repositoryProvider.provide(),
         arbeidsopptrappingRepository = repositoryProvider.provide(),
-        stansOpphørService = StansOpphørService(repositoryProvider.provide(), repositoryProvider.provide())
+        stansOpphørService = StansOpphørService(
+            repositoryProvider.provide(),
+            repositoryProvider.provide(), repositoryProvider.provide()
+        )
     )
 
     private val log = LoggerFactory.getLogger(javaClass)
