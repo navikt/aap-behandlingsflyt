@@ -150,7 +150,6 @@ class AvklarHelseinstitusjonLøser(
                     Segment(
                         Periode(segment.periode.fom, nåværendeOppholdTom),
                         segment.verdi.copy(
-                            vurdertIBehandling = nåværendeBehandlingId,
                             vurdertTidspunkt = LocalDateTime.now()
                         )
                     )
