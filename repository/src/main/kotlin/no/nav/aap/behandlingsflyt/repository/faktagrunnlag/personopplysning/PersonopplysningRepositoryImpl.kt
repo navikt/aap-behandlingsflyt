@@ -28,7 +28,7 @@ class PersonopplysningRepositoryImpl(
     fun hentHvisEksisterer(behandlingId: BehandlingId): PersonopplysningGrunnlag? {
         return connection.queryFirstOrNull(
             """
-            SELECT g.bruker_personopplysning_id, g.personopplysninger_id
+            SELECT g.bruker_personopplysning_id
             FROM PERSONOPPLYSNING_GRUNNLAG g
             WHERE g.AKTIV AND g.BEHANDLING_ID = ?
             """.trimIndent()
@@ -45,7 +45,7 @@ class PersonopplysningRepositoryImpl(
     override fun hentBrukerPersonOpplysningHvisEksisterer(behandlingId: BehandlingId): Personopplysning? {
         return connection.queryFirstOrNull(
             """
-            SELECT g.bruker_personopplysning_id, g.personopplysninger_id
+            SELECT g.bruker_personopplysning_id
             FROM PERSONOPPLYSNING_GRUNNLAG g
             WHERE g.AKTIV AND g.BEHANDLING_ID = ?
             """.trimIndent()
@@ -211,11 +211,10 @@ class PersonopplysningRepositoryImpl(
                 }
             }
 
-        connection.execute("INSERT INTO PERSONOPPLYSNING_GRUNNLAG (BEHANDLING_ID, bruker_personopplysning_id, personopplysninger_id) VALUES (?, ?, ?)") {
+        connection.execute("INSERT INTO PERSONOPPLYSNING_GRUNNLAG (BEHANDLING_ID, bruker_personopplysning_id) VALUES (?, ?)") {
             setParams {
                 setLong(1, behandlingId.toLong())
                 setLong(2, personopplysningId)
-                setLong(3, null)
             }
         }
     }
@@ -233,7 +232,7 @@ class PersonopplysningRepositoryImpl(
 
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
         require(fraBehandling != tilBehandling)
-        connection.execute("INSERT INTO PERSONOPPLYSNING_GRUNNLAG (BEHANDLING_ID, bruker_personopplysning_id, personopplysninger_id) SELECT ?, bruker_personopplysning_id, personopplysninger_id FROM PERSONOPPLYSNING_GRUNNLAG WHERE AKTIV AND BEHANDLING_ID = ?") {
+        connection.execute("INSERT INTO PERSONOPPLYSNING_GRUNNLAG (BEHANDLING_ID, bruker_personopplysning_id) SELECT ?, bruker_personopplysning_id FROM PERSONOPPLYSNING_GRUNNLAG WHERE AKTIV AND BEHANDLING_ID = ?") {
             setParams {
                 setLong(1, tilBehandling.toLong())
                 setLong(2, fraBehandling.toLong())
