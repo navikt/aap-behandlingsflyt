@@ -492,7 +492,7 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
         return connection.queryList(query) {
             setParams {
                 setLong(1, sisteBehandlingId)
-                setLocalDate(1, if (Miljø.erDev()) LocalDate.parse("2025-04-01") else LocalDate.parse("2020-01-01"))
+                setLocalDate(2, if (Miljø.erDev()) LocalDate.parse("2025-04-01") else LocalDate.parse("2020-01-01"))
             }
             setRowMapper { row ->
                 BehandlingId(row.getLong("behandling_id"))
