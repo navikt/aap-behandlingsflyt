@@ -118,14 +118,14 @@ class InntektsbortfallRepositoryImpl(private val connection: DBConnection) : Inn
         val inntektsbortfallVurderingerIds = getInntektsbortfallVurderingerIds(behandlingId)
         val deletedRows = connection.executeReturnUpdated(
             """
-            delete from INNTEKTSBORTFALL_VURDERING where vurderinger_id = ANY(?::bigint[]);
             delete from INNTEKTSBORTFALL_GRUNNLAG where behandling_id = ?;
+            delete from INNTEKTSBORTFALL_VURDERING where vurderinger_id = ANY(?::bigint[]);
             delete from INNTEKTSBORTFALL_VURDERINGER where id = ANY(?::bigint[]);
         """.trimIndent()
         ) {
             setParams {
-                setLongArray(1, inntektsbortfallVurderingerIds)
-                setLong(2, behandlingId.id)
+                setLong(1, behandlingId.id)
+                setLongArray(2, inntektsbortfallVurderingerIds)
                 setLongArray(3, inntektsbortfallVurderingerIds)
             }
         }

@@ -159,7 +159,7 @@ class VedtakslengdeRepositoryImpl(private val connection: DBConnection) : Vedtak
     override fun slett(behandlingId: BehandlingId) {
         val vurderingerIds = connection.queryList(
             """
-            select vurderinger_id from vedtakslengde_grunnlag where behandling_id = ?
+            select vurdering_id from vedtakslengde_grunnlag where behandling_id = ?
             """.trimIndent()
         ) {
             setParams { setLong(1, behandlingId.toLong()) }
@@ -175,14 +175,14 @@ class VedtakslengdeRepositoryImpl(private val connection: DBConnection) : Vedtak
 
         if (vurderingerIds.isNotEmpty()) {
             val antallSlettedeVurderinger = connection.executeReturnUpdated(
-                "delete from vedtakslengde_vurdering where vurderinger_id = ANY(?::bigint[])"
+                "delete from vedtakslengde_vurdering where id = ANY(?::bigint[])"
             ) {
                 setParams { setLongArray(1, vurderingerIds) }
             }
             log.info("Slettet $antallSlettedeVurderinger rader fra vedtakslengde_vurdering for behandlingId=${behandlingId.toLong()}")
 
             connection.executeReturnUpdated(
-                "delete from vedtakslengde_vurderinger where id = ANY(?::bigint[])"
+                "delete from vedtakslengde_vurdering where id = ANY(?::bigint[])"
             ) {
                 setParams { setLongArray(1, vurderingerIds) }
             }

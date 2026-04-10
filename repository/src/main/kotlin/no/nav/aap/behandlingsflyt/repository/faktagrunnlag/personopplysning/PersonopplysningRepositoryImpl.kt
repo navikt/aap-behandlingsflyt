@@ -244,14 +244,12 @@ class PersonopplysningRepositoryImpl(
     override fun slett(behandlingId: BehandlingId) {
         // Sletter ikke bruker_land og bruker_land_aggregat, eller bruker_utenlandsadresser_aggregat da det ikke er personopplysninger her
         val brukerPersonopplysningIds = getBrukerPersonopplysningIds(behandlingId)
-        val personopplysningerIds = getPersonOpplysningerIds(behandlingId)
         val utenlandsAdresserIds = getUtenlandsAdresserIds(brukerPersonopplysningIds)
 
         val deletedRows = connection.executeReturnUpdated(
             """
             delete from personopplysning_grunnlag where behandling_id = ?; 
             delete from bruker_utenlandsadresse where utenlandsadresser_id = ANY(?::bigint[]);
-            delete from personopplysninger where id = ANY(?::bigint[]);
             delete from bruker_personopplysning where id = ANY(?::bigint[]);
             
         """.trimIndent()
@@ -259,8 +257,7 @@ class PersonopplysningRepositoryImpl(
             setParams {
                 setLong(1, behandlingId.id)
                 setLongArray(2, utenlandsAdresserIds)
-                setLongArray(3, personopplysningerIds)
-                setLongArray(4, brukerPersonopplysningIds)
+                setLongArray(3, brukerPersonopplysningIds)
             }
         }
         log.info("Slettet $deletedRows rader fra personopplysning_grunnlag")
