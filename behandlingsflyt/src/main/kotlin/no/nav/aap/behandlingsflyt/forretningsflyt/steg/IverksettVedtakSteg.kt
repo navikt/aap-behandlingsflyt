@@ -203,17 +203,10 @@ class IverksettVedtakSteg private constructor(
             }
 
             val tidligsteMuligeVedtakstidspunkt =
-                if (unleashGateway.isEnabled(BehandlingsflytFeature.RefusjonsdatoKorreksjon)) {
-                    utledTidligsteMuligeVedtakstidspunkt(
-                        behandling,
-                        vedtak.vedtakstidspunkt.toLocalDate()
-                    )
-                } else {
-                    finnTidligesteVedtakstidspunktFraTidligereBehandlinger(
-                        behandling,
-                        vedtak.vedtakstidspunkt.toLocalDate()
-                    )
-                }
+                utledTidligsteMuligeVedtakstidspunkt(
+                    behandling,
+                    vedtak.vedtakstidspunkt.toLocalDate()
+                )
 
             val gjeldendeSosialRefusjonDtoer = navkontorSosialRefusjon
                 .filter { it.harKrav && it.navKontor != null }

@@ -165,7 +165,10 @@ private fun tilKvalitetssikring(it: no.nav.aap.behandlingsflyt.behandling.avklar
                 )
             }
 
-        val godkjent = it.status() == Status.KVALITETSSIKRET
+        val godkjent = when (it.status()) {
+            Status.AVSLUTTET -> if (it.erKvalitetssikretTidligere()) null else false
+            else -> it.status() == Status.KVALITETSSIKRET
+        }
 
         TotrinnsVurdering(
             it.definisjon.kode,

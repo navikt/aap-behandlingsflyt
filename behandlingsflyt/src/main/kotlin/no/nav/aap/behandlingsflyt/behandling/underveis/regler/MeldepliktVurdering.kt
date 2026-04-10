@@ -8,7 +8,6 @@ import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus.F
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus.IKKE_MELDT_SEG
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus.MELDT_SEG
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus.UTEN_RETT
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisÅrsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.verdityper.dokument.JournalpostId
 

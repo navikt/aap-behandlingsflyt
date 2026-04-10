@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.hendelse.datadeling
 
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelsePeriode
 import no.nav.aap.behandlingsflyt.datadeling.SakStatus
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.GjeldendeStansEllerOpphør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.DetaljertMeldekortDTO
@@ -34,7 +35,8 @@ interface ApiInternGateway : Gateway {
         beregningsgrunnlag: BigDecimal?,
         underveis: List<Underveisperiode>,
         vedtaksDato: LocalDate,
-        rettighetsTypeTidslinje: Tidslinje<RettighetsType>
+        rettighetsTypeTidslinje: Tidslinje<RettighetsType>,
+        stansOpphørGrunnlag: Set<GjeldendeStansEllerOpphør>?
     )
 
     fun sendDetaljertMeldekortListe(

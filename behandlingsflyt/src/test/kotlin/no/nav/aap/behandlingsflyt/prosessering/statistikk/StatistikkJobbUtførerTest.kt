@@ -1,7 +1,5 @@
 package no.nav.aap.behandlingsflyt.prosessering.statistikk
 
-import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingService
-import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Kvote
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakService
@@ -23,8 +21,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.StrukturertDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.ArbeidIPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Meldekort
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.dokument.KlagedokumentInformasjonUtleder
-import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.IKlageresultatUtleder
-import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageResultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Diagnose
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.integrasjon.statistikk.StatistikkGatewayImpl
@@ -63,7 +59,6 @@ import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
@@ -74,19 +69,11 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.test.FakeApiInternGateway
 import no.nav.aap.behandlingsflyt.test.Fakes
-import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryArbeidsopptrappingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
-import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBeregningsgrunnlagRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryMeldekortRepository
-import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryMeldepliktRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryMottattDokumentRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryPåklagetBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
-import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySykdomRepository
-import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryTilkjentYtelseRepository
-import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryTrukketSøknadRepository
-import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryUnderveisRepository
-import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryVilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryProvider
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.dbconnect.DBConnection
@@ -399,6 +386,8 @@ class StatistikkJobbUtførerTest {
                         erNedsettelseIArbeidsevneAvEnVissVarighet = true,
                         erNedsettelseIArbeidsevneMerEnnHalvparten = true,
                         erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = true,
+                        erNedsettelseMinstHalvparten = null,
+                        erNedsettelseMerEnnYrkesskadegrense = null,
                         yrkesskadeBegrunnelse = "begr",
                         erArbeidsevnenNedsatt = true,
                         diagnose = Diagnose(
@@ -531,7 +520,6 @@ class StatistikkJobbUtførerTest {
 
     @Test
     fun `prosesserings-kall avgir statistikk korrekt`(hendelser: List<StoppetBehandling>) {
-        val vilkårsResultatRepository = InMemoryVilkårsresultatRepository
         val behandlingRepository = InMemoryBehandlingRepository
 
         val sak = InMemorySakRepository.finnEllerOpprett(
@@ -559,9 +547,6 @@ class StatistikkJobbUtførerTest {
         )
         val referanse = behandling.referanse
 
-        val tilkjentYtelseRepository = InMemoryTilkjentYtelseRepository
-
-        val beregningsgrunnlagRepository = InMemoryBeregningsgrunnlagRepository
         val sakService = SakService(InMemorySakRepository, InMemoryBehandlingRepository)
 
         val nå = LocalDateTime.now()
@@ -595,26 +580,14 @@ class StatistikkJobbUtførerTest {
 
         val utfører = StatistikkJobbUtfører(
             statistikkGateway = StatistikkGatewayImpl(), statistikkMetoder = StatistikkMetoder(
-                vilkårsresultatRepository = vilkårsResultatRepository,
                 behandlingRepository = behandlingRepository,
                 sakService = sakService,
-                tilkjentYtelseRepository = tilkjentYtelseRepository,
-                beregningsgrunnlagRepository = beregningsgrunnlagRepository,
                 pipService = PipService(inMemoryRepositoryProvider),
                 dokumentRepository = dokumentRepository,
-                sykdomRepository = InMemorySykdomRepository,
-                underveisRepository = InMemoryUnderveisRepository,
-                trukketSøknadService = TrukketSøknadService(
-                    trukketSøknadRepository = InMemoryTrukketSøknadRepository
-                ),
                 påklagetBehandlingRepository = InMemoryPåklagetBehandlingRepository,
-                klageresultatUtleder = DummyKlageresultatUtleder(),
-                avbrytRevurderingService = AvbrytRevurderingService(inMemoryRepositoryProvider),
                 meldekortRepository = InMemoryMeldekortRepository,
                 klagedokumentInformasjonUtleder = KlagedokumentInformasjonUtleder(inMemoryRepositoryProvider),
-                vedtakService = VedtakService(inMemoryRepositoryProvider),
-                meldepliktRepository = InMemoryMeldepliktRepository,
-                arbeidsopptrappingRepository = InMemoryArbeidsopptrappingRepository,
+                avsluttetBehandlingTilStatistikk = AvsluttetBehandlingTilStatistikk(inMemoryRepositoryProvider),
             )
         )
 
@@ -688,8 +661,3 @@ class StatistikkJobbUtførerTest {
     }
 }
 
-class DummyKlageresultatUtleder : IKlageresultatUtleder {
-    override fun utledKlagebehandlingResultat(behandlingId: BehandlingId): KlageResultat {
-        throw NotImplementedError("Lag spesifikk implementasjon for caset du vil teste")
-    }
-}
