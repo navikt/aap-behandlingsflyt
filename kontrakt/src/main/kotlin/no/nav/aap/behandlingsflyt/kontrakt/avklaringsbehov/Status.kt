@@ -15,7 +15,7 @@ package no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov
  * * Fra alle tilstander, bortsett fra [AVBRUTT] og [OPPRETTET], til [OPPRETTET]. Dette skjer når avklaringsbehovet
  *   er løst, men det viser seg at løsningen ikke er god nok.
  *
- *  * Fra [AVSLUTTET], [KVALITETSSIKRET] og [TOTRINNS_VURDERT] til [AVSLUTTET]. Dette skjer når hvis vi mottar
+ *  * Fra [AVSLUTTET], [KVALITETSSIKRET] og [TOTRINNS_VURDERT] til [AVSLUTTET]. Dette skjer hvis vi mottar
  *      en løsning.
 ```mermaid
 ---
