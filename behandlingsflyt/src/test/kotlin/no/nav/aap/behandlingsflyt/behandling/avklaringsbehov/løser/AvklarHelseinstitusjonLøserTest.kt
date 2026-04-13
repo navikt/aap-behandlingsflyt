@@ -807,7 +807,7 @@ class AvklarHelseinstitusjonLøserTest {
         val lagrede = vurderingSlot.captured
         assertThat(lagrede).hasSize(1)
         assertThat(lagrede[0].periode.tom).isEqualTo(nyTom)
-        assertThat(lagrede[0].vurdertIBehandling).isEqualTo(nåværendeBehandlingId)
+        assertThat(lagrede[0].vurdertIBehandling).isEqualTo(forrigeBehandlingId)
     }
 
     @Test
