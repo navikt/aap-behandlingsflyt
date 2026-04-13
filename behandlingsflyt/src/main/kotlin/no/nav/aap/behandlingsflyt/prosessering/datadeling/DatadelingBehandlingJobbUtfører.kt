@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.prosessering.datadeling
 
+import no.nav.aap.behandlingsflyt.behandling.StansOpphørService
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepository
@@ -32,6 +33,7 @@ class DatadelingBehandlingJobbUtfører(
     private val samIdRepository: SamIdRepository,
     private val stansOpphørRepository: StansOpphørRepository,
     private val beregningsgrunnlagRepository: BeregningsgrunnlagRepository,
+    private val stansOpphørService: StansOpphørService
 ) : JobbUtfører {
     private val log = LoggerFactory.getLogger(javaClass)
 
@@ -73,7 +75,7 @@ class DatadelingBehandlingJobbUtfører(
 
         val beregningsgrunnlagIKroner = beregningsgrunnlagGUnit?.multiplisert(grunnbeløpVedSakensStart)?.verdi
 
-        val stansOpphør = stansOpphørRepository.hentHvisEksisterer(behandling.id)?.gjeldendeStansOgOpphør()
+        val stansOpphør = stansOpphørService.vedtattStansOpphør(behandling.id).toSet()
 
         apiInternGateway.sendBehandling(
             sak,
