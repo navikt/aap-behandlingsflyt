@@ -20,6 +20,10 @@ repositories {
     mavenLocal()
 }
 
+dependencies {
+    dokkaPlugin("com.glureau:html-mermaid-dokka-plugin:0.6.0")
+}
+
 // https://docs.gradle.org/8.12.1/userguide/jvm_test_suite_plugin.html
 testing {
     suites {
