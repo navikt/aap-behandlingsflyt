@@ -1366,7 +1366,6 @@ object FakeServers : AutoCloseable {
         )
     }
 
-
     private fun mapIdentBolk(it: String): HentPersonBolkResult? {
         val person = fakePersoner.hentPerson(it) ?: return null
         return HentPersonBolkResult(
