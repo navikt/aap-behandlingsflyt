@@ -243,6 +243,7 @@ private fun mapTilExtendedVurdertBarnDto(
             navn = barn.navn.takeIf { barn.ident?.identifikator == ident.hentIdent().identifikator } ?: ident.navn,
             vurderinger = vurderinger,
             fødselsdato = barn.fodselsDato,
+            dødsdato = barn.dodsDato,
             oppgittForeldreRelasjon = barn.oppgittForeldreRelasjon,
         )
 
@@ -251,6 +252,7 @@ private fun mapTilExtendedVurdertBarnDto(
             navn = ident.navn,
             vurderinger = vurderinger,
             fødselsdato = ident.fødselsdato.toLocalDate(),
+            dødsdato = null,
             oppgittForeldreRelasjon = barn.oppgittForeldreRelasjon,
         )
     }

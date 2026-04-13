@@ -289,6 +289,7 @@ class TestScenarioOrkestrator(
                         ident = barn.ident?.identifikator,
                         navn = barn.navn,
                         fødselsdato = barn.fødselsdato?.toLocalDate(),
+                        dødsdato = null,
                         vurderinger = listOf(
                             VurderingAvForeldreAnsvarDto(
                                 fraDato = LocalDate.now().minusMonths((index + 1).toLong()),
