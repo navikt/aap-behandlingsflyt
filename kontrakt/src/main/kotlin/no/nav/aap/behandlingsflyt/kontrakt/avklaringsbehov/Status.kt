@@ -10,7 +10,7 @@ package no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov
  * Diagrammet under viser de viktigste overgangene, noen overganger er ikke tegnet inn,
  * fordi det blir uoversiktlig. Følgende mangler:
  *
- * * Fra alle statuser til [AVBRUTT]. Denne overgangen brukes hvis hvis avklaringsbehovet ikke lenger trengs.
+ * * Fra alle statuser til [AVBRUTT]. Denne overgangen brukes hvis avklaringsbehovet ikke lenger trengs.
  *
  * * Fra alle tilstander, bortsett fra [AVBRUTT] og [OPPRETTET], til [OPPRETTET]. Dette skjer når avklaringsehovet
  *   er løst, men det viser seg at løsningen ikke er god nok.
