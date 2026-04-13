@@ -129,7 +129,7 @@ class SykdomsvurderingMigreringService(
         )
 
         val sammenligningEtter = SykdomsvilkårUtenVissVarighet(vilkårsresultat)
-            .vurderOgSammenlign(oppdatertFaktagrunnlag, vilkårsresultat)
+            .vurderOgSammenlign(oppdatertFaktagrunnlag, vilkårsresultat, rettighetsperiode)
         val diffEtter = sammenligningEtter.diff()
 
         if (diffEtter.isNotEmpty()) {
