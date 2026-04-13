@@ -12,7 +12,7 @@ package no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov
  *
  * * Fra alle statuser til [AVBRUTT]. Denne overgangen brukes hvis avklaringsbehovet ikke lenger trengs.
  *
- * * Fra alle tilstander, bortsett fra [AVBRUTT] og [OPPRETTET], til [OPPRETTET]. Dette skjer når avklaringsehovet
+ * * Fra alle tilstander, bortsett fra [AVBRUTT] og [OPPRETTET], til [OPPRETTET]. Dette skjer når avklaringsbehovet
  *   er løst, men det viser seg at løsningen ikke er god nok.
  *
  *  * Fra [AVSLUTTET], [KVALITETSSIKRET] og [TOTRINNS_VURDERT] til [AVSLUTTET]. Dette skjer når hvis vi mottar
