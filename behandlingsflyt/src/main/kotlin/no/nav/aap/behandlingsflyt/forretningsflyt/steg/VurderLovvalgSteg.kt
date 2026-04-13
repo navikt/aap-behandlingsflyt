@@ -52,7 +52,7 @@ class VurderLovvalgSteg private constructor(
         val grunnlag = lazy { hentGrunnlag(kontekst.sakId, kontekst.behandlingId) }
 
         val tvingerAvklaringsbehov =
-            vurderingsbehovSomTvingerAvklaringsbehov()  // med MOTTATT_SØKNAD
+            vurderingsbehovSomTvingerAvklaringsbehov()
         avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
             kontekst = kontekst,
             definisjon = Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP,
@@ -173,7 +173,7 @@ class VurderLovvalgSteg private constructor(
     }
 
     private fun vurderingsbehovSomTvingerAvklaringsbehov(): Set<Vurderingsbehov> =
-        setOf(Vurderingsbehov.REVURDER_LOVVALG, Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP, Vurderingsbehov.MOTTATT_SØKNAD)
+        setOf(Vurderingsbehov.REVURDER_LOVVALG, Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP)
 
     private fun hentGrunnlag(sakId: SakId, behandlingId: BehandlingId): MedlemskapLovvalgGrunnlag {
         val medlemskapArbeidInntektGrunnlag =
