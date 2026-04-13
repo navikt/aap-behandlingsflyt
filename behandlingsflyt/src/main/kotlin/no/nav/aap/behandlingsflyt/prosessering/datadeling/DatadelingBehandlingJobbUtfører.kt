@@ -31,7 +31,6 @@ class DatadelingBehandlingJobbUtfører(
     private val underveisRepository: UnderveisRepository,
     private val vedtakRepository: VedtakRepository,
     private val samIdRepository: SamIdRepository,
-    private val stansOpphørRepository: StansOpphørRepository,
     private val beregningsgrunnlagRepository: BeregningsgrunnlagRepository,
     private val stansOpphørService: StansOpphørService
 ) : JobbUtfører {
@@ -106,7 +105,10 @@ class DatadelingBehandlingJobbUtfører(
                 vedtakRepository = repositoryProvider.provide(),
                 samIdRepository = repositoryProvider.provide(),
                 beregningsgrunnlagRepository = repositoryProvider.provide(),
-                stansOpphørRepository = repositoryProvider.provide(),
+                stansOpphørService = StansOpphørService(
+                    repositoryProvider.provide(),
+                    repositoryProvider.provide(),
+                    repositoryProvider.provide())
             )
         }
     }
