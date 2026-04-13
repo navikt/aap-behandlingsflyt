@@ -30,7 +30,8 @@ class SykdomsvilkårUtenVissVarighet(vilkårsresultat: Vilkårsresultat) : Vilk�
 
     fun vurderOgSammenlign(
         grunnlag: SykdomsFaktagrunnlag,
-        eksisterendeVilkårsresultat: Vilkårsresultat
+        eksisterendeVilkårsresultat: Vilkårsresultat,
+        rettighetsperiode: Periode
     ): Tidslinje<SammenlignetSegment> {
 
         val nySammenlignbarVilkårsvurderingTidslinje =
@@ -42,11 +43,13 @@ class SykdomsvilkårUtenVissVarighet(vilkårsresultat: Vilkårsresultat) : Vilk�
                 )
             }
                 .komprimer()
+                .begrensetTil(rettighetsperiode)
 
         val gammelSammenlignbarVilkårsvurderingTidslinje =
             eksisterendeVilkårsresultat.optionalVilkår(Vilkårtype.SYKDOMSVILKÅRET)?.tidslinje().orEmpty()
                 .mapValue { SammenlignbarVurdering(it.utfall, it.innvilgelsesårsak, it.avslagsårsak) }
                 .komprimer()
+                .begrensetTil(rettighetsperiode)
 
 
         return gammelSammenlignbarVilkårsvurderingTidslinje.outerJoin(nySammenlignbarVilkårsvurderingTidslinje) { gammel, ny ->
