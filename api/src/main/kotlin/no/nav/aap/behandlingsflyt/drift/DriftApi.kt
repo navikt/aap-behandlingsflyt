@@ -9,8 +9,11 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepo
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingReferanse
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingRepository
+import no.nav.aap.behandlingsflyt.behandling.rettighet.RettighetsinfoDto
+import no.nav.aap.behandlingsflyt.behandling.rettighet.RettighetsperiodeDto
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelse2Dto
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseService
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.rettighetstype.RettighetstypeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Innvilgelsesårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
@@ -185,6 +188,42 @@ fun NormalOpenAPIRoute.driftApi(
                 krevDtoErUtenFødselsnummer(tilkjentYtelseDto)
 
                 respond(tilkjentYtelseDto)
+            }
+        }
+
+        route("/behandling/{referanse}/rettighetsinfo") {
+            authorizedPost<BehandlingReferanse, RettighetsinfoDto, Unit>(
+                AuthorizationParamPathConfig(
+                    behandlingPathParam = BehandlingPathParam("referanse"),
+                    operasjon = Operasjon.DRIFTE
+                )
+            ) { params, _ ->
+                val res = dataSource.transaction { connection ->
+                    val rettighetstypeRepository =
+                        repositoryRegistry.provider(connection).provide<RettighetstypeRepository>()
+                    val behandlingRepository = repositoryRegistry.provider(connection).provide<BehandlingRepository>()
+                    val rettighetstypeTidslinje =
+                        rettighetstypeRepository.hentHvisEksisterer(behandlingRepository.hent(params).id)?.rettighetstypeTidslinje
+                            ?: return@transaction null
+
+                    val sisteDagMedRett = rettighetstypeTidslinje.perioder().maxOfOrNull { it.tom }
+
+                    RettighetsinfoDto(
+                        sisteDagMedRett = sisteDagMedRett,
+                        perioderMedRett = rettighetstypeTidslinje.komprimer().segmenter().map {
+                            RettighetsperiodeDto(
+                                rettighetstype = it.verdi,
+                                fom = it.fom(),
+                                tom = it.tom(),
+                            )
+                        })
+                }
+
+                if (res == null) {
+                    respondWithStatus(HttpStatusCode.NoContent)
+                } else {
+                    respond(res)
+                }
             }
         }
 

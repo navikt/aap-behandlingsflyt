@@ -19,7 +19,7 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeName(value = AVKLAR_STUDENT_KODE)
 class AvklarStudentEnkelLøsning(
-    @param:JsonProperty("studentvurdering", required = true) val studentvurdering: StudentVurderingDTO,
+    @param:JsonProperty("studentvurdering", required = true) val studentvurdering: StudentVurderingDTO? = null,
     @param:JsonProperty(
         "løsningerForPerioder",
         required = true
@@ -71,7 +71,7 @@ class AvklarStudentLøsning(
     
     private fun tilEnkeltLøsning(): AvklarStudentEnkelLøsning {
         return AvklarStudentEnkelLøsning(
-            studentvurdering = this.løsningerForPerioder.first().tilGammelDto(),
+            studentvurdering = this.løsningerForPerioder.firstOrNull()?.tilGammelDto(),
             løsningerForPerioder = this.løsningerForPerioder.toSet(),
             behovstype = this.behovstype
         )

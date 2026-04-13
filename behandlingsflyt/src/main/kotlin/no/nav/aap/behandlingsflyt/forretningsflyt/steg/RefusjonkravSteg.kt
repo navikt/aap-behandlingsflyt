@@ -15,8 +15,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 
@@ -26,7 +24,6 @@ class RefusjonkravSteg private constructor(
     private val avklaringsbehovService: AvklaringsbehovService,
     private val behandlingRepository: BehandlingRepository,
     private val resultatUtleder: ResultatUtleder,
-    private val unleashGateway: UnleashGateway
 ) : BehandlingSteg {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         refusjonkravRepository = repositoryProvider.provide(),
@@ -34,7 +31,6 @@ class RefusjonkravSteg private constructor(
         avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
         behandlingRepository = repositoryProvider.provide(),
         resultatUtleder = ResultatUtleder(repositoryProvider),
-        unleashGateway = gatewayProvider.provide()
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
@@ -57,10 +53,7 @@ class RefusjonkravSteg private constructor(
 
                     VurderingType.REVURDERING -> {
                         when {
-                            unleashGateway.isEnabled(BehandlingsflytFeature.RefusjonkravIRevurdering) && skalVurdereRefusjonkravIRevurdering(
-                                kontekst
-                            ) -> true
-
+                            skalVurdereRefusjonkravIRevurdering(kontekst) -> true
                             else -> false
                         }
                     }

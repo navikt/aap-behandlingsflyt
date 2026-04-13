@@ -191,7 +191,6 @@ class AvventUtbetalingServiceTest {
 
     }
 
-
     @Test
     fun `Refusjonskrav med åpen tom overlapper med tilkjent ytelse skal føre til avvent utbetaling`() {
 

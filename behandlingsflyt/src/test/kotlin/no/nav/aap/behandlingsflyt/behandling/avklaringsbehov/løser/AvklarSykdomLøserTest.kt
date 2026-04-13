@@ -76,6 +76,8 @@ class AvklarSykdomLøserTest {
                         erNedsettelseIArbeidsevneMerEnnHalvparten = null,
                         erNedsettelseIArbeidsevneAvEnVissVarighet = null,
                         erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
+                        erNedsettelseMinstHalvparten = null,
+                        erNedsettelseMerEnnYrkesskadegrense = null,
                         erArbeidsevnenNedsatt = null,
                         yrkesskadeBegrunnelse = null,
                         fom = 10 januar 2025,
@@ -112,6 +114,7 @@ private fun sykdomsvurdering(
     erNedsettelseIArbeidsevneMerEnnHalvparten = erNedsettelseIArbeidsevneMerEnnHalvparten,
     erNedsettelseIArbeidsevneAvEnVissVarighet = erNedsettelseIArbeidsevneAvEnVissVarighet,
     erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense,
+
     erArbeidsevnenNedsatt = erArbeidsevnenNedsatt,
     yrkesskadeBegrunnelse = null,
     vurderingenGjelderFra = vurderingenGjelderFra,
@@ -119,6 +122,8 @@ private fun sykdomsvurdering(
     vurdertAv = Bruker("Z00000"),
     opprettet = opprettet.toInstant(ZoneOffset.UTC),
     vurdertIBehandling = vurdertIBehandling,
+    erNedsettelseMinstHalvparten = null,
+    erNedsettelseMerEnnYrkesskadegrense = null,
     diagnose = null
 )
 

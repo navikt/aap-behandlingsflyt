@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.PeriodiserteVurderingerDto
 import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.sykdom.SykdomsvurderingResponse
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
 import no.nav.aap.komponenter.type.Periode
+import java.time.LocalDate
 
 data class OvergangUføreGrunnlagResponse(
     override val harTilgangTilÅSaksbehandle: Boolean,
@@ -20,4 +21,10 @@ data class OvergangUføreGrunnlagResponse(
     override val behøverVurderinger: List<Periode>,
     val perioderSomIkkeErTilstrekkeligVurdert: List<Periode>,
     val kvalitetssikretAv: VurdertAvResponse?,
+    val uføreSøknadOpplysninger: UføreSøknadOpplysninger? = null,
 ): PeriodiserteVurderingerDto<OvergangUføreVurderingResponse>
+
+
+data class UføreSøknadOpplysninger(
+    val soknadsdato: LocalDate
+)

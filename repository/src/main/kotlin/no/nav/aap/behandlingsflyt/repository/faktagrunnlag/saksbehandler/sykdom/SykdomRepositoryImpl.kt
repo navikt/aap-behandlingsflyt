@@ -1,20 +1,25 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.sykdom
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Diagnose
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ErNedsettelseMerEnnYrkesskadegrenseValg
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ErNedsettelseMinstHalvpartenValg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomsvurderingMedId
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.YrkesskadeSak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Yrkesskadevurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
+import no.nav.aap.komponenter.miljo.Miljø
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.lookup.repository.Factory
 import no.nav.aap.verdityper.dokument.JournalpostId
 import org.slf4j.LoggerFactory
+import java.time.LocalDate
 
 class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomRepository {
 
@@ -210,10 +215,11 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
                 ER_ARBEIDSEVNE_NEDSATT, HAR_SYKDOM_SKADE_LYTE,
                 ER_SYKDOM_SKADE_LYTE_VESETLING_DEL, ER_NEDSETTELSE_MER_ENN_HALVPARTEN,
                 ER_NEDSETTELSE_MER_ENN_YRKESSKADE_GRENSE, ER_NEDSETTELSE_AV_EN_VISS_VARIGHET,
+                ER_NEDSETTELSE_MINST_HALVPARTEN, ER_NEDSETTELSE_MER_ENN_YRKESSKADEGRENSE,
                 YRKESSKADE_BEGRUNNELSE, KODEVERK,
                 DIAGNOSE, OPPRETTET_TID, VURDERT_AV_IDENT, VURDERT_I_BEHANDLING, VURDERINGEN_GJELDER_TIL)
             VALUES
-            (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """.trimIndent()
 
         for (vurdering in vurderinger) {
@@ -228,13 +234,15 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
                     setBoolean(7, vurdering.erNedsettelseIArbeidsevneMerEnnHalvparten)
                     setBoolean(8, vurdering.erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense)
                     setBoolean(9, vurdering.erNedsettelseIArbeidsevneAvEnVissVarighet)
-                    setString(10, vurdering.yrkesskadeBegrunnelse)
-                    setString(11, vurdering.diagnose?.kodeverk)
-                    setString(12, vurdering.diagnose?.hoveddiagnose)
-                    setInstant(13, vurdering.opprettet)
-                    setString(14, vurdering.vurdertAv.ident)
-                    setLong(15, vurdering.vurdertIBehandling.id)
-                    setLocalDate(16, vurdering.vurderingenGjelderTil)
+                    setEnumName(10, vurdering.erNedsettelseMinstHalvparten)
+                    setEnumName(11, vurdering.erNedsettelseMerEnnYrkesskadegrense)
+                    setString(12, vurdering.yrkesskadeBegrunnelse)
+                    setString(13, vurdering.diagnose?.kodeverk)
+                    setString(14, vurdering.diagnose?.hoveddiagnose)
+                    setInstant(15, vurdering.opprettet)
+                    setString(16, vurdering.vurdertAv.ident)
+                    setLong(17, vurdering.vurdertIBehandling.id)
+                    setLocalDate(18, vurdering.vurderingenGjelderTil)
                 }
             }
 
@@ -323,6 +331,8 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
                    ER_NEDSETTELSE_MER_ENN_HALVPARTEN,
                    ER_NEDSETTELSE_MER_ENN_YRKESSKADE_GRENSE,
                    ER_NEDSETTELSE_AV_EN_VISS_VARIGHET,
+                   ER_NEDSETTELSE_MINST_HALVPARTEN, 
+                   ER_NEDSETTELSE_MER_ENN_YRKESSKADEGRENSE,
                    ER_ARBEIDSEVNE_NEDSATT,
                    YRKESSKADE_BEGRUNNELSE,
                    KODEVERK,
@@ -366,7 +376,9 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
             opprettet = row.getInstant("OPPRETTET_TID"),
             vurdertAv = Bruker(row.getString("VURDERT_AV_IDENT")),
             vurdertIBehandling = BehandlingId(row.getLong("VURDERT_I_BEHANDLING")),
-            vurderingenGjelderTil = row.getLocalDateOrNull("VURDERINGEN_GJELDER_TIL")
+            vurderingenGjelderTil = row.getLocalDateOrNull("VURDERINGEN_GJELDER_TIL"),
+            erNedsettelseMinstHalvparten = row.getEnumOrNull("ER_NEDSETTELSE_MINST_HALVPARTEN"),
+            erNedsettelseMerEnnYrkesskadegrense = row.getEnumOrNull("ER_NEDSETTELSE_MER_ENN_YRKESSKADEGRENSE")
         )
     }
 
@@ -458,6 +470,93 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
                 setLong(2, behandlingId.id)
             }
             setRowMapper(::sykdomsvurderingRowmapper)
+        }
+    }
+
+    override fun hentBehandlingIderMedUmigrerteSykdomsvurderinger(sisteBehandlingId: Long): List<BehandlingId> {
+        val query = """
+            SELECT DISTINCT sg.behandling_id
+            FROM sykdom_grunnlag sg
+            JOIN sykdom_vurdering sv ON sv.sykdom_vurderinger_id = sg.sykdom_vurderinger_id
+            JOIN behandling b on b.id = sg.behandling_id
+            JOIN sak s on s.id = b.sak_id
+            WHERE sg.aktiv = TRUE
+              AND sg.behandling_id > ?
+              AND sv.er_nedsettelse_minst_halvparten IS NULL
+              AND sv.er_nedsettelse_mer_enn_yrkesskadegrense IS NULL
+              AND s.opprettet_tid >= ?
+            ORDER BY sg.behandling_id
+            LIMIT 1
+        """.trimIndent()
+
+        return connection.queryList(query) {
+            setParams {
+                setLong(1, sisteBehandlingId)
+                setLocalDate(2, if (Miljø.erDev()) LocalDate.parse("2025-04-01") else LocalDate.parse("2020-01-01"))
+            }
+            setRowMapper { row ->
+                BehandlingId(row.getLong("behandling_id"))
+            }
+        }
+    }
+
+    override fun oppdaterNyeFelter(
+        sykdomVurderingId: Long,
+        erNedsettelseMinstHalvparten: ErNedsettelseMinstHalvpartenValg?,
+        erNedsettelseMerEnnYrkesskadegrense: ErNedsettelseMerEnnYrkesskadegrenseValg?
+    ) {
+        val query = """
+            UPDATE sykdom_vurdering
+            SET er_nedsettelse_minst_halvparten = ?,
+                er_nedsettelse_mer_enn_yrkesskadegrense = ?
+            WHERE id = ?
+        """.trimIndent()
+
+        connection.execute(query) {
+            setParams {
+                setEnumName(1, erNedsettelseMinstHalvparten)
+                setEnumName(2, erNedsettelseMerEnnYrkesskadegrense)
+                setLong(3, sykdomVurderingId)
+            }
+        }
+    }
+
+    override fun hentSykdomsvurderingMedId(behandlingId: BehandlingId): List<SykdomsvurderingMedId> {
+        val sykdomVurderingerIds = getSykdomVurderingerIds(behandlingId)
+        
+        return connection.queryList(
+            """
+            SELECT id,
+                   BEGRUNNELSE,
+                   VURDERINGEN_GJELDER_FRA,
+                   HAR_SYKDOM_SKADE_LYTE,
+                   ER_SYKDOM_SKADE_LYTE_VESETLING_DEL,
+                   ER_NEDSETTELSE_MER_ENN_HALVPARTEN,
+                   ER_NEDSETTELSE_MER_ENN_YRKESSKADE_GRENSE,
+                   ER_NEDSETTELSE_AV_EN_VISS_VARIGHET,
+                   ER_NEDSETTELSE_MINST_HALVPARTEN, 
+                   ER_NEDSETTELSE_MER_ENN_YRKESSKADEGRENSE,
+                   ER_ARBEIDSEVNE_NEDSATT,
+                   YRKESSKADE_BEGRUNNELSE,
+                   KODEVERK,
+                   DIAGNOSE,
+                   OPPRETTET_TID,
+                   VURDERT_AV_IDENT,
+                   VURDERT_I_BEHANDLING,
+                   VURDERINGEN_GJELDER_TIL
+            FROM SYKDOM_VURDERING
+            WHERE SYKDOM_VURDERINGER_ID = ANY(?::bigint[])
+            """.trimIndent()
+        ) {
+            setParams {
+                setLongArray(1, sykdomVurderingerIds)
+            }
+            setRowMapper { row ->
+                SykdomsvurderingMedId(
+                    id = row.getLong("id"),
+                    sykdomsvurdering = sykdomsvurderingRowmapper(row)
+                )
+            }
         }
     }
 

@@ -147,6 +147,24 @@ class IverksettVedtakSteg private constructor(
         return null
     }
 
+    private fun utledTidligsteMuligeVedtakstidspunkt(behandling: Behandling, vedtakstidspunkt: LocalDate): LocalDate {
+        behandling.forrigeBehandlingId ?: return vedtakstidspunkt
+
+        val alleYtelsesbehandlingerPåSak =
+            behandlingRepository.hentAlleFor(behandling.sakId, TypeBehandling.ytelseBehandlingstyper())
+
+        val oppfylteVurderinger = alleYtelsesbehandlingerPåSak.filter {
+            !resultatUtleder.erRentAvslag(it)
+        }
+
+        val alleInnvilgedeVedtak = oppfylteVurderinger.mapNotNull {
+            vedtakService.hentVedtak(it.id)
+        }
+
+        return alleInnvilgedeVedtak.minByOrNull { it.vedtakstidspunkt }?.vedtakstidspunkt?.toLocalDate()
+            ?: vedtakstidspunkt
+    }
+
     private fun finnTidligesteVedtakstidspunktFraTidligereBehandlinger(
         behandling: Behandling,
         vedtakstidspunkt: LocalDate
@@ -184,16 +202,18 @@ class IverksettVedtakSteg private constructor(
                 return
             }
 
-            val tidligsteVedtaksTidspunkt = finnTidligesteVedtakstidspunktFraTidligereBehandlinger(
-                behandling,
-                vedtak.vedtakstidspunkt.toLocalDate()
-            )
+            val tidligsteMuligeVedtakstidspunkt =
+                utledTidligsteMuligeVedtakstidspunkt(
+                    behandling,
+                    vedtak.vedtakstidspunkt.toLocalDate()
+                )
+
             val gjeldendeSosialRefusjonDtoer = navkontorSosialRefusjon
                 .filter { it.harKrav && it.navKontor != null }
                 .map {
                     it.tilNavKontorPeriodeDto(
                         virkningsdato = vedtakMedTidligsteVirkingsdato.virkningstidspunkt,
-                        vedtaksdato = tidligsteVedtaksTidspunkt.minusDays(1)
+                        vedtaksdato = tidligsteMuligeVedtakstidspunkt.minusDays(1)
                     )
                 }
                 .toSet()
@@ -204,7 +224,6 @@ class IverksettVedtakSteg private constructor(
             opprettGosysOppgaverForSosialrefusjon(gjeldendeSosialRefusjonDtoer, aktivIdent, kontekst)
         }
     }
-
 
     fun lagGysOppgaveHvisRelevant(kontekst: FlytKontekstMedPerioder, vedtak: Vedtak) {
         val behandling = behandlingRepository.hent(behandlingId = kontekst.behandlingId)

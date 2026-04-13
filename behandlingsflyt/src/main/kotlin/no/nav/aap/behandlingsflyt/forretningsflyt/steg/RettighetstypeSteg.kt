@@ -14,7 +14,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.StansO
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.StansOpphørRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.ApplikasjonsVersjon
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
-import no.nav.aap.behandlingsflyt.flyt.BehandlingType
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
@@ -24,7 +23,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.type.Periode
@@ -82,14 +80,14 @@ class RettighetstypeSteg(
         when (kontekst.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING,
             VurderingType.REVURDERING ->
-                if (unleashGateway.isEnabled(BehandlingsflytFeature.LagreStansOgOpphor)) {
-                    lagreStansOgOpphør(
-                        behandlingId,
-                        kontekst.forrigeBehandlingId,
-                        kontekst.behandlingType,
-                        kontekst.rettighetsperiode
-                    )
-                }
+
+                lagreStansOgOpphør(
+                    behandlingId,
+                    kontekst.forrigeBehandlingId,
+                    kontekst.behandlingType,
+                    kontekst.rettighetsperiode
+                )
+
 
             else -> {
             }
@@ -98,7 +96,12 @@ class RettighetstypeSteg(
         return Fullført
     }
 
-    fun lagreStansOgOpphør(behandlingId: BehandlingId, forrigeBehandlingId: BehandlingId?, behandlingType: TypeBehandling, rettighetsperiode: Periode) {
+    fun lagreStansOgOpphør(
+        behandlingId: BehandlingId,
+        forrigeBehandlingId: BehandlingId?,
+        behandlingType: TypeBehandling,
+        rettighetsperiode: Periode
+    ) {
         val forrigeGrunnlag = forrigeBehandlingId?.let { stansOpphørRepository.hentHvisEksisterer(it) }
             ?: when (behandlingType) {
                 TypeBehandling.Førstegangsbehandling -> StansOpphørGrunnlag(emptySet())
@@ -112,7 +115,7 @@ class RettighetstypeSteg(
                 kvoteService.beregn(),
                 rettighetsperiode
             ),
-                behandlingId
+            behandlingId
         )
 
         stansOpphørRepository.lagre(behandlingId, stansOpphørGrunnlag)

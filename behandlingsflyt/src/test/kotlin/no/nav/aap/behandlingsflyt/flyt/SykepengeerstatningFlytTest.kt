@@ -150,6 +150,8 @@ class SykepengeerstatningFlytTest(val unleashGateway: KClass<UnleashGateway>) :
                             erSkadeSykdomEllerLyteVesentligdel = true,
                             erNedsettelseIArbeidsevneMerEnnHalvparten = true,
                             erNedsettelseIArbeidsevneAvEnVissVarighet = true,
+erNedsettelseMinstHalvparten = null,
+                            erNedsettelseMerEnnYrkesskadegrense = null,
                             erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
                             erArbeidsevnenNedsatt = true,
                             yrkesskadeBegrunnelse = null,
@@ -312,7 +314,9 @@ class SykepengeerstatningFlytTest(val unleashGateway: KClass<UnleashGateway>) :
                         erArbeidsevnenNedsatt = true,
                         yrkesskadeBegrunnelse = null,
                         fom = sak.rettighetsperiode.fom,
-                        tom = null
+                        tom = null,
+                        erNedsettelseMinstHalvparten = null,
+                        erNedsettelseMerEnnYrkesskadegrense = null,
                     )
                 )
             ),
@@ -449,7 +453,9 @@ class SykepengeerstatningFlytTest(val unleashGateway: KClass<UnleashGateway>) :
                             erArbeidsevnenNedsatt = true,
                             yrkesskadeBegrunnelse = null,
                             fom = revurdering2Fom,
-                            tom = null
+                            tom = null,
+                            erNedsettelseMinstHalvparten = null,
+                            erNedsettelseMerEnnYrkesskadegrense = null,
                         )
                     )
                 )
@@ -515,7 +521,9 @@ class SykepengeerstatningFlytTest(val unleashGateway: KClass<UnleashGateway>) :
                         erArbeidsevnenNedsatt = true,
                         yrkesskadeBegrunnelse = null,
                         fom = sak.rettighetsperiode.fom,
-                        tom = null
+                        tom = null,
+                        erNedsettelseMinstHalvparten = null,
+                        erNedsettelseMerEnnYrkesskadegrense = null,
                     )
                 )
             ),
@@ -539,7 +547,9 @@ class SykepengeerstatningFlytTest(val unleashGateway: KClass<UnleashGateway>) :
                             erArbeidsevnenNedsatt = true,
                             yrkesskadeBegrunnelse = null,
                             fom = nyStartDato,
-                            tom = null
+                            tom = null,
+                            erNedsettelseMinstHalvparten = null,
+                            erNedsettelseMerEnnYrkesskadegrense = null,
                         )
                     )
                 ),

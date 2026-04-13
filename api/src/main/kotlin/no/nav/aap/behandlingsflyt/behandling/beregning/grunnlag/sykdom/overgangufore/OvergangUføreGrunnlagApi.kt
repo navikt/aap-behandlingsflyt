@@ -7,6 +7,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovMeta
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.sykdom.SykdomsvurderingResponse
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreSøknadRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.OvergangUføreSteg
@@ -43,6 +44,7 @@ fun NormalOpenAPIRoute.overgangUforeGrunnlagApi(
                     val repositoryProvider = repositoryRegistry.provider(connection)
                     val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
                     val overgangUforeRepository = repositoryProvider.provide<OvergangUføreRepository>()
+                    val uføreSøknadRepository = repositoryProvider.provide<UføreSøknadRepository>()
                     val sykdomRepository = repositoryProvider.provide<SykdomRepository>()
                     val vurdertAvService = VurdertAvService(repositoryProvider, gatewayProvider)
                     val sakRepository = repositoryProvider.provide<SakRepository>()
@@ -54,7 +56,7 @@ fun NormalOpenAPIRoute.overgangUforeGrunnlagApi(
                     val grunnlag = overgangUforeRepository.hentHvisEksisterer(behandling.id)
                     val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
                     val sak = sakRepository.hent(behandling.sakId)
-
+                    val uføreSøknad = uføreSøknadRepository.hentHvisEksisterer(behandling.id)
                     val gjeldendeSykdomsvurderinger =
                         sykdomRepository.hentHvisEksisterer(behandling.id)?.sykdomsvurderinger.orEmpty()
 
@@ -106,7 +108,8 @@ fun NormalOpenAPIRoute.overgangUforeGrunnlagApi(
                         kvalitetssikretAv = vurdertAvService.kvalitetssikretAv(
                             Definisjon.AVKLAR_OVERGANG_UFORE,
                             behandling.id
-                        )
+                        ),
+                        uføreSøknadOpplysninger = uføreSøknad?.let { UføreSøknadOpplysninger(it.uføreSøknad.soknadsdato) }
                     )
                 }
 

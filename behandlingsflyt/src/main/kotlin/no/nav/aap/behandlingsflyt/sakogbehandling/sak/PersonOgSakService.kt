@@ -4,7 +4,6 @@ import no.nav.aap.behandlingsflyt.hendelse.datadeling.ApiInternGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
 import no.nav.aap.komponenter.gateway.GatewayProvider
-import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
@@ -34,11 +33,6 @@ class PersonOgSakService(
         val person = personRepository.finnEllerOpprett(identliste)
 
         return sakRepository.finnEllerOpprett(person, søknadsdato)
-    }
-
-    @Deprecated("Sluttdato for rettighetesperiode er alltid Tid.MAKS for nye/migrerte saker. Send kun med søknadsdato, med mindre du tester koden din for ikke-migrerte saker.")
-    fun finnEllerOpprett(ident: Ident, periode: Periode): Sak {
-        return finnEllerOpprett(ident, periode.fom)
     }
 
     private fun rapporterHvisOppretterPersonSomFinnesIArena(identliste: List<Ident>) {

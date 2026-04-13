@@ -30,8 +30,9 @@ fun NormalOpenAPIRoute.bekreftVurderingerOppfølgingApi(
                 val respons = dataSource.transaction { connection ->
                     val repositoryProvider = repositoryRegistry.provider(connection)
                     val mellomlagretVurderingerService = MellomlagretVurderingService(repositoryProvider)
+                    
                     val veiledersMellomlagredeVurderinger =
-                        mellomlagretVurderingerService.hentMellomlagredeVurderingerFørSteg(
+                        mellomlagretVurderingerService.hentMellomlagredeVurderingerForAktiveBehovFørSteg(
                             req,
                             Definisjon.BEKREFT_VURDERINGER_OPPFØLGING.løsesISteg,
                             løsesAv = listOf(Rolle.SAKSBEHANDLER_OPPFOLGING)

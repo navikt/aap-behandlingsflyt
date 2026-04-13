@@ -3,10 +3,14 @@ package no.nav.aap.behandlingsflyt.integrasjon.datadeling
 import com.github.benmanes.caffeine.cache.Caffeine
 import no.nav.aap.api.intern.PersonEksistererIAAPArena
 import no.nav.aap.api.intern.SakerRequest
+import no.nav.aap.api.intern.behandlingsflyt.OppdaterIdenterDto
 import no.nav.aap.api.intern.behandlingsflyt.SakStatusKelvin
 import no.nav.aap.api.intern.behandlingsflyt.SakstatusFraKelvin
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelsePeriode
 import no.nav.aap.behandlingsflyt.datadeling.SakStatus
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.GjeldendeStansEllerOpphør
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.Opphør
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.Stans
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.ApiInternGateway
@@ -14,11 +18,15 @@ import no.nav.aap.behandlingsflyt.hendelse.datadeling.ArenaStatusResponse
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.MeldekortPerioderDTO
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.DatadelingDTO
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.DetaljertMeldekortDTO
+import no.nav.aap.behandlingsflyt.kontrakt.datadeling.GjeldendeStansEllerOpphørDTO
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.RettighetsTypePeriode
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.SakDTO
+import no.nav.aap.behandlingsflyt.kontrakt.datadeling.StansEllerOpphørEnumDTO
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.TilkjentDTO
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.UnderveisDTO
+import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.prometheus
+import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
@@ -101,7 +109,8 @@ class ApiInternGatewayImpl : ApiInternGateway {
         beregningsgrunnlag: BigDecimal?,
         underveis: List<Underveisperiode>,
         vedtaksDato: LocalDate,
-        rettighetsTypeTidslinje: Tidslinje<RettighetsType>
+        rettighetsTypeTidslinje: Tidslinje<RettighetsType>,
+        stansOpphørGrunnlag: Set<GjeldendeStansEllerOpphør>?
     ) {
         log.info("Sender behandling for behandlingId=${behandling.id} med vedtakId=$vedtakId, sak: ${sak.saksnummer}. Beregningsgrunnlag: $beregningsgrunnlag")
         restClient.post(
@@ -158,6 +167,16 @@ class ApiInternGatewayImpl : ApiInternGateway {
                     },
                     vedtakId = vedtakId,
                     samId = samId,
+                    stansOpphørVurdering = stansOpphørGrunnlag?.map {
+                        GjeldendeStansEllerOpphørDTO(
+                            fom = it.fom,
+                            opprettet = it.opprettet,
+                            vurdering = when (it.vurdering) {
+                                is Stans -> StansEllerOpphørEnumDTO.STANS
+                                is Opphør -> StansEllerOpphørEnumDTO.OPPHØR
+                            }
+                        )
+                    }?.toSet() ?: emptySet()
                 ),
             ),
             mapper = { _, _ ->
@@ -184,6 +203,18 @@ class ApiInternGatewayImpl : ApiInternGateway {
             val sakerRequest = SakerRequest(personidentifikatorer = personidentifikatorer.toList())
             doHentArenaStatus(sakerRequest)
         }
+    }
+
+    override fun oppdaterIdenter(
+        saksnummer: Saksnummer,
+        identer: List<Ident>
+    ) {
+        log.info("Oppdaterer identer for sak $saksnummer.")
+        restClient.post(
+            uri.resolve("/api/insert/oppdater-identer"),
+            PostRequest(body = OppdaterIdenterDto(saksnummer.toString(), identer.map(Ident::identifikator))),
+            mapper = { _, _ -> }
+        )
     }
 
     private fun doHentArenaStatus(sakerRequest: SakerRequest): ArenaStatusResponse {

@@ -2,9 +2,12 @@ package no.nav.aap.behandlingsflyt.hendelse.datadeling
 
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelsePeriode
 import no.nav.aap.behandlingsflyt.datadeling.SakStatus
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.GjeldendeStansEllerOpphør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.DetaljertMeldekortDTO
+import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
+import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
@@ -32,7 +35,8 @@ interface ApiInternGateway : Gateway {
         beregningsgrunnlag: BigDecimal?,
         underveis: List<Underveisperiode>,
         vedtaksDato: LocalDate,
-        rettighetsTypeTidslinje: Tidslinje<RettighetsType>
+        rettighetsTypeTidslinje: Tidslinje<RettighetsType>,
+        stansOpphørGrunnlag: Set<GjeldendeStansEllerOpphør>?
     )
 
     fun sendDetaljertMeldekortListe(
@@ -40,6 +44,8 @@ interface ApiInternGateway : Gateway {
         sakId: SakId,
         behandlingId: BehandlingId
     )
+
+    fun oppdaterIdenter(saksnummer: Saksnummer, identer: List<Ident>)
 
     fun hentArenaStatus(personidentifikatorer: Set<String>): ArenaStatusResponse
 }

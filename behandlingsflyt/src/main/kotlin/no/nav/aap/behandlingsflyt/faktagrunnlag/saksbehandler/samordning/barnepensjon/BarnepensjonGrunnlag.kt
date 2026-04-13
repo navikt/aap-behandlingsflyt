@@ -5,8 +5,6 @@ import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.somTidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
-import no.nav.aap.komponenter.verdityper.Beløp.Companion.ANTALL_DESIMALER_I_UTREGNING
-import no.nav.aap.komponenter.verdityper.Beløp.Companion.AVRUNDINGSMETODE
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.verdityper.Tid
 import java.math.BigDecimal

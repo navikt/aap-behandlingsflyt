@@ -6,7 +6,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.UnparsedStrukturertDoku
 import no.nav.aap.behandlingsflyt.hendelse.mottak.HåndterDialogMeldingService
 import no.nav.aap.behandlingsflyt.hendelse.mottak.HåndterKlageService
 import no.nav.aap.behandlingsflyt.hendelse.mottak.HåndterMottattDokumentService
-import no.nav.aap.behandlingsflyt.hendelse.mottak.HåndterSykepengevedtakService
+import no.nav.aap.behandlingsflyt.hendelse.mottak.HåndterVedtakHendelseService
 import no.nav.aap.behandlingsflyt.hendelse.mottak.HåndterTilbakekrevingHendelseService
 import no.nav.aap.behandlingsflyt.hendelse.mottak.HåndterUførevedtakService
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
@@ -45,7 +45,7 @@ class HendelseMottattHåndteringJobbUtfører(
     private val håndterKlageService:HåndterKlageService,
     private val håndterTilbakekrevingHendelse: HåndterTilbakekrevingHendelseService,
     private val håndterDialogMeldingService: HåndterDialogMeldingService,
-    private val håndterSykepengevedtakService: HåndterSykepengevedtakService,
+    private val håndterVedtakHendelseService: HåndterVedtakHendelseService,
     private val håndterUførevedtakService: HåndterUførevedtakService,
 ) : JobbUtfører {
 
@@ -148,8 +148,8 @@ class HendelseMottattHåndteringJobbUtfører(
                 )
             }
 
-            InnsendingType.SYKEPENGE_VEDTAK_HENDELSE -> {
-                håndterSykepengevedtakService.håndterMottattSykepengevedtakHendelse(
+            InnsendingType.SYKEPENGE_VEDTAK_HENDELSE, InnsendingType.FORELDREPENGE_VEDTAK_HENDELSE -> {
+                håndterVedtakHendelseService.håndterMottattVedtakHendelseOgSjekkInformasjonskravPåNytt(
                     sakId = sakId,
                     referanse = referanse,
                 )
@@ -216,7 +216,7 @@ class HendelseMottattHåndteringJobbUtfører(
                 håndterKlageService = HåndterKlageService(repositoryProvider, gatewayProvider),
                 håndterTilbakekrevingHendelse = HåndterTilbakekrevingHendelseService(repositoryProvider, gatewayProvider),
                 håndterDialogMeldingService = HåndterDialogMeldingService(repositoryProvider, gatewayProvider),
-                håndterSykepengevedtakService = HåndterSykepengevedtakService(repositoryProvider, gatewayProvider),
+                håndterVedtakHendelseService = HåndterVedtakHendelseService(repositoryProvider, gatewayProvider),
                 håndterUførevedtakService = HåndterUførevedtakService(repositoryProvider, gatewayProvider),
             )
         }

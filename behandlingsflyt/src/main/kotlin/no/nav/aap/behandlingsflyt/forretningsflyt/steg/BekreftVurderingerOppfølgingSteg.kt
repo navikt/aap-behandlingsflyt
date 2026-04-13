@@ -21,8 +21,10 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.komponenter.miljo.Miljø
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.tilgang.Rolle
+import java.time.LocalDate
 
 class BekreftVurderingerOppfølgingSteg(
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
@@ -76,16 +78,26 @@ class BekreftVurderingerOppfølgingSteg(
         avklaringsbehovene: Avklaringsbehovene, behandlingId: BehandlingId
     ): Boolean {
         val sykdomsbehovSistLøstAvKontor =
-            sykdomsbehovLøstAvKontorIDenneBehandlingen(avklaringsbehovene).mapNotNull { behov -> behov.aktivHistorikk.lastOrNull { it.status == Status.AVSLUTTET } }
-        val sistBekreftet =
-            avklaringsbehovene.hentBehovForDefinisjon(Definisjon.BEKREFT_VURDERINGER_OPPFØLGING)?.aktivHistorikk?.lastOrNull { endring -> endring.status == Status.AVSLUTTET }?.tidsstempel
+            sykdomsbehovLøstAvKontorIDenneBehandlingen(avklaringsbehovene).mapNotNull { behov ->
+                behov.aktivHistorikk.lastOrNull { it.status == Status.AVSLUTTET }
+            }
 
-        val mellomlagredeVurderinger = mellomlagretVurderingService.hentMellomlagredeVurderingerFørSteg(
-            behandlingId, type(), listOf(Rolle.SAKSBEHANDLER_OPPFOLGING)
-        )
+        val sistBekreftet =
+            avklaringsbehovene.hentBehovForDefinisjon(Definisjon.BEKREFT_VURDERINGER_OPPFØLGING)
+                ?.aktivHistorikk
+                ?.lastOrNull { endring -> endring.status == Status.AVSLUTTET }
+                ?.tidsstempel
+
+        val mellomlagredeVurderingerForRelevanteBehov =
+            // Filtrer vekk avbrutte behov som kan ha mellomlagrede vurderinger som det ikke er mulig for saksbehandler å slette
+            // Bør nok heller løses ved automatisk sletting ved avbrutt i avklaringsbehovservice
+            mellomlagretVurderingService.hentMellomlagredeVurderingerForAktiveBehovFørSteg(
+                behandlingId, type(), listOf(Rolle.SAKSBEHANDLER_OPPFOLGING)
+            )
+
 
         return when {
-            mellomlagredeVurderinger.isNotEmpty() -> false
+            mellomlagredeVurderingerForRelevanteBehov.isNotEmpty() -> false
             sykdomsbehovSistLøstAvKontor.isEmpty() -> true
             sistBekreftet == null -> false
             else -> sykdomsbehovSistLøstAvKontor.all { nyesteSykdomsløsning ->
@@ -100,7 +112,13 @@ class BekreftVurderingerOppfølgingSteg(
         return avklaringsbehovene.alle().filter { it.løsesISteg().gruppe == StegGruppe.SYKDOM }
             .filterNot { it.løsesISteg() == type() }
             .filter { it.definisjon.løsesAv.contains(Rolle.SAKSBEHANDLER_OPPFOLGING) }
-            .filter { it.aktivHistorikk.any { it.status == Status.AVSLUTTET } }
+            .filter {
+                it.aktivHistorikk.any { endring ->
+                    endring.status == Status.AVSLUTTET && (!Miljø.erProd() || endring.tidsstempel.toLocalDate().isAfter(
+                        LocalDate.of(2026, 3, 25)
+                    )) // Hack for å unngå at man må bekrefte behov som ble utført før steget fantes. Bør se på en bedre løsning
+                }
+            }
     }
 
     companion object : FlytSteg {

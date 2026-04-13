@@ -9,10 +9,10 @@ import io.ktor.serialization.jackson.*
 import io.ktor.server.auth.*
 import io.ktor.server.routing.*
 import io.ktor.server.testing.*
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
@@ -31,7 +31,6 @@ import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureConfig
 import no.nav.aap.komponenter.server.AZURE
 import no.nav.aap.komponenter.server.commonKtorModule
-import no.nav.aap.komponenter.type.Periode
 import java.net.URI
 import java.time.LocalDate
 import java.util.*
@@ -55,7 +54,7 @@ open class BaseApiTest {
             identifikator = UUID.randomUUID(),
             identer = listOf(Ident("0".repeat(11)))
         ),
-        periode = Periode(søknadsDato, søknadsDato.plusYears(1)),
+        søknadsdato = søknadsDato
     )
 
     fun getToken(): OidcToken {

@@ -36,7 +36,7 @@ class RettighetstypeRepositoryImplTest {
     @Test
     fun `lagre, hente og slette rettighetstypegrunnlag`() {
         val rettighetsperiode = Periode(1 januar 2020, Tid.MAKS)
-        val sak = dataSource.transaction { sak(it, rettighetsperiode) }
+        val sak = dataSource.transaction { sak(it, rettighetsperiode.fom) }
         val behandling = dataSource.transaction { finnEllerOpprettBehandling(it, sak) }
 
         val periodeMedSpe = Periode(rettighetsperiode.fom, rettighetsperiode.fom.plusDays(10))
@@ -90,9 +90,9 @@ class RettighetstypeRepositoryImplTest {
     }
 
     @Test
-    fun Kopier() {
+    fun `lagre og kopier`() {
         val rettighetsperiode = Periode(1 januar 2020, Tid.MAKS)
-        val sak = dataSource.transaction { sak(it, rettighetsperiode) }
+        val sak = dataSource.transaction { sak(it, rettighetsperiode.fom) }
         val behandling = dataSource.transaction { finnEllerOpprettBehandling(it, sak) }
 
         val periodeMedRett = Periode(rettighetsperiode.fom, rettighetsperiode.fom.plusYears(3))

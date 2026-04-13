@@ -20,6 +20,7 @@ enum class InformasjonskravNavn {
     UFØRE_SØKNAD,
     AVBRYT_REVURDERING,
     DAGPENGER,
+    TILTAKSPENGER,
     VEDTAKSLENGDE,
 
     @Deprecated("Ikke i bruk, men finnes i databasen.")
