@@ -45,6 +45,7 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.api.assertThrows
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
 
@@ -761,8 +762,309 @@ class AvklarHelseinstitusjonLøserTest {
     }
 
     // -------------------------------------------------------------------------
+    // Justering av sluttdato på opphold
+    // -------------------------------------------------------------------------
+
+    @Test
+    fun `løpende opphold forkortet til konkret dato med tom ny vurdering`() {
+        val forrigeBehandlingId = BehandlingId(1L)
+        val nåværendeBehandlingId = BehandlingId(2L)
+        val vurderingSlot = slot<List<HelseinstitusjonVurdering>>()
+
+        // Forrige behandling: opphold løpende (tom = 2999-01-01), vurdering fra 1/6 til 2999-01-01
+        val løpendeTom = 1 januar 2999
+        val forrigeGrunnlag = lagGrunnlagMedOpphold(
+            oppholdFom = 1 februar 2025,
+            oppholdTom = løpendeTom,
+            vurderinger = listOf(
+                lagHelseinstitusjonVurdering(
+                    begrunnelse = "reduksjon løpende",
+                    periode = Periode(1 juni 2025, løpendeTom),
+                    behandlingId = forrigeBehandlingId
+                )
+            )
+        )
+
+        // Nåværende behandling: samme opphold, men tom endret til konkret dato
+        val nyTom = 1 august 2025
+        val nåværendeGrunnlag = lagGrunnlagMedOpphold(
+            oppholdFom = 1 februar 2025,
+            oppholdTom = nyTom,
+            vurderinger = emptyList()
+        )
+
+        every { behandlingRepository.hent(nåværendeBehandlingId) } returns
+                opprettBehandling(nåværendeBehandlingId, forrigeBehandlingId)
+        every { helseinstitusjonRepository.hentHvisEksisterer(forrigeBehandlingId) } returns forrigeGrunnlag
+        every { helseinstitusjonRepository.hentHvisEksisterer(nåværendeBehandlingId) } returns nåværendeGrunnlag
+        every { helseinstitusjonRepository.lagreHelseVurdering(any(), capture(vurderingSlot)) } returns Unit
+
+        løser.løs(
+            lagKontekst(nåværendeBehandlingId),
+            lagLøsning()
+        )
+
+        val lagrede = vurderingSlot.captured
+        assertThat(lagrede).hasSize(1)
+        assertThat(lagrede[0].periode.tom).isEqualTo(nyTom)
+        assertThat(lagrede[0].vurdertIBehandling).isEqualTo(forrigeBehandlingId)
+    }
+
+    @Test
+    fun `løpende opphold forkortet til konkret dato - vedtatt vurdering klippes og reassigneres`() {
+        val forrigeBehandlingId = BehandlingId(1L)
+        val nåværendeBehandlingId = BehandlingId(2L)
+        val vurderingSlot = slot<List<HelseinstitusjonVurdering>>()
+
+        // Forrige behandling: opphold løpende (tom = 2999-01-01), vurdering fra 1/6 til 2999-01-01
+        val løpendeTom = 1 januar 2999
+        val forrigeGrunnlag = lagGrunnlagMedOpphold(
+            oppholdFom = 1 februar 2025,
+            oppholdTom = løpendeTom,
+            vurderinger = listOf(
+                lagHelseinstitusjonVurdering(
+                    begrunnelse = "reduksjon løpende",
+                    periode = Periode(1 juni 2025, løpendeTom),
+                    behandlingId = forrigeBehandlingId
+                )
+            )
+        )
+
+        // Nåværende behandling: samme opphold, men tom endret til konkret dato
+        val nyTom = 1 august 2025
+        val nåværendeGrunnlag = lagGrunnlagMedOpphold(
+            oppholdFom = 1 februar 2025,
+            oppholdTom = nyTom,
+            vurderinger = emptyList()
+        )
+
+        every { behandlingRepository.hent(nåværendeBehandlingId) } returns
+                opprettBehandling(nåværendeBehandlingId, forrigeBehandlingId)
+        every { helseinstitusjonRepository.hentHvisEksisterer(forrigeBehandlingId) } returns forrigeGrunnlag
+        every { helseinstitusjonRepository.hentHvisEksisterer(nåværendeBehandlingId) } returns nåværendeGrunnlag
+        every { helseinstitusjonRepository.lagreHelseVurdering(any(), capture(vurderingSlot)) } returns Unit
+
+        løser.løs(
+            lagKontekst(nåværendeBehandlingId),
+            lagLøsning(
+                lagHelseinstitusjonVurderingDto(
+                    begrunnelse = "ny reduksjon etter forkortelse",
+                    periode = Periode(1 juni 2025, nyTom)
+                )
+            )
+        )
+
+        val lagrede = vurderingSlot.captured
+        assertThat(lagrede).hasSize(1)
+        assertThat(lagrede[0].periode.tom).isEqualTo(nyTom)
+        assertThat(lagrede[0].vurdertIBehandling).isEqualTo(nåværendeBehandlingId)
+    }
+
+    @Test
+    fun `opphold forkortet - vedtatt reduksjonsvurdering klippes til ny sluttdato og får ny behandlingId`() {
+        val forrigeBehandlingId = BehandlingId(1L)
+        val nåværendeBehandlingId = BehandlingId(2L)
+        val vurderingSlot = slot<List<HelseinstitusjonVurdering>>()
+
+        // Forrige: opphold og vurdering fom=2025-06-02 tom=2025-10-01
+        val gammelTom = 1 oktober 2025
+        val forrigeGrunnlag = lagGrunnlagMedOpphold(
+            oppholdFom = 1 februar 2025,
+            oppholdTom = gammelTom,
+            vurderinger = listOf(
+                lagHelseinstitusjonVurdering(
+                    begrunnelse = "reduksjon gammel periode",
+                    periode = Periode(1 juni 2025, gammelTom),
+                    behandlingId = forrigeBehandlingId
+                )
+            )
+        )
+
+        // Nåværende: opphold forkortet til 1/8
+        val nyTom = 1 august 2025
+        val nåværendeGrunnlag = lagGrunnlagMedOpphold(
+            oppholdFom = 1 februar 2025,
+            oppholdTom = nyTom,
+            vurderinger = emptyList()
+        )
+
+        every { behandlingRepository.hent(nåværendeBehandlingId) } returns
+                opprettBehandling(nåværendeBehandlingId, forrigeBehandlingId)
+        every { helseinstitusjonRepository.hentHvisEksisterer(forrigeBehandlingId) } returns forrigeGrunnlag
+        every { helseinstitusjonRepository.hentHvisEksisterer(nåværendeBehandlingId) } returns nåværendeGrunnlag
+        every { helseinstitusjonRepository.lagreHelseVurdering(any(), capture(vurderingSlot)) } returns Unit
+
+        løser.løs(
+            lagKontekst(nåværendeBehandlingId),
+            lagLøsning(
+                lagHelseinstitusjonVurderingDto(
+                    begrunnelse = "ny vurdering etter forkortelse",
+                    periode = Periode(1 juni 2025, nyTom)
+                )
+            )
+        )
+
+        val lagrede = vurderingSlot.captured
+        assertThat(lagrede.none { it.periode.tom.isAfter(nyTom) })
+            .`as`("Ingen vurderinger skal strekke seg forbi ny sluttdato").isTrue()
+        assertThat(lagrede.all { it.vurdertIBehandling == nåværendeBehandlingId }).isTrue()
+    }
+
+    @Test
+    fun `opphold forlenget - vedtatt reduksjonsvurdering forlenges til ny sluttdato og får ny behandlingId`() {
+        val forrigeBehandlingId = BehandlingId(1L)
+        val nåværendeBehandlingId = BehandlingId(2L)
+        val vurderingSlot = slot<List<HelseinstitusjonVurdering>>()
+
+        // Forrige: opphold og vurdering tom=2025-08-01
+        val gammelTom = 1 august 2025
+        val forrigeGrunnlag = lagGrunnlagMedOpphold(
+            oppholdFom = 1 februar 2025,
+            oppholdTom = gammelTom,
+            vurderinger = listOf(
+                lagHelseinstitusjonVurdering(
+                    begrunnelse = "reduksjon gammel periode",
+                    periode = Periode(1 juni 2025, gammelTom),
+                    behandlingId = forrigeBehandlingId
+                )
+            )
+        )
+
+        // Nåværende: opphold forlenget til 1/11
+        val nyTom = 1 november 2025
+        val nåværendeGrunnlag = lagGrunnlagMedOpphold(
+            oppholdFom = 1 februar 2025,
+            oppholdTom = nyTom,
+            vurderinger = emptyList()
+        )
+
+        every { behandlingRepository.hent(nåværendeBehandlingId) } returns
+                opprettBehandling(nåværendeBehandlingId, forrigeBehandlingId)
+        every { helseinstitusjonRepository.hentHvisEksisterer(forrigeBehandlingId) } returns forrigeGrunnlag
+        every { helseinstitusjonRepository.hentHvisEksisterer(nåværendeBehandlingId) } returns nåværendeGrunnlag
+        every { helseinstitusjonRepository.lagreHelseVurdering(any(), capture(vurderingSlot)) } returns Unit
+
+        løser.løs(
+            lagKontekst(nåværendeBehandlingId),
+            lagLøsning(
+                lagHelseinstitusjonVurderingDto(
+                    begrunnelse = "ny vurdering etter forlengelse",
+                    periode = Periode(1 juni 2025, nyTom)
+                )
+            )
+        )
+
+        val lagrede = vurderingSlot.captured
+        val vurdering = lagrede.find { it.begrunnelse == "ny vurdering etter forlengelse" }
+        assertThat(vurdering).isNotNull
+        assertThat(vurdering!!.periode.tom).isEqualTo(nyTom)
+        assertThat(vurdering.vurdertIBehandling).isEqualTo(nåværendeBehandlingId)
+    }
+
+    @Test
+    fun `uendret opphold - vedtatt vurdering beholdes med opprinnelig behandlingId`() {
+        val forrigeBehandlingId = BehandlingId(1L)
+        val nåværendeBehandlingId = BehandlingId(2L)
+        val vurderingSlot = slot<List<HelseinstitusjonVurdering>>()
+
+        val uendretTom = 1 august 2025
+        val forrigeGrunnlag = lagGrunnlagMedOpphold(
+            oppholdFom = 1 februar 2025,
+            oppholdTom = uendretTom,
+            vurderinger = listOf(
+                lagHelseinstitusjonVurdering(
+                    begrunnelse = "vedtatt reduksjon",
+                    periode = Periode(1 juni 2025, uendretTom),
+                    behandlingId = forrigeBehandlingId
+                )
+            )
+        )
+
+        val nåværendeGrunnlag = lagGrunnlagMedOpphold(
+            oppholdFom = 1 februar 2025,
+            oppholdTom = uendretTom,  // tom er lik - ingen endring
+            vurderinger = emptyList()
+        )
+
+        every { behandlingRepository.hent(nåværendeBehandlingId) } returns
+                opprettBehandling(nåværendeBehandlingId, forrigeBehandlingId)
+        every { helseinstitusjonRepository.hentHvisEksisterer(forrigeBehandlingId) } returns forrigeGrunnlag
+        every { helseinstitusjonRepository.hentHvisEksisterer(nåværendeBehandlingId) } returns nåværendeGrunnlag
+        every { helseinstitusjonRepository.lagreHelseVurdering(any(), capture(vurderingSlot)) } returns Unit
+
+        løser.løs(
+            lagKontekst(nåværendeBehandlingId),
+            lagLøsning(
+                lagHelseinstitusjonVurderingDto(
+                    begrunnelse = "ny vurdering uendret opphold",
+                    periode = Periode(1 juni 2025, uendretTom)
+                )
+            )
+        )
+
+        val lagrede = vurderingSlot.captured
+        // Ny vurdering overskriver den gamle for samme periode
+        assertThat(lagrede.find { it.begrunnelse == "ny vurdering uendret opphold" }).isNotNull
+        assertThat(lagrede.none { it.vurdertIBehandling == forrigeBehandlingId })
+            .`as`("Vedtatt vurdering for samme periode er erstattet av ny").isTrue()
+    }
+
+    @Test
+    fun `ingen forrige behandling - nåværendeGrunnlag ignoreres og ny vurdering lagres direkte`() {
+        val behandlingId = BehandlingId(1L)
+        val vurderingSlot = slot<List<HelseinstitusjonVurdering>>()
+
+        val nåværendeGrunnlag = lagGrunnlagMedOpphold(
+            oppholdFom = 1 februar 2025,
+            oppholdTom = 1 august 2025,
+            vurderinger = emptyList()
+        )
+
+        every { behandlingRepository.hent(behandlingId) } returns opprettBehandling(behandlingId, null)
+        every { helseinstitusjonRepository.hentHvisEksisterer(behandlingId) } returns nåværendeGrunnlag
+        every { helseinstitusjonRepository.lagreHelseVurdering(any(), capture(vurderingSlot)) } returns Unit
+
+        løser.løs(
+            lagKontekst(behandlingId),
+            lagLøsning(
+                lagHelseinstitusjonVurderingDto(
+                    begrunnelse = "ny vurdering uten forrige",
+                    periode = Periode(1 juni 2025, 1 august 2025)
+                )
+            )
+        )
+
+        val lagrede = vurderingSlot.captured
+        assertThat(lagrede).hasSize(1)
+        assertThat(lagrede[0].begrunnelse).isEqualTo("ny vurdering uten forrige")
+        assertThat(lagrede[0].vurdertIBehandling).isEqualTo(behandlingId)
+    }
+
+    // -------------------------------------------------------------------------
     // Hjelpemetoder
     // -------------------------------------------------------------------------
+
+    private fun lagGrunnlagMedOpphold(
+        oppholdFom: LocalDate,
+        oppholdTom: LocalDate,
+        vurderinger: List<HelseinstitusjonVurdering>
+    ) = InstitusjonsoppholdGrunnlag(
+        oppholdene = Oppholdene(
+            id = 1L,
+            opphold = listOf(
+                Segment(
+                    Periode(oppholdFom, oppholdTom),
+                    Institusjon(Institusjonstype.HS, Oppholdstype.H, "987654321", "Grønnlia Omsorgsopphold")
+                )
+            )
+        ),
+        helseoppholdvurderinger = Helseoppholdvurderinger(
+            id = 1L,
+            vurderinger = vurderinger,
+            vurdertTidspunkt = LocalDateTime.of(2025, 5, 1, 12, 0)
+        ),
+        soningsVurderinger = null
+    )
 
     private fun lagLøsning(vararg vurderinger: HelseinstitusjonVurderingDto) =
         AvklarHelseinstitusjonLøsning(HelseinstitusjonVurderingerDto(vurderinger.toList()))
