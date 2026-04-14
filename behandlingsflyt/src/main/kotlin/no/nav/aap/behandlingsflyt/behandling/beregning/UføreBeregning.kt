@@ -23,7 +23,7 @@ class UføreBeregning(
     private val uføregrader: Set<Uføre>,
     private val inntektsPerioder: Set<Månedsinntekt>,
     ytterligereNedsattDato: LocalDate,
-    årsInntekter: Set<InntektPerÅr>,
+    private val årsInntekter: Set<InntektPerÅr>,
 ) {
     private val relevanteÅr = Beregning.treÅrForutFor(ytterligereNedsattDato)
     private val ytterligereNedsattÅr = Year.from(ytterligereNedsattDato)
@@ -168,6 +168,7 @@ class UføreBeregning(
         månedEntries: List<Map.Entry<YearMonth, Beløp>>,
         uføreTidslinje: Tidslinje<Prosent>
     ): UføreInntekt {
+        InntektValidering.validerSummertInntekt(år, månedEntries.associate { it.key to it.value }, årsInntekter)
         val månedsinntekter = månedEntries.map { (årMåned, beløp) ->
             val uføregrad = uføreTidslinje.segment(årMåned.atDay(1))?.verdi ?: Prosent.`0_PROSENT`
             lagPeriodisertInntekt(Periode(årMåned.atDay(1), årMåned.atEndOfMonth()), beløp, uføregrad)

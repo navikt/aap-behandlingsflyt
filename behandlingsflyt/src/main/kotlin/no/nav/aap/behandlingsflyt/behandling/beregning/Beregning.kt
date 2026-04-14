@@ -46,7 +46,6 @@ class Beregning(
         val grunnlag11_19 = GrunnlagetForBeregningen(utledForOrdinær()).beregnGrunnlaget()
 
         val beregningMedEllerUtenUføre = if (finnesUføreData()) {
-            validerSummertInntekt()
             UføreBeregning(
                 grunnlag = grunnlag11_19,
                 uføregrader = uføregrad,
@@ -77,25 +76,6 @@ class Beregning(
      */
     fun utledForOrdinær(): Set<InntektPerÅr> {
         return filtrerInntekter(nedsettelsesDato, årsInntekter)
-    }
-
-    fun validerSummertInntekt() {
-        val inntektPerÅrFraPerioder: Map<Year, Beløp> = inntektsPerioder
-            .groupBy { Year.of(it.årMåned.year) }
-            .mapValues { (_, value) -> value.sumOf { it.beløp.verdi }.let(::Beløp) }
-
-        inntektPerÅrFraPerioder.forEach { (år, sum) ->
-            // Forskjell på inntektene kan ikke være større enn 100 kr
-            // Mest for sanity - denne sjekken kan nok fjernes, men helst etter at vi har blitt litt smartere
-            // i når vi bruker A-Inntekt som kilde. Om uføregraden er konstant et år, bør POPP brukes, for da trengs ikke
-            // månedsinntekter.
-            val differanse =
-                (årsInntekter.first { it.år == år }.beløp.verdi.stripTrailingZeros() - sum.verdi.stripTrailingZeros()).abs()
-            require(
-                differanse < BigDecimal(100)
-            )
-            { "Håndterer ikke å støtte forskjellig inntekt fra A-Inntekt og PESYS. Fikk $sum for år $år, men fant ${årsInntekter.filter { it.år == år }}" }
-        }
     }
 
     /**
