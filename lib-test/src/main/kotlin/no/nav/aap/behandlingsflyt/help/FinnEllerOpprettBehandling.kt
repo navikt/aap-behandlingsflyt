@@ -1,10 +1,10 @@
 package no.nav.aap.behandlingsflyt.help
 
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
@@ -17,7 +17,6 @@ import no.nav.aap.behandlingsflyt.test.FakeApiInternGateway
 import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.gateway.GatewayProvider
-import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.LocalDate
 
@@ -79,27 +78,4 @@ fun sak(
         repositoryProvider.provide(),
         repositoryProvider.provide()
     ).finnEllerOpprett(ident(), søknadsdato)
-}
-
-@Deprecated("Sluttdato for rettighetesperiode er alltid Tid.MAKS for nye/migrerte saker. Send kun med søknadsdato, med mindre du tester koden din for ikke-migrerte saker.")
-fun sak(
-    connection: DBConnection,
-    periode: Periode,
-): Sak {
-    @Suppress("DEPRECATION")
-    return sak(postgresRepositoryRegistry.provider(connection), periode)
-}
-
-@Deprecated("Sluttdato for rettighetesperiode er alltid Tid.MAKS for nye/migrerte saker. Send kun med søknadsdato, med mindre du tester koden din for ikke-migrerte saker.")
-fun sak(
-    repositoryProvider: RepositoryProvider,
-    periode: Periode,
-): Sak {
-    @Suppress("DEPRECATION")
-    return PersonOgSakService(
-        FakePdlGateway,
-        FakeApiInternGateway.konstruer(),
-        repositoryProvider.provide(),
-        repositoryProvider.provide()
-    ).finnEllerOpprett(ident(), periode)
 }

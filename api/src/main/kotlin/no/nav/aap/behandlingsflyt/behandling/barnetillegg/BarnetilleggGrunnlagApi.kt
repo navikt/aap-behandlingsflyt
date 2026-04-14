@@ -243,6 +243,7 @@ private fun mapTilExtendedVurdertBarnDto(
             navn = barn.navn.takeIf { barn.ident?.identifikator == ident.hentIdent().identifikator } ?: ident.navn,
             vurderinger = vurderinger,
             fødselsdato = barn.fodselsDato,
+            dødsdato = barn.dodsDato,
             oppgittForeldreRelasjon = barn.oppgittForeldreRelasjon,
         )
 
@@ -251,6 +252,7 @@ private fun mapTilExtendedVurdertBarnDto(
             navn = ident.navn,
             vurderinger = vurderinger,
             fødselsdato = ident.fødselsdato.toLocalDate(),
+            dødsdato = null,
             oppgittForeldreRelasjon = barn.oppgittForeldreRelasjon,
         )
     }
@@ -277,6 +279,7 @@ private fun hentBarnMedIdent(ident: BarnIdent, barnGrunnlag: BarnGrunnlag?): Ide
     return IdentifiserteBarnDto(
         ident = ident.ident,
         fodselsDato = fødselsdato.toLocalDate(),
+        dodsDato = registerBarn?.dødsdato?.toLocalDate(),
         navn = oppgittBarn?.navn ?: saksbehandlerOppgittBarn?.navn,
         forsorgerPeriode = Barn.periodeMedRettTil(fødselsdato, registerBarn?.dødsdato),
         oppgittForeldreRelasjon = oppgittBarn?.relasjon ?: saksbehandlerOppgittBarn?.relasjon
@@ -297,6 +300,7 @@ private fun hentBarnUtenIdent(
     return IdentifiserteBarnDto(
         ident = null,
         fodselsDato = ident.fødselsdato.toLocalDate(),
+        dodsDato = null,
         navn = ident.navn,
         forsorgerPeriode = ident.fødselsdato.let { Barn.periodeMedRettTil(it, null) },
         oppgittForeldreRelasjon = oppgittBarn?.relasjon ?: saksbehandlerOppgittBarn?.relasjon

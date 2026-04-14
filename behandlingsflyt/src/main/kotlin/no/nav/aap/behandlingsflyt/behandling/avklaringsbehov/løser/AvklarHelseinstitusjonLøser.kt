@@ -18,6 +18,7 @@ import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.orEmpty
+import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -47,12 +48,8 @@ class AvklarHelseinstitusjonLøser(
             UgyldigForespørselException(it.errorMessage)
         }
 
-        val vedtatteVurderinger =
-            behandling.forrigeBehandlingId?.let { helseinstitusjonRepository.hentHvisEksisterer(it) }
-
         val oppdaterteVurderinger =
-            slåSammenMedNyeVurderingerNy(
-                vedtatteVurderinger,
+            slåSammenMedNyeVurderinger(
                 løsning.helseinstitusjonVurdering.vurderinger,
                 behandling,
                 vurdertAv
@@ -66,13 +63,31 @@ class AvklarHelseinstitusjonLøser(
         return LøsningsResultat(løsning.helseinstitusjonVurdering.vurderinger.joinToString(" ") { it.begrunnelse })
     }
 
-    private fun slåSammenMedNyeVurderingerNy(
-        grunnlag: InstitusjonsoppholdGrunnlag?,
+    private fun slåSammenMedNyeVurderinger(
         nyeVurderinger: List<HelseinstitusjonVurderingDto>,
         behandling: Behandling,
         vurdertAv: String,
     ): List<HelseinstitusjonVurdering> {
-        val eksisterendeTidslinje = byggTidslinjeForHelseoppholdvurderinger(grunnlag)
+        val forrigeGrunnlag =
+            behandling.forrigeBehandlingId?.let { helseinstitusjonRepository.hentHvisEksisterer(it) }
+
+        val eksisterendeTidslinje =
+            byggTidslinjeForHelseoppholdvurderingerBegrensetTilOpphold(forrigeGrunnlag, behandling.id)
+
+        if (nyeVurderinger.isEmpty()) {
+            return eksisterendeTidslinje.segmenter().map {
+                HelseinstitusjonVurdering(
+                    begrunnelse = it.verdi.begrunnelse,
+                    faarFriKostOgLosji = it.verdi.faarFriKostOgLosji,
+                    forsoergerEktefelle = it.verdi.forsoergerEktefelle,
+                    harFasteUtgifter = it.verdi.harFasteUtgifter,
+                    periode = it.periode,
+                    vurdertIBehandling = it.verdi.vurdertIBehandling,
+                    vurdertAv = it.verdi.vurdertAv,
+                    vurdertTidspunkt = it.verdi.vurdertTidspunkt
+                )
+            }
+        }
 
         val nyeVurderingerTidslinje = Tidslinje(nyeVurderinger.sortedBy { it.periode }
             .map {
@@ -107,8 +122,13 @@ class AvklarHelseinstitusjonLøser(
         }
     }
 
-    private fun byggTidslinjeForHelseoppholdvurderinger(grunnlag: InstitusjonsoppholdGrunnlag?): Tidslinje<HelseoppholdVurderingData> {
-        return grunnlag?.helseoppholdvurderinger?.tilTidslinje()
+    private fun byggTidslinjeForHelseoppholdvurderingerBegrensetTilOpphold(
+        forrigeGrunnlag: InstitusjonsoppholdGrunnlag?,
+        nåværendeBehandlingId: BehandlingId
+    ): Tidslinje<HelseoppholdVurderingData> {
+        val nåværendeGrunnlag = helseinstitusjonRepository.hentHvisEksisterer(nåværendeBehandlingId)
+        val nåværendeOppholdTom = nåværendeGrunnlag?.oppholdene?.opphold?.maxOfOrNull { it.periode.tom }
+        val tidslinje = forrigeGrunnlag?.helseoppholdvurderinger?.tilTidslinje()
             ?.mapValue {
                 HelseoppholdVurderingData(
                     begrunnelse = it.begrunnelse,
@@ -120,6 +140,24 @@ class AvklarHelseinstitusjonLøser(
                     vurdertTidspunkt = it.vurdertTidspunkt
                 )
             }.orEmpty()
+
+        if (nåværendeOppholdTom == null) return tidslinje
+
+        val begrensetSegmenter = tidslinje.segmenter()
+            .filter { it.periode.fom <= nåværendeOppholdTom }
+            .map { segment ->
+                if (segment.periode.tom > nåværendeOppholdTom)
+                    Segment(
+                        Periode(segment.periode.fom, nåværendeOppholdTom),
+                        segment.verdi.copy(
+                            vurdertTidspunkt = LocalDateTime.now()
+                        )
+                    )
+                else
+                    segment
+            }
+
+        return if (begrensetSegmenter.isEmpty()) Tidslinje(emptyList()) else Tidslinje(begrensetSegmenter)
     }
 
     private fun validerReduksjonsdatoForInstitusjonsopphold(
@@ -148,8 +186,7 @@ class AvklarHelseinstitusjonLøser(
             val resultat = validerReduksjonsdato(
                 vurderinger,
                 første,
-                tidligsteReduksjonsdato,
-                "Reduksjonsvurdering starter for tidlig. Skal ikke starte før"
+                tidligsteReduksjonsdato
             )
             if (resultat != null) return resultat
         }
@@ -166,15 +203,14 @@ class AvklarHelseinstitusjonLøser(
     private fun validerReduksjonsdato(
         vurderinger: List<HelseinstitusjonVurderingDto>,
         førsteReduksjonsvurdering: HelseinstitusjonVurderingDto?,
-        tidligsteReduksjonsdato: LocalDate,
-        feilmelding: String,
+        tidligsteReduksjonsdato: LocalDate
     ): Validation<List<HelseinstitusjonVurderingDto>>? {
         if (førsteReduksjonsvurdering != null && førsteReduksjonsvurdering.periode.fom.isBefore(tidligsteReduksjonsdato)) {
             val tidligsteReduksjonsdatoFormatert =
                 tidligsteReduksjonsdato.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"))
             return Validation.Invalid(
                 vurderinger,
-                "$feilmelding $tidligsteReduksjonsdatoFormatert"
+                "Reduksjonsvurdering starter for tidlig. Skal ikke starte før $tidligsteReduksjonsdatoFormatert"
             )
         }
         return null

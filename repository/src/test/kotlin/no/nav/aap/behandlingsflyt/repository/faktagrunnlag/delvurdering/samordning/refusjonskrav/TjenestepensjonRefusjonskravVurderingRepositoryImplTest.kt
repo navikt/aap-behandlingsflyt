@@ -33,7 +33,7 @@ class TjenestepensjonRefusjonskravVurderingRepositoryImplTest {
     fun `lagre, hente ut igjen, slette`() {
 
 
-        val sak = dataSource.transaction { sak(it, Periode(1 januar 2022, 31.desember(2023))) }
+        val sak = dataSource.transaction { sak(it, 1 januar 2022) }
 
         val behandling = dataSource.transaction {
             finnEllerOpprettBehandling(it, sak)

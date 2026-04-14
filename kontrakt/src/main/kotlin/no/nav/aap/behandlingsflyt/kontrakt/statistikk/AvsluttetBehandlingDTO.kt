@@ -20,6 +20,7 @@ public data class AvsluttetBehandlingDTO(
     val vedtakstidspunkt: LocalDateTime?,
     val fritaksvurderinger: Iterable<Fritakvurdering>? = null,
     val perioderMedArbeidsopptrapping: List<PeriodeDTO>,
+    val vedtattStansOpphør: List<StansEllerOpphør>
 )
 
 public data class PeriodeDTO(val fom: LocalDate, val tom: LocalDate)
@@ -40,6 +41,48 @@ public enum class ResultatKode {
     KLAGE_AVSLÅTT,
     KLAGE_TRUKKET,
     AVBRUTT
+}
+
+public data class StansEllerOpphør(
+    val type: Avslagstype,
+    val fom: LocalDate,
+    val årsaker: Set<Avslagsårsak>
+)
+
+public enum class Avslagsårsak {
+    BRUKER_UNDER_18,
+    BRUKER_OVER_67,
+    MANGLENDE_DOKUMENTASJON,
+    IKKE_RETT_PA_SYKEPENGEERSTATNING,
+    IKKE_RETT_PA_STUDENT,
+    VARIGHET_OVERSKREDET_STUDENT,
+    IKKE_SYKDOM_AV_VISS_VARIGHET,
+    IKKE_SYKDOM_SKADE_LYTE_VESENTLIGDEL,
+    IKKE_NOK_REDUSERT_ARBEIDSEVNE,
+    IKKE_BEHOV_FOR_OPPFOLGING,
+    IKKE_MEDLEM_FORUTGÅENDE,
+    IKKE_MEDLEM,
+    IKKE_OPPFYLT_OPPHOLDSKRAV_EØS,
+    NORGE_IKKE_KOMPETENT_STAT,
+    ANNEN_FULL_YTELSE,
+    INNTEKTSTAP_DEKKES_ETTER_ANNEN_LOVGIVNING,
+    IKKE_RETT_PA_AAP_UNDER_BEHANDLING_AV_UFORE,
+    VARIGHET_OVERSKREDET_OVERGANG_UFORE,
+    VARIGHET_OVERSKREDET_ARBEIDSSØKER,
+    IKKE_RETT_PA_AAP_I_PERIODE_SOM_ARBEIDSSOKER,
+    IKKE_RETT_UNDER_STRAFFEGJENNOMFØRING,
+    BRUDD_PÅ_AKTIVITETSPLIKT_STANS,
+    BRUDD_PÅ_AKTIVITETSPLIKT_OPPHØR,
+    BRUDD_PÅ_OPPHOLDSKRAV_STANS,
+    BRUDD_PÅ_OPPHOLDSKRAV_OPPHØR,
+    HAR_RETT_TIL_FULLT_UTTAK_ALDERSPENSJON,
+    ORDINÆRKVOTE_BRUKT_OPP,
+    SYKEPENGEERSTATNINGKVOTE_BRUKT_OPP,
+}
+
+public enum class Avslagstype {
+    STANS,
+    OPPHØR,
 }
 
 public data class Diagnoser(

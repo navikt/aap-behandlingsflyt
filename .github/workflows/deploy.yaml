@@ -85,7 +85,7 @@ jobs:
         run: |
           ./gradlew dokkaGenerate
       - name: upload-artifact for docs
-        uses: actions/upload-pages-artifact@v4
+        uses: actions/upload-pages-artifact@v5
         with:
           path: './docs/build/dokka/html'
 
@@ -150,7 +150,7 @@ jobs:
                 GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
             run: |
                 ./gradlew -Pversion=${{ steps.tag.outputs.version }} publish
-          - uses:  softprops/action-gh-release@v2
+          - uses:  softprops/action-gh-release@v3
             if: ${{ steps.tag.outputs.version_type != 'none' }}
             id: create_release
             env:

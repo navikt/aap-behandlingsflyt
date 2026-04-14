@@ -15,17 +15,16 @@ enum class BehandlingsflytFeature : FeatureToggle {
     KvalitetssikringVed2213,
     VisIkkeRelevantPeriode,
     BekreftVurderingerOppfolging,
-    LagreStansOgOpphor,
     MigrerStansOgOpphor,
     SamordningBarnepensjon,
     SignaturEnhetFraOppgave,
     VedtakslengdeAvklaringsbehov,
     hentDagpengerPerioder,
     hentTiltakspengerPerioder,
-    hentUforesoknadsdata,
     UtvidVedtakslengdeUnderEttAr,
     OpprettManuellVedtakslengdeBehandling,
-    AvslagLovvalgMedlemskap
+    AvslagLovvalgMedlemskap,
+    MigrerSykdomsvurdering,
     ;
 
     override fun key(): String = name
