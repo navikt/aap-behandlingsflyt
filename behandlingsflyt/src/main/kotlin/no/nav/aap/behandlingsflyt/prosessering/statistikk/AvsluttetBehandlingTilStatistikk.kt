@@ -134,7 +134,9 @@ class AvsluttetBehandlingTilStatistikk(
         val perioderMedArbeidsopptrapping =
             arbeidsopptrappingRepository.hentHvisEksisterer(behandling.id).perioderMedArbeidsopptrapping()
 
-        val vedtattStansOpphør = stansOpphørService.vedtattStansOpphør(behandling.id)
+        val vedtattStansOpphør = if (behandling.typeBehandling()
+                .erYtelsesbehandling()
+        ) stansOpphørService.vedtattStansOpphør(behandling.id) else emptyList()
 
         return AvsluttetBehandlingDTO(
             vilkårsResultat = VilkårsResultatDTO(
