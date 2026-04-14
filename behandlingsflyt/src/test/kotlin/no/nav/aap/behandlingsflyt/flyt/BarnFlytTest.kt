@@ -336,6 +336,7 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
                                 ident = null,
                                 navn = barnNavn,
                                 fødselsdato = barnAlder,
+                                dødsdato = null,
                                 vurderinger = listOf(
                                     VurderingAvForeldreAnsvarDto(
                                         fraDato = fom,
@@ -363,6 +364,7 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
                                 ident = null,
                                 navn = barnNavn,
                                 fødselsdato = barnAlder,
+                                dødsdato = null,
                                 vurderinger = listOf(
                                     VurderingAvForeldreAnsvarDto(
                                         fraDato = fom,
@@ -375,6 +377,7 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
                                 ident = null,
                                 navn = manueltBarnIPDL.navn.toString(),
                                 fødselsdato = manueltBarnIPDL.fødselsdato.toLocalDate(),
+                                dødsdato = null,
                                 vurderinger = listOf(
                                     VurderingAvForeldreAnsvarDto(
                                         fraDato = fom,
@@ -500,6 +503,7 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
             ident = saksbehandlerOppgitteBarn.identer.first().identifikator,
             navn = saksbehandlerOppgitteBarn.navn.toString(),
             fødselsdato = saksbehandlerOppgitteBarn.fødselsdato.toLocalDate(),
+            dødsdato = null,
             vurderinger = listOf(
                 VurderingAvForeldreAnsvarDto(
                     harForeldreAnsvar = true,
@@ -522,6 +526,7 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
                                 ident = null,
                                 navn = oppgitteBarn.navn.toString(),
                                 fødselsdato = oppgitteBarn.fødselsdato.toLocalDate(),
+                                dødsdato = null,
                                 vurderinger = listOf(
                                     VurderingAvForeldreAnsvarDto(
                                         harForeldreAnsvar = true,
@@ -537,6 +542,7 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
                                 ident = registerBarnIdent.identifikator,
                                 navn = registerBarn.navn.toString(),
                                 fødselsdato = registerBarn.fødselsdato.toLocalDate(),
+                                dødsdato = null,
                                 vurderinger = listOf(
                                     VurderingAvForeldreAnsvarDto(
                                         harForeldreAnsvar = true,
@@ -614,6 +620,7 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
                             ident = null,
                             navn = oppgitteBarn.navn.toString(),
                             fødselsdato = oppgitteBarn.fødselsdato.toLocalDate(),
+                            dødsdato = null,
                             vurderinger = listOf(
                                 VurderingAvForeldreAnsvarDto(
                                     harForeldreAnsvar = true,
@@ -662,6 +669,7 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
             ident = null,
             navn = "Flinke Bamse",
             fødselsdato = LocalDate.now().minusYears(6),
+            dødsdato = null,
             vurderinger = listOf(
                 VurderingAvForeldreAnsvarDto(
                     harForeldreAnsvar = true,
@@ -692,6 +700,7 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
                                 ident = null,
                                 navn = oppgitteBarn.navn.toString(),
                                 fødselsdato = oppgitteBarn.fødselsdato.toLocalDate(),
+                                dødsdato = null,
                                 vurderinger = listOf(
                                     VurderingAvForeldreAnsvarDto(
                                         harForeldreAnsvar = true,
@@ -768,6 +777,7 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
                                 ident = null,
                                 navn = oppgitteBarn.navn.toString(),
                                 fødselsdato = oppgitteBarn.fødselsdato.toLocalDate(),
+                                dødsdato = null,
                                 vurderinger = listOf(
                                     VurderingAvForeldreAnsvarDto(
                                         harForeldreAnsvar = true,
@@ -916,6 +926,7 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
             ident = "hhhh",
             navn = "Kjær Boks",
             fødselsdato = LocalDate.now().minusYears(4),
+            dødsdato = null,
             vurderinger = listOf(
                 VurderingAvForeldreAnsvarDto(
                     harForeldreAnsvar = true,
@@ -1032,6 +1043,7 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
             ident = "hhhh",
             navn = "Konkret Oktober",
             fødselsdato = LocalDate.now().minusYears(6),
+            dødsdato = null,
             vurderinger = listOf(
                 VurderingAvForeldreAnsvarDto(
                     harForeldreAnsvar = true,
