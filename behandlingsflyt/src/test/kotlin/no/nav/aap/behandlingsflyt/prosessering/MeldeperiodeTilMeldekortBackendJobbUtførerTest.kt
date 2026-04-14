@@ -29,6 +29,7 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Dagsatser
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.komponenter.verdityper.TimerArbeid
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions.assertEquals
 import java.math.BigDecimal
 import java.time.LocalDate
@@ -96,7 +97,11 @@ class MeldeperiodeTilMeldekortBackendJobbUtførerTest {
             )
         )
 
-        assertEquals(opplysninger.identer.toSet(), setOf("1".repeat(11), "2".repeat(11)))
+        assertThat(opplysninger.personIdenter.map { it.ident to it.aktiv })
+            .containsExactlyInAnyOrder(
+                "1".repeat(11) to false,
+                "2".repeat(11) to true,
+            )
         assertEquals(opplysninger.opplysningsbehov.single().fom, 13 mai 2025)
         assertEquals(opplysninger.opplysningsbehov.single().tom, 30 mars 2026)
         assertEquals(opplysninger.meldeperioder.map { Periode(it.fom, it.tom) }.toSet(), setOf(

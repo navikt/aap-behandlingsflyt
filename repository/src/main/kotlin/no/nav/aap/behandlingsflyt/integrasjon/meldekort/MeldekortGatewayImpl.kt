@@ -55,7 +55,6 @@ class MeldekortGatewayImpl : MeldekortGateway {
                             aktiv = it.aktivIdent
                         )
                     },
-                    identer = identer.map { it.identifikator },
                 )
             )
         )
