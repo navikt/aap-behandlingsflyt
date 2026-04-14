@@ -49,6 +49,12 @@ class MeldekortGatewayImpl : MeldekortGateway {
             PostRequest(
                 OppdaterIdenterV0(
                     saksnummer = saksnummer.toString(),
+                    personIdenter = identer.map {
+                        no.nav.aap.meldekort.kontrakt.sak.Ident(
+                            ident = it.identifikator,
+                            aktiv = it.aktivIdent
+                        )
+                    },
                     identer = identer.map { it.identifikator },
                 )
             )
