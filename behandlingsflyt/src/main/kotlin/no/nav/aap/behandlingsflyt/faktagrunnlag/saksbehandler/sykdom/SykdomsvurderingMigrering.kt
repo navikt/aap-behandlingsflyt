@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom
 import no.nav.aap.behandlingsflyt.behandling.vilkår.sykdom.SykdomsFaktagrunnlag
 import no.nav.aap.behandlingsflyt.behandling.vilkår.sykdom.SykdomsvilkårUtenVissVarighet
 import no.nav.aap.behandlingsflyt.behandling.vilkår.sykdom.diff
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandRepository
@@ -10,6 +11,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.komponenter.miljo.Miljø
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.lookup.repository.RepositoryProvider
@@ -133,13 +135,35 @@ class SykdomsvurderingMigreringService(
         val diffEtter = sammenligningEtter.diff()
 
         if (diffEtter.isNotEmpty()) {
-            log.error(
-                "Behandling $behandlingId har diff etter migrer. Dette indikerer feil i migreringslogikk. " +
-                "Diff: $diffEtter. Ruller tilbake transaksjon."
-            )
-            throw SykdomsvurderingMigreringFeil(
-                "Migrering av behandling $behandlingId førte til endret vilkårsvurdering. Diff: $diffEtter"
-            )
+            val bistandsTidslinje = bistandGrunnlag?.somBistandsvurderingstidslinje().orEmpty()
+            val diffEtterFiltrertGamleVurderinger = diffEtter.mapNotNull { diff ->
+                val bistandIPerioden = bistandsTidslinje.begrensetTil(diff.periode).segmenter()
+                val gammelVerdi = diff.verdi.gammel
+                val nyVerdi = diff.verdi.ny
+                val erNyIkkeOppfylt = nyVerdi?.utfall == Utfall.IKKE_OPPFYLT
+                val erGammelOrdinærtOppfylt =
+                    gammelVerdi?.utfall == Utfall.OPPFYLT && gammelVerdi.innvilgelsesårsak == null
+                val harIkkeBistand = bistandIPerioden.any { !it.verdi.erBehovForBistand() }
+                if (erGammelOrdinærtOppfylt && erNyIkkeOppfylt && harIkkeBistand) {
+                    log.info("Behandling $behandlingId var oppfylt, men skulle ikke vært det ettersom bistand ikke er oppfylt - ignorerer derfor diff her")
+                    null
+                } else {
+                    diff
+                }
+            }
+
+            if (diffEtterFiltrertGamleVurderinger.isNotEmpty()) {
+                log.error(
+                    "Behandling $behandlingId har diff etter migrer. Dette indikerer feil i migreringslogikk. " +
+                            "Diff: $diffEtter. Ruller tilbake transaksjon."
+                )
+
+                throw SykdomsvurderingMigreringFeil(
+                    "Migrering av behandling $behandlingId førte til endret vilkårsvurdering. Diff: $diffEtter"
+                )
+            } else {
+                log.info("Behandling $behandlingId hadde diff etter migrering, men denne var basert på utdatert vilkårvurderingsform på sykdomsvilkåret.")
+            }
         }
     }
 }
