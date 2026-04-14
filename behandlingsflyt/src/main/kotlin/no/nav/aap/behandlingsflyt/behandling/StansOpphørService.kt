@@ -16,6 +16,8 @@ class StansOpphørService(
 ) {
     /**
      * Antas å kjøre etter at behandlingen er vedtatt (status IVERKSETTES eller status AVSLUTTET).
+     *
+     * Antar også at behandlingen er en ytelsesbehandling.
      */
     fun vedtattStansOpphør(behandlingId: BehandlingId): List<GjeldendeStansEllerOpphør> {
         val opphørGrunnlag =

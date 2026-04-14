@@ -68,7 +68,7 @@ class AvsluttetBehandlingTilStatistikk(
     private val vedtakService: VedtakService,
     trukketSøknadService: TrukketSøknadService,
     private val klageresultatUtleder: IKlageresultatUtleder,
-    avbrytRevurderingService: AvbrytRevurderingService,
+    private val avbrytRevurderingService: AvbrytRevurderingService,
     private val meldepliktRepository: MeldepliktRepository,
     private val arbeidsopptrappingRepository: ArbeidsopptrappingRepository,
     private val stansOpphørService: StansOpphørService,
@@ -134,7 +134,9 @@ class AvsluttetBehandlingTilStatistikk(
         val perioderMedArbeidsopptrapping =
             arbeidsopptrappingRepository.hentHvisEksisterer(behandling.id).perioderMedArbeidsopptrapping()
 
-        val vedtattStansOpphør = stansOpphørService.vedtattStansOpphør(behandling.id)
+        val vedtattStansOpphør = if (behandling.typeBehandling()
+                .erYtelsesbehandling() && !avbrytRevurderingService.revurderingErAvbrutt(behandling.id)
+        ) stansOpphørService.vedtattStansOpphør(behandling.id) else emptyList()
 
         return AvsluttetBehandlingDTO(
             vilkårsResultat = VilkårsResultatDTO(
