@@ -88,104 +88,102 @@ class UføreBeregning(
         inntektPerMåned: Map<YearMonth, Beløp>,
         uføreTidslinje: Tidslinje<Prosent>
     ): List<UføreInntekt> {
-
         return inntektPerMåned.entries.groupBy { Year.of(it.key.year) }
-            .mapValues {
-                val år = it.key
+            .mapValues { (år, månedEntries) ->
                 val detteÅret = Periode(år.atDay(1), år.atMonth(12).atEndOfMonth())
-                val uføretidslinjeBegrensetTilGjeldendeÅr =
-                    uføreTidslinje.begrensetTil(detteÅret)
+                val uføretidslinjeBegrensetTilGjeldendeÅr = uføreTidslinje.begrensetTil(detteÅret)
 
-                return@mapValues if (uføretidslinjeBegrensetTilGjeldendeÅr.isEmpty()) {
-                    // Antar null uføregrad
+                when {
+                    uføretidslinjeBegrensetTilGjeldendeÅr.isEmpty() ->
+                        // Ingen uføregrad registrert for året – antar 0 prosent
+                        uføreInntektUtenUføregrad(år, detteÅret)
 
-                    val uføreGradDetteÅret = Prosent.`0_PROSENT`
-                    val årsInntekt = inntektIÅr(år)
+                    likUføreGradHeleÅret(uføretidslinjeBegrensetTilGjeldendeÅr, detteÅret) ->
+                        uføreInntektKonstantUføregrad(år, detteÅret, uføretidslinjeBegrensetTilGjeldendeÅr)
 
-                    val periodisert = UføreInntektPeriodisert(
-                        periode = detteÅret,
-                        inntektIKroner = årsInntekt,
-                        uføregrad = uføreGradDetteÅret,
-                        inntektJustertForUføregrad = årsInntekt
-                    )
-
-                    val gUnit = gUnit(år, årsInntekt)
-
-                    UføreInntekt(
-                        år = år,
-                        inntektsPerioder = listOf(periodisert),
-                        inntektIKroner = årsInntekt,
-                        inntektJustertForUføregrad = årsInntekt,
-                        inntektIGJustertForUføregrad = gUnit.gUnit,
-                        inntektIG = gUnit.gUnit,
-                        grunnbeløp = gUnit.beløp,
-                    )
-                } else if (likUføreGradHeleÅret(uføretidslinjeBegrensetTilGjeldendeÅr, detteÅret)) {
-                    // Uføregraden er konstant hele året, kan bruke årsinntekt
-
-                    val uføregradDetteÅret = uføretidslinjeBegrensetTilGjeldendeÅr.verdier().first()
-                    val arbeidsgrad = uføregradDetteÅret.komplement()
-                    val årsInntekt = inntektIÅr(år)
-
-                    val periodisert = UføreInntektPeriodisert(
-                        periode = detteÅret,
-                        inntektIKroner = årsInntekt,
-                        uføregrad = uføregradDetteÅret,
-                        inntektJustertForUføregrad = if (arbeidsgrad == Prosent.`0_PROSENT`) {
-                            Beløp(0)
-                        } else {
-                            årsInntekt.dividert(arbeidsgrad)
-                        }
-                    )
-
-                    val gUnit = gUnit(år, periodisert.inntektJustertForUføregrad)
-
-
-                    UføreInntekt(
-                        år = år,
-                        inntektsPerioder = listOf(periodisert),
-                        inntektIKroner = årsInntekt,
-                        inntektJustertForUføregrad = periodisert.inntektJustertForUføregrad,
-                        inntektIGJustertForUføregrad = gUnit.gUnit,
-                        inntektIG = gUnit(år, årsInntekt).gUnit,
-                        grunnbeløp = gUnit.beløp,
-                    )
-                } else {
-                    val månedsinntekter = it.value.map { (årMåned, beløp) ->
-                        val uføregradDenneMåneden =
-                            uføreTidslinje.segment(årMåned.atDay(1))?.verdi ?: Prosent.`0_PROSENT`
-
-                        val arbeidsgrad = uføregradDenneMåneden.komplement()
-
-                        UføreInntektPeriodisert(
-                            periode = Periode(årMåned.atDay(1), årMåned.atEndOfMonth()),
-                            inntektIKroner = beløp,
-                            uføregrad = uføregradDenneMåneden,
-                            inntektJustertForUføregrad = if (arbeidsgrad == Prosent.`0_PROSENT`) {
-                                Beløp(0)
-                            } else {
-                                beløp.dividert(arbeidsgrad)
-                            }
-                        )
-                    }
-                    val summertInntektJustertForUføre =
-                        Beløp(månedsinntekter.sumOf { it.inntektJustertForUføregrad.verdi })
-
-                    val summertInntekt = Beløp(månedsinntekter.sumOf { it.inntektIKroner.verdi })
-
-                    val summertInntektIGJustertForUføregrad = gUnit(år, summertInntektJustertForUføre)
-
-                    UføreInntekt(
-                        år = år,
-                        inntektsPerioder = månedsinntekter,
-                        inntektIKroner = summertInntekt,
-                        inntektJustertForUføregrad = summertInntektJustertForUføre,
-                        inntektIGJustertForUføregrad = summertInntektIGJustertForUføregrad.gUnit,
-                        inntektIG = gUnit(år, summertInntekt).gUnit,
-                        grunnbeløp = summertInntektIGJustertForUføregrad.beløp,
-                    )
+                    else ->
+                        // Uføregraden varierer i løpet av året – beregnes per måned
+                        uføreInntektVariabelUføregrad(år, månedEntries, uføreTidslinje)
                 }
             }.values.toList()
+    }
+
+    private fun uføreInntektUtenUføregrad(år: Year, detteÅret: Periode): UføreInntekt {
+        val årsInntekt = inntektIÅr(år)
+        val periodisert = lagPeriodisertInntekt(detteÅret, årsInntekt, Prosent.`0_PROSENT`)
+        val gUnit = gUnit(år, årsInntekt)
+        return UføreInntekt(
+            år = år,
+            inntektsPerioder = listOf(periodisert),
+            inntektIKroner = årsInntekt,
+            inntektJustertForUføregrad = årsInntekt,
+            inntektIGJustertForUføregrad = gUnit.gUnit,
+            inntektIG = gUnit.gUnit,
+            grunnbeløp = gUnit.beløp,
+        )
+    }
+
+    private fun uføreInntektKonstantUføregrad(
+        år: Year,
+        detteÅret: Periode,
+        uføretidslinje: Tidslinje<Prosent>
+    ): UføreInntekt {
+        // Uføregraden er konstant hele året – kan bruke årsinntekt
+        val uføregrad = uføretidslinje.verdier().first()
+        val årsInntekt = inntektIÅr(år)
+        val periodisert = lagPeriodisertInntekt(detteÅret, årsInntekt, uføregrad)
+        val gUnit = gUnit(år, periodisert.inntektJustertForUføregrad)
+        return UføreInntekt(
+            år = år,
+            inntektsPerioder = listOf(periodisert),
+            inntektIKroner = årsInntekt,
+            inntektJustertForUføregrad = periodisert.inntektJustertForUføregrad,
+            inntektIGJustertForUføregrad = gUnit.gUnit,
+            inntektIG = gUnit(år, årsInntekt).gUnit,
+            grunnbeløp = gUnit.beløp,
+        )
+    }
+
+    private fun lagPeriodisertInntekt(
+        periode: Periode,
+        inntektIKroner: Beløp,
+        uføregrad: Prosent
+    ): UføreInntektPeriodisert {
+        val arbeidsgrad = uføregrad.komplement()
+        val inntektJustert = if (arbeidsgrad == Prosent.`0_PROSENT`) {
+            Beløp(0)
+        } else {
+            inntektIKroner.dividert(arbeidsgrad)
+        }
+        return UføreInntektPeriodisert(
+            periode = periode,
+            inntektIKroner = inntektIKroner,
+            uføregrad = uføregrad,
+            inntektJustertForUføregrad = inntektJustert
+        )
+    }
+
+    private fun uføreInntektVariabelUføregrad(
+        år: Year,
+        månedEntries: List<Map.Entry<YearMonth, Beløp>>,
+        uføreTidslinje: Tidslinje<Prosent>
+    ): UføreInntekt {
+        val månedsinntekter = månedEntries.map { (årMåned, beløp) ->
+            val uføregrad = uføreTidslinje.segment(årMåned.atDay(1))?.verdi ?: Prosent.`0_PROSENT`
+            lagPeriodisertInntekt(Periode(årMåned.atDay(1), årMåned.atEndOfMonth()), beløp, uføregrad)
+        }
+        val summertInntekt = Beløp(månedsinntekter.sumOf { it.inntektIKroner.verdi })
+        val summertInntektJustert = Beløp(månedsinntekter.sumOf { it.inntektJustertForUføregrad.verdi })
+        val gUnit = gUnit(år, summertInntektJustert)
+        return UføreInntekt(
+            år = år,
+            inntektsPerioder = månedsinntekter,
+            inntektIKroner = summertInntekt,
+            inntektJustertForUføregrad = summertInntektJustert,
+            inntektIGJustertForUføregrad = gUnit.gUnit,
+            inntektIG = gUnit(år, summertInntekt).gUnit,
+            grunnbeløp = gUnit.beløp,
+        )
     }
 
     private fun likUføreGradHeleÅret(
