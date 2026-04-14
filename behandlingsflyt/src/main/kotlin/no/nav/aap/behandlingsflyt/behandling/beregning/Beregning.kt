@@ -52,6 +52,7 @@ class Beregning(
                 uføregrader = uføregrad,
                 ytterligereNedsattDato = requireNotNull(ytterligereNedsettelsesDato),
                 inntektsPerioder = inntektsPerioder,
+                årsInntekter = årsInntekter,
             ).beregnUføre()
         } else {
             grunnlag11_19
@@ -247,7 +248,7 @@ class Beregning(
 
         private fun Collection<ManuellInntektVurdering>.tilÅrInntekt(selector: (ManuellInntektVurdering) -> Beløp?): Map<Year, InntektPerÅr> {
             return this.filter { selector(it) != null }
-                .map { InntektPerÅr(it.år, selector(it)!!, it) }
+                .map { InntektPerÅr(it.år, selector(it)!!) }
                 .groupBy { it.år }
                 .mapValues {
                     it.value.single()
