@@ -117,7 +117,6 @@ class MeldeperiodeTilMeldekortBackendJobbUtfører(
         internal fun opplysningerVedTrukketSøknad(sak: Sak) =
             MeldeperioderV0(
                 personIdenter = sak.person.identer().somKontraktIdenter,
-                identer = sak.person.identer().map { it.identifikator },
                 saksnummer = sak.saksnummer.toString(),
                 sakStatus = SakStatus.AVSLUTTET,
                 sakenGjelderFor = sak.rettighetsperiode.somKontraktperiode,
@@ -153,7 +152,6 @@ class MeldeperiodeTilMeldekortBackendJobbUtfører(
                 },
                 saksnummer = sak.saksnummer.toString(),
                 personIdenter = sak.person.identer().somKontraktIdenter,
-                identer = sak.person.identer().map { it.identifikator },
                 sakenGjelderFor = sak.rettighetsperiode.somKontraktperiode,
                 meldeperioder = meldeperioder.somKontraktperioder,
                 opplysningsbehov = underveisperioder
@@ -179,7 +177,6 @@ class MeldeperiodeTilMeldekortBackendJobbUtfører(
         ): MeldeperioderV0 = MeldeperioderV0(
             saksnummer = sak.saksnummer.toString(),
             personIdenter = sak.person.identer().somKontraktIdenter,
-            identer = sak.person.identer().map { it.identifikator },
             sakenGjelderFor = sak.rettighetsperiode.somKontraktperiode,
             meldeperioder = meldeperioder.somKontraktperioder,
             opplysningsbehov = listOf(sak.rettighetsperiode.somKontraktperiode),
