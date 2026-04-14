@@ -23,6 +23,7 @@ import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.meldekort.kontrakt.Periode
+import no.nav.aap.meldekort.kontrakt.sak.Ident
 import no.nav.aap.meldekort.kontrakt.sak.MeldeperioderV0
 import no.nav.aap.meldekort.kontrakt.sak.SakStatus
 import no.nav.aap.motor.JobbInput
@@ -55,7 +56,8 @@ class MeldeperiodeTilMeldekortBackendJobbUtfører(
 
             behandling.status().erAvsluttet() -> {
                 val underveisGrunnlag = underveisRepository.hentHvisEksisterer(behandling.id)
-                val underveisperiode = underveisGrunnlag?.somTidslinje()?.helePerioden() ?: error("Skal ha underveisperiode for avsluttet behandling ${behandling.id}")
+                val underveisperiode = underveisGrunnlag?.somTidslinje()?.helePerioden()
+                    ?: error("Skal ha underveisperiode for avsluttet behandling ${behandling.id}")
                 val meldeperioder = meldeperiodeRepository.hentMeldeperioder(behandlingId, underveisperiode)
                 opplysningerVedVedtak(
                     sak = sak,
@@ -67,7 +69,8 @@ class MeldeperiodeTilMeldekortBackendJobbUtfører(
             }
 
             behandling.typeBehandling() == TypeBehandling.Førstegangsbehandling -> {
-                val meldeperioder = meldeperiodeRepository.hentMeldeperioder(behandlingId, sak.rettighetsperiodeEttÅrFraStartDato())
+                val meldeperioder =
+                    meldeperiodeRepository.hentMeldeperioder(behandlingId, sak.rettighetsperiodeEttÅrFraStartDato())
                 opplysningerFørVedtak(sak, meldeperioder)
             }
 
@@ -113,6 +116,7 @@ class MeldeperiodeTilMeldekortBackendJobbUtfører(
 
         internal fun opplysningerVedTrukketSøknad(sak: Sak) =
             MeldeperioderV0(
+                personIdenter = sak.person.identer().somKontraktIdenter,
                 identer = sak.person.identer().map { it.identifikator },
                 saksnummer = sak.saksnummer.toString(),
                 sakStatus = SakStatus.AVSLUTTET,
@@ -148,6 +152,7 @@ class MeldeperiodeTilMeldekortBackendJobbUtfører(
                     Status.AVSLUTTET -> SakStatus.AVSLUTTET
                 },
                 saksnummer = sak.saksnummer.toString(),
+                personIdenter = sak.person.identer().somKontraktIdenter,
                 identer = sak.person.identer().map { it.identifikator },
                 sakenGjelderFor = sak.rettighetsperiode.somKontraktperiode,
                 meldeperioder = meldeperioder.somKontraktperioder,
@@ -173,6 +178,7 @@ class MeldeperiodeTilMeldekortBackendJobbUtfører(
             meldeperioder: List<no.nav.aap.komponenter.type.Periode>
         ): MeldeperioderV0 = MeldeperioderV0(
             saksnummer = sak.saksnummer.toString(),
+            personIdenter = sak.person.identer().somKontraktIdenter,
             identer = sak.person.identer().map { it.identifikator },
             sakenGjelderFor = sak.rettighetsperiode.somKontraktperiode,
             meldeperioder = meldeperioder.somKontraktperioder,
@@ -185,5 +191,13 @@ class MeldeperiodeTilMeldekortBackendJobbUtfører(
 
         private val List<no.nav.aap.komponenter.type.Periode>.somKontraktperioder: List<Periode>
             get() = map { it.somKontraktperiode }
+
+        private val List<no.nav.aap.behandlingsflyt.sakogbehandling.Ident>.somKontraktIdenter: List<Ident>
+            get() = map {
+                Ident(
+                    ident = it.identifikator,
+                    aktiv = it.aktivIdent
+                )
+            }
     }
 }
