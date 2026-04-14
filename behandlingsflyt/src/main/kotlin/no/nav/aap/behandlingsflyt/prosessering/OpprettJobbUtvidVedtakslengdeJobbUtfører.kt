@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.prosessering
 import no.nav.aap.behandlingsflyt.behandling.vedtakslengde.VedtakslengdeUtvidelse
 import no.nav.aap.behandlingsflyt.behandling.vedtakslengde.VedtakslengdeService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
@@ -48,7 +49,14 @@ class OpprettJobbUtvidVedtakslengdeJobbUtfører(
 
     // TODO: Må filtrere vekk de som allerede har blitt kjørt, men ikke kvalifiserte til reell utvidelse av vedtakslengde
     private fun hentKandidaterForUtvidelseAvVedtakslengde(datoForUtvidelse: LocalDate): Set<SakId> {
-        val kandidater = vedtakslengdeService.hentSakerAktuelleForUtvidelseAvVedtakslengde(datoForUtvidelse)
+        val alleSaker = vedtakslengdeService.hentSakerAktuelleForUtvidelseAvVedtakslengde(datoForUtvidelse)
+        val (sakerMedÅpenUtvidelse, sakerUtenÅpenUtvidelse) = alleSaker.partition { harÅpenUtvidVedtakslengdeBehandling(it) }
+
+        if (sakerMedÅpenUtvidelse.isNotEmpty()) {
+            log.info("Filtrerer vekk ${sakerMedÅpenUtvidelse.size} saker som allerede har en åpen behandling med årsak UTVID_VEDTAKSLENGDE. Saker: $sakerMedÅpenUtvidelse")
+        }
+
+        val kandidater = sakerUtenÅpenUtvidelse
             .fold(KategoriserteKandidater()) { acc, sakId ->
                 val utvidelse = vurderUtvidelseBehov(sakId)
                 // Sikrer at nye typer i VedtakslengdeUtvidelse må håndteres
@@ -84,6 +92,11 @@ class OpprettJobbUtvidVedtakslengdeJobbUtfører(
             }
             kandidater.automatiske
         }
+    }
+
+    private fun harÅpenUtvidVedtakslengdeBehandling(sakId: SakId): Boolean {
+        val sisteBehandling = behandlingService.finnSisteYtelsesbehandlingFor(sakId) ?: return false
+        return sisteBehandling.årsakTilOpprettelse == ÅrsakTilOpprettelse.UTVID_VEDTAKSLENGDE && sisteBehandling.status().erÅpen()
     }
 
     private fun vurderUtvidelseBehov(sakId: SakId): VedtakslengdeUtvidelse? {
