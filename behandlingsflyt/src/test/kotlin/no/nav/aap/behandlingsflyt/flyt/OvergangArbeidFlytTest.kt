@@ -1,13 +1,17 @@
 package no.nav.aap.behandlingsflyt.flyt
 
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSykdomLøsning
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companion.plussEtÅrMedHverdager
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.ÅrMedHverdager
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.SykdomsvurderingLøsningDto
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.verdityper.dokument.JournalpostId
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedClass
@@ -90,5 +94,70 @@ class OvergangArbeidFlytTest(val unleashGateway: KClass<UnleashGateway>) : Abstr
             )
     }
 
+    @Test
+    fun `Hvis det ikke finnes vurdert 11-17, så skal det trigge en vurdering av § 11-5 + 11-17`() {
+        /*
+        Legg til "§ 11-17 AAP i perioden som arbeidssøker" som revurderingsårsak
+        1. Hvis det finnes en eksisterende 11-17 vurdering, så skal det trigge avklaringsbehov på 11-17
+        2. Hvis det ikke finnes vurdert 11-17, så skal det trigge en vurdering av § 11-5 + 11-17.
+         */
+        val startDato = LocalDate.now()
+        val sak = happyCaseFørstegangsbehandling(startDato)
+        val endringsdato = sak.rettighetsperiode.fom.plusDays(7)
+        val sluttdato = endringsdato.plusMonths(6).minusDays(1)
 
+        /* Gir AAP som arbeidssøker. */
+        sak.opprettManuellRevurdering(
+            no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.OVERGANG_ARBEID
+        )
+            .medKontekst {
+                assertThat( åpneAvklaringsbehov.map { it.definisjon } ).containsExactly(Definisjon.AVKLAR_SYKDOM);
+            }
+            .løsAvklaringsBehov(
+                AvklarSykdomLøsning(
+                    løsningerForPerioder = listOf(
+                        SykdomsvurderingLøsningDto(
+                            begrunnelse = "Er syk nok",
+                            dokumenterBruktIVurdering = listOf(JournalpostId("123128")),
+                            harSkadeSykdomEllerLyte = true,
+                            erSkadeSykdomEllerLyteVesentligdel = true,
+                            erNedsettelseIArbeidsevneMerEnnHalvparten = true,
+                            erNedsettelseIArbeidsevneAvEnVissVarighet = true,
+                            erNedsettelseMinstHalvparten = null,
+                            erNedsettelseMerEnnYrkesskadegrense = null,
+                            erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
+                            erArbeidsevnenNedsatt = true,
+                            yrkesskadeBegrunnelse = null,
+                            fom = startDato,
+                            tom = startDato.plusDays(7)
+                        ),
+                        SykdomsvurderingLøsningDto(
+                            begrunnelse = "Ikke syk",
+                            dokumenterBruktIVurdering = listOf(JournalpostId("123128")),
+                            harSkadeSykdomEllerLyte = false,
+                            erSkadeSykdomEllerLyteVesentligdel = false,
+                            erNedsettelseIArbeidsevneMerEnnHalvparten = false,
+                            erNedsettelseIArbeidsevneAvEnVissVarighet = false,
+                            erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
+                            erNedsettelseMinstHalvparten = null,
+                            erNedsettelseMerEnnYrkesskadegrense = null,
+                            erArbeidsevnenNedsatt = false,
+                            yrkesskadeBegrunnelse = null,
+                            fom = startDato.plusDays(8),
+                            tom = null
+                        ),
+                    )
+                )
+            )
+            // 1.
+            .medKontekst {
+                assertThat( åpneAvklaringsbehov.map { it.definisjon } ).containsExactly(Definisjon.AVKLAR_OVERGANG_ARBEID);
+            }
+
+            // 2.
+            .løsOvergangArbeid(Utfall.OPPFYLT, fom = endringsdato)
+            .medKontekst {
+                assertThat( åpneAvklaringsbehov.map { it.definisjon } ).doesNotContain(Definisjon.AVKLAR_OVERGANG_ARBEID);
+            }
+    }
 }
