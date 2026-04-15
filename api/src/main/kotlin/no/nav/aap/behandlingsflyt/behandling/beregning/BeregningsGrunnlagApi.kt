@@ -176,25 +176,17 @@ private fun inntekterTilUføreDTO(uføreInntekt: UføreInntekt, grunnlagInntekt:
         justertForUføreGrad = grunnlagInntekt.inntektIKroner.verdi(),
         justertForUføreGradiG = grunnlagInntekt.inntektIG.verdi(),
         inntektsPerioder = uføreInntekt.inntektsPerioder
-            .somTidslinje({ it.periode }, { Triple(it.inntektIKroner, it.uføregrad, it.inntektJustertForUføregrad) })
+            .somTidslinje({ it.periode }, { it.uføregrad })
             .komprimer()
             .segmenter()
-            .map { (periode, triple) ->
-                val (_, uføregrad, _) = triple
-                // Summer de originale periodebeløpene innenfor segmentet.
-                // Dette fungerer korrekt både når inntektsPerioder inneholder månedlige beløp
-                // (variabel uføregrad) og ett årsbeløp (konstant uføregrad).
-                val originalerISegment = uføreInntekt.inntektsPerioder
+            .map { (periode, uføregrad) ->
+                val perioderISegment = uføreInntekt.inntektsPerioder
                     .filter { it.periode.fom >= periode.fom && it.periode.tom <= periode.tom }
-                val totalInntekt = originalerISegment
-                    .fold(Beløp(0)) { acc, p -> acc.pluss(p.inntektIKroner) }
-                val totalJustert = originalerISegment
-                    .fold(Beløp(0)) { acc, p -> acc.pluss(p.inntektJustertForUføregrad) }
                 UføreInntektPeriodisertDTO(
                     periode = periode,
-                    inntektIKroner = totalInntekt,
+                    inntektIKroner = perioderISegment.fold(Beløp(0)) { acc, p -> acc.pluss(p.inntektIKroner) },
                     uføregrad = uføregrad.prosentverdi(),
-                    inntektJustertForUføregrad = totalJustert
+                    inntektJustertForUføregrad = perioderISegment.fold(Beløp(0)) { acc, p -> acc.pluss(p.inntektJustertForUføregrad) }
                 )
             }
     )

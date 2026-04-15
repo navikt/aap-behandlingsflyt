@@ -171,8 +171,6 @@ class BeregningsGrunnlagApiTest {
     @Test
     fun `inntektIKroner i periodene skal multipliseres med korrekt antall måneder`() {
         // Uføregrad endrer seg midt i 2022: 0% jan-jun, 50% jul-des
-        // Dette trigger variabel uføregrad-logikk som lagrer månedsinntekter
-        // Med feil MONTHS.between (eksklusiv) blir antall måneder 5 i stedet for 6
         val årsInntekter = setOf(
             InntektPerÅr(2021, Beløp(600000)),
             InntektPerÅr(2022, Beløp(600000)),
@@ -202,10 +200,8 @@ class BeregningsGrunnlagApiTest {
 
         assertThat(inntektsPerioder2022).hasSize(2)
 
-        // Månedsinntekt for 2022 = 600 000 / 12 = 50 000
-        // Begge halvår har 6 måneder → forventet total = 50 000 * 6 = 300 000
-        val månedligInntekt = BigDecimal(50000)
-        val forventetHalvår = månedligInntekt.multiply(BigDecimal(6))
+        // Månedsinntekt for 2022 = 600 000 / 12 = 50 000; begge halvår har 6 måneder → 300 000
+        val forventetHalvår = BigDecimal(50000).multiply(BigDecimal(6))
 
         inntektsPerioder2022.forEach { periode ->
             assertThat(periode.inntektIKroner.verdi)
