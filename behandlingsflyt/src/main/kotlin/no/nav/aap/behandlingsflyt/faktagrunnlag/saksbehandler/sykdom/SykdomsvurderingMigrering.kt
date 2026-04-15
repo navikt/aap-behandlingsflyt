@@ -147,20 +147,26 @@ class SykdomsvurderingMigreringService(
                 } else if (harIkkeFastsattSykdomsvilkåretIOpprinneligBehandling(diff)) {
                     log.info("Behandlingen $behandlingId har ikke kjørt fastsettsykdomsvilkårsteget og er derfor ulikt før og etter migrering")
                     null
-                }else {
+                } else {
                     diff
                 }
             }
 
             if (diffEtterFiltrertGamleVurderinger.isNotEmpty()) {
-                log.error(
-                    "Behandling $behandlingId har diff etter migrer. Dette indikerer feil i migreringslogikk. " +
-                            "Diff: $diffEtter. Ruller tilbake transaksjon."
-                )
+                if (Miljø.erDev()) {
+                    log.warn("Behandlingen $behandlingId har diff etter migrering - ignoreres pga dev-miljø. Diff: $diffEtter")
 
-                throw SykdomsvurderingMigreringFeil(
-                    "Migrering av behandling $behandlingId førte til endret vilkårsvurdering. Diff: $diffEtter"
-                )
+                } else {
+                    log.error(
+                        "Behandling $behandlingId har diff etter migrer. Dette indikerer feil i migreringslogikk. " +
+                                "Diff: $diffEtter. Ruller tilbake transaksjon."
+                    )
+
+
+                    throw SykdomsvurderingMigreringFeil(
+                        "Migrering av behandling $behandlingId førte til endret vilkårsvurdering. Diff: $diffEtter"
+                    )
+                }
             } else {
                 log.info("Behandling $behandlingId hadde diff etter migrering, men denne var basert på utdatert vilkårvurderingsform på sykdomsvilkåret.")
             }
