@@ -11,6 +11,7 @@ import no.nav.aap.komponenter.verdityper.Prosent
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.data.Percentage
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.Year
@@ -179,6 +180,27 @@ class UføreBeregningTest {
             assertThat(inntekt.inntektIKroner.verdi).isGreaterThan(BigDecimal.ZERO)
             assertThat(inntekt.inntektsPerioder.first().inntektIKroner).isEqualTo(inntekt.inntektIKroner)
         }
+    }
+
+    @Test
+    fun `hvis uføregraden er forskjellig midt i et år, og månedsinntekt og årsinntekt er forskjellig, så krasjer det`() {
+        val uføreBeregning = UføreBeregning(
+            grunnlag = elleveNittenGrunnlag(2),
+            uføregrader = uføreGrader(
+                LocalDate.of(2021, 1, 1) to Prosent.`50_PROSENT`,
+                LocalDate.of(2021, 6, 1) to Prosent.`66_PROSENT`,
+            ),
+            // Ingen månedsinntekter
+            inntektsPerioder = emptySet(),
+            ytterligereNedsattDato = LocalDate.of(2023, 4, 2),
+            årsInntekter = setOf(
+                InntektPerÅr(2021, Beløp(10_000)),
+                InntektPerÅr(2020, Beløp(10_000)),
+                InntektPerÅr(2022, Beløp(10_000))
+            ),
+        )
+
+        assertThrows<IllegalArgumentException> { uføreBeregning.beregnUføre() }
     }
 
     @Test
