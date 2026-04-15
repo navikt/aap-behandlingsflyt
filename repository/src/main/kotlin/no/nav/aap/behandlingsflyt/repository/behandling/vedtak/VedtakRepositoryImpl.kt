@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.repository.behandling.vedtak
 
 import no.nav.aap.behandlingsflyt.behandling.vedtak.Vedtak
+import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakId
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
@@ -43,7 +44,8 @@ class VedtakRepositoryImpl(private val connection: DBConnection) : VedtakReposit
                 Vedtak(
                     behandlingId = BehandlingId(it.getLong("behandling_id")),
                     vedtakstidspunkt = it.getLocalDateTime("vedtakstidspunkt"),
-                    virkningstidspunkt = it.getLocalDateOrNull("virkningstidspunkt")
+                    virkningstidspunkt = it.getLocalDateOrNull("virkningstidspunkt"),
+                    id = VedtakId(it.getLong("id")),
                 )
             }
         }
