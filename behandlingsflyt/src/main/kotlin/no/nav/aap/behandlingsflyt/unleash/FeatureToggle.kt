@@ -19,7 +19,6 @@ enum class BehandlingsflytFeature : FeatureToggle {
     SamordningBarnepensjon,
     SignaturEnhetFraOppgave,
     VedtakslengdeAvklaringsbehov,
-    hentDagpengerPerioder,
     hentTiltakspengerPerioder,
     UtvidVedtakslengdeUnderEttAr,
     OpprettManuellVedtakslengdeBehandling,

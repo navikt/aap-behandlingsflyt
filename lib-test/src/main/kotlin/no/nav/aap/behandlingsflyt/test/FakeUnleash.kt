@@ -44,7 +44,6 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.MigrerStansOgOpphor to true,
         BehandlingsflytFeature.SamordningBarnepensjon to true,
         BehandlingsflytFeature.SignaturEnhetFraOppgave to true,
-        BehandlingsflytFeature.hentDagpengerPerioder to true,
         BehandlingsflytFeature.hentTiltakspengerPerioder to true,
         BehandlingsflytFeature.VedtakslengdeAvklaringsbehov to true,
         BehandlingsflytFeature.UtvidVedtakslengdeUnderEttAr to true,
