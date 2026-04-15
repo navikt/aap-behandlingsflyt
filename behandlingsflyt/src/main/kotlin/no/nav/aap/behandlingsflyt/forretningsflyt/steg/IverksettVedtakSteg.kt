@@ -28,8 +28,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.FlytJobbRepository
@@ -50,7 +48,6 @@ class IverksettVedtakSteg private constructor(
     private val flytJobbRepository: FlytJobbRepository,
     private val mellomlagretVurderingRepository: MellomlagretVurderingRepository,
     private val resultatUtleder: ResultatUtleder,
-    private val unleashGateway: UnleashGateway,
 ) : BehandlingSteg {
     private val log = LoggerFactory.getLogger(javaClass)
 
@@ -240,9 +237,7 @@ class IverksettVedtakSteg private constructor(
             /* Vedtak lagret i `FatteVedtakSteg`, så ikke noe å gjøre her. */
             return
         }
-        if (unleashGateway.isEnabled(BehandlingsflytFeature.LagreVedtakIFatteVedtak)) {
-            log.warn("Forventet å finne allerede lagret vedtak fra FatteVedtakSteg. Lagrer vedtak...")
-        }
+        log.warn("Forventet å finne allerede lagret vedtak fra FatteVedtakSteg. Lagrer vedtak...")
 
         val stegHistorikk = behandlingRepository.hentStegHistorikk(kontekst.behandlingId)
         val vedtakstidspunkt = stegHistorikk
@@ -298,8 +293,6 @@ class IverksettVedtakSteg private constructor(
                 mellomlagretVurderingRepository = mellomlagretVurderingRepository,
                 gosysService = gosysService,
                 resultatUtleder = resultatUtleder,
-                unleashGateway = gatewayProvider.provide<UnleashGateway>(),
-
                 )
         }
 
