@@ -62,6 +62,36 @@ public data class MeldekortV0(
     }
 }
 
+public data class MeldekortFraSaksbehandlerV0(
+    public val harDuArbeidet: Boolean?,
+    public val timerArbeidPerPeriode: List<ArbeidIPeriodeV0>,
+    public val begrunnelse: String,
+    public val opprettetAv: String,
+) : Meldekort {
+
+    init {
+        require((harDuArbeidet == null) == (timerArbeidPerPeriode.isEmpty())) {
+            "må oppgi `harDuArbeidet` og `timerArbeidPerPeriode` sammen"
+        }
+
+        require(!MeldekortV0.overlappendePerioder(timerArbeidPerPeriode)) {
+            "kan ikke gi overlappende opplysninger i et meldekort"
+        }
+
+        require(MeldekortV0.timerArbeidetSamsvarerMedArbeidetSvar(harDuArbeidet, timerArbeidPerPeriode)) {
+            "oppgitte timer arbeidet samsvarer ikke til svar på `harDuArbeidet`"
+        }
+    }
+
+    override fun fom(): LocalDate? {
+        return timerArbeidPerPeriode.minOfOrNull { it.fraOgMedDato }
+    }
+
+    override fun tom(): LocalDate? {
+        return timerArbeidPerPeriode.maxOfOrNull { it.fraOgMedDato }
+    }
+}
+
 @JsonIgnoreProperties(ignoreUnknown = true)
 public data class ArbeidIPeriodeV0(
     val fraOgMedDato: LocalDate,
