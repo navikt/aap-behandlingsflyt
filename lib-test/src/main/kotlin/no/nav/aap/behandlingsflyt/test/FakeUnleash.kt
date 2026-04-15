@@ -40,6 +40,7 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.VisIkkeRelevantPeriode to true,
         BehandlingsflytFeature.MigrerStansOgOpphor to true,
         BehandlingsflytFeature.hentTiltakspengerPerioder to true,
+        BehandlingsflytFeature.ForutgaaendeForbedringer to true,
         BehandlingsflytFeature.ForeslaaVedtakVedtakslengde to true,
         BehandlingsflytFeature.SamordningFaktagrunnlagBrev to true,
         )

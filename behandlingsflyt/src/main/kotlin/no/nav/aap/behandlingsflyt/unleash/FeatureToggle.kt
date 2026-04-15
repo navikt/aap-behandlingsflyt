@@ -13,7 +13,6 @@ enum class BehandlingsflytFeature : FeatureToggle {
     KvalitetssikringVed2213,
     VisIkkeRelevantPeriode,
     MigrerStansOgOpphor,
-    hentTiltakspengerPerioder,
     AvslagLovvalgMedlemskap,
     ForeslaaVedtakVedtakslengde,
     SamordningFaktagrunnlagBrev,

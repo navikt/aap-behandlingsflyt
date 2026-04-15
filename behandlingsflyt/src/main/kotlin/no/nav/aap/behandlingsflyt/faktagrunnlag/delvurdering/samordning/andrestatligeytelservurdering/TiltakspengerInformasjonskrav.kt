@@ -34,9 +34,6 @@ class TiltakspengerInformasjonskrav(
     override fun erRelevant(
         kontekst: FlytKontekstMedPerioder, steg: StegType, oppdatert: InformasjonskravOppdatert?
     ): Boolean {
-        if (unleashGateway.isDisabled(BehandlingsflytFeature.hentTiltakspengerPerioder)) {
-            return false
-        }
         return kontekst.erFørstegangsbehandlingEllerRevurdering() && !tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(
             kontekst, steg
         ) && (oppdatert.ikkeKjørtSisteKalenderdagForBehandling(kontekst.behandlingId) || kontekst.rettighetsperiode != oppdatert?.rettighetsperiode || kontekst.erVurderingsbehovEndretEtterOppdatertInformasjonskrav(
@@ -55,9 +52,6 @@ class TiltakspengerInformasjonskrav(
     }
 
     override fun hentData(input: TiltakspengerInput): TiltakspengerRegisterdata {
-        if (unleashGateway.isDisabled(BehandlingsflytFeature.hentTiltakspengerPerioder)) {
-            return TiltakspengerRegisterdata(emptySet())
-        }
         val (person, rettighetsperiode) = input
         val tiltakspengerPerioder = tiltakspengerGateway.hentYtelseTiltakspenger(
             personidentifikatorer = person.aktivIdent().identifikator,
