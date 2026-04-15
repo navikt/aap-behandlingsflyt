@@ -34,7 +34,6 @@ object LokalUnleash : FakeUnleashBase(
     mapOf(
         BehandlingsflytFeature.IngenValidering to true,
         BehandlingsflytFeature.NyBrevbyggerV3 to false,
-        BehandlingsflytFeature.LagreVedtakIFatteVedtak to true,
         BehandlingsflytFeature.Under18 to true,
         BehandlingsflytFeature.InstitusjonsoppholdJobb to true,
         BehandlingsflytFeature.TrekkSoeknadOpprettetFraLegeerklaering to true,
