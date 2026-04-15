@@ -23,13 +23,13 @@ import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.komponenter.tidslinje.somTidslinje
+import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.authorizedGet
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
-import java.time.temporal.ChronoUnit
 import javax.sql.DataSource
 
 private val årFormatter = DateTimeFormatter.ofPattern("yyyy")
@@ -180,14 +180,21 @@ private fun inntekterTilUføreDTO(uføreInntekt: UføreInntekt, grunnlagInntekt:
             .komprimer()
             .segmenter()
             .map { (periode, triple) ->
-                val (inntektIKroner, uføregrad, inntektJustertForUføregrad) = triple
-                val antallMåneder =
-                    ChronoUnit.MONTHS.between(periode.fom.withDayOfMonth(1), periode.tom.withDayOfMonth(1)).toInt()
+                val (_, uføregrad, _) = triple
+                // Summer de originale periodebeløpene innenfor segmentet.
+                // Dette fungerer korrekt både når inntektsPerioder inneholder månedlige beløp
+                // (variabel uføregrad) og ett årsbeløp (konstant uføregrad).
+                val originalerISegment = uføreInntekt.inntektsPerioder
+                    .filter { it.periode.fom >= periode.fom && it.periode.tom <= periode.tom }
+                val totalInntekt = originalerISegment
+                    .fold(Beløp(0)) { acc, p -> acc.pluss(p.inntektIKroner) }
+                val totalJustert = originalerISegment
+                    .fold(Beløp(0)) { acc, p -> acc.pluss(p.inntektJustertForUføregrad) }
                 UføreInntektPeriodisertDTO(
                     periode = periode,
-                    inntektIKroner = inntektIKroner.multiplisert(antallMåneder),
+                    inntektIKroner = totalInntekt,
                     uføregrad = uføregrad.prosentverdi(),
-                    inntektJustertForUføregrad = inntektJustertForUføregrad.multiplisert(antallMåneder)
+                    inntektJustertForUføregrad = totalJustert
                 )
             }
     )
