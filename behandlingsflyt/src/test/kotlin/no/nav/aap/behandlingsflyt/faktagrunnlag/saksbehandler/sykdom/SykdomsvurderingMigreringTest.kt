@@ -289,6 +289,67 @@ class SykdomsvurderingMigreringTest : AbstraktFlytOrkestratorTest(Sykdomsvurderi
             }
         }
     }
+
+    @Test
+    fun `migrering av sykdomsvilkår hvor man ikke har kommet til fastsettsykdomssteget skal ikke feile`() {
+        val søknadsdato = LocalDate.of(2026, 1, 1)
+        val (sak, behandling) = sendInnFørsteSøknad(
+            mottattTidspunkt = søknadsdato.atStartOfDay(),
+        )
+        behandling
+            .løsSykdom(søknadsdato)
+            .løsBistand(søknadsdato)
+            .løsRefusjonskrav()
+            .løsSykdomsvurderingBrev()
+
+
+        // Nullstill de nye feltene for å simulere gammel data
+        dataSource.transaction { connection ->
+            connection.execute(
+                """
+                UPDATE sykdom_vurdering 
+                SET er_nedsettelse_minst_halvparten = NULL,
+                    er_nedsettelse_mer_enn_yrkesskadegrense = NULL
+                WHERE sykdom_vurderinger_id IN (
+                    SELECT sykdom_vurderinger_id FROM sykdom_grunnlag WHERE behandling_id = ?
+                )
+                """.trimIndent()
+            ) {
+                setParams {
+                    setLong(1, behandling.id.id)
+                }
+            }
+        }
+
+        // Verifiser at feltene er null før migrering
+        dataSource.transaction { connection ->
+            val sykdomRepo = postgresRepositoryRegistry.provider(connection).provide<SykdomRepository>()
+            val vurderingerMedId = sykdomRepo.hentSykdomsvurderingMedId(behandling.id)
+
+            assertThat(vurderingerMedId).isNotEmpty
+            vurderingerMedId.forEach { vurderingMedId ->
+                assertThat(vurderingMedId.sykdomsvurdering.erNedsettelseMinstHalvparten).isNull()
+                assertThat(vurderingMedId.sykdomsvurdering.erNedsettelseMerEnnYrkesskadegrense).isNull()
+            }
+        }
+
+        // Kjør migrering
+        SykdomsvurderingMigrering(dataSource, postgresRepositoryRegistry, gatewayProvider).migrer()
+
+        // Verifiser at feltene er satt etter migrering
+        dataSource.transaction { connection ->
+            val sykdomRepo = postgresRepositoryRegistry.provider(connection).provide<SykdomRepository>()
+            val vurderingerMedId = sykdomRepo.hentSykdomsvurderingMedId(behandling.id)
+
+            assertThat(vurderingerMedId).isNotEmpty
+            vurderingerMedId.forEach { vurderingMedId ->
+                val vurdering = vurderingMedId.sykdomsvurdering
+                assertThat(vurdering.erNedsettelseMinstHalvparten).isEqualTo(ErNedsettelseMinstHalvpartenValg.JA)
+                assertThat(vurdering.erNedsettelseMerEnnYrkesskadegrense).isNull()
+            }
+        }
+    }
+
 }
 
 

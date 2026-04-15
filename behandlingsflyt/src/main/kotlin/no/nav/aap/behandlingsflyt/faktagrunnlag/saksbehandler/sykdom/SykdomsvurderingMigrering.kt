@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom
 
+import no.nav.aap.behandlingsflyt.behandling.vilkår.sykdom.SammenlignetSegment
 import no.nav.aap.behandlingsflyt.behandling.vilkår.sykdom.SykdomsFaktagrunnlag
 import no.nav.aap.behandlingsflyt.behandling.vilkår.sykdom.SykdomsvilkårUtenVissVarighet
 import no.nav.aap.behandlingsflyt.behandling.vilkår.sykdom.diff
@@ -7,12 +8,15 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Ut
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.Bistandsvurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.miljo.Miljø
 import no.nav.aap.komponenter.repository.RepositoryRegistry
+import no.nav.aap.komponenter.tidslinje.Segment
+import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
@@ -137,17 +141,13 @@ class SykdomsvurderingMigreringService(
         if (diffEtter.isNotEmpty()) {
             val bistandsTidslinje = bistandGrunnlag?.somBistandsvurderingstidslinje().orEmpty()
             val diffEtterFiltrertGamleVurderinger = diffEtter.mapNotNull { diff ->
-                val bistandIPerioden = bistandsTidslinje.begrensetTil(diff.periode).segmenter()
-                val gammelVerdi = diff.verdi.gammel
-                val nyVerdi = diff.verdi.ny
-                val erNyIkkeOppfylt = nyVerdi?.utfall == Utfall.IKKE_OPPFYLT
-                val erGammelOrdinærtOppfylt =
-                    gammelVerdi?.utfall == Utfall.OPPFYLT && gammelVerdi.innvilgelsesårsak == null
-                val harIkkeBistand = bistandIPerioden.any { !it.verdi.erBehovForBistand() }
-                if (erGammelOrdinærtOppfylt && erNyIkkeOppfylt && harIkkeBistand) {
+                if (erSykMenTrengerIkkeBistandOgUtledetMedUtdatertVilkårsvurderingslogikk(bistandsTidslinje, diff)) {
                     log.info("Behandling $behandlingId var oppfylt, men skulle ikke vært det ettersom bistand ikke er oppfylt - ignorerer derfor diff her")
                     null
-                } else {
+                } else if (harIkkeFastsattSykdomsvilkåretIOpprinneligBehandling(diff)) {
+                    log.info("Behandlingen $behandlingId har ikke kjørt fastsettsykdomsvilkårsteget og er derfor ulikt før og etter migrering")
+                    null
+                }else {
                     diff
                 }
             }
@@ -165,6 +165,27 @@ class SykdomsvurderingMigreringService(
                 log.info("Behandling $behandlingId hadde diff etter migrering, men denne var basert på utdatert vilkårvurderingsform på sykdomsvilkåret.")
             }
         }
+    }
+
+    private fun harIkkeFastsattSykdomsvilkåretIOpprinneligBehandling(
+        diff: Segment<SammenlignetSegment>
+    ): Boolean {
+        return diff.verdi.gammel?.utfall == Utfall.IKKE_VURDERT
+    }
+    private fun erSykMenTrengerIkkeBistandOgUtledetMedUtdatertVilkårsvurderingslogikk(
+        bistandsTidslinje: Tidslinje<Bistandsvurdering>,
+        diff: Segment<SammenlignetSegment>
+    ): Boolean {
+        val bistandIPerioden = bistandsTidslinje.begrensetTil(diff.periode).segmenter()
+        val gammelVerdi = diff.verdi.gammel
+        val nyVerdi = diff.verdi.ny
+        val erNyIkkeOppfylt = nyVerdi?.utfall == Utfall.IKKE_OPPFYLT
+        val erGammelOrdinærtOppfylt =
+            gammelVerdi?.utfall == Utfall.OPPFYLT && gammelVerdi.innvilgelsesårsak == null
+        val harIkkeBistand = bistandIPerioden.any { !it.verdi.erBehovForBistand() }
+        val haroppfyltSykdomsvurderingMenIkkeBistandOgBruktUtdatertVilkårsvurderingslogikk =
+            erGammelOrdinærtOppfylt && erNyIkkeOppfylt && harIkkeBistand
+        return haroppfyltSykdomsvurderingMenIkkeBistandOgBruktUtdatertVilkårsvurderingslogikk
     }
 }
 
