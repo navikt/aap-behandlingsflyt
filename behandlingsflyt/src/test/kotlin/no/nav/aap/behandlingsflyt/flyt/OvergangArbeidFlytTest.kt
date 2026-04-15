@@ -9,6 +9,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.SykdomsvurderingLøsningDto
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
+import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.verdityper.dokument.JournalpostId
@@ -95,7 +96,7 @@ class OvergangArbeidFlytTest(val unleashGateway: KClass<UnleashGateway>) : Abstr
     }
 
     @Test
-    fun `Hvis det ikke finnes vurdert 11-17, så skal det trigge en vurdering av § 11-5 + 11-17`() {
+    fun `Legge til revurdering av 11-17`() {
         /*
         Legg til "§ 11-17 AAP i perioden som arbeidssøker" som revurderingsårsak
         1. Hvis det finnes en eksisterende 11-17 vurdering, så skal det trigge avklaringsbehov på 11-17
@@ -104,7 +105,6 @@ class OvergangArbeidFlytTest(val unleashGateway: KClass<UnleashGateway>) : Abstr
         val startDato = LocalDate.now()
         val sak = happyCaseFørstegangsbehandling(startDato)
         val endringsdato = sak.rettighetsperiode.fom.plusDays(7)
-        val sluttdato = endringsdato.plusMonths(6).minusDays(1)
 
         /* Gir AAP som arbeidssøker. */
         sak.opprettManuellRevurdering(
@@ -149,15 +149,25 @@ class OvergangArbeidFlytTest(val unleashGateway: KClass<UnleashGateway>) : Abstr
                     )
                 )
             )
-            // 1.
+            // 2.
             .medKontekst {
                 assertThat( åpneAvklaringsbehov.map { it.definisjon } ).containsExactly(Definisjon.AVKLAR_OVERGANG_ARBEID);
             }
 
-            // 2.
+            // 1.
             .løsOvergangArbeid(Utfall.OPPFYLT, fom = endringsdato)
             .medKontekst {
                 assertThat( åpneAvklaringsbehov.map { it.definisjon } ).doesNotContain(Definisjon.AVKLAR_OVERGANG_ARBEID);
+            }
+            .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
+            .fattVedtak()
+
+        sak.opprettManuellRevurdering(
+            no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.OVERGANG_ARBEID
+        )
+            .medKontekst {
+                assertThat( behandling.aktivtSteg() ).isEqualTo(StegType.OVERGANG_ARBEID);
             }
     }
 }
