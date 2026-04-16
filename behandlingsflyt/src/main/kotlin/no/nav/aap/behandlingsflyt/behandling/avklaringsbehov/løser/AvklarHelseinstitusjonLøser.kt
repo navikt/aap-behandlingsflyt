@@ -91,7 +91,7 @@ class AvklarHelseinstitusjonLøser(
 
         val nyeVurderingerTidslinje = Tidslinje(nyeVurderinger.sortedBy { it.fom }
             .map {
-                val periode = Periode(it.fom, checkNotNull(it.tom) { "tom må være satt for institusjonsoppholdsvurdering" })
+                val periode = Periode(it.fom, it.tom)
                 Segment(
                     periode,
                     HelseoppholdVurderingData(
@@ -167,30 +167,25 @@ class AvklarHelseinstitusjonLøser(
     ): Validation<List<PeriodisertInstitusjonsoppholdDto>> {
         val grunnlag = helseinstitusjonRepository.hentHvisEksisterer(behandling.id)
         val opphold = grunnlag?.oppholdene?.opphold ?: emptyList()
+
         if (opphold.isEmpty() || nyeVurderinger.isEmpty()) return Validation.Valid(nyeVurderinger)
 
         val vurderingerPerOpphold: Map<Segment<Institusjon>, List<PeriodisertInstitusjonsoppholdDto>> =
             opphold.associateWith { o ->
                 nyeVurderinger
-                    .filter { v -> v.fom >= o.periode.fom && (v.tom == null || v.tom <= o.periode.tom) }
+                    .filter { v -> v.fom >= o.periode.fom && (v.tom <= o.periode.tom) }
                     .sortedBy { it.fom }
             }
 
-        // Henter forhåndsberegnet tidligste reduksjonsdato per opphold fra util
         val tidligsteReduksjonsdatoPerOpphold = beregnTidligsteReduksjonsdatoPerOpphold(opphold)
 
-        vurderingerPerOpphold.entries.forEach { (oppholdSegment, vurderinger) ->
-            val tidligsteReduksjonsdato = tidligsteReduksjonsdatoPerOpphold[oppholdSegment] ?: return@forEach
+        val feil = vurderingerPerOpphold.entries.firstNotNullOfOrNull { (oppholdSegment, vurderinger) ->
+            val tidligsteReduksjonsdato = tidligsteReduksjonsdatoPerOpphold[oppholdSegment] ?: return@firstNotNullOfOrNull null
             val første = førsteReduksjonsvurdering(vurderinger)
-            val resultat = validerReduksjonsdato(
-                vurderinger,
-                første,
-                tidligsteReduksjonsdato
-            )
-            if (resultat != null) return resultat
+            validerReduksjonsdato(vurderinger, første, tidligsteReduksjonsdato)
         }
 
-        return Validation.Valid(nyeVurderinger)
+        return feil ?: Validation.Valid(nyeVurderinger)
     }
 
     private fun førsteReduksjonsvurdering(vurderinger: List<PeriodisertInstitusjonsoppholdDto>): PeriodisertInstitusjonsoppholdDto? {
