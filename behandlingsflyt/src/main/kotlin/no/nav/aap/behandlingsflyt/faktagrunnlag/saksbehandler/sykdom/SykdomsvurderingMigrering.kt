@@ -37,25 +37,35 @@ class SykdomsvurderingMigrering(
 
         while (!ferdig) {
             dataSource.transaction { connection ->
-                val repositoryProvider = repositoryRegistry.provider(connection)
-                val sykdomsvurderingMigreringService = SykdomsvurderingMigreringService(repositoryProvider, gatewayProvider)
+                try {
+                    val repositoryProvider = repositoryRegistry.provider(connection)
+                    val sykdomsvurderingMigreringService =
+                        SykdomsvurderingMigreringService(repositoryProvider, gatewayProvider)
 
-                val behandlingIder = sykdomsvurderingMigreringService.hentNesteBehandlingIdMedUmigrerteSykdomsvurderinger(sisteMigrerte)
+                    val behandlingIder =
+                        sykdomsvurderingMigreringService.hentNesteBehandlingIdMedUmigrerteSykdomsvurderinger(
+                            sisteMigrerte
+                        )
 
-                if (behandlingIder.isEmpty()) {
-                    ferdig = true
-                    log.info("Ferdig med migrering av sykdomsvurdering. Totalt $antallMigreringer behandlinger migrert.")
-                    return@transaction
+                    if (behandlingIder.isEmpty()) {
+                        ferdig = true
+                        log.info("Ferdig med migrering av sykdomsvurdering. Totalt $antallMigreringer behandlinger migrert.")
+                        return@transaction
+                    }
+
+                    val behandlingId = behandlingIder.first()
+                    sykdomsvurderingMigreringService.migrerBehandling(behandlingId)
+                    antallMigreringer += 1
+                    sisteMigrerte = behandlingId.id
+
+                    if (antallMigreringer % 10 == 0) {
+                        log.info("Pågående migrering av sykdomsvurdering, $antallMigreringer behandlinger migrert")
+                    }
+                } catch (e: Exception) {
+                    log.error("Migrering feilet", e)
+                    throw e
                 }
 
-                val behandlingId = behandlingIder.first()
-                sykdomsvurderingMigreringService.migrerBehandling(behandlingId)
-                antallMigreringer += 1
-                sisteMigrerte = behandlingId.id
-
-                if (antallMigreringer % 10 == 0) {
-                    log.info("Pågående migrering av sykdomsvurdering, $antallMigreringer behandlinger migrert")
-                }
             }
         }
     }
@@ -90,7 +100,7 @@ class SykdomsvurderingMigreringService(
             log.info("Fant ikke sykdomsvurderinger for behandling $behandlingId, hopper over")
             return
         }
-        
+
         val vilkårsresultat = try {
             vilkårsresultatRepository.hent(behandlingId)
         } catch (e: Exception) {
@@ -109,7 +119,7 @@ class SykdomsvurderingMigreringService(
 
         val sykepengerErstatningGrunnlag = sykepengerErstatningRepository.hentHvisEksisterer(behandlingId)
         val bistandGrunnlag = bistandRepository.hentHvisEksisterer(behandlingId)
-        
+
         for (vurderingMedId in sykdomsvurderingerMedId) {
             val vurdering = vurderingMedId.sykdomsvurdering
             val utledetHalvparten = vurdering.utledErNedsettelseMinstHalvparten()
@@ -131,7 +141,8 @@ class SykdomsvurderingMigreringService(
             sykepengerErstatningFaktagrunnlag = sykepengerErstatningGrunnlag,
             sykdomsvurderinger = oppdatertSykdomsGrunnlag.sykdomsvurderinger,
             bistandvurderingFaktagrunnlag = bistandGrunnlag,
-            sykepengeerstatningVilkår = vilkårsresultat.optionalVilkår(Vilkårtype.SYKEPENGEERSTATNING)?.tidslinje().orEmpty(),
+            sykepengeerstatningVilkår = vilkårsresultat.optionalVilkår(Vilkårtype.SYKEPENGEERSTATNING)?.tidslinje()
+                .orEmpty(),
         )
 
         val sammenligningEtter = SykdomsvilkårUtenVissVarighet(vilkårsresultat)
@@ -178,6 +189,7 @@ class SykdomsvurderingMigreringService(
     ): Boolean {
         return diff.verdi.gammel?.utfall == Utfall.IKKE_VURDERT
     }
+
     private fun erSykMenTrengerIkkeBistandOgUtledetMedUtdatertVilkårsvurderingslogikk(
         bistandsTidslinje: Tidslinje<Bistandsvurdering>,
         diff: Segment<SammenlignetSegment>
