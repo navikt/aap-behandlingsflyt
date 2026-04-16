@@ -117,6 +117,12 @@ public data class TilkjentYtelsePeriodeDTO(
     val barnetillegg: Double,
     val utbetalingsdato: LocalDate,
     val minsteSats: Minstesats,
+    val samordningGradering: Double,
+    val institusjonGradering: Double,
+    val arbeidGradering: Double,
+    val samordningUføregradering: Double,
+    val samordningArbeidsgiverGradering: Double,
+    val meldepliktGradering: Double
 )
 
 public enum class Minstesats { IKKE_MINSTESATS, MINSTESATS_OVER_25, MINSTESATS_UNDER_25 }
