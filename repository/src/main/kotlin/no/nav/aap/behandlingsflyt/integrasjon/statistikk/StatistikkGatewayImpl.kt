@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.integrasjon.statistikk
 
 import no.nav.aap.behandlingsflyt.hendelse.statistikk.StatistikkGateway
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.TilbakekrevingsbehandlingOppdatertHendelse
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.StoppetBehandling
 import no.nav.aap.behandlingsflyt.prometheus
 import no.nav.aap.komponenter.config.requiredConfigForKey
@@ -43,5 +44,15 @@ class StatistikkGatewayImpl : StatistikkGateway {
             mapper = { body, _ ->
                 DefaultJsonMapper.fromJson(body)
             })
+    }
+
+    override fun varsleTilbakekrevingHendelse(tilbakekrevingsbehandlingOppdatertHendelse: TilbakekrevingsbehandlingOppdatertHendelse) {
+        restClient.post<_, Unit>(
+            uri = uri.resolve("/tilbakekrevingshendelse"),
+            request = PostRequest(body = tilbakekrevingsbehandlingOppdatertHendelse),
+            mapper = { body, _ ->
+                DefaultJsonMapper.fromJson(body)
+            }
+        )
     }
 }

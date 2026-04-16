@@ -97,7 +97,7 @@ class MellomlagretVurderingApiTest : BaseApiTest() {
                 data = "{}",
             )
             val response =
-                createClient().post("/api/behandling/mellomlagret-vurdering") {
+                createClient().post("/api/behandling/mellomlagret-vurdering/${behandling.referanse.referanse}") {
                     header("Authorization", "Bearer ${getToken().token()}")
                     contentType(ContentType.Application.Json)
                     setBody(nyMellomlagretVurdering)

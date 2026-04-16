@@ -1,9 +1,11 @@
 package no.nav.aap.behandlingsflyt.prosessering.datadeling
 
+import no.nav.aap.behandlingsflyt.behandling.StansOpphørService
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.samid.SamIdRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.StansOpphørRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.ApiInternGateway
@@ -30,6 +32,7 @@ class DatadelingBehandlingJobbUtfører(
     private val vedtakRepository: VedtakRepository,
     private val samIdRepository: SamIdRepository,
     private val beregningsgrunnlagRepository: BeregningsgrunnlagRepository,
+    private val stansOpphørService: StansOpphørService
 ) : JobbUtfører {
     private val log = LoggerFactory.getLogger(javaClass)
 
@@ -71,6 +74,8 @@ class DatadelingBehandlingJobbUtfører(
 
         val beregningsgrunnlagIKroner = beregningsgrunnlagGUnit?.multiplisert(grunnbeløpVedSakensStart)?.verdi
 
+        val stansOpphør = stansOpphørService.vedtattStansOpphør(behandling.id).toSet()
+
         apiInternGateway.sendBehandling(
             sak,
             behandling,
@@ -80,7 +85,8 @@ class DatadelingBehandlingJobbUtfører(
             beregningsgrunnlagIKroner,
             underveis?.perioder.orEmpty(),
             vedtaksTidspunkt.toLocalDate(),
-            vilkårsresultatTidslinje
+            vilkårsresultatTidslinje,
+            stansOpphør
         )
     }
 
@@ -99,6 +105,10 @@ class DatadelingBehandlingJobbUtfører(
                 vedtakRepository = repositoryProvider.provide(),
                 samIdRepository = repositoryProvider.provide(),
                 beregningsgrunnlagRepository = repositoryProvider.provide(),
+                stansOpphørService = StansOpphørService(
+                    repositoryProvider.provide(),
+                    repositoryProvider.provide(),
+                    repositoryProvider.provide())
             )
         }
     }

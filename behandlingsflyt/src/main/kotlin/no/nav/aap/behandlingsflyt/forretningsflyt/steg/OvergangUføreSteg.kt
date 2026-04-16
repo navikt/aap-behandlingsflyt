@@ -11,7 +11,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreValidering.nårVurderingErKonsistentMedSykdomOgBistand
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreValidering.sykdomErOppfyltOgBistandErIkkeOppfylt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
@@ -22,7 +21,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Tidslinje
@@ -95,41 +93,20 @@ class OvergangUføreSteg private constructor(
         val sykdomsvurderinger =
             sykdomRepository.hentHvisEksisterer(kontekst.behandlingId)?.somSykdomsvurderingstidslinje().orEmpty()
 
-        return if (unleashGateway.isEnabled(BehandlingsflytFeature.NyTidligereVurderinger)) {
-            Tidslinje.map2(
-                utfall,
-                sykdomsvurderinger
-            ) { segmentPeriode, utfall, sykdomsvurering ->
-                when (utfall) {
-                    TidligereVurderinger.IkkeBehandlingsgrunnlag, TidligereVurderinger.UunngåeligAvslag -> false
-                    is TidligereVurderinger.PotensieltOppfylt -> {
-                        utfall.rettighetstype == null && sykdomsvurering?.erOppfyltOrdinærEllerYrkesskadeSettBortIfraÅrsakssammenheng(
-                            kontekst.rettighetsperiode.fom,
-                            segmentPeriode
-                        ) == true
-                    }
-
-                    else -> false
+        return Tidslinje.map2(
+            utfall,
+            sykdomsvurderinger
+        ) { segmentPeriode, utfall, sykdomsvurering ->
+            when (utfall) {
+                TidligereVurderinger.IkkeBehandlingsgrunnlag, TidligereVurderinger.UunngåeligAvslag -> false
+                is TidligereVurderinger.PotensieltOppfylt -> {
+                    utfall.rettighetstype == null && sykdomsvurering?.erOppfyltOrdinærEllerYrkesskadeSettBortIfraÅrsakssammenheng(
+                        kontekst.rettighetsperiode.fom,
+                        segmentPeriode
+                    ) == true
                 }
-            }
-        } else {
-            val bistandsvurderinger =
-                bistandRepository.hentHvisEksisterer(kontekst.behandlingId)?.somBistandsvurderingstidslinje().orEmpty()
 
-            Tidslinje.map3(
-                utfall,
-                sykdomsvurderinger,
-                bistandsvurderinger
-            ) { segmentPeriode, utfall, sykdomsvurdering, bistandsvurdering ->
-                when (utfall) {
-                    null -> false
-                    TidligereVurderinger.IkkeBehandlingsgrunnlag -> false
-                    TidligereVurderinger.UunngåeligAvslag -> false
-                    is TidligereVurderinger.PotensieltOppfylt ->
-                        sykdomErOppfyltOgBistandErIkkeOppfylt(
-                            kontekst.rettighetsperiode.fom, segmentPeriode, sykdomsvurdering, bistandsvurdering
-                        )
-                }
+                else -> false
             }
         }
     }

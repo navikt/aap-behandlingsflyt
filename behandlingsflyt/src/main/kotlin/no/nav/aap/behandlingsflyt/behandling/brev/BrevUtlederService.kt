@@ -2,11 +2,13 @@ package no.nav.aap.behandlingsflyt.behandling.brev
 
 import no.nav.aap.behandlingsflyt.behandling.Resultat
 import no.nav.aap.behandlingsflyt.behandling.ResultatUtleder
+import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.BeregnTilkjentYtelseService.Companion.ANTALL_ÅRLIGE_ARBEIDSDAGER
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.MINSTE_ÅRLIG_YTELSE_TIDSLINJE
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.tilTidslinje
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakRepository
+import no.nav.aap.behandlingsflyt.behandling.vedtakslengde.VedtakslengdeService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Repository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Beregningsgrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepository
@@ -16,6 +18,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagU
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagYrkesskade
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.UføreInntekt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.Avslått
@@ -41,6 +44,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.FRITAK_ME
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.MIGRER_RETTIGHETSPERIODE
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.MOTTATT_MELDEKORT
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.UTVID_VEDTAKSLENGDE
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Segment
@@ -48,6 +52,7 @@ import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.lookup.repository.RepositoryProvider
+import org.slf4j.LoggerFactory
 import java.math.RoundingMode
 import java.time.LocalDate
 
@@ -64,6 +69,7 @@ class BrevUtlederService(
     private val arbeidsopptrappingRepository: ArbeidsopptrappingRepository,
     private val sykdomsvurderingForBrevRepository: SykdomsvurderingForBrevRepository,
     private val overgangUføreRepository: OvergangUføreRepository,
+    private val vedtakslengdeService: VedtakslengdeService,
     private val unleashGateway: UnleashGateway
 ) {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
@@ -79,8 +85,11 @@ class BrevUtlederService(
         arbeidsopptrappingRepository = repositoryProvider.provide(),
         sykdomsvurderingForBrevRepository = repositoryProvider.provide(),
         overgangUføreRepository = repositoryProvider.provide(),
+        vedtakslengdeService = VedtakslengdeService(repositoryProvider, gatewayProvider),
         unleashGateway = gatewayProvider.provide()
     )
+
+    private val log = LoggerFactory.getLogger(javaClass)
 
     fun utledBehovForMeldingOmVedtak(behandlingId: BehandlingId): BrevBehov? {
         val behandling = behandlingRepository.hent(behandlingId)
@@ -121,11 +130,15 @@ class BrevUtlederService(
             }
 
             TypeBehandling.Revurdering -> {
+                val resultat = resultatUtleder.utledRevurderingResultat(behandlingId)
+                if (resultat == Resultat.AVBRUTT) {
+                    return null
+                }
+                
                 if (skalSendeVedtakForArbeidsopptrapping) {
                     return VedtakArbeidsopptrapping11_23SjetteLedd
                 }
 
-                val resultat = resultatUtleder.utledRevurderingResultat(behandlingId)
                 val vurderingsbehov = behandling.vurderingsbehov().map { it.type }.toSet()
                 if (setOf(
                         FRITAK_MELDEPLIKT,
@@ -148,10 +161,7 @@ class BrevUtlederService(
                 if (vurderingsbehov == setOf(UTVID_VEDTAKSLENGDE)) {
                     return brevBehovUtvidVedtakslengde(behandling)
                 }
-
-                if (resultat == Resultat.AVBRUTT) {
-                    return null
-                }
+                
                 if (harRettighetsType(
                         behandling.id,
                         RettighetsType.VURDERES_FOR_UFØRETRYGD
@@ -201,20 +211,68 @@ class BrevUtlederService(
         }
     }
 
-    private fun brevBehovUtvidVedtakslengde(behandling: Behandling): UtvidVedtakslengde {
+    private fun brevBehovUtvidVedtakslengde(behandling: Behandling): BrevBehov {
         val forrigeBehandlingId = checkNotNull(behandling.forrigeBehandlingId) {
             "UtvidelsesVedtak mangler forrigeBehandlingId for ${behandling.id}"
         }
+
+        // Datoen utvidelsen gjelder fra
         val underveisGrunnlagVedForrigeBehandling = underveisRepository.hent(forrigeBehandlingId)
         val utvidetAapFomDato = underveisGrunnlagVedForrigeBehandling.sisteDagMedYtelse().plusDays(1)
-        checkNotNull(utvidetAapFomDato) {
-            "UtvidelsesVedtak mangler utvidetAapFomDato"
-        }
+
+        // Datoen utvidelsen gjelder til
         val underveisGrunnlag = underveisRepository.hent(behandling.id)
+        val sisteDagMedYtelse = underveisGrunnlag.sisteDagMedYtelse()
+
+        if (unleashGateway.isEnabled(BehandlingsflytFeature.UtvidVedtakslengdeUnderEttAr)) {
+            val avslagsårsaker = vedtakslengdeService.hentAvslagsårsakerVedStansEllerOpphør(
+                behandlingId = behandling.id,
+                stansEllerOpphørFom = sisteDagMedYtelse.plusDays(1)
+            )
+
+            if (avslagsårsaker.isNotEmpty()) {
+                // Støtter kun en avslagsårsak i brev - henter ut høyest prioritert
+                val prioritertAvslagsårsak = requireNotNull(prioriterAvslagsårsak(avslagsårsaker)) {
+                    "Fant avslagsårsaker $avslagsårsaker for behandling ${behandling.id}, men ingen av dem er støttet for utvidelse under ett år"
+                }
+
+                log.info("Fant avslagsårsak $prioritertAvslagsårsak for brev i behandling ${behandling.id}")
+
+                return UtvidVedtakslengde(
+                    utvidetAapFomDato = utvidetAapFomDato,
+                    sisteDagMedYtelse = sisteDagMedYtelse,
+                    vedtakslengdeTypeBrev = avslagsårsakTilTypeBrev(prioritertAvslagsårsak),
+                )
+            }
+        }
+
         return UtvidVedtakslengde(
             utvidetAapFomDato = utvidetAapFomDato,
-            sisteDagMedYtelse = underveisGrunnlag.sisteDagMedYtelse()
+            sisteDagMedYtelse = sisteDagMedYtelse,
+            vedtakslengdeTypeBrev = TypeBrev.VEDTAK_UTVID_VEDTAKSLENGDE,
         )
+    }
+
+    private fun avslagsårsakTilTypeBrev(avslagsårsak: Avslagsårsak): TypeBrev = when (avslagsårsak) {
+        Avslagsårsak.BRUKER_OVER_67 -> TypeBrev.VEDTAK_FORLENGELSE_UNDER_ETT_ÅR_11_4
+        Avslagsårsak.IKKE_MEDLEM -> TypeBrev.VEDTAK_FORLENGELSE_UNDER_ETT_ÅR_MEDLEMSKAP
+        Avslagsårsak.ORDINÆRKVOTE_BRUKT_OPP -> TypeBrev.VEDTAK_FORLENGELSE_UNDER_ETT_ÅR_11_12
+        Avslagsårsak.BRUDD_PÅ_OPPHOLDSKRAV_STANS -> TypeBrev.VEDTAK_FORLENGELSE_UNDER_ETT_ÅR_11_3
+        Avslagsårsak.IKKE_RETT_UNDER_STRAFFEGJENNOMFØRING -> TypeBrev.VEDTAK_FORLENGELSE_UNDER_ETT_ÅR_11_26
+        Avslagsårsak.ANNEN_FULL_YTELSE -> TypeBrev.VEDTAK_FORLENGELSE_UNDER_ETT_ÅR_11_27
+        else -> error("Uventet avslagsårsak for utvidelse under ett år: $avslagsårsak")
+    }
+
+    private fun prioriterAvslagsårsak(avslagsårsaker: Set<Avslagsårsak>): Avslagsårsak? {
+        val prioritertRekkefølge = listOf(
+            Avslagsårsak.BRUKER_OVER_67,
+            Avslagsårsak.IKKE_MEDLEM,
+            Avslagsårsak.ORDINÆRKVOTE_BRUKT_OPP,
+            Avslagsårsak.BRUDD_PÅ_OPPHOLDSKRAV_STANS,
+            Avslagsårsak.IKKE_RETT_UNDER_STRAFFEGJENNOMFØRING,
+            Avslagsårsak.ANNEN_FULL_YTELSE,
+        )
+        return prioritertRekkefølge.firstOrNull { it in avslagsårsaker }
     }
 
     private fun brevBehovArbeidssøker(behandling: Behandling): Arbeidssøker {

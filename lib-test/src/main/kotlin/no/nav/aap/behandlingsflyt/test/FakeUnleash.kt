@@ -36,23 +36,19 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.NyBrevbyggerV3 to false,
         BehandlingsflytFeature.LagreVedtakIFatteVedtak to true,
         BehandlingsflytFeature.Under18 to true,
-        BehandlingsflytFeature.SendBrevVedMottattKlage to true,
-        BehandlingsflytFeature.ForlengelseIManuellBehandling to true,
         BehandlingsflytFeature.InstitusjonsoppholdJobb to true,
         BehandlingsflytFeature.TrekkSoeknadOpprettetFraLegeerklaering to true,
-        BehandlingsflytFeature.VirksomhetsEtablering to true,
         BehandlingsflytFeature.KvalitetssikringVed2213 to true,
-        BehandlingsflytFeature.tilbakekrevingsOppgaverTilOppgave to true,
-        BehandlingsflytFeature.HentingAvInstitusjonsOpphold to true,
         BehandlingsflytFeature.VisIkkeRelevantPeriode to true,
-        BehandlingsflytFeature.NyTidligereVurderinger to true,
         BehandlingsflytFeature.BekreftVurderingerOppfolging to true,
-        BehandlingsflytFeature.LagreStansOgOpphor to true,
+        BehandlingsflytFeature.MigrerStansOgOpphor to true,
         BehandlingsflytFeature.SamordningBarnepensjon to true,
-        BehandlingsflytFeature.RefusjonkravIRevurdering to true,
         BehandlingsflytFeature.SignaturEnhetFraOppgave to true,
         BehandlingsflytFeature.hentDagpengerPerioder to true,
+        BehandlingsflytFeature.hentTiltakspengerPerioder to true,
         BehandlingsflytFeature.VedtakslengdeAvklaringsbehov to true,
+        BehandlingsflytFeature.UtvidVedtakslengdeUnderEttAr to true,
+        BehandlingsflytFeature.OpprettManuellVedtakslengdeBehandling to true,
         )
 )
 
@@ -65,4 +61,3 @@ object AlleAvskruddUnleash : FakeUnleashBaseWithDefaultDisabled(
         BehandlingsflytFeature.IngenValidering, // Vi må ha på validering, slik oppførselen er i prod. Dette er egentlig for å støtte superbruker
     )
 )
-

@@ -14,7 +14,8 @@ data class InstitusjonsoppholdDto(
     val status: String,
     val oppholdFra: LocalDate,
     val avsluttetDato: LocalDate,
-    val kildeinstitusjon: String
+    val kildeinstitusjon: String,
+    val tidligsteReduksjonsdato: LocalDate?,  // null dersom ikke beregnet (f.eks. soningsopphold)
 ) {
     companion object {
         fun institusjonToDto(institusjonsopphold: Segment<Institusjon>) =
@@ -33,7 +34,8 @@ data class InstitusjonsoppholdDto(
                 // TODO skal muligens være start av rettighetsperiode i seteden for dd
                 kildeinstitusjon = institusjonsopphold.verdi.navn,
                 oppholdFra = institusjonsopphold.periode.fom,
-                avsluttetDato = institusjonsopphold.periode.tom
+                avsluttetDato = institusjonsopphold.periode.tom,
+                tidligsteReduksjonsdato = null
             )
     }
 }
@@ -59,7 +61,8 @@ data class HelseinstitusjonVurderingDto(
     val forsoergerEktefelle: Boolean? = null,
     val harFasteUtgifter: Boolean? = null,
     val periode: Periode,
-    val vurdertAv: VurdertAvResponse?
+    val vurdertAv: VurdertAvResponse?,
+    val besluttetAv: VurdertAvResponse?
 )
 
 data class SoningsGrunnlagDto(

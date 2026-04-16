@@ -32,8 +32,7 @@ class EtableringEgenVirksomhetLøsning(
         gatewayProvider: GatewayProvider
     ): LøsningsResultat {
         return EtableringEgenVirksomhetLøser(
-            repositoryProvider,
-            gatewayProvider
+            repositoryProvider
         ).løs(kontekst, this)
     }
 

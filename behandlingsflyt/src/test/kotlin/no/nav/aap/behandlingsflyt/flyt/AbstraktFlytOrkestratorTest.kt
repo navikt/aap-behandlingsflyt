@@ -28,6 +28,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FatteVedta
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.ForeslåVedtakLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FritakMeldepliktLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.KvalitetssikringLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.PeriodisertAvklarSykepengerErstatningLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.RefusjonkravLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivBrevAvklaringsbehovLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivVedtaksbrevLøsning
@@ -43,7 +44,6 @@ import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.AvklarOppholdkravLøsn
 import no.nav.aap.behandlingsflyt.behandling.vedtak.Vedtak
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.EØSLandEllerLandMedAvtale
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravNavn
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.SamordningAndreStatligeYtelserVurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.arbeidsgiver.SamordningArbeidsgiverVurderingerDTO
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
@@ -73,6 +73,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.rettighetsperiode.
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.rettighetsperiode.RettighetsperiodeVurderingDTO
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.VurderingerForSamordning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.sykestipend.SamordningSykestipendVurderingDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerGrunn
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.PeriodisertSykepengerVurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.SykdomsvurderingLøsningDto
 import no.nav.aap.behandlingsflyt.help.assertTidslinje
 import no.nav.aap.behandlingsflyt.hendelse.mottak.BehandlingSattPåVent
@@ -115,6 +117,7 @@ import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.StegTilstand
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
@@ -446,7 +449,9 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
                         erArbeidsevnenNedsatt = true.takeIf { erOppfylt },
                         yrkesskadeBegrunnelse = if (erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense != null) "test" else null,
                         fom = vurderingGjelderFra,
-                        tom = null
+                        tom = null,
+                        erNedsettelseMinstHalvparten = null,
+                        erNedsettelseMerEnnYrkesskadegrense = null,
                     )
                 )
             ),
@@ -512,14 +517,14 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
         )
     }
 
-    protected fun Behandling.løsOppholdskrav(startDato: LocalDate): Behandling {
+    protected fun Behandling.løsOppholdskrav(startDato: LocalDate, oppfylt: Boolean = true): Behandling {
         return løsAvklaringsBehov(
             behandling = this,
             avklaringsBehovLøsning =
                 AvklarOppholdskravLøsning(
                     løsningerForPerioder = listOf(
                         AvklarOppholdkravLøsningForPeriodeDto(
-                            oppfylt = true,
+                            oppfylt = oppfylt,
                             land = "",
                             fom = startDato,
                             begrunnelse = "Fiske"
@@ -563,6 +568,23 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
                     harRett = RettighetsperiodeHarRett.Nei,
                 )
             )
+        )
+    }
+
+    protected fun Behandling.løsSykepengeerstatning(vararg vurderinger: Pair<LocalDate, Boolean>): Behandling {
+        return løsAvklaringsBehov(
+            PeriodisertAvklarSykepengerErstatningLøsning(
+                løsningerForPerioder = vurderinger.map { (fom, harRett) ->
+                    PeriodisertSykepengerVurderingDto(
+                        begrunnelse = "...",
+                        dokumenterBruktIVurdering = emptyList(),
+                        harRettPå = harRett,
+                        grunn = SykepengerGrunn.SYKEPENGER_IGJEN_ARBEIDSUFOR.takeUnless { harRett },
+                        fom = fom,
+                        tom = null
+                    )
+                }
+            ),
         )
     }
 
@@ -1217,7 +1239,9 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
 
     @JvmName("bekreftVurderingerExt")
     protected fun Behandling.bekreftVurderinger(): Behandling {
-        return if (gatewayProvider.provide<UnleashGateway>().isEnabled(BehandlingsflytFeature.BekreftVurderingerOppfolging)) {
+        return if (gatewayProvider.provide<UnleashGateway>()
+                .isEnabled(BehandlingsflytFeature.BekreftVurderingerOppfolging)
+        ) {
             løsAvklaringsBehov(this, BekreftVurderingerOppfølgingLøsning())
         } else {
             this
@@ -1269,7 +1293,7 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
                 listOf(
                     RefusjonkravVurderingDto(
                         harKrav = true,
-                        navKontor = "",
+                        navKontor = "Peppas Crib",
                     )
                 )
             )

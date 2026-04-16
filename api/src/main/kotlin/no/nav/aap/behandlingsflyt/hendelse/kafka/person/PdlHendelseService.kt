@@ -25,6 +25,7 @@ import no.nav.aap.behandlingsflyt.utils.UtfallOppfyltUtils
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
+import java.time.LocalDate
 
 class PdlHendelseService(
     private val sakRepository: SakRepository,
@@ -85,6 +86,7 @@ class PdlHendelseService(
                 håndterDødPersonSomEtBarnOppgittAvSaksbehandler(
                     funnetIdent!!,
                     personHendelse,
+                    saksbehandlersOppgitteBarn
                 )
             }
         }
@@ -95,43 +97,44 @@ class PdlHendelseService(
         funnetIdent: Ident,
         personHendelse: PdlPersonHendelse,
     ) {
-        val behandlingIdsForRegisterBarn =
-            barnRepository.hentBehandlingIdForSakSomFårBarnetilleggForRegisterBarn(funnetIdent)
-        val behandlingIdsForSøknadsBarn =
-            barnRepository.hentBehandlingIdForSakSomFårBarnetilleggForSøknadsBarn(funnetIdent)
-        val alleBarneBehandlingIds =
-            behandlingIdsForRegisterBarn + behandlingIdsForSøknadsBarn
-        log.info("Sjekker mottatt hendelse for barn $alleBarneBehandlingIds")
-        alleBarneBehandlingIds
-            .map { behandlingRepository.hent(it) }
-            .map { it.sakId }
-            .distinct()
-            .map { sakRepository.hent(it) }
-            .forEach { sak ->
-                val behandlingMedSistFattedeVedtak =
-                    behandlingService.finnBehandlingMedSisteFattedeVedtak(sakId = sak.id)
-                val sisteOpprettedeBehandling = behandlingRepository.finnSisteOpprettedeBehandlingFor(
-                    sak.id,
-                    listOf(TypeBehandling.Førstegangsbehandling, TypeBehandling.Revurdering)
-                )
-                log.info("Registrerer mottatt hendelse på barn for ${sak.saksnummer}")
-                sendDødsHendelseHvisRelevant(
-                    behandlingMedSistFattedeVedtak,
-                    personHendelse,
-                    sak,
-                    sisteOpprettedeBehandling,
-                    Dødsfalltype.DODSFALL_BARN
-                )
-            }
+        val barnFødselsdato = barnRepository.finnFødselsdatoForRegisterBarn(funnetIdent)
+        val barnErUnder18 = barnFødselsdato?.alderPåDato(LocalDate.now().plusDays(1))?.let { it < 18 } ?: true
+        if (barnErUnder18) {
+            val behandlingIdsForRegisterBarn =
+                barnRepository.hentBehandlingIdForSakSomFårBarnetilleggForRegisterBarn(funnetIdent)
+            val behandlingIdsForSøknadsBarn =
+                barnRepository.hentBehandlingIdForSakSomFårBarnetilleggForSøknadsBarn(funnetIdent)
+            val alleBarneBehandlingIds =
+                behandlingIdsForRegisterBarn + behandlingIdsForSøknadsBarn
+            log.info("Sjekker mottatt hendelse for barn $alleBarneBehandlingIds")
+            alleBarneBehandlingIds
+                .map { behandlingRepository.hent(it) }
+                .map { it.sakId }
+                .distinct()
+                .map { sakRepository.hent(it) }
+                .forEach { sak ->
+                    val behandlingMedSistFattedeVedtak =
+                        behandlingService.finnBehandlingMedSisteFattedeVedtak(sakId = sak.id)
+                    val sisteOpprettedeBehandling = behandlingService.finnSisteYtelsesbehandlingFor(
+                        sak.id
+                    )
+                    log.info("Registrerer mottatt hendelse på barn for ${sak.saksnummer}")
+                    sendDødsHendelseHvisRelevant(
+                        behandlingMedSistFattedeVedtak,
+                        personHendelse,
+                        sak,
+                        sisteOpprettedeBehandling,
+                        Dødsfalltype.DODSFALL_BARN
+                    )
+                }
+        }
 
         // Finn sak på person
         sakRepository.finnSakerFor(person).forEach { sak ->
             log.info("Registrerer mottatt hendelse på ${sak.saksnummer}")
-            val sisteOpprettedeBehandling = behandlingRepository.finnSisteOpprettedeBehandlingFor(
-                sak.id,
-                listOf(TypeBehandling.Førstegangsbehandling, TypeBehandling.Revurdering)
+            val sisteOpprettedeBehandling = behandlingService.finnSisteYtelsesbehandlingFor(
+                sak.id
             )
-
             val behandlingMedSistFattedeVedtak =
                 behandlingService.finnBehandlingMedSisteFattedeVedtak(sakId = sak.id)
 
@@ -148,7 +151,14 @@ class PdlHendelseService(
     private fun håndterDødPersonSomEtBarnOppgittAvSaksbehandler(
         funnetIdent: Ident,
         personHendelse: PdlPersonHendelse,
+        barn: SaksbehandlerOppgitteBarn.SaksbehandlerOppgitteBarn
     ) {
+        val erUnder18 = barn.fødselsdato.alderPåDato(LocalDate.now().plusDays(1)) < 18
+        if (!erUnder18) {
+            log.info("Ignorerer dødsfallhendelse for barn over 18 år")
+            return
+        }
+
         val behandlingIdsForSaksbehandlerOppgitteBarn =
             barnRepository.hentBehandlingIdForSakSomFårBarnetilleggForSaksbehandlerOppgitteBarn(
                 funnetIdent

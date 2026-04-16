@@ -50,7 +50,9 @@ import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.inntekt.Manu
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.medlemsskap.MedlemskapRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.opphold.OppholdskravGrunnlagRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.tiltakspenger.TiltakspengerRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.uføre.UføreRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.uføre.UføreSøknadRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.yrkesskade.YrkesskadeRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.andreYtelserOppgittISøknad.AndreYtelserOppgittISøknadRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneRepositoryImpl
@@ -108,6 +110,7 @@ val postgresRepositoryRegistry = RepositoryRegistry()
     .register<YrkesskadeRepositoryImpl>()
     .register<AndreYtelserOppgittISøknadRepositoryImpl>()
     .register<UføreRepositoryImpl>()
+    .register<UføreSøknadRepositoryImpl>()
     .register<MedlemskapArbeidInntektRepositoryImpl>()
     .register<SykepengerErstatningRepositoryImpl>()
     .register<SamordningVurderingRepositoryImpl>()
@@ -162,6 +165,7 @@ val postgresRepositoryRegistry = RepositoryRegistry()
     .register<BarnepensjonRepositoryImpl>()
     .register<VedtakslengdeRepositoryImpl>()
     .register<DagpengerRepositoryImpl>()
+    .register<TiltakspengerRepositoryImpl>()
     .register<RettighetstypeRepositoryImpl>()
     .register<EtableringEgenVirksomhetRepositoryImpl>()
     .register<StansOpphørRepositoryImpl>()

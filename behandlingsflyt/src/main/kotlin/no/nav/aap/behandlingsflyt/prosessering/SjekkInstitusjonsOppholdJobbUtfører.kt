@@ -98,14 +98,22 @@ class SjekkInstitusjonsOppholdJobbUtfører(
 
     private fun erKandidatForVurderingAvInstitusjonsopphold(behandlingId: BehandlingId): Boolean {
 
-        val grunnlag = institusjonsOppholdRepository.hentHvisEksisterer(behandlingId)
-        grunnlag?.oppholdene?.opphold?.forEach { opphold ->
-            if (periodeErMinstFireMaanederOgFomVartIToMaaneder(opphold.periode)) {
-                log.info("For behandlingsid $behandlingId er oppholdene true")
-                return true
+        val opphold = institusjonsOppholdRepository.hentHvisEksisterer(behandlingId)?.oppholdene?.opphold
+        val matchendeOpphold =
+            opphold?.firstOrNull { oppholdPeriode ->
+                periodeErMinstFireMaanederOgFomVartIToMaaneder(oppholdPeriode.periode)
             }
-            log.info("For behandlingsid $behandlingId er oppholdene false")
+
+        if (matchendeOpphold != null) {
+            log.info(
+                "Behandling $behandlingId er kandidat for vurdering av institusjonsopphold: opphold med fom=${matchendeOpphold.periode.fom} og tom=${matchendeOpphold.periode.tom} oppfyller kravene"
+            )
+            return true
         }
+
+        log.info(
+            "Behandling $behandlingId er ikke kandidat for vurdering av institusjonsopphold: ingen opphold oppfyller kravene"
+        )
         return false
     }
 

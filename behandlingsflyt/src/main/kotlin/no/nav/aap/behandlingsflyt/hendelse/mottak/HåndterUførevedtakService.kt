@@ -11,11 +11,14 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettels
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
+import no.nav.aap.behandlingsflyt.prosessering.OppdagEndretInformasjonskravJobbUtfører
 import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingService
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.lookup.repository.RepositoryProvider
+import no.nav.aap.motor.FlytJobbRepository
+import no.nav.aap.motor.JobbInput
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 
@@ -25,6 +28,7 @@ class HåndterUførevedtakService(
     private val rettighetstypeService: RettighetstypeService,
     private val mottaDokumentService: MottaDokumentService,
     private val prosesserBehandlingService: ProsesserBehandlingService,
+    private val flytJobbRepository: FlytJobbRepository,
 ) {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         behandlingService = BehandlingService(repositoryProvider, gatewayProvider),
@@ -32,6 +36,7 @@ class HåndterUførevedtakService(
         rettighetstypeService = RettighetstypeService(repositoryProvider, gatewayProvider),
         mottaDokumentService = MottaDokumentService(repositoryProvider),
         prosesserBehandlingService = ProsesserBehandlingService(repositoryProvider, gatewayProvider),
+        flytJobbRepository = repositoryProvider.provide()
     )
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -44,10 +49,14 @@ class HåndterUførevedtakService(
     ) {
         val sisteYtelsesBehandling = behandlingService.finnSisteYtelsesbehandlingFor(sakId)
             ?: error("Finnes ingen ytelsesbehandling for sakId $sakId")
-        if (uførevedtak.resultat.erOpphørEllerEndring()) {
-            log.info("Uførevedtak for sak $sakId er opphør eller endring, gjør ingenting i Kelvin med dette")
-        } else if (trukketSøknadService.søknadErTrukket(sisteYtelsesBehandling.id)) {
-            log.info("Søknad er trukket for sak $sakId, oppretter ikke revurdering ved mottak av uførevedtak")
+        if (trukketSøknadService.søknadErTrukket(sisteYtelsesBehandling.id)) {
+            log.info("Søknad er trukket for sak $sakId, ignorerer nytt uførevedtak")
+        }
+        else if (uførevedtak.resultat.erOpphørEllerEndring()) {
+            log.info("Uførevedtak for sak $sakId er opphør eller endring, sjekker om informasjonskrav har endret seg")
+            flytJobbRepository.leggTil(
+                JobbInput(jobb = OppdagEndretInformasjonskravJobbUtfører).forSak(sakId.toLong()).medCallId()
+            )
         } else {
             log.info("Oppretter vurderingsbehov for mottatt uførevedtak for sak $sakId")
             val aktuellPeriode = Periode(uførevedtak.virkningsdato, Tid.MAKS)

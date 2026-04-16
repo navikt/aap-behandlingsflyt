@@ -28,8 +28,9 @@ data class Arbeidssøker(
 
 data class UtvidVedtakslengde(
     val utvidetAapFomDato: LocalDate,
-    val sisteDagMedYtelse: LocalDate
-) : BrevBehov(TypeBrev.VEDTAK_UTVID_VEDTAKSLENGDE)
+    val sisteDagMedYtelse: LocalDate,
+    val vedtakslengdeTypeBrev: TypeBrev,
+) : BrevBehov(vedtakslengdeTypeBrev)
 
 data class Avslag(val sykdomsvurdering: String?): BrevBehov(TypeBrev.VEDTAK_AVSLAG)
 object VedtakEndring : BrevBehov(TypeBrev.VEDTAK_ENDRING)

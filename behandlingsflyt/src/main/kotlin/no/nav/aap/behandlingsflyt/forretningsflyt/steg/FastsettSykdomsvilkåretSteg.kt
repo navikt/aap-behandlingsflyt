@@ -4,6 +4,8 @@ import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.behandling.vilkår.sykdom.SykdomsFaktagrunnlag
 import no.nav.aap.behandlingsflyt.behandling.vilkår.sykdom.Sykdomsvilkår
+import no.nav.aap.behandlingsflyt.behandling.vilkår.sykdom.SykdomsvilkårUtenVissVarighet
+import no.nav.aap.behandlingsflyt.behandling.vilkår.sykdom.diff
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
@@ -21,6 +23,7 @@ import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.lookup.repository.RepositoryProvider
+import org.slf4j.LoggerFactory
 
 class FastsettSykdomsvilkåretSteg private constructor(
     private val vilkårsresultatRepository: VilkårsresultatRepository,
@@ -31,6 +34,8 @@ class FastsettSykdomsvilkåretSteg private constructor(
     private val vilkårService: VilkårService,
     private val unleashGateway: UnleashGateway,
 ) : BehandlingSteg {
+    private val log = LoggerFactory.getLogger(javaClass)
+
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         vilkårsresultatRepository = repositoryProvider.provide(),
         sykdomRepository = repositoryProvider.provide(),
@@ -73,7 +78,7 @@ class FastsettSykdomsvilkåretSteg private constructor(
         kontekst: FlytKontekstMedPerioder,
     ) {
         val behandlingId = kontekst.behandlingId
-        val vilkårResultat = vilkårsresultatRepository.hent(behandlingId)
+        val vilkårsresultat = vilkårsresultatRepository.hent(behandlingId)
         val sykdomsGrunnlag = sykdomRepository.hentHvisEksisterer(behandlingId)
         val sykepengerErstatningGrunnlag = sykepengerErstatningRepository.hentHvisEksisterer(behandlingId)
         val bistandGrunnlag = bistandRepository.hentHvisEksisterer(behandlingId)
@@ -86,11 +91,21 @@ class FastsettSykdomsvilkåretSteg private constructor(
             sykepengerErstatningGrunnlag,
             sykdomsGrunnlag?.sykdomsvurderinger.orEmpty(),
             bistandGrunnlag,
-            vilkårResultat.optionalVilkår(Vilkårtype.SYKEPENGEERSTATNING)?.tidslinje().orEmpty(),
+            vilkårsresultat.optionalVilkår(Vilkårtype.SYKEPENGEERSTATNING)?.tidslinje().orEmpty(),
         )
-        Sykdomsvilkår(vilkårResultat).vurder(faktagrunnlag)
 
-        vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårResultat)
+        Sykdomsvilkår(vilkårsresultat).vurder(faktagrunnlag)
+        val segmenterMedDiff = SykdomsvilkårUtenVissVarighet(vilkårsresultat).vurderOgSammenlign(
+            faktagrunnlag,
+            vilkårsresultat,
+            rettighetsperiode
+        ).diff()
+        
+        if (segmenterMedDiff.isNotEmpty()) {
+            log.warn("Fant ulikt utfall mellom ny og gammel vilkårsvurdering: $segmenterMedDiff")
+        }
+
+        vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
     }
 
     companion object : FlytSteg {

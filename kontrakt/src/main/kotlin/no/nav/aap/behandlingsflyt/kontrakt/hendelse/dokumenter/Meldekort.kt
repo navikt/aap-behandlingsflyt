@@ -11,11 +11,15 @@ public sealed interface Meldekort : Melding {
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public data class MeldekortV0(
-    public val harDuArbeidet: Boolean,
+    public val harDuArbeidet: Boolean?,
     public val timerArbeidPerPeriode: List<ArbeidIPeriodeV0>,
 ) : Meldekort {
 
     init {
+        require((harDuArbeidet == null) == (timerArbeidPerPeriode.isEmpty())) {
+            "må oppgi `harDuArbeidet` og `timerArbeidPerPeriode` sammen"
+        }
+
         require(!overlappendePerioder(timerArbeidPerPeriode)) {
             "kan ikke gi overlappende opplysninger i et meldekort"
         }
@@ -46,13 +50,13 @@ public data class MeldekortV0(
         }
 
         public fun timerArbeidetSamsvarerMedArbeidetSvar(
-            harDuArbeidet: Boolean,
+            harDuArbeidet: Boolean?,
             timerArbeidPerPeriode: List<ArbeidIPeriodeV0>
         ): Boolean {
-            return if (harDuArbeidet) {
-                timerArbeidPerPeriode.sumOf { it.timerArbeid } > 0.0
-            } else {
-                timerArbeidPerPeriode.all { it.timerArbeid == 0.0 }
+            return when (harDuArbeidet) {
+                null -> timerArbeidPerPeriode.isEmpty()
+                true -> timerArbeidPerPeriode.sumOf { it.timerArbeid } > 0.0
+                false -> timerArbeidPerPeriode.all { it.timerArbeid == 0.0 }
             }
         }
     }
@@ -75,7 +79,7 @@ public data class ArbeidIPeriodeV0(
     }
 
     public companion object {
-        public fun gyldigTimerArbeidet(timer: Double, fom: LocalDate, tom: LocalDate): Boolean  {
+        public fun gyldigTimerArbeidet(timer: Double, fom: LocalDate, tom: LocalDate): Boolean {
             return timer >= 0 && timer <= 24.0 * antallDager(fom, tom)
         }
     }

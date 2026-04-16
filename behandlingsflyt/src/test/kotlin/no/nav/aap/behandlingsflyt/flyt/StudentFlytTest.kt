@@ -3,7 +3,6 @@ package no.nav.aap.behandlingsflyt.flyt
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarStudentEnkelLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarStudentLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.ForeslåVedtakLøsning
-import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.VirkningstidspunktUtleder
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companion.plussEtÅrMedHverdager
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.ÅrMedHverdager
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
@@ -20,7 +19,6 @@ import no.nav.aap.behandlingsflyt.test.desember
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.behandlingsflyt.test.november
 import no.nav.aap.behandlingsflyt.test.oktober
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.type.Periode
@@ -51,6 +49,7 @@ class StudentFlytTest(val unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
         )
 
         val avbruttStudieDato = 1 oktober 2025
+        val forventetVarighetSluttStudent = avbruttStudieDato.plusMonths(6)
 
         behandling = behandling
             .løsAvklaringsBehov(
@@ -70,7 +69,6 @@ class StudentFlytTest(val unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                 val vilkår = repositoryProvider.provide<VilkårsresultatRepository>().hent(this.behandling.id)
 
                 val studentVilkår = vilkår.finnVilkår(Vilkårtype.STUDENT)
-                val forventetVarighetSluttStudent = avbruttStudieDato.plusMonths(6)
 
                 studentVilkår.tidslinje().assertTidslinje(
                     Segment(Periode(fom, avbruttStudieDato.plusMonths(6).minusDays(1))) { vurdering ->
@@ -82,20 +80,12 @@ class StudentFlytTest(val unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                     }
                 )
 
-                if (unleashGateway.objectInstance!!.isEnabled(BehandlingsflytFeature.NyTidligereVurderinger)) {
-                    // Her løftes sykdombehovet fordi det er studentvilkåret og ikke vurderingen som sjekkes 
-                    this.behandling.løsSykdom(forventetVarighetSluttStudent, erOppfylt = false)
-                }
             }
+            .løsSykdom(forventetVarighetSluttStudent, erOppfylt = false)
             .løsRefusjonskrav()
-            .medKontekst {
-                if (unleashGateway.objectInstance!!.isEnabled(BehandlingsflytFeature.NyTidligereVurderinger)) {
-                    // Nei på 11-5, må skrive brev
-                    this.behandling.løsSykdomsvurderingBrev()
-                    this.behandling.bekreftVurderinger()
-                    this.behandling.kvalitetssikre()
-                }
-            }
+            .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
+            .kvalitetssikre()
             .løsBeregningstidspunkt()
             .løsOppholdskrav(fom)
             .løsSykestipend(listOf(sykestipendPeriode))
@@ -164,12 +154,8 @@ class StudentFlytTest(val unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             .løsBistand(sak.rettighetsperiode.fom)
             .løsSykdomsvurderingBrev()
             .bekreftVurderinger()
-            .medKontekst {
-                if (unleashGateway.objectInstance!!.isEnabled(BehandlingsflytFeature.NyTidligereVurderinger)) {
-                    // Kjent bug at dette løftes på nytt ved diff i nårVurderingErRelevant, selv om vurderingen er gjort for hele perioden
-                    this.behandling.løsOppholdskrav(fom)
-                }
-            }
+            // Kjent bug at oppholdskrav løftes på nytt ved diff i nårVurderingErRelevant, selv om vurderingen er gjort for hele perioden
+            .løsOppholdskrav(fom) 
             .løsSykestipend()
             .medKontekst {
                 val vilkår = repositoryProvider.provide<VilkårsresultatRepository>().hent(this.behandling.id)
@@ -190,13 +176,59 @@ class StudentFlytTest(val unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             .assertRettighetstype(
                 Periode(
                     fom,
-                    if (unleashGateway.objectInstance?.isEnabled(BehandlingsflytFeature.LagreVedtakIFatteVedtak) == true) {
-                        fom.plussEtÅrMedHverdager(ÅrMedHverdager.FØRSTE_ÅR)
-                    } else {
-                        fom.plusDays(15).plussEtÅrMedHverdager(ÅrMedHverdager.FØRSTE_ÅR)
-                    }
+                    fom.plussEtÅrMedHverdager(ÅrMedHverdager.FØRSTE_ÅR)
                 ) to RettighetsType.BISTANDSBEHOV
             )
+    }
+
+    @Test
+    fun `revurdering med tom løsningerForPerioder skal ikke kaste NoSuchElementException`() {
+        val fom = 24 november 2025
+        val sykestipendPeriode = Periode(fom, fom.plusDays(14))
+        val avbruttStudieDato = 1 oktober 2025
+
+        val person = TestPersoner.STANDARD_PERSON()
+
+        val (sak, behandling) = sendInnFørsteSøknad(
+            person = person,
+            mottattTidspunkt = fom.atStartOfDay(),
+            søknad = TestSøknader.SØKNAD_STUDENT
+        )
+
+        behandling
+            .løsAvklaringsBehov(
+                AvklarStudentEnkelLøsning(
+                    studentvurdering = StudentVurderingDTO(
+                        begrunnelse = "...",
+                        harAvbruttStudie = true,
+                        godkjentStudieAvLånekassen = true,
+                        avbruttPgaSykdomEllerSkade = true,
+                        harBehovForBehandling = true,
+                        avbruttStudieDato = avbruttStudieDato,
+                        avbruddMerEnn6Måneder = true
+                    ),
+                )
+            )
+            .løsSykdom(avbruttStudieDato.plusMonths(6), erOppfylt = false)
+            .løsRefusjonskrav()
+            .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
+            .kvalitetssikre()
+            .løsBeregningstidspunkt()
+            .løsOppholdskrav(fom)
+            .løsSykestipend(listOf(sykestipendPeriode))
+            .løsAndreStatligeYtelser()
+            .løsAvklaringsBehov(ForeslåVedtakLøsning())
+            .fattVedtak()
+
+        sak.opprettManuellRevurdering(listOf(Vurderingsbehov.REVURDER_STUDENT))
+            .løsAvklaringsBehov(
+                AvklarStudentLøsning(løsningerForPerioder = emptyList())
+            )
+            .medKontekst {
+                assertThat(åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
+                    .doesNotContain(Definisjon.AVKLAR_STUDENT)
+            }
     }
 
     @Test

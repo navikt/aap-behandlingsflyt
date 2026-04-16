@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.kontrakt.datadeling
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Status
 import java.math.BigDecimal
+import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -22,8 +23,51 @@ public data class DatadelingDTO(
     val behandlingsReferanse: String,
     val samId: String? = null,
     val vedtakId: Long,
-    val beregningsgrunnlag: BigDecimal?
+    val beregningsgrunnlag: BigDecimal?,
+    val stansOpphørVurdering: Set<GjeldendeStansEllerOpphørDTO>?
 )
+
+
+public data class GjeldendeStansEllerOpphørDTO(
+    val fom: LocalDate,
+    val opprettet: Instant,
+    val vurdering: StansEllerOpphørEnumDTO,
+    val avslagsårsaker: Set<AvslagsårsakDTO>,
+)
+
+public enum class StansEllerOpphørEnumDTO {
+    STANS,
+    OPPHØR
+}
+
+public enum class AvslagsårsakDTO(
+    public val type: StansEllerOpphørEnumDTO,
+) {
+    BRUKER_OVER_67(StansEllerOpphørEnumDTO.OPPHØR),
+    IKKE_RETT_PA_SYKEPENGEERSTATNING(StansEllerOpphørEnumDTO.OPPHØR),
+    IKKE_RETT_PA_STUDENT(StansEllerOpphørEnumDTO.OPPHØR),
+    VARIGHET_OVERSKREDET_STUDENT(StansEllerOpphørEnumDTO.OPPHØR),
+    IKKE_SYKDOM_AV_VISS_VARIGHET(StansEllerOpphørEnumDTO.OPPHØR),
+    IKKE_SYKDOM_SKADE_LYTE_VESENTLIGDEL(StansEllerOpphørEnumDTO.OPPHØR),
+    IKKE_NOK_REDUSERT_ARBEIDSEVNE(StansEllerOpphørEnumDTO.OPPHØR),
+    IKKE_BEHOV_FOR_OPPFOLGING(StansEllerOpphørEnumDTO.OPPHØR),
+    IKKE_MEDLEM(StansEllerOpphørEnumDTO.OPPHØR),
+    IKKE_OPPFYLT_OPPHOLDSKRAV_EØS(StansEllerOpphørEnumDTO.STANS),
+    ANNEN_FULL_YTELSE(StansEllerOpphørEnumDTO.OPPHØR),
+    INNTEKTSTAP_DEKKES_ETTER_ANNEN_LOVGIVNING(StansEllerOpphørEnumDTO.OPPHØR),
+    IKKE_RETT_PA_AAP_UNDER_BEHANDLING_AV_UFORE(StansEllerOpphørEnumDTO.OPPHØR),
+    VARIGHET_OVERSKREDET_OVERGANG_UFORE(StansEllerOpphørEnumDTO.OPPHØR),
+    VARIGHET_OVERSKREDET_ARBEIDSSØKER(StansEllerOpphørEnumDTO.OPPHØR),
+    IKKE_RETT_PA_AAP_I_PERIODE_SOM_ARBEIDSSOKER(StansEllerOpphørEnumDTO.STANS),
+    IKKE_RETT_UNDER_STRAFFEGJENNOMFØRING(StansEllerOpphørEnumDTO.STANS),
+    BRUDD_PÅ_AKTIVITETSPLIKT_STANS(StansEllerOpphørEnumDTO.STANS),
+    BRUDD_PÅ_AKTIVITETSPLIKT_OPPHØR(StansEllerOpphørEnumDTO.OPPHØR),
+    BRUDD_PÅ_OPPHOLDSKRAV_STANS(StansEllerOpphørEnumDTO.STANS),
+    BRUDD_PÅ_OPPHOLDSKRAV_OPPHØR(StansEllerOpphørEnumDTO.OPPHØR),
+    ORDINÆRKVOTE_BRUKT_OPP(StansEllerOpphørEnumDTO.OPPHØR),
+    SYKEPENGEERSTATNINGKVOTE_BRUKT_OPP(StansEllerOpphørEnumDTO.OPPHØR),
+}
+
 
 public data class RettighetsTypePeriode(
     val fom: LocalDate,

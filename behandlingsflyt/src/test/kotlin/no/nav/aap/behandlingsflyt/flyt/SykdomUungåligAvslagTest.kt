@@ -65,6 +65,8 @@ class SykdomUungåligAvslagTest(val unleashGateway: KClass<UnleashGateway>) :
                         erNedsettelseIArbeidsevneMerEnnHalvparten = null,
                         erNedsettelseIArbeidsevneAvEnVissVarighet = null,
                         erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
+erNedsettelseMinstHalvparten = null,
+                            erNedsettelseMerEnnYrkesskadegrense = null,
                         erArbeidsevnenNedsatt = null,
                         yrkesskadeBegrunnelse = null,
                         fom = fom,
@@ -139,7 +141,9 @@ class SykdomUungåligAvslagTest(val unleashGateway: KClass<UnleashGateway>) :
                         erArbeidsevnenNedsatt = true,
                         yrkesskadeBegrunnelse = null,
                         fom = sak.rettighetsperiode.fom,
-                        tom = null
+                        tom = null,
+                        erNedsettelseMinstHalvparten = null,
+                        erNedsettelseMerEnnYrkesskadegrense = null,
                     )
                 )
             ),
@@ -230,7 +234,9 @@ class SykdomUungåligAvslagTest(val unleashGateway: KClass<UnleashGateway>) :
                             yrkesskadeBegrunnelse = "Skadd på jobb",
                             erNedsettelseIArbeidsevneAvEnVissVarighet = true,
                             fom = periode.fom,
-                            tom = null
+                            tom = null,
+                            erNedsettelseMinstHalvparten = null,
+                            erNedsettelseMerEnnYrkesskadegrense = null,
                         )
                     )
                 ),
@@ -313,6 +319,8 @@ class SykdomUungåligAvslagTest(val unleashGateway: KClass<UnleashGateway>) :
                             erSkadeSykdomEllerLyteVesentligdel = true,
                             erNedsettelseIArbeidsevneMerEnnHalvparten = true,
                             erNedsettelseIArbeidsevneAvEnVissVarighet = true,
+erNedsettelseMinstHalvparten = null,
+                            erNedsettelseMerEnnYrkesskadegrense = null,
                             erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
                             erArbeidsevnenNedsatt = true,
                             yrkesskadeBegrunnelse = null,
@@ -416,6 +424,8 @@ class SykdomUungåligAvslagTest(val unleashGateway: KClass<UnleashGateway>) :
                             erSkadeSykdomEllerLyteVesentligdel = true,
                             erNedsettelseIArbeidsevneMerEnnHalvparten = true,
                             erNedsettelseIArbeidsevneAvEnVissVarighet = true,
+erNedsettelseMinstHalvparten = null,
+                            erNedsettelseMerEnnYrkesskadegrense = null,
                             erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
                             erArbeidsevnenNedsatt = true,
                             yrkesskadeBegrunnelse = null,
@@ -433,7 +443,9 @@ class SykdomUungåligAvslagTest(val unleashGateway: KClass<UnleashGateway>) :
                             erArbeidsevnenNedsatt = null,
                             yrkesskadeBegrunnelse = null,
                             fom = periode115.tom.plusDays(1),
-                            tom = null
+                            tom = null,
+                            erNedsettelseMinstHalvparten = null,
+                            erNedsettelseMerEnnYrkesskadegrense = null,
                         )
                     )
                 ),

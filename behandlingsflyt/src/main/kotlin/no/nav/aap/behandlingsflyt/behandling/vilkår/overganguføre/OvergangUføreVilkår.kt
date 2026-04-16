@@ -1,7 +1,5 @@
 package no.nav.aap.behandlingsflyt.behandling.vilkår.overganguføre
 
-import no.nav.aap.behandlingsflyt.behandling.underveis.Kvoter
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager
 import no.nav.aap.behandlingsflyt.behandling.vilkår.Varighetsvurdering
 import no.nav.aap.behandlingsflyt.behandling.vilkår.Vilkårsvurderer
 import no.nav.aap.behandlingsflyt.behandling.vilkår.mapMedDatoTilDatoVarighet

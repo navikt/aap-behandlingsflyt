@@ -11,7 +11,7 @@ data class UbehandletMeldekort(
     val journalpostId: JournalpostId,
     val timerArbeidPerPeriode: Set<ArbeidIPeriode>,
     val mottattTidspunkt: LocalDateTime,
-    val harDuArbeidet: Boolean,
+    val harDuArbeidet: Boolean?,
     val digitalisertAvPostmottak: Boolean?
 ) {
     companion object {

@@ -21,7 +21,6 @@ import no.nav.aap.behandlingsflyt.api.config.definisjoner.configApi
 import no.nav.aap.behandlingsflyt.auditlog.auditlogApi
 import no.nav.aap.behandlingsflyt.behandling.aktivitetsplikt.brudd_11_7.aktivitetsplikt11_7GrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.aktivitetsplikt.brudd_11_9.aktivitetsplikt11_9GrunnlagApi
-import no.nav.aap.behandlingsflyt.behandling.andrestatligeytelser.andreStatligeYtelserGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.arbeidsevne.arbeidsevneGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.arbeidsopptrapping.arbeidsopptrappingGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.avklaringsbehovApi
@@ -61,11 +60,12 @@ import no.nav.aap.behandlingsflyt.behandling.kvalitetssikring.kvalitetssikringTi
 import no.nav.aap.behandlingsflyt.behandling.lovvalgmedlemskap.grunnlag.forutgåendeMedlemskapApi
 import no.nav.aap.behandlingsflyt.behandling.lovvalgmedlemskap.grunnlag.lovvalgMedlemskapGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.lovvalgmedlemskap.lovvalgMedlemskapApi
+import no.nav.aap.behandlingsflyt.behandling.meldekort.meldekortApi
 import no.nav.aap.behandlingsflyt.behandling.mellomlagring.mellomlagretVurderingApi
 import no.nav.aap.behandlingsflyt.behandling.oppfolgingsbehandling.avklarOppfolgingsoppgaveGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.oppfolgingsbehandling.oppfølgingsOppgaveApi
 import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.oppholdskravGrunnlagApi
-import no.nav.aap.behandlingsflyt.behandling.rettighet.rettighetApi
+import no.nav.aap.behandlingsflyt.behandling.rettighet.rettighetsinfoApi
 import no.nav.aap.behandlingsflyt.behandling.rettighetsperiode.rettighetsperiodeGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.revurdering.avbrytRevurderingGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.simulering.simuleringApi
@@ -77,23 +77,23 @@ import no.nav.aap.behandlingsflyt.behandling.tidligerevurderinger.tidligereVurde
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.tilkjentYtelseApi
 import no.nav.aap.behandlingsflyt.behandling.underveis.meldepliktOverstyringGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.underveis.underveisVurderingerApi
+import no.nav.aap.behandlingsflyt.behandling.vedtakslengde.vedtakslengdeGrunnlagApi
 import no.nav.aap.behandlingsflyt.drift.driftApi
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.StansEllerOpphørMigrering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomsvurderingMigrering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.ApplikasjonsVersjon
 import no.nav.aap.behandlingsflyt.flyt.behandlingApi
 import no.nav.aap.behandlingsflyt.flyt.flytApi
 import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaConsumerConfig
 import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaKonsument
+import no.nav.aap.behandlingsflyt.hendelse.kafka.foreldrepenger.FORELDREPENGEVEDTAK_EVENT_TOPIC
+import no.nav.aap.behandlingsflyt.hendelse.kafka.foreldrepenger.ForeldrepengevedtakKafkaKonsument
 import no.nav.aap.behandlingsflyt.hendelse.kafka.inst2.INSTITUSJONSOPPHOLD_EVENT_TOPIC
 import no.nav.aap.behandlingsflyt.hendelse.kafka.inst2.InstitusjonsOppholdKafkaKonsument
-import no.nav.aap.behandlingsflyt.hendelse.kafka.klage.KABAL_EVENT_TOPIC
 import no.nav.aap.behandlingsflyt.hendelse.kafka.klage.KabalKafkaKonsument
-import no.nav.aap.behandlingsflyt.hendelse.kafka.person.PDL_HENDELSE_TOPIC
 import no.nav.aap.behandlingsflyt.hendelse.kafka.person.PdlHendelseKafkaKonsument
-import no.nav.aap.behandlingsflyt.hendelse.kafka.sykepenger.SYKEPENGEVEDTAK_EVENT_TOPIC
 import no.nav.aap.behandlingsflyt.hendelse.kafka.sykepenger.SykepengevedtakKafkaKonsument
-import no.nav.aap.behandlingsflyt.hendelse.kafka.tilbakekreving.TILBAKEKREVING_EVENT_TOPIC
 import no.nav.aap.behandlingsflyt.hendelse.kafka.tilbakekreving.TilbakekrevingKafkaKonsument
-import no.nav.aap.behandlingsflyt.hendelse.kafka.uføre.UFØRE_VEDTAK_TOPIC
 import no.nav.aap.behandlingsflyt.hendelse.kafka.uføre.UførevedtakKafkaKonsument
 import no.nav.aap.behandlingsflyt.hendelse.mottattHendelseApi
 import no.nav.aap.behandlingsflyt.integrasjon.defaultGatewayProvider
@@ -106,6 +106,7 @@ import no.nav.aap.behandlingsflyt.prosessering.ProsesseringsJobber
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.saksApi
 import no.nav.aap.behandlingsflyt.test.opprettDummySakApi
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -121,9 +122,7 @@ import no.nav.aap.komponenter.server.plugins.NavIdentInterceptor
 import no.nav.aap.motor.Motor
 import no.nav.aap.motor.api.motorApi
 import no.nav.aap.motor.retry.RetryService
-import no.nav.person.pdl.leesah.Personhendelse
 import org.apache.kafka.common.serialization.Deserializer
-import org.apache.kafka.common.serialization.StringDeserializer
 import org.slf4j.LoggerFactory
 import org.slf4j.bridge.SLF4JBridgeHandler
 import java.net.InetAddress
@@ -137,7 +136,6 @@ import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit
 import java.util.logging.Level
 import java.util.logging.Logger
-import javax.sql.DataSource
 import kotlin.time.Duration.Companion.seconds
 
 
@@ -263,6 +261,7 @@ internal fun Application.server(
                 bistandsgrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
                 meldepliktsgrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
                 meldepliktOverstyringGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
+                vedtakslengdeGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
                 arbeidsevneGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
                 arbeidsopptrappingGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
                 etableringEgenVirksomhetApi(dataSource, repositoryRegistry, gatewayProvider)
@@ -285,7 +284,6 @@ internal fun Application.server(
                 beregningVurderingApi(dataSource, repositoryRegistry, gatewayProvider)
                 beregningsGrunnlagApi(dataSource, repositoryRegistry)
                 aldersGrunnlagApi(dataSource, repositoryRegistry)
-                andreStatligeYtelserGrunnlagApi(dataSource, repositoryRegistry)
                 barnetilleggApi(dataSource, repositoryRegistry, gatewayProvider)
                 motorApi(dataSource)
                 behandlingsflytPipApi(dataSource, repositoryRegistry)
@@ -293,7 +291,7 @@ internal fun Application.server(
                 refusjonGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
                 manglendeGrunnlagApi(dataSource, repositoryRegistry)
                 mellomlagretVurderingApi(dataSource, repositoryRegistry, gatewayProvider)
-                rettighetApi(dataSource, repositoryRegistry)
+                rettighetsinfoApi(dataSource, repositoryRegistry)
                 tidligereVurderingerApi(dataSource, repositoryRegistry, gatewayProvider)
                 barnepensjonGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
                 bekreftVurderingerOppfølgingApi(dataSource, repositoryRegistry, gatewayProvider)
@@ -314,6 +312,8 @@ internal fun Application.server(
                 // Aktivitetsplikt
                 aktivitetsplikt11_7GrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
                 aktivitetsplikt11_9GrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
+                // Meldekort
+                meldekortApi(dataSource, repositoryRegistry, gatewayProvider)
                 // Flytt
                 brevApi(dataSource, repositoryRegistry, gatewayProvider)
                 dokumentinnhentingApi(dataSource, repositoryRegistry, gatewayProvider)
@@ -343,12 +343,90 @@ private fun Application.startKafkakonsumenter(
     gatewayProvider: GatewayProvider
 ) {
     if (!Miljø.erLokal()) {
-        startKabalKonsument(dataSource, repositoryRegistry)
-        startPDLHendelseKonsument(dataSource, repositoryRegistry, gatewayProvider)
-        startTilbakekrevingEventKonsument(dataSource, repositoryRegistry)
-        startSykepengevedtakKonsument(dataSource, repositoryRegistry, gatewayProvider)
-        startInstitusjonsOppholdKonsument(dataSource, repositoryRegistry, gatewayProvider)
-        startUføreVedtakEventKonsument(dataSource, repositoryRegistry, gatewayProvider)
+        startKonsument(
+            KabalKafkaKonsument(
+                config = KafkaConsumerConfig(),
+                dataSource = dataSource,
+                repositoryRegistry = repositoryRegistry,
+                closeTimeout = AppConfig.stansArbeidTimeout
+            )
+        )
+        startKonsument(
+            PdlHendelseKafkaKonsument(
+                config = KafkaConsumerConfig(
+                    valueDeserializer = KafkaAvroDeserializer::class.java
+                ),
+                dataSource = dataSource,
+                repositoryRegistry = repositoryRegistry,
+                closeTimeout = AppConfig.stansArbeidTimeout,
+                gatewayProvider = gatewayProvider
+            )
+        )
+        startKonsument(
+            TilbakekrevingKafkaKonsument(
+                config = KafkaConsumerConfig(),
+                dataSource = dataSource,
+                repositoryRegistry = repositoryRegistry,
+                closeTimeout = AppConfig.stansArbeidTimeout
+            )
+        )
+        startKonsument(
+            SykepengevedtakKafkaKonsument(
+                config = KafkaConsumerConfig(),
+                dataSource = dataSource,
+                repositoryRegistry = repositoryRegistry,
+                closeTimeout = AppConfig.stansArbeidTimeout,
+                gatewayProvider = gatewayProvider
+            )
+        )
+        startKonsument(
+            InstitusjonsOppholdKafkaKonsument(
+                config = KafkaConsumerConfig(
+                    valueDeserializer = JsonDeserializerInstitusjonsOppholdHendelse::class.java,
+                ),
+                dataSource = dataSource,
+                repositoryRegistry = repositoryRegistry,
+                closeTimeout = AppConfig.stansArbeidTimeout,
+                gatewayProvider = gatewayProvider,
+                institusjonsoppholdKlient = InstitusjonsoppholdGatewayImpl
+            )
+        )
+        startKonsument(
+            UførevedtakKafkaKonsument(
+                config = KafkaConsumerConfig(),
+                dataSource = dataSource,
+                repositoryRegistry = repositoryRegistry,
+                closeTimeout = AppConfig.stansArbeidTimeout,
+                gatewayProvider = gatewayProvider
+            )
+        )
+        startKonsument(
+            ForeldrepengevedtakKafkaKonsument(
+                config = KafkaConsumerConfig(),
+                dataSource = dataSource,
+                repositoryRegistry = repositoryRegistry,
+                closeTimeout = AppConfig.stansArbeidTimeout,
+                gatewayProvider = gatewayProvider
+            )
+        )
+    }
+}
+
+private fun <K, V> Application.startKonsument(konsument: KafkaKonsument<K, V>) {
+    monitor.subscribe(ApplicationStarted) {
+        val t = Thread {
+            konsument.konsumer()
+        }
+        t.uncaughtExceptionHandler = Thread.UncaughtExceptionHandler { _, e ->
+            log.error("Konsumering av ${konsument.topic} ble lukket pga uhåndtert feil", e)
+        }
+        t.start()
+    }
+    monitor.subscribe(ApplicationStopping) { env ->
+        // ktor sine eventer kjøres synkront, så vi må kjøre dette asynkront for ikke å blokkere nedstengings-sekvensen
+        env.launch(Dispatchers.IO) {
+            konsument.lukk()
+        }
     }
 }
 
@@ -359,17 +437,25 @@ private fun utførMigreringer(
     log: io.ktor.util.logging.Logger
 ): ScheduledExecutorService {
     val scheduler = Executors.newScheduledThreadPool(1)
-    scheduler.schedule(Runnable {
+    /* Prøv på nytt, for å se om vi er elected til leader, hvert 9. minutt. Hvis vi blir elected, så vil metoden
+     * aldri returnere, og med fixed delay, så blir det heller ikke skjedulert flere tasks.
+    **/
+    scheduler.scheduleWithFixedDelay(Runnable {
         val unleashGateway: UnleashGateway = gatewayProvider.provide()
         val isLeader = isLeader(log)
         log.info("isLeader = $isLeader")
 
 
-        if (isLeader) {
+        if (unleashGateway.isEnabled(BehandlingsflytFeature.MigrerStansOgOpphor) && isLeader) {
             // kjør migreringer
+            StansEllerOpphørMigrering(dataSource, postgresRepositoryRegistry, gatewayProvider).migrer()
         }
 
-    }, 9, TimeUnit.MINUTES)
+        if (unleashGateway.isEnabled(BehandlingsflytFeature.MigrerSykdomsvurdering) && isLeader) {
+            SykdomsvurderingMigrering(dataSource, postgresRepositoryRegistry, gatewayProvider).migrer()
+        }
+
+    }, 1, 9, TimeUnit.MINUTES)
     return scheduler
 }
 
@@ -417,205 +503,6 @@ fun Application.startMotor(
     }
 
     return motor
-}
-
-fun Application.startKabalKonsument(
-    dataSource: DataSource, repositoryRegistry: RepositoryRegistry
-): KafkaKonsument<String, String> {
-    val konsument = KabalKafkaKonsument(
-        config = KafkaConsumerConfig(), dataSource = dataSource, repositoryRegistry = repositoryRegistry,
-        closeTimeout = AppConfig.stansArbeidTimeout
-    )
-    monitor.subscribe(ApplicationStarted) {
-        val t = Thread {
-            konsument.konsumer()
-        }
-        t.uncaughtExceptionHandler = Thread.UncaughtExceptionHandler { _, e ->
-            log.error("Konsumering av $KABAL_EVENT_TOPIC ble lukket pga uhåndtert feil", e)
-        }
-        t.start()
-    }
-    monitor.subscribe(ApplicationStopping) { env ->
-        // ktor sine eventer kjøres synkront, så vi må kjøre dette asynkront for ikke å blokkere nedstengings-sekvensen
-        env.launch(Dispatchers.IO) {
-            konsument.lukk()
-        }
-    }
-
-    return konsument
-}
-
-fun Application.startTilbakekrevingEventKonsument(
-    dataSource: DataSource, repositoryRegistry: RepositoryRegistry
-): KafkaKonsument<String, String> {
-    val konsument = TilbakekrevingKafkaKonsument(
-        config = KafkaConsumerConfig(), dataSource = dataSource, repositoryRegistry = repositoryRegistry,
-        closeTimeout = AppConfig.stansArbeidTimeout
-    )
-    monitor.subscribe(ApplicationStarted) {
-        val t = Thread {
-            konsument.konsumer()
-        }
-        t.uncaughtExceptionHandler = Thread.UncaughtExceptionHandler { _, e ->
-            log.error("Konsumering av $TILBAKEKREVING_EVENT_TOPIC ble lukket pga uhåndtert feil", e)
-        }
-        t.start()
-    }
-    monitor.subscribe(ApplicationStopping) { env ->
-        // ktor sine eventer kjøres synkront, så vi må kjøre dette asynkront for ikke å blokkere nedstengings-sekvensen
-        env.launch(Dispatchers.IO) {
-            konsument.lukk()
-        }
-    }
-
-    return konsument
-}
-
-fun Application.startPDLHendelseKonsument(
-    dataSource: DataSource,
-    repositoryRegistry: RepositoryRegistry,
-    gatewayProvider: GatewayProvider,
-): KafkaKonsument<String, Personhendelse> {
-    val konsument = PdlHendelseKafkaKonsument(
-        config = KafkaConsumerConfig(
-            keyDeserializer = StringDeserializer::class.java,
-            valueDeserializer = KafkaAvroDeserializer::class.java
-        ),
-        closeTimeout = AppConfig.stansArbeidTimeout,
-        dataSource = dataSource,
-        repositoryRegistry = repositoryRegistry,
-        gatewayProvider = gatewayProvider
-    )
-    monitor.subscribe(ApplicationStarted) {
-        val t = Thread {
-            konsument.konsumer()
-        }
-        t.uncaughtExceptionHandler = Thread.UncaughtExceptionHandler { _, e ->
-            log.error("Konsumering av $PDL_HENDELSE_TOPIC ble lukket pga uhåndtert feil", e)
-        }
-        t.start()
-    }
-    monitor.subscribe(ApplicationStopped) { env ->
-        env.log.info("ktor stopper, lukker PDLHendelseKonsument.")
-
-        // ktor sine eventer kjøres synkront, så vi må kjøre dette asynkront for ikke å blokkere nedstengings-sekvensen
-        env.launch(Dispatchers.IO) {
-            konsument.lukk()
-        }
-    }
-
-    return konsument
-}
-
-
-fun Application.startUføreVedtakEventKonsument(
-    dataSource: DataSource,
-    repositoryRegistry: RepositoryRegistry,
-    gatewayProvider: GatewayProvider,
-): KafkaKonsument<String, String> {
-    val konsument = UførevedtakKafkaKonsument(
-        config = KafkaConsumerConfig(),
-        closeTimeout = AppConfig.stansArbeidTimeout,
-        dataSource = dataSource,
-        repositoryRegistry = repositoryRegistry,
-        gatewayProvider = gatewayProvider
-    )
-    monitor.subscribe(ApplicationStarted) {
-        val t = Thread {
-            konsument.konsumer()
-        }
-        t.uncaughtExceptionHandler = Thread.UncaughtExceptionHandler { _, e ->
-            log.error("Konsumering av $UFØRE_VEDTAK_TOPIC ble lukket pga uhåndtert feil", e)
-        }
-        t.start()
-    }
-    monitor.subscribe(ApplicationStopped) { env ->
-        env.log.info("ktor stopper, lukker PDLHendelseKonsument.")
-
-        // ktor sine eventer kjøres synkront, så vi må kjøre dette asynkront for ikke å blokkere nedstengings-sekvensen
-        env.launch(Dispatchers.IO) {
-            konsument.lukk()
-        }
-    }
-
-    return konsument
-}
-
-
-fun Application.startInstitusjonsOppholdKonsument(
-    dataSource: DataSource,
-    repositoryRegistry: RepositoryRegistry,
-    gatewayProvider: GatewayProvider,
-): KafkaKonsument<String, InstitusjonsOppholdHendelseKafkaMelding> {
-
-    val konsument = InstitusjonsOppholdKafkaKonsument(
-        config = KafkaConsumerConfig(
-            keyDeserializer = StringDeserializer::class.java,
-            valueDeserializer = JsonDeserializerInstitusjonsOppholdHendelse::class.java,
-        ),
-        closeTimeout = AppConfig.stansArbeidTimeout,
-        dataSource = dataSource,
-        repositoryRegistry = repositoryRegistry,
-        gatewayProvider = gatewayProvider,
-        institusjonsoppholdKlient = InstitusjonsoppholdGatewayImpl
-    )
-    monitor.subscribe(ApplicationStarted) {
-        val t = Thread {
-            konsument.konsumer()
-        }
-        t.uncaughtExceptionHandler = Thread.UncaughtExceptionHandler { _, e ->
-            log.error("Konsumering av $INSTITUSJONSOPPHOLD_EVENT_TOPIC ble lukket pga uhåndtert feil", e)
-        }
-        t.start()
-    }
-    monitor.subscribe(ApplicationStopping) { env ->
-        env.log.info("Forbereder stopp av applikasjon, lukker InstitusjonKonsument.")
-
-        // ktor sine eventer kjøres synkront, så vi må kjøre dette asynkront for ikke å blokkere nedstengings-sekvensen
-        env.launch(Dispatchers.IO) {
-            konsument.lukk()
-        }
-    }
-
-    return konsument
-}
-
-
-fun Application.startSykepengevedtakKonsument(
-    dataSource: DataSource,
-    repositoryRegistry: RepositoryRegistry,
-    gatewayProvider: GatewayProvider,
-): KafkaKonsument<String, String> {
-
-    val konsument = SykepengevedtakKafkaKonsument(
-        config = KafkaConsumerConfig(
-            keyDeserializer = StringDeserializer::class.java,
-            valueDeserializer = StringDeserializer::class.java,
-        ),
-        closeTimeout = AppConfig.stansArbeidTimeout,
-        dataSource = dataSource,
-        repositoryRegistry = repositoryRegistry,
-        gatewayProvider = gatewayProvider
-    )
-    monitor.subscribe(ApplicationStarted) {
-        val t = Thread {
-            konsument.konsumer()
-        }
-        t.uncaughtExceptionHandler = Thread.UncaughtExceptionHandler { _, e ->
-            log.error("Konsumering av $SYKEPENGEVEDTAK_EVENT_TOPIC ble lukket pga uhåndtert feil", e)
-        }
-        t.start()
-    }
-    monitor.subscribe(ApplicationStopping) { env ->
-        env.log.info("Forbereder stopp av applikasjon, lukker SykepengevedtakKonsument.")
-
-        // ktor sine eventer kjøres synkront, så vi må kjøre dette asynkront for ikke å blokkere nedstengings-sekvensen
-        env.launch(Dispatchers.IO) {
-            konsument.lukk()
-        }
-    }
-
-    return konsument
 }
 
 class DbConfig(

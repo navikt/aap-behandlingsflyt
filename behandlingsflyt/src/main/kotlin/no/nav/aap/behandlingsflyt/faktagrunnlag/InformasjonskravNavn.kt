@@ -17,8 +17,10 @@ enum class InformasjonskravNavn {
     PERSONOPPLYSNING_FORUTGÅENDE,
     PERSONOPPLYSNING,
     UFØRE,
+    UFØRE_SØKNAD,
     AVBRYT_REVURDERING,
     DAGPENGER,
+    TILTAKSPENGER,
     VEDTAKSLENGDE,
 
     @Deprecated("Ikke i bruk, men finnes i databasen.")
