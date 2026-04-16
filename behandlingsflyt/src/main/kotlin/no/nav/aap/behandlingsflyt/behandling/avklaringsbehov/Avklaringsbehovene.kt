@@ -276,13 +276,19 @@ class Avklaringsbehovene(
 
     fun hentNyesteKvalitetssikringGittDefinisjon(definisjon: Definisjon): Endring? {
         return hentBehovForDefinisjon(definisjon)?.historikk?.filter {
-            it.status == Status.KVALITETSSIKRET || it.status == Status.SENDT_TILBAKE_FRA_KVALITETSSIKRER
+            it.status in setOf(
+                Status.KVALITETSSIKRET,
+                Status.SENDT_TILBAKE_FRA_KVALITETSSIKRER
+            )
         }?.maxByOrNull { it.tidsstempel }
     }
 
     fun hentNyesteBeslutningGittDefinisjon(definisjon: Definisjon): Endring? {
         return hentBehovForDefinisjon(definisjon)?.historikk?.filter {
-            it.status == Status.TOTRINNS_VURDERT || it.status == Status.SENDT_TILBAKE_FRA_BESLUTTER
+            it.status in setOf(
+                Status.TOTRINNS_VURDERT,
+                Status.SENDT_TILBAKE_FRA_BESLUTTER
+            )
         }?.maxByOrNull { it.tidsstempel }
     }
 
