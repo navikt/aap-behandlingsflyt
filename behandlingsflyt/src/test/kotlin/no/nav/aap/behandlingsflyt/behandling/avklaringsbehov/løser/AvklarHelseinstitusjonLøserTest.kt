@@ -16,7 +16,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Ins
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Oppholdene
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Oppholdstype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.HelseinstitusjonVurdering
-import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
@@ -80,7 +79,7 @@ class AvklarHelseinstitusjonLøserTest {
         every { helseinstitusjonRepository.lagreHelseVurdering(any(), capture(vurderingSlot)) } returns Unit
 
         val løsning = AvklarHelseinstitusjonLøsning(
-            AvklaringsbehovKode.`5011`,
+            Definisjon.AVKLAR_HELSEINSTITUSJON.kode,
             listOf(
                 lagPeriodisertInstitusjonsoppholdDto(
                     begrunnelse = "Periode 1 - reduksjon",
@@ -1062,7 +1061,7 @@ class AvklarHelseinstitusjonLøserTest {
     )
 
     private fun lagLøsning(vararg vurderinger: PeriodisertInstitusjonsoppholdDto) =
-        AvklarHelseinstitusjonLøsning(AvklaringsbehovKode.`5011`, vurderinger.toList())
+        AvklarHelseinstitusjonLøsning(Definisjon.AVKLAR_HELSEINSTITUSJON.kode, vurderinger.toList())
 
     private fun lagKontekst(behandlingId: BehandlingId) = AvklaringsbehovKontekst(
         bruker = Bruker("12345678901"),
