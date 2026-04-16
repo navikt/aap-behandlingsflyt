@@ -201,7 +201,15 @@ class AvsluttetBehandlingTilStatistikk(
                     barnetilleggSats = verdi.barnetilleggsats.verdi().toDouble(),
                     barnetillegg = verdi.barnetillegg.verdi().toDouble(),
                     utbetalingsdato = verdi.utbetalingsdato,
-                    minsteSats = verdi.tilKontrakt()
+                    minsteSats = verdi.tilKontrakt(),
+                    samordningGradering = verdi.graderingGrunnlag.samordningGradering.prosentverdi().toDouble(),
+                    institusjonGradering = verdi.graderingGrunnlag.institusjonGradering.prosentverdi().toDouble(),
+                    arbeidGradering = verdi.graderingGrunnlag.arbeidGradering.prosentverdi().toDouble(),
+                    samordningUføregradering = verdi.graderingGrunnlag.samordningUføregradering.prosentverdi()
+                        .toDouble(),
+                    samordningArbeidsgiverGradering = verdi.graderingGrunnlag.samordningArbeidsgiverGradering.prosentverdi()
+                        .toDouble(),
+                    meldepliktGradering = verdi.graderingGrunnlag.meldepliktGradering.prosentverdi().toDouble(),
                 )
             }
 
