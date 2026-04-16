@@ -122,10 +122,13 @@ class AvklarHelseinstitusjonLøserTest {
 
         val løsning = AvklarHelseinstitusjonLøsning(
             løsningerForPerioder = listOf(
-                lagPeriodisertInstitusjonsoppholdDto(
+                PeriodisertInstitusjonsoppholdDto(
                     begrunnelse = "Vurdering med null-verdier",
                     faarFriKostOgLosji = false,
-                    periode = Periode(1 mai 2025, 1 august 2025)
+                    forsoergerEktefelle = null,
+                    harFasteUtgifter = null,
+                    fom = 1 mai 2025,
+                    tom = 1 august 2025
                 )
             )
         )
