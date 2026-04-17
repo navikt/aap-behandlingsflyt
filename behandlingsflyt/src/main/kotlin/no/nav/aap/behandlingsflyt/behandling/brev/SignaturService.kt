@@ -32,14 +32,11 @@ class SignaturService(
         avklaringsbehovRepository = repositoryProvider.provide()
     )
 
-    fun finnSignaturGrunnlag(brevbestilling: Brevbestilling, bruker: Bruker): List<SignaturGrunnlag> {
+    fun finnSignaturGrunnlag(brevbestilling: Brevbestilling, innloggetBruker: Bruker): List<SignaturGrunnlag> {
         require(brevbestilling.status == Status.FORHÅNDSVISNING_KLAR) {
             "Kan ikke utlede signaturer på brev i status ${brevbestilling.status}"
         }
-        return finnSignaturGrunnlagV2(brevbestilling, bruker)
-    }
 
-    fun finnSignaturGrunnlagV2(brevbestilling: Brevbestilling, innloggetBruker: Bruker): List<SignaturGrunnlag> {
         return if (brevbestilling.typeBrev.erAutomatiskBrev()) {
             emptyList()
         } else if (brevbestilling.typeBrev.erVedtak()) {
@@ -79,10 +76,10 @@ class SignaturService(
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(brevbestilling.behandlingId)
 
         return listOfNotNull(
-            utledSignaturV2(Rolle.BESLUTTER, avklaringsbehovene, oppgaveEnhetListe, innloggetBruker),
-            utledSignaturV2(Rolle.SAKSBEHANDLER_NASJONAL, avklaringsbehovene, oppgaveEnhetListe, innloggetBruker),
-            utledSignaturV2(Rolle.KVALITETSSIKRER, avklaringsbehovene, oppgaveEnhetListe, innloggetBruker),
-            utledSignaturV2(Rolle.SAKSBEHANDLER_OPPFOLGING, avklaringsbehovene, oppgaveEnhetListe, innloggetBruker),
+            utledSignatur(Rolle.BESLUTTER, avklaringsbehovene, oppgaveEnhetListe, innloggetBruker),
+            utledSignatur(Rolle.SAKSBEHANDLER_NASJONAL, avklaringsbehovene, oppgaveEnhetListe, innloggetBruker),
+            utledSignatur(Rolle.KVALITETSSIKRER, avklaringsbehovene, oppgaveEnhetListe, innloggetBruker),
+            utledSignatur(Rolle.SAKSBEHANDLER_OPPFOLGING, avklaringsbehovene, oppgaveEnhetListe, innloggetBruker),
         )
             .groupingBy { it.navIdent }
             .reduce { _, s1, s2 -> if (s1.harLøstAvklaringsbehov) s1 else s2 }
@@ -116,7 +113,7 @@ class SignaturService(
         return SignaturGrunnlag(navIdent = innloggetBruker.ident, rolle = null, enhet = enhet)
     }
 
-    private fun utledSignaturV2(
+    private fun utledSignatur(
         rolle: Rolle,
         avklaringsbehovene: Avklaringsbehovene,
         oppgaveEnhetListe: List<OppgaveEnhetDto>,
