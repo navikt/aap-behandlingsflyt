@@ -9,8 +9,6 @@ import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Status
 import no.nav.aap.behandlingsflyt.hendelse.oppgavestyring.OppgavestyringGateway
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.brev.kontrakt.SignaturGrunnlag
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.verdityper.Bruker
@@ -21,7 +19,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status as Avklaringsb
 import no.nav.aap.brev.kontrakt.Rolle as SignaturRolle
 
 class SignaturService(
-    private val unleashGateway: UnleashGateway,
     private val oppgavestyringGateway: OppgavestyringGateway,
     private val behandlingRepository: BehandlingRepository,
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
@@ -30,7 +27,6 @@ class SignaturService(
         repositoryProvider: RepositoryProvider,
         gatewayProvider: GatewayProvider
     ) : this(
-        unleashGateway = gatewayProvider.provide(),
         oppgavestyringGateway = gatewayProvider.provide(),
         behandlingRepository = repositoryProvider.provide(),
         avklaringsbehovRepository = repositoryProvider.provide()
@@ -40,44 +36,7 @@ class SignaturService(
         require(brevbestilling.status == Status.FORHÅNDSVISNING_KLAR) {
             "Kan ikke utlede signaturer på brev i status ${brevbestilling.status}"
         }
-        return if (unleashGateway.isEnabled(BehandlingsflytFeature.SignaturEnhetFraOppgave)) {
-            finnSignaturGrunnlagV2(brevbestilling, bruker)
-        } else {
-            finnSignaturGrunnlagV1(brevbestilling, bruker)
-        }
-    }
-
-    fun finnSignaturGrunnlagV1(brevbestilling: Brevbestilling, bruker: Bruker): List<SignaturGrunnlag> {
-        return if (brevbestilling.typeBrev.erAutomatiskBrev()) {
-            emptyList()
-        } else if (brevbestilling.typeBrev.erVedtak()) {
-            val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(brevbestilling.behandlingId)
-            val signaturBeslutter = utledSignatur(Rolle.BESLUTTER, avklaringsbehovene)
-            val signaturSaksbehandlerNasjonal = utledSignatur(Rolle.SAKSBEHANDLER_NASJONAL, avklaringsbehovene)
-            val signaturKvalitetssikrer = utledSignatur(Rolle.KVALITETSSIKRER, avklaringsbehovene)
-            val signaturSaksbehandlerOppfolging = utledSignatur(Rolle.SAKSBEHANDLER_OPPFOLGING, avklaringsbehovene)
-
-            buildList {
-                signaturSaksbehandlerNasjonal?.let { add(it) }
-                signaturKvalitetssikrer?.let { add(it) }
-                signaturSaksbehandlerOppfolging?.let { add(it) }
-                if (signaturBeslutter == null && none { it.navIdent == bruker.ident }) {
-                    // Dersom ingen har saksbehandlet med rollen beslutter så tas innlogget bruker med i signatur.
-                    // Dette fordi det er beslutter som skriver vedtaksbrev.
-                    addFirst(
-                        SignaturGrunnlag(
-                            navIdent = bruker.ident,
-                            rolle = null,
-                            enhet = null
-                        )
-                    )
-                } else {
-                    signaturBeslutter?.let { addFirst(it) }
-                }
-            }.distinctBy { it.navIdent }
-        } else {
-            listOf(SignaturGrunnlag(navIdent = bruker.ident, rolle = null, enhet = null))
-        }
+        return finnSignaturGrunnlagV2(brevbestilling, bruker)
     }
 
     fun finnSignaturGrunnlagV2(brevbestilling: Brevbestilling, innloggetBruker: Bruker): List<SignaturGrunnlag> {
@@ -109,15 +68,6 @@ class SignaturService(
                     Definisjon.VURDER_TREKK_AV_SØKNAD
                 ).contains(it)
             }
-    }
-
-    private fun utledSignatur(rolle: Rolle, avklaringsbehovene: Avklaringsbehovene): SignaturGrunnlag? {
-        val definisjoner = rolleTilAvklaringsbehov.getValue(rolle)
-        return avklaringsbehovene.hentBehovForDefinisjon(definisjoner).mapNotNull {
-            it.historikk.filter { it.endretAv.erNavIdent() && it.status == AvklaringsbehovStatus.AVSLUTTET }.maxOrNull()
-        }.maxOrNull()?.let {
-            SignaturGrunnlag(navIdent = it.endretAv, rolle = mapRolle(rolle), enhet = null)
-        }
     }
 
     private fun utledSignaturerForVedtak(
