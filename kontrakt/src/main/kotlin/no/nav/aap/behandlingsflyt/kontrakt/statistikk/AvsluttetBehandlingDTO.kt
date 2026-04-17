@@ -176,7 +176,9 @@ public data class VilkårsPeriodeDTO(
 public data class BeregningsgrunnlagDTO(
     @Suppress("PropertyName") val grunnlag11_19dto: Grunnlag11_19DTO? = null,
     val grunnlagYrkesskade: GrunnlagYrkesskadeDTO? = null,
-    val grunnlagUføre: GrunnlagUføreDTO? = null
+    val grunnlagUføre: GrunnlagUføreDTO? = null,
+    val nedsattArbeidsevneEllerStudieevneDato: LocalDate,
+    val ytterligereNedsattArbeidsevneDato: LocalDate?,
 ) {
     init {
         require(grunnlag11_19dto != null || grunnlagYrkesskade != null || grunnlagUføre != null)
