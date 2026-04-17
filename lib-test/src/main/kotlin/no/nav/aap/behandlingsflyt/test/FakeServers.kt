@@ -39,6 +39,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevu
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.Ytelser
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.LegeerklæringStatusResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.MeldingStatusType
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.dokarkiv.DokarkivGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.adapter.InntektForÅr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.adapter.InntektRequest
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.adapter.InntektResponse
@@ -183,6 +184,7 @@ object FakeServers : AutoCloseable {
     private val leaderElector = embeddedServer(Netty, port = 0, module = { leaderElectorFake() })
     private val dagpenger = embeddedServer(Netty, port = 0, module = { dagpengerFake() })
     private val tiltakspenger = embeddedServer(Netty, port = 0, module = { tiltakspengerFake() })
+    private val dokarkiv = embeddedServer(Netty, port = 0, module = { dokarkivFake() })
 
     internal val statistikkHendelser = mutableListOf<StoppetBehandling>()
     internal val legeerklæringStatuser = mutableListOf<LegeerklæringStatusResponse>()
@@ -430,6 +432,37 @@ object FakeServers : AutoCloseable {
                     }
 
                     call.respond(emptyList<TiltakspengerVedtakResponse>())
+                }
+            }
+        }
+    }
+
+    private fun Application.dokarkivFake() {
+        installerContentNegotiation()
+        install(StatusPages) {
+            exception<Throwable> { call, cause ->
+                this@dokarkivFake.log.info("Dokarkiv :: Ukjent feil ved kall til '{}'", call.request.local.uri, cause)
+                call.respond(
+                    status = HttpStatusCode.InternalServerError,
+                    message = ErrorRespons(cause.message)
+                )
+            }
+        }
+
+        routing {
+            route("/rest/journalpostapi/v1/journalpost") {
+                post {
+                    val journalpost = call.receive<DokarkivGateway.Journalpost>()
+                    call.respond(
+                        DokarkivGateway.JournalpostResponse(
+                            journalpostId = 123456789L,
+                            melding = null,
+                            journalpostferdigstilt = call.request.queryParameters["forsoekFerdigstill"]?.toBoolean() ?: false,
+                            dokumenter = journalpost.dokumenter?.mapIndexed { index, _ ->
+                                DokarkivGateway.DokumentInfo(dokumentInfoId = (index + 1).toLong())
+                            } ?: emptyList()
+                        )
+                    )
                 }
             }
         }
@@ -2037,6 +2070,7 @@ object FakeServers : AutoCloseable {
         ereg.start()
         dagpenger.start()
         tiltakspenger.start()
+        dokarkiv.start()
         gosys.start()
         leaderElector.start()
 
@@ -2122,6 +2156,10 @@ object FakeServers : AutoCloseable {
         // Tiltakspenger
         System.setProperty("integrasjon.tiltakspenger.url", "http://localhost:${tiltakspenger.port()}")
         System.setProperty("integrasjon.tiltakspenger.scope", "scope")
+
+        // Dokarkiv
+        System.setProperty("dokarkiv.url", "http://localhost:${dokarkiv.port()}")
+        System.setProperty("dokarkiv.scope", "scope")
 
         // AAregisteret
         System.setProperty("integrasjon.aareg.url", "http://localhost:${aareg.port()}")
@@ -2221,6 +2259,7 @@ object FakeServers : AutoCloseable {
         ereg.stop(0L, 0L)
         dagpenger.stop(0L, 0L)
         tiltakspenger.stop(0L, 0L)
+        dokarkiv.stop(0L, 0L)
         leaderElector.stop(0L, 0L)
     }
 }
