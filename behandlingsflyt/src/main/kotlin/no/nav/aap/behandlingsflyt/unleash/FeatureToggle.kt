@@ -13,7 +13,6 @@ enum class BehandlingsflytFeature : FeatureToggle {
     TrekkSoeknadOpprettetFraLegeerklaering,
     KvalitetssikringVed2213,
     VisIkkeRelevantPeriode,
-    BekreftVurderingerOppfolging,
     MigrerStansOgOpphor,
     SamordningBarnepensjon,
     SignaturEnhetFraOppgave,

@@ -1239,13 +1239,7 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
 
     @JvmName("bekreftVurderingerExt")
     protected fun Behandling.bekreftVurderinger(): Behandling {
-        return if (gatewayProvider.provide<UnleashGateway>()
-                .isEnabled(BehandlingsflytFeature.BekreftVurderingerOppfolging)
-        ) {
-            løsAvklaringsBehov(this, BekreftVurderingerOppfølgingLøsning())
-        } else {
-            this
-        }
+        return løsAvklaringsBehov(this, BekreftVurderingerOppfølgingLøsning())
     }
 
 
