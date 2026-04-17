@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.integrasjon.arbeidsforhold.EREGGateway
 import no.nav.aap.behandlingsflyt.integrasjon.brev.BrevGateway
 import no.nav.aap.behandlingsflyt.integrasjon.datadeling.ApiInternGatewayImpl
 import no.nav.aap.behandlingsflyt.integrasjon.datadeling.SamGatewayImpl
+import no.nav.aap.behandlingsflyt.integrasjon.dokarkiv.DokarkivGatewayImpl
 import no.nav.aap.behandlingsflyt.integrasjon.dokumentinnhenting.DokumentinnhentingGatewayImpl
 import no.nav.aap.behandlingsflyt.integrasjon.ident.PdlIdentGateway
 import no.nav.aap.behandlingsflyt.integrasjon.ident.PdlPersoninfoBulkGateway
@@ -73,5 +74,6 @@ fun defaultGatewayProvider(utvidelser: GatewayRegistry.() -> Unit = {}) = create
     register<GosysGateway>()
     register<DagpengerGatewayImpl>()
     register<TiltakspengerGatewayImpl>()
+    register<DokarkivGatewayImpl>()
     utvidelser()
 }

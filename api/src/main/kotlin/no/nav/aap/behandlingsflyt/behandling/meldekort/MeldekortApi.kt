@@ -9,18 +9,24 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveis
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Meldekort
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.MeldekortRepository
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ArbeidIPeriodeV0
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.MeldekortV0
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.HentSakDTO
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.SaksnummerParameter
 import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForSakResolver
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.tilgang.AuthorizationBodyPathConfig
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
+import no.nav.aap.tilgang.Operasjon
 import no.nav.aap.tilgang.SakPathParam
 import no.nav.aap.tilgang.authorizedGet
+import no.nav.aap.tilgang.authorizedPost
 import java.time.Clock
 import java.time.LocalDate
 import javax.sql.DataSource
@@ -31,8 +37,8 @@ fun NormalOpenAPIRoute.meldekortApi(
     gatewayProvider: GatewayProvider,
     clock: Clock = Clock.systemDefaultZone()
 ) {
-    route("api/meldekort/{saksnummer}") {
-        authorizedGet<HentSakDTO, MeldeperioderMedMeldekortResponse>(
+    route("/api/meldekort/{saksnummer}") {
+        authorizedGet<SaksnummerParameter, MeldeperioderMedMeldekortResponse>(
             AuthorizationParamPathConfig(
                 relevanteIdenterResolver = relevanteIdenterForSakResolver(repositoryRegistry, dataSource),
                 sakPathParam = SakPathParam("saksnummer")
@@ -69,6 +75,52 @@ fun NormalOpenAPIRoute.meldekortApi(
             respond(meldeperioderMedMeldekortResponse ?: MeldeperioderMedMeldekortResponse(emptySet()))
         }
     }
+
+    route("api/meldekort/{saksnummer}/oppdater") {
+            authorizedPost<Unit, OppdaterMeldekortResponse, OppdaterMeldekortRequest>(
+                AuthorizationBodyPathConfig(
+                    relevanteIdenterResolver = relevanteIdenterForSakResolver(repositoryRegistry, dataSource),
+                    operasjon = Operasjon.SAKSBEHANDLE,
+                ),
+                modules = arrayOf(TagModule(listOf(Tags.Sak))),
+            ) { _, body ->
+                val response = dataSource.transaction { connection ->
+                    val repositoryProvider = repositoryRegistry.provider(connection)
+                    val sakRepository = repositoryProvider.provide<SakRepository>()
+                    val journalføringService = JournalføringService(gatewayProvider)
+
+                    val sak = sakRepository.hent(Saksnummer(body.saksnummer))
+                    val meldekort = tilMeldekort(body)
+
+                    /**
+                     * Journalfører meldekort, men ferdigstiller ikke journalposten. Det fører til at den plukkes
+                     * opp i postmottak som ferdigstiller denne på tilsvarende måte som vanlig meldekort fra
+                     * bruker. Resten av flyten er lik ellers med revurdering og fasttrack.
+                     */
+                    val journalpostId = journalføringService.journalfør(sak, meldekort)
+
+                    // TODO lagre ned "midlertidig tilstand her slik at saksbehandler kan se at vi prosesserer endringene?
+
+                    OppdaterMeldekortResponse(journalpostId.identifikator)
+                }
+
+                respond(response)
+            }
+        }
+    }
+
+private fun tilMeldekort(oppdaterMeldekortRequest: OppdaterMeldekortRequest): MeldekortV0 {
+    // TODO få inn begrunnelse og opprettetAv når PR for utvidelse av Meldekort-kontrakt er merget
+    return MeldekortV0(
+        harDuArbeidet = true,
+        timerArbeidPerPeriode = oppdaterMeldekortRequest.dager.map {
+            ArbeidIPeriodeV0(
+                fraOgMedDato = it.dato,
+                tilOgMedDato = it.dato,
+                timerArbeid = it.timerArbeidet ?: 0.0,
+            )
+        }
+    )
 }
 
 /**

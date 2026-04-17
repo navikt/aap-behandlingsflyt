@@ -110,6 +110,7 @@ spec:
         - host: pensjon-pen-q2.dev-fss-pub.nais.io
         - host: tp-api.dev-fss-pub.nais.io
         - host: aap-unleash-api.nav.cloud.nais.io
+        - host: dokarkiv.dev-fss-pub.nais.io
       rules:
         - application: brev
         - application: tilgang
@@ -266,3 +267,7 @@ spec:
       value: http://tiltakspenger-datadeling.tpts
     - name: INTEGRASJON_TILTAKSPENGER_SCOPE
       value: api://dev-gcp.tpts.tiltakspenger-datadeling/.default
+    - name: DOKARKIV_URL
+      value: https://dokarkiv-q2.dev-fss-pub.nais.io
+    - name: DOKARKIV_SCOPE
+      value: api://dev-fss.teamdokumenthandtering.dokarkiv/.default
