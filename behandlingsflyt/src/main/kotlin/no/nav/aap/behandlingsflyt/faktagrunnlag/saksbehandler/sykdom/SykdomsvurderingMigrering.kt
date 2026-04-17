@@ -37,7 +37,6 @@ class SykdomsvurderingMigrering(
 
         while (!ferdig) {
             dataSource.transaction { connection ->
-                try {
                     val repositoryProvider = repositoryRegistry.provider(connection)
                     val sykdomsvurderingMigreringService =
                         SykdomsvurderingMigreringService(repositoryProvider, gatewayProvider)
@@ -54,18 +53,18 @@ class SykdomsvurderingMigrering(
                     }
 
                     val behandlingId = behandlingIder.first()
-                    sykdomsvurderingMigreringService.migrerBehandling(behandlingId)
+                    try {
+                        sykdomsvurderingMigreringService.migrerBehandling(behandlingId)
+                    } catch (e: Exception) {
+                        log.error("Migrering feilet for behandling $behandlingId. Avbryter migrering.", e)
+                        ferdig = true
+                    }
                     antallMigreringer += 1
                     sisteMigrerte = behandlingId.id
 
                     if (antallMigreringer % 10 == 0) {
                         log.info("Pågående migrering av sykdomsvurdering, $antallMigreringer behandlinger migrert")
                     }
-                } catch (e: Exception) {
-                    log.error("Migrering feilet", e)
-                    throw e
-                }
-
             }
         }
     }
