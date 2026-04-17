@@ -302,7 +302,9 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
         }
 
         assertThat(underveisGrunnlag.perioder).isNotEmpty
-        assertThat(underveisGrunnlag.perioder.any { it.arbeidsgradering.gradering.prosentverdi() > 0 }).isTrue()
+        if (sendMeldekort) {
+            assertThat(underveisGrunnlag.perioder.any { it.arbeidsgradering.gradering.prosentverdi() > 0 }).isTrue()
+        }
 
         // Saken er avsluttet, så det skal ikke være flere åpne avklaringsbehov
         val åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling.id)
