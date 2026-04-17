@@ -138,7 +138,7 @@ class SykdomsvurderingMigreringService(
             sisteDagMedMuligYtelse = rettighetsperiode.tom,
             yrkesskadevurdering = oppdatertSykdomsGrunnlag.yrkesskadevurdering,
             sykepengerErstatningFaktagrunnlag = sykepengerErstatningGrunnlag,
-            sykdomsvurderinger = oppdatertSykdomsGrunnlag.sykdomsvurderinger,
+            sykdomsvurderinger = oppdatertSykdomsGrunnlag.sykdomsvurderinger.filter { rettighetsperiode.inneholder(it.vurderingenGjelderFra) },
             bistandvurderingFaktagrunnlag = bistandGrunnlag,
             sykepengeerstatningVilkår = vilkårsresultat.optionalVilkår(Vilkårtype.SYKEPENGEERSTATNING)?.tidslinje()
                 .orEmpty(),

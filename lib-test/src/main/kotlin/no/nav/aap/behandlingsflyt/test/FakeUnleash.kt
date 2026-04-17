@@ -47,6 +47,7 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.VedtakslengdeAvklaringsbehov to true,
         BehandlingsflytFeature.UtvidVedtakslengdeUnderEttAr to true,
         BehandlingsflytFeature.OpprettManuellVedtakslengdeBehandling to true,
+        BehandlingsflytFeature.ForutgaaendeForbedringer to true
         )
 )
 
