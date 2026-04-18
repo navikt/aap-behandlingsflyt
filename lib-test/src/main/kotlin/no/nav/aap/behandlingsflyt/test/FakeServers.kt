@@ -2158,8 +2158,8 @@ object FakeServers : AutoCloseable {
         System.setProperty("integrasjon.tiltakspenger.scope", "scope")
 
         // Dokarkiv
-        System.setProperty("dokarkiv.url", "http://localhost:${dokarkiv.port()}")
-        System.setProperty("dokarkiv.scope", "scope")
+        System.setProperty("integrasjon.dokarkiv.url", "http://localhost:${dokarkiv.port()}")
+        System.setProperty("integrasjon.dokarkiv.scope", "scope")
 
         // AAregisteret
         System.setProperty("integrasjon.aareg.url", "http://localhost:${aareg.port()}")

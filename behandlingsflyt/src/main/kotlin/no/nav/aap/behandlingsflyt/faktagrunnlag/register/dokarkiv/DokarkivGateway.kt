@@ -63,7 +63,6 @@ interface DokarkivGateway : Gateway {
     )
 
     enum class Journalposttype {
-        UTGAAENDE,
         NOTAT
     }
 
@@ -74,15 +73,10 @@ interface DokarkivGateway : Gateway {
 
     enum class AvsenderIdType {
         FNR,
-        ORGNR,
-        HPRNR,
-        UTL_ORG
     }
 
     enum class BrukerIdType {
         FNR,
-        ORGNR,
-        AKTOERID
     }
 
     enum class Sakstype {
@@ -99,28 +93,13 @@ interface DokarkivGateway : Gateway {
     // Se https://confluence.adeo.no/display/BOA/Filtype
     enum class Filetype {
         PDF,
-        PDFA,
-        XML,
-        RTF,
-        DLF,
-        JPEG,
-        TIFF,
-        AXML,
-        DXML,
         JSON,
-        PNG
     }
 
     // Se https://confluence.adeo.no/display/BOA/Variantformat
     enum class Variantformat {
         ARKIV,
         ORIGINAL,
-        SLADDET,
-        FULLVERSJON,
-        SKANNING_META,
-        BREVBESTILLING,
-        PRODUKSJON,
-        PRODUKSJON_DLF
     }
 
     // Se https://confluence.adeo.no/display/BOA/opprettJournalpost

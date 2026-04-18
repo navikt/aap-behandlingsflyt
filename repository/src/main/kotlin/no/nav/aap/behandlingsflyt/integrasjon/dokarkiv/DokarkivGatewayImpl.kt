@@ -14,10 +14,10 @@ import no.nav.aap.komponenter.json.DefaultJsonMapper
 import java.net.URI
 
 object DokarkivGatewayImpl : DokarkivGateway {
-    private val baseUrl = requiredConfigForKey("dokarkiv.url")
+    private val baseUrl = requiredConfigForKey("integrasjon.dokarkiv.url")
 
     private val httpClient = RestClient.withDefaultResponseHandler(
-        ClientConfig(scope = requiredConfigForKey("dokarkiv.scope")),
+        ClientConfig(scope = requiredConfigForKey("integrasjon.dokarkiv.scope")),
         tokenProvider = ClientCredentialsTokenProvider,
         prometheus = prometheus
     )
