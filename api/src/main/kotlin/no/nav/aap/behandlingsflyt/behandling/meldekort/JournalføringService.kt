@@ -66,8 +66,12 @@ class JournalføringService(
             ),
             tema = DokarkivGateway.Tema.AAP,
             tittel = tittel,
-            eksternReferanseId = sak.saksnummer.toString(), // TODO
             datoMottatt = opprettet.toString(),
+            sak = DokarkivGateway.Sak(
+                sakstype = DokarkivGateway.Sakstype.FAGSAK,
+                fagsaksystem = DokarkivGateway.FagsaksSystem.KELVIN,
+                fagsakId = sak.saksnummer.toString()
+            ),
             dokumenter = listOf(
                 DokarkivGateway.Dokument(
                     tittel = tittel,

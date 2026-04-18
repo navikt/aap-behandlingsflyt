@@ -345,7 +345,7 @@ class MeldekortApiTest : BaseApiTest() {
                 meldekortApi(MockDataSource(), inMemoryRepositoryRegistry, createTestGatewayProviderMedDokarkiv(), fixedClock)
             }
 
-            val response = createClient().post("/api/meldekort/${sak.saksnummer}/oppdater") {
+            val response = createClient().post("/api/meldekort/oppdater") {
                 header("Authorization", "Bearer ${getToken().token()}")
                 contentType(ContentType.Application.Json)
                 setBody(request)

@@ -76,7 +76,7 @@ fun NormalOpenAPIRoute.meldekortApi(
         }
     }
 
-    route("api/meldekort/{saksnummer}/oppdater") {
+    route("/api/meldekort/oppdater") {
             authorizedPost<Unit, OppdaterMeldekortResponse, OppdaterMeldekortRequest>(
                 AuthorizationBodyPathConfig(
                     relevanteIdenterResolver = relevanteIdenterForSakResolver(repositoryRegistry, dataSource),
