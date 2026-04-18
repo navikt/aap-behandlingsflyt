@@ -90,7 +90,7 @@ class JournalføringService(
     }
 
     companion object {
-        private val dateFormatter = DateTimeFormatter.ofPattern("dd.MM.YYYY")
+        private val dateFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy")
         private val uke = WeekFields.of(Locale.of("nb", "NO")).weekOfWeekBasedYear()
     }
 }
