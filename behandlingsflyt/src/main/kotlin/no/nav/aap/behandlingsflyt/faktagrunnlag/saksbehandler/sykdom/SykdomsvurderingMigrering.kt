@@ -159,7 +159,7 @@ class SykdomsvurderingMigreringService(
                 } else if (harIkkeFastsattSykdomsvilkåretIOpprinneligBehandling(diff)) {
                     log.info("Behandlingen $behandlingId har ikke kjørt fastsettsykdomsvilkårsteget og er derfor ulikt før og etter migrering")
                     null
-                } else if(erYrkesskadeÅrsakssamennhengMenIngentingFør(diff)) {
+                } else if (erYrkesskadeÅrsakssamennhengMenIngentingFør(diff)) {
                     log.info("Var oppfylt med ren bistand tidligere, men viser seg å være yrkesskade årsakssammenheng - ignorerer diff")
                     null
                 } else {
@@ -192,7 +192,7 @@ class SykdomsvurderingMigreringService(
     private fun harIkkeFastsattSykdomsvilkåretIOpprinneligBehandling(
         diff: Segment<SammenlignetSegment>
     ): Boolean {
-        return diff.verdi.gammel?.utfall == Utfall.IKKE_VURDERT
+        return diff.verdi.gammel?.utfall == Utfall.IKKE_VURDERT || diff.verdi.gammel == null
     }
 
     private fun erYrkesskadeÅrsakssamennhengMenIngentingFør(
