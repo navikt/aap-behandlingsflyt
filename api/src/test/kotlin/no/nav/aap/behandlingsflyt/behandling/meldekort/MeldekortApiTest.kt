@@ -333,6 +333,7 @@ class MeldekortApiTest : BaseApiTest() {
 
         val request = OppdaterMeldekortRequest(
             saksnummer = sak.saksnummer.toString(),
+            meldeperiode = Periode(dag1, dag2),
             begrunnelse = "Korrigering av timer",
             dager = setOf(
                 DagDto(dato = dag1, timerArbeidet = 7.5),

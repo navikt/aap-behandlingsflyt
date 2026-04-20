@@ -20,7 +20,9 @@ import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForSakResolver
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
+import no.nav.aap.komponenter.server.auth.bruker
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.tilgang.AuthorizationBodyPathConfig
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.Operasjon
@@ -28,6 +30,7 @@ import no.nav.aap.tilgang.SakPathParam
 import no.nav.aap.tilgang.authorizedGet
 import no.nav.aap.tilgang.authorizedPost
 import java.time.Clock
+import java.time.Instant
 import java.time.LocalDate
 import javax.sql.DataSource
 
@@ -90,14 +93,16 @@ fun NormalOpenAPIRoute.meldekortApi(
                     val journalføringService = JournalføringService(gatewayProvider)
 
                     val sak = sakRepository.hent(Saksnummer(body.saksnummer))
-                    val meldekort = tilMeldekort(body)
+                    val meldeperiode = body.meldeperiode
+                    val meldekort = tilMeldekort(body, bruker())
+                    val tidspunkt = Instant.now()
 
                     /**
                      * Journalfører meldekort, men ferdigstiller ikke journalposten. Det fører til at den plukkes
                      * opp i postmottak som ferdigstiller denne på tilsvarende måte som vanlig meldekort fra
                      * bruker. Resten av flyten er lik ellers med revurdering og fasttrack.
                      */
-                    val journalpostId = journalføringService.journalfør(sak, meldekort)
+                    val journalpostId = journalføringService.journalfør(sak, meldeperiode, meldekort, tidspunkt)
 
                     // TODO lagre ned "midlertidig tilstand her slik at saksbehandler kan se at vi prosesserer endringene?
 
@@ -109,7 +114,7 @@ fun NormalOpenAPIRoute.meldekortApi(
         }
     }
 
-private fun tilMeldekort(oppdaterMeldekortRequest: OppdaterMeldekortRequest): MeldekortV0 {
+private fun tilMeldekort(oppdaterMeldekortRequest: OppdaterMeldekortRequest, vurdertAv: Bruker): MeldekortV0 {
     // TODO få inn begrunnelse og opprettetAv når PR for utvidelse av Meldekort-kontrakt er merget
     return MeldekortV0(
         harDuArbeidet = true,

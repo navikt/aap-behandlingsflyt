@@ -2,7 +2,9 @@ package no.nav.aap.behandlingsflyt.behandling.meldekort
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Meldekort
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.tilgang.plugin.kontrakt.Saksreferanse
+import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -28,6 +30,7 @@ data class DagDto(
 
 data class OppdaterMeldekortRequest(
     val saksnummer: String,
+    val meldeperiode: Periode,
     val begrunnelse: String,
     val dager: Set<DagDto>,
 ) : Saksreferanse {

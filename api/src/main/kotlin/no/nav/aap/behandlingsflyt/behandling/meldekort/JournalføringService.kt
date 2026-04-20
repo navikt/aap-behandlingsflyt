@@ -8,6 +8,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.json.DefaultJsonMapper
+import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.verdityper.dokument.JournalpostId
 import java.time.Instant
 import java.time.format.DateTimeFormatter
@@ -23,13 +24,17 @@ class JournalføringService(
 
     fun journalfør(
         sak: Sak,
+        meldeperiode: Periode,
         meldekort: MeldekortV0,
+        tidspunkt: Instant,
     ): JournalpostId {
         val pdf = "".toByteArray() // TODO må få inn pdfgen her
 
         val journalpost = journalpost(
             ident = sak.person.aktivIdent(),
+            meldeperiode = meldeperiode,
             meldekort = meldekort,
+            tidspunkt = tidspunkt,
             pdf = pdf,
             sak = sak,
         )
@@ -44,19 +49,18 @@ class JournalføringService(
 
     private fun journalpost(
         ident: Ident,
+        meldeperiode: Periode,
         meldekort: Meldekort,
+        tidspunkt: Instant,
         pdf: ByteArray,
         sak: Sak,
     ): DokarkivGateway.Journalpost {
-        // TODO trenger meldeperiode for å få dette riktig?
-        val uke1 = meldekort.fom()!!.get(uke)
-        val uke2 = meldekort.tom()!!.get(uke)
-        val fra = meldekort.fom()!!.format(dateFormatter)
-        val til = meldekort.tom()!!.format(dateFormatter)
+        val uke1 = meldeperiode.fom.get(uke)
+        val uke2 = meldeperiode.tom.get(uke)
+        val fra = meldeperiode.fom.format(dateFormatter)
+        val til = meldeperiode.tom.format(dateFormatter)
         val tittelsuffix = "for uke $uke1 - $uke2 ($fra - $til) elektronisk mottatt av NAV"
         val tittel = "Korrigert meldekort $tittelsuffix"
-
-        val opprettet = Instant.now()
 
         return DokarkivGateway.Journalpost(
             journalposttype = DokarkivGateway.Journalposttype.NOTAT,
@@ -66,7 +70,7 @@ class JournalføringService(
             ),
             tema = DokarkivGateway.Tema.AAP,
             tittel = tittel,
-            datoMottatt = opprettet.toString(),
+            datoMottatt = tidspunkt.toString(),
             sak = DokarkivGateway.Sak(
                 sakstype = DokarkivGateway.Sakstype.FAGSAK,
                 fagsaksystem = DokarkivGateway.FagsaksSystem.KELVIN,
