@@ -323,7 +323,7 @@ class ForutgåendeMedlemskapVurderingService(
             val inntekterForMnd = inntekter?.filter { it.periode.overlapper(mndPeriode) }
 
             if (inntekterForMnd.isNullOrEmpty()) {
-                tidslinje.add(VisuellTidslinjeArbeidInntektINorge(null, null, 0.0, mndPeriode))
+                tidslinje.add(VisuellTidslinjeArbeidInntektINorge(null, null, 0.0, mndPeriode, true))
             } else {
                 inntekterForMnd.forEach { inntekt ->
                     tidslinje.add(
@@ -332,6 +332,7 @@ class ForutgåendeMedlemskapVurderingService(
                             virksomhetNavn = inntekt.organisasjonsNavn,
                             beloep = inntekt.beloep,
                             periode = mndPeriode,
+                            periodeMangler = false
                         )
                     )
                 }

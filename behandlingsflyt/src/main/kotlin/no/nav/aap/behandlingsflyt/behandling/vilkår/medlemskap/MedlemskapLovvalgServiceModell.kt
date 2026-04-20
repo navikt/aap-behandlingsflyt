@@ -33,6 +33,7 @@ data class VisuellTidslinjeArbeidInntektINorge(
     val virksomhetNavn: String?,
     val beloep: Double,
     val periode: Periode,
+    val periodeMangler: Boolean
 )
 
 data class VedtakIMEDLGrunnlag(
