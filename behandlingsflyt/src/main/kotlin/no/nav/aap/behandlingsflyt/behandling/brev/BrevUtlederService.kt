@@ -20,7 +20,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.UføreInn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.Avslått
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.DelvisOmgjøres
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageresultatUtleder
@@ -505,9 +504,6 @@ class BrevUtlederService(
         return underveisRepository.hentHvisEksisterer(behandlingId)
             ?.perioder
             .orEmpty()
-            .any {
-                it.utfall == Utfall.OPPFYLT &&
-                        it.rettighetsType == rettighetsType
-            }
+            .any { it.rettighetsType == rettighetsType }
     }
 }

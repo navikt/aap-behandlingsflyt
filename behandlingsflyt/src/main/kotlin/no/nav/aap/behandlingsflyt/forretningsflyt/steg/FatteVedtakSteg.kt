@@ -22,8 +22,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.LocalDateTime
@@ -39,7 +37,6 @@ class FatteVedtakSteg(
     private val klageresultatUtleder: KlageresultatUtleder,
     private val vedtakService: VedtakService,
     private val virkningstidspunktUtleder: VirkningstidspunktUtleder,
-    private val unleashGateway: UnleashGateway,
 ) : BehandlingSteg {
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
@@ -59,23 +56,21 @@ class FatteVedtakSteg(
             return TilbakeføresFraBeslutter
         }
 
-        if (unleashGateway.isEnabled(BehandlingsflytFeature.LagreVedtakIFatteVedtak)) {
-            val vedtakstidspunkt = if (vedtakBehøverVurdering)
-                avklaringsbehovene.hentBehovForDefinisjon(Definisjon.FATTE_VEDTAK)
-                    ?.historikk
-                    ?.filter { it.status == Status.AVSLUTTET }
-                    ?.maxOrNull()
-                    ?.tidsstempel
-            else
-                LocalDateTime.now(ZoneId.of("Europe/Oslo"))
+        val vedtakstidspunkt = if (vedtakBehøverVurdering)
+            avklaringsbehovene.hentBehovForDefinisjon(Definisjon.FATTE_VEDTAK)
+                ?.historikk
+                ?.filter { it.status == Status.AVSLUTTET }
+                ?.maxOrNull()
+                ?.tidsstempel
+        else
+            LocalDateTime.now(ZoneId.of("Europe/Oslo"))
 
-            if (erTilstrekkeligVurdert && vedtakstidspunkt != null && skalLagreYtelsesvedtak(kontekst)) {
-                vedtakService.lagreVedtak(
-                    behandlingId = kontekst.behandlingId,
-                    vedtakstidspunkt = vedtakstidspunkt,
-                    virkningstidspunkt = virkningstidspunktUtleder.utledVirkningsTidspunkt(kontekst.behandlingId),
-                )
-            }
+        if (erTilstrekkeligVurdert && vedtakstidspunkt != null && skalLagreYtelsesvedtak(kontekst)) {
+            vedtakService.lagreVedtak(
+                behandlingId = kontekst.behandlingId,
+                vedtakstidspunkt = vedtakstidspunkt,
+                virkningstidspunkt = virkningstidspunktUtleder.utledVirkningsTidspunkt(kontekst.behandlingId),
+            )
         }
 
         return Fullført
@@ -154,7 +149,6 @@ class FatteVedtakSteg(
                 klageresultatUtleder = KlageresultatUtleder(repositoryProvider),
                 vedtakService = VedtakService(repositoryProvider),
                 virkningstidspunktUtleder = VirkningstidspunktUtleder(repositoryProvider),
-                unleashGateway = gatewayProvider.provide(),
             )
         }
 

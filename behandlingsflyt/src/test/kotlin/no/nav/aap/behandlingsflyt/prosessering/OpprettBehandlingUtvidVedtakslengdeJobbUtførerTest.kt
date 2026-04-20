@@ -6,6 +6,7 @@ import io.mockk.just
 import io.mockk.mockk
 import io.mockk.verify
 import no.nav.aap.behandlingsflyt.behandling.underveis.RettighetstypeService
+import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakId
 import no.nav.aap.behandlingsflyt.behandling.vedtakslengde.VedtakslengdeService
 import no.nav.aap.behandlingsflyt.behandling.vedtakslengde.VedtakslengdeService.Companion.ANTALL_DAGER_FØR_UTVIDELSE
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.rettighetstype.RettighetstypeGrunnlag
@@ -216,10 +217,12 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtførerTest {
             typeBehandling = TypeBehandling.Førstegangsbehandling,
             status = Status.IVERKSETTES,
             opprettetTidspunkt = LocalDateTime.now(clock),
+            vedtakId = VedtakId(0),
             vedtakstidspunkt = LocalDateTime.now(clock),
             virkningstidspunkt = null,
             vurderingsbehov = setOf(),
-            årsakTilOpprettelse = ÅrsakTilOpprettelse.SØKNAD
+            årsakTilOpprettelse = ÅrsakTilOpprettelse.SØKNAD,
+            forrigeBehandlingId = null,
         )
 
     private fun sak(rettighetsperiode: Periode = Periode(LocalDate.now(clock).minusDays(180), Tid.MAKS)) =

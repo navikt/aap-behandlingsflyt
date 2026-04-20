@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus.F
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus.FØR_VEDTAK
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus.IKKE_MELDT_SEG
 import no.nav.aap.behandlingsflyt.behandling.vedtak.Vedtak
+import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakId
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.ArbeidsGradering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
@@ -14,6 +15,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveis
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisÅrsak.MELDEPLIKT_FRIST_IKKE_PASSERT
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType.BISTANDSBEHOV
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall.IKKE_OPPFYLT
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktGrunnlag
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
@@ -29,6 +31,7 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Dagsatser
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.komponenter.verdityper.TimerArbeid
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions.assertEquals
 import java.math.BigDecimal
 import java.time.LocalDate
@@ -85,6 +88,7 @@ class MeldeperiodeTilMeldekortBackendJobbUtførerTest {
             ),
             meldeperioder = underveisperioder.map { it.meldePeriode }.toSet().sorted(),
             vedtak = Vedtak(
+                id = VedtakId(0),
                 behandlingId = BehandlingId(0),
                 vedtakstidspunkt = LocalDateTime.parse("2025-05-05T10:43:44.561"),
                 virkningstidspunkt = LocalDate.parse("2025-05-13"),
@@ -96,7 +100,11 @@ class MeldeperiodeTilMeldekortBackendJobbUtførerTest {
             )
         )
 
-        assertEquals(opplysninger.identer.toSet(), setOf("1".repeat(11), "2".repeat(11)))
+        assertThat(opplysninger.personIdenter.map { it.ident to it.aktiv })
+            .containsExactlyInAnyOrder(
+                "1".repeat(11) to false,
+                "2".repeat(11) to true,
+            )
         assertEquals(opplysninger.opplysningsbehov.single().fom, 13 mai 2025)
         assertEquals(opplysninger.opplysningsbehov.single().tom, 30 mars 2026)
         assertEquals(opplysninger.meldeperioder.map { Periode(it.fom, it.tom) }.toSet(), setOf(
@@ -168,7 +176,7 @@ class MeldeperiodeTilMeldekortBackendJobbUtførerTest {
     ) = Underveisperiode(
         periode = parse(periode),
         meldePeriode = parse(meldeperiode),
-        utfall = IKKE_OPPFYLT,
+        utfall = if (rettighetstype == null) Utfall.IKKE_OPPFYLT else Utfall.OPPFYLT,
         rettighetsType = rettighetstype,
         avslagsårsak = avslagsårsak,
         grenseverdi = Prosent(60),

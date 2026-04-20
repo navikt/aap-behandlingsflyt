@@ -19,6 +19,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageResultatType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageresultatUtleder
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsopptrapping.ArbeidsopptrappingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsopptrapping.perioderMedArbeidsopptrapping
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status.AVSLUTTET
@@ -63,6 +65,7 @@ class AvsluttetBehandlingTilStatistikk(
     private val sakService: SakService,
     private val tilkjentYtelseRepository: TilkjentYtelseRepository,
     private val beregningsgrunnlagRepository: BeregningsgrunnlagRepository,
+    private val beregningVurderingRepository: BeregningVurderingRepository,
     private val sykdomRepository: SykdomRepository,
     private val underveisRepository: UnderveisRepository,
     private val vedtakService: VedtakService,
@@ -80,6 +83,7 @@ class AvsluttetBehandlingTilStatistikk(
         sakService = SakService(repositoryProvider.provide(), repositoryProvider.provide()),
         tilkjentYtelseRepository = repositoryProvider.provide(),
         beregningsgrunnlagRepository = repositoryProvider.provide(),
+        beregningVurderingRepository = repositoryProvider.provide(),
         sykdomRepository = repositoryProvider.provide(),
         underveisRepository = repositoryProvider.provide(),
         vedtakService = VedtakService(repositoryProvider),
@@ -121,9 +125,12 @@ class AvsluttetBehandlingTilStatistikk(
         }
 
         val grunnlag = beregningsgrunnlagRepository.hentHvisEksisterer(behandling.id)
+        val beregningstidspunktVurdering =
+            beregningVurderingRepository.hentHvisEksisterer(behandling.id)?.tidspunktVurdering
 
         val beregningsGrunnlagDTO: BeregningsgrunnlagDTO? =
-            if (grunnlag == null) null else beregningsgrunnlagDTO(grunnlag)
+            if (grunnlag == null || beregningstidspunktVurdering == null) null
+            else beregningsgrunnlagDTO(grunnlag, beregningstidspunktVurdering)
 
         log.info("Kaller aap-statistikk for sak ${sak.saksnummer} og behandling ${behandling.referanse}")
 
@@ -167,8 +174,9 @@ class AvsluttetBehandlingTilStatistikk(
     }
 
     private fun hentRettighetstypePerioder(behandling: Behandling): List<RettighetstypePeriode> {
-        val rettighetstypePerioder = underveisRepository.hentHvisEksisterer(behandling.id)?.perioder.orEmpty()
-            .filter { it.rettighetsType != null }.map { Segment(it.periode, it.rettighetsType) }.let(::Tidslinje)
+        val rettighetstypePerioder = underveisRepository.hentHvisEksisterer(behandling.id)
+            ?.somTidslinje().orEmpty()
+            .mapNotNull { it.rettighetsType }
             .komprimer().segmenter().map {
                 RettighetstypePeriode(
                     fraDato = it.periode.fom,
@@ -201,7 +209,15 @@ class AvsluttetBehandlingTilStatistikk(
                     barnetilleggSats = verdi.barnetilleggsats.verdi().toDouble(),
                     barnetillegg = verdi.barnetillegg.verdi().toDouble(),
                     utbetalingsdato = verdi.utbetalingsdato,
-                    minsteSats = verdi.tilKontrakt()
+                    minsteSats = verdi.tilKontrakt(),
+                    samordningGradering = verdi.graderingGrunnlag.samordningGradering.prosentverdi().toDouble(),
+                    institusjonGradering = verdi.graderingGrunnlag.institusjonGradering.prosentverdi().toDouble(),
+                    arbeidGradering = verdi.graderingGrunnlag.arbeidGradering.prosentverdi().toDouble(),
+                    samordningUføregradering = verdi.graderingGrunnlag.samordningUføregradering.prosentverdi()
+                        .toDouble(),
+                    samordningArbeidsgiverGradering = verdi.graderingGrunnlag.samordningArbeidsgiverGradering.prosentverdi()
+                        .toDouble(),
+                    meldepliktGradering = verdi.graderingGrunnlag.meldepliktGradering.prosentverdi().toDouble(),
                 )
             }
 
@@ -275,10 +291,13 @@ class AvsluttetBehandlingTilStatistikk(
     }
 
     private fun beregningsgrunnlagDTO(
-        grunnlag: Beregningsgrunnlag
+        grunnlag: Beregningsgrunnlag,
+        tidspunktVurdering: BeregningstidspunktVurdering,
     ): BeregningsgrunnlagDTO = when (grunnlag) {
         is Grunnlag11_19 -> BeregningsgrunnlagDTO(
             grunnlag11_19dto = grunnlag1119dto(grunnlag),
+            nedsattArbeidsevneEllerStudieevneDato = tidspunktVurdering.nedsattArbeidsevneEllerStudieevneDato,
+            ytterligereNedsattArbeidsevneDato = tidspunktVurdering.ytterligereNedsattArbeidsevneDato,
         )
 
         is GrunnlagUføre -> BeregningsgrunnlagDTO(
@@ -291,14 +310,16 @@ class AvsluttetBehandlingTilStatistikk(
                 uføregrad = grunnlag.uføregrader().maxBy { it.virkningstidspunkt }.uføregrad.prosentverdi(),
                 uføregrader = grunnlag.uføregrader().map { Uføre(it.uføregrad.prosentverdi(), it.virkningstidspunkt) },
                 uføreInntekterFraForegåendeÅr = grunnlag.uføreInntekterFraForegåendeÅr()
-                    .associate { it.år.value.toString() to it.inntektIKroner.verdi().toDouble() })
+                    .associate { it.år.value.toString() to it.inntektIKroner.verdi().toDouble() }),
+            nedsattArbeidsevneEllerStudieevneDato = tidspunktVurdering.nedsattArbeidsevneEllerStudieevneDato,
+            ytterligereNedsattArbeidsevneDato = tidspunktVurdering.ytterligereNedsattArbeidsevneDato,
         )
 
         is GrunnlagYrkesskade -> BeregningsgrunnlagDTO(
             grunnlagYrkesskade = GrunnlagYrkesskadeDTO(
                 beregningsgrunnlag = when (grunnlag.underliggende()) {
-                    is Grunnlag11_19 -> beregningsgrunnlagDTO(grunnlag.underliggende())
-                    is GrunnlagUføre -> beregningsgrunnlagDTO(grunnlag.underliggende())
+                    is Grunnlag11_19 -> beregningsgrunnlagDTO(grunnlag.underliggende(), tidspunktVurdering)
+                    is GrunnlagUføre -> beregningsgrunnlagDTO(grunnlag.underliggende(), tidspunktVurdering)
                     is GrunnlagYrkesskade -> error("Grunnlagyrkesskade kan ikke ha grunnlag yrkesskade")
                 },
                 andelYrkesskade = grunnlag.andelYrkesskade().prosentverdi(),
@@ -313,7 +334,9 @@ class AvsluttetBehandlingTilStatistikk(
                 yrkesskadeinntektIG = grunnlag.yrkesskadeinntektIG().verdi(),
                 grunnlaget = grunnlag.grunnlaget().verdi(),
                 inkludererUføre = grunnlag.underliggende() is GrunnlagUføre
-            )
+            ),
+            nedsattArbeidsevneEllerStudieevneDato = tidspunktVurdering.nedsattArbeidsevneEllerStudieevneDato,
+            ytterligereNedsattArbeidsevneDato = tidspunktVurdering.ytterligereNedsattArbeidsevneDato,
         )
     }
 

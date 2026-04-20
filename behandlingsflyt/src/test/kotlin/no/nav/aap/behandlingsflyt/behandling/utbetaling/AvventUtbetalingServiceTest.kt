@@ -4,6 +4,7 @@ import io.mockk.checkUnnecessaryStub
 import io.mockk.every
 import io.mockk.mockk
 import no.nav.aap.behandlingsflyt.behandling.vedtak.Vedtak
+import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakId
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.AndreStatligeYtelser
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.SamordningAndreStatligeYtelserGrunnlag
@@ -50,6 +51,7 @@ class AvventUtbetalingServiceTest {
     }
 
     val vedtak = Vedtak(
+        id = VedtakId(0),
         behandlingId = BehandlingId(123L),
         vedtakstidspunkt = LocalDate.parse("2025-01-15").atStartOfDay(),
         virkningstidspunkt = LocalDate.parse("2025-01-10"),
@@ -145,12 +147,14 @@ class AvventUtbetalingServiceTest {
         )
 
         val førstegangVedtak = Vedtak(
+            id = VedtakId(0),
             behandlingId = BehandlingId(1L),
             vedtakstidspunkt = LocalDate.parse("2025-01-15").atStartOfDay(),
             virkningstidspunkt = LocalDate.parse("2025-01-10"),
         )
 
         val revurderingVedtak = Vedtak(
+            id = VedtakId(0),
             behandlingId = BehandlingId(2L),
             vedtakstidspunkt = LocalDate.parse("2025-01-20").atStartOfDay(),
             virkningstidspunkt = LocalDate.parse("2025-01-16"),

@@ -14,6 +14,7 @@ import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseReposi
 import no.nav.aap.behandlingsflyt.behandling.vedtak.Vedtak
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakRepository
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
+import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakId
 import no.nav.aap.behandlingsflyt.behandling.vedtakslengde.VedtakslengdeService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Grunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Repository
@@ -437,6 +438,7 @@ class BrevUtlederServiceTest {
                 ), null
             )
             every { vedtakRepository.hent(revurdering.id) } returns Vedtak(
+                VedtakId(0),
                 revurdering.id,
                 LocalDateTime.now(),
                 kravdatoUføretrygd
@@ -1017,6 +1019,7 @@ class BrevUtlederServiceTest {
 
     private fun stubVedtak(behandlingId: BehandlingId): Vedtak {
         return Vedtak(
+            id = VedtakId(0),
             behandlingId = behandlingId,
             vedtakstidspunkt = virkningstidspunkt.atStartOfDay(),
             virkningstidspunkt = virkningstidspunkt,

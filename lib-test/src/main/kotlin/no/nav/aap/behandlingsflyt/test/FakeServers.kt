@@ -149,8 +149,6 @@ import java.time.format.DateTimeFormatter
 import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
-import kotlin.text.mapNotNull
-import kotlin.text.orEmpty
 
 object FakeServers : AutoCloseable {
     private val log = LoggerFactory.getLogger(javaClass)
@@ -1538,6 +1536,12 @@ object FakeServers : AutoCloseable {
             }
         }
         routing {
+            post("/token") {
+                val body = call.receiveText()
+                val erCc = body.contains("grant_type=client_credentials")
+                val token = AzureTokenGen("behandlingsflyt", "behandlingsflyt").generate(erCc, "behandlingsflyt")
+                call.respond(TestToken(access_token = token))
+            }
             post("/token/{NAVident}") {
                 val body = call.receiveText()
                 val NAVident = call.parameters["NAVident"]
@@ -2074,8 +2078,9 @@ object FakeServers : AutoCloseable {
 
         // Oppgavestyring
         System.setProperty("integrasjon.oppgavestyring.scope", "oppgavestyring")
-        System.setProperty("integrasjon.oppgavestyring.url", "http://localhost:${oppgavestyring.port()}")
-
+        if (System.getenv("INTEGRASJON_OPPGAVESTYRING_URL").isNullOrEmpty()) {
+            System.setProperty("integrasjon.oppgavestyring.url", "http://localhost:${oppgavestyring.port()}")
+        }
 
         // MEDL
         System.setProperty("integrasjon.medl.url", "http://localhost:${medl.port()}")

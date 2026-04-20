@@ -28,7 +28,7 @@ class PersonopplysningRepositoryImpl(
     fun hentHvisEksisterer(behandlingId: BehandlingId): PersonopplysningGrunnlag? {
         return connection.queryFirstOrNull(
             """
-            SELECT g.bruker_personopplysning_id, g.personopplysninger_id
+            SELECT g.bruker_personopplysning_id
             FROM PERSONOPPLYSNING_GRUNNLAG g
             WHERE g.AKTIV AND g.BEHANDLING_ID = ?
             """.trimIndent()
@@ -45,7 +45,7 @@ class PersonopplysningRepositoryImpl(
     override fun hentBrukerPersonOpplysningHvisEksisterer(behandlingId: BehandlingId): Personopplysning? {
         return connection.queryFirstOrNull(
             """
-            SELECT g.bruker_personopplysning_id, g.personopplysninger_id
+            SELECT g.bruker_personopplysning_id
             FROM PERSONOPPLYSNING_GRUNNLAG g
             WHERE g.AKTIV AND g.BEHANDLING_ID = ?
             """.trimIndent()
@@ -211,11 +211,10 @@ class PersonopplysningRepositoryImpl(
                 }
             }
 
-        connection.execute("INSERT INTO PERSONOPPLYSNING_GRUNNLAG (BEHANDLING_ID, bruker_personopplysning_id, personopplysninger_id) VALUES (?, ?, ?)") {
+        connection.execute("INSERT INTO PERSONOPPLYSNING_GRUNNLAG (BEHANDLING_ID, bruker_personopplysning_id) VALUES (?, ?)") {
             setParams {
                 setLong(1, behandlingId.toLong())
                 setLong(2, personopplysningId)
-                setLong(3, null)
             }
         }
     }
@@ -233,7 +232,7 @@ class PersonopplysningRepositoryImpl(
 
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
         require(fraBehandling != tilBehandling)
-        connection.execute("INSERT INTO PERSONOPPLYSNING_GRUNNLAG (BEHANDLING_ID, bruker_personopplysning_id, personopplysninger_id) SELECT ?, bruker_personopplysning_id, personopplysninger_id FROM PERSONOPPLYSNING_GRUNNLAG WHERE AKTIV AND BEHANDLING_ID = ?") {
+        connection.execute("INSERT INTO PERSONOPPLYSNING_GRUNNLAG (BEHANDLING_ID, bruker_personopplysning_id) SELECT ?, bruker_personopplysning_id FROM PERSONOPPLYSNING_GRUNNLAG WHERE AKTIV AND BEHANDLING_ID = ?") {
             setParams {
                 setLong(1, tilBehandling.toLong())
                 setLong(2, fraBehandling.toLong())
@@ -244,15 +243,12 @@ class PersonopplysningRepositoryImpl(
     override fun slett(behandlingId: BehandlingId) {
         // Sletter ikke bruker_land og bruker_land_aggregat, eller bruker_utenlandsadresser_aggregat da det ikke er personopplysninger her
         val brukerPersonopplysningIds = getBrukerPersonopplysningIds(behandlingId)
-        val personopplysningerIds = getPersonOpplysningerIds(behandlingId)
         val utenlandsAdresserIds = getUtenlandsAdresserIds(brukerPersonopplysningIds)
 
         val deletedRows = connection.executeReturnUpdated(
             """
             delete from personopplysning_grunnlag where behandling_id = ?; 
             delete from bruker_utenlandsadresse where utenlandsadresser_id = ANY(?::bigint[]);
-            delete from personopplysning where personopplysninger_id = ANY(?::bigint[]);
-            delete from personopplysninger where id = ANY(?::bigint[]);
             delete from bruker_personopplysning where id = ANY(?::bigint[]);
             
         """.trimIndent()
@@ -260,9 +256,7 @@ class PersonopplysningRepositoryImpl(
             setParams {
                 setLong(1, behandlingId.id)
                 setLongArray(2, utenlandsAdresserIds)
-                setLongArray(3, utenlandsAdresserIds)
-                setLongArray(4, personopplysningerIds)
-                setLongArray(5, brukerPersonopplysningIds)
+                setLongArray(3, brukerPersonopplysningIds)
             }
         }
         log.info("Slettet $deletedRows rader fra personopplysning_grunnlag")

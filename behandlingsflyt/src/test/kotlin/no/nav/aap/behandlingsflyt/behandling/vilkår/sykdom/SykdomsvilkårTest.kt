@@ -117,14 +117,20 @@ class SykdomsvilkårTest {
         )
     }
 
-    private fun bistandGrunnlag(startDato: LocalDate, sluttDato: LocalDate? = null): BistandGrunnlag = BistandGrunnlag(
+    private fun bistandGrunnlag(
+        startDato: LocalDate,
+        sluttDato: LocalDate? = null,
+        erBehovForAktivBehandling: Boolean = true,
+        erBehovForArbeidsrettetTiltak: Boolean = true,
+        erBehovForAnnenOppfølging: Boolean = true,
+        ): BistandGrunnlag = BistandGrunnlag(
         vurderinger = listOf(
             Bistandsvurdering(
                 vurdertIBehandling = BehandlingId(1),
                 begrunnelse = "bistand",
-                erBehovForAktivBehandling = true,
-                erBehovForArbeidsrettetTiltak = true,
-                erBehovForAnnenOppfølging = true,
+                erBehovForAktivBehandling = erBehovForAktivBehandling,
+                erBehovForArbeidsrettetTiltak = erBehovForArbeidsrettetTiltak,
+                erBehovForAnnenOppfølging = erBehovForAnnenOppfølging,
                 overgangBegrunnelse = "...",
                 skalVurdereAapIOvergangTilArbeid = null,
                 vurdertAv = "Foffer",
@@ -234,7 +240,7 @@ class SykdomsvilkårTest {
         erSkadeSykdomEllerLyteVesentligdel: Boolean = true,
         erNedsettelseIArbeidsevneMerEnnHalvparten: Boolean = true,
         erNedsettelseIArbeidsevneAvEnVissVarighet: Boolean? = true,
-        erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense: Boolean = true,
+        erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense: Boolean? = true,
         erArbeidsevnenNedsatt: Boolean = true,
         vurderingenGjelderFra: LocalDate,
         vurderingenGjelderTil: LocalDate? = null,

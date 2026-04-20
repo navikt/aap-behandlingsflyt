@@ -6,6 +6,7 @@ import io.mockk.just
 import io.mockk.mockk
 import io.mockk.verify
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
+import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakId
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.ArbeidsGradering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
@@ -247,10 +248,12 @@ class SjekkInstitusjonsoppholdJobbUtførerTest {
             typeBehandling = TypeBehandling.Revurdering,
             status = Status.AVSLUTTET,
             opprettetTidspunkt = LocalDateTime.now(),
+            vedtakId = VedtakId(0),
             vedtakstidspunkt = LocalDateTime.now(),
             virkningstidspunkt = LocalDate.now(),
             vurderingsbehov = setOf(),
-            årsakTilOpprettelse = ÅrsakTilOpprettelse.SØKNAD
+            årsakTilOpprettelse = ÅrsakTilOpprettelse.SØKNAD,
+            forrigeBehandlingId = null,
         )
 
         every { sakRepositoryMock.hent(SakId(123)) } returns

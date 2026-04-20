@@ -575,37 +575,6 @@ class YrkesskadeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
             .løsSykdomsvurderingBrev()
             .bekreftVurderinger()
             .kvalitetssikre()
-            .løsAvklaringsBehov(
-                AvklarYrkesskadeLøsning(
-                    yrkesskadesvurdering = YrkesskadevurderingDto(
-                        begrunnelse = "Ikke årsakssammenheng",
-                        relevanteSaker = emptyList(),
-                        relevanteYrkesskadeSaker = emptyList(),
-                        andelAvNedsettelsen = null,
-                        erÅrsakssammenheng = false
-                    )
-                )
-            )
-            .løsBeregningstidspunkt()
-            .løsOppholdskrav(fom)
-            .løsAvklaringsBehov(
-                AvklarSamordningUføreLøsning(
-                    samordningUføreVurdering = SamordningUføreVurderingDto(
-                        begrunnelse = "Samordnet med uføre",
-                        vurderingPerioder = listOf(
-                            SamordningUføreVurderingPeriodeDto(
-                                virkningstidspunkt = virkningstidspunkt, uføregradTilSamordning = 50
-                            )
-                        )
-                    )
-                )
-            )
-            .medKontekst {
-                // Saken er tilbake til en-trinnskontroll hos saksbehandler klar for å bli sendt til beslutter
-                assertThat(åpneAvklaringsbehov).anySatisfy { assertTrue(it.definisjon == Definisjon.FORESLÅ_VEDTAK) }
-                assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
-            }
-            .løsAvklaringsBehov(ForeslåVedtakLøsning())
             .medKontekst {
                 // Saken står til To-trinnskontroll hos beslutter
                 assertThat(åpneAvklaringsbehov).anySatisfy { assertTrue(it.definisjon == Definisjon.FATTE_VEDTAK) }

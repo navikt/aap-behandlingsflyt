@@ -56,6 +56,7 @@ class OvergangUføreSteg private constructor(
             definisjon = Definisjon.AVKLAR_OVERGANG_UFORE,
             tvingerAvklaringsbehov = setOf(
                 Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND,
+                Vurderingsbehov.OVERGANG_UFORE,
             ),
             nårVurderingErRelevant = ::nårVurderingErRelevant,
             perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert,

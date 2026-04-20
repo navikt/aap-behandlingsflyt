@@ -134,6 +134,82 @@ class BeregningsGrunnlagApiTest {
             .isEqualTo(Periode(YearMonth.of(2022, 1).atDay(1), YearMonth.of(2022, 12).atEndOfMonth()))
     }
 
+    @Test
+    fun `inntektIKroner i periodene skal være korrekt ved konstant uføregrad hele året`() {
+        // Konstant uføregrad lagrer årsbeløp direkte i perioden (ikke månedlig)
+        // Å multiplisere årsbeløpet med antall måneder gir feil svar (12x for fullt år)
+        val årsInntekter = setOf(
+            InntektPerÅr(2021, Beløp(600000)),
+            InntektPerÅr(2022, Beløp(600000)),
+            InntektPerÅr(2023, Beløp(600000))
+        )
+
+        val beregning = Beregning(
+            nedsettelsesDato = LocalDate.of(2024, 1, 1),
+            ytterligereNedsettelsesDato = LocalDate.of(2024, 1, 1),
+            årsInntekter = årsInntekter,
+            uføregrad = setOf(Uføre(LocalDate.of(2021, 1, 1), Prosent(30))),
+            yrkesskadevurdering = null,
+            registrerteYrkesskader = null,
+            yrkesskadeBeløpVurderinger = null,
+            inntektsPerioder = inntektsPerioder(årsInntekter)
+        ).beregnBeregningsgrunnlag()
+
+        val res = beregningDTO(beregning, LocalDate.of(2024, 1, 1))
+
+        val inntektsPerioder2022 = requireNotNull(res.grunnlagUføre)
+            .uføreInntekter
+            .single { it.år == "2022" }
+            .inntektsPerioder
+
+        assertThat(inntektsPerioder2022).hasSize(1)
+        // Forventet inntektIKroner = 600 000 (årsbeløpet), ikke 600 000 * 12
+        assertThat(inntektsPerioder2022.first().inntektIKroner.verdi)
+            .isEqualByComparingTo(BigDecimal(600000))
+    }
+
+    @Test
+    fun `inntektIKroner i periodene skal multipliseres med korrekt antall måneder`() {
+        // Uføregrad endrer seg midt i 2022: 0% jan-jun, 50% jul-des
+        val årsInntekter = setOf(
+            InntektPerÅr(2021, Beløp(600000)),
+            InntektPerÅr(2022, Beløp(600000)),
+            InntektPerÅr(2023, Beløp(600000))
+        )
+
+        val beregning = Beregning(
+            nedsettelsesDato = LocalDate.of(2024, 1, 1),
+            ytterligereNedsettelsesDato = LocalDate.of(2024, 1, 1),
+            årsInntekter = årsInntekter,
+            uføregrad = setOf(
+                Uføre(LocalDate.of(2021, 1, 1), Prosent(0)),
+                Uføre(LocalDate.of(2022, 7, 1), Prosent(50))
+            ),
+            yrkesskadevurdering = null,
+            registrerteYrkesskader = null,
+            yrkesskadeBeløpVurderinger = null,
+            inntektsPerioder = inntektsPerioder(årsInntekter)
+        ).beregnBeregningsgrunnlag()
+
+        val res = beregningDTO(beregning, LocalDate.of(2024, 1, 1))
+
+        val inntektsPerioder2022 = requireNotNull(res.grunnlagUføre)
+            .uføreInntekter
+            .single { it.år == "2022" }
+            .inntektsPerioder
+
+        assertThat(inntektsPerioder2022).hasSize(2)
+
+        // Månedsinntekt for 2022 = 600 000 / 12 = 50 000; begge halvår har 6 måneder → 300 000
+        val forventetHalvår = BigDecimal(50000).multiply(BigDecimal(6))
+
+        inntektsPerioder2022.forEach { periode ->
+            assertThat(periode.inntektIKroner.verdi)
+                .`as`("inntektIKroner for periode ${periode.periode}")
+                .isEqualByComparingTo(forventetHalvår)
+        }
+    }
+
     private fun inntektsPerioder(inntektPerÅr: Set<InntektPerÅr>): Set<Månedsinntekt> {
         return inntektPerÅr.flatMap { inntektPerÅr ->
             val år = inntektPerÅr.år

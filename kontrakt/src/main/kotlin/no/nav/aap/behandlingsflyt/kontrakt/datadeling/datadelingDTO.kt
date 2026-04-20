@@ -24,8 +24,31 @@ public data class DatadelingDTO(
     val samId: String? = null,
     val vedtakId: Long,
     val beregningsgrunnlag: BigDecimal?,
-    val stansOpphørVurdering: Set<GjeldendeStansEllerOpphørDTO>?
+    val stansOpphørVurdering: Set<GjeldendeStansEllerOpphørDTO>?,
+    val arenavedtak: List<ArenavedtakDTO>,
 )
+
+public data class ArenavedtakDTO(
+    public val vedtakId: Long,
+    public val fom: LocalDate,
+    public val tom: LocalDate,
+    public val  vedtaksvariant: ArenaVedtaksvariantDTO,
+)
+
+public enum class ArenaVedtaksvariantDTO {
+    O_AVSLAG,
+    O_INNV_NAV,
+    O_INNV_SOKNAD,
+    E_FORLENGE,
+    E_VERDI,
+    G_AVSLAG,
+    G_INNV_NAV,
+    G_INNV_SOKNAD,
+    S_DOD,
+    S_OPPHOR,
+    S_STANS,
+    ;
+}
 
 
 public data class GjeldendeStansEllerOpphørDTO(
