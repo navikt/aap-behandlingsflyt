@@ -381,9 +381,6 @@ class RettighetsperiodeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
             .løsVedtaksbrev(TypeBrev.VEDTAK_ENDRING)
 
         val (underveisGrunnlag, tilkjentYtelse) = dataSource.transaction {
-            val repositoryProvider = postgresRepositoryRegistry.provider(it)
-            val behandlingService = BehandlingService(repositoryProvider, gatewayProvider)
-            val behandling = behandlingService.finnSisteYtelsesbehandlingFor(sak.id) ?: error("Fant ikke behandling")
             val underveisGrunnlag = UnderveisRepositoryImpl(it).hent(revurdering.id)
             val tilkjentYtelse = TilkjentYtelseRepositoryImpl(it).hentHvisEksisterer(revurdering.id) ?: error("Fant ikke tilkjent ytelse")
             Pair(underveisGrunnlag, tilkjentYtelse)

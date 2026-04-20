@@ -170,13 +170,16 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
         @BeforeAll
         @JvmStatic
         fun setup() {
-            dataSource = TestDataSource()
+            dataSource = SharedTestDataSource.instance
             System.setProperty("NAIS_CLUSTER_NAME", "LOCAL")
         }
 
         @AfterAll
         @JvmStatic
-        fun tearDown() = dataSource.close()
+        fun tearDown() {
+            // Don't close — the shared singleton is reused across parameterized variants
+            // and other test classes. JVM shutdown handles cleanup.
+        }
 
         @Suppress("unused")
         @JvmStatic
