@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.behandling.vilkår.sykdom.SammenlignetSegment
 import no.nav.aap.behandlingsflyt.behandling.vilkår.sykdom.SykdomsFaktagrunnlag
 import no.nav.aap.behandlingsflyt.behandling.vilkår.sykdom.SykdomsvilkårUtenVissVarighet
 import no.nav.aap.behandlingsflyt.behandling.vilkår.sykdom.diff
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Innvilgelsesårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
@@ -158,6 +159,9 @@ class SykdomsvurderingMigreringService(
                 } else if (harIkkeFastsattSykdomsvilkåretIOpprinneligBehandling(diff)) {
                     log.info("Behandlingen $behandlingId har ikke kjørt fastsettsykdomsvilkårsteget og er derfor ulikt før og etter migrering")
                     null
+                } else if(erYrkesskadeÅrsakssamennhengMenIngentingFør(diff)) {
+                    log.info("Var oppfylt med ren bistand tidligere, men viser seg å være yrkesskade årsakssammenheng - ignorerer diff")
+                    null
                 } else {
                     diff
                 }
@@ -189,6 +193,12 @@ class SykdomsvurderingMigreringService(
         diff: Segment<SammenlignetSegment>
     ): Boolean {
         return diff.verdi.gammel?.utfall == Utfall.IKKE_VURDERT
+    }
+
+    private fun erYrkesskadeÅrsakssamennhengMenIngentingFør(
+        diff: Segment<SammenlignetSegment>
+    ): Boolean {
+        return diff.verdi.gammel?.utfall == Utfall.OPPFYLT && diff.verdi.ny?.utfall == Utfall.OPPFYLT && diff.verdi.ny?.innvilgelsesårsak == Innvilgelsesårsak.YRKESSKADE_ÅRSAKSSAMMENHENG && diff.verdi.gammel?.innvilgelsesårsak == null
     }
 
     private fun erSykMenTrengerIkkeBistandOgUtledetMedUtdatertVilkårsvurderingslogikk(
