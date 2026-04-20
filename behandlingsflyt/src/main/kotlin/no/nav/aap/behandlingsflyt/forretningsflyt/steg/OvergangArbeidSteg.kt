@@ -156,7 +156,7 @@ class OvergangArbeidSteg internal constructor(
                         return@map6 false
                     }
 
-                    sykdomsvurdering?.erOppfyltOrdinær(kontekst.rettighetsperiode.fom, segmentPeriode) != true ||
+                    sykdomsvurdering?.erOppfyltForYrkesskadeSettBortIfraÅrsakssammenheng(kontekst.rettighetsperiode.fom, segmentPeriode) != true ||
                             bistandsvurdering?.erBehovForBistand() != true
                 }
             }
