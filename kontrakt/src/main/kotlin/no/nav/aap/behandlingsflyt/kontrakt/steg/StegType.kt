@@ -287,6 +287,11 @@ public enum class StegType(
         gruppe = StegGruppe.AKTIVITETSPLIKT_11_7,
         status = Status.UTREDES,
     ),
+
+    VURDER_AKTIVITETSPLIKT_11_8(
+        gruppe = StegGruppe.AKTIVITETSPLIKT_11_8,
+        status = Status.UTREDES,
+    ),
     
     IVERKSETT_BRUDD(
         gruppe = StegGruppe.UDEFINERT,

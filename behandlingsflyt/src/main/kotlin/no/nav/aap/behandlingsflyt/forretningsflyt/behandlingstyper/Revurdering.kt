@@ -55,6 +55,7 @@ import no.nav.aap.behandlingsflyt.forretningsflyt.steg.SamordningSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.SamordningUføreSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.SendForvaltningsmeldingSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.BekreftVurderingerOppfølgingSteg
+import no.nav.aap.behandlingsflyt.forretningsflyt.steg.aktivitetsplikt.VurderAktivitetsplikt11_8Steg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.SamordningBarnepensjonSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.SimulerUtbetalingSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.StartBehandlingSteg
@@ -422,6 +423,7 @@ object Revurdering : BehandlingType {
                 vurderingsbehovRelevanteForSteg = Vurderingsbehov.alleInklusivGRegulering(),
                 informasjonskrav = listOf(MeldekortInformasjonskrav)
             )
+            .medSteg(steg = VurderAktivitetsplikt11_8Steg)
             .medSteg(steg = UnderveisSteg)
             .medSteg(
                 steg = BeregnTilkjentYtelseSteg,
