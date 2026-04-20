@@ -72,6 +72,73 @@ class SykepengeerstatningVilkårTest {
         )
     }
 
+    @Test
+    fun `overlapp feil`() {
+        val vilkårsresultat = Vilkårsresultat()
+        vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.SYKEPENGEERSTATNING)
+        val startDato = 1 januar 2024
+        val opprettet = LocalDateTime.now()
+
+        val rettighetsperiode = Periode(startDato, startDato.plusYears(3))
+        val grunnlag = SykepengerErstatningFaktagrunnlag(
+            rettighetsperiode = rettighetsperiode,
+            sykdomGrunnlag = SykdomGrunnlag(
+                yrkesskadevurdering = null, sykdomsvurderinger = listOf(
+                    sykdomsvurdering(opprettet = opprettet, vurderingenGjelderFra = startDato),
+                    sykdomsvurdering(
+                        erNedsettelseIArbeidsevneAvEnVissVarighet = false,
+                        vurderingenGjelderFra = startDato,
+                        opprettet = opprettet.plusSeconds(50)
+                    )
+                )
+            ),
+            sykepengeerstatningGrunnlag =
+                SykepengerErstatningGrunnlag(
+                    vurderinger = listOf(
+                        SykepengerVurdering(
+                            begrunnelse = "",
+                            dokumenterBruktIVurdering = emptyList(),
+                            harRettPå = true,
+                            grunn = SykepengerGrunn.SYKEPENGER_IGJEN_ARBEIDSUFOR,
+                            vurdertAv = "abc123",
+                            vurdertTidspunkt = LocalDateTime.now(),
+                            vurdertIBehandling = BehandlingId(1L),
+                            gjelderFra = startDato,
+                        ),
+                        SykepengerVurdering(
+                            begrunnelse = "",
+                            dokumenterBruktIVurdering = emptyList(),
+                            harRettPå = true,
+                            grunn = SykepengerGrunn.SYKEPENGER_IGJEN_ARBEIDSUFOR,
+                            vurdertAv = "abc123",
+                            vurdertTidspunkt = LocalDateTime.now(),
+                            vurdertIBehandling = BehandlingId(1L),
+                            gjelderFra = startDato.plusDays(10),
+                        )
+                    )
+                ),
+        )
+        grunnlag.sykepengeerstatningGrunnlag?.somTidslinje(startDato, rettighetsperiode.tom)
+        SykepengeerstatningVilkår(vilkårsresultat).vurder(
+            grunnlag
+        )
+
+        val vilkår = vilkårsresultat.finnVilkår(Vilkårtype.SYKEPENGEERSTATNING)
+
+        assertThat(vilkår.vilkårsperioder()).hasSize(2)
+
+        vilkår.tidslinje().assertTidslinje(
+            Segment(Periode(1 januar 2024, 10 januar 2024)) { vurdering ->
+                assertThat(vurdering.utfall).isEqualTo(Utfall.OPPFYLT)
+                assertThat(vurdering.innvilgelsesårsak).isEqualTo(null)
+            },
+            Segment(Periode(11 januar 2024, 1 januar 2027)) { vurdering ->
+                assertThat(vurdering.utfall).isEqualTo(Utfall.OPPFYLT)
+                assertThat(vurdering.innvilgelsesårsak).isEqualTo(null)
+            },
+        )
+    }
+
     private fun sykdomsvurdering(
         harSkadeSykdomEllerLyte: Boolean = true,
         erSkadeSykdomEllerLyteVesentligdel: Boolean = true,
