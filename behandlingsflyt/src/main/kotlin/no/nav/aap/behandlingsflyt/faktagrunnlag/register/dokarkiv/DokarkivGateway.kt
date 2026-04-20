@@ -5,7 +5,11 @@ import no.nav.aap.komponenter.gateway.Gateway
 
 interface DokarkivGateway : Gateway {
 
-    fun oppdater(journalpost: Journalpost, forsøkFerdigstill: Boolean): JournalpostResponse
+    fun oppdater(
+        journalpost: Journalpost,
+        bruker: no.nav.aap.komponenter.verdityper.Bruker,
+        forsøkFerdigstill: Boolean,
+    ): JournalpostResponse
 
     // Docs: https://confluence.adeo.no/display/BOA/opprettJournalpost
     data class Journalpost(

@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.test
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.dokarkiv.DokarkivGateway
 import no.nav.aap.komponenter.gateway.Factory
+import no.nav.aap.komponenter.verdityper.Bruker
 import java.util.concurrent.atomic.AtomicLong
 
 class FakeDokarkivGateway : DokarkivGateway {
@@ -9,7 +10,8 @@ class FakeDokarkivGateway : DokarkivGateway {
 
     override fun oppdater(
         journalpost: DokarkivGateway.Journalpost,
-        forsøkFerdigstill: Boolean
+        bruker: Bruker,
+        forsøkFerdigstill: Boolean,
     ): DokarkivGateway.JournalpostResponse {
         val id = idSequence.getAndIncrement()
         return DokarkivGateway.JournalpostResponse(

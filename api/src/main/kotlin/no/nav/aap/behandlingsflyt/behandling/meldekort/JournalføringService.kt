@@ -9,6 +9,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.json.DefaultJsonMapper
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.verdityper.dokument.JournalpostId
 import java.time.Instant
 import java.time.format.DateTimeFormatter
@@ -26,6 +27,7 @@ class JournalføringService(
         sak: Sak,
         meldeperiode: Periode,
         meldekort: MeldekortV0,
+        bruker: Bruker,
         tidspunkt: Instant,
     ): JournalpostId {
         val pdf = "".toByteArray() // TODO må få inn pdfgen her
@@ -41,6 +43,7 @@ class JournalføringService(
 
         val response = dokarkivGateway.oppdater(
             journalpost,
+            bruker = bruker,
             forsøkFerdigstill = false // postmottak vil lese denne og behandle den på lik linje som andre meldekort
         )
 

@@ -11,6 +11,7 @@ import no.nav.aap.komponenter.httpklient.httpclient.post
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
 import no.nav.aap.komponenter.json.DefaultJsonMapper
+import no.nav.aap.komponenter.verdityper.Bruker
 import java.net.URI
 
 object DokarkivGatewayImpl : DokarkivGateway {
@@ -24,18 +25,24 @@ object DokarkivGatewayImpl : DokarkivGateway {
 
     override fun oppdater(
         journalpost: DokarkivGateway.Journalpost,
-        forsøkFerdigstill: Boolean
+        bruker: Bruker,
+        forsøkFerdigstill: Boolean,
     ): DokarkivGateway.JournalpostResponse {
         return try {
             httpClient.post<_, DokarkivGateway.JournalpostResponse>(
                 uri = URI("$baseUrl/rest/journalpostapi/v1/journalpost?forsoekFerdigstill=$forsøkFerdigstill"),
                 request = PostRequest(
                     body = journalpost,
-                    additionalHeaders = listOf(Header("accept", "application/json")),
+                    additionalHeaders = listOf(
+                        Header("accept", "application/json"),
+                        Header("Nav-User-Id", bruker.ident),
+                    ),
                 ),
-            )!!
+            ) ?: error("Dokarkiv returnerte tom respons ved opprettelse av journalpost")
         } catch (e: ConflictHttpResponseException) {
-            DefaultJsonMapper.fromJson<DokarkivGateway.JournalpostResponse>(e.body!!)
+            DefaultJsonMapper.fromJson<DokarkivGateway.JournalpostResponse>(
+                e.body ?: error("Dokarkiv returnerte 409 Conflict uten body")
+            )
         }
     }
 }

@@ -93,8 +93,9 @@ fun NormalOpenAPIRoute.meldekortApi(
                     val journalføringService = JournalføringService(gatewayProvider)
 
                     val sak = sakRepository.hent(Saksnummer(body.saksnummer))
+                    val bruker = bruker()
                     val meldeperiode = body.meldeperiode
-                    val meldekort = tilMeldekort(body, bruker())
+                    val meldekort = tilMeldekort(body, bruker)
                     val tidspunkt = Instant.now()
 
                     /**
@@ -102,7 +103,7 @@ fun NormalOpenAPIRoute.meldekortApi(
                      * opp i postmottak som ferdigstiller denne på tilsvarende måte som vanlig meldekort fra
                      * bruker. Resten av flyten er lik ellers med revurdering og fasttrack.
                      */
-                    val journalpostId = journalføringService.journalfør(sak, meldeperiode, meldekort, tidspunkt)
+                    val journalpostId = journalføringService.journalfør(sak, meldeperiode, meldekort, bruker, tidspunkt)
 
                     // TODO lagre ned "midlertidig tilstand her slik at saksbehandler kan se at vi prosesserer endringene?
 
