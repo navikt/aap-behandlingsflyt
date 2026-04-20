@@ -319,7 +319,7 @@ internal fun Application.server(
                 dokumentinnhentingApi(dataSource, repositoryRegistry, gatewayProvider)
                 mottattHendelseApi(dataSource, repositoryRegistry)
                 underveisVurderingerApi(dataSource, repositoryRegistry)
-                lovvalgMedlemskapApi(dataSource, repositoryRegistry)
+                lovvalgMedlemskapApi(dataSource, repositoryRegistry, gatewayProvider)
                 lovvalgMedlemskapGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
                 samordningGrunnlag(dataSource, repositoryRegistry, gatewayProvider)
                 forutgåendeMedlemskapApi(dataSource, repositoryRegistry, gatewayProvider)

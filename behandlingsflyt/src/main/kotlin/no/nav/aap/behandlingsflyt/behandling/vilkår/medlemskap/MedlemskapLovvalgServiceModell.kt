@@ -25,6 +25,14 @@ data class TilhørighetVurdering(
     val oppgittJobbetIUtlandGrunnlag: List<OppgittJobbetIUtlandGrunnlag>? = null,
     val oppgittUtenlandsOppholdGrunnlag: List<OppgittUtenlandsOppholdGrunnlag>? = null,
     val utenlandsAddresserGrunnlag: UtenlandsAdresserGrunnlag? = null,
+    val visuellTidslinje: List<VisuellTidslinjeArbeidInntektINorge>? = null
+)
+
+data class VisuellTidslinjeArbeidInntektINorge(
+    val virksomhetId: String?,
+    val virksomhetNavn: String?,
+    val beloep: Double,
+    val periode: Periode,
 )
 
 data class VedtakIMEDLGrunnlag(

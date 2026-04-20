@@ -13,15 +13,21 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Pers
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningMedHistorikkGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Statsborgerskap
 import no.nav.aap.behandlingsflyt.test.Fakes
+import no.nav.aap.behandlingsflyt.test.FakeUnleashBase
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
+import java.time.YearMonth
 
 @Fakes
 class ForutgåendeMedlemskapVurderingServiceTest {
     private val service = ForutgåendeMedlemskapVurderingService()
+    private val serviceWithToggle = ForutgåendeMedlemskapVurderingService(
+        FakeUnleashBase(mapOf(BehandlingsflytFeature.ForutgaaendeForbedringer to true))
+    )
 
     @Test
     fun `automatisk om inntekt er oppfylt`() {
@@ -62,6 +68,27 @@ class ForutgåendeMedlemskapVurderingServiceTest {
         assertThat(vurdering.resultat).isFalse
     }
 
+    @Test
+    fun `lager tomme perioder i visuell tidslinjefor måneder uten inntekt`() {
+        val rettighetsperiode = Periode(LocalDate.now(), LocalDate.now().plusYears(1))
+        val grunnlag = lagGrunnlag(godkjentPgaUnntakIMedl = false, godkjentPgaInntekt = false, inntektHarHull = true)
+
+        val vurdering = serviceWithToggle.vurderTilhørighet(grunnlag, rettighetsperiode)
+            .tilhørighetVurdering
+            .single { it.opplysning == "Sammenhengende arbeid og inntekt i Norge siste 5 år" }
+        val tidslinje = vurdering.visuellTidslinje!!
+
+        val gapMåned = YearMonth.from(LocalDate.now().minusYears(2))
+        val gapEntry = tidslinje.single { YearMonth.from(it.periode.fom) == gapMåned }
+        assertThat(gapEntry.virksomhetId).isNull()
+        assertThat(gapEntry.virksomhetNavn).isNull()
+        assertThat(gapEntry.beloep).isEqualTo(0.0)
+
+        val inntektMåned = YearMonth.from(LocalDate.now().minusYears(4))
+        val inntektEntry = tidslinje.single { YearMonth.from(it.periode.fom) == inntektMåned }
+        assertThat(inntektEntry.virksomhetId).isEqualTo("1")
+        assertThat(inntektEntry.beloep).isEqualTo(1.0)
+    }
 
     private fun lagGrunnlag(
         godkjentPgaUnntakIMedl: Boolean,
