@@ -37,34 +37,34 @@ class SykdomsvurderingMigrering(
 
         while (!ferdig) {
             dataSource.transaction { connection ->
-                    val repositoryProvider = repositoryRegistry.provider(connection)
-                    val sykdomsvurderingMigreringService =
-                        SykdomsvurderingMigreringService(repositoryProvider, gatewayProvider)
+                val repositoryProvider = repositoryRegistry.provider(connection)
+                val sykdomsvurderingMigreringService =
+                    SykdomsvurderingMigreringService(repositoryProvider, gatewayProvider)
 
-                    val behandlingIder =
-                        sykdomsvurderingMigreringService.hentNesteBehandlingIdMedUmigrerteSykdomsvurderinger(
-                            sisteMigrerte
-                        )
+                val behandlingIder =
+                    sykdomsvurderingMigreringService.hentNesteBehandlingIdMedUmigrerteSykdomsvurderinger(
+                        sisteMigrerte
+                    )
 
-                    if (behandlingIder.isEmpty()) {
-                        ferdig = true
-                        log.info("Ferdig med migrering av sykdomsvurdering. Totalt $antallMigreringer behandlinger migrert.")
-                        return@transaction
-                    }
+                if (behandlingIder.isEmpty()) {
+                    ferdig = true
+                    log.info("Ferdig med migrering av sykdomsvurdering. Totalt $antallMigreringer behandlinger migrert.")
+                    return@transaction
+                }
 
-                    val behandlingId = behandlingIder.first()
-                    try {
-                        sykdomsvurderingMigreringService.migrerBehandling(behandlingId)
-                    } catch (e: Exception) {
-                        log.error("Migrering feilet for behandling $behandlingId. Avbryter migrering.", e)
-                        ferdig = true
-                    }
-                    antallMigreringer += 1
-                    sisteMigrerte = behandlingId.id
+                val behandlingId = behandlingIder.first()
+                try {
+                    sykdomsvurderingMigreringService.migrerBehandling(behandlingId)
+                } catch (e: Exception) {
+                    log.error("Migrering feilet for behandling $behandlingId. Avbryter migrering.", e)
+                    ferdig = true
+                }
+                antallMigreringer += 1
+                sisteMigrerte = behandlingId.id
 
-                    if (antallMigreringer % 10 == 0) {
-                        log.info("Pågående migrering av sykdomsvurdering, $antallMigreringer behandlinger migrert")
-                    }
+                if (antallMigreringer % 10 == 0) {
+                    log.info("Pågående migrering av sykdomsvurdering, $antallMigreringer behandlinger migrert")
+                }
             }
         }
     }
@@ -78,6 +78,7 @@ class SykdomsvurderingMigreringService(
     val sykepengerErstatningRepository: SykepengerErstatningRepository,
 ) {
     private val log = LoggerFactory.getLogger(this.javaClass)
+    private val WHITELISTEDE_BEHANDLING_ID_ER_PRODUKSJON = listOf(72, 73, 75, 81, 184, 187, 188, 189, 192)
 
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         sykdomRepository = repositoryProvider.provide(),
@@ -164,8 +165,9 @@ class SykdomsvurderingMigreringService(
 
             if (diffEtterFiltrertGamleVurderinger.isNotEmpty()) {
                 if (Miljø.erDev()) {
-                    log.warn("Behandlingen $behandlingId har diff etter migrering - ignoreres pga dev-miljø. Diff: $diffEtter")
-
+                    log.warn("Behandlingen $behandlingId har diff etter migrering - ignoreres pga dev-miljø eller whitelisting. Diff: $diffEtter")
+                } else if(WHITELISTEDE_BEHANDLING_ID_ER_PRODUKSJON.contains(behandlingId.id)) {
+                    log.warn("Behandlingen $behandlingId har diff etter migrering - ignoreres pga whitelisting. Diff: $diffEtter")
                 } else {
                     log.error(
                         "Behandling $behandlingId har diff etter migrer. Dette indikerer feil i migreringslogikk. " +
