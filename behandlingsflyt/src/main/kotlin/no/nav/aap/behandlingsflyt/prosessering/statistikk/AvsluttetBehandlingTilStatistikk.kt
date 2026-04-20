@@ -174,8 +174,9 @@ class AvsluttetBehandlingTilStatistikk(
     }
 
     private fun hentRettighetstypePerioder(behandling: Behandling): List<RettighetstypePeriode> {
-        val rettighetstypePerioder = underveisRepository.hentHvisEksisterer(behandling.id)?.perioder.orEmpty()
-            .filter { it.rettighetsType != null }.map { Segment(it.periode, it.rettighetsType) }.let(::Tidslinje)
+        val rettighetstypePerioder = underveisRepository.hentHvisEksisterer(behandling.id)
+            ?.somTidslinje().orEmpty()
+            .mapNotNull { it.rettighetsType }
             .komprimer().segmenter().map {
                 RettighetstypePeriode(
                     fraDato = it.periode.fom,
