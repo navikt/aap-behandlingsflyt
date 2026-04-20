@@ -78,7 +78,7 @@ class SykdomsvurderingMigreringService(
     val sykepengerErstatningRepository: SykepengerErstatningRepository,
 ) {
     private val log = LoggerFactory.getLogger(this.javaClass)
-    private val WHITELISTEDE_BEHANDLING_ID_ER_PRODUKSJON = listOf(72, 73, 75, 81, 184, 187, 188, 189, 192)
+    private val WHITELISTEDE_BEHANDLING_ID_ER_PRODUKSJON = listOf<Long>(72, 73, 75, 81, 184, 187, 188, 189, 192)
 
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         sykdomRepository = repositoryProvider.provide(),
@@ -166,7 +166,7 @@ class SykdomsvurderingMigreringService(
             if (diffEtterFiltrertGamleVurderinger.isNotEmpty()) {
                 if (Miljø.erDev()) {
                     log.warn("Behandlingen $behandlingId har diff etter migrering - ignoreres pga dev-miljø eller whitelisting. Diff: $diffEtter")
-                } else if(WHITELISTEDE_BEHANDLING_ID_ER_PRODUKSJON.contains(behandlingId.id)) {
+                } else if (WHITELISTEDE_BEHANDLING_ID_ER_PRODUKSJON.contains(behandlingId.id)) {
                     log.warn("Behandlingen $behandlingId har diff etter migrering - ignoreres pga whitelisting. Diff: $diffEtter")
                 } else {
                     log.error(
