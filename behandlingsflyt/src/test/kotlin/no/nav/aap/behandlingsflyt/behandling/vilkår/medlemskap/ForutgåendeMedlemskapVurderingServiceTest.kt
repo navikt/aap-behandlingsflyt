@@ -24,8 +24,9 @@ import java.time.YearMonth
 
 @Fakes
 class ForutgåendeMedlemskapVurderingServiceTest {
-    private val service = ForutgåendeMedlemskapVurderingService(
-        unleashGateway = TODO()
+    private val service = ForutgåendeMedlemskapVurderingService()
+    private val serviceWithToggle = ForutgåendeMedlemskapVurderingService(
+        FakeUnleashBase(mapOf(BehandlingsflytFeature.ForutgaaendeForbedringer to true))
     )
 
     @Test
@@ -72,7 +73,7 @@ class ForutgåendeMedlemskapVurderingServiceTest {
         val rettighetsperiode = Periode(LocalDate.now(), LocalDate.now().plusYears(1))
         val grunnlag = lagGrunnlag(godkjentPgaUnntakIMedl = false, godkjentPgaInntekt = false, inntektHarHull = true)
 
-        val vurdering = service.vurderTilhørighet(grunnlag, rettighetsperiode)
+        val vurdering = serviceWithToggle.vurderTilhørighet(grunnlag, rettighetsperiode)
             .tilhørighetVurdering
             .single { it.opplysning == "Sammenhengende arbeid og inntekt i Norge siste 5 år" }
         val tidslinje = vurdering.visuellTidslinje!!
