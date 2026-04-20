@@ -1,6 +1,8 @@
 package no.nav.aap.behandlingsflyt.integrasjon.dokarkiv
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.dokarkiv.DokarkivGateway
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.dokarkiv.JournalpostResponse
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.dokarkiv.Journalpost
 import no.nav.aap.behandlingsflyt.prometheus
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
@@ -24,12 +26,12 @@ object DokarkivGatewayImpl : DokarkivGateway {
     )
 
     override fun oppdater(
-        journalpost: DokarkivGateway.Journalpost,
+        journalpost: Journalpost,
         bruker: Bruker,
         forsøkFerdigstill: Boolean,
-    ): DokarkivGateway.JournalpostResponse {
+    ): JournalpostResponse {
         return try {
-            httpClient.post<_, DokarkivGateway.JournalpostResponse>(
+            httpClient.post<_, JournalpostResponse>(
                 uri = URI("$baseUrl/rest/journalpostapi/v1/journalpost?forsoekFerdigstill=$forsøkFerdigstill"),
                 request = PostRequest(
                     body = journalpost,
@@ -40,7 +42,7 @@ object DokarkivGatewayImpl : DokarkivGateway {
                 ),
             ) ?: error("Dokarkiv returnerte tom respons ved opprettelse av journalpost")
         } catch (e: ConflictHttpResponseException) {
-            DefaultJsonMapper.fromJson<DokarkivGateway.JournalpostResponse>(
+            DefaultJsonMapper.fromJson<JournalpostResponse>(
                 e.body ?: error("Dokarkiv returnerte 409 Conflict uten body")
             )
         }

@@ -39,7 +39,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevu
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.Ytelser
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.LegeerklæringStatusResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.MeldingStatusType
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.dokarkiv.DokarkivGateway
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.dokarkiv.DokumentInfo
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.dokarkiv.Journalpost
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.dokarkiv.JournalpostResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.adapter.InntektForÅr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.adapter.InntektRequest
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.adapter.InntektResponse
@@ -452,14 +454,14 @@ object FakeServers : AutoCloseable {
         routing {
             route("/rest/journalpostapi/v1/journalpost") {
                 post {
-                    val journalpost = call.receive<DokarkivGateway.Journalpost>()
+                    val journalpost = call.receive<Journalpost>()
                     call.respond(
-                        DokarkivGateway.JournalpostResponse(
+                        JournalpostResponse(
                             journalpostId = 123456789L,
                             melding = null,
                             journalpostferdigstilt = call.request.queryParameters["forsoekFerdigstill"]?.toBoolean() ?: false,
                             dokumenter = journalpost.dokumenter?.mapIndexed { index, _ ->
-                                DokarkivGateway.DokumentInfo(dokumentInfoId = (index + 1).toLong())
+                                DokumentInfo(dokumentInfoId = (index + 1).toLong())
                             } ?: emptyList()
                         )
                     )

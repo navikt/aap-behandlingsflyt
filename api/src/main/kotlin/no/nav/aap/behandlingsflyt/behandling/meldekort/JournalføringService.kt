@@ -1,7 +1,18 @@
 package no.nav.aap.behandlingsflyt.behandling.meldekort
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.dokarkiv.BrukerIdType
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.dokarkiv.DokarkivBruker
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.dokarkiv.DokarkivGateway
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ArbeidIPeriodeV0
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.dokarkiv.DokarkivSak
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.dokarkiv.Dokument
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.dokarkiv.DokumentVariant
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.dokarkiv.FagsaksSystem
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.dokarkiv.Filetype
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.dokarkiv.Journalpost
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.dokarkiv.Journalposttype
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.dokarkiv.Sakstype
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.dokarkiv.Tema
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.dokarkiv.Variantformat
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Meldekort
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.MeldekortV0
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
@@ -57,7 +68,7 @@ class JournalføringService(
         tidspunkt: Instant,
         pdf: ByteArray,
         sak: Sak,
-    ): DokarkivGateway.Journalpost {
+    ): Journalpost {
         val uke1 = meldeperiode.fom.get(uke)
         val uke2 = meldeperiode.tom.get(uke)
         val fra = meldeperiode.fom.format(dateFormatter)
@@ -65,33 +76,33 @@ class JournalføringService(
         val tittelsuffix = "for uke $uke1 - $uke2 ($fra - $til) elektronisk mottatt av NAV"
         val tittel = "Korrigert meldekort $tittelsuffix"
 
-        return DokarkivGateway.Journalpost(
-            journalposttype = DokarkivGateway.Journalposttype.NOTAT,
-            bruker = DokarkivGateway.Bruker(
+        return Journalpost(
+            journalposttype = Journalposttype.NOTAT,
+            bruker = DokarkivBruker(
                 id = ident.identifikator,
-                idType = DokarkivGateway.BrukerIdType.FNR,
+                idType = BrukerIdType.FNR,
             ),
-            tema = DokarkivGateway.Tema.AAP,
+            tema = Tema.AAP,
             tittel = tittel,
             datoMottatt = tidspunkt.toString(),
-            sak = DokarkivGateway.Sak(
-                sakstype = DokarkivGateway.Sakstype.FAGSAK,
-                fagsaksystem = DokarkivGateway.FagsaksSystem.KELVIN,
+            sak = DokarkivSak(
+                sakstype = Sakstype.FAGSAK,
+                fagsaksystem = FagsaksSystem.KELVIN,
                 fagsakId = sak.saksnummer.toString()
             ),
             dokumenter = listOf(
-                DokarkivGateway.Dokument(
+                Dokument(
                     tittel = tittel,
                     brevkode = "NAV 00-10.03", // Korrigering
                     dokumentvarianter = listOf(
-                        DokarkivGateway.DokumentVariant(
-                            filtype = DokarkivGateway.Filetype.PDF,
-                            variantformat = DokarkivGateway.Variantformat.ARKIV,
+                        DokumentVariant(
+                            filtype = Filetype.PDF,
+                            variantformat = Variantformat.ARKIV,
                             fysiskDokument = pdf,
                         ),
-                        DokarkivGateway.DokumentVariant(
-                            filtype = DokarkivGateway.Filetype.JSON,
-                            variantformat = DokarkivGateway.Variantformat.ORIGINAL,
+                        DokumentVariant(
+                            filtype = Filetype.JSON,
+                            variantformat = Variantformat.ORIGINAL,
                             fysiskDokument = DefaultJsonMapper.toJson(meldekort).encodeToByteArray(),
                         )
                     ),
