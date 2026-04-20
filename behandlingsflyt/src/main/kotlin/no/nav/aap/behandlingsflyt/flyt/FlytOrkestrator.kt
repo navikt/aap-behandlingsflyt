@@ -65,6 +65,7 @@ class FlytOrkestrator(
         gatewayProvider: GatewayProvider,
         stoppNårStatus: Set<Status> = emptySet(),
         markSavepointAt: Set<StegStatus>? = null,
+        behandlingHendelseService: BehandlingHendelseService = BehandlingHendelseServiceImpl(repositoryProvider, gatewayProvider),
     ) : this(
         ventebehovEvaluererService = VentebehovEvaluererServiceImpl(repositoryProvider),
         behandlingRepository = repositoryProvider.provide(),
@@ -73,7 +74,7 @@ class FlytOrkestrator(
         sakRepository = repositoryProvider.provide(),
         flytKontekstMedPeriodeService = FlytKontekstMedPeriodeService(repositoryProvider, gatewayProvider),
         behandlingService = BehandlingService(repositoryProvider, gatewayProvider),
-        behandlingHendelseService = BehandlingHendelseServiceImpl(repositoryProvider, gatewayProvider),
+        behandlingHendelseService = behandlingHendelseService,
         stegOrkestrator = StegOrkestrator(repositoryProvider, gatewayProvider, markSavepointAt),
         stoppNårStatus = stoppNårStatus,
     )
