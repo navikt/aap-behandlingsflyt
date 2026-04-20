@@ -69,7 +69,7 @@ class ForutgåendeMedlemskapVurderingServiceTest {
     }
 
     @Test
-    fun `lager tomme perioder i visuell tidslinjefor måneder uten inntekt`() {
+    fun `lager tomme perioder i visuell tidslinje for måneder uten inntekt`() {
         val rettighetsperiode = Periode(LocalDate.now(), LocalDate.now().plusYears(1))
         val grunnlag = lagGrunnlag(godkjentPgaUnntakIMedl = false, godkjentPgaInntekt = false, inntektHarHull = true)
 
@@ -78,11 +78,16 @@ class ForutgåendeMedlemskapVurderingServiceTest {
             .single { it.opplysning == "Sammenhengende arbeid og inntekt i Norge siste 5 år" }
         val tidslinje = vurdering.visuellTidslinje
 
-        val gapMåned = YearMonth.from(LocalDate.now().minusYears(2))
-        val gapEntry = tidslinje.single { YearMonth.from(it.periode.fom) == gapMåned }
+        val gapEntries = tidslinje.filter { it.periodeMangler }
+        assertThat(gapEntries).hasSize(1)
+        val gapEntry = gapEntries.single()
         assertThat(gapEntry.virksomhetId).isNull()
         assertThat(gapEntry.virksomhetNavn).isNull()
         assertThat(gapEntry.beloep).isEqualTo(0.0)
+
+        val gapMåned = YearMonth.from(LocalDate.now().minusYears(2))
+        assertThat(YearMonth.from(gapEntry.periode.fom)).isBeforeOrEqualTo(gapMåned)
+        assertThat(YearMonth.from(gapEntry.periode.tom)).isAfterOrEqualTo(gapMåned)
 
         val inntektMåned = YearMonth.from(LocalDate.now().minusYears(4))
         val inntektEntry = tidslinje.single { YearMonth.from(it.periode.fom) == inntektMåned }

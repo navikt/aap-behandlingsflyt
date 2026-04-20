@@ -318,14 +318,31 @@ class ForutgåendeMedlemskapVurderingService(
 
         val tidslinje = mutableListOf<VisuellTidslinjeArbeidInntektINorge>()
         var nåMnd = startMnd
+        var hullStart: YearMonth? = null
+
+        fun slåSammenHull(hullTom: YearMonth) {
+            val start = hullStart ?: return
+            tidslinje.add(
+                VisuellTidslinjeArbeidInntektINorge(
+                    null,
+                    null,
+                    0.0,
+                    Periode(start.atDay(1), hullTom.atEndOfMonth()),
+                    true
+                )
+            )
+            hullStart = null
+        }
+
         while (!nåMnd.isAfter(sluttMnd)) {
             val mndPeriode = Periode(nåMnd.atDay(1), nåMnd.atEndOfMonth())
             val inntekterForMnd = inntekter?.filter { it.periode.overlapper(mndPeriode) }
 
-            if (inntekterForMnd.isNullOrEmpty()) {
-                tidslinje.add(VisuellTidslinjeArbeidInntektINorge(null, null, 0.0, mndPeriode, true))
+            if (inntekterForMnd.isNullOrEmpty() && hullStart == null) {
+                hullStart = nåMnd
             } else {
-                inntekterForMnd.forEach { inntekt ->
+                slåSammenHull(nåMnd.minusMonths(1))
+                inntekterForMnd?.forEach { inntekt ->
                     tidslinje.add(
                         VisuellTidslinjeArbeidInntektINorge(
                             virksomhetId = inntekt.identifikator,
@@ -339,6 +356,8 @@ class ForutgåendeMedlemskapVurderingService(
             }
             nåMnd = nåMnd.plusMonths(1)
         }
+        slåSammenHull(sluttMnd)
+
         return tidslinje
     }
 
