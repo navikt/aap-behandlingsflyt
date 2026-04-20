@@ -25,7 +25,7 @@ data class TilhørighetVurdering(
     val oppgittJobbetIUtlandGrunnlag: List<OppgittJobbetIUtlandGrunnlag>? = null,
     val oppgittUtenlandsOppholdGrunnlag: List<OppgittUtenlandsOppholdGrunnlag>? = null,
     val utenlandsAddresserGrunnlag: UtenlandsAdresserGrunnlag? = null,
-    val visuellTidslinje: List<VisuellTidslinjeArbeidInntektINorge>? = null
+    val visuellTidslinje: List<VisuellTidslinjeArbeidInntektINorge> = emptyList(),
 )
 
 data class VisuellTidslinjeArbeidInntektINorge(

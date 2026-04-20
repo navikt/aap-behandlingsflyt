@@ -76,7 +76,7 @@ class ForutgåendeMedlemskapVurderingServiceTest {
         val vurdering = serviceWithToggle.vurderTilhørighet(grunnlag, rettighetsperiode)
             .tilhørighetVurdering
             .single { it.opplysning == "Sammenhengende arbeid og inntekt i Norge siste 5 år" }
-        val tidslinje = vurdering.visuellTidslinje!!
+        val tidslinje = vurdering.visuellTidslinje
 
         val gapMåned = YearMonth.from(LocalDate.now().minusYears(2))
         val gapEntry = tidslinje.single { YearMonth.from(it.periode.fom) == gapMåned }

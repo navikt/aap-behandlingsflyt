@@ -275,7 +275,7 @@ class ForutgåendeMedlemskapVurderingService(
 
         val visuellTidslinje = if (unleashGateway?.isEnabled(BehandlingsflytFeature.ForutgaaendeForbedringer) == true) {
             byggVisuellTidslinje(grunnlag?.inntekterINorgeGrunnlag, forutgåendePeriode)
-        } else null
+        } else emptyList()
 
         return TilhørighetVurdering(
             kilde = listOf(Kilde.A_INNTEKT, Kilde.AA_REGISTERET, Kilde.EREG),
