@@ -78,7 +78,7 @@ class SykdomsvurderingMigreringService(
     val sykepengerErstatningRepository: SykepengerErstatningRepository,
 ) {
     private val log = LoggerFactory.getLogger(this.javaClass)
-    private val WHITELISTEDE_BEHANDLING_ID_ER_PRODUKSJON = listOf<Long>(72, 73, 75, 81, 184, 187, 188, 189, 192, 110)
+    private val WHITELISTEDE_BEHANDLING_ID_ER_PRODUKSJON = listOf<Long>(72, 73, 75, 81, 184, 187, 188, 189, 192, 110, 14806)
 
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         sykdomRepository = repositoryProvider.provide(),
