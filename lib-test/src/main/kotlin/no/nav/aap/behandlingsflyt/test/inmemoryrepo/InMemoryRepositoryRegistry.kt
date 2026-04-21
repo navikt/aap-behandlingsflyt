@@ -11,6 +11,7 @@ val inMemoryRepositoryRegistry = RepositoryRegistry().apply {
     register<InMemoryBarnRepository>()
     register<InMemoryBehandlingRepository>()
     register<InMemoryBeregningsgrunnlagRepository>()
+    register<InMemoryBeregningVurderingRepository>()
     register<InMemoryBrevbestillingRepository>()
     register<InMemoryContextRepository>()
     register<InMemoryFlytJobbRepository>()

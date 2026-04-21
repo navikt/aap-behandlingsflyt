@@ -114,7 +114,6 @@ class BeregnTilkjentYtelseSteg private constructor(
             faktagrunnlag = grunnlag,
             versjon = ApplikasjonsVersjon.versjon,
         )
-        log.info("Beregnet tilkjent ytelse: $beregnetTilkjentYtelse")
 
         log.info("Lagrer ned reduksjoner pga aktivitetsplikt 11-9: [${reduksjoner11_9.size}]")
         reduksjon11_9Repository.lagre(

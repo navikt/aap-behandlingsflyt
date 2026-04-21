@@ -2,15 +2,20 @@ package no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap
 
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.ForutgåendeMedlemskapArbeidInntektGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.ForutgåendeMedlemskapGrunnlag
+import no.nav.aap.behandlingsflyt.behandling.lovvalg.InntektINorgeGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.utenlandsopphold.UtenlandsOppholdData
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapUnntakGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonStatus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningMedHistorikkGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.erGyldigIPeriode
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.type.Periode
 import java.time.YearMonth
 
-class ForutgåendeMedlemskapVurderingService {
+class ForutgåendeMedlemskapVurderingService(
+    private val unleashGateway: UnleashGateway? = null
+) {
     fun vurderTilhørighet(
         grunnlag: ForutgåendeMedlemskapGrunnlag,
         rettighetsPeriode: Periode
@@ -268,6 +273,9 @@ class ForutgåendeMedlemskapVurderingService {
                 )
             }
 
+        val visuellTidslinje = if (unleashGateway?.isEnabled(BehandlingsflytFeature.ForutgaaendeForbedringer) == true) {
+            byggVisuellTidslinje(grunnlag?.inntekterINorgeGrunnlag, forutgåendePeriode)
+        } else emptyList()
 
         return TilhørighetVurdering(
             kilde = listOf(Kilde.A_INNTEKT, Kilde.AA_REGISTERET, Kilde.EREG),
@@ -275,7 +283,8 @@ class ForutgåendeMedlemskapVurderingService {
             opplysning = "Sammenhengende arbeid og inntekt i Norge siste 5 år",
             resultat = sammenhengendeInntektSiste5År,
             arbeidInntektINorgeGrunnlag = arbeidInntektINorgeGrunnlag,
-            vurdertPeriode = VurdertPeriode.SISTE_5_ÅR.beskrivelse
+            vurdertPeriode = VurdertPeriode.SISTE_5_ÅR.beskrivelse,
+            visuellTidslinje = visuellTidslinje
         )
     }
 
@@ -298,6 +307,41 @@ class ForutgåendeMedlemskapVurderingService {
             nåMnd = nåMnd.plusMonths(1)
         }
         return true
+    }
+
+    private fun byggVisuellTidslinje(
+        inntekter: List<InntektINorgeGrunnlag>?,
+        forutgåendePeriode: Periode
+    ): List<VisuellTidslinjeArbeidInntektINorge> {
+        val startMnd = YearMonth.from(forutgåendePeriode.fom)
+        val sluttMnd = YearMonth.from(forutgåendePeriode.fom.plusYears(5))
+
+        val tidslinje = mutableListOf<VisuellTidslinjeArbeidInntektINorge>()
+        var nåMnd = startMnd
+
+        while (!nåMnd.isAfter(sluttMnd)) {
+            val mndPeriode = Periode(nåMnd.atDay(1), nåMnd.atEndOfMonth())
+            val inntekterForMnd = inntekter?.filter { it.periode.overlapper(mndPeriode) }
+
+            if (inntekterForMnd.isNullOrEmpty()) {
+                tidslinje.add(VisuellTidslinjeArbeidInntektINorge(null, null, 0.0, mndPeriode, true))
+            } else {
+                inntekterForMnd.forEach { inntekt ->
+                    tidslinje.add(
+                        VisuellTidslinjeArbeidInntektINorge(
+                            virksomhetId = inntekt.identifikator,
+                            virksomhetNavn = inntekt.organisasjonsNavn,
+                            beloep = inntekt.beloep,
+                            periode = mndPeriode,
+                            periodeMangler = false
+                        )
+                    )
+                }
+            }
+            nåMnd = nåMnd.plusMonths(1)
+        }
+
+        return tidslinje
     }
 
     private fun harVedtakIMEDL(grunnlag: MedlemskapUnntakGrunnlag?, forutgåendePeriode: Periode): TilhørighetVurdering {

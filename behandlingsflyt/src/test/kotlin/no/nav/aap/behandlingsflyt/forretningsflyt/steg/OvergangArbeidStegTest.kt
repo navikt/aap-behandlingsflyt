@@ -99,6 +99,57 @@ class OvergangArbeidStegTest {
         assertThat(behov!!.erÅpent()).isTrue
     }
 
+    @Test
+    fun `Overgang arbeid skal ikke vurderes om 11-5 oppfylt ved yrkesskadefordel`() {
+        val rettighetsperiode = Periode(
+            1 januar 2020,
+            1 januar 2021,
+        )
+        val person = person()
+        val sak = sak(person, rettighetsperiode)
+        val behandling = behandling(sak, typeBehandling = TypeBehandling.Førstegangsbehandling)
+        val kontekstMedPerioder = flytKontekstMedPerioder(sak, behandling, VurderingType.FØRSTEGANGSBEHANDLING)
+
+
+        val bistandMock: BistandRepository = mockk(relaxed = true) {
+            every { hentHvisEksisterer(any()) } returns BistandGrunnlag(
+                vurderinger = listOf(bistand(erBehov = true, vurderingenGjelderFra = rettighetsperiode.fom))
+            )
+        }
+        val sykdomMock: SykdomRepository = mockk(relaxed = true) {
+            every { hentHvisEksisterer(any()) } returns SykdomGrunnlag(
+                yrkesskadevurdering = null,
+                sykdomsvurderinger = listOf(
+                    sykdom(erSyk = true, vurderingenGjelderFra = rettighetsperiode.fom),
+                    sykdomMedYrkesskadefordel(vurderingenGjelderFra = rettighetsperiode.fom.plusMonths(2))
+                )
+            )
+        }
+
+        val steg = OvergangArbeidSteg(
+            vilkårsresultatRepository = InMemoryVilkårsresultatRepository,
+            avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
+            overgangArbeidRepository = mockk<OvergangArbeidRepository> {
+                every { hentHvisEksisterer(any()) } returns null
+            },
+            sykdomRepository = sykdomMock,
+            tidligereVurderinger = FakeTidligereVurderinger(),
+            bistandRepository = bistandMock,
+            avklaringsbehovService = AvklaringsbehovService(inMemoryRepositoryProvider),
+            studentRepository = mockk<StudentRepository> {
+                every { hentHvisEksisterer(any()) } returns null
+            },
+            overgangUføreRepository = mockk<OvergangUføreRepository> {
+                every { hentHvisEksisterer(any()) } returns null
+            },
+        )
+
+        // skal ikke åpne avklaringsbehov, 11-5 og 11-6 er oppfylt
+        steg.utfør(kontekstMedPerioder)
+        val behov = hentOvergangArbeidBehov(behandling)
+        assertThat(behov).isNull()
+    }
+
 
     private fun hentOvergangArbeidBehov(behandling: Behandling): Avklaringsbehov? =
         InMemoryAvklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
@@ -163,6 +214,26 @@ class OvergangArbeidStegTest {
         erNedsettelseMerEnnYrkesskadegrense = null,
         erArbeidsevnenNedsatt = true,
         yrkesskadeBegrunnelse = null,
+        erNedsettelseIArbeidsevneAvEnVissVarighet = true,
+        vurderingenGjelderFra = vurderingenGjelderFra,
+        vurderingenGjelderTil = null,
+        vurdertAv = Bruker("Z00000"),
+        opprettet = Instant.now(),
+        vurdertIBehandling = BehandlingId(1L),
+        diagnose = null
+    )
+
+    private fun sykdomMedYrkesskadefordel(vurderingenGjelderFra: LocalDate) = Sykdomsvurdering(
+        begrunnelse = "",
+        dokumenterBruktIVurdering = emptyList(),
+        harSkadeSykdomEllerLyte = true,
+        erSkadeSykdomEllerLyteVesentligdel = true,
+        erNedsettelseIArbeidsevneMerEnnHalvparten = false,
+        erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = true,
+        erNedsettelseMinstHalvparten = null,
+        erNedsettelseMerEnnYrkesskadegrense = null,
+        erArbeidsevnenNedsatt = true,
+        yrkesskadeBegrunnelse = "",
         erNedsettelseIArbeidsevneAvEnVissVarighet = true,
         vurderingenGjelderFra = vurderingenGjelderFra,
         vurderingenGjelderTil = null,

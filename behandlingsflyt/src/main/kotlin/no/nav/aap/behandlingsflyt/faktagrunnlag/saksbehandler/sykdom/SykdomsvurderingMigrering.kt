@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.behandling.vilkår.sykdom.SammenlignetSegment
 import no.nav.aap.behandlingsflyt.behandling.vilkår.sykdom.SykdomsFaktagrunnlag
 import no.nav.aap.behandlingsflyt.behandling.vilkår.sykdom.SykdomsvilkårUtenVissVarighet
 import no.nav.aap.behandlingsflyt.behandling.vilkår.sykdom.diff
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Innvilgelsesårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
@@ -37,35 +38,33 @@ class SykdomsvurderingMigrering(
 
         while (!ferdig) {
             dataSource.transaction { connection ->
-                try {
-                    val repositoryProvider = repositoryRegistry.provider(connection)
-                    val sykdomsvurderingMigreringService =
-                        SykdomsvurderingMigreringService(repositoryProvider, gatewayProvider)
+                val repositoryProvider = repositoryRegistry.provider(connection)
+                val sykdomsvurderingMigreringService =
+                    SykdomsvurderingMigreringService(repositoryProvider, gatewayProvider)
 
-                    val behandlingIder =
-                        sykdomsvurderingMigreringService.hentNesteBehandlingIdMedUmigrerteSykdomsvurderinger(
-                            sisteMigrerte
-                        )
+                val behandlingIder =
+                    sykdomsvurderingMigreringService.hentNesteBehandlingIdMedUmigrerteSykdomsvurderinger(
+                        sisteMigrerte
+                    )
 
-                    if (behandlingIder.isEmpty()) {
-                        ferdig = true
-                        log.info("Ferdig med migrering av sykdomsvurdering. Totalt $antallMigreringer behandlinger migrert.")
-                        return@transaction
-                    }
-
-                    val behandlingId = behandlingIder.first()
-                    sykdomsvurderingMigreringService.migrerBehandling(behandlingId)
-                    antallMigreringer += 1
-                    sisteMigrerte = behandlingId.id
-
-                    if (antallMigreringer % 10 == 0) {
-                        log.info("Pågående migrering av sykdomsvurdering, $antallMigreringer behandlinger migrert")
-                    }
-                } catch (e: Exception) {
-                    log.error("Migrering feilet", e)
-                    throw e
+                if (behandlingIder.isEmpty()) {
+                    ferdig = true
+                    log.info("Ferdig med migrering av sykdomsvurdering. Totalt $antallMigreringer behandlinger migrert.")
+                    return@transaction
                 }
 
+                val behandlingId = behandlingIder.first()
+                try {
+                    sykdomsvurderingMigreringService.migrerBehandling(behandlingId)
+                } catch (e: Exception) {
+                    log.error("Migrering feilet for behandling $behandlingId. Avbryter migrering.", e)
+                }
+                antallMigreringer += 1
+                sisteMigrerte = behandlingId.id
+
+                if (antallMigreringer % 10 == 0) {
+                    log.info("Pågående migrering av sykdomsvurdering, $antallMigreringer behandlinger migrert")
+                }
             }
         }
     }
@@ -79,6 +78,7 @@ class SykdomsvurderingMigreringService(
     val sykepengerErstatningRepository: SykepengerErstatningRepository,
 ) {
     private val log = LoggerFactory.getLogger(this.javaClass)
+    private val WHITELISTEDE_BEHANDLING_ID_ER_PRODUKSJON = listOf<Long>(72, 73, 75, 81, 184, 187, 188, 189, 192, 110, 14806)
 
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         sykdomRepository = repositoryProvider.provide(),
@@ -134,12 +134,14 @@ class SykdomsvurderingMigreringService(
 
         // Hent oppdatert grunnlag og sammenlign etter oppdatering
         val oppdatertSykdomsGrunnlag = sykdomRepository.hent(behandlingId)
+        val oppdaterteSykdomsvurderinger =
+            if (Miljø.erDev()) oppdatertSykdomsGrunnlag.sykdomsvurderinger.filter { rettighetsperiode.inneholder(it.vurderingenGjelderFra) } else oppdatertSykdomsGrunnlag.sykdomsvurderinger
         val oppdatertFaktagrunnlag = SykdomsFaktagrunnlag(
             kravDato = rettighetsperiode.fom,
             sisteDagMedMuligYtelse = rettighetsperiode.tom,
             yrkesskadevurdering = oppdatertSykdomsGrunnlag.yrkesskadevurdering,
             sykepengerErstatningFaktagrunnlag = sykepengerErstatningGrunnlag,
-            sykdomsvurderinger = oppdatertSykdomsGrunnlag.sykdomsvurderinger,
+            sykdomsvurderinger = oppdaterteSykdomsvurderinger,
             bistandvurderingFaktagrunnlag = bistandGrunnlag,
             sykepengeerstatningVilkår = vilkårsresultat.optionalVilkår(Vilkårtype.SYKEPENGEERSTATNING)?.tidslinje()
                 .orEmpty(),
@@ -158,6 +160,9 @@ class SykdomsvurderingMigreringService(
                 } else if (harIkkeFastsattSykdomsvilkåretIOpprinneligBehandling(diff)) {
                     log.info("Behandlingen $behandlingId har ikke kjørt fastsettsykdomsvilkårsteget og er derfor ulikt før og etter migrering")
                     null
+                } else if (erYrkesskadeÅrsakssamennhengMenIngentingFør(diff)) {
+                    log.info("Var oppfylt med ren bistand tidligere, men viser seg å være yrkesskade årsakssammenheng - ignorerer diff")
+                    null
                 } else {
                     diff
                 }
@@ -165,8 +170,9 @@ class SykdomsvurderingMigreringService(
 
             if (diffEtterFiltrertGamleVurderinger.isNotEmpty()) {
                 if (Miljø.erDev()) {
-                    log.warn("Behandlingen $behandlingId har diff etter migrering - ignoreres pga dev-miljø. Diff: $diffEtter")
-
+                    log.warn("Behandlingen $behandlingId har diff etter migrering - ignoreres pga dev-miljø eller whitelisting. Diff: $diffEtter")
+                } else if (WHITELISTEDE_BEHANDLING_ID_ER_PRODUKSJON.contains(behandlingId.id)) {
+                    log.warn("Behandlingen $behandlingId har diff etter migrering - ignoreres pga whitelisting. Diff: $diffEtter")
                 } else {
                     log.error(
                         "Behandling $behandlingId har diff etter migrer. Dette indikerer feil i migreringslogikk. " +
@@ -187,7 +193,13 @@ class SykdomsvurderingMigreringService(
     private fun harIkkeFastsattSykdomsvilkåretIOpprinneligBehandling(
         diff: Segment<SammenlignetSegment>
     ): Boolean {
-        return diff.verdi.gammel?.utfall == Utfall.IKKE_VURDERT
+        return diff.verdi.gammel?.utfall == Utfall.IKKE_VURDERT || diff.verdi.gammel == null
+    }
+
+    private fun erYrkesskadeÅrsakssamennhengMenIngentingFør(
+        diff: Segment<SammenlignetSegment>
+    ): Boolean {
+        return diff.verdi.gammel?.utfall == Utfall.OPPFYLT && diff.verdi.ny?.utfall == Utfall.OPPFYLT && diff.verdi.ny?.innvilgelsesårsak == Innvilgelsesårsak.YRKESSKADE_ÅRSAKSSAMMENHENG && diff.verdi.gammel?.innvilgelsesårsak == null
     }
 
     private fun erSykMenTrengerIkkeBistandOgUtledetMedUtdatertVilkårsvurderingslogikk(

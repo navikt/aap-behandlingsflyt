@@ -9,6 +9,7 @@ import no.nav.aap.behandlingsflyt.hendelse.datadeling.ApiInternGateway
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.ArenaStatusResponse
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.DetaljertMeldekortDTO
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
+import no.nav.aap.behandlingsflyt.prosessering.datadeling.UtledArenaVedtakstype
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
@@ -46,7 +47,8 @@ class FakeApiInternGateway : ApiInternGateway {
         underveis: List<Underveisperiode>,
         vedtaksDato: LocalDate,
         rettighetsTypeTidslinje: Tidslinje<RettighetsType>,
-        stansOpphørGrunnlag: Set<GjeldendeStansEllerOpphør>?
+        stansOpphørGrunnlag: Set<GjeldendeStansEllerOpphør>?,
+        arenavedtak: Tidslinje<UtledArenaVedtakstype.ArenaVedtak>
     ) {
         // No-op
     }
