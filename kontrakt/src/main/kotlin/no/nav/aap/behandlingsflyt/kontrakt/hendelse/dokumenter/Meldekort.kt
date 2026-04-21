@@ -29,6 +29,10 @@ public data class MeldekortV0(
         require(timerArbeidetSamsvarerMedArbeidetSvar(harDuArbeidet, timerArbeidPerPeriode)) {
             "oppgitte timer arbeidet samsvarer ikke til svar på `harDuArbeidet`"
         }
+
+        require((opprettetAv == null) == (begrunnelse == null)) {
+            "må oppgi `begrunnelse` og `opprettetAv` sammen"
+        }
     }
 
     override fun fom(): LocalDate? {
