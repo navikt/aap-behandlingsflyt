@@ -1,7 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid
 
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Meldekort
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.MeldekortFraSaksbehandlerV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.MeldekortV0
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.TimerArbeid
@@ -22,22 +21,20 @@ data class UbehandletMeldekort(
             mottattTidspunkt: LocalDateTime,
             digitalisertAvPostmottak: Boolean?
         ): UbehandletMeldekort {
-            val (harDuArbeidet, timerArbeidPerPeriode) = when (meldekort) {
-                is MeldekortV0 -> meldekort.harDuArbeidet to meldekort.timerArbeidPerPeriode
-                is MeldekortFraSaksbehandlerV0 -> meldekort.harDuArbeidet to meldekort.timerArbeidPerPeriode
+            return when (meldekort) {
+                is MeldekortV0 -> UbehandletMeldekort(
+                    journalpostId = journalpostId,
+                    timerArbeidPerPeriode = meldekort.timerArbeidPerPeriode.map {
+                        ArbeidIPeriode(
+                            periode = Periode(it.fraOgMedDato, it.tilOgMedDato),
+                            timerArbeid = TimerArbeid(it.timerArbeid.toBigDecimal())
+                        )
+                    }.toSet(),
+                    mottattTidspunkt = mottattTidspunkt,
+                    harDuArbeidet = meldekort.harDuArbeidet,
+                    digitalisertAvPostmottak = digitalisertAvPostmottak
+                )
             }
-            return UbehandletMeldekort(
-                journalpostId = journalpostId,
-                timerArbeidPerPeriode = timerArbeidPerPeriode.map {
-                    ArbeidIPeriode(
-                        periode = Periode(it.fraOgMedDato, it.tilOgMedDato),
-                        timerArbeid = TimerArbeid(it.timerArbeid.toBigDecimal())
-                    )
-                }.toSet(),
-                mottattTidspunkt = mottattTidspunkt,
-                harDuArbeidet = harDuArbeidet,
-                digitalisertAvPostmottak = digitalisertAvPostmottak
-            )
         }
     }
 }
