@@ -117,7 +117,8 @@ class TilbakekrevingRepositoryImpl(private val connection: DBConnection) : Tilba
             setRowMapper { mapToTilbakekrevingsbehandling(it) }
         }
     }
-    override fun hent(tilbakekrevingsBehandlingId: UUID): Tilbakekrevingsbehandling{
+
+    override fun hent(tilbakekrevingsBehandlingId: UUID): Tilbakekrevingsbehandling {
         val sql = """
             SELECT
                 TILBAKEKREVING_BEHANDLING_ID,
@@ -145,14 +146,15 @@ class TilbakekrevingRepositoryImpl(private val connection: DBConnection) : Tilba
     private fun mapToTilbakekrevingsbehandling(row: Row) =
         Tilbakekrevingsbehandling(
             tilbakekrevingBehandlingId = row.getUUID("TILBAKEKREVING_BEHANDLING_ID"),
-            eksternFagsakId = row.getString("EKSTERN_FAGSAK_ID") ,
+            eksternFagsakId = row.getString("EKSTERN_FAGSAK_ID"),
             hendelseOpprettet = row.getLocalDateTime("HENDELSE_OPPRETTET"),
             eksternBehandlingId = row.getStringOrNull("EKSTERN_BEHANDLING_ID"),
             sakOpprettet = row.getLocalDateTime("SAK_OPPRETTET"),
             varselSendt = row.getLocalDateOrNull("VARSEL_SENDT"),
             behandlingsstatus = row.getEnum("BEHANDLINGSSTATUS"),
             totaltFeilutbetaltBeløp = Beløp(row.getBigDecimal("TOTALT_FEILUTBETALT_BELOP")),
-            saksbehandlingURL = URI.create(row.getString("TILBAKEKREVING_SAKSBEHANDLING_URL")), fullstendigPeriode = row.getPeriode("FULLSTENDIG_PERIODE")
+            saksbehandlingURL = URI.create(row.getString("TILBAKEKREVING_SAKSBEHANDLING_URL")),
+            fullstendigPeriode = row.getPeriode("FULLSTENDIG_PERIODE")
         )
 
     override fun kopier(

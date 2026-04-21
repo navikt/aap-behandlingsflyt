@@ -25,6 +25,7 @@ import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.test.FakeTidligereVurderinger
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryOvergangUføreRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryVilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryProvider
@@ -91,6 +92,8 @@ class VurderBistandsbehovStegTest {
                             erSkadeSykdomEllerLyteVesentligdel = true,
                             erNedsettelseIArbeidsevneMerEnnHalvparten = true,
                             erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
+                            erNedsettelseMinstHalvparten = null,
+                            erNedsettelseMerEnnYrkesskadegrense = null,
                             erArbeidsevnenNedsatt = true,
                             yrkesskadeBegrunnelse = null,
                             erNedsettelseIArbeidsevneAvEnVissVarighet = true,
@@ -105,6 +108,7 @@ class VurderBistandsbehovStegTest {
                 )
             },
             vilkårsresultatRepository = InMemoryVilkårsresultatRepository,
+            overgangUføreRepository = InMemoryOvergangUføreRepository,
             tidligereVurderinger = FakeTidligereVurderinger(),
             avklaringsbehovService = AvklaringsbehovService(inMemoryRepositoryProvider),
         )

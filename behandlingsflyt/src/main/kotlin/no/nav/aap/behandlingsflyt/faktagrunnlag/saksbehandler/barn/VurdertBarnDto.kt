@@ -22,6 +22,7 @@ open class VurdertBarnDto(
     val ident: String?,
     val navn: String?,
     val fødselsdato: LocalDate?,
+    val dødsdato: LocalDate?,
     val vurderinger: List<VurderingAvForeldreAnsvarDto>,
     val oppgittForeldreRelasjon: Relasjon? = null,
 ) {

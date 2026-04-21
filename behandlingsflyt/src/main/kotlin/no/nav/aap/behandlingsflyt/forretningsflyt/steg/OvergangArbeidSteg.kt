@@ -62,6 +62,7 @@ class OvergangArbeidSteg internal constructor(
             tvingerAvklaringsbehov = setOf(
                 Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND,
                 Vurderingsbehov.HELHETLIG_VURDERING,
+                Vurderingsbehov.OVERGANG_ARBEID,
             ),
             nårVurderingErRelevant = ::nårVurderingErRelevant,
             kontekst = kontekst,
@@ -155,7 +156,7 @@ class OvergangArbeidSteg internal constructor(
                         return@map6 false
                     }
 
-                    sykdomsvurdering?.erOppfyltOrdinær(kontekst.rettighetsperiode.fom, segmentPeriode) != true ||
+                    sykdomsvurdering?.erOppfyltForYrkesskadeSettBortIfraÅrsakssammenheng(kontekst.rettighetsperiode.fom, segmentPeriode) != true ||
                             bistandsvurdering?.erBehovForBistand() != true
                 }
             }

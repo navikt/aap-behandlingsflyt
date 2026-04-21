@@ -26,13 +26,13 @@ jobs:
           java-version: 25
           distribution: 'temurin'
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v5
+        uses: gradle/actions/setup-gradle@v6
         with:
             gradle-version: wrapper
       - name: Bygg & test
         run: ./gradlew clean build --continue --stacktrace
 
-      - uses: dorny/test-reporter@v2.6.0
+      - uses: dorny/test-reporter@v3.0.0
         if: success() || failure()
         with:
           name: test
@@ -78,14 +78,14 @@ jobs:
           java-version: 25
           distribution: 'temurin'
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v5
+        uses: gradle/actions/setup-gradle@v6
         with:
             gradle-version: wrapper
       - name: Genererer docs
         run: |
           ./gradlew dokkaGenerate
       - name: upload-artifact for docs
-        uses: actions/upload-pages-artifact@v4
+        uses: actions/upload-pages-artifact@v5
         with:
           path: './docs/build/dokka/html'
 
@@ -104,7 +104,7 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
 
 
   publiser-kontrakt:
@@ -121,7 +121,7 @@ jobs:
             with:
                 fetch-depth: 0
             #  Ha denne tidlig, så action kan skippe raskt om ingen endringer.
-          - uses: paulhatch/semantic-version@v6.0.1
+          - uses: paulhatch/semantic-version@v6.0.2
             id: tag
             with:
                 change_path: "kontrakt/"
@@ -134,7 +134,7 @@ jobs:
             with:
                 java-version: 25
                 distribution: 'temurin'
-          - uses: gradle/actions/setup-gradle@v5
+          - uses: gradle/actions/setup-gradle@v6
             with:
                 gradle-version: wrapper
           - id: notes
@@ -150,7 +150,7 @@ jobs:
                 GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
             run: |
                 ./gradlew -Pversion=${{ steps.tag.outputs.version }} publish
-          - uses:  softprops/action-gh-release@v2
+          - uses:  softprops/action-gh-release@v3
             if: ${{ steps.tag.outputs.version_type != 'none' }}
             id: create_release
             env:

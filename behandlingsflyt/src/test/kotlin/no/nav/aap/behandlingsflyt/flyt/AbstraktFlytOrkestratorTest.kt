@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.flyt
 import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovOrkestrator
+import no.nav.aap.behandlingsflyt.flyt.testutil.DummyBehandlingHendelseService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.vedtak.TotrinnsVurdering
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarBarnetilleggLøsning
@@ -302,7 +303,9 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
         }
 
         assertThat(underveisGrunnlag.perioder).isNotEmpty
-        assertThat(underveisGrunnlag.perioder.any { it.arbeidsgradering.gradering.prosentverdi() > 0 }).isTrue()
+        if (sendMeldekort) {
+            assertThat(underveisGrunnlag.perioder.any { it.arbeidsgradering.gradering.prosentverdi() > 0 }).isTrue()
+        }
 
         // Saken er avsluttet, så det skal ikke være flere åpne avklaringsbehov
         val åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling.id)
@@ -449,7 +452,9 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
                         erArbeidsevnenNedsatt = true.takeIf { erOppfylt },
                         yrkesskadeBegrunnelse = if (erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense != null) "test" else null,
                         fom = vurderingGjelderFra,
-                        tom = null
+                        tom = null,
+                        erNedsettelseMinstHalvparten = null,
+                        erNedsettelseMerEnnYrkesskadegrense = null,
                     )
                 )
             ),
@@ -515,14 +520,14 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
         )
     }
 
-    protected fun Behandling.løsOppholdskrav(startDato: LocalDate): Behandling {
+    protected fun Behandling.løsOppholdskrav(startDato: LocalDate, oppfylt: Boolean = true): Behandling {
         return løsAvklaringsBehov(
             behandling = this,
             avklaringsBehovLøsning =
                 AvklarOppholdskravLøsning(
                     løsningerForPerioder = listOf(
                         AvklarOppholdkravLøsningForPeriodeDto(
-                            oppfylt = true,
+                            oppfylt = oppfylt,
                             land = "",
                             fom = startDato,
                             begrunnelse = "Fiske"
@@ -1291,7 +1296,7 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
                 listOf(
                     RefusjonkravVurderingDto(
                         harKrav = true,
-                        navKontor = "",
+                        navKontor = "Peppas Crib",
                     )
                 )
             )
@@ -1454,7 +1459,8 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
         dataSource.transaction { connection ->
             FlytOrkestrator(
                 postgresRepositoryRegistry.provider(connection),
-                gatewayProvider
+                gatewayProvider,
+                behandlingHendelseService = DummyBehandlingHendelseService
             ).forberedOgProsesserBehandling(
                 FlytKontekst(
                     sakId = behandling.sakId,

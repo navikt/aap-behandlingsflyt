@@ -58,14 +58,21 @@ data class SykdomGrunnlag(
         maksDato: LocalDate = Tid.MAKS,
         filter: (sykdomsvurdering: Sykdomsvurdering) -> Boolean
     ): Tidslinje<Sykdomsvurdering> {
-        return sykdomsvurderinger
-            .filter(filter)
-            .groupBy { it.vurdertIBehandling }
-            .values
-            .sortedBy { it[0].opprettet }
-            .flatMap { it.sortedBy { it.vurderingenGjelderFra } }
-            .somTidslinje { Periode(it.vurderingenGjelderFra, it.vurderingenGjelderTil ?: Tid.MAKS) }
-            .komprimer()
-            .begrensetTil(Periode(Tid.MIN, maksDato))
+        return sykdomsvurderinger.somSykdomsvurderingTidslinje(maksDato, filter)
     }
+}
+
+fun List<Sykdomsvurdering>.somSykdomsvurderingTidslinje(
+    maksDato: LocalDate = Tid.MAKS,
+    filter: (sykdomsvurdering: Sykdomsvurdering) -> Boolean = { true }
+): Tidslinje<Sykdomsvurdering> {
+    return this
+        .filter(filter)
+        .groupBy { it.vurdertIBehandling }
+        .values
+        .sortedBy { it[0].opprettet }
+        .flatMap { it.sortedBy { it.vurderingenGjelderFra } }
+        .somTidslinje { Periode(it.vurderingenGjelderFra, it.vurderingenGjelderTil ?: Tid.MAKS) }
+        .komprimer()
+        .begrensetTil(Periode(Tid.MIN, maksDato))
 }

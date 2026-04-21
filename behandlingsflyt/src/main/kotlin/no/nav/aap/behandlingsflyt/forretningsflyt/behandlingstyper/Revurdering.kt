@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.behandlingstyper
 
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.LovvalgInformasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.DagpengerInformasjonskrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.TiltakspengerInformasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjonInformasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseVurderingInformasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Aktivitetsplikt11_7Informasjonskrav
@@ -142,6 +143,7 @@ object Revurdering : BehandlingType {
                     Vurderingsbehov.DØDSFALL_BRUKER,
                     Vurderingsbehov.REVURDER_LOVVALG,
                     Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP,
+                    Vurderingsbehov.OVERGANG_ARBEID,
                 )
             )
             .medSteg(
@@ -154,6 +156,7 @@ object Revurdering : BehandlingType {
                     Vurderingsbehov.DØDSFALL_BRUKER,
                     Vurderingsbehov.REVURDER_LOVVALG,
                     Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP,
+                    Vurderingsbehov.OVERGANG_UFORE,
                 )
             )
             .medSteg(
@@ -209,6 +212,7 @@ object Revurdering : BehandlingType {
                     Vurderingsbehov.HELHETLIG_VURDERING,
                     Vurderingsbehov.REVURDER_LOVVALG,
                     Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP,
+                    Vurderingsbehov.OVERGANG_UFORE,
                 )
             )
             .medSteg(
@@ -221,6 +225,7 @@ object Revurdering : BehandlingType {
                     Vurderingsbehov.HELHETLIG_VURDERING,
                     Vurderingsbehov.REVURDER_LOVVALG,
                     Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP,
+                    Vurderingsbehov.OVERGANG_ARBEID,
                 )
             )
             .medSteg(
@@ -398,7 +403,7 @@ object Revurdering : BehandlingType {
             )
             .medSteg(
                 steg = SamordningAndreStatligeYtelserSteg,
-                informasjonskrav = listOf(DagpengerInformasjonskrav),
+                informasjonskrav = listOf(DagpengerInformasjonskrav, TiltakspengerInformasjonskrav),
                 vurderingsbehovRelevanteForSteg = listOf(
                     Vurderingsbehov.MOTTATT_SØKNAD,
                     Vurderingsbehov.SAMORDNING_OG_AVREGNING,

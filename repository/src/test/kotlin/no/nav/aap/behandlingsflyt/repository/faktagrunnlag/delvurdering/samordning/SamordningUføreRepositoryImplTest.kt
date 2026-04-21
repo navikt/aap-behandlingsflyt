@@ -6,7 +6,6 @@ import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.help.sak
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
-import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
@@ -31,23 +30,23 @@ internal class SamordningUføreRepositoryImplTest {
     }
 
 
-    private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(1))
+    private val virkningstidspunkt = LocalDate.now()
 
     @Test
     fun `skal lagre ned en helt ny vurdering og hente den opp igjen`() {
         val behandling = dataSource.transaction {
-            finnEllerOpprettBehandling(it, sak(it, periode))
+            finnEllerOpprettBehandling(it, sak(it, virkningstidspunkt))
         }
 
         // Lagre ytelse
         val vurdering = SamordningUføreVurdering(
             begrunnelse = "En fin begrunnelse", vurderingPerioder = listOf(
                 SamordningUføreVurderingPeriode(
-                    virkningstidspunkt = periode.fom,
+                    virkningstidspunkt = virkningstidspunkt,
                     uføregradTilSamordning = Prosent.`50_PROSENT`
                 ),
                 SamordningUføreVurderingPeriode(
-                    virkningstidspunkt = periode.fom.plusMonths(4),
+                    virkningstidspunkt = virkningstidspunkt.plusMonths(4),
                     uføregradTilSamordning = Prosent.`70_PROSENT`
                 )
             ),
@@ -77,11 +76,11 @@ internal class SamordningUføreRepositoryImplTest {
                     SamordningUføreVurdering(
                         begrunnelse = "En fin begrunnelse", vurderingPerioder = listOf(
                             SamordningUføreVurderingPeriode(
-                                virkningstidspunkt = periode.fom,
+                                virkningstidspunkt = virkningstidspunkt,
                                 uføregradTilSamordning = Prosent.`50_PROSENT`
                             ),
                             SamordningUføreVurderingPeriode(
-                                virkningstidspunkt = periode.fom.plusMonths(4),
+                                virkningstidspunkt = virkningstidspunkt.plusMonths(4),
                                 uføregradTilSamordning = Prosent.`70_PROSENT`
                             )
                         ),
@@ -93,11 +92,11 @@ internal class SamordningUføreRepositoryImplTest {
                     SamordningUføreVurdering(
                         begrunnelse = "En fin begrunnelse", vurderingPerioder = listOf(
                             SamordningUføreVurderingPeriode(
-                                virkningstidspunkt = periode.fom,
+                                virkningstidspunkt = virkningstidspunkt,
                                 uføregradTilSamordning = Prosent.`50_PROSENT`
                             ),
                             SamordningUføreVurderingPeriode(
-                                virkningstidspunkt = periode.fom.plusMonths(2),
+                                virkningstidspunkt = virkningstidspunkt.plusMonths(2),
                                 uføregradTilSamordning = Prosent.`70_PROSENT`
                             )
                         ),

@@ -28,8 +28,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.FlytJobbRepository
@@ -50,7 +48,6 @@ class IverksettVedtakSteg private constructor(
     private val flytJobbRepository: FlytJobbRepository,
     private val mellomlagretVurderingRepository: MellomlagretVurderingRepository,
     private val resultatUtleder: ResultatUtleder,
-    private val unleashGateway: UnleashGateway,
 ) : BehandlingSteg {
     private val log = LoggerFactory.getLogger(javaClass)
 
@@ -147,6 +144,24 @@ class IverksettVedtakSteg private constructor(
         return null
     }
 
+    private fun utledTidligsteMuligeVedtakstidspunkt(behandling: Behandling, vedtakstidspunkt: LocalDate): LocalDate {
+        behandling.forrigeBehandlingId ?: return vedtakstidspunkt
+
+        val alleYtelsesbehandlingerPåSak =
+            behandlingRepository.hentAlleFor(behandling.sakId, TypeBehandling.ytelseBehandlingstyper())
+
+        val oppfylteVurderinger = alleYtelsesbehandlingerPåSak.filter {
+            !resultatUtleder.erRentAvslag(it)
+        }
+
+        val alleInnvilgedeVedtak = oppfylteVurderinger.mapNotNull {
+            vedtakService.hentVedtak(it.id)
+        }
+
+        return alleInnvilgedeVedtak.minByOrNull { it.vedtakstidspunkt }?.vedtakstidspunkt?.toLocalDate()
+            ?: vedtakstidspunkt
+    }
+
     private fun finnTidligesteVedtakstidspunktFraTidligereBehandlinger(
         behandling: Behandling,
         vedtakstidspunkt: LocalDate
@@ -184,16 +199,18 @@ class IverksettVedtakSteg private constructor(
                 return
             }
 
-            val tidligsteVedtaksTidspunkt = finnTidligesteVedtakstidspunktFraTidligereBehandlinger(
-                behandling,
-                vedtak.vedtakstidspunkt.toLocalDate()
-            )
+            val tidligsteMuligeVedtakstidspunkt =
+                utledTidligsteMuligeVedtakstidspunkt(
+                    behandling,
+                    vedtak.vedtakstidspunkt.toLocalDate()
+                )
+
             val gjeldendeSosialRefusjonDtoer = navkontorSosialRefusjon
                 .filter { it.harKrav && it.navKontor != null }
                 .map {
                     it.tilNavKontorPeriodeDto(
                         virkningsdato = vedtakMedTidligsteVirkingsdato.virkningstidspunkt,
-                        vedtaksdato = tidligsteVedtaksTidspunkt.minusDays(1)
+                        vedtaksdato = tidligsteMuligeVedtakstidspunkt.minusDays(1)
                     )
                 }
                 .toSet()
@@ -204,7 +221,6 @@ class IverksettVedtakSteg private constructor(
             opprettGosysOppgaverForSosialrefusjon(gjeldendeSosialRefusjonDtoer, aktivIdent, kontekst)
         }
     }
-
 
     fun lagGysOppgaveHvisRelevant(kontekst: FlytKontekstMedPerioder, vedtak: Vedtak) {
         val behandling = behandlingRepository.hent(behandlingId = kontekst.behandlingId)
@@ -221,9 +237,7 @@ class IverksettVedtakSteg private constructor(
             /* Vedtak lagret i `FatteVedtakSteg`, så ikke noe å gjøre her. */
             return
         }
-        if (unleashGateway.isEnabled(BehandlingsflytFeature.LagreVedtakIFatteVedtak)) {
-            log.warn("Forventet å finne allerede lagret vedtak fra FatteVedtakSteg. Lagrer vedtak...")
-        }
+        log.warn("Forventet å finne allerede lagret vedtak fra FatteVedtakSteg. Lagrer vedtak...")
 
         val stegHistorikk = behandlingRepository.hentStegHistorikk(kontekst.behandlingId)
         val vedtakstidspunkt = stegHistorikk
@@ -279,8 +293,6 @@ class IverksettVedtakSteg private constructor(
                 mellomlagretVurderingRepository = mellomlagretVurderingRepository,
                 gosysService = gosysService,
                 resultatUtleder = resultatUtleder,
-                unleashGateway = gatewayProvider.provide<UnleashGateway>(),
-
                 )
         }
 

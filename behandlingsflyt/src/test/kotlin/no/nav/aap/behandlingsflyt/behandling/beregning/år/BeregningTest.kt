@@ -16,9 +16,6 @@ import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.Prosent
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertDoesNotThrow
-import org.junit.jupiter.api.assertThrows
-import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.Year
 import java.time.YearMonth
@@ -169,56 +166,6 @@ class BeregningTest {
             Year.of(2018),
             Year.of(2017),
         )
-    }
-
-    @Test
-    fun `skal feile når forskjellen mellom inntekt fra A-inntekt og PESYS er mer enn 100kr`() {
-        val årsInntekter = setOf(
-            InntektPerÅr(2022, Beløp(500000)),
-            InntektPerÅr(2021, Beløp(400000)),
-            InntektPerÅr(2020, Beløp(300000))
-        )
-
-        // 2kr forskjell, da skal feil kastes
-        assertThrows<IllegalArgumentException> {
-            Beregning(
-                nedsettelsesDato = LocalDate.of(2015, 1, 1),
-                årsInntekter = årsInntekter,
-                uføregrad = setOf(Uføre(LocalDate.now().minusYears(5), Prosent(30))),
-                yrkesskadevurdering = null,
-                ytterligereNedsettelsesDato = LocalDate.of(2023, 1, 1),
-                yrkesskadeBeløpVurderinger = null,
-                registrerteYrkesskader = null,
-                inntektsPerioder = inntektsPerioder(
-                    setOf(
-                        InntektPerÅr(2022, Beløp(500102)),
-                        InntektPerÅr(2021, Beløp(400000)),
-                        InntektPerÅr(2020, Beløp(300000))
-                    )
-                )
-            ).validerSummertInntekt()
-        }
-
-        // 0.5kr forskjell, skal ikke feile
-        assertDoesNotThrow {
-            Beregning(
-                nedsettelsesDato = LocalDate.of(2015, 1, 1),
-                årsInntekter = årsInntekter,
-                uføregrad = setOf(Uføre(LocalDate.now().minusYears(5), Prosent(30))),
-                yrkesskadevurdering = null,
-                ytterligereNedsettelsesDato = LocalDate.of(2023, 1, 1),
-                yrkesskadeBeløpVurderinger = null,
-                registrerteYrkesskader = null,
-                inntektsPerioder = inntektsPerioder(
-                    setOf(
-                        InntektPerÅr(2022, Beløp(BigDecimal(499999.5))),
-                        InntektPerÅr(2021, Beløp(400000)),
-                        InntektPerÅr(2020, Beløp(300000))
-                    )
-                )
-            ).validerSummertInntekt()
-        }
-
     }
 
     private fun inntektsPerioder(inntektPerÅr: Set<InntektPerÅr>): Set<Månedsinntekt> {

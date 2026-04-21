@@ -72,6 +72,8 @@ class YrkesskadeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
                             yrkesskadeBegrunnelse = null,
                             fom = sak.rettighetsperiode.fom,
                             tom = null,
+                            erNedsettelseMinstHalvparten = null,
+                            erNedsettelseMerEnnYrkesskadegrense = null,
                         )
                     )
                 )
@@ -573,37 +575,6 @@ class YrkesskadeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
             .løsSykdomsvurderingBrev()
             .bekreftVurderinger()
             .kvalitetssikre()
-            .løsAvklaringsBehov(
-                AvklarYrkesskadeLøsning(
-                    yrkesskadesvurdering = YrkesskadevurderingDto(
-                        begrunnelse = "Ikke årsakssammenheng",
-                        relevanteSaker = emptyList(),
-                        relevanteYrkesskadeSaker = emptyList(),
-                        andelAvNedsettelsen = null,
-                        erÅrsakssammenheng = false
-                    )
-                )
-            )
-            .løsBeregningstidspunkt()
-            .løsOppholdskrav(fom)
-            .løsAvklaringsBehov(
-                AvklarSamordningUføreLøsning(
-                    samordningUføreVurdering = SamordningUføreVurderingDto(
-                        begrunnelse = "Samordnet med uføre",
-                        vurderingPerioder = listOf(
-                            SamordningUføreVurderingPeriodeDto(
-                                virkningstidspunkt = virkningstidspunkt, uføregradTilSamordning = 50
-                            )
-                        )
-                    )
-                )
-            )
-            .medKontekst {
-                // Saken er tilbake til en-trinnskontroll hos saksbehandler klar for å bli sendt til beslutter
-                assertThat(åpneAvklaringsbehov).anySatisfy { assertTrue(it.definisjon == Definisjon.FORESLÅ_VEDTAK) }
-                assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
-            }
-            .løsAvklaringsBehov(ForeslåVedtakLøsning())
             .medKontekst {
                 // Saken står til To-trinnskontroll hos beslutter
                 assertThat(åpneAvklaringsbehov).anySatisfy { assertTrue(it.definisjon == Definisjon.FATTE_VEDTAK) }
@@ -688,6 +659,8 @@ class YrkesskadeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
                             erSkadeSykdomEllerLyteVesentligdel = true,
                             erNedsettelseIArbeidsevneMerEnnHalvparten = true,
                             erNedsettelseIArbeidsevneAvEnVissVarighet = true,
+                            erNedsettelseMinstHalvparten = null,
+                            erNedsettelseMerEnnYrkesskadegrense = null,
                             erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
                             erArbeidsevnenNedsatt = true,
                             yrkesskadeBegrunnelse = null,
@@ -732,6 +705,8 @@ class YrkesskadeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
                         erSkadeSykdomEllerLyteVesentligdel = null,
                         erNedsettelseIArbeidsevneAvEnVissVarighet = null,
                         erNedsettelseIArbeidsevneMerEnnHalvparten = false,
+                        erNedsettelseMinstHalvparten = null,
+                        erNedsettelseMerEnnYrkesskadegrense = null,
                         erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = false,
                         yrkesskadeBegrunnelse = "Skade under grense for yrkesskade",
                         fom = periode.fom,
@@ -782,7 +757,9 @@ class YrkesskadeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
                             erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
                             yrkesskadeBegrunnelse = null,
                             fom = LocalDateTime.now().minusDays(5).toLocalDate(),
-                            tom = null
+                            tom = null,
+                            erNedsettelseMinstHalvparten = null,
+                            erNedsettelseMerEnnYrkesskadegrense = null,
                         )
                     )
                 )

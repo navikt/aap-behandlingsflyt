@@ -5,7 +5,6 @@ import no.nav.aap.behandlingsflyt.behandling.rettighetstype.vurderRettighetstype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.rettighetstype.RettighetstypeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.gateway.GatewayProvider
@@ -59,8 +58,7 @@ class RettighetstypeService(
 
         if (vedtatteUnderveisperioder != null) {
             val harVedtattePerioderSomIkkeSamsvarerMedUtlededePerioder = vedtatteUnderveisperioder.somTidslinje()
-                .filter { it.verdi.utfall == Utfall.OPPFYLT }
-                .map { it.rettighetsType }
+                .mapNotNull { it.rettighetsType }
                 .komprimer()
                 .leftJoin(utledetRettighetstidslinje) { underveisRettighetstype, rettighetstype ->
                     underveisRettighetstype != rettighetstype

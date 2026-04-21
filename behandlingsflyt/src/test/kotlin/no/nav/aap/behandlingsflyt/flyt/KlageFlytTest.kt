@@ -1027,7 +1027,7 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
             )
             .medKontekst {
                 // Sjekk at avklaringsbehov er blitt gjenåpnet
-                assertThat(åpneAvklaringsbehov).hasSize(3)
+                assertThat(åpneAvklaringsbehov).hasSize(1)
                 assertThat(åpneAvklaringsbehov.first().definisjon).isEqualTo(Definisjon.VURDER_FORMKRAV)
                 assertThat(
                     åpneAvklaringsbehov.first().status()

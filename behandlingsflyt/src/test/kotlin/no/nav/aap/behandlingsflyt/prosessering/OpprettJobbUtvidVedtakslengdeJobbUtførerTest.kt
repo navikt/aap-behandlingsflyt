@@ -6,6 +6,7 @@ import io.mockk.just
 import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
+import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakId
 import no.nav.aap.behandlingsflyt.behandling.vedtakslengde.VedtakslengdeService
 import no.nav.aap.behandlingsflyt.behandling.vedtakslengde.VedtakslengdeUtvidelse
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
@@ -147,10 +148,12 @@ class OpprettJobbUtvidVedtakslengdeJobbUtførerTest {
             typeBehandling = TypeBehandling.Førstegangsbehandling,
             status = Status.IVERKSETTES,
             opprettetTidspunkt = LocalDateTime.now(clock),
+            vedtakId = VedtakId(0),
             vedtakstidspunkt = LocalDateTime.now(clock),
             virkningstidspunkt = null,
             vurderingsbehov = setOf(),
-            årsakTilOpprettelse = ÅrsakTilOpprettelse.SØKNAD
+            årsakTilOpprettelse = ÅrsakTilOpprettelse.SØKNAD,
+            forrigeBehandlingId = null,
         )
 
 }

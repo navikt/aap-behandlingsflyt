@@ -20,7 +20,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.UføreInn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.Avslått
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.DelvisOmgjøres
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageresultatUtleder
@@ -130,11 +129,15 @@ class BrevUtlederService(
             }
 
             TypeBehandling.Revurdering -> {
+                val resultat = resultatUtleder.utledRevurderingResultat(behandlingId)
+                if (resultat == Resultat.AVBRUTT) {
+                    return null
+                }
+                
                 if (skalSendeVedtakForArbeidsopptrapping) {
                     return VedtakArbeidsopptrapping11_23SjetteLedd
                 }
 
-                val resultat = resultatUtleder.utledRevurderingResultat(behandlingId)
                 val vurderingsbehov = behandling.vurderingsbehov().map { it.type }.toSet()
                 if (setOf(
                         FRITAK_MELDEPLIKT,
@@ -157,10 +160,7 @@ class BrevUtlederService(
                 if (vurderingsbehov == setOf(UTVID_VEDTAKSLENGDE)) {
                     return brevBehovUtvidVedtakslengde(behandling)
                 }
-
-                if (resultat == Resultat.AVBRUTT) {
-                    return null
-                }
+                
                 if (harRettighetsType(
                         behandling.id,
                         RettighetsType.VURDERES_FOR_UFØRETRYGD
@@ -230,7 +230,7 @@ class BrevUtlederService(
             )
 
             if (avslagsårsaker.isNotEmpty()) {
-                // Støtter kun en avslagsårsakk i brev - henter ut høyest prioritert
+                // Støtter kun en avslagsårsak i brev - henter ut høyest prioritert
                 val prioritertAvslagsårsak = requireNotNull(prioriterAvslagsårsak(avslagsårsaker)) {
                     "Fant avslagsårsaker $avslagsårsaker for behandling ${behandling.id}, men ingen av dem er støttet for utvidelse under ett år"
                 }
@@ -504,9 +504,6 @@ class BrevUtlederService(
         return underveisRepository.hentHvisEksisterer(behandlingId)
             ?.perioder
             .orEmpty()
-            .any {
-                it.utfall == Utfall.OPPFYLT &&
-                        it.rettighetsType == rettighetsType
-            }
+            .any { it.rettighetsType == rettighetsType }
     }
 }

@@ -25,10 +25,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
-import no.nav.aap.behandlingsflyt.test.FakeUnleashBaseWithDefaultDisabled
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
@@ -71,7 +68,7 @@ class FatteVedtakStegTest {
         vurderingsbehovRelevanteForSteg = setOf(vurderingsbehov)
     }
 
-    private fun steg(unleashGateway: UnleashGateway = AlleAvskruddUnleash) = FatteVedtakSteg(
+    private fun steg() = FatteVedtakSteg(
         avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
         tidligereVurderinger = tidligereVurderinger,
         klageresultatUtleder = klageresultatUtleder,
@@ -81,7 +78,6 @@ class FatteVedtakStegTest {
         trukketSøknadService = trukketSøknadService,
         vedtakService = vedtakService,
         virkningstidspunktUtleder = virkningstidspunktUtleder,
-        unleashGateway = unleashGateway,
     )
 
     @Test
@@ -127,7 +123,7 @@ class FatteVedtakStegTest {
         every { avbrytRevurderingService.revurderingErAvbrutt(kontekst.behandlingId) } returns false
 
         val resultat =
-            steg(FakeUnleashBaseWithDefaultDisabled(enabledFlags = listOf(BehandlingsflytFeature.LagreVedtakIFatteVedtak))).utfør(
+            steg().utfør(
                 kontekst
             )
 
@@ -144,10 +140,7 @@ class FatteVedtakStegTest {
         )
 
         every { tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, StegType.FATTE_VEDTAK) } returns false
-        val resultat =
-            steg(FakeUnleashBaseWithDefaultDisabled(enabledFlags = listOf(BehandlingsflytFeature.LagreVedtakIFatteVedtak))).utfør(
-                kontekst
-            )
+        val resultat = steg().utfør(kontekst)
 
         verify(exactly = 0) { vedtakService.lagreVedtak(kontekst.behandlingId, any(), any()) }
         assertThat(resultat).isEqualTo(Fullført)
@@ -228,7 +221,7 @@ class FatteVedtakStegTest {
             )
         )
         val resultat =
-            steg(FakeUnleashBaseWithDefaultDisabled(enabledFlags = listOf(BehandlingsflytFeature.LagreVedtakIFatteVedtak))).utfør(
+            steg().utfør(
                 kontekst
             )
         verify { vedtakService.lagreVedtak(kontekst.behandlingId, nå.plusMinutes(8), virkningstidspunkt) }
@@ -258,10 +251,7 @@ class FatteVedtakStegTest {
             )
         )
 
-        val resultat =
-            steg(FakeUnleashBaseWithDefaultDisabled(enabledFlags = listOf(BehandlingsflytFeature.LagreVedtakIFatteVedtak))).utfør(
-                kontekst
-            )
+        val resultat = steg().utfør(kontekst)
         assertThat(resultat).isEqualTo(TilbakeføresFraBeslutter)
     }
 
@@ -315,10 +305,7 @@ class FatteVedtakStegTest {
                 ),
             )
         )
-        val resultat =
-            steg(FakeUnleashBaseWithDefaultDisabled(enabledFlags = listOf(BehandlingsflytFeature.LagreVedtakIFatteVedtak))).utfør(
-                kontekst
-            )
+        val resultat = steg().utfør(kontekst)
         verify(exactly = 0) { vedtakService.lagreVedtak(kontekst.behandlingId, any(), any()) }
         assertThat(resultat).isEqualTo(Fullført)
     }
@@ -354,7 +341,7 @@ class FatteVedtakStegTest {
             )
         )
         val resultat =
-            steg(FakeUnleashBaseWithDefaultDisabled(enabledFlags = listOf(BehandlingsflytFeature.LagreVedtakIFatteVedtak))).utfør(
+            steg().utfør(
                 kontekst
             )
         verify { vedtakService.lagreVedtak(kontekst.behandlingId, any(), any()) }
@@ -371,10 +358,7 @@ class FatteVedtakStegTest {
         every { tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, StegType.FATTE_VEDTAK) } returns false
         every { trukketSøknadService.søknadErTrukket(kontekst.behandlingId) } returns true
 
-        val resultat =
-            steg(FakeUnleashBaseWithDefaultDisabled(enabledFlags = listOf(BehandlingsflytFeature.LagreVedtakIFatteVedtak))).utfør(
-                kontekst
-            )
+        val resultat = steg().utfør(kontekst)
 
         verify(exactly = 0) { vedtakService.lagreVedtak(kontekst.behandlingId, any(), any()) }
         assertThat(resultat).isEqualTo(Fullført)
@@ -389,10 +373,7 @@ class FatteVedtakStegTest {
 
         every { tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, StegType.FATTE_VEDTAK) } returns false
         every { avbrytRevurderingService.revurderingErAvbrutt(kontekst.behandlingId) } returns true
-        val resultat =
-            steg(FakeUnleashBaseWithDefaultDisabled(enabledFlags = listOf(BehandlingsflytFeature.LagreVedtakIFatteVedtak))).utfør(
-                kontekst
-            )
+        val resultat = steg().utfør(kontekst)
 
         verify(exactly = 0) { vedtakService.lagreVedtak(kontekst.behandlingId, any(), any()) }
         assertThat(resultat).isEqualTo(Fullført)

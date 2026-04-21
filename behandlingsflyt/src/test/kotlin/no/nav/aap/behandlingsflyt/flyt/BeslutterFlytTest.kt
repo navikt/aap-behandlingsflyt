@@ -65,6 +65,8 @@ class BeslutterFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class
                             erSkadeSykdomEllerLyteVesentligdel = true,
                             erNedsettelseIArbeidsevneMerEnnHalvparten = true,
                             erNedsettelseIArbeidsevneAvEnVissVarighet = true,
+                            erNedsettelseMinstHalvparten = null,
+                            erNedsettelseMerEnnYrkesskadegrense = null,
                             erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
                             erArbeidsevnenNedsatt = true,
                             yrkesskadeBegrunnelse = null,
@@ -117,6 +119,8 @@ class BeslutterFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class
                             erSkadeSykdomEllerLyteVesentligdel = true,
                             erNedsettelseIArbeidsevneMerEnnHalvparten = true,
                             erNedsettelseIArbeidsevneAvEnVissVarighet = true,
+                            erNedsettelseMinstHalvparten = null,
+                            erNedsettelseMerEnnYrkesskadegrense = null,
                             erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
                             erArbeidsevnenNedsatt = true,
                             yrkesskadeBegrunnelse = null,
@@ -129,24 +133,6 @@ class BeslutterFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class
             )
             .bekreftVurderinger()
             .kvalitetssikre()
-            .løsAvklaringsBehov(
-                FastsettBeregningstidspunktLøsning(
-                    beregningVurdering = BeregningstidspunktVurderingDto(
-                        begrunnelse = "Trenger hjelp fra Nav",
-                        nedsattArbeidsevneDato = LocalDate.now(),
-                        ytterligereNedsattArbeidsevneDato = null,
-                        ytterligereNedsattBegrunnelse = null
-                    ),
-                ),
-                Bruker("SAKSBEHANDLER")
-            )
-            .løsOppholdskrav(fom)
-            .medKontekst {
-                assertThat(behandling.status()).isEqualTo(Status.UTREDES)
-                // Saken står til en-trinnskontroll hos saksbehandler klar for å bli sendt til beslutter
-                assertThat(åpneAvklaringsbehov).anySatisfy { behov -> assertThat(behov.definisjon).isEqualTo(Definisjon.FORESLÅ_VEDTAK) }
-            }
-            .løsAvklaringsBehov(ForeslåVedtakLøsning())
             .medKontekst {
                 // Saken står til To-trinnskontroll hos beslutter
                 assertThat(åpneAvklaringsbehov).anySatisfy { assertThat(it.definisjon).isEqualTo(Definisjon.FATTE_VEDTAK) }
@@ -238,6 +224,8 @@ class BeslutterFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class
                         erSkadeSykdomEllerLyteVesentligdel = true,
                         erNedsettelseIArbeidsevneMerEnnHalvparten = true,
                         erNedsettelseIArbeidsevneAvEnVissVarighet = true,
+                        erNedsettelseMinstHalvparten = null,
+                        erNedsettelseMerEnnYrkesskadegrense = null,
                         erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
                         erArbeidsevnenNedsatt = true,
                         yrkesskadeBegrunnelse = null,

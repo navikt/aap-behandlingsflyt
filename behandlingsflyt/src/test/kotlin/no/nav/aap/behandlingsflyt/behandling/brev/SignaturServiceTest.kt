@@ -22,8 +22,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.brev.kontrakt.Rolle
 import no.nav.aap.brev.kontrakt.SignaturGrunnlag
 import no.nav.aap.komponenter.verdityper.Bruker
@@ -32,36 +30,25 @@ import no.nav.aap.oppgave.enhet.OppgaveEnhetResponse
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.ExtendWith
-import org.junit.jupiter.params.ParameterizedClass
-import org.junit.jupiter.params.provider.ValueSource
 import java.time.LocalDateTime
 import java.util.*
 import kotlin.random.Random
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status as AvklaringsbehovStatus
 
-@ParameterizedClass
-@ValueSource(booleans = [true, false])
-class SignaturServiceTest(
-    // Midlertidig i overgang til ny implementasjon bak feature-toggle
-    val hentEnhetFraOppgave: Boolean
-) {
+class SignaturServiceTest {
 
-
-    private val unleashGateway = mockk<UnleashGateway>()
     private val oppgavestyringGateway = mockk<OppgavestyringGateway>()
     private val behandlingRepository = mockk<BehandlingRepository>()
     private val avklaringsbehovRepository = mockk<AvklaringsbehovRepository>()
     private val avklaringsbehovOperasjonerRepository = mockk<AvklaringsbehovOperasjonerRepository>()
     private val signaturService =
-        SignaturService(unleashGateway, oppgavestyringGateway, behandlingRepository, avklaringsbehovRepository)
+        SignaturService(oppgavestyringGateway, behandlingRepository, avklaringsbehovRepository)
 
     private val behandlingTilAvklaringsbehovene = mutableMapOf<BehandlingId, List<Avklaringsbehov>>()
     private val behandlingTilOppgaveEnhet = mutableMapOf<BehandlingReferanse, List<OppgaveEnhetDto>>()
 
     @BeforeEach
     fun setup() {
-        every { unleashGateway.isEnabled(BehandlingsflytFeature.SignaturEnhetFraOppgave) } returns hentEnhetFraOppgave
         val behandlingId = slot<BehandlingId>()
         every { avklaringsbehovOperasjonerRepository.hent(capture(behandlingId)) } answers {
             behandlingTilAvklaringsbehovene[behandlingId.captured] ?: emptyList()
@@ -192,21 +179,12 @@ class SignaturServiceTest(
 
         val signaturer = signaturService.finnSignaturGrunnlag(brevbestilling, Bruker(""))
 
-        if (hentEnhetFraOppgave) { // Identisk assert i tillegg til å sjekke enhet
-            assertThat(signaturer).containsExactly( // NB: Tester også rekkefølge.
-                SignaturGrunnlag(navIdent = beslutterIdent, rolle = Rolle.BESLUTTER, enhet = "8901"),
-                SignaturGrunnlag(navIdent = saksbehandlerIdent, rolle = Rolle.SAKSBEHANDLER_NASJONAL, enhet = "5678"),
-                SignaturGrunnlag(navIdent = kvalitetssikrerIdent, rolle = Rolle.KVALITETSSIKRER, enhet = "3456"),
-                SignaturGrunnlag(navIdent = veilederIdent, rolle = Rolle.SAKSBEHANDLER_OPPFOLGING, enhet = "2345")
-            )
-        } else {
-            assertThat(signaturer).containsExactly( // NB: Tester også rekkefølge.
-                SignaturGrunnlag(navIdent = beslutterIdent, rolle = Rolle.BESLUTTER, enhet = null),
-                SignaturGrunnlag(navIdent = saksbehandlerIdent, rolle = Rolle.SAKSBEHANDLER_NASJONAL, enhet = null),
-                SignaturGrunnlag(navIdent = kvalitetssikrerIdent, rolle = Rolle.KVALITETSSIKRER, enhet = null),
-                SignaturGrunnlag(navIdent = veilederIdent, rolle = Rolle.SAKSBEHANDLER_OPPFOLGING, enhet = null)
-            )
-        }
+        assertThat(signaturer).containsExactly( // NB: Tester også rekkefølge.
+            SignaturGrunnlag(navIdent = beslutterIdent, rolle = Rolle.BESLUTTER, enhet = "8901"),
+            SignaturGrunnlag(navIdent = saksbehandlerIdent, rolle = Rolle.SAKSBEHANDLER_NASJONAL, enhet = "5678"),
+            SignaturGrunnlag(navIdent = kvalitetssikrerIdent, rolle = Rolle.KVALITETSSIKRER, enhet = "3456"),
+            SignaturGrunnlag(navIdent = veilederIdent, rolle = Rolle.SAKSBEHANDLER_OPPFOLGING, enhet = "2345")
+        )
     }
 
     @Test
@@ -295,19 +273,11 @@ class SignaturServiceTest(
         val signaturer = signaturService.finnSignaturGrunnlag(brevbestilling, Bruker(""))
 
         assertThat(signaturer).hasSize(3)
-        if (hentEnhetFraOppgave) { // Identisk assert i tillegg til å sjekke enhet
-            assertThat(signaturer).containsExactlyInAnyOrder(
-                SignaturGrunnlag(navIdent = beslutterIdent, rolle = Rolle.BESLUTTER, enhet = "6789"),
-                SignaturGrunnlag(navIdent = kvalitetssikrerIdent, rolle = Rolle.KVALITETSSIKRER, enhet = "5678"),
-                SignaturGrunnlag(navIdent = veilederIdent, rolle = Rolle.SAKSBEHANDLER_NASJONAL, enhet = "4567")
-            )
-        } else {
-            assertThat(signaturer).containsExactlyInAnyOrder(
-                SignaturGrunnlag(navIdent = beslutterIdent, rolle = Rolle.BESLUTTER, enhet = null),
-                SignaturGrunnlag(navIdent = kvalitetssikrerIdent, rolle = Rolle.KVALITETSSIKRER, enhet = null),
-                SignaturGrunnlag(navIdent = veilederIdent, rolle = Rolle.SAKSBEHANDLER_NASJONAL, enhet = null)
-            )
-        }
+        assertThat(signaturer).containsExactlyInAnyOrder(
+            SignaturGrunnlag(navIdent = beslutterIdent, rolle = Rolle.BESLUTTER, enhet = "6789"),
+            SignaturGrunnlag(navIdent = kvalitetssikrerIdent, rolle = Rolle.KVALITETSSIKRER, enhet = "5678"),
+            SignaturGrunnlag(navIdent = veilederIdent, rolle = Rolle.SAKSBEHANDLER_NASJONAL, enhet = "4567")
+        )
     }
 
     @Test
@@ -343,17 +313,10 @@ class SignaturServiceTest(
 
         val signaturer = signaturService.finnSignaturGrunnlag(brevbestilling, Bruker(innloggetBrukerIdent))
 
-        if (hentEnhetFraOppgave) {
-            assertThat(signaturer).containsExactlyInAnyOrder(
-                SignaturGrunnlag(navIdent = innloggetBrukerIdent, rolle = Rolle.BESLUTTER, enhet = "2345"),
-                SignaturGrunnlag(navIdent = saksbehandlerIdent, rolle = Rolle.SAKSBEHANDLER_NASJONAL, enhet = "1234")
-            )
-        } else {
-            assertThat(signaturer).containsExactlyInAnyOrder(
-                SignaturGrunnlag(navIdent = innloggetBrukerIdent, rolle = null, enhet = null),
-                SignaturGrunnlag(navIdent = saksbehandlerIdent, rolle = Rolle.SAKSBEHANDLER_NASJONAL, enhet = null)
-            )
-        }
+        assertThat(signaturer).containsExactlyInAnyOrder(
+            SignaturGrunnlag(navIdent = innloggetBrukerIdent, rolle = Rolle.BESLUTTER, enhet = "2345"),
+            SignaturGrunnlag(navIdent = saksbehandlerIdent, rolle = Rolle.SAKSBEHANDLER_NASJONAL, enhet = "1234")
+        )
     }
 
     @Test
@@ -435,19 +398,11 @@ class SignaturServiceTest(
             oppgaveEnhet = "4567"
         )
         val signaturer = signaturService.finnSignaturGrunnlag(brevbestilling, Bruker(kvalitetssikrerIdent))
-        if (hentEnhetFraOppgave) { // Identisk assert i tillegg til å sjekke enhet
-            assertThat(signaturer).containsExactly(
-                SignaturGrunnlag(navIdent = saksbehandlerIdent, rolle = Rolle.SAKSBEHANDLER_NASJONAL, enhet = "1234"),
-                SignaturGrunnlag(navIdent = kvalitetssikrerIdent, rolle = Rolle.KVALITETSSIKRER, enhet = "3456"),
-                SignaturGrunnlag(navIdent = veilederIdent, rolle = Rolle.SAKSBEHANDLER_OPPFOLGING, enhet = "2345"),
-            )
-        } else {
-            assertThat(signaturer).containsExactly(
-                SignaturGrunnlag(navIdent = saksbehandlerIdent, rolle = Rolle.SAKSBEHANDLER_NASJONAL, enhet = null),
-                SignaturGrunnlag(navIdent = kvalitetssikrerIdent, rolle = Rolle.KVALITETSSIKRER, enhet = null),
-                SignaturGrunnlag(navIdent = veilederIdent, rolle = Rolle.SAKSBEHANDLER_OPPFOLGING, enhet = null),
-            )
-        }
+        assertThat(signaturer).containsExactly(
+            SignaturGrunnlag(navIdent = saksbehandlerIdent, rolle = Rolle.SAKSBEHANDLER_NASJONAL, enhet = "1234"),
+            SignaturGrunnlag(navIdent = kvalitetssikrerIdent, rolle = Rolle.KVALITETSSIKRER, enhet = "3456"),
+            SignaturGrunnlag(navIdent = veilederIdent, rolle = Rolle.SAKSBEHANDLER_OPPFOLGING, enhet = "2345"),
+        )
     }
 
     @Test
@@ -473,15 +428,9 @@ class SignaturServiceTest(
 
         val signaturer = signaturService.finnSignaturGrunnlag(brevbestilling, Bruker(innloggetBrukerIdent))
 
-        if (hentEnhetFraOppgave) { // Identisk assert i tillegg til å sjekke enhet
-            assertThat(signaturer).containsExactly(
-                SignaturGrunnlag(navIdent = innloggetBrukerIdent, rolle = null, enhet = "1234")
-            )
-        } else {
-            assertThat(signaturer).containsExactly(
-                SignaturGrunnlag(navIdent = innloggetBrukerIdent, rolle = null, enhet = null)
-            )
-        }
+        assertThat(signaturer).containsExactly(
+            SignaturGrunnlag(navIdent = innloggetBrukerIdent, rolle = null, enhet = "1234")
+        )
     }
 
     @Test

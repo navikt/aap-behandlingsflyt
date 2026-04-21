@@ -3,11 +3,9 @@ package no.nav.aap.behandlingsflyt.behandling.rettighetsperiode
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
-import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
 import no.nav.aap.behandlingsflyt.behandling.søknad.DatoFraDokumentUtleder
-import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
+import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.rettighetsperiode.RettighetsperiodeHarRett
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
@@ -18,29 +16,13 @@ import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.getGrunnlag
-import java.time.LocalDate
 import javax.sql.DataSource
-
-data class RettighetsperiodeGrunnlagResponse(
-    val vurdering: RettighetsperiodeVurderingResponse?,
-    val søknadsdato: LocalDate?,
-    val harTilgangTilÅSaksbehandle: Boolean
-)
-
-data class RettighetsperiodeVurderingResponse(
-    val begrunnelse: String,
-    val harRett: RettighetsperiodeHarRett,
-    val startDato: LocalDate?,
-    val vurdertAv: VurdertAvResponse
-)
-
 
 fun NormalOpenAPIRoute.rettighetsperiodeGrunnlagApi(
     dataSource: DataSource,
     repositoryRegistry: RepositoryRegistry,
     gatewayProvider: GatewayProvider,
 ) {
-    val ansattInfoService = AnsattInfoService(gatewayProvider)
     route("/api/behandling/{referanse}/grunnlag/rettighetsperiode")
         .getGrunnlag<BehandlingReferanse, RettighetsperiodeGrunnlagResponse>(
             relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
@@ -58,26 +40,10 @@ fun NormalOpenAPIRoute.rettighetsperiodeGrunnlagApi(
                 val behandling = behandlingRepository.hent(BehandlingReferanse(req.referanse))
                 val vurdering = rettighetsperiodeRepository.hentVurdering(behandling.id)
 
-                val ansattNavnOgEnhet = vurdering?.let { ansattInfoService.hentAnsattNavnOgEnhet(it.vurdertAv) }
+                val vurdertAvService = VurdertAvService(repositoryProvider, gatewayProvider)
 
                 RettighetsperiodeGrunnlagResponse(
-                    vurdering =
-                        rettighetsperiodeRepository.hentVurdering(behandling.id)?.let {
-                            RettighetsperiodeVurderingResponse(
-                                begrunnelse = it.begrunnelse,
-                                startDato = it.startDato,
-                                harRett = it.harRettUtoverSøknadsdato,
-                                vurdertAv =
-                                    VurdertAvResponse(
-                                        ident = it.vurdertAv,
-                                        dato =
-                                            it.vurdertDato?.toLocalDate()
-                                                ?: error("Mangler vurdertdato på rettighetsperiodevurderingen"),
-                                        ansattnavn = ansattNavnOgEnhet?.navn,
-                                        enhetsnavn = ansattNavnOgEnhet?.enhet
-                                    )
-                            )
-                        },
+                    vurdering = vurdering?.tilDto(vurdertAvService, behandling.id),
                     søknadsdato = datoFraDokumentUtleder.utledSøknadsdatoForSak(behandling.sakId)?.toLocalDate(),
                     harTilgangTilÅSaksbehandle = kanSaksbehandle()
                 )

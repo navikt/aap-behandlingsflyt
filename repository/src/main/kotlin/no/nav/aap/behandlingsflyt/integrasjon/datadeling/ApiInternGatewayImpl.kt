@@ -3,22 +3,35 @@ package no.nav.aap.behandlingsflyt.integrasjon.datadeling
 import com.github.benmanes.caffeine.cache.Caffeine
 import no.nav.aap.api.intern.PersonEksistererIAAPArena
 import no.nav.aap.api.intern.SakerRequest
+import no.nav.aap.api.intern.behandlingsflyt.OppdaterIdenterDto
 import no.nav.aap.api.intern.behandlingsflyt.SakStatusKelvin
 import no.nav.aap.api.intern.behandlingsflyt.SakstatusFraKelvin
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelsePeriode
 import no.nav.aap.behandlingsflyt.datadeling.SakStatus
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.GjeldendeStansEllerOpphør
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.Opphør
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.Stans
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.ApiInternGateway
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.ArenaStatusResponse
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.MeldekortPerioderDTO
+import no.nav.aap.behandlingsflyt.kontrakt.datadeling.ArenaVedtaksvariantDTO
+import no.nav.aap.behandlingsflyt.kontrakt.datadeling.ArenavedtakDTO
+import no.nav.aap.behandlingsflyt.kontrakt.datadeling.AvslagsårsakDTO
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.DatadelingDTO
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.DetaljertMeldekortDTO
+import no.nav.aap.behandlingsflyt.kontrakt.datadeling.GjeldendeStansEllerOpphørDTO
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.RettighetsTypePeriode
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.SakDTO
+import no.nav.aap.behandlingsflyt.kontrakt.datadeling.StansEllerOpphørEnumDTO
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.TilkjentDTO
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.UnderveisDTO
+import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.prometheus
+import no.nav.aap.behandlingsflyt.prosessering.datadeling.UtledArenaVedtakstype
+import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
@@ -101,7 +114,9 @@ class ApiInternGatewayImpl : ApiInternGateway {
         beregningsgrunnlag: BigDecimal?,
         underveis: List<Underveisperiode>,
         vedtaksDato: LocalDate,
-        rettighetsTypeTidslinje: Tidslinje<RettighetsType>
+        rettighetsTypeTidslinje: Tidslinje<RettighetsType>,
+        stansOpphørGrunnlag: Set<GjeldendeStansEllerOpphør>?,
+        arenavedtak: Tidslinje<UtledArenaVedtakstype.ArenaVedtak>
     ) {
         log.info("Sender behandling for behandlingId=${behandling.id} med vedtakId=$vedtakId, sak: ${sak.saksnummer}. Beregningsgrunnlag: $beregningsgrunnlag")
         restClient.post(
@@ -158,10 +173,74 @@ class ApiInternGatewayImpl : ApiInternGateway {
                     },
                     vedtakId = vedtakId,
                     samId = samId,
+                    stansOpphørVurdering = stansOpphørGrunnlag.orEmpty().map {
+                        GjeldendeStansEllerOpphørDTO(
+                            fom = it.fom,
+                            opprettet = it.opprettet,
+                            vurdering = when (it.vurdering) {
+                                is Stans -> StansEllerOpphørEnumDTO.STANS
+                                is Opphør -> StansEllerOpphørEnumDTO.OPPHØR
+                            },
+                            avslagsårsaker = it.vurdering.årsaker.mapNotNull { mapAvslagsårsak(it) }.toSet(),
+                        )
+                    }.toSet(),
+                    arenavedtak = arenavedtak.segmenter().map {
+                        ArenavedtakDTO(
+                            vedtakId = it.verdi.vedtakId.id,
+                            fom = it.fom(),
+                            tom = it.tom(),
+                            vedtaksvariant = when (it.verdi.vedtaksvariant) {
+                                UtledArenaVedtakstype.ArenaVedtaksvariant.O_AVSLAG -> ArenaVedtaksvariantDTO.O_AVSLAG
+                                UtledArenaVedtakstype.ArenaVedtaksvariant.O_INNV_NAV -> ArenaVedtaksvariantDTO.O_INNV_NAV
+                                UtledArenaVedtakstype.ArenaVedtaksvariant.O_INNV_SOKNAD -> ArenaVedtaksvariantDTO.O_INNV_SOKNAD
+                                UtledArenaVedtakstype.ArenaVedtaksvariant.E_FORLENGE -> ArenaVedtaksvariantDTO.E_FORLENGE
+                                UtledArenaVedtakstype.ArenaVedtaksvariant.E_VERDI -> ArenaVedtaksvariantDTO.E_VERDI
+                                UtledArenaVedtakstype.ArenaVedtaksvariant.G_AVSLAG -> ArenaVedtaksvariantDTO.G_AVSLAG
+                                UtledArenaVedtakstype.ArenaVedtaksvariant.G_INNV_NAV -> ArenaVedtaksvariantDTO.G_INNV_NAV
+                                UtledArenaVedtakstype.ArenaVedtaksvariant.G_INNV_SOKNAD -> ArenaVedtaksvariantDTO.G_INNV_SOKNAD
+                                UtledArenaVedtakstype.ArenaVedtaksvariant.S_DOD -> ArenaVedtaksvariantDTO.S_DOD
+                                UtledArenaVedtakstype.ArenaVedtaksvariant.S_OPPHOR -> ArenaVedtaksvariantDTO.S_OPPHOR
+                                UtledArenaVedtakstype.ArenaVedtaksvariant.S_STANS -> ArenaVedtaksvariantDTO.S_STANS
+                            }
+                        )
+                    },
                 ),
             ),
             mapper = { _, _ ->
             })
+    }
+
+    fun mapAvslagsårsak(it: Avslagsårsak): AvslagsårsakDTO? {
+        return when (it) {
+            Avslagsårsak.BRUKER_OVER_67 -> AvslagsårsakDTO.BRUKER_OVER_67
+            Avslagsårsak.IKKE_RETT_PA_SYKEPENGEERSTATNING -> AvslagsårsakDTO.IKKE_RETT_PA_SYKEPENGEERSTATNING
+            Avslagsårsak.IKKE_RETT_PA_STUDENT -> AvslagsårsakDTO.IKKE_RETT_PA_STUDENT
+            Avslagsårsak.VARIGHET_OVERSKREDET_STUDENT -> AvslagsårsakDTO.VARIGHET_OVERSKREDET_STUDENT
+            Avslagsårsak.IKKE_SYKDOM_AV_VISS_VARIGHET -> AvslagsårsakDTO.IKKE_SYKDOM_AV_VISS_VARIGHET
+            Avslagsårsak.IKKE_SYKDOM_SKADE_LYTE_VESENTLIGDEL -> AvslagsårsakDTO.IKKE_SYKDOM_SKADE_LYTE_VESENTLIGDEL
+            Avslagsårsak.IKKE_NOK_REDUSERT_ARBEIDSEVNE -> AvslagsårsakDTO.IKKE_NOK_REDUSERT_ARBEIDSEVNE
+            Avslagsårsak.IKKE_BEHOV_FOR_OPPFOLGING -> AvslagsårsakDTO.IKKE_BEHOV_FOR_OPPFOLGING
+            Avslagsårsak.IKKE_MEDLEM -> AvslagsårsakDTO.IKKE_MEDLEM
+            Avslagsårsak.IKKE_OPPFYLT_OPPHOLDSKRAV_EØS -> AvslagsårsakDTO.IKKE_OPPFYLT_OPPHOLDSKRAV_EØS
+            Avslagsårsak.ANNEN_FULL_YTELSE -> AvslagsårsakDTO.ANNEN_FULL_YTELSE
+            Avslagsårsak.INNTEKTSTAP_DEKKES_ETTER_ANNEN_LOVGIVNING -> AvslagsårsakDTO.INNTEKTSTAP_DEKKES_ETTER_ANNEN_LOVGIVNING
+            Avslagsårsak.IKKE_RETT_PA_AAP_UNDER_BEHANDLING_AV_UFORE -> AvslagsårsakDTO.IKKE_RETT_PA_AAP_UNDER_BEHANDLING_AV_UFORE
+            Avslagsårsak.VARIGHET_OVERSKREDET_OVERGANG_UFORE -> AvslagsårsakDTO.VARIGHET_OVERSKREDET_OVERGANG_UFORE
+            Avslagsårsak.VARIGHET_OVERSKREDET_ARBEIDSSØKER -> AvslagsårsakDTO.VARIGHET_OVERSKREDET_ARBEIDSSØKER
+            Avslagsårsak.IKKE_RETT_PA_AAP_I_PERIODE_SOM_ARBEIDSSOKER -> AvslagsårsakDTO.IKKE_RETT_PA_AAP_I_PERIODE_SOM_ARBEIDSSOKER
+            Avslagsårsak.IKKE_RETT_UNDER_STRAFFEGJENNOMFØRING -> AvslagsårsakDTO.IKKE_RETT_UNDER_STRAFFEGJENNOMFØRING
+            Avslagsårsak.BRUDD_PÅ_AKTIVITETSPLIKT_STANS -> AvslagsårsakDTO.BRUDD_PÅ_AKTIVITETSPLIKT_STANS
+            Avslagsårsak.BRUDD_PÅ_AKTIVITETSPLIKT_OPPHØR -> AvslagsårsakDTO.BRUDD_PÅ_AKTIVITETSPLIKT_OPPHØR
+            Avslagsårsak.BRUDD_PÅ_OPPHOLDSKRAV_STANS -> AvslagsårsakDTO.BRUDD_PÅ_OPPHOLDSKRAV_STANS
+            Avslagsårsak.BRUDD_PÅ_OPPHOLDSKRAV_OPPHØR -> AvslagsårsakDTO.BRUDD_PÅ_OPPHOLDSKRAV_OPPHØR
+            Avslagsårsak.ORDINÆRKVOTE_BRUKT_OPP -> AvslagsårsakDTO.ORDINÆRKVOTE_BRUKT_OPP
+            Avslagsårsak.SYKEPENGEERSTATNINGKVOTE_BRUKT_OPP -> AvslagsårsakDTO.SYKEPENGEERSTATNINGKVOTE_BRUKT_OPP
+            Avslagsårsak.BRUKER_UNDER_18 -> null
+            Avslagsårsak.MANGLENDE_DOKUMENTASJON -> null
+            Avslagsårsak.IKKE_MEDLEM_FORUTGÅENDE -> null
+            Avslagsårsak.NORGE_IKKE_KOMPETENT_STAT -> null
+            Avslagsårsak.HAR_RETT_TIL_FULLT_UTTAK_ALDERSPENSJON -> null
+        }
     }
 
     override fun sendDetaljertMeldekortListe(
@@ -184,6 +263,18 @@ class ApiInternGatewayImpl : ApiInternGateway {
             val sakerRequest = SakerRequest(personidentifikatorer = personidentifikatorer.toList())
             doHentArenaStatus(sakerRequest)
         }
+    }
+
+    override fun oppdaterIdenter(
+        saksnummer: Saksnummer,
+        identer: List<Ident>
+    ) {
+        log.info("Oppdaterer identer for sak $saksnummer.")
+        restClient.post(
+            uri.resolve("/api/insert/oppdater-identer"),
+            PostRequest(body = OppdaterIdenterDto(saksnummer.toString(), identer.map(Ident::identifikator))),
+            mapper = { _, _ -> }
+        )
     }
 
     private fun doHentArenaStatus(sakerRequest: SakerRequest): ArenaStatusResponse {

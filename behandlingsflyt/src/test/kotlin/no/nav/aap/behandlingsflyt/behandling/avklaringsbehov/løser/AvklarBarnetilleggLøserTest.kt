@@ -29,6 +29,7 @@ class AvklarBarnetilleggLøserTest {
                     VurdertBarnDto(
                         barnIdent.ident.identifikator,
                         fødselsdato = null,
+                        dødsdato = null,
                         vurderinger = listOf(
                             VurderingAvForeldreAnsvarDto(
                                fraDato =  LocalDate.now().minusMonths(1),

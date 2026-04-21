@@ -14,7 +14,7 @@ sealed class BarnIdentifikator : Comparable<BarnIdentifikator> {
     data class BarnIdent(
         val ident: Ident,
         val navn: String? = null,
-        val fødselsdato: Fødselsdato? = null
+        val fødselsdato: Fødselsdato? = null,
     ) : BarnIdentifikator() {
         constructor(ident: String) : this(Ident(ident))
 

@@ -197,7 +197,6 @@ class KvalitetssikringFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash
             }
             .bekreftVurderinger()
             .kvalitetssikre()
-            .foreslåVedtak()
             .fattVedtak()
             .medKontekst {
                 assertThat(åpneAvklaringsbehov).hasSize(1)

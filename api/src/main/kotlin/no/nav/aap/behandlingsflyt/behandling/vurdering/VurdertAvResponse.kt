@@ -9,13 +9,15 @@ data class VurdertAvResponse(
     val ident: String,
     val dato: LocalDate,
     val ansattnavn: String? = null,
-    val enhetsnavn: String? = null
+    val enhetsnavn: String? = null,
+    val erRetur: Boolean? = null,
 ) {
     companion object {
         fun fraIdent(
             ident: String?,
             dato: LocalDate?,
-            ansattInfoService: AnsattInfoService
+            ansattInfoService: AnsattInfoService,
+            erRetur: Boolean? = null
         ): VurdertAvResponse? {
             if (ident == null || dato == null) return null
 
@@ -24,7 +26,8 @@ data class VurdertAvResponse(
                 ident = ident,
                 dato = dato,
                 ansattnavn = navnOgEnhet?.navn,
-                enhetsnavn = navnOgEnhet?.enhet
+                enhetsnavn = navnOgEnhet?.enhet,
+                erRetur = erRetur
             )
         }
 
@@ -32,12 +35,14 @@ data class VurdertAvResponse(
             ident: String?,
             dato: Instant?,
             ansattInfoService: AnsattInfoService,
+            erRetur: Boolean? = null
         ): VurdertAvResponse? {
             if (ident == null || dato == null) return null
             return fraIdent(
                 ident = ident,
                 dato = dato.atZone(ZoneId.of("Europe/Oslo")).toLocalDate(),
-                ansattInfoService = ansattInfoService
+                ansattInfoService = ansattInfoService,
+                erRetur = erRetur
             )
         }
     }

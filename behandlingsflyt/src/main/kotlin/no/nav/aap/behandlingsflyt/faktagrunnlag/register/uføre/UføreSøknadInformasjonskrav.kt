@@ -48,9 +48,6 @@ class UføreSøknadInformasjonskrav(
         steg: StegType,
         oppdatert: InformasjonskravOppdatert?
     ): Boolean {
-        if (unleashGateway.isDisabled(BehandlingsflytFeature.hentUforesoknadsdata)) {
-            return false
-        }
         return kontekst.erFørstegangsbehandlingEllerRevurdering()
                 && !tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, steg)
                 && (oppdatert.ikkeKjørtSisteKalenderdagForBehandling(kontekst.behandlingId) || kontekst.rettighetsperiode != oppdatert?.rettighetsperiode || kontekst.erVurderingsbehovEndretEtterOppdatertInformasjonskrav(
@@ -68,10 +65,6 @@ class UføreSøknadInformasjonskrav(
     }
 
     override fun hentData(input: UføreSøknadInput): UføreSøknadRegisterdata {
-        if (unleashGateway.isDisabled(BehandlingsflytFeature.hentUforesoknadsdata)) {
-            return UføreSøknadRegisterdata(null)
-        }
-
         return UføreSøknadRegisterdata(hentUføreSøknad(input))
     }
 

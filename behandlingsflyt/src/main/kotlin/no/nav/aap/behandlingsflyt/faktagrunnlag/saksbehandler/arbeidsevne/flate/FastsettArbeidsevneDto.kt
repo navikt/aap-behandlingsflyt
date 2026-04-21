@@ -3,8 +3,6 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.flate
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.LøsningForPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneVurdering
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
 import no.nav.aap.komponenter.verdityper.Prosent
 import java.time.LocalDate
 import java.time.LocalDateTime

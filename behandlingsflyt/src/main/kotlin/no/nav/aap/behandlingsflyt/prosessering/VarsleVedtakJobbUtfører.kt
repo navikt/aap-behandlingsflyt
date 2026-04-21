@@ -10,16 +10,14 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjeneste
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravVurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.refusjonskrav.TjenestepensjonRefusjonsKravVurderingRepository
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryProvider
-import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.JobbInput
@@ -149,9 +147,9 @@ class VarsleVedtakJobbUtfører(
     fun underveisTilRettighetsTypeTidslinje(
         underveis: UnderveisGrunnlag?
     ): Tidslinje<RettighetsType> {
-        return underveis?.perioder.orEmpty()
-            .mapNotNull { if (it.rettighetsType != null) Segment(it.periode, it.rettighetsType) else null }
-            .let(::Tidslinje).komprimer()
+        return underveis?.somTidslinje().orEmpty()
+            .mapNotNull { it.rettighetsType }
+            .komprimer()
     }
 
     fun endringIRettighetstypeTidslinje(

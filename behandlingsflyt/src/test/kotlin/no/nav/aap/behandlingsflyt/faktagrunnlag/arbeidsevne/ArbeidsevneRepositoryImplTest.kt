@@ -39,7 +39,7 @@ class ArbeidsevneRepositoryImplTest {
     @Test
     fun `Lagrer nye arbeidsevnevurderinger skal deaktivere forrige grunnlag selv om den ikke har noen vurderinger`() {
         dataSource.transaction { connection ->
-            val sak = sak(connection, periode)
+            val sak = sak(connection, periode.fom)
             val behandling = finnEllerOpprettBehandling(connection, sak)
             val arbeidsevneRepository = ArbeidsevneRepositoryImpl(connection)
 
@@ -66,7 +66,7 @@ class ArbeidsevneRepositoryImplTest {
     @Test
     fun `Finner ikke arbeidsevne hvis ikke lagret`() {
         dataSource.transaction { connection ->
-            val sak = sak(connection, periode)
+            val sak = sak(connection, periode.fom)
             val behandling = finnEllerOpprettBehandling(connection, sak)
 
             val arbeidsevneRepository = ArbeidsevneRepositoryImpl(connection)
@@ -78,7 +78,7 @@ class ArbeidsevneRepositoryImplTest {
     @Test
     fun `Lagrer og henter arbeidsevne`() {
         dataSource.transaction { connection ->
-            val sak = sak(connection, periode)
+            val sak = sak(connection, periode.fom)
             val behandling = finnEllerOpprettBehandling(connection, sak)
             val arbeidsevne = ArbeidsevneVurdering("begrunnelse", Prosent(100), LocalDate.now(), null, behandling.id, LocalDateTime.now(), "vurdertAv")
 
@@ -93,7 +93,7 @@ class ArbeidsevneRepositoryImplTest {
     @Test
     fun `Kopierer arbeidsevne fra en behandling til en annen`() {
         dataSource.transaction { connection ->
-            val sak = sak(connection, periode)
+            val sak = sak(connection, periode.fom)
             val behandling1 = finnEllerOpprettBehandling(connection, sak)
             val arbeidsevneRepository = ArbeidsevneRepositoryImpl(connection)
             val arbeidsevne = ArbeidsevneVurdering("begrunnelse", Prosent(100), LocalDate.now(), null, behandling1.id, LocalDateTime.now(),"vurdertAv")
@@ -122,7 +122,7 @@ class ArbeidsevneRepositoryImplTest {
     @Test
     fun `Kopierer arbeidsevne fra en behandling til en annen der fraBehandlingen har to versjoner av opplysningene`() {
         dataSource.transaction { connection ->
-            val sak = sak(connection, periode)
+            val sak = sak(connection, periode.fom)
             val behandling1 = finnEllerOpprettBehandling(connection, sak)
             val arbeidsevneRepository = ArbeidsevneRepositoryImpl(connection)
             val arbeidsevne = ArbeidsevneVurdering("begrunnelse", Prosent(100), LocalDate.now(), null, behandling1.id, LocalDateTime.now(), "vurdertAv")
@@ -143,11 +143,11 @@ class ArbeidsevneRepositoryImplTest {
     @Test
     fun `Lagrer nye arbeidsevneopplysninger som ny rad og deaktiverer forrige versjon av opplysningene`() {
         dataSource.transaction { connection ->
-            val sak = sak(connection, periode)
+            val sak = sak(connection, periode.fom)
             val behandling = finnEllerOpprettBehandling(connection, sak)
             val arbeidsevneRepository = ArbeidsevneRepositoryImpl(connection)
             val arbeidsevne = ArbeidsevneVurdering("begrunnelse", Prosent(100), LocalDate.now(), null, behandling.id, LocalDateTime.now(), "vurdertAv")
-            val arbeidsevne2 = arbeidsevne.copy("annen begrunnelse")
+            val arbeidsevne2 = arbeidsevne.copy(begrunnelse = "annen begrunnelse")
 
             arbeidsevneRepository.lagre(behandling.id, listOf(arbeidsevne))
             val originaleVurderinger = arbeidsevneRepository.hentHvisEksisterer(behandling.id)?.vurderinger
@@ -205,12 +205,12 @@ class ArbeidsevneRepositoryImplTest {
     fun `Ved kopiering av arbeidsevneopplysninger fra en avsluttet behandling til en ny skal kun referansen kopieres, ikke hele raden`() {
         dataSource.transaction { connection ->
 
-            val sak = sak(connection, periode)
+            val sak = sak(connection, periode.fom)
             val behandling1 = finnEllerOpprettBehandling(connection, sak)
             val arbeidsevneRepository = ArbeidsevneRepositoryImpl(connection)
             val arbeidsevne =
                 ArbeidsevneVurdering("begrunnelse", Prosent(100), LocalDate.now(), null, behandling1.id, LocalDateTime.now(), "vurdertAv")
-            val arbeidsevne2 = arbeidsevne.copy("annen begrunnelse")
+            val arbeidsevne2 = arbeidsevne.copy(begrunnelse = "annen begrunnelse")
 
             arbeidsevneRepository.lagre(behandling1.id, listOf(arbeidsevne))
             arbeidsevneRepository.lagre(behandling1.id, listOf(arbeidsevne2))
