@@ -58,7 +58,6 @@ class SykdomsvurderingMigrering(
                     sykdomsvurderingMigreringService.migrerBehandling(behandlingId)
                 } catch (e: Exception) {
                     log.error("Migrering feilet for behandling $behandlingId. Avbryter migrering.", e)
-                    ferdig = true
                 }
                 antallMigreringer += 1
                 sisteMigrerte = behandlingId.id
@@ -135,12 +134,14 @@ class SykdomsvurderingMigreringService(
 
         // Hent oppdatert grunnlag og sammenlign etter oppdatering
         val oppdatertSykdomsGrunnlag = sykdomRepository.hent(behandlingId)
+        val oppdaterteSykdomsvurderinger =
+            if (Miljø.erDev()) oppdatertSykdomsGrunnlag.sykdomsvurderinger.filter { rettighetsperiode.inneholder(it.vurderingenGjelderFra) } else oppdatertSykdomsGrunnlag.sykdomsvurderinger
         val oppdatertFaktagrunnlag = SykdomsFaktagrunnlag(
             kravDato = rettighetsperiode.fom,
             sisteDagMedMuligYtelse = rettighetsperiode.tom,
             yrkesskadevurdering = oppdatertSykdomsGrunnlag.yrkesskadevurdering,
             sykepengerErstatningFaktagrunnlag = sykepengerErstatningGrunnlag,
-            sykdomsvurderinger = oppdatertSykdomsGrunnlag.sykdomsvurderinger.filter { rettighetsperiode.inneholder(it.vurderingenGjelderFra) },
+            sykdomsvurderinger = oppdaterteSykdomsvurderinger,
             bistandvurderingFaktagrunnlag = bistandGrunnlag,
             sykepengeerstatningVilkår = vilkårsresultat.optionalVilkår(Vilkårtype.SYKEPENGEERSTATNING)?.tidslinje()
                 .orEmpty(),
