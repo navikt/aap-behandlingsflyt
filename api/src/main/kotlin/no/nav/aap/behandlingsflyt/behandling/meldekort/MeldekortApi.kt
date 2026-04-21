@@ -77,48 +77,48 @@ fun NormalOpenAPIRoute.meldekortApi(
 
             respond(meldeperioderMedMeldekortResponse ?: MeldeperioderMedMeldekortResponse(emptySet()))
         }
-    }
 
-    route("/api/meldekort/oppdater") {
-            authorizedPost<Unit, OppdaterMeldekortResponse, OppdaterMeldekortRequest>(
-                AuthorizationBodyPathConfig(
-                    relevanteIdenterResolver = relevanteIdenterForSakResolver(repositoryRegistry, dataSource),
-                    operasjon = Operasjon.SAKSBEHANDLE,
-                ),
-                modules = arrayOf(TagModule(listOf(Tags.Sak))),
-            ) { _, body ->
-                val response = dataSource.transaction { connection ->
-                    val repositoryProvider = repositoryRegistry.provider(connection)
-                    val sakRepository = repositoryProvider.provide<SakRepository>()
-                    val journalføringService = JournalføringService(gatewayProvider)
+        authorizedPost<Unit, OppdaterMeldekortResponse, OppdaterMeldekortRequest>(
+            AuthorizationBodyPathConfig(
+                relevanteIdenterResolver = relevanteIdenterForSakResolver(repositoryRegistry, dataSource),
+                operasjon = Operasjon.SAKSBEHANDLE,
+            ),
+            modules = arrayOf(TagModule(listOf(Tags.Sak))),
+        ) { _, body ->
+            val response = dataSource.transaction { connection ->
+                val repositoryProvider = repositoryRegistry.provider(connection)
+                val sakRepository = repositoryProvider.provide<SakRepository>()
+                val journalføringService = JournalføringService(gatewayProvider)
 
-                    val sak = sakRepository.hent(Saksnummer(body.saksnummer))
-                    val bruker = bruker()
-                    val meldeperiode = body.meldeperiode
-                    val meldekort = tilMeldekort(body, bruker)
-                    val tidspunkt = Instant.now()
+                val sak = sakRepository.hent(Saksnummer(body.saksnummer))
+                val bruker = bruker()
+                val meldeperiode = body.meldeperiode
+                val meldekort = tilMeldekort(body, bruker)
+                val tidspunkt = Instant.now()
 
-                    /**
-                     * Journalfører meldekort, men ferdigstiller ikke journalposten. Det fører til at den plukkes
-                     * opp i postmottak som ferdigstiller denne på tilsvarende måte som vanlig meldekort fra
-                     * bruker. Resten av flyten er lik ellers med revurdering og fasttrack.
-                     */
-                    val journalpostId = journalføringService.journalfør(sak, meldeperiode, meldekort, bruker, tidspunkt)
+                /**
+                 * Journalfører meldekort, men ferdigstiller ikke journalposten. Det fører til at den plukkes
+                 * opp i postmottak som ferdigstiller denne på tilsvarende måte som vanlig meldekort fra
+                 * bruker. Resten av flyten er lik ellers med revurdering og fasttrack.
+                 */
+                val journalpostId = journalføringService.journalfør(sak, meldeperiode, meldekort, bruker, tidspunkt)
 
-                    // TODO lagre ned "midlertidig tilstand her slik at saksbehandler kan se at vi prosesserer endringene?
+                // TODO lagre ned "midlertidig tilstand her slik at saksbehandler kan se at vi prosesserer endringene?
 
-                    OppdaterMeldekortResponse(journalpostId.identifikator)
-                }
-
-                respond(response)
+                OppdaterMeldekortResponse(journalpostId.identifikator)
             }
+
+            respond(response)
         }
     }
+}
 
 private fun tilMeldekort(oppdaterMeldekortRequest: OppdaterMeldekortRequest, vurdertAv: Bruker): MeldekortV0 {
     // TODO få inn begrunnelse og opprettetAv når PR for utvidelse av Meldekort-kontrakt er merget
     return MeldekortV0(
-        harDuArbeidet = true,
+        harDuArbeidet = true, // TODO bør utledes basert på registrerte timer?
+        opprettetAv = vurdertAv.ident,
+        begrunnelse = oppdaterMeldekortRequest.begrunnelse,
         timerArbeidPerPeriode = oppdaterMeldekortRequest.dager.map {
             ArbeidIPeriodeV0(
                 fraOgMedDato = it.dato,
