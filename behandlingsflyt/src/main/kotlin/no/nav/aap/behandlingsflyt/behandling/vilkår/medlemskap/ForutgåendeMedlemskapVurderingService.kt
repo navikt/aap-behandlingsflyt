@@ -338,11 +338,13 @@ class ForutgåendeMedlemskapVurderingService(
             val mndPeriode = Periode(nåMnd.atDay(1), nåMnd.atEndOfMonth())
             val inntekterForMnd = inntekter?.filter { it.periode.overlapper(mndPeriode) }
 
-            if (inntekterForMnd.isNullOrEmpty() && hullStart == null) {
-                hullStart = nåMnd
+            if (inntekterForMnd.isNullOrEmpty()) {
+                if (hullStart == null) {
+                    hullStart = nåMnd
+                }
             } else {
                 slåSammenHull(nåMnd.minusMonths(1))
-                inntekterForMnd?.forEach { inntekt ->
+                inntekterForMnd.forEach { inntekt ->
                     tidslinje.add(
                         VisuellTidslinjeArbeidInntektINorge(
                             virksomhetId = inntekt.identifikator,
