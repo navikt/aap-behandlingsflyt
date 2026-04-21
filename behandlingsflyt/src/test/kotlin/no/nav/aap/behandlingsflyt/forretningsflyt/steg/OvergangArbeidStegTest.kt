@@ -130,12 +130,6 @@ class OvergangArbeidStegTest {
             tidligereVurderinger = FakeTidligereVurderinger(),
             bistandRepository = bistandMock,
             avklaringsbehovService = AvklaringsbehovService(inMemoryRepositoryProvider),
-            studentRepository = mockk<StudentRepository> {
-                every { hentHvisEksisterer(any()) } returns null
-            },
-            overgangUføreRepository = mockk<OvergangUføreRepository> {
-                every { hentHvisEksisterer(any()) } returns null
-            },
         )
 
         // skal ikke åpne avklaringsbehov, 11-5 og 11-6 er oppfylt
