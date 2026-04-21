@@ -363,7 +363,9 @@ class VedtakslengdeService(
         )
 
     private fun gyldigeAvslagsårsakerForAutomatiskBehandlingProd() =
-        emptySet<Avslagsårsak>()
+        setOf(
+            Avslagsårsak.BRUKER_OVER_67,
+        )
 }
 
 private sealed interface BistandsbehovRettighetsperioder {
