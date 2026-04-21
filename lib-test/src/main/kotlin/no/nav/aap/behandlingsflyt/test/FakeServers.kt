@@ -46,6 +46,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fød
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreSøknadRequest
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreSøknadResponse
 import no.nav.aap.behandlingsflyt.integrasjon.ident.IDENT_QUERY
+import no.nav.aap.behandlingsflyt.integrasjon.ident.PERSONINFO_BOLK_QUERY
 import no.nav.aap.behandlingsflyt.integrasjon.ident.PdlPersoninfoGateway
 import no.nav.aap.behandlingsflyt.integrasjon.institusjonsopphold.InstitusjonoppholdRequest
 import no.nav.aap.behandlingsflyt.integrasjon.medlemsskap.MedlemskapRequest
@@ -76,6 +77,8 @@ import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlIdenterData
 import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlIdenterDataResponse
 import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlNavn
 import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlNavnData
+import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlNavnDataBolk
+import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlPersonBolk
 import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlPersonNavnDataResponse
 import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlPersoninfo
 import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlPersoninfoData
@@ -467,6 +470,7 @@ object FakeServers : AutoCloseable {
                     PdlPersoninfoGateway.PERSONINFO_QUERY -> call.respond(navn(req))
                     BARN_RELASJON_QUERY -> call.respond(barnRelasjoner(req))
                     PERSON_BOLK_QUERY -> call.respond(barn(req))
+                    PERSONINFO_BOLK_QUERY -> call.respond(personinfoBolk(req))
                     else -> call.respond(HttpStatusCode.BadRequest)
                 }
             }
@@ -1332,6 +1336,34 @@ object FakeServers : AutoCloseable {
         )
     }
 
+    private fun personinfoBolk(req: PdlRequest): PdlPersonNavnDataResponse {
+        val forespurtIdenter = req.variables.identer.orEmpty()
+
+        val navnBolk = forespurtIdenter.mapNotNull { ident ->
+            val person = fakePersoner.hentPerson(ident) ?: return@mapNotNull null
+            PdlNavnDataBolk(
+                ident = person.identer.first().identifikator,
+                person = PdlPersonBolk(
+                    navn = listOf(
+                        PdlNavn(
+                            fornavn = person.navn.fornavn,
+                            mellomnavn = null,
+                            etternavn = person.navn.etternavn
+                        )
+                    )
+                )
+            )
+        }
+
+        return PdlPersonNavnDataResponse(
+            errors = null,
+            extensions = null,
+            data = HentPerson(
+                hentPersonBolk = navnBolk
+            )
+        )
+    }
+
     private fun mapIdentBolk(it: String): HentPersonBolkResult? {
         val person = fakePersoner.hentPerson(it) ?: return null
         return HentPersonBolkResult(
@@ -1504,6 +1536,12 @@ object FakeServers : AutoCloseable {
             }
         }
         routing {
+            post("/token") {
+                val body = call.receiveText()
+                val erCc = body.contains("grant_type=client_credentials")
+                val token = AzureTokenGen("behandlingsflyt", "behandlingsflyt").generate(erCc, "behandlingsflyt")
+                call.respond(TestToken(access_token = token))
+            }
             post("/token/{NAVident}") {
                 val body = call.receiveText()
                 val NAVident = call.parameters["NAVident"]
@@ -2040,8 +2078,9 @@ object FakeServers : AutoCloseable {
 
         // Oppgavestyring
         System.setProperty("integrasjon.oppgavestyring.scope", "oppgavestyring")
-        System.setProperty("integrasjon.oppgavestyring.url", "http://localhost:${oppgavestyring.port()}")
-
+        if (System.getenv("INTEGRASJON_OPPGAVESTYRING_URL").isNullOrEmpty()) {
+            System.setProperty("integrasjon.oppgavestyring.url", "http://localhost:${oppgavestyring.port()}")
+        }
 
         // MEDL
         System.setProperty("integrasjon.medl.url", "http://localhost:${medl.port()}")

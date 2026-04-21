@@ -15,7 +15,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ErNedsettel
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Yrkesskadevurdering
-import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.somSykdomsvurderingTidslinje
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.komponenter.type.Periode
@@ -30,7 +30,8 @@ class SykdomsvilkårUtenVissVarighet(vilkårsresultat: Vilkårsresultat) : Vilk�
 
     fun vurderOgSammenlign(
         grunnlag: SykdomsFaktagrunnlag,
-        eksisterendeVilkårsresultat: Vilkårsresultat
+        eksisterendeVilkårsresultat: Vilkårsresultat,
+        rettighetsperiode: Periode
     ): Tidslinje<SammenlignetSegment> {
 
         val nySammenlignbarVilkårsvurderingTidslinje =
@@ -42,11 +43,13 @@ class SykdomsvilkårUtenVissVarighet(vilkårsresultat: Vilkårsresultat) : Vilk�
                 )
             }
                 .komprimer()
+                .begrensetTil(rettighetsperiode)
 
         val gammelSammenlignbarVilkårsvurderingTidslinje =
             eksisterendeVilkårsresultat.optionalVilkår(Vilkårtype.SYKDOMSVILKÅRET)?.tidslinje().orEmpty()
                 .mapValue { SammenlignbarVurdering(it.utfall, it.innvilgelsesårsak, it.avslagsårsak) }
                 .komprimer()
+                .begrensetTil(rettighetsperiode)
 
 
         return gammelSammenlignbarVilkårsvurderingTidslinje.outerJoin(nySammenlignbarVilkårsvurderingTidslinje) { gammel, ny ->
@@ -62,20 +65,7 @@ class SykdomsvilkårUtenVissVarighet(vilkårsresultat: Vilkårsresultat) : Vilk�
             grunnlag.yrkesskadevurdering
         )
 
-        val sykdomsvurderingTidslinje = grunnlag.sykdomsvurderinger
-            .sortedBy { it.opprettet }
-            .map { vurdering ->
-                Tidslinje(
-                    Periode(
-                        fom = vurdering.vurderingenGjelderFra,
-                        tom = grunnlag.sisteDagMedMuligYtelse
-                    ),
-                    vurdering
-                )
-            }
-            .fold(Tidslinje<Sykdomsvurdering>()) { t1, t2 ->
-                t1.kombiner(t2, StandardSammenslåere.prioriterHøyreSideCrossJoin())
-            }
+        val sykdomsvurderingTidslinje = grunnlag.sykdomsvurderinger.somSykdomsvurderingTidslinje(grunnlag.sisteDagMedMuligYtelse)
 
         val bistandvurderingtidslinje =
             grunnlag.bistandvurderingFaktagrunnlag

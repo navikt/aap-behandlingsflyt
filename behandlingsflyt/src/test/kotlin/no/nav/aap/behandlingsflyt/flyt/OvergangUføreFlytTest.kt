@@ -24,6 +24,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.UførevedtakKafkaMelding
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.UførevedtakResultat
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.UførevedtakV0
+import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.prosessering.HendelseMottattHåndteringJobbUtfører
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.underveis.UnderveisRepositoryImpl
@@ -407,5 +408,86 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::
         val revurdering = hentSisteOpprettedeBehandlingForSak(sak.id)
         prosesserBehandling(revurdering)
         return Pair(melding, revurdering)
+    }
+
+    @Test
+    fun `Legge til revurdering av 11-18`() {
+        /*
+        Legg til "§ 11-18 AAP under behandling av krav om uføretrygd" som revurderingsårsak
+        1. Hvis det finnes en eksisterende 11-18 vurdering, så skal det trigge avklaringsbehov på 11-18
+        2. Hvis det ikke finnes vurdert 11-18, så skal det trigge en vurdering av § 11-6 + 11-18.
+         */
+        val startDato = LocalDate.now()
+        val sak = happyCaseFørstegangsbehandling(startDato)
+
+        /* Gir AAP som arbeidssøker. */
+        sak.opprettManuellRevurdering(
+            no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.OVERGANG_UFORE
+        )
+            .medKontekst {
+                assertThat(åpneAvklaringsbehov.map { it.definisjon }).containsExactly(Definisjon.AVKLAR_BISTANDSBEHOV);
+            }
+            .løsAvklaringsBehov(
+                AvklarBistandsbehovLøsning(
+                    løsningerForPerioder = listOf(
+                        BistandLøsningDto(
+                            begrunnelse = "Trenger hjelp fra nav",
+                            erBehovForAktivBehandling = true,
+                            erBehovForArbeidsrettetTiltak = false,
+                            erBehovForAnnenOppfølging = null,
+                            skalVurdereAapIOvergangTilArbeid = null,
+                            overgangBegrunnelse = null,
+                            fom = startDato,
+                            tom = startDato.plusDays(7)
+                        ),
+                        BistandLøsningDto(
+                            fom = startDato.plusDays(8),
+                            begrunnelse = "Trenger hjelp fra nav",
+                            erBehovForAktivBehandling = false,
+                            erBehovForArbeidsrettetTiltak = false,
+                            erBehovForAnnenOppfølging = false,
+                            skalVurdereAapIOvergangTilArbeid = null,
+                            overgangBegrunnelse = "Skal over i arbeid",
+                            tom = null
+                        ),
+                    )
+                )
+            )
+            // 2.
+            .medKontekst {
+                assertThat(åpneAvklaringsbehov.map { it.definisjon }).containsExactly(Definisjon.AVKLAR_OVERGANG_UFORE);
+            }
+
+            // 1.
+            .løsAvklaringsBehov(
+                AvklarOvergangUføreLøsning(
+                    listOf(
+                        OvergangUføreLøsningDto(
+                            begrunnelse = "Løsning",
+                            brukerHarSøktOmUføretrygd = true,
+                            brukerHarFåttVedtakOmUføretrygd = UføreSøknadVedtakResultat.NEI,
+                            brukerRettPåAAP = true,
+                            fom = startDato.plusDays(8),
+                            tom = null,
+                            overgangBegrunnelse = null
+                        )
+                    )
+                )
+            )
+            .medKontekst {
+                assertThat(åpneAvklaringsbehov.map { it.definisjon }).doesNotContain(Definisjon.AVKLAR_OVERGANG_UFORE);
+            }
+            .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
+            .løsSykepengeerstatning(startDato.plusMonths(6) to true)
+            .foreslåVedtak()
+            .fattVedtak()
+
+        sak.opprettManuellRevurdering(
+            no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.OVERGANG_UFORE
+        )
+            .medKontekst {
+                assertThat(behandling.aktivtSteg()).isEqualTo(StegType.OVERGANG_UFORE);
+            }
     }
 }

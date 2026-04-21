@@ -18,6 +18,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.komponenter.miljo.Miljø.erProd
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.lookup.repository.RepositoryProvider
@@ -334,6 +335,10 @@ class VedtakslengdeService(
     }
 
     private fun gyldigForAutomatiskUtvidelseAvVedtakslengde(avslagsårsaker: Set<Avslagsårsak>): Boolean {
+        // Kun tillate automatisk behandling for årsakene som er slått på i prod så langt
+        if (erProd()) {
+            return avslagsårsaker.isNotEmpty() && gyldigeAvslagsårsakerForAutomatiskBehandlingProd().containsAll(avslagsårsaker)
+        }
         return avslagsårsaker.isNotEmpty() && gyldigeAvslagsårsakerForAutomatiskBehandling().containsAll(avslagsårsaker)
     }
 
@@ -355,6 +360,11 @@ class VedtakslengdeService(
             Avslagsårsak.BRUDD_PÅ_OPPHOLDSKRAV_STANS,
             Avslagsårsak.IKKE_RETT_UNDER_STRAFFEGJENNOMFØRING,
             Avslagsårsak.ANNEN_FULL_YTELSE
+        )
+
+    private fun gyldigeAvslagsårsakerForAutomatiskBehandlingProd() =
+        setOf(
+            Avslagsårsak.BRUKER_OVER_67,
         )
 }
 

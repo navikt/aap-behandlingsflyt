@@ -4,6 +4,7 @@ import io.mockk.every
 import io.mockk.mockk
 import no.nav.aap.behandlingsflyt.behandling.utbetaling.UtbetalingGateway
 import no.nav.aap.behandlingsflyt.behandling.utbetaling.UtbetalingService
+import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakId
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
@@ -93,7 +94,8 @@ class IverksettUtbetalingJobbUtførerTest {
         vedtakstidspunkt = LocalDateTime.now(),
         virkningstidspunkt = null,
         vurderingsbehov = setOf(),
-        årsakTilOpprettelse = ÅrsakTilOpprettelse.SØKNAD
-
+        årsakTilOpprettelse = ÅrsakTilOpprettelse.SØKNAD,
+        forrigeBehandlingId = null,
+        vedtakId = VedtakId(0),
     )
 }

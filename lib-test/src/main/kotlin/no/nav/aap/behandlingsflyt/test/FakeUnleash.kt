@@ -34,22 +34,19 @@ object LokalUnleash : FakeUnleashBase(
     mapOf(
         BehandlingsflytFeature.IngenValidering to true,
         BehandlingsflytFeature.NyBrevbyggerV3 to false,
-        BehandlingsflytFeature.LagreVedtakIFatteVedtak to true,
         BehandlingsflytFeature.Under18 to true,
         BehandlingsflytFeature.InstitusjonsoppholdJobb to true,
         BehandlingsflytFeature.TrekkSoeknadOpprettetFraLegeerklaering to true,
         BehandlingsflytFeature.KvalitetssikringVed2213 to true,
         BehandlingsflytFeature.VisIkkeRelevantPeriode to true,
         BehandlingsflytFeature.BekreftVurderingerOppfolging to true,
-        BehandlingsflytFeature.LagreStansOgOpphor to true,
         BehandlingsflytFeature.MigrerStansOgOpphor to true,
         BehandlingsflytFeature.SamordningBarnepensjon to true,
-        BehandlingsflytFeature.SignaturEnhetFraOppgave to true,
-        BehandlingsflytFeature.hentDagpengerPerioder to true,
         BehandlingsflytFeature.hentTiltakspengerPerioder to true,
         BehandlingsflytFeature.VedtakslengdeAvklaringsbehov to true,
         BehandlingsflytFeature.UtvidVedtakslengdeUnderEttAr to true,
         BehandlingsflytFeature.OpprettManuellVedtakslengdeBehandling to true,
+        BehandlingsflytFeature.ForutgaaendeForbedringer to true
         )
 )
 

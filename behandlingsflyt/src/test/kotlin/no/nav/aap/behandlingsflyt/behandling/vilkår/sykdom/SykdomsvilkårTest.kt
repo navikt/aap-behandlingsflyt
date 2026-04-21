@@ -13,6 +13,7 @@ import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
+import no.nav.aap.komponenter.verdityper.Tid
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.Instant
@@ -61,7 +62,11 @@ class SykdomsvilkårTest {
             sykepengeerstatningVilkår = Tidslinje()
         )
         Sykdomsvilkår(vilkårsresultat).vurder(faktagrunnlag)
-        val nyttOgGammelVilkårsresultat = SykdomsvilkårUtenVissVarighet(vilkårsresultat).vurderOgSammenlign(faktagrunnlag, vilkårsresultat)
+        val nyttOgGammelVilkårsresultat = SykdomsvilkårUtenVissVarighet(vilkårsresultat).vurderOgSammenlign(
+            faktagrunnlag,
+            vilkårsresultat,
+            Periode(kravdato, Tid.MAKS)
+        )
         assertThat(nyttOgGammelVilkårsresultat.harDiff()).isFalse
 
         assertThat(vilkår.vilkårsperioder()).hasSize(1).allMatch { periode -> periode.utfall == Utfall.IKKE_OPPFYLT }
@@ -93,7 +98,11 @@ class SykdomsvilkårTest {
         Sykdomsvilkår(vilkårsresultat).vurder(faktagrunnlag)
 
         val vilkår = vilkårsresultat.finnVilkår(Vilkårtype.SYKDOMSVILKÅRET)
-        val sammenlignedeVilkårsvurderinger = SykdomsvilkårUtenVissVarighet(vilkårsresultat).vurderOgSammenlign(faktagrunnlag, vilkårsresultat)
+        val sammenlignedeVilkårsvurderinger = SykdomsvilkårUtenVissVarighet(vilkårsresultat).vurderOgSammenlign(
+            faktagrunnlag,
+            vilkårsresultat,
+            Periode(startDato, Tid.MAKS)
+        )
         assertThat(sammenlignedeVilkårsvurderinger.harDiff()).isFalse
 
         assertThat(vilkår.vilkårsperioder()).hasSize(2)
@@ -108,14 +117,20 @@ class SykdomsvilkårTest {
         )
     }
 
-    private fun bistandGrunnlag(startDato: LocalDate, sluttDato: LocalDate? = null): BistandGrunnlag = BistandGrunnlag(
+    private fun bistandGrunnlag(
+        startDato: LocalDate,
+        sluttDato: LocalDate? = null,
+        erBehovForAktivBehandling: Boolean = true,
+        erBehovForArbeidsrettetTiltak: Boolean = true,
+        erBehovForAnnenOppfølging: Boolean = true,
+        ): BistandGrunnlag = BistandGrunnlag(
         vurderinger = listOf(
             Bistandsvurdering(
                 vurdertIBehandling = BehandlingId(1),
                 begrunnelse = "bistand",
-                erBehovForAktivBehandling = true,
-                erBehovForArbeidsrettetTiltak = true,
-                erBehovForAnnenOppfølging = true,
+                erBehovForAktivBehandling = erBehovForAktivBehandling,
+                erBehovForArbeidsrettetTiltak = erBehovForArbeidsrettetTiltak,
+                erBehovForAnnenOppfølging = erBehovForAnnenOppfølging,
                 overgangBegrunnelse = "...",
                 skalVurdereAapIOvergangTilArbeid = null,
                 vurdertAv = "Foffer",
@@ -155,7 +170,11 @@ class SykdomsvilkårTest {
 
         val vilkår = vilkårsresultat.finnVilkår(Vilkårtype.SYKDOMSVILKÅRET)
 
-        val sammenlignetVilkårsvurdering = SykdomsvilkårUtenVissVarighet(vilkårsresultat).vurderOgSammenlign(faktagrunnlag, vilkårsresultat)
+        val sammenlignetVilkårsvurdering = SykdomsvilkårUtenVissVarighet(vilkårsresultat).vurderOgSammenlign(
+            faktagrunnlag,
+            vilkårsresultat,
+            Periode(startDato, Tid.MAKS)
+        )
         assertThat(sammenlignetVilkårsvurdering.harDiff()).isFalse
 
         assertThat(vilkår.vilkårsperioder()).hasSize(1)
@@ -197,7 +216,11 @@ class SykdomsvilkårTest {
         )
 
         val vilkår = vilkårsresultat.finnVilkår(Vilkårtype.SYKDOMSVILKÅRET)
-        val sammenlignetVilkårsvurdering = SykdomsvilkårUtenVissVarighet(vilkårsresultat).vurderOgSammenlign(faktagrunnlag, vilkårsresultat)
+        val sammenlignetVilkårsvurdering = SykdomsvilkårUtenVissVarighet(vilkårsresultat).vurderOgSammenlign(
+            faktagrunnlag,
+            vilkårsresultat,
+            Periode(startDato, Tid.MAKS)
+        )
         assertThat(sammenlignetVilkårsvurdering.harDiff()).isFalse
 
         assertThat(vilkår.vilkårsperioder()).hasSize(2)
@@ -217,7 +240,7 @@ class SykdomsvilkårTest {
         erSkadeSykdomEllerLyteVesentligdel: Boolean = true,
         erNedsettelseIArbeidsevneMerEnnHalvparten: Boolean = true,
         erNedsettelseIArbeidsevneAvEnVissVarighet: Boolean? = true,
-        erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense: Boolean = true,
+        erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense: Boolean? = true,
         erArbeidsevnenNedsatt: Boolean = true,
         vurderingenGjelderFra: LocalDate,
         vurderingenGjelderTil: LocalDate? = null,

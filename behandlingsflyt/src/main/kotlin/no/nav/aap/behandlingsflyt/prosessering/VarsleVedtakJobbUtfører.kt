@@ -16,8 +16,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryProvider
-import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.JobbInput
@@ -147,9 +147,9 @@ class VarsleVedtakJobbUtfører(
     fun underveisTilRettighetsTypeTidslinje(
         underveis: UnderveisGrunnlag?
     ): Tidslinje<RettighetsType> {
-        return underveis?.perioder.orEmpty()
-            .mapNotNull { if (it.rettighetsType != null) Segment(it.periode, it.rettighetsType) else null }
-            .let(::Tidslinje).komprimer()
+        return underveis?.somTidslinje().orEmpty()
+            .mapNotNull { it.rettighetsType }
+            .komprimer()
     }
 
     fun endringIRettighetstypeTidslinje(

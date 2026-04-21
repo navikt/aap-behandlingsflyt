@@ -10,6 +10,7 @@ import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Tilkjent
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelsePeriode
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
 import no.nav.aap.behandlingsflyt.behandling.vedtak.Vedtak
+import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakId
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.meldeperiode.MeldeperiodeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
@@ -78,10 +79,12 @@ class UtbetalingServiceTest {
         every { meldeperiodeRepository.hentMeldeperioder(any<BehandlingId>(), any<Periode>()) } returns meldeperioderSomDekker2025
 
         every { vedtakRepository.hent(førstegangsbehandling.id) } returns Vedtak(
+            VedtakId(0),
             førstegangsbehandling.id,
             andreTilkjentYtelsePeriode.tom.plusDays(1).atStartOfDay(), søknadsDato
         )
         every { vedtakRepository.hent(revurdering.id) } returns Vedtak(
+            VedtakId(1),
             revurdering.id,
             tredjeTilkjentYtelsePeriode.tom.plusDays(1).atStartOfDay(),
             søknadsDato
@@ -122,10 +125,12 @@ class UtbetalingServiceTest {
         every { meldeperiodeRepository.hentMeldeperioder(any<BehandlingId>(), any<Periode>()) } returns meldeperioderSomDekker2025
 
         every { vedtakRepository.hent(førstegangsbehandling.id) } returns Vedtak(
+            VedtakId(0),
             førstegangsbehandling.id,
             førsteTilkjentYtelsePeriode.tom.plusDays(1).atStartOfDay(), søknadsDato
         )
         every { vedtakRepository.hent(revurdering.id) } returns Vedtak(
+            VedtakId(1),
             revurdering.id,
             tredjeTilkjentYtelsePeriode.tom.plusDays(1).atStartOfDay(),
             søknadsDato
@@ -170,10 +175,12 @@ class UtbetalingServiceTest {
 
         val startdato = LocalDate.of(2025, 11, 29)
         every { vedtakRepository.hent(førstegangsbehandling.id) } returns Vedtak(
+            VedtakId(0),
             førstegangsbehandling.id,
             (8 desember 2025).atStartOfDay(), startdato
         )
         every { vedtakRepository.hent(revurdering.id) } returns Vedtak(
+            VedtakId(1),
             revurdering.id,
             LocalDate.of(2025, 12, 17).atStartOfDay(),
             startdato

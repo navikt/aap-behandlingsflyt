@@ -11,6 +11,7 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 class VurderRettighetsperiodeRepositoryImplTest {
 
@@ -39,7 +40,8 @@ class VurderRettighetsperiodeRepositoryImplTest {
                 startDato = LocalDate.now().minusDays(10),
                 begrunnelse = "begrunnelse",
                 harRettUtoverSøknadsdato = RettighetsperiodeHarRett.`HarRettIkkeIStandTilÅSøkeTidligere`,
-                vurdertAv = "NAVident"
+                vurdertAv = "NAVident",
+                vurdertDato = LocalDateTime.now()
             )
             vurderRettighetsPeriodeRepo.lagreVurdering(behandling.id, vurdering)
 
@@ -66,7 +68,8 @@ class VurderRettighetsperiodeRepositoryImplTest {
                 startDato = null,
                 begrunnelse = "begrunnelse",
                 harRettUtoverSøknadsdato = RettighetsperiodeHarRett.Nei,
-                vurdertAv = "NAVident"
+                vurdertAv = "NAVident",
+                vurdertDato = LocalDateTime.now()
             )
             vurderRettighetsPeriodeRepo.lagreVurdering(behandling.id, vurdering)
 
@@ -91,7 +94,8 @@ class VurderRettighetsperiodeRepositoryImplTest {
                 startDato = LocalDate.now().minusDays(10),
                 begrunnelse = "begrunnelse",
                 harRettUtoverSøknadsdato = RettighetsperiodeHarRett.`HarRettIkkeIStandTilÅSøkeTidligere`,
-                vurdertAv = "NAVident"
+                vurdertAv = "NAVident",
+                vurdertDato = LocalDateTime.now()
             )
 
             vurderRettighetsPeriodeRepo.lagreVurdering(behandling.id, vurdering)

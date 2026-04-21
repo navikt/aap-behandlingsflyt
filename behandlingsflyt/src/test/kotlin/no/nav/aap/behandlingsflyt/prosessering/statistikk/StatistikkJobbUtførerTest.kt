@@ -6,9 +6,15 @@ import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Faktagrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag11_19
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurdering
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepositoryImpl
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.GjeldendeStansEllerOpphør
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.Stans
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.StansOpphørGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.ArbeidsGradering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.ApplikasjonsVersjon
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkår
@@ -36,12 +42,14 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ArbeidIPeriodeV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.MeldekortV0
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Status.UTREDES
+import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Avslagstype
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.AvsluttetBehandlingDTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.BeregningsgrunnlagDTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Diagnoser
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Grunnlag11_19DTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.ResultatKode
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.RettighetstypePeriode
+import no.nav.aap.behandlingsflyt.kontrakt.statistikk.StansEllerOpphør
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.StoppetBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.TilkjentYtelseDTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.VilkårDTO
@@ -50,6 +58,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.statistikk.VilkårsResultatDTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.pip.PipService
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.stansopphør.StansOpphørRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.underveis.UnderveisRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.dokument.arbeid.MeldekortRepositoryImpl
@@ -69,6 +78,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.test.FakeApiInternGateway
 import no.nav.aap.behandlingsflyt.test.Fakes
+import no.nav.aap.behandlingsflyt.test.april
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryMeldekortRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryMottattDokumentRepository
@@ -291,12 +301,14 @@ class StatistikkJobbUtførerTest {
         val periode = Periode(
             fom = LocalDate.now().minusDays(1), tom = LocalDate.now().plusDays(1)
         )
+        val nedsattArbeidsevneDato = LocalDate.now().minusDays(5)
         val vedtakstidspunkt = LocalDateTime.now()
         val (behandling, sak, ident) = dataSource.transaction { connection ->
             val vilkårsResultatRepository = VilkårsresultatRepositoryImpl(connection = connection)
             val behandlingRepository = BehandlingRepositoryImpl(connection)
 
             val beregningsgrunnlagRepository = BeregningsgrunnlagRepositoryImpl(connection)
+            val beregningVurderingRepository = BeregningVurderingRepositoryImpl(connection)
 
             val ident = Ident(
                 identifikator = "123", aktivIdent = true
@@ -340,6 +352,16 @@ class StatistikkJobbUtførerTest {
                     inntekter = emptyList()
                 )
             )
+            beregningVurderingRepository.lagre(
+                behandlingId = opprettetBehandling.id,
+                vurdering = BeregningstidspunktVurdering(
+                    begrunnelse = "begrunnelse",
+                    nedsattArbeidsevneEllerStudieevneDato = nedsattArbeidsevneDato,
+                    ytterligereNedsattBegrunnelse = null,
+                    ytterligereNedsattArbeidsevneDato = null,
+                    vurdertAv = "Z0000",
+                )
+            )
 
             val vilkårsresultat = Vilkårsresultat(
                 vilkår = listOf(
@@ -373,6 +395,19 @@ class StatistikkJobbUtførerTest {
                     type = InnsendingType.SØKNAD,
                     kanal = Kanal.PAPIR,
                     strukturertDokument = null
+                )
+            )
+
+            StansOpphørRepositoryImpl(connection).lagre(
+                opprettetBehandling.id, StansOpphørGrunnlag(
+                    setOf(
+                        GjeldendeStansEllerOpphør(
+                            fom = (1 januar 2020).plusMonths(3),
+                            opprettet = Instant.now(),
+                            vurdertIBehandling = opprettetBehandling.id,
+                            vurdering = Stans(setOf(Avslagsårsak.BRUKER_OVER_67))
+                        )
+                    )
                 )
             )
 
@@ -482,7 +517,9 @@ class StatistikkJobbUtførerTest {
                         grunnlaget = 7.0,
                         er6GBegrenset = false,
                         erGjennomsnitt = false,
-                    )
+                    ),
+                    nedsattArbeidsevneEllerStudieevneDato = nedsattArbeidsevneDato,
+                    ytterligereNedsattArbeidsevneDato = null,
                 ),
                 vilkårsResultat = VilkårsResultatDTO(
                     typeBehandling = TypeBehandling.Førstegangsbehandling, vilkår = listOf(
@@ -513,7 +550,14 @@ class StatistikkJobbUtførerTest {
                 resultat = ResultatKode.INNVILGET,
                 vedtakstidspunkt = vedtakstidspunkt,
                 fritaksvurderinger = emptyList(),
-                perioderMedArbeidsopptrapping = emptyList()
+                perioderMedArbeidsopptrapping = emptyList(),
+                vedtattStansOpphør = listOf(
+                    StansEllerOpphør(
+                        type = Avslagstype.STANS,
+                        fom = 1 april 2020,
+                        årsaker = setOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Avslagsårsak.BRUKER_OVER_67)
+                    )
+                )
             )
         )
     }

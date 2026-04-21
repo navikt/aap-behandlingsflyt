@@ -17,7 +17,6 @@ object ManuellStyringUnleashGateway : UnleashGateway {
     var lagreStansOpphørFlagg = false
 
     override fun isEnabled(featureToggle: FeatureToggle) = when (featureToggle) {
-        BehandlingsflytFeature.LagreStansOgOpphor -> lagreStansOpphørFlagg
         BehandlingsflytFeature.MigrerStansOgOpphor -> true
         else -> false
     }

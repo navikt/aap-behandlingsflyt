@@ -1,10 +1,10 @@
 package no.nav.aap.behandlingsflyt.prosessering.datadeling
 
+import no.nav.aap.behandlingsflyt.behandling.StansOpphørService
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.samid.SamIdRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.StansOpphørRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.ApiInternGateway
@@ -13,8 +13,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.komponenter.gateway.GatewayProvider
-import no.nav.aap.komponenter.tidslinje.Segment
-import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.motor.JobbUtfører
@@ -30,8 +29,9 @@ class DatadelingBehandlingJobbUtfører(
     private val underveisRepository: UnderveisRepository,
     private val vedtakRepository: VedtakRepository,
     private val samIdRepository: SamIdRepository,
-    private val stansOpphørRepository: StansOpphørRepository,
     private val beregningsgrunnlagRepository: BeregningsgrunnlagRepository,
+    private val stansOpphørService: StansOpphørService,
+    private val utledArenaVedtakstype: UtledArenaVedtakstype,
 ) : JobbUtfører {
     private val log = LoggerFactory.getLogger(javaClass)
 
@@ -57,9 +57,8 @@ class DatadelingBehandlingJobbUtfører(
 
         val underveis = underveisRepository.hentHvisEksisterer(behandling.id)
 
-        val vilkårsresultatTidslinje = underveis?.perioder.orEmpty()
-            .mapNotNull { if (it.rettighetsType != null) Segment(it.periode, it.rettighetsType) else null }
-            .let(::Tidslinje)
+        val vilkårsresultatTidslinje = underveis?.somTidslinje().orEmpty()
+            .mapNotNull { it.rettighetsType }
 
 
         val vedtakId = vedtakRepository.hentId(behandling.id)
@@ -73,7 +72,7 @@ class DatadelingBehandlingJobbUtfører(
 
         val beregningsgrunnlagIKroner = beregningsgrunnlagGUnit?.multiplisert(grunnbeløpVedSakensStart)?.verdi
 
-        val stansOpphør = stansOpphørRepository.hentHvisEksisterer(behandling.id)?.gjeldendeStansOgOpphør()
+        val stansOpphør = stansOpphørService.vedtattStansOpphør(behandling.id).toSet()
 
         apiInternGateway.sendBehandling(
             sak,
@@ -85,7 +84,8 @@ class DatadelingBehandlingJobbUtfører(
             underveis?.perioder.orEmpty(),
             vedtaksTidspunkt.toLocalDate(),
             vilkårsresultatTidslinje,
-            stansOpphør
+            stansOpphør,
+            utledArenaVedtakstype.utledVedtak(sak),
         )
     }
 
@@ -104,7 +104,12 @@ class DatadelingBehandlingJobbUtfører(
                 vedtakRepository = repositoryProvider.provide(),
                 samIdRepository = repositoryProvider.provide(),
                 beregningsgrunnlagRepository = repositoryProvider.provide(),
-                stansOpphørRepository = repositoryProvider.provide(),
+                stansOpphørService = StansOpphørService(
+                    repositoryProvider.provide(),
+                    repositoryProvider.provide(),
+                    repositoryProvider.provide(),
+                ),
+                utledArenaVedtakstype = UtledArenaVedtakstype(repositoryProvider, gatewayProvider),
             )
         }
     }

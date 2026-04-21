@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
 import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.tidslinje.somTidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Tid
 import java.time.LocalDate
@@ -19,16 +20,14 @@ data class SykepengerErstatningGrunnlag(
 }
 
 fun List<SykepengerVurdering>.somTidslinje(): Tidslinje<SykepengerVurdering> {
-    val vurderingerPerBehandling = this.groupBy { it.vurdertIBehandling.id }
-    val behandlingIdSortert = vurderingerPerBehandling.keys.sortedBy { vurderingerPerBehandling[it]!!.first().vurdertIBehandling.id }
-
-    return behandlingIdSortert
-        .map { Tidslinje(initSegmenter = vurderingerPerBehandling[it]!!.somTidlinjeSegmenter()) }
-        .fold(Tidslinje<SykepengerVurdering>()) { acc, curr ->
-            acc.kombiner(curr, StandardSammenslåere.prioriterHøyreSideCrossJoin())
-        }
+    return this
+        .groupBy { it.vurdertIBehandling }
+        .values
+        .sortedBy { it[0].vurdertTidspunkt }
+        .flatMap { it.sortedBy { it.gjelderFra } }
+        .somTidslinje { Periode(it.gjelderFra, it.gjelderTom ?: Tid.MAKS) }
         .komprimer()
-        .map { periode, vurdering -> vurdering.copy(gjelderFra = periode.fom, gjelderTom = periode.tom.tilTidOrNull()) }
+        .begrensetTil(Periode(Tid.MIN, Tid.MAKS))
 }
 
 fun List<SykepengerVurdering>.somTidlinjeSegmenter(): List<Segment<SykepengerVurdering>> =

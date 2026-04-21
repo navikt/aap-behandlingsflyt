@@ -18,6 +18,7 @@ import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 class VurderRettighetsperiodeLøser(
     private val behandlingRepository: BehandlingRepository,
@@ -60,7 +61,8 @@ class VurderRettighetsperiodeLøser(
                     begrunnelse = løsning.rettighetsperiodeVurdering.begrunnelse,
                     startDato = nyStartDato,
                     harRettUtoverSøknadsdato = løsning.rettighetsperiodeVurdering.harRett,
-                    vurdertAv = kontekst.bruker.ident
+                    vurdertAv = kontekst.bruker.ident,
+                    vurdertDato = LocalDateTime.now()
                 )
         )
 

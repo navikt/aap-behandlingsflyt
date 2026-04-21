@@ -65,7 +65,6 @@ import no.nav.aap.behandlingsflyt.behandling.mellomlagring.mellomlagretVurdering
 import no.nav.aap.behandlingsflyt.behandling.oppfolgingsbehandling.avklarOppfolgingsoppgaveGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.oppfolgingsbehandling.oppfølgingsOppgaveApi
 import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.oppholdskravGrunnlagApi
-import no.nav.aap.behandlingsflyt.behandling.rettighet.rettighetApi
 import no.nav.aap.behandlingsflyt.behandling.rettighet.rettighetsinfoApi
 import no.nav.aap.behandlingsflyt.behandling.rettighetsperiode.rettighetsperiodeGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.revurdering.avbrytRevurderingGrunnlagApi
@@ -81,15 +80,12 @@ import no.nav.aap.behandlingsflyt.behandling.underveis.underveisVurderingerApi
 import no.nav.aap.behandlingsflyt.behandling.vedtakslengde.vedtakslengdeGrunnlagApi
 import no.nav.aap.behandlingsflyt.drift.driftApi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.StansEllerOpphørMigrering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomsvurderingMigrering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.ApplikasjonsVersjon
 import no.nav.aap.behandlingsflyt.flyt.behandlingApi
 import no.nav.aap.behandlingsflyt.flyt.flytApi
 import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaConsumerConfig
 import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaKonsument
-import no.nav.aap.behandlingsflyt.hendelse.kafka.foreldrepenger.FORELDREPENGEVEDTAK_EVENT_TOPIC
 import no.nav.aap.behandlingsflyt.hendelse.kafka.foreldrepenger.ForeldrepengevedtakKafkaKonsument
-import no.nav.aap.behandlingsflyt.hendelse.kafka.inst2.INSTITUSJONSOPPHOLD_EVENT_TOPIC
 import no.nav.aap.behandlingsflyt.hendelse.kafka.inst2.InstitusjonsOppholdKafkaKonsument
 import no.nav.aap.behandlingsflyt.hendelse.kafka.klage.KabalKafkaKonsument
 import no.nav.aap.behandlingsflyt.hendelse.kafka.person.PdlHendelseKafkaKonsument
@@ -292,7 +288,6 @@ internal fun Application.server(
                 refusjonGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
                 manglendeGrunnlagApi(dataSource, repositoryRegistry)
                 mellomlagretVurderingApi(dataSource, repositoryRegistry, gatewayProvider)
-                rettighetApi(dataSource, repositoryRegistry)
                 rettighetsinfoApi(dataSource, repositoryRegistry)
                 tidligereVurderingerApi(dataSource, repositoryRegistry, gatewayProvider)
                 barnepensjonGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
@@ -321,7 +316,7 @@ internal fun Application.server(
                 dokumentinnhentingApi(dataSource, repositoryRegistry, gatewayProvider)
                 mottattHendelseApi(dataSource, repositoryRegistry)
                 underveisVurderingerApi(dataSource, repositoryRegistry)
-                lovvalgMedlemskapApi(dataSource, repositoryRegistry)
+                lovvalgMedlemskapApi(dataSource, repositoryRegistry, gatewayProvider)
                 lovvalgMedlemskapGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
                 samordningGrunnlag(dataSource, repositoryRegistry, gatewayProvider)
                 forutgåendeMedlemskapApi(dataSource, repositoryRegistry, gatewayProvider)
@@ -447,14 +442,9 @@ private fun utførMigreringer(
         val isLeader = isLeader(log)
         log.info("isLeader = $isLeader")
 
-
         if (unleashGateway.isEnabled(BehandlingsflytFeature.MigrerStansOgOpphor) && isLeader) {
             // kjør migreringer
             StansEllerOpphørMigrering(dataSource, postgresRepositoryRegistry, gatewayProvider).migrer()
-        }
-
-        if (unleashGateway.isEnabled(BehandlingsflytFeature.MigrerSykdomsvurdering) && isLeader) {
-            SykdomsvurderingMigrering(dataSource, postgresRepositoryRegistry, gatewayProvider).migrer()
         }
 
     }, 1, 9, TimeUnit.MINUTES)

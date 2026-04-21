@@ -1,5 +1,68 @@
 package no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov
 
+/** Statusen til et avklaringsbehov.
+ *
+ * Diagrammet under viser overgangene mellom forskjellige [statuser][Status].
+ * Hver status er en sirkel.  Den lille, tomme sirkelen er starten. Statuser med
+ * dobbel sirkel er gyldige slutt-statuser.
+ *
+ * Triggerere for overganger er firkanter.
+ * Diagrammet under viser de viktigste overgangene, noen overganger er ikke tegnet inn,
+ * fordi det blir uoversiktlig. Følgende mangler:
+ *
+ * * Fra alle statuser til [AVBRUTT]. Denne overgangen brukes hvis avklaringsbehovet ikke lenger trengs.
+ *
+ * * Fra alle tilstander, bortsett fra [AVBRUTT] og [OPPRETTET], til [OPPRETTET]. Dette skjer når avklaringsbehovet
+ *   er løst, men det viser seg at løsningen ikke er god nok.
+ *
+ *  * Fra [AVSLUTTET], [KVALITETSSIKRET] og [TOTRINNS_VURDERT] til [AVSLUTTET]. Dette skjer hvis vi mottar
+ *      en løsning.
+```mermaid
+---
+config:
+layout: elk
+---
+flowchart TB
+START(( ))
+AVBRUTT(((AVBRUTT)))
+
+subgraph Åpent avklaringsbehov
+OPPRETTET_INN[trenger løsning]
+OPPRETTET((OPPRETTET))
+SENDT_TILBAKE_FRA_KVALITETSSIKRER_INN[kvalitetssikrer returnerer]
+SENDT_TILBAKE_FRA_KVALITETSSIKRER((SENDT_TILBAKE_FRA_KVALITETSSIKRER))
+SENDT_TILBAKE_FRA_BESLUTTER_INN[beslutter returnerer]
+SENDT_TILBAKE_FRA_BESLUTTER((SENDT_TILBAKE_FRA_BESLUTTER))
+end
+
+subgraph Løst avklaringsbehov
+AVSLUTTET_INN[løsning mottatt]
+AVSLUTTET(((AVSLUTTET)))
+KVALITETSSIKRET_INN[kvalitetssikrer godkjenner]
+KVALITETSSIKRET(((KVALITETSSIKRET)))
+TOTRINNS_VURDERT_INN[beslutter godkjenner]
+TOTRINNS_VURDERT(((TOTRINNS_VURDERT)))
+end
+
+START --> OPPRETTET_INN --> OPPRETTET
+AVBRUTT --- OPPRETTET_INN
+OPPRETTET --> AVSLUTTET_INN --> AVSLUTTET
+AVSLUTTET --> KVALITETSSIKRET_INN --> KVALITETSSIKRET
+AVSLUTTET --> SENDT_TILBAKE_FRA_KVALITETSSIKRER_INN --> SENDT_TILBAKE_FRA_KVALITETSSIKRER
+
+AVSLUTTET --> TOTRINNS_VURDERT_INN
+KVALITETSSIKRET --> TOTRINNS_VURDERT_INN
+AVSLUTTET --> SENDT_TILBAKE_FRA_BESLUTTER_INN
+KVALITETSSIKRET --> SENDT_TILBAKE_FRA_BESLUTTER_INN
+
+TOTRINNS_VURDERT_INN --> TOTRINNS_VURDERT
+SENDT_TILBAKE_FRA_BESLUTTER_INN --> SENDT_TILBAKE_FRA_BESLUTTER
+
+SENDT_TILBAKE_FRA_KVALITETSSIKRER --> AVSLUTTET_INN
+SENDT_TILBAKE_FRA_BESLUTTER --> AVSLUTTET_INN
+```
+ */
+
 public enum class Status {
      /**  Hvis Definisjon.type er
       * - MANUELT_PÅKREVD:  behandlingsflyt venter på en løsning

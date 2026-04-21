@@ -97,7 +97,7 @@ class TrekkSøknadLøser(
         log.info("Ingen søknad funnet for sak ${kontekst.kontekst.sakId.id}. Forsøker å trekke legeerklæring i stedet for søknad.")
 
         val kanTrekkeLegeerklæring =
-            behandling.årsakTilOpprettelse == ÅrsakTilOpprettelse.HELSEOPPLYSNINGER
+            behandling.årsakTilOpprettelse in listOf(ÅrsakTilOpprettelse.HELSEOPPLYSNINGER, ÅrsakTilOpprettelse.ANNET_RELEVANT_DOKUMENT)
                     && Vurderingsbehov.MOTTATT_LEGEERKLÆRING in behandling.vurderingsbehov().map { it.type }
 
         if (!kanTrekkeLegeerklæring) {
