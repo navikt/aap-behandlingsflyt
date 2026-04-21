@@ -21,7 +21,6 @@ enum class BehandlingsflytFeature : FeatureToggle {
     UtvidVedtakslengdeUnderEttAr,
     OpprettManuellVedtakslengdeBehandling,
     AvslagLovvalgMedlemskap,
-    MigrerSykdomsvurdering,
     ForutgaaendeForbedringer
     ;
 
