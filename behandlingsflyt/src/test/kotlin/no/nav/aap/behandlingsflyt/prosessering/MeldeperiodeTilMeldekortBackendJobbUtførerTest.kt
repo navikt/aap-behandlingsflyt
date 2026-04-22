@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus.F
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus.FØR_VEDTAK
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus.IKKE_MELDT_SEG
 import no.nav.aap.behandlingsflyt.behandling.vedtak.Vedtak
+import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakId
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.ArbeidsGradering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
@@ -14,6 +15,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveis
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisÅrsak.MELDEPLIKT_FRIST_IKKE_PASSERT
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType.BISTANDSBEHOV
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall.IKKE_OPPFYLT
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktGrunnlag
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
@@ -86,6 +88,7 @@ class MeldeperiodeTilMeldekortBackendJobbUtførerTest {
             ),
             meldeperioder = underveisperioder.map { it.meldePeriode }.toSet().sorted(),
             vedtak = Vedtak(
+                id = VedtakId(0),
                 behandlingId = BehandlingId(0),
                 vedtakstidspunkt = LocalDateTime.parse("2025-05-05T10:43:44.561"),
                 virkningstidspunkt = LocalDate.parse("2025-05-13"),
@@ -173,7 +176,7 @@ class MeldeperiodeTilMeldekortBackendJobbUtførerTest {
     ) = Underveisperiode(
         periode = parse(periode),
         meldePeriode = parse(meldeperiode),
-        utfall = IKKE_OPPFYLT,
+        utfall = if (rettighetstype == null) Utfall.IKKE_OPPFYLT else Utfall.OPPFYLT,
         rettighetsType = rettighetstype,
         avslagsårsak = avslagsårsak,
         grenseverdi = Prosent(60),

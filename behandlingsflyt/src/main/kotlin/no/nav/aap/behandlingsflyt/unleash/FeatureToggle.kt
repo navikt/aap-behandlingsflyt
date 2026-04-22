@@ -8,7 +8,6 @@ enum class BehandlingsflytFeature : FeatureToggle {
     // Se: https://aap-unleash-web.iap.nav.cloud.nais.io/projects/default
     IngenValidering,
     NyBrevbyggerV3,
-    LagreVedtakIFatteVedtak,
     Under18,
     InstitusjonsoppholdJobb,
     TrekkSoeknadOpprettetFraLegeerklaering,
@@ -17,14 +16,12 @@ enum class BehandlingsflytFeature : FeatureToggle {
     BekreftVurderingerOppfolging,
     MigrerStansOgOpphor,
     SamordningBarnepensjon,
-    SignaturEnhetFraOppgave,
     VedtakslengdeAvklaringsbehov,
-    hentDagpengerPerioder,
     hentTiltakspengerPerioder,
     UtvidVedtakslengdeUnderEttAr,
     OpprettManuellVedtakslengdeBehandling,
     AvslagLovvalgMedlemskap,
-    MigrerSykdomsvurdering,
+    ForutgaaendeForbedringer
     ;
 
     override fun key(): String = name

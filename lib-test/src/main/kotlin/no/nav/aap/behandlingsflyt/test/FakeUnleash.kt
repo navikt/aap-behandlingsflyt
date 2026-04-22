@@ -34,7 +34,6 @@ object LokalUnleash : FakeUnleashBase(
     mapOf(
         BehandlingsflytFeature.IngenValidering to true,
         BehandlingsflytFeature.NyBrevbyggerV3 to false,
-        BehandlingsflytFeature.LagreVedtakIFatteVedtak to true,
         BehandlingsflytFeature.Under18 to true,
         BehandlingsflytFeature.InstitusjonsoppholdJobb to true,
         BehandlingsflytFeature.TrekkSoeknadOpprettetFraLegeerklaering to true,
@@ -43,12 +42,11 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.BekreftVurderingerOppfolging to true,
         BehandlingsflytFeature.MigrerStansOgOpphor to true,
         BehandlingsflytFeature.SamordningBarnepensjon to true,
-        BehandlingsflytFeature.SignaturEnhetFraOppgave to true,
-        BehandlingsflytFeature.hentDagpengerPerioder to true,
         BehandlingsflytFeature.hentTiltakspengerPerioder to true,
         BehandlingsflytFeature.VedtakslengdeAvklaringsbehov to true,
         BehandlingsflytFeature.UtvidVedtakslengdeUnderEttAr to true,
         BehandlingsflytFeature.OpprettManuellVedtakslengdeBehandling to true,
+        BehandlingsflytFeature.ForutgaaendeForbedringer to true
         )
 )
 

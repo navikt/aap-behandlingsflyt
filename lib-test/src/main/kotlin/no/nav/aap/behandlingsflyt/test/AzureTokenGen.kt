@@ -52,6 +52,10 @@ class AzureTokenGen(private val issuer: String, private val audience: String) {
                 )
         } else {
             builder.claim("NAVident", navIdent ?: "X123456")
+                .claim(
+                    "groups",
+                    listOf("saksbehandler-rolle", "veileder-rolle", "kvalitetssikrer-rolle", "beslutter-rolle")
+                )
         }
 
         return builder.build()

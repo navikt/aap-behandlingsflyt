@@ -117,6 +117,12 @@ public data class TilkjentYtelsePeriodeDTO(
     val barnetillegg: Double,
     val utbetalingsdato: LocalDate,
     val minsteSats: Minstesats,
+    val samordningGradering: Double,
+    val institusjonGradering: Double,
+    val arbeidGradering: Double,
+    val samordningUføregradering: Double,
+    val samordningArbeidsgiverGradering: Double,
+    val meldepliktGradering: Double
 )
 
 public enum class Minstesats { IKKE_MINSTESATS, MINSTESATS_OVER_25, MINSTESATS_UNDER_25 }
@@ -170,7 +176,9 @@ public data class VilkårsPeriodeDTO(
 public data class BeregningsgrunnlagDTO(
     @Suppress("PropertyName") val grunnlag11_19dto: Grunnlag11_19DTO? = null,
     val grunnlagYrkesskade: GrunnlagYrkesskadeDTO? = null,
-    val grunnlagUføre: GrunnlagUføreDTO? = null
+    val grunnlagUføre: GrunnlagUføreDTO? = null,
+    val nedsattArbeidsevneEllerStudieevneDato: LocalDate,
+    val ytterligereNedsattArbeidsevneDato: LocalDate?,
 ) {
     init {
         require(grunnlag11_19dto != null || grunnlagYrkesskade != null || grunnlagUføre != null)

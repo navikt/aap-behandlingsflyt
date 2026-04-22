@@ -6,6 +6,8 @@ import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Faktagrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag11_19
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurdering
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.GjeldendeStansEllerOpphør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.Stans
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.StansOpphørGrunnlag
@@ -299,12 +301,14 @@ class StatistikkJobbUtførerTest {
         val periode = Periode(
             fom = LocalDate.now().minusDays(1), tom = LocalDate.now().plusDays(1)
         )
+        val nedsattArbeidsevneDato = LocalDate.now().minusDays(5)
         val vedtakstidspunkt = LocalDateTime.now()
         val (behandling, sak, ident) = dataSource.transaction { connection ->
             val vilkårsResultatRepository = VilkårsresultatRepositoryImpl(connection = connection)
             val behandlingRepository = BehandlingRepositoryImpl(connection)
 
             val beregningsgrunnlagRepository = BeregningsgrunnlagRepositoryImpl(connection)
+            val beregningVurderingRepository = BeregningVurderingRepositoryImpl(connection)
 
             val ident = Ident(
                 identifikator = "123", aktivIdent = true
@@ -346,6 +350,16 @@ class StatistikkJobbUtførerTest {
                     erGjennomsnitt = false,
                     gjennomsnittligInntektIG = GUnit(0),
                     inntekter = emptyList()
+                )
+            )
+            beregningVurderingRepository.lagre(
+                behandlingId = opprettetBehandling.id,
+                vurdering = BeregningstidspunktVurdering(
+                    begrunnelse = "begrunnelse",
+                    nedsattArbeidsevneEllerStudieevneDato = nedsattArbeidsevneDato,
+                    ytterligereNedsattBegrunnelse = null,
+                    ytterligereNedsattArbeidsevneDato = null,
+                    vurdertAv = "Z0000",
                 )
             )
 
@@ -503,7 +517,9 @@ class StatistikkJobbUtførerTest {
                         grunnlaget = 7.0,
                         er6GBegrenset = false,
                         erGjennomsnitt = false,
-                    )
+                    ),
+                    nedsattArbeidsevneEllerStudieevneDato = nedsattArbeidsevneDato,
+                    ytterligereNedsattArbeidsevneDato = null,
                 ),
                 vilkårsResultat = VilkårsResultatDTO(
                     typeBehandling = TypeBehandling.Førstegangsbehandling, vilkår = listOf(

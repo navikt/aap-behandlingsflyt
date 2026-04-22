@@ -169,9 +169,11 @@ object InMemoryBehandlingRepository : BehandlingRepository {
                 status = behandling.status(),
                 opprettetTidspunkt = behandling.opprettetTidspunkt,
                 vedtakstidspunkt = vedtak.vedtakstidspunkt,
+                vedtakId = vedtak.id,
                 virkningstidspunkt = vedtak.virkningstidspunkt,
                 vurderingsbehov = behandling.vurderingsbehov().map { it.type }.toSet(),
                 årsakTilOpprettelse = behandling.årsakTilOpprettelse,
+                forrigeBehandlingId = behandling.forrigeBehandlingId,
             )
         }
     }
