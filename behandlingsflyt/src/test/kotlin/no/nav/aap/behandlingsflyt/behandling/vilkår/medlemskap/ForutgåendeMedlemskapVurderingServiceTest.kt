@@ -94,7 +94,7 @@ class ForutgåendeMedlemskapVurderingServiceTest {
     fun `grupperer flere inntekter i samme måned som én tidslinje-entry med sub-liste`() {
         val rettighetsperiode = Periode(LocalDate.now(), LocalDate.now().plusYears(1))
         val månedMedFlereInntekter = LocalDate.now().minusYears(3)
-        val grunnlag = lagGrunnlagMedFlereInntekterSammeMåned(månedMedFlereInntekter)
+        val grunnlag = lagGrunnlagMedFlereInntekterSammeMåned()
 
         val vurdering = serviceWithToggle.vurderTilhørighet(grunnlag, rettighetsperiode)
             .tilhørighetVurdering
@@ -409,7 +409,7 @@ class ForutgåendeMedlemskapVurderingServiceTest {
         )
     }
 
-    private fun lagGrunnlagMedFlereInntekterSammeMåned(måned: LocalDate): ForutgåendeMedlemskapGrunnlag {
+    private fun lagGrunnlagMedFlereInntekterSammeMåned(): ForutgåendeMedlemskapGrunnlag {
         val fullCoverage = Periode(LocalDate.now().minusYears(5), LocalDate.now())
         val inntekterINorgeGrunnlag = listOf(
             InntektINorgeGrunnlag("virksomhet-A", 1000.0, "NOR", "NOR", "type", fullCoverage, "Virksomhet A"),
