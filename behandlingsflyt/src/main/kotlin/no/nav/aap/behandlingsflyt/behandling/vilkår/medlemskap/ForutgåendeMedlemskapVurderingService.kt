@@ -321,26 +321,23 @@ class ForutgåendeMedlemskapVurderingService(
 
         while (!nåMnd.isAfter(sluttMnd)) {
             val mndPeriode = Periode(nåMnd.atDay(1), nåMnd.atEndOfMonth())
-            val inntekterForMnd = inntekter?.filter { it.periode.overlapper(mndPeriode) }
+            val inntekterForMnd = inntekter?.filter { it.periode.overlapper(mndPeriode) } ?: emptyList()
 
-            if (inntekterForMnd.isNullOrEmpty()) {
-                tidslinje.add(VisuellTidslinjeArbeidInntektINorge(mndPeriode))
-            } else {
-                tidslinje.add(
-                    VisuellTidslinjeArbeidInntektINorge(
-                        periode = mndPeriode,
-                        inntekter = inntekterForMnd
-                            .sortedBy { it.identifikator }
-                            .map { inntekt ->
-                                VisuellTidslinjeInntektDetalj(
-                                    virksomhetId = inntekt.identifikator,
-                                    virksomhetNavn = inntekt.organisasjonsNavn,
-                                    beloep = inntekt.beloep,
-                                )
-                            }
-                    )
+            tidslinje.add(
+                VisuellTidslinjeArbeidInntektINorge(
+                    periode = mndPeriode,
+                    inntekter = inntekterForMnd
+                        .sortedBy { it.identifikator }
+                        .map { inntekt ->
+                            VisuellTidslinjeInntektDetalj(
+                                virksomhetId = inntekt.identifikator,
+                                virksomhetNavn = inntekt.organisasjonsNavn,
+                                beloep = inntekt.beloep,
+                            )
+                        }
                 )
-            }
+            )
+
             nåMnd = nåMnd.plusMonths(1)
         }
 
