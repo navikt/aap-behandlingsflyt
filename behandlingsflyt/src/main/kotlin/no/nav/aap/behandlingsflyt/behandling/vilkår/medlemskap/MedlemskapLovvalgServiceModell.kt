@@ -38,11 +38,7 @@ data class VisuellTidslinjeArbeidInntektINorge(
     val periode: Periode,
     val inntekter: List<VisuellTidslinjeInntektDetalj> = emptyList(),
     val periodeMangler: Boolean = inntekter.isEmpty(),
-) {
-    val virksomhetId: String? get() = inntekter.firstOrNull()?.virksomhetId
-    val virksomhetNavn: String? get() = inntekter.firstOrNull()?.virksomhetNavn
-    val beloep: Double get() = inntekter.sumOf { it.beloep }
-}
+)
 
 data class VedtakIMEDLGrunnlag(
     val periode: Periode,
