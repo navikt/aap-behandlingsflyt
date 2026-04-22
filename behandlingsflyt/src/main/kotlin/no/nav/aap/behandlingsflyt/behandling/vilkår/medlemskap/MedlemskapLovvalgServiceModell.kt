@@ -28,13 +28,21 @@ data class TilhørighetVurdering(
     val visuellTidslinje: List<VisuellTidslinjeArbeidInntektINorge> = emptyList(),
 )
 
-data class VisuellTidslinjeArbeidInntektINorge(
+data class VisuellTidslinjeInntektDetalj(
     val virksomhetId: String?,
     val virksomhetNavn: String?,
     val beloep: Double,
-    val periode: Periode,
-    val periodeMangler: Boolean
 )
+
+data class VisuellTidslinjeArbeidInntektINorge(
+    val periode: Periode,
+    val periodeMangler: Boolean,
+    val inntekter: List<VisuellTidslinjeInntektDetalj>,
+) {
+    val virksomhetId: String? get() = inntekter.firstOrNull()?.virksomhetId
+    val virksomhetNavn: String? get() = inntekter.firstOrNull()?.virksomhetNavn
+    val beloep: Double get() = inntekter.sumOf { it.beloep }
+}
 
 data class VedtakIMEDLGrunnlag(
     val periode: Periode,
