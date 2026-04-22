@@ -223,26 +223,24 @@ class BrevUtlederService(
         val underveisGrunnlag = underveisRepository.hent(behandling.id)
         val sisteDagMedYtelse = underveisGrunnlag.sisteDagMedYtelse()
 
-        if (unleashGateway.isEnabled(BehandlingsflytFeature.UtvidVedtakslengdeUnderEttAr)) {
-            val avslagsårsaker = vedtakslengdeService.hentAvslagsårsakerVedStansEllerOpphør(
-                behandlingId = behandling.id,
-                stansEllerOpphørFom = sisteDagMedYtelse.plusDays(1)
-            )
+        val avslagsårsaker = vedtakslengdeService.hentAvslagsårsakerVedStansEllerOpphør(
+            behandlingId = behandling.id,
+            stansEllerOpphørFom = sisteDagMedYtelse.plusDays(1)
+        )
 
-            if (avslagsårsaker.isNotEmpty()) {
-                // Støtter kun en avslagsårsak i brev - henter ut høyest prioritert
-                val prioritertAvslagsårsak = requireNotNull(prioriterAvslagsårsak(avslagsårsaker)) {
-                    "Fant avslagsårsaker $avslagsårsaker for behandling ${behandling.id}, men ingen av dem er støttet for utvidelse under ett år"
-                }
-
-                log.info("Fant avslagsårsak $prioritertAvslagsårsak for brev i behandling ${behandling.id}")
-
-                return UtvidVedtakslengde(
-                    utvidetAapFomDato = utvidetAapFomDato,
-                    sisteDagMedYtelse = sisteDagMedYtelse,
-                    vedtakslengdeTypeBrev = avslagsårsakTilTypeBrev(prioritertAvslagsårsak),
-                )
+        if (avslagsårsaker.isNotEmpty()) {
+            // Støtter kun en avslagsårsak i brev - henter ut høyest prioritert
+            val prioritertAvslagsårsak = requireNotNull(prioriterAvslagsårsak(avslagsårsaker)) {
+                "Fant avslagsårsaker $avslagsårsaker for behandling ${behandling.id}, men ingen av dem er støttet for utvidelse under ett år"
             }
+
+            log.info("Fant avslagsårsak $prioritertAvslagsårsak for brev i behandling ${behandling.id}")
+
+            return UtvidVedtakslengde(
+                utvidetAapFomDato = utvidetAapFomDato,
+                sisteDagMedYtelse = sisteDagMedYtelse,
+                vedtakslengdeTypeBrev = avslagsårsakTilTypeBrev(prioritertAvslagsårsak),
+            )
         }
 
         return UtvidVedtakslengde(

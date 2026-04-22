@@ -16,10 +16,7 @@ enum class BehandlingsflytFeature : FeatureToggle {
     BekreftVurderingerOppfolging,
     MigrerStansOgOpphor,
     SamordningBarnepensjon,
-    VedtakslengdeAvklaringsbehov,
     hentTiltakspengerPerioder,
-    UtvidVedtakslengdeUnderEttAr,
-    OpprettManuellVedtakslengdeBehandling,
     AvslagLovvalgMedlemskap,
     ForutgaaendeForbedringer
     ;
