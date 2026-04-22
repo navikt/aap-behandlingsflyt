@@ -76,12 +76,9 @@ enum class BrukerIdType {
 
 enum class Sakstype {
     FAGSAK,
-    GENERELL_SAK,
-    ARKIVSAK
 }
 
 enum class FagsaksSystem {
-    AO01, // Arena
     KELVIN,
 }
 
