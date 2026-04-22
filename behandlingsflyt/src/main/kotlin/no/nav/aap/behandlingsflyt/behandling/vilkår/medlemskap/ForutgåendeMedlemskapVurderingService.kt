@@ -324,12 +324,11 @@ class ForutgåendeMedlemskapVurderingService(
             val inntekterForMnd = inntekter?.filter { it.periode.overlapper(mndPeriode) }
 
             if (inntekterForMnd.isNullOrEmpty()) {
-                tidslinje.add(VisuellTidslinjeArbeidInntektINorge(mndPeriode, true, emptyList()))
+                tidslinje.add(VisuellTidslinjeArbeidInntektINorge(mndPeriode))
             } else {
                 tidslinje.add(
                     VisuellTidslinjeArbeidInntektINorge(
                         periode = mndPeriode,
-                        periodeMangler = false,
                         inntekter = inntekterForMnd
                             .sortedBy { it.identifikator }
                             .map { inntekt ->
