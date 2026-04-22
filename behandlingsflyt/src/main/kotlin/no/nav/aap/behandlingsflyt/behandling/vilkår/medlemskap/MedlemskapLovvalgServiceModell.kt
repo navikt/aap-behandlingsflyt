@@ -36,8 +36,8 @@ data class VisuellTidslinjeInntektDetalj(
 
 data class VisuellTidslinjeArbeidInntektINorge(
     val periode: Periode,
-    val periodeMangler: Boolean,
-    val inntekter: List<VisuellTidslinjeInntektDetalj>,
+    val inntekter: List<VisuellTidslinjeInntektDetalj> = emptyList(),
+    val periodeMangler: Boolean = inntekter.isEmpty(),
 ) {
     val virksomhetId: String? get() = inntekter.firstOrNull()?.virksomhetId
     val virksomhetNavn: String? get() = inntekter.firstOrNull()?.virksomhetNavn
