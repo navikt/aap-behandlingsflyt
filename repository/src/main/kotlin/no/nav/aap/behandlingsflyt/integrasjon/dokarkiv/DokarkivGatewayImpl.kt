@@ -27,7 +27,7 @@ object DokarkivGatewayImpl : DokarkivGateway {
 
     override fun oppdater(
         journalpost: Journalpost,
-        bruker: Bruker,
+        oppdatertAv: Bruker,
         forsøkFerdigstill: Boolean,
     ): JournalpostResponse {
         return try {
@@ -37,7 +37,7 @@ object DokarkivGatewayImpl : DokarkivGateway {
                     body = journalpost,
                     additionalHeaders = listOf(
                         Header("accept", "application/json"),
-                        Header("Nav-User-Id", bruker.ident),
+                        Header("Nav-User-Id", oppdatertAv.ident),
                     ),
                 ),
             ) ?: error("Dokarkiv returnerte tom respons ved opprettelse av journalpost")

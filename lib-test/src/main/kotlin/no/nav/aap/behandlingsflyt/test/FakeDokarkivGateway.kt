@@ -13,7 +13,7 @@ class FakeDokarkivGateway : DokarkivGateway {
 
     override fun oppdater(
         journalpost: Journalpost,
-        bruker: Bruker,
+        oppdatertAv: Bruker,
         forsøkFerdigstill: Boolean,
     ): JournalpostResponse {
         val id = idSequence.getAndIncrement()

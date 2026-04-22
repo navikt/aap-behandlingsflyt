@@ -38,10 +38,10 @@ class JournalføringService(
         sak: Sak,
         meldeperiode: Periode,
         meldekort: MeldekortV0,
-        bruker: Bruker,
+        oppdatertAv: Bruker,
         tidspunkt: Instant,
     ): JournalpostId {
-        val pdf = "".toByteArray() // TODO må få inn pdfgen her
+        val pdf = mockedPdf() // TODO må få inn pdfgen her
 
         val journalpost = journalpost(
             ident = sak.person.aktivIdent(),
@@ -54,7 +54,7 @@ class JournalføringService(
 
         val response = dokarkivGateway.oppdater(
             journalpost,
-            bruker = bruker,
+            oppdatertAv = oppdatertAv,
             forsøkFerdigstill = false // postmottak vil lese denne og behandle den på lik linje som andre meldekort
         )
 
@@ -73,7 +73,7 @@ class JournalføringService(
         val uke2 = meldeperiode.tom.get(uke)
         val fra = meldeperiode.fom.format(dateFormatter)
         val til = meldeperiode.tom.format(dateFormatter)
-        val tittelsuffix = "for uke $uke1 - $uke2 ($fra - $til) elektronisk mottatt av NAV"
+        val tittelsuffix = "for uke $uke1 - $uke2 ($fra - $til) elektronisk mottatt av NAV" // TODO tittelen her bør vurderes
         val tittel = "Korrigert meldekort $tittelsuffix"
 
         return Journalpost(
@@ -110,6 +110,24 @@ class JournalføringService(
             ),
         )
     }
+
+    private fun mockedPdf(): ByteArray = """
+    %PDF-1.0
+    1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj
+    2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj
+    3 0 obj<</Type/Page/Parent 2 0 R/Resources<<>>/MediaBox[0 0 9 9]>>endobj
+    xref
+    0 4
+    0000000000 65535 f
+    0000000009 00000 n
+    0000000052 00000 n
+    0000000101 00000 n
+    trailer<</Root 1 0 R/Size 4>>
+    startxref
+    174
+    %%EOF%
+    """.trimIndent()
+        .toByteArray()
 
     companion object {
         private val dateFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy")

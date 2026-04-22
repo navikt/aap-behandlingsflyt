@@ -14,7 +14,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.MeldekortV0
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.HentSakDTO
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.SaksnummerParameter
 import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForSakResolver
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -78,19 +77,19 @@ fun NormalOpenAPIRoute.meldekortApi(
             respond(meldeperioderMedMeldekortResponse ?: MeldeperioderMedMeldekortResponse(emptySet()))
         }
 
-        authorizedPost<Unit, OppdaterMeldekortResponse, OppdaterMeldekortRequest>(
-            AuthorizationBodyPathConfig(
+        authorizedPost<SaksnummerParameter, OppdaterMeldekortResponse, OppdaterMeldekortRequest>(
+            AuthorizationParamPathConfig(
                 relevanteIdenterResolver = relevanteIdenterForSakResolver(repositoryRegistry, dataSource),
                 operasjon = Operasjon.SAKSBEHANDLE,
             ),
             modules = arrayOf(TagModule(listOf(Tags.Sak))),
-        ) { _, body ->
+        ) { req, body ->
             val response = dataSource.transaction { connection ->
                 val repositoryProvider = repositoryRegistry.provider(connection)
                 val sakRepository = repositoryProvider.provide<SakRepository>()
                 val journalføringService = JournalføringService(gatewayProvider)
 
-                val sak = sakRepository.hent(Saksnummer(body.saksnummer))
+                val sak = sakRepository.hent(Saksnummer(req.saksnummer))
                 val bruker = bruker()
                 val meldeperiode = body.meldeperiode
                 val meldekort = tilMeldekort(body, bruker)
@@ -114,9 +113,8 @@ fun NormalOpenAPIRoute.meldekortApi(
 }
 
 private fun tilMeldekort(oppdaterMeldekortRequest: OppdaterMeldekortRequest, vurdertAv: Bruker): MeldekortV0 {
-    // TODO få inn begrunnelse og opprettetAv når PR for utvidelse av Meldekort-kontrakt er merget
     return MeldekortV0(
-        harDuArbeidet = true, // TODO bør utledes basert på registrerte timer?
+        harDuArbeidet = oppdaterMeldekortRequest.dager.sumOf { it.timerArbeidet } > 0.0,
         opprettetAv = vurdertAv.ident,
         begrunnelse = oppdaterMeldekortRequest.begrunnelse,
         timerArbeidPerPeriode = oppdaterMeldekortRequest.dager.map {
