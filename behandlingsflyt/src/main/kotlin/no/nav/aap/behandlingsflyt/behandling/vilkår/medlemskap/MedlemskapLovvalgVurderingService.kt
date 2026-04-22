@@ -9,6 +9,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Pers
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Personopplysning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.erGyldigIPeriode
 import no.nav.aap.komponenter.type.Periode
+import java.math.BigDecimal
 
 class MedlemskapLovvalgVurderingService {
     fun vurderTilhørighet(
@@ -236,7 +237,7 @@ class MedlemskapLovvalgVurderingService {
 
     private fun mottarSykepenger(grunnlag: MedlemskapArbeidInntektGrunnlag?): TilhørighetVurdering {
         val sykepengerInntektGrunnlag = grunnlag?.inntekterINorgeGrunnlag?.filter { inntekt ->
-            inntekt.inntektType?.uppercase() in enumValues<InntektTyper>().map { it.name }
+            inntekt.inntektType?.uppercase() in enumValues<InntektTyper>().map { it.name } && inntekt.beloep != 0.0
         }
 
         val mottarSykepengerGrunnlag = sykepengerInntektGrunnlag?.map {
@@ -259,7 +260,7 @@ class MedlemskapLovvalgVurderingService {
 
     private fun harArbeidInntektINorge(grunnlag: MedlemskapArbeidInntektGrunnlag?): TilhørighetVurdering {
         val arbeidInntektINorgeGrunnlag =
-            grunnlag?.inntekterINorgeGrunnlag?.map {
+            grunnlag?.inntekterINorgeGrunnlag?.filter { it.beloep != 0.0 }?.map {
                 ArbeidInntektINorgeGrunnlag(
                     virksomhetId = it.identifikator,
                     virksomhetNavn = it.organisasjonsNavn,

@@ -259,12 +259,14 @@ class ForutgåendeMedlemskapVurderingService(
         grunnlag: ForutgåendeMedlemskapArbeidInntektGrunnlag?,
         forutgåendePeriode: Periode
     ): TilhørighetVurdering {
-        val inntekterINorgePerioder = grunnlag?.inntekterINorgeGrunnlag?.map { it.periode }
+        val inntektINorgeGrunnlag = grunnlag?.inntekterINorgeGrunnlag?.filter { it.beloep != 0.0 }
+
+        val inntekterINorgePerioder = inntektINorgeGrunnlag?.map { it.periode }
         val sammenhengendeInntektSiste5År =
             sammenhengendePerioderAlleMndSiste5år(inntekterINorgePerioder, forutgåendePeriode)
 
         val arbeidInntektINorgeGrunnlag =
-            grunnlag?.inntekterINorgeGrunnlag?.map {
+            inntektINorgeGrunnlag?.map {
                 ArbeidInntektINorgeGrunnlag(
                     virksomhetId = it.identifikator,
                     virksomhetNavn = it.organisasjonsNavn,
@@ -274,7 +276,7 @@ class ForutgåendeMedlemskapVurderingService(
             }
 
         val visuellTidslinje = if (unleashGateway?.isEnabled(BehandlingsflytFeature.ForutgaaendeForbedringer) == true) {
-            byggVisuellTidslinje(grunnlag?.inntekterINorgeGrunnlag, forutgåendePeriode)
+            byggVisuellTidslinje(inntektINorgeGrunnlag, forutgåendePeriode)
         } else emptyList()
 
         return TilhørighetVurdering(
