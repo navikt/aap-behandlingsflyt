@@ -9,7 +9,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Pers
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Personopplysning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.erGyldigIPeriode
 import no.nav.aap.komponenter.type.Periode
-import java.math.BigDecimal
 
 class MedlemskapLovvalgVurderingService {
     fun vurderTilhørighet(
