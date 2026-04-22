@@ -280,6 +280,7 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::
                     )
                 )
             )
+            // TODO: Denne bør egentlig ikke løftes - skal kun løftes ved 11-5 nei eller delvis ufør 
             .løsOvergangArbeid(utfall = Utfall.IKKE_OPPFYLT, fom = overgangUførDato.plusMonths(8))
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
@@ -420,6 +421,7 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::
         val startDato = LocalDate.now()
         val sak = happyCaseFørstegangsbehandling(startDato)
 
+        val overgangUføreDato = startDato.plusDays(8)
         /* Gir AAP som arbeidssøker. */
         sak.opprettManuellRevurdering(
             no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.OVERGANG_UFORE
@@ -441,7 +443,7 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::
                             tom = startDato.plusDays(7)
                         ),
                         BistandLøsningDto(
-                            fom = startDato.plusDays(8),
+                            fom = overgangUføreDato,
                             begrunnelse = "Trenger hjelp fra nav",
                             erBehovForAktivBehandling = false,
                             erBehovForArbeidsrettetTiltak = false,
@@ -467,7 +469,7 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::
                             brukerHarSøktOmUføretrygd = true,
                             brukerHarFåttVedtakOmUføretrygd = UføreSøknadVedtakResultat.NEI,
                             brukerRettPåAAP = true,
-                            fom = startDato.plusDays(8),
+                            fom = overgangUføreDato,
                             tom = null,
                             overgangBegrunnelse = null
                         )
@@ -477,10 +479,10 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::
             .medKontekst {
                 assertThat(åpneAvklaringsbehov.map { it.definisjon }).doesNotContain(Definisjon.AVKLAR_OVERGANG_UFORE);
             }
+            // TODO: Denne bør egentlig ikke løftes - skal kun løftes ved 11-5 nei eller delvis ufør 
+            .løsOvergangArbeid(utfall = Utfall.IKKE_OPPFYLT, fom = overgangUføreDato.plusMonths(8))
             .løsSykdomsvurderingBrev()
             .bekreftVurderinger()
-            .løsSykepengeerstatning(startDato.plusMonths(6) to true)
-            .foreslåVedtak()
             .fattVedtak()
 
         sak.opprettManuellRevurdering(
