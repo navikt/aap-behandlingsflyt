@@ -16,3 +16,6 @@ fun PrometheusMeterRegistry.dokumentHendelse(type: InnsendingType): Counter =
         "behandlingsflyt_dokument_hendelse_total",
         listOf(Tag.of("hendelse", type.name))
     )
+
+fun PrometheusMeterRegistry.forutgåendeMedlemskapMedGapTeller(): Counter =
+    this.counter("behandlingsflyt_forutgaaende_medlemskap_med_gap_total")
