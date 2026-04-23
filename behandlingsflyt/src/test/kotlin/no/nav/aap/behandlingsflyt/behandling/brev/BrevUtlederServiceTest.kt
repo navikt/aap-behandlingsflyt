@@ -158,7 +158,6 @@ class BrevUtlederServiceTest {
                     any()
                 )
             } returns emptySet()
-            every { unleashGateway.isEnabled(BehandlingsflytFeature.UtvidVedtakslengdeUnderEttAr) } returns true
 
             val resultat = brevUtlederService.utledBehovForMeldingOmVedtak(revurdering.id)
 
@@ -179,7 +178,6 @@ class BrevUtlederServiceTest {
             every { vedtakslengdeService.hentAvslagsårsakerVedStansEllerOpphør(revurdering.id, any()) } returns setOf(
                 avslagsårsak
             )
-            every { unleashGateway.isEnabled(BehandlingsflytFeature.UtvidVedtakslengdeUnderEttAr) } returns true
 
             val resultat = brevUtlederService.utledBehovForMeldingOmVedtak(revurdering.id)
 
@@ -194,7 +192,6 @@ class BrevUtlederServiceTest {
             every { vedtakslengdeService.hentAvslagsårsakerVedStansEllerOpphør(revurdering.id, any()) } returns setOf(
                 Avslagsårsak.MANGLENDE_DOKUMENTASJON
             )
-            every { unleashGateway.isEnabled(BehandlingsflytFeature.UtvidVedtakslengdeUnderEttAr) } returns true
 
             assertThrows<IllegalArgumentException> {
                 brevUtlederService.utledBehovForMeldingOmVedtak(revurdering.id)
@@ -209,7 +206,6 @@ class BrevUtlederServiceTest {
                 Avslagsårsak.ANNEN_FULL_YTELSE,
                 Avslagsårsak.BRUKER_OVER_67
             )
-            every { unleashGateway.isEnabled(BehandlingsflytFeature.UtvidVedtakslengdeUnderEttAr) } returns true
 
             val resultat = brevUtlederService.utledBehovForMeldingOmVedtak(revurdering.id)
 

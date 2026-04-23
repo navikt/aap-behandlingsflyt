@@ -296,7 +296,7 @@ erNedsettelseMinstHalvparten = null,
     }
 
     @Test
-    fun `Oppfyller 11-5, ikke oppfyller 11-6,ikke oppfyller 11-18,ikke oppfyller 11-17, ikke oppfyller 11-13 - Skal gi avslag`() {
+    fun `Oppfyller 11-5, ikke oppfyller 11-6,ikke oppfyller 11-18,ikke oppfyller 11-17 - Skal gi avslag`() {
 
 
         val fom = LocalDate.now().minusMonths(3)
@@ -361,30 +361,10 @@ erNedsettelseMinstHalvparten = null,
                             )
                         )
                     )
-            ).løsRefusjonskrav()
+            )
             .løsSykdomsvurderingBrev()
             .bekreftVurderinger()
             .kvalitetssikre()
-            .medKontekst {
-                assertThat(åpneAvklaringsbehov).anySatisfy { assertThat(it.definisjon).isEqualTo(Definisjon.AVKLAR_SYKEPENGEERSTATNING) }
-            }
-            .løsAvklaringsBehov(
-                PeriodisertAvklarSykepengerErstatningLøsning(
-                    løsningerForPerioder = listOf(
-                        PeriodisertSykepengerVurderingDto(
-                            begrunnelse = "...",
-                            dokumenterBruktIVurdering = emptyList(),
-                            harRettPå = false,
-                            grunn = null,
-                            fom = LocalDate.now()
-                        )
-                    ),
-                )
-            ).medKontekst {
-                assertThat(this.åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
-                    .containsExactlyInAnyOrder(Definisjon.FORESLÅ_VEDTAK)
-            }
-            .løsAvklaringsBehov(ForeslåVedtakLøsning())
             .fattVedtak()
             .medKontekst {
                 assertThat(this.behandling.status()).isEqualTo(Status.IVERKSETTES)
