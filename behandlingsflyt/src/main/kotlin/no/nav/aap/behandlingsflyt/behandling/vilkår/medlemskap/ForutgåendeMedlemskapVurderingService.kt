@@ -9,6 +9,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Pers
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningMedHistorikkGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.erGyldigIPeriode
 import no.nav.aap.behandlingsflyt.forutgåendeMedlemskapMedGapTeller
+import no.nav.aap.behandlingsflyt.forutgåendeMedlemskapMedGapUtfall
 import no.nav.aap.behandlingsflyt.prometheus
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
@@ -32,9 +33,8 @@ class ForutgåendeMedlemskapVurderingService(
 
         // No-op: sjekk om 1 måneds gap-toleranse i inntekt ville gitt annet utfall
         val gapResultat = vurderTilhørighetMedGapToleranse(grunnlag, forutgåendePeriode, andreDelVurdering)
-        if (!originalResultat && gapResultat) {
-            prometheus.forutgåendeMedlemskapMedGapTeller().increment()
-        }
+        prometheus.forutgåendeMedlemskapMedGapUtfall(!originalResultat && gapResultat).increment()
+        prometheus.forutgåendeMedlemskapMedGapTeller(gapResultat).increment()
 
         return KanBehandlesAutomatiskVurdering(
             originalResultat,
