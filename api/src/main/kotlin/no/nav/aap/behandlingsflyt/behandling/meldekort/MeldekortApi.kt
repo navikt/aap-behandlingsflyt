@@ -25,6 +25,7 @@ import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.tilgang.AuthorizationBodyPathConfig
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.Operasjon
+import no.nav.aap.tilgang.Rolle
 import no.nav.aap.tilgang.SakPathParam
 import no.nav.aap.tilgang.authorizedGet
 import no.nav.aap.tilgang.authorizedPost
@@ -80,7 +81,9 @@ fun NormalOpenAPIRoute.meldekortApi(
         authorizedPost<SaksnummerParameter, OppdaterMeldekortResponse, OppdaterMeldekortRequest>(
             AuthorizationParamPathConfig(
                 relevanteIdenterResolver = relevanteIdenterForSakResolver(repositoryRegistry, dataSource),
+                sakPathParam = SakPathParam("saksnummer"),
                 operasjon = Operasjon.SAKSBEHANDLE,
+                påkrevdRolle = Rolle.SAKSBEHANDLER_NASJONAL,
             ),
             modules = arrayOf(TagModule(listOf(Tags.Sak))),
         ) { req, body ->
