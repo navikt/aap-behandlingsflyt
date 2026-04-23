@@ -87,11 +87,7 @@ class FasttrackMeldekortFlytTest :
                 assertThat(this.åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
                     .containsExactlyInAnyOrder(Definisjon.SKRIV_SYKDOMSVURDERING_BREV)
             }
-            .løsAvklaringsBehov(
-                SykdomsvurderingForBrevLøsning(
-                    vurdering = "Begrunnelse"
-                ),
-            )
+            .løsSykdomsvurderingBrev().bekreftVurderinger()
             .medKontekst {
                 assertThat(this.åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
                     .containsExactlyInAnyOrder(Definisjon.FATTE_VEDTAK)

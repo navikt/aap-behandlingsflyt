@@ -46,8 +46,22 @@ class MellomlagringFlyttest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::c
             }
             .løsSykdomsvurderingBrev()
             .bekreftVurderinger()
+            .medKontekst {
+                assertThat(åpneAvklaringsbehov).anySatisfy {
+                    assertThat(it.definisjon)
+                        .describedAs { "Er ikke tilstrekkelig vurdert dersom det finnes mellomlagret sykdomsvurdering" }
+                        .isEqualTo(Definisjon.BEKREFT_VURDERINGER_OPPFØLGING)
+                }
+            }
+            .slettMellomlagretVurdering(Definisjon.AVKLAR_SYKDOM)
+            .medKontekst {
+                val mellomlagretVerdi = hentMellomlagretVerdi()
+                assertThat(mellomlagretVerdi).isNull()
+            }
+            .bekreftVurderinger()
             .kvalitetssikre()
             .løsBeregningstidspunkt()
+            .mellomlagreSykdom()
             .løsOppholdskrav(periode.fom)
             .medKontekst {
                 val mellomlagretVerdi = hentMellomlagretVerdi()

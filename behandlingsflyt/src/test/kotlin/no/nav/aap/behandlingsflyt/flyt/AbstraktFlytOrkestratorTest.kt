@@ -426,6 +426,13 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
         return behandling
     }
 
+    protected fun slettMellomlagretVurdering(behandling: Behandling, definisjon: Definisjon): Behandling {
+        dataSource.transaction { connection ->
+            MellomlagretVurderingRepositoryImpl(connection).slett(behandling.id, definisjon.kode)
+        }
+        return behandling
+    }
+
     protected fun løsSykdom(
         behandling: Behandling,
         vurderingGjelderFra: LocalDate,
@@ -702,6 +709,11 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
     @JvmName("mellomlagreSykdomExt")
     protected fun Behandling.mellomlagreSykdom(): Behandling {
         return mellomlagreSykdom(this)
+    }
+
+    @JvmName("slettMellomlagretVurderingExt")
+    protected fun Behandling.slettMellomlagretVurdering(definisjon: Definisjon): Behandling {
+        return slettMellomlagretVurdering(this, definisjon)
     }
 
     protected fun hentSak(ident: Ident, periode: Periode): Sak {
