@@ -134,18 +134,19 @@ class SykdomsvilkårUtenVissVarighet(vilkårsresultat: Vilkårsresultat) : Vilk�
             utfall = Utfall.IKKE_OPPFYLT
 
             val nedsettelseHalvparten = sykdomVurdering?.utledErNedsettelseMinstHalvparten()
-            val nedsettelseYrkesskade = sykdomVurdering?.utledErNedsettelseMerEnnYrkesskadegrense()
 
-            avslagsårsak = if (sykdomVurdering?.erSkadeSykdomEllerLyteVesentligdel == false) {
-                Avslagsårsak.IKKE_SYKDOM_SKADE_LYTE_VESENTLIGDEL
-            } else if (nedsettelseHalvparten == ErNedsettelseMinstHalvpartenValg.NEI
-                && nedsettelseYrkesskade != ErNedsettelseMerEnnYrkesskadegrenseValg.JA
-            ) {
-                Avslagsårsak.IKKE_NOK_REDUSERT_ARBEIDSEVNE
-            } else if (nedsettelseHalvparten == ErNedsettelseMinstHalvpartenValg.JA_FORBIGÅENDE_PROBLEMER) {
-                Avslagsårsak.IKKE_SYKDOM_AV_VISS_VARIGHET
-            } else {
-                Avslagsårsak.MANGLENDE_DOKUMENTASJON
+            avslagsårsak = when {
+                sykdomVurdering?.harSkadeSykdomEllerLyte == false ->
+                    Avslagsårsak.IKKE_SYKDOM_SKADE_LYTE
+
+                sykdomVurdering?.erSkadeSykdomEllerLyteVesentligdel == false ->
+                    Avslagsårsak.IKKE_SYKDOM_SKADE_LYTE_VESENTLIGDEL
+
+                nedsettelseHalvparten == ErNedsettelseMinstHalvpartenValg.JA_FORBIGÅENDE_PROBLEMER ->
+                    Avslagsårsak.IKKE_SYKDOM_AV_VISS_VARIGHET
+
+                else ->
+                    Avslagsårsak.IKKE_NOK_REDUSERT_ARBEIDSEVNE
             }
         }
 

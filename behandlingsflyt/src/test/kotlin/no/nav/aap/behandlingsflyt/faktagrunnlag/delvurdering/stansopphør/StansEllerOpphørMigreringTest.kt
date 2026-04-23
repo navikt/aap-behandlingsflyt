@@ -85,7 +85,12 @@ class StansEllerOpphørMigreringTest : AbstraktFlytOrkestratorTest(ManuellStyrin
             val gjeldende = stansOpphørRevurdering.gjeldendeStansOgOpphør().single()
             assertThat(gjeldende.fom).isEqualTo(revurdererFra)
             assertThat(gjeldende.vurdertIBehandling).isEqualTo(revurdering.id)
-            assertThat(gjeldende.vurdering.årsaker).containsExactly(Avslagsårsak.IKKE_BEHOV_FOR_OPPFOLGING)
+            assertThat(gjeldende.vurdering.årsaker).containsExactly(
+                Avslagsårsak.IKKE_BEHOV_FOR_OPPFOLGING,
+                /* gir egentlig ikke så mye mening med IKKE_NOK_REDUSERT_ARBEIDSEVNE siden 11-5 er oppfylt,
+                 * men i sykdomsvilkåret sjekker vi bistandsvurderingene, og setter derfor sykdomsvilkåret som ikke oppfylt. */
+                Avslagsårsak.IKKE_NOK_REDUSERT_ARBEIDSEVNE,
+                )
         }
     }
 }

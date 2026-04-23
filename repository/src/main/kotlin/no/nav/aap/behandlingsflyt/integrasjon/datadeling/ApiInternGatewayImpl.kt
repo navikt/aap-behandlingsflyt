@@ -241,6 +241,7 @@ class ApiInternGatewayImpl : ApiInternGateway {
             Avslagsårsak.BRUDD_PÅ_OPPHOLDSKRAV_OPPHØR -> AvslagsårsakDTO.BRUDD_PÅ_OPPHOLDSKRAV_OPPHØR
             Avslagsårsak.ORDINÆRKVOTE_BRUKT_OPP -> AvslagsårsakDTO.ORDINÆRKVOTE_BRUKT_OPP
             Avslagsårsak.SYKEPENGEERSTATNINGKVOTE_BRUKT_OPP -> AvslagsårsakDTO.SYKEPENGEERSTATNINGKVOTE_BRUKT_OPP
+            Avslagsårsak.IKKE_SYKDOM_SKADE_LYTE -> AvslagsårsakDTO.IKKE_SYKDOM_SKADE_LYTE
             Avslagsårsak.BRUKER_UNDER_18 -> null
             Avslagsårsak.MANGLENDE_DOKUMENTASJON -> null
             Avslagsårsak.IKKE_MEDLEM_FORUTGÅENDE -> null
