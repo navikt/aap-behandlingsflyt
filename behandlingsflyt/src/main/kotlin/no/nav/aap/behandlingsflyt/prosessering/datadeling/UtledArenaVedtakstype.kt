@@ -91,6 +91,7 @@ class UtledArenaVedtakstype(
             val behandlingensRettighetsTyper = underveisRepository.hent(behandling.id)
                 .somTidslinje()
                 .mapNotNull { it.rettighetsType }
+                .komprimer()
 
             val behandlingensStansOgOpphør = stansOpphørRepository.hentHvisEksisterer(behandling.id)
                 ?.gjeldendeStansOgOpphør().orEmpty()

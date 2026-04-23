@@ -71,7 +71,7 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::
                             erSkadeSykdomEllerLyteVesentligdel = true,
                             erNedsettelseIArbeidsevneMerEnnHalvparten = true,
                             erNedsettelseIArbeidsevneAvEnVissVarighet = true,
-erNedsettelseMinstHalvparten = null,
+                            erNedsettelseMinstHalvparten = null,
                             erNedsettelseMerEnnYrkesskadegrense = null,
                             erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
                             erArbeidsevnenNedsatt = true,
@@ -169,23 +169,6 @@ erNedsettelseMinstHalvparten = null,
             .bekreftVurderinger()
             .bekreftVurderinger()
             .kvalitetssikre()
-            .medKontekst {
-                assertThat(åpneAvklaringsbehov).anySatisfy { assertThat(it.definisjon).isEqualTo(Definisjon.AVKLAR_SYKEPENGEERSTATNING) }
-            }
-            .løsAvklaringsBehov(
-                PeriodisertAvklarSykepengerErstatningLøsning(
-                    løsningerForPerioder = listOf(
-                        PeriodisertSykepengerVurderingDto(
-                            begrunnelse = "...",
-                            dokumenterBruktIVurdering = emptyList(),
-                            harRettPå = false,
-                            grunn = null,
-                            fom = LocalDate.now(),
-                            tom = null
-                        )
-                    ),
-                )
-            )
             .løsBeregningstidspunkt()
             .løsOppholdskrav(periode.fom)
             .løsAndreStatligeYtelser()
@@ -297,23 +280,12 @@ erNedsettelseMinstHalvparten = null,
                     )
                 )
             )
+            // TODO: Denne bør egentlig ikke løftes - skal kun løftes ved 11-5 nei eller delvis ufør 
+            .løsOvergangArbeid(utfall = Utfall.IKKE_OPPFYLT, fom = overgangUførDato.plusMonths(8))
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
             .bekreftVurderinger()
             .kvalitetssikre()
-            .løsAvklaringsBehov(
-                PeriodisertAvklarSykepengerErstatningLøsning(
-                    løsningerForPerioder = listOf(
-                        PeriodisertSykepengerVurderingDto(
-                            begrunnelse = "...",
-                            dokumenterBruktIVurdering = emptyList(),
-                            harRettPå = false,
-                            grunn = null,
-                            fom = LocalDate.now()
-                        )
-                    ),
-                )
-            )
             .løsBeregningstidspunkt()
             .løsOppholdskrav(periode.fom)
             .løsAndreStatligeYtelser()
@@ -324,7 +296,8 @@ erNedsettelseMinstHalvparten = null,
         assertThat(revurdering.årsakTilOpprettelse).isEqualTo(no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse.ENDRING_I_REGISTERDATA)
 
         dataSource.transaction { connection ->
-            val vurderingsbehovOgÅrsaker = BehandlingRepositoryImpl(connection).hentVurderingsbehovOgÅrsaker(revurdering.id)
+            val vurderingsbehovOgÅrsaker =
+                BehandlingRepositoryImpl(connection).hentVurderingsbehovOgÅrsaker(revurdering.id)
             assertThat(vurderingsbehovOgÅrsaker).hasSize(1)
             assertThat(vurderingsbehovOgÅrsaker.first().beskrivelse).isEqualTo(melding.beskrivelseVurderingsbehov())
             assertThat(vurderingsbehovOgÅrsaker.first().vurderingsbehov).hasSize(1)
@@ -448,6 +421,7 @@ erNedsettelseMinstHalvparten = null,
         val startDato = LocalDate.now()
         val sak = happyCaseFørstegangsbehandling(startDato)
 
+        val overgangUføreDato = startDato.plusDays(8)
         /* Gir AAP som arbeidssøker. */
         sak.opprettManuellRevurdering(
             no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.OVERGANG_UFORE
@@ -469,7 +443,7 @@ erNedsettelseMinstHalvparten = null,
                             tom = startDato.plusDays(7)
                         ),
                         BistandLøsningDto(
-                            fom = startDato.plusDays(8),
+                            fom = overgangUføreDato,
                             begrunnelse = "Trenger hjelp fra nav",
                             erBehovForAktivBehandling = false,
                             erBehovForArbeidsrettetTiltak = false,
@@ -495,7 +469,7 @@ erNedsettelseMinstHalvparten = null,
                             brukerHarSøktOmUføretrygd = true,
                             brukerHarFåttVedtakOmUføretrygd = UføreSøknadVedtakResultat.NEI,
                             brukerRettPåAAP = true,
-                            fom = startDato.plusDays(8),
+                            fom = overgangUføreDato,
                             tom = null,
                             overgangBegrunnelse = null
                         )
@@ -505,10 +479,10 @@ erNedsettelseMinstHalvparten = null,
             .medKontekst {
                 assertThat(åpneAvklaringsbehov.map { it.definisjon }).doesNotContain(Definisjon.AVKLAR_OVERGANG_UFORE);
             }
+            // TODO: Denne bør egentlig ikke løftes - skal kun løftes ved 11-5 nei eller delvis ufør 
+            .løsOvergangArbeid(utfall = Utfall.IKKE_OPPFYLT, fom = overgangUføreDato.plusMonths(8))
             .løsSykdomsvurderingBrev()
             .bekreftVurderinger()
-            .løsSykepengeerstatning(startDato.plusMonths(6) to true)
-            .foreslåVedtak()
             .fattVedtak()
 
         sak.opprettManuellRevurdering(

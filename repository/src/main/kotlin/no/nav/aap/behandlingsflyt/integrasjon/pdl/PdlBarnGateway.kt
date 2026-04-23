@@ -112,15 +112,6 @@ val BARN_RELASJON_QUERY = $$"""
             forelderBarnRelasjon {
                 relatertPersonsRolle
                 relatertPersonsIdent
-                relatertPersonUtenFolkeregisteridentifikator {
-                  foedselsdato
-                  navn {    
-                    fornavn
-                    mellomnavn
-                    etternavn
-                  }
-                 statsborgerskap
-               }
             }
         }
     }
