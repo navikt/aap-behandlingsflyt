@@ -10,7 +10,7 @@ import no.nav.aap.komponenter.httpklient.httpclient.RestClient
 import no.nav.aap.komponenter.httpklient.httpclient.post
 import no.nav.aap.komponenter.httpklient.httpclient.request.GetRequest
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
-import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureM2MTokenProvider
+import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
 import no.nav.aap.komponenter.json.DefaultJsonMapper
 import no.nav.aap.utbetal.simulering.UtbetalingOgSimuleringDto
 import no.nav.aap.utbetal.tilkjentytelse.TilkjentYtelseDto
@@ -25,7 +25,7 @@ object UtbetalingGatewayImpl : UtbetalingGateway {
 
     private val client = RestClient(
         config = config,
-        tokenProvider = AzureM2MTokenProvider(),
+        tokenProvider = ClientCredentialsTokenProvider,
         responseHandler = HåndterConflictResponseHandler(),
         prometheus = prometheus
     )

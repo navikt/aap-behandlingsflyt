@@ -41,7 +41,7 @@ import no.nav.aap.komponenter.gateway.Factory
 import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
 import no.nav.aap.komponenter.httpklient.httpclient.RestClient
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
-import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureM2MTokenProvider
+import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
 import no.nav.aap.komponenter.json.DefaultJsonMapper
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
@@ -68,7 +68,7 @@ class ApiInternGatewayImpl : ApiInternGateway {
 
     private val restClient = RestClient.withDefaultResponseHandler(
         config = ClientConfig(scope = requiredConfigForKey("integrasjon.datadeling.scope")),
-        tokenProvider = AzureM2MTokenProvider(),
+        tokenProvider = ClientCredentialsTokenProvider,
         prometheus = prometheus
     )
 

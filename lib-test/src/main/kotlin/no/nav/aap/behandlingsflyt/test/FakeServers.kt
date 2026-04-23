@@ -152,8 +152,8 @@ import java.util.concurrent.atomic.AtomicInteger
 
 object FakeServers : AutoCloseable {
     private val log = LoggerFactory.getLogger(javaClass)
-
-    private val texas = embeddedServer(Netty, port = TexasPortHolder.getPort(), module = { texasFakes() })
+    private val azure = embeddedServer(Netty, port = AzurePortHolder.getPort(), module = { azureFake() })
+    private val texas = embeddedServer(Netty, port = 0, module = { texasFakes() })
     private val brev = embeddedServer(Netty, port = 0, module = { brevFake() })
     private val pdl = embeddedServer(Netty, port = 0, module = { pdlFake() })
     private val yrkesskade = embeddedServer(Netty, port = 0, module = { yrkesskadeFake() })
@@ -502,6 +502,7 @@ object FakeServers : AutoCloseable {
             }
         }
     }
+
 
     private fun Application.unleashFake() {
         install(ContentNegotiation) {
@@ -1521,6 +1522,41 @@ object FakeServers : AutoCloseable {
         )
     }
 
+    private fun Application.azureFake() {
+        install(ContentNegotiation) {
+            jackson()
+        }
+        install(StatusPages) {
+            exception<Throwable> { call, cause ->
+                this@azureFake.log.info("AZURE :: Ukjent feil ved kall til '{}'", call.request.local.uri, cause)
+                call.respond(
+                    status = HttpStatusCode.InternalServerError,
+                    message = ErrorRespons(cause.message)
+                )
+            }
+        }
+        routing {
+            post("/token") {
+                val body = call.receiveText()
+                val erCc = body.contains("grant_type=client_credentials")
+                val token = AzureTokenGen("behandlingsflyt", "behandlingsflyt").generate(erCc, "behandlingsflyt")
+                call.respond(TestToken(access_token = token))
+            }
+            post("/token/{NAVident}") {
+                val body = call.receiveText()
+                val NAVident = call.parameters["NAVident"]
+                val token = AzureTokenGen(
+                    issuer = "behandlingsflyt",
+                    audience = "behandlingsflyt"
+                ).generate(body.contains("grant_type=client_credentials"), azp = "behandlingsflyt", NAVident)
+                call.respond(TestToken(access_token = token))
+            }
+            get("/jwks") {
+                call.respond(AZURE_JWKS)
+            }
+        }
+    }
+
     private fun Application.texasFakes() {
         install(ContentNegotiation) {
             jackson()
@@ -1536,24 +1572,15 @@ object FakeServers : AutoCloseable {
         }
         routing {
             post("/token") {
-                val token = AzureTokenGen("behandlingsflyt")
-                    .generate(isApp = true, azp = "behandlingsflyt")
-                call.respond(TestToken(access_token = token))
-            }
-
-            post("/token/exchange") {
                 val body = call.receive<JsonNode>()
                 val NAVident = JWTParser.parse(body["user_token"].asText())
                     .jwtClaimsSet
                     .getClaimAsString("NAVident")
-
-                val token = AzureTokenGen(body["target"].asText())
-                    .generate(isApp = false, azp = "behandlingsflyt", navIdent = NAVident)
+                val token = AzureTokenGen(
+                    issuer = body["identity_provider"].asText(),
+                    audience = body["target"].asText(),
+                ).generate(false, azp = "behandlingsflyt", NAVident)
                 call.respond(TestToken(access_token = token))
-            }
-
-            post("/introspect") {
-                call.respond(mapOf("active" to true))
             }
         }
     }
@@ -1965,9 +1992,13 @@ object FakeServers : AutoCloseable {
     @Suppress("PropertyName", "ConstructorParameterNaming")
     data class TestToken(
         val access_token: String,
+        val refresh_token: String = "very.secure.token",
+        val id_token: String = "very.secure.token",
         val token_type: String = "token-type",
+        val scope: String? = null,
         val expires_in: Int = 3599,
     )
+
 
     fun start(testPersonService: TestPersonService = FakePersoner) {
         if (started.get()) {
@@ -1976,6 +2007,8 @@ object FakeServers : AutoCloseable {
 
         fakePersoner = testPersonService
 
+        azure.start()
+        setAzureProperties()
         texas.start()
         brev.start()
         yrkesskade.start()
@@ -2007,9 +2040,19 @@ object FakeServers : AutoCloseable {
         gosys.start()
         leaderElector.start()
 
+        println("AZURE PORT ${azure.port()}")
+
         setProperties()
 
         started.set(true)
+    }
+
+    fun setAzureProperties() {
+        System.setProperty("azure.openid.config.token.endpoint", "http://localhost:${azure.port()}/token/x12345")
+        System.setProperty("azure.app.client.id", "behandlingsflyt")
+        System.setProperty("azure.app.client.secret", "")
+        System.setProperty("azure.openid.config.jwks.uri", "http://localhost:${azure.port()}/jwks")
+        System.setProperty("azure.openid.config.issuer", "behandlingsflyt")
     }
 
     private fun setProperties() {
@@ -2141,9 +2184,7 @@ object FakeServers : AutoCloseable {
         System.setProperty("integrasjon.gosys.scope", "scope")
 
         // Texas
-        System.setProperty("nais.token.endpoint", "http://localhost:${texas.port()}/token")
-        System.setProperty("nais.token.exchange.endpoint", "http://localhost:${texas.port()}/token/exchange")
-        System.setProperty("nais.token.introspection.endpoint", "http://localhost:${texas.port()}/introspect")
+        System.setProperty("nais.token.exchange.endpoint", "http://localhost:${texas.port()}/token")
 
         // LeaderElector
         System.setProperty("ELECTOR_GET_URL", "http://localhost:${leaderElector.port()}")
@@ -2156,6 +2197,7 @@ object FakeServers : AutoCloseable {
         }
         yrkesskade.stop(0L, 0L)
         pdl.stop(0L, 0L)
+        azure.stop(0L, 0L)
         texas.stop(0L, 0L)
         brev.stop(0L, 0L)
         inntekt.stop(0L, 0L)
@@ -2190,14 +2232,14 @@ private fun EmbeddedServer<*, *>.port(): Int {
         .port
 }
 
-object TexasPortHolder {
-    private val texasPort = AtomicInteger(0)
+object AzurePortHolder {
+    private val azurePort = AtomicInteger(0)
 
     fun setPort(port: Int) {
-        texasPort.set(port)
+        azurePort.set(port)
     }
 
     fun getPort(): Int {
-        return texasPort.get()
+        return azurePort.get()
     }
 }

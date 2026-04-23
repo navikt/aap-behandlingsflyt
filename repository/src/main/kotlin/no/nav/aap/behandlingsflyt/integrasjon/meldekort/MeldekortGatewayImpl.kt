@@ -10,7 +10,7 @@ import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
 import no.nav.aap.komponenter.httpklient.httpclient.RestClient
 import no.nav.aap.komponenter.httpklient.httpclient.post
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
-import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureM2MTokenProvider
+import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
 import no.nav.aap.meldekort.kontrakt.sak.BehandslingsflytUtfyllingRequest
 import no.nav.aap.meldekort.kontrakt.sak.MeldeperioderV0
 import no.nav.aap.meldekort.kontrakt.sak.OppdaterIdenterV0
@@ -21,7 +21,7 @@ class MeldekortGatewayImpl : MeldekortGateway {
 
     private val client = RestClient.withDefaultResponseHandler(
         config = ClientConfig(scope = requiredConfigForKey("integrasjon.meldekort.scope")),
-        tokenProvider = AzureM2MTokenProvider(),
+        tokenProvider = ClientCredentialsTokenProvider,
         prometheus = prometheus
     )
 

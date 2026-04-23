@@ -16,7 +16,7 @@ import no.nav.aap.komponenter.httpklient.httpclient.Header
 import no.nav.aap.komponenter.httpklient.httpclient.RestClient.Companion.withDefaultResponseHandler
 import no.nav.aap.komponenter.httpklient.httpclient.error.ConflictHttpResponseException
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
-import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureM2MTokenProvider
+import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
 import org.slf4j.LoggerFactory
 import java.net.URI
 import java.time.LocalDate
@@ -37,7 +37,7 @@ class KabalGateway : AndreinstansGateway {
 
     private val client = withDefaultResponseHandler(
         config = config,
-        tokenProvider = AzureM2MTokenProvider(),
+        tokenProvider = ClientCredentialsTokenProvider,
         prometheus = prometheus
     )
 

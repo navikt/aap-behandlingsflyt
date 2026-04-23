@@ -17,7 +17,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettels
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
-import no.nav.aap.behandlingsflyt.test.AzureTokenGen
 import no.nav.aap.behandlingsflyt.test.FakeServers
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
@@ -29,7 +28,8 @@ import no.nav.aap.komponenter.httpklient.httpclient.post
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.NoTokenTokenProvider
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
-import no.nav.aap.komponenter.server.auth.IdentityProvider
+import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureConfig
+import no.nav.aap.komponenter.server.AZURE
 import no.nav.aap.komponenter.server.commonKtorModule
 import java.net.URI
 import java.time.LocalDate
@@ -64,12 +64,9 @@ open class BaseApiTest {
             responseHandler = DefaultResponseHandler()
         )
         return OidcToken(
-            client.post<Map<String, String>, FakeServers.TestToken>(
-                URI.create(requiredConfigForKey("nais.token.exchange.endpoint")),
-                PostRequest(body = mapOf(
-                    "user_token" to AzureTokenGen("audience").generate(false, "behandlingsflyt", "Z123456"),
-                    "target" to "behandlingsflyt"
-                ))
+            client.post<Unit, FakeServers.TestToken>(
+                URI.create(requiredConfigForKey("azure.openid.config.token.endpoint")),
+                PostRequest(Unit)
             )!!.access_token
         )
     }
@@ -87,16 +84,17 @@ open class BaseApiTest {
         application {
             commonKtorModule(
                 prometheus,
+                AzureConfig(),
                 InfoModel(
                     title = "AAP - Behandlingsflyt", version = "vTestApi",
                     description = "Api tester",
-                ),
-                identityProvider = IdentityProvider.ENTRA_ID
+                )
             )
 
             routing {
-                authenticate(IdentityProvider.ENTRA_ID.value) {
+                authenticate(AZURE) {
                     apiRouting(apiEndepunkt)
+
                 }
 
             }
