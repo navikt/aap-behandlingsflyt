@@ -840,43 +840,6 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
         return Pair(sak, behandling)
     }
 
-    @Deprecated("Sluttdato for rettighetesperiode er alltid Tid.MAKS for nye/migrerte saker. Send kun med søknadsdato, med mindre du tester koden din for ikke-migrerte saker.")
-    protected fun sendInnFørsteSøknad(
-        søknad: Søknad = TestSøknader.STANDARD_SØKNAD,
-        person: TestPerson = TestPersoner.STANDARD_PERSON(),
-        mottattTidspunkt: LocalDateTime? = null,
-        periode: Periode?,
-        journalpostId: JournalpostId = journalpostId(),
-    ): Pair<Sak, Behandling> {
-        val mottattTidspunkt = mottattTidspunkt ?: periode?.fom?.atStartOfDay() ?: LocalDateTime.now().minusMonths(3)
-        val periode = periode ?: Periode(mottattTidspunkt.toLocalDate(), mottattTidspunkt.toLocalDate().plusYears(1))
-        val sak = dataSource.transaction { connection ->
-            SakRepositoryImpl(connection).finnEllerOpprett(
-                PersonRepositoryImpl(connection).finnEllerOpprett(listOf(person.aktivIdent())),
-                periode
-            )
-        }
-        val behandling = sak.sendInnSøknad(søknad, mottattTidspunkt, journalpostId)
-
-        return Pair(sak, behandling)
-    }
-
-
-    @Deprecated("Bruk sendInnFørsteSøknad for førstegangsbehandling eller Sak.sendInnSøknad hvis saken allerede eksisterer")
-    protected fun sendInnSøknad(
-        ident: Ident,
-        periode: Periode,
-        søknad: Søknad,
-        mottattTidspunkt: LocalDateTime = LocalDateTime.now(),
-        journalpostId: JournalpostId = journalpostId(),
-    ): Behandling {
-        return hentSak(ident, periode).sendInnSøknad(
-            søknad,
-            mottattTidspunkt,
-            journalpostId
-        )
-    }
-
     protected fun Sak.sendInnSøknad(
         søknad: Søknad,
         mottattTidspunkt: LocalDateTime = LocalDateTime.now(),
@@ -1399,7 +1362,7 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
         harYrkesskade: Boolean,
         harUtenlandskOpphold: Boolean,
         inntekter: MutableList<InntektPerÅr>? = null
-    ): Ident {
+    ): TestPerson {
         val ident = ident()
         val person = TestPerson(
             identer = setOf(ident),
@@ -1439,7 +1402,7 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
             )
         )
         FakePersoner.leggTil(person)
-        return ident
+        return person
     }
 
     protected fun vedtaksbrevLøsning(brevbestillingReferanse: UUID): AvklaringsbehovLøsning {

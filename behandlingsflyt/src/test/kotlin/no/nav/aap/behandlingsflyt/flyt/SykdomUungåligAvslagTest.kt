@@ -45,16 +45,14 @@ class SykdomUungåligAvslagTest(val unleashGateway: KClass<UnleashGateway>) :
     fun `Oppfyller ikke 11-5`() {
         val fom = LocalDate.now().minusMonths(3)
 
-        val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
         val person = TestPersoner.STANDARD_PERSON()
 
-        var (sak, behandling) = sendInnFørsteSøknad(
+        var (_, behandling) = sendInnFørsteSøknad(
             person = person,
             mottattTidspunkt = fom.atStartOfDay(),
-            periode = periode,
         )
 
-        val steg = behandling.løsAvklaringsBehov(
+        behandling.løsAvklaringsBehov(
             AvklarSykdomLøsning(
                 løsningerForPerioder = listOf(
                     SykdomsvurderingLøsningDto(
@@ -65,8 +63,8 @@ class SykdomUungåligAvslagTest(val unleashGateway: KClass<UnleashGateway>) :
                         erNedsettelseIArbeidsevneMerEnnHalvparten = null,
                         erNedsettelseIArbeidsevneAvEnVissVarighet = null,
                         erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
-erNedsettelseMinstHalvparten = null,
-                            erNedsettelseMerEnnYrkesskadegrense = null,
+                        erNedsettelseMinstHalvparten = null,
+                        erNedsettelseMerEnnYrkesskadegrense = null,
                         erArbeidsevnenNedsatt = null,
                         yrkesskadeBegrunnelse = null,
                         fom = fom,
@@ -113,15 +111,13 @@ erNedsettelseMinstHalvparten = null,
 
     @Test
     fun `Oppfyller ikke 11-5, men vil vurderes for 11-13, men få nei`() {
-        val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
-
         val person = TestPersoner.STANDARD_PERSON()
 
         // Sender inn en søknad
+        val søknadsdato = LocalDate.now()
         var (sak, behandling) = sendInnFørsteSøknad(
             person = person,
-            periode = periode,
-            mottattTidspunkt = periode.fom.atStartOfDay()
+            mottattTidspunkt = søknadsdato.atStartOfDay()
         )
 
         assertThat(behandling.status()).isEqualTo(Status.UTREDES)
@@ -165,7 +161,7 @@ erNedsettelseMinstHalvparten = null,
                             dokumenterBruktIVurdering = emptyList(),
                             harRettPå = false,
                             grunn = SykepengerGrunn.SYKEPENGER_IGJEN_ARBEIDSUFOR,
-                            fom = periode.fom
+                            fom = søknadsdato
                         )
                     ),
                 )
@@ -206,13 +202,11 @@ erNedsettelseMinstHalvparten = null,
 
     @Test
     fun `Oppfyller 11-5 med YS og kun 30% nedsatt, 11-6 OK, 11-22 YS ikke årsaksammenhengende`() {
-        val fom = 1 april 2025
+        val søknadsdato = 1 april 2025
         val person = TestPersoner.PERSON_MED_YRKESSKADE()
-        val periode = Periode(fom, fom.plusYears(3))
-        var (sak, behandling) = sendInnFørsteSøknad(
+        var (_, behandling) = sendInnFørsteSøknad(
             person = person,
-            mottattTidspunkt = fom.atStartOfDay(),
-            periode = periode,
+            mottattTidspunkt = søknadsdato.atStartOfDay(),
         )
         behandling = behandling.medKontekst {
             assertThat(åpneAvklaringsbehov).isNotEmpty()
@@ -233,14 +227,14 @@ erNedsettelseMinstHalvparten = null,
                             erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = true,
                             yrkesskadeBegrunnelse = "Skadd på jobb",
                             erNedsettelseIArbeidsevneAvEnVissVarighet = true,
-                            fom = periode.fom,
+                            fom = søknadsdato,
                             tom = null,
                             erNedsettelseMinstHalvparten = null,
                             erNedsettelseMerEnnYrkesskadegrense = null,
                         )
                     )
                 ),
-            ).løsBistand(periode.fom, true)
+            ).løsBistand(søknadsdato, true)
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
             .bekreftVurderinger()
@@ -298,13 +292,9 @@ erNedsettelseMinstHalvparten = null,
     @Test
     fun `Oppfyller 11-5, ikke oppfyller 11-6,ikke oppfyller 11-18,ikke oppfyller 11-17 - Skal gi avslag`() {
 
-
-        val fom = LocalDate.now().minusMonths(3)
-
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
-        val person = TestPersoner.STANDARD_PERSON()
 
-        var (_, behandling) = sendInnFørsteSøknad(periode = periode)
+        val (_, behandling) = sendInnFørsteSøknad(mottattTidspunkt = periode.fom.atStartOfDay())
         behandling
             .medKontekst {
                 assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
@@ -319,7 +309,7 @@ erNedsettelseMinstHalvparten = null,
                             erSkadeSykdomEllerLyteVesentligdel = true,
                             erNedsettelseIArbeidsevneMerEnnHalvparten = true,
                             erNedsettelseIArbeidsevneAvEnVissVarighet = true,
-erNedsettelseMinstHalvparten = null,
+                            erNedsettelseMinstHalvparten = null,
                             erNedsettelseMerEnnYrkesskadegrense = null,
                             erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
                             erArbeidsevnenNedsatt = true,
@@ -381,15 +371,10 @@ erNedsettelseMinstHalvparten = null,
 
     @Test
     fun `Har periode med oppfylt 11-5 i en kort periode, men ikke etter - oppfyller 11-6 - Oppfyller ikke 11-17 - Skal gi avslag`() {
-
-        val fom = LocalDate.now().minusMonths(3)
-
         val periode115 = Periode(LocalDate.now(), LocalDate.now().plusMonths(1))
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
 
-        val person = TestPersoner.STANDARD_PERSON()
-
-        var (_, behandling) = sendInnFørsteSøknad(periode = periode)
+        val (_, behandling) = sendInnFørsteSøknad(mottattTidspunkt = periode.fom.atStartOfDay())
         behandling
             .medKontekst {
                 assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
@@ -404,7 +389,7 @@ erNedsettelseMinstHalvparten = null,
                             erSkadeSykdomEllerLyteVesentligdel = true,
                             erNedsettelseIArbeidsevneMerEnnHalvparten = true,
                             erNedsettelseIArbeidsevneAvEnVissVarighet = true,
-erNedsettelseMinstHalvparten = null,
+                            erNedsettelseMinstHalvparten = null,
                             erNedsettelseMerEnnYrkesskadegrense = null,
                             erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
                             erArbeidsevnenNedsatt = true,

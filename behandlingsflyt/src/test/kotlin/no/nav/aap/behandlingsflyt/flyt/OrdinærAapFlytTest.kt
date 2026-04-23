@@ -86,9 +86,8 @@ class OrdinærAapFlytTest(val unleashGateway: KClass<UnleashGateway>) : Abstrakt
     @Test
     fun `ved avslag på 11-5 hoppes det rett til beslutter-steget`() {
         val fom = LocalDate.now().minusMonths(3)
-        val periode = Periode(fom, fom.plusYears(3))
 
-        var (_, behandling) = sendInnFørsteSøknad(periode = periode)
+        var (_, behandling) = sendInnFørsteSøknad(mottattTidspunkt = fom.atStartOfDay())
 
         val alleAvklaringsbehov = hentAlleAvklaringsbehov(behandling)
         assertThat(alleAvklaringsbehov).isNotEmpty()
@@ -108,7 +107,7 @@ class OrdinærAapFlytTest(val unleashGateway: KClass<UnleashGateway>) : Abstrakt
                         erNedsettelseIArbeidsevneMerEnnHalvparten = null,
                         erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
                         yrkesskadeBegrunnelse = null,
-                        fom = periode.fom,
+                        fom = fom,
                         tom = null,
                         erNedsettelseMinstHalvparten = null,
                         erNedsettelseMerEnnYrkesskadegrense = null,

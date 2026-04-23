@@ -197,12 +197,11 @@ class RettighetsperiodeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
 
     @Test
     fun `Skal kunne overstyre rettighetsperioden og angre seg etterpå`() {
-        val periode = Periode(LocalDate.now(), Tid.MAKS)
-        val nyStartDato = periode.fom.minusDays(7)
+        val søknadsdato = LocalDate.now()
+        val nyStartDato = søknadsdato.minusDays(7)
 
         var (sak, behandling) = sendInnFørsteSøknad(
-            mottattTidspunkt = periode.fom.atStartOfDay(),
-            periode = periode,
+            mottattTidspunkt = søknadsdato.atStartOfDay(),
         )
 
         val åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling.id)
@@ -224,7 +223,7 @@ class RettighetsperiodeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
 
         behandling.løsRettighetsperiodeIngenEndring()
         hentSak(sak.saksnummer).also {
-            assertThat(it.rettighetsperiode).isEqualTo(periode)
+            assertThat(it.rettighetsperiode).isEqualTo(Periode(nyStartDato, Tid.MAKS))
         }
 
     }

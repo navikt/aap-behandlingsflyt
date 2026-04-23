@@ -20,47 +20,47 @@ class MellomlagringFlyttest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::c
     fun `skal nullstille mellomlagret verdi når avklaringsbehov løses - og nullstille hengende mellomlagrede verdier ved iverksettelse`() {
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
         val person = TestPersoner.STANDARD_PERSON()
-        val ident = person.aktivIdent()
 
-        val førstegangsbehandling = sendInnSøknad(ident, periode, TestSøknader.STANDARD_SØKNAD)
-            .medKontekst {
-                assertThat(behandling.status()).isEqualTo(Status.UTREDES)
-            }
-            .mellomlagreSykdom()
-            .medKontekst {
-                val mellomlagretVerdi = hentMellomlagretVerdi()
-                assertThat(mellomlagretVerdi).isNotNull
-            }
-            .løsSykdom(periode.fom)
-            .medKontekst {
-                val mellomlagretVerdi = hentMellomlagretVerdi()
-                assertThat(mellomlagretVerdi).isNull()
-            }
-            .løsBistand(periode.fom)
-            .mellomlagreSykdom()
-            .løsRefusjonskrav()
-            .medKontekst {
-                assertThat(åpneAvklaringsbehov).anySatisfy {
-                    assertThat(it.definisjon).isEqualTo(Definisjon.SKRIV_SYKDOMSVURDERING_BREV)
+        val førstegangsbehandling =
+            sendInnFørsteSøknad(TestSøknader.STANDARD_SØKNAD, person, periode.fom.atStartOfDay()).second
+                .medKontekst {
+                    assertThat(behandling.status()).isEqualTo(Status.UTREDES)
                 }
-            }
-            .løsSykdomsvurderingBrev()
-            .bekreftVurderinger()
-            .kvalitetssikre()
-            .løsBeregningstidspunkt()
-            .løsOppholdskrav(periode.fom)
-            .medKontekst {
-                val mellomlagretVerdi = hentMellomlagretVerdi()
-                assertThat(mellomlagretVerdi).isNotNull()
-            }
-            .løsAndreStatligeYtelser()
-            .løsAvklaringsBehov(ForeslåVedtakLøsning())
-            .fattVedtak()
-            .medKontekst {
-                val mellomlagretVerdi = hentMellomlagretVerdi()
-                assertThat(mellomlagretVerdi).isNull()
-            }
-            .løsVedtaksbrev()
+                .mellomlagreSykdom()
+                .medKontekst {
+                    val mellomlagretVerdi = hentMellomlagretVerdi()
+                    assertThat(mellomlagretVerdi).isNotNull
+                }
+                .løsSykdom(periode.fom)
+                .medKontekst {
+                    val mellomlagretVerdi = hentMellomlagretVerdi()
+                    assertThat(mellomlagretVerdi).isNull()
+                }
+                .løsBistand(periode.fom)
+                .mellomlagreSykdom()
+                .løsRefusjonskrav()
+                .medKontekst {
+                    assertThat(åpneAvklaringsbehov).anySatisfy {
+                        assertThat(it.definisjon).isEqualTo(Definisjon.SKRIV_SYKDOMSVURDERING_BREV)
+                    }
+                }
+                .løsSykdomsvurderingBrev()
+                .bekreftVurderinger()
+                .kvalitetssikre()
+                .løsBeregningstidspunkt()
+                .løsOppholdskrav(periode.fom)
+                .medKontekst {
+                    val mellomlagretVerdi = hentMellomlagretVerdi()
+                    assertThat(mellomlagretVerdi).isNotNull()
+                }
+                .løsAndreStatligeYtelser()
+                .løsAvklaringsBehov(ForeslåVedtakLøsning())
+                .fattVedtak()
+                .medKontekst {
+                    val mellomlagretVerdi = hentMellomlagretVerdi()
+                    assertThat(mellomlagretVerdi).isNull()
+                }
+                .løsVedtaksbrev()
 
         assertThat(førstegangsbehandling.status()).isEqualTo(Status.AVSLUTTET)
     }
