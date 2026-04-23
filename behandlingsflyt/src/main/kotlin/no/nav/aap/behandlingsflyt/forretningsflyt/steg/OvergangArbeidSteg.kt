@@ -10,6 +10,7 @@ import no.nav.aap.behandlingsflyt.behandling.vilkår.overgangarbeid.OvergangArbe
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.Bistandsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangarbeid.OvergangArbeidRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
@@ -135,7 +136,7 @@ class OvergangArbeidSteg internal constructor(
                             }
 
                             sykdomsvurdering?.erOppfyltForOrdinærEllerYrkesskadeSettBortIfraÅrsakssammenhengMedUtlededeFelter() != true ||
-                                    bistandsvurdering?.erBehovForBistand() != true
+                                    erDelvisUfør(bistandsvurdering)
                         }
 
                         else -> false
@@ -144,6 +145,10 @@ class OvergangArbeidSteg internal constructor(
             }
         }
     }
+
+    private fun erDelvisUfør(bistandsvurdering: Bistandsvurdering?) =
+        // TODO: Finn ut om bruker er delvis ufør. Bruker bistand nei i mellomtiden (løfter behovet for ofte)
+        bistandsvurdering?.erBehovForBistand() != true
 
     private fun tilbakestillGrunnlag(kontekst: FlytKontekstMedPerioder) {
         val vedtatteVurderinger = kontekst.forrigeBehandlingId
