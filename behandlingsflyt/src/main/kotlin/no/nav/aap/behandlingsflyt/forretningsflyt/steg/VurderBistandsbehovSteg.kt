@@ -30,7 +30,6 @@ import org.slf4j.LoggerFactory
 
 class VurderBistandsbehovSteg(
     private val bistandRepository: BistandRepository,
-    private val studentRepository: StudentRepository,
     private val sykdomsRepository: SykdomRepository,
     private val vilkårsresultatRepository: VilkårsresultatRepository,
     private val overgangUføreRepository: OvergangUføreRepository,
@@ -40,7 +39,6 @@ class VurderBistandsbehovSteg(
 ) : BehandlingSteg, AvklaringsbehovMetadataUtleder {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         bistandRepository = repositoryProvider.provide(),
-        studentRepository = repositoryProvider.provide(),
         sykdomsRepository = repositoryProvider.provide(),
         vilkårsresultatRepository = repositoryProvider.provide(),
         overgangUføreRepository = repositoryProvider.provide(),
@@ -131,27 +129,15 @@ class VurderBistandsbehovSteg(
             ?.begrensetTil(kontekst.rettighetsperiode)
             .orEmpty()
 
-        val studentvurderinger = studentRepository.hentHvisEksisterer(kontekst.behandlingId)
-            ?.somStudenttidslinje(kontekst.rettighetsperiode.tom)
-            .orEmpty()
-
-
-        return Tidslinje.map3(tidligereVurderingsutfall, sykdomsvurderinger, studentvurderinger)
-        { segmentPeriode, behandlingsutfall, sykdomsvurdering, studentvurdering ->
+        return Tidslinje.map2(tidligereVurderingsutfall, sykdomsvurderinger)
+        { behandlingsutfall, sykdomsvurdering ->
             when (behandlingsutfall) {
                 null -> false
                 TidligereVurderinger.IkkeBehandlingsgrunnlag -> false
                 TidligereVurderinger.UunngåeligAvslag -> false
                 is TidligereVurderinger.PotensieltOppfylt -> {
                     when (behandlingsutfall.rettighetstype) {
-                        null -> (sykdomsvurdering?.erOppfyltOrdinær(
-                            kravdato = kontekst.rettighetsperiode.fom,
-                            segmentPeriode
-                        ) == true
-                                || sykdomsvurdering?.erOppfyltForYrkesskadeSettBortIfraÅrsakssammenheng(
-                            kravdato = kontekst.rettighetsperiode.fom, segmentPeriode
-                        ) == true)
-
+                        null -> sykdomsvurdering?.erOppfyltForOrdinærEllerYrkesskadeSettBortIfraÅrsakssammenhengMedUtlededeFelter() == true
                         else -> false
                     }
                 }

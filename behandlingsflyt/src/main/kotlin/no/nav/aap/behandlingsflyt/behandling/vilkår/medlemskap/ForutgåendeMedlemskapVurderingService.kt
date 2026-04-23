@@ -259,12 +259,14 @@ class ForutgåendeMedlemskapVurderingService(
         grunnlag: ForutgåendeMedlemskapArbeidInntektGrunnlag?,
         forutgåendePeriode: Periode
     ): TilhørighetVurdering {
-        val inntekterINorgePerioder = grunnlag?.inntekterINorgeGrunnlag?.map { it.periode }
+        val inntektINorgeGrunnlag = grunnlag?.inntekterINorgeGrunnlag?.filter { it.beloep != 0.0 }
+
+        val inntekterINorgePerioder = inntektINorgeGrunnlag?.map { it.periode }
         val sammenhengendeInntektSiste5År =
             sammenhengendePerioderAlleMndSiste5år(inntekterINorgePerioder, forutgåendePeriode)
 
         val arbeidInntektINorgeGrunnlag =
-            grunnlag?.inntekterINorgeGrunnlag?.map {
+            inntektINorgeGrunnlag?.map {
                 ArbeidInntektINorgeGrunnlag(
                     virksomhetId = it.identifikator,
                     virksomhetNavn = it.organisasjonsNavn,
@@ -274,7 +276,7 @@ class ForutgåendeMedlemskapVurderingService(
             }
 
         val visuellTidslinje = if (unleashGateway?.isEnabled(BehandlingsflytFeature.ForutgaaendeForbedringer) == true) {
-            byggVisuellTidslinje(grunnlag?.inntekterINorgeGrunnlag, forutgåendePeriode)
+            byggVisuellTidslinje(inntektINorgeGrunnlag, forutgåendePeriode)
         } else emptyList()
 
         return TilhørighetVurdering(
@@ -321,23 +323,23 @@ class ForutgåendeMedlemskapVurderingService(
 
         while (!nåMnd.isAfter(sluttMnd)) {
             val mndPeriode = Periode(nåMnd.atDay(1), nåMnd.atEndOfMonth())
-            val inntekterForMnd = inntekter?.filter { it.periode.overlapper(mndPeriode) }
+            val inntekterForMnd = inntekter?.filter { it.periode.overlapper(mndPeriode) } ?: emptyList()
 
-            if (inntekterForMnd.isNullOrEmpty()) {
-                tidslinje.add(VisuellTidslinjeArbeidInntektINorge(null, null, 0.0, mndPeriode, true))
-            } else {
-                inntekterForMnd.forEach { inntekt ->
-                    tidslinje.add(
-                        VisuellTidslinjeArbeidInntektINorge(
-                            virksomhetId = inntekt.identifikator,
-                            virksomhetNavn = inntekt.organisasjonsNavn,
-                            beloep = inntekt.beloep,
-                            periode = mndPeriode,
-                            periodeMangler = false
-                        )
-                    )
-                }
-            }
+            tidslinje.add(
+                VisuellTidslinjeArbeidInntektINorge(
+                    periode = mndPeriode,
+                    inntekter = inntekterForMnd
+                        .sortedBy { it.identifikator }
+                        .map { inntekt ->
+                            VisuellTidslinjeInntektDetalj(
+                                virksomhetId = inntekt.identifikator,
+                                virksomhetNavn = inntekt.organisasjonsNavn,
+                                beloep = inntekt.beloep,
+                            )
+                        }
+                )
+            )
+
             nåMnd = nåMnd.plusMonths(1)
         }
 

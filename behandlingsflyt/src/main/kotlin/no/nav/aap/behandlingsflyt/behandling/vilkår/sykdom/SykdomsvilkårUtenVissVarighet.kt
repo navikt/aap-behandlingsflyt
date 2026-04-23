@@ -142,7 +142,7 @@ class SykdomsvilkårUtenVissVarighet(vilkårsresultat: Vilkårsresultat) : Vilk�
         var avslagsårsak: Avslagsårsak? = null
         var innvilgelsesårsak: Innvilgelsesårsak?
 
-        if (sykdomVurdering?.erOppfyltForYrkesskadeSettBortIfraÅrsakssammenhengMedUtlededeFelter() == true
+        if (sykdomVurdering?.erOppfyltForOrdinærEllerYrkesskadeSettBortIfraÅrsakssammenhengMedUtlededeFelter() == true
             && yrkesskadeVurdering?.erÅrsakssammenheng == true
         ) {
             utfall = Utfall.OPPFYLT
