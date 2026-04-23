@@ -15,6 +15,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveis
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisÅrsak.MELDEPLIKT_FRIST_IKKE_PASSERT
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType.BISTANDSBEHOV
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall.IKKE_OPPFYLT
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktGrunnlag
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
@@ -175,7 +176,7 @@ class MeldeperiodeTilMeldekortBackendJobbUtførerTest {
     ) = Underveisperiode(
         periode = parse(periode),
         meldePeriode = parse(meldeperiode),
-        utfall = IKKE_OPPFYLT,
+        utfall = if (rettighetstype == null) Utfall.IKKE_OPPFYLT else Utfall.OPPFYLT,
         rettighetsType = rettighetstype,
         avslagsårsak = avslagsårsak,
         grenseverdi = Prosent(60),

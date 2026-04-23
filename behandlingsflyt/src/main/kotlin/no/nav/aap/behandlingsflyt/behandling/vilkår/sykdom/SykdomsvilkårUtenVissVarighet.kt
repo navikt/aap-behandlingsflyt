@@ -15,7 +15,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ErNedsettel
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Yrkesskadevurdering
-import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.somSykdomsvurderingTidslinje
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.komponenter.type.Periode
@@ -65,20 +65,7 @@ class SykdomsvilkårUtenVissVarighet(vilkårsresultat: Vilkårsresultat) : Vilk�
             grunnlag.yrkesskadevurdering
         )
 
-        val sykdomsvurderingTidslinje = grunnlag.sykdomsvurderinger
-            .sortedBy { it.opprettet }
-            .map { vurdering ->
-                Tidslinje(
-                    Periode(
-                        fom = vurdering.vurderingenGjelderFra,
-                        tom = grunnlag.sisteDagMedMuligYtelse
-                    ),
-                    vurdering
-                )
-            }
-            .fold(Tidslinje<Sykdomsvurdering>()) { t1, t2 ->
-                t1.kombiner(t2, StandardSammenslåere.prioriterHøyreSideCrossJoin())
-            }
+        val sykdomsvurderingTidslinje = grunnlag.sykdomsvurderinger.somSykdomsvurderingTidslinje(grunnlag.sisteDagMedMuligYtelse)
 
         val bistandvurderingtidslinje =
             grunnlag.bistandvurderingFaktagrunnlag
@@ -155,7 +142,7 @@ class SykdomsvilkårUtenVissVarighet(vilkårsresultat: Vilkårsresultat) : Vilk�
         var avslagsårsak: Avslagsårsak? = null
         var innvilgelsesårsak: Innvilgelsesårsak?
 
-        if (sykdomVurdering?.erOppfyltForYrkesskadeSettBortIfraÅrsakssammenhengMedUtlededeFelter() == true
+        if (sykdomVurdering?.erOppfyltForOrdinærEllerYrkesskadeSettBortIfraÅrsakssammenhengMedUtlededeFelter() == true
             && yrkesskadeVurdering?.erÅrsakssammenheng == true
         ) {
             utfall = Utfall.OPPFYLT

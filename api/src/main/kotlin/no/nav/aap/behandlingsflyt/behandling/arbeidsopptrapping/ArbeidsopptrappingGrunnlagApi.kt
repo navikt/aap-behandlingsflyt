@@ -57,7 +57,7 @@ fun NormalOpenAPIRoute.arbeidsopptrappingGrunnlagApi(
                     val bistandRepository = repositoryProvider.provide<BistandRepository>()
                     val bistandGrunnlag = bistandRepository.hentHvisEksisterer(behandling.id)
                     val ikkeVurderbarePerioder =
-                        utledIkkeVurderbarePerioder(sykdomGrunnlag, bistandGrunnlag, sak.rettighetsperiode.fom)
+                        utledIkkeVurderbarePerioder(sykdomGrunnlag, bistandGrunnlag)
 
                     val arbeidsopptrappingGrunnlag = arbeidsopptrappingRepository.hentHvisEksisterer(behandling.id)
 
@@ -66,7 +66,10 @@ fun NormalOpenAPIRoute.arbeidsopptrappingGrunnlagApi(
                             ?: ArbeidsopptrappingGrunnlag(emptyList())
 
                     ArbeidsopptrappingGrunnlagResponse(
-                        harTilgangTilÅSaksbehandle = kanSaksbehandle() && kanLøseBehovSomSkalVæreLåstEtterKvalitetssikring(Definisjon.ARBEIDSOPPTRAPPING.løsesISteg, behandling),
+                        harTilgangTilÅSaksbehandle = kanSaksbehandle() && kanLøseBehovSomSkalVæreLåstEtterKvalitetssikring(
+                            Definisjon.ARBEIDSOPPTRAPPING.løsesISteg,
+                            behandling
+                        ),
                         sisteVedtatteVurderinger = ArbeidsopptrappingVurderingResponse.fraDomene(
                             forrigeGrunnlag.gjeldendeVurderinger(),
                             vurdertAvService
@@ -95,7 +98,6 @@ fun NormalOpenAPIRoute.arbeidsopptrappingGrunnlagApi(
 private fun utledIkkeVurderbarePerioder(
     sykdomGrunnlag: SykdomGrunnlag?,
     bistandGrunnlag: BistandGrunnlag?,
-    fom: LocalDate
 ): List<Periode> {
     val sykdomsvurderinger = sykdomGrunnlag?.somSykdomsvurderingstidslinje().orEmpty()
     val bistandsvurderinger =
@@ -103,7 +105,7 @@ private fun utledIkkeVurderbarePerioder(
 
     val mapped = Tidslinje.zip2(sykdomsvurderinger, bistandsvurderinger)
         .filter {
-            it.verdi.first?.erOppfyltOrdinær(fom, it.periode) != true || it.verdi.second?.erBehovForBistand() != true
+            it.verdi.first?.erOppfyltForOrdinærEllerYrkesskadeSettBortIfraÅrsakssammenhengMedUtlededeFelter() != true || it.verdi.second?.erBehovForBistand() != true
         }
     return mapped.perioder().toList()
 }
