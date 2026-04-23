@@ -101,10 +101,7 @@ class OvergangUføreSteg private constructor(
             when (utfall) {
                 TidligereVurderinger.IkkeBehandlingsgrunnlag, TidligereVurderinger.UunngåeligAvslag -> false
                 is TidligereVurderinger.PotensieltOppfylt -> {
-                    utfall.rettighetstype == null && sykdomsvurering?.erOppfyltOrdinærEllerYrkesskadeSettBortIfraÅrsakssammenheng(
-                        kontekst.rettighetsperiode.fom,
-                        segmentPeriode
-                    ) == true
+                    utfall.rettighetstype == null && sykdomsvurering?.erOppfyltForOrdinærEllerYrkesskadeSettBortIfraÅrsakssammenhengMedUtlededeFelter() == true
                 }
 
                 else -> false
