@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory
 
 class MottattDokumentRepositoryImpl(private val connection: DBConnection) : MottattDokumentRepository {
     private val log = LoggerFactory.getLogger(javaClass)
+
     companion object : Factory<MottattDokumentRepositoryImpl> {
         override fun konstruer(connection: DBConnection): MottattDokumentRepositoryImpl {
             return MottattDokumentRepositoryImpl(connection)
@@ -46,7 +47,7 @@ class MottattDokumentRepositoryImpl(private val connection: DBConnection) : Mott
         val query = """
             SELECT * FROM MOTTATT_DOKUMENT WHERE referanse = ? and referanse_type = ?
         """.trimIndent()
-        
+
         return connection.queryFirst(query) {
             setParams {
                 setString(1, innsendingsreferanse.verdi)
@@ -121,9 +122,11 @@ class MottattDokumentRepositoryImpl(private val connection: DBConnection) : Mott
     }
 
     override fun slett(behandlingId: BehandlingId) {
-        val deletedRows = connection.executeReturnUpdated("""
+        val deletedRows = connection.executeReturnUpdated(
+            """
             delete from mottatt_dokument where behandling_id = ?;
-        """.trimIndent()) {
+        """.trimIndent()
+        ) {
             setParams {
                 setLong(1, behandlingId.id)
             }
