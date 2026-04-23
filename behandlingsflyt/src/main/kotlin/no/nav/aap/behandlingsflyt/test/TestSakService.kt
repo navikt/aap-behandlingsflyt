@@ -42,9 +42,15 @@ class TestSakService(
     )
 
 
-    fun opprettTestSak(ident: Ident, erStudent: Boolean, harYrkesskade: Boolean, harMedlemskap: Boolean,andreUtbetalinger: AndreUtbetalingerDto?): Sak {
+    fun opprettTestSak(
+        ident: Ident,
+        erStudent: Boolean,
+        harYrkesskade: Boolean,
+        harMedlemskap: Boolean,
+        andreUtbetalinger: AndreUtbetalingerDto?
+    ): Sak {
         if (Miljø.erProd()) {
-            throw RuntimeException("Man kan ikke opprette testsaker i produksjon")
+            error("Man kan ikke opprette testsaker i produksjon")
         }
 
         val identer = try {

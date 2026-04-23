@@ -102,6 +102,7 @@ import no.nav.aap.behandlingsflyt.prosessering.BehandlingsflytLogInfoProvider
 import no.nav.aap.behandlingsflyt.prosessering.ProsesseringsJobber
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.saksApi
+import no.nav.aap.behandlingsflyt.test.fullforBehandlingApi
 import no.nav.aap.behandlingsflyt.test.opprettDummySakApi
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
@@ -326,6 +327,7 @@ internal fun Application.server(
                 // Endepunkter kun tilgjengelig lokalt og i test
                 if (!Miljø.erProd()) {
                     opprettDummySakApi(dataSource, repositoryRegistry, gatewayProvider)
+                    fullforBehandlingApi(dataSource, repositoryRegistry, gatewayProvider)
                 }
             }
         }
