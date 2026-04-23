@@ -49,12 +49,11 @@ import no.nav.aap.komponenter.httpklient.httpclient.put
 import no.nav.aap.komponenter.httpklient.httpclient.request.GetRequest
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
 import no.nav.aap.komponenter.httpklient.httpclient.request.PutRequest
-import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
+import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureM2MTokenProvider
 import no.nav.aap.komponenter.json.DefaultJsonMapper
 import org.slf4j.LoggerFactory
 import java.io.InputStream
 import java.net.URI
-import kotlin.collections.orEmpty
 
 class BrevGateway : BrevbestillingGateway {
 
@@ -73,7 +72,7 @@ class BrevGateway : BrevbestillingGateway {
 
     private val client = RestClient(
         config = config,
-        tokenProvider = ClientCredentialsTokenProvider,
+        tokenProvider = AzureM2MTokenProvider(),
         responseHandler = HåndterConflictResponseHandler(),
         prometheus = prometheus
     )
