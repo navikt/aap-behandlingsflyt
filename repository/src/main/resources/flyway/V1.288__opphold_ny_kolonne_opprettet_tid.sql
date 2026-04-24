@@ -1,2 +1,2 @@
 alter table opphold
-    add column opprettet_tid timestamp(3) default current_timestamp
+    add column opprettet_tid timestamp(3)
