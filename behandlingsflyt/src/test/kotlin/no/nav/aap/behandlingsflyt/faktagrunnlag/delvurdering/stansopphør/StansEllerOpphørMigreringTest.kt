@@ -69,11 +69,8 @@ class StansEllerOpphørMigreringTest : AbstraktFlytOrkestratorTest(ManuellStyrin
 
         revurdering
             .løsOvergangUføre(revurdererFra)
-            .løsOvergangArbeid(Utfall.IKKE_OPPFYLT, fom = revurdererFra)
             .løsSykdomsvurderingBrev()
             .bekreftVurderinger()
-            .løsSykepengeerstatning(revurdererFra to false)
-            .løsForeslåVedtak()
             .fattVedtak()
 
         dataSource.transaction { connection ->

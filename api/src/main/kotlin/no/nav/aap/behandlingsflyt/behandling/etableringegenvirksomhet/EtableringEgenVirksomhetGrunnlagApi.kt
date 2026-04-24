@@ -73,7 +73,7 @@ fun NormalOpenAPIRoute.etableringEgenVirksomhetApi(
                             ?: EtableringEgenVirksomhetGrunnlag(emptyList())
 
                     val ikkeVurderbarePerioder =
-                        utledIkkeVurderbarePerioder(sykdomGrunnlag, bistandGrunnlag, sak.rettighetsperiode.fom)
+                        utledIkkeVurderbarePerioder(sykdomGrunnlag, bistandGrunnlag)
 
                     val alleVurderinger =
                         etableringEgenVirksomhetGrunnlag?.vurderinger.orEmpty() + forrigeGrunnlag.vurderinger
@@ -126,7 +126,6 @@ fun NormalOpenAPIRoute.etableringEgenVirksomhetApi(
 private fun utledIkkeVurderbarePerioder(
     sykdomGrunnlag: SykdomGrunnlag?,
     bistandGrunnlag: BistandGrunnlag?,
-    fom: LocalDate
 ): List<Periode> {
     val sykdomsvurderinger = sykdomGrunnlag?.somSykdomsvurderingstidslinje().orEmpty()
     val bistandsvurderinger =
@@ -136,20 +135,15 @@ private fun utledIkkeVurderbarePerioder(
 
     val førsteDagIOppfyltPeriode = zipped
         .filter {
-            it.verdi.first?.erOppfyltForYrkesskadeSettBortIfraÅrsakssammenheng(
-                fom,
-                it.periode
-            ) == true || it.verdi.second?.erBehovForBistand() != true
+            it.verdi.first?.erOppfyltForOrdinærEllerYrkesskadeSettBortIfraÅrsakssammenhengMedUtlededeFelter() == true || it.verdi.second?.erBehovForBistand() != true
         }.perioder().toList().firstOrNull()?.fom
 
     if (førsteDagIOppfyltPeriode == null) return emptyList()
 
     val mapped = zipped
         .filter {
-            it.verdi.first?.erOppfyltForYrkesskadeSettBortIfraÅrsakssammenheng(
-                fom,
-                it.periode
-            ) != true || it.verdi.second?.erBehovForArbeidsrettetTiltak != true
+            it.verdi.first?.erOppfyltForOrdinærEllerYrkesskadeSettBortIfraÅrsakssammenhengMedUtlededeFelter() != true
+                    || it.verdi.second?.erBehovForArbeidsrettetTiltak != true
         }
 
     return mapped.perioder().plus(Periode(førsteDagIOppfyltPeriode, førsteDagIOppfyltPeriode)).toList()

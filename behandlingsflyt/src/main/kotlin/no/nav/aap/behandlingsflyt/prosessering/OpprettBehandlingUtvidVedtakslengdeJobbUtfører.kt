@@ -8,8 +8,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅ
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.JobbInput
@@ -21,7 +19,6 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtfører(
     private val prosesserBehandlingService: ProsesserBehandlingService,
     private val behandlingService: BehandlingService,
     private val vedtakslengdeService: VedtakslengdeService,
-    private val unleashGateway: UnleashGateway,
 ) : JobbUtfører {
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -47,15 +44,10 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtfører(
                     prosesserBehandlingService.triggProsesserBehandling(utvidVedtakslengdeBehandling)
                 }
                 is VedtakslengdeUtvidelse.Manuell -> {
-                    if (unleashGateway.isEnabled(BehandlingsflytFeature.OpprettManuellVedtakslengdeBehandling)) {
-                        log.info("Oppretter manuell behandling for utvidelse ($vedtakslengdeUtvidelse) av vedtakslengde for sak $sakId")
+                    log.info("Oppretter manuell behandling for utvidelse ($vedtakslengdeUtvidelse) av vedtakslengde for sak $sakId")
 
-                        val utvidVedtakslengdeBehandling = opprettNyBehandling(sakId, Vurderingsbehov.VEDTAKSLENGDE_MANUELT)
-                        prosesserBehandlingService.triggProsesserBehandling(utvidVedtakslengdeBehandling)
-                    } else {
-                        log.error("Sak med id $sakId trenger manuell utvidelse ($vedtakslengdeUtvidelse) av vedtakslengde. " +
-                                "Dette er ikke implementert. Må følges opp!")
-                    }
+                    val utvidVedtakslengdeBehandling = opprettNyBehandling(sakId, Vurderingsbehov.VEDTAKSLENGDE_MANUELT)
+                    prosesserBehandlingService.triggProsesserBehandling(utvidVedtakslengdeBehandling)
                 }
                 is VedtakslengdeUtvidelse.IngenFremtidigBistandsbehovRettighet -> {
                     log.info("Sak med id $sakId har ingen fremtidig bistandsbehovrettighet, ingen behandling opprettes")
@@ -81,7 +73,6 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtfører(
                 prosesserBehandlingService = ProsesserBehandlingService(repositoryProvider, gatewayProvider),
                 behandlingService = BehandlingService(repositoryProvider, gatewayProvider),
                 vedtakslengdeService = VedtakslengdeService(repositoryProvider, gatewayProvider),
-                unleashGateway = gatewayProvider.provide(),
             )
         }
 

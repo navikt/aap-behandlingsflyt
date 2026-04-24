@@ -13,6 +13,7 @@ import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryProvider
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Tid
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
@@ -24,13 +25,13 @@ class PerioderTilVurderingServiceTest {
     fun `ved førstegangsbehandling skal hele perioden vurderes`() {
         val periode = Periode(
             LocalDate.now(),
-            LocalDate.now().plusMonths(1)
+            Tid.MAKS
         )
         val sak = InMemorySakRepository.finnEllerOpprett(
             Person(
                 identifikator = UUID.randomUUID(),
                 identer = emptyList(),
-            ), periode
+            ), periode.fom
         )
 
         val behandling = InMemoryBehandlingRepository.opprettBehandling(

@@ -16,20 +16,18 @@ import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryProvider
 import no.nav.aap.behandlingsflyt.test.inmemoryservice.InMemoryBehandlingService
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.behandlingsflyt.test.modell.genererIdent
-import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.util.*
 
 class BehandlingHendelseServiceImplTest {
     private val person = Person(UUID.randomUUID(), listOf(genererIdent(1 januar 2020)))
-    private val rettighetsperiode = Periode(1 januar 2025, 1 januar 2026)
 
-    val behandlingHendelseSerice = BehandlingHendelseServiceImpl(inMemoryRepositoryProvider, createGatewayProvider {  })
+    val behandlingHendelseSerice = BehandlingHendelseServiceImpl(inMemoryRepositoryProvider, createGatewayProvider { })
 
     @Test
     fun `Avklaringsbehov sorteres i rekkefølgen de kan løses i`() {
-        val sak = InMemorySakRepository.finnEllerOpprett(person, rettighetsperiode)
+        val sak = InMemorySakRepository.finnEllerOpprett(person, 1 januar 2025)
         val behandling = InMemoryBehandlingService.finnEllerOpprettOrdinærBehandling(
             sak.id,
             VurderingsbehovOgÅrsak(listOf(), ÅrsakTilOpprettelse.SØKNAD)

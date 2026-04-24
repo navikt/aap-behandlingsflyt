@@ -18,7 +18,6 @@ import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBrevbestillingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
 import no.nav.aap.behandlingsflyt.test.modell.genererIdent
-import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -363,7 +362,7 @@ class BrevbestillingServiceTest {
 
     private fun opprettSakOgBehandling(): Behandling {
         val person = Person(PersonId(1), UUID.randomUUID(), listOf(genererIdent(LocalDate.now().minusYears(23))))
-        val sak = InMemorySakRepository.finnEllerOpprett(person, Periode(LocalDate.now(), LocalDate.now().plusYears(1)))
+        val sak = InMemorySakRepository.finnEllerOpprett(person, LocalDate.now())
         return InMemoryBehandlingRepository.opprettBehandling(
             sak.id,
             Førstegangsbehandling,
