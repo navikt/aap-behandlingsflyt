@@ -43,6 +43,7 @@ import no.nav.aap.behandlingsflyt.behandling.beregning.tidspunkt.beregningVurder
 import no.nav.aap.behandlingsflyt.behandling.brev.sykdomsvurderingForBrevApi
 import no.nav.aap.behandlingsflyt.behandling.etableringegenvirksomhet.etableringEgenVirksomhetApi
 import no.nav.aap.behandlingsflyt.behandling.foreslåvedtak.foreslaaVedtakApi
+import no.nav.aap.behandlingsflyt.behandling.foreslåvedtak.foreslaaVedtakVedtakslengdeApi
 import no.nav.aap.behandlingsflyt.behandling.grunnlag.medlemskap.medlemskapsgrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.grunnlag.samordning.samordningGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.inntektsbortfall.inntektsbortfallGrunnlagApi
@@ -275,6 +276,7 @@ internal fun Application.server(
                 avklaringsbehovApi(dataSource, repositoryRegistry, gatewayProvider)
                 tilkjentYtelseApi(dataSource, repositoryRegistry)
                 foreslaaVedtakApi(dataSource, repositoryRegistry)
+                foreslaaVedtakVedtakslengdeApi(dataSource, repositoryRegistry)
                 trukketSøknadGrunnlagApi(dataSource, repositoryRegistry)
                 avbrytRevurderingGrunnlagApi(dataSource, repositoryRegistry)
                 rettighetsperiodeGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
