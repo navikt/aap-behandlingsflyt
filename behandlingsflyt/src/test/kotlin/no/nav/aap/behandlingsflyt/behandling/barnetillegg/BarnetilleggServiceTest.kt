@@ -27,6 +27,7 @@ import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryProvider
 import no.nav.aap.behandlingsflyt.test.modell.genererIdent
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Tid
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -62,11 +63,13 @@ class BarnetilleggServiceTest {
     fun `tidslinjen stopper når barnet blir 18 år`() {
         val service = BarnetilleggService(inMemoryRepositoryProvider, gatewayProvider)
 
-        val (sak, behandling) = opprettPersonBehandlingOgSak()
+        val (_, behandling) = opprettPersonBehandlingOgSak()
+        val søknadsdato = LocalDate.now()
 
-        val fødselsdatoGammeltBarn = LocalDate.now().minusYears(21)
-        val fødseldatoUngtBarn = LocalDate.now().minusYears(5)
+        val fødselsdatoGammeltBarn = søknadsdato.minusYears(21)
+        val fødseldatoUngtBarn = søknadsdato.minusYears(5)
 
+        val attenårsdagUngtBarn = søknadsdato.plusYears(13)
         val gammeltBarn = Barn(
             ident = BarnIdentifikator.BarnIdent(genererIdent(fødselsdatoGammeltBarn)),
             fødselsdato = Fødselsdato(fødselsdatoGammeltBarn)
@@ -84,14 +87,20 @@ class BarnetilleggServiceTest {
 
         val res = service.beregn(behandlingId = behandling.id)
 
-        assertTidslinje(res, sak.rettighetsperiode to {
-            assertThat(it).isEqualTo(
-                RettTilBarnetillegg(
-                    // Kun det unge barnet gir rett til barnetillegg
-                    barn = setOf(ungtBarn.identifikator())
+
+        assertTidslinje(
+            res, Periode(søknadsdato, attenårsdagUngtBarn.minusDays(1)) to {
+                assertThat(it).isEqualTo(
+                    RettTilBarnetillegg(
+                        // Kun det unge barnet gir rett til barnetillegg
+                        barn = setOf(ungtBarn.identifikator())
+                    )
                 )
-            )
-        })
+            },
+            Periode(attenårsdagUngtBarn, Tid.MAKS) to {
+                assertThat(it).isEqualTo(RettTilBarnetillegg())
+            }
+        )
     }
 
     @Test
@@ -131,7 +140,9 @@ class BarnetilleggServiceTest {
     fun `barnetillegg for folkeregistrerte barn skal gi rett på barnetillegg om man ikke har lagt inn perioder`() {
         val service = BarnetilleggService(inMemoryRepositoryProvider, gatewayProvider)
         val (sak, behandling) = opprettPersonBehandlingOgSak()
+        val søknadsdato = sak.rettighetsperiode.fom
         val fødseldatoUngtBarn = LocalDate.now().minusYears(5)
+        val attenårsdag = LocalDate.now().plusYears(13)
 
         val barn = Barn(
             ident = BarnIdentifikator.BarnIdent(genererIdent(fødseldatoUngtBarn)),
@@ -145,9 +156,14 @@ class BarnetilleggServiceTest {
 
         val res = service.beregn(behandlingId = behandling.id)
 
-        assertTidslinje(res, Periode(sak.rettighetsperiode.fom, sak.rettighetsperiode.tom) to {
-            assertThat(it.barnMedRettTil()).hasSize(1)
-        })
+        assertTidslinje(
+            res, Periode(søknadsdato, attenårsdag.minusDays(1)) to {
+                assertThat(it.barnMedRettTil()).hasSize(1)
+            },
+            Periode(attenårsdag, Tid.MAKS) to {
+                assertThat(it.barnMedRettTil()).isEmpty()
+            }
+        )
     }
 
     @Test
@@ -168,14 +184,27 @@ class BarnetilleggServiceTest {
             listOf(barn)
         )
 
-        lagreVurdering(behandling, VurdertBarn(ident = barn.ident, vurderinger = listOf(
-            VurderingAvForeldreAnsvar(fraDato = periodeUtenRett.fom, harForeldreAnsvar = false, begrunnelse = "Uten rett"),
-            VurderingAvForeldreAnsvar(fraDato = periodeMedRett.fom, harForeldreAnsvar = true, begrunnelse = "Med rett")
-        )))
+        lagreVurdering(
+            behandling, VurdertBarn(
+                ident = barn.ident, vurderinger = listOf(
+                    VurderingAvForeldreAnsvar(
+                        fraDato = periodeUtenRett.fom,
+                        harForeldreAnsvar = false,
+                        begrunnelse = "Uten rett"
+                    ),
+                    VurderingAvForeldreAnsvar(
+                        fraDato = periodeMedRett.fom,
+                        harForeldreAnsvar = true,
+                        begrunnelse = "Med rett"
+                    )
+                )
+            )
+        )
 
         val res = service.beregn(behandlingId = behandling.id)
 
-        assertTidslinje(res,
+        assertTidslinje(
+            res,
             periodeUtenRett to { assertThat(it.barnMedRettTil()).hasSize(0) },
             periodeMedRett to { assertThat(it.barnMedRettTil()).hasSize(1) }
         )
