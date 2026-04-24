@@ -9,14 +9,20 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.Opphev
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.Opphør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.Stans
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.StansOpphørRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.FORESLÅ_VEDTAK_VEDTAKSLENGDE_KODE
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.repository.RepositoryRegistry
+import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.getGrunnlag
 import javax.sql.DataSource
@@ -37,8 +43,16 @@ fun NormalOpenAPIRoute.foreslaaVedtakVedtakslengdeApi(
                     val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
                     val behandling =
                         BehandlingReferanseService(behandlingRepository).behandling(behandlingReferanse)
-                    val rettighetstypeGrunnlag =
-                        repositoryProvider.provide<RettighetstypeRepository>().hentHvisEksisterer(behandling.id)
+
+                    val gjeldendeSluttdato = repositoryProvider.provide<VedtakslengdeRepository>()
+                        .hentHvisEksisterer(behandling.id)
+                        ?.gjeldendeVurdering()
+                        ?.sluttdato
+
+                    val rettighetstypeTidslinje = repositoryProvider.provide<RettighetstypeRepository>()
+                        .hentHvisEksisterer(behandling.id)
+                        ?.rettighetstypeTidslinje
+
                     val stansOpphørGrunnlag =
                         repositoryProvider.provide<StansOpphørRepository>().hentHvisEksisterer(behandling.id)
                     val stansOgOpphør = stansOpphørGrunnlag?.stansOgOpphørMedHistorikk() ?: emptyMap()
@@ -70,20 +84,39 @@ fun NormalOpenAPIRoute.foreslaaVedtakVedtakslengdeApi(
                         )
                     }
 
-                    val perioder = rettighetstypeGrunnlag
-                        ?.rettighetstypeTidslinje
-                        ?.segmenter()
-                        ?.map { segment ->
-                            VedtakslengdeVedtakDto(
-                                periode = segment.periode,
-                                rettighetsType = segment.verdi
-                            )
-                        }
-                        ?: emptyList()
+                    val perioder = if (gjeldendeSluttdato == null || rettighetstypeTidslinje == null) {
+                        null
+                    } else {
+                        val rettighetsperiodeFom = repositoryProvider.provide<SakRepository>()
+                            .hent(behandling.sakId)
+                            .rettighetsperiode
+                            .fom
+                        val vedtakslengdePeriode = Periode(rettighetsperiodeFom, gjeldendeSluttdato)
+                        utledPerioder(rettighetstypeTidslinje, vedtakslengdePeriode)
+                    }
 
                     VedtakslengdeVedtakResponse(perioder, stansOgOpphørDto)
                 }
             respond(response)
         }
     }
+}
+
+private fun utledPerioder(
+    rettighetstypeTidslinje: Tidslinje<RettighetsType>,
+    vedtakslengdePeriode: Periode
+): List<VedtakslengdeVedtakDto> {
+    val fullDekning = Tidslinje(vedtakslengdePeriode, Unit)
+
+    return fullDekning
+        .leftJoin(rettighetstypeTidslinje) { _, rettighetsType -> rettighetsType }
+        .komprimer()
+        .segmenter()
+        .map { segment ->
+            VedtakslengdeVedtakDto(
+                periode = segment.periode,
+                rettighetsType = segment.verdi,
+                utfall = if (segment.verdi != null) Utfall.OPPFYLT else Utfall.IKKE_OPPFYLT
+            )
+        }
 }
