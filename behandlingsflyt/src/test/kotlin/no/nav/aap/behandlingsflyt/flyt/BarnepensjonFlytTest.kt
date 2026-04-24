@@ -41,8 +41,9 @@ class BarnepensjonFlytTest : AbstraktFlytOrkestratorTest(LokalUnleash::class) {
         val periode = Periode(fom, fom.plusYears(3))
 
         // Sender inn en søknad
-        var (sak, behandling) = sendInnFørsteSøknad(
-            periode = periode,
+        val søknadsdato = periode.fom
+        val (sak, behandling) = sendInnFørsteSøknad(
+             mottattTidspunkt = søknadsdato.atStartOfDay(),
             søknad = SøknadV0(
                 student = SøknadStudentDto(StudentStatus.Nei),
                 yrkesskade = "NEI",
@@ -61,8 +62,8 @@ class BarnepensjonFlytTest : AbstraktFlytOrkestratorTest(LokalUnleash::class) {
                 assertThat(åpneAvklaringsbehov).isNotEmpty()
                 assertThat(behandling.status()).isEqualTo(Status.UTREDES)
             }
-            .løsSykdom(periode.fom)
-            .løsBistand(periode.fom)
+            .løsSykdom(søknadsdato)
+            .løsBistand(søknadsdato)
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
             .bekreftVurderinger()

@@ -83,7 +83,6 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
         // Avslås pga. alder
         val (sak, avslåttFørstegang) = sendInnFørsteSøknad(
             person = TestPersoner.PERSON_FOR_UNG(),
-            periode = periode,
             mottattTidspunkt = periode.fom.atStartOfDay(),
             søknad = SøknadV0(
                 student = SøknadStudentDto(StudentStatus.Nei),
@@ -316,19 +315,16 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
     @Test
     fun `Teste Klageflyt - Omgjøring av kapitel 2 og revurdering genereres `() {
         val person = TestPersoner.PERSON_FOR_UNG()
-        val ident = person.aktivIdent()
-
-        val periode = Periode(LocalDate.now().minusMonths(3), LocalDate.now().plusYears(3))
 
         // Avslås pga. alder
-        val avslåttFørstegang = sendInnSøknad(
-            ident, periode, SøknadV0(
+        val avslåttFørstegang = sendInnFørsteSøknad(
+            søknad = SøknadV0(
                 student = SøknadStudentDto(StudentStatus.Nei),
                 yrkesskade = "NEI",
                 oppgitteBarn = null,
                 medlemskap = SøknadMedlemskapDto("JA", "NEI", "NEI", "NEI", null)
-            )
-        )
+            ), person = person
+        ).second
         assertThat(avslåttFørstegang)
             .describedAs("Førstegangsbehandlingen skal være satt som avsluttet")
             .extracting { b -> b.status().erAvsluttet() }.isEqualTo(true)
@@ -515,19 +511,18 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
     @Test
     fun `Teste Klageflyt`() {
         val person = TestPersoner.PERSON_FOR_UNG()
-        val ident = person.aktivIdent()
 
         val periode = Periode(LocalDate.now().minusMonths(3), LocalDate.now().plusYears(3))
 
         // Avslås pga. alder
-        val avslåttFørstegang = sendInnSøknad(
-            ident, periode, SøknadV0(
+        val avslåttFørstegang = sendInnFørsteSøknad(
+            søknad = SøknadV0(
                 student = SøknadStudentDto(StudentStatus.Nei),
                 yrkesskade = "NEI",
                 oppgitteBarn = null,
                 medlemskap = SøknadMedlemskapDto("JA", "NEI", "NEI", "NEI", null)
-            )
-        )
+            ), person = person, mottattTidspunkt = periode.fom.atStartOfDay()
+        ).second
         assertThat(avslåttFørstegang)
             .describedAs("Førstegangsbehandlingen skal være satt som avsluttet")
             .extracting { b -> b.status().erAvsluttet() }.isEqualTo(true)
@@ -739,19 +734,18 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
     @Test
     fun `Klage - Skal gå rett til beslutter ved avslag på frist`() {
         val person = TestPersoner.PERSON_FOR_UNG()
-        val ident = person.aktivIdent()
 
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
 
         // Avslås pga. alder
-        val avslåttFørstegang = sendInnSøknad(
-            ident, periode, SøknadV0(
+        val avslåttFørstegang = sendInnFørsteSøknad(
+            søknad = SøknadV0(
                 student = SøknadStudentDto(StudentStatus.Nei),
                 yrkesskade = "NEI",
                 oppgitteBarn = null,
                 medlemskap = SøknadMedlemskapDto("JA", "NEI", "NEI", "NEI", null)
-            )
-        )
+            ), person = person, mottattTidspunkt = periode.fom.atStartOfDay()
+        ).second
 
         assertThat(avslåttFørstegang)
             .describedAs("Førstegangsbehandlingen skal være satt som avsluttet")
@@ -835,20 +829,20 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
     @Test
     fun `Klage - skal sende forhåndsvarsel ved avvist på formkrav, og kunne manuelt ta av vent og fortsette ved nye opplysninger`() {
         val person = TestPersoner.PERSON_FOR_UNG()
-        val ident = person.aktivIdent()
 
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
 
         // Avslås pga. alder
-        val avslåttFørstegang = sendInnSøknad(
-            ident, periode,
-            SøknadV0(
+        val avslåttFørstegang = sendInnFørsteSøknad(
+            søknad = SøknadV0(
                 student = SøknadStudentDto(StudentStatus.Nei),
                 yrkesskade = "NEI",
                 oppgitteBarn = null,
                 medlemskap = SøknadMedlemskapDto("JA", "NEI", "NEI", "NEI", null)
             ),
-        )
+            person = person,
+            mottattTidspunkt = periode.fom.atStartOfDay(),
+        ).second
 
         assertThat(avslåttFørstegang)
             .describedAs("Førstegangsbehandlingen skal være satt som avsluttet")
@@ -1039,18 +1033,18 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
     @Test
     fun `Teste TrekkKlageFlyt`() {
         val person = TestPersoner.PERSON_FOR_UNG()
-        val ident = person.aktivIdent()
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
 
         // Avslås pga. alder
-        val avslåttFørstegang = sendInnSøknad(
-            ident, periode, SøknadV0(
+        val avslåttFørstegang = sendInnFørsteSøknad(
+            søknad = SøknadV0(
                 student = SøknadStudentDto(StudentStatus.Nei),
                 yrkesskade = "NEI",
                 oppgitteBarn = null,
                 medlemskap = SøknadMedlemskapDto("JA", "NEI", "NEI", "NEI", null)
-            )
-        )
+            ),
+            person = person, mottattTidspunkt = periode.fom.atStartOfDay(),
+        ).second
 
         assertThat(avslåttFørstegang)
             .describedAs("Førstegangsbehandlingen skal være satt som avsluttet")
@@ -1211,19 +1205,17 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
     @Test
     fun `Håndtere svar fra kabal - valg omgjøring av kapitel 2 skal opprette en revurdering av LOVVALG_OG_MEDLEMSKAP`() {
         val person = TestPersoner.PERSON_FOR_UNG()
-        val ident = person.aktivIdent()
-
-        val periode = Periode(LocalDate.now().minusMonths(3), LocalDate.now().plusYears(3))
 
         // Avslås pga. alder
-        val avslåttFørstegang = sendInnSøknad(
-            ident, periode, SøknadV0(
+        val avslåttFørstegang = sendInnFørsteSøknad(
+            søknad =  SøknadV0(
                 student = SøknadStudentDto(StudentStatus.Nei),
                 yrkesskade = "NEI",
                 oppgitteBarn = null,
                 medlemskap = SøknadMedlemskapDto("JA", "NEI", "NEI", "NEI", null)
-            )
-        )
+            ), person = person
+        ).second
+
         assertThat(avslåttFørstegang)
             .describedAs("Førstegangsbehandlingen skal være satt som avsluttet")
             .extracting { b -> b.status().erAvsluttet() }.isEqualTo(true)

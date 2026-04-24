@@ -21,7 +21,7 @@ class BehandlingService(
     private val grunnlagKopierer: GrunnlagKopierer,
     private val sakRepository: SakRepository,
     private val behandlingRepository: BehandlingRepository,
-    private val trukketSøknadService: `TrukketSøknadService`,
+    private val trukketSøknadService: TrukketSøknadService,
     private val avbrytRevurderingService: AvbrytRevurderingService,
     private val unleashGateway: UnleashGateway
 ) {
@@ -32,7 +32,7 @@ class BehandlingService(
         grunnlagKopierer = GrunnlagKopiererImpl(repositoryProvider),
         sakRepository = repositoryProvider.provide(),
         behandlingRepository = repositoryProvider.provide(),
-        trukketSøknadService = `TrukketSøknadService`(repositoryProvider),
+        trukketSøknadService = TrukketSøknadService(repositoryProvider),
         avbrytRevurderingService = AvbrytRevurderingService(repositoryProvider),
         unleashGateway = gatewayProvider.provide()
     )

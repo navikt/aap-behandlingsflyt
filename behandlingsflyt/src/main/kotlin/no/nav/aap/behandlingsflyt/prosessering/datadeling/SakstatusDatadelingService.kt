@@ -40,9 +40,9 @@ class SakstatusDatadelingService(
 
 
         return SakStatus.fromKelvin(
-            sak.saksnummer.toString(),
-            datadelingBehandlingStatus,
-            sak.rettighetsperiode
+            saksnummer = sak.saksnummer.toString(),
+            datadelingBehandlingStatus = datadelingBehandlingStatus,
+            periode = sak.rettighetsperiode
         )
     }
 }

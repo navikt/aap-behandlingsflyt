@@ -13,6 +13,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingMedVedtak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
@@ -51,6 +52,7 @@ class OpprettJobbUtvidVedtakslengdeJobbUtførerTest {
         val jobbInputSak = JobbInput(OpprettBehandlingUtvidVedtakslengdeJobbUtfører).forSak(sakId.id)
 
         every { vedtakslengdeService.hentSakerAktuelleForUtvidelseAvVedtakslengde(any()) } returns setOf(sakId)
+        every { behandlingService.finnSisteYtelsesbehandlingFor(sakId) } returns null
         every { vedtakslengdeService.hentNesteVedtakslengdeUtvidelse(behandlingId, behandlingId)} returns VedtakslengdeUtvidelse.Automatisk(
             forrigeSluttdato = dagensDato,
             nySluttdato = dagensDato.plusYears(1),
@@ -80,6 +82,7 @@ class OpprettJobbUtvidVedtakslengdeJobbUtførerTest {
     @Test
     fun `skal ikke opprette jobber hvis hentNesteVedtakslengdeUtvidelse gir IngenFramtidigOrdinærRettighet`() {
         every { vedtakslengdeService.hentSakerAktuelleForUtvidelseAvVedtakslengde(any()) } returns setOf(sakId)
+        every { behandlingService.finnSisteYtelsesbehandlingFor(sakId) } returns null
         every { vedtakslengdeService.hentNesteVedtakslengdeUtvidelse(behandlingId, behandlingId)} returns VedtakslengdeUtvidelse.IngenFremtidigBistandsbehovRettighet
         every { behandlingService.finnBehandlingMedSisteFattedeVedtak(sakId) } returns behandlingMedVedtak()
 
@@ -93,6 +96,7 @@ class OpprettJobbUtvidVedtakslengdeJobbUtførerTest {
         val jobbInputSak = JobbInput(OpprettBehandlingUtvidVedtakslengdeJobbUtfører).forSak(sakId.id)
 
         every { vedtakslengdeService.hentSakerAktuelleForUtvidelseAvVedtakslengde(any()) } returns setOf(sakId)
+        every { behandlingService.finnSisteYtelsesbehandlingFor(sakId) } returns null
         every { vedtakslengdeService.hentNesteVedtakslengdeUtvidelse(behandlingId, behandlingId) } returns VedtakslengdeUtvidelse.Manuell(
             forrigeSluttdato = dagensDato,
         )
@@ -112,11 +116,64 @@ class OpprettJobbUtvidVedtakslengdeJobbUtførerTest {
     @Test
     fun `skal ikke opprette jobber hvis sak ikke har gjeldende vedtatt behandling`() {
         every { vedtakslengdeService.hentSakerAktuelleForUtvidelseAvVedtakslengde(any()) } returns setOf(sakId)
+        every { behandlingService.finnSisteYtelsesbehandlingFor(sakId) } returns null
         every { behandlingService.finnBehandlingMedSisteFattedeVedtak(sakId) } returns null
 
         opprettJobbUtfører().utfør(jobbInput)
 
         verify(exactly = 0) { flytJobbRepository.leggTil(any()) }
+    }
+
+    @Test
+    fun `skal ikke inkludere kandidat som allerede har åpen behandling med årsak UTVID_VEDTAKSLENGDE`() {
+        val åpenBehandling = Behandling(
+            id = BehandlingId(2L),
+            forrigeBehandlingId = behandlingId,
+            sakId = sakId,
+            typeBehandling = TypeBehandling.Revurdering,
+            status = Status.OPPRETTET,
+            årsakTilOpprettelse = ÅrsakTilOpprettelse.UTVID_VEDTAKSLENGDE,
+            versjon = 0L
+        )
+
+        every { vedtakslengdeService.hentSakerAktuelleForUtvidelseAvVedtakslengde(any()) } returns setOf(sakId)
+        every { behandlingService.finnSisteYtelsesbehandlingFor(sakId) } returns åpenBehandling
+
+        opprettJobbUtfører().utfør(jobbInput)
+
+        verify(exactly = 0) { flytJobbRepository.leggTil(any()) }
+    }
+
+    @Test
+    fun `skal inkludere kandidat som har avsluttet behandling med årsak UTVID_VEDTAKSLENGDE`() {
+        val jobbInputSak = JobbInput(OpprettBehandlingUtvidVedtakslengdeJobbUtfører).forSak(sakId.id)
+        val avsluttetBehandling = Behandling(
+            id = BehandlingId(2L),
+            forrigeBehandlingId = behandlingId,
+            sakId = sakId,
+            typeBehandling = TypeBehandling.Revurdering,
+            status = Status.AVSLUTTET,
+            årsakTilOpprettelse = ÅrsakTilOpprettelse.UTVID_VEDTAKSLENGDE,
+            versjon = 0L
+        )
+
+        every { vedtakslengdeService.hentSakerAktuelleForUtvidelseAvVedtakslengde(any()) } returns setOf(sakId)
+        every { behandlingService.finnSisteYtelsesbehandlingFor(sakId) } returns avsluttetBehandling
+        every { vedtakslengdeService.hentNesteVedtakslengdeUtvidelse(behandlingId, behandlingId) } returns VedtakslengdeUtvidelse.Automatisk(
+            forrigeSluttdato = dagensDato,
+            nySluttdato = dagensDato.plusYears(1),
+        )
+        every { behandlingService.finnBehandlingMedSisteFattedeVedtak(sakId) } returns behandlingMedVedtak()
+        every { flytJobbRepository.leggTil(match { it.sakId() == sakId.id }) } just Runs
+
+        opprettJobbUtfører().utfør(jobbInput)
+
+        val slot = slot<JobbInput>()
+        verify(exactly = 1) { flytJobbRepository.leggTil(capture(slot)) }
+
+        assertThat(slot.captured)
+            .usingRecursiveComparison()
+            .isEqualTo(jobbInputSak)
     }
 
     private fun behandlingMedVedtak(): BehandlingMedVedtak =
