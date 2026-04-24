@@ -37,7 +37,7 @@ import kotlin.reflect.KClass
 class OrdinærAapFlytTest(val unleashGateway: KClass<UnleashGateway>) : AbstraktFlytOrkestratorTest(unleashGateway) {
     @Test
     fun `happy case førstegangsbehandling + revurder førstegangssøknad, nei på viss varighet, nei på 11-13 - avslag`() {
-        val sak = happyCaseFørstegangsbehandling()
+        val sak = happyCaseFørstegangsbehandling(sendMeldekort = false)
         val behandling = revurdereFramTilOgMedSykdom(sak, sak.rettighetsperiode.fom, false)
 
         behandling
@@ -173,7 +173,7 @@ class OrdinærAapFlytTest(val unleashGateway: KClass<UnleashGateway>) : Abstrakt
     fun `ved revurdering i steget for sykdom skal sykdomsvurdering for brev vises etter refusjonskrav`() {
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
         val person = TestPersoner.STANDARD_PERSON()
-        val sak = happyCaseFørstegangsbehandling(periode.fom, person)
+        val sak = happyCaseFørstegangsbehandling(periode.fom, person, sendMeldekort = false)
 
         val revurdering = sak.opprettManuellRevurdering(
             listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND),

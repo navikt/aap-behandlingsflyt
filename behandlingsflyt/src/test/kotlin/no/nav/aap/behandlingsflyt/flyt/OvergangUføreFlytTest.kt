@@ -417,7 +417,7 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::
          */
         val startDato = LocalDate.now()
         val uføreDato = startDato.minusYears(3)
-        val sak = happyCaseFørstegangsbehandling(fom = startDato, person = TestPersoner.STANDARD_PERSON().medUføre(
+        val sak = happyCaseFørstegangsbehandling(fom = startDato, sendMeldekort = false, person = TestPersoner.STANDARD_PERSON().medUføre(
             virkningstidspunkt = uføreDato,
             uføre = Prosent(50)))
 

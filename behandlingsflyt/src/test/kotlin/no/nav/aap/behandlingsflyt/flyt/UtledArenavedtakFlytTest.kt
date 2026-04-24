@@ -18,7 +18,7 @@ class UtledArenavedtakFlytTest: AbstraktFlytOrkestratorTest(AlleAvskruddUnleash:
     @Test
     fun `sender komprimert arena-vedtak til api-intern`() {
         val søknadsdato = LocalDate.now()
-        val sak = happyCaseFørstegangsbehandling(søknadsdato)
+        val sak = happyCaseFørstegangsbehandling(søknadsdato, sendMeldekort = false)
         val behandling = hentSisteOpprettedeBehandlingForSak(sak.id)
 
         val arenavedtak = dataSource.transaction {

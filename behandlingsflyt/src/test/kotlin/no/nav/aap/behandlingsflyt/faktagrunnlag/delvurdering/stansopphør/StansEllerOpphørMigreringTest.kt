@@ -28,7 +28,7 @@ class StansEllerOpphørMigreringTest : AbstraktFlytOrkestratorTest(ManuellStyrin
     @Test
     fun `kan hente sak uten stansOpphør grunnlag og og lage det`() {
         ManuellStyringUnleashGateway.lagreStansOpphørFlagg = false
-        val sak = happyCaseFørstegangsbehandling()
+        val sak = happyCaseFørstegangsbehandling(sendMeldekort = false)
         StansEllerOpphørMigrering(dataSource, postgresRepositoryRegistry, gatewayProvider).migrer()
 
         val behandling = hentSisteOpprettedeBehandlingForSak(sak.id)
@@ -42,7 +42,7 @@ class StansEllerOpphørMigreringTest : AbstraktFlytOrkestratorTest(ManuellStyrin
     fun `migrerer ved åpen revurdering som vil gi endring`() {
         ManuellStyringUnleashGateway.lagreStansOpphørFlagg = false
         val søknadsdato = LocalDate.now().minusMonths(1)
-        val sak = happyCaseFørstegangsbehandling(søknadsdato)
+        val sak = happyCaseFørstegangsbehandling(søknadsdato, sendMeldekort = false)
 
         val revurdererFra = LocalDate.now().minusWeeks(2)
         val revurdering = revurdereFramTilOgMedSykdom(sak, revurdererFra)
