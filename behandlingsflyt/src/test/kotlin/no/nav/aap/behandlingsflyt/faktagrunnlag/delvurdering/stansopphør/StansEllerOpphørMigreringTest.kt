@@ -69,7 +69,6 @@ class StansEllerOpphørMigreringTest : AbstraktFlytOrkestratorTest(ManuellStyrin
 
         revurdering
             .løsOvergangUføre(revurdererFra)
-            .løsOvergangArbeid(Utfall.IKKE_OPPFYLT, fom = revurdererFra)
             .løsSykdomsvurderingBrev()
             .bekreftVurderinger()
             .fattVedtak()

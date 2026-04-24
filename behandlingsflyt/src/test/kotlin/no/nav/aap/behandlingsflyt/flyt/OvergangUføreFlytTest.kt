@@ -35,6 +35,7 @@ import no.nav.aap.behandlingsflyt.utils.toHumanReadable
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.verdityper.dokument.JournalpostId
@@ -278,8 +279,6 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::
                     )
                 )
             )
-            // TODO: Denne bør egentlig ikke løftes - skal kun løftes ved 11-5 nei eller delvis ufør 
-            .løsOvergangArbeid(utfall = Utfall.IKKE_OPPFYLT, fom = overgangUførDato.plusMonths(8))
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
             .bekreftVurderinger()
@@ -417,7 +416,10 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::
         2. Hvis det ikke finnes vurdert 11-18, så skal det trigge en vurdering av § 11-6 + 11-18.
          */
         val startDato = LocalDate.now()
-        val sak = happyCaseFørstegangsbehandling(startDato)
+        val uføreDato = startDato.minusYears(3)
+        val sak = happyCaseFørstegangsbehandling(fom = startDato, person = TestPersoner.STANDARD_PERSON().medUføre(
+            virkningstidspunkt = uføreDato,
+            uføre = Prosent(50)))
 
         val overgangUføreDato = startDato.plusDays(8)
         /* Gir AAP som arbeidssøker. */
@@ -477,7 +479,7 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::
             .medKontekst {
                 assertThat(åpneAvklaringsbehov.map { it.definisjon }).doesNotContain(Definisjon.AVKLAR_OVERGANG_UFORE)
             }
-            // TODO: Denne bør egentlig ikke løftes - skal kun løftes ved 11-5 nei eller delvis ufør 
+            // Denne skal ideelt ikke løftes, men ikke et veldig vanlig case (delvis ufør + ja 11-18)
             .løsOvergangArbeid(utfall = Utfall.IKKE_OPPFYLT, fom = overgangUføreDato.plusMonths(8))
             .løsSykdomsvurderingBrev()
             .bekreftVurderinger()
