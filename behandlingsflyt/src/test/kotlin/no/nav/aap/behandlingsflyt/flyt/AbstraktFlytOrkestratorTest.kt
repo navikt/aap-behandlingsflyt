@@ -3,7 +3,6 @@ package no.nav.aap.behandlingsflyt.flyt
 import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovOrkestrator
-import no.nav.aap.behandlingsflyt.flyt.testutil.DummyBehandlingHendelseService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.vedtak.TotrinnsVurdering
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarBarnetilleggLøsning
@@ -80,6 +79,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.sykestipen
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerGrunn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.PeriodisertSykepengerVurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.SykdomsvurderingLøsningDto
+import no.nav.aap.behandlingsflyt.flyt.testutil.DummyBehandlingHendelseService
 import no.nav.aap.behandlingsflyt.help.assertTidslinje
 import no.nav.aap.behandlingsflyt.hendelse.mottak.BehandlingSattPåVent
 import no.nav.aap.behandlingsflyt.hendelse.mottak.MottattHendelseService
@@ -138,7 +138,6 @@ import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.behandlingsflyt.test.modell.TestYrkesskade
 import no.nav.aap.behandlingsflyt.test.modell.defaultInntekt
 import no.nav.aap.behandlingsflyt.test.testGatewayProvider
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
@@ -736,11 +735,11 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
         return slettMellomlagretVurdering(this, definisjon)
     }
 
-    protected fun hentSak(ident: Ident, periode: Periode): Sak {
+    protected fun hentSak(ident: Ident, søknadsdato: LocalDate): Sak {
         return dataSource.transaction { connection ->
             SakRepositoryImpl(connection).finnEllerOpprett(
                 PersonRepositoryImpl(connection).finnEllerOpprett(listOf(ident)),
-                periode
+                søknadsdato
             )
         }
     }
@@ -1278,7 +1277,7 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
     protected fun Behandling.løsForeslåVedtak(): Behandling =
         løsAvklaringsBehov(this, ForeslåVedtakLøsning())
 
-    protected fun Behandling.løsRefusjonskrav(fom: LocalDate = LocalDate.now()): Behandling {
+    protected fun Behandling.løsRefusjonskrav(): Behandling {
         return løsAvklaringsBehov(
             this,
             RefusjonkravLøsning(
@@ -1519,19 +1518,6 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
             }
         vilkårsutfall.assertTidslinje(assertions)
         return this
-    }
-
-    protected fun settRettighetsperiode(
-        sak: Sak,
-        rettighetsperiode: Periode
-    ) {
-        dataSource.transaction { connection ->
-            val sakRepository = SakRepositoryImpl(connection)
-            sakRepository.oppdaterRettighetsperiode(
-                sak.id,
-                rettighetsperiode
-            )
-        }
     }
 
     fun assertStatusForDefinisjon(

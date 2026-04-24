@@ -5,7 +5,6 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSamo
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSamordningGraderingLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FastsettBeregningstidspunktLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.ForeslåVedtakLøsning
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FritakMeldepliktLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.RefusjonkravLøsning
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
@@ -16,7 +15,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Ut
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurderingDto
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.flate.FritaksvurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravVurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.SamordningVurderingData
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.VurderingerForSamordning
@@ -47,7 +45,6 @@ import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.tuple
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
-import java.time.LocalDateTime
 
 
 class SamordningFlyttest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
@@ -79,17 +76,7 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::clas
             .løsSykdom(søknadsdato)
             .løsBistand(søknadsdato)
             .løsRefusjonskrav()
-            .løsAvklaringsBehov(
-                FritakMeldepliktLøsning(
-                    fritaksvurderinger = listOf(
-                        FritaksvurderingDto(
-                            harFritak = true,
-                            fraDato = søknadsdato,
-                            begrunnelse = "...",
-                        )
-                    ),
-                ),
-            )
+            .løsFritakMeldeplikt(søknadsdato)
             .løsSykdomsvurderingBrev()
             .bekreftVurderinger()
             .kvalitetssikre()
@@ -263,11 +250,11 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::clas
         )
         val behandling = opprettSamordning(person, søknadsdato, sykePengerPeriode)
         val sak = hentSak(behandling)
-        var revurdering =
-            sak.opprettManuellRevurdering(listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.SAMORDNING_OG_AVREGNING))
+
+        sak.opprettManuellRevurdering(listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.SAMORDNING_OG_AVREGNING))
 
         // Opprett manuell revurdering før ta av vent
-        revurdering = sak.opprettManuellRevurdering(listOf(SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND))
+        var revurdering = sak.opprettManuellRevurdering(listOf(SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND))
         assertThat(revurdering.vurderingsbehov().map { it.type }).describedAs("Ny årsak skal være lagt til")
             .contains(Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND)
 
@@ -363,17 +350,7 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::clas
                     )
                 )
             )
-            .løsAvklaringsBehov(
-                avklaringsBehovLøsning = FritakMeldepliktLøsning(
-                    fritaksvurderinger = listOf(
-                        FritaksvurderingDto(
-                            harFritak = true,
-                            fraDato = søknadsdato,
-                            begrunnelse = "...",
-                        )
-                    ),
-                ),
-            )
+            .løsFritakMeldeplikt(søknadsdato)
             .løsSykdomsvurderingBrev()
             .bekreftVurderinger()
             .kvalitetssikre()

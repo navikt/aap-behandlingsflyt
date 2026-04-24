@@ -4,7 +4,6 @@ import no.nav.aap.behandlingsflyt.behandling.Resultat
 import no.nav.aap.behandlingsflyt.behandling.ResultatUtleder
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSykdomLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.ForeslåVedtakLøsning
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.PeriodisertAvklarSykepengerErstatningLøsning
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companion.antallHverdager
@@ -18,8 +17,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Ut
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ErNedsettelseMinstHalvpartenValg
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerGrunn
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.PeriodisertSykepengerVurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.SykdomsvurderingLøsningDto
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
@@ -79,20 +76,7 @@ class SykepengeerstatningFlytTest(val unleashGateway: KClass<UnleashGateway>) :
                     "Viss varighet false skal gi avklaringsbehov for sykepengeerstatning"
                 ).containsExactly(Definisjon.AVKLAR_SYKEPENGEERSTATNING)
             }
-            .løsAvklaringsBehov(
-                PeriodisertAvklarSykepengerErstatningLøsning(
-                    løsningerForPerioder = listOf(
-                        PeriodisertSykepengerVurderingDto(
-                            begrunnelse = "...",
-                            dokumenterBruktIVurdering = emptyList(),
-                            harRettPå = true,
-                            grunn = SykepengerGrunn.SYKEPENGER_IGJEN_ARBEIDSUFOR,
-                            fom = søknadsdato,
-                            tom = null
-                        )
-                    ),
-                )
-            )
+            .løsSykepengeerstatning(søknadsdato to true)
             .medKontekst {
                 assertThat(åpneAvklaringsbehov.map { it.definisjon }).describedAs(
                     "Forutgående medlemskap skal ikke vurderes for yrkesskade"
@@ -118,7 +102,7 @@ class SykepengeerstatningFlytTest(val unleashGateway: KClass<UnleashGateway>) :
             }
 
     }
-    
+
     @Test
     fun `revurdere sykepengeerstatning - skal ikke trigge 11-13 om gjelderFra ikke er kravdato`() {
         val sak = happyCaseFørstegangsbehandling()
@@ -184,20 +168,7 @@ class SykepengeerstatningFlytTest(val unleashGateway: KClass<UnleashGateway>) :
                 assertThat(åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
                     .contains(Definisjon.AVKLAR_SYKEPENGEERSTATNING)
             }
-            .løsAvklaringsBehov(
-                PeriodisertAvklarSykepengerErstatningLøsning(
-                    løsningerForPerioder = listOf(
-                        PeriodisertSykepengerVurderingDto(
-                            begrunnelse = "...",
-                            dokumenterBruktIVurdering = emptyList(),
-                            harRettPå = true,
-                            grunn = SykepengerGrunn.SYKEPENGER_IGJEN_ARBEIDSUFOR,
-                            fom = sak.rettighetsperiode.fom,
-                            tom = null
-                        )
-                    ),
-                )
-            )
+            .løsSykepengeerstatning(søknadsdato to true)
             .løsBeregningstidspunkt()
             .løsOppholdskrav(søknadsdato)
             .løsAndreStatligeYtelser()
@@ -319,20 +290,7 @@ class SykepengeerstatningFlytTest(val unleashGateway: KClass<UnleashGateway>) :
             .løsOvergangArbeid(Utfall.IKKE_OPPFYLT, søknadsdato)
             .løsSykdomsvurderingBrev()
             .bekreftVurderinger()
-            .løsAvklaringsBehov(
-                PeriodisertAvklarSykepengerErstatningLøsning(
-                    løsningerForPerioder = listOf(
-                        PeriodisertSykepengerVurderingDto(
-                            begrunnelse = "...",
-                            dokumenterBruktIVurdering = emptyList(),
-                            harRettPå = true,
-                            grunn = SykepengerGrunn.SYKEPENGER_IGJEN_ARBEIDSUFOR,
-                            fom = søknadsdato.plusMonths(2),
-                            tom = null
-                        )
-                    ),
-                )
-            )
+            .løsSykepengeerstatning(søknadsdato.plusMonths(2) to true)
             .assertRettighetstype(
                 førstePeriodeSykepengeerstatning to
                         RettighetsType.SYKEPENGEERSTATNING,
@@ -425,20 +383,7 @@ class SykepengeerstatningFlytTest(val unleashGateway: KClass<UnleashGateway>) :
                     .describedAs("Siden vurderingenGjelderFra er lik kravdato (rettighetsperiode.fom), så kan man revurdere 11-13")
                     .containsExactlyInAnyOrder(Definisjon.AVKLAR_SYKEPENGEERSTATNING)
             }
-            .løsAvklaringsBehov(
-                PeriodisertAvklarSykepengerErstatningLøsning(
-                    løsningerForPerioder = listOf(
-                        PeriodisertSykepengerVurderingDto(
-                            begrunnelse = "...",
-                            dokumenterBruktIVurdering = emptyList(),
-                            harRettPå = true,
-                            grunn = SykepengerGrunn.SYKEPENGER_IGJEN_ARBEIDSUFOR,
-                            fom = sak.rettighetsperiode.fom,
-                            tom = null
-                        )
-                    ),
-                )
-            )
+            .løsSykepengeerstatning(sak.rettighetsperiode.fom to true)
             .medKontekst {
                 assertThat(this.åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
                     .containsExactlyInAnyOrder(Definisjon.FORESLÅ_VEDTAK)
