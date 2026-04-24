@@ -74,7 +74,7 @@ class LovvalgOgMedlemskapFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnle
 
     @Test
     fun `ved revurdering med avslag før sykdom ved manglende medlemskap er ikke sykdomsvurdering for brev aktuelt`() {
-        val sak = happyCaseFørstegangsbehandling(LocalDate.now())
+        val sak = happyCaseFørstegangsbehandling(LocalDate.now(), sendMeldekort = false)
         val revurdering = sak.opprettManuellRevurdering(
             listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP)
         )

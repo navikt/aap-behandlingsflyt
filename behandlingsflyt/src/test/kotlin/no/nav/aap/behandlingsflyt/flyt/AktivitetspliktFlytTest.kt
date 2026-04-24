@@ -57,7 +57,7 @@ class AktivitetspliktFlytTest :
     @Test
     fun `Happy-case flyt for aktivitetsplikt 11_7`() {
         val person = TestPersoner.STANDARD_PERSON()
-        val sak = happyCaseFørstegangsbehandling(person = person)
+        val sak = happyCaseFørstegangsbehandling(person = person, sendMeldekort = false)
         var åpenBehandling = revurdereFramTilOgMedSykdom(sak, sak.rettighetsperiode.fom, vissVarighet = true)
 
         var aktivitetspliktBehandling = dataSource.transaction { connection ->
@@ -219,7 +219,7 @@ class AktivitetspliktFlytTest :
     @Test
     fun `Åpen behandling skal trekkes tilbake ved effektuering av aktivitetsplikt`() {
         val person = TestPersoner.STANDARD_PERSON()
-        val sak = happyCaseFørstegangsbehandling(person = person)
+        val sak = happyCaseFørstegangsbehandling(person = person, sendMeldekort = false)
         var åpenBehandling = revurdereFramTilOgMedSykdom(sak, sak.rettighetsperiode.fom, vissVarighet = true)
 
         åpenBehandling = åpenBehandling.løsBistand(sak.rettighetsperiode.fom)
@@ -361,6 +361,7 @@ class AktivitetspliktFlytTest :
         val sak = happyCaseFørstegangsbehandling(
             fom = LocalDate.now().minusMonths(1),
             person = person,
+            sendMeldekort = false
         )
         val åpenBehandlingForbiTilkjentYtelse =
             revurdereFramTilOgMedSykdom(sak, sak.rettighetsperiode.fom, vissVarighet = true)
