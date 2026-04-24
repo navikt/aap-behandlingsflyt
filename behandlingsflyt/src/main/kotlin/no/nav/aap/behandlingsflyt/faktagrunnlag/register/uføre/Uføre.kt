@@ -37,7 +37,6 @@ private fun Collection<Uføre>.utledRiktigSluttdatoForSegment(uføre: Uføre): L
 }
 
 fun Collection<Uføre>.tilTidslinje(): Tidslinje<Prosent> {
-    // TODO hvis ufør -> stans -> ufør, skal inntekt oppjusteres for ufør nr. 1?
     return this
         .sortedBy { it.virkningstidspunkt }
         .somTidslinje({
