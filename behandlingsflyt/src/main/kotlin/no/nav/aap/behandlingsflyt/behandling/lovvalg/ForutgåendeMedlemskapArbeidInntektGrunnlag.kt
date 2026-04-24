@@ -14,7 +14,7 @@ import java.time.LocalDate
 data class ForutgåendeMedlemskapGrunnlag(
     val medlemskapArbeidInntektGrunnlag: ForutgåendeMedlemskapArbeidInntektGrunnlag?,
     val personopplysningGrunnlag: PersonopplysningMedHistorikkGrunnlag?,
-    var nyeSoknadGrunnlag: UtenlandsOppholdData?
+    val nyeSoknadGrunnlag: UtenlandsOppholdData?
 ) : Faktagrunnlag
 
 data class ForutgåendeMedlemskapArbeidInntektGrunnlag(

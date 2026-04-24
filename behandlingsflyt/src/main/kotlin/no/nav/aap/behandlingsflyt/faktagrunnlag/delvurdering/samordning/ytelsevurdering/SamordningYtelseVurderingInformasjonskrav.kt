@@ -54,7 +54,9 @@ class SamordningYtelseVurderingInformasjonskrav(
     ): Boolean {
         return kontekst.erFørstegangsbehandlingEllerRevurdering() && !tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(
             kontekst, steg
-        ) && (oppdatert.ikkeKjørtSisteKalenderdagForBehandling(kontekst.behandlingId) || kontekst.rettighetsperiode != oppdatert?.rettighetsperiode || kontekst.erVurderingsbehovEndretEtterOppdatertInformasjonskrav(oppdatert))
+        ) && (oppdatert.ikkeKjørtSisteKalenderdagForBehandling(kontekst.behandlingId) || kontekst.rettighetsperiode != oppdatert?.rettighetsperiode || kontekst.erVurderingsbehovEndretEtterOppdatertInformasjonskrav(
+            oppdatert
+        ))
     }
 
 
@@ -134,8 +136,8 @@ class SamordningYtelseVurderingInformasjonskrav(
 
     private fun hentYtelseSykepenger(personIdent: String, oppslagsPeriode: Periode): List<UtbetaltePerioder> {
         return spGateway.hentYtelseSykepenger(
-                setOf(personIdent), oppslagsPeriode.fom, oppslagsPeriode.tom
-            ).filter { oppslagsPeriode.overlapper((Periode(it.fom, it.tom))) }
+            setOf(personIdent), oppslagsPeriode.fom, oppslagsPeriode.tom
+        ).filter { oppslagsPeriode.overlapper((Periode(it.fom, it.tom))) }
 
     }
 
@@ -298,6 +300,6 @@ private fun <T : SamordningPeriode> isPeriodeDekketAvEksisterendePerioder(
 
 
 fun <T : SamordningPeriode> List<T>.tilTidslinje(): Tidslinje<Boolean> =
-    this.somTidslinje( { it.periode }, { true } )
+    this.somTidslinje({ it.periode }, { true })
 
 

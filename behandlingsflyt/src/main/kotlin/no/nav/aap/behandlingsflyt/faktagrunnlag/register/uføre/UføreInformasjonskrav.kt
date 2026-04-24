@@ -61,7 +61,9 @@ class UføreInformasjonskrav(
 
         return kontekst.erFørstegangsbehandlingEllerRevurdering()
                 && !tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, steg)
-                && (oppdatert.ikkeKjørtSisteKalenderdagForBehandling(kontekst.behandlingId) || kontekst.rettighetsperiode != oppdatert?.rettighetsperiode || inputHarEndretSeg || kontekst.erVurderingsbehovEndretEtterOppdatertInformasjonskrav(oppdatert))
+                && (oppdatert.ikkeKjørtSisteKalenderdagForBehandling(kontekst.behandlingId) || kontekst.rettighetsperiode != oppdatert?.rettighetsperiode || inputHarEndretSeg || kontekst.erVurderingsbehovEndretEtterOppdatertInformasjonskrav(
+            oppdatert
+        ))
     }
 
     data class UføreInput(val sak: Sak, val behandlingId: BehandlingId, val beregningVurdering: BeregningGrunnlag?) :
