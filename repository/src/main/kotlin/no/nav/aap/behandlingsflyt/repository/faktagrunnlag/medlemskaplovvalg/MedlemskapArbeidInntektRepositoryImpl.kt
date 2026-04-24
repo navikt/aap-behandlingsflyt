@@ -636,9 +636,9 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
                 begrunnelse = row.getString("tekstvurdering_lovvalg"),
                 lovvalgsEØSLandEllerLandMedAvtale = row.getEnum("lovvalgs_land")
             ),
-            medlemskap = row.getStringOrNull("tekstvurdering_medlemskap")?.let { tekstvurdering_medlemskap ->
+            medlemskap = row.getStringOrNull("tekstvurdering_medlemskap")?.let { tekstvurderingMedlemskap ->
                 MedlemskapDto(
-                    begrunnelse = tekstvurdering_medlemskap,
+                    begrunnelse = tekstvurderingMedlemskap,
                     varMedlemIFolketrygd = row.getBoolean("var_medlem_i_folketrygden")
                 )
             },
