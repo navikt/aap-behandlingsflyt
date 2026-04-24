@@ -17,6 +17,10 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagI
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagUføre
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagYrkesskade
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.UføreInntekt
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.SamordningAndreStatligeYtelserRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.arbeidsgiver.SamordningArbeidsgiverRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
@@ -30,6 +34,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsopptrapping
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.barnepensjon.BarnepensjonRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.refusjonskrav.TjenestepensjonRefusjonsKravVurderingRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.sykestipend.SykestipendRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdomsvurderingbrev.SykdomsvurderingForBrevRepository
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
@@ -69,7 +76,14 @@ class BrevUtlederService(
     private val sykdomsvurderingForBrevRepository: SykdomsvurderingForBrevRepository,
     private val overgangUføreRepository: OvergangUføreRepository,
     private val vedtakslengdeService: VedtakslengdeService,
-    private val unleashGateway: UnleashGateway
+    private val unleashGateway: UnleashGateway,
+    private val samordningVurderingRepository: SamordningVurderingRepository,
+    private val samordningUføreRepository: SamordningUføreRepository,
+    private val samordningArbeidsgiverRepository: SamordningArbeidsgiverRepository,
+    private val tjenestepensjonRefusjonsKravVurderingRepository: TjenestepensjonRefusjonsKravVurderingRepository,
+    private val sykestipendRepository: SykestipendRepository,
+    private val barnepensjonRepository: BarnepensjonRepository,
+    private val samordningAndreStatligeYtelserRepository: SamordningAndreStatligeYtelserRepository,
 ) {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         behandlingRepository = repositoryProvider.provide(),
@@ -85,7 +99,14 @@ class BrevUtlederService(
         sykdomsvurderingForBrevRepository = repositoryProvider.provide(),
         overgangUføreRepository = repositoryProvider.provide(),
         vedtakslengdeService = VedtakslengdeService(repositoryProvider, gatewayProvider),
-        unleashGateway = gatewayProvider.provide()
+        unleashGateway = gatewayProvider.provide(),
+        samordningVurderingRepository = repositoryProvider.provide(),
+        samordningUføreRepository = repositoryProvider.provide(),
+        samordningArbeidsgiverRepository = repositoryProvider.provide(),
+        tjenestepensjonRefusjonsKravVurderingRepository = repositoryProvider.provide(),
+        sykestipendRepository = repositoryProvider.provide(),
+        barnepensjonRepository = repositoryProvider.provide(),
+        samordningAndreStatligeYtelserRepository = repositoryProvider.provide(),
     )
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -300,6 +321,7 @@ class BrevUtlederService(
 
         val underveisGrunnlag = underveisRepository.hent(behandling.id)
 
+        val samordning = hentSamordningForBrev(behandling.id)
 
         return Innvilgelse(
             virkningstidspunkt = vedtak.virkningstidspunkt,
@@ -307,6 +329,7 @@ class BrevUtlederService(
             grunnlagBeregning = grunnlagBeregning,
             tilkjentYtelse = tilkjentYtelse,
             sykdomsvurdering = sykdomsvurdering,
+            samordning = samordning,
         )
     }
 
@@ -503,5 +526,123 @@ class BrevUtlederService(
             ?.perioder
             .orEmpty()
             .any { it.rettighetsType == rettighetsType }
+    }
+
+    fun hentSamordningForBrev(behandlingId: BehandlingId): SamordningBrevData? {
+        val gradering = hentGraderingForBrev(behandlingId)
+        val uføre = hentUføreForBrev(behandlingId)
+        val arbeidsgiver = hentArbeidsgiverForBrev(behandlingId)
+        val tjenestepensjon = hentTjenestepensjonForBrev(behandlingId)
+        val sykestipend = hentSykestipendForBrev(behandlingId)
+        val barnepensjon = hentBarnepensjonForBrev(behandlingId)
+        val andreStatligeYtelser = hentAndreStatligeYtelserForBrev(behandlingId)
+
+        val harSamordningsdata = listOf(
+            gradering, uføre, arbeidsgiver, tjenestepensjon, sykestipend, barnepensjon, andreStatligeYtelser
+        ).any { it != null }
+
+        if (!harSamordningsdata) return null
+
+        return SamordningBrevData(
+            gradering = gradering,
+            uføre = uføre,
+            arbeidsgiver = arbeidsgiver,
+            tjenestepensjonRefusjonskrav = tjenestepensjon,
+            sykestipend = sykestipend,
+            barnepensjon = barnepensjon,
+            andreStatligeYtelser = andreStatligeYtelser,
+        )
+    }
+
+    private fun hentGraderingForBrev(behandlingId: BehandlingId): GraderingBrevData? {
+        return samordningVurderingRepository.hentHvisEksisterer(behandlingId)?.let { grunnlag ->
+            grunnlag.vurderinger.takeIf { it.isNotEmpty() }?.let { vurderinger ->
+                GraderingBrevData(
+                    vurderinger = vurderinger.map { vurdering ->
+                        GraderingBrevData.GraderingVurderingBrev(
+                            ytelseType = vurdering.ytelseType.name,
+                            perioder = vurdering.vurderingPerioder.map { periode ->
+                                GraderingBrevData.GraderingPeriodeBrev(
+                                    periode = periode.periode,
+                                    gradering = periode.gradering?.prosentverdi(),
+                                )
+                            }
+                        )
+                    }
+                )
+            }
+        }
+    }
+
+    private fun hentUføreForBrev(behandlingId: BehandlingId): UføreBrevData? {
+        return samordningUføreRepository.hentHvisEksisterer(behandlingId)?.let { grunnlag ->
+            grunnlag.vurdering.vurderingPerioder.takeIf { it.isNotEmpty() }?.let { perioder ->
+                UføreBrevData(
+                    perioder = perioder.map { periode ->
+                        UføreBrevData.UførePeriodeBrev(
+                            virkningstidspunkt = periode.virkningstidspunkt,
+                            uføregradTilSamordning = periode.uføregradTilSamordning.prosentverdi(),
+                        )
+                    }
+                )
+            }
+        }
+    }
+
+    private fun hentArbeidsgiverForBrev(behandlingId: BehandlingId): ArbeidsgiverBrevData? {
+        return samordningArbeidsgiverRepository.hentHvisEksisterer(behandlingId)?.let { grunnlag ->
+            grunnlag.vurdering.perioder.takeIf { it.isNotEmpty() }?.let { perioder ->
+                ArbeidsgiverBrevData(perioder = perioder)
+            }
+        }
+    }
+
+    private fun hentTjenestepensjonForBrev(behandlingId: BehandlingId): TjenestepensjonRefusjonskravBrevData? {
+        return tjenestepensjonRefusjonsKravVurderingRepository.hentHvisEksisterer(behandlingId)?.let { vurdering ->
+            TjenestepensjonRefusjonskravBrevData(
+                harKrav = vurdering.harKrav,
+                fom = vurdering.fom,
+                tom = vurdering.tom,
+            )
+        }
+    }
+
+    private fun hentSykestipendForBrev(behandlingId: BehandlingId): SykestipendBrevData? {
+        return sykestipendRepository.hentHvisEksisterer(behandlingId)?.let { grunnlag ->
+            grunnlag.vurdering.perioder.takeIf { it.isNotEmpty() }?.let { perioder ->
+                SykestipendBrevData(perioder = perioder.toList())
+            }
+        }
+    }
+
+    private fun hentBarnepensjonForBrev(behandlingId: BehandlingId): BarnepensjonBrevData? {
+        return barnepensjonRepository.hentHvisEksisterer(behandlingId)?.let { grunnlag ->
+            grunnlag.vurdering.perioder.takeIf { it.isNotEmpty() }?.let { perioder ->
+                BarnepensjonBrevData(
+                    perioder = perioder.map { periode ->
+                        BarnepensjonBrevData.BarnepensjonPeriodeBrev(
+                            fom = periode.fom,
+                            tom = periode.tom,
+                            månedsats = periode.månedsats,
+                        )
+                    }
+                )
+            }
+        }
+    }
+
+    private fun hentAndreStatligeYtelserForBrev(behandlingId: BehandlingId): AndreStatligeYtelserBrevData? {
+        return samordningAndreStatligeYtelserRepository.hentHvisEksisterer(behandlingId)?.let { grunnlag ->
+            grunnlag.vurdering.vurderingPerioder.takeIf { it.isNotEmpty() }?.let { perioder ->
+                AndreStatligeYtelserBrevData(
+                    perioder = perioder.map { periode ->
+                        AndreStatligeYtelserBrevData.AndreStatligeYtelserPeriodeBrev(
+                            ytelse = periode.ytelse.name,
+                            periode = periode.periode,
+                        )
+                    }
+                )
+            }
+        }
     }
 }

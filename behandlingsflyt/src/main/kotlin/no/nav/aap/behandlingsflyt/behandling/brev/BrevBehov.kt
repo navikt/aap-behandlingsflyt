@@ -10,7 +10,8 @@ data class Innvilgelse(
     val sisteDagMedYtelse: LocalDate,
     val grunnlagBeregning: GrunnlagBeregning?,
     val tilkjentYtelse: TilkjentYtelse?,
-    val sykdomsvurdering: String?
+    val sykdomsvurdering: String?,
+    val samordning: SamordningBrevData?,
 ) : BrevBehov(TypeBrev.VEDTAK_INNVILGELSE)
 
 data class VurderesForUføretrygd(
