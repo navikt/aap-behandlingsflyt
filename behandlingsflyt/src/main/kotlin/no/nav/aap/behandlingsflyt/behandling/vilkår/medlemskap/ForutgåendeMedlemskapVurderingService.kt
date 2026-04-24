@@ -8,7 +8,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapUn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonStatus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningMedHistorikkGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.erGyldigIPeriode
-import no.nav.aap.behandlingsflyt.forutgåendeMedlemskapMedGapTeller
+import no.nav.aap.behandlingsflyt.forutgåendeMedlemskapMedGapInntektsvurdering
 import no.nav.aap.behandlingsflyt.forutgåendeMedlemskapMedGapUtfall
 import no.nav.aap.behandlingsflyt.prometheus
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
@@ -31,10 +31,15 @@ class ForutgåendeMedlemskapVurderingService(
         val ingenInntruffet = andreDelVurdering.all { !it.resultat }
         val originalResultat = oppfyltMinstEttKrav && ingenInntruffet
 
-        // No-op: sjekk om 1 måneds gap-toleranse i inntekt ville gitt annet utfall
+        // No-op: sjekk om 1 måneds gap-toleranse i inntekt ville gitt annet utfall totalt sett
         val gapResultat = vurderTilhørighetMedGapToleranse(grunnlag, forutgåendePeriode, andreDelVurdering)
         prometheus.forutgåendeMedlemskapMedGapUtfall(!originalResultat && gapResultat).increment()
-        prometheus.forutgåendeMedlemskapMedGapTeller(gapResultat).increment()
+
+        // No-op: sjekk om 1 måneds gap-toleranse i inntekt ville gitt annet utfall i inntektsvurderingen
+        val utfallInntekt = oppfyllerSammenhengendePerioderMedEttMånedsgap(grunnlag, forutgåendePeriode)
+        val harIkkeSammenhengendePerioder =
+            !harArbeidInntektINorge(grunnlag.medlemskapArbeidInntektGrunnlag, forutgåendePeriode).resultat
+        prometheus.forutgåendeMedlemskapMedGapInntektsvurdering(harIkkeSammenhengendePerioder && utfallInntekt).increment()
 
         return KanBehandlesAutomatiskVurdering(
             originalResultat,
@@ -348,15 +353,28 @@ class ForutgåendeMedlemskapVurderingService(
         forutgåendePeriode: Periode,
         andreDelVurdering: List<TilhørighetVurdering>
     ): Boolean {
-        val inntektINorgeGrunnlag = grunnlag.medlemskapArbeidInntektGrunnlag?.inntekterINorgeGrunnlag?.filter { it.beloep != 0.0 }
+        val inntektINorgeGrunnlag =
+            grunnlag.medlemskapArbeidInntektGrunnlag?.inntekterINorgeGrunnlag?.filter { it.beloep != 0.0 }
         val inntekterINorgePerioder = inntektINorgeGrunnlag?.map { it.periode }
         val arbeidInntektMedGap = sammenhengendePerioderMedEttMånedsgap(inntekterINorgePerioder, forutgåendePeriode)
 
-        val vedtakIMedl = harVedtakIMEDL(grunnlag.medlemskapArbeidInntektGrunnlag?.medlemskapGrunnlag, forutgåendePeriode)
+        val vedtakIMedl =
+            harVedtakIMEDL(grunnlag.medlemskapArbeidInntektGrunnlag?.medlemskapGrunnlag, forutgåendePeriode)
         val oppfyltMinstEttKrav = arbeidInntektMedGap || vedtakIMedl.resultat
         val ingenInntruffet = andreDelVurdering.all { !it.resultat }
 
         return oppfyltMinstEttKrav && ingenInntruffet
+    }
+
+    private fun oppfyllerSammenhengendePerioderMedEttMånedsgap(
+        grunnlag: ForutgåendeMedlemskapGrunnlag,
+        forutgåendePeriode: Periode
+    ): Boolean {
+        val inntektINorgeGrunnlag =
+            grunnlag.medlemskapArbeidInntektGrunnlag?.inntekterINorgeGrunnlag?.filter { it.beloep != 0.0 }
+        val inntekterINorgePerioder = inntektINorgeGrunnlag?.map { it.periode }
+
+        return  sammenhengendePerioderMedEttMånedsgap(inntekterINorgePerioder, forutgåendePeriode)
     }
 
     private fun byggVisuellTidslinje(

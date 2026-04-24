@@ -20,5 +20,5 @@ fun PrometheusMeterRegistry.dokumentHendelse(type: InnsendingType): Counter =
 fun PrometheusMeterRegistry.forutgåendeMedlemskapMedGapUtfall(resultat: Boolean): Counter =
     this.counter("behandlingsflyt_forutgaaende_medlemskap_med_gap_total", listOf(Tag.of("utfall", resultat.toString())))
 
-fun PrometheusMeterRegistry.forutgåendeMedlemskapMedGapTeller(resultat: Boolean): Counter =
-    this.counter("behandlingsflyt_forutgaaende_medlemskap_med_gap", listOf(Tag.of("resultat", resultat.toString())))
+fun PrometheusMeterRegistry.forutgåendeMedlemskapMedGapInntektsvurdering(resultat: Boolean): Counter =
+    this.counter("behandlingsflyt_forutgaaende_medlemskap_med_gap_inntekt", listOf(Tag.of("inntekt", resultat.toString())))
