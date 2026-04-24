@@ -11,7 +11,9 @@ import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
@@ -48,7 +50,7 @@ class ForeslåVedtakVedtakslengdeSteg internal constructor(
         avklaringsbehovene: Avklaringsbehovene
     ): Boolean {
         return tidligereVurderinger.harBehandlingsgrunnlag(kontekst, type())
-                && skalInnomForeslåVedtak(avklaringsbehovene)
+                && skalInnomForeslåVedtak(avklaringsbehovene, kontekst.vurderingsbehovRelevanteForSteg)
     }
 
     private fun erTilstrekkeligVurdert(
@@ -67,7 +69,14 @@ class ForeslåVedtakVedtakslengdeSteg internal constructor(
         return avklaringsbehovLøstAvNay.all { it.sistEndret().isBefore(sistForeslåttVedtak) }
     }
 
-    private fun skalInnomForeslåVedtak(avklaringsbehovene: Avklaringsbehovene): Boolean {
+    private fun skalInnomForeslåVedtak(
+        avklaringsbehovene: Avklaringsbehovene,
+        vurderingsbehovRelevanteForSteg: Set<Vurderingsbehov>
+    ): Boolean {
+        if (!vurderingsbehovRelevanteForSteg.contains(Vurderingsbehov.VEDTAKSLENGDE_MANUELT)) {
+            return false
+        }
+
         val harAvklaringsbehovLøstAvNay = avklaringsbehovene.avklaringsbehovLøstAvNay().isNotEmpty()
         if (!harAvklaringsbehovLøstAvNay) {
             return false
