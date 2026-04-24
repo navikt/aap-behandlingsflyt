@@ -8,8 +8,10 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapUn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonStatus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningMedHistorikkGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.erGyldigIPeriode
+import no.nav.aap.behandlingsflyt.forutgåendeMedlemskapGapGjennomslipp
 import no.nav.aap.behandlingsflyt.forutgåendeMedlemskapMedGapInntektsvurdering
 import no.nav.aap.behandlingsflyt.forutgåendeMedlemskapMedGapUtfall
+import no.nav.aap.behandlingsflyt.forutgåendeMedlemskapStandardGjennomslipp
 import no.nav.aap.behandlingsflyt.prometheus
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
@@ -36,10 +38,15 @@ class ForutgåendeMedlemskapVurderingService(
         prometheus.forutgåendeMedlemskapMedGapUtfall(!originalResultat && gapResultat).increment()
 
         // No-op: sjekk om 1 måneds gap-toleranse i inntekt ville gitt annet utfall i inntektsvurderingen
-        val utfallInntekt = oppfyllerSammenhengendePerioderMedEttMånedsgap(grunnlag, forutgåendePeriode)
+        val utfallInntektMed1MndGap = oppfyllerSammenhengendePerioderMedEttMånedsgap(grunnlag, forutgåendePeriode)
         val harIkkeSammenhengendePerioder =
             !harArbeidInntektINorge(grunnlag.medlemskapArbeidInntektGrunnlag, forutgåendePeriode).resultat
-        prometheus.forutgåendeMedlemskapMedGapInntektsvurdering(harIkkeSammenhengendePerioder && utfallInntekt).increment()
+        prometheus.forutgåendeMedlemskapMedGapInntektsvurdering(harIkkeSammenhengendePerioder && utfallInntektMed1MndGap)
+            .increment()
+
+        // No-op: total gjennomslipp av hele 11-2 vurderingen i normaltilfeller og gaptilfeller
+        prometheus.forutgåendeMedlemskapStandardGjennomslipp(originalResultat).increment()
+        prometheus.forutgåendeMedlemskapGapGjennomslipp(gapResultat).increment()
 
         return KanBehandlesAutomatiskVurdering(
             originalResultat,
@@ -374,7 +381,7 @@ class ForutgåendeMedlemskapVurderingService(
             grunnlag.medlemskapArbeidInntektGrunnlag?.inntekterINorgeGrunnlag?.filter { it.beloep != 0.0 }
         val inntekterINorgePerioder = inntektINorgeGrunnlag?.map { it.periode }
 
-        return  sammenhengendePerioderMedEttMånedsgap(inntekterINorgePerioder, forutgåendePeriode)
+        return sammenhengendePerioderMedEttMånedsgap(inntekterINorgePerioder, forutgåendePeriode)
     }
 
     private fun byggVisuellTidslinje(
