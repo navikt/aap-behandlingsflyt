@@ -223,7 +223,7 @@ class RettighetsperiodeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
 
         behandling.løsRettighetsperiodeIngenEndring()
         hentSak(sak.saksnummer).also {
-            assertThat(it.rettighetsperiode).isEqualTo(Periode(nyStartDato, Tid.MAKS))
+            assertThat(it.rettighetsperiode).isEqualTo(Periode(søknadsdato, Tid.MAKS))
         }
 
     }

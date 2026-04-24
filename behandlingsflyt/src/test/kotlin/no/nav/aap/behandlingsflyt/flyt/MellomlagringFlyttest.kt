@@ -26,7 +26,6 @@ class MellomlagringFlyttest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::c
                 .medKontekst {
                     assertThat(behandling.status()).isEqualTo(Status.UTREDES)
                 }
-                .løsSykdomsvurderingBrev()
                 .bekreftVurderinger()
                 .medKontekst {
                     assertThat(åpneAvklaringsbehov).anySatisfy {
