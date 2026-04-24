@@ -7,7 +7,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
-import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
@@ -18,14 +17,33 @@ class MellomlagringFlyttest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::c
 
     @Test
     fun `skal nullstille mellomlagret verdi når avklaringsbehov løses - og nullstille hengende mellomlagrede verdier ved iverksettelse`() {
-        val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
+        val søknadsdato = LocalDate.now()
         val person = TestPersoner.STANDARD_PERSON()
 
         val førstegangsbehandling =
-            sendInnFørsteSøknad(TestSøknader.STANDARD_SØKNAD, person, periode.fom.atStartOfDay()).second
+            sendInnFørsteSøknad(TestSøknader.STANDARD_SØKNAD, person, søknadsdato.atStartOfDay()).second
                 .medKontekst {
                     assertThat(behandling.status()).isEqualTo(Status.UTREDES)
                 }
+                .mellomlagreSykdom()
+                .medKontekst {
+                    val mellomlagretVerdi = hentMellomlagretVerdi()
+                    assertThat(mellomlagretVerdi).isNotNull
+                }
+                .løsSykdom(søknadsdato)
+                .medKontekst {
+                    val mellomlagretVerdi = hentMellomlagretVerdi()
+                    assertThat(mellomlagretVerdi).isNull()
+                }
+                .løsBistand(søknadsdato)
+                .mellomlagreSykdom()
+                .løsRefusjonskrav()
+                .medKontekst {
+                    assertThat(åpneAvklaringsbehov).anySatisfy {
+                        assertThat(it.definisjon).isEqualTo(Definisjon.SKRIV_SYKDOMSVURDERING_BREV)
+                    }
+                }
+                .løsSykdomsvurderingBrev()
                 .bekreftVurderinger()
                 .medKontekst {
                     assertThat(åpneAvklaringsbehov).anySatisfy {
@@ -43,7 +61,7 @@ class MellomlagringFlyttest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::c
                 .kvalitetssikre()
                 .løsBeregningstidspunkt()
                 .mellomlagreSykdom()
-                .løsOppholdskrav(periode.fom)
+                .løsOppholdskrav(søknadsdato)
                 .medKontekst {
                     val mellomlagretVerdi = hentMellomlagretVerdi()
                     assertThat(mellomlagretVerdi).isNotNull()
