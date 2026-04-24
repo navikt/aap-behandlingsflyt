@@ -87,11 +87,7 @@ class FasttrackMeldekortFlytTest :
                 assertThat(this.åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
                     .containsExactlyInAnyOrder(Definisjon.SKRIV_SYKDOMSVURDERING_BREV)
             }
-            .løsAvklaringsBehov(
-                SykdomsvurderingForBrevLøsning(
-                    vurdering = "Begrunnelse"
-                ),
-            )
+            .løsSykdomsvurderingBrev().bekreftVurderinger()
             .medKontekst {
                 assertThat(this.åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
                     .containsExactlyInAnyOrder(Definisjon.FATTE_VEDTAK)
@@ -174,7 +170,11 @@ class FasttrackMeldekortFlytTest :
         val sak = happyCaseFørstegangsbehandling(fom = 25 august 2025)
         val fom = sak.rettighetsperiode.fom.plusWeeks(2)
         val åpenBehandling = revurdereFramTilOgMedSykdom(sak, fom)
-        åpenBehandling.løsSykdom(sak.rettighetsperiode.fom).løsBistand(fom).løsSykdomsvurderingBrev()
+        åpenBehandling
+            .løsSykdom(sak.rettighetsperiode.fom)
+            .løsBistand(fom)
+            .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
 
         val (førsteMeldeperiode, andreMeldeperiode) = dataSource.transaction { connection ->
             MeldeperiodeRepositoryImpl(connection).hentMeldeperioder(
