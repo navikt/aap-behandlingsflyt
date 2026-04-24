@@ -68,4 +68,5 @@ fun testGatewayProvider(unleashGateway: KClass<out UnleashGateway> = AlleAvskrud
         register<GosysGateway>()
         register<DagpengerGatewayImpl>()
         register<TiltakspengerGatewayImpl>()
+        register<DummyBehandlingHendelseServiceFactory>()
     }

@@ -44,7 +44,7 @@ class RettighetsperiodeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
 
     @Test
     fun `Skal kunne overstyre rettighetsperioden på en revurdering - innskrenke perioden`() {
-        val sak = happyCaseFørstegangsbehandling(LocalDate.now())
+        val sak = happyCaseFørstegangsbehandling(LocalDate.now(), sendMeldekort = false)
         val ident = sak.person.aktivIdent()
         val førsteOverstyring = sak.rettighetsperiode.fom.minusMonths(2)
         val andreOverstyring = sak.rettighetsperiode.fom.minusMonths(1)
