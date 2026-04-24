@@ -39,7 +39,6 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.TrekkSoeknadOpprettetFraLegeerklaering to true,
         BehandlingsflytFeature.KvalitetssikringVed2213 to true,
         BehandlingsflytFeature.VisIkkeRelevantPeriode to true,
-        BehandlingsflytFeature.BekreftVurderingerOppfolging to true,
         BehandlingsflytFeature.MigrerStansOgOpphor to true,
         BehandlingsflytFeature.hentTiltakspengerPerioder to true,
         BehandlingsflytFeature.ForutgaaendeForbedringer to true
