@@ -1,0 +1,1 @@
+alter table beregning_ufore_uforegrader add column uforegrad_fom date;
