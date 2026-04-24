@@ -13,6 +13,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.Bistandsvu
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Yrkesskadevurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.somSykdomsvurderingTidslinje
 import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.orEmpty
@@ -29,20 +30,7 @@ class SykdomsvilkårFraLansering(vilkårsresultat: Vilkårsresultat) : Vilkårsv
             grunnlag.yrkesskadevurdering
         )
 
-        val sykdomsvurderingTidslinje = grunnlag.sykdomsvurderinger
-            .sortedBy { it.opprettet }
-            .map { vurdering ->
-                Tidslinje(
-                    Periode(
-                        fom = vurdering.vurderingenGjelderFra,
-                        tom = grunnlag.sisteDagMedMuligYtelse
-                    ),
-                    vurdering
-                )
-            }
-            .fold(Tidslinje<Sykdomsvurdering>()) { t1, t2 ->
-                t1.kombiner(t2, StandardSammenslåere.prioriterHøyreSideCrossJoin())
-            }
+        val sykdomsvurderingTidslinje = grunnlag.sykdomsvurderinger.somSykdomsvurderingTidslinje(grunnlag.sisteDagMedMuligYtelse)
 
         val bistandvurderingtidslinje =
             grunnlag.bistandvurderingFaktagrunnlag

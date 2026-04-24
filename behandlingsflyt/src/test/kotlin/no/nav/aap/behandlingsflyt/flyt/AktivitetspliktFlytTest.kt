@@ -3,7 +3,6 @@ package no.nav.aap.behandlingsflyt.flyt
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivBrevAvklaringsbehovLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivForhåndsvarselBruddAktivitetspliktBrevLøsning
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SykdomsvurderingForBrevLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VentePåFristForhåndsvarselAktivitetsplikt11_7Løsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VurderBrudd11_7Løsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VurderBrudd11_9Løsning
@@ -193,15 +192,8 @@ class AktivitetspliktFlytTest :
 
         åpenBehandling
             .løsBistand(sak.rettighetsperiode.fom)
-            .medKontekst {
-                assertThat(this.åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
-                    .containsExactlyInAnyOrder(Definisjon.SKRIV_SYKDOMSVURDERING_BREV)
-            }
-            .løsAvklaringsBehov(
-                SykdomsvurderingForBrevLøsning(
-                    vurdering = "Begrunnelse"
-                ),
-            )
+            .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
             .medKontekst {
                 assertThat(this.åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
                     .containsExactlyInAnyOrder(Definisjon.FATTE_VEDTAK)
@@ -235,11 +227,8 @@ class AktivitetspliktFlytTest :
                 assertThat(this.åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
                     .containsExactlyInAnyOrder(Definisjon.SKRIV_SYKDOMSVURDERING_BREV)
             }
-            .løsAvklaringsBehov(
-                SykdomsvurderingForBrevLøsning(
-                    vurdering = "Begrunnelse"
-                ),
-            )
+            .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
             .medKontekst {
                 assertThat(this.åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
                     .containsExactlyInAnyOrder(Definisjon.FATTE_VEDTAK)
@@ -380,11 +369,8 @@ class AktivitetspliktFlytTest :
                     assertThat(this.åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
                         .containsExactlyInAnyOrder(Definisjon.SKRIV_SYKDOMSVURDERING_BREV)
                 }
-                .løsAvklaringsBehov(
-                    SykdomsvurderingForBrevLøsning(
-                        vurdering = "Begrunnelse"
-                    ),
-                )
+                .løsSykdomsvurderingBrev()
+                .bekreftVurderinger()
                 .medKontekst {
                     assertThat(this.åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
                         .containsExactlyInAnyOrder(Definisjon.FATTE_VEDTAK)

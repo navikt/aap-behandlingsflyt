@@ -58,7 +58,7 @@ class InstitusjonsoppholdSteg(
                 }
             },
             definisjon = Definisjon.AVKLAR_HELSEINSTITUSJON,
-            tvingerAvklaringsbehov = setOf<Vurderingsbehov>(Vurderingsbehov.INSTITUSJONSOPPHOLD),
+            tvingerAvklaringsbehov = setOf(Vurderingsbehov.INSTITUSJONSOPPHOLD),
             nårVurderingErRelevant = ::perioderMedVurderingsbehovHelse
         )
 

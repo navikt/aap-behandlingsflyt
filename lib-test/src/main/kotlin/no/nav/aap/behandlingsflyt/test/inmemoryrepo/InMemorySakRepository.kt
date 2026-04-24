@@ -51,7 +51,7 @@ object InMemorySakRepository : SakRepository {
                         person = person,
                         rettighetsperiode = periode,
                     )
-                memory.put(id, sak)
+                memory[id] = sak
 
                 return sak
             }

@@ -33,7 +33,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
-import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.test.FakeTidligereVurderinger
 import no.nav.aap.behandlingsflyt.test.desember
 import no.nav.aap.behandlingsflyt.test.fixedClock
@@ -137,12 +136,10 @@ class VedtakslengdeStegTest {
                     InMemoryUnderveisRepository
                 ),
                 stansOpphørRepository = mockk(),
-                unleashGateway = AlleAvskruddUnleash,
                 clock = fixedClock(dagensDato),
             ),
             avklaringsbehovService = AvklaringsbehovService(inMemoryRepositoryProvider),
             tidligereVurderinger = FakeTidligereVurderinger(),
-            unleashGateway = AlleAvskruddUnleash,
         )
 
         steg.utfør(kontekst)

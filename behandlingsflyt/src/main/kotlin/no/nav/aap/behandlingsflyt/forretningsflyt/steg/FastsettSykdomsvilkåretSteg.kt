@@ -95,15 +95,6 @@ class FastsettSykdomsvilkåretSteg private constructor(
         )
 
         Sykdomsvilkår(vilkårsresultat).vurder(faktagrunnlag)
-        val segmenterMedDiff = SykdomsvilkårUtenVissVarighet(vilkårsresultat).vurderOgSammenlign(
-            faktagrunnlag,
-            vilkårsresultat,
-            rettighetsperiode
-        ).diff()
-        
-        if (segmenterMedDiff.isNotEmpty()) {
-            log.warn("Fant ulikt utfall mellom ny og gammel vilkårsvurdering: $segmenterMedDiff")
-        }
 
         vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
     }

@@ -18,8 +18,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.miljo.Miljø
 import no.nav.aap.lookup.repository.RepositoryProvider
@@ -30,14 +28,10 @@ class BekreftVurderingerOppfølgingSteg(
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
     private val avklaringsbehovService: AvklaringsbehovService,
     private val tidligereVurderinger: TidligereVurderinger,
-    private val mellomlagretVurderingService: MellomlagretVurderingService,
-    private val unleashGateway: UnleashGateway
+    private val mellomlagretVurderingService: MellomlagretVurderingService
 ) : BehandlingSteg {
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        if (unleashGateway.isDisabled(BehandlingsflytFeature.BekreftVurderingerOppfolging)) {
-            return Fullført
-        }
 
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
 
@@ -129,8 +123,7 @@ class BekreftVurderingerOppfølgingSteg(
                 avklaringsbehovRepository = repositoryProvider.provide(),
                 avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
                 tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
-                mellomlagretVurderingService = MellomlagretVurderingService(repositoryProvider),
-                unleashGateway = gatewayProvider.provide()
+                mellomlagretVurderingService = MellomlagretVurderingService(repositoryProvider)
             )
         }
 

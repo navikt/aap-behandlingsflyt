@@ -48,7 +48,11 @@ class SaksHistorikkService(
         )
 
         val avklaringsbehovene = behandlingerMedBehov.flatMap { it.avklaringsbehov }
-        val erVedtatt = avklaringsbehovene.filter { it.erIkkeAvbrutt() && it.erTotrinn() }.all { it.erTotrinnsVurdert() }
+        val erVedtatt =
+            avklaringsbehovene.filter { it.erIkkeAvbrutt() && it.erTotrinn() }.all { it.erTotrinnsVurdert() }
+        val alleBehovErKvalitetssikret =
+            avklaringsbehovene.filter { it.erIkkeAvbrutt() && it.definisjon.kvalitetssikres }
+                .all { it.erKvalitetssikretTidligere() }
 
         return behandlingerMedBehov.mapNotNull { behandling ->
             val hendelser = behandling.avklaringsbehov
@@ -118,7 +122,7 @@ class SaksHistorikkService(
                         }
 
                         Definisjon.KVALITETSSIKRING -> {
-                            avklaringsbehov.historikk
+                            val sendtTilKvalitetssikrer = avklaringsbehov.historikk
                                 .filter { it.status != Status.AVSLUTTET }
                                 .map { h ->
                                     BehandlingHendelseDTO(
@@ -128,6 +132,22 @@ class SaksHistorikkService(
                                         begrunnelse = h.begrunnelse
                                     )
                                 }
+
+                            val kvalitetssikretTidligere = if (alleBehovErKvalitetssikret) {
+                                avklaringsbehov.historikk.filter { it.status == Status.AVSLUTTET }
+                                    .maxByOrNull { it.tidsstempel }
+                                    ?.let {
+                                        listOf(
+                                            BehandlingHendelseDTO(
+                                                hendelse = BehandlingHendelseType.KVALITETSSIKRET,
+                                                tidspunkt = it.tidsstempel,
+                                                utførtAv = it.endretAv,
+                                            )
+                                        )
+                                    }.orEmpty()
+                            } else emptyList()
+
+                            sendtTilKvalitetssikrer.plus(kvalitetssikretTidligere)
                         }
 
                         Definisjon.BESTILL_LEGEERKLÆRING -> {
