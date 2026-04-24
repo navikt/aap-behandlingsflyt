@@ -345,7 +345,7 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::clas
                 medlemskap = SøknadMedlemskapDto("JA", "NEI", "NEI", "NEI", null)
             ),
             person = person,
-            mottattTidspunkt = LocalDateTime.now(),
+            mottattTidspunkt = søknadsdato.atStartOfDay(),
         ).second
             .medKontekst {
                 assertThat(this.behandling.typeBehandling()).isEqualTo(TypeBehandling.Førstegangsbehandling)
