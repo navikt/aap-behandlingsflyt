@@ -2,26 +2,27 @@ package no.nav.aap.behandlingsflyt.test
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseService
+import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseServiceProvider
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.komponenter.gateway.Factory
+import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.lookup.repository.RepositoryProvider
 
 object DummyBehandlingHendelseService : BehandlingHendelseService {
     override fun stoppet(
         behandling: Behandling,
         avklaringsbehovene: Avklaringsbehovene
     ) {
-        // noop — avoids scheduling oppgave/statistikk/datadeling motor jobs in tests
+        // noop
     }
 }
 
-/**
- * Factory wrapper so DummyBehandlingHendelseService can be registered in GatewayProvider.
- * Usage: `register<DummyBehandlingHendelseServiceFactory>()`
- */
-class DummyBehandlingHendelseServiceFactory : BehandlingHendelseService by DummyBehandlingHendelseService {
-    companion object : Factory<BehandlingHendelseService> {
-        override fun konstruer(): BehandlingHendelseService = DummyBehandlingHendelseService
+class DummyBehandlingHendelseServiceFactory : BehandlingHendelseServiceProvider {
+    override fun create(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): BehandlingHendelseService {
+        return DummyBehandlingHendelseService
+    }
+
+    companion object : Factory<BehandlingHendelseServiceProvider> {
+        override fun konstruer(): BehandlingHendelseServiceProvider = DummyBehandlingHendelseServiceFactory()
     }
 }
-
-
