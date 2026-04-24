@@ -27,4 +27,4 @@ fun PrometheusMeterRegistry.forutgåendeMedlemskapStandardGjennomslipp(resultat:
     this.counter("behandlingsflyt_forutgaaende_medlemskap_automatisk_vurdert_standard", listOf(Tag.of("standardgjennomslipp", resultat.toString())))
 
 fun PrometheusMeterRegistry.forutgåendeMedlemskapGapGjennomslipp(resultat: Boolean): Counter =
-    this.counter("behandlingsflyt_forutgaaende_medlemskap_automatisk_vurdert_med_gap", listOf(Tag.of("gapjennomslipp", resultat.toString())))
+    this.counter("behandlingsflyt_forutgaaende_medlemskap_automatisk_vurdert_med_gap", listOf(Tag.of("gapgjennomslipp", resultat.toString())))
