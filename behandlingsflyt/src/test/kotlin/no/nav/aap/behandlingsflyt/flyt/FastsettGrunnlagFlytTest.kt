@@ -14,7 +14,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadMedlemskap
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadStudentDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadV0
 import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
-import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
@@ -28,17 +27,19 @@ import java.time.Year
 class FastsettGrunnlagFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
     @Test
     fun `kan hente inn manuell inntektsdata i grunnlag og benytte i beregning`() {
-        val ident = nyPerson(harYrkesskade = false, harUtenlandskOpphold = false, inntekter = mutableListOf())
+        val person = nyPerson(harYrkesskade = false, harUtenlandskOpphold = false, inntekter = mutableListOf())
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
         val nedsattDato = LocalDate.now()
 
         // Oppretter vanlig søknad
-        val behandling = sendInnSøknad(
-            ident, periode, SøknadV0(
+        val behandling = sendInnFørsteSøknad(
+            søknad = SøknadV0(
                 student = SøknadStudentDto(StudentStatus.Nei), yrkesskade = "NEI", oppgitteBarn = null,
                 medlemskap = SøknadMedlemskapDto("JA", null, "NEI", null, null)
-            )
-        )
+            ),
+            person = person,
+            mottattTidspunkt = periode.fom.atStartOfDay(),
+        ).second
             .løsFramTilGrunnlag(periode.fom)
             .løsAvklaringsBehov(
                 FastsettBeregningstidspunktLøsning(
@@ -107,16 +108,21 @@ class FastsettGrunnlagFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash
 
     @Test
     fun `henter ikke inn manuell inntektsdata i grunnlag om inntektsdata eksisterer fra før`() {
-        val ident = ident()
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
 
         // Oppretter vanlig søknad
-        sendInnSøknad(
-            ident, periode, SøknadV0(
+        sendInnFørsteSøknad(
+            søknad = SøknadV0(
                 student = SøknadStudentDto(StudentStatus.Nei), yrkesskade = "NEI", oppgitteBarn = null,
-                medlemskap = SøknadMedlemskapDto("JA", null, "NEI", null, null)
-            )
-        )
+                medlemskap = SøknadMedlemskapDto(
+                    harBoddINorgeSiste5År = "JA",
+                    harArbeidetINorgeSiste5År = null,
+                    arbeidetUtenforNorgeFørSykdom = "NEI",
+                    iTilleggArbeidUtenforNorge = null,
+                    utenlandsOpphold = null
+                )
+            ), person = TestPersoner.STANDARD_PERSON(), mottattTidspunkt = periode.fom.atStartOfDay(),
+        ).second
             .løsFramTilGrunnlag(periode.fom)
             .løsAvklaringsBehov(
                 FastsettBeregningstidspunktLøsning(

@@ -52,12 +52,9 @@ class OvergangArbeidStegTest {
 
     @Test
     fun `Overgang arbeid skal vurderes ved forutgående ordinær aap + nei 11-5`() {
-        val rettighetsperiode = Periode(
-            1 januar 2020,
-            1 januar 2021,
-        )
+        val søknadsdato = 1 januar 2020
         val person = person()
-        val sak = sak(person, rettighetsperiode)
+        val sak = sak(person, søknadsdato)
         val behandling = behandling(sak, typeBehandling = TypeBehandling.Førstegangsbehandling)
         val kontekstMedPerioder = flytKontekstMedPerioder(sak, behandling, VurderingType.FØRSTEGANGSBEHANDLING)
 
@@ -69,8 +66,8 @@ class OvergangArbeidStegTest {
             every { hentHvisEksisterer(any()) } returns SykdomGrunnlag(
                 yrkesskadevurdering = null,
                 sykdomsvurderinger = listOf(
-                    sykdom(erSyk = true, vurderingenGjelderFra = rettighetsperiode.fom),
-                    sykdom(erSyk = false, vurderingenGjelderFra = rettighetsperiode.fom.plusMonths(2))
+                    sykdom(erSyk = true, vurderingenGjelderFra = søknadsdato),
+                    sykdom(erSyk = false, vurderingenGjelderFra = søknadsdato.plusMonths(2))
                 )
             )
         }
@@ -85,8 +82,8 @@ class OvergangArbeidStegTest {
             tidligereVurderinger = FakeTidligereVurderinger(
                 tidslinjeOf(
                     Periode(
-                        rettighetsperiode.fom,
-                        rettighetsperiode.fom.plusMonths(2)
+                        søknadsdato,
+                        søknadsdato.plusMonths(2)
                     ) to TidligereVurderinger.PotensieltOppfylt(
                         RettighetsType.BISTANDSBEHOV
                     )
@@ -104,12 +101,9 @@ class OvergangArbeidStegTest {
 
     @Test
     fun `Overgang arbeid skal vurderes ved forutgående ordinær aap + delvis ufør`() {
-        val rettighetsperiode = Periode(
-            1 januar 2020,
-            1 januar 2021,
-        )
+        val søknadsdato = 1 januar 2020
         val person = person()
-        val sak = sak(person, rettighetsperiode)
+        val sak = sak(person, søknadsdato)
         val behandling = behandling(sak, typeBehandling = TypeBehandling.Førstegangsbehandling)
         val kontekstMedPerioder = flytKontekstMedPerioder(sak, behandling, VurderingType.FØRSTEGANGSBEHANDLING)
 
@@ -117,7 +111,7 @@ class OvergangArbeidStegTest {
             every { hentHvisEksisterer(any()) } returns SykdomGrunnlag(
                 yrkesskadevurdering = null,
                 sykdomsvurderinger = listOf(
-                    sykdom(erSyk = true, vurderingenGjelderFra = rettighetsperiode.fom),
+                    sykdom(erSyk = true, vurderingenGjelderFra = søknadsdato),
                 )
             )
         }
@@ -132,8 +126,8 @@ class OvergangArbeidStegTest {
             tidligereVurderinger = FakeTidligereVurderinger(
                 tidslinjeOf(
                     Periode(
-                        rettighetsperiode.fom,
-                        rettighetsperiode.fom.plusMonths(2)
+                        søknadsdato,
+                        søknadsdato.plusMonths(2)
                     ) to TidligereVurderinger.PotensieltOppfylt(
                         RettighetsType.BISTANDSBEHOV
                     )
@@ -156,12 +150,13 @@ class OvergangArbeidStegTest {
 
     @Test
     fun `Overgang arbeid skal ikke vurderes om 11-5 oppfylt ved yrkesskadefordel`() {
+        val søknadsdato = 1 januar 2020
         val rettighetsperiode = Periode(
             1 januar 2020,
             1 januar 2021,
         )
         val person = person()
-        val sak = sak(person, rettighetsperiode)
+        val sak = sak(person, søknadsdato)
         val behandling = behandling(sak, typeBehandling = TypeBehandling.Førstegangsbehandling)
         val kontekstMedPerioder = flytKontekstMedPerioder(sak, behandling, VurderingType.FØRSTEGANGSBEHANDLING)
 
@@ -235,8 +230,8 @@ class OvergangArbeidStegTest {
             )
         )
 
-    private fun sak(person: Person, periode: Periode): Sak =
-        sakRepository.finnEllerOpprett(person, periode)
+    private fun sak(person: Person, søknadsdato: LocalDate): Sak =
+        sakRepository.finnEllerOpprett(person, søknadsdato)
 
     private fun person(): Person =
         Person(PersonId(random.nextLong()), UUID.randomUUID(), listOf(genererIdent(LocalDate.now().minusYears(23))))

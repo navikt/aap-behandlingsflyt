@@ -44,17 +44,19 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.LocalDateTime
-import java.util.UUID
+import java.util.*
 
 class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
 
     @Test
     fun `11-18 uføre underveis i en behandling`() {
-        val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
-        val virkningsdatoFørsteLøsningOvertgangUføre = periode.fom.plusDays(2)
-        val virkningsdatoAndreLøsningOvergangUføre = periode.fom.minusDays(20)
+        val søknadstidspunkt = LocalDate.now()
+
+        val virkningsdatoFørsteLøsningOvertgangUføre = søknadstidspunkt.plusDays(2)
+        val virkningsdatoAndreLøsningOvergangUføre = søknadstidspunkt.minusDays(20)
+
         // Sender inn en søknad
-        var (_, behandling) = sendInnFørsteSøknad(periode = periode)
+        var (_, behandling) = sendInnFørsteSøknad(mottattTidspunkt = søknadstidspunkt.atStartOfDay())
         behandling
             .medKontekst {
                 assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
@@ -74,7 +76,7 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::
                             erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
                             erArbeidsevnenNedsatt = true,
                             yrkesskadeBegrunnelse = null,
-                            fom = periode.fom,
+                            fom = søknadstidspunkt,
                             tom = null
                         )
                     )
@@ -91,7 +93,7 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::
                             erBehovForAnnenOppfølging = false,
                             skalVurdereAapIOvergangTilArbeid = null,
                             overgangBegrunnelse = "Yep",
-                            fom = periode.fom,
+                            fom = søknadstidspunkt,
                             tom = null
                         )
                     ),
@@ -102,7 +104,7 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::
                 "Du mangler vurdering for ${
                     listOf(
                         Periode(
-                            periode.fom,
+                            søknadstidspunkt,
                             virkningsdatoFørsteLøsningOvertgangUføre.minusDays(1)
                         )
                     ).toHumanReadable()
@@ -168,7 +170,7 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::
             .bekreftVurderinger()
             .kvalitetssikre()
             .løsBeregningstidspunkt()
-            .løsOppholdskrav(periode.fom)
+            .løsOppholdskrav(søknadstidspunkt)
             .løsAndreStatligeYtelser()
             .medKontekst {
                 assertThat(åpneAvklaringsbehov).anySatisfy { avklaringsbehov -> assertThat(avklaringsbehov.definisjon == Definisjon.FORESLÅ_VEDTAK).isTrue() }
@@ -206,7 +208,7 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::
         // Sjekker at overgangUføreVilkår ble oppfylt med innvilgelsesårsak satt til 11-13.
         assertTidslinje(
             overgangUføreVilkår.tidslinje().begrensetTil(underveisPeriode),
-            Periode(periode.fom, virkningsdatoAndreLøsningOvergangUføre.plusMonths(8).minusDays(1)) to {
+            Periode(søknadstidspunkt, virkningsdatoAndreLøsningOvergangUføre.plusMonths(8).minusDays(1)) to {
                 assertThat(it.utfall).isEqualTo(Utfall.OPPFYLT)
             })
 
@@ -221,7 +223,7 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::
 
         assertTidslinje(
             vilkårsresultat.rettighetstypeTidslinje().begrensetTil(underveisPeriode),
-            Periode(periode.fom, virkningsdatoAndreLøsningOvergangUføre.plusMonths(8).minusDays(1)) to {
+            Periode(søknadstidspunkt, virkningsdatoAndreLøsningOvergangUføre.plusMonths(8).minusDays(1)) to {
                 assertThat(it).isEqualTo(RettighetsType.VURDERES_FOR_UFØRETRYGD)
             },
         )
@@ -230,13 +232,12 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::
     @Test
     fun `11-18 uføre underveis i en behandling - deretter ikke syk`() {
         val fom = LocalDate.of(2026, 1, 1)
-        val periode = Periode(fom, fom.plusYears(3))
-        val overgangUførDato = periode.fom.plusDays(10)
-        val ikkeLengerSykDato = periode.fom.plusDays(20)
+        val overgangUførDato = fom.plusDays(10)
+        val ikkeLengerSykDato = fom.plusDays(20)
 
-        val (sak, behandling) = sendInnFørsteSøknad(periode = periode)
+        val (sak, behandling) = sendInnFørsteSøknad(mottattTidspunkt = fom.atStartOfDay())
         behandling
-            .løsSykdom(periode.fom)
+            .løsSykdom(fom)
             .løsAvklaringsBehov(
                 AvklarBistandsbehovLøsning(
                     løsningerForPerioder = listOf(
@@ -247,7 +248,7 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::
                             erBehovForAnnenOppfølging = null,
                             skalVurdereAapIOvergangTilArbeid = null,
                             overgangBegrunnelse = "Yep",
-                            fom = periode.fom,
+                            fom = fom,
                             tom = null
                         ),
                         BistandLøsningDto(
@@ -283,7 +284,7 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::
             .bekreftVurderinger()
             .kvalitetssikre()
             .løsBeregningstidspunkt()
-            .løsOppholdskrav(periode.fom)
+            .løsOppholdskrav(fom)
             .løsAndreStatligeYtelser()
             .løsAvklaringsBehov(ForeslåVedtakLøsning())
             .fattVedtak()
@@ -426,7 +427,7 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::
             no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.OVERGANG_UFORE
         )
             .medKontekst {
-                assertThat(åpneAvklaringsbehov.map { it.definisjon }).containsExactly(Definisjon.AVKLAR_BISTANDSBEHOV);
+                assertThat(åpneAvklaringsbehov.map { it.definisjon }).containsExactly(Definisjon.AVKLAR_BISTANDSBEHOV)
             }
             .løsAvklaringsBehov(
                 AvklarBistandsbehovLøsning(
@@ -456,7 +457,7 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::
             )
             // 2.
             .medKontekst {
-                assertThat(åpneAvklaringsbehov.map { it.definisjon }).containsExactly(Definisjon.AVKLAR_OVERGANG_UFORE);
+                assertThat(åpneAvklaringsbehov.map { it.definisjon }).containsExactly(Definisjon.AVKLAR_OVERGANG_UFORE)
             }
 
             // 1.
@@ -476,7 +477,7 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::
                 )
             )
             .medKontekst {
-                assertThat(åpneAvklaringsbehov.map { it.definisjon }).doesNotContain(Definisjon.AVKLAR_OVERGANG_UFORE);
+                assertThat(åpneAvklaringsbehov.map { it.definisjon }).doesNotContain(Definisjon.AVKLAR_OVERGANG_UFORE)
             }
             // Denne skal ideelt ikke løftes, men ikke et veldig vanlig case (delvis ufør + ja 11-18)
             .løsOvergangArbeid(utfall = Utfall.IKKE_OPPFYLT, fom = overgangUføreDato.plusMonths(8))
@@ -488,7 +489,7 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::
             no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.OVERGANG_UFORE
         )
             .medKontekst {
-                assertThat(behandling.aktivtSteg()).isEqualTo(StegType.OVERGANG_UFORE);
+                assertThat(behandling.aktivtSteg()).isEqualTo(StegType.OVERGANG_UFORE)
             }
     }
 }

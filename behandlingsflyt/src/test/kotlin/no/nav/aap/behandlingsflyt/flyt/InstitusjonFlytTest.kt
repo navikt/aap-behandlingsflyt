@@ -48,8 +48,7 @@ import java.time.LocalDate
 class InstitusjonFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
     @Test
     fun `Stopper opp på institusjonssteget i førstegangsbehandling når innleggelsesdato er mer enn 2 mnd siden`() {
-        val fom = LocalDate.now()
-        val periode = Periode(fom, fom.plusYears(3))
+        val søknadsdato = LocalDate.now()
 
         val person = TestPersoner.STANDARD_PERSON()
         person.institusjonsopphold = listOf(
@@ -65,8 +64,7 @@ class InstitusjonFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::cla
 
         val (_, behandling) = sendInnFørsteSøknad(
             person = person,
-            mottattTidspunkt = fom.atStartOfDay(),
-            periode = periode,
+            mottattTidspunkt = søknadsdato.atStartOfDay(),
         )
 
         behandling
@@ -75,14 +73,14 @@ class InstitusjonFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::cla
                 assertThat(åpneAvklaringsbehov).isNotEmpty()
                 assertThat(behandling.status()).isEqualTo(Status.UTREDES)
             }
-            .løsSykdom(periode.fom)
-            .løsBistand(periode.fom)
+            .løsSykdom(søknadsdato)
+            .løsBistand(søknadsdato)
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
             .bekreftVurderinger()
             .kvalitetssikre()
             .løsBeregningstidspunkt()
-            .løsOppholdskrav(fom)
+            .løsOppholdskrav(søknadsdato)
             .medKontekst {
                 assertThat(åpneAvklaringsbehov.map { it.definisjon }).contains(Definisjon.AVKLAR_HELSEINSTITUSJON)
             }
@@ -718,7 +716,7 @@ class InstitusjonFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::cla
     @Test
     fun `fra pågående institusjonsopphold til avsluttet opphold med gitt sluttdato`() {
         val fom = LocalDate.now().minusMonths(5)
-        val pågåendeOpphold = Tid.MAKS;
+        val pågåendeOpphold = Tid.MAKS
         val tidligsteReduksjonsdato = fom.withDayOfMonth(1).plusMonths(4)
 
         val (sak, behandling) = sendInnFørsteSøknad(

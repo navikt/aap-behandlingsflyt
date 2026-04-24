@@ -18,19 +18,19 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.UtenlandsPeriodeDto
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.medlemskaplovvalg.MedlemskapArbeidInntektRepositoryImpl
 import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
-import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
+import java.time.LocalDateTime
 
-class LovvalgOgMedlemskapFlytTest: AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
+class LovvalgOgMedlemskapFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
     @Test
     fun `ved førstegangsbehandling med avslag før sykdom ved manglende medlemskap er ikke sykdomsvurdering for brev aktuelt`() {
         val (sak, behandling) = sendInnFørsteSøknad(
-            periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3)),
+            mottattTidspunkt = LocalDate.now().atStartOfDay(),
             søknad = TestSøknader.SØKNAD_INGEN_MEDLEMSKAP
         )
 
@@ -46,7 +46,7 @@ class LovvalgOgMedlemskapFlytTest: AbstraktFlytOrkestratorTest(AlleAvskruddUnlea
     @Test
     fun `ved førstegangsbehandling og annet lovvalgsland hopper behandling rett til foreslå vedtak`() {
         val (sak, behandling) = sendInnFørsteSøknad(
-            periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3)),
+            mottattTidspunkt = LocalDateTime.now(),
             søknad = TestSøknader.SØKNAD_INGEN_MEDLEMSKAP
         )
 
@@ -223,7 +223,6 @@ class LovvalgOgMedlemskapFlytTest: AbstraktFlytOrkestratorTest(AlleAvskruddUnlea
         val (_, behandling) = sendInnFørsteSøknad(
             person = person,
             mottattTidspunkt = periode.fom.atStartOfDay(),
-            periode = periode,
             søknad = SøknadV0(
                 student = SøknadStudentDto(StudentStatus.Nei), yrkesskade = "NEI", oppgitteBarn = null,
                 medlemskap = SøknadMedlemskapDto("NEI", null, "JA", null, null)
@@ -239,16 +238,14 @@ class LovvalgOgMedlemskapFlytTest: AbstraktFlytOrkestratorTest(AlleAvskruddUnlea
 
     @Test
     fun `Går automatisk forbi medlemskap når kravene til manuell avklaring ikke oppfylles`() {
-        val ident = ident()
-        val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
 
         // Oppretter vanlig søknad
-        val behandling = sendInnSøknad(
-            ident, periode, SøknadV0(
+        val behandling = sendInnFørsteSøknad(
+            SøknadV0(
                 student = SøknadStudentDto(StudentStatus.Nei), yrkesskade = "NEI", oppgitteBarn = null,
                 medlemskap = SøknadMedlemskapDto("JA", null, "NEI", null, null)
-            )
-        )
+            ), TestPersoner.STANDARD_PERSON(), LocalDate.now().atStartOfDay()
+        ).second
 
         // Validér avklaring
         val åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling.id)
@@ -257,12 +254,49 @@ class LovvalgOgMedlemskapFlytTest: AbstraktFlytOrkestratorTest(AlleAvskruddUnlea
 
     @Test
     fun `Gir oppfylt når bruker ikke har lovvalgsland men oppfyller trygdeloven`() {
-        val ident = ident()
-        val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
-
+        val søknadsdato = LocalDate.now()
         // Oppretter vanlig søknad
-        var behandling = sendInnSøknad(
-            ident, periode,
+        var behandling = sendInnFørsteSøknad(
+            SøknadV0(
+                student = SøknadStudentDto(StudentStatus.Nei), yrkesskade = "NEI", oppgitteBarn = null,
+                medlemskap = SøknadMedlemskapDto(
+                    "JA", null, "JA", null,
+                    listOf(
+                        UtenlandsPeriodeDto(
+                            "SWE",
+                            søknadsdato.plusMonths(1),
+                            søknadsdato.minusMonths(1),
+                            "JA",
+                            null,
+                            søknadsdato.plusMonths(1),
+                            søknadsdato.minusMonths(1),
+                        )
+                    )
+                )
+            ),
+            TestPersoner.STANDARD_PERSON(), søknadsdato.atStartOfDay()
+
+        ).second
+
+        // Validér avklaring
+        var åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling.id)
+        assertTrue(åpneAvklaringsbehov.all { it.definisjon == Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP })
+
+        // Trigger manuell vurdering
+        behandling = behandling.løsLovvalg(søknadsdato)
+
+        // Validér riktig resultat
+        åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling.id)
+        val vilkårsResultat = hentVilkårsresultat(behandling.id).finnVilkår(Vilkårtype.LOVVALG).vilkårsperioder()
+        assertTrue(åpneAvklaringsbehov.none { it.definisjon == Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP })
+        assertTrue(vilkårsResultat.all { it.erOppfylt() })
+    }
+
+    @Test
+    fun `Gir avslag når bruker har annet lovvalgsland`() {
+        val søknadsdato = LocalDate.now()
+        // Oppretter vanlig søknad
+        var behandling = sendInnFørsteSøknad(
             SøknadV0(
                 student = SøknadStudentDto(StudentStatus.Nei), yrkesskade = "NEI", oppgitteBarn = null,
                 medlemskap = SøknadMedlemskapDto(
@@ -278,49 +312,10 @@ class LovvalgOgMedlemskapFlytTest: AbstraktFlytOrkestratorTest(AlleAvskruddUnlea
                             LocalDate.now().minusMonths(1),
                         )
                     )
-                )
-            )
-        )
-
-        // Validér avklaring
-        var åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling.id)
-        assertTrue(åpneAvklaringsbehov.all { it.definisjon == Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP })
-
-        // Trigger manuell vurdering
-        behandling = behandling.løsLovvalg(periode.fom)
-
-        // Validér riktig resultat
-        åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling.id)
-        val vilkårsResultat = hentVilkårsresultat(behandling.id).finnVilkår(Vilkårtype.LOVVALG).vilkårsperioder()
-        assertTrue(åpneAvklaringsbehov.none { it.definisjon == Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP })
-        assertTrue(vilkårsResultat.all { it.erOppfylt() })
-    }
-
-    @Test
-    fun `Gir avslag når bruker har annet lovvalgsland`() {
-        val ident = ident()
-        val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
-
-        // Oppretter vanlig søknad
-        var behandling = sendInnSøknad(
-            ident, periode, SøknadV0(
-                student = SøknadStudentDto(StudentStatus.Nei), yrkesskade = "NEI", oppgitteBarn = null,
-                medlemskap = SøknadMedlemskapDto(
-                    "JA", null, "JA", null,
-                    listOf(
-                        UtenlandsPeriodeDto(
-                            "SWE",
-                            LocalDate.now().plusMonths(1),
-                            LocalDate.now().minusMonths(1),
-                            "JA",
-                            null,
-                            LocalDate.now().plusMonths(1),
-                            LocalDate.now().minusMonths(1),
-                        )
-                    )
                 ),
-            )
-        )
+            ),
+            TestPersoner.STANDARD_PERSON(), søknadsdato.atStartOfDay(),
+        ).second
 
         // Validér avklaring
         var åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling.id)
@@ -332,7 +327,7 @@ class LovvalgOgMedlemskapFlytTest: AbstraktFlytOrkestratorTest(AlleAvskruddUnlea
                 AvklarPeriodisertLovvalgMedlemskapLøsning(
                     løsningerForPerioder = listOf(
                         PeriodisertManuellVurderingForLovvalgMedlemskapDto(
-                            fom = periode.fom,
+                            fom = søknadsdato,
                             tom = null,
                             begrunnelse = "",
                             lovvalg = LovvalgDto("begrunnelse", EØSLandEllerLandMedAvtale.DNK),
@@ -351,12 +346,11 @@ class LovvalgOgMedlemskapFlytTest: AbstraktFlytOrkestratorTest(AlleAvskruddUnlea
 
     @Test
     fun `Gir avslag når bruker ikke er medlem i trygden`() {
-        val ident = ident()
-        val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
+        val søknadsdato = LocalDate.now()
 
         // Oppretter vanlig søknad
-        var behandling = sendInnSøknad(
-            ident, periode, SøknadV0(
+        var behandling = sendInnFørsteSøknad(
+            SøknadV0(
                 student = SøknadStudentDto(StudentStatus.Nei), yrkesskade = "NEI", oppgitteBarn = null,
                 medlemskap = SøknadMedlemskapDto(
                     "JA", null, "JA", null,
@@ -372,15 +366,16 @@ class LovvalgOgMedlemskapFlytTest: AbstraktFlytOrkestratorTest(AlleAvskruddUnlea
                         )
                     )
                 ),
-            )
-        )
+            ),
+            TestPersoner.STANDARD_PERSON(), søknadsdato.atStartOfDay(),
+        ).second
 
         // Validér avklaring
         var åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling.id)
         assertTrue(åpneAvklaringsbehov.all { it.definisjon == Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP })
 
         // Trigger manuell vurdering
-        behandling = behandling.løsLovvalg(periode.fom, false)
+        behandling = behandling.løsLovvalg(søknadsdato, false)
 
         // Validér avklaring
         åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling.id)
@@ -394,17 +389,17 @@ class LovvalgOgMedlemskapFlytTest: AbstraktFlytOrkestratorTest(AlleAvskruddUnlea
 
     @Test
     fun `Kan løse overstyringsbehov til ikke oppfylt`() {
-        val ident = ident()
-        val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
+        val søknadsdato = LocalDate.now()
 
         // Oppretter vanlig søknad
-        sendInnSøknad(
-            ident, periode, SøknadV0(
+        sendInnFørsteSøknad(
+            SøknadV0(
                 student = SøknadStudentDto(StudentStatus.Nei), yrkesskade = "NEI", oppgitteBarn = null,
                 medlemskap = SøknadMedlemskapDto("JA", null, "NEI", null, null)
-            )
-        )
-            .løsLovvalgOverstyrt(periode.fom, false)
+            ),
+            TestPersoner.STANDARD_PERSON(), søknadsdato.atStartOfDay(),
+        ).second
+            .løsLovvalgOverstyrt(søknadsdato, false)
             .medKontekst {
                 assertThat(åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
                     .doesNotContain(Definisjon.MANUELL_OVERSTYRING_LOVVALG)
@@ -420,15 +415,15 @@ class LovvalgOgMedlemskapFlytTest: AbstraktFlytOrkestratorTest(AlleAvskruddUnlea
 
     @Test
     fun `Kan løse overstyringsbehov til oppfylt`() {
-        val ident = ident()
-        val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
+        val søknadsdato = LocalDate.now()
 
-        val behandling = sendInnSøknad(
-            ident, periode, SøknadV0(
+        val behandling = sendInnFørsteSøknad(
+            SøknadV0(
                 student = SøknadStudentDto(StudentStatus.Nei), yrkesskade = "NEI", oppgitteBarn = null,
                 medlemskap = SøknadMedlemskapDto("JA", null, "NEI", null, null)
-            )
-        ).løsLovvalgOverstyrt(periode.fom, true)
+            ), TestPersoner.STANDARD_PERSON(), søknadsdato.atStartOfDay()
+        ).second
+            .løsLovvalgOverstyrt(søknadsdato, true)
 
         // Validér avklaring
         val åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling.id)
