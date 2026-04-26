@@ -98,7 +98,6 @@ class OvergangUforeGrunnlagApiTest : BaseApiTest() {
             val overgangUføreGrunnlagResponse = responseMedSøknad.body<OvergangUføreGrunnlagResponse>()
             val overgangUføreGrunnlagUtenSøknadResponse = responseUtenSøknad.body<OvergangUføreGrunnlagResponse>()
             assertThat(overgangUføreGrunnlagResponse.nyeVurderinger).isEqualTo(listOf(vurderingResponse))
-            assertThat(overgangUføreGrunnlagResponse.vurdering).isEqualTo(vurderingResponse)
             assertThat(overgangUføreGrunnlagResponse.uføreSøknadOpplysninger).isEqualTo(uføreSøknadOpplysninger)
 
             assertThat(overgangUføreGrunnlagUtenSøknadResponse.uføreSøknadOpplysninger).isNull()

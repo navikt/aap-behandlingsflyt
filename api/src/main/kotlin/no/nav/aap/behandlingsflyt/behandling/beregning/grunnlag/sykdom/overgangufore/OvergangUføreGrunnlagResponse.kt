@@ -8,11 +8,7 @@ import java.time.LocalDate
 
 data class OvergangUføreGrunnlagResponse(
     override val harTilgangTilÅSaksbehandle: Boolean,
-    @Deprecated("Erstattes av nyeVurderinger")
-    val vurdering: OvergangUføreVurderingResponse?,
     override val nyeVurderinger: List<OvergangUføreVurderingResponse>,
-    @Deprecated("Erstattes av sisteVedtatteVurderinger")
-    val gjeldendeVedtatteVurderinger: List<OvergangUføreVurderingResponse>,
     override val sisteVedtatteVurderinger: List<OvergangUføreVurderingResponse>,
     val historiskeVurderinger: List<OvergangUføreVurderingResponse>,
     val gjeldendeSykdsomsvurderinger: List<SykdomsvurderingResponse>,

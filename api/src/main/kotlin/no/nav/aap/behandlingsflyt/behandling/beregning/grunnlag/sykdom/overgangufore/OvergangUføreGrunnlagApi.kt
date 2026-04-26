@@ -63,23 +63,13 @@ fun NormalOpenAPIRoute.overgangUforeGrunnlagApi(
                     val nyeVurderinger = grunnlag?.overgangUføreVurderingerVurdertIBehandling(behandling.id)
                         .orEmpty()
                         .map { OvergangUføreVurderingResponse.fraDomene(it, vurdertAvService) }
-
-                    val nyesteVurdering = grunnlag?.overgangUføreVurderingerVurdertIBehandling(behandling.id)
-                        ?.maxByOrNull { it.opprettet!! }
-                        ?.let { OvergangUføreVurderingResponse.fraDomene(it, vurdertAvService) }
-
+                    
                     val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
                     val avklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_OVERGANG_UFORE)
 
                     OvergangUføreGrunnlagResponse(
                         harTilgangTilÅSaksbehandle = kanSaksbehandle() && kanLøseBehovSomSkalVæreLåstEtterKvalitetssikring(Definisjon.AVKLAR_OVERGANG_UFORE.løsesISteg, behandling),
-                        vurdering = nyesteVurdering, // TODO: Fjern
                         nyeVurderinger = nyeVurderinger,
-                        // TODO: Fjern
-                        gjeldendeVedtatteVurderinger = OvergangUføreVurderingResponse.fraDomene(
-                            grunnlag?.vedtattOvergangUførevurderingstidslinje(behandling.id).orEmpty(),
-                            vurdertAvService
-                        ),
                         sisteVedtatteVurderinger = OvergangUføreVurderingResponse.fraDomene(
                             grunnlag?.vedtattOvergangUførevurderingstidslinje(behandling.id).orEmpty(),
                             vurdertAvService
