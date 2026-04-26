@@ -380,6 +380,12 @@ public enum class Definisjon(
         løsesISteg = StegType.FORESLÅ_VEDTAK,
         løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL)
     ),
+    FORESLÅ_VEDTAK_VEDTAKSLENGDE(
+        kode = AvklaringsbehovKode.`5060`,
+        type = BehovType.MANUELT_PÅKREVD,
+        løsesISteg = StegType.FORESLÅ_VEDTAK_VEDTAKSLENGDE,
+        løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL)
+    ),
     FATTE_VEDTAK(
         kode = AvklaringsbehovKode.`5099`,
         type = BehovType.MANUELT_PÅKREVD,
