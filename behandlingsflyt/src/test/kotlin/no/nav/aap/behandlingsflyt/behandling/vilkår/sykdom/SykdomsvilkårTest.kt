@@ -13,7 +13,6 @@ import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
-import no.nav.aap.komponenter.verdityper.Tid
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.Instant
@@ -62,12 +61,6 @@ class SykdomsvilkårTest {
             sykepengeerstatningVilkår = Tidslinje()
         )
         Sykdomsvilkår(vilkårsresultat).vurder(faktagrunnlag)
-        val nyttOgGammelVilkårsresultat = SykdomsvilkårUtenVissVarighet(vilkårsresultat).vurderOgSammenlign(
-            faktagrunnlag,
-            vilkårsresultat,
-            Periode(kravdato, Tid.MAKS)
-        )
-        assertThat(nyttOgGammelVilkårsresultat.harDiff()).isFalse
 
         assertThat(vilkår.vilkårsperioder()).hasSize(1).allMatch { periode -> periode.utfall == Utfall.IKKE_OPPFYLT }
     }
@@ -98,12 +91,6 @@ class SykdomsvilkårTest {
         Sykdomsvilkår(vilkårsresultat).vurder(faktagrunnlag)
 
         val vilkår = vilkårsresultat.finnVilkår(Vilkårtype.SYKDOMSVILKÅRET)
-        val sammenlignedeVilkårsvurderinger = SykdomsvilkårUtenVissVarighet(vilkårsresultat).vurderOgSammenlign(
-            faktagrunnlag,
-            vilkårsresultat,
-            Periode(startDato, Tid.MAKS)
-        )
-        assertThat(sammenlignedeVilkårsvurderinger.harDiff()).isFalse
 
         assertThat(vilkår.vilkårsperioder()).hasSize(2)
 
@@ -170,13 +157,6 @@ class SykdomsvilkårTest {
 
         val vilkår = vilkårsresultat.finnVilkår(Vilkårtype.SYKDOMSVILKÅRET)
 
-        val sammenlignetVilkårsvurdering = SykdomsvilkårUtenVissVarighet(vilkårsresultat).vurderOgSammenlign(
-            faktagrunnlag,
-            vilkårsresultat,
-            Periode(startDato, Tid.MAKS)
-        )
-        assertThat(sammenlignetVilkårsvurdering.harDiff()).isFalse
-
         assertThat(vilkår.vilkårsperioder()).hasSize(1)
 
         vilkår.tidslinje().assertTidslinje(
@@ -216,12 +196,6 @@ class SykdomsvilkårTest {
         )
 
         val vilkår = vilkårsresultat.finnVilkår(Vilkårtype.SYKDOMSVILKÅRET)
-        val sammenlignetVilkårsvurdering = SykdomsvilkårUtenVissVarighet(vilkårsresultat).vurderOgSammenlign(
-            faktagrunnlag,
-            vilkårsresultat,
-            Periode(startDato, Tid.MAKS)
-        )
-        assertThat(sammenlignetVilkårsvurdering.harDiff()).isFalse
 
         assertThat(vilkår.vilkårsperioder()).hasSize(2)
 

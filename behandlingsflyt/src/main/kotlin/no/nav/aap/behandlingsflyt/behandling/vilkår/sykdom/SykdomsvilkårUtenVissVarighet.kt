@@ -28,35 +28,6 @@ class SykdomsvilkårUtenVissVarighet(vilkårsresultat: Vilkårsresultat) : Vilk�
         vilkår.leggTilVurderinger(tidslinje)
     }
 
-    fun vurderOgSammenlign(
-        grunnlag: SykdomsFaktagrunnlag,
-        eksisterendeVilkårsresultat: Vilkårsresultat,
-        rettighetsperiode: Periode
-    ): Tidslinje<SammenlignetSegment> {
-
-        val nySammenlignbarVilkårsvurderingTidslinje =
-            vurderVilkårUtenMutering(grunnlag).mapValue {
-                SammenlignbarVurdering(
-                    it.utfall,
-                    it.innvilgelsesårsak,
-                    it.avslagsårsak
-                )
-            }
-                .komprimer()
-                .begrensetTil(rettighetsperiode)
-
-        val gammelSammenlignbarVilkårsvurderingTidslinje =
-            eksisterendeVilkårsresultat.optionalVilkår(Vilkårtype.SYKDOMSVILKÅRET)?.tidslinje().orEmpty()
-                .mapValue { SammenlignbarVurdering(it.utfall, it.innvilgelsesårsak, it.avslagsårsak) }
-                .komprimer()
-                .begrensetTil(rettighetsperiode)
-
-
-        return gammelSammenlignbarVilkårsvurderingTidslinje.outerJoin(nySammenlignbarVilkårsvurderingTidslinje) { gammel, ny ->
-            SammenlignetSegment(gammel, ny)
-        }.komprimer()
-    }
-
     fun vurderVilkårUtenMutering(
         grunnlag: SykdomsFaktagrunnlag
     ): Tidslinje<Vilkårsvurdering> {
@@ -191,13 +162,3 @@ class SykdomsvilkårUtenVissVarighet(vilkårsresultat: Vilkårsresultat) : Vilk�
     }
 
 }
-
-data class SammenlignetSegment(val gammel: SammenlignbarVurdering?, val ny: SammenlignbarVurdering?)
-
-fun Tidslinje<SammenlignetSegment>.diff() = this.segmenter().filter { it.verdi.gammel != it.verdi.ny }
-fun Tidslinje<SammenlignetSegment>.harDiff() = this.segmenter().any { it.verdi.gammel != it.verdi.ny }
-data class SammenlignbarVurdering(
-    val utfall: Utfall,
-    val innvilgelsesårsak: Innvilgelsesårsak?,
-    val avslagsårsak: Avslagsårsak?
-)
