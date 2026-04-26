@@ -1,5 +1,7 @@
 package no.nav.aap.behandlingsflyt.flyt
 
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companion.plussEtÅrMedHverdager
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.ÅrMedHverdager
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakId
 import no.nav.aap.behandlingsflyt.help.assertTidslinjeEquals
 import no.nav.aap.behandlingsflyt.prosessering.datadeling.UtledArenaVedtakstype
@@ -31,7 +33,7 @@ class UtledArenavedtakFlytTest: AbstraktFlytOrkestratorTest(AlleAvskruddUnleash:
 
         assertTidslinjeEquals(arenavedtak,
             tidslinjeOf(
-                Periode(søknadsdato, søknadsdato.plusYears(1).minusDays(1)) to
+                Periode(søknadsdato, søknadsdato.plussEtÅrMedHverdager(ÅrMedHverdager.FØRSTE_ÅR)) to
                         UtledArenaVedtakstype.ArenaVedtak(
                             vedtakId = vedtakId,
                             vedtaksvariant = UtledArenaVedtakstype.ArenaVedtaksvariant.O_INNV_SOKNAD
