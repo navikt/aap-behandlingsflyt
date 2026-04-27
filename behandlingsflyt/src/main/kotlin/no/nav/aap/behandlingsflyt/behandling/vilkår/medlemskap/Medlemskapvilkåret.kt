@@ -9,6 +9,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
+import no.nav.aap.behandlingsflyt.forutgåendeMedlemskapGapGjennomslipp
+import no.nav.aap.behandlingsflyt.forutgåendeMedlemskapNorskOgAvslag
+import no.nav.aap.behandlingsflyt.prometheus
 import no.nav.aap.komponenter.type.Periode
 
 class Medlemskapvilkåret(
@@ -18,7 +21,8 @@ class Medlemskapvilkåret(
     private val vilkår = vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.LOVVALG)
 
     override fun vurder(grunnlag: MedlemskapLovvalgGrunnlag) {
-        val brukManuellVurderingForLovvalgMedlemskap = grunnlag.medlemskapArbeidInntektGrunnlag?.vurderinger?.isNotEmpty() ?: false
+        val brukManuellVurderingForLovvalgMedlemskap =
+            grunnlag.medlemskapArbeidInntektGrunnlag?.vurderinger?.isNotEmpty() ?: false
 
         if (brukManuellVurderingForLovvalgMedlemskap) {
             val gjeldendeVurderinger = grunnlag.medlemskapArbeidInntektGrunnlag.gjeldendeVurderinger()
@@ -53,13 +57,22 @@ class Medlemskapvilkåret(
                 .komprimer()
                 .begrensetTil(rettighetsPeriode)
 
+            // No-op: av kun norske, hvor mange får nei på manuell vurdering?
+            val kunNorskStatsborgerskap =
+                grunnlag.personopplysning?.statsborgerskap?.singleOrNull()?.land == "NO"
+            val ikkeoppfyltePerioder = vilkårsvurderinger.filter { it.verdi.utfall == Utfall.IKKE_OPPFYLT }.isNotEmpty()
+            prometheus.forutgåendeMedlemskapNorskOgAvslag(kunNorskStatsborgerskap && ikkeoppfyltePerioder).increment()
+
             vilkår.leggTilVurderinger(vilkårsvurderinger)
 
-        } else if (grunnlag.nyeSoknadGrunnlag == null)  {
+        } else if (grunnlag.nyeSoknadGrunnlag == null) {
             val vurderingsResultat = VurderingsResultat(Utfall.IKKE_RELEVANT, null, null)
             leggTilVurdering(rettighetsPeriode, grunnlag, vurderingsResultat, false)
         } else {
-            val kanBehandlesAutomatisk = MedlemskapLovvalgVurderingService().vurderTilhørighet(grunnlag, rettighetsPeriode).kanBehandlesAutomatisk
+            val kanBehandlesAutomatisk = MedlemskapLovvalgVurderingService().vurderTilhørighet(
+                grunnlag,
+                rettighetsPeriode
+            ).kanBehandlesAutomatisk
             val utfall = if (kanBehandlesAutomatisk) Utfall.OPPFYLT else Utfall.IKKE_VURDERT
             val vurderingsResultat = VurderingsResultat(utfall, null, null)
             leggTilVurdering(rettighetsPeriode, grunnlag, vurderingsResultat, false)
