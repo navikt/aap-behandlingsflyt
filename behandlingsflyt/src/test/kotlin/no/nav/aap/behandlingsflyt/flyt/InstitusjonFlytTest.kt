@@ -797,7 +797,7 @@ class InstitusjonFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::cla
             }
     }
 
-   
+
 
     // -------------------------------------------------------------------------
     // Hjelpemetoder
