@@ -15,7 +15,9 @@ data class Uføre(
 )
 
 private fun skalSetteSluttdatoPåSegmentPgaReellStans(uføre1: Uføre, uføre2: Uføre): Boolean {
-    return uføre1.uføregradTom?.isBefore(uføre2.uføregradFom?.minusDays(1)) == true
+    // TODO Hvis fom for neste segment ikke finnes kan vi ikke vite om det er stans eller ikke
+    if (uføre1.uføregradTom == null || uføre2.uføregradFom == null) return false
+    return uføre1.uføregradTom.isBefore(uføre2.uføregradFom.minusDays(1))
 }
 
 private fun Collection<Uføre>.utledRiktigSluttdatoForSegment(uføre: Uføre): LocalDate {

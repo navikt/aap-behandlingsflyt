@@ -84,4 +84,28 @@ class UføreTidslinjeTest {
             Periode(LocalDate.of(2022, 7, 1), LocalDate.of(2023, 12, 31)),
         )
     }
+
+    @Test
+    fun `Når uføregradFom ikke finnes ennå skal sluttdato bare settes for siste segment`() {
+        val sisteSegmentHarSluttdato = setOf(
+            Uføre(
+                virkningstidspunkt = LocalDate.of(2021, 2, 1),
+                uføregradTom = LocalDate.of(2021, 9, 30),
+                uføregrad = Prosent(80)
+            ),
+            Uføre(
+                virkningstidspunkt = LocalDate.of(2022, 7, 1),
+                uføregrad = Prosent(50),
+                uføregradTom = LocalDate.of(2023, 12, 31),
+            )
+        )
+
+        val tidslinje = sisteSegmentHarSluttdato.tilTidslinje()
+        assertThat(tidslinje.erSammenhengende()).isTrue()
+        assertThat(tidslinje.helePerioden().tom).isEqualTo(LocalDate.of(2023, 12, 31))
+        assertThat(tidslinje.segmenter().map { it.periode }).containsExactly(
+            Periode(LocalDate.of(2021, 2, 1), LocalDate.of(2022, 6, 30)),
+            Periode(LocalDate.of(2022, 7, 1), LocalDate.of(2023, 12, 31)),
+        )
+    }
 }
