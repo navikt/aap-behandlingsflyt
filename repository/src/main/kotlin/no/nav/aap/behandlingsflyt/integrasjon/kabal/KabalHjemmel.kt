@@ -37,6 +37,7 @@ enum class KabalHjemmel {
     FVL_35,
     TRRL_27,
     FTRL_KAPITTEL_2,
+    ANDRE_TRYGDEAVTALER
 }
 
 fun Hjemmel.tilKabalHjemmel(): KabalHjemmel {
@@ -86,5 +87,7 @@ fun Hjemmel.tilKabalHjemmel(): KabalHjemmel {
         Hjemmel.FOLKETRYGDLOVEN_22_13 -> KabalHjemmel.FTRL_22_13
         Hjemmel.FOLKETRYGDLOVEN_22_15 -> KabalHjemmel.FTRL_22_15
         Hjemmel.FOLKETRYGDLOVEN_22_17 -> KabalHjemmel.FTRL_22_17
+        
+        Hjemmel.ANDRE_TRYGDEAVTALER -> KabalHjemmel.ANDRE_TRYGDEAVTALER
     }
 }
