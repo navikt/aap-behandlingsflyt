@@ -63,7 +63,6 @@ class OvergangUforeGrunnlagApiTest : BaseApiTest() {
             brukerHarSøktUføretrygd = vurdering.brukerHarSøktOmUføretrygd,
             brukerHarFåttVedtakOmUføretrygd = vurdering.brukerHarFåttVedtakOmUføretrygd,
             brukerRettPåAAP = vurdering.brukerRettPåAAP,
-            virkningsdato = vurdering.fom,
             fom = vurdering.fom,
             tom = vurdering.tom,
             vurdertAv = VurdertAvResponse(vurdering.vurdertAv, LocalDate.now(), "Test Testesen", "Lokalenhetsnavn"),
