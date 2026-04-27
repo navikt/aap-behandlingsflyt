@@ -4,12 +4,12 @@ import io.mockk.every
 import io.mockk.mockk
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.Bistandsvurdering
+import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.Uføre
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangarbeid.OvergangArbeidRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
@@ -34,8 +34,10 @@ import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryVilkårsresultatRepo
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryProvider
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.behandlingsflyt.test.modell.genererIdent
+import no.nav.aap.komponenter.tidslinje.tidslinjeOf
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
+import no.nav.aap.komponenter.verdityper.Prosent
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.Instant
@@ -49,28 +51,23 @@ class OvergangArbeidStegTest {
     private val behandlingRepository = InMemoryBehandlingRepository
 
     @Test
-    fun `Overgang arbeid skal vurderes ved forutgående ordinær aap`() {
-        val rettighetsperiode = Periode(
-            1 januar 2020,
-            1 januar 2021,
-        )
+    fun `Overgang arbeid skal vurderes ved forutgående ordinær aap + nei 11-5`() {
+        val søknadsdato = 1 januar 2020
         val person = person()
-        val sak = sak(person, rettighetsperiode)
+        val sak = sak(person, søknadsdato)
         val behandling = behandling(sak, typeBehandling = TypeBehandling.Førstegangsbehandling)
         val kontekstMedPerioder = flytKontekstMedPerioder(sak, behandling, VurderingType.FØRSTEGANGSBEHANDLING)
 
 
-        val bistandMock: BistandRepository = mockk(relaxed = true) {
-            every { hentHvisEksisterer(any()) } returns BistandGrunnlag(
-                vurderinger = listOf(bistand(erBehov = true, vurderingenGjelderFra = rettighetsperiode.fom))
-            )
+        val uføreMock = mockk<UføreRepository> {
+            every { hentHvisEksisterer(any()) } returns null
         }
         val sykdomMock: SykdomRepository = mockk(relaxed = true) {
             every { hentHvisEksisterer(any()) } returns SykdomGrunnlag(
                 yrkesskadevurdering = null,
                 sykdomsvurderinger = listOf(
-                    sykdom(erSyk = true, vurderingenGjelderFra = rettighetsperiode.fom),
-                    sykdom(erSyk = false, vurderingenGjelderFra = rettighetsperiode.fom.plusMonths(2))
+                    sykdom(erSyk = true, vurderingenGjelderFra = søknadsdato),
+                    sykdom(erSyk = false, vurderingenGjelderFra = søknadsdato.plusMonths(2))
                 )
             )
         }
@@ -82,15 +79,67 @@ class OvergangArbeidStegTest {
                 every { hentHvisEksisterer(any()) } returns null
             },
             sykdomRepository = sykdomMock,
-            tidligereVurderinger = FakeTidligereVurderinger(),
-            bistandRepository = bistandMock,
+            tidligereVurderinger = FakeTidligereVurderinger(
+                tidslinjeOf(
+                    Periode(
+                        søknadsdato,
+                        søknadsdato.plusMonths(2)
+                    ) to TidligereVurderinger.PotensieltOppfylt(
+                        RettighetsType.BISTANDSBEHOV
+                    )
+                )
+            ),
+            uføreRepository = uføreMock,
             avklaringsbehovService = AvklaringsbehovService(inMemoryRepositoryProvider),
-            studentRepository = mockk<StudentRepository> {
+        )
+
+        steg.utfør(kontekstMedPerioder)
+        val behov = hentOvergangArbeidBehov(behandling)
+        assertThat(behov).isNotNull
+        assertThat(behov!!.erÅpent()).isTrue
+    }
+
+    @Test
+    fun `Overgang arbeid skal vurderes ved forutgående ordinær aap + delvis ufør`() {
+        val søknadsdato = 1 januar 2020
+        val person = person()
+        val sak = sak(person, søknadsdato)
+        val behandling = behandling(sak, typeBehandling = TypeBehandling.Førstegangsbehandling)
+        val kontekstMedPerioder = flytKontekstMedPerioder(sak, behandling, VurderingType.FØRSTEGANGSBEHANDLING)
+
+        val sykdomMock: SykdomRepository = mockk(relaxed = true) {
+            every { hentHvisEksisterer(any()) } returns SykdomGrunnlag(
+                yrkesskadevurdering = null,
+                sykdomsvurderinger = listOf(
+                    sykdom(erSyk = true, vurderingenGjelderFra = søknadsdato),
+                )
+            )
+        }
+
+        val steg = OvergangArbeidSteg(
+            vilkårsresultatRepository = InMemoryVilkårsresultatRepository,
+            avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
+            overgangArbeidRepository = mockk<OvergangArbeidRepository> {
                 every { hentHvisEksisterer(any()) } returns null
             },
-            overgangUføreRepository = mockk<OvergangUføreRepository> {
-                every { hentHvisEksisterer(any()) } returns null
-            },
+            sykdomRepository = sykdomMock,
+            tidligereVurderinger = FakeTidligereVurderinger(
+                tidslinjeOf(
+                    Periode(
+                        søknadsdato,
+                        søknadsdato.plusMonths(2)
+                    ) to TidligereVurderinger.PotensieltOppfylt(
+                        RettighetsType.BISTANDSBEHOV
+                    )
+                )
+            ),
+            avklaringsbehovService = AvklaringsbehovService(inMemoryRepositoryProvider),
+            uføreRepository = mockk<UføreRepository> {
+                every { hentHvisEksisterer(any()) } returns UføreGrunnlag(
+                    behandlingId = behandling.id,
+                    vurderinger = setOf(Uføre(virkningstidspunkt = 1 januar 2010, uføregrad = Prosent(50)))
+                )
+            }
         )
 
         steg.utfør(kontekstMedPerioder)
@@ -101,21 +150,20 @@ class OvergangArbeidStegTest {
 
     @Test
     fun `Overgang arbeid skal ikke vurderes om 11-5 oppfylt ved yrkesskadefordel`() {
+        val søknadsdato = 1 januar 2020
         val rettighetsperiode = Periode(
             1 januar 2020,
             1 januar 2021,
         )
         val person = person()
-        val sak = sak(person, rettighetsperiode)
+        val sak = sak(person, søknadsdato)
         val behandling = behandling(sak, typeBehandling = TypeBehandling.Førstegangsbehandling)
         val kontekstMedPerioder = flytKontekstMedPerioder(sak, behandling, VurderingType.FØRSTEGANGSBEHANDLING)
 
-
-        val bistandMock: BistandRepository = mockk(relaxed = true) {
-            every { hentHvisEksisterer(any()) } returns BistandGrunnlag(
-                vurderinger = listOf(bistand(erBehov = true, vurderingenGjelderFra = rettighetsperiode.fom))
-            )
+        val uføreMock = mockk<UføreRepository> {
+            every { hentHvisEksisterer(any()) } returns null
         }
+
         val sykdomMock: SykdomRepository = mockk(relaxed = true) {
             every { hentHvisEksisterer(any()) } returns SykdomGrunnlag(
                 yrkesskadevurdering = null,
@@ -133,15 +181,18 @@ class OvergangArbeidStegTest {
                 every { hentHvisEksisterer(any()) } returns null
             },
             sykdomRepository = sykdomMock,
-            tidligereVurderinger = FakeTidligereVurderinger(),
-            bistandRepository = bistandMock,
+            tidligereVurderinger = FakeTidligereVurderinger(
+                tidslinjeOf(
+                    Periode(
+                        rettighetsperiode.fom,
+                        rettighetsperiode.fom.plusMonths(2)
+                    ) to TidligereVurderinger.PotensieltOppfylt(
+                        RettighetsType.BISTANDSBEHOV
+                    )
+                )
+            ),
+            uføreRepository = uføreMock,
             avklaringsbehovService = AvklaringsbehovService(inMemoryRepositoryProvider),
-            studentRepository = mockk<StudentRepository> {
-                every { hentHvisEksisterer(any()) } returns null
-            },
-            overgangUføreRepository = mockk<OvergangUføreRepository> {
-                every { hentHvisEksisterer(any()) } returns null
-            },
         )
 
         // skal ikke åpne avklaringsbehov, 11-5 og 11-6 er oppfylt
@@ -179,30 +230,12 @@ class OvergangArbeidStegTest {
             )
         )
 
-    private fun sak(person: Person, periode: Periode): Sak =
-        sakRepository.finnEllerOpprett(person, periode)
+    private fun sak(person: Person, søknadsdato: LocalDate): Sak =
+        sakRepository.finnEllerOpprett(person, søknadsdato)
 
     private fun person(): Person =
         Person(PersonId(random.nextLong()), UUID.randomUUID(), listOf(genererIdent(LocalDate.now().minusYears(23))))
-
-    private fun bistand(
-        vurderingenGjelderFra: LocalDate,
-        erBehov: Boolean,
-        opprettet: Instant = Instant.now()
-    ) = Bistandsvurdering(
-        begrunnelse = "Begrunnelse",
-        erBehovForAktivBehandling = erBehov,
-        erBehovForArbeidsrettetTiltak = erBehov,
-        erBehovForAnnenOppfølging = false,
-        vurderingenGjelderFra = vurderingenGjelderFra,
-        vurdertAv = "Z00000",
-        skalVurdereAapIOvergangTilArbeid = null,
-        overgangBegrunnelse = null,
-        vurdertIBehandling = BehandlingId(1),
-        opprettet = opprettet,
-        tom = null
-    )
-
+    
     private fun sykdom(erSyk: Boolean, vurderingenGjelderFra: LocalDate) = Sykdomsvurdering(
         begrunnelse = "",
         dokumenterBruktIVurdering = emptyList(),

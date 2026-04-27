@@ -63,7 +63,6 @@ class OvergangUforeGrunnlagApiTest : BaseApiTest() {
             brukerHarSøktUføretrygd = vurdering.brukerHarSøktOmUføretrygd,
             brukerHarFåttVedtakOmUføretrygd = vurdering.brukerHarFåttVedtakOmUføretrygd,
             brukerRettPåAAP = vurdering.brukerRettPåAAP,
-            virkningsdato = vurdering.fom,
             fom = vurdering.fom,
             tom = vurdering.tom,
             vurdertAv = VurdertAvResponse(vurdering.vurdertAv, LocalDate.now(), "Test Testesen", "Lokalenhetsnavn"),
@@ -98,7 +97,6 @@ class OvergangUforeGrunnlagApiTest : BaseApiTest() {
             val overgangUføreGrunnlagResponse = responseMedSøknad.body<OvergangUføreGrunnlagResponse>()
             val overgangUføreGrunnlagUtenSøknadResponse = responseUtenSøknad.body<OvergangUføreGrunnlagResponse>()
             assertThat(overgangUføreGrunnlagResponse.nyeVurderinger).isEqualTo(listOf(vurderingResponse))
-            assertThat(overgangUføreGrunnlagResponse.vurdering).isEqualTo(vurderingResponse)
             assertThat(overgangUføreGrunnlagResponse.uføreSøknadOpplysninger).isEqualTo(uføreSøknadOpplysninger)
 
             assertThat(overgangUføreGrunnlagUtenSøknadResponse.uføreSøknadOpplysninger).isNull()

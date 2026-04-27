@@ -15,8 +15,6 @@ data class BistandVurderingResponse(
     val erBehovForAnnenOppfølging: Boolean?,
     val overgangBegrunnelse: String?,
     val skalVurdereAapIOvergangTilArbeid: Boolean?,
-    @Deprecated("Bruk fom")
-    val vurderingenGjelderFra: LocalDate?,
     override val fom: LocalDate,
     override val tom: LocalDate?,
     override val vurdertAv: VurdertAvResponse,
@@ -54,7 +52,6 @@ data class BistandVurderingResponse(
             erBehovForArbeidsrettetTiltak = bistandsvurdering.erBehovForArbeidsrettetTiltak,
             erBehovForAnnenOppfølging = bistandsvurdering.erBehovForAnnenOppfølging,
             fom = fom,
-            vurderingenGjelderFra = fom,
             tom = tom,
             skalVurdereAapIOvergangTilArbeid = bistandsvurdering.skalVurdereAapIOvergangTilArbeid,
             overgangBegrunnelse = bistandsvurdering.overgangBegrunnelse,

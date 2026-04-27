@@ -89,18 +89,18 @@ class YrkesskadeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
 
     @Test
     fun `ved revurdering med yrkesskade og årsakssammenheng må både beregningstidspunkt og yrkesskadeinntekt avklares ved revurdering av beregning`() {
-        val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
+        val søknadsdato = LocalDate.now()
         val person = TestPersoner.PERSON_MED_YRKESSKADE()
         // Sender inn en søknad
         val (sak, behandling) = sendInnFørsteSøknad(
-            periode = periode,
+            mottattTidspunkt = søknadsdato.atStartOfDay(),
             person = person,
             søknad = TestSøknader.STANDARD_SØKNAD
         )
 
         val oppdatertBehandling = behandling
-            .løsSykdom(periode.fom)
-            .løsBistand(periode.fom)
+            .løsSykdom(søknadsdato)
+            .løsBistand(søknadsdato)
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
             .bekreftVurderinger()
@@ -123,7 +123,7 @@ class YrkesskadeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
             )
             .løsBeregningstidspunkt()
             .løsYrkesskadeInntekt(person.yrkesskade)
-            .løsOppholdskrav(periode.fom)
+            .løsOppholdskrav(søknadsdato)
             .løsAndreStatligeYtelser()
             .løsAvklaringsBehov(ForeslåVedtakLøsning())
             .fattVedtak()
@@ -146,18 +146,19 @@ class YrkesskadeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
 
     @Test
     fun `ved revurdering med yrkesskade skal både årsakssammenheng og yrkesskadeinntekt avklares hvis årsak revurder yrkesskade`() {
-        val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
+        val søknadsdato = LocalDate.now()
+
         val person = TestPersoner.PERSON_MED_YRKESSKADE()
         // Sender inn en søknad
         val (sak, behandling) = sendInnFørsteSøknad(
-            periode = periode,
+            mottattTidspunkt = søknadsdato.atStartOfDay(),
             person = person,
             søknad = TestSøknader.STANDARD_SØKNAD
         )
 
         val oppdatertBehandling = behandling
-            .løsSykdom(periode.fom)
-            .løsBistand(periode.fom)
+            .løsSykdom(søknadsdato)
+            .løsBistand(søknadsdato)
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
             .bekreftVurderinger()
@@ -180,7 +181,7 @@ class YrkesskadeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
             )
             .løsBeregningstidspunkt()
             .løsYrkesskadeInntekt(person.yrkesskade)
-            .løsOppholdskrav(periode.fom)
+            .løsOppholdskrav(søknadsdato)
             .løsAndreStatligeYtelser()
             .løsAvklaringsBehov(ForeslåVedtakLøsning())
             .fattVedtak()
@@ -218,19 +219,19 @@ class YrkesskadeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
 
     @Test
     fun `ved revurdering med yrkesskade hvor yrkesskade fjernes må forutgående medlemskap vurderes da den igjen er aktuell`() {
-        val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
+        val søknadsdato = LocalDate.now()
         val person = TestPersoner.PERSON_MED_YRKESSKADE()
         // Sender inn en søknad
         val (sak, behandling) = sendInnFørsteSøknad(
-            periode = periode,
+            mottattTidspunkt = søknadsdato.atStartOfDay(),
             person = person,
             søknad = TestSøknader.SØKNAD_INGEN_MEDLEMSKAP
         )
 
         val oppdatertBehandling = behandling
-            .løsLovvalg(periode.fom)
-            .løsSykdom(periode.fom)
-            .løsBistand(periode.fom)
+            .løsLovvalg(søknadsdato)
+            .løsSykdom(søknadsdato)
+            .løsBistand(søknadsdato)
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
             .bekreftVurderinger()
@@ -253,7 +254,7 @@ class YrkesskadeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
             )
             .løsBeregningstidspunkt()
             .løsYrkesskadeInntekt(person.yrkesskade)
-            .løsOppholdskrav(periode.fom)
+            .løsOppholdskrav(søknadsdato)
             .løsAndreStatligeYtelser()
             .løsAvklaringsBehov(ForeslåVedtakLøsning())
             .fattVedtak()
@@ -285,15 +286,15 @@ class YrkesskadeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
 
     @Test
     fun `skal avklare yrkesskade hvis det finnes spor av yrkesskade - yrkesskade har årsakssammenheng`() {
-        val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
-
+        val søknadsdato = LocalDate.now()
         val person = TestPersoner.PERSON_MED_YRKESSKADE()
 
         // Sender inn en søknad
         var (sak, behandling) = sendInnFørsteSøknad(
             person = person,
-            periode = periode,
+            mottattTidspunkt = søknadsdato.atStartOfDay(),
         )
+
         behandling = behandling
             .medKontekst {
                 assertThat(this.behandling.typeBehandling()).isEqualTo(TypeBehandling.Førstegangsbehandling)
@@ -370,7 +371,7 @@ class YrkesskadeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
 
                 assertTidslinje(
                     vilkårsresultat.begrensetTil(underveisPeriode),
-                    Periode(periode.fom, underveisPeriode.tom) to {
+                    Periode(søknadsdato, underveisPeriode.tom) to {
                         assertThat(it.innvilgelsesårsak).isEqualTo(Innvilgelsesårsak.YRKESSKADE_ÅRSAKSSAMMENHENG)
                     })
             }
@@ -408,8 +409,7 @@ class YrkesskadeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
 
     @Test
     fun `innvilge v yrkesskadegrunnlag`() {
-        val fom = LocalDate.now().minusMonths(3)
-        val periode = Periode(fom, fom.plusYears(3))
+        val søknadsdato = LocalDate.now().minusMonths(3)
 
         // Simulerer et svar fra YS-løsning om at det finnes en yrkesskade
         val person = TestPersoner.PERSON_MED_YRKESSKADE().medBarn(
@@ -423,8 +423,7 @@ class YrkesskadeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
 
         var (sak, behandling) = sendInnFørsteSøknad(
             person = person,
-            mottattTidspunkt = fom.atStartOfDay(),
-            periode = periode,
+            mottattTidspunkt = søknadsdato.atStartOfDay(),
         )
 
         // Sender inn en søknad
@@ -459,7 +458,7 @@ class YrkesskadeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
             .løsBeregningstidspunkt()
             .løsYrkesskadeInntekt(person.yrkesskade)
             // Skal ikke løse forutgående medlemsskap
-            .løsOppholdskrav(fom)
+            .løsOppholdskrav(søknadsdato)
             .løsBarnetillegg()
             .løsAndreStatligeYtelser()
             .løsAvklaringsBehov(ForeslåVedtakLøsning())
@@ -508,7 +507,6 @@ class YrkesskadeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
         var (sak, behandling) = sendInnFørsteSøknad(
             person = person,
             mottattTidspunkt = fom.atStartOfDay(),
-            periode = periode,
         )
 
         // Sender inn en søknad
@@ -575,37 +573,6 @@ class YrkesskadeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
             .løsSykdomsvurderingBrev()
             .bekreftVurderinger()
             .kvalitetssikre()
-            .løsAvklaringsBehov(
-                AvklarYrkesskadeLøsning(
-                    yrkesskadesvurdering = YrkesskadevurderingDto(
-                        begrunnelse = "Ikke årsakssammenheng",
-                        relevanteSaker = emptyList(),
-                        relevanteYrkesskadeSaker = emptyList(),
-                        andelAvNedsettelsen = null,
-                        erÅrsakssammenheng = false
-                    )
-                )
-            )
-            .løsBeregningstidspunkt()
-            .løsOppholdskrav(fom)
-            .løsAvklaringsBehov(
-                AvklarSamordningUføreLøsning(
-                    samordningUføreVurdering = SamordningUføreVurderingDto(
-                        begrunnelse = "Samordnet med uføre",
-                        vurderingPerioder = listOf(
-                            SamordningUføreVurderingPeriodeDto(
-                                virkningstidspunkt = virkningstidspunkt, uføregradTilSamordning = 50
-                            )
-                        )
-                    )
-                )
-            )
-            .medKontekst {
-                // Saken er tilbake til en-trinnskontroll hos saksbehandler klar for å bli sendt til beslutter
-                assertThat(åpneAvklaringsbehov).anySatisfy { assertTrue(it.definisjon == Definisjon.FORESLÅ_VEDTAK) }
-                assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
-            }
-            .løsAvklaringsBehov(ForeslåVedtakLøsning())
             .medKontekst {
                 // Saken står til To-trinnskontroll hos beslutter
                 assertThat(åpneAvklaringsbehov).anySatisfy { assertTrue(it.definisjon == Definisjon.FATTE_VEDTAK) }
@@ -717,7 +684,6 @@ class YrkesskadeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
         var (sak, behandling) = sendInnFørsteSøknad(
             person = person,
             mottattTidspunkt = fom.atStartOfDay(),
-            periode = periode,
         )
 
         val alleAvklaringsbehov = hentAlleAvklaringsbehov(behandling)

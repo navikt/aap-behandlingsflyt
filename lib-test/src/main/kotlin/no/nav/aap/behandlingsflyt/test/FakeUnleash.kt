@@ -38,14 +38,10 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.TrekkSoeknadOpprettetFraLegeerklaering to true,
         BehandlingsflytFeature.KvalitetssikringVed2213 to true,
         BehandlingsflytFeature.VisIkkeRelevantPeriode to true,
-        BehandlingsflytFeature.BekreftVurderingerOppfolging to true,
         BehandlingsflytFeature.MigrerStansOgOpphor to true,
-        BehandlingsflytFeature.SamordningBarnepensjon to true,
         BehandlingsflytFeature.hentTiltakspengerPerioder to true,
-        BehandlingsflytFeature.VedtakslengdeAvklaringsbehov to true,
-        BehandlingsflytFeature.UtvidVedtakslengdeUnderEttAr to true,
-        BehandlingsflytFeature.OpprettManuellVedtakslengdeBehandling to true,
-        BehandlingsflytFeature.ForutgaaendeForbedringer to true
+        BehandlingsflytFeature.ForutgaaendeForbedringer to true,
+        BehandlingsflytFeature.ForeslaaVedtakVedtakslengde to true,
         )
 )
 

@@ -183,6 +183,10 @@ public enum class StegType(
         gruppe = StegGruppe.VEDTAKSLENGDE,
         status = Status.UTREDES
     ),
+    FORESLÅ_VEDTAK_VEDTAKSLENGDE(
+        gruppe = StegGruppe.VEDTAKSLENGDE,
+        status = Status.UTREDES
+    ),
     IKKE_OPPFYLT_MELDEPLIKT(
         gruppe = StegGruppe.UNDERVEIS,
         status = Status.UTREDES

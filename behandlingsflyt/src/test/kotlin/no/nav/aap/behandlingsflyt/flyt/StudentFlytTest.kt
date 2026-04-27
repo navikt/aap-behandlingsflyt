@@ -35,7 +35,6 @@ class StudentFlytTest(val unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
     @Test
     fun `innvilge som student, revurdering ordinær`() {
         val fom = 24 november 2025
-        val periode = Periode(fom, fom.plusYears(3))
 
         val sykestipendPeriode = Periode(fom, fom.plusDays(14))
 
@@ -44,7 +43,6 @@ class StudentFlytTest(val unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
         var (sak, behandling) = sendInnFørsteSøknad(
             person = person,
             mottattTidspunkt = fom.atStartOfDay(),
-            periode = periode,
             søknad = TestSøknader.SØKNAD_STUDENT
         )
 
@@ -234,16 +232,14 @@ class StudentFlytTest(val unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
     @Test
     fun `Periodisering - skal kunne avslutte student i samme behandling`() {
         val fom = 24 november 2025
-        val periode = Periode(fom, fom.plusYears(3))
 
         val sykestipendPeriode = Periode(fom, fom.plusDays(14))
 
         val person = TestPersoner.STANDARD_PERSON()
 
-        var (sak, behandling) = sendInnFørsteSøknad(
+        var (_, behandling) = sendInnFørsteSøknad(
             person = person,
             mottattTidspunkt = fom.atStartOfDay(),
-            periode = periode,
             søknad = TestSøknader.SØKNAD_STUDENT
         )
 

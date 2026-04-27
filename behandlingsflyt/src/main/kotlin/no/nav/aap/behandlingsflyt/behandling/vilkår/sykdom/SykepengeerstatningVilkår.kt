@@ -50,7 +50,7 @@ class SykepengeerstatningVilkår(vilkårsresultat: Vilkårsresultat) :
         grunnlag: SykepengerErstatningFaktagrunnlag,
     ): Vilkårsvurdering {
         return if (sykepengeerstatningVurdering?.harRettPå == true &&
-            sykdomsvurdering?.erOppfyltOrdinærtEllerMedYrkesskadeSettBortFraVissVarighet(yrkesskadeVurdering) ?: false
+            sykdomsvurdering?.erKonsistentMedSykepengeerstatning(yrkesskadeVurdering) ?: false
         ) {
             Vilkårsvurdering(
                 Vilkårsperiode(
