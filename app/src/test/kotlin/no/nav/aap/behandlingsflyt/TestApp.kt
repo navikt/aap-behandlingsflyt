@@ -255,13 +255,23 @@ private fun genererFengselsopphold() = InstitusjonsoppholdJSON(
     institusjonsnavn = "Azkaban"
 )
 
-private fun genererSykehusopphold() = InstitusjonsoppholdJSON(
-    organisasjonsnummer = "12345",
-    kategori = Oppholdstype.H.name,
-    institusjonstype = Institusjonstype.HS.name,
-    forventetSluttdato = LocalDate.now().plusYears(1),
-    startdato = LocalDate.now().minusYears(2),
-    institusjonsnavn = "St. Mungos Hospital"
+private fun genererSykehusopphold() = listOf(
+    InstitusjonsoppholdJSON(
+        organisasjonsnummer = "12345",
+        kategori = Oppholdstype.H.name,
+        institusjonstype = Institusjonstype.HS.name,
+        startdato = LocalDate.of(2025, 1, 1),
+        forventetSluttdato = LocalDate.of(2025, 11, 20),
+        institusjonsnavn = "St. Mungos Hospital"
+    ),
+    InstitusjonsoppholdJSON(
+        organisasjonsnummer = "67890",
+        kategori = Oppholdstype.D.name,
+        institusjonstype = Institusjonstype.HS.name,
+        startdato = LocalDate.of(2025, 11, 20),
+        forventetSluttdato = LocalDate.of(2026, 12, 16),
+        institusjonsnavn = "Helgelandssykehus Dialyse, Sandnessjøen"
+    ),
 )
 
 private fun genererBarn(dto: TestBarn): TestPerson {
@@ -339,10 +349,10 @@ private fun sendInnSøknad(dto: OpprettTestcaseDTO, gatewayProvider: GatewayProv
                     )
             },
             barn = barn,
-            institusjonsopphold = listOfNotNull(
-                if (dto.institusjoner.fengsel == true) genererFengselsopphold() else null,
-                if (dto.institusjoner.sykehus == true) genererSykehusopphold() else null,
-            ),
+            institusjonsopphold = buildList{
+                if (dto.institusjoner.fengsel == true) genererFengselsopphold()
+                if (dto.institusjoner.sykehus == true) genererSykehusopphold()
+            },
             inntekter = dto.inntekterPerAr.orEmpty().map { inn -> inn.to() },
             sykepenger = dto.sykepenger.map {
                 TestPerson.Sykepenger(
@@ -391,7 +401,7 @@ private fun sendInnSøknad(dto: OpprettTestcaseDTO, gatewayProvider: GatewayProv
     val sak = datasource.transaction { connection ->
         val repositoryProvider = repositoryRegistry.provider(connection)
         val sakService = PersonOgSakService(gatewayProvider, repositoryProvider)
-        val sak = sakService.finnEllerOpprett(ident, LocalDate.now())
+        val sak = sakService.finnEllerOpprett(ident, LocalDate.of(2025, 7, 25))
 
         val flytJobbRepository = FlytJobbRepository(connection)
 
