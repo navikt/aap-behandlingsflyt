@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.integrasjon.datadeling
 
 import com.github.benmanes.caffeine.cache.Caffeine
+import io.micrometer.core.instrument.binder.cache.CaffeineCacheMetrics
 import no.nav.aap.api.intern.PersonEksistererIAAPArena
 import no.nav.aap.api.intern.SakerRequest
 import no.nav.aap.api.intern.behandlingsflyt.OppdaterIdenterDto
@@ -61,7 +62,12 @@ class ApiInternGatewayImpl : ApiInternGateway {
         private val arenaStatusCache = Caffeine.newBuilder()
             .expireAfterWrite(Duration.ofHours(2))
             .maximumSize(10_000)
+            .recordStats()
             .build<Set<String>, ArenaStatusResponse>()
+
+        init {
+            CaffeineCacheMetrics.monitor(prometheus, arenaStatusCache, "datadeling_arena_status")
+        }
     }
 
     private val log = LoggerFactory.getLogger(javaClass)
