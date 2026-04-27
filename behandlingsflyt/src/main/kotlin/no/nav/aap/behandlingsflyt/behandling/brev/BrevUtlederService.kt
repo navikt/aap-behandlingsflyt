@@ -322,7 +322,7 @@ class BrevUtlederService(
         val underveisGrunnlag = underveisRepository.hent(behandling.id)
 
         val samordning = if (unleashGateway.isEnabled(BehandlingsflytFeature.SamordningFaktagrunnlagBrev)) {
-            hentSamordningerForBrev(behandling.id)
+            hentForholdTilAndreYtelserForBrev(behandling.id)
         } else {
             null
         }
@@ -532,7 +532,7 @@ class BrevUtlederService(
             .any { it.rettighetsType == rettighetsType }
     }
 
-    fun hentSamordningerForBrev(behandlingId: BehandlingId): ForholdTilAndreYtelser? {
+    fun hentForholdTilAndreYtelserForBrev(behandlingId: BehandlingId): ForholdTilAndreYtelser? {
         val samordningAndreYtelser = hentSamordningAndreYtelser(behandlingId)
         val samordningUføre = hentSamordningUføre(behandlingId)
         val reduksjonArbeidsgiver = hentReduksjonArbeidsgiver(behandlingId)
@@ -541,7 +541,7 @@ class BrevUtlederService(
         val samordningBarnepensjon = hentSamordningBarnepensjon(behandlingId)
         val fradragAndreYtelser = hentFradragAndreYtelser(behandlingId)
 
-        val harSamordningsdata =
+        val harForholdTilAndreYtelser =
             samordningAndreYtelser.isNotEmpty() ||
             samordningUføre.isNotEmpty() ||
             reduksjonArbeidsgiver.isNotEmpty() ||
@@ -550,7 +550,7 @@ class BrevUtlederService(
             samordningBarnepensjon.isNotEmpty() ||
             fradragAndreYtelser.isNotEmpty()
 
-        if (!harSamordningsdata) return null
+        if (!harForholdTilAndreYtelser) return null
 
         return ForholdTilAndreYtelser(
             samordningAndreYtelser = samordningAndreYtelser,
