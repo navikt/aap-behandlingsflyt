@@ -59,6 +59,7 @@ import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
+import java.math.BigDecimal
 import java.math.RoundingMode
 import java.time.LocalDate
 
@@ -558,12 +559,13 @@ class BrevUtlederService(
         return samordningVurderingRepository.hentHvisEksisterer(behandlingId)?.let { grunnlag ->
             grunnlag.vurderinger.takeIf { it.isNotEmpty() }?.let { vurderinger ->
                 SamordningAndreYtelser(
-                    perioder = vurderinger.flatMap { vurdering ->
+                    samordninger = vurderinger.flatMap { vurdering ->
                         vurdering.vurderingPerioder.map { periode ->
-                            SamordningAndreYtelser.SamordningAndreYtelserPeriode(
-                                ytelseType = vurdering.ytelseType.name,
-                                periode = periode.periode,
-                                gradering = periode.gradering?.prosentverdi(),
+                            SamordningAndreYtelser.SamordningAnnenYtelse(
+                                ytelseNavn = vurdering.ytelseType.name,
+                                fraOgMed = periode.periode.fom,
+                                tilOgMed = periode.periode.tom,
+                                gradering = periode.gradering?.prosentverdi()?.let { BigDecimal(it) },
                             )
                         }
                     }
@@ -578,7 +580,7 @@ class BrevUtlederService(
                 perioder.map { periode ->
                     SamordningUførePeriode(
                         virkningstidspunkt = periode.virkningstidspunkt,
-                        uføregradTilSamordning = periode.uføregradTilSamordning.prosentverdi(),
+                        uføregradTilSamordning = BigDecimal(periode.uføregradTilSamordning.prosentverdi()),
                     )
                 }
             }
@@ -588,7 +590,14 @@ class BrevUtlederService(
     private fun hentSamordningYtelseFraArbeidsgiver(behandlingId: BehandlingId): SamordningYtelseFraArbeidsgiver? {
         return samordningArbeidsgiverRepository.hentHvisEksisterer(behandlingId)?.let { grunnlag ->
             grunnlag.vurdering.perioder.takeIf { it.isNotEmpty() }?.let { perioder ->
-                SamordningYtelseFraArbeidsgiver(perioder = perioder)
+                SamordningYtelseFraArbeidsgiver(
+                    samordninger = perioder.map { periode ->
+                        SamordningYtelseFraArbeidsgiver.SamordningArbeidsgiver(
+                            fraOgMed = periode.fom,
+                            tilOgMed = periode.tom,
+                        )
+                    }
+                )
             }
         }
     }
@@ -596,9 +605,9 @@ class BrevUtlederService(
     private fun hentSamordningTjenestepensjon(behandlingId: BehandlingId): SamordningTjenestepensjon? {
         return tjenestepensjonRefusjonsKravVurderingRepository.hentHvisEksisterer(behandlingId)?.let { vurdering ->
             SamordningTjenestepensjon(
-                harKrav = vurdering.harKrav,
-                fom = vurdering.fom,
-                tom = vurdering.tom,
+                skalEtterbetalingHoldesIgjen = vurdering.harKrav,
+                fraOgMed = vurdering.fom,
+                tilOgMed = vurdering.tom,
             )
         }
     }
@@ -606,7 +615,14 @@ class BrevUtlederService(
     private fun hentSamordningerSykestipend(behandlingId: BehandlingId): SamordningerSykestipend? {
         return sykestipendRepository.hentHvisEksisterer(behandlingId)?.let { grunnlag ->
             grunnlag.vurdering.perioder.takeIf { it.isNotEmpty() }?.let { perioder ->
-                SamordningerSykestipend(perioder = perioder.toList())
+                SamordningerSykestipend(
+                    samordninger = perioder.map { periode ->
+                        SamordningerSykestipend.SamordningSykestipend(
+                            fraOgMed = periode.fom,
+                            tilOgMed = periode.tom,
+                        )
+                    }
+                )
             }
         }
     }
@@ -615,11 +631,11 @@ class BrevUtlederService(
         return barnepensjonRepository.hentHvisEksisterer(behandlingId)?.let { grunnlag ->
             grunnlag.vurdering.perioder.takeIf { it.isNotEmpty() }?.let { perioder ->
                 SamordningerBarnepensjon(
-                    perioder = perioder.map { periode ->
-                        SamordningerBarnepensjon.SamordningBarnepensjonPeriode(
-                            fom = periode.fom,
-                            tom = periode.tom,
-                            månedsats = periode.månedsats,
+                    samordninger = perioder.map { periode ->
+                        SamordningerBarnepensjon.SamordningBarnepensjon(
+                            fraOgMed = periode.fom.atDay(1),
+                            tilOgMed = periode.tom?.atEndOfMonth(),
+                            månedsats = periode.månedsats.verdi,
                         )
                     }
                 )
@@ -632,9 +648,10 @@ class BrevUtlederService(
             grunnlag.vurdering.vurderingPerioder.takeIf { it.isNotEmpty() }?.let { perioder ->
                 SamordningerFradragAndreYtelser(
                     perioder = perioder.map { periode ->
-                        SamordningerFradragAndreYtelser.SamordningFradragAnnenYtelsePeriode(
-                            ytelse = periode.ytelse.name,
-                            periode = periode.periode,
+                        SamordningerFradragAndreYtelser.SamordningFradragAnnenYtelse(
+                            ytelseNavn = periode.ytelse.name,
+                            fraOgMed = periode.periode.fom,
+                            tilOgMed = periode.periode.tom,
                         )
                     }
                 )

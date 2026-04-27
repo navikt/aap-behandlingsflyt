@@ -60,7 +60,6 @@ import no.nav.aap.komponenter.httpklient.httpclient.request.PutRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureM2MTokenProvider
 import no.nav.aap.komponenter.json.DefaultJsonMapper
 import org.slf4j.LoggerFactory
-import java.math.BigDecimal
 import java.io.InputStream
 import java.net.URI
 
@@ -441,12 +440,12 @@ class BrevGateway : BrevbestillingGateway {
     private fun samordningAndreYtelserTilFaktagrunnlag(andreYtelser: SamordningAndreYtelser): Set<Faktagrunnlag> {
         return setOf(
             Faktagrunnlag.SamordningerAndreYtelser(
-                samordninger = andreYtelser.perioder.map { periode ->
+                samordninger = andreYtelser.samordninger.map { samordning ->
                     Faktagrunnlag.SamordningerAndreYtelser.SamordningAnnenYtelse(
-                        ytelseNavn = periode.ytelseType,
-                        gradering = periode.gradering?.let { BigDecimal(it) },
-                        fraOgMed = periode.periode.fom,
-                        tilOgMed = periode.periode.tom,
+                        ytelseNavn = samordning.ytelseNavn,
+                        gradering = samordning.gradering,
+                        fraOgMed = samordning.fraOgMed,
+                        tilOgMed = samordning.tilOgMed,
                     )
                 }
             )
@@ -459,7 +458,7 @@ class BrevGateway : BrevbestillingGateway {
                 samordninger = perioder.map { periode ->
                     Faktagrunnlag.SamordningerUføre.SamordningUføre(
                         virkningstidspunkt = periode.virkningstidspunkt,
-                        uføregradTilSamordning = BigDecimal(periode.uføregradTilSamordning),
+                        uføregradTilSamordning = periode.uføregradTilSamordning,
                     )
                 }
             )
@@ -469,10 +468,10 @@ class BrevGateway : BrevbestillingGateway {
     private fun samordningArbeidsgiverTilFaktagrunnlag(arbeidsgiver: SamordningYtelseFraArbeidsgiver): Set<Faktagrunnlag> {
         return setOf(
             Faktagrunnlag.SamordningerArbeidsgiver(
-                samordninger = arbeidsgiver.perioder.map { periode ->
+                samordninger = arbeidsgiver.samordninger.map { samordning ->
                     Faktagrunnlag.SamordningerArbeidsgiver.SamordningArbeidsgiver(
-                        fraOgMed = periode.fom,
-                        tilOgMed = periode.tom,
+                        fraOgMed = samordning.fraOgMed,
+                        tilOgMed = samordning.tilOgMed,
                     )
                 }
             )
@@ -482,9 +481,9 @@ class BrevGateway : BrevbestillingGateway {
     private fun samordningTjenestepensjonTilFaktagrunnlag(tp: SamordningTjenestepensjon): Set<Faktagrunnlag> {
         return setOf(
             Faktagrunnlag.SamordningTjenestepensjon(
-                skalEtterbetalingHoldesIgjen = tp.harKrav,
-                fraOgMed = tp.fom,
-                tilOgMed = tp.tom,
+                skalEtterbetalingHoldesIgjen = tp.skalEtterbetalingHoldesIgjen,
+                fraOgMed = tp.fraOgMed,
+                tilOgMed = tp.tilOgMed,
             )
         )
     }
@@ -492,10 +491,10 @@ class BrevGateway : BrevbestillingGateway {
     private fun samordningSykestipendTilFaktagrunnlag(sykestipend: SamordningerSykestipend): Set<Faktagrunnlag> {
         return setOf(
             Faktagrunnlag.SamordningerSykestipend(
-                samordninger = sykestipend.perioder.map { periode ->
+                samordninger = sykestipend.samordninger.map { samordning ->
                     Faktagrunnlag.SamordningerSykestipend.SamordningSykestipend(
-                        fraOgMed = periode.fom,
-                        tilOgMed = periode.tom,
+                        fraOgMed = samordning.fraOgMed,
+                        tilOgMed = samordning.tilOgMed,
                     )
                 }
             )
@@ -505,11 +504,11 @@ class BrevGateway : BrevbestillingGateway {
     private fun samordningBarnepensjonTilFaktagrunnlag(barnepensjon: SamordningerBarnepensjon): Set<Faktagrunnlag> {
         return setOf(
             Faktagrunnlag.SamordningerBarnepensjon(
-                samordninger = barnepensjon.perioder.map { periode ->
+                samordninger = barnepensjon.samordninger.map { samordning ->
                     Faktagrunnlag.SamordningerBarnepensjon.SamordningBarnepensjon(
-                        fraOgMed = periode.fom.atDay(1),
-                        tilOgMed = periode.tom?.atEndOfMonth(),
-                        månedsats = periode.månedsats.verdi,
+                        fraOgMed = samordning.fraOgMed,
+                        tilOgMed = samordning.tilOgMed,
+                        månedsats = samordning.månedsats,
                     )
                 }
             )
@@ -521,9 +520,9 @@ class BrevGateway : BrevbestillingGateway {
             Faktagrunnlag.SamordningerFradragAndreYtelser(
                 perioder = andre.perioder.map { periode ->
                     Faktagrunnlag.SamordningerFradragAndreYtelser.SamordningFradragAnnenYtelse(
-                        ytelseNavn = periode.ytelse,
-                        fraOgMed = periode.periode.fom,
-                        tilOgMed = periode.periode.tom,
+                        ytelseNavn = periode.ytelseNavn,
+                        fraOgMed = periode.fraOgMed,
+                        tilOgMed = periode.tilOgMed,
                     )
                 }
             )

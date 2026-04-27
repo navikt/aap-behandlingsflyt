@@ -1,11 +1,9 @@
 package no.nav.aap.behandlingsflyt.behandling.brev
 
-import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.Year
-import java.time.YearMonth
 
 data class TilkjentYtelse(
     val dagsats: Beløp,
@@ -40,49 +38,61 @@ data class Samordning(
 )
 
 data class SamordningAndreYtelser(
-    val perioder: List<SamordningAndreYtelserPeriode>,
+    val samordninger: List<SamordningAnnenYtelse>,
 ) {
-    data class SamordningAndreYtelserPeriode(
-        val ytelseType: String,
-        val periode: Periode,
-        val gradering: Int?,
+    data class SamordningAnnenYtelse(
+        val ytelseNavn: String,
+        val fraOgMed: LocalDate,
+        val tilOgMed: LocalDate,
+        val gradering: BigDecimal?,
     )
 }
 
 data class SamordningUførePeriode(
     val virkningstidspunkt: LocalDate,
-    val uføregradTilSamordning: Int,
+    val uføregradTilSamordning: BigDecimal,
 )
 
 data class SamordningYtelseFraArbeidsgiver(
-    val perioder: List<Periode>,
-)
+    val samordninger: List<SamordningArbeidsgiver>,
+) {
+    data class SamordningArbeidsgiver(
+        val fraOgMed: LocalDate,
+        val tilOgMed: LocalDate,
+    )
+}
 
 data class SamordningTjenestepensjon(
-    val harKrav: Boolean,
-    val fom: LocalDate?,
-    val tom: LocalDate?,
+    val skalEtterbetalingHoldesIgjen: Boolean,
+    val fraOgMed: LocalDate?,
+    val tilOgMed: LocalDate?,
 )
 
 data class SamordningerSykestipend(
-    val perioder: List<Periode>,
-)
+    val samordninger: List<SamordningSykestipend>,
+) {
+    data class SamordningSykestipend(
+        val fraOgMed: LocalDate,
+        val tilOgMed: LocalDate,
+    )
+}
 
 data class SamordningerBarnepensjon(
-    val perioder: List<SamordningBarnepensjonPeriode>,
+    val samordninger: List<SamordningBarnepensjon>,
 ) {
-    data class SamordningBarnepensjonPeriode(
-        val fom: YearMonth,
-        val tom: YearMonth?,
-        val månedsats: Beløp,
+    data class SamordningBarnepensjon(
+        val fraOgMed: LocalDate,
+        val tilOgMed: LocalDate?,
+        val månedsats: BigDecimal,
     )
 }
 
 data class SamordningerFradragAndreYtelser(
-    val perioder: List<SamordningFradragAnnenYtelsePeriode>,
+    val perioder: List<SamordningFradragAnnenYtelse>,
 ) {
-    data class SamordningFradragAnnenYtelsePeriode(
-        val ytelse: String,
-        val periode: Periode,
+    data class SamordningFradragAnnenYtelse(
+        val ytelseNavn: String,
+        val fraOgMed: LocalDate,
+        val tilOgMed: LocalDate,
     )
 }
