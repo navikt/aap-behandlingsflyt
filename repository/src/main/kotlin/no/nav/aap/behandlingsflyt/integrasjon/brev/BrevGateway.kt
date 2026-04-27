@@ -53,6 +53,7 @@ import no.nav.aap.komponenter.httpklient.httpclient.request.PutRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureM2MTokenProvider
 import no.nav.aap.komponenter.json.DefaultJsonMapper
 import org.slf4j.LoggerFactory
+import java.math.BigDecimal
 import java.io.InputStream
 import java.net.URI
 
@@ -422,18 +423,16 @@ class BrevGateway : BrevbestillingGateway {
         return buildSet {
             samordning.gradering?.let { gradering ->
                 add(
-                    Faktagrunnlag.SamordningGradering(
-                        vurderinger = gradering.vurderinger.map { vurdering ->
-                            Faktagrunnlag.SamordningGradering.GraderingVurdering(
-                                ytelseType = vurdering.ytelseType,
-                                perioder = vurdering.perioder.map { periode ->
-                                    Faktagrunnlag.SamordningGradering.GraderingPeriode(
-                                        fom = periode.periode.fom,
-                                        tom = periode.periode.tom,
-                                        gradering = periode.gradering,
-                                    )
-                                }
-                            )
+                    Faktagrunnlag.SamordningerAndreYtelser(
+                        samordninger = gradering.vurderinger.flatMap { vurdering ->
+                            vurdering.perioder.map { periode ->
+                                Faktagrunnlag.SamordningerAndreYtelser.SamordningAnnenYtelse(
+                                    ytelseNavn = vurdering.ytelseType,
+                                    gradering = periode.gradering?.let { BigDecimal(it) },
+                                    fraOgMed = periode.periode.fom,
+                                    tilOgMed = periode.periode.tom,
+                                )
+                            }
                         }
                     )
                 )
@@ -441,11 +440,11 @@ class BrevGateway : BrevbestillingGateway {
 
             samordning.uføre?.let { uføre ->
                 add(
-                    Faktagrunnlag.SamordningUfore(
-                        perioder = uføre.perioder.map { periode ->
-                            Faktagrunnlag.SamordningUfore.UførePeriode(
+                    Faktagrunnlag.SamordningerUføre(
+                        samordninger = uføre.perioder.map { periode ->
+                            Faktagrunnlag.SamordningerUføre.SamordningUføre(
                                 virkningstidspunkt = periode.virkningstidspunkt,
-                                uføregradTilSamordning = periode.uføregradTilSamordning,
+                                uføregradTilSamordning = BigDecimal(periode.uføregradTilSamordning),
                             )
                         }
                     )
@@ -454,11 +453,11 @@ class BrevGateway : BrevbestillingGateway {
 
             samordning.arbeidsgiver?.let { arbeidsgiver ->
                 add(
-                    Faktagrunnlag.SamordningArbeidsgiver(
-                        perioder = arbeidsgiver.perioder.map { periode ->
-                            Faktagrunnlag.SamordningArbeidsgiver.ArbeidsgiverPeriode(
-                                fom = periode.fom,
-                                tom = periode.tom,
+                    Faktagrunnlag.SamordningerArbeidsgiver(
+                        samordninger = arbeidsgiver.perioder.map { periode ->
+                            Faktagrunnlag.SamordningerArbeidsgiver.SamordningArbeidsgiver(
+                                fraOgMed = periode.fom,
+                                tilOgMed = periode.tom,
                             )
                         }
                     )
@@ -467,21 +466,21 @@ class BrevGateway : BrevbestillingGateway {
 
             samordning.tjenestepensjonRefusjonskrav?.let { tp ->
                 add(
-                    Faktagrunnlag.TjenestepensjonRefusjonskrav(
-                        harKrav = tp.harKrav,
-                        fom = tp.fom,
-                        tom = tp.tom,
+                    Faktagrunnlag.SamordningTjenestepensjon(
+                        skalEtterbetalingHoldesIgjen = tp.harKrav,
+                        fraOgMed = tp.fom,
+                        tilOgMed = tp.tom,
                     )
                 )
             }
 
             samordning.sykestipend?.let { sykestipend ->
                 add(
-                    Faktagrunnlag.Sykestipend(
-                        perioder = sykestipend.perioder.map { periode ->
-                            Faktagrunnlag.Sykestipend.SykestipendPeriode(
-                                fom = periode.fom,
-                                tom = periode.tom,
+                    Faktagrunnlag.SamordningerSykestipend(
+                        samordninger = sykestipend.perioder.map { periode ->
+                            Faktagrunnlag.SamordningerSykestipend.SamordningSykestipend(
+                                fraOgMed = periode.fom,
+                                tilOgMed = periode.tom,
                             )
                         }
                     )
@@ -490,11 +489,11 @@ class BrevGateway : BrevbestillingGateway {
 
             samordning.barnepensjon?.let { barnepensjon ->
                 add(
-                    Faktagrunnlag.Barnepensjon(
-                        perioder = barnepensjon.perioder.map { periode ->
-                            Faktagrunnlag.Barnepensjon.BarnepensjonPeriode(
-                                fom = periode.fom.atDay(1),
-                                tom = periode.tom?.atEndOfMonth(),
+                    Faktagrunnlag.SamordningerBarnepensjon(
+                        samordninger = barnepensjon.perioder.map { periode ->
+                            Faktagrunnlag.SamordningerBarnepensjon.SamordningBarnepensjon(
+                                fraOgMed = periode.fom.atDay(1),
+                                tilOgMed = periode.tom?.atEndOfMonth(),
                                 månedsats = periode.månedsats.verdi,
                             )
                         }
@@ -504,12 +503,12 @@ class BrevGateway : BrevbestillingGateway {
 
             samordning.andreStatligeYtelser?.let { andre ->
                 add(
-                    Faktagrunnlag.AndreStatligeYtelser(
+                    Faktagrunnlag.SamordningerFradragAndreYtelser(
                         perioder = andre.perioder.map { periode ->
-                            Faktagrunnlag.AndreStatligeYtelser.AndreStatligeYtelserPeriode(
-                                ytelse = periode.ytelse,
-                                fom = periode.periode.fom,
-                                tom = periode.periode.tom,
+                            Faktagrunnlag.SamordningerFradragAndreYtelser.SamordningFradragAnnenYtelse(
+                                ytelseNavn = periode.ytelse,
+                                fraOgMed = periode.periode.fom,
+                                tilOgMed = periode.periode.tom,
                             )
                         }
                     )
