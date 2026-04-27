@@ -5,14 +5,14 @@ import no.nav.aap.behandlingsflyt.behandling.brev.Avslag
 import no.nav.aap.behandlingsflyt.behandling.brev.BrevBehov
 import no.nav.aap.behandlingsflyt.behandling.brev.GrunnlagBeregning
 import no.nav.aap.behandlingsflyt.behandling.brev.Innvilgelse
-import no.nav.aap.behandlingsflyt.behandling.brev.SamordningAndreYtelserFaktagrunnlag
-import no.nav.aap.behandlingsflyt.behandling.brev.SamordningFaktagrunnlag
-import no.nav.aap.behandlingsflyt.behandling.brev.SamordningUførePeriodeFaktagrunnlag
-import no.nav.aap.behandlingsflyt.behandling.brev.SamordningYtelseFraArbeidsgiverFaktagrunnlag
-import no.nav.aap.behandlingsflyt.behandling.brev.SamordningTjenestepensjonFaktagrunnlag
-import no.nav.aap.behandlingsflyt.behandling.brev.SamordningerSykestipendFaktagrunnlag
-import no.nav.aap.behandlingsflyt.behandling.brev.SamordningerBarnepensjonFaktagrunnlag
-import no.nav.aap.behandlingsflyt.behandling.brev.SamordningerFradragAndreYtelserFaktagrunnlag
+import no.nav.aap.behandlingsflyt.behandling.brev.SamordningAndreYtelser
+import no.nav.aap.behandlingsflyt.behandling.brev.Samordning
+import no.nav.aap.behandlingsflyt.behandling.brev.SamordningUførePeriode
+import no.nav.aap.behandlingsflyt.behandling.brev.SamordningYtelseFraArbeidsgiver
+import no.nav.aap.behandlingsflyt.behandling.brev.SamordningTjenestepensjon
+import no.nav.aap.behandlingsflyt.behandling.brev.SamordningerSykestipend
+import no.nav.aap.behandlingsflyt.behandling.brev.SamordningerBarnepensjon
+import no.nav.aap.behandlingsflyt.behandling.brev.SamordningerFradragAndreYtelser
 import no.nav.aap.behandlingsflyt.behandling.brev.TilkjentYtelse
 import no.nav.aap.behandlingsflyt.behandling.brev.UtvidVedtakslengde
 import no.nav.aap.behandlingsflyt.behandling.brev.VurderesForUføretrygd
@@ -426,19 +426,19 @@ class BrevGateway : BrevbestillingGateway {
 
     }
 
-    private fun samordningTilFaktagrunnlag(samordning: SamordningFaktagrunnlag): Set<Faktagrunnlag> {
+    private fun samordningTilFaktagrunnlag(samordning: Samordning): Set<Faktagrunnlag> {
         return buildSet {
-            samordning.andreYtelser?.let { addAll(andreYtelserTilFaktagrunnlag(it)) }
-            samordning.uførePerioder?.let { addAll(uføreTilFaktagrunnlag(it)) }
-            samordning.ytelseFraArbeidsgiver?.let { addAll(arbeidsgiverTilFaktagrunnlag(it)) }
-            samordning.tjenestepensjon?.let { addAll(tjenestepensjonTilFaktagrunnlag(it)) }
-            samordning.sykestipend?.let { addAll(sykestipendTilFaktagrunnlag(it)) }
-            samordning.barnepensjon?.let { addAll(barnepensjonTilFaktagrunnlag(it)) }
-            samordning.fradragAndreYtelser?.let { addAll(fradragAndreYtelserTilFaktagrunnlag(it)) }
+            samordning.andreYtelser?.let { addAll(samordningAndreYtelserTilFaktagrunnlag(it)) }
+            samordning.uførePerioder?.let { addAll(samordningUføreTilFaktagrunnlag(it)) }
+            samordning.ytelseFraArbeidsgiver?.let { addAll(samordningArbeidsgiverTilFaktagrunnlag(it)) }
+            samordning.tjenestepensjon?.let { addAll(samordningTjenestepensjonTilFaktagrunnlag(it)) }
+            samordning.sykestipend?.let { addAll(samordningSykestipendTilFaktagrunnlag(it)) }
+            samordning.barnepensjon?.let { addAll(samordningBarnepensjonTilFaktagrunnlag(it)) }
+            samordning.fradragAndreYtelser?.let { addAll(samordningFradragAndreYtelserTilFaktagrunnlag(it)) }
         }
     }
 
-    private fun andreYtelserTilFaktagrunnlag(andreYtelser: SamordningAndreYtelserFaktagrunnlag): Set<Faktagrunnlag> {
+    private fun samordningAndreYtelserTilFaktagrunnlag(andreYtelser: SamordningAndreYtelser): Set<Faktagrunnlag> {
         return setOf(
             Faktagrunnlag.SamordningerAndreYtelser(
                 samordninger = andreYtelser.perioder.map { periode ->
@@ -453,7 +453,7 @@ class BrevGateway : BrevbestillingGateway {
         )
     }
 
-    private fun uføreTilFaktagrunnlag(perioder: List<SamordningUførePeriodeFaktagrunnlag>): Set<Faktagrunnlag> {
+    private fun samordningUføreTilFaktagrunnlag(perioder: List<SamordningUførePeriode>): Set<Faktagrunnlag> {
         return setOf(
             Faktagrunnlag.SamordningerUføre(
                 samordninger = perioder.map { periode ->
@@ -466,7 +466,7 @@ class BrevGateway : BrevbestillingGateway {
         )
     }
 
-    private fun arbeidsgiverTilFaktagrunnlag(arbeidsgiver: SamordningYtelseFraArbeidsgiverFaktagrunnlag): Set<Faktagrunnlag> {
+    private fun samordningArbeidsgiverTilFaktagrunnlag(arbeidsgiver: SamordningYtelseFraArbeidsgiver): Set<Faktagrunnlag> {
         return setOf(
             Faktagrunnlag.SamordningerArbeidsgiver(
                 samordninger = arbeidsgiver.perioder.map { periode ->
@@ -479,7 +479,7 @@ class BrevGateway : BrevbestillingGateway {
         )
     }
 
-    private fun tjenestepensjonTilFaktagrunnlag(tp: SamordningTjenestepensjonFaktagrunnlag): Set<Faktagrunnlag> {
+    private fun samordningTjenestepensjonTilFaktagrunnlag(tp: SamordningTjenestepensjon): Set<Faktagrunnlag> {
         return setOf(
             Faktagrunnlag.SamordningTjenestepensjon(
                 skalEtterbetalingHoldesIgjen = tp.harKrav,
@@ -489,7 +489,7 @@ class BrevGateway : BrevbestillingGateway {
         )
     }
 
-    private fun sykestipendTilFaktagrunnlag(sykestipend: SamordningerSykestipendFaktagrunnlag): Set<Faktagrunnlag> {
+    private fun samordningSykestipendTilFaktagrunnlag(sykestipend: SamordningerSykestipend): Set<Faktagrunnlag> {
         return setOf(
             Faktagrunnlag.SamordningerSykestipend(
                 samordninger = sykestipend.perioder.map { periode ->
@@ -502,7 +502,7 @@ class BrevGateway : BrevbestillingGateway {
         )
     }
 
-    private fun barnepensjonTilFaktagrunnlag(barnepensjon: SamordningerBarnepensjonFaktagrunnlag): Set<Faktagrunnlag> {
+    private fun samordningBarnepensjonTilFaktagrunnlag(barnepensjon: SamordningerBarnepensjon): Set<Faktagrunnlag> {
         return setOf(
             Faktagrunnlag.SamordningerBarnepensjon(
                 samordninger = barnepensjon.perioder.map { periode ->
@@ -516,7 +516,7 @@ class BrevGateway : BrevbestillingGateway {
         )
     }
 
-    private fun fradragAndreYtelserTilFaktagrunnlag(andre: SamordningerFradragAndreYtelserFaktagrunnlag): Set<Faktagrunnlag> {
+    private fun samordningFradragAndreYtelserTilFaktagrunnlag(andre: SamordningerFradragAndreYtelser): Set<Faktagrunnlag> {
         return setOf(
             Faktagrunnlag.SamordningerFradragAndreYtelser(
                 perioder = andre.perioder.map { periode ->

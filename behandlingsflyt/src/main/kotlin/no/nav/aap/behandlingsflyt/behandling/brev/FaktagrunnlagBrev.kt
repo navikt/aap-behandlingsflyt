@@ -29,59 +29,59 @@ data class GrunnlagBeregning(
 
 data class InntektPerÅr(val år: Year, val inntekt: BigDecimal)
 
-data class SamordningFaktagrunnlag(
-    val andreYtelser: SamordningAndreYtelserFaktagrunnlag?,
-    val uførePerioder: List<SamordningUførePeriodeFaktagrunnlag>?,
-    val ytelseFraArbeidsgiver: SamordningYtelseFraArbeidsgiverFaktagrunnlag?,
-    val tjenestepensjon: SamordningTjenestepensjonFaktagrunnlag?,
-    val sykestipend: SamordningerSykestipendFaktagrunnlag?,
-    val barnepensjon: SamordningerBarnepensjonFaktagrunnlag?,
-    val fradragAndreYtelser: SamordningerFradragAndreYtelserFaktagrunnlag?,
+data class Samordning(
+    val andreYtelser: SamordningAndreYtelser?,
+    val uførePerioder: List<SamordningUførePeriode>?,
+    val ytelseFraArbeidsgiver: SamordningYtelseFraArbeidsgiver?,
+    val tjenestepensjon: SamordningTjenestepensjon?,
+    val sykestipend: SamordningerSykestipend?,
+    val barnepensjon: SamordningerBarnepensjon?,
+    val fradragAndreYtelser: SamordningerFradragAndreYtelser?,
 )
 
-data class SamordningAndreYtelserFaktagrunnlag(
-    val perioder: List<SamordningAndreYtelserPeriodeFaktagrunnlag>,
+data class SamordningAndreYtelser(
+    val perioder: List<SamordningAndreYtelserPeriode>,
 ) {
-    data class SamordningAndreYtelserPeriodeFaktagrunnlag(
+    data class SamordningAndreYtelserPeriode(
         val ytelseType: String,
         val periode: Periode,
         val gradering: Int?,
     )
 }
 
-data class SamordningUførePeriodeFaktagrunnlag(
+data class SamordningUførePeriode(
     val virkningstidspunkt: LocalDate,
     val uføregradTilSamordning: Int,
 )
 
-data class SamordningYtelseFraArbeidsgiverFaktagrunnlag(
+data class SamordningYtelseFraArbeidsgiver(
     val perioder: List<Periode>,
 )
 
-data class SamordningTjenestepensjonFaktagrunnlag(
+data class SamordningTjenestepensjon(
     val harKrav: Boolean,
     val fom: LocalDate?,
     val tom: LocalDate?,
 )
 
-data class SamordningerSykestipendFaktagrunnlag(
+data class SamordningerSykestipend(
     val perioder: List<Periode>,
 )
 
-data class SamordningerBarnepensjonFaktagrunnlag(
-    val perioder: List<SamordningBarnepensjonPeriodeFaktagrunnlag>,
+data class SamordningerBarnepensjon(
+    val perioder: List<SamordningBarnepensjonPeriode>,
 ) {
-    data class SamordningBarnepensjonPeriodeFaktagrunnlag(
+    data class SamordningBarnepensjonPeriode(
         val fom: YearMonth,
         val tom: YearMonth?,
         val månedsats: Beløp,
     )
 }
 
-data class SamordningerFradragAndreYtelserFaktagrunnlag(
-    val perioder: List<SamordningFradragAnnenYtelsePeriodeFaktagrunnlag>,
+data class SamordningerFradragAndreYtelser(
+    val perioder: List<SamordningFradragAnnenYtelsePeriode>,
 ) {
-    data class SamordningFradragAnnenYtelsePeriodeFaktagrunnlag(
+    data class SamordningFradragAnnenYtelsePeriode(
         val ytelse: String,
         val periode: Periode,
     )

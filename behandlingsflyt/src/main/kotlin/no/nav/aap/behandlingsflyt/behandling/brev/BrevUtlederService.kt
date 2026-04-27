@@ -528,7 +528,7 @@ class BrevUtlederService(
             .any { it.rettighetsType == rettighetsType }
     }
 
-    fun hentSamordningerForBrev(behandlingId: BehandlingId): SamordningFaktagrunnlag? {
+    fun hentSamordningerForBrev(behandlingId: BehandlingId): Samordning? {
         val andreYtelser = hentSamordningAndreYtelser(behandlingId)
         val uførePerioder = hentSamordningUføre(behandlingId)
         val ytelseFraArbeidsgiver = hentSamordningYtelseFraArbeidsgiver(behandlingId)
@@ -543,7 +543,7 @@ class BrevUtlederService(
 
         if (!harSamordningsdata) return null
 
-        return SamordningFaktagrunnlag(
+        return Samordning(
             andreYtelser = andreYtelser,
             uførePerioder = uførePerioder,
             ytelseFraArbeidsgiver = ytelseFraArbeidsgiver,
@@ -554,13 +554,13 @@ class BrevUtlederService(
         )
     }
 
-    private fun hentSamordningAndreYtelser(behandlingId: BehandlingId): SamordningAndreYtelserFaktagrunnlag? {
+    private fun hentSamordningAndreYtelser(behandlingId: BehandlingId): SamordningAndreYtelser? {
         return samordningVurderingRepository.hentHvisEksisterer(behandlingId)?.let { grunnlag ->
             grunnlag.vurderinger.takeIf { it.isNotEmpty() }?.let { vurderinger ->
-                SamordningAndreYtelserFaktagrunnlag(
+                SamordningAndreYtelser(
                     perioder = vurderinger.flatMap { vurdering ->
                         vurdering.vurderingPerioder.map { periode ->
-                            SamordningAndreYtelserFaktagrunnlag.SamordningAndreYtelserPeriodeFaktagrunnlag(
+                            SamordningAndreYtelser.SamordningAndreYtelserPeriode(
                                 ytelseType = vurdering.ytelseType.name,
                                 periode = periode.periode,
                                 gradering = periode.gradering?.prosentverdi(),
@@ -572,11 +572,11 @@ class BrevUtlederService(
         }
     }
 
-    private fun hentSamordningUføre(behandlingId: BehandlingId): List<SamordningUførePeriodeFaktagrunnlag>? {
+    private fun hentSamordningUføre(behandlingId: BehandlingId): List<SamordningUførePeriode>? {
         return samordningUføreRepository.hentHvisEksisterer(behandlingId)?.let { grunnlag ->
             grunnlag.vurdering.vurderingPerioder.takeIf { it.isNotEmpty() }?.let { perioder ->
                 perioder.map { periode ->
-                    SamordningUførePeriodeFaktagrunnlag(
+                    SamordningUførePeriode(
                         virkningstidspunkt = periode.virkningstidspunkt,
                         uføregradTilSamordning = periode.uføregradTilSamordning.prosentverdi(),
                     )
@@ -585,17 +585,17 @@ class BrevUtlederService(
         }
     }
 
-    private fun hentSamordningYtelseFraArbeidsgiver(behandlingId: BehandlingId): SamordningYtelseFraArbeidsgiverFaktagrunnlag? {
+    private fun hentSamordningYtelseFraArbeidsgiver(behandlingId: BehandlingId): SamordningYtelseFraArbeidsgiver? {
         return samordningArbeidsgiverRepository.hentHvisEksisterer(behandlingId)?.let { grunnlag ->
             grunnlag.vurdering.perioder.takeIf { it.isNotEmpty() }?.let { perioder ->
-                SamordningYtelseFraArbeidsgiverFaktagrunnlag(perioder = perioder)
+                SamordningYtelseFraArbeidsgiver(perioder = perioder)
             }
         }
     }
 
-    private fun hentSamordningTjenestepensjon(behandlingId: BehandlingId): SamordningTjenestepensjonFaktagrunnlag? {
+    private fun hentSamordningTjenestepensjon(behandlingId: BehandlingId): SamordningTjenestepensjon? {
         return tjenestepensjonRefusjonsKravVurderingRepository.hentHvisEksisterer(behandlingId)?.let { vurdering ->
-            SamordningTjenestepensjonFaktagrunnlag(
+            SamordningTjenestepensjon(
                 harKrav = vurdering.harKrav,
                 fom = vurdering.fom,
                 tom = vurdering.tom,
@@ -603,20 +603,20 @@ class BrevUtlederService(
         }
     }
 
-    private fun hentSamordningerSykestipend(behandlingId: BehandlingId): SamordningerSykestipendFaktagrunnlag? {
+    private fun hentSamordningerSykestipend(behandlingId: BehandlingId): SamordningerSykestipend? {
         return sykestipendRepository.hentHvisEksisterer(behandlingId)?.let { grunnlag ->
             grunnlag.vurdering.perioder.takeIf { it.isNotEmpty() }?.let { perioder ->
-                SamordningerSykestipendFaktagrunnlag(perioder = perioder.toList())
+                SamordningerSykestipend(perioder = perioder.toList())
             }
         }
     }
 
-    private fun hentSamordningerBarnepensjon(behandlingId: BehandlingId): SamordningerBarnepensjonFaktagrunnlag? {
+    private fun hentSamordningerBarnepensjon(behandlingId: BehandlingId): SamordningerBarnepensjon? {
         return barnepensjonRepository.hentHvisEksisterer(behandlingId)?.let { grunnlag ->
             grunnlag.vurdering.perioder.takeIf { it.isNotEmpty() }?.let { perioder ->
-                SamordningerBarnepensjonFaktagrunnlag(
+                SamordningerBarnepensjon(
                     perioder = perioder.map { periode ->
-                        SamordningerBarnepensjonFaktagrunnlag.SamordningBarnepensjonPeriodeFaktagrunnlag(
+                        SamordningerBarnepensjon.SamordningBarnepensjonPeriode(
                             fom = periode.fom,
                             tom = periode.tom,
                             månedsats = periode.månedsats,
@@ -627,12 +627,12 @@ class BrevUtlederService(
         }
     }
 
-    private fun hentSamordningerFradragAndreYtelser(behandlingId: BehandlingId): SamordningerFradragAndreYtelserFaktagrunnlag? {
+    private fun hentSamordningerFradragAndreYtelser(behandlingId: BehandlingId): SamordningerFradragAndreYtelser? {
         return samordningAndreStatligeYtelserRepository.hentHvisEksisterer(behandlingId)?.let { grunnlag ->
             grunnlag.vurdering.vurderingPerioder.takeIf { it.isNotEmpty() }?.let { perioder ->
-                SamordningerFradragAndreYtelserFaktagrunnlag(
+                SamordningerFradragAndreYtelser(
                     perioder = perioder.map { periode ->
-                        SamordningerFradragAndreYtelserFaktagrunnlag.SamordningFradragAnnenYtelsePeriodeFaktagrunnlag(
+                        SamordningerFradragAndreYtelser.SamordningFradragAnnenYtelsePeriode(
                             ytelse = periode.ytelse.name,
                             periode = periode.periode,
                         )
