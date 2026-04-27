@@ -9,7 +9,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
-import no.nav.aap.behandlingsflyt.forutgåendeMedlemskapGapGjennomslipp
 import no.nav.aap.behandlingsflyt.forutgåendeMedlemskapNorskOgAvslag
 import no.nav.aap.behandlingsflyt.prometheus
 import no.nav.aap.komponenter.type.Periode
