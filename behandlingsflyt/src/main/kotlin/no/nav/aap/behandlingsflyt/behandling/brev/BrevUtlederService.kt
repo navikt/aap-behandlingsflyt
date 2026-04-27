@@ -59,7 +59,6 @@ import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
-import java.math.BigDecimal
 import java.math.RoundingMode
 import java.time.LocalDate
 
@@ -533,82 +532,77 @@ class BrevUtlederService(
             .any { it.rettighetsType == rettighetsType }
     }
 
-    fun hentSamordningerForBrev(behandlingId: BehandlingId): Samordning? {
-        val andreYtelser = hentSamordningAndreYtelser(behandlingId)
-        val uførePerioder = hentSamordningUføre(behandlingId)
-        val ytelseFraArbeidsgiver = hentSamordningYtelseFraArbeidsgiver(behandlingId)
-        val tjenestepensjon = hentSamordningTjenestepensjon(behandlingId)
-        val sykestipend = hentSamordningerSykestipend(behandlingId)
-        val barnepensjon = hentSamordningerBarnepensjon(behandlingId)
-        val fradragAndreYtelser = hentSamordningerFradragAndreYtelser(behandlingId)
+    fun hentSamordningerForBrev(behandlingId: BehandlingId): ForholdTilAndreYtelser? {
+        val samordningAndreYtelser = hentSamordningAndreYtelser(behandlingId)
+        val samordningUføre = hentSamordningUføre(behandlingId)
+        val reduksjonArbeidsgiver = hentReduksjonArbeidsgiver(behandlingId)
+        val refusjonskravTjenestepensjon = hentRefusjonskravTjenestepensjon(behandlingId)
+        val sykestipend = hentSykestipend(behandlingId)
+        val samordningBarnepensjon = hentSamordningBarnepensjon(behandlingId)
+        val fradragAndreYtelser = hentFradragAndreYtelser(behandlingId)
 
-        val harSamordningsdata = listOf(
-            andreYtelser, uførePerioder, ytelseFraArbeidsgiver, tjenestepensjon, sykestipend, barnepensjon, fradragAndreYtelser
-        ).any { it != null }
+        val harSamordningsdata =
+            samordningAndreYtelser.isNotEmpty() ||
+            samordningUføre.isNotEmpty() ||
+            reduksjonArbeidsgiver.isNotEmpty() ||
+            refusjonskravTjenestepensjon != null ||
+            sykestipend.isNotEmpty() ||
+            samordningBarnepensjon.isNotEmpty() ||
+            fradragAndreYtelser.isNotEmpty()
 
         if (!harSamordningsdata) return null
 
-        return Samordning(
-            andreYtelser = andreYtelser,
-            uførePerioder = uførePerioder,
-            ytelseFraArbeidsgiver = ytelseFraArbeidsgiver,
-            tjenestepensjon = tjenestepensjon,
+        return ForholdTilAndreYtelser(
+            samordningAndreYtelser = samordningAndreYtelser,
+            samordningUføre = samordningUføre,
+            reduksjonArbeidsgiver = reduksjonArbeidsgiver,
+            refusjonskravTjenestepensjon = refusjonskravTjenestepensjon,
             sykestipend = sykestipend,
-            barnepensjon = barnepensjon,
+            samordningBarnepensjon = samordningBarnepensjon,
             fradragAndreYtelser = fradragAndreYtelser,
         )
     }
 
-    private fun hentSamordningAndreYtelser(behandlingId: BehandlingId): SamordningAndreYtelser? {
+    private fun hentSamordningAndreYtelser(behandlingId: BehandlingId): List<SamordningYtelse> {
         return samordningVurderingRepository.hentHvisEksisterer(behandlingId)?.let { grunnlag ->
-            grunnlag.vurderinger.takeIf { it.isNotEmpty() }?.let { vurderinger ->
-                SamordningAndreYtelser(
-                    samordninger = vurderinger.flatMap { vurdering ->
-                        vurdering.vurderingPerioder.map { periode ->
-                            SamordningAndreYtelser.SamordningAnnenYtelse(
-                                ytelseNavn = vurdering.ytelseType.name,
-                                fraOgMed = periode.periode.fom,
-                                tilOgMed = periode.periode.tom,
-                                gradering = periode.gradering?.prosentverdi()?.let { BigDecimal(it) },
-                            )
-                        }
-                    }
-                )
-            }
-        }
-    }
-
-    private fun hentSamordningUføre(behandlingId: BehandlingId): List<SamordningUførePeriode>? {
-        return samordningUføreRepository.hentHvisEksisterer(behandlingId)?.let { grunnlag ->
-            grunnlag.vurdering.vurderingPerioder.takeIf { it.isNotEmpty() }?.let { perioder ->
-                perioder.map { periode ->
-                    SamordningUførePeriode(
-                        virkningstidspunkt = periode.virkningstidspunkt,
-                        uføregradTilSamordning = BigDecimal(periode.uføregradTilSamordning.prosentverdi()),
+            grunnlag.vurderinger.flatMap { vurdering ->
+                vurdering.vurderingPerioder.map { periode ->
+                    SamordningYtelse(
+                        ytelseNavn = vurdering.ytelseType.name,
+                        fraOgMed = periode.periode.fom,
+                        tilOgMed = periode.periode.tom,
+                        gradering = periode.gradering?.prosentverdi() ?: 0,
                     )
                 }
             }
-        }
+        } ?: emptyList()
     }
 
-    private fun hentSamordningYtelseFraArbeidsgiver(behandlingId: BehandlingId): SamordningYtelseFraArbeidsgiver? {
-        return samordningArbeidsgiverRepository.hentHvisEksisterer(behandlingId)?.let { grunnlag ->
-            grunnlag.vurdering.perioder.takeIf { it.isNotEmpty() }?.let { perioder ->
-                SamordningYtelseFraArbeidsgiver(
-                    samordninger = perioder.map { periode ->
-                        SamordningYtelseFraArbeidsgiver.SamordningArbeidsgiver(
-                            fraOgMed = periode.fom,
-                            tilOgMed = periode.tom,
-                        )
-                    }
+    private fun hentSamordningUføre(behandlingId: BehandlingId): List<SamordningUføre> {
+        return samordningUføreRepository.hentHvisEksisterer(behandlingId)?.let { grunnlag ->
+            grunnlag.vurdering.vurderingPerioder.map { periode ->
+                SamordningUføre(
+                    virkningstidspunkt = periode.virkningstidspunkt,
+                    uføregradProsent = periode.uføregradTilSamordning.prosentverdi(),
                 )
             }
-        }
+        } ?: emptyList()
     }
 
-    private fun hentSamordningTjenestepensjon(behandlingId: BehandlingId): SamordningTjenestepensjon? {
+    private fun hentReduksjonArbeidsgiver(behandlingId: BehandlingId): List<ReduksjonArbeidsgiver> {
+        return samordningArbeidsgiverRepository.hentHvisEksisterer(behandlingId)?.let { grunnlag ->
+            grunnlag.vurdering.perioder.map { periode ->
+                ReduksjonArbeidsgiver(
+                    fraOgMed = periode.fom,
+                    tilOgMed = periode.tom,
+                )
+            }
+        } ?: emptyList()
+    }
+
+    private fun hentRefusjonskravTjenestepensjon(behandlingId: BehandlingId): RefusjonskravTjenestepensjon? {
         return tjenestepensjonRefusjonsKravVurderingRepository.hentHvisEksisterer(behandlingId)?.let { vurdering ->
-            SamordningTjenestepensjon(
+            RefusjonskravTjenestepensjon(
                 skalEtterbetalingHoldesIgjen = vurdering.harKrav,
                 fraOgMed = vurdering.fom,
                 tilOgMed = vurdering.tom,
@@ -616,50 +610,38 @@ class BrevUtlederService(
         }
     }
 
-    private fun hentSamordningerSykestipend(behandlingId: BehandlingId): SamordningerSykestipend? {
+    private fun hentSykestipend(behandlingId: BehandlingId): List<Sykestipend> {
         return sykestipendRepository.hentHvisEksisterer(behandlingId)?.let { grunnlag ->
-            grunnlag.vurdering.perioder.takeIf { it.isNotEmpty() }?.let { perioder ->
-                SamordningerSykestipend(
-                    samordninger = perioder.map { periode ->
-                        SamordningerSykestipend.SamordningSykestipend(
-                            fraOgMed = periode.fom,
-                            tilOgMed = periode.tom,
-                        )
-                    }
+            grunnlag.vurdering.perioder.map { periode ->
+                Sykestipend(
+                    fraOgMed = periode.fom,
+                    tilOgMed = periode.tom,
                 )
             }
-        }
+        } ?: emptyList()
     }
 
-    private fun hentSamordningerBarnepensjon(behandlingId: BehandlingId): SamordningerBarnepensjon? {
+    private fun hentSamordningBarnepensjon(behandlingId: BehandlingId): List<SamordningBarnepensjon> {
         return barnepensjonRepository.hentHvisEksisterer(behandlingId)?.let { grunnlag ->
-            grunnlag.vurdering.perioder.takeIf { it.isNotEmpty() }?.let { perioder ->
-                SamordningerBarnepensjon(
-                    samordninger = perioder.map { periode ->
-                        SamordningerBarnepensjon.SamordningBarnepensjon(
-                            fraOgMed = periode.fom.atDay(1),
-                            tilOgMed = periode.tom?.atEndOfMonth(),
-                            månedsats = periode.månedsats.verdi,
-                        )
-                    }
+            grunnlag.vurdering.perioder.map { periode ->
+                SamordningBarnepensjon(
+                    fraOgMed = periode.fom.atDay(1),
+                    tilOgMed = periode.tom?.atEndOfMonth(),
+                    månedsats = periode.månedsats.verdi,
                 )
             }
-        }
+        } ?: emptyList()
     }
 
-    private fun hentSamordningerFradragAndreYtelser(behandlingId: BehandlingId): SamordningerFradragAndreYtelser? {
+    private fun hentFradragAndreYtelser(behandlingId: BehandlingId): List<FradragYtelse> {
         return samordningAndreStatligeYtelserRepository.hentHvisEksisterer(behandlingId)?.let { grunnlag ->
-            grunnlag.vurdering.vurderingPerioder.takeIf { it.isNotEmpty() }?.let { perioder ->
-                SamordningerFradragAndreYtelser(
-                    perioder = perioder.map { periode ->
-                        SamordningerFradragAndreYtelser.SamordningFradragAnnenYtelse(
-                            ytelseNavn = periode.ytelse.name,
-                            fraOgMed = periode.periode.fom,
-                            tilOgMed = periode.periode.tom,
-                        )
-                    }
+            grunnlag.vurdering.vurderingPerioder.map { periode ->
+                FradragYtelse(
+                    ytelseNavn = periode.ytelse.name,
+                    fraOgMed = periode.periode.fom,
+                    tilOgMed = periode.periode.tom,
                 )
             }
-        }
+        } ?: emptyList()
     }
 }
