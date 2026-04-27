@@ -43,6 +43,7 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.hentTiltakspengerPerioder to true,
         BehandlingsflytFeature.ForutgaaendeForbedringer to true,
         BehandlingsflytFeature.ForeslaaVedtakVedtakslengde to true,
+        BehandlingsflytFeature.SamordningFaktagrunnlagBrev to true,
         )
 )
 

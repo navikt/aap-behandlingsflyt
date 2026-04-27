@@ -322,7 +322,11 @@ class BrevUtlederService(
 
         val underveisGrunnlag = underveisRepository.hent(behandling.id)
 
-        val samordning = hentSamordningerForBrev(behandling.id)
+        val samordning = if (unleashGateway.isEnabled(BehandlingsflytFeature.SamordningFaktagrunnlagBrev)) {
+            hentSamordningerForBrev(behandling.id)
+        } else {
+            null
+        }
 
         return Innvilgelse(
             virkningstidspunkt = vedtak.virkningstidspunkt,

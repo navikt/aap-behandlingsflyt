@@ -166,6 +166,7 @@ class BrevUtlederServiceTest {
         every { sykestipendRepository.hentHvisEksisterer(any<BehandlingId>()) } returns null
         every { barnepensjonRepository.hentHvisEksisterer(any<BehandlingId>()) } returns null
         every { samordningAndreStatligeYtelserRepository.hentHvisEksisterer(any<BehandlingId>()) } returns null
+        every { unleashGateway.isEnabled(BehandlingsflytFeature.SamordningFaktagrunnlagBrev) } returns true
     }
 
     @Nested
