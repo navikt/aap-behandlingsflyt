@@ -121,9 +121,6 @@ class SjekkInstitusjonsoppholdJobbUtførerTest {
         val prosesserBehandlingServiceMock = mockk<ProsesserBehandlingService>()
         val institusjonsoppholdRepositoryMock = mockk<InstitusjonsoppholdRepository>()
         val underveisgrunnlagRepositoryMock = mockk<UnderveisRepository>()
-        val unleashGateway = mockk<UnleashGateway> {
-            every { isEnabled(BehandlingsflytFeature.InstitusjonsoppholdJobb) } returns true
-        }
 
         every { institusjonsoppholdRepositoryMock.hentHvisEksisterer(any()) } returns hentInstitusjonsoppholdReturn
 
@@ -294,7 +291,6 @@ class SjekkInstitusjonsoppholdJobbUtførerTest {
             trukketSøknadService = trukketSøknadServiceMock,
             behandlingRepository = behandlingRepositoryMock,
             underveisgrunnlagRepository = underveisgrunnlagRepositoryMock,
-            unleashGateway = unleashGateway,
         ) to behandlingServiceMock
     }
 
