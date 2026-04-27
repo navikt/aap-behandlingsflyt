@@ -33,10 +33,10 @@ data class SamordningFaktagrunnlag(
     val andreYtelser: SamordningAndreYtelserFaktagrunnlag?,
     val uførePerioder: List<SamordningUførePeriodeFaktagrunnlag>?,
     val ytelseFraArbeidsgiver: SamordningYtelseFraArbeidsgiverFaktagrunnlag?,
-    val tjenestepensjonRefusjonskrav: TjenestepensjonRefusjonskravFaktagrunnlag?,
-    val sykestipend: SykestipendFaktagrunnlag?,
-    val barnepensjon: BarnepensjonFaktagrunnlag?,
-    val andreStatligeYtelser: AndreStatligeYtelserFaktagrunnlag?,
+    val tjenestepensjon: SamordningTjenestepensjonFaktagrunnlag?,
+    val sykestipend: SamordningerSykestipendFaktagrunnlag?,
+    val barnepensjon: SamordningerBarnepensjonFaktagrunnlag?,
+    val fradragAndreYtelser: SamordningerFradragAndreYtelserFaktagrunnlag?,
 )
 
 data class SamordningAndreYtelserFaktagrunnlag(
@@ -58,30 +58,30 @@ data class SamordningYtelseFraArbeidsgiverFaktagrunnlag(
     val perioder: List<Periode>,
 )
 
-data class TjenestepensjonRefusjonskravFaktagrunnlag(
+data class SamordningTjenestepensjonFaktagrunnlag(
     val harKrav: Boolean,
     val fom: LocalDate?,
     val tom: LocalDate?,
 )
 
-data class SykestipendFaktagrunnlag(
+data class SamordningerSykestipendFaktagrunnlag(
     val perioder: List<Periode>,
 )
 
-data class BarnepensjonFaktagrunnlag(
-    val perioder: List<BarnepensjonPeriodeFaktagrunnlag>,
+data class SamordningerBarnepensjonFaktagrunnlag(
+    val perioder: List<SamordningBarnepensjonPeriodeFaktagrunnlag>,
 ) {
-    data class BarnepensjonPeriodeFaktagrunnlag(
+    data class SamordningBarnepensjonPeriodeFaktagrunnlag(
         val fom: YearMonth,
         val tom: YearMonth?,
         val månedsats: Beløp,
     )
 }
 
-data class AndreStatligeYtelserFaktagrunnlag(
-    val perioder: List<AndreStatligeYtelserPeriodeFaktagrunnlag>,
+data class SamordningerFradragAndreYtelserFaktagrunnlag(
+    val perioder: List<SamordningFradragAnnenYtelsePeriodeFaktagrunnlag>,
 ) {
-    data class AndreStatligeYtelserPeriodeFaktagrunnlag(
+    data class SamordningFradragAnnenYtelsePeriodeFaktagrunnlag(
         val ytelse: String,
         val periode: Periode,
     )
