@@ -528,25 +528,25 @@ class BrevUtlederService(
             .any { it.rettighetsType == rettighetsType }
     }
 
-    fun hentSamordningForBrev(behandlingId: BehandlingId): SamordningBrevData? {
-        val gradering = hentGraderingForBrev(behandlingId)
-        val uføre = hentUføreForBrev(behandlingId)
-        val arbeidsgiver = hentArbeidsgiverForBrev(behandlingId)
+    fun hentSamordningForBrev(behandlingId: BehandlingId): SamordningFaktagrunnlag? {
+        val andreYtelser = hentSamordningAndreYtelser(behandlingId)
+        val uførePerioder = hentSamordningUføre(behandlingId)
+        val ytelseFraArbeidsgiver = hentSamordningYtelseFraArbeidsgiver(behandlingId)
         val tjenestepensjon = hentTjenestepensjonForBrev(behandlingId)
         val sykestipend = hentSykestipendForBrev(behandlingId)
         val barnepensjon = hentBarnepensjonForBrev(behandlingId)
         val andreStatligeYtelser = hentAndreStatligeYtelserForBrev(behandlingId)
 
         val harSamordningsdata = listOf(
-            gradering, uføre, arbeidsgiver, tjenestepensjon, sykestipend, barnepensjon, andreStatligeYtelser
+            andreYtelser, uførePerioder, ytelseFraArbeidsgiver, tjenestepensjon, sykestipend, barnepensjon, andreStatligeYtelser
         ).any { it != null }
 
         if (!harSamordningsdata) return null
 
-        return SamordningBrevData(
-            gradering = gradering,
-            uføre = uføre,
-            arbeidsgiver = arbeidsgiver,
+        return SamordningFaktagrunnlag(
+            andreYtelser = andreYtelser,
+            uførePerioder = uførePerioder,
+            ytelseFraArbeidsgiver = ytelseFraArbeidsgiver,
             tjenestepensjonRefusjonskrav = tjenestepensjon,
             sykestipend = sykestipend,
             barnepensjon = barnepensjon,
@@ -554,52 +554,48 @@ class BrevUtlederService(
         )
     }
 
-    private fun hentGraderingForBrev(behandlingId: BehandlingId): GraderingBrevData? {
+    private fun hentSamordningAndreYtelser(behandlingId: BehandlingId): SamordningAndreYtelserFaktagrunnlag? {
         return samordningVurderingRepository.hentHvisEksisterer(behandlingId)?.let { grunnlag ->
             grunnlag.vurderinger.takeIf { it.isNotEmpty() }?.let { vurderinger ->
-                GraderingBrevData(
-                    vurderinger = vurderinger.map { vurdering ->
-                        GraderingBrevData.GraderingVurderingBrev(
-                            ytelseType = vurdering.ytelseType.name,
-                            perioder = vurdering.vurderingPerioder.map { periode ->
-                                GraderingBrevData.GraderingPeriodeBrev(
-                                    periode = periode.periode,
-                                    gradering = periode.gradering?.prosentverdi(),
-                                )
-                            }
-                        )
+                SamordningAndreYtelserFaktagrunnlag(
+                    perioder = vurderinger.flatMap { vurdering ->
+                        vurdering.vurderingPerioder.map { periode ->
+                            SamordningAndreYtelserFaktagrunnlag.SamordningAndreYtelserPeriodeFaktagrunnlag(
+                                ytelseType = vurdering.ytelseType.name,
+                                periode = periode.periode,
+                                gradering = periode.gradering?.prosentverdi(),
+                            )
+                        }
                     }
                 )
             }
         }
     }
 
-    private fun hentUføreForBrev(behandlingId: BehandlingId): UføreBrevData? {
+    private fun hentSamordningUføre(behandlingId: BehandlingId): List<SamordningUførePeriodeFaktagrunnlag>? {
         return samordningUføreRepository.hentHvisEksisterer(behandlingId)?.let { grunnlag ->
             grunnlag.vurdering.vurderingPerioder.takeIf { it.isNotEmpty() }?.let { perioder ->
-                UføreBrevData(
-                    perioder = perioder.map { periode ->
-                        UføreBrevData.UførePeriodeBrev(
-                            virkningstidspunkt = periode.virkningstidspunkt,
-                            uføregradTilSamordning = periode.uføregradTilSamordning.prosentverdi(),
-                        )
-                    }
-                )
+                perioder.map { periode ->
+                    SamordningUførePeriodeFaktagrunnlag(
+                        virkningstidspunkt = periode.virkningstidspunkt,
+                        uføregradTilSamordning = periode.uføregradTilSamordning.prosentverdi(),
+                    )
+                }
             }
         }
     }
 
-    private fun hentArbeidsgiverForBrev(behandlingId: BehandlingId): ArbeidsgiverBrevData? {
+    private fun hentSamordningYtelseFraArbeidsgiver(behandlingId: BehandlingId): SamordningYtelseFraArbeidsgiverFaktagrunnlag? {
         return samordningArbeidsgiverRepository.hentHvisEksisterer(behandlingId)?.let { grunnlag ->
             grunnlag.vurdering.perioder.takeIf { it.isNotEmpty() }?.let { perioder ->
-                ArbeidsgiverBrevData(perioder = perioder)
+                SamordningYtelseFraArbeidsgiverFaktagrunnlag(perioder = perioder)
             }
         }
     }
 
-    private fun hentTjenestepensjonForBrev(behandlingId: BehandlingId): TjenestepensjonRefusjonskravBrevData? {
+    private fun hentTjenestepensjonForBrev(behandlingId: BehandlingId): TjenestepensjonRefusjonskravFaktagrunnlag? {
         return tjenestepensjonRefusjonsKravVurderingRepository.hentHvisEksisterer(behandlingId)?.let { vurdering ->
-            TjenestepensjonRefusjonskravBrevData(
+            TjenestepensjonRefusjonskravFaktagrunnlag(
                 harKrav = vurdering.harKrav,
                 fom = vurdering.fom,
                 tom = vurdering.tom,
@@ -607,20 +603,20 @@ class BrevUtlederService(
         }
     }
 
-    private fun hentSykestipendForBrev(behandlingId: BehandlingId): SykestipendBrevData? {
+    private fun hentSykestipendForBrev(behandlingId: BehandlingId): SykestipendFaktagrunnlag? {
         return sykestipendRepository.hentHvisEksisterer(behandlingId)?.let { grunnlag ->
             grunnlag.vurdering.perioder.takeIf { it.isNotEmpty() }?.let { perioder ->
-                SykestipendBrevData(perioder = perioder.toList())
+                SykestipendFaktagrunnlag(perioder = perioder.toList())
             }
         }
     }
 
-    private fun hentBarnepensjonForBrev(behandlingId: BehandlingId): BarnepensjonBrevData? {
+    private fun hentBarnepensjonForBrev(behandlingId: BehandlingId): BarnepensjonFaktagrunnlag? {
         return barnepensjonRepository.hentHvisEksisterer(behandlingId)?.let { grunnlag ->
             grunnlag.vurdering.perioder.takeIf { it.isNotEmpty() }?.let { perioder ->
-                BarnepensjonBrevData(
+                BarnepensjonFaktagrunnlag(
                     perioder = perioder.map { periode ->
-                        BarnepensjonBrevData.BarnepensjonPeriodeBrev(
+                        BarnepensjonFaktagrunnlag.BarnepensjonPeriodeFaktagrunnlag(
                             fom = periode.fom,
                             tom = periode.tom,
                             månedsats = periode.månedsats,
@@ -631,12 +627,12 @@ class BrevUtlederService(
         }
     }
 
-    private fun hentAndreStatligeYtelserForBrev(behandlingId: BehandlingId): AndreStatligeYtelserBrevData? {
+    private fun hentAndreStatligeYtelserForBrev(behandlingId: BehandlingId): AndreStatligeYtelserFaktagrunnlag? {
         return samordningAndreStatligeYtelserRepository.hentHvisEksisterer(behandlingId)?.let { grunnlag ->
             grunnlag.vurdering.vurderingPerioder.takeIf { it.isNotEmpty() }?.let { perioder ->
-                AndreStatligeYtelserBrevData(
+                AndreStatligeYtelserFaktagrunnlag(
                     perioder = perioder.map { periode ->
-                        AndreStatligeYtelserBrevData.AndreStatligeYtelserPeriodeBrev(
+                        AndreStatligeYtelserFaktagrunnlag.AndreStatligeYtelserPeriodeFaktagrunnlag(
                             ytelse = periode.ytelse.name,
                             periode = periode.periode,
                         )

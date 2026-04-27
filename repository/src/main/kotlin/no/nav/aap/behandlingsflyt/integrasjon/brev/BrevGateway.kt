@@ -5,7 +5,14 @@ import no.nav.aap.behandlingsflyt.behandling.brev.Avslag
 import no.nav.aap.behandlingsflyt.behandling.brev.BrevBehov
 import no.nav.aap.behandlingsflyt.behandling.brev.GrunnlagBeregning
 import no.nav.aap.behandlingsflyt.behandling.brev.Innvilgelse
-import no.nav.aap.behandlingsflyt.behandling.brev.SamordningBrevData
+import no.nav.aap.behandlingsflyt.behandling.brev.SamordningAndreYtelserFaktagrunnlag
+import no.nav.aap.behandlingsflyt.behandling.brev.SamordningFaktagrunnlag
+import no.nav.aap.behandlingsflyt.behandling.brev.SamordningUførePeriodeFaktagrunnlag
+import no.nav.aap.behandlingsflyt.behandling.brev.SamordningYtelseFraArbeidsgiverFaktagrunnlag
+import no.nav.aap.behandlingsflyt.behandling.brev.TjenestepensjonRefusjonskravFaktagrunnlag
+import no.nav.aap.behandlingsflyt.behandling.brev.SykestipendFaktagrunnlag
+import no.nav.aap.behandlingsflyt.behandling.brev.BarnepensjonFaktagrunnlag
+import no.nav.aap.behandlingsflyt.behandling.brev.AndreStatligeYtelserFaktagrunnlag
 import no.nav.aap.behandlingsflyt.behandling.brev.TilkjentYtelse
 import no.nav.aap.behandlingsflyt.behandling.brev.UtvidVedtakslengde
 import no.nav.aap.behandlingsflyt.behandling.brev.VurderesForUføretrygd
@@ -419,101 +426,107 @@ class BrevGateway : BrevbestillingGateway {
 
     }
 
-    private fun samordningTilFaktagrunnlag(samordning: SamordningBrevData): Set<Faktagrunnlag> {
+    private fun samordningTilFaktagrunnlag(samordning: SamordningFaktagrunnlag): Set<Faktagrunnlag> {
         return buildSet {
-            samordning.gradering?.let { gradering ->
-                add(
-                    Faktagrunnlag.SamordningerAndreYtelser(
-                        samordninger = gradering.vurderinger.flatMap { vurdering ->
-                            vurdering.perioder.map { periode ->
-                                Faktagrunnlag.SamordningerAndreYtelser.SamordningAnnenYtelse(
-                                    ytelseNavn = vurdering.ytelseType,
-                                    gradering = periode.gradering?.let { BigDecimal(it) },
-                                    fraOgMed = periode.periode.fom,
-                                    tilOgMed = periode.periode.tom,
-                                )
-                            }
-                        }
-                    )
-                )
-            }
-
-            samordning.uføre?.let { uføre ->
-                add(
-                    Faktagrunnlag.SamordningerUføre(
-                        samordninger = uføre.perioder.map { periode ->
-                            Faktagrunnlag.SamordningerUføre.SamordningUføre(
-                                virkningstidspunkt = periode.virkningstidspunkt,
-                                uføregradTilSamordning = BigDecimal(periode.uføregradTilSamordning),
-                            )
-                        }
-                    )
-                )
-            }
-
-            samordning.arbeidsgiver?.let { arbeidsgiver ->
-                add(
-                    Faktagrunnlag.SamordningerArbeidsgiver(
-                        samordninger = arbeidsgiver.perioder.map { periode ->
-                            Faktagrunnlag.SamordningerArbeidsgiver.SamordningArbeidsgiver(
-                                fraOgMed = periode.fom,
-                                tilOgMed = periode.tom,
-                            )
-                        }
-                    )
-                )
-            }
-
-            samordning.tjenestepensjonRefusjonskrav?.let { tp ->
-                add(
-                    Faktagrunnlag.SamordningTjenestepensjon(
-                        skalEtterbetalingHoldesIgjen = tp.harKrav,
-                        fraOgMed = tp.fom,
-                        tilOgMed = tp.tom,
-                    )
-                )
-            }
-
-            samordning.sykestipend?.let { sykestipend ->
-                add(
-                    Faktagrunnlag.SamordningerSykestipend(
-                        samordninger = sykestipend.perioder.map { periode ->
-                            Faktagrunnlag.SamordningerSykestipend.SamordningSykestipend(
-                                fraOgMed = periode.fom,
-                                tilOgMed = periode.tom,
-                            )
-                        }
-                    )
-                )
-            }
-
-            samordning.barnepensjon?.let { barnepensjon ->
-                add(
-                    Faktagrunnlag.SamordningerBarnepensjon(
-                        samordninger = barnepensjon.perioder.map { periode ->
-                            Faktagrunnlag.SamordningerBarnepensjon.SamordningBarnepensjon(
-                                fraOgMed = periode.fom.atDay(1),
-                                tilOgMed = periode.tom?.atEndOfMonth(),
-                                månedsats = periode.månedsats.verdi,
-                            )
-                        }
-                    )
-                )
-            }
-
-            samordning.andreStatligeYtelser?.let { andre ->
-                add(
-                    Faktagrunnlag.SamordningerFradragAndreYtelser(
-                        perioder = andre.perioder.map { periode ->
-                            Faktagrunnlag.SamordningerFradragAndreYtelser.SamordningFradragAnnenYtelse(
-                                ytelseNavn = periode.ytelse,
-                                fraOgMed = periode.periode.fom,
-                                tilOgMed = periode.periode.tom,
-                            )
-                        }
-                    )
-                )
-            }
+            samordning.andreYtelser?.let { addAll(andreYtelserTilFaktagrunnlag(it)) }
+            samordning.uførePerioder?.let { addAll(uføreTilFaktagrunnlag(it)) }
+            samordning.ytelseFraArbeidsgiver?.let { addAll(arbeidsgiverTilFaktagrunnlag(it)) }
+            samordning.tjenestepensjonRefusjonskrav?.let { addAll(tjenestepensjonTilFaktagrunnlag(it)) }
+            samordning.sykestipend?.let { addAll(sykestipendTilFaktagrunnlag(it)) }
+            samordning.barnepensjon?.let { addAll(barnepensjonTilFaktagrunnlag(it)) }
+            samordning.andreStatligeYtelser?.let { addAll(andreStatligeYtelserTilFaktagrunnlag(it)) }
         }
+    }
+
+    private fun andreYtelserTilFaktagrunnlag(andreYtelser: SamordningAndreYtelserFaktagrunnlag): Set<Faktagrunnlag> {
+        return setOf(
+            Faktagrunnlag.SamordningerAndreYtelser(
+                samordninger = andreYtelser.perioder.map { periode ->
+                    Faktagrunnlag.SamordningerAndreYtelser.SamordningAnnenYtelse(
+                        ytelseNavn = periode.ytelseType,
+                        gradering = periode.gradering?.let { BigDecimal(it) },
+                        fraOgMed = periode.periode.fom,
+                        tilOgMed = periode.periode.tom,
+                    )
+                }
+            )
+        )
+    }
+
+    private fun uføreTilFaktagrunnlag(perioder: List<SamordningUførePeriodeFaktagrunnlag>): Set<Faktagrunnlag> {
+        return setOf(
+            Faktagrunnlag.SamordningerUføre(
+                samordninger = perioder.map { periode ->
+                    Faktagrunnlag.SamordningerUføre.SamordningUføre(
+                        virkningstidspunkt = periode.virkningstidspunkt,
+                        uføregradTilSamordning = BigDecimal(periode.uføregradTilSamordning),
+                    )
+                }
+            )
+        )
+    }
+
+    private fun arbeidsgiverTilFaktagrunnlag(arbeidsgiver: SamordningYtelseFraArbeidsgiverFaktagrunnlag): Set<Faktagrunnlag> {
+        return setOf(
+            Faktagrunnlag.SamordningerArbeidsgiver(
+                samordninger = arbeidsgiver.perioder.map { periode ->
+                    Faktagrunnlag.SamordningerArbeidsgiver.SamordningArbeidsgiver(
+                        fraOgMed = periode.fom,
+                        tilOgMed = periode.tom,
+                    )
+                }
+            )
+        )
+    }
+
+    private fun tjenestepensjonTilFaktagrunnlag(tp: TjenestepensjonRefusjonskravFaktagrunnlag): Set<Faktagrunnlag> {
+        return setOf(
+            Faktagrunnlag.SamordningTjenestepensjon(
+                skalEtterbetalingHoldesIgjen = tp.harKrav,
+                fraOgMed = tp.fom,
+                tilOgMed = tp.tom,
+            )
+        )
+    }
+
+    private fun sykestipendTilFaktagrunnlag(sykestipend: SykestipendFaktagrunnlag): Set<Faktagrunnlag> {
+        return setOf(
+            Faktagrunnlag.SamordningerSykestipend(
+                samordninger = sykestipend.perioder.map { periode ->
+                    Faktagrunnlag.SamordningerSykestipend.SamordningSykestipend(
+                        fraOgMed = periode.fom,
+                        tilOgMed = periode.tom,
+                    )
+                }
+            )
+        )
+    }
+
+    private fun barnepensjonTilFaktagrunnlag(barnepensjon: BarnepensjonFaktagrunnlag): Set<Faktagrunnlag> {
+        return setOf(
+            Faktagrunnlag.SamordningerBarnepensjon(
+                samordninger = barnepensjon.perioder.map { periode ->
+                    Faktagrunnlag.SamordningerBarnepensjon.SamordningBarnepensjon(
+                        fraOgMed = periode.fom.atDay(1),
+                        tilOgMed = periode.tom?.atEndOfMonth(),
+                        månedsats = periode.månedsats.verdi,
+                    )
+                }
+            )
+        )
+    }
+
+    private fun andreStatligeYtelserTilFaktagrunnlag(andre: AndreStatligeYtelserFaktagrunnlag): Set<Faktagrunnlag> {
+        return setOf(
+            Faktagrunnlag.SamordningerFradragAndreYtelser(
+                perioder = andre.perioder.map { periode ->
+                    Faktagrunnlag.SamordningerFradragAndreYtelser.SamordningFradragAnnenYtelse(
+                        ytelseNavn = periode.ytelse,
+                        fraOgMed = periode.periode.fom,
+                        tilOgMed = periode.periode.tom,
+                    )
+                }
+            )
+        )
     }
 }
