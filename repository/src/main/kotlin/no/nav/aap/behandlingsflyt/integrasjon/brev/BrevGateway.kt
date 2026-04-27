@@ -335,7 +335,7 @@ class BrevGateway : BrevbestillingGateway {
                         add(Faktagrunnlag.Sykdomsvurdering(brevBehov.sykdomsvurdering!!))
                     }
 
-                    brevBehov.samordning?.let { forholdTilAndreYtelser ->
+                    brevBehov.forholdTilAndreYtelser?.let { forholdTilAndreYtelser ->
                         add(forholdTilAndreYtelserTilFaktagrunnlag(forholdTilAndreYtelser))
                     }
                 }

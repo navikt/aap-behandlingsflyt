@@ -333,7 +333,7 @@ class BrevUtlederService(
             grunnlagBeregning = grunnlagBeregning,
             tilkjentYtelse = tilkjentYtelse,
             sykdomsvurdering = sykdomsvurdering,
-            samordning = samordning,
+            forholdTilAndreYtelser = samordning,
         )
     }
 
