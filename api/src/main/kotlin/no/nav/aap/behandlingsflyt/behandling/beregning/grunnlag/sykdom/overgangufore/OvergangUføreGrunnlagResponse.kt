@@ -1,8 +1,10 @@
 package no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.overgangufore
 
 import no.nav.aap.behandlingsflyt.PeriodiserteVurderingerDto
+import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.bistand.BistandVurderingResponse
 import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.sykdom.SykdomsvurderingResponse
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.Bistandsvurdering
 import no.nav.aap.komponenter.type.Periode
 import java.time.LocalDate
 
@@ -12,6 +14,7 @@ data class OvergangUføreGrunnlagResponse(
     override val sisteVedtatteVurderinger: List<OvergangUføreVurderingResponse>,
     val historiskeVurderinger: List<OvergangUføreVurderingResponse>,
     val gjeldendeSykdsomsvurderinger: List<SykdomsvurderingResponse>,
+    val gjeldendeBistandsbehovVurderinger: List<BistandVurderingResponse>,
     override val kanVurderes: List<Periode>,
     override val ikkeRelevantePerioder: List<Periode>,
     override val behøverVurderinger: List<Periode>,

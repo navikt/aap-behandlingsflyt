@@ -5,11 +5,15 @@ import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovMetadataService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
+import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.bistand.BistandVurderingResponse
 import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.sykdom.SykdomsvurderingResponse
+import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.sykdom.sykdomsgrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreSøknadRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.OvergangUføreSteg
 import no.nav.aap.behandlingsflyt.kanLøseBehovSomSkalVæreLåstEtterKvalitetssikring
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
@@ -28,6 +32,8 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.getGrunnlag
 import javax.sql.DataSource
+import kotlin.collections.map
+import kotlin.collections.orEmpty
 
 fun NormalOpenAPIRoute.overgangUforeGrunnlagApi(
     dataSource: DataSource, repositoryRegistry: RepositoryRegistry,
@@ -46,6 +52,7 @@ fun NormalOpenAPIRoute.overgangUforeGrunnlagApi(
                     val overgangUforeRepository = repositoryProvider.provide<OvergangUføreRepository>()
                     val uføreSøknadRepository = repositoryProvider.provide<UføreSøknadRepository>()
                     val sykdomRepository = repositoryProvider.provide<SykdomRepository>()
+                    val bistandRepository = repositoryProvider.provide<BistandRepository>()
                     val vurdertAvService = VurdertAvService(repositoryProvider, gatewayProvider)
                     val sakRepository = repositoryProvider.provide<SakRepository>()
                     val overgangUføreSteg = OvergangUføreSteg(repositoryProvider, gatewayProvider)
@@ -59,6 +66,8 @@ fun NormalOpenAPIRoute.overgangUforeGrunnlagApi(
                     val uføreSøknad = uføreSøknadRepository.hentHvisEksisterer(behandling.id)
                     val gjeldendeSykdomsvurderinger =
                         sykdomRepository.hentHvisEksisterer(behandling.id)?.sykdomsvurderinger.orEmpty()
+                    val bistansbehovGrunnlag =
+                        bistandRepository.hentHvisEksisterer(behandling.id)
 
                     val nyeVurderinger = grunnlag?.overgangUføreVurderingerVurdertIBehandling(behandling.id)
                         .orEmpty()
@@ -82,6 +91,15 @@ fun NormalOpenAPIRoute.overgangUforeGrunnlagApi(
                                 vurdertAvService
                             )
                         },
+                        gjeldendeBistandsbehovVurderinger = bistansbehovGrunnlag
+                            ?.bistandsvurderingerVurdertIBehandling(behandling.id)
+                            .orEmpty()
+                            .map {
+                                BistandVurderingResponse.fraDomene(
+                                    bistandsvurdering = it,
+                                    vurdertAvService = vurdertAvService
+                                )
+                            },
                         kanVurderes = listOf(
                             Periode(
                                 sak.rettighetsperiode.fom.minusMonths(8),
