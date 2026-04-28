@@ -20,6 +20,7 @@ import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryUnderveisRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryProvider
 import no.nav.aap.behandlingsflyt.test.inmemoryservice.InMemoryBehandlingService
 import no.nav.aap.behandlingsflyt.test.januar
+import no.nav.aap.behandlingsflyt.test.minimalGatewayProvider
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Dagsatser
 import no.nav.aap.komponenter.verdityper.Prosent
@@ -32,7 +33,7 @@ import java.math.BigDecimal
 import java.time.LocalDate
 
 class ResultatUtlederTest {
-    private val resultatUtleder = ResultatUtleder(inMemoryRepositoryProvider)
+    private val resultatUtleder = ResultatUtleder(inMemoryRepositoryProvider, minimalGatewayProvider {})
 
     @Test
     fun `innvilgelse betyr minst en periode med oppfylt`() {

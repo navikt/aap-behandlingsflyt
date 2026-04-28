@@ -61,9 +61,10 @@ fun NormalOpenAPIRoute.saksApi(
         route("/ekstern/finn").authorizedPost<Unit, List<SaksinfoDTO>, FinnSakForIdentDTO>(
             AuthorizationMachineToMachineConfig(authorizedRoles = listOf("finn-sak"))
         ) { _, dto ->
-            val saker: List<SaksinfoDTO> = finnSaksinfo(dataSource, repositoryRegistry, dto)
+            val saker: List<SaksinfoDTO> = finnSaksinfo(dataSource, repositoryRegistry, gatewayProvider, dto)
             respond(saker)
         }
+
         route("/{saksnummer}/opprettAktivitetspliktBehandling")
             .authorizedPost<SaksnummerParameter, BehandlingAvTypeDTO, OpprettAktivitetspliktBehandlingDto>(
                 routeConfig = AuthorizationParamPathConfig(
@@ -96,7 +97,7 @@ fun NormalOpenAPIRoute.saksApi(
 
 
         @Suppress("UnauthorizedPost") route("/finn").post<Unit, List<SaksinfoDTO>, FinnSakForIdentDTO> { _, dto ->
-            val saker = finnSaksinfo(dataSource, repositoryRegistry, dto)
+            val saker = finnSaksinfo(dataSource, repositoryRegistry, gatewayProvider, dto)
 
             // Midlertidig fiks for ikke å brekke postmottak
             val token = token()
@@ -365,6 +366,7 @@ fun NormalOpenAPIRoute.saksApi(
 private fun finnSaksinfo(
     dataSource: DataSource,
     repositoryRegistry: RepositoryRegistry,
+    gatewayProvider: GatewayProvider,
     dto: FinnSakForIdentDTO
 ): List<SaksinfoDTO> {
     val saker: List<SaksinfoDTO> = dataSource.transaction(readOnly = true) { connection ->
@@ -372,7 +374,7 @@ private fun finnSaksinfo(
         val ident = Ident(dto.ident)
         val person = repositoryProvider.provide<PersonRepository>().finn(ident)
         val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
-        val resultatUtleder = ResultatUtleder(repositoryProvider)
+        val resultatUtleder = ResultatUtleder(repositoryProvider, gatewayProvider)
 
         if (person == null) {
             emptyList()
