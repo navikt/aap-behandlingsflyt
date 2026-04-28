@@ -9,7 +9,6 @@ import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Meldekort
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.MeldekortRepository
 import no.nav.aap.behandlingsflyt.hendelse.mottak.MottattHendelseService
@@ -75,15 +74,17 @@ fun NormalOpenAPIRoute.meldekortApi(
                     val underveisGrunnlag = underveisRepository.hentHvisEksisterer(behandling.id) ?: return@let null
                     val meldeperioder = hentAktuelleMeldeperioder(underveisGrunnlag, clock)
                     val meldekortene = meldekortRepository.hentHvisEksisterer(behandling.id)?.meldekort().orEmpty()
+                    val mottatteDokumenter = mottattDokumentRepository
+                        .hentDokumenterAvType(behandling.id, InnsendingType.MELDEKORT)
+                        .associateBy { it.referanse }
 
                     meldeperioder.map { meldeperiode ->
                         val meldekort = nyesteMeldekortForMeldeperiode(meldekortene, meldeperiode)
 
                         if (meldekort != null) {
-                            // Henter metadata fra mottatt_dokument
                             val innsendingReferanse = InnsendingReferanse(meldekort.journalpostId)
-                            val mottattDokument = mottattDokumentRepository.hent(innsendingReferanse)
-                            val meldekortData = mottattDokument.strukturerteData<MeldekortV0>()?.data
+                            val meldekortData = mottatteDokumenter[innsendingReferanse]
+                                ?.strukturerteData<MeldekortV0>()?.data
 
                             MeldeperiodeMedMeldekortDto(
                                 meldeperiode = meldeperiode,
