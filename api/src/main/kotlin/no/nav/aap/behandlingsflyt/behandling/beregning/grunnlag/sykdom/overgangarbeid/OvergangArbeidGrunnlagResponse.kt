@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.overgangarbeid
 
 import no.nav.aap.behandlingsflyt.PeriodiserteVurderingerDto
+import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.bistand.BistandVurderingResponse
 import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.sykdom.SykdomsvurderingResponse
 import no.nav.aap.komponenter.type.Periode
 
@@ -13,4 +14,5 @@ data class OvergangArbeidGrunnlagResponse(
     override val behøverVurderinger: List<Periode>,
 
     val gjeldendeSykdsomsvurderinger: List<SykdomsvurderingResponse>,
+    val gjeldendeBistandsbehovVurderinger: List<BistandVurderingResponse>,
 ): PeriodiserteVurderingerDto<OvergangArbeidVurderingResponse>
