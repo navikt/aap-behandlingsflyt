@@ -146,8 +146,6 @@ class ApiInternGatewayImpl : ApiInternGateway {
                             // legg til redusert dagsats
                             gradering = tilkjentPeriode.tilkjent.gradering.prosentverdi(),
                             samordningUføregradering = tilkjentPeriode.tilkjent.graderingGrunnlag.samordningUføregradering.prosentverdi(),
-                            // TODO: fjern
-                            grunnlag = tilkjentPeriode.tilkjent.dagsats.verdi,
                             grunnlagsfaktor = tilkjentPeriode.tilkjent.grunnlagsfaktor.verdi(),
                             grunnbeløp = tilkjentPeriode.tilkjent.grunnbeløp.verdi,
                             antallBarn = tilkjentPeriode.tilkjent.antallBarn,
