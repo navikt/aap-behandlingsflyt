@@ -33,7 +33,7 @@ import java.math.BigDecimal
 import java.time.LocalDate
 
 class ResultatUtlederTest {
-    private val resultatUtleder = ResultatUtleder(inMemoryRepositoryProvider, minimalGatewayProvider {})
+    private val resultatUtleder = ResultatUtleder(inMemoryRepositoryProvider, minimalGatewayProvider())
 
     @Test
     fun `innvilgelse betyr minst en periode med oppfylt`() {
