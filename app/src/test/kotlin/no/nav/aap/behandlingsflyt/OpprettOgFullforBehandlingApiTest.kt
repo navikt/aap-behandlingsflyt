@@ -4,7 +4,14 @@ import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
+import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
+import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
+import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.behandlingsflyt.test.BehandlingStatusRequest
 import no.nav.aap.behandlingsflyt.test.BehandlingStatusRespons
 import no.nav.aap.behandlingsflyt.test.FakePersoner
@@ -19,8 +26,7 @@ import no.nav.aap.komponenter.httpklient.httpclient.RestClient
 import no.nav.aap.komponenter.httpklient.httpclient.error.DefaultResponseHandler
 import no.nav.aap.komponenter.httpklient.httpclient.post
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
-import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.NoTokenTokenProvider
-import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
+import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureM2MTokenProvider
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
@@ -31,6 +37,7 @@ import org.slf4j.LoggerFactory
 import java.io.InputStream
 import java.net.URI
 import java.time.LocalDate
+import kotlin.time.Duration.Companion.milliseconds
 
 @Fakes
 @Execution(ExecutionMode.SAME_THREAD)
@@ -49,13 +56,7 @@ class OpprettOgFullforBehandlingApiTest {
 
         private val ccClient: RestClient<InputStream> = RestClient(
             config = ClientConfig(scope = "behandlingsflyt"),
-            tokenProvider = ClientCredentialsTokenProvider,
-            responseHandler = DefaultResponseHandler(),
-        )
-
-        private val noTokenClient: RestClient<InputStream> = RestClient(
-            config = ClientConfig(scope = "behandlingsflyt"),
-            tokenProvider = NoTokenTokenProvider(),
+            tokenProvider = AzureM2MTokenProvider,
             responseHandler = DefaultResponseHandler(),
         )
 
@@ -87,12 +88,12 @@ class OpprettOgFullforBehandlingApiTest {
     }
 
     @Test
-    fun `oppretter og fullfoerer behandling automatisk`() {
+    fun `oppretter og fullfører behandling automatisk`() {
         val ident = "10107099950"
         FakePersoner.leggTil(
             TestPerson(
-                identer = setOf(no.nav.aap.behandlingsflyt.sakogbehandling.Ident(ident)),
-                fødselsdato = no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato(
+                identer = setOf(Ident(ident)),
+                fødselsdato = Fødselsdato(
                     LocalDate.now().minusYears(25)
                 ),
             )
@@ -118,6 +119,19 @@ class OpprettOgFullforBehandlingApiTest {
 
         assertThat(behandlingStatus?.ferdig).isTrue()
         assertThat(behandlingStatus?.behandlingStatus).isEqualTo("AVSLUTTET")
+
+        // Verifiser at behandlingen faktisk er AVSLUTTET i databasen
+        val dataSource = initDatasource(dbConfig)
+        dataSource.transaction { connection ->
+            val sakRepo = postgresRepositoryRegistry.provider(connection).provide<SakRepository>()
+            val sak = sakRepo.hent(Saksnummer(saksnummer))
+
+            val behandlingRepo = postgresRepositoryRegistry.provider(connection).provide<BehandlingRepository>()
+            val behandlinger = behandlingRepo.hentAlleFor(sak.id)
+
+            assertThat(behandlinger).hasSize(1)
+            assertThat(behandlinger.first().status()).isEqualTo(Status.AVSLUTTET)
+        }
     }
 
     private fun pollBehandlingStatus(saksnummer: String): BehandlingStatusRespons? {
@@ -134,7 +148,7 @@ class OpprettOgFullforBehandlingApiTest {
                 } catch (e: Exception) {
                     log.info("Poll exception: $e")
                 }
-                delay(1000)
+                delay(1000.milliseconds)
                 tries++
             }
             status

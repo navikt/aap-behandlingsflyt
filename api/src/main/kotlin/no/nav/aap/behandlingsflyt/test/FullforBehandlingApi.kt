@@ -15,8 +15,9 @@ import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.miljo.Miljø
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import javax.sql.DataSource
+import kotlin.concurrent.thread
 
-fun NormalOpenAPIRoute.fullforBehandlingApi(
+fun NormalOpenAPIRoute.fullførBehandlingApi(
     dataSource: DataSource,
     repositoryRegistry: RepositoryRegistry,
     gatewayProvider: GatewayProvider,
@@ -38,7 +39,7 @@ fun NormalOpenAPIRoute.fullforBehandlingApi(
                             andreUtbetalinger = req.andreUtbetalinger,
                         )
                 }
-                Thread { service.fullforBehandling(sak) }.apply { isDaemon = true }.start()
+                thread(isDaemon = true) { service.fullforBehandling(sak) }
                 respond(OpprettOgFullforBehandlingRespons(sak.saksnummer.toString()))
             } catch (e: OpprettTestSakException) {
                 throw UgyldigForespørselException(message = e.message ?: "Ukjent feil", cause = e)
