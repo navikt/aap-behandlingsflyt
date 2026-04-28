@@ -32,7 +32,17 @@ import no.nav.aap.behandlingsflyt.integrasjon.ufore.UføreGateway
 import no.nav.aap.behandlingsflyt.integrasjon.utbetaling.UtbetalingGatewayImpl
 import no.nav.aap.behandlingsflyt.integrasjon.yrkesskade.YrkesskadeRegisterGatewayImpl
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
+import no.nav.aap.komponenter.gateway.GatewayRegistry
 import kotlin.reflect.KClass
+
+fun minimalGatewayProvider(
+    unleashGateway: KClass<out UnleashGateway> = AlleAvskruddUnleash::class,
+    extensions: GatewayRegistry.() -> Unit = {},
+) =
+    createGatewayProvider {
+        register(unleashGateway)
+        extensions()
+    }
 
 fun testGatewayProvider(unleashGateway: KClass<out UnleashGateway> = AlleAvskruddUnleash::class) =
     createGatewayProvider {
