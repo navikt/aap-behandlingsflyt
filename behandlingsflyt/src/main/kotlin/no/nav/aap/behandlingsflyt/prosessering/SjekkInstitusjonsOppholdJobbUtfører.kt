@@ -35,7 +35,6 @@ class SjekkInstitusjonsOppholdJobbUtfører(
     private val trukketSøknadService: TrukketSøknadService,
     private val behandlingRepository: BehandlingRepository,
     private val underveisgrunnlagRepository: UnderveisRepository,
-    private val unleashGateway: UnleashGateway,
 ) : JobbUtfører {
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -47,8 +46,6 @@ class SjekkInstitusjonsOppholdJobbUtfører(
 
         log.info("Fant ${sakerMedInstitusjonsOpphold.size} kandidater for institusjonsopphold")
 
-
-        if (unleashGateway.isEnabled(BehandlingsflytFeature.InstitusjonsoppholdJobb)) {
             val resultat = sakerMedInstitusjonsOpphold
                 .map { sak ->
 
@@ -92,7 +89,6 @@ class SjekkInstitusjonsOppholdJobbUtfører(
                 }
 
             log.info("Jobb for sjekk av institusjonsopphold fullført for ${resultat.count()} av ${sakerMedInstitusjonsOpphold.size} saker")
-        }
     }
 
 
@@ -148,7 +144,6 @@ class SjekkInstitusjonsOppholdJobbUtfører(
                 trukketSøknadService = TrukketSøknadService(repositoryProvider),
                 behandlingRepository = repositoryProvider.provide(),
                 underveisgrunnlagRepository = repositoryProvider.provide(),
-                unleashGateway = gatewayProvider.provide(),
             )
         }
 

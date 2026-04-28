@@ -44,7 +44,8 @@ class RettighetsperiodeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
 
     @Test
     fun `Skal kunne overstyre rettighetsperioden på en revurdering - innskrenke perioden`() {
-        val sak = happyCaseFørstegangsbehandling(LocalDate.now())
+        val søknadsdato = LocalDate.now()
+        val sak = happyCaseFørstegangsbehandling(søknadsdato, sendMeldekort = false)
         val ident = sak.person.aktivIdent()
         val førsteOverstyring = sak.rettighetsperiode.fom.minusMonths(2)
         val andreOverstyring = sak.rettighetsperiode.fom.minusMonths(1)
@@ -63,7 +64,7 @@ class RettighetsperiodeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
             .løsBistand(førsteOverstyring)
             .løsSykdomsvurderingBrev()
             .bekreftVurderinger()
-            .løsBeregningstidspunkt(LocalDate.now())
+            .løsBeregningstidspunkt(søknadsdato)
             .løsOppholdskrav(førsteOverstyring)
             .løsUtenSamordning()
             .løsAndreStatligeYtelser()
@@ -75,7 +76,7 @@ class RettighetsperiodeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
             }
             .løsVedtaksbrev(TypeBrev.VEDTAK_ENDRING)
             .medKontekst {
-                val oppdatertRettighetsperiode = hentSak(ident, sak.rettighetsperiode).rettighetsperiode
+                val oppdatertRettighetsperiode = hentSak(ident, søknadsdato).rettighetsperiode
                 assertThat(oppdatertRettighetsperiode).isEqualTo(Periode(førsteOverstyring, Tid.MAKS))
             }
 
@@ -92,13 +93,13 @@ class RettighetsperiodeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
          * Innskrenker perioden til etter søknadsdato,
          */
         val feil = assertThrows<UgyldigForespørselException> {
-            revurderingInnskrenking.løsRettighetsperiode(LocalDate.now().plusDays(1))
+            revurderingInnskrenking.løsRettighetsperiode(søknadsdato.plusDays(1))
         }
         assertThat(feil.message).contains("Kan ikke endre starttidspunkt til å gjelde ETTER søknadstidspunkt")
 
         revurderingInnskrenking
             .løsRettighetsperiode(andreOverstyring)
-            .løsBeregningstidspunkt(LocalDate.now())
+            .løsBeregningstidspunkt(søknadsdato)
             .løsUtenSamordning()
             .løsAndreStatligeYtelser()
             .løsAvklaringsBehov(ForeslåVedtakLøsning())
@@ -112,7 +113,7 @@ class RettighetsperiodeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
         val åpneAvklaringsbehov = hentÅpneAvklaringsbehov(revurderingInnskrenking.id)
         assertThat(åpneAvklaringsbehov).isEmpty()
 
-        val oppdatertSak = hentSak(ident, sak.rettighetsperiode)
+        val oppdatertSak = hentSak(ident, søknadsdato)
 
         assertThat(oppdatertSak.rettighetsperiode).isNotEqualTo(sak.rettighetsperiode)
         assertThat(oppdatertSak.rettighetsperiode).isEqualTo(
@@ -197,12 +198,11 @@ class RettighetsperiodeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
 
     @Test
     fun `Skal kunne overstyre rettighetsperioden og angre seg etterpå`() {
-        val periode = Periode(LocalDate.now(), Tid.MAKS)
-        val nyStartDato = periode.fom.minusDays(7)
+        val søknadsdato = LocalDate.now()
+        val nyStartDato = søknadsdato.minusDays(7)
 
         var (sak, behandling) = sendInnFørsteSøknad(
-            mottattTidspunkt = periode.fom.atStartOfDay(),
-            periode = periode,
+            mottattTidspunkt = søknadsdato.atStartOfDay(),
         )
 
         val åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling.id)
@@ -224,7 +224,7 @@ class RettighetsperiodeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
 
         behandling.løsRettighetsperiodeIngenEndring()
         hentSak(sak.saksnummer).also {
-            assertThat(it.rettighetsperiode).isEqualTo(periode)
+            assertThat(it.rettighetsperiode).isEqualTo(Periode(søknadsdato, Tid.MAKS))
         }
 
     }
@@ -292,7 +292,7 @@ class RettighetsperiodeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
         val åpneAvklaringsbehov = hentÅpneAvklaringsbehov(oppdatertBehandling.id)
         assertThat(åpneAvklaringsbehov).isEmpty()
 
-        val oppdatertSak = hentSak(ident, sak.rettighetsperiode)
+        val oppdatertSak = hentSak(ident, søknadsdato = sak.rettighetsperiode.fom)
 
         val uthentetTilkjentYtelse =
             requireNotNull(dataSource.transaction { TilkjentYtelseRepositoryImpl(it).hentHvisEksisterer(behandling.id) })

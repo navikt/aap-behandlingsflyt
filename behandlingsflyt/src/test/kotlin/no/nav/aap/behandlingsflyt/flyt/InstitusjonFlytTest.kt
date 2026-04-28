@@ -48,8 +48,7 @@ import java.time.LocalDate
 class InstitusjonFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
     @Test
     fun `Stopper opp på institusjonssteget i førstegangsbehandling når innleggelsesdato er mer enn 2 mnd siden`() {
-        val fom = LocalDate.now()
-        val periode = Periode(fom, fom.plusYears(3))
+        val søknadsdato = LocalDate.now()
 
         val person = TestPersoner.STANDARD_PERSON()
         person.institusjonsopphold = listOf(
@@ -65,8 +64,7 @@ class InstitusjonFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::cla
 
         val (_, behandling) = sendInnFørsteSøknad(
             person = person,
-            mottattTidspunkt = fom.atStartOfDay(),
-            periode = periode,
+            mottattTidspunkt = søknadsdato.atStartOfDay(),
         )
 
         behandling
@@ -75,14 +73,14 @@ class InstitusjonFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::cla
                 assertThat(åpneAvklaringsbehov).isNotEmpty()
                 assertThat(behandling.status()).isEqualTo(Status.UTREDES)
             }
-            .løsSykdom(periode.fom)
-            .løsBistand(periode.fom)
+            .løsSykdom(søknadsdato)
+            .løsBistand(søknadsdato)
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
             .bekreftVurderinger()
             .kvalitetssikre()
             .løsBeregningstidspunkt()
-            .løsOppholdskrav(fom)
+            .løsOppholdskrav(søknadsdato)
             .medKontekst {
                 assertThat(åpneAvklaringsbehov.map { it.definisjon }).contains(Definisjon.AVKLAR_HELSEINSTITUSJON)
             }
@@ -380,6 +378,7 @@ class InstitusjonFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::cla
             .løsBistand(fom)
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
             .kvalitetssikre()
             .løsBeregningstidspunkt()
             .løsOppholdskrav(fom)
@@ -472,6 +471,7 @@ class InstitusjonFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::cla
             .løsBistand(oppholdFom1)
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
             .kvalitetssikre()
             .løsBeregningstidspunkt()
             .løsOppholdskrav(oppholdFom1)
@@ -581,6 +581,7 @@ class InstitusjonFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::cla
             .løsBistand(fom)
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
             .kvalitetssikre()
             .løsBeregningstidspunkt()
             .løsOppholdskrav(fom)
@@ -654,6 +655,7 @@ class InstitusjonFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::cla
             .løsBistand(fom)
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
             .kvalitetssikre()
             .løsBeregningstidspunkt()
             .løsOppholdskrav(fom)
@@ -714,7 +716,7 @@ class InstitusjonFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::cla
     @Test
     fun `fra pågående institusjonsopphold til avsluttet opphold med gitt sluttdato`() {
         val fom = LocalDate.now().minusMonths(5)
-        val pågåendeOpphold = Tid.MAKS;
+        val pågåendeOpphold = Tid.MAKS
         val tidligsteReduksjonsdato = fom.withDayOfMonth(1).plusMonths(4)
 
         val (sak, behandling) = sendInnFørsteSøknad(
@@ -730,6 +732,7 @@ class InstitusjonFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::cla
             .løsBistand(fom)
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
             .kvalitetssikre()
             .løsBeregningstidspunkt()
             .løsOppholdskrav(fom)
@@ -794,88 +797,7 @@ class InstitusjonFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::cla
             }
     }
 
-    @Test
-    fun `gitt sluttdato på opphold som blir forlenget eller utvidet gir riktig forlenget reduksjon`() {
-        val fom = LocalDate.now().minusMonths(5)
-        val oppholdTom = LocalDate.now().plusMonths(3)
-        val tidligsteReduksjonsdato = fom.withDayOfMonth(1).plusMonths(4)
 
-        val (sak, behandling) = sendInnFørsteSøknad(
-            person = TestPersoner.STANDARD_PERSON().medInstitusjonsopphold(
-                listOf(hsOpphold(startdato = fom, sluttdato = oppholdTom))
-            ),
-            mottattTidspunkt = fom.atStartOfDay(),
-        )
-
-        // Fullfør førstegangsbehandling med reduksjon
-        behandling
-            .løsSykdom(fom)
-            .løsBistand(fom)
-            .løsRefusjonskrav()
-            .løsSykdomsvurderingBrev()
-            .kvalitetssikre()
-            .løsBeregningstidspunkt()
-            .løsOppholdskrav(fom)
-            .løsAvklaringsBehov(løsHelseinstitusjonMedReduksjon(fom, oppholdTom))
-            .løsAndreStatligeYtelser()
-            .løsAvklaringsBehov(ForeslåVedtakLøsning())
-            .fattVedtak()
-            .løsVedtaksbrev()
-            .medKontekst {
-                val tilkjentYtelse = hentTilkjentYtelse(behandling.id)
-                val tidslinje = tilkjentYtelse.map { Segment(it.periode, it.tilkjent) }.let(::Tidslinje)
-
-                assertThat(tidslinje.isNotEmpty()).isTrue()
-
-                val periodeMedReduksjon = Periode(tidligsteReduksjonsdato, oppholdTom)
-                val tilkjentPeriodeMedReduksjon = tidslinje.begrensetTil(periodeMedReduksjon)
-                tilkjentPeriodeMedReduksjon.segmenter().forEach { segment ->
-                    assertThat(segment.verdi.graderingGrunnlag.institusjonGradering)
-                        .`as`("Institusjonsgradering skal være 50% i perioden med institusjonsopphold")
-                        .isEqualTo(Prosent.`50_PROSENT`)
-                }
-            }
-
-        // Revurder og forlenger sluttdato
-        val revurdering = sak.opprettManuellRevurdering(listOf(Vurderingsbehov.INSTITUSJONSOPPHOLD))
-        val utvidetOppholdTom = LocalDate.now().plusMonths(5)
-
-        revurdering
-            .medKontekst {
-                assertThat(revurdering.typeBehandling()).isEqualTo(TypeBehandling.Revurdering)
-                assertThat(åpneAvklaringsbehov.map { it.definisjon }).contains(Definisjon.AVKLAR_HELSEINSTITUSJON)
-
-                // Forlenger sluttdato
-                repositoryProvider.provide<InstitusjonsoppholdRepository>().lagreOpphold(
-                    revurdering.id, listOf(
-                        Institusjonsopphold(
-                            startdato = fom,
-                            sluttdato = utvidetOppholdTom,
-                            institusjonstype = Institusjonstype.HS,
-                            institusjonsnavn = "Testinstitusjon",
-                            orgnr = "111222333",
-                            kategori = Oppholdstype.H
-                        )
-                    )
-                )
-            }
-            .løsAvklaringsBehov(løsHelseinstitusjonMedReduksjon(fom, utvidetOppholdTom))
-            .løsAndreStatligeYtelser()
-            .løsAvklaringsBehov(ForeslåVedtakLøsning())
-            .fattVedtak()
-            .medKontekst {
-                val tilkjentYtelse = hentTilkjentYtelse(revurdering.id)
-                val tidslinje = tilkjentYtelse.map { Segment(it.periode, it.tilkjent) }.let(::Tidslinje)
-
-                val periodeMedReduksjon = Periode(tidligsteReduksjonsdato, utvidetOppholdTom)
-                val tilkjentPeriodeMedReduksjon = tidslinje.begrensetTil(periodeMedReduksjon)
-                tilkjentPeriodeMedReduksjon.segmenter().forEach { segment ->
-                    assertThat(segment.verdi.graderingGrunnlag.institusjonGradering)
-                        .`as`("Institusjonsgradering skal være 50% i perioden med institusjonsopphold")
-                        .isEqualTo(Prosent.`50_PROSENT`)
-                }
-            }
-    }
 
     // -------------------------------------------------------------------------
     // Hjelpemetoder

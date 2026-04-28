@@ -26,3 +26,53 @@ data class GrunnlagBeregning(
 )
 
 data class InntektPerÅr(val år: Year, val inntekt: BigDecimal)
+
+data class ForholdTilAndreYtelser(
+    val fradragAndreYtelser: List<FradragYtelse>,
+    val reduksjonArbeidsgiver: List<ReduksjonArbeidsgiver>,
+    val refusjonskravTjenestepensjon: RefusjonskravTjenestepensjon?,
+    val samordningAndreYtelser: List<SamordningYtelse>,
+    val samordningBarnepensjon: List<SamordningBarnepensjon>,
+    val samordningUføre: List<SamordningUføre>,
+    val sykestipend: List<Sykestipend>,
+)
+
+data class SamordningYtelse(
+    val ytelseNavn: String,
+    val gradering: Int,
+    val fraOgMed: LocalDate,
+    val tilOgMed: LocalDate,
+)
+
+data class SamordningUføre(
+    val virkningstidspunkt: LocalDate,
+    val uføregradProsent: Int,
+)
+
+data class ReduksjonArbeidsgiver(
+    val fraOgMed: LocalDate,
+    val tilOgMed: LocalDate,
+)
+
+data class RefusjonskravTjenestepensjon(
+    val skalEtterbetalingHoldesIgjen: Boolean,
+    val fraOgMed: LocalDate?,
+    val tilOgMed: LocalDate?,
+)
+
+data class Sykestipend(
+    val fraOgMed: LocalDate,
+    val tilOgMed: LocalDate,
+)
+
+data class SamordningBarnepensjon(
+    val fraOgMed: LocalDate,
+    val tilOgMed: LocalDate?,
+    val månedsats: BigDecimal,
+)
+
+data class FradragYtelse(
+    val ytelseNavn: String,
+    val fraOgMed: LocalDate,
+    val tilOgMed: LocalDate,
+)

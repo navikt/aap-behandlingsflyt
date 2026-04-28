@@ -131,7 +131,7 @@ class TrekkOgAvbrytFlytTest: AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::cl
     @Test
     fun `Teste AvbrytRevurderingFlyt`() {
         // Førstegangsbehandling
-        val sak = happyCaseFørstegangsbehandling()
+        val sak = happyCaseFørstegangsbehandling(sendMeldekort = false)
         val førstegangsbehandling = hentSisteOpprettedeBehandlingForSak(sak.id)
 
         // Revurdering 1 - skal bli avbrutt

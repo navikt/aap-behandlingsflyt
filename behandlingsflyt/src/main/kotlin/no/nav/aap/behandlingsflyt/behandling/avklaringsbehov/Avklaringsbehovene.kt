@@ -12,7 +12,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
 import no.nav.aap.behandlingsflyt.utils.toHumanReadable
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
-import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.komponenter.tidslinje.somTidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
@@ -253,7 +253,7 @@ class Avklaringsbehovene(
     fun avklaringsbehovLøstAvNay(): List<Avklaringsbehov> {
         return alle().filter { avklaringsbehov -> avklaringsbehov.erIkkeAvbrutt() }
             .filter { it.definisjon.løsesAv == listOf(Rolle.SAKSBEHANDLER_NASJONAL) }
-            .filterNot { it.erForeslåttVedtak() }
+            .filterNot { it.erForeslåttVedtak() || it.erForeslåttVedtakVedtakslengde() }
     }
 
     fun harAvklaringsbehovSomKreverToTrinn(): Boolean {
@@ -309,12 +309,12 @@ class Avklaringsbehovene(
             .somTidslinje { Periode(fom = it.fom, tom = it.tom ?: Tid.MAKS) }
             .map { true }.komprimer()
 
-        val perioderDekkerAvTidligereVurderinger = kontekst.forrigeBehandlingId?.let {
+        val perioderDekketAvTidligereVurderinger = kontekst.forrigeBehandlingId?.let {
             løsning.hentLagredeLøstePerioder(it, repositoryProvider)
                 .map { true }.komprimer()
-        } ?: Tidslinje()
+        }.orEmpty()
 
-        val perioderDekket = perioderDekkerAvTidligereVurderinger.kombiner(
+        val perioderDekket = perioderDekketAvTidligereVurderinger.kombiner(
             perioderDekketAvLøsning,
             StandardSammenslåere.prioriterHøyreSideCrossJoin()
         ).komprimer()

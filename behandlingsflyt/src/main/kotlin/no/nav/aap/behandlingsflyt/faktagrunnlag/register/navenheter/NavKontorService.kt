@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.register.navenheter
 
 import no.nav.aap.behandlingsflyt.behandling.ansattinfo.Enhet
 import no.nav.aap.behandlingsflyt.behandling.ansattinfo.EnhetGateway
+import no.nav.aap.behandlingsflyt.behandling.ansattinfo.EnhetsType
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import org.slf4j.LoggerFactory
 
@@ -12,10 +13,10 @@ class NavKontorService(private val enhetGateway: EnhetGateway) {
         enhetGateway = gatewayProvider.provide()
     )
 
-    fun hentNavEnheter(): List<Enhet>? {
+    fun hentLokalkontor(): List<Enhet> {
         try {
             val enheter = enhetGateway.hentAlleEnheter()
-            return enheter.map { it }
+            return enheter.filter { it.type == EnhetsType.LOKAL }
         } catch (e: Exception) {
             logger.error("Kunne ikke hente enheter.", e)
             return emptyList()

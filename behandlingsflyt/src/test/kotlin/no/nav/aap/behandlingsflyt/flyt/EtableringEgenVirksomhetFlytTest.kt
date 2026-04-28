@@ -187,6 +187,7 @@ class EtableringEgenVirksomhetFlytTest : AbstraktFlytOrkestratorTest(AlleAvskrud
                     )
                 )
             )
+            .bekreftVurderinger()
             .fattVedtak()
 
         val etableringGrunnlag = dataSource.transaction {

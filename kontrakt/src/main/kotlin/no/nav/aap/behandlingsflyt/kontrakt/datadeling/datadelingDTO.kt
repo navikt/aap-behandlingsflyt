@@ -11,7 +11,6 @@ import java.time.LocalDateTime
  * @param beregningsgrunnlag Hvilket beløp ble brukt for å utlede dagsats før redusering. Det er G-justert mhp rettighetsperiode.fom.
  */
 public data class DatadelingDTO(
-    val underveisperiode: List<UnderveisDTO>,
     val rettighetsPeriodeFom: LocalDate,
     val rettighetsPeriodeTom: LocalDate,
     val behandlingStatus: no.nav.aap.behandlingsflyt.kontrakt.behandling.Status,
@@ -89,6 +88,7 @@ public enum class AvslagsårsakDTO(
     BRUDD_PÅ_OPPHOLDSKRAV_OPPHØR(StansEllerOpphørEnumDTO.OPPHØR),
     ORDINÆRKVOTE_BRUKT_OPP(StansEllerOpphørEnumDTO.OPPHØR),
     SYKEPENGEERSTATNINGKVOTE_BRUKT_OPP(StansEllerOpphørEnumDTO.OPPHØR),
+    IKKE_SYKDOM_SKADE_LYTE(StansEllerOpphørEnumDTO.OPPHØR),
 }
 
 

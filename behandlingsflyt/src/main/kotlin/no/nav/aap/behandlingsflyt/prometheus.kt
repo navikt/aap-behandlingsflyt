@@ -20,5 +20,17 @@ fun PrometheusMeterRegistry.dokumentHendelse(type: InnsendingType): Counter =
 fun PrometheusMeterRegistry.forutgåendeMedlemskapMedGapUtfall(resultat: Boolean): Counter =
     this.counter("behandlingsflyt_forutgaaende_medlemskap_med_gap_total", listOf(Tag.of("utfall", resultat.toString())))
 
-fun PrometheusMeterRegistry.forutgåendeMedlemskapMedGapTeller(resultat: Boolean): Counter =
-    this.counter("behandlingsflyt_forutgaaende_medlemskap_med_gap", listOf(Tag.of("resultat", resultat.toString())))
+fun PrometheusMeterRegistry.forutgåendeMedlemskapMedGapInntektsvurdering(resultat: Boolean): Counter =
+    this.counter("behandlingsflyt_forutgaaende_medlemskap_med_gap_inntekt", listOf(Tag.of("inntekt", resultat.toString())))
+
+fun PrometheusMeterRegistry.forutgåendeMedlemskapStandardGjennomslipp(resultat: Boolean): Counter =
+    this.counter("behandlingsflyt_forutgaaende_medlemskap_automatisk_vurdert_standard", listOf(Tag.of("standardgjennomslipp", resultat.toString())))
+
+fun PrometheusMeterRegistry.forutgåendeMedlemskapGapGjennomslipp(resultat: Boolean): Counter =
+    this.counter("behandlingsflyt_forutgaaende_medlemskap_automatisk_vurdert_med_gap", listOf(Tag.of("gapgjennomslipp", resultat.toString())))
+
+fun PrometheusMeterRegistry.forutgåendeMedlemskapNorskOgUtfallInntekt(resultat: Boolean): Counter =
+    this.counter("behandlingsflyt_forutgaaende_medlemskap_norsk_utfall_inntekt", listOf(Tag.of("norskutfallinntek", resultat.toString())))
+
+fun PrometheusMeterRegistry.forutgåendeMedlemskapNorskOgAvslag(resultat: Boolean): Counter =
+    this.counter("behandlingsflyt_forutgaaende_medlemskap_norsk_avslag", listOf(Tag.of("norskavslag", resultat.toString())))

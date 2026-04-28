@@ -25,7 +25,7 @@ import kotlin.reflect.KClass
 class OvergangArbeidFlytTest(val unleashGateway: KClass<UnleashGateway>) : AbstraktFlytOrkestratorTest(unleashGateway) {
     @Test
     fun `Vurdering av 11-17`() {
-        val sak = happyCaseFørstegangsbehandling(LocalDate.now())
+        val sak = happyCaseFørstegangsbehandling(LocalDate.now(), sendMeldekort = false)
         val endringsdato = sak.rettighetsperiode.fom.plusDays(7)
         val sluttdato = endringsdato.plusMonths(6).minusDays(1)
 
@@ -67,7 +67,7 @@ class OvergangArbeidFlytTest(val unleashGateway: KClass<UnleashGateway>) : Abstr
 
     @Test
     fun `Endrer sykdomsvurdering slik at 11-17-vurdering ikke lenger er nødvendig`() {
-        val sak = happyCaseFørstegangsbehandling(LocalDate.now())
+        val sak = happyCaseFørstegangsbehandling(LocalDate.now(), sendMeldekort = false)
         val periodeEttAar = Periode(fom = sak.rettighetsperiode.fom, tom = sak.rettighetsperiode.fom.plussEtÅrMedHverdager(ÅrMedHverdager.FØRSTE_ÅR))
 
         /* Gir AAP som arbeidssøker. */
@@ -103,7 +103,7 @@ class OvergangArbeidFlytTest(val unleashGateway: KClass<UnleashGateway>) : Abstr
         2. Hvis det ikke finnes vurdert 11-17, så skal det trigge en vurdering av § 11-5 + 11-17.
          */
         val startDato = LocalDate.now()
-        val sak = happyCaseFørstegangsbehandling(startDato)
+        val sak = happyCaseFørstegangsbehandling(startDato, sendMeldekort = false)
         val endringsdato = sak.rettighetsperiode.fom.plusDays(7)
 
         /* Gir AAP som arbeidssøker. */

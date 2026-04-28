@@ -15,7 +15,7 @@ import no.nav.aap.komponenter.httpklient.httpclient.request.GetRequest
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.NoTokenTokenProvider
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
-import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.OnBehalfOfTokenProvider
+import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureOBOTokenProvider
 import java.io.BufferedWriter
 import java.io.FileWriter
 import java.io.InputStream
@@ -31,7 +31,7 @@ fun getToken(): OidcToken {
     )
     return token ?: OidcToken(
         client.post<Unit, FakeServers.TestToken>(
-            URI.create(requiredConfigForKey("azure.openid.config.token.endpoint")),
+            URI.create(requiredConfigForKey("nais.token.endpoint")),
             PostRequest(Unit)
         )!!.access_token
     )
@@ -50,12 +50,10 @@ fun main() {
 
     val client: RestClient<InputStream> = RestClient(
         config = ClientConfig(scope = "behandlingsflyt"),
-        tokenProvider = OnBehalfOfTokenProvider,
+        tokenProvider = AzureOBOTokenProvider,
         responseHandler = DefaultResponseHandler()
     )
 
-//    System.setProperty("unleash.server.api.url", "http://localhost:8080")
-//    System.setProperty("unleash.server.api.token", "xxxx")
     // Starter server
     val server = embeddedServer(Netty, port = 0) {
         server(dbConfig = dbConfig, repositoryRegistry = postgresRepositoryRegistry, gatewayProvider = defaultGatewayProvider())

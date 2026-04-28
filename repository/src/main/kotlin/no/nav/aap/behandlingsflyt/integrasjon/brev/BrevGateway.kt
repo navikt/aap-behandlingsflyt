@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.behandling.brev.Avslag
 import no.nav.aap.behandlingsflyt.behandling.brev.BrevBehov
 import no.nav.aap.behandlingsflyt.behandling.brev.GrunnlagBeregning
 import no.nav.aap.behandlingsflyt.behandling.brev.Innvilgelse
+import no.nav.aap.behandlingsflyt.behandling.brev.ForholdTilAndreYtelser
 import no.nav.aap.behandlingsflyt.behandling.brev.TilkjentYtelse
 import no.nav.aap.behandlingsflyt.behandling.brev.UtvidVedtakslengde
 import no.nav.aap.behandlingsflyt.behandling.brev.VurderesForUføretrygd
@@ -49,12 +50,11 @@ import no.nav.aap.komponenter.httpklient.httpclient.put
 import no.nav.aap.komponenter.httpklient.httpclient.request.GetRequest
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
 import no.nav.aap.komponenter.httpklient.httpclient.request.PutRequest
-import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
+import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureM2MTokenProvider
 import no.nav.aap.komponenter.json.DefaultJsonMapper
 import org.slf4j.LoggerFactory
 import java.io.InputStream
 import java.net.URI
-import kotlin.collections.orEmpty
 
 class BrevGateway : BrevbestillingGateway {
 
@@ -73,7 +73,7 @@ class BrevGateway : BrevbestillingGateway {
 
     private val client = RestClient(
         config = config,
-        tokenProvider = ClientCredentialsTokenProvider,
+        tokenProvider = AzureM2MTokenProvider,
         responseHandler = HåndterConflictResponseHandler(),
         prometheus = prometheus
     )
@@ -334,6 +334,10 @@ class BrevGateway : BrevbestillingGateway {
                     if(brevBehov.sykdomsvurdering != null) {
                         add(Faktagrunnlag.Sykdomsvurdering(brevBehov.sykdomsvurdering!!))
                     }
+
+                    brevBehov.forholdTilAndreYtelser?.let { forholdTilAndreYtelser ->
+                        add(forholdTilAndreYtelserTilFaktagrunnlag(forholdTilAndreYtelser))
+                    }
                 }
 
             is VurderesForUføretrygd -> {
@@ -412,5 +416,57 @@ class BrevGateway : BrevbestillingGateway {
             },
         )
 
+    }
+
+    private fun forholdTilAndreYtelserTilFaktagrunnlag(forholdTilAndreYtelser: ForholdTilAndreYtelser): Faktagrunnlag {
+        return Faktagrunnlag.ForholdTilAndreYtelser(
+            fradragAndreYtelser = forholdTilAndreYtelser.fradragAndreYtelser.map { periode ->
+                Faktagrunnlag.ForholdTilAndreYtelser.FradragYtelse(
+                    ytelseNavn = periode.ytelseNavn,
+                    fraOgMed = periode.fraOgMed,
+                    tilOgMed = periode.tilOgMed,
+                )
+            },
+            reduksjonArbeidsgiver = forholdTilAndreYtelser.reduksjonArbeidsgiver.map { periode ->
+                Faktagrunnlag.ForholdTilAndreYtelser.ReduksjonArbeidsgiver(
+                    fraOgMed = periode.fraOgMed,
+                    tilOgMed = periode.tilOgMed,
+                )
+            },
+            refusjonskravTjenestepensjon = forholdTilAndreYtelser.refusjonskravTjenestepensjon?.let { tp ->
+                Faktagrunnlag.ForholdTilAndreYtelser.RefusjonskravTjenestepensjon(
+                    skalEtterbetalingHoldesIgjen = tp.skalEtterbetalingHoldesIgjen,
+                    fraOgMed = tp.fraOgMed,
+                    tilOgMed = tp.tilOgMed,
+                )
+            },
+            samordningAndreYtelser = forholdTilAndreYtelser.samordningAndreYtelser.map { samordning ->
+                Faktagrunnlag.ForholdTilAndreYtelser.SamordningYtelse(
+                    ytelseNavn = samordning.ytelseNavn,
+                    gradering = samordning.gradering,
+                    fraOgMed = samordning.fraOgMed,
+                    tilOgMed = samordning.tilOgMed,
+                )
+            },
+            samordningBarnepensjon = forholdTilAndreYtelser.samordningBarnepensjon.map { bp ->
+                Faktagrunnlag.ForholdTilAndreYtelser.SamordningBarnepensjon(
+                    fraOgMed = bp.fraOgMed,
+                    tilOgMed = bp.tilOgMed,
+                    månedsats = bp.månedsats,
+                )
+            },
+            samordningUføre = forholdTilAndreYtelser.samordningUføre.map { uføre ->
+                Faktagrunnlag.ForholdTilAndreYtelser.SamordningUføre(
+                    virkningstidspunkt = uføre.virkningstidspunkt,
+                    uføregradProsent = uføre.uføregradProsent,
+                )
+            },
+            sykestipend = forholdTilAndreYtelser.sykestipend.map { s ->
+                Faktagrunnlag.ForholdTilAndreYtelser.Sykestipend(
+                    fraOgMed = s.fraOgMed,
+                    tilOgMed = s.tilOgMed,
+                )
+            },
+        )
     }
 }
