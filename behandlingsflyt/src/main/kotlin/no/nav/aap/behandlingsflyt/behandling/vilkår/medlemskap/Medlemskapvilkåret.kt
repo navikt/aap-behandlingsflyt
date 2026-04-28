@@ -58,7 +58,7 @@ class Medlemskapvilkåret(
 
             // No-op: av kun norske, hvor mange får nei på manuell vurdering?
             val kunNorskStatsborgerskap =
-                grunnlag.personopplysning?.statsborgerskap?.singleOrNull()?.land == "NO"
+                grunnlag.personopplysning?.statsborgerskap?.singleOrNull()?.land == "NOR"
             val ikkeoppfyltePerioder = vilkårsvurderinger.filter { it.verdi.utfall == Utfall.IKKE_OPPFYLT }.isNotEmpty()
             prometheus.forutgåendeMedlemskapNorskOgAvslag(kunNorskStatsborgerskap && ikkeoppfyltePerioder).increment()
 
