@@ -253,7 +253,7 @@ class Avklaringsbehovene(
     fun avklaringsbehovLøstAvNay(): List<Avklaringsbehov> {
         return alle().filter { avklaringsbehov -> avklaringsbehov.erIkkeAvbrutt() }
             .filter { it.definisjon.løsesAv == listOf(Rolle.SAKSBEHANDLER_NASJONAL) }
-            .filterNot { it.erForeslåttVedtak() }
+            .filterNot { it.erForeslåttVedtak() || it.erForeslåttVedtakVedtakslengde() }
     }
 
     fun harAvklaringsbehovSomKreverToTrinn(): Boolean {

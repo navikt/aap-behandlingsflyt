@@ -42,8 +42,8 @@ data object KravForStudent : KravspesifikasjonForRettighetsType {
     override val rettighetstype = RettighetsType.STUDENT
     override val kravStudent = MåVæreOppfylt()
     override val kravForutgåendeMedlemskap = MåVæreOppfylt()
-    override val kravBistand = IngenKrav
 
+    override val kravBistand = IngenKrav
     override val kravSykdom = IngenKrav
     override val kravOvergangUfør = IngenKrav
     override val kravOvergangArbeid = IngenKrav
@@ -97,9 +97,9 @@ data object KravForOvergangUføretrygd : KravspesifikasjonForRettighetsType {
     override val rettighetstype = RettighetsType.VURDERES_FOR_UFØRETRYGD
 
     override val kravForutgåendeMedlemskap = MåVæreOppfylt()
-    override val kravSykdom = IngenKrav
     override val kravOvergangUfør = MåVæreOppfylt(null, Innvilgelsesårsak.VURDERES_FOR_UFØRETRYGD)
 
+    override val kravSykdom = IngenKrav
     override val kravBistand = IngenKrav
     override val kravOvergangArbeid = IngenKrav
     override val kravSykepengeerstatning = IngenKrav

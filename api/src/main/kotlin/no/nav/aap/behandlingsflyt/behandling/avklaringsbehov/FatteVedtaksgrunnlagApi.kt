@@ -84,7 +84,11 @@ fun NormalOpenAPIRoute.fatteVedtakGrunnlagApi(
                         ),
                         vurderinger = vurderinger,
                         historikk = historikk,
-                        besluttetAv = beslutter
+                        besluttetAv = beslutter,
+                        harGjortVilkårsvurderingerPåBehandling = brukerHarGjortVilkårsvurderingerPåBehandling(
+                            avklaringsbehovene,
+                            bruker()
+                        )
                     )
                 }
                 respond(dto)
@@ -100,14 +104,19 @@ private fun utledHarTilgangTilÅSaksbehandle(
     gatewayProvider: GatewayProvider
 ): Boolean {
     val unleashGateway = gatewayProvider.provide<UnleashGateway>()
-    if (!unleashGateway.isEnabled(BehandlingsflytFeature.IngenValidering, bruker.ident)) {
-        val harIkkeGjortNoenVurderinger =
-            avklaringsbehovene.alle().filter { it.erTotrinn() }.none { it.brukere().contains(bruker.ident) }
-
-        return kanSaksbehandle && harIkkeGjortNoenVurderinger
+    return if (!unleashGateway.isEnabled(BehandlingsflytFeature.IngenValidering, bruker.ident)) {
+        kanSaksbehandle && !brukerHarGjortVilkårsvurderingerPåBehandling(avklaringsbehovene, bruker)
     } else {
-        return kanSaksbehandle
+        kanSaksbehandle
     }
+}
+
+private fun brukerHarGjortVilkårsvurderingerPåBehandling(
+    avklaringsbehovene: Avklaringsbehovene,
+    bruker: Bruker
+): Boolean {
+    return avklaringsbehovene.alle().filter { it.erTotrinn() }
+        .any { it.brukere().contains(bruker.ident) }
 }
 
 

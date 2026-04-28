@@ -22,6 +22,7 @@ object PdlPersoninfoGateway : PersoninfoGateway {
     private val personinfoCache = Caffeine.newBuilder()
         .maximumSize(1_000)
         .expireAfterWrite(Duration.ofMinutes(30))
+        .recordStats()
         .build<String, Personinfo>()
 
     @Language("GraphQL")

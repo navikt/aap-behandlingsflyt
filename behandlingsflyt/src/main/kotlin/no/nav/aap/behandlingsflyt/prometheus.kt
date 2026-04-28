@@ -28,3 +28,9 @@ fun PrometheusMeterRegistry.forutgåendeMedlemskapStandardGjennomslipp(resultat:
 
 fun PrometheusMeterRegistry.forutgåendeMedlemskapGapGjennomslipp(resultat: Boolean): Counter =
     this.counter("behandlingsflyt_forutgaaende_medlemskap_automatisk_vurdert_med_gap", listOf(Tag.of("gapgjennomslipp", resultat.toString())))
+
+fun PrometheusMeterRegistry.forutgåendeMedlemskapNorskOgUtfallInntekt(resultat: Boolean): Counter =
+    this.counter("behandlingsflyt_forutgaaende_medlemskap_norsk_utfall_inntekt", listOf(Tag.of("norskutfallinntek", resultat.toString())))
+
+fun PrometheusMeterRegistry.forutgåendeMedlemskapNorskOgAvslag(resultat: Boolean): Counter =
+    this.counter("behandlingsflyt_forutgaaende_medlemskap_norsk_avslag", listOf(Tag.of("norskavslag", resultat.toString())))

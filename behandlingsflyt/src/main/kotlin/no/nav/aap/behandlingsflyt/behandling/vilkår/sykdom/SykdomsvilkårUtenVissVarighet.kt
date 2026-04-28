@@ -28,35 +28,6 @@ class SykdomsvilkårUtenVissVarighet(vilkårsresultat: Vilkårsresultat) : Vilk�
         vilkår.leggTilVurderinger(tidslinje)
     }
 
-    fun vurderOgSammenlign(
-        grunnlag: SykdomsFaktagrunnlag,
-        eksisterendeVilkårsresultat: Vilkårsresultat,
-        rettighetsperiode: Periode
-    ): Tidslinje<SammenlignetSegment> {
-
-        val nySammenlignbarVilkårsvurderingTidslinje =
-            vurderVilkårUtenMutering(grunnlag).mapValue {
-                SammenlignbarVurdering(
-                    it.utfall,
-                    it.innvilgelsesårsak,
-                    it.avslagsårsak
-                )
-            }
-                .komprimer()
-                .begrensetTil(rettighetsperiode)
-
-        val gammelSammenlignbarVilkårsvurderingTidslinje =
-            eksisterendeVilkårsresultat.optionalVilkår(Vilkårtype.SYKDOMSVILKÅRET)?.tidslinje().orEmpty()
-                .mapValue { SammenlignbarVurdering(it.utfall, it.innvilgelsesårsak, it.avslagsårsak) }
-                .komprimer()
-                .begrensetTil(rettighetsperiode)
-
-
-        return gammelSammenlignbarVilkårsvurderingTidslinje.outerJoin(nySammenlignbarVilkårsvurderingTidslinje) { gammel, ny ->
-            SammenlignetSegment(gammel, ny)
-        }.komprimer()
-    }
-
     fun vurderVilkårUtenMutering(
         grunnlag: SykdomsFaktagrunnlag
     ): Tidslinje<Vilkårsvurdering> {
@@ -163,18 +134,19 @@ class SykdomsvilkårUtenVissVarighet(vilkårsresultat: Vilkårsresultat) : Vilk�
             utfall = Utfall.IKKE_OPPFYLT
 
             val nedsettelseHalvparten = sykdomVurdering?.utledErNedsettelseMinstHalvparten()
-            val nedsettelseYrkesskade = sykdomVurdering?.utledErNedsettelseMerEnnYrkesskadegrense()
 
-            avslagsårsak = if (sykdomVurdering?.erSkadeSykdomEllerLyteVesentligdel == false) {
-                Avslagsårsak.IKKE_SYKDOM_SKADE_LYTE_VESENTLIGDEL
-            } else if (nedsettelseHalvparten == ErNedsettelseMinstHalvpartenValg.NEI
-                && nedsettelseYrkesskade != ErNedsettelseMerEnnYrkesskadegrenseValg.JA
-            ) {
-                Avslagsårsak.IKKE_NOK_REDUSERT_ARBEIDSEVNE
-            } else if (nedsettelseHalvparten == ErNedsettelseMinstHalvpartenValg.JA_FORBIGÅENDE_PROBLEMER) {
-                Avslagsårsak.IKKE_SYKDOM_AV_VISS_VARIGHET
-            } else {
-                Avslagsårsak.MANGLENDE_DOKUMENTASJON
+            avslagsårsak = when {
+                sykdomVurdering?.harSkadeSykdomEllerLyte == false ->
+                    Avslagsårsak.IKKE_SYKDOM_SKADE_LYTE
+
+                sykdomVurdering?.erSkadeSykdomEllerLyteVesentligdel == false ->
+                    Avslagsårsak.IKKE_SYKDOM_SKADE_LYTE_VESENTLIGDEL
+
+                nedsettelseHalvparten == ErNedsettelseMinstHalvpartenValg.JA_FORBIGÅENDE_PROBLEMER ->
+                    Avslagsårsak.IKKE_SYKDOM_AV_VISS_VARIGHET
+
+                else ->
+                    Avslagsårsak.IKKE_NOK_REDUSERT_ARBEIDSEVNE
             }
         }
 
@@ -191,13 +163,3 @@ class SykdomsvilkårUtenVissVarighet(vilkårsresultat: Vilkårsresultat) : Vilk�
     }
 
 }
-
-data class SammenlignetSegment(val gammel: SammenlignbarVurdering?, val ny: SammenlignbarVurdering?)
-
-fun Tidslinje<SammenlignetSegment>.diff() = this.segmenter().filter { it.verdi.gammel != it.verdi.ny }
-fun Tidslinje<SammenlignetSegment>.harDiff() = this.segmenter().any { it.verdi.gammel != it.verdi.ny }
-data class SammenlignbarVurdering(
-    val utfall: Utfall,
-    val innvilgelsesårsak: Innvilgelsesårsak?,
-    val avslagsårsak: Avslagsårsak?
-)

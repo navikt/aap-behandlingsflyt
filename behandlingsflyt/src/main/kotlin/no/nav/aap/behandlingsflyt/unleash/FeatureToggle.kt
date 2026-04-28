@@ -9,14 +9,15 @@ enum class BehandlingsflytFeature : FeatureToggle {
     IngenValidering,
     NyBrevbyggerV3,
     Under18,
-    InstitusjonsoppholdJobb,
     TrekkSoeknadOpprettetFraLegeerklaering,
     KvalitetssikringVed2213,
     VisIkkeRelevantPeriode,
     MigrerStansOgOpphor,
     hentTiltakspengerPerioder,
     AvslagLovvalgMedlemskap,
-    ForutgaaendeForbedringer
+    ForutgaaendeForbedringer,
+    ForeslaaVedtakVedtakslengde,
+    SamordningFaktagrunnlagBrev,
     ;
 
     override fun key(): String = name

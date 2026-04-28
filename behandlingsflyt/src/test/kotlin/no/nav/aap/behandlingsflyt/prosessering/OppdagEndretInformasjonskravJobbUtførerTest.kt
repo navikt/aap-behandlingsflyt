@@ -49,6 +49,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
+import no.nav.aap.behandlingsflyt.test.DummyBehandlingHendelseServiceFactory
 import no.nav.aap.behandlingsflyt.test.fixedClock
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -142,6 +143,7 @@ class OppdagEndretInformasjonskravJobbUtførerTest {
         register<FakeInstitusjonsoppholdGateway>()
         register<FakePersonopplysningGateway>()
         register<AlleAvskruddUnleash>()
+        register<DummyBehandlingHendelseServiceFactory>()
     }
 
     companion object {

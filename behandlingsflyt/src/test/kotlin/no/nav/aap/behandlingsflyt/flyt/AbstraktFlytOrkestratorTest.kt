@@ -1447,8 +1447,7 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
         dataSource.transaction { connection ->
             FlytOrkestrator(
                 postgresRepositoryRegistry.provider(connection),
-                gatewayProvider,
-                behandlingHendelseService = DummyBehandlingHendelseService
+                gatewayProvider
             ).forberedOgProsesserBehandling(
                 FlytKontekst(
                     sakId = behandling.sakId,
