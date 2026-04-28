@@ -109,8 +109,6 @@ public data class TilkjentDTO(
     val dagsats: Int,
     val gradering: Int,
     val samordningUføregradering: Int? = null,
-    @Deprecated("Denne er alltid lik dagsats fra behandlingsflyt.")
-    val grunnlag: BigDecimal? = null,
     val grunnlagsfaktor: BigDecimal,
     val grunnbeløp: BigDecimal,
     val antallBarn: Int,
