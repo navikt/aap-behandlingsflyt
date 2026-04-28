@@ -7,6 +7,7 @@ import no.nav.aap.behandlingsflyt.test.fakes.AinntektFake
 import no.nav.aap.behandlingsflyt.test.fakes.BrevFake
 import no.nav.aap.behandlingsflyt.test.fakes.DagpengerFake
 import no.nav.aap.behandlingsflyt.test.fakes.DatadelingFake
+import no.nav.aap.behandlingsflyt.test.fakes.DokarkivFake
 import no.nav.aap.behandlingsflyt.test.fakes.DokumentinnhentingFake
 import no.nav.aap.behandlingsflyt.test.fakes.EregFake
 import no.nav.aap.behandlingsflyt.test.fakes.FakeServer
@@ -77,11 +78,12 @@ object FakeServers : AutoCloseable {
     private val tiltakspenger = TiltakspengerFake { fakePersoner }
     private val tjenestePensjon = TjenestePensjonFake { fakePersoner }
     private val ainntekt = AinntektFake { fakePersoner }
+    private val dokarkiv = DokarkivFake()
 
     private val allFakes: List<FakeServer> = listOf(
         texas, brev, yrkesskade, pdl, popp, oppgavestyring, inst2, sam, medl, tilgang, foreldrepenger, pesys,
         sykepenger, statistikk, dokumentinnhenting, ainntekt, aareg, datadeling, utbetal, meldekort, tjenestePensjon,
-        unleash, nom, norg, kabal, ereg, dagpenger, tiltakspenger, gosys, leaderElector,
+        unleash, nom, norg, kabal, ereg, dagpenger, tiltakspenger, gosys, leaderElector, dokarkiv
     )
 
     private lateinit var fakePersoner: TestPersonService
@@ -171,6 +173,10 @@ object FakeServers : AutoCloseable {
         System.setProperty("integrasjon.tiltakspenger.url", "http://localhost:${tiltakspenger.port()}")
         System.setProperty("integrasjon.tiltakspenger.scope", "scope")
 
+        // Dokarkiv
+        System.setProperty("integrasjon.dokarkiv.url", "http://localhost:${dokarkiv.port()}")
+        System.setProperty("integrasjon.dokarkiv.scope", "scope")
+
         // AAregisteret
         System.setProperty("integrasjon.aareg.url", "http://localhost:${aareg.port()}")
         System.setProperty("integrasjon.aareg.scope", "scope")
@@ -194,6 +200,10 @@ object FakeServers : AutoCloseable {
         //tjenestepensjon
         System.setProperty("integrasjon.tjenestepensjon.url", "http://localhost:${tjenestePensjon.port()}")
         System.setProperty("integrasjon.tjenestepensjon.scope", "tjenestepensjon")
+
+        // Dokarkiv
+        System.setProperty("integrasjon.dokarkiv.url", "http://localhost:${dokarkiv.port()}")
+        System.setProperty("integrasjon.dokarkiv.scope", "scope")
 
         //unleash
         System.setProperty("nais.app.name", "behandlingsflyt")

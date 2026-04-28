@@ -19,6 +19,7 @@ import no.nav.aap.behandlingsflyt.integrasjon.organisasjon.NomInfoGateway
 import no.nav.aap.behandlingsflyt.integrasjon.organisasjon.NorgGateway
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
+import no.nav.aap.behandlingsflyt.test.FakeDokarkivGateway
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.behandlingsflyt.test.MockDataSource
 import no.nav.aap.behandlingsflyt.test.april
@@ -53,6 +54,13 @@ class MeldekortApiTest : BaseApiTest() {
         register<NomInfoGateway>()
         register<NorgGateway>()
         register<AlleAvskruddUnleash>()
+    }
+
+    private fun createTestGatewayProviderMedDokarkiv() = createGatewayProvider {
+        register<NomInfoGateway>()
+        register<NorgGateway>()
+        register<AlleAvskruddUnleash>()
+        register<FakeDokarkivGateway>()
     }
 
     @Test
@@ -310,6 +318,42 @@ class MeldekortApiTest : BaseApiTest() {
             assertThat(body.meldeperioderMedMeldekort).hasSize(2)
             assertThat(body.meldeperioderMedMeldekort.first().meldeperiode).isEqualTo(forrigeMeldeperiode)
             assertThat(body.meldeperioderMedMeldekort.last().meldeperiode).isEqualTo(inneværendeMeldeperiode)
+        }
+    }
+
+    @Test
+    fun `skal journalføre oppdatert meldekort og returnere journalpostId`() {
+        val sak = nySak()
+        val behandling = opprettBehandling(sak, TypeBehandling.Førstegangsbehandling)
+
+        InMemoryVedtakRepository.lagre(behandling.id, LocalDateTime.now(), LocalDate.now())
+
+        val dag1 = 6 januar 2025
+        val dag2 = 7 januar 2025
+
+        val request = OppdaterMeldekortRequest(
+            meldeperiode = Periode(dag1, dag2),
+            begrunnelse = "Korrigering av timer",
+            dager = setOf(
+                DagDto(dato = dag1, timerArbeidet = 7.5),
+                DagDto(dato = dag2, timerArbeidet = 3.0),
+            ),
+        )
+
+        testApplication {
+            installApplication {
+                meldekortApi(MockDataSource(), inMemoryRepositoryRegistry, createTestGatewayProviderMedDokarkiv(), fixedClock)
+            }
+
+            val response = createClient().post("/api/meldekort/${sak.saksnummer}") {
+                header("Authorization", "Bearer ${getToken().token()}")
+                contentType(ContentType.Application.Json)
+                setBody(request)
+            }
+
+            assertThat(response.status).isEqualTo(HttpStatusCode.OK)
+            val body = response.body<OppdaterMeldekortResponse>()
+            assertThat(body.journalpostId).isNotBlank()
         }
     }
 

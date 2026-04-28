@@ -25,6 +25,16 @@ data class DagDto(
     val timerArbeidet: Double
 )
 
+data class OppdaterMeldekortRequest(
+    val meldeperiode: Periode,
+    val begrunnelse: String,
+    val dager: Set<DagDto>,
+)
+
+data class OppdaterMeldekortResponse(
+    val journalpostId: String,
+)
+
 fun Meldekort.toDto(): MeldekortDto = MeldekortDto(
     id = journalpostId.identifikator,
     mottattTidspunkt = mottattTidspunkt,
