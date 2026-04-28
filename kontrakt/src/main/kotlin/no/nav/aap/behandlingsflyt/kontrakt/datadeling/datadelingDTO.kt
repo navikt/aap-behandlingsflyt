@@ -100,7 +100,7 @@ public data class RettighetsTypePeriode(
 
 public data class SakDTO(
     val saksnummer: String,
-    val status: Status,
+    val status: Status? = null,
     val fnr: List<String>,
     val opprettetTidspunkt: LocalDateTime = LocalDateTime.now(),
 )
