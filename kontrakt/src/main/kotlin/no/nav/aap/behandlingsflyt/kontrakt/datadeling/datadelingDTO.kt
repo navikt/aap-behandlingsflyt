@@ -100,19 +100,9 @@ public data class RettighetsTypePeriode(
 
 public data class SakDTO(
     val saksnummer: String,
-    val status: Status,
+    val status: Status? = null,
     val fnr: List<String>,
     val opprettetTidspunkt: LocalDateTime = LocalDateTime.now(),
-)
-
-public data class UnderveisDTO(
-    val underveisFom: LocalDate,
-    val underveisTom: LocalDate,
-    val meldeperiodeFom: LocalDate,
-    val meldeperiodeTom: LocalDate,
-    val utfall: String,
-    val rettighetsType: String?,
-    val avslagsårsak: String?, // skal ikke denne være Avslagsårsak?
 )
 
 public data class TilkjentDTO(
@@ -122,7 +112,7 @@ public data class TilkjentDTO(
     val gradering: Int,
     val samordningUføregradering: Int? = null,
     @Deprecated("Denne er alltid lik dagsats fra behandlingsflyt.")
-    val grunnlag: BigDecimal,
+    val grunnlag: BigDecimal? = null,
     val grunnlagsfaktor: BigDecimal,
     val grunnbeløp: BigDecimal,
     val antallBarn: Int,
