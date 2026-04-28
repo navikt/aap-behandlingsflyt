@@ -31,6 +31,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
+import no.nav.aap.behandlingsflyt.test.minimalGatewayProvider
 import no.nav.aap.behandlingsflyt.utils.toHumanReadable
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
@@ -189,7 +190,7 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::
 
         var resultat =
             dataSource.transaction {
-                ResultatUtleder(postgresRepositoryRegistry.provider(it), gatewayProvider).utledResultatFørstegangsBehandling(
+                ResultatUtleder(postgresRepositoryRegistry.provider(it), minimalGatewayProvider { }).utledResultatFørstegangsBehandling(
                     behandling.id
                 )
             }
@@ -214,7 +215,7 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::
 
         resultat =
             dataSource.transaction {
-                ResultatUtleder(postgresRepositoryRegistry.provider(it), gatewayProvider).utledResultatFørstegangsBehandling(
+                ResultatUtleder(postgresRepositoryRegistry.provider(it), minimalGatewayProvider { }).utledResultatFørstegangsBehandling(
                     behandling.id
                 )
             }

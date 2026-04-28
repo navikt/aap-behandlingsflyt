@@ -4,27 +4,32 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsopptrapping
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsopptrapping.ArbeidsopptrappingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsopptrapping.ArbeidsopptrappingVurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import java.util.concurrent.ConcurrentHashMap
 
 object InMemoryArbeidsopptrappingRepository : ArbeidsopptrappingRepository {
+    private val store = ConcurrentHashMap<BehandlingId, ArbeidsopptrappingGrunnlag>()
+
     override fun hentHvisEksisterer(behandlingId: BehandlingId): ArbeidsopptrappingGrunnlag? {
-        TODO("Not yet implemented")
+        return store[behandlingId]
     }
 
     override fun lagre(
         behandlingId: BehandlingId,
         arbeidsopptrappingVurderinger: List<ArbeidsopptrappingVurdering>
     ) {
-        TODO("Not yet implemented")
+        store[behandlingId] = ArbeidsopptrappingGrunnlag(
+            vurderinger = arbeidsopptrappingVurderinger
+        )
     }
 
     override fun slett(behandlingId: BehandlingId) {
-        TODO("Not yet implemented")
+        store.remove(behandlingId)
     }
 
     override fun kopier(
         fraBehandling: BehandlingId,
         tilBehandling: BehandlingId
     ) {
-        TODO("Not yet implemented")
+        store[fraBehandling]?.let {  store[tilBehandling] = it }
     }
 }

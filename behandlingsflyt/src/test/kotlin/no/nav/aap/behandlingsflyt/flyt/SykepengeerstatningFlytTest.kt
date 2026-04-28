@@ -22,6 +22,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.test.april
+import no.nav.aap.behandlingsflyt.test.minimalGatewayProvider
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
@@ -97,7 +98,7 @@ class SykepengeerstatningFlytTest(val unleashGateway: KClass<UnleashGateway>) :
             .medKontekst {
                 assertThat(this.behandling.status()).isEqualTo(Status.IVERKSETTES)
 
-                val resultat = ResultatUtleder(repositoryProvider, gatewayProvider).utledResultatFørstegangsBehandling(behandling.id)
+                val resultat = ResultatUtleder(repositoryProvider, minimalGatewayProvider { }).utledResultatFørstegangsBehandling(behandling.id)
                 assertThat(resultat).isEqualTo(Resultat.INNVILGELSE)
             }
 
@@ -189,7 +190,7 @@ class SykepengeerstatningFlytTest(val unleashGateway: KClass<UnleashGateway>) :
             .medKontekst {
                 assertThat(this.behandling.status()).isEqualTo(Status.IVERKSETTES)
 
-                val resultat = ResultatUtleder(repositoryProvider, gatewayProvider).utledResultatFørstegangsBehandling(behandling.id)
+                val resultat = ResultatUtleder(repositoryProvider, minimalGatewayProvider { }).utledResultatFørstegangsBehandling(behandling.id)
                 assertThat(resultat).isEqualTo(Resultat.INNVILGELSE)
             }
             .løsVedtaksbrev()
@@ -203,7 +204,7 @@ class SykepengeerstatningFlytTest(val unleashGateway: KClass<UnleashGateway>) :
                     .extracting(Vilkårsperiode::erOppfylt, Vilkårsperiode::innvilgelsesårsak)
                     .containsExactly(true, null)
 
-                val resultat = ResultatUtleder(repositoryProvider, gatewayProvider).utledResultatFørstegangsBehandling(behandling.id)
+                val resultat = ResultatUtleder(repositoryProvider, minimalGatewayProvider { }).utledResultatFørstegangsBehandling(behandling.id)
 
                 assertThat(resultat).isEqualTo(Resultat.INNVILGELSE)
             }
