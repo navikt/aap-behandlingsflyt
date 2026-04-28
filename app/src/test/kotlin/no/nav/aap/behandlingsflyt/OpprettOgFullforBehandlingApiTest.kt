@@ -137,7 +137,6 @@ class OpprettOgFullforBehandlingApiTest {
         assertThat(behandlingStatus?.ferdig).isTrue()
         assertThat(behandlingStatus?.behandlingStatus).isEqualTo("AVSLUTTET")
 
-        // Verifiser at behandlingen faktisk er AVSLUTTET i databasen
         val dataSource = initDatasource(dbConfig)
         dataSource.transaction { connection ->
             val sakRepo = postgresRepositoryRegistry.provider(connection).provide<SakRepository>()
@@ -151,24 +150,19 @@ class OpprettOgFullforBehandlingApiTest {
         }
     }
 
-    private fun pollBehandlingStatus(saksnummer: String): BehandlingStatusRespons? {
-        return runBlocking {
-            var status: BehandlingStatusRespons? = null
-            var tries = 0
-            while (tries < 120) {
-                try {
-                    status = ccClient.post(
-                        URI.create("http://localhost:$port/api/test/behandlingStatus"),
-                        PostRequest(body = BehandlingStatusRequest(saksnummer = saksnummer))
-                    )
-                    if (status?.ferdig == true) return@runBlocking status
-                } catch (e: Exception) {
-                    log.info("Poll exception: $e")
-                }
-                delay(1000.milliseconds)
-                tries++
+    private fun pollBehandlingStatus(saksnummer: String): BehandlingStatusRespons? = runBlocking {
+        repeat(120) {
+            try {
+                val status = ccClient.post<BehandlingStatusRequest, BehandlingStatusRespons>(
+                    URI.create("http://localhost:$port/api/test/behandlingStatus"),
+                    PostRequest(body = BehandlingStatusRequest(saksnummer = saksnummer))
+                )
+                if (status?.ferdig == true) return@runBlocking status
+            } catch (e: Exception) {
+                log.info("Poll exception: $e")
             }
-            status
+            delay(1000.milliseconds)
         }
+        null
     }
 }
