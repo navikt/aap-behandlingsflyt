@@ -8,6 +8,8 @@ import no.nav.aap.behandlingsflyt.Tags
 import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Meldekort
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.MeldekortRepository
 import no.nav.aap.behandlingsflyt.hendelse.mottak.MottattHendelseService
@@ -63,6 +65,7 @@ fun NormalOpenAPIRoute.meldekortApi(
                 val meldekortRepository = repositoryProvider.provide<MeldekortRepository>()
                 val underveisRepository = repositoryProvider.provide<UnderveisRepository>()
                 val sakRepository = repositoryProvider.provide<SakRepository>()
+                val mottattDokumentRepository = repositoryProvider.provide<MottattDokumentRepository>()
                 val behandlingService = BehandlingService(repositoryProvider, gatewayProvider)
 
                 val sak = sakRepository.hent(Saksnummer(req.saksnummer))
@@ -76,10 +79,22 @@ fun NormalOpenAPIRoute.meldekortApi(
                     meldeperioder.map { meldeperiode ->
                         val meldekort = nyesteMeldekortForMeldeperiode(meldekortene, meldeperiode)
 
-                        MeldeperiodeMedMeldekortDto(
-                            meldeperiode = meldeperiode,
-                            meldekort = meldekort?.toDto()
-                        )
+                        if (meldekort != null) {
+                            // Henter metadata fra mottatt_dokument
+                            val innsendingReferanse = InnsendingReferanse(meldekort.journalpostId)
+                            val mottattDokument = mottattDokumentRepository.hent(innsendingReferanse)
+                            val meldekortData = mottattDokument.strukturerteData<MeldekortV0>()?.data
+
+                            MeldeperiodeMedMeldekortDto(
+                                meldeperiode = meldeperiode,
+                                meldekort = meldekort.toDto(meldekortData?.begrunnelse, meldekortData?.opprettetAv)
+                            )
+                        } else {
+                            MeldeperiodeMedMeldekortDto(
+                                meldeperiode = meldeperiode,
+                                meldekort = null
+                            )
+                        }
                     }
                 }?.let { MeldeperioderMedMeldekortResponse(it.toSet()) }
             }
