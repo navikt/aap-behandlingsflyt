@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.kontrakt.datadeling
 
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
+import no.nav.aap.behandlingsflyt.kontrakt.sak.Status
 import java.math.BigDecimal
 import java.time.Instant
 import java.time.LocalDate
