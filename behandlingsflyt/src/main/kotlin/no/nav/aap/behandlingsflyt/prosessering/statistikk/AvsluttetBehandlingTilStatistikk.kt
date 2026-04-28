@@ -142,7 +142,12 @@ class AvsluttetBehandlingTilStatistikk(
         val rettighetstypePerioder = hentRettighetstypePerioder(underveistidslinje)
 
         val institusjonsopphold =
-            underveistidslinje.map { it.institusjonsoppholdReduksjon }.komprimer().perioder().toList()
+            underveistidslinje
+                .map { it.institusjonsoppholdReduksjon }
+                .filter { it.verdi.prosentverdi() > 0 }
+                .komprimer()
+                .perioder()
+                .toList()
 
         val fritaksvurderinger = hentFritaksvurderinger(behandling)
 
