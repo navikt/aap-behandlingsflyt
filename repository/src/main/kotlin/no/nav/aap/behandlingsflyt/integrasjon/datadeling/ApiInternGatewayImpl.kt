@@ -135,7 +135,6 @@ class ApiInternGatewayImpl : ApiInternGateway {
                     beregningsgrunnlag = beregningsgrunnlag,
                     sak = SakDTO(
                         saksnummer = sak.saksnummer.toString(),
-                        status = sak.status(),
                         fnr = sak.person.identer().map { ident -> ident.identifikator },
                         opprettetTidspunkt = sak.opprettetTidspunkt
                     ),
