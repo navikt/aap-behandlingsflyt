@@ -625,6 +625,41 @@ class BrevUtlederServiceTest {
             assertIs<Innvilgelse>(resultat, "brevbehov er av type Innvilgelse")
             assertEquals(resultat.sykdomsvurdering, "Vurdering av sykdom")
         }
+
+        @Test
+        fun `skal få innvilgelsesbrev etter avslag`() {
+            val førstegangsbehandling = gittBehandling()
+            val revurdering = gittBehandling(forrigeBehandlingId = førstegangsbehandling.id)
+
+            gittUnderveisGrunnlag(
+                førstegangsbehandling.id,
+                underveisperiode(
+                    periode = Periode(virkningstidspunkt, virkningstidspunkt.plusYears(1)),
+                    utfall = Utfall.IKKE_OPPFYLT,
+                    rettighetsType = null
+                ),
+            )
+
+            gittUnderveisGrunnlag(
+                revurdering.id,
+                underveisperiode(
+                    periode = Periode(virkningstidspunkt, virkningstidspunkt.plusDays(14)),
+                    utfall = Utfall.IKKE_OPPFYLT,
+                    rettighetsType = null,
+                ),
+                underveisperiode(
+                    periode = Periode(virkningstidspunkt.plusDays(15), virkningstidspunkt.plusYears(1)),
+                    utfall = Utfall.OPPFYLT,
+                    rettighetsType = RettighetsType.BISTANDSBEHOV
+                ),
+            )
+
+            val resultatFørstegangsbehandling = brevUtlederService.utledBehovForMeldingOmVedtak(førstegangsbehandling.id)
+            val resultatAndreBehandling = brevUtlederService.utledBehovForMeldingOmVedtak(revurdering.id)
+
+            assertIs<Avslag>(resultatFørstegangsbehandling, "første behandling gir avslag")
+            assertIs<Innvilgelse>(resultatAndreBehandling, "revurdering er innvilgelse")
+        }
     }
 
 
