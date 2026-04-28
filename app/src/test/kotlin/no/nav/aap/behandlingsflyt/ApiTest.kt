@@ -41,6 +41,7 @@ import no.nav.aap.behandlingsflyt.test.FakePersoner
 import no.nav.aap.behandlingsflyt.test.FakeServers
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.behandlingsflyt.test.LokalUnleash
+import no.nav.aap.behandlingsflyt.test.fakes.TestToken
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.behandlingsflyt.test.testGatewayProvider
 import no.nav.aap.komponenter.config.requiredConfigForKey
@@ -119,12 +120,12 @@ class ApiTest {
             )
 
             val response = if (isApp) {
-                client.post<Unit, FakeServers.TestToken>(
+                client.post<Unit, TestToken>(
                     URI.create(requiredConfigForKey("nais.token.endpoint")),
                     PostRequest(Unit)
                 )
             } else {
-                client.post<Map<String, String>, FakeServers.TestToken>(
+                client.post<Map<String, String>, TestToken>(
                     URI.create(requiredConfigForKey("nais.token.exchange.endpoint")),
                     PostRequest(
                         body = mapOf(
