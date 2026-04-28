@@ -50,6 +50,18 @@ class VurdertAvService(
         )
     }
 
+    fun vurderingerMeta(
+        definisjon: Definisjon,
+        behandlingId: BehandlingId,
+        vurdertAv: VurdertAvResponse?,
+        trukketAv: VurdertAvResponse? = null,
+    ) = VurderingerMetaResponse(
+        vurdertAv = vurdertAv,
+        kvalitetssikretAv = kvalitetssikretAv(definisjon, behandlingId),
+        besluttetAv = besluttetAv(definisjon, behandlingId),
+        trukketAv = trukketAv,
+    )
+
     fun medNavnOgEnhet(ident: String, dato: LocalDate): VurdertAvResponse {
         val ansattNavnOgEnhet = ansattInfoService.hentAnsattNavnOgEnhet(ident)
         return VurdertAvResponse(

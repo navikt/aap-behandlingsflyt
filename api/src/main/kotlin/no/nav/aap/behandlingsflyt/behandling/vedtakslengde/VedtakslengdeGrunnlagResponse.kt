@@ -3,7 +3,7 @@ package no.nav.aap.behandlingsflyt.behandling.vedtakslengde
 import no.nav.aap.behandlingsflyt.PeriodiserteVurderingerDto
 import no.nav.aap.behandlingsflyt.VurderingDto
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.ÅrMedHverdager
-import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
+import no.nav.aap.behandlingsflyt.behandling.vurdering.VurderingerMetaResponse
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeVurdering
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
@@ -22,9 +22,7 @@ data class VedtakslengdeGrunnlagResponse(
 data class VedtakslengdeVurderingResponse(
     override val fom: LocalDate,
     override val tom: LocalDate?,
-    override val vurdertAv: VurdertAvResponse?,
-    override val kvalitetssikretAv: VurdertAvResponse?,
-    override val besluttetAv: VurdertAvResponse?,
+    override val vurderingerMeta: VurderingerMetaResponse,
     val sluttdato: LocalDate,
     val utvidetMed: ÅrMedHverdager,
     val begrunnelse: String,
@@ -37,11 +35,10 @@ fun VedtakslengdeVurdering.toResponse(
 ) = VedtakslengdeVurderingResponse(
     fom = periode.fom,
     tom = periode.tom,
-    vurdertAv = vurdertAvService.medNavnOgEnhet(vurdertAv.ident, opprettet),
-    kvalitetssikretAv = null,
-    besluttetAv = vurdertAvService.besluttetAv(
+    vurderingerMeta = vurdertAvService.vurderingerMeta(
         definisjon = Definisjon.AVKLAR_VEDTAKSLENGDE,
         behandlingId = vurdertIBehandling,
+        vurdertAv = vurdertAvService.medNavnOgEnhet(vurdertAv.ident, opprettet),
     ),
     sluttdato = sluttdato,
     utvidetMed = utvidetMed,

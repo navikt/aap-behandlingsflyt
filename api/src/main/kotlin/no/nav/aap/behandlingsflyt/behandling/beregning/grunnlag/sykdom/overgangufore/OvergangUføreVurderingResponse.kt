@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.overgangufore
 
 import no.nav.aap.behandlingsflyt.VurderingDto
-import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
+import no.nav.aap.behandlingsflyt.behandling.vurdering.VurderingerMetaResponse
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.UføreSøknadVedtakResultat
@@ -16,9 +16,7 @@ data class OvergangUføreVurderingResponse(
     val brukerRettPåAAP: Boolean?,
     override val fom: LocalDate,
     override val tom: LocalDate?,
-    override val vurdertAv: VurdertAvResponse,
-    override val kvalitetssikretAv: VurdertAvResponse?,
-    override val besluttetAv: VurdertAvResponse?
+    override val vurderingerMeta: VurderingerMetaResponse,
 ) : VurderingDto {
     companion object {
         fun fraDomene(
@@ -52,18 +50,14 @@ data class OvergangUføreVurderingResponse(
             brukerRettPåAAP = overgangUføreVurdering.brukerRettPåAAP,
             fom = fom,
             tom = tom,
-            vurdertAv = vurdertAvService.medNavnOgEnhet(
-                overgangUføreVurdering.vurdertAv,
-                overgangUføreVurdering.opprettet!!  // TODO: Sett denne i kode i stedet for database
-            ),
-            kvalitetssikretAv = vurdertAvService.kvalitetssikretAv(
+            vurderingerMeta = vurdertAvService.vurderingerMeta(
                 definisjon = Definisjon.AVKLAR_OVERGANG_UFORE,
-                behandlingId = overgangUføreVurdering.vurdertIBehandling
+                behandlingId = overgangUføreVurdering.vurdertIBehandling,
+                vurdertAv = vurdertAvService.medNavnOgEnhet(
+                    overgangUføreVurdering.vurdertAv,
+                    overgangUføreVurdering.opprettet!!, // TODO: Sett denne i kode i stedet for database
+                ),
             ),
-            besluttetAv = vurdertAvService.besluttetAv(
-                definisjon = Definisjon.AVKLAR_OVERGANG_UFORE,
-                behandlingId = overgangUføreVurdering.vurdertIBehandling
-            )
         )
     }
 }

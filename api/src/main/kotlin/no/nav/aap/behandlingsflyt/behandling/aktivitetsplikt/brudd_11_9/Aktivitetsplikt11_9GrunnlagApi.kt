@@ -7,6 +7,7 @@ import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.Tags
 import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
 import no.nav.aap.behandlingsflyt.behandling.utbetaling.UtbetalingGateway
+import no.nav.aap.behandlingsflyt.behandling.vurdering.VurderingerMetaResponse
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_9Grunnlag
@@ -127,10 +128,12 @@ internal fun Aktivitetsplikt11_9Grunnlag.tilDtoMedTrekk(
             begrunnelse = aktivitetspliktVurdering.begrunnelse,
             brudd = aktivitetspliktVurdering.brudd,
             grunn = aktivitetspliktVurdering.grunn,
-            vurdertAv = VurdertAvResponse.fraIdent(
-                aktivitetspliktVurdering.vurdertAv,
-                aktivitetspliktVurdering.opprettet,
-                ansattInfoService
+            vurderingerMeta = VurderingerMetaResponse(
+                vurdertAv = VurdertAvResponse.fraIdent(
+                    aktivitetspliktVurdering.vurdertAv,
+                    aktivitetspliktVurdering.opprettet,
+                    ansattInfoService,
+                )
             ),
             registrertTrekk = aktueltTrekk?.let {
                 AktivitetspliktTrekkDto(
@@ -156,7 +159,7 @@ data class AktivitetspliktVurderingMedTrekkDto(
     val begrunnelse: String,
     val brudd: Brudd,
     val grunn: Grunn,
-    val vurdertAv: VurdertAvResponse?,
+    val vurderingerMeta: VurderingerMetaResponse,
     val registrertTrekk: AktivitetspliktTrekkDto?,
 )
 
@@ -181,7 +184,7 @@ data class Aktivitetsplikt11_9VurderingDto(
     val begrunnelse: String,
     val brudd: Brudd,
     val grunn: Grunn,
-    val vurdertAv: VurdertAvResponse?,
+    val vurderingerMeta: VurderingerMetaResponse,
 )
 
 internal fun Aktivitetsplikt11_9Vurdering.tilDto(ansattInfoService: AnsattInfoService): Aktivitetsplikt11_9VurderingDto {
@@ -190,6 +193,8 @@ internal fun Aktivitetsplikt11_9Vurdering.tilDto(ansattInfoService: AnsattInfoSe
         begrunnelse = begrunnelse,
         brudd = brudd,
         grunn = grunn,
-        vurdertAv = VurdertAvResponse.fraIdent(vurdertAv, opprettet, ansattInfoService),
+        vurderingerMeta = VurderingerMetaResponse(
+            vurdertAv = VurdertAvResponse.fraIdent(vurdertAv, opprettet, ansattInfoService),
+        ),
     )
 }

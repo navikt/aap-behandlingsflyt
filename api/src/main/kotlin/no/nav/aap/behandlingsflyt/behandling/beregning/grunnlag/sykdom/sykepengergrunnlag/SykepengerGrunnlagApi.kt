@@ -96,15 +96,14 @@ private fun SykepengerVurdering.tilResponse(vurdertAvService: VurdertAvService):
         gjelderTom = gjelderTom,
         opprettet = vurdertTidspunkt ?: error("Mangler dato for sykepengervurdering"),
         vurdertIBehandling = vurdertIBehandling,
-        besluttetAv = vurdertAvService.besluttetAv(Definisjon.AVKLAR_SYKEPENGEERSTATNING, vurdertIBehandling),
-        kvalitetssikretAv = vurdertAvService.kvalitetssikretAv(
-            Definisjon.AVKLAR_SYKEPENGEERSTATNING,
-            vurdertIBehandling
+        vurderingerMeta = vurdertAvService.vurderingerMeta(
+            definisjon = Definisjon.AVKLAR_SYKEPENGEERSTATNING,
+            behandlingId = vurdertIBehandling,
+            vurdertAv = vurdertAvService.medNavnOgEnhet(
+                ident = vurdertAv,
+                vurdertTidspunkt ?: error("Mangler dato for sykepengervurdering"),
+            ),
         ),
-        vurdertAv = vurdertAvService.medNavnOgEnhet(
-            ident = vurdertAv,
-            vurdertTidspunkt ?: error("Mangler dato for sykepengervurdering")
-        )
     )
 }
 

@@ -2,7 +2,7 @@ package no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.fritakmeldeplik
 
 import no.nav.aap.behandlingsflyt.PeriodiserteVurderingerDto
 import no.nav.aap.behandlingsflyt.VurderingDto
-import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
+import no.nav.aap.behandlingsflyt.behandling.vurdering.VurderingerMetaResponse
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.Fritaksvurdering
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
@@ -23,9 +23,7 @@ data class FritakMeldepliktGrunnlagResponse(
 data class PeriodisertFritakMeldepliktVurderingResponse(
     override val fom: LocalDate,
     override val tom: LocalDate?,
-    override val vurdertAv: VurdertAvResponse?,
-    override val kvalitetssikretAv: VurdertAvResponse? = null,
-    override val besluttetAv: VurdertAvResponse? = null,
+    override val vurderingerMeta: VurderingerMetaResponse,
     val begrunnelse: String,
     val harFritak: Boolean,
 ) : VurderingDto
@@ -49,14 +47,10 @@ fun Fritaksvurdering.toResponse(
     PeriodisertFritakMeldepliktVurderingResponse(
         fom = fom,
         tom = tom,
-        vurdertAv = vurdertAvService.medNavnOgEnhet(vurdertAv, opprettetTid.toLocalDate()),
-        besluttetAv = vurdertAvService.besluttetAv(
+        vurderingerMeta = vurdertAvService.vurderingerMeta(
             definisjon = Definisjon.FRITAK_MELDEPLIKT,
-            behandlingId = vurdertIBehandling
-        ),
-        kvalitetssikretAv = vurdertAvService.kvalitetssikretAv(
-            definisjon = Definisjon.FRITAK_MELDEPLIKT,
-            behandlingId = vurdertIBehandling
+            behandlingId = vurdertIBehandling,
+            vurdertAv = vurdertAvService.medNavnOgEnhet(vurdertAv, opprettetTid.toLocalDate()),
         ),
         begrunnelse = begrunnelse,
         harFritak = harFritak,

@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.behandling.klage.klagebehandling
-
-import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
+import no.nav.aap.behandlingsflyt.behandling.vurdering.VurderingerMetaResponse
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.Hjemmel
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.KlageInnstilling
@@ -20,8 +19,7 @@ data class KlagevurderingKontorDto(
     val innstilling: KlageInnstilling,
     val vilkårSomOpprettholdes: List<Hjemmel>,
     val vilkårSomOmgjøres: List<Hjemmel>,
-    val vurdertAv: VurdertAvResponse?,
-    val kvalitetssikretAv: VurdertAvResponse?,
+    val vurderingerMeta: VurderingerMetaResponse,
 )
 
 internal fun KlagevurderingKontor.tilDto(vurdertAvService: VurdertAvService, behandlingId: BehandlingId) =
@@ -31,10 +29,13 @@ internal fun KlagevurderingKontor.tilDto(vurdertAvService: VurdertAvService, beh
         innstilling = innstilling,
         vilkårSomOpprettholdes = vilkårSomOpprettholdes,
         vilkårSomOmgjøres = vilkårSomOmgjøres,
-        vurdertAv = vurdertAvService.medNavnOgEnhet(vurdertAv, requireNotNull(opprettet) {
-            "Opprettet-tidspunkt kan ikke være null"
-        }),
-        kvalitetssikretAv = vurdertAvService.kvalitetssikretAv(Definisjon.VURDER_KLAGE_KONTOR, behandlingId)
+        vurderingerMeta = vurdertAvService.vurderingerMeta(
+            definisjon = Definisjon.VURDER_KLAGE_KONTOR,
+            behandlingId = behandlingId,
+            vurdertAv = vurdertAvService.medNavnOgEnhet(vurdertAv, requireNotNull(opprettet) {
+                "Opprettet-tidspunkt kan ikke være null"
+            }),
+        ),
     )
 
 internal fun KlagebehandlingKontorGrunnlag.tilDto(

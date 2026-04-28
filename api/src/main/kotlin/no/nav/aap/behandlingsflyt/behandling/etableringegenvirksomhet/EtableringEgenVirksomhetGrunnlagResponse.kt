@@ -2,7 +2,7 @@ package no.nav.aap.behandlingsflyt.behandling.etableringegenvirksomhet
 
 import no.nav.aap.behandlingsflyt.PeriodiserteVurderingerDto
 import no.nav.aap.behandlingsflyt.VurderingDto
-import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
+import no.nav.aap.behandlingsflyt.behandling.vurdering.VurderingerMetaResponse
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EierVirksomhet
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetVurdering
@@ -18,7 +18,7 @@ data class EtableringEgenVirksomhetGrunnlagResponse(
     override val kanVurderes: List<Periode>,
     override val behøverVurderinger: List<Periode>,
     override val ikkeRelevantePerioder: List<Periode>,
-    val kvalitetssikretAv: VurdertAvResponse?,
+    val vurderingerMeta: VurderingerMetaResponse,
     val bruktUtviklingsDager: Int?,
     val bruktOppstartsdager: Int?
 ) : PeriodiserteVurderingerDto<EtableringEgenVirksomhetVurderingResponse>
@@ -26,9 +26,7 @@ data class EtableringEgenVirksomhetGrunnlagResponse(
 data class EtableringEgenVirksomhetVurderingResponse(
     override val fom: LocalDate,
     override val tom: LocalDate?,
-    override val vurdertAv: VurdertAvResponse,
-    override val kvalitetssikretAv: VurdertAvResponse?,
-    override val besluttetAv: VurdertAvResponse?,
+    override val vurderingerMeta: VurderingerMetaResponse,
 
     val begrunnelse: String,
     val virksomhetNavn: String,
@@ -79,20 +77,16 @@ data class EtableringEgenVirksomhetVurderingResponse(
             kanFøreTilSelvforsørget = etableringEgenVirksomhetVurdering.kanFøreTilSelvforsørget,
             utviklingsPeriode = etableringEgenVirksomhetVurdering.utviklingsPerioder,
             oppstartsPeriode = etableringEgenVirksomhetVurdering.oppstartsPerioder,
-            vurdertAv = vurdertAvService.medNavnOgEnhet(
-                etableringEgenVirksomhetVurdering.vurdertAv.ident,
-                etableringEgenVirksomhetVurdering.opprettetTid
+            vurderingerMeta = vurdertAvService.vurderingerMeta(
+                definisjon = Definisjon.ETABLERING_EGEN_VIRKSOMHET,
+                behandlingId = etableringEgenVirksomhetVurdering.vurdertIBehandling,
+                vurdertAv = vurdertAvService.medNavnOgEnhet(
+                    etableringEgenVirksomhetVurdering.vurdertAv.ident,
+                    etableringEgenVirksomhetVurdering.opprettetTid,
+                ),
             ),
             fom = fom,
             tom = tom,
-            kvalitetssikretAv = vurdertAvService.kvalitetssikretAv(
-                definisjon = Definisjon.ETABLERING_EGEN_VIRKSOMHET,
-                behandlingId = etableringEgenVirksomhetVurdering.vurdertIBehandling
-            ),
-            besluttetAv = vurdertAvService.besluttetAv(
-                definisjon = Definisjon.ETABLERING_EGEN_VIRKSOMHET,
-                behandlingId = etableringEgenVirksomhetVurdering.vurdertIBehandling
-            ),
             oppfylt = etableringEgenVirksomhetService.evaluerVirksomhetVurdering(etableringEgenVirksomhetVurdering)
         )
     }

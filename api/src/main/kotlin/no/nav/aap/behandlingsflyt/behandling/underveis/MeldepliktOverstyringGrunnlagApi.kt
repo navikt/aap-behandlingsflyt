@@ -5,6 +5,7 @@ import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus
+import no.nav.aap.behandlingsflyt.behandling.vurdering.VurderingerMetaResponse
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.OverstyringMeldepliktData
@@ -97,7 +98,13 @@ private fun Tidslinje<OverstyringMeldepliktData>.tilVurderingResponse(ansattInfo
                 meldepliktOverstyringStatus = segment.verdi.meldepliktOverstyringStatus,
                 fraDato = segment.periode.fom,
                 tilDato = segment.periode.tom,
-                vurdertAv = VurdertAvResponse.fraIdent(segment.verdi.vurdertAv, segment.verdi.opprettetTid.toLocalDate(), ansattInfoService)
+                vurderingerMeta = VurderingerMetaResponse(
+                    vurdertAv = VurdertAvResponse.fraIdent(
+                        segment.verdi.vurdertAv,
+                        segment.verdi.opprettetTid.toLocalDate(),
+                        ansattInfoService,
+                    )
+                ),
             )
         }
 }

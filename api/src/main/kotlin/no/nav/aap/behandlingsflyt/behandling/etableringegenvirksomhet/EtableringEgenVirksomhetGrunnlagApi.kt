@@ -5,6 +5,7 @@ import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companion.antallHverdager
+import no.nav.aap.behandlingsflyt.behandling.vurdering.VurderingerMetaResponse
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandRepository
@@ -106,9 +107,11 @@ fun NormalOpenAPIRoute.etableringEgenVirksomhetApi(
                             },
                         kanVurderes = listOf(sak.rettighetsperiode),
                         behøverVurderinger = listOf(),
-                        kvalitetssikretAv = vurdertAvService.kvalitetssikretAv(
-                            definisjon = Definisjon.ETABLERING_EGEN_VIRKSOMHET,
-                            behandlingId = behandling.id
+                        vurderingerMeta = VurderingerMetaResponse(
+                            kvalitetssikretAv = vurdertAvService.kvalitetssikretAv(
+                                definisjon = Definisjon.ETABLERING_EGEN_VIRKSOMHET,
+                                behandlingId = behandling.id,
+                            ),
                         ),
                         ikkeRelevantePerioder = ikkeVurderbarePerioder,
                         bruktUtviklingsDager = bruktUtviklingsDager,

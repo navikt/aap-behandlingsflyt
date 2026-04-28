@@ -2,7 +2,7 @@ package no.nav.aap.behandlingsflyt.behandling.student
 
 import no.nav.aap.behandlingsflyt.PeriodiserteVurderingerDto
 import no.nav.aap.behandlingsflyt.VurderingDto
-import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
+import no.nav.aap.behandlingsflyt.behandling.vurdering.VurderingerMetaResponse
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.OppgittStudent
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentVurdering
@@ -26,9 +26,7 @@ open class StudentGrunnlagResponse(
 data class StudentVurderingResponse(
     override val fom: LocalDate,
     override val tom: LocalDate?,
-    override val vurdertAv: VurdertAvResponse,
-    override val kvalitetssikretAv: VurdertAvResponse? = null,
-    override val besluttetAv: VurdertAvResponse?,
+    override val vurderingerMeta: VurderingerMetaResponse,
 
     val begrunnelse: String,
     val harAvbruttStudie: Boolean,
@@ -67,14 +65,13 @@ data class StudentVurderingResponse(
             return StudentVurderingResponse(
                 fom = fom,
                 tom = tom,
-                vurdertAv = vurdertAvService.medNavnOgEnhet(
-                    studentVurdering.vurdertAv,
-                    studentVurdering.vurdertTidspunkt
-                ),
-                kvalitetssikretAv = null,
-                besluttetAv = vurdertAvService.besluttetAv(
+                vurderingerMeta = vurdertAvService.vurderingerMeta(
                     definisjon = Definisjon.AVKLAR_STUDENT,
                     behandlingId = studentVurdering.vurdertIBehandling,
+                    vurdertAv = vurdertAvService.medNavnOgEnhet(
+                        studentVurdering.vurdertAv,
+                        studentVurdering.vurdertTidspunkt,
+                    ),
                 ),
                 begrunnelse = studentVurdering.begrunnelse,
                 harAvbruttStudie = studentVurdering.harAvbruttStudie,

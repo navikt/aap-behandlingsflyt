@@ -5,6 +5,7 @@ import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.VirkningstidspunktUtleder
+import no.nav.aap.behandlingsflyt.behandling.vurdering.VurderingerMetaResponse
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.AndreUtbetalingerYtelser
@@ -122,12 +123,13 @@ private fun RefusjonkravVurdering.tilResponse(ansattInfoService: AnsattInfoServi
         navKontor = navKontor,
         fom = fom,
         tom = tom,
-        vurdertAv =
-            VurdertAvResponse(
+        vurderingerMeta = VurderingerMetaResponse(
+            vurdertAv = VurdertAvResponse(
                 ident = vurdertAv,
                 dato = opprettetTid?.toLocalDate() ?: error("Fant ikke opprettet tid for refusjonkrav vurdering"),
                 ansattnavn = navnOgEnhet?.navn,
-                enhetsnavn = navnOgEnhet?.enhet
+                enhetsnavn = navnOgEnhet?.enhet,
             )
+        )
     )
 }

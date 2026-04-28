@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.refusjon
 
-import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
+import no.nav.aap.behandlingsflyt.behandling.vurdering.VurderingerMetaResponse
 import java.time.LocalDate
 
 
@@ -17,5 +17,5 @@ data class RefusjonkravVurderingResponse(
     val fom: LocalDate?,
     val tom: LocalDate?,
     val navKontor: String?,
-    val vurdertAv: VurdertAvResponse
+    val vurderingerMeta: VurderingerMetaResponse,
 )
