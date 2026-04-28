@@ -39,12 +39,14 @@ class JournalføringService(
         meldeperiode: Periode,
         meldekort: MeldekortV0,
         oppdatertAv: Bruker,
+        enhet: String,
         tidspunkt: Instant,
     ): JournalpostId {
         val pdf = mockedPdf() // TODO må få inn pdfgen her
 
         val journalpost = journalpost(
             ident = sak.person.aktivIdent(),
+            enhet = enhet,
             meldeperiode = meldeperiode,
             meldekort = meldekort,
             tidspunkt = tidspunkt,
@@ -55,7 +57,7 @@ class JournalføringService(
         val response = dokarkivGateway.oppdater(
             journalpost,
             oppdatertAv = oppdatertAv,
-            forsøkFerdigstill = false // postmottak vil lese denne og behandle den på lik linje som andre meldekort
+            forsøkFerdigstill = true
         )
 
         return JournalpostId(response.journalpostId.toString())
@@ -63,6 +65,7 @@ class JournalføringService(
 
     private fun journalpost(
         ident: Ident,
+        enhet: String,
         meldeperiode: Periode,
         meldekort: Meldekort,
         tidspunkt: Instant,
@@ -82,14 +85,16 @@ class JournalføringService(
                 id = ident.identifikator,
                 idType = BrukerIdType.FNR,
             ),
-            tema = Tema.AAP,
-            tittel = tittel,
-            datoMottatt = tidspunkt.toString(),
             sak = DokarkivSak(
                 sakstype = Sakstype.FAGSAK,
                 fagsaksystem = FagsaksSystem.KELVIN,
                 fagsakId = sak.saksnummer.toString()
             ),
+            journalfoerendeEnhet = enhet,
+            tema = Tema.AAP,
+            tittel = tittel,
+            eksternReferanseId = UUID.randomUUID().toString(),
+            datoMottatt = tidspunkt.toString(),
             dokumenter = listOf(
                 Dokument(
                     tittel = tittel,

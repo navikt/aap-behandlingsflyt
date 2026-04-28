@@ -12,7 +12,7 @@ data class Journalpost(
     val tittel: String? = null,
     val kanal: String? = null,
     val journalfoerendeEnhet: String? = null,
-    val eksternReferanseId: String? = null,
+    val eksternReferanseId: String,
     val datoMottatt: String? = null,
     val tilleggsopplysninger: List<Tilleggsopplysning>? = null,
     val sak: DokarkivSak? = null,
