@@ -11,7 +11,7 @@ interface VurderingDto {
     /** Til og med. Hvis null er slutt-datoen implisitt. I rekkefølge regnes `null` som senere enn konkrete datoer. */
     val tom: LocalDate?
 
-    /** Samlet metadata om hvem som har vurdert, kvalitetssikret, besluttet eller trukket vurderingen. */
+    /** Samlet metadata om hvem som har vurdert, kvalitetssikret eller besluttet. */
     val vurderingerMeta: VurderingerMetaResponse
 }
 
