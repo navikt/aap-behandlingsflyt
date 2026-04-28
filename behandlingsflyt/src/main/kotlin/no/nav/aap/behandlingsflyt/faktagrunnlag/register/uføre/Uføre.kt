@@ -24,17 +24,12 @@ private fun Collection<Uføre>.utledRiktigSluttdatoForSegment(uføre: Uføre): L
     val sortertListe = this.sortedBy { it.virkningstidspunkt }
     val indeksForSegment = sortertListe.indexOf(uføre)
 
-    if (sortertListe.size == 1 || indeksForSegment == sortertListe.lastIndex) return uføre.uføregradTom ?: Tid.MAKS
+    return when {
+        indeksForSegment == sortertListe.lastIndex -> uføre.uføregradTom ?: Tid.MAKS
+        skalSetteSluttdatoPåSegmentPgaReellStans(uføre, sortertListe[indeksForSegment + 1]) -> uføre.uføregradTom
+            ?: Tid.MAKS
 
-    return if (skalSetteSluttdatoPåSegmentPgaReellStans(uføre, sortertListe[indeksForSegment + 1])) {
-        uføre.uføregradTom ?: Tid.MAKS
-    } else {
-        if (indeksForSegment == sortertListe.lastIndex) {
-            Tid.MAKS
-        } else {
-            val nesteSegment = sortertListe[indeksForSegment + 1]
-            nesteSegment.virkningstidspunkt.minusDays(1)
-        }
+        else -> sortertListe[indeksForSegment + 1].virkningstidspunkt.minusDays(1)
     }
 }
 
