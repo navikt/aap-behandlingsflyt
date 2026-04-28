@@ -135,7 +135,6 @@ class ApiInternGatewayImpl : ApiInternGateway {
                     beregningsgrunnlag = beregningsgrunnlag,
                     sak = SakDTO(
                         saksnummer = sak.saksnummer.toString(),
-                        status = sak.status(),
                         fnr = sak.person.identer().map { ident -> ident.identifikator },
                         opprettetTidspunkt = sak.opprettetTidspunkt
                     ),
@@ -147,8 +146,6 @@ class ApiInternGatewayImpl : ApiInternGateway {
                             // legg til redusert dagsats
                             gradering = tilkjentPeriode.tilkjent.gradering.prosentverdi(),
                             samordningUføregradering = tilkjentPeriode.tilkjent.graderingGrunnlag.samordningUføregradering.prosentverdi(),
-                            // TODO: fjern
-                            grunnlag = tilkjentPeriode.tilkjent.dagsats.verdi,
                             grunnlagsfaktor = tilkjentPeriode.tilkjent.grunnlagsfaktor.verdi(),
                             grunnbeløp = tilkjentPeriode.tilkjent.grunnbeløp.verdi,
                             antallBarn = tilkjentPeriode.tilkjent.antallBarn,
