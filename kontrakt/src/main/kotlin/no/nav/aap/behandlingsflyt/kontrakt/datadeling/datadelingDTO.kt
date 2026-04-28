@@ -11,7 +11,6 @@ import java.time.LocalDateTime
  * @param beregningsgrunnlag Hvilket beløp ble brukt for å utlede dagsats før redusering. Det er G-justert mhp rettighetsperiode.fom.
  */
 public data class DatadelingDTO(
-    val underveisperiode: List<UnderveisDTO>,
     val rettighetsPeriodeFom: LocalDate,
     val rettighetsPeriodeTom: LocalDate,
     val behandlingStatus: no.nav.aap.behandlingsflyt.kontrakt.behandling.Status,

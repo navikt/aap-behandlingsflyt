@@ -51,7 +51,7 @@ class ForutgåendeMedlemskapVurderingService(
 
         // No-op: av kun norske, hvor mange får nei på inntekt?
         val kunNorskStatsborgerskap =
-            grunnlag.personopplysningGrunnlag?.brukerPersonopplysning?.statsborgerskap?.singleOrNull()?.land == "NO"
+            grunnlag.personopplysningGrunnlag?.brukerPersonopplysning?.statsborgerskap?.singleOrNull()?.land == "NOR"
         prometheus.forutgåendeMedlemskapNorskOgUtfallInntekt(kunNorskStatsborgerskap && harIkkeSammenhengendePerioder).increment()
 
         return KanBehandlesAutomatiskVurdering(
