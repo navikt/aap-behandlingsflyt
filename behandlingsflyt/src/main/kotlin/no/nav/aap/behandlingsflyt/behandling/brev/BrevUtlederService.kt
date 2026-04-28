@@ -198,6 +198,11 @@ class BrevUtlederService(
                 ) {
                     return brevBehovArbeidssøker(behandling)
                 }
+
+                if (resultat == Resultat.INNVILGELSE) {
+                    return brevBehovInnvilgelse(behandling)
+                }
+
                 return VedtakEndring
             }
 
