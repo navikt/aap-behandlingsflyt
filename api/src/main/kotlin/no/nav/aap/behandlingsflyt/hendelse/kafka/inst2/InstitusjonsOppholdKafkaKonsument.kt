@@ -78,7 +78,7 @@ class InstitusjonsOppholdKafkaKonsument(
                         if (søknadErTrukket) {
                             log.info("Institusjonsopphold oppdateres ikke, da sak med ${saken.id} er trukket")
                         }
-                    } else {
+                    }
                         val institusjonsopphold = institusjonsoppholdKlient.hentDataForHendelse(meldingVerdi.oppholdId)
                         val beriketInstitusjonsopphold = Inst2KafkaDto(
                             startdato = institusjonsopphold.startdato,
@@ -94,7 +94,6 @@ class InstitusjonsOppholdKafkaKonsument(
                         )
                         log.info("Sendt institusjonsoppholdhendelse for saksnummer: ${saken.saksnummer}")
                     }
-                }
             }
         }
 
