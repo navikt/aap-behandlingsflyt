@@ -14,7 +14,8 @@
       <env name="INTEGRASJON_YRKESSKADE_SCOPE" value="api://dev-gcp.yrkesskade.yrkesskade-saker/.default" />
       <env name="INTEGRASJON_GOSYS_URL" value="https://oppgave.dev-fss-pub.nais.io" />
       <env name="INTEGRASJON_GOSYS_SCOPE" value="api://dev-fss.oppgavehandtering.oppgave/.default" />
-      <env name="INTEGRASJON_INSTITUSJONSOPPHOLD_URL" value="https://inst2-q2.dev-fss-pub.nais.io/api/v1/person/institusjonsopphold" />
+      <env name="INTEGRASJON_INSTITUSJONSOPPHOLD_URL" value="https://inst2-q2.dev-fss-pub.nais.io/api/v1/person/institusjonsopphold/soek" />
+      <env name="INTEGRASJON_INSTITUSJONSOPPHOLDENKELT_URL" value="https://inst2-q2.dev-fss-pub.nais.io/api/v1/person/institusjonsopphold" />
       <env name="INTEGRASJON_INSTITUSJONSOPPHOLD_SCOPE" value="api://dev-fss.team-rocket.inst2-q2/.default" />
       <env name="INTEGRASJON_INNTEKT_URL" value="https://pensjon-popp-q2.dev-fss-pub.nais.io/popp/api/inntekt/sumPi" />
       <env name="INTEGRASJON_INNTEKT_SCOPE" value="api://dev-fss.pensjonopptjening.pensjon-popp-q2/.default" />
@@ -48,8 +49,8 @@
       <env name="INTEGRASJON_SAKSBEHANDLING_AZP" value="4920ff1d-0f6b-407f-8630-695e3360d3d3" />
       <env name="INTEGRASJON_AAREG_URL" value="https://aareg-services-q2.dev-fss-pub.nais.io" />
       <env name="INTEGRASJON_AAREG_SCOPE" value="api://dev-fss.arbeidsforhold.aareg-services-nais/.default" />
-      <env name="INTEGRASJON_INNTEKTSKOMPONENTEN_URL" value="https://team-inntekt-proxy.dev-fss-pub.nais.io/proxy/inntektskomponenten-q2/rs/api/v1" />
-      <env name="INTEGRASJON_INNTEKTSKOMPONENTEN_SCOPE" value="api://dev-fss.team-inntekt.inntektskomponenten/.default" />
+      <env name="INTEGRASJON_INNTEKTSKOMPONENTEN_URL" value="https://ikomp-q2.dev-fss-pub.nais.io/rs/api/v1" />
+      <env name="INTEGRASJON_INNTEKTSKOMPONENTEN_SCOPE" value="api://dev-fss.team-inntekt.ikomp-q2/.default" />
       <env name="INTEGRASJON_DATADELING_URL" value="https://aap-api.intern.dev.nav.no" />
       <env name="INTEGRASJON_DATADELING_SCOPE" value="api://dev-gcp.aap.api-intern/.default" />
       <env name="INTEGRASJON_NOM_URL" value="http://nom-api.nom/graphql" />
@@ -63,6 +64,10 @@
       <env name="INTEGRASJON_SAM_SCOPE" value="api://dev-fss.pensjonsamhandling.sam-q2/.default" />
       <env name="INTEGRASJON_DOKARKIV_URL" value="https://dokarkiv-q2.dev-fss-pub.nais.io" />
       <env name="INTEGRASJON_DOKARKIV_SCOPE" value="api://dev-fss.teamdokumenthandtering.dokarkiv/.default" />
+      <env name="INTEGRASJON_DAGPENGER_URL" value="https://dp-datadeling.intern.dev.nav.no" />
+      <env name="INTEGRASJON_DAGPENGER_SCOPE" value="api://dev-gcp.teamdagpenger.dp-datadeling/.default" />
+      <env name="INTEGRASJON_TILTAKSPENGER_URL" value="https://tiltakspenger-datadeling.intern.dev.nav.no" />
+      <env name="INTEGRASJON_TILTAKSPENGER_SCOPE" value="api://dev-gcp.tpts.tiltakspenger-datadeling/.default" />
       <env name="NAIS_TOKEN_ENDPOINT" value="http://host.docker.internal:7164/api/v1/token" />
       <env name="NAIS_TOKEN_EXCHANGE_ENDPOINT" value="http://host.docker.internal:7164/api/v1/token/exchange" />
       <env name="NAIS_TOKEN_INTROSPECTION_ENDPOINT" value="http://host.docker.internal:7164/api/v1/introspect" />
