@@ -4,6 +4,5 @@ data class VurderingerMetaResponse(
     val vurdertAv: VurdertAvResponse? = null,
     val besluttetAv: VurdertAvResponse? = null,
     val kvalitetssikretAv: VurdertAvResponse? = null,
-    val trukketAv: VurdertAvResponse? = null,
 )
 
