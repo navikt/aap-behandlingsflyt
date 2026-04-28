@@ -89,7 +89,24 @@ class OpprettOgFullforBehandlingApiTest {
 
     @Test
     fun `oppretter og fullfører behandling automatisk`() {
-        val ident = "10107099950"
+        opprettOgVerifiserBehandling(
+            ident = "10107099950",
+            erStudent = false,
+        )
+    }
+
+    @Test
+    fun `oppretter og fullfører behandling automatisk for student`() {
+        opprettOgVerifiserBehandling(
+            ident = "10107099951",
+            erStudent = true,
+        )
+    }
+
+    private fun opprettOgVerifiserBehandling(
+        ident: String,
+        erStudent: Boolean,
+    ) {
         FakePersoner.leggTil(
             TestPerson(
                 identer = setOf(Ident(ident)),
@@ -104,7 +121,7 @@ class OpprettOgFullforBehandlingApiTest {
             PostRequest(
                 body = OpprettDummySakDto(
                     ident = ident,
-                    erStudent = false,
+                    erStudent = erStudent,
                     harYrkesskade = false,
                     harMedlemskap = true,
                     andreUtbetalinger = null,

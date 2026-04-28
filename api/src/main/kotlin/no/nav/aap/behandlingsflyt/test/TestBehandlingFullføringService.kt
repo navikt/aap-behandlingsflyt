@@ -10,6 +10,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarOpph
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarPeriodisertForutgåendeMedlemskapLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSamordningAndreStatligeYtelserLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSamordningGraderingLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSamordningSykestipendLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarStudentEnkelLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSykdomLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarYrkesskadeLøsning
@@ -42,6 +43,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.ÅrsVurd
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.BistandLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravVurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.VurderingerForSamordning
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.sykestipend.SamordningSykestipendVurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentVurderingDTO
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.SykdomsvurderingLøsningDto
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
@@ -66,7 +68,7 @@ private val BESLUTTER = Bruker("BESLUTTER")
 private val KVALITETSSIKRER = Bruker("KVALITETSSIKRER")
 private const val MAKS_ITERASJONER = 200
 
-class TestBehandlingFullforingService(
+class TestBehandlingFullføringService(
     private val dataSource: DataSource,
     private val repositoryRegistry: RepositoryRegistry,
     private val gatewayProvider: GatewayProvider,
@@ -79,7 +81,7 @@ class TestBehandlingFullforingService(
 
         while (iterasjoner < MAKS_ITERASJONER && !erBehandlingAvsluttet(sak)) {
             iterasjoner++
-            sisteBehandlingId = prosesserNesteSteget(sak) ?: sisteBehandlingId
+            sisteBehandlingId = prosesserNesteSteg(sak) ?: sisteBehandlingId
         }
 
         if (iterasjoner >= MAKS_ITERASJONER) {
@@ -99,7 +101,7 @@ class TestBehandlingFullforingService(
      * Henter avklaringsbehov og løser det første åpne. Returnerer behandlingId hvis et behov ble løst.
      */
     @Suppress("ReturnCount")
-    private fun prosesserNesteSteget(sak: Sak): BehandlingId? {
+    private fun prosesserNesteSteg(sak: Sak): BehandlingId? {
         val behandling = dataSource.transaction(readOnly = true) { connection ->
             BehandlingService(repositoryRegistry.provider(connection), gatewayProvider)
                 .finnSisteYtelsesbehandlingFor(sak.id)
@@ -299,6 +301,13 @@ class TestBehandlingFullforingService(
 
         Definisjon.AVKLAR_SAMORDNING_GRADERING -> AvklarSamordningGraderingLøsning(
             vurderingerForSamordning = VurderingerForSamordning("", true, null, emptyList())
+        )
+
+        Definisjon.AVKLAR_SAMORDNING_SYKESTIPEND -> AvklarSamordningSykestipendLøsning(
+            sykestipendVurdering = SamordningSykestipendVurderingDto(
+                begrunnelse = "Ingen sykestipend",
+                perioder = emptySet(),
+            )
         )
 
         Definisjon.SAMORDNING_ANDRE_STATLIGE_YTELSER -> AvklarSamordningAndreStatligeYtelserLøsning(

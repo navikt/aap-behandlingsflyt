@@ -22,7 +22,7 @@ fun NormalOpenAPIRoute.fullførBehandlingApi(
     repositoryRegistry: RepositoryRegistry,
     gatewayProvider: GatewayProvider,
 ) {
-    val service = TestBehandlingFullforingService(dataSource, repositoryRegistry, gatewayProvider)
+    val service = TestBehandlingFullføringService(dataSource, repositoryRegistry, gatewayProvider)
 
     route("/api/test/opprettOgFullforBehandling") {
         @Suppress("UnauthorizedPost")
