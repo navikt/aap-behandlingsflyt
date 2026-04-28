@@ -4,7 +4,6 @@ import no.nav.aap.behandlingsflyt.behandling.Resultat
 import no.nav.aap.behandlingsflyt.behandling.ResultatUtleder
 import no.nav.aap.behandlingsflyt.behandling.StansOpphørService
 import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingService
-import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Beregningsgrunnlag
@@ -12,6 +11,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Beregning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag11_19
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagUføre
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagYrkesskade
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.GjeldendeStansEllerOpphør
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.Opphør
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.Stans
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.IKlageresultatUtleder
@@ -44,20 +46,18 @@ import no.nav.aap.behandlingsflyt.kontrakt.statistikk.VilkårDTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.VilkårsPeriodeDTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.VilkårsResultatDTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vilkårtype
-import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Avslagstype as AvslagstypeDTO
-import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Avslagsårsak as AvslagsårsakDTO
-import no.nav.aap.behandlingsflyt.kontrakt.statistikk.StansEllerOpphør as StansEllerOpphørDTO
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.GjeldendeStansEllerOpphør
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.Stans
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.Opphør
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
+import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Avslagstype as AvslagstypeDTO
+import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Avslagsårsak as AvslagsårsakDTO
+import no.nav.aap.behandlingsflyt.kontrakt.statistikk.StansEllerOpphør as StansEllerOpphørDTO
 
 class AvsluttetBehandlingTilStatistikk(
     private val vilkårsresultatRepository: VilkårsresultatRepository,
@@ -69,15 +69,15 @@ class AvsluttetBehandlingTilStatistikk(
     private val sykdomRepository: SykdomRepository,
     private val underveisRepository: UnderveisRepository,
     private val vedtakService: VedtakService,
-    trukketSøknadService: TrukketSøknadService,
     private val klageresultatUtleder: IKlageresultatUtleder,
     private val avbrytRevurderingService: AvbrytRevurderingService,
     private val meldepliktRepository: MeldepliktRepository,
     private val arbeidsopptrappingRepository: ArbeidsopptrappingRepository,
     private val stansOpphørService: StansOpphørService,
+    private val resultatUtleder: ResultatUtleder,
 ) {
 
-    constructor(repositoryProvider: RepositoryProvider) : this(
+    constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         vilkårsresultatRepository = repositoryProvider.provide(),
         behandlingRepository = repositoryProvider.provide(),
         sakService = SakService(repositoryProvider.provide(), repositoryProvider.provide()),
@@ -87,7 +87,6 @@ class AvsluttetBehandlingTilStatistikk(
         sykdomRepository = repositoryProvider.provide(),
         underveisRepository = repositoryProvider.provide(),
         vedtakService = VedtakService(repositoryProvider),
-        trukketSøknadService = TrukketSøknadService(repositoryProvider.provide()),
         klageresultatUtleder = KlageresultatUtleder(repositoryProvider),
         avbrytRevurderingService = AvbrytRevurderingService(repositoryProvider),
         meldepliktRepository = repositoryProvider.provide(),
@@ -95,13 +94,11 @@ class AvsluttetBehandlingTilStatistikk(
         stansOpphørService = StansOpphørService(
             repositoryProvider.provide(),
             repositoryProvider.provide(), repositoryProvider.provide()
-        )
+        ),
+        resultatUtleder = ResultatUtleder(repositoryProvider, gatewayProvider),
     )
 
     private val log = LoggerFactory.getLogger(javaClass)
-
-    private val resultatUtleder =
-        ResultatUtleder(underveisRepository, behandlingRepository, trukketSøknadService, avbrytRevurderingService)
 
     /**
      * Skal kalles når en behandling er avsluttet for å levere statistikk til statistikk-appen.

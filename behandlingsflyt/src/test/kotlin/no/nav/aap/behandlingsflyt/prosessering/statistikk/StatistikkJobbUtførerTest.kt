@@ -86,6 +86,7 @@ import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryPåklagetBehandlingR
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryProvider
 import no.nav.aap.behandlingsflyt.test.januar
+import no.nav.aap.behandlingsflyt.test.minimalGatewayProvider
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
@@ -223,7 +224,7 @@ class StatistikkJobbUtførerTest {
 
         dataSource.transaction { connection ->
             StatistikkJobbUtfører(
-                statistikkMetoder = StatistikkMetoder(postgresRepositoryRegistry.provider(connection)),
+                statistikkMetoder = StatistikkMetoder(postgresRepositoryRegistry.provider(connection), minimalGatewayProvider {  }),
                 statistikkGateway = StatistikkGatewayImpl(),
             ).utfør(
                 JobbInput(StatistikkJobbUtfører).medPayload(hendelse2)
@@ -497,7 +498,7 @@ class StatistikkJobbUtførerTest {
         dataSource.transaction { connection ->
             StatistikkJobbUtfører(
                 statistikkGateway = StatistikkGatewayImpl(),
-                statistikkMetoder = StatistikkMetoder(postgresRepositoryRegistry.provider(connection)),
+                statistikkMetoder = StatistikkMetoder(postgresRepositoryRegistry.provider(connection), minimalGatewayProvider {  }),
             ).utfør(
                 JobbInput(StatistikkJobbUtfører).medPayload(hendelse2)
             )
@@ -631,7 +632,7 @@ class StatistikkJobbUtførerTest {
                 påklagetBehandlingRepository = InMemoryPåklagetBehandlingRepository,
                 meldekortRepository = InMemoryMeldekortRepository,
                 klagedokumentInformasjonUtleder = KlagedokumentInformasjonUtleder(inMemoryRepositoryProvider),
-                avsluttetBehandlingTilStatistikk = AvsluttetBehandlingTilStatistikk(inMemoryRepositoryProvider),
+                avsluttetBehandlingTilStatistikk = AvsluttetBehandlingTilStatistikk(inMemoryRepositoryProvider, minimalGatewayProvider {  }),
             )
         )
 
