@@ -61,7 +61,7 @@ data class ArbeidsopptrappingVurderingResponse(
             rettPaaAAPIOpptrapping = arbeidsopptrappingVurdering.rettPaaAAPIOpptrapping,
             fom = fom,
             tom = tom,
-            vurderingerMeta = vurdertAvService.vurderingerMeta(
+            vurderingerMeta = vurdertAvService.byggVurderingerMeta(
                 definisjon = Definisjon.ARBEIDSOPPTRAPPING,
                 behandlingId = arbeidsopptrappingVurdering.vurdertIBehandling,
                 vurdertAv = vurdertAvService.medNavnOgEnhet(

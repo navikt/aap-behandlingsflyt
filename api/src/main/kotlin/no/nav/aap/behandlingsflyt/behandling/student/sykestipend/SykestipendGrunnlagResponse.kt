@@ -24,7 +24,7 @@ data class SykestipendvurderingResponse(
             SykestipendvurderingResponse(
                 begrunnelse = sykestipendVurdering.begrunnelse,
                 perioder = sykestipendVurdering.perioder.sortedBy { it.fom },
-                vurderingerMeta = vurdertAvService.vurderingerMeta(
+                vurderingerMeta = vurdertAvService.byggVurderingerMeta(
                     definisjon = Definisjon.AVKLAR_SAMORDNING_SYKESTIPEND,
                     behandlingId = sykestipendVurdering.vurdertIBehandling,
                     vurdertAv = vurdertAvService.medNavnOgEnhet(

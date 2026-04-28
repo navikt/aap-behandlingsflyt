@@ -29,7 +29,7 @@ internal fun KlagevurderingKontor.tilDto(vurdertAvService: VurdertAvService, beh
         innstilling = innstilling,
         vilkårSomOpprettholdes = vilkårSomOpprettholdes,
         vilkårSomOmgjøres = vilkårSomOmgjøres,
-        vurderingerMeta = vurdertAvService.vurderingerMeta(
+        vurderingerMeta = vurdertAvService.byggVurderingerMeta(
             definisjon = Definisjon.VURDER_KLAGE_KONTOR,
             behandlingId = behandlingId,
             vurdertAv = vurdertAvService.medNavnOgEnhet(vurdertAv, requireNotNull(opprettet) {

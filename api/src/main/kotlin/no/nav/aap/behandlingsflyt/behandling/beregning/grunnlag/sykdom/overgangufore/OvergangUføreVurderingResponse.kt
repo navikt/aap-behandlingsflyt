@@ -50,7 +50,7 @@ data class OvergangUføreVurderingResponse(
             brukerRettPåAAP = overgangUføreVurdering.brukerRettPåAAP,
             fom = fom,
             tom = tom,
-            vurderingerMeta = vurdertAvService.vurderingerMeta(
+            vurderingerMeta = vurdertAvService.byggVurderingerMeta(
                 definisjon = Definisjon.AVKLAR_OVERGANG_UFORE,
                 behandlingId = overgangUføreVurdering.vurdertIBehandling,
                 vurdertAv = vurdertAvService.medNavnOgEnhet(

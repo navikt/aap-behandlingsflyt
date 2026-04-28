@@ -47,7 +47,7 @@ fun ArbeidsevneVurdering.toResponse(
     PeriodisertArbeidsevneVurderingDto(
         fom = fom,
         tom = tom,
-        vurderingerMeta = vurdertAvService.vurderingerMeta(
+        vurderingerMeta = vurdertAvService.byggVurderingerMeta(
             definisjon = Definisjon.FRITAK_MELDEPLIKT,
             behandlingId = vurdertIBehandling,
             vurdertAv = vurdertAvService.medNavnOgEnhet(vurdertAv, opprettetTid.toLocalDate()),

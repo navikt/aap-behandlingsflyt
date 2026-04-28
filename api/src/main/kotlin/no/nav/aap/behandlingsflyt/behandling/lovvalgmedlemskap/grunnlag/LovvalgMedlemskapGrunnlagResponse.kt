@@ -50,7 +50,7 @@ fun ManuellVurderingForLovvalgMedlemskap.toResponse(
     PeriodisertManuellVurderingForLovvalgMedlemskapResponse(
         fom = fom,
         tom = tom,
-        vurderingerMeta = vurdertAvService.vurderingerMeta(
+        vurderingerMeta = vurdertAvService.byggVurderingerMeta(
             definisjon = Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP,
             behandlingId = vurdertIBehandling,
             vurdertAv = vurdertAvService.medNavnOgEnhet(vurdertAv, vurdertDato.toLocalDate()),

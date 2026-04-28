@@ -29,7 +29,7 @@ fun RettighetsperiodeVurdering.tilDto(
         begrunnelse = begrunnelse,
         harRett = harRettUtoverSøknadsdato,
         startDato = startDato,
-        vurderingerMeta = vurdertAvService.vurderingerMeta(
+        vurderingerMeta = vurdertAvService.byggVurderingerMeta(
             definisjon = Definisjon.VURDER_RETTIGHETSPERIODE,
             behandlingId = behandlingId,
             vurdertAv = vurdertAvService.medNavnOgEnhet(vurdertAv, vurdertDato),

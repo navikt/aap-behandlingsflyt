@@ -35,7 +35,7 @@ fun VedtakslengdeVurdering.toResponse(
 ) = VedtakslengdeVurderingResponse(
     fom = periode.fom,
     tom = periode.tom,
-    vurderingerMeta = vurdertAvService.vurderingerMeta(
+    vurderingerMeta = vurdertAvService.byggVurderingerMeta(
         definisjon = Definisjon.AVKLAR_VEDTAKSLENGDE,
         behandlingId = vurdertIBehandling,
         vurdertAv = vurdertAvService.medNavnOgEnhet(vurdertAv.ident, opprettet),

@@ -34,7 +34,7 @@ fun OppholdskravVurdering.tilDto(
 ): List<OppholdskravVurderingDto> =
     perioder.map {
         OppholdskravVurderingDto(
-            vurderingerMeta = vurdertAvService.vurderingerMeta(
+            vurderingerMeta = vurdertAvService.byggVurderingerMeta(
                 definisjon = Definisjon.AVKLAR_OPPHOLDSKRAV,
                 behandlingId = vurdertIBehandling,
                 vurdertAv = VurdertAvResponse.fraIdent(vurdertAv, opprettet.toLocalDate(), ansattInfoService),

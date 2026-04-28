@@ -70,7 +70,7 @@ fun NormalOpenAPIRoute.oppholdskravGrunnlagApi(
                             .segmenter()
                             .map { segment ->
                                 OppholdskravVurderingDto(
-                                    vurderingerMeta = vurdertAvService.vurderingerMeta(
+                                    vurderingerMeta = vurdertAvService.byggVurderingerMeta(
                                         definisjon = Definisjon.AVKLAR_OPPHOLDSKRAV,
                                         behandlingId = behandling.id,
                                         vurdertAv = VurdertAvResponse.fraIdent(

@@ -77,7 +77,7 @@ data class EtableringEgenVirksomhetVurderingResponse(
             kanFøreTilSelvforsørget = etableringEgenVirksomhetVurdering.kanFøreTilSelvforsørget,
             utviklingsPeriode = etableringEgenVirksomhetVurdering.utviklingsPerioder,
             oppstartsPeriode = etableringEgenVirksomhetVurdering.oppstartsPerioder,
-            vurderingerMeta = vurdertAvService.vurderingerMeta(
+            vurderingerMeta = vurdertAvService.byggVurderingerMeta(
                 definisjon = Definisjon.ETABLERING_EGEN_VIRKSOMHET,
                 behandlingId = etableringEgenVirksomhetVurdering.vurdertIBehandling,
                 vurdertAv = vurdertAvService.medNavnOgEnhet(

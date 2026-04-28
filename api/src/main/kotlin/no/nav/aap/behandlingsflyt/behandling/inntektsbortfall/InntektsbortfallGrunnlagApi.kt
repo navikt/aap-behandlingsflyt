@@ -77,7 +77,7 @@ fun InntektsbortfallVurdering.tilDto(fom: LocalDate, vurdertAvService: VurdertAv
         begrunnelse = begrunnelse,
         rettTilUttak = rettTilUttak,
         vurdertIBehandling = vurdertIBehandling,
-        vurderingerMeta = vurdertAvService.vurderingerMeta(
+        vurderingerMeta = vurdertAvService.byggVurderingerMeta(
             definisjon = Definisjon.FRITAK_MELDEPLIKT,
             behandlingId = vurdertIBehandling,
             vurdertAv = vurdertAvService.medNavnOgEnhet(vurdertAv, opprettetTid),

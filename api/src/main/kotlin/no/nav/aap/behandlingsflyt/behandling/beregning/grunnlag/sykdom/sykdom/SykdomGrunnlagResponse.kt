@@ -98,7 +98,7 @@ data class SykdomsvurderingResponse(
             bidiagnoser = sykdomsvurdering.diagnose?.bidiagnoser.orEmpty(),
             fom = fom,
             tom = tom,
-            vurderingerMeta = vurdertAvService.vurderingerMeta(
+            vurderingerMeta = vurdertAvService.byggVurderingerMeta(
                 definisjon = Definisjon.AVKLAR_SYKDOM,
                 behandlingId = sykdomsvurdering.vurdertIBehandling,
                 vurdertAv = vurdertAvService.medNavnOgEnhet(sykdomsvurdering.vurdertAv.ident, sykdomsvurdering.opprettet),

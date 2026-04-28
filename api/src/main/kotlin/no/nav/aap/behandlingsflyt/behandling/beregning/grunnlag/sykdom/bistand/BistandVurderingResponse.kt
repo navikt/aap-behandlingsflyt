@@ -53,7 +53,7 @@ data class BistandVurderingResponse(
             tom = tom,
             skalVurdereAapIOvergangTilArbeid = bistandsvurdering.skalVurdereAapIOvergangTilArbeid,
             overgangBegrunnelse = bistandsvurdering.overgangBegrunnelse,
-            vurderingerMeta = vurdertAvService.vurderingerMeta(
+            vurderingerMeta = vurdertAvService.byggVurderingerMeta(
                 definisjon = Definisjon.AVKLAR_BISTANDSBEHOV,
                 behandlingId = bistandsvurdering.vurdertIBehandling,
                 vurdertAv = vurdertAvService.medNavnOgEnhet(bistandsvurdering.vurdertAv, bistandsvurdering.opprettet),

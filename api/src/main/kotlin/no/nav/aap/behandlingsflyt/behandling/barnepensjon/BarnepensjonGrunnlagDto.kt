@@ -55,7 +55,7 @@ data class BarnepensjonVurderingDto(
                     )
                 },
                 begrunnelse = vurdering.begrunnelse,
-                vurderingerMeta = vurdertAvService.vurderingerMeta(
+                vurderingerMeta = vurdertAvService.byggVurderingerMeta(
                     definisjon = Definisjon.SAMORDNING_BARNEPENSJON,
                     behandlingId = vurdering.vurdertIBehandling,
                     vurdertAv = vurdertAvService.medNavnOgEnhet(vurdertAv, vurdering.opprettet),

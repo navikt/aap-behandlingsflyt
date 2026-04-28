@@ -46,7 +46,7 @@ data class OvergangArbeidVurderingResponse(
             brukerRettPåAAP = overgangArbeidVurdering.brukerRettPåAAP,
             fom = fom,
             tom = tom,
-            vurderingerMeta = vurdertAvService.vurderingerMeta(
+            vurderingerMeta = vurdertAvService.byggVurderingerMeta(
                 definisjon = Definisjon.AVKLAR_OVERGANG_ARBEID,
                 behandlingId = overgangArbeidVurdering.vurdertIBehandling,
                 vurdertAv = vurdertAvService.medNavnOgEnhet(overgangArbeidVurdering.vurdertAv, overgangArbeidVurdering.opprettet),

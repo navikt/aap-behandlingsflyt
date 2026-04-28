@@ -50,7 +50,7 @@ class VurdertAvService(
         )
     }
 
-    fun vurderingerMeta(
+    fun byggVurderingerMeta(
         definisjon: Definisjon,
         behandlingId: BehandlingId,
         vurdertAv: VurdertAvResponse?,
