@@ -189,7 +189,7 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::
 
         var resultat =
             dataSource.transaction {
-                ResultatUtleder(postgresRepositoryRegistry.provider(it)).utledResultatFørstegangsBehandling(
+                ResultatUtleder(postgresRepositoryRegistry.provider(it), gatewayProvider).utledResultatFørstegangsBehandling(
                     behandling.id
                 )
             }
@@ -214,7 +214,7 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::
 
         resultat =
             dataSource.transaction {
-                ResultatUtleder(postgresRepositoryRegistry.provider(it)).utledResultatFørstegangsBehandling(
+                ResultatUtleder(postgresRepositoryRegistry.provider(it), gatewayProvider).utledResultatFørstegangsBehandling(
                     behandling.id
                 )
             }

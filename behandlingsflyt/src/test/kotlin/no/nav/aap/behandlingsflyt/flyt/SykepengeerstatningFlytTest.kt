@@ -97,7 +97,7 @@ class SykepengeerstatningFlytTest(val unleashGateway: KClass<UnleashGateway>) :
             .medKontekst {
                 assertThat(this.behandling.status()).isEqualTo(Status.IVERKSETTES)
 
-                val resultat = ResultatUtleder(repositoryProvider).utledResultatFørstegangsBehandling(behandling.id)
+                val resultat = ResultatUtleder(repositoryProvider, gatewayProvider).utledResultatFørstegangsBehandling(behandling.id)
                 assertThat(resultat).isEqualTo(Resultat.INNVILGELSE)
             }
 
@@ -189,7 +189,7 @@ class SykepengeerstatningFlytTest(val unleashGateway: KClass<UnleashGateway>) :
             .medKontekst {
                 assertThat(this.behandling.status()).isEqualTo(Status.IVERKSETTES)
 
-                val resultat = ResultatUtleder(repositoryProvider).utledResultatFørstegangsBehandling(behandling.id)
+                val resultat = ResultatUtleder(repositoryProvider, gatewayProvider).utledResultatFørstegangsBehandling(behandling.id)
                 assertThat(resultat).isEqualTo(Resultat.INNVILGELSE)
             }
             .løsVedtaksbrev()
@@ -203,7 +203,7 @@ class SykepengeerstatningFlytTest(val unleashGateway: KClass<UnleashGateway>) :
                     .extracting(Vilkårsperiode::erOppfylt, Vilkårsperiode::innvilgelsesårsak)
                     .containsExactly(true, null)
 
-                val resultat = ResultatUtleder(repositoryProvider).utledResultatFørstegangsBehandling(behandling.id)
+                val resultat = ResultatUtleder(repositoryProvider, gatewayProvider).utledResultatFørstegangsBehandling(behandling.id)
 
                 assertThat(resultat).isEqualTo(Resultat.INNVILGELSE)
             }

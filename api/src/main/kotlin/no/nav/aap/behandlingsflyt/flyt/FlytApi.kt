@@ -85,7 +85,7 @@ fun NormalOpenAPIRoute.flytApi(
                 val dto = dataSource.transaction(readOnly = true) { connection ->
                     val repositoryProvider = repositoryRegistry.provider(connection)
                     val sakRepository = repositoryProvider.provide<SakRepository>()
-                    val resultatUtleder = ResultatUtleder(repositoryProvider)
+                    val resultatUtleder = ResultatUtleder(repositoryProvider, gatewayProvider)
                     val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
                     val vilkårsresultatRepository =
                         repositoryProvider.provide<VilkårsresultatRepository>()
