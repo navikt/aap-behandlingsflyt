@@ -35,13 +35,13 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.IngenValidering to true,
         BehandlingsflytFeature.NyBrevbyggerV3 to false,
         BehandlingsflytFeature.Under18 to true,
-        BehandlingsflytFeature.InstitusjonsoppholdJobb to true,
         BehandlingsflytFeature.TrekkSoeknadOpprettetFraLegeerklaering to true,
         BehandlingsflytFeature.KvalitetssikringVed2213 to true,
         BehandlingsflytFeature.VisIkkeRelevantPeriode to true,
         BehandlingsflytFeature.MigrerStansOgOpphor to true,
         BehandlingsflytFeature.hentTiltakspengerPerioder to true,
-        BehandlingsflytFeature.ForutgaaendeForbedringer to true
+        BehandlingsflytFeature.ForutgaaendeForbedringer to true,
+        BehandlingsflytFeature.ForeslaaVedtakVedtakslengde to true,
         )
 )
 

@@ -6,7 +6,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov
 // men det er ikke implementert noen revurdering på de, så det vil feile
 enum class Hjemmel(val hjemmel: String) {
     EOES_883_2004("EØS-forordningen (lovvalg / medlemskap)"),
-    
+
     FOLKETRYGDLOVEN_KAPITTEL_2("Kapittel 2"),
     FOLKETRYGDLOVEN_11_2("§ 11-2"),
 
@@ -15,7 +15,7 @@ enum class Hjemmel(val hjemmel: String) {
     FOLKETRYGDLOVEN_11_5("§ 11-5"),
     FOLKETRYGDLOVEN_11_6("§ 11-6"),
 
-    FOLKETRYGDLOVEN_11_7("§ 11-7"), 
+    FOLKETRYGDLOVEN_11_7("§ 11-7"),
     FOLKETRYGDLOVEN_11_8("§ 11-8"), // TODO: Mangler
     FOLKETRYGDLOVEN_11_9("§ 11-9"),
     FOLKETRYGDLOVEN_11_10_FRITAK("§ 11-10 Fritak meldeplikt"),
@@ -48,8 +48,8 @@ enum class Hjemmel(val hjemmel: String) {
     FOLKETRYGDLOVEN_21_7("§ 21-7"), // Ikke aktuelt som hjemmel for omgjøring
     FOLKETRYGDLOVEN_22_13("§ 22-13"), // TODO: Hva kan klages på her?
     FOLKETRYGDLOVEN_22_15("§ 22-15"), // TODO: Må videre til Team Tilbake?
-    FOLKETRYGDLOVEN_22_17("§ 22-17"); // TODO: Hva kan klages på her?
-    // AVREGNING("Avregning"); // Kan ikke klage på avregning
+    FOLKETRYGDLOVEN_22_17("§ 22-17"), // TODO: Hva kan klages på her?
+    ANDRE_TRYGDEAVTALER("Andre bilaterale trygdeavtaler");
 
     companion object {
         fun fraHjemmel(hjemmel: String): Hjemmel? {
@@ -62,9 +62,8 @@ enum class Hjemmel(val hjemmel: String) {
             // Aktivitetspliktbehandling
             FOLKETRYGDLOVEN_11_7 -> listOf(Vurderingsbehov.AKTIVITETSPLIKT_11_7)
             FOLKETRYGDLOVEN_11_9 -> listOf(Vurderingsbehov.AKTIVITETSPLIKT_11_9)
-            
+
             // Førstegangsbehandling / Revurdering
-            EOES_883_2004 -> listOf(Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP)
             FOLKETRYGDLOVEN_11_2 -> listOf(Vurderingsbehov.FORUTGAENDE_MEDLEMSKAP)
             FOLKETRYGDLOVEN_11_3 -> listOf(Vurderingsbehov.OPPHOLDSKRAV)
 
@@ -92,9 +91,14 @@ enum class Hjemmel(val hjemmel: String) {
             FOLKETRYGDLOVEN_11_27,
             FOLKETRYGDLOVEN_11_28 -> listOf(Vurderingsbehov.SAMORDNING_OG_AVREGNING)
 
+            ANDRE_TRYGDEAVTALER,
+            EOES_883_2004,
             FOLKETRYGDLOVEN_KAPITTEL_2 -> listOf(Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP)
 
-            FOLKETRYGDLOVEN_22_13 -> listOf(Vurderingsbehov.HELHETLIG_VURDERING, Vurderingsbehov.VURDER_RETTIGHETSPERIODE)
+            FOLKETRYGDLOVEN_22_13 -> listOf(
+                Vurderingsbehov.HELHETLIG_VURDERING,
+                Vurderingsbehov.VURDER_RETTIGHETSPERIODE
+            )
 
             FOLKETRYGDLOVEN_11_4,
             FOLKETRYGDLOVEN_11_7,

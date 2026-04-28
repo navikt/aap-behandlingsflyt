@@ -44,7 +44,8 @@ enum class Vilkårtype(
             Avslagsårsak.MANGLENDE_DOKUMENTASJON,
             Avslagsårsak.IKKE_SYKDOM_SKADE_LYTE_VESENTLIGDEL,
             Avslagsårsak.IKKE_NOK_REDUSERT_ARBEIDSEVNE,
-            Avslagsårsak.IKKE_SYKDOM_AV_VISS_VARIGHET
+            Avslagsårsak.IKKE_SYKDOM_AV_VISS_VARIGHET,
+            Avslagsårsak.IKKE_SYKDOM_SKADE_LYTE,
         ),
         hjemmel = "§ 11-5"
     ),

@@ -203,3 +203,13 @@ class BehandlingHendelseServiceImpl(
             referanse = this.referanse
         )
 }
+
+class BehandlingHendelseServiceFactory : BehandlingHendelseServiceProvider {
+    override fun create(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): BehandlingHendelseService {
+        return BehandlingHendelseServiceImpl(repositoryProvider, gatewayProvider)
+    }
+
+    companion object : no.nav.aap.komponenter.gateway.Factory<BehandlingHendelseServiceProvider> {
+        override fun konstruer(): BehandlingHendelseServiceProvider = BehandlingHendelseServiceFactory()
+    }
+}

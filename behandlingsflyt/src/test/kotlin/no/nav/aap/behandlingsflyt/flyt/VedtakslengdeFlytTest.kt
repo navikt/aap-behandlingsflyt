@@ -83,7 +83,7 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::c
 
     @Test
     fun `skal holde sluttdato uendret når siste oppfylte rettighetstype fortsatt er bistand ved revurdering`() {
-        val sak = happyCaseFørstegangsbehandling(LocalDate.now(clock))
+        val sak = happyCaseFørstegangsbehandling(LocalDate.now(clock), sendMeldekort = false)
         val endringsdato = sak.rettighetsperiode.fom.plusMonths(10)
 
         /* Gir AAP som arbeidssøker. */
@@ -397,7 +397,7 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::c
 
     @Test
     fun `skal sette sluttdato 14 måneder frem i tid ved overgang arbeid som siste oppfylte rettighetstype ved revurdering`() {
-        val sak = happyCaseFørstegangsbehandling(LocalDate.now(clock))
+        val sak = happyCaseFørstegangsbehandling(LocalDate.now(clock), sendMeldekort = false)
         val endringsdato = sak.rettighetsperiode.fom.plusMonths(8)
 
         /* Gir AAP som arbeidssøker. */
@@ -502,7 +502,7 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::c
 
     @Test
     fun `skal beholde vedtatte underveisperioder dersom vedtakslengde innskrenkes pga endret rettighetstype ved revurdering`() {
-        val sak = happyCaseFørstegangsbehandling(LocalDate.now(clock))
+        val sak = happyCaseFørstegangsbehandling(LocalDate.now(clock), sendMeldekort = false)
         val endringsdato = sak.rettighetsperiode.fom.plusMonths(2)
 
         dataSource.transaction { connection ->
@@ -1133,7 +1133,7 @@ class AvklarVedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnle
 
     @Test
     fun `skal trigge avklaringsbehov for vedtakslengde når vurderingsbehov VEDTAKSLENGDE_MANUELT er lagt til i revurdering`() {
-        val sak = happyCaseFørstegangsbehandling(LocalDate.now(clock))
+        val sak = happyCaseFørstegangsbehandling(LocalDate.now(clock), sendMeldekort = false)
         val automatiskSluttdato = sak.rettighetsperiode.fom.plussEtÅrMedHverdager(ÅrMedHverdager.FØRSTE_ÅR)
 
         dataSource.transaction { connection ->

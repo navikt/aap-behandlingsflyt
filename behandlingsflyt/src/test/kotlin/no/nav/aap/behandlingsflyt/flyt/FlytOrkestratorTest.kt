@@ -22,7 +22,7 @@ import kotlin.reflect.KClass
 class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlytOrkestratorTest(unleashGateway) {
     @Test
     fun `hopper over foreslå vedtak-steg når revurdering ikke skal innom NAY`() {
-        val sak = happyCaseFørstegangsbehandling()
+        val sak = happyCaseFørstegangsbehandling(sendMeldekort = false)
         // Revurdering av sykdom uten 11-13
         revurdereFramTilOgMedSykdom(
             sak = sak,
@@ -41,7 +41,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
 
     @Test
     fun `revurdering skal innom foreslå vedtak-steg når NAY-saksbehandler har løst avklaringsbehov`() {
-        val sak = happyCaseFørstegangsbehandling()
+        val sak = happyCaseFørstegangsbehandling(sendMeldekort = false)
         // Revurdering som krever 11-13-vurdering
         revurdereFramTilOgMedSykdom(
             sak = sak,

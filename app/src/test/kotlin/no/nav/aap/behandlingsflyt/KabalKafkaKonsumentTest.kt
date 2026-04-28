@@ -4,6 +4,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentReposito
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Status
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.help.sak
+import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseServiceFactory
+import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseServiceProvider
 import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaConsumerConfig
 import no.nav.aap.behandlingsflyt.hendelse.kafka.SchemaRegistryConfig
 import no.nav.aap.behandlingsflyt.hendelse.kafka.klage.KABAL_EVENT_TOPIC
@@ -84,6 +86,7 @@ class KabalKafkaKonsumentTest {
                     register<FakeAnsattInfoGateway>()
                     register<FakeEnhetGateway>()
                     register<FakeOppgavestyringGateway>()
+                    register<BehandlingHendelseServiceFactory>()
                 }
             )
             motor.start()

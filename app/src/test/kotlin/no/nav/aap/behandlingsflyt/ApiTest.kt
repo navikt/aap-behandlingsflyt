@@ -55,8 +55,8 @@ import no.nav.aap.komponenter.httpklient.httpclient.request.GetRequest
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.NoTokenTokenProvider
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
-import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
-import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.OnBehalfOfTokenProvider
+import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureM2MTokenProvider
+import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureOBOTokenProvider
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.GUnit
 import no.nav.aap.verdityper.dokument.JournalpostId
@@ -95,13 +95,13 @@ class ApiTest {
 
         private val client: RestClient<InputStream> = RestClient(
             config = ClientConfig(scope = "behandlingsflyt"),
-            tokenProvider = OnBehalfOfTokenProvider,
+            tokenProvider = AzureOBOTokenProvider,
             responseHandler = DefaultResponseHandler()
         )
 
         private val ccClient: RestClient<InputStream> = RestClient(
             config = ClientConfig(scope = "behandlingsflyt"),
-            tokenProvider = ClientCredentialsTokenProvider,
+            tokenProvider = AzureM2MTokenProvider,
             responseHandler = DefaultResponseHandler()
         )
 
@@ -111,19 +111,31 @@ class ApiTest {
             responseHandler = DefaultResponseHandler()
         )
 
-        private var token: OidcToken? = null
-        private fun getToken(): OidcToken {
+        private fun getToken(isApp: Boolean = false): OidcToken {
             val client = RestClient(
                 config = ClientConfig(scope = "behandlingsflyt"),
                 tokenProvider = NoTokenTokenProvider(),
                 responseHandler = DefaultResponseHandler()
             )
-            return token ?: OidcToken(
+
+            val response = if (isApp) {
                 client.post<Unit, FakeServers.TestToken>(
-                    URI.create(requiredConfigForKey("azure.openid.config.token.endpoint")),
+                    URI.create(requiredConfigForKey("nais.token.endpoint")),
                     PostRequest(Unit)
-                )!!.access_token
-            )
+                )
+            } else {
+                client.post<Map<String, String>, FakeServers.TestToken>(
+                    URI.create(requiredConfigForKey("nais.token.exchange.endpoint")),
+                    PostRequest(
+                        body = mapOf(
+                            "user_token" to AzureTokenGen("aud").generate(false, "behandlingsflyt", "Z123456"),
+                            "target" to "behandlingsflyt"
+                        )
+                    )
+                )
+            }
+
+            return OidcToken(response!!.access_token)
         }
 
         // Starter server
@@ -321,6 +333,7 @@ class ApiTest {
             URI.create("http://localhost:$port/").resolve("api/sak/finnEllerOpprett"),
             PostRequest(
                 body = FinnEllerOpprettSakDTO("12345678910", LocalDate.now()),
+                currentToken = getToken(isApp = true)
             )
         )
 
@@ -432,7 +445,7 @@ class ApiTest {
     private fun azpAuth(azp: Azp) = Header(
         "Authorization",
         "Bearer ${
-            AzureTokenGen("behandlingsflyt", "behandlingsflyt").generate(
+            AzureTokenGen("behandlingsflyt").generate(
                 true,
                 azp.uuid.toString()
             )

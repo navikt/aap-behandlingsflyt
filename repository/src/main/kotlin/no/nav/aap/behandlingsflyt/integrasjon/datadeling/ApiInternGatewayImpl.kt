@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.integrasjon.datadeling
 
 import com.github.benmanes.caffeine.cache.Caffeine
+import io.micrometer.core.instrument.binder.cache.CaffeineCacheMetrics
 import no.nav.aap.api.intern.PersonEksistererIAAPArena
 import no.nav.aap.api.intern.SakerRequest
 import no.nav.aap.api.intern.behandlingsflyt.OppdaterIdenterDto
@@ -41,7 +42,7 @@ import no.nav.aap.komponenter.gateway.Factory
 import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
 import no.nav.aap.komponenter.httpklient.httpclient.RestClient
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
-import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
+import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureM2MTokenProvider
 import no.nav.aap.komponenter.json.DefaultJsonMapper
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
@@ -61,14 +62,19 @@ class ApiInternGatewayImpl : ApiInternGateway {
         private val arenaStatusCache = Caffeine.newBuilder()
             .expireAfterWrite(Duration.ofHours(2))
             .maximumSize(10_000)
+            .recordStats()
             .build<Set<String>, ArenaStatusResponse>()
+
+        init {
+            CaffeineCacheMetrics.monitor(prometheus, arenaStatusCache, "datadeling_arena_status")
+        }
     }
 
     private val log = LoggerFactory.getLogger(javaClass)
 
     private val restClient = RestClient.withDefaultResponseHandler(
         config = ClientConfig(scope = requiredConfigForKey("integrasjon.datadeling.scope")),
-        tokenProvider = ClientCredentialsTokenProvider,
+        tokenProvider = AzureM2MTokenProvider,
         prometheus = prometheus
     )
 
@@ -235,6 +241,7 @@ class ApiInternGatewayImpl : ApiInternGateway {
             Avslagsårsak.BRUDD_PÅ_OPPHOLDSKRAV_OPPHØR -> AvslagsårsakDTO.BRUDD_PÅ_OPPHOLDSKRAV_OPPHØR
             Avslagsårsak.ORDINÆRKVOTE_BRUKT_OPP -> AvslagsårsakDTO.ORDINÆRKVOTE_BRUKT_OPP
             Avslagsårsak.SYKEPENGEERSTATNINGKVOTE_BRUKT_OPP -> AvslagsårsakDTO.SYKEPENGEERSTATNINGKVOTE_BRUKT_OPP
+            Avslagsårsak.IKKE_SYKDOM_SKADE_LYTE -> AvslagsårsakDTO.IKKE_SYKDOM_SKADE_LYTE
             Avslagsårsak.BRUKER_UNDER_18 -> null
             Avslagsårsak.MANGLENDE_DOKUMENTASJON -> null
             Avslagsårsak.IKKE_MEDLEM_FORUTGÅENDE -> null

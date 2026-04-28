@@ -36,6 +36,7 @@ import no.nav.aap.behandlingsflyt.forretningsflyt.steg.FastsettMeldeperiodeSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.FastsettSykdomsvilkåretSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.FatteVedtakSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.ForeslåVedtakSteg
+import no.nav.aap.behandlingsflyt.forretningsflyt.steg.ForeslåVedtakVedtakslengdeSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.FritakMeldepliktSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.IkkeOppfyltMeldepliktSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.InntektsbortfallSteg
@@ -422,6 +423,12 @@ object Revurdering : BehandlingType {
             .medSteg(
                 steg = VedtakslengdeSteg,
                 informasjonskrav = listOf(VedtakslengdeInformasjonskrav),
+                vurderingsbehovRelevanteForSteg = listOf(
+                    Vurderingsbehov.VEDTAKSLENGDE_MANUELT
+                )
+            )
+            .medSteg(
+                steg = ForeslåVedtakVedtakslengdeSteg,
                 vurderingsbehovRelevanteForSteg = listOf(
                     Vurderingsbehov.VEDTAKSLENGDE_MANUELT
                 )
