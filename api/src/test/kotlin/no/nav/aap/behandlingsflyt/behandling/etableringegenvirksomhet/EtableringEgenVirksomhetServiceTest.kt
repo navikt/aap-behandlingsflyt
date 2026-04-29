@@ -42,18 +42,16 @@ class EtableringEgenVirksomhetServiceTest {
         val res = service.erVurderingerGyldig(behandling.id, emptyList())
 
         assertThat(res).isInstanceOf(VirksomhetEtableringGyldig::class.java)
-
     }
 
     private fun opprettBehandling(periode: LocalDate): Behandling {
-        val person =
-            Person(
-                PersonId(Random.nextLong()),
-                UUID.randomUUID(),
-                listOf(genererIdent(LocalDate.now().minusYears(23)))
-            )
+        val person = Person(
+            PersonId(Random.nextLong()),
+            UUID.randomUUID(),
+            listOf(genererIdent(LocalDate.now().minusYears(23)))
+        )
         val sak = InMemorySakRepository.finnEllerOpprett(person, periode)
-        val behandling = InMemoryBehandlingRepository.opprettBehandling(
+        return InMemoryBehandlingRepository.opprettBehandling(
             sakId = sak.id,
             typeBehandling = TypeBehandling.Førstegangsbehandling,
             forrigeBehandlingId = null,
@@ -62,8 +60,6 @@ class EtableringEgenVirksomhetServiceTest {
                 årsak = ÅrsakTilOpprettelse.SØKNAD
             )
         )
-
-        return behandling
     }
 
     private fun oppfyllSykdomOgBistand(behandling: Behandling) {
@@ -90,19 +86,23 @@ class EtableringEgenVirksomhetServiceTest {
                 )
             )
         )
-        InMemoryBistandRepository.lagre(behandling.id, listOf(Bistandsvurdering(
-            begrunnelse = "...",
-            erBehovForAktivBehandling = true,
-            erBehovForArbeidsrettetTiltak = true,
-            erBehovForAnnenOppfølging = false,
-            overgangBegrunnelse = null,
-            skalVurdereAapIOvergangTilArbeid = false,
-            vurdertAv = "saks",
-            vurderingenGjelderFra = LocalDate.now(),
-            tom = LocalDate.now().plusMonths(6),
-            opprettet = Instant.now(),
-            vurdertIBehandling = behandling.id
-        )))
+        InMemoryBistandRepository.lagre(
+            behandling.id, listOf(
+                Bistandsvurdering(
+                    begrunnelse = "...",
+                    erBehovForAktivBehandling = true,
+                    erBehovForArbeidsrettetTiltak = true,
+                    erBehovForAnnenOppfølging = false,
+                    overgangBegrunnelse = null,
+                    skalVurdereAapIOvergangTilArbeid = false,
+                    vurdertAv = "saks",
+                    vurderingenGjelderFra = LocalDate.now(),
+                    tom = LocalDate.now().plusMonths(6),
+                    opprettet = Instant.now(),
+                    vurdertIBehandling = behandling.id
+                )
+            )
+        )
     }
 
 }

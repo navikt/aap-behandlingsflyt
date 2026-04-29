@@ -38,43 +38,49 @@ import kotlin.random.Random
 
 class EtableringEgenVirksomhetLøserTest {
 
+    private val løser = EtableringEgenVirksomhetLøser(
+        InMemoryEtableringEgenVirksomRepository,
+        InMemoryBehandlingRepository,
+        EtableringEgenVirksomhetService(
+            InMemoryEtableringEgenVirksomRepository,
+            InMemoryBehandlingRepository,
+            InMemoryBistandRepository,
+            InMemorySykdomRepository
+        )
+    )
+
+    private fun opprettKontekst(sak: Sak, behandling: Behandling) = AvklaringsbehovKontekst(
+        Bruker("dd"),
+        FlytKontekst(sak.id, behandling.id, behandling.forrigeBehandlingId, behandling.typeBehandling())
+    )
+
+    private fun oppfyltVurdering(
+        fom: LocalDate,
+        utviklingsPerioder: List<Periode> = emptyList(),
+        oppstartsPerioder: List<Periode> = emptyList()
+    ) = EtableringEgenVirksomhetLøsningDto(
+        begrunnelse = "meee",
+        fom = fom,
+        tom = null,
+        virksomhetNavn = "peppas peppers",
+        orgNr = null,
+        foreliggerFagligVurdering = true,
+        virksomhetErNy = true,
+        brukerEierVirksomheten = EierVirksomhet.EIER_MINST_50_PROSENT,
+        kanFøreTilSelvforsørget = true,
+        utviklingsPerioder = utviklingsPerioder,
+        oppstartsPerioder = oppstartsPerioder
+    )
+
     @Test
     fun `Må ha definert minst én periode i tidsplanen dersom vilkåret er oppfylt for en periode`() {
         val (sak, behandling) = opprettBehandling(LocalDate.now())
         oppfyllSykdomOgBistand(behandling)
 
-
-        val løser = EtableringEgenVirksomhetLøser(
-            InMemoryEtableringEgenVirksomRepository, InMemoryBehandlingRepository, EtableringEgenVirksomhetService(
-                InMemoryEtableringEgenVirksomRepository,
-                InMemoryBehandlingRepository,
-                InMemoryBistandRepository,
-                InMemorySykdomRepository
-            )
-        )
-        val kontekst = AvklaringsbehovKontekst(
-            Bruker("dd"),
-            FlytKontekst(sak.id, behandling.id, behandling.forrigeBehandlingId, behandling.typeBehandling())
-        )
-
+        val kontekst = opprettKontekst(sak, behandling)
         val løsning = EtableringEgenVirksomhetLøsning(
-            listOf(
-                EtableringEgenVirksomhetLøsningDto(
-                    begrunnelse = "meee",
-                    fom = sak.rettighetsperiode.fom.plusDays(1),
-                    tom = null,
-                    virksomhetNavn = "peppas peppers",
-                    orgNr = null,
-                    foreliggerFagligVurdering = true,
-                    virksomhetErNy = true,
-                    brukerEierVirksomheten = EierVirksomhet.EIER_MINST_50_PROSENT,
-                    kanFøreTilSelvforsørget = true,
-                    utviklingsPerioder = listOf(),
-                    oppstartsPerioder = listOf()
-                )
-            )
+            listOf(oppfyltVurdering(fom = sak.rettighetsperiode.fom.plusDays(1)))
         )
-
 
         val feil = assertThrows<UgyldigForespørselException> { løser.løs(kontekst, løsning) }
         assertThat(feil.message).contains("Må ha definert minst én periode i tidsplanen dersom vilkåret er oppfylt for en periode")
@@ -85,49 +91,22 @@ class EtableringEgenVirksomhetLøserTest {
         val (sak, behandling) = opprettBehandling(LocalDate.now())
         oppfyllSykdomOgBistand(behandling)
 
-
-        val løser = EtableringEgenVirksomhetLøser(
-            InMemoryEtableringEgenVirksomRepository, InMemoryBehandlingRepository, EtableringEgenVirksomhetService(
-                InMemoryEtableringEgenVirksomRepository,
-                InMemoryBehandlingRepository,
-                InMemoryBistandRepository,
-                InMemorySykdomRepository
-            )
-        )
-        val kontekst = AvklaringsbehovKontekst(
-            Bruker("dd"),
-            FlytKontekst(sak.id, behandling.id, behandling.forrigeBehandlingId, behandling.typeBehandling())
-        )
-
+        val kontekst = opprettKontekst(sak, behandling)
         val løsning = EtableringEgenVirksomhetLøsning(
             listOf(
-                EtableringEgenVirksomhetLøsningDto(
-                    begrunnelse = "meee",
+                oppfyltVurdering(
                     fom = sak.rettighetsperiode.fom,
-                    tom = null,
-                    virksomhetNavn = "peppas peppers",
-                    orgNr = null,
-                    foreliggerFagligVurdering = true,
-                    virksomhetErNy = true,
-                    brukerEierVirksomheten = EierVirksomhet.EIER_MINST_50_PROSENT,
-                    kanFøreTilSelvforsørget = true,
                     utviklingsPerioder = listOf(
-                        Periode(
-                            sak.rettighetsperiode.fom.plusDays(1),
-                            sak.rettighetsperiode.fom.plusDays(4)
-                        )
+                        Periode(sak.rettighetsperiode.fom.plusDays(1), sak.rettighetsperiode.fom.plusDays(4))
                     ),
                     oppstartsPerioder = listOf(
-                        Periode(
-                            sak.rettighetsperiode.fom.plusMonths(1),
-                            sak.rettighetsperiode.fom.plusMonths(2)
-                        )
+                        Periode(sak.rettighetsperiode.fom.plusMonths(1), sak.rettighetsperiode.fom.plusMonths(2))
                     )
                 )
             )
         )
-        val feil = assertThrows<UgyldigForespørselException> { løser.løs(kontekst, løsning) }
 
+        val feil = assertThrows<UgyldigForespørselException> { løser.løs(kontekst, løsning) }
         assertThat(feil.message).contains("vurderingenGjelderFra må være minst én dag etter første mulige dag med AAP")
     }
 
@@ -136,49 +115,22 @@ class EtableringEgenVirksomhetLøserTest {
         val (sak, behandling) = opprettBehandling(LocalDate.now())
         oppfyllSykdomOgBistand(behandling)
 
-
-        val løser = EtableringEgenVirksomhetLøser(
-            InMemoryEtableringEgenVirksomRepository, InMemoryBehandlingRepository, EtableringEgenVirksomhetService(
-                InMemoryEtableringEgenVirksomRepository,
-                InMemoryBehandlingRepository,
-                InMemoryBistandRepository,
-                InMemorySykdomRepository
-            )
-        )
-        val kontekst = AvklaringsbehovKontekst(
-            Bruker("dd"),
-            FlytKontekst(sak.id, behandling.id, behandling.forrigeBehandlingId, behandling.typeBehandling())
-        )
-
+        val kontekst = opprettKontekst(sak, behandling)
         val løsning = EtableringEgenVirksomhetLøsning(
             listOf(
-                EtableringEgenVirksomhetLøsningDto(
-                    begrunnelse = "meee",
+                oppfyltVurdering(
                     fom = sak.rettighetsperiode.fom.plusDays(1),
-                    tom = null,
-                    virksomhetNavn = "peppas peppers",
-                    orgNr = null,
-                    foreliggerFagligVurdering = true,
-                    virksomhetErNy = true,
-                    brukerEierVirksomheten = EierVirksomhet.EIER_MINST_50_PROSENT,
-                    kanFøreTilSelvforsørget = true,
                     utviklingsPerioder = listOf(
-                        Periode(
-                            sak.rettighetsperiode.fom.plusMonths(1),
-                            sak.rettighetsperiode.fom.plusMonths(2)
-                        )
+                        Periode(sak.rettighetsperiode.fom.plusMonths(1), sak.rettighetsperiode.fom.plusMonths(2))
                     ),
                     oppstartsPerioder = listOf(
-                        Periode(
-                            sak.rettighetsperiode.fom.plusDays(1),
-                            sak.rettighetsperiode.fom.plusDays(4)
-                        )
+                        Periode(sak.rettighetsperiode.fom.plusDays(1), sak.rettighetsperiode.fom.plusDays(4))
                     )
                 )
             )
         )
-        val feil = assertThrows<UgyldigForespørselException> { løser.løs(kontekst, løsning) }
 
+        val feil = assertThrows<UgyldigForespørselException> { løser.løs(kontekst, løsning) }
         assertThat(feil.message).contains("Oppstartsperioder kan ikke ligge før en utviklingsperiode")
     }
 
@@ -187,53 +139,23 @@ class EtableringEgenVirksomhetLøserTest {
         val (sak, behandling) = opprettBehandling(LocalDate.now())
         oppfyllSykdomOgBistand(behandling)
 
-
-        val løser = EtableringEgenVirksomhetLøser(
-            InMemoryEtableringEgenVirksomRepository, InMemoryBehandlingRepository, EtableringEgenVirksomhetService(
-                InMemoryEtableringEgenVirksomRepository,
-                InMemoryBehandlingRepository,
-                InMemoryBistandRepository,
-                InMemorySykdomRepository
-            )
-        )
-        val kontekst = AvklaringsbehovKontekst(
-            Bruker("dd"),
-            FlytKontekst(sak.id, behandling.id, behandling.forrigeBehandlingId, behandling.typeBehandling())
-        )
-
+        val kontekst = opprettKontekst(sak, behandling)
         val løsning = EtableringEgenVirksomhetLøsning(
             listOf(
-                EtableringEgenVirksomhetLøsningDto(
-                    begrunnelse = "meee",
+                oppfyltVurdering(
                     fom = sak.rettighetsperiode.fom.plusDays(1),
-                    tom = null,
-                    virksomhetNavn = "peppas peppers",
-                    orgNr = null,
-                    foreliggerFagligVurdering = true,
-                    virksomhetErNy = true,
-                    brukerEierVirksomheten = EierVirksomhet.EIER_MINST_50_PROSENT,
-                    kanFøreTilSelvforsørget = true,
                     utviklingsPerioder = listOf(
-                        Periode(
-                            sak.rettighetsperiode.fom.plusDays(1),
-                            sak.rettighetsperiode.fom.plusDays(4)
-                        )
+                        Periode(sak.rettighetsperiode.fom.plusDays(1), sak.rettighetsperiode.fom.plusDays(4))
                     ),
                     oppstartsPerioder = listOf(
-                        Periode(
-                            sak.rettighetsperiode.fom.plusMonths(1),
-                            sak.rettighetsperiode.fom.plusMonths(2)
-                        ),
-                        Periode(
-                            sak.rettighetsperiode.fom.plusMonths(2),
-                            sak.rettighetsperiode.fom.plusMonths(5)
-                        )
+                        Periode(sak.rettighetsperiode.fom.plusMonths(1), sak.rettighetsperiode.fom.plusMonths(2)),
+                        Periode(sak.rettighetsperiode.fom.plusMonths(2), sak.rettighetsperiode.fom.plusMonths(5))
                     )
                 )
             )
         )
-        val feil = assertThrows<UgyldigForespørselException> { løser.løs(kontekst, løsning) }
 
+        val feil = assertThrows<UgyldigForespørselException> { løser.løs(kontekst, løsning) }
         assertThat(feil.message).contains("Oppsatte oppstartsdager overstiger gjenværende dager:")
     }
 
@@ -242,56 +164,25 @@ class EtableringEgenVirksomhetLøserTest {
         val (sak, behandling) = opprettBehandling(LocalDate.now())
         oppfyllSykdomOgBistand(behandling)
 
-
-        val løser = EtableringEgenVirksomhetLøser(
-            InMemoryEtableringEgenVirksomRepository, InMemoryBehandlingRepository, EtableringEgenVirksomhetService(
-                InMemoryEtableringEgenVirksomRepository,
-                InMemoryBehandlingRepository,
-                InMemoryBistandRepository,
-                InMemorySykdomRepository
-            )
-        )
-        val kontekst = AvklaringsbehovKontekst(
-            Bruker("dd"),
-            FlytKontekst(sak.id, behandling.id, behandling.forrigeBehandlingId, behandling.typeBehandling())
-        )
-
+        val kontekst = opprettKontekst(sak, behandling)
         val løsning = EtableringEgenVirksomhetLøsning(
             listOf(
-                EtableringEgenVirksomhetLøsningDto(
-                    begrunnelse = "meee",
+                oppfyltVurdering(
                     fom = sak.rettighetsperiode.fom.plusDays(1),
-                    tom = null,
-                    virksomhetNavn = "peppas peppers",
-                    orgNr = null,
-                    foreliggerFagligVurdering = true,
-                    virksomhetErNy = true,
-                    brukerEierVirksomheten = EierVirksomhet.EIER_MINST_50_PROSENT,
-                    kanFøreTilSelvforsørget = true,
                     utviklingsPerioder = listOf(
-                        Periode(
-                            sak.rettighetsperiode.fom.plusDays(1),
-                            sak.rettighetsperiode.fom.plusDays(4)
-                        ),
-                        Periode(
-                            sak.rettighetsperiode.fom.plusMonths(1),
-                            sak.rettighetsperiode.fom.plusMonths(10)
-                        )
+                        Periode(sak.rettighetsperiode.fom.plusDays(1), sak.rettighetsperiode.fom.plusDays(4)),
+                        Periode(sak.rettighetsperiode.fom.plusMonths(1), sak.rettighetsperiode.fom.plusMonths(10))
                     ),
                     oppstartsPerioder = listOf(
-                        Periode(
-                            sak.rettighetsperiode.fom.plusMonths(11),
-                            sak.rettighetsperiode.fom.plusMonths(12)
-                        )
+                        Periode(sak.rettighetsperiode.fom.plusMonths(11), sak.rettighetsperiode.fom.plusMonths(12))
                     )
                 )
             )
         )
-        val feil = assertThrows<UgyldigForespørselException> { løser.løs(kontekst, løsning) }
 
+        val feil = assertThrows<UgyldigForespørselException> { løser.løs(kontekst, løsning) }
         assertThat(feil.message).contains("Oppsatte utviklingsdager overstiger gjenværende dager:")
     }
-
 
     private fun opprettBehandling(periode: LocalDate): Pair<Sak, Behandling> {
         val person =
