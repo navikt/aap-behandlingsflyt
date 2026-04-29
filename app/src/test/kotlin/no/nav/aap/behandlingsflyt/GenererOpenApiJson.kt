@@ -6,6 +6,7 @@ import kotlinx.coroutines.runBlocking
 import no.nav.aap.behandlingsflyt.integrasjon.defaultGatewayProvider
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.test.FakeServers
+import no.nav.aap.behandlingsflyt.test.fakes.TestToken
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
 import no.nav.aap.komponenter.httpklient.httpclient.RestClient
@@ -30,7 +31,7 @@ fun getToken(): OidcToken {
         responseHandler = DefaultResponseHandler()
     )
     return token ?: OidcToken(
-        client.post<Unit, FakeServers.TestToken>(
+        client.post<Unit, TestToken>(
             URI.create(requiredConfigForKey("nais.token.endpoint")),
             PostRequest(Unit)
         )!!.access_token
