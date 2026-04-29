@@ -72,7 +72,7 @@ data class Sykdomsvurdering(
                 && erNedsettelseIArbeidsevneMerEnnHalvparten == true
     }
 
-    fun erKonsistentForSykdom(harYrkesskadeRegistrert: Boolean, typeBehandling: TypeBehandling): Boolean {
+    fun erKonsistentForSykdom(harYrkesskadeRegistrert: Boolean): Boolean {
         if (!harSkadeSykdomEllerLyte && erSkadeSykdomEllerLyteVesentligdel == true) {
             return false
         }
