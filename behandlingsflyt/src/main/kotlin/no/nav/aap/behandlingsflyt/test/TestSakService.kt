@@ -53,18 +53,7 @@ class TestSakService(
             error("Man kan ikke opprette testsaker i produksjon")
         }
 
-        val identer = try {
-            identGateway.hentAlleIdenterForPerson(ident)
-        } catch (e: PdlQueryException) {
-            if (e.message?.contains("Fant ikke person") == true) {
-                throw OpprettTestSakException("Fant ikke person i PDL")
-            } else {
-                throw e
-            }
-        }
-        if (identer.isEmpty()) {
-            throw OpprettTestSakException("Fant ikke ident i PDL. Har man brukt en gyldig bruker fra Dolly?")
-        }
+        validerIdent(ident)
 
         val personOgSakService = PersonOgSakService(
             identGateway,
@@ -73,14 +62,7 @@ class TestSakService(
             sakRepository
         )
 
-        val eksisterendeSaker = personOgSakService.finnSakerFor(ident)
-        if (eksisterendeSaker.isNotEmpty()) {
-            throw OpprettTestSakException(
-                "Det finnes allerede en eller flere saker for bruker ${ident.getMasked()}. " +
-                        "Fant sak med saksnummer: ${eksisterendeSaker.first().saksnummer}. " +
-                        "Vennligst bruk en annen testbruker eller gjenbruk den åpne saken."
-            )
-        }
+        validerIngenEksisterendeSaker(personOgSakService, ident)
 
         val sak = personOgSakService.finnEllerOpprett(ident, LocalDate.now())
 
@@ -110,6 +92,32 @@ class TestSakService(
         )
 
         return sak
+    }
+
+    private fun validerIdent(ident: Ident) {
+        val identer = try {
+            identGateway.hentAlleIdenterForPerson(ident)
+        } catch (e: PdlQueryException) {
+            throw if (e.message?.contains("Fant ikke person") == true) {
+                OpprettTestSakException("Fant ikke person i PDL")
+            } else {
+                e
+            }
+        }
+        if (identer.isEmpty()) {
+            throw OpprettTestSakException("Fant ikke ident i PDL. Har man brukt en gyldig bruker fra Dolly?")
+        }
+    }
+
+    private fun validerIngenEksisterendeSaker(personOgSakService: PersonOgSakService, ident: Ident) {
+        val eksisterendeSaker = personOgSakService.finnSakerFor(ident)
+        if (eksisterendeSaker.isNotEmpty()) {
+            throw OpprettTestSakException(
+                "Det finnes allerede en eller flere saker for bruker ${ident.getMasked()}. " +
+                        "Fant sak med saksnummer: ${eksisterendeSaker.first().saksnummer}. " +
+                        "Vennligst bruk en annen testbruker eller gjenbruk den åpne saken."
+            )
+        }
     }
 
     private fun Boolean.toJaNei() = if (this) StudentStatus.Ja else StudentStatus.Nei
