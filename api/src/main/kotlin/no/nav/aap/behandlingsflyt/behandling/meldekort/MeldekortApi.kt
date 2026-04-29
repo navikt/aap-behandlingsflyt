@@ -13,6 +13,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Meldekort
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.MeldekortRepository
 import no.nav.aap.behandlingsflyt.hendelse.mottak.MottattHendelseService
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
+import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ArbeidIPeriodeV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Innsending
@@ -65,12 +66,13 @@ fun NormalOpenAPIRoute.meldekortApi(
                 val underveisRepository = repositoryProvider.provide<UnderveisRepository>()
                 val sakRepository = repositoryProvider.provide<SakRepository>()
                 val mottattDokumentRepository = repositoryProvider.provide<MottattDokumentRepository>()
+                val flytJobbRepository = repositoryProvider.provide<FlytJobbRepository>()
                 val behandlingService = BehandlingService(repositoryProvider, gatewayProvider)
 
                 val sak = sakRepository.hent(Saksnummer(req.saksnummer))
                 val sisteFattedeVedtaksBehandling = behandlingService.finnBehandlingMedSisteFattedeVedtak(sak.id)
 
-                sisteFattedeVedtaksBehandling?.let { behandling ->
+                val meldeperiodeMedMeldekort = sisteFattedeVedtaksBehandling?.let { behandling ->
                     val underveisGrunnlag = underveisRepository.hentHvisEksisterer(behandling.id) ?: return@let null
                     val meldeperioder = hentAktuelleMeldeperioder(underveisGrunnlag, clock)
                     val meldekortene = meldekortRepository.hentHvisEksisterer(behandling.id)?.meldekort().orEmpty()
@@ -82,6 +84,7 @@ fun NormalOpenAPIRoute.meldekortApi(
                         val meldekort = nyesteMeldekortForMeldeperiode(meldekortene, meldeperiode)
 
                         if (meldekort != null) {
+                            // Henter ut relevante metadata for meldekort hvor saksbehandler har korrigert timer
                             val innsendingReferanse = InnsendingReferanse(meldekort.journalpostId)
                             val meldekortData = mottatteDokumenter[innsendingReferanse]
                                 ?.strukturerteData<MeldekortV0>()?.data
@@ -97,10 +100,15 @@ fun NormalOpenAPIRoute.meldekortApi(
                             )
                         }
                     }
-                }?.let { MeldeperioderMedMeldekortResponse(it.toSet()) }
+                }
+
+                MeldeperioderMedMeldekortResponse(
+                    meldeperioderMedMeldekort = meldeperiodeMedMeldekort?.toSet() ?: emptySet(),
+                    meldekortProsesseringStatus = hentProsesseringStatus(flytJobbRepository, sak)
+                )
             }
 
-            respond(meldeperioderMedMeldekortResponse ?: MeldeperioderMedMeldekortResponse(emptySet()))
+            respond(meldeperioderMedMeldekortResponse)
         }
 
         authorizedPost<SaksnummerParameter, OppdaterMeldekortResponse, OppdaterMeldekortRequest>(
@@ -125,11 +133,18 @@ fun NormalOpenAPIRoute.meldekortApi(
                 val tidspunkt = Instant.now(clock)
                 val enhet = ansattInfoService.hentAnsattEnhet(bruker.ident) ?: "9999"
 
-                val journalpostId = journalføringService.journalfør(sak, meldeperiode, meldekort, bruker, enhet, tidspunkt)
+                val journalpostId = journalføringService.journalfør(
+                    sak = sak,
+                    meldeperiode = meldeperiode,
+                    meldekort = meldekort,
+                    oppdatertAv = bruker,
+                    enhet = enhet,
+                    tidspunkt = tidspunkt
+                )
+
                 val innsending = tilInnsending(sak, journalpostId, tidspunkt, meldekort)
 
-                // TODO lagre ned "midlertidig tilstand her slik at saksbehandler kan se at vi prosesserer endringene?
-
+                // Oppretter mottatt hendelse som prosesseres som en meldekort-behandling
                 MottattHendelseService(repositoryProvider).registrerMottattHendelse(innsending)
 
                 OppdaterMeldekortResponse(journalpostId.identifikator)
@@ -137,6 +152,20 @@ fun NormalOpenAPIRoute.meldekortApi(
 
             respond(response)
         }
+    }
+}
+
+private fun hentProsesseringStatus(
+    flytJobbRepository: FlytJobbRepository,
+    sak: Sak
+): MeldekortProsesseringStatus {
+    val harVentendeMeldekortJobber = flytJobbRepository
+        .hentJobberForSak(sak.id.toLong())
+        .any { it.optionalParameter("brevkode") == InnsendingType.MELDEKORT.name }
+    return if (harVentendeMeldekortJobber) {
+        MeldekortProsesseringStatus.PROSESSERER_MELDEKORT
+    } else {
+        MeldekortProsesseringStatus.KLAR
     }
 }
 

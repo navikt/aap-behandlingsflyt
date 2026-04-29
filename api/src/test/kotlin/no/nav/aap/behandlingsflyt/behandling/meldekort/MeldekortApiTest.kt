@@ -12,9 +12,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveis
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisÅrsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.ArbeidIPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.StrukturertDokument
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.ArbeidIPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Meldekort
 import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
 import no.nav.aap.behandlingsflyt.integrasjon.organisasjon.NomInfoGateway
@@ -24,6 +24,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ArbeidIPeriodeV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.MeldekortV0
+import no.nav.aap.behandlingsflyt.prosessering.HendelseMottattHåndteringJobbUtfører
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
@@ -32,6 +33,7 @@ import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.behandlingsflyt.test.MockDataSource
 import no.nav.aap.behandlingsflyt.test.april
 import no.nav.aap.behandlingsflyt.test.februar
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryFlytJobbRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryMeldekortRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryMottattDokumentRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryUnderveisRepository
@@ -90,6 +92,7 @@ class MeldekortApiTest : BaseApiTest() {
             assertThat(response.status).isEqualTo(HttpStatusCode.OK)
             val body = response.body<MeldeperioderMedMeldekortResponse>()
             assertThat(body.meldeperioderMedMeldekort).isEmpty()
+            assertThat(body.meldekortProsesseringStatus).isEqualTo(MeldekortProsesseringStatus.KLAR)
         }
     }
 
@@ -120,6 +123,8 @@ class MeldekortApiTest : BaseApiTest() {
             assertThat(response.status).isEqualTo(HttpStatusCode.OK)
             val body = response.body<MeldeperioderMedMeldekortResponse>()
             assertThat(body.meldeperioderMedMeldekort).hasSize(1)
+
+            assertThat(body.meldekortProsesseringStatus).isEqualTo(MeldekortProsesseringStatus.KLAR)
 
             val meldeperiodeMedMeldekort = body.meldeperioderMedMeldekort.first()
             assertThat(meldeperiodeMedMeldekort.meldeperiode).isEqualTo(meldeperiode)
@@ -172,6 +177,7 @@ class MeldekortApiTest : BaseApiTest() {
             assertThat(response.status).isEqualTo(HttpStatusCode.OK)
             val body = response.body<MeldeperioderMedMeldekortResponse>()
             assertThat(body.meldeperioderMedMeldekort).hasSize(1)
+            assertThat(body.meldekortProsesseringStatus).isEqualTo(MeldekortProsesseringStatus.KLAR)
 
             val meldeperiodeMedMeldekort = body.meldeperioderMedMeldekort.first()
             assertThat(meldeperiodeMedMeldekort.meldeperiode).isEqualTo(meldeperiode)
@@ -239,6 +245,7 @@ class MeldekortApiTest : BaseApiTest() {
             assertThat(response.status).isEqualTo(HttpStatusCode.OK)
             val body = response.body<MeldeperioderMedMeldekortResponse>()
             assertThat(body.meldeperioderMedMeldekort).hasSize(2)
+            assertThat(body.meldekortProsesseringStatus).isEqualTo(MeldekortProsesseringStatus.KLAR)
             assertThat(body.meldeperioderMedMeldekort.mapNotNull { it.meldekort?.id })
                 .containsExactlyInAnyOrder(meldekort1.journalpostId.identifikator, meldekort2.journalpostId.identifikator)
         }
@@ -296,6 +303,7 @@ class MeldekortApiTest : BaseApiTest() {
             assertThat(response.status).isEqualTo(HttpStatusCode.OK)
             val body = response.body<MeldeperioderMedMeldekortResponse>()
             assertThat(body.meldeperioderMedMeldekort).hasSize(1)
+            assertThat(body.meldekortProsesseringStatus).isEqualTo(MeldekortProsesseringStatus.KLAR)
 
             val meldeperiodeMedMeldekort = body.meldeperioderMedMeldekort.first()
             assertThat(meldeperiodeMedMeldekort.meldekort).isNotNull
@@ -342,8 +350,51 @@ class MeldekortApiTest : BaseApiTest() {
             assertThat(response.status).isEqualTo(HttpStatusCode.OK)
             val body = response.body<MeldeperioderMedMeldekortResponse>()
             assertThat(body.meldeperioderMedMeldekort).hasSize(2)
+            assertThat(body.meldekortProsesseringStatus).isEqualTo(MeldekortProsesseringStatus.KLAR)
             assertThat(body.meldeperioderMedMeldekort.first().meldeperiode).isEqualTo(forrigeMeldeperiode)
             assertThat(body.meldeperioderMedMeldekort.last().meldeperiode).isEqualTo(inneværendeMeldeperiode)
+        }
+    }
+
+    @Test
+    fun `returnerer prosesseringsStatus PROSESSERER når det finnes ventende meldekort-jobber`() {
+        val sak = nySak()
+        val behandling = opprettBehandling(sak, TypeBehandling.Førstegangsbehandling)
+
+        InMemoryVedtakRepository.lagre(behandling.id, LocalDateTime.now(), LocalDate.now())
+
+        val dag1 = 6 januar 2025
+        val meldeperiode = Periode(dag1, dag1.plusDays(13))
+
+        InMemoryUnderveisRepository.lagre(
+            behandlingId = behandling.id,
+            underveisperioder = listOf(underveisperiode(Utfall.OPPFYLT, meldeperiode)),
+            input = object : Faktagrunnlag {}
+        )
+
+        InMemoryFlytJobbRepository.leggTil(
+            HendelseMottattHåndteringJobbUtfører.nyJobb(
+                sakId = sak.id,
+                dokumentReferanse = InnsendingReferanse(JournalpostId("999")),
+                brevkategori = InnsendingType.MELDEKORT,
+                kanal = Kanal.DIGITAL,
+                mottattTidspunkt = LocalDateTime.of(2025, 1, 20, 9, 0),
+            )
+        )
+
+        testApplication {
+            installApplication {
+                meldekortApi(MockDataSource(), inMemoryRepositoryRegistry, createTestGatewayProvider(), fixedClock)
+            }
+
+            val response = createClient().get("/api/meldekort/${sak.saksnummer}") {
+                header("Authorization", "Bearer ${getToken().token()}")
+            }
+
+            assertThat(response.status).isEqualTo(HttpStatusCode.OK)
+            val body = response.body<MeldeperioderMedMeldekortResponse>()
+            assertThat(body.meldekortProsesseringStatus).isEqualTo(MeldekortProsesseringStatus.PROSESSERER_MELDEKORT)
+            assertThat(body.meldeperioderMedMeldekort).hasSize(1)
         }
     }
 
