@@ -1,8 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.sykdom
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
-import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling.Førstegangsbehandling
-import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling.Revurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.verdityper.Bruker
@@ -34,7 +32,7 @@ class SykdomsInformasjonskravTest {
             diagnose = null
         )
 
-        assertThat(vurdering.erKonsistentForSykdom(false, Førstegangsbehandling)).isTrue
+        assertThat(vurdering.erKonsistentForSykdom(false)).isTrue
     }
 
     @Test
@@ -59,7 +57,7 @@ class SykdomsInformasjonskravTest {
             diagnose = null
         )
 
-        assertThat(vurdering.erKonsistentForSykdom(true, Førstegangsbehandling)).isTrue
+        assertThat(vurdering.erKonsistentForSykdom(true)).isTrue
     }
 
     @Test
@@ -84,32 +82,7 @@ class SykdomsInformasjonskravTest {
             diagnose = null
         )
 
-        assertThat(vurdering.erKonsistentForSykdom(true, Førstegangsbehandling)).isFalse
-    }
-
-    @Test
-    fun `er ikke konsistent hvis yrkesskade 30 prosent og ingen begrunnelse for ys`() {
-        val vurdering = Sykdomsvurdering(
-            begrunnelse = "",
-            dokumenterBruktIVurdering = emptyList(),
-            harSkadeSykdomEllerLyte = true,
-            erSkadeSykdomEllerLyteVesentligdel = true,
-            erNedsettelseIArbeidsevneMerEnnHalvparten = false,
-            erNedsettelseIArbeidsevneAvEnVissVarighet = true,
-            erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = true,
-            erNedsettelseMinstHalvparten = null,
-            erNedsettelseMerEnnYrkesskadegrense = null,
-            erArbeidsevnenNedsatt = true,
-            yrkesskadeBegrunnelse = null,
-            vurderingenGjelderFra = 1 januar 2020,
-            vurdertAv = Bruker("Z00000"),
-            opprettet = Instant.now(),
-            vurdertIBehandling = BehandlingId(1L),
-            vurderingenGjelderTil = null,
-            diagnose = null
-        )
-
-        assertThat(vurdering.erKonsistentForSykdom(true, Førstegangsbehandling)).isFalse
+        assertThat(vurdering.erKonsistentForSykdom(true)).isFalse
     }
 
     @Test
@@ -134,7 +107,7 @@ class SykdomsInformasjonskravTest {
             diagnose = null
         )
 
-        assertThat(vurdering.erKonsistentForSykdom(true, Revurdering)).isTrue
+        assertThat(vurdering.erKonsistentForSykdom(true)).isTrue
     }
 
     @Test
@@ -159,7 +132,7 @@ class SykdomsInformasjonskravTest {
             diagnose = null
         )
 
-        assertThat(vurdering.erKonsistentForSykdom(true, Førstegangsbehandling)).isTrue
+        assertThat(vurdering.erKonsistentForSykdom(true)).isTrue
     }
 
     @Test
@@ -184,7 +157,7 @@ class SykdomsInformasjonskravTest {
             diagnose = null
         )
 
-        assertThat(vurdering.erKonsistentForSykdom(false, Førstegangsbehandling)).isTrue
+        assertThat(vurdering.erKonsistentForSykdom(false)).isTrue
     }
 
     @Test
@@ -209,7 +182,7 @@ class SykdomsInformasjonskravTest {
             diagnose = null
         )
 
-        assertThat(vurdering.erKonsistentForSykdom(false, Førstegangsbehandling)).isTrue
+        assertThat(vurdering.erKonsistentForSykdom(false)).isTrue
     }
 
     @Test
@@ -234,7 +207,7 @@ class SykdomsInformasjonskravTest {
             diagnose = null
         )
 
-        assertThat(vurdering.erKonsistentForSykdom(false, Førstegangsbehandling)).isTrue
+        assertThat(vurdering.erKonsistentForSykdom(false)).isTrue
     }
 
     @Test
@@ -259,6 +232,6 @@ class SykdomsInformasjonskravTest {
             diagnose = null
         )
 
-        assertThat(vurdering.erKonsistentForSykdom(false, Førstegangsbehandling)).isFalse
+        assertThat(vurdering.erKonsistentForSykdom(false)).isFalse
     }
 }

@@ -9,6 +9,7 @@ import java.time.LocalDateTime
  * Sendes til statistikkappen når en behandling avsluttes.
  *
  * @param beregningsGrunnlag Beregningsgrunnlag. Kan være null om behandlingen avsluttes før inntekt hentes inn.
+ * @param institusjonsopphold Perioder med institusjonsopphold som gir reduksjon i AAP.
  */
 public data class AvsluttetBehandlingDTO(
     val tilkjentYtelse: TilkjentYtelseDTO,
@@ -20,7 +21,8 @@ public data class AvsluttetBehandlingDTO(
     val vedtakstidspunkt: LocalDateTime?,
     val fritaksvurderinger: Iterable<Fritakvurdering>? = null,
     val perioderMedArbeidsopptrapping: List<PeriodeDTO>,
-    val vedtattStansOpphør: List<StansEllerOpphør>
+    val vedtattStansOpphør: List<StansEllerOpphør>,
+    val institusjonsopphold: List<PeriodeDTO>
 )
 
 public data class PeriodeDTO(val fom: LocalDate, val tom: LocalDate)
@@ -57,6 +59,7 @@ public enum class Avslagsårsak {
     IKKE_RETT_PA_STUDENT,
     VARIGHET_OVERSKREDET_STUDENT,
     IKKE_SYKDOM_AV_VISS_VARIGHET,
+    IKKE_SYKDOM_SKADE_LYTE,
     IKKE_SYKDOM_SKADE_LYTE_VESENTLIGDEL,
     IKKE_NOK_REDUSERT_ARBEIDSEVNE,
     IKKE_BEHOV_FOR_OPPFOLGING,
