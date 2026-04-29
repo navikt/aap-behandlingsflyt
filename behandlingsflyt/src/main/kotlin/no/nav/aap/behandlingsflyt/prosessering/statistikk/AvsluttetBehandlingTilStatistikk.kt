@@ -12,7 +12,11 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Beregning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag11_19
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagUføre
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagYrkesskade
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.GjeldendeStansEllerOpphør
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.Opphør
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.Stans
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.IKlageresultatUtleder
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageResultatType
@@ -44,12 +48,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.statistikk.VilkårDTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.VilkårsPeriodeDTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.VilkårsResultatDTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vilkårtype
-import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Avslagstype as AvslagstypeDTO
-import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Avslagsårsak as AvslagsårsakDTO
-import no.nav.aap.behandlingsflyt.kontrakt.statistikk.StansEllerOpphør as StansEllerOpphørDTO
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.GjeldendeStansEllerOpphør
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.Stans
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.Opphør
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
@@ -58,6 +56,9 @@ import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
+import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Avslagstype as AvslagstypeDTO
+import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Avslagsårsak as AvslagsårsakDTO
+import no.nav.aap.behandlingsflyt.kontrakt.statistikk.StansEllerOpphør as StansEllerOpphørDTO
 
 class AvsluttetBehandlingTilStatistikk(
     private val vilkårsresultatRepository: VilkårsresultatRepository,
@@ -134,7 +135,19 @@ class AvsluttetBehandlingTilStatistikk(
 
         log.info("Kaller aap-statistikk for sak ${sak.saksnummer} og behandling ${behandling.referanse}")
 
-        val rettighetstypePerioder = hentRettighetstypePerioder(behandling)
+        val underveistidslinje = underveisRepository
+            .hentHvisEksisterer(behandling.id)
+            ?.somTidslinje().orEmpty()
+
+        val rettighetstypePerioder = hentRettighetstypePerioder(underveistidslinje)
+
+        val institusjonsopphold =
+            underveistidslinje
+                .map { it.institusjonsoppholdReduksjon }
+                .filter { it.verdi.prosentverdi() > 0 }
+                .komprimer()
+                .perioder()
+                .toList()
 
         val fritaksvurderinger = hentFritaksvurderinger(behandling)
 
@@ -169,13 +182,13 @@ class AvsluttetBehandlingTilStatistikk(
             vedtakstidspunkt = vedtakTidspunkt,
             fritaksvurderinger = fritaksvurderinger,
             perioderMedArbeidsopptrapping = perioderMedArbeidsopptrapping.map { PeriodeDTO(it.fom, it.tom) },
+            institusjonsopphold = institusjonsopphold.map { PeriodeDTO(it.fom, it.tom) },
             vedtattStansOpphør = vedtattStansOpphør.map { it.tilKontrakt() }
         )
     }
 
-    private fun hentRettighetstypePerioder(behandling: Behandling): List<RettighetstypePeriode> {
-        val rettighetstypePerioder = underveisRepository.hentHvisEksisterer(behandling.id)
-            ?.somTidslinje().orEmpty()
+    private fun hentRettighetstypePerioder(underveistidslinje: Tidslinje<Underveisperiode>): List<RettighetstypePeriode> {
+        val rettighetstypePerioder = underveistidslinje
             .mapNotNull { it.rettighetsType }
             .komprimer().segmenter().map {
                 RettighetstypePeriode(
