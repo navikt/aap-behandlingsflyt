@@ -41,7 +41,6 @@ class TestSakService(
         apiInternGateway = gatewayProvider.provide()
     )
 
-
     fun opprettTestSak(
         ident: Ident,
         erStudent: Boolean,
@@ -83,7 +82,7 @@ class TestSakService(
         flytJobbRepository.leggTil(
             HendelseMottattHåndteringJobbUtfører.nyJobb(
                 sakId = sak.id,
-                dokumentReferanse = InnsendingReferanse(JournalpostId("" + System.currentTimeMillis())),
+                dokumentReferanse = InnsendingReferanse(JournalpostId("${System.currentTimeMillis()}")),
                 brevkategori = InnsendingType.SØKNAD,
                 kanal = Kanal.DIGITAL,
                 melding = melding,

@@ -51,17 +51,17 @@ fun NormalOpenAPIRoute.fullførBehandlingApi(
         @Suppress("UnauthorizedPost")
         post<Unit, BehandlingStatusRespons, BehandlingStatusRequest> { _, req ->
             require(!Miljø.erProd()) { "Ikke tilgjengelig i produksjonsmiljøet" }
-            val (behandlingStatus, erFerdig) = dataSource.transaction(readOnly = true) { connection ->
+            val respons = dataSource.transaction(readOnly = true) { connection ->
                 val provider = repositoryRegistry.provider(connection)
                 val sak = provider.provide<SakRepository>().hentHvisFinnes(Saksnummer(req.saksnummer))
-                    ?: return@transaction Pair(null, false)
+                    ?: return@transaction BehandlingStatusRespons(req.saksnummer, null, false)
                 val behandling = BehandlingService(provider, gatewayProvider)
                     .finnSisteYtelsesbehandlingFor(sak.id)
-                    ?: return@transaction Pair(null, false)
+                    ?: return@transaction BehandlingStatusRespons(req.saksnummer, null, false)
                 val status = behandling.status()
-                Pair(status.name, status == Status.AVSLUTTET)
+                BehandlingStatusRespons(req.saksnummer, status.name, status == Status.AVSLUTTET)
             }
-            respond(BehandlingStatusRespons(req.saksnummer, behandlingStatus, erFerdig))
+            respond(respons)
         }
     }
 }

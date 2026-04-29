@@ -76,15 +76,13 @@ class TestBehandlingFullføringService(
     private val log = LoggerFactory.getLogger(javaClass)
 
     fun fullforBehandling(sak: Sak) {
-        var iterasjoner = 0
-        var sisteBehandlingId: BehandlingId? = null
+        val sisteBehandlingId = (1..MAKS_ITERASJONER).asSequence()
+            .takeWhile { !erBehandlingAvsluttet(sak) }
+            .fold<Int, BehandlingId?>(null) { forrige, _ ->
+                prosesserNesteSteg(sak) ?: forrige
+            }
 
-        while (iterasjoner < MAKS_ITERASJONER && !erBehandlingAvsluttet(sak)) {
-            iterasjoner++
-            sisteBehandlingId = prosesserNesteSteg(sak) ?: sisteBehandlingId
-        }
-
-        if (iterasjoner >= MAKS_ITERASJONER) {
+        if (!erBehandlingAvsluttet(sak)) {
             log.error("Behandling ${sisteBehandlingId ?: "ukjent"} ble ikke avsluttet innen $MAKS_ITERASJONER iterasjoner")
         }
     }
