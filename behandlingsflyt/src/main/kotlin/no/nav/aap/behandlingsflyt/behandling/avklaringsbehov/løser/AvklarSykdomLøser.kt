@@ -66,7 +66,7 @@ class AvklarSykdomLøser(
 
         val harYrkesskade = yrkesskadeGrunnlag?.yrkesskader?.harYrkesskade() == true
         sykdomLøsning.segmenter().forEach {
-            if (!it.verdi.erKonsistentForSykdom(harYrkesskade, behandling.typeBehandling())) {
+            if (!it.verdi.erKonsistentForSykdom(harYrkesskade)) {
                 log.warn(
                     "Sykdomsvurderingen er ikke konsistent med yrkesskade. " +
                             "harYrkesskade: $harYrkesskade, " +

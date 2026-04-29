@@ -32,7 +32,7 @@ data class Sykdomsvurdering(
     val opprettet: Instant,
     val vurdertAv: Bruker,
 ) {
-    
+
     @Deprecated("Erstattet av erOppfyltOrdinærMedUtlededeFelter")
     fun erOppfyltOrdinær(kravdato: LocalDate, periodenVurderingenGjelderFor: Periode): Boolean {
         return erOppfyltOrdinærSettBortIfraVissVarighet() &&
@@ -72,14 +72,17 @@ data class Sykdomsvurdering(
                 && erNedsettelseIArbeidsevneMerEnnHalvparten == true
     }
 
-    // TODO: Erstatt denne med en som sjekker nye felter
-    fun erKonsistentForSykdom(harYrkesskadeRegistrert: Boolean, typeBehandling: TypeBehandling): Boolean {
+    fun erKonsistentForSykdom(harYrkesskadeRegistrert: Boolean): Boolean {
         if (!harSkadeSykdomEllerLyte && erSkadeSykdomEllerLyteVesentligdel == true) {
+            return false
+        }
+        if (erArbeidsevnenNedsatt == false && (erNedsettelseMinstHalvparten == ErNedsettelseMinstHalvpartenValg.JA || erNedsettelseMinstHalvparten == ErNedsettelseMinstHalvpartenValg.JA_FORBIGÅENDE_PROBLEMER)) {
             return false
         }
         if (erArbeidsevnenNedsatt == false && erNedsettelseIArbeidsevneMerEnnHalvparten == true) {
             return false
         }
+
         if (erNedsettelseIArbeidsevneMerEnnHalvparten != null &&
             !erNedsettelseIArbeidsevneMerEnnHalvparten &&
             harYrkesskadeRegistrert &&
@@ -87,7 +90,10 @@ data class Sykdomsvurdering(
         ) {
             return false
         }
-        if (erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense != null && yrkesskadeBegrunnelse.isNullOrBlank() && typeBehandling == TypeBehandling.Førstegangsbehandling) {
+        if (erNedsettelseMinstHalvparten == ErNedsettelseMinstHalvpartenValg.NEI &&
+            harYrkesskadeRegistrert &&
+            erNedsettelseMerEnnYrkesskadegrense == null
+        ) {
             return false
         }
         return true
