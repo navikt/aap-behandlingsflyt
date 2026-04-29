@@ -7,7 +7,13 @@ import java.time.LocalDateTime
 
 data class MeldeperioderMedMeldekortResponse(
     val meldeperioderMedMeldekort: Set<MeldeperiodeMedMeldekortDto>,
+    val meldekortProsesseringStatus: MeldekortProsesseringStatus = MeldekortProsesseringStatus.KLAR,
 )
+
+enum class MeldekortProsesseringStatus {
+    KLAR,
+    PROSESSERER_MELDEKORT,
+}
 
 data class MeldeperiodeMedMeldekortDto(
     val meldeperiode: Periode,
