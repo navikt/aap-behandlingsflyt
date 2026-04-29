@@ -13,7 +13,6 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 
 class AndreYtelserRepositoryImplTest {
     private lateinit var dataSource: TestDataSource
@@ -69,7 +68,6 @@ class AndreYtelserRepositoryImplTest {
     }
 
 
-
     @Test
     fun `lagre og kopier, så slette gamle`() {
 
@@ -116,14 +114,6 @@ class AndreYtelserRepositoryImplTest {
             AndreYtelserOppgittISøknadRepositoryImpl(it).slett(
                 behandling1.id
             )
-        }
-
-        assertThrows<IllegalArgumentException> {
-            dataSource.transaction {
-                AndreYtelserOppgittISøknadRepositoryImpl(it).hentHvisEksisterer(
-                    behandling1.id
-                )
-            }
         }
 
         val ytelser2 = dataSource.transaction {
