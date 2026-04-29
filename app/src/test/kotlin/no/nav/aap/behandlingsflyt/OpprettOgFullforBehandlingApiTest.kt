@@ -17,7 +17,7 @@ import no.nav.aap.behandlingsflyt.test.BehandlingStatusRespons
 import no.nav.aap.behandlingsflyt.test.FakePersoner
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.behandlingsflyt.test.LokalUnleash
-import no.nav.aap.behandlingsflyt.test.OpprettDummySakDto
+import no.nav.aap.behandlingsflyt.test.OpprettOgFullforBehandlingRequest
 import no.nav.aap.behandlingsflyt.test.OpprettOgFullforBehandlingRespons
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.behandlingsflyt.test.testGatewayProvider
@@ -119,7 +119,7 @@ class OpprettOgFullforBehandlingApiTest {
         val respons: OpprettOgFullforBehandlingRespons? = ccClient.post(
             URI.create("http://localhost:$port/api/test/opprettOgFullforBehandling"),
             PostRequest(
-                body = OpprettDummySakDto(
+                body = OpprettOgFullforBehandlingRequest(
                     ident = ident,
                     erStudent = erStudent,
                     harYrkesskade = false,

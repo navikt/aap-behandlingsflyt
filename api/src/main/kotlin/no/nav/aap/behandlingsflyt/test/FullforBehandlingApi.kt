@@ -4,7 +4,12 @@ import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.path.normal.post
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.AndreUtbetalingerDto
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.StudentStatus
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadV0
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
@@ -26,7 +31,7 @@ fun NormalOpenAPIRoute.fullførBehandlingApi(
     if (Miljø.erProd()) return
     route("/api/test/opprettOgFullforBehandling") {
         @Suppress("UnauthorizedPost")
-        post<Unit, OpprettOgFullforBehandlingRespons, OpprettDummySakDto> { _, req ->
+        post<Unit, OpprettOgFullforBehandlingRespons, OpprettOgFullforBehandlingRequest> { _, req ->
             require(!Miljø.erProd()) { "Ikke tilgjengelig i produksjonsmiljøet" }
             try {
                 val sak = dataSource.transaction { connection ->
@@ -57,9 +62,30 @@ fun NormalOpenAPIRoute.fullførBehandlingApi(
                     ?: return@transaction BehandlingStatusRespons(req.saksnummer, null, false)
                 val behandling = BehandlingService(provider, gatewayProvider)
                     .finnSisteYtelsesbehandlingFor(sak.id)
-                    ?: return@transaction BehandlingStatusRespons(req.saksnummer, null, false)
+                    ?: return@transaction BehandlingStatusRespons(sak.saksnummer.toString(), null, false)
                 val status = behandling.status()
-                BehandlingStatusRespons(req.saksnummer, status.name, status == Status.AVSLUTTET)
+
+                val søknad = provider.provide<MottattDokumentRepository>()
+                    .hentDokumenterAvType(behandling.id, InnsendingType.SØKNAD)
+                    .firstOrNull()
+                    ?.strukturerteData<SøknadV0>()
+                    ?.data
+
+                val søknadDetaljer = søknad?.let {
+                    SøknadDetaljer(
+                        erStudent = it.student?.erStudent == StudentStatus.Ja,
+                        harYrkesskade = it.yrkesskade.equals("Ja", ignoreCase = true),
+                        harMedlemskap = it.medlemskap?.harBoddINorgeSiste5År.equals("JA", ignoreCase = true),
+                        andreUtbetalinger = it.andreUtbetalinger,
+                    )
+                }
+
+                BehandlingStatusRespons(
+                    saksnummer = sak.saksnummer.toString(),
+                    behandlingStatus = status.name,
+                    ferdig = status == Status.AVSLUTTET,
+                    søknad = søknadDetaljer,
+                )
             }
             respond(respons)
         }
@@ -68,10 +94,26 @@ fun NormalOpenAPIRoute.fullførBehandlingApi(
 
 data class OpprettOgFullforBehandlingRespons(val saksnummer: String)
 
+data class OpprettOgFullforBehandlingRequest(
+    val ident: String,
+    val erStudent: Boolean,
+    val harYrkesskade: Boolean,
+    val harMedlemskap: Boolean,
+    val andreUtbetalinger: AndreUtbetalingerDto?
+)
+
 data class BehandlingStatusRequest(val saksnummer: String)
 
 data class BehandlingStatusRespons(
     val saksnummer: String,
     val behandlingStatus: String?,
     val ferdig: Boolean,
+    val søknad: SøknadDetaljer? = null,
+)
+
+data class SøknadDetaljer(
+    val erStudent: Boolean,
+    val harYrkesskade: Boolean,
+    val harMedlemskap: Boolean,
+    val andreUtbetalinger: AndreUtbetalingerDto?,
 )
