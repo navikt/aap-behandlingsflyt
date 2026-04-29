@@ -230,10 +230,4 @@ class AndreYtelserOppgittISøknadRepositoryImpl(private val connection: DBConnec
             stønad = ytelser
         )
     }
-
-
-    override fun hent(behandlingId: BehandlingId): AndreYtelserSøknad {
-        return requireNotNull(hentHvisEksisterer(behandlingId))
-    }
-
 }

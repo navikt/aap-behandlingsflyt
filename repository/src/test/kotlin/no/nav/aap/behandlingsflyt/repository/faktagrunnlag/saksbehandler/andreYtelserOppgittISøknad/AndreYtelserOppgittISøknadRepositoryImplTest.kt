@@ -48,7 +48,7 @@ class AndreYtelserOppgittISøknadRepositoryImplTest {
         }
 
         val resultat = dataSource.transaction {
-            AndreYtelserOppgittISøknadRepositoryImpl(it).hent(behandling.id)
+            AndreYtelserOppgittISøknadRepositoryImpl(it).hentHvisEksisterer(behandling.id)
         }
 
         assertThat(resultat).isEqualTo(input)
