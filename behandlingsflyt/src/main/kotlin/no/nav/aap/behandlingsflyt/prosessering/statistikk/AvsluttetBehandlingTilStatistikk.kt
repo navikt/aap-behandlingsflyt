@@ -17,6 +17,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.Opphø
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.Stans
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.IKlageresultatUtleder
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageResultatType
@@ -369,8 +370,41 @@ class AvsluttetBehandlingTilStatistikk(
         return StansEllerOpphørDTO(
             type = type,
             fom = fom,
-            årsaker = vurdering.årsaker.map { AvslagsårsakDTO.valueOf(it.name) }.toSet()
+            årsaker = vurdering.årsaker.map { it.tilStatistikkDTO() }.toSet()
         )
     }
+
+    private fun Avslagsårsak.tilStatistikkDTO(): AvslagsårsakDTO =
+        when (this) {
+            Avslagsårsak.BRUKER_UNDER_18 -> AvslagsårsakDTO.BRUKER_UNDER_18
+            Avslagsårsak.BRUKER_OVER_67 -> AvslagsårsakDTO.BRUKER_OVER_67
+            Avslagsårsak.MANGLENDE_DOKUMENTASJON -> AvslagsårsakDTO.MANGLENDE_DOKUMENTASJON
+            Avslagsårsak.IKKE_RETT_PA_SYKEPENGEERSTATNING -> AvslagsårsakDTO.IKKE_RETT_PA_SYKEPENGEERSTATNING
+            Avslagsårsak.IKKE_RETT_PA_STUDENT -> AvslagsårsakDTO.IKKE_RETT_PA_STUDENT
+            Avslagsårsak.VARIGHET_OVERSKREDET_STUDENT -> AvslagsårsakDTO.VARIGHET_OVERSKREDET_STUDENT
+            Avslagsårsak.IKKE_SYKDOM_AV_VISS_VARIGHET -> AvslagsårsakDTO.IKKE_SYKDOM_AV_VISS_VARIGHET
+            Avslagsårsak.IKKE_SYKDOM_SKADE_LYTE -> AvslagsårsakDTO.IKKE_SYKDOM_SKADE_LYTE
+            Avslagsårsak.IKKE_SYKDOM_SKADE_LYTE_VESENTLIGDEL -> AvslagsårsakDTO.IKKE_SYKDOM_SKADE_LYTE_VESENTLIGDEL
+            Avslagsårsak.IKKE_NOK_REDUSERT_ARBEIDSEVNE -> AvslagsårsakDTO.IKKE_NOK_REDUSERT_ARBEIDSEVNE
+            Avslagsårsak.IKKE_BEHOV_FOR_OPPFOLGING -> AvslagsårsakDTO.IKKE_BEHOV_FOR_OPPFOLGING
+            Avslagsårsak.IKKE_MEDLEM_FORUTGÅENDE -> AvslagsårsakDTO.IKKE_MEDLEM_FORUTGÅENDE
+            Avslagsårsak.IKKE_MEDLEM -> AvslagsårsakDTO.IKKE_MEDLEM
+            Avslagsårsak.IKKE_OPPFYLT_OPPHOLDSKRAV_EØS -> AvslagsårsakDTO.IKKE_OPPFYLT_OPPHOLDSKRAV_EØS
+            Avslagsårsak.NORGE_IKKE_KOMPETENT_STAT -> AvslagsårsakDTO.NORGE_IKKE_KOMPETENT_STAT
+            Avslagsårsak.ANNEN_FULL_YTELSE -> AvslagsårsakDTO.ANNEN_FULL_YTELSE
+            Avslagsårsak.INNTEKTSTAP_DEKKES_ETTER_ANNEN_LOVGIVNING -> AvslagsårsakDTO.INNTEKTSTAP_DEKKES_ETTER_ANNEN_LOVGIVNING
+            Avslagsårsak.IKKE_RETT_PA_AAP_UNDER_BEHANDLING_AV_UFORE -> AvslagsårsakDTO.IKKE_RETT_PA_AAP_UNDER_BEHANDLING_AV_UFORE
+            Avslagsårsak.VARIGHET_OVERSKREDET_OVERGANG_UFORE -> AvslagsårsakDTO.VARIGHET_OVERSKREDET_OVERGANG_UFORE
+            Avslagsårsak.VARIGHET_OVERSKREDET_ARBEIDSSØKER -> AvslagsårsakDTO.VARIGHET_OVERSKREDET_ARBEIDSSØKER
+            Avslagsårsak.IKKE_RETT_PA_AAP_I_PERIODE_SOM_ARBEIDSSOKER -> AvslagsårsakDTO.IKKE_RETT_PA_AAP_I_PERIODE_SOM_ARBEIDSSOKER
+            Avslagsårsak.IKKE_RETT_UNDER_STRAFFEGJENNOMFØRING -> AvslagsårsakDTO.IKKE_RETT_UNDER_STRAFFEGJENNOMFØRING
+            Avslagsårsak.BRUDD_PÅ_AKTIVITETSPLIKT_STANS -> AvslagsårsakDTO.BRUDD_PÅ_AKTIVITETSPLIKT_STANS
+            Avslagsårsak.BRUDD_PÅ_AKTIVITETSPLIKT_OPPHØR -> AvslagsårsakDTO.BRUDD_PÅ_AKTIVITETSPLIKT_OPPHØR
+            Avslagsårsak.BRUDD_PÅ_OPPHOLDSKRAV_STANS -> AvslagsårsakDTO.BRUDD_PÅ_OPPHOLDSKRAV_STANS
+            Avslagsårsak.BRUDD_PÅ_OPPHOLDSKRAV_OPPHØR -> AvslagsårsakDTO.BRUDD_PÅ_OPPHOLDSKRAV_OPPHØR
+            Avslagsårsak.HAR_RETT_TIL_FULLT_UTTAK_ALDERSPENSJON -> AvslagsårsakDTO.HAR_RETT_TIL_FULLT_UTTAK_ALDERSPENSJON
+            Avslagsårsak.ORDINÆRKVOTE_BRUKT_OPP -> AvslagsårsakDTO.ORDINÆRKVOTE_BRUKT_OPP
+            Avslagsårsak.SYKEPENGEERSTATNINGKVOTE_BRUKT_OPP -> AvslagsårsakDTO.SYKEPENGEERSTATNINGKVOTE_BRUKT_OPP
+        }
 
 }
