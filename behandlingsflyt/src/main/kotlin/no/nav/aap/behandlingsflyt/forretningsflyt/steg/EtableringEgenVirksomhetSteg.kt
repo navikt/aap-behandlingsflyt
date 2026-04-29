@@ -59,8 +59,7 @@ class EtableringEgenVirksomhetSteg(
         val tidligereVurderingsutfall = tidligereVurderinger.behandlingsutfall(kontekst, type())
         val relevantPeriode =
             etableringEgenVirksomhetService.utledGyldighetsPeriode(
-                kontekst.behandlingId,
-                kontekst.rettighetsperiode.fom.plusDays(1)
+                kontekst.behandlingId
             ).somTidslinje { it }
 
         if (Vurderingsbehov.ETABLERING_EGEN_VIRKSOMHET in kontekst.vurderingsbehovRelevanteForSteg) {

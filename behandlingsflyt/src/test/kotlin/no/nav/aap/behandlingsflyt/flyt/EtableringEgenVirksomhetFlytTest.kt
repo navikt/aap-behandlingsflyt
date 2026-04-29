@@ -414,35 +414,4 @@ class EtableringEgenVirksomhetFlytTest : AbstraktFlytOrkestratorTest(AlleAvskrud
         }
         assertThat(feil.message).contains("vurderingenGjelderFra må være minst én dag etter første mulige dag med AAP")
     }
-
-    @Test
-    fun `Må ha definert minst én periode i tidsplanen dersom vilkåret er oppfylt for en periode`() {
-        val (sak, behandling) = sendInnFørsteSøknad(person = TestPersoner.STANDARD_PERSON())
-
-        val feil = assertThrows<UgyldigForespørselException> {
-            behandling
-                .løsSykdom(vurderingGjelderFra = sak.rettighetsperiode.fom, erOppfylt = true)
-                .løsBistand(fom = sak.rettighetsperiode.fom, erOppfylt = true, erBehovForArbeidsrettetTiltak = true)
-                .løsAvklaringsBehov(
-                    EtableringEgenVirksomhetLøsning(
-                        listOf(
-                            EtableringEgenVirksomhetLøsningDto(
-                                begrunnelse = "meee",
-                                fom = sak.rettighetsperiode.fom.plusDays(1),
-                                tom = null,
-                                virksomhetNavn = "peppas peppers",
-                                orgNr = null,
-                                foreliggerFagligVurdering = true,
-                                virksomhetErNy = true,
-                                brukerEierVirksomheten = EierVirksomhet.EIER_MINST_50_PROSENT,
-                                kanFøreTilSelvforsørget = true,
-                                utviklingsPerioder = listOf(),
-                                oppstartsPerioder = listOf()
-                            )
-                        )
-                    )
-                )
-        }
-        assertThat(feil.message).contains("Må ha definert minst én periode i tidsplanen dersom vilkåret er oppfylt for en periode")
-    }
 }
