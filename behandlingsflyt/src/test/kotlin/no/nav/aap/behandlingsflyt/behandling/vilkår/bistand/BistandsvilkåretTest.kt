@@ -19,7 +19,6 @@ import no.nav.aap.behandlingsflyt.help.sak
 import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
-import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.AVKLAR_SYKDOM
 import no.nav.aap.behandlingsflyt.repository.avklaringsbehov.AvklaringsbehovRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
@@ -28,7 +27,6 @@ import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.bistand
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
@@ -213,12 +211,7 @@ class BistandsvilkåretTest {
             AvklarBistandLøser(postgresRepositoryRegistry.provider(connection)).løs(
                 AvklaringsbehovKontekst(
                     bruker = Bruker(sak.person.aktivIdent().identifikator),
-                    kontekst = FlytKontekst(
-                        behandlingId = revurdering.id,
-                        forrigeBehandlingId = revurdering.forrigeBehandlingId,
-                        sakId = sak.id,
-                        behandlingType = TypeBehandling.Revurdering
-                    ),
+                    kontekst = revurdering.flytKontekst(),
                 ), løsning = AvklarBistandsbehovLøsning(løsningerForPerioder = listOf(bistandsvurdering2))
             )
         }

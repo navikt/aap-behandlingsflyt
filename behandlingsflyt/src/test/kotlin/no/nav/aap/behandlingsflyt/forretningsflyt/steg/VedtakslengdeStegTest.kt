@@ -26,7 +26,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonId
@@ -115,12 +114,8 @@ class VedtakslengdeStegTest {
         val kontekst =
             FlytKontekstMedPeriodeService(SakService(sakRepository, behandlingRepository), behandlingRepository)
                 .utled(
-                    FlytKontekst(
-                        inneværendeBehandling.sakId,
-                        inneværendeBehandling.id,
-                        inneværendeBehandling.forrigeBehandlingId,
-                        inneværendeBehandling.typeBehandling()
-                    ), StegType.FASTSETT_VEDTAKSLENGDE
+                    inneværendeBehandling.flytKontekst(),
+                    StegType.FASTSETT_VEDTAKSLENGDE,
                 )
 
         val dagensDato = 10 desember 2020
