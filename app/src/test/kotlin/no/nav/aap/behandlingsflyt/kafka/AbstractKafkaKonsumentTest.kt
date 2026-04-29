@@ -43,7 +43,7 @@ open class AbstractKafkaKonsumentTest {
             dataSource = TestDataSource()
             motor = ManuellMotorImpl(
                 dataSource,
-                jobber = listOf(HendelseMottattHåndteringJobbUtfører, KafkaFeilJobbUtfører),
+                jobber = listOf(HendelseMottattHåndteringJobbUtfører, KafkaFeilJobbUtfører, DummyProsesserBehandlingJobbUtfører),
                 repositoryRegistry = repositoryRegistry,
                 gatewayProvider = createGatewayProvider {
                     register<AlleAvskruddUnleash>()
