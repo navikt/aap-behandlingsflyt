@@ -14,7 +14,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonId
@@ -164,12 +163,7 @@ class KvalitetssikringsStegTest {
             val resultat = løser.løs(
                 AvklaringsbehovKontekst(
                     bruker = Bruker(KVALITETSSIKRER),
-                    kontekst = FlytKontekst(
-                        sakId = behandling.sakId,
-                        behandlingId = behandling.id,
-                        forrigeBehandlingId = null,
-                        behandlingType = behandling.typeBehandling(),
-                    )
+                    kontekst = behandling.flytKontekst(),
                 ),
                 KvalitetssikringLøsning(
                     vurderinger = (godkjente + underkjente).map {

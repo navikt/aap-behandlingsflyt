@@ -6,7 +6,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
@@ -50,12 +49,7 @@ class PerioderTilVurderingServiceTest {
         )
 
         val res = flytKontekstMedPeriodeService.utled(
-            FlytKontekst(
-                sakId = sak.id,
-                behandlingId = behandling.id,
-                forrigeBehandlingId = behandling.forrigeBehandlingId,
-                behandlingType = TypeBehandling.Førstegangsbehandling
-            ),
+            behandling.flytKontekst(),
             stegType = StegType.AVKLAR_SYKDOM
         )
 
