@@ -23,7 +23,7 @@ fun NormalOpenAPIRoute.fullførBehandlingApi(
     gatewayProvider: GatewayProvider,
 ) {
     val service = TestBehandlingFullføringService(dataSource, repositoryRegistry, gatewayProvider)
-
+    if (Miljø.erProd()) return
     route("/api/test/opprettOgFullforBehandling") {
         @Suppress("UnauthorizedPost")
         post<Unit, OpprettOgFullforBehandlingRespons, OpprettDummySakDto> { _, req ->
