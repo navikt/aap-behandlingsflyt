@@ -1,12 +1,12 @@
-package no.nav.aap.behandlingsflyt
+package no.nav.aap.behandlingsflyt.kafka
 
 import no.nav.aap.behandlingsflyt.help.FakePdlGateway
 import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaConsumerConfig
 import no.nav.aap.behandlingsflyt.hendelse.kafka.SchemaRegistryConfig
-import no.nav.aap.behandlingsflyt.hendelse.kafka.uføre.UførevedtakKafkaKonsument
+import no.nav.aap.behandlingsflyt.hendelse.kafka.foreldrepenger.FORELDREPENGEVEDTAK_EVENT_TOPIC
+import no.nav.aap.behandlingsflyt.hendelse.kafka.foreldrepenger.ForeldrepengevedtakKafkaKonsument
 import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.UførevedtakKafkaMelding
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.UførevedtakResultat
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ForeldrepengevedtakKafkaMelding
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.komponenter.dbtest.TestDataSource
@@ -24,43 +24,16 @@ import org.testcontainers.containers.wait.strategy.Wait
 import org.testcontainers.kafka.KafkaContainer
 import org.testcontainers.utility.DockerImageName
 import java.time.Duration
-import java.time.LocalDate
+import java.time.OffsetDateTime
+import java.time.ZoneOffset
 import java.util.*
 import kotlin.concurrent.thread
 import kotlin.test.Test
 import kotlin.time.Duration.Companion.milliseconds
 
-class UførevedtakHendelseKafkaKonsumentTest {
+class ForeldrepengevedtakHendelseKafkaKonsumentTest: AbstractKafkaKonsumentTest() {
 
-    companion object {
-        private const val UFØRE_KAFKA_TOPIC = "lokal.kafkatopic.ufore-vedtak"
-        private val logger = LoggerFactory.getLogger(UførevedtakKafkaKonsument::class.java)
-        val kafka: KafkaContainer = KafkaContainer(DockerImageName.parse("apache/kafka-native:4.1.0"))
-            .withReuse(true)
-            .waitingFor(Wait.forListeningPort())
-            .withStartupTimeout(Duration.ofSeconds(60))
-            .withLogConsumer { Slf4jLogConsumer(logger) }
-
-        private lateinit var dataSource: TestDataSource
-        val repositoryRegistry = postgresRepositoryRegistry
-
-        @BeforeAll
-        @JvmStatic
-        internal fun beforeAll() {
-            dataSource = TestDataSource()
-            kafka.start()
-            System.setProperty("INTEGRASJON_UFORE_VEDTAK_TOPIC", UFØRE_KAFKA_TOPIC)
-        }
-
-        @AfterAll
-        @JvmStatic
-        internal fun afterAll() {
-            kafka.stop()
-            dataSource.close()
-        }
-    }
-
-    val konsument = UførevedtakKafkaKonsument(
+    val konsument = ForeldrepengevedtakKafkaKonsument(
         config = testConfig(kafka.bootstrapServers),
         dataSource = dataSource,
         repositoryRegistry = repositoryRegistry,
@@ -72,13 +45,12 @@ class UførevedtakHendelseKafkaKonsumentTest {
     )
 
     @Test
-    fun `Uførevedtakhendelse konsumeres av kafka`() {
+    fun `Foreldrepengevedtakhendelse konsumeres av kafka`() {
 
-        val uførevedtakMelding = UførevedtakKafkaMelding(
-            personId = "12345678901",
-            virkningsdato = LocalDate.now(),
-            resultat = UførevedtakResultat.AVSL,
-            avslag12_5 = false
+        val foreldrepengevedtakhendelse = ForeldrepengevedtakKafkaMelding(
+            personidentifikator = "12345678901",
+            tidspunkt = OffsetDateTime.now(ZoneOffset.UTC),
+            tema = "FOR",
         )
         val producerProps = Properties().apply {
             put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafka.bootstrapServers)
@@ -87,11 +59,11 @@ class UførevedtakHendelseKafkaKonsumentTest {
         }
 
         KafkaProducer<String, String>(producerProps).use { producer ->
-            val value = DefaultJsonMapper.toJson(uførevedtakMelding)
+            val value = DefaultJsonMapper.toJson(foreldrepengevedtakhendelse)
             producer.send(
                 ProducerRecord(
-                    UFØRE_KAFKA_TOPIC,
-                    uførevedtakMelding.personId,
+                    FORELDREPENGEVEDTAK_EVENT_TOPIC,
+                    foreldrepengevedtakhendelse.personidentifikator,
                     value
                 )
             )
@@ -113,6 +85,8 @@ class UførevedtakHendelseKafkaKonsumentTest {
         kafka.stop()
         pollThread.join()
     }
+
+
 }
 
 

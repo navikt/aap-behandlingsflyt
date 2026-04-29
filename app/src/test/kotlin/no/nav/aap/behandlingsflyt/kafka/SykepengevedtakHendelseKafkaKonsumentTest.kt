@@ -1,12 +1,12 @@
-package no.nav.aap.behandlingsflyt
+package no.nav.aap.behandlingsflyt.kafka
 
 import no.nav.aap.behandlingsflyt.help.FakePdlGateway
 import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaConsumerConfig
 import no.nav.aap.behandlingsflyt.hendelse.kafka.SchemaRegistryConfig
-import no.nav.aap.behandlingsflyt.hendelse.kafka.foreldrepenger.FORELDREPENGEVEDTAK_EVENT_TOPIC
-import no.nav.aap.behandlingsflyt.hendelse.kafka.foreldrepenger.ForeldrepengevedtakKafkaKonsument
+import no.nav.aap.behandlingsflyt.hendelse.kafka.sykepenger.SYKEPENGEVEDTAK_EVENT_TOPIC
+import no.nav.aap.behandlingsflyt.hendelse.kafka.sykepenger.SykepengevedtakKafkaKonsument
 import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ForeldrepengevedtakKafkaMelding
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SykepengevedtakKafkaMelding
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.komponenter.dbtest.TestDataSource
@@ -31,35 +31,9 @@ import kotlin.concurrent.thread
 import kotlin.test.Test
 import kotlin.time.Duration.Companion.milliseconds
 
-class ForeldrepengevedtakHendelseKafkaKonsumentTest {
+class SykepengevedtakHendelseKafkaKonsumentTest: AbstractKafkaKonsumentTest() {
 
-    companion object {
-        private val logger = LoggerFactory.getLogger(ForeldrepengevedtakKafkaKonsument::class.java)
-        val kafka: KafkaContainer = KafkaContainer(DockerImageName.parse("apache/kafka-native:4.1.0"))
-            .withReuse(true)
-            .waitingFor(Wait.forListeningPort())
-            .withStartupTimeout(Duration.ofSeconds(60))
-            .withLogConsumer { Slf4jLogConsumer(logger) }
-
-        private lateinit var dataSource: TestDataSource
-        val repositoryRegistry = postgresRepositoryRegistry
-
-        @BeforeAll
-        @JvmStatic
-        internal fun beforeAll() {
-            dataSource = TestDataSource()
-            kafka.start()
-        }
-
-        @AfterAll
-        @JvmStatic
-        internal fun afterAll() {
-            kafka.stop()
-            dataSource.close()
-        }
-    }
-
-    val konsument = ForeldrepengevedtakKafkaKonsument(
+    val konsument = SykepengevedtakKafkaKonsument(
         config = testConfig(kafka.bootstrapServers),
         dataSource = dataSource,
         repositoryRegistry = repositoryRegistry,
@@ -71,12 +45,11 @@ class ForeldrepengevedtakHendelseKafkaKonsumentTest {
     )
 
     @Test
-    fun `Foreldrepengevedtakhendelse konsumeres av kafka`() {
+    fun `Sykepengevedtakhendelse konsumeres av kafka`() {
 
-        val foreldrepengevedtakhendelse = ForeldrepengevedtakKafkaMelding(
+        val sykepengevedtakHendelse = SykepengevedtakKafkaMelding(
             personidentifikator = "12345678901",
-            tidspunkt = OffsetDateTime.now(ZoneOffset.UTC),
-            tema = "FOR",
+            tidspunkt = OffsetDateTime.now(ZoneOffset.UTC)
         )
         val producerProps = Properties().apply {
             put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafka.bootstrapServers)
@@ -85,11 +58,11 @@ class ForeldrepengevedtakHendelseKafkaKonsumentTest {
         }
 
         KafkaProducer<String, String>(producerProps).use { producer ->
-            val value = DefaultJsonMapper.toJson(foreldrepengevedtakhendelse)
+            val value = DefaultJsonMapper.toJson(sykepengevedtakHendelse)
             producer.send(
                 ProducerRecord(
-                    FORELDREPENGEVEDTAK_EVENT_TOPIC,
-                    foreldrepengevedtakhendelse.personidentifikator,
+                    SYKEPENGEVEDTAK_EVENT_TOPIC,
+                    sykepengevedtakHendelse.personidentifikator,
                     value
                 )
             )

@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt
+package no.nav.aap.behandlingsflyt.kafka
 
 import io.confluent.kafka.serializers.KafkaAvroDeserializer
 import io.confluent.kafka.serializers.KafkaAvroSerializer
@@ -7,8 +7,8 @@ import no.nav.aap.behandlingsflyt.hendelse.kafka.SchemaRegistryConfig
 import no.nav.aap.behandlingsflyt.hendelse.kafka.person.PdlHendelseKafkaKonsument
 import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
-import no.nav.aap.behandlingsflyt.test.FakeOppgavestyringGateway
 import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
+import no.nav.aap.behandlingsflyt.test.FakeOppgavestyringGateway
 import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.person.pdl.leesah.Endringstype
 import no.nav.person.pdl.leesah.Personhendelse
@@ -33,34 +33,7 @@ import kotlin.concurrent.thread
 import kotlin.test.Test
 import kotlin.time.Duration.Companion.milliseconds
 
-class
-PdlHendelseKafkaKonsumentTest {
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(PdlHendelseKafkaKonsumentTest::class.java)
-        val kafka: KafkaContainer = KafkaContainer(DockerImageName.parse("apache/kafka-native:4.1.0"))
-            .withReuse(true)
-            .waitingFor(Wait.forListeningPort())
-            .withStartupTimeout(Duration.ofSeconds(60))
-            .withLogConsumer { Slf4jLogConsumer(logger) }
-
-        private lateinit var dataSource: TestDataSource
-        val repositoryRegistry = postgresRepositoryRegistry
-
-        @BeforeAll
-        @JvmStatic
-        internal fun beforeAll() {
-            dataSource = TestDataSource()
-            kafka.start()
-        }
-
-        @AfterAll
-        @JvmStatic
-        internal fun afterAll() {
-            kafka.stop()
-            dataSource.close()
-        }
-    }
+class PdlHendelseKafkaKonsumentTest : AbstractKafkaKonsumentTest() {
 
     val konsument = PdlHendelseKafkaKonsument(
         testConfig(kafka.bootstrapServers),

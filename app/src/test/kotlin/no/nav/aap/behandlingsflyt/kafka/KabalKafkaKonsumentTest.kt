@@ -1,11 +1,10 @@
-package no.nav.aap.behandlingsflyt
+package no.nav.aap.behandlingsflyt.kafka
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Status
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.help.sak
 import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseServiceFactory
-import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseServiceProvider
 import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaConsumerConfig
 import no.nav.aap.behandlingsflyt.hendelse.kafka.SchemaRegistryConfig
 import no.nav.aap.behandlingsflyt.hendelse.kafka.klage.KABAL_EVENT_TOPIC
@@ -56,57 +55,15 @@ import java.util.*
 import kotlin.concurrent.thread
 import kotlin.time.Duration.Companion.milliseconds
 
-class KabalKafkaKonsumentTest {
+class KabalKafkaKonsumentTest : AbstractKafkaKonsumentTest() {
     companion object {
-        private val logger = LoggerFactory.getLogger(KabalKafkaKonsumentTest::class.java)
-        private val repositoryRegistry = postgresRepositoryRegistry
         private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
-
-        private lateinit var dataSource: TestDataSource
-        private lateinit var motor: ManuellMotorImpl
-
-        val kafka: KafkaContainer = KafkaContainer(DockerImageName.parse("apache/kafka-native:4.1.0"))
-            .withReuse(true)
-            .waitingFor(Wait.forListeningPort())
-            .withStartupTimeout(Duration.ofSeconds(60))
-            .withLogConsumer { Slf4jLogConsumer(logger) }
-
-        @BeforeAll
-        @JvmStatic
-        internal fun beforeAll() {
-            // Avoid starting testcontainers and motor during class initialization, as it takes a while, and
-            // can lead to exceptions with root cause InitializationError.
-            dataSource = TestDataSource()
-            motor = ManuellMotorImpl(
-                dataSource,
-                jobber = listOf(HendelseMottattHåndteringJobbUtfører, KafkaFeilJobbUtfører),
-                repositoryRegistry = repositoryRegistry,
-                gatewayProvider = createGatewayProvider {
-                    register<AlleAvskruddUnleash>()
-                    register<FakeAnsattInfoGateway>()
-                    register<FakeEnhetGateway>()
-                    register<FakeOppgavestyringGateway>()
-                    register<BehandlingHendelseServiceFactory>()
-                }
-            )
-            motor.start()
-
-            kafka.start()
-        }
-
-        @AfterAll
-        @JvmStatic
-        internal fun afterAll() {
-            motor.stop()
-            kafka.stop()
-            dataSource.close()
-        }
     }
 
     @Test
     fun `Kan motta og lagre ned hendelse fra Kabal`() {
         val testTopic = KABAL_EVENT_TOPIC + "test2"
-        
+
         val sak = dataSource.transaction { sak(it, periode.fom) }
         dataSource.transaction { finnEllerOpprettBehandling(it, sak) }
         val klagebehandling = dataSource.transaction { connection ->
@@ -214,7 +171,7 @@ class KabalKafkaKonsumentTest {
         konsument.konsumer()
 
         thread.join()
-        
+
         assertThat(konsument.antallMeldinger).isEqualTo(0)
     }
 
