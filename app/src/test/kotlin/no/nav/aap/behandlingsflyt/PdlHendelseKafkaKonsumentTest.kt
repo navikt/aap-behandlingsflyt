@@ -6,10 +6,10 @@ import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaConsumerConfig
 import no.nav.aap.behandlingsflyt.hendelse.kafka.SchemaRegistryConfig
 import no.nav.aap.behandlingsflyt.hendelse.kafka.person.PdlHendelseKafkaKonsument
 import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
-import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.test.FakeOppgavestyringGateway
 import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
-import no.nav.aap.komponenter.dbtest.TestDataSource
+import no.nav.aap.behandlingsflyt.test.MockDataSource
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryRegistry
 import no.nav.person.pdl.leesah.Endringstype
 import no.nav.person.pdl.leesah.Personhendelse
 import org.apache.kafka.clients.producer.KafkaProducer
@@ -33,8 +33,7 @@ import kotlin.concurrent.thread
 import kotlin.test.Test
 import kotlin.time.Duration.Companion.milliseconds
 
-class
-PdlHendelseKafkaKonsumentTest {
+class PdlHendelseKafkaKonsumentTest {
 
     companion object {
         private val logger = LoggerFactory.getLogger(PdlHendelseKafkaKonsumentTest::class.java)
@@ -44,13 +43,13 @@ PdlHendelseKafkaKonsumentTest {
             .withStartupTimeout(Duration.ofSeconds(60))
             .withLogConsumer { Slf4jLogConsumer(logger) }
 
-        private lateinit var dataSource: TestDataSource
-        val repositoryRegistry = postgresRepositoryRegistry
+        private lateinit var dataSource: MockDataSource
+        val repositoryRegistry = inMemoryRepositoryRegistry
 
         @BeforeAll
         @JvmStatic
         internal fun beforeAll() {
-            dataSource = TestDataSource()
+            dataSource = MockDataSource()
             kafka.start()
         }
 
@@ -58,7 +57,6 @@ PdlHendelseKafkaKonsumentTest {
         @JvmStatic
         internal fun afterAll() {
             kafka.stop()
-            dataSource.close()
         }
     }
 
