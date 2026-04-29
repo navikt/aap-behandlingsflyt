@@ -73,7 +73,8 @@ fun NormalOpenAPIRoute.kvalitetssikringApi(
                             unleashGateway
                         ),
                         vurderinger = vurderinger,
-                        historikk = utledKvalitetssikringHistorikk(avklaringsbehovene)
+                        historikk = utledKvalitetssikringHistorikk(avklaringsbehovene),
+                        harGjortVilkårsvurderingerPåBehandling = brukerHarGjortVilkårsvurderingerPåBehandling(avklaringsbehovene, bruker())
                     )
                 }
                 respond(dto)
@@ -88,15 +89,16 @@ private fun utledHarTilgangTilÅSaksbehandle(
     bruker: Bruker,
     unleashGateway: UnleashGateway
 ): Boolean {
-    if (!unleashGateway.isEnabled(BehandlingsflytFeature.IngenValidering, bruker.ident)) {
-        val harIkkeGjortNoenVurderinger =
-            avklaringsbehovene.alle().filter { it.kreverKvalitetssikring() }
-                .any { !it.brukere().contains(bruker.ident) }
-
-        return kanSaksbehandle && harIkkeGjortNoenVurderinger
+    return if (!unleashGateway.isEnabled(BehandlingsflytFeature.IngenValidering, bruker.ident)) {
+        kanSaksbehandle && !brukerHarGjortVilkårsvurderingerPåBehandling(avklaringsbehovene, bruker)
     } else {
-        return kanSaksbehandle
+        kanSaksbehandle
     }
+}
+
+private fun brukerHarGjortVilkårsvurderingerPåBehandling(avklaringsbehovene: Avklaringsbehovene, bruker: Bruker): Boolean {
+    return avklaringsbehovene.alle().filter { it.kreverKvalitetssikring() }
+        .any { it.brukere().contains(bruker.ident) }
 }
 
 private fun utledKvalitetssikringHistorikk(avklaringsbehovene: Avklaringsbehovene): List<Historikk> {

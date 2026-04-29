@@ -13,6 +13,8 @@ public sealed interface Meldekort : Melding {
 public data class MeldekortV0(
     public val harDuArbeidet: Boolean?,
     public val timerArbeidPerPeriode: List<ArbeidIPeriodeV0>,
+    public val begrunnelse: String? = null,
+    public val opprettetAv: String? = null,
 ) : Meldekort {
 
     init {
@@ -26,6 +28,10 @@ public data class MeldekortV0(
 
         require(timerArbeidetSamsvarerMedArbeidetSvar(harDuArbeidet, timerArbeidPerPeriode)) {
             "oppgitte timer arbeidet samsvarer ikke til svar på `harDuArbeidet`"
+        }
+
+        require((opprettetAv == null) == (begrunnelse == null)) {
+            "må oppgi `begrunnelse` og `opprettetAv` sammen"
         }
     }
 

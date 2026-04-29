@@ -17,6 +17,8 @@ data class MeldeperiodeMedMeldekortDto(
 data class MeldekortDto(
     val id: String,
     val mottattTidspunkt: LocalDateTime,
+    val begrunnelse: String? = null,
+    val oppdatertAv: String? = null,
     val dager: Set<DagDto>,
 )
 
@@ -25,9 +27,21 @@ data class DagDto(
     val timerArbeidet: Double
 )
 
-fun Meldekort.toDto(): MeldekortDto = MeldekortDto(
+data class OppdaterMeldekortRequest(
+    val meldeperiode: Periode,
+    val begrunnelse: String,
+    val dager: Set<DagDto>,
+)
+
+data class OppdaterMeldekortResponse(
+    val journalpostId: String,
+)
+
+fun Meldekort.toDto(begrunnelse: String?, oppdatertAv: String?): MeldekortDto = MeldekortDto(
     id = journalpostId.identifikator,
     mottattTidspunkt = mottattTidspunkt,
+    begrunnelse = begrunnelse,
+    oppdatertAv = oppdatertAv,
     dager = timerArbeidPerPeriode.map { arbeid ->
         DagDto(
             dato = arbeid.periode.fom,

@@ -11,7 +11,6 @@ import java.time.LocalDateTime
  * @param beregningsgrunnlag Hvilket beløp ble brukt for å utlede dagsats før redusering. Det er G-justert mhp rettighetsperiode.fom.
  */
 public data class DatadelingDTO(
-    val underveisperiode: List<UnderveisDTO>,
     val rettighetsPeriodeFom: LocalDate,
     val rettighetsPeriodeTom: LocalDate,
     val behandlingStatus: no.nav.aap.behandlingsflyt.kontrakt.behandling.Status,
@@ -24,8 +23,31 @@ public data class DatadelingDTO(
     val samId: String? = null,
     val vedtakId: Long,
     val beregningsgrunnlag: BigDecimal?,
-    val stansOpphørVurdering: Set<GjeldendeStansEllerOpphørDTO>?
+    val stansOpphørVurdering: Set<GjeldendeStansEllerOpphørDTO>?,
+    val arenavedtak: List<ArenavedtakDTO>,
 )
+
+public data class ArenavedtakDTO(
+    public val vedtakId: Long,
+    public val fom: LocalDate,
+    public val tom: LocalDate,
+    public val  vedtaksvariant: ArenaVedtaksvariantDTO,
+)
+
+public enum class ArenaVedtaksvariantDTO {
+    O_AVSLAG,
+    O_INNV_NAV,
+    O_INNV_SOKNAD,
+    E_FORLENGE,
+    E_VERDI,
+    G_AVSLAG,
+    G_INNV_NAV,
+    G_INNV_SOKNAD,
+    S_DOD,
+    S_OPPHOR,
+    S_STANS,
+    ;
+}
 
 
 public data class GjeldendeStansEllerOpphørDTO(
@@ -66,6 +88,7 @@ public enum class AvslagsårsakDTO(
     BRUDD_PÅ_OPPHOLDSKRAV_OPPHØR(StansEllerOpphørEnumDTO.OPPHØR),
     ORDINÆRKVOTE_BRUKT_OPP(StansEllerOpphørEnumDTO.OPPHØR),
     SYKEPENGEERSTATNINGKVOTE_BRUKT_OPP(StansEllerOpphørEnumDTO.OPPHØR),
+    IKKE_SYKDOM_SKADE_LYTE(StansEllerOpphørEnumDTO.OPPHØR),
 }
 
 
@@ -77,19 +100,8 @@ public data class RettighetsTypePeriode(
 
 public data class SakDTO(
     val saksnummer: String,
-    val status: Status,
     val fnr: List<String>,
     val opprettetTidspunkt: LocalDateTime = LocalDateTime.now(),
-)
-
-public data class UnderveisDTO(
-    val underveisFom: LocalDate,
-    val underveisTom: LocalDate,
-    val meldeperiodeFom: LocalDate,
-    val meldeperiodeTom: LocalDate,
-    val utfall: String,
-    val rettighetsType: String?,
-    val avslagsårsak: String?, // skal ikke denne være Avslagsårsak?
 )
 
 public data class TilkjentDTO(
@@ -98,8 +110,6 @@ public data class TilkjentDTO(
     val dagsats: Int,
     val gradering: Int,
     val samordningUføregradering: Int? = null,
-    @Deprecated("Denne er alltid lik dagsats fra behandlingsflyt.")
-    val grunnlag: BigDecimal,
     val grunnlagsfaktor: BigDecimal,
     val grunnbeløp: BigDecimal,
     val antallBarn: Int,

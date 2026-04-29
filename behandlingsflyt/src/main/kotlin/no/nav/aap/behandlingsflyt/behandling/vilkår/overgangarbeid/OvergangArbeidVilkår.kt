@@ -18,6 +18,7 @@ class OvergangArbeidVilkår(vilkårsresultat: Vilkårsresultat) : Vilkårsvurder
 
     private val vilkår: Vilkår = vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.OVERGANGARBEIDVILKÅRET)
 
+    // TODO: Bør det ikke være konsistenssjekk med sykdom og bistand her?
     override fun vurder(grunnlag: OvergangArbeidFaktagrunnlag) {
         vilkår.leggTilVurderinger(
             grunnlag.overgangArbeidGrunnlag

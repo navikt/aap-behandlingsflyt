@@ -30,7 +30,8 @@ class DatadelingBehandlingJobbUtfører(
     private val vedtakRepository: VedtakRepository,
     private val samIdRepository: SamIdRepository,
     private val beregningsgrunnlagRepository: BeregningsgrunnlagRepository,
-    private val stansOpphørService: StansOpphørService
+    private val stansOpphørService: StansOpphørService,
+    private val utledArenaVedtakstype: UtledArenaVedtakstype,
 ) : JobbUtfører {
     private val log = LoggerFactory.getLogger(javaClass)
 
@@ -59,7 +60,6 @@ class DatadelingBehandlingJobbUtfører(
         val vilkårsresultatTidslinje = underveis?.somTidslinje().orEmpty()
             .mapNotNull { it.rettighetsType }
 
-
         val vedtakId = vedtakRepository.hentId(behandling.id)
         val samId = samIdRepository.hentHvisEksisterer(behandling.id)
 
@@ -80,10 +80,10 @@ class DatadelingBehandlingJobbUtfører(
             samId,
             tilkjentYtelse,
             beregningsgrunnlagIKroner,
-            underveis?.perioder.orEmpty(),
             vedtaksTidspunkt.toLocalDate(),
             vilkårsresultatTidslinje,
-            stansOpphør
+            stansOpphør,
+            utledArenaVedtakstype.utledVedtak(sak),
         )
     }
 
@@ -105,7 +105,9 @@ class DatadelingBehandlingJobbUtfører(
                 stansOpphørService = StansOpphørService(
                     repositoryProvider.provide(),
                     repositoryProvider.provide(),
-                    repositoryProvider.provide())
+                    repositoryProvider.provide(),
+                ),
+                utledArenaVedtakstype = UtledArenaVedtakstype(repositoryProvider, gatewayProvider),
             )
         }
     }

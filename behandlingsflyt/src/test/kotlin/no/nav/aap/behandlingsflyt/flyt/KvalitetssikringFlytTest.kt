@@ -191,13 +191,12 @@ class KvalitetssikringFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash
             .løsAvklaringsBehov(ForeslåVedtakLøsning())
             .beslutterGodkjennerIkke(underkjennVurderinger = listOf(Definisjon.AVKLAR_SYKDOM))
             .løsSykdom(fom)
+            .bekreftVurderinger()
             .medKontekst {
                 assertThat(åpneAvklaringsbehov)
                     .anyMatch { it.definisjon == Definisjon.KVALITETSSIKRING }
             }
-            .bekreftVurderinger()
             .kvalitetssikre()
-            .foreslåVedtak()
             .fattVedtak()
             .medKontekst {
                 assertThat(åpneAvklaringsbehov).hasSize(1)
@@ -268,6 +267,7 @@ class KvalitetssikringFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash
             )
             .løsRettighetsperiodeIngenEndring()
             .løsSykdom(fom)
+            .bekreftVurderinger()
 
         val stegetsEgetBehov = hentAlleAvklaringsbehov(behandling)
             .filter { behov -> behov.definisjon == Definisjon.KVALITETSSIKRING }

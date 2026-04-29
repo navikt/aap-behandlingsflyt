@@ -16,7 +16,7 @@ class KvoteOgVarighetFlytTest: AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::
     @Test
     fun `manglende meldekort tolkes som reduksjon`() {
         val kravdato = 20 januar 2025 /* mandag */
-        val sak = happyCaseFørstegangsbehandling(fom = kravdato)
+        val sak = happyCaseFørstegangsbehandling(fom = kravdato, sendMeldekort = false)
         val førstegangsbehandling = hentSisteOpprettedeBehandlingForSak(sak.saksnummer)
 
         førstegangsbehandling.assertUnderveis(

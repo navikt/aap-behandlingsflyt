@@ -15,8 +15,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.Vedt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeVurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.miljo.Miljø.erProd
 import no.nav.aap.komponenter.type.Periode
@@ -33,8 +31,7 @@ class VedtakslengdeService(
     private val vilkårsresultatRepository: VilkårsresultatRepository,
     private val rettighetstypeService: RettighetstypeService,
     private val stansOpphørRepository: StansOpphørRepository,
-    private val unleashGateway: UnleashGateway,
-    private val clock: Clock = Clock.systemDefaultZone()
+    private val clock: Clock = Clock.systemDefaultZone(),
 ) {
     companion object {
         const val ANTALL_DAGER_FØR_UTVIDELSE = 28L
@@ -45,7 +42,7 @@ class VedtakslengdeService(
         vilkårsresultatRepository = repositoryProvider.provide(),
         rettighetstypeService = RettighetstypeService(repositoryProvider, gatewayProvider),
         stansOpphørRepository = repositoryProvider.provide(),
-        unleashGateway = gatewayProvider.provide()
+
     )
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -93,9 +90,7 @@ class VedtakslengdeService(
                     val stansEllerOpphørFom = fremtidigBistandsbehovRettighetsperioder.periode.tom.plusDays(1)
                     val avslagsårsaker = hentAvslagsårsakerVedStansEllerOpphør(behandlingId, stansEllerOpphørFom)
 
-                    val kanBehandlesAutomatisk =
-                        unleashGateway.isEnabled(BehandlingsflytFeature.UtvidVedtakslengdeUnderEttAr)
-                                && gyldigForAutomatiskUtvidelseAvVedtakslengde(avslagsårsaker)
+                    val kanBehandlesAutomatisk = gyldigForAutomatiskUtvidelseAvVedtakslengde(avslagsårsaker)
 
                     if (kanBehandlesAutomatisk) {
                         VedtakslengdeUtvidelse.Automatisk(
@@ -363,7 +358,9 @@ class VedtakslengdeService(
         )
 
     private fun gyldigeAvslagsårsakerForAutomatiskBehandlingProd() =
-        emptySet<Avslagsårsak>()
+        setOf(
+            Avslagsårsak.BRUKER_OVER_67,
+        )
 }
 
 private sealed interface BistandsbehovRettighetsperioder {

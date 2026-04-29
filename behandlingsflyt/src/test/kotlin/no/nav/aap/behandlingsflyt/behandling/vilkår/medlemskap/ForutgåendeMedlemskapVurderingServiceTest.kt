@@ -13,15 +13,21 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Pers
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningMedHistorikkGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Statsborgerskap
 import no.nav.aap.behandlingsflyt.test.Fakes
+import no.nav.aap.behandlingsflyt.test.FakeUnleashBase
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
+import java.time.YearMonth
 
 @Fakes
 class ForutgåendeMedlemskapVurderingServiceTest {
     private val service = ForutgåendeMedlemskapVurderingService()
+    private val serviceWithToggle = ForutgåendeMedlemskapVurderingService(
+        FakeUnleashBase(mapOf(BehandlingsflytFeature.ForutgaaendeForbedringer to true))
+    )
 
     @Test
     fun `automatisk om inntekt er oppfylt`() {
@@ -62,6 +68,44 @@ class ForutgåendeMedlemskapVurderingServiceTest {
         assertThat(vurdering.resultat).isFalse
     }
 
+    @Test
+    fun `lager tomme perioder i visuell tidslinje for måneder uten inntekt`() {
+        val rettighetsperiode = Periode(LocalDate.now(), LocalDate.now().plusYears(1))
+        val grunnlag = lagGrunnlag(godkjentPgaUnntakIMedl = false, godkjentPgaInntekt = false, inntektHarHull = true)
+
+        val vurdering = serviceWithToggle.vurderTilhørighet(grunnlag, rettighetsperiode)
+            .tilhørighetVurdering
+            .single { it.opplysning == "Sammenhengende arbeid og inntekt i Norge siste 5 år" }
+        val tidslinje = vurdering.visuellTidslinje
+
+        val gapMåned = YearMonth.from(LocalDate.now().minusYears(2))
+        val gapEntry = tidslinje.single { YearMonth.from(it.periode.fom) == gapMåned }
+        assertThat(gapEntry.periodeMangler).isTrue()
+        assertThat(gapEntry.inntekter).isEmpty()
+
+        val inntektMåned = YearMonth.from(LocalDate.now().minusYears(4))
+        val inntektEntry = tidslinje.single { YearMonth.from(it.periode.fom) == inntektMåned }
+        assertThat(inntektEntry.inntekter).hasSize(1)
+        assertThat(inntektEntry.inntekter.first().virksomhetId).isEqualTo("1")
+        assertThat(inntektEntry.inntekter.first().beloep).isEqualTo(1.0)
+    }
+
+    @Test
+    fun `grupperer flere inntekter i samme måned som én tidslinje-entry med sub-liste`() {
+        val rettighetsperiode = Periode(LocalDate.now(), LocalDate.now().plusYears(1))
+        val månedMedFlereInntekter = LocalDate.now().minusYears(3)
+        val grunnlag = lagGrunnlagMedFlereInntekterSammeMåned()
+
+        val vurdering = serviceWithToggle.vurderTilhørighet(grunnlag, rettighetsperiode)
+            .tilhørighetVurdering
+            .single { it.opplysning == "Sammenhengende arbeid og inntekt i Norge siste 5 år" }
+        val tidslinje = vurdering.visuellTidslinje
+
+        val entries = tidslinje.filter { YearMonth.from(it.periode.fom) == YearMonth.from(månedMedFlereInntekter) }
+        assertThat(entries).hasSize(1)
+        assertThat(entries.first().periodeMangler).isFalse()
+        assertThat(entries.first().inntekter).hasSize(2)
+    }
 
     private fun lagGrunnlag(
         godkjentPgaUnntakIMedl: Boolean,
@@ -362,6 +406,39 @@ class ForutgåendeMedlemskapVurderingServiceTest {
                 ),
             ),
             nyeSoknadGrunnlag = UtenlandsOppholdData(false, false, false, false, null)
+        )
+    }
+
+    private fun lagGrunnlagMedFlereInntekterSammeMåned(): ForutgåendeMedlemskapGrunnlag {
+        val fullCoverage = Periode(LocalDate.now().minusYears(5), LocalDate.now())
+        val inntekterINorgeGrunnlag = listOf(
+            InntektINorgeGrunnlag("virksomhet-A", 1000.0, "NOR", "NOR", "type", fullCoverage, "Virksomhet A"),
+            InntektINorgeGrunnlag("virksomhet-B", 2000.0, "NOR", "NOR", "type", fullCoverage, "Virksomhet B"),
+        )
+
+        return ForutgåendeMedlemskapGrunnlag(
+            medlemskapArbeidInntektGrunnlag = ForutgåendeMedlemskapArbeidInntektGrunnlag(
+                medlemskapGrunnlag = null,
+                inntekterINorgeGrunnlag = inntekterINorgeGrunnlag,
+                arbeiderINorgeGrunnlag = emptyList(),
+                vurderinger = emptyList()
+            ),
+            personopplysningGrunnlag = PersonopplysningMedHistorikkGrunnlag(
+                brukerPersonopplysning = PersonopplysningMedHistorikk(
+                    fødselsdato = Fødselsdato(LocalDate.now().minusYears(18)),
+                    id = 1,
+                    dødsdato = null,
+                    statsborgerskap = listOf(Statsborgerskap("NOR")),
+                    folkeregisterStatuser = listOf(
+                        FolkeregisterStatus(
+                            status = PersonStatus.bosatt,
+                            gyldighetstidspunkt = LocalDate.now(),
+                            opphoerstidspunkt = LocalDate.now()
+                        )
+                    )
+                ),
+            ),
+            nyeSoknadGrunnlag = UtenlandsOppholdData(true, true, false, false, null)
         )
     }
 }
