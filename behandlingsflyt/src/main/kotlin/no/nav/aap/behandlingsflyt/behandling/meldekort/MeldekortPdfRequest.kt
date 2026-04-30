@@ -13,6 +13,7 @@ data class MeldekortPdfRequest(
     val ident: String,
     val sendtInnDato: String,
     val utførtAv: String,
+    val begrunnelse: String?,
     val sammenlagtArbeidIPerioden: Int,
     val meldeperiode: MeldekortMeldeperiode,
     val meldekort: MeldekortPdfData
@@ -79,6 +80,7 @@ fun MeldekortV0.tilPdfRequest(
             tilOgMedDato = meldeperiode.tom.format(datoFormatter),
             uker = "uke $uke1 - $uke2"
         ),
+        begrunnelse = this.begrunnelse,
         meldekort = MeldekortPdfData(timerArbeidPerUkeIPerioden = uker)
     )
 }

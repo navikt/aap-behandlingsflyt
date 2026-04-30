@@ -31,7 +31,7 @@ class JournalføringService(
     private val dokarkivGateway: DokarkivGateway,
     private val pdfgenGateway: PdfgenGateway,
 ) {
-    constructor(gatewayProvider: GatewayProvider): this(
+    constructor(gatewayProvider: GatewayProvider) : this(
         dokarkivGateway = gatewayProvider.provide(),
         pdfgenGateway = gatewayProvider.provide(),
     )
@@ -44,13 +44,15 @@ class JournalføringService(
         enhet: String,
         tidspunkt: Instant,
     ): JournalpostId {
+        val meldekortPdfRequest = meldekort.tilPdfRequest(
+            ident = sak.person.aktivIdent().identifikator,
+            meldeperiode = meldeperiode,
+            utførtAv = oppdatertAv.ident,
+            tidspunkt = tidspunkt
+        )
+
         val pdf = pdfgenGateway.genererMeldekortPdf(
-            meldekort.tilPdfRequest(
-                ident = sak.person.aktivIdent().identifikator,
-                meldeperiode = meldeperiode,
-                utførtAv = oppdatertAv.ident,
-                tidspunkt = tidspunkt,
-            )
+            meldekortPdfRequest
         )
 
         val journalpost = journalpost(
@@ -85,7 +87,8 @@ class JournalføringService(
         val uke2 = meldeperiode.tom.get(uke)
         val fra = meldeperiode.fom.format(dateFormatter)
         val til = meldeperiode.tom.format(dateFormatter)
-        val tittelsuffix = "for uke $uke1 - $uke2 ($fra - $til) elektronisk mottatt av NAV" // TODO tittelen her bør vurderes
+        val tittelsuffix =
+            "for uke $uke1 - $uke2 ($fra - $til) elektronisk mottatt av NAV" // TODO tittelen her bør vurderes
         val tittel = "Korrigert meldekort $tittelsuffix"
 
         return Journalpost(
