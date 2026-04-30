@@ -256,6 +256,54 @@ class UføreBeregningTest {
         assertThat(uføreInntekt2022.inntektJustertForUføregrad.verdi.toDouble()).isEqualTo(0.0)
     }
 
+
+    @Test
+    fun `Oppjusterer riktig for økning i uføregrad med uføregradFom tilbake i tid`() {
+        val (inntektsPerioder, årsInntekter) = genererInntektsPerioder(
+            2022 to 10_000,
+            2021 to 5_000,
+            2020 to 20_000
+        )
+        
+        val uføregrader = setOf(
+            Uføre(
+                virkningstidspunkt = LocalDate.of(2021, 2, 1),
+                uføregradFom = LocalDate.of(2019, 2, 1),
+                uføregradTom = LocalDate.of(2021, 9, 30),
+                uføregrad = Prosent(80)
+            ),
+            Uføre(
+                virkningstidspunkt = LocalDate.of(2022, 7, 1),
+                uføregrad = Prosent(50),
+                uføregradFom = LocalDate.of(2021, 10, 1),
+                uføregradTom = null,
+            )
+        )
+        
+        val uføreBeregning = UføreBeregning(
+            grunnlag = elleveNittenGrunnlag(2),
+            uføregrader = uføregrader,
+            inntektsPerioder = inntektsPerioder,
+            ytterligereNedsattDato = LocalDate.of(2023, 4, 2),
+            årsInntekter = årsInntekter,
+        )
+
+        val grunnlagUføre = uføreBeregning.beregnUføre()
+
+        val uføreInntekterFraForegåendeÅr = grunnlagUføre.uføreInntekterFraForegåendeÅr()
+        val for2022 = uføreInntekterFraForegåendeÅr.first { it.år == Year.of(2022) }
+        assertThat(for2022.inntektJustertForUføregrad)
+            .isEqualTo(Beløp(6 * 20_000 + 6 * 50_000))
+        assertThat(for2022.inntektIKroner.verdi.toDouble())
+            .isEqualTo(12 * 10_000.0)
+
+        val uføreInntekter2021 = uføreInntekterFraForegåendeÅr.first { it.år == Year.of(2021) }
+        assertThat(
+            uføreInntekter2021.inntektJustertForUføregrad
+        ).isEqualTo(Beløp(1 * 5000 + 11 * 25000))
+        assertThat(grunnlagUføre.type()).isEqualTo(GrunnlagUføre.Type.YTTERLIGERE_NEDSATT)
+    }
+
     private fun uføreGrader(vararg gradering: Pair<LocalDate, Prosent>): Set<Uføre> {
         return gradering.map { (virkningstidspunkt, uføregrad) ->
             Uføre(
