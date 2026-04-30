@@ -96,6 +96,13 @@ spec:
         - application: azure-token-generator # Ikke i prod :)
           namespace: nais
           cluster: dev-gcp
+        - application: testnav-dolly-proxy
+          cluster: dev-fss
+          namespace: dolly
+        - application: testnav-dolly-proxy-trygdeetaten
+          cluster: dev-fss
+          namespace: dolly
+
     outbound:
       external:
         - host: pdl-api.dev-fss-pub.nais.io
