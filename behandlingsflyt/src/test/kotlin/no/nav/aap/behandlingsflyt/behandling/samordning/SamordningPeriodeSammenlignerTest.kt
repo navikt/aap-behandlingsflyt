@@ -2,16 +2,8 @@ package no.nav.aap.behandlingsflyt.behandling.samordning
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelsePeriode
-import no.nav.aap.behandlingsflyt.help.opprettInMemorySak
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
-import no.nav.aap.behandlingsflyt.test.ident
+import no.nav.aap.behandlingsflyt.help.opprettInMemorySakOgBehandling
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySamordningYtelseRepository
-import no.nav.aap.behandlingsflyt.test.inmemoryservice.InMemoryBehandlingService
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
 import org.assertj.core.api.Assertions.assertThat
@@ -23,11 +15,11 @@ import java.time.ZoneId
 
 class SamordningPeriodeSammenlignerTest {
 
+    private val samordningPeriodeSammenligner = SamordningPeriodeSammenligner(InMemorySamordningYtelseRepository)
 
     @Test
     fun `om det kun er en lagring, så er alle nye`() {
-        val behandling = opprettBehandling(nySak())
-        val samordningPeriodeSammenligner = SamordningPeriodeSammenligner(InMemorySamordningYtelseRepository)
+        val (_, behandling) = opprettInMemorySakOgBehandling()
 
         InMemorySamordningYtelseRepository.lagre(
             behandling.id, setOf(
@@ -53,8 +45,7 @@ class SamordningPeriodeSammenlignerTest {
 
     @Test
     fun `det kommer en ekstra, ikke overlappende periode`() {
-        val behandling = opprettBehandling(nySak())
-        val samordningPeriodeSammenligner = SamordningPeriodeSammenligner(InMemorySamordningYtelseRepository)
+        val (_, behandling) = opprettInMemorySakOgBehandling()
 
         val fixedClock = Clock.fixed(Instant.now(), ZoneId.systemDefault())
 
@@ -126,8 +117,7 @@ class SamordningPeriodeSammenlignerTest {
 
     @Test
     fun `periode har blitt forlenget, skal markeres som NY`() {
-        val behandling = opprettBehandling(nySak())
-        val samordningPeriodeSammenligner = SamordningPeriodeSammenligner(InMemorySamordningYtelseRepository)
+        val (_, behandling) = opprettInMemorySakOgBehandling()
 
         val fixedClock = Clock.fixed(Instant.now(), ZoneId.systemDefault())
 
@@ -192,8 +182,7 @@ class SamordningPeriodeSammenlignerTest {
 
     @Test
     fun `ny periode med annen ytelse skal ikke endre status`() {
-        val behandling = opprettBehandling(nySak())
-        val samordningPeriodeSammenligner = SamordningPeriodeSammenligner(InMemorySamordningYtelseRepository)
+        val (_, behandling) = opprettInMemorySakOgBehandling()
 
         val fixedClock = Clock.fixed(Instant.now(), ZoneId.systemDefault())
 
@@ -266,21 +255,4 @@ class SamordningPeriodeSammenlignerTest {
         )
     }
 
-    private fun nySak(): Sak {
-        return opprettInMemorySak(
-            ident(),
-            LocalDate.now(),
-        )
-    }
-
-    private fun opprettBehandling(sak: Sak): Behandling {
-        return InMemoryBehandlingService
-            .finnEllerOpprettOrdinærBehandling(
-                sak.id,
-                VurderingsbehovOgÅrsak(
-                    listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_SØKNAD)),
-                    ÅrsakTilOpprettelse.SØKNAD
-                )
-            )
-    }
 }

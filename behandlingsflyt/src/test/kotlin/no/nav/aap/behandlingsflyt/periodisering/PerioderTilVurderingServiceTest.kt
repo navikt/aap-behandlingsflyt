@@ -1,22 +1,15 @@
 package no.nav.aap.behandlingsflyt.periodisering
 
+import no.nav.aap.behandlingsflyt.help.opprettInMemorySakOgBehandling
 import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
-import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
-import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
-import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryProvider
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Tid
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
-import java.util.*
 
 class PerioderTilVurderingServiceTest {
 
@@ -26,22 +19,7 @@ class PerioderTilVurderingServiceTest {
             LocalDate.now(),
             Tid.MAKS
         )
-        val sak = InMemorySakRepository.finnEllerOpprett(
-            Person(
-                identifikator = UUID.randomUUID(),
-                identer = emptyList(),
-            ), periode.fom
-        )
-
-        val behandling = InMemoryBehandlingRepository.opprettBehandling(
-            sak.id,
-            TypeBehandling.Førstegangsbehandling,
-            null,
-            VurderingsbehovOgÅrsak(
-                listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_SØKNAD)),
-                ÅrsakTilOpprettelse.SØKNAD
-            )
-        )
+        val (sak, behandling) = opprettInMemorySakOgBehandling()
 
         val flytKontekstMedPeriodeService = FlytKontekstMedPeriodeService(
             inMemoryRepositoryProvider,
