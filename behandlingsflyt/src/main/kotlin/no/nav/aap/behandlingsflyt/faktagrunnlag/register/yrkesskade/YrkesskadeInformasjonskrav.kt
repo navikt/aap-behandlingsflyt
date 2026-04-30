@@ -104,13 +104,14 @@ class YrkesskadeInformasjonskrav internal constructor(
     ): Yrkesskade? {
         val mottattDokumenter = mottattDokumentRepository.hentDokumenterAvType(id, InnsendingType.SØKNAD)
 
-        if (harOppgittYrkesskade(mottattDokumenter)) {
+        // FIXME Thao: Sjekk om det er behov for denne
+        /*if (harOppgittYrkesskade(mottattDokumenter)) {
             if (Miljø.er() in listOf(MiljøKode.DEV, MiljøKode.LOKALT)) {
                 return fakeOppgittYrkesskade(periode)
             }
 
-            /* TODO: Modeller og vis informasjon fra søknad i kelvin. */
-        }
+            *//* TODO: Modeller og vis informasjon fra søknad i kelvin. *//*
+        }*/
 
         return null
     }
@@ -125,22 +126,23 @@ class YrkesskadeInformasjonskrav internal constructor(
         }
     }
 
+    // FIXME Thao: Fjern denne da det ikke er behov
     private fun fakeOppgittYrkesskade(
         periode: Periode?
     ): Yrkesskade {
         check(Miljø.er() in listOf(MiljøKode.DEV, MiljøKode.LOKALT))
         check(!Miljø.erProd())
 
-        val skadedato = if (periode != null) {
-            periode.fom.minusDays(60)
-        } else {
-            null
-        }
         return Yrkesskade(
             ref = "YRK" + "-" + Math.floor(Math.random() * 100),
-            saksnummer = null,
+            saksnummer = (10000000..99999999).random(),
             kildesystem = "KELVIN",
-            skadedato = skadedato,
+            skadedato = periode?.fom?.minusDays(60),
+            vedtaksdato = periode?.fom?.minusDays(35),
+            skadeart = "Brudd",
+            diagnose = "Forstuing",
+            skadekombinasjoner = listOf(SkadekombinasjonRegister(kroppsdel = "Venstre legg", skadetype = "Brudd")),
+            skadekombinasjonerTekst = null
         )
     }
 

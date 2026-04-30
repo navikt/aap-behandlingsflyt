@@ -275,7 +275,7 @@ private fun genererBarn(dto: TestBarn): TestPerson {
 
 private fun mapTilSøknad(dto: OpprettTestcaseDTO, urelaterteBarn: List<TestPerson>): SøknadV0 {
     val erStudent = if (dto.student) StudentStatus.Ja else StudentStatus.Nei
-    val harYrkesskade = if (dto.yrkesskade) "JA" else "NEI"
+    val harYrkesskade = if (dto.harYrkesskadeFraSøknad) "JA" else "NEI"
 
     val oppgitteBarn = if (urelaterteBarn.isNotEmpty()) {
         OppgitteBarn(
@@ -320,10 +320,18 @@ private fun sendInnSøknad(dto: OpprettTestcaseDTO, gatewayProvider: GatewayProv
         TestPerson(
             identer = setOf(ident),
             fødselsdato = Fødselsdato(dto.fødselsdato),
-            yrkesskade = if (dto.yrkesskade) listOf(
-                TestYrkesskade(),
-                TestYrkesskade(skadedato = null, saksreferanse = "ABCDE")
-            ) else emptyList(),
+            yrkesskade = dto.yrkesskader.mapNotNull { entry ->
+                when (entry) {
+                    is TestYrkesskadeDto.Søknad -> if (entry.harYrkesskade) TestYrkesskade() else null
+                    is TestYrkesskadeDto.Register -> TestYrkesskade(
+                        skadedato = entry.skadedato,
+                        saksreferanse = entry.saksreferanse,
+                        skadeart = entry.skadeart,
+                        diagnose = entry.diagnose,
+                        skadebeskrivelse = entry.skadebeskrivelse,
+                    )
+                }
+            },
             uføre = dto.uføre?.let {
                 Uføre(
                     virkningstidspunkt = dto.uføreTidspunkt!!,
@@ -464,7 +472,7 @@ private fun opprettNySakOgBehandling(
 
         if (harBehandlingsgrunnlag) {
             // Yrkesskade
-            if (dto.yrkesskade) {
+            if (dto.harYrkesskade) {
                 if (dto.steg == StegType.VURDER_YRKESSKADE) return sak
                 løsYrkesSkade(behandling)
             }
@@ -480,7 +488,7 @@ private fun opprettNySakOgBehandling(
             }
 
             // Forutgående medlemskap
-            if (dto.yrkesskade) {
+            if (dto.harYrkesskade) {
                 løsFastsettYrkesskadeInntekt(behandling)
             }
             if (dto.steg == StegType.VURDER_MEDLEMSKAP) return sak

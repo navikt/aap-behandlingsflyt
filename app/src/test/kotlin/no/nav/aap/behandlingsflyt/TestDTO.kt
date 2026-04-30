@@ -1,12 +1,14 @@
 package no.nav.aap.behandlingsflyt
 
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.fasterxml.jackson.annotation.JsonSubTypes
+import com.fasterxml.jackson.annotation.JsonTypeInfo
 import com.papsign.ktor.openapigen.annotations.Response
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjonstype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Oppholdstype
-import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.AndreUtbetalingerDto
+import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.komponenter.verdityper.Beløp
 import org.jetbrains.annotations.NotNull
@@ -18,10 +20,29 @@ data class Institusjoner(
     val sykehus: Boolean? = false,
 )
 
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "kilde")
+@JsonSubTypes(
+    JsonSubTypes.Type(value = TestYrkesskadeDto.Søknad::class, name = "SØKNAD"),
+    JsonSubTypes.Type(value = TestYrkesskadeDto.Register::class, name = "REGISTER"),
+)
+sealed class TestYrkesskadeDto {
+    data class Søknad(
+        val harYrkesskade: Boolean = false,
+    ) : TestYrkesskadeDto()
+
+    data class Register(
+        val skadeart: String,
+        val diagnose: String,
+        val skadebeskrivelse: String,
+        val skadedato: LocalDate? = LocalDate.now(),
+        val saksreferanse: String = "1234",
+    ) : TestYrkesskadeDto()
+}
+
 @Response(statusCode = 202)
 data class OpprettTestcaseDTO(
     @param:JsonProperty(value = "fødselsdato", required = true) val fødselsdato: LocalDate,
-    @param:NotNull @param:JsonProperty(value = "yrkesskade", defaultValue = "false") val yrkesskade: Boolean,
+    @param:NotNull @param:JsonProperty(value = "yrkesskader") val yrkesskader: List<TestYrkesskadeDto> = emptyList(),
     @param:JsonProperty(value = "uføre") val uføre: Int?,
     @param:JsonProperty(value = "uføretidspunkt") val uføreTidspunkt: LocalDate?,
     @param:JsonProperty(value = "uføregradTom") val uføregradTom: LocalDate?,
@@ -40,7 +61,14 @@ data class OpprettTestcaseDTO(
     val steg: StegType? = null,
     val erArbeidsevnenNedsatt: Boolean = true,
     val erNedsettelseIArbeidsevneMerEnnHalvparten: Boolean = true,
-)
+) {
+    // Bakoverkompatibilitet for eksisterende tester
+    val harYrkesskadeFraSøknad: Boolean
+        get() = yrkesskader.any { it is TestYrkesskadeDto.Søknad && it.harYrkesskade }
+
+    val harYrkesskade: Boolean
+        get() = harYrkesskadeFraSøknad || yrkesskader.any { it is TestYrkesskadeDto.Register }
+}
 
 data class LeggTilInstitusjonsoppholdDTO(
     @param:JsonProperty(value = "opphold", required = true)

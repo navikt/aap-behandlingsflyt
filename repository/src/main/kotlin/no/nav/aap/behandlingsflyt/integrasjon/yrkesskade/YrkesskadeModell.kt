@@ -17,5 +17,14 @@ data class YrkesskadeModell(
     val skadedato: LocalDate?,
     val kildetabell: String,
     val kildesystem: String,
-    val saksreferanse: String
+    val saksreferanse: String,
+    val eksternreferanser: List<String>?,
+    val skadekombinasjoner: List<SkadekombinasjonModell>?,
+    val skadekombinasjonerTekst: String?,
+    val saksbehandlingsansvarligIdent: String?
+)
+
+data class SkadekombinasjonModell(
+    val kroppsdel: String,
+    val skadetype: String,
 )

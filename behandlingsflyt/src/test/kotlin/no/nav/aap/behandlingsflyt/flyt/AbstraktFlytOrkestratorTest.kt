@@ -1399,7 +1399,7 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
                 )
             )
             else listOf(PdlStatsborgerskap("NOR", LocalDate.now().minusYears(5), LocalDate.now())),
-            yrkesskade = if (harYrkesskade) listOf(TestYrkesskade()) else emptyList(),
+            yrkesskade = if (harYrkesskade) listOf(TestYrkesskade()) else emptyList(), // FIXME Thao: Her skal vi lage yrkesskade i register separat ift. søknad.
             personStatus = if (!harUtenlandskOpphold) listOf(
                 PdlFolkeregisterPersonStatus(
                     PersonStatus.bosatt,
