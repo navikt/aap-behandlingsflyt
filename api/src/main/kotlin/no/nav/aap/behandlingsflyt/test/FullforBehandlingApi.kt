@@ -4,6 +4,8 @@ import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.path.normal.post
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
+import com.papsign.ktor.openapigen.route.tag
+import no.nav.aap.behandlingsflyt.Tags
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
@@ -29,7 +31,7 @@ fun NormalOpenAPIRoute.fullførBehandlingApi(
 ) {
     val service = TestBehandlingFullføringService(dataSource, repositoryRegistry, gatewayProvider)
     if (Miljø.erProd()) return
-    route("/api/test/opprettOgFullforBehandling") {
+    route("/api/test/opprettOgFullforBehandling").tag(Tags.Dolly) {
         @Suppress("UnauthorizedPost")
         post<Unit, OpprettOgFullforBehandlingRespons, OpprettOgFullforBehandlingRequest> { _, req ->
             require(!Miljø.erProd()) { "Ikke tilgjengelig i produksjonsmiljøet" }
@@ -52,7 +54,7 @@ fun NormalOpenAPIRoute.fullførBehandlingApi(
         }
     }
 
-    route("/api/test/behandlingStatus") {
+    route("/api/test/behandlingStatus").tag(Tags.Dolly) {
         @Suppress("UnauthorizedPost")
         post<Unit, BehandlingStatusRespons, BehandlingStatusRequest> { _, req ->
             require(!Miljø.erProd()) { "Ikke tilgjengelig i produksjonsmiljøet" }
