@@ -5,29 +5,18 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fød
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.BarnIdentifikator
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurderingAvForeldreAnsvar
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurdertBarn
-import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
+import no.nav.aap.behandlingsflyt.help.opprettInMemorySakOgBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonId
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
-import no.nav.aap.behandlingsflyt.test.modell.genererIdent
-import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
-import java.util.*
 
 class InMemoryBarnRepositoryTest {
 
 
     @Test
     fun `Finner ikke barn hvis det ikke finnes barn`() {
-        val (_, behandling) = opprettPersonBehandlingOgSak()
+        val (_, behandling) = opprettInMemorySakOgBehandling()
 
         val barnRepository = InMemoryBarnRepository
         val barn = barnRepository.hentHvisEksisterer(behandling.id)
@@ -56,7 +45,7 @@ class InMemoryBarnRepositoryTest {
             )
         }
 
-        val (_, behandling) = opprettPersonBehandlingOgSak()
+        val (_, behandling) = opprettInMemorySakOgBehandling()
 
         val barnRepository = InMemoryBarnRepository
 
@@ -95,28 +84,4 @@ class InMemoryBarnRepositoryTest {
         assertThat(barnRepository.hentHvisEksisterer(behandling.id)).isNull()
 
     }
-
-    private fun opprettPersonBehandlingOgSak(): Pair<Sak, Behandling> {
-        val person =
-            Person(
-                Random().nextLong().let(::PersonId),
-                UUID.randomUUID(),
-                listOf(genererIdent(LocalDate.now().minusYears(23)))
-            )
-        val sak = InMemorySakRepository.finnEllerOpprett(
-            person,
-            periode = Periode(LocalDate.now(), LocalDate.now().plusDays(5)),
-        )
-        val behandling = InMemoryBehandlingRepository.opprettBehandling(
-            sakId = sak.id,
-            typeBehandling = TypeBehandling.Førstegangsbehandling,
-            forrigeBehandlingId = null,
-            vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
-                vurderingsbehov = listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_SØKNAD)),
-                årsak = ÅrsakTilOpprettelse.SØKNAD,
-            ),
-        )
-        return Pair(sak, behandling)
-    }
-
 }
