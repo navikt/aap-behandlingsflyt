@@ -85,7 +85,7 @@ object FakeServers : AutoCloseable {
     private val allFakes: List<FakeServer> = listOf(
         texas, brev, yrkesskade, pdl, popp, oppgavestyring, inst2, sam, medl, tilgang, foreldrepenger, pesys,
         sykepenger, statistikk, dokumentinnhenting, ainntekt, aareg, datadeling, utbetal, meldekort, tjenestePensjon,
-        unleash, nom, norg, kabal, ereg, dagpenger, tiltakspenger, gosys, leaderElector, dokarkiv
+        unleash, nom, norg, kabal, ereg, dagpenger, tiltakspenger, gosys, leaderElector, dokarkiv, pdfGen
     )
 
     private lateinit var fakePersoner: TestPersonService
@@ -251,8 +251,9 @@ object FakeServers : AutoCloseable {
         // LeaderElector
         System.setProperty("ELECTOR_GET_URL", "http://localhost:${leaderElector.port()}")
 
-//        // aap-saksbehandling-pdf
+        // aap-saksbehandling-pdf
         System.setProperty("integrasjon.pdfgen.url", "http://localhost:${pdfGen.port()}")
+        System.setProperty("integrasjon.pdfgen.scope", "scope")
     }
 
     override fun close() {
