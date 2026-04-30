@@ -21,6 +21,7 @@ import no.nav.aap.behandlingsflyt.test.fakes.MeldekortFake
 import no.nav.aap.behandlingsflyt.test.fakes.NomFake
 import no.nav.aap.behandlingsflyt.test.fakes.NorgFake
 import no.nav.aap.behandlingsflyt.test.fakes.OppgavestyringFake
+import no.nav.aap.behandlingsflyt.test.fakes.PdfgenFake
 import no.nav.aap.behandlingsflyt.test.fakes.PdlFake
 import no.nav.aap.behandlingsflyt.test.fakes.PesysFake
 import no.nav.aap.behandlingsflyt.test.fakes.PoppFake
@@ -64,6 +65,7 @@ object FakeServers : AutoCloseable {
     private val nom = NomFake()
     private val norg = NorgFake()
     private val leaderElector = LeaderElectorFake()
+    private val pdfGen = PdfgenFake()
 
     // Fakes needing fakePersoner - lazy lambda
     private val pdl = PdlFake { fakePersoner }
@@ -83,7 +85,7 @@ object FakeServers : AutoCloseable {
     private val allFakes: List<FakeServer> = listOf(
         texas, brev, yrkesskade, pdl, popp, oppgavestyring, inst2, sam, medl, tilgang, foreldrepenger, pesys,
         sykepenger, statistikk, dokumentinnhenting, ainntekt, aareg, datadeling, utbetal, meldekort, tjenestePensjon,
-        unleash, nom, norg, kabal, ereg, dagpenger, tiltakspenger, gosys, leaderElector, dokarkiv
+        unleash, nom, norg, kabal, ereg, dagpenger, tiltakspenger, gosys, leaderElector, dokarkiv, pdfGen
     )
 
     private lateinit var fakePersoner: TestPersonService
@@ -248,6 +250,10 @@ object FakeServers : AutoCloseable {
 
         // LeaderElector
         System.setProperty("ELECTOR_GET_URL", "http://localhost:${leaderElector.port()}")
+
+        // aap-saksbehandling-pdf
+        System.setProperty("integrasjon.pdfgen.url", "http://localhost:${pdfGen.port()}")
+        System.setProperty("integrasjon.pdfgen.scope", "scope")
     }
 
     override fun close() {
