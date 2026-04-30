@@ -15,7 +15,6 @@ enum class BehandlingsflytFeature : FeatureToggle {
     MigrerStansOgOpphor,
     hentTiltakspengerPerioder,
     AvslagLovvalgMedlemskap,
-    ForutgaaendeForbedringer,
     ForeslaaVedtakVedtakslengde,
     SamordningFaktagrunnlagBrev,
     ;
