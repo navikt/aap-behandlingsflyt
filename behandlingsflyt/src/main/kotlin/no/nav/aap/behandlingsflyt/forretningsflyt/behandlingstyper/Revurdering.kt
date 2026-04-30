@@ -241,7 +241,6 @@ object Revurdering : BehandlingType {
                     Vurderingsbehov.REVURDER_YRKESSKADE,
                     Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND,
                     Vurderingsbehov.HELHETLIG_VURDERING,
-                    Vurderingsbehov.REVURDER_LOVVALG,
                 )
             )
             .medSteg(
@@ -252,7 +251,6 @@ object Revurdering : BehandlingType {
                     Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND,
                     Vurderingsbehov.REVURDER_SYKEPENGEERSTATNING,
                     Vurderingsbehov.HELHETLIG_VURDERING,
-                    Vurderingsbehov.REVURDER_LOVVALG,
                 )
             )
             .medSteg(steg = FastsettSykdomsvilkåretSteg, vurderingsbehovRelevanteForSteg = Vurderingsbehov.alle())
@@ -263,7 +261,6 @@ object Revurdering : BehandlingType {
                     Vurderingsbehov.REVURDER_YRKESSKADE,
                     Vurderingsbehov.VURDER_RETTIGHETSPERIODE,
                     Vurderingsbehov.HELHETLIG_VURDERING,
-                    Vurderingsbehov.REVURDER_LOVVALG,
                     Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP,
                 )
             )
@@ -379,7 +376,6 @@ object Revurdering : BehandlingType {
                     Vurderingsbehov.REVURDER_SAMORDNING_ANDRE_STATLIGE_YTELSER,
                     Vurderingsbehov.VURDER_RETTIGHETSPERIODE,
                     Vurderingsbehov.HELHETLIG_VURDERING,
-                    Vurderingsbehov.REVURDER_LOVVALG,
                     Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP,
                 )
             )
