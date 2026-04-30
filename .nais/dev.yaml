@@ -137,6 +137,7 @@ spec:
           namespace: teamdagpenger
         - application: tiltakspenger-datadeling
           namespace: tpts
+        - application: aap-saksbehandling-pdfgen
 
   env:
     - name: INTEGRASJON_PDL_URL
@@ -267,3 +268,5 @@ spec:
       value: https://dokarkiv-q2.dev-fss-pub.nais.io
     - name: INTEGRASJON_DOKARKIV_SCOPE
       value: api://dev-fss.teamdokumenthandtering.dokarkiv/.default
+    - name: INTEGRASJON_PDFGEN_URL
+      value: http://aap-saksbehandling-pdfgen

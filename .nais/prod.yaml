@@ -131,6 +131,7 @@ spec:
           namespace: team-rocket
         - application: logging
           namespace: nais-system
+        - application: aap-saksbehandling-pdfgen
         - application: dp-datadeling
           namespace: teamdagpenger
         - application: tiltakspenger-datadeling
@@ -263,3 +264,5 @@ spec:
       value: https://dokarkiv.prod-fss-pub.nais.io
     - name: INTEGRASJON_DOKARKIV_SCOPE
       value: api://prod-fss.teamdokumenthandtering.dokarkiv/.default
+    - name: INTEGRASJON_PDFGEN_URL
+      value: http://aap-saksbehandling-pdfgen

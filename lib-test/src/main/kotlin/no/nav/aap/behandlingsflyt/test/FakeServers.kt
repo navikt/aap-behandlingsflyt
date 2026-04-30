@@ -21,6 +21,7 @@ import no.nav.aap.behandlingsflyt.test.fakes.MeldekortFake
 import no.nav.aap.behandlingsflyt.test.fakes.NomFake
 import no.nav.aap.behandlingsflyt.test.fakes.NorgFake
 import no.nav.aap.behandlingsflyt.test.fakes.OppgavestyringFake
+import no.nav.aap.behandlingsflyt.test.fakes.PdfgenFake
 import no.nav.aap.behandlingsflyt.test.fakes.PdlFake
 import no.nav.aap.behandlingsflyt.test.fakes.PesysFake
 import no.nav.aap.behandlingsflyt.test.fakes.PoppFake
@@ -64,6 +65,7 @@ object FakeServers : AutoCloseable {
     private val nom = NomFake()
     private val norg = NorgFake()
     private val leaderElector = LeaderElectorFake()
+    private val pdfGen = PdfgenFake()
 
     // Fakes needing fakePersoner - lazy lambda
     private val pdl = PdlFake { fakePersoner }
@@ -248,6 +250,9 @@ object FakeServers : AutoCloseable {
 
         // LeaderElector
         System.setProperty("ELECTOR_GET_URL", "http://localhost:${leaderElector.port()}")
+
+//        // aap-saksbehandling-pdf
+        System.setProperty("integrasjon.pdfgen.url", "http://localhost:${pdfGen.port()}")
     }
 
     override fun close() {
