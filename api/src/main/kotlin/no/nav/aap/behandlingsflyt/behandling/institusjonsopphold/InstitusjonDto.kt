@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.institusjonsopphold
 
-import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
+import no.nav.aap.behandlingsflyt.behandling.vurdering.VurderingerMetaResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjon
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.flate.OppholdVurdering
 import no.nav.aap.komponenter.tidslinje.Segment
@@ -61,15 +61,14 @@ data class HelseinstitusjonVurderingDto(
     val forsoergerEktefelle: Boolean? = null,
     val harFasteUtgifter: Boolean? = null,
     val periode: Periode,
-    val vurdertAv: VurdertAvResponse?,
-    val besluttetAv: VurdertAvResponse?
+    val vurderingerMeta: VurderingerMetaResponse,
 )
 
 data class SoningsGrunnlagDto(
     val harTilgangTilÅSaksbehandle: Boolean,
     val soningsforhold: List<InstitusjonsoppholdDto>,
     val vurderinger: List<SoningsforholdDto>,
-    val vurdertAv: VurdertAvResponse?
+    val vurderingerMeta: VurderingerMetaResponse?,
 )
 
 data class SoningsforholdDto(

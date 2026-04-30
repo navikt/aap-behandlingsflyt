@@ -3,8 +3,7 @@ package no.nav.aap.behandlingsflyt.behandling.barnetillegg
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
-import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
-import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
+import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Barn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnRepository
@@ -40,7 +39,6 @@ fun NormalOpenAPIRoute.barnetilleggApi(
     repositoryRegistry: RepositoryRegistry,
     gatewayProvider: GatewayProvider,
 ) {
-    val ansattInfoService = AnsattInfoService(gatewayProvider)
     route("/api/barnetillegg") {
         route("/grunnlag/{referanse}") {
             getGrunnlag<BehandlingReferanse, BarnetilleggDto>(
@@ -58,7 +56,6 @@ fun NormalOpenAPIRoute.barnetilleggApi(
                         behandling,
                         repositoryProvider,
                         gatewayProvider,
-                        ansattInfoService,
                         kanSaksbehandle()
                     )
                 }
@@ -73,11 +70,11 @@ private fun opprettBarnetilleggDto(
     behandling: Behandling,
     repositoryProvider: RepositoryProvider,
     gatewayProvider: GatewayProvider,
-    ansattInfoService: AnsattInfoService,
     harTilgangTilÅSaksbehandle: Boolean
 ): BarnetilleggDto {
     val barnRepository = repositoryProvider.provide<BarnRepository>()
     val barnetilleggService = BarnetilleggService(repositoryProvider, gatewayProvider)
+    val vurdertAvService = VurdertAvService(repositoryProvider, gatewayProvider)
     val barnetilleggTidslinje = barnetilleggService.beregn(behandling.id)
     val barnGrunnlag = barnRepository.hentHvisEksisterer(behandling.id)
 
@@ -87,7 +84,6 @@ private fun opprettBarnetilleggDto(
     val saksbehandlerOppgittBarn = barnGrunnlag?.saksbehandlerOppgitteBarn?.barn.orEmpty()
     val uavklarteBarn = filtrerUavklarteBarn(barnetilleggTidslinje, saksbehandlerOppgittBarn)
     val vurderteBarn = barnRepository.hentVurderteBarnHvisEksisterer(behandling.id)
-    val ansattNavnOgEnhet = vurderteBarn?.let { ansattInfoService.hentAnsattNavnOgEnhet(it.vurdertAv) }
 
     val vurderteBarnDto = vurderteBarn?.barn.orEmpty().map {
         mapTilExtendedVurdertBarnDto(it, barnGrunnlag)
@@ -105,12 +101,14 @@ private fun opprettBarnetilleggDto(
         folkeregisterbarn = folkeregister.map { hentBarn(it.ident, barnGrunnlag) },
         saksbehandlerOppgitteBarn = saksbehandlerOppgittBarn.map { hentBarn(it.identifikator(), barnGrunnlag) },
         vurderteBarn = vurderteOppgittBarnDto,
-        vurdertAv = vurderteBarn?.let {
-            VurdertAvResponse(
-                ident = it.vurdertAv,
-                dato = it.vurdertTidspunkt.toLocalDate(),
-                ansattnavn = ansattNavnOgEnhet?.navn,
-                enhetsnavn = ansattNavnOgEnhet?.enhet
+        vurderingerMeta = vurderteBarn?.let {
+            vurdertAvService.byggVurderingerMeta(
+                definisjon = Definisjon.AVKLAR_BARNETILLEGG,
+                behandlingId = behandling.id,
+                vurdertAv = vurdertAvService.medNavnOgEnhet(
+                    ident = it.vurdertAv,
+                    tidspunkt = it.vurdertTidspunkt,
+                ),
             )
         },
         barnSomTrengerVurdering = uavklarteBarn.map { hentBarn(it, barnGrunnlag) },

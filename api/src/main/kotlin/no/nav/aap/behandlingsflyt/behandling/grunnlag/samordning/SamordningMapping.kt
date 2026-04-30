@@ -1,8 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.grunnlag.samordning
 
-import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
-import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattNavnOgEnhet
-import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
+import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.SamordningAndreStatligeYtelserVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.gateway.DagpengerKilde
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.gateway.DagpengerYtelseType
@@ -11,11 +9,14 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andresta
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.arbeidsgiver.SamordningArbeidsgiverVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingGrunnlag
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UførePeriodeMedEndringStatus
 
 fun mapSamordningAndreStatligeYtelserVurderingDTO(
     vurdering: SamordningAndreStatligeYtelserVurdering,
-    navnOgEnhet: AnsattNavnOgEnhet?
+    behandlingId: BehandlingId,
+    vurdertAvService: VurdertAvService,
 ): SamordningAndreStatligeYtelserVurderingDTO =
     SamordningAndreStatligeYtelserVurderingDTO(
         begrunnelse = vurdering.begrunnelse,
@@ -26,42 +27,43 @@ fun mapSamordningAndreStatligeYtelserVurderingDTO(
                     ytelse = it.ytelse,
                 )
             },
-        vurdertAv =
-            vurdering.let {
-                VurdertAvResponse(
-                    ident = it.vurdertAv,
-                    dato = requireNotNull(it.vurdertTidspunkt?.toLocalDate()) {
-                        "Fant ikke vurdert tidspunkt for samordningAndreStatligeYtelserVurdering"
-                    },
-                    ansattnavn = navnOgEnhet?.navn,
-                    enhetsnavn = navnOgEnhet?.enhet
-                )
-            }
+        vurderingerMeta = vurdertAvService.byggVurderingerMeta(
+            definisjon = Definisjon.SAMORDNING_ANDRE_STATLIGE_YTELSER,
+            behandlingId = behandlingId,
+            vurdertAv = vurdertAvService.medNavnOgEnhet(
+                ident = vurdering.vurdertAv,
+                dato = requireNotNull(vurdering.vurdertTidspunkt?.toLocalDate()) {
+                    "Fant ikke vurdert tidspunkt for samordningAndreStatligeYtelserVurdering"
+                },
+            ),
+        ),
     )
 
 fun mapSamordningArbeidsgiverVurdering(
     vurdering: SamordningArbeidsgiverVurdering,
-    navnOgEnhet: AnsattNavnOgEnhet?
+    behandlingId: BehandlingId,
+    vurdertAvService: VurdertAvService,
 ): SamordningArbeidsgiverVurderingDTO =
     SamordningArbeidsgiverVurderingDTO(
         begrunnelse = vurdering.begrunnelse,
         perioder = vurdering.perioder,
-        vurdertAv = VurdertAvResponse(
-            ident = vurdering.vurdertAv,
-            dato = requireNotNull(vurdering.vurdertTidspunkt?.toLocalDate()) {
-                "Fant ikke vurdert tidspunkt for samordningArbeidsgiverVurdering"
-            },
-            ansattnavn = navnOgEnhet?.navn,
-            enhetsnavn = navnOgEnhet?.enhet
-        )
+        vurderingerMeta = vurdertAvService.byggVurderingerMeta(
+            definisjon = Definisjon.SAMORDNING_ARBEIDSGIVER,
+            behandlingId = behandlingId,
+            vurdertAv = vurdertAvService.medNavnOgEnhet(
+                ident = vurdering.vurdertAv,
+                dato = requireNotNull(vurdering.vurdertTidspunkt?.toLocalDate()) {
+                    "Fant ikke vurdert tidspunkt for samordningArbeidsgiverVurdering"
+                },
+            ),
+        ),
     )
 
 fun mapSamordningVurdering(
     samordning: SamordningVurderingGrunnlag,
-    ansattInfoService: AnsattInfoService
+    behandlingId: BehandlingId,
+    vurdertAvService: VurdertAvService,
 ): SamordningYtelseVurderingDTO {
-    val ansattNavnOgEnhet = ansattInfoService.hentAnsattNavnOgEnhet(samordning.vurdertAv)
-
     return SamordningYtelseVurderingDTO(
         begrunnelse = samordning.begrunnelse,
         vurderinger = samordning.vurderinger.flatMap { vurdering ->
@@ -75,24 +77,25 @@ fun mapSamordningVurdering(
                 )
             }
         },
-        vurdertAv = VurdertAvResponse(
-            ident = samordning.vurdertAv,
-            dato = requireNotNull(samordning.vurdertTidspunkt?.toLocalDate()) {
-                "Fant ikke vurderingstidspunkt for yrkesskadevurdering"
-            },
-            ansattnavn = ansattNavnOgEnhet?.navn,
-            enhetsnavn = ansattNavnOgEnhet?.enhet
+        vurderingerMeta = vurdertAvService.byggVurderingerMeta(
+            definisjon = Definisjon.AVKLAR_SAMORDNING_GRADERING,
+            behandlingId = behandlingId,
+            vurdertAv = vurdertAvService.medNavnOgEnhet(
+                ident = samordning.vurdertAv,
+                dato = requireNotNull(samordning.vurdertTidspunkt?.toLocalDate()) {
+                    "Fant ikke vurderingstidspunkt for yrkesskadevurdering"
+                },
+            ),
         ),
     )
 }
 
 fun mapSamordningUføreVurdering(
     vurdering: SamordningUføreVurdering?,
-    ansattInfoService: AnsattInfoService,
+    behandlingId: BehandlingId,
+    vurdertAvService: VurdertAvService,
 ): SamordningUføreVurderingDTO? =
     vurdering?.let {
-        val navnOgEnhet = ansattInfoService.hentAnsattNavnOgEnhet(it.vurdertAv)
-
         return SamordningUføreVurderingDTO(
             begrunnelse = it.begrunnelse,
             vurderingPerioder =
@@ -102,14 +105,16 @@ fun mapSamordningUføreVurdering(
                         periode.uføregradTilSamordning.prosentverdi()
                     )
                 },
-            vurdertAv = VurdertAvResponse(
-                ident = it.vurdertAv,
-                dato = requireNotNull(it.vurdertTidspunkt?.toLocalDate()) {
-                    "Fant ikke vurderingstidspunkt for samordning uføre"
-                },
-                ansattnavn = navnOgEnhet?.navn,
-                enhetsnavn = navnOgEnhet?.enhet
-            )
+            vurderingerMeta = vurdertAvService.byggVurderingerMeta(
+                definisjon = Definisjon.AVKLAR_SAMORDNING_UFØRE,
+                behandlingId = behandlingId,
+                vurdertAv = vurdertAvService.medNavnOgEnhet(
+                    ident = it.vurdertAv,
+                    dato = requireNotNull(it.vurdertTidspunkt?.toLocalDate()) {
+                        "Fant ikke vurderingstidspunkt for samordning uføre"
+                    },
+                ),
+            ),
         )
     }
 
