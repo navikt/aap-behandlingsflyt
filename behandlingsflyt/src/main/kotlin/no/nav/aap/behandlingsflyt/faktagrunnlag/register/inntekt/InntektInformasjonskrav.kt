@@ -75,12 +75,12 @@ class InntektInformasjonskrav(
     override fun hentData(input: InntektInput): InntektRegisterdata {
         val (person, relevanteÅr, relevanteÅrUføre) = input
         val oppdaterteInntekter = inntektRegisterGateway.innhent(person, relevanteÅr)
-        val EARLIEST_INNTEKT = YearMonth.of(2015, 1)
+        val TIDLIGSTE_MULIGE_INNTEKTSGRUNNLAGDATA = YearMonth.of(2015, 1)
 
         val fom = relevanteÅrUføre.minOfOrNull { it.atMonth(1) }
-            ?.coerceAtLeast(EARLIEST_INNTEKT)
+            ?.coerceAtLeast(TIDLIGSTE_MULIGE_INNTEKTSGRUNNLAGDATA)
         val tom = relevanteÅrUføre.maxOfOrNull { it.atMonth(12) }
-            ?.coerceAtLeast(EARLIEST_INNTEKT)
+            ?.coerceAtLeast(TIDLIGSTE_MULIGE_INNTEKTSGRUNNLAGDATA)
         val inntekter = if (fom != null && tom != null) inntektkomponentenGateway.hentAInntekt(
             person.aktivIdent().identifikator,
             fom,
