@@ -1,8 +1,6 @@
 package no.nav.aap.behandlingsflyt
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import com.fasterxml.jackson.annotation.JsonSubTypes
-import com.fasterxml.jackson.annotation.JsonTypeInfo
 import com.papsign.ktor.openapigen.annotations.Response
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjonstype
@@ -20,24 +18,15 @@ data class Institusjoner(
     val sykehus: Boolean? = false,
 )
 
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "kilde")
-@JsonSubTypes(
-    JsonSubTypes.Type(value = TestYrkesskadeDto.Søknad::class, name = "SØKNAD"),
-    JsonSubTypes.Type(value = TestYrkesskadeDto.Register::class, name = "REGISTER"),
+data class TestYrkesskadeDto(
+    val kilde: String = "REGISTER",         // "SØKNAD" eller "REGISTER"
+    val harYrkesskade: Boolean = false,     // brukes når kilde=SØKNAD
+    val skadeart: String? = null,           // brukes når kilde=REGISTER
+    val diagnose: String? = null,           // brukes når kilde=REGISTER
+    val skadebeskrivelse: String? = null,   // brukes når kilde=REGISTER
+    val skadedato: LocalDate? = LocalDate.now(),
+    val saksreferanse: String = "1234",
 )
-sealed class TestYrkesskadeDto {
-    data class Søknad(
-        val harYrkesskade: Boolean = false,
-    ) : TestYrkesskadeDto()
-
-    data class Register(
-        val skadeart: String,
-        val diagnose: String,
-        val skadebeskrivelse: String,
-        val skadedato: LocalDate? = LocalDate.now(),
-        val saksreferanse: String = "1234",
-    ) : TestYrkesskadeDto()
-}
 
 @Response(statusCode = 202)
 data class OpprettTestcaseDTO(
@@ -62,12 +51,11 @@ data class OpprettTestcaseDTO(
     val erArbeidsevnenNedsatt: Boolean = true,
     val erNedsettelseIArbeidsevneMerEnnHalvparten: Boolean = true,
 ) {
-    // Bakoverkompatibilitet for eksisterende tester
     val harYrkesskadeFraSøknad: Boolean
-        get() = yrkesskader.any { it is TestYrkesskadeDto.Søknad && it.harYrkesskade }
+        get() = yrkesskader.any { it.kilde == "SØKNAD" && it.harYrkesskade }
 
     val harYrkesskade: Boolean
-        get() = harYrkesskadeFraSøknad || yrkesskader.any { it is TestYrkesskadeDto.Register }
+        get() = harYrkesskadeFraSøknad || yrkesskader.any { it.kilde == "REGISTER" }
 }
 
 data class LeggTilInstitusjonsoppholdDTO(

@@ -321,15 +321,16 @@ private fun sendInnSøknad(dto: OpprettTestcaseDTO, gatewayProvider: GatewayProv
             identer = setOf(ident),
             fødselsdato = Fødselsdato(dto.fødselsdato),
             yrkesskade = dto.yrkesskader.mapNotNull { entry ->
-                when (entry) {
-                    is TestYrkesskadeDto.Søknad -> if (entry.harYrkesskade) TestYrkesskade() else null
-                    is TestYrkesskadeDto.Register -> TestYrkesskade(
+                when (entry.kilde) {
+                    "SØKNAD" -> if (entry.harYrkesskade) TestYrkesskade() else null
+                    "REGISTER" -> TestYrkesskade(
                         skadedato = entry.skadedato,
                         saksreferanse = entry.saksreferanse,
                         skadeart = entry.skadeart,
                         diagnose = entry.diagnose,
                         skadebeskrivelse = entry.skadebeskrivelse,
                     )
+                    else -> null
                 }
             },
             uføre = dto.uføre?.let {
