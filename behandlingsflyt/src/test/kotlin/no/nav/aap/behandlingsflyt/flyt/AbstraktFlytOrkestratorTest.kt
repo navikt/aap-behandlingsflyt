@@ -126,7 +126,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.StegTilstand
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
@@ -1448,14 +1447,7 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
             FlytOrkestrator(
                 postgresRepositoryRegistry.provider(connection),
                 gatewayProvider
-            ).forberedOgProsesserBehandling(
-                FlytKontekst(
-                    sakId = behandling.sakId,
-                    behandlingId = behandling.id,
-                    forrigeBehandlingId = behandling.forrigeBehandlingId,
-                    behandlingType = behandling.typeBehandling(),
-                ),
-            )
+            ).forberedOgProsesserBehandling(behandling)
         }
         motor.kjørJobber()
         return hentBehandling(behandling.referanse)

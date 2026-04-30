@@ -58,7 +58,7 @@ githubUser=<github-brukernavn>
 githubPassword=<github-token>
 ```
 
-Token må ha rettighet til å lese pakker. Husk å logg inn token med SSO for NAVIKT-organisasjonen.œ
+Token må ha rettighet til å lese pakker. Husk å logg inn token med SSO for NAVIKT-organisasjonen.
 
 ### Kjøre lokalt
 

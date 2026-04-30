@@ -6,6 +6,7 @@ import java.time.LocalDateTime
 
 data class FatteVedtakGrunnlagDto(
     val harTilgangTilÅSaksbehandle: Boolean,
+    val harGjortVilkårsvurderingerPåBehandling: Boolean,
     val vurderinger: List<TotrinnsVurdering>,
     val historikk: List<Historikk>,
     val besluttetAv: BeslutterDto?

@@ -28,7 +28,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.verdityper.Bruker
@@ -81,21 +80,6 @@ class FlytOrkestrator(
 
     private val log = LoggerFactory.getLogger(javaClass)
 
-    fun opprettKontekst(behandling: Behandling): FlytKontekst {
-        return opprettKontekst(behandling.sakId, behandling.id)
-    }
-
-    fun opprettKontekst(sakId: SakId, behandlingId: BehandlingId): FlytKontekst {
-        val behandling = behandlingRepository.hent(behandlingId)
-
-        return FlytKontekst(
-            sakId = sakId,
-            behandlingId = behandlingId,
-            behandlingType = behandling.typeBehandling(),
-            forrigeBehandlingId = behandling.forrigeBehandlingId
-        )
-    }
-
     fun tilbakeførEtterAtomærBehandling(kontekst: FlytKontekst) {
         val behandling = behandlingRepository.hent(kontekst.behandlingId)
         val behandlingFlyt = behandling.flyt()
@@ -112,13 +96,22 @@ class FlytOrkestrator(
         )
     }
 
-
     fun forberedOgProsesserBehandling(
-        kontekst: FlytKontekst,
+        behandlingId: BehandlingId,
         triggere: List<Vurderingsbehov> = emptyList()
     ) {
-        this.forberedBehandling(kontekst, triggere)
-        this.prosesserBehandling(kontekst)
+        forberedOgProsesserBehandling(
+            behandlingRepository.hent(behandlingId),
+            triggere,
+        )
+    }
+
+    fun forberedOgProsesserBehandling(
+        behandling: Behandling,
+        triggere: List<Vurderingsbehov> = emptyList()
+    ) {
+        this.forberedBehandling(behandling.flytKontekst(), triggere)
+        this.prosesserBehandling(behandling.flytKontekst())
     }
 
     private fun forberedBehandling(kontekst: FlytKontekst, triggere: List<Vurderingsbehov>) {

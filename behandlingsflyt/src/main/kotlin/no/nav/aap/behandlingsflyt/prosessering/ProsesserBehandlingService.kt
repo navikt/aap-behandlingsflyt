@@ -94,9 +94,7 @@ class ProsesserBehandlingService(
 
     private fun kjørAtomærBehandling(opprettetBehandling: BehandlingService.MåBehandlesAtomært) {
         val behandling = opprettetBehandling.nyBehandling
-
-        val kontekst = atomærFlytOrkestrator.opprettKontekst(behandling.sakId, behandling.id)
-        atomærFlytOrkestrator.forberedOgProsesserBehandling(kontekst)
+        atomærFlytOrkestrator.forberedOgProsesserBehandling(behandling)
 
         behandlingRepository.hent(behandling.id).also {
             check(it.status().erAvsluttet()) {
@@ -109,8 +107,7 @@ class ProsesserBehandlingService(
 
         val åpenBehandling = opprettetBehandling.åpenBehandling
         if (åpenBehandling != null) {
-            val kontekst = atomærFlytOrkestrator.opprettKontekst(åpenBehandling.sakId, åpenBehandling.id)
-            atomærFlytOrkestrator.tilbakeførEtterAtomærBehandling(kontekst)
+            atomærFlytOrkestrator.tilbakeførEtterAtomærBehandling(åpenBehandling.flytKontekst())
             triggProsesserBehandling(åpenBehandling, emptyList())
         } else if (skalInnhenteInformasjon(opprettetBehandling.nyBehandling.vurderingsbehov().map { it.type })) {
             flytJobbRepository.leggTil(

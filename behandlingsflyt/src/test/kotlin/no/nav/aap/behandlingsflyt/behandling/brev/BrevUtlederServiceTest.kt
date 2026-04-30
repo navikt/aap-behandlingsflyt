@@ -45,6 +45,13 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.Over
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.UføreSøknadVedtakResultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdomsvurderingbrev.SykdomsvurderingForBrev
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdomsvurderingbrev.SykdomsvurderingForBrevRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.SamordningAndreStatligeYtelserRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.arbeidsgiver.SamordningArbeidsgiverRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.barnepensjon.BarnepensjonRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.refusjonskrav.TjenestepensjonRefusjonsKravVurderingRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.sykestipend.SykestipendRepository
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
@@ -104,6 +111,13 @@ class BrevUtlederServiceTest {
     val avbrytRevurderingService = mockk<AvbrytRevurderingService>()
     val vedtakslengdeService = mockk<VedtakslengdeService>()
     val unleashGateway = mockk<UnleashGateway>()
+    val samordningVurderingRepository = mockk<SamordningVurderingRepository>()
+    val samordningUføreRepository = mockk<SamordningUføreRepository>()
+    val samordningArbeidsgiverRepository = mockk<SamordningArbeidsgiverRepository>()
+    val tjenestepensjonRefusjonsKravVurderingRepository = mockk<TjenestepensjonRefusjonsKravVurderingRepository>()
+    val sykestipendRepository = mockk<SykestipendRepository>()
+    val barnepensjonRepository = mockk<BarnepensjonRepository>()
+    val samordningAndreStatligeYtelserRepository = mockk<SamordningAndreStatligeYtelserRepository>()
     val brevUtlederService = BrevUtlederService(
         resultatUtleder = ResultatUtleder(
             underveisRepository = underveisRepository,
@@ -124,6 +138,13 @@ class BrevUtlederServiceTest {
         overgangUføreRepository = overgangUføreRepository,
         vedtakslengdeService = vedtakslengdeService,
         unleashGateway = unleashGateway,
+        samordningVurderingRepository = samordningVurderingRepository,
+        samordningUføreRepository = samordningUføreRepository,
+        samordningArbeidsgiverRepository = samordningArbeidsgiverRepository,
+        tjenestepensjonRefusjonsKravVurderingRepository = tjenestepensjonRefusjonsKravVurderingRepository,
+        sykestipendRepository = sykestipendRepository,
+        barnepensjonRepository = barnepensjonRepository,
+        samordningAndreStatligeYtelserRepository = samordningAndreStatligeYtelserRepository,
     )
     val virkningstidspunkt = 1 januar 2025
 
@@ -138,6 +159,14 @@ class BrevUtlederServiceTest {
         every { tilkjentYtelseRepository.hentHvisEksisterer(any<BehandlingId>()) } returns stubTilkjentYtelse()
         every { trukketSøknadService.søknadErTrukket(any<BehandlingId>()) } returns false
         every { avbrytRevurderingService.revurderingErAvbrutt(any<BehandlingId>()) } returns false
+        every { samordningVurderingRepository.hentHvisEksisterer(any<BehandlingId>()) } returns null
+        every { samordningUføreRepository.hentHvisEksisterer(any<BehandlingId>()) } returns null
+        every { samordningArbeidsgiverRepository.hentHvisEksisterer(any<BehandlingId>()) } returns null
+        every { tjenestepensjonRefusjonsKravVurderingRepository.hentHvisEksisterer(any<BehandlingId>()) } returns null
+        every { sykestipendRepository.hentHvisEksisterer(any<BehandlingId>()) } returns null
+        every { barnepensjonRepository.hentHvisEksisterer(any<BehandlingId>()) } returns null
+        every { samordningAndreStatligeYtelserRepository.hentHvisEksisterer(any<BehandlingId>()) } returns null
+        every { unleashGateway.isEnabled(BehandlingsflytFeature.SamordningFaktagrunnlagBrev) } returns true
     }
 
     @Nested

@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.behandling.brev.Avslag
 import no.nav.aap.behandlingsflyt.behandling.brev.BrevBehov
 import no.nav.aap.behandlingsflyt.behandling.brev.GrunnlagBeregning
 import no.nav.aap.behandlingsflyt.behandling.brev.Innvilgelse
+import no.nav.aap.behandlingsflyt.behandling.brev.ForholdTilAndreYtelser
 import no.nav.aap.behandlingsflyt.behandling.brev.TilkjentYtelse
 import no.nav.aap.behandlingsflyt.behandling.brev.UtvidVedtakslengde
 import no.nav.aap.behandlingsflyt.behandling.brev.VurderesForUføretrygd
@@ -333,6 +334,10 @@ class BrevGateway : BrevbestillingGateway {
                     if(brevBehov.sykdomsvurdering != null) {
                         add(Faktagrunnlag.Sykdomsvurdering(brevBehov.sykdomsvurdering!!))
                     }
+
+                    brevBehov.forholdTilAndreYtelser?.let { forholdTilAndreYtelser ->
+                        add(forholdTilAndreYtelserTilFaktagrunnlag(forholdTilAndreYtelser))
+                    }
                 }
 
             is VurderesForUføretrygd -> {
@@ -411,5 +416,57 @@ class BrevGateway : BrevbestillingGateway {
             },
         )
 
+    }
+
+    private fun forholdTilAndreYtelserTilFaktagrunnlag(forholdTilAndreYtelser: ForholdTilAndreYtelser): Faktagrunnlag {
+        return Faktagrunnlag.ForholdTilAndreYtelser(
+            fradragAndreYtelser = forholdTilAndreYtelser.fradragAndreYtelser.map { periode ->
+                Faktagrunnlag.ForholdTilAndreYtelser.FradragYtelse(
+                    ytelseNavn = periode.ytelseNavn,
+                    fraOgMed = periode.fraOgMed,
+                    tilOgMed = periode.tilOgMed,
+                )
+            },
+            reduksjonArbeidsgiver = forholdTilAndreYtelser.reduksjonArbeidsgiver.map { periode ->
+                Faktagrunnlag.ForholdTilAndreYtelser.ReduksjonArbeidsgiver(
+                    fraOgMed = periode.fraOgMed,
+                    tilOgMed = periode.tilOgMed,
+                )
+            },
+            refusjonskravTjenestepensjon = forholdTilAndreYtelser.refusjonskravTjenestepensjon?.let { tp ->
+                Faktagrunnlag.ForholdTilAndreYtelser.RefusjonskravTjenestepensjon(
+                    skalEtterbetalingHoldesIgjen = tp.skalEtterbetalingHoldesIgjen,
+                    fraOgMed = tp.fraOgMed,
+                    tilOgMed = tp.tilOgMed,
+                )
+            },
+            samordningAndreYtelser = forholdTilAndreYtelser.samordningAndreYtelser.map { samordning ->
+                Faktagrunnlag.ForholdTilAndreYtelser.SamordningYtelse(
+                    ytelseNavn = samordning.ytelseNavn,
+                    gradering = samordning.gradering,
+                    fraOgMed = samordning.fraOgMed,
+                    tilOgMed = samordning.tilOgMed,
+                )
+            },
+            samordningBarnepensjon = forholdTilAndreYtelser.samordningBarnepensjon.map { bp ->
+                Faktagrunnlag.ForholdTilAndreYtelser.SamordningBarnepensjon(
+                    fraOgMed = bp.fraOgMed,
+                    tilOgMed = bp.tilOgMed,
+                    månedsats = bp.månedsats,
+                )
+            },
+            samordningUføre = forholdTilAndreYtelser.samordningUføre.map { uføre ->
+                Faktagrunnlag.ForholdTilAndreYtelser.SamordningUføre(
+                    virkningstidspunkt = uføre.virkningstidspunkt,
+                    uføregradProsent = uføre.uføregradProsent,
+                )
+            },
+            sykestipend = forholdTilAndreYtelser.sykestipend.map { s ->
+                Faktagrunnlag.ForholdTilAndreYtelser.Sykestipend(
+                    fraOgMed = s.fraOgMed,
+                    tilOgMed = s.tilOgMed,
+                )
+            },
+        )
     }
 }

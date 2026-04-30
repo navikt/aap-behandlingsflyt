@@ -12,7 +12,7 @@ data class SamordningYtelseVurderingGrunnlag(
 ) : Faktagrunnlag
 
 /**
- * Grunnlag fra smordningssteget som brukes i følgende steg.
+ * Grunnlag fra samordningssteget som brukes i følgende steg.
  *
  * Alle fakta ligger i [SamordningYtelseVurderingGrunnlag] og
  * lagres ned som [no.nav.aap.behandlingsflyt.faktagrunnlag.Faktagrunnlag] sammen med denne.

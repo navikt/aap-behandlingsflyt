@@ -18,7 +18,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.AzureTokenGen
-import no.nav.aap.behandlingsflyt.test.FakeServers
+import no.nav.aap.behandlingsflyt.test.fakes.TestToken
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
 import no.nav.aap.komponenter.config.requiredConfigForKey
@@ -64,7 +64,7 @@ open class BaseApiTest {
             responseHandler = DefaultResponseHandler()
         )
         return OidcToken(
-            client.post<Map<String, String>, FakeServers.TestToken>(
+            client.post<Map<String, String>, TestToken>(
                 URI.create(requiredConfigForKey("nais.token.exchange.endpoint")),
                 PostRequest(body = mapOf(
                     "user_token" to AzureTokenGen("audience").generate(false, "behandlingsflyt", "Z123456"),

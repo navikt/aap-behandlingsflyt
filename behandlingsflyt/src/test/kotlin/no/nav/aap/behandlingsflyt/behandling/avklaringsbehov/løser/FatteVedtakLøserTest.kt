@@ -12,7 +12,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonId
@@ -25,7 +24,6 @@ import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
 import no.nav.aap.behandlingsflyt.test.modell.genererIdent
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.repository.RepositoryRegistry
-import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
@@ -41,7 +39,7 @@ class FatteVedtakLøserTest {
     @Test
     fun `Skal ikke reåpne behov før det som det returneres til`() {
 
-        val (sak, behandling) = opprettPersonBehandlingOgSak()
+        val (_, behandling) = opprettPersonBehandlingOgSak()
         val avklaringsbehovRepository = InMemoryAvklaringsbehovRepository
 
         // Oppretter avklaringsbehov på soning
@@ -77,12 +75,7 @@ class FatteVedtakLøserTest {
         fatteVedtakLøser.løs(
             AvklaringsbehovKontekst(
                 bruker = Bruker("123"),
-                kontekst = FlytKontekst(
-                    sakId = sak.id,
-                    behandlingId = behandling.id,
-                    forrigeBehandlingId = behandling.forrigeBehandlingId,
-                    behandlingType = TypeBehandling.Førstegangsbehandling,
-                )
+                kontekst = behandling.flytKontekst()
             ),
             løsning = FatteVedtakLøsning(
                 vurderinger = listOf(

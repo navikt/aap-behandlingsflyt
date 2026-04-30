@@ -511,16 +511,6 @@ class StatistikkJobbUtførerTest {
         }, LocalDateTime::class.java).isEqualTo(
             AvsluttetBehandlingDTO(
                 tilkjentYtelse = TilkjentYtelseDTO(perioder = emptyList()),
-                beregningsGrunnlag = BeregningsgrunnlagDTO(
-                    grunnlag11_19dto = Grunnlag11_19DTO(
-                        inntekter = emptyMap(),
-                        grunnlaget = 7.0,
-                        er6GBegrenset = false,
-                        erGjennomsnitt = false,
-                    ),
-                    nedsattArbeidsevneEllerStudieevneDato = nedsattArbeidsevneDato,
-                    ytterligereNedsattArbeidsevneDato = null,
-                ),
                 vilkårsResultat = VilkårsResultatDTO(
                     typeBehandling = TypeBehandling.Førstegangsbehandling, vilkår = listOf(
                         VilkårDTO(
@@ -539,6 +529,16 @@ class StatistikkJobbUtførerTest {
                         )
                     )
                 ),
+                beregningsGrunnlag = BeregningsgrunnlagDTO(
+                    grunnlag11_19dto = Grunnlag11_19DTO(
+                        inntekter = emptyMap(),
+                        grunnlaget = 7.0,
+                        er6GBegrenset = false,
+                        erGjennomsnitt = false,
+                    ),
+                    nedsattArbeidsevneEllerStudieevneDato = nedsattArbeidsevneDato,
+                    ytterligereNedsattArbeidsevneDato = null,
+                ),
                 diagnoser = Diagnoser(kodeverk = "KODEVERK", diagnosekode = "PEST", bidiagnoser = listOf("KOLERA")),
                 rettighetstypePerioder = listOf(
                     RettighetstypePeriode(
@@ -551,13 +551,14 @@ class StatistikkJobbUtførerTest {
                 vedtakstidspunkt = vedtakstidspunkt,
                 fritaksvurderinger = emptyList(),
                 perioderMedArbeidsopptrapping = emptyList(),
+                institusjonsopphold = emptyList(),
                 vedtattStansOpphør = listOf(
                     StansEllerOpphør(
                         type = Avslagstype.STANS,
                         fom = 1 april 2020,
                         årsaker = setOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Avslagsårsak.BRUKER_OVER_67)
                     )
-                )
+                ),
             )
         )
     }

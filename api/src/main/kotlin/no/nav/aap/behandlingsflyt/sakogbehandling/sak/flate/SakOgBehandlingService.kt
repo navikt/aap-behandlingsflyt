@@ -11,17 +11,28 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedP
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryProvider
 
-class SakOgBehandlingService(private val repositoryProvider: RepositoryProvider) {
+class SakOgBehandlingService(
+    private val resultatUtleder: ResultatUtleder,
+    private val sakRepository: SakRepository,
+    private val behandlingRepository: BehandlingRepository,
+    private val tilbakekrevingRepository: TilbakekrevingRepository,
+) {
+    constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
+        resultatUtleder = ResultatUtleder(repositoryProvider),
+        sakRepository = repositoryProvider.provide(),
+        behandlingRepository = repositoryProvider.provide(),
+        tilbakekrevingRepository = repositoryProvider.provide(),
+    )
 
     fun finnSakOgBehandlinger(saksnummer: Saksnummer): SakOgBehandlinger {
         var søknadErTrukket: Boolean? = null
-        val resultatUtleder = ResultatUtleder(repositoryProvider)
-        val sak = repositoryProvider.provide<SakRepository>().hent(saksnummer)
+        val sak = sakRepository.hent(saksnummer)
 
         val behandlinger =
-            repositoryProvider.provide<BehandlingRepository>().hentAlleFor(sak.id).map { behandling ->
+            behandlingRepository.hentAlleFor(sak.id).map { behandling ->
                 if (behandling.typeBehandling() == TypeBehandling.Førstegangsbehandling) {
                     søknadErTrukket =
                         resultatUtleder.utledResultatFørstegangsBehandling(behandling) == Resultat.TRUKKET
@@ -38,7 +49,7 @@ class SakOgBehandlingService(private val repositoryProvider: RepositoryProvider)
                 )
             }
 
-        val tilbakekrevingsbehandlinger = repositoryProvider.provide<TilbakekrevingRepository>().hent(sak.id).map { tilbakekrevingBehandling ->
+        val tilbakekrevingsbehandlinger = tilbakekrevingRepository.hent(sak.id).map { tilbakekrevingBehandling ->
             BehandlinginfoDTO(
                 referanse = tilbakekrevingBehandling.tilbakekrevingBehandlingId,
                 typeBehandling = TypeBehandling.Tilbakekreving,

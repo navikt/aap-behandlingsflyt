@@ -12,7 +12,6 @@ import no.nav.aap.behandlingsflyt.datadeling.SakStatus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.GjeldendeStansEllerOpphør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.Opphør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.Stans
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.ApiInternGateway
@@ -28,7 +27,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.datadeling.RettighetsTypePeriode
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.SakDTO
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.StansEllerOpphørEnumDTO
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.TilkjentDTO
-import no.nav.aap.behandlingsflyt.kontrakt.datadeling.UnderveisDTO
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.prometheus
 import no.nav.aap.behandlingsflyt.prosessering.datadeling.UtledArenaVedtakstype
@@ -118,7 +116,6 @@ class ApiInternGatewayImpl : ApiInternGateway {
         samId: String?,
         tilkjent: List<TilkjentYtelsePeriode>,
         beregningsgrunnlag: BigDecimal?,
-        underveis: List<Underveisperiode>,
         vedtaksDato: LocalDate,
         rettighetsTypeTidslinje: Tidslinje<RettighetsType>,
         stansOpphørGrunnlag: Set<GjeldendeStansEllerOpphør>?,
@@ -131,17 +128,6 @@ class ApiInternGatewayImpl : ApiInternGateway {
                 body = DatadelingDTO(
                     behandlingsId = behandling.id.id.toString(),
                     behandlingsReferanse = behandling.referanse.toString(),
-                    underveisperiode = underveis.map {
-                        UnderveisDTO(
-                            underveisFom = it.periode.fom,
-                            underveisTom = it.periode.tom,
-                            meldeperiodeFom = it.meldePeriode.fom,
-                            meldeperiodeTom = it.meldePeriode.tom,
-                            utfall = it.utfall.name,
-                            rettighetsType = it.rettighetsType?.name,
-                            avslagsårsak = it.avslagsårsak?.name
-                        )
-                    },
                     rettighetsPeriodeFom = sak.rettighetsperiode.fom,
                     rettighetsPeriodeTom = sak.rettighetsperiode.tom,
                     behandlingStatus = behandling.status(),
@@ -149,7 +135,6 @@ class ApiInternGatewayImpl : ApiInternGateway {
                     beregningsgrunnlag = beregningsgrunnlag,
                     sak = SakDTO(
                         saksnummer = sak.saksnummer.toString(),
-                        status = sak.status(),
                         fnr = sak.person.identer().map { ident -> ident.identifikator },
                         opprettetTidspunkt = sak.opprettetTidspunkt
                     ),
@@ -161,8 +146,6 @@ class ApiInternGatewayImpl : ApiInternGateway {
                             // legg til redusert dagsats
                             gradering = tilkjentPeriode.tilkjent.gradering.prosentverdi(),
                             samordningUføregradering = tilkjentPeriode.tilkjent.graderingGrunnlag.samordningUføregradering.prosentverdi(),
-                            // TODO: fjern
-                            grunnlag = tilkjentPeriode.tilkjent.dagsats.verdi,
                             grunnlagsfaktor = tilkjentPeriode.tilkjent.grunnlagsfaktor.verdi(),
                             grunnbeløp = tilkjentPeriode.tilkjent.grunnbeløp.verdi,
                             antallBarn = tilkjentPeriode.tilkjent.antallBarn,
