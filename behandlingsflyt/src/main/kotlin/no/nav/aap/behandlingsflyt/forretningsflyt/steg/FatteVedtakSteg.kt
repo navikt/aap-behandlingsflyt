@@ -125,14 +125,12 @@ class FatteVedtakSteg(
         kontekst: FlytKontekstMedPerioder,
         avklaringsbehovene: Avklaringsbehovene
     ): Boolean {
-        val erKlage = kontekst.behandlingType == TypeBehandling.Klage
         val erTrukketEllerIngenGrunnlag =
             tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type()) ||
                     trekkKlageService.klageErTrukket(kontekst.behandlingId)
 
         return when {
             erTrukketEllerIngenGrunnlag -> true
-            erKlage -> true
             avklaringsbehovene.harAvklaringsbehovSomKreverToTrinnMenIkkeErGodkjent() -> false
             else -> true
         }
