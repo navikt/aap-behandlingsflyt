@@ -13,27 +13,19 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangarbeid.Ove
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
+import no.nav.aap.behandlingsflyt.help.opprettInMemorySakOgBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
-import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.FakeTidligereVurderinger
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
-import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
-import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryVilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryProvider
 import no.nav.aap.behandlingsflyt.test.januar
-import no.nav.aap.behandlingsflyt.test.modell.genererIdent
 import no.nav.aap.komponenter.tidslinje.tidslinjeOf
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
@@ -42,20 +34,12 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.Instant
 import java.time.LocalDate
-import java.util.*
 
 class OvergangArbeidStegTest {
-    private val random = Random(1235123)
-
-    private val sakRepository = InMemorySakRepository
-    private val behandlingRepository = InMemoryBehandlingRepository
-
     @Test
     fun `Overgang arbeid skal vurderes ved forutgående ordinær aap + nei 11-5`() {
         val søknadsdato = 1 januar 2020
-        val person = person()
-        val sak = sak(person, søknadsdato)
-        val behandling = behandling(sak, typeBehandling = TypeBehandling.Førstegangsbehandling)
+        val (sak, behandling) = opprettInMemorySakOgBehandling()
         val kontekstMedPerioder = flytKontekstMedPerioder(sak, behandling, VurderingType.FØRSTEGANGSBEHANDLING)
 
 
@@ -102,9 +86,7 @@ class OvergangArbeidStegTest {
     @Test
     fun `Overgang arbeid skal vurderes ved forutgående ordinær aap + delvis ufør`() {
         val søknadsdato = 1 januar 2020
-        val person = person()
-        val sak = sak(person, søknadsdato)
-        val behandling = behandling(sak, typeBehandling = TypeBehandling.Førstegangsbehandling)
+        val (sak, behandling) = opprettInMemorySakOgBehandling()
         val kontekstMedPerioder = flytKontekstMedPerioder(sak, behandling, VurderingType.FØRSTEGANGSBEHANDLING)
 
         val sykdomMock: SykdomRepository = mockk(relaxed = true) {
@@ -150,14 +132,11 @@ class OvergangArbeidStegTest {
 
     @Test
     fun `Overgang arbeid skal ikke vurderes om 11-5 oppfylt ved yrkesskadefordel`() {
-        val søknadsdato = 1 januar 2020
         val rettighetsperiode = Periode(
             1 januar 2020,
             1 januar 2021,
         )
-        val person = person()
-        val sak = sak(person, søknadsdato)
-        val behandling = behandling(sak, typeBehandling = TypeBehandling.Førstegangsbehandling)
+        val (sak, behandling) = opprettInMemorySakOgBehandling()
         val kontekstMedPerioder = flytKontekstMedPerioder(sak, behandling, VurderingType.FØRSTEGANGSBEHANDLING)
 
         val uføreMock = mockk<UføreRepository> {
@@ -219,23 +198,6 @@ class OvergangArbeidStegTest {
         this.rettighetsperiode = sak.rettighetsperiode
     }
 
-    private fun behandling(sak: Sak, typeBehandling: TypeBehandling): Behandling =
-        behandlingRepository.opprettBehandling(
-            sakId = sak.id,
-            typeBehandling = typeBehandling,
-            forrigeBehandlingId = null,
-            vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
-                vurderingsbehov = listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_SØKNAD)),
-                årsak = ÅrsakTilOpprettelse.SØKNAD
-            )
-        )
-
-    private fun sak(person: Person, søknadsdato: LocalDate): Sak =
-        sakRepository.finnEllerOpprett(person, søknadsdato)
-
-    private fun person(): Person =
-        Person(PersonId(random.nextLong()), UUID.randomUUID(), listOf(genererIdent(LocalDate.now().minusYears(23))))
-    
     private fun sykdom(erSyk: Boolean, vurderingenGjelderFra: LocalDate) = Sykdomsvurdering(
         begrunnelse = "",
         dokumenterBruktIVurdering = emptyList(),

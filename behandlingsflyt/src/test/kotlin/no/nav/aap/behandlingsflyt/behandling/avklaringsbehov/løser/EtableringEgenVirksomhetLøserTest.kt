@@ -9,22 +9,14 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirk
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ErNedsettelseMerEnnYrkesskadegrenseValg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ErNedsettelseMinstHalvpartenValg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
-import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
+import no.nav.aap.behandlingsflyt.help.opprettInMemorySakOgBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBistandRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryEtableringEgenVirksomRepository
-import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySykdomRepository
-import no.nav.aap.behandlingsflyt.test.modell.genererIdent
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
@@ -33,8 +25,6 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import java.time.Instant
 import java.time.LocalDate
-import java.util.*
-import kotlin.random.Random
 
 class EtableringEgenVirksomhetLøserTest {
 
@@ -74,7 +64,7 @@ class EtableringEgenVirksomhetLøserTest {
 
     @Test
     fun `Må ha definert minst én periode i tidsplanen dersom vilkåret er oppfylt for en periode`() {
-        val (sak, behandling) = opprettBehandling(LocalDate.now())
+        val (sak, behandling) = opprettInMemorySakOgBehandling(LocalDate.now())
         oppfyllSykdomOgBistand(behandling)
 
         val kontekst = opprettKontekst(sak, behandling)
@@ -88,7 +78,7 @@ class EtableringEgenVirksomhetLøserTest {
 
     @Test
     fun `Oppstart må være minst én dag etter første dag med innvilget AAP`() {
-        val (sak, behandling) = opprettBehandling(LocalDate.now())
+        val (sak, behandling) = opprettInMemorySakOgBehandling(LocalDate.now())
         oppfyllSykdomOgBistand(behandling)
 
         val kontekst = opprettKontekst(sak, behandling)
@@ -112,7 +102,7 @@ class EtableringEgenVirksomhetLøserTest {
 
     @Test
     fun `Skal ikke kunne legge oppstartsperioder før utviklingsperioden`() {
-        val (sak, behandling) = opprettBehandling(LocalDate.now())
+        val (sak, behandling) = opprettInMemorySakOgBehandling(LocalDate.now())
         oppfyllSykdomOgBistand(behandling)
 
         val kontekst = opprettKontekst(sak, behandling)
@@ -136,7 +126,7 @@ class EtableringEgenVirksomhetLøserTest {
 
     @Test
     fun `Skal ikke kunne overstige oppstartsperiodens kvote på 66 dager`() {
-        val (sak, behandling) = opprettBehandling(LocalDate.now())
+        val (sak, behandling) = opprettInMemorySakOgBehandling(LocalDate.now())
         oppfyllSykdomOgBistand(behandling)
 
         val kontekst = opprettKontekst(sak, behandling)
@@ -161,7 +151,7 @@ class EtableringEgenVirksomhetLøserTest {
 
     @Test
     fun `Skal ikke kunne overstige utviklingsperiodens kvote på 131 dager`() {
-        val (sak, behandling) = opprettBehandling(LocalDate.now())
+        val (sak, behandling) = opprettInMemorySakOgBehandling(LocalDate.now())
         oppfyllSykdomOgBistand(behandling)
 
         val kontekst = opprettKontekst(sak, behandling)
@@ -182,27 +172,6 @@ class EtableringEgenVirksomhetLøserTest {
 
         val feil = assertThrows<UgyldigForespørselException> { løser.løs(kontekst, løsning) }
         assertThat(feil.message).contains("Oppsatte utviklingsdager overstiger gjenværende dager:")
-    }
-
-    private fun opprettBehandling(periode: LocalDate): Pair<Sak, Behandling> {
-        val person =
-            Person(
-                PersonId(Random.nextLong()),
-                UUID.randomUUID(),
-                listOf(genererIdent(LocalDate.now().minusYears(23)))
-            )
-        val sak = InMemorySakRepository.finnEllerOpprett(person, periode)
-        val behandling = InMemoryBehandlingRepository.opprettBehandling(
-            sakId = sak.id,
-            typeBehandling = TypeBehandling.Førstegangsbehandling,
-            forrigeBehandlingId = null,
-            vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
-                vurderingsbehov = listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_SØKNAD)),
-                årsak = ÅrsakTilOpprettelse.SØKNAD
-            )
-        )
-
-        return sak to behandling
     }
 
     private fun oppfyllSykdomOgBistand(behandling: Behandling) {

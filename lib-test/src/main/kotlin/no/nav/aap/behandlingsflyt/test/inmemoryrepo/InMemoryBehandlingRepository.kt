@@ -62,6 +62,7 @@ object InMemoryBehandlingRepository : BehandlingRepository {
         }
     }
 
+    @Deprecated("Mest sannsynlig ønsker du å bruke BehandlingService.finnSisteYtelsesbehandlingFor eller BehandlingService.finnBehandlingMedSisteFattedeVedtak")
     override fun finnSisteOpprettedeBehandlingFor(
         sakId: SakId,
         behandlingstypeFilter: List<TypeBehandling>
