@@ -267,4 +267,4 @@ spec:
     - name: INTEGRASJON_PDFGEN_URL
       value: http://aap-saksbehandling-pdfgen
     - name: INTEGRASJON_PDFGEN_SCOPE
-      value: api://prod-gcp.aap.saksbehandling-pdfgen/.default
+      value: api://prod-gcp.aap-saksbehandling-pdfgen/.default
