@@ -263,7 +263,6 @@ object Revurdering : BehandlingType {
                     Vurderingsbehov.REVURDER_YRKESSKADE,
                     Vurderingsbehov.VURDER_RETTIGHETSPERIODE,
                     Vurderingsbehov.HELHETLIG_VURDERING,
-                    // TODO: vurder om disse kan fjernes selv om beregning ikke er periodisert
                     Vurderingsbehov.REVURDER_LOVVALG,
                     Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP,
                 )
