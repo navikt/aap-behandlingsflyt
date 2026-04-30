@@ -13,8 +13,12 @@ import java.net.URI
 
 class PdfgenGatewayImpl : PdfgenGateway {
     private val baseUri = URI.create(requiredConfigForKey("integrasjon.pdfgen.url"))
+    val config = ClientConfig(
+        scope = requiredConfigForKey("integrasjon.pdfgen.scope"),
+    )
+
     private val client = RestClient.withDefaultResponseHandler(
-        config = ClientConfig(),
+        config = config,
         tokenProvider = AzureM2MTokenProvider,
         prometheus = prometheus
     )
