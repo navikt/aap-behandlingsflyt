@@ -43,6 +43,7 @@ import no.nav.aap.behandlingsflyt.behandling.beregning.tidspunkt.beregningVurder
 import no.nav.aap.behandlingsflyt.behandling.brev.sykdomsvurderingForBrevApi
 import no.nav.aap.behandlingsflyt.behandling.etableringegenvirksomhet.etableringEgenVirksomhetApi
 import no.nav.aap.behandlingsflyt.behandling.foreslåvedtak.foreslaaVedtakApi
+import no.nav.aap.behandlingsflyt.behandling.foreslåvedtak.foreslaaVedtakVedtakslengdeApi
 import no.nav.aap.behandlingsflyt.behandling.grunnlag.medlemskap.medlemskapsgrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.grunnlag.samordning.samordningGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.inntektsbortfall.inntektsbortfallGrunnlagApi
@@ -80,15 +81,12 @@ import no.nav.aap.behandlingsflyt.behandling.underveis.underveisVurderingerApi
 import no.nav.aap.behandlingsflyt.behandling.vedtakslengde.vedtakslengdeGrunnlagApi
 import no.nav.aap.behandlingsflyt.drift.driftApi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.StansEllerOpphørMigrering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomsvurderingMigrering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.ApplikasjonsVersjon
 import no.nav.aap.behandlingsflyt.flyt.behandlingApi
 import no.nav.aap.behandlingsflyt.flyt.flytApi
 import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaConsumerConfig
 import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaKonsument
-import no.nav.aap.behandlingsflyt.hendelse.kafka.foreldrepenger.FORELDREPENGEVEDTAK_EVENT_TOPIC
 import no.nav.aap.behandlingsflyt.hendelse.kafka.foreldrepenger.ForeldrepengevedtakKafkaKonsument
-import no.nav.aap.behandlingsflyt.hendelse.kafka.inst2.INSTITUSJONSOPPHOLD_EVENT_TOPIC
 import no.nav.aap.behandlingsflyt.hendelse.kafka.inst2.InstitusjonsOppholdKafkaKonsument
 import no.nav.aap.behandlingsflyt.hendelse.kafka.klage.KabalKafkaKonsument
 import no.nav.aap.behandlingsflyt.hendelse.kafka.person.PdlHendelseKafkaKonsument
@@ -112,11 +110,10 @@ import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbmigrering.Migrering
 import no.nav.aap.komponenter.gateway.GatewayProvider
-import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureConfig
 import no.nav.aap.komponenter.json.DefaultJsonMapper
 import no.nav.aap.komponenter.miljo.Miljø
 import no.nav.aap.komponenter.repository.RepositoryRegistry
-import no.nav.aap.komponenter.server.AZURE
+import no.nav.aap.komponenter.server.auth.IdentityProvider
 import no.nav.aap.komponenter.server.commonKtorModule
 import no.nav.aap.komponenter.server.plugins.NavIdentInterceptor
 import no.nav.aap.motor.Motor
@@ -209,13 +206,16 @@ internal fun Application.server(
         .registerSubtypes(utledSubtypesTilAvklaringsbehovLøsning() + utledSubtypesTilMottattHendelseDTO())
 
     commonKtorModule(
-        prometheus, AzureConfig(), InfoModel(
-            title = "AAP - Behandlingsflyt", version = ApplikasjonsVersjon.versjon,
+        prometheus = prometheus,
+        infoModel = InfoModel(
+            title = "AAP - Behandlingsflyt",
+            version = ApplikasjonsVersjon.versjon,
             description = """
                 For å teste API i dev, besøk
                 <a href="https://azure-token-generator.intern.dev.nav.no/api/m2m?aud=dev-gcp:aap:behandlingsflyt">Token Generator</a> for å få token.
                 """.trimIndent(),
-        )
+        ),
+        identityProvider = IdentityProvider.ENTRA_ID
     )
 
     install(StatusPages, StatusPagesConfigHelper.setup())
@@ -247,7 +247,7 @@ internal fun Application.server(
     }
 
     routing {
-        authenticate(AZURE) {
+        authenticate(IdentityProvider.ENTRA_ID.value) {
             install(NavIdentInterceptor)
 
             apiRouting {
@@ -279,6 +279,7 @@ internal fun Application.server(
                 avklaringsbehovApi(dataSource, repositoryRegistry, gatewayProvider)
                 tilkjentYtelseApi(dataSource, repositoryRegistry)
                 foreslaaVedtakApi(dataSource, repositoryRegistry)
+                foreslaaVedtakVedtakslengdeApi(dataSource, repositoryRegistry)
                 trukketSøknadGrunnlagApi(dataSource, repositoryRegistry)
                 avbrytRevurderingGrunnlagApi(dataSource, repositoryRegistry)
                 rettighetsperiodeGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
@@ -446,14 +447,9 @@ private fun utførMigreringer(
         val isLeader = isLeader(log)
         log.info("isLeader = $isLeader")
 
-
         if (unleashGateway.isEnabled(BehandlingsflytFeature.MigrerStansOgOpphor) && isLeader) {
             // kjør migreringer
             StansEllerOpphørMigrering(dataSource, postgresRepositoryRegistry, gatewayProvider).migrer()
-        }
-
-        if (unleashGateway.isEnabled(BehandlingsflytFeature.MigrerSykdomsvurdering) && isLeader) {
-            SykdomsvurderingMigrering(dataSource, postgresRepositoryRegistry, gatewayProvider).migrer()
         }
 
     }, 1, 9, TimeUnit.MINUTES)

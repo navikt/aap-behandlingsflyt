@@ -53,13 +53,27 @@ class UføreRepositoryImplTest {
             val behandling = finnEllerOpprettBehandling(connection, sak)
 
             val uføreRepository = UføreRepositoryImpl(connection)
-            uføreRepository.lagre(behandling.id, setOf(Uføre(
-                virkningstidspunkt = LocalDate.now(),
-                uføregrad = Prosent(100),
-                uføregradTom = LocalDate.now().plusYears(1)
-            )))
+            uføreRepository.lagre(
+                behandling.id, setOf(
+                    Uføre(
+                        virkningstidspunkt = LocalDate.now(),
+                        uføregrad = Prosent(100),
+                        uføregradFom = LocalDate.now().minusYears(1),
+                        uføregradTom = LocalDate.now().plusYears(1)
+                    )
+                )
+            )
             val uføreGrunnlag = uføreRepository.hentHvisEksisterer(behandling.id)
-            assertThat(uføreGrunnlag?.vurderinger).isEqualTo(setOf(Uføre(LocalDate.now(), Prosent(100), LocalDate.now().plusYears(1))))
+            assertThat(uføreGrunnlag?.vurderinger).isEqualTo(
+                setOf(
+                    Uføre(
+                        LocalDate.now(),
+                        Prosent(100),
+                        LocalDate.now().minusYears(1),
+                        LocalDate.now().plusYears(1)
+                    )
+                )
+            )
 
             val eldsteGrunnlag = uføreRepository.hentEldsteGrunnlag(behandling.id)
             assertThat(eldsteGrunnlag).isNotNull

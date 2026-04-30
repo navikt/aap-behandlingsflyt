@@ -8,13 +8,11 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirk
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.komponenter.tidslinje.somTidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
-import java.time.LocalDate
 import kotlin.collections.orEmpty
 import kotlin.collections.plus
 
@@ -23,14 +21,12 @@ class EtableringEgenVirksomhetService(
     private val behandlingRepository: BehandlingRepository,
     private val bistandRepository: BistandRepository,
     private val sykdomRepository: SykdomRepository,
-    private val sakRepository: SakRepository,
 ) {
     constructor(repositoryProvider: RepositoryProvider) : this(
         etableringEgenVirksomhetRepository = repositoryProvider.provide(),
         behandlingRepository = repositoryProvider.provide(),
         bistandRepository = repositoryProvider.provide(),
-        sykdomRepository = repositoryProvider.provide(),
-        sakRepository = repositoryProvider.provide()
+        sykdomRepository = repositoryProvider.provide()
     )
 
     private val maksUtviklingsdager = 131
@@ -45,10 +41,8 @@ class EtableringEgenVirksomhetService(
         val gamleVurderinger =
             behandling.forrigeBehandlingId?.let { etableringEgenVirksomhetRepository.hentHvisEksisterer(it) }?.vurderinger.orEmpty()
         val alleVurderinger = gamleVurderinger + nyeVurderinger
-        val rettighetsperiode = sakRepository.hent(behandling.sakId).rettighetsperiode
 
-        val gyldighetPeriode =
-            utledGyldighetsPeriode(behandlingId, rettighetsperiode.fom.plusDays(1))
+        val gyldighetPeriode = utledGyldighetsPeriode(behandlingId)
         if (gyldighetPeriode.isEmpty()) {
             return VirksomhetEtableringIkkeGyldig(
                 "11-5 & 11-6b må være oppfylt i minst én periode"
@@ -72,7 +66,7 @@ class EtableringEgenVirksomhetService(
             )
         }
 
-        if (alleVurderinger.none { it.vurderingenGjelderFra.isAfter(førsteMuligeDato) }) {
+        if (alleVurderinger.isNotEmpty() && alleVurderinger.none { it.vurderingenGjelderFra.isAfter(førsteMuligeDato) }) {
             return VirksomhetEtableringIkkeGyldig(
                 "vurderingenGjelderFra må være minst én dag etter første mulige dag med AAP"
             )
@@ -114,8 +108,7 @@ class EtableringEgenVirksomhetService(
     }
 
     fun utledGyldighetsPeriode(
-        behandlingId: BehandlingId,
-        fom: LocalDate
+        behandlingId: BehandlingId
     ): List<Periode> {
         val sykdomGrunnlag = sykdomRepository.hentHvisEksisterer(behandlingId)
         val bistandGrunnlag = bistandRepository.hentHvisEksisterer(behandlingId)
@@ -126,10 +119,8 @@ class EtableringEgenVirksomhetService(
 
         val mapped = Tidslinje.zip2(sykdomsvurderinger, bistandsvurderinger)
             .filter {
-                it.verdi.first?.erOppfyltForYrkesskadeSettBortIfraÅrsakssammenheng(
-                    fom,
-                    it.periode
-                ) == true && it.verdi.second?.erBehovForArbeidsrettetTiltak == true
+                it.verdi.first?.erOppfyltForOrdinærEllerYrkesskadeSettBortIfraÅrsakssammenhengMedUtlededeFelter() == true
+                        && it.verdi.second?.erBehovForArbeidsrettetTiltak == true
             }
         return mapped.perioder().toList()
     }

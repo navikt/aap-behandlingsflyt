@@ -19,7 +19,7 @@ class InstitusjonRegel : UnderveisRegel {
 
     override fun vurder(input: UnderveisInput, resultat: Tidslinje<Vurdering>): Tidslinje<Vurdering> {
         log.info("Vurderer institusjonsregel.")
-        var institusjonTidslinje = konstruerTidslinje(input)
+        val institusjonTidslinje = konstruerTidslinje(input)
         if (institusjonTidslinje.isEmpty()) {
             return resultat
         }

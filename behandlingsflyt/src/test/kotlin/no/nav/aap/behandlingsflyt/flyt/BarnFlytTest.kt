@@ -223,7 +223,7 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
         behandling
             .løsSykdom(fom)
             .løsBistand(fom)
-            .løsRefusjonskrav(fom)
+            .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
             .bekreftVurderinger()
             .kvalitetssikre()
@@ -1169,7 +1169,7 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
         }
             .løsSykdom(fraDato)
             .løsBistand(fraDato)
-            .løsRefusjonskrav(fraDato)
+            .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
             .bekreftVurderinger()
             .kvalitetssikre()

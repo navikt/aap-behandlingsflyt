@@ -5,25 +5,15 @@ import io.mockk.mockk
 import io.mockk.verify
 import no.nav.aap.behandlingsflyt.behandling.brev.SignaturService
 import no.nav.aap.behandlingsflyt.behandling.brev.VedtakEndring
-import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling.Førstegangsbehandling
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
+import no.nav.aap.behandlingsflyt.help.opprettInMemorySakOgBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonId
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBrevbestillingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
-import no.nav.aap.behandlingsflyt.test.modell.genererIdent
-import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
-import java.time.LocalDate
 import java.util.*
 import kotlin.random.Random
 
@@ -41,7 +31,7 @@ class BrevbestillingServiceTest {
 
     @Test
     fun `bestiller og lagrer brevbestilling`() {
-        val behandling = opprettSakOgBehandling()
+        val (_, behandling) = opprettInMemorySakOgBehandling()
         every {
             brevbestillingGateway.bestillBrev(
                 saksnummer = any(),
@@ -68,7 +58,7 @@ class BrevbestillingServiceTest {
 
     @Test
     fun `returnerer samme bestilling dersom man gjør samme bestilling flere ganger`() {
-        val behandling = opprettSakOgBehandling()
+        val (_, behandling) = opprettInMemorySakOgBehandling()
         val unikReferanse = UUID.randomUUID().toString()
         val brevbestillingReferanse = BrevbestillingReferanse(UUID.randomUUID())
 
@@ -359,20 +349,6 @@ class BrevbestillingServiceTest {
         val resultat = InMemoryBrevbestillingRepository.hent(referanse)
         assertThat(resultat?.status).isEqualTo(Status.FORHÅNDSVISNING_KLAR)
         verify { brevbestillingGateway.gjenoppta(referanse) }
-    }
-
-    private fun opprettSakOgBehandling(): Behandling {
-        val person = Person(PersonId(1), UUID.randomUUID(), listOf(genererIdent(LocalDate.now().minusYears(23))))
-        val sak = InMemorySakRepository.finnEllerOpprett(person, Periode(LocalDate.now(), LocalDate.now().plusYears(1)))
-        return InMemoryBehandlingRepository.opprettBehandling(
-            sak.id,
-            Førstegangsbehandling,
-            null,
-            VurderingsbehovOgÅrsak(
-                listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_SØKNAD)),
-                ÅrsakTilOpprettelse.SØKNAD
-            )
-        )
     }
 
     private fun lagreBrevbestillingerMedStatus(

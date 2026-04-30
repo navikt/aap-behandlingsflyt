@@ -44,7 +44,6 @@ fun NormalOpenAPIRoute.refusjonGrunnlagApi(
                 behandlingPathParam = BehandlingPathParam("referanse"),
                 avklaringsbehovKode = Definisjon.REFUSJON_KRAV.kode.toString()
             ) { req ->
-
                 val response = dataSource.transaction(readOnly = true) { connection ->
                     val repositoryProvider = repositoryRegistry.provider(connection)
                     val refusjonkravRepository = repositoryProvider.provide<RefusjonkravRepository>()
@@ -79,7 +78,10 @@ fun NormalOpenAPIRoute.refusjonGrunnlagApi(
 
                     RefusjonkravGrunnlagResponse(
                         nåværendeVirkningsTidspunkt = virkningstidspunkt,
-                        harTilgangTilÅSaksbehandle = kanSaksbehandle() && kanLøseBehovSomSkalVæreLåstEtterKvalitetssikring(Definisjon.REFUSJON_KRAV.løsesISteg, behandling),
+                        harTilgangTilÅSaksbehandle = kanSaksbehandle() && kanLøseBehovSomSkalVæreLåstEtterKvalitetssikring(
+                            Definisjon.REFUSJON_KRAV.løsesISteg,
+                            behandling
+                        ),
                         gjeldendeVurderinger = gjeldendeVurderinger,
                         økonomiskSosialHjelp = økonomiskSosialHjelp,
                         historiskeVurderinger = null
@@ -97,16 +99,16 @@ fun NormalOpenAPIRoute.refusjonGrunnlagApi(
                     relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
                     behandlingPathParam = BehandlingPathParam("referanse")
                 )
-            ) { req, body ->
-                val response = navKontorService.hentNavEnheter()?.filter { enhet ->
+            ) { _, body ->
+                val response = navKontorService.hentLokalkontor().filter { enhet ->
                     enhet.navn.contains(
                         body.navn,
                         ignoreCase = true
                     ) || enhet.enhetsNummer.contains(body.navn, ignoreCase = true)
                 }
-                    ?.map { enhet ->
+                    .map { enhet ->
                         NavEnheterResponse(navn = enhet.navn, enhetsnummer = enhet.enhetsNummer)
-                    }.orEmpty()
+                    }
                 respond(response)
             }
         }

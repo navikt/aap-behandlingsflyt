@@ -26,7 +26,7 @@ import java.time.LocalDateTime
 class OppfølgingsBehandlingFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
     @Test
     fun `opprette oppfølgingsbehandling`() {
-        val sak = happyCaseFørstegangsbehandling()
+        val sak = happyCaseFørstegangsbehandling(sendMeldekort = false)
         val førstegangsbehandling = hentSisteOpprettedeBehandlingForSak(sak.id)
 
         val oppfølgingsbehandling = sak.sendInnOppfølgingsoppgave(
@@ -79,7 +79,7 @@ class OppfølgingsBehandlingFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddU
     @Test
     fun `Opprett oppfølgningsoppgave med opprinnelse`() {
 
-        val sak = happyCaseFørstegangsbehandling()
+        val sak = happyCaseFørstegangsbehandling(sendMeldekort = false)
         val førstegangsbehandling = hentSisteOpprettedeBehandlingForSak(sak.id)
 
         sak.sendInnOppfølgingsoppgave(

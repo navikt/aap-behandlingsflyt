@@ -13,7 +13,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvbrytRevurderingRepository
@@ -617,15 +616,12 @@ class AvklaringsbehovServiceTest {
         val rettighetsperiode = Periode(LocalDate.now(), Tid.MAKS)
         val behandlingId = BehandlingId(1004)
         val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, behandlingId)
-        val kontekst = FlytKontekstMedPerioder(
-            sakId = SakId(1),
-            behandlingId = behandlingId,
-            forrigeBehandlingId = null,
-            behandlingType = TypeBehandling.Førstegangsbehandling,
-            vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
-            rettighetsperiode = rettighetsperiode,
-            vurderingsbehovRelevanteForStegMedPerioder = emptySet()
-        )
+        val kontekst = flytKontekstMedPerioder {
+            sakId = SakId(1)
+            this.behandlingId = behandlingId
+            this.rettighetsperiode = rettighetsperiode
+            behandlingType = TypeBehandling.Førstegangsbehandling
+        }
 
         // Løfter avklaringsbehov når det er relevant å vurdere bistandsbehov
         avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(

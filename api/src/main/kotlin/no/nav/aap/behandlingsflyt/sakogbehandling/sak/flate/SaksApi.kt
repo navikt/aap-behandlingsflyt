@@ -226,7 +226,7 @@ fun NormalOpenAPIRoute.saksApi(
                 val saksnummer = req.saksnummer
                 val (sak, behandlinger, søknadErTrukket) = dataSource.transaction(readOnly = true) { connection ->
                     val repositoryProvider = repositoryRegistry.provider(connection)
-                    SakOgBehandlingService(repositoryProvider).finnSakOgBehandlinger(Saksnummer(saksnummer))
+                    SakOgBehandlingService(repositoryProvider, gatewayProvider).finnSakOgBehandlinger(Saksnummer(saksnummer))
                 }
 
                 respond(

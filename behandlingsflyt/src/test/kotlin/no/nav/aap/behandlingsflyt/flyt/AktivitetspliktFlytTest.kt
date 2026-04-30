@@ -3,7 +3,6 @@ package no.nav.aap.behandlingsflyt.flyt
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivBrevAvklaringsbehovLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivForhåndsvarselBruddAktivitetspliktBrevLøsning
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SykdomsvurderingForBrevLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VentePåFristForhåndsvarselAktivitetsplikt11_7Løsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VurderBrudd11_7Løsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VurderBrudd11_9Løsning
@@ -58,7 +57,7 @@ class AktivitetspliktFlytTest :
     @Test
     fun `Happy-case flyt for aktivitetsplikt 11_7`() {
         val person = TestPersoner.STANDARD_PERSON()
-        val sak = happyCaseFørstegangsbehandling(person = person)
+        val sak = happyCaseFørstegangsbehandling(person = person, sendMeldekort = false)
         var åpenBehandling = revurdereFramTilOgMedSykdom(sak, sak.rettighetsperiode.fom, vissVarighet = true)
 
         var aktivitetspliktBehandling = dataSource.transaction { connection ->
@@ -193,15 +192,8 @@ class AktivitetspliktFlytTest :
 
         åpenBehandling
             .løsBistand(sak.rettighetsperiode.fom)
-            .medKontekst {
-                assertThat(this.åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
-                    .containsExactlyInAnyOrder(Definisjon.SKRIV_SYKDOMSVURDERING_BREV)
-            }
-            .løsAvklaringsBehov(
-                SykdomsvurderingForBrevLøsning(
-                    vurdering = "Begrunnelse"
-                ),
-            )
+            .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
             .medKontekst {
                 assertThat(this.åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
                     .containsExactlyInAnyOrder(Definisjon.FATTE_VEDTAK)
@@ -227,7 +219,7 @@ class AktivitetspliktFlytTest :
     @Test
     fun `Åpen behandling skal trekkes tilbake ved effektuering av aktivitetsplikt`() {
         val person = TestPersoner.STANDARD_PERSON()
-        val sak = happyCaseFørstegangsbehandling(person = person)
+        val sak = happyCaseFørstegangsbehandling(person = person, sendMeldekort = false)
         var åpenBehandling = revurdereFramTilOgMedSykdom(sak, sak.rettighetsperiode.fom, vissVarighet = true)
 
         åpenBehandling = åpenBehandling.løsBistand(sak.rettighetsperiode.fom)
@@ -235,11 +227,8 @@ class AktivitetspliktFlytTest :
                 assertThat(this.åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
                     .containsExactlyInAnyOrder(Definisjon.SKRIV_SYKDOMSVURDERING_BREV)
             }
-            .løsAvklaringsBehov(
-                SykdomsvurderingForBrevLøsning(
-                    vurdering = "Begrunnelse"
-                ),
-            )
+            .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
             .medKontekst {
                 assertThat(this.åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
                     .containsExactlyInAnyOrder(Definisjon.FATTE_VEDTAK)
@@ -372,6 +361,7 @@ class AktivitetspliktFlytTest :
         val sak = happyCaseFørstegangsbehandling(
             fom = LocalDate.now().minusMonths(1),
             person = person,
+            sendMeldekort = false
         )
         val åpenBehandlingForbiTilkjentYtelse =
             revurdereFramTilOgMedSykdom(sak, sak.rettighetsperiode.fom, vissVarighet = true)
@@ -380,11 +370,8 @@ class AktivitetspliktFlytTest :
                     assertThat(this.åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
                         .containsExactlyInAnyOrder(Definisjon.SKRIV_SYKDOMSVURDERING_BREV)
                 }
-                .løsAvklaringsBehov(
-                    SykdomsvurderingForBrevLøsning(
-                        vurdering = "Begrunnelse"
-                    ),
-                )
+                .løsSykdomsvurderingBrev()
+                .bekreftVurderinger()
                 .medKontekst {
                     assertThat(this.åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
                         .containsExactlyInAnyOrder(Definisjon.FATTE_VEDTAK)

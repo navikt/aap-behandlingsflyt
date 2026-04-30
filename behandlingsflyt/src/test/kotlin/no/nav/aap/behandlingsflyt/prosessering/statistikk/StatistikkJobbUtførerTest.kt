@@ -6,8 +6,6 @@ import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Faktagrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag11_19
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurdering
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.GjeldendeStansEllerOpphør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.Stans
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.StansOpphørGrunnlag
@@ -27,8 +25,10 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.StrukturertDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.ArbeidIPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Meldekort
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.dokument.KlagedokumentInformasjonUtleder
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Diagnose
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
+import no.nav.aap.behandlingsflyt.help.opprettInMemorySakOgBehandling
 import no.nav.aap.behandlingsflyt.integrasjon.statistikk.StatistikkGatewayImpl
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
@@ -41,7 +41,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ArbeidIPeriodeV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.MeldekortV0
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
-import no.nav.aap.behandlingsflyt.kontrakt.sak.Status.UTREDES
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Avslagstype
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.AvsluttetBehandlingDTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.BeregningsgrunnlagDTO
@@ -62,6 +61,7 @@ import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.stansopp
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.underveis.UnderveisRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.dokument.arbeid.MeldekortRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.sykdom.SykdomRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
@@ -72,7 +72,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedP
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.IdentGateway
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
@@ -108,7 +107,6 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
-import java.util.*
 
 @Fakes
 class StatistikkJobbUtførerTest {
@@ -511,16 +509,6 @@ class StatistikkJobbUtførerTest {
         }, LocalDateTime::class.java).isEqualTo(
             AvsluttetBehandlingDTO(
                 tilkjentYtelse = TilkjentYtelseDTO(perioder = emptyList()),
-                beregningsGrunnlag = BeregningsgrunnlagDTO(
-                    grunnlag11_19dto = Grunnlag11_19DTO(
-                        inntekter = emptyMap(),
-                        grunnlaget = 7.0,
-                        er6GBegrenset = false,
-                        erGjennomsnitt = false,
-                    ),
-                    nedsattArbeidsevneEllerStudieevneDato = nedsattArbeidsevneDato,
-                    ytterligereNedsattArbeidsevneDato = null,
-                ),
                 vilkårsResultat = VilkårsResultatDTO(
                     typeBehandling = TypeBehandling.Førstegangsbehandling, vilkår = listOf(
                         VilkårDTO(
@@ -539,6 +527,16 @@ class StatistikkJobbUtførerTest {
                         )
                     )
                 ),
+                beregningsGrunnlag = BeregningsgrunnlagDTO(
+                    grunnlag11_19dto = Grunnlag11_19DTO(
+                        inntekter = emptyMap(),
+                        grunnlaget = 7.0,
+                        er6GBegrenset = false,
+                        erGjennomsnitt = false,
+                    ),
+                    nedsattArbeidsevneEllerStudieevneDato = nedsattArbeidsevneDato,
+                    ytterligereNedsattArbeidsevneDato = null,
+                ),
                 diagnoser = Diagnoser(kodeverk = "KODEVERK", diagnosekode = "PEST", bidiagnoser = listOf("KOLERA")),
                 rettighetstypePerioder = listOf(
                     RettighetstypePeriode(
@@ -551,13 +549,14 @@ class StatistikkJobbUtførerTest {
                 vedtakstidspunkt = vedtakstidspunkt,
                 fritaksvurderinger = emptyList(),
                 perioderMedArbeidsopptrapping = emptyList(),
+                institusjonsopphold = emptyList(),
                 vedtattStansOpphør = listOf(
                     StansEllerOpphør(
                         type = Avslagstype.STANS,
                         fom = 1 april 2020,
                         årsaker = setOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Avslagsårsak.BRUKER_OVER_67)
                     )
-                )
+                ),
             )
         )
     }
@@ -566,29 +565,8 @@ class StatistikkJobbUtførerTest {
     fun `prosesserings-kall avgir statistikk korrekt`(hendelser: List<StoppetBehandling>) {
         val behandlingRepository = InMemoryBehandlingRepository
 
-        val sak = InMemorySakRepository.finnEllerOpprett(
-            Person(
-                identifikator = UUID.randomUUID(), identer = listOf(
-                    Ident(
-                        identifikator = "1234", aktivIdent = true
-                    )
-                )
-            ), LocalDate.now()
-        )
-        InMemorySakRepository.oppdaterSakStatus(sak.id, UTREDES)
+        val (sak, behandling) = opprettInMemorySakOgBehandling(ident = Ident("1234"))
         val sakId = sak.id
-        val behandling = behandlingRepository.opprettBehandling(
-            sakId = sakId,
-            typeBehandling = TypeBehandling.Klage,
-            forrigeBehandlingId = null,
-            vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
-                vurderingsbehov = listOf(
-                    VurderingsbehovMedPeriode(
-                        type = no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.MOTTATT_SØKNAD,
-                    )
-                ), årsak = ÅrsakTilOpprettelse.SØKNAD
-            )
-        )
         val referanse = behandling.referanse
 
         val sakService = SakService(InMemorySakRepository, InMemoryBehandlingRepository)
@@ -694,7 +672,7 @@ class StatistikkJobbUtførerTest {
                 versjon = ApplikasjonsVersjon.versjon,
                 soknadsFormat = Kanal.PAPIR,
                 mottattTid = tidligsteMottattTid,
-                sakStatus = UTREDES,
+                sakStatus = no.nav.aap.behandlingsflyt.kontrakt.sak.Status.OPPRETTET,
                 hendelsesTidspunkt = hendelsesTidspunkt,
                 identerForSak = listOf("1234"),
                 årsakTilOpprettelse = no.nav.aap.behandlingsflyt.kontrakt.behandling.ÅrsakTilOpprettelse.SØKNAD,

@@ -236,7 +236,7 @@ class MedlemskapLovvalgVurderingService {
 
     private fun mottarSykepenger(grunnlag: MedlemskapArbeidInntektGrunnlag?): TilhørighetVurdering {
         val sykepengerInntektGrunnlag = grunnlag?.inntekterINorgeGrunnlag?.filter { inntekt ->
-            inntekt.inntektType?.uppercase() in enumValues<InntektTyper>().map { it.name }
+            inntekt.inntektType?.uppercase() in enumValues<InntektTyper>().map { it.name } && inntekt.beloep != 0.0
         }
 
         val mottarSykepengerGrunnlag = sykepengerInntektGrunnlag?.map {
@@ -259,7 +259,7 @@ class MedlemskapLovvalgVurderingService {
 
     private fun harArbeidInntektINorge(grunnlag: MedlemskapArbeidInntektGrunnlag?): TilhørighetVurdering {
         val arbeidInntektINorgeGrunnlag =
-            grunnlag?.inntekterINorgeGrunnlag?.map {
+            grunnlag?.inntekterINorgeGrunnlag?.filter { it.beloep != 0.0 }?.map {
                 ArbeidInntektINorgeGrunnlag(
                     virksomhetId = it.identifikator,
                     virksomhetNavn = it.organisasjonsNavn,

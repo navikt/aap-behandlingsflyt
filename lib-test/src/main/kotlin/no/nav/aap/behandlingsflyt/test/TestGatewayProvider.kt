@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.integrasjon.arbeidsforhold.EREGGateway
 import no.nav.aap.behandlingsflyt.integrasjon.brev.BrevGateway
 import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
 import no.nav.aap.behandlingsflyt.integrasjon.datadeling.SamGatewayImpl
+import no.nav.aap.behandlingsflyt.integrasjon.dokarkiv.DokarkivGatewayImpl
 import no.nav.aap.behandlingsflyt.integrasjon.dokumentinnhenting.DokumentinnhentingGatewayImpl
 import no.nav.aap.behandlingsflyt.integrasjon.gosys.GosysGateway
 import no.nav.aap.behandlingsflyt.integrasjon.ident.PdlIdentGateway
@@ -68,4 +69,6 @@ fun testGatewayProvider(unleashGateway: KClass<out UnleashGateway> = AlleAvskrud
         register<GosysGateway>()
         register<DagpengerGatewayImpl>()
         register<TiltakspengerGatewayImpl>()
+        register<DokarkivGatewayImpl>()
+        register<DummyBehandlingHendelseServiceFactory>()
     }

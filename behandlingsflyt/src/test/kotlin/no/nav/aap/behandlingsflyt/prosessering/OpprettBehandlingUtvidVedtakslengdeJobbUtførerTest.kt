@@ -35,12 +35,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettels
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
-import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
-import no.nav.aap.behandlingsflyt.test.FakeUnleashBaseWithDefaultDisabled
 import no.nav.aap.behandlingsflyt.test.desember
 import no.nav.aap.behandlingsflyt.test.fixedClock
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.motor.JobbInput
@@ -65,7 +61,7 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtførerTest {
     private val rettighetestypeRepository = mockk<RettighetstypeRepository>()
     private val stansOpphørRepository = mockk<StansOpphørRepository>()
 
-    private fun opprettUtfører(unleashGateway: UnleashGateway = AlleAvskruddUnleash) =
+    private fun opprettUtfører() =
         OpprettBehandlingUtvidVedtakslengdeJobbUtfører(
             prosesserBehandlingService = prosesserBehandlingService,
             behandlingService = behandlingService,
@@ -75,10 +71,8 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtførerTest {
                 vilkårsresultatRepository = vilkårsresultatRepository,
                 rettighetstypeService = RettighetstypeService(rettighetestypeRepository, vilkårsresultatRepository, underveisRepository),
                 stansOpphørRepository = stansOpphørRepository,
-                unleashGateway = AlleAvskruddUnleash,
                 clock = clock
             ),
-            unleashGateway = unleashGateway,
         )
 
 
@@ -102,29 +96,7 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtførerTest {
     }
 
     @Test
-    fun `skal ikke opprette manuell behandling for utvidelse av vedtakslengde hvis toggle er av`() {
-        val sak = sak()
-        val behandling = behandlingMedVedtak()
-        val vilkårsresultat = genererVilkårsresultat(
-            periode = sak.rettighetsperiode,
-            oppfyltBistand = true,
-            bistandPeriode = Periode(sak.rettighetsperiode.fom, sak.rettighetsperiode.fom.plusMonths(14))
-        )
-
-        every { underveisRepository.hentHvisEksisterer(behandling.id)} returns underveisGrunnlag()
-        every { behandlingService.finnBehandlingMedSisteFattedeVedtak(sakId) } returns behandlingMedVedtak()
-        every { vilkårsresultatRepository.hent(behandlingId) } returns vilkårsresultat
-        every { vedtakslengdeRepository.hentHvisEksisterer(behandling.id) } returns null
-        every { rettighetestypeRepository.hentHvisEksisterer(behandling.id) } returns rettighetstypeGrunnlag(vilkårsresultat)
-        every { stansOpphørRepository.hentHvisEksisterer(behandling.id) } returns null
-
-        opprettUtfører().utfør(jobbInput)
-
-        verify(exactly = 0) { prosesserBehandlingService.triggProsesserBehandling(any<BehandlingService.OpprettetBehandling>()) }
-    }
-
-    @Test
-    fun `skal opprette manuell behandling for utvidelse av vedtakslengde hvis toggle er på`() {
+    fun `skal opprette manuell behandling for utvidelse av vedtakslengde`() {
         val sak = sak()
         val behandling = behandlingMedVedtak()
         val vilkårsresultat = genererVilkårsresultat(
@@ -142,10 +114,7 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtførerTest {
         every { rettighetestypeRepository.hentHvisEksisterer(behandling.id) } returns rettighetstypeGrunnlag(vilkårsresultat)
         every { stansOpphørRepository.hentHvisEksisterer(behandling.id) } returns null
 
-        val unleashMedManuellToggle = FakeUnleashBaseWithDefaultDisabled(
-            enabledFlags = listOf(BehandlingsflytFeature.OpprettManuellVedtakslengdeBehandling)
-        )
-        opprettUtfører(unleashMedManuellToggle).utfør(jobbInput)
+        opprettUtfører().utfør(jobbInput)
 
         verify(exactly = 1) { prosesserBehandlingService.triggProsesserBehandling(any<BehandlingService.OpprettetBehandling>()) }
     }

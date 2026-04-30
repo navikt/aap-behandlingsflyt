@@ -4,6 +4,8 @@ import no.nav.aap.behandlingsflyt.PeriodiserteVurderingerDto
 import no.nav.aap.behandlingsflyt.VurderingDto
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ErNedsettelseMerEnnYrkesskadegrenseValg
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ErNedsettelseMinstHalvpartenValg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.InnhentetSykdomsOpplysninger
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
@@ -38,8 +40,13 @@ data class SykdomsvurderingResponse(
     val erArbeidsevnenNedsatt: Boolean?,
     val harSkadeSykdomEllerLyte: Boolean,
     val erSkadeSykdomEllerLyteVesentligdel: Boolean?,
-    val erNedsettelseIArbeidsevneAvEnVissVarighet: Boolean?,
+    val erNedsettelseMinstHalvparten: ErNedsettelseMinstHalvpartenValg?,
+    val erNedsettelseMerEnnYrkesskadegrense: ErNedsettelseMerEnnYrkesskadegrenseValg?,
+    @Deprecated("Bruk erNedsettelseMinstHalvparten")
     val erNedsettelseIArbeidsevneMerEnnHalvparten: Boolean?,
+    @Deprecated("Bruk erNedsettelseMinstHalvparten/erNedsettelseMerEnnYrkesskadegrense")
+    val erNedsettelseIArbeidsevneAvEnVissVarighet: Boolean?,
+    @Deprecated("Bruk erNedsettelseMerEnnYrkesskadegrense")
     val erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense: Boolean?,
     val yrkesskadeBegrunnelse: String?,
     val kodeverk: String? = null,
@@ -78,6 +85,8 @@ data class SykdomsvurderingResponse(
             erArbeidsevnenNedsatt = sykdomsvurdering.erArbeidsevnenNedsatt,
             harSkadeSykdomEllerLyte = sykdomsvurdering.harSkadeSykdomEllerLyte,
             erSkadeSykdomEllerLyteVesentligdel = sykdomsvurdering.erSkadeSykdomEllerLyteVesentligdel,
+            erNedsettelseMinstHalvparten = sykdomsvurdering.erNedsettelseMinstHalvparten,
+            erNedsettelseMerEnnYrkesskadegrense = sykdomsvurdering.erNedsettelseMerEnnYrkesskadegrense,
             erNedsettelseIArbeidsevneAvEnVissVarighet = sykdomsvurdering.erNedsettelseIArbeidsevneAvEnVissVarighet,
             erNedsettelseIArbeidsevneMerEnnHalvparten = sykdomsvurdering.erNedsettelseIArbeidsevneMerEnnHalvparten,
             erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = sykdomsvurdering.erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense,

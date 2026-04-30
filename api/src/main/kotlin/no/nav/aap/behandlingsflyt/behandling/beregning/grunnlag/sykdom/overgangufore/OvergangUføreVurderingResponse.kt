@@ -14,8 +14,6 @@ data class OvergangUføreVurderingResponse(
     val brukerHarSøktUføretrygd: Boolean,
     val brukerHarFåttVedtakOmUføretrygd: UføreSøknadVedtakResultat?,
     val brukerRettPåAAP: Boolean?,
-    @Deprecated("Bruk fom")
-    val virkningsdato: LocalDate,
     override val fom: LocalDate,
     override val tom: LocalDate?,
     override val vurdertAv: VurdertAvResponse,
@@ -52,7 +50,6 @@ data class OvergangUføreVurderingResponse(
             brukerHarSøktUføretrygd = overgangUføreVurdering.brukerHarSøktOmUføretrygd,
             brukerHarFåttVedtakOmUføretrygd = overgangUføreVurdering.brukerHarFåttVedtakOmUføretrygd,
             brukerRettPåAAP = overgangUføreVurdering.brukerRettPåAAP,
-            virkningsdato = fom,
             fom = fom,
             tom = tom,
             vurdertAv = vurdertAvService.medNavnOgEnhet(

@@ -13,7 +13,6 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 
 class AndreYtelserRepositoryImplTest {
     private lateinit var dataSource: TestDataSource
@@ -53,7 +52,7 @@ class AndreYtelserRepositoryImplTest {
         }
 
         val ytelser = dataSource.transaction {
-            AndreYtelserOppgittISøknadRepositoryImpl(it).hent(
+            AndreYtelserOppgittISøknadRepositoryImpl(it).hentHvisEksisterer(
                 behandling1.id
             )
         }
@@ -67,7 +66,6 @@ class AndreYtelserRepositoryImplTest {
             )
         }
     }
-
 
 
     @Test
@@ -105,7 +103,7 @@ class AndreYtelserRepositoryImplTest {
         }
 
         val ytelser = dataSource.transaction {
-            AndreYtelserOppgittISøknadRepositoryImpl(it).hent(
+            AndreYtelserOppgittISøknadRepositoryImpl(it).hentHvisEksisterer(
                 behandling2.id
             )
         }
@@ -118,16 +116,8 @@ class AndreYtelserRepositoryImplTest {
             )
         }
 
-        assertThrows<IllegalArgumentException> {
-            dataSource.transaction {
-                AndreYtelserOppgittISøknadRepositoryImpl(it).hent(
-                    behandling1.id
-                )
-            }
-        }
-
         val ytelser2 = dataSource.transaction {
-            AndreYtelserOppgittISøknadRepositoryImpl(it).hent(
+            AndreYtelserOppgittISøknadRepositoryImpl(it).hentHvisEksisterer(
                 behandling2.id
             )
         }
@@ -177,12 +167,12 @@ class AndreYtelserRepositoryImplTest {
             )
         }
         val ytelser1 = dataSource.transaction {
-            AndreYtelserOppgittISøknadRepositoryImpl(it).hent(
+            AndreYtelserOppgittISøknadRepositoryImpl(it).hentHvisEksisterer(
                 behandling1.id
             )
         }
         val ytelser2 = dataSource.transaction {
-            AndreYtelserOppgittISøknadRepositoryImpl(it).hent(
+            AndreYtelserOppgittISøknadRepositoryImpl(it).hentHvisEksisterer(
                 behandling2.id
             )
         }

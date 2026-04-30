@@ -113,9 +113,7 @@ class EnklereFlytOrkestratorTest {
             forrigeBehandlingId = null
         )
 
-        stopperTidligereFlytOrkestrator.opprettKontekst(behandling.sakId, behandling.id).also {
-            stopperTidligereFlytOrkestrator.forberedOgProsesserBehandling(it)
-        }
+        stopperTidligereFlytOrkestrator.forberedOgProsesserBehandling(behandling)
 
         assertThat(behandling.aktivtSteg()).isEqualTo(FATTE_VEDTAK)
         assertThat(behandling.status()).isEqualTo(Status.IVERKSETTES)
@@ -140,9 +138,7 @@ class EnklereFlytOrkestratorTest {
         )
 
 
-        flytOrkestrator.opprettKontekst(behandling.sakId, behandling.id).also {
-            flytOrkestrator.forberedOgProsesserBehandling(it)
-        }
+        flytOrkestrator.forberedOgProsesserBehandling(behandling)
 
         assertThat(behandling.aktivtSteg()).isEqualTo(OPPRETT_REVURDERING)
         assertThat(behandling.status()).isEqualTo(Status.AVSLUTTET)
@@ -187,9 +183,7 @@ class EnklereFlytOrkestratorTest {
                 )
             )
 
-        val flytKontekst = flytOrkestrator.opprettKontekst(behandling.sakId, behandling.id)
-
-        flytOrkestrator.forberedOgProsesserBehandling(flytKontekst)
+        flytOrkestrator.forberedOgProsesserBehandling(behandling)
 
         assertThat(behandlingRepository.hentStegHistorikk(behandling.id)).isNotEmpty()
         assertThat(behandlingRepository.hentStegHistorikk(behandling.id).map { tilstand -> tilstand.steg() }
@@ -241,9 +235,7 @@ class EnklereFlytOrkestratorTest {
             ),
         )
 
-        val flytKontekst = flytOrkestrator.opprettKontekst(behandling.sakId, behandling.id)
-
-        flytOrkestrator.forberedOgProsesserBehandling(flytKontekst)
+        flytOrkestrator.forberedOgProsesserBehandling(behandling)
 
         assertThat(behandlingHendelseService.hendelser).hasSize(1)
         assertThat(behandlingHendelseService.hendelser.first().first.status()).isEqualTo(Status.AVSLUTTET)
@@ -269,8 +261,7 @@ class EnklereFlytOrkestratorTest {
             definisjon = Definisjon.AVKLAR_SYKDOM, funnetISteg = AVKLAR_SYKDOM, null, null
         )
 
-        val flytKontekst = flytOrkestrator.opprettKontekst(behandling.sakId, behandling.id)
-        flytOrkestrator.forberedOgProsesserBehandling(flytKontekst)
+        flytOrkestrator.forberedOgProsesserBehandling(behandling)
 
         assertThat(behandling.status()).isEqualTo(Status.UTREDES)
         assertThat(behandling.aktivtSteg()).isEqualTo(AVKLAR_SYKDOM)
@@ -291,8 +282,7 @@ class EnklereFlytOrkestratorTest {
             )
         )
 
-        flytOrkestrator.opprettKontekst(behandling.sakId, behandling.id)
-        flytOrkestrator.forberedOgProsesserBehandling(flytKontekst)
+        flytOrkestrator.forberedOgProsesserBehandling(behandling)
 
 
         assertThat(behandling.status()).isEqualTo(Status.UTREDES)
@@ -314,16 +304,15 @@ class EnklereFlytOrkestratorTest {
             )
         )
 
-        val flytKontekst3 = flytOrkestrator.opprettKontekst(behandling.sakId, behandling.id)
         flytOrkestrator.forberedLøsingAvBehov(
             behovDefinisjon = Definisjon.AVKLAR_SYKDOM,
             behandling = behandling,
-            kontekst = flytKontekst3,
+            kontekst = behandling.flytKontekst(),
             bruker = Bruker("Z123456")
         )
         avklaringsbehovene.løsAvklaringsbehov(Definisjon.AVKLAR_SYKDOM, "asdf", "TESTEN")
 
-        flytOrkestrator.forberedOgProsesserBehandling(flytKontekst3)
+        flytOrkestrator.forberedOgProsesserBehandling(behandling)
 
         assertThat(behandlingRepository.hentStegHistorikk(behandling.id)).isNotEmpty()
         assertThat(behandlingRepository.hentStegHistorikk(behandling.id).map { tilstand -> tilstand.steg() }
@@ -358,8 +347,7 @@ class EnklereFlytOrkestratorTest {
             definisjon = Definisjon.AVKLAR_SYKDOM, funnetISteg = AVKLAR_SYKDOM, null, null
         )
 
-        val flytKontekst = flytOrkestrator.opprettKontekst(behandling.sakId, behandling.id)
-        flytOrkestrator.forberedOgProsesserBehandling(flytKontekst)
+        flytOrkestrator.forberedOgProsesserBehandling(behandling)
 
         assertThat(behandling.status()).isEqualTo(Status.UTREDES)
         assertThat(behandling.aktivtSteg()).isEqualTo(AVKLAR_SYKDOM)
@@ -526,16 +514,15 @@ class EnklereFlytOrkestratorTest {
             )
         )
 
-        val flytKontekst3 = flytOrkestrator.opprettKontekst(behandling.sakId, behandling.id)
         flytOrkestrator.forberedLøsingAvBehov(
             behovDefinisjon = Definisjon.AVKLAR_STUDENT,
             behandling = behandling,
-            kontekst = flytKontekst3,
+            kontekst = behandling.flytKontekst(),
             bruker = Bruker("Z123456")
         )
         avklaringsbehovene.løsAvklaringsbehov(Definisjon.AVKLAR_STUDENT, "asdf", "TESTEN")
 
-        flytOrkestrator.forberedOgProsesserBehandling(flytKontekst3)
+        flytOrkestrator.forberedOgProsesserBehandling(behandling)
 
         assertThat(behandlingRepository.hentStegHistorikk(behandling.id)).isNotEmpty()
         assertThat(behandlingRepository.hentStegHistorikk(behandling.id)).containsExactlyElementsOf(
@@ -744,7 +731,7 @@ class EnklereFlytOrkestratorTest {
         /* Plasser flyten i steget FASTSETT_ARBEIDSEVNE. */
         avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
             .leggTil(Definisjon.FASTSETT_ARBEIDSEVNE, Definisjon.FASTSETT_ARBEIDSEVNE.løsesISteg, null, null)
-        flytOrkestrator.forberedOgProsesserBehandling(flytOrkestrator.opprettKontekst(behandling.sakId, behandling.id))
+        flytOrkestrator.forberedOgProsesserBehandling(behandling)
         behandlingRepository.hent(behandling.id).also {
             assertThat(it.aktivtSteg()).isEqualTo(Definisjon.FASTSETT_ARBEIDSEVNE.løsesISteg)
         }
@@ -752,7 +739,7 @@ class EnklereFlytOrkestratorTest {
         avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
             .leggTil(Definisjon.AVKLAR_BISTANDSBEHOV, Definisjon.AVKLAR_BISTANDSBEHOV.løsesISteg, null, null)
 
-        flytOrkestrator.forberedOgProsesserBehandling(flytOrkestrator.opprettKontekst(behandling.sakId, behandling.id))
+        flytOrkestrator.forberedOgProsesserBehandling(behandling)
 
         behandlingRepository.hent(behandling.id).also {
             assertThat(it.aktivtSteg())

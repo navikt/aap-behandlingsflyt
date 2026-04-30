@@ -60,7 +60,6 @@ class DatadelingBehandlingJobbUtfører(
         val vilkårsresultatTidslinje = underveis?.somTidslinje().orEmpty()
             .mapNotNull { it.rettighetsType }
 
-
         val vedtakId = vedtakRepository.hentId(behandling.id)
         val samId = samIdRepository.hentHvisEksisterer(behandling.id)
 
@@ -81,7 +80,6 @@ class DatadelingBehandlingJobbUtfører(
             samId,
             tilkjentYtelse,
             beregningsgrunnlagIKroner,
-            underveis?.perioder.orEmpty(),
             vedtaksTidspunkt.toLocalDate(),
             vilkårsresultatTidslinje,
             stansOpphør,

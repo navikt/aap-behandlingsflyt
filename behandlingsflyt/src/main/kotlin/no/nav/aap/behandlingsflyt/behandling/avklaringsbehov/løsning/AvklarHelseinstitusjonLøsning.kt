@@ -25,6 +25,8 @@ class AvklarHelseinstitusjonLøsning(
         defaultValue = AVKLAR_HELSEINSTITUSJON_KODE
     ) val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`5011`
 ) :
+// PeriodisertAvklaringsbehovLøsning kan ikke brukes her, fordi den krever at alle perioder er vurdert – noe som ikke gjelder for helseinstitusjon.
+// For helseinstitusjon vurderes perioder ut fra tidligste reduksjonsdato, eller perioden saksbehandler har angitt.
     EnkeltAvklaringsbehovLøsning {
     override fun løs(repositoryProvider: RepositoryProvider, kontekst: AvklaringsbehovKontekst, gatewayProvider: GatewayProvider): LøsningsResultat {
         return AvklarHelseinstitusjonLøser(repositoryProvider).løs(kontekst, this)

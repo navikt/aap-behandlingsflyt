@@ -8,5 +8,4 @@ interface AndreYtelserOppgittISøknadRepository : Repository {
     fun lagre(behandlingId: BehandlingId, andreUtbetalinger: AndreYtelserSøknad)
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId)
     fun hentHvisEksisterer(behandlingId: BehandlingId): AndreYtelserSøknad?
-    fun hent(behandlingId: BehandlingId): AndreYtelserSøknad
 }

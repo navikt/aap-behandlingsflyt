@@ -4,8 +4,6 @@ import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.behandling.vilkår.sykdom.SykdomsFaktagrunnlag
 import no.nav.aap.behandlingsflyt.behandling.vilkår.sykdom.Sykdomsvilkår
-import no.nav.aap.behandlingsflyt.behandling.vilkår.sykdom.SykdomsvilkårUtenVissVarighet
-import no.nav.aap.behandlingsflyt.behandling.vilkår.sykdom.diff
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
@@ -95,15 +93,6 @@ class FastsettSykdomsvilkåretSteg private constructor(
         )
 
         Sykdomsvilkår(vilkårsresultat).vurder(faktagrunnlag)
-        val segmenterMedDiff = SykdomsvilkårUtenVissVarighet(vilkårsresultat).vurderOgSammenlign(
-            faktagrunnlag,
-            vilkårsresultat,
-            rettighetsperiode
-        ).diff()
-        
-        if (segmenterMedDiff.isNotEmpty()) {
-            log.warn("Fant ulikt utfall mellom ny og gammel vilkårsvurdering: $segmenterMedDiff")
-        }
 
         vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
     }

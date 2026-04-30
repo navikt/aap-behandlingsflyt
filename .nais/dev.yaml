@@ -46,14 +46,10 @@ spec:
   terminationGracePeriodSeconds: 30
   liveness:
     path: /actuator/live
-    initialDelay: 3
-    periodSeconds: 3
-    failureThreshold: 21
+    initialDelay: 5
   readiness:
     path: /actuator/ready
-    initialDelay: 3
-    periodSeconds: 3
-    failureThreshold: 21
+    initialDelay: 5
   prometheus:
     enabled: true
     path: /actuator/metrics
@@ -110,6 +106,7 @@ spec:
         - host: pensjon-pen-q2.dev-fss-pub.nais.io
         - host: tp-api.dev-fss-pub.nais.io
         - host: aap-unleash-api.nav.cloud.nais.io
+        - host: dokarkiv.dev-fss-pub.nais.io
       rules:
         - application: brev
         - application: tilgang
@@ -266,3 +263,7 @@ spec:
       value: http://tiltakspenger-datadeling.tpts
     - name: INTEGRASJON_TILTAKSPENGER_SCOPE
       value: api://dev-gcp.tpts.tiltakspenger-datadeling/.default
+    - name: INTEGRASJON_DOKARKIV_URL
+      value: https://dokarkiv-q2.dev-fss-pub.nais.io
+    - name: INTEGRASJON_DOKARKIV_SCOPE
+      value: api://dev-fss.teamdokumenthandtering.dokarkiv/.default

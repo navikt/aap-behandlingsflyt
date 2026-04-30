@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.integrasjon.datadeling
 
 import com.github.benmanes.caffeine.cache.Caffeine
+import io.micrometer.core.instrument.binder.cache.CaffeineCacheMetrics
 import no.nav.aap.api.intern.PersonEksistererIAAPArena
 import no.nav.aap.api.intern.SakerRequest
 import no.nav.aap.api.intern.behandlingsflyt.OppdaterIdenterDto
@@ -11,7 +12,6 @@ import no.nav.aap.behandlingsflyt.datadeling.SakStatus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.GjeldendeStansEllerOpphør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.Opphør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.Stans
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.ApiInternGateway
@@ -27,7 +27,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.datadeling.RettighetsTypePeriode
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.SakDTO
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.StansEllerOpphørEnumDTO
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.TilkjentDTO
-import no.nav.aap.behandlingsflyt.kontrakt.datadeling.UnderveisDTO
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.prometheus
 import no.nav.aap.behandlingsflyt.prosessering.datadeling.UtledArenaVedtakstype
@@ -41,7 +40,7 @@ import no.nav.aap.komponenter.gateway.Factory
 import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
 import no.nav.aap.komponenter.httpklient.httpclient.RestClient
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
-import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
+import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureM2MTokenProvider
 import no.nav.aap.komponenter.json.DefaultJsonMapper
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
@@ -61,14 +60,19 @@ class ApiInternGatewayImpl : ApiInternGateway {
         private val arenaStatusCache = Caffeine.newBuilder()
             .expireAfterWrite(Duration.ofHours(2))
             .maximumSize(10_000)
+            .recordStats()
             .build<Set<String>, ArenaStatusResponse>()
+
+        init {
+            CaffeineCacheMetrics.monitor(prometheus, arenaStatusCache, "datadeling_arena_status")
+        }
     }
 
     private val log = LoggerFactory.getLogger(javaClass)
 
     private val restClient = RestClient.withDefaultResponseHandler(
         config = ClientConfig(scope = requiredConfigForKey("integrasjon.datadeling.scope")),
-        tokenProvider = ClientCredentialsTokenProvider,
+        tokenProvider = AzureM2MTokenProvider,
         prometheus = prometheus
     )
 
@@ -112,7 +116,6 @@ class ApiInternGatewayImpl : ApiInternGateway {
         samId: String?,
         tilkjent: List<TilkjentYtelsePeriode>,
         beregningsgrunnlag: BigDecimal?,
-        underveis: List<Underveisperiode>,
         vedtaksDato: LocalDate,
         rettighetsTypeTidslinje: Tidslinje<RettighetsType>,
         stansOpphørGrunnlag: Set<GjeldendeStansEllerOpphør>?,
@@ -125,17 +128,6 @@ class ApiInternGatewayImpl : ApiInternGateway {
                 body = DatadelingDTO(
                     behandlingsId = behandling.id.id.toString(),
                     behandlingsReferanse = behandling.referanse.toString(),
-                    underveisperiode = underveis.map {
-                        UnderveisDTO(
-                            underveisFom = it.periode.fom,
-                            underveisTom = it.periode.tom,
-                            meldeperiodeFom = it.meldePeriode.fom,
-                            meldeperiodeTom = it.meldePeriode.tom,
-                            utfall = it.utfall.name,
-                            rettighetsType = it.rettighetsType?.name,
-                            avslagsårsak = it.avslagsårsak?.name
-                        )
-                    },
                     rettighetsPeriodeFom = sak.rettighetsperiode.fom,
                     rettighetsPeriodeTom = sak.rettighetsperiode.tom,
                     behandlingStatus = behandling.status(),
@@ -143,7 +135,6 @@ class ApiInternGatewayImpl : ApiInternGateway {
                     beregningsgrunnlag = beregningsgrunnlag,
                     sak = SakDTO(
                         saksnummer = sak.saksnummer.toString(),
-                        status = sak.status(),
                         fnr = sak.person.identer().map { ident -> ident.identifikator },
                         opprettetTidspunkt = sak.opprettetTidspunkt
                     ),
@@ -155,8 +146,6 @@ class ApiInternGatewayImpl : ApiInternGateway {
                             // legg til redusert dagsats
                             gradering = tilkjentPeriode.tilkjent.gradering.prosentverdi(),
                             samordningUføregradering = tilkjentPeriode.tilkjent.graderingGrunnlag.samordningUføregradering.prosentverdi(),
-                            // TODO: fjern
-                            grunnlag = tilkjentPeriode.tilkjent.dagsats.verdi,
                             grunnlagsfaktor = tilkjentPeriode.tilkjent.grunnlagsfaktor.verdi(),
                             grunnbeløp = tilkjentPeriode.tilkjent.grunnbeløp.verdi,
                             antallBarn = tilkjentPeriode.tilkjent.antallBarn,
@@ -235,6 +224,7 @@ class ApiInternGatewayImpl : ApiInternGateway {
             Avslagsårsak.BRUDD_PÅ_OPPHOLDSKRAV_OPPHØR -> AvslagsårsakDTO.BRUDD_PÅ_OPPHOLDSKRAV_OPPHØR
             Avslagsårsak.ORDINÆRKVOTE_BRUKT_OPP -> AvslagsårsakDTO.ORDINÆRKVOTE_BRUKT_OPP
             Avslagsårsak.SYKEPENGEERSTATNINGKVOTE_BRUKT_OPP -> AvslagsårsakDTO.SYKEPENGEERSTATNINGKVOTE_BRUKT_OPP
+            Avslagsårsak.IKKE_SYKDOM_SKADE_LYTE -> AvslagsårsakDTO.IKKE_SYKDOM_SKADE_LYTE
             Avslagsårsak.BRUKER_UNDER_18 -> null
             Avslagsårsak.MANGLENDE_DOKUMENTASJON -> null
             Avslagsårsak.IKKE_MEDLEM_FORUTGÅENDE -> null

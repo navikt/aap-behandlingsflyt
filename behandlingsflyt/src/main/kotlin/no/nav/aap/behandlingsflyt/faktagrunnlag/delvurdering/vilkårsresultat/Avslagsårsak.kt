@@ -15,6 +15,7 @@ enum class Avslagsårsak(
     IKKE_RETT_PA_STUDENT(kode = "11-14", hjemmel = "§ 11-14", Avslagstype.OPPHØR),
     VARIGHET_OVERSKREDET_STUDENT(kode = "AAP-F-7", hjemmel = "Forskrift om AAP § 7 jf. ftrl. § 11-14", Avslagstype.OPPHØR),
     IKKE_SYKDOM_AV_VISS_VARIGHET(kode = "11-5-1", "§ 11-5", Avslagstype.OPPHØR),
+    IKKE_SYKDOM_SKADE_LYTE(kode = "11-5-1", hjemmel = "§ 11-5", Avslagstype.OPPHØR),
     IKKE_SYKDOM_SKADE_LYTE_VESENTLIGDEL(kode = "11-5-1", "§ 11-5", Avslagstype.OPPHØR),
     IKKE_NOK_REDUSERT_ARBEIDSEVNE(kode = "11-5-1", "§ 11-5", Avslagstype.OPPHØR),
     IKKE_BEHOV_FOR_OPPFOLGING(kode = "11-6-1", "§ 11-6", Avslagstype.OPPHØR),
