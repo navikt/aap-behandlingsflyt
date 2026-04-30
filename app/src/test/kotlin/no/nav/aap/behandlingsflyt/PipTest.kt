@@ -59,6 +59,7 @@ class PipTest {
         // Starter server
         private val server = embeddedServer(Netty, port = 0) {
             System.setProperty("NAIS_CLUSTER_NAME", "LOCAL")
+            System.setProperty("KELVIN_KRYPTERT_STRING_SECRET_KEY","dGVzdC1ub2trZWwtZm9yLWtlbHZpbi1pZC0zMmJ5dGU=")
             server(
                 dbConfig = dbConfig,
                 repositoryRegistry = postgresRepositoryRegistry,
