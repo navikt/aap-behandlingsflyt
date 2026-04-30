@@ -38,7 +38,7 @@ data class MeldekortUke(
 
 data class MeldekortDag(
     val dag: String,
-    val timerArbeid: Int
+    val timerArbeid: Double
 )
 
 fun MeldekortV0.tilPdfRequest(
@@ -61,7 +61,7 @@ fun MeldekortV0.tilPdfRequest(
                 dager = dager.map { dag ->
                     MeldekortDag(
                         dag = dag.fraOgMedDato.dayOfWeek.getDisplayName(TextStyle.FULL, norsk),
-                        timerArbeid = dag.timerArbeid.toInt()
+                        timerArbeid = dag.timerArbeid
                     )
                 }
             )
