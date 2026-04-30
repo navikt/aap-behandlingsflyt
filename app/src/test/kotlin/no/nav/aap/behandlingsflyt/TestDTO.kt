@@ -26,6 +26,7 @@ data class TestYrkesskadeDto(
     val skadebeskrivelse: String? = null,   // brukes når kilde=REGISTER
     val skadedato: LocalDate? = LocalDate.now(),
     val saksreferanse: String = "1234",
+    val vedtaksdato: LocalDate? = null,
 )
 
 @Response(statusCode = 202)

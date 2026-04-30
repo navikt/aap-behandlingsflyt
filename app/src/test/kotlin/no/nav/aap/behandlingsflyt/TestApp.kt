@@ -329,6 +329,7 @@ private fun sendInnSøknad(dto: OpprettTestcaseDTO, gatewayProvider: GatewayProv
                         skadeart = entry.skadeart,
                         diagnose = entry.diagnose,
                         skadebeskrivelse = entry.skadebeskrivelse,
+                        vedtaksdato = entry.vedtaksdato,
                     )
                     else -> null
                 }

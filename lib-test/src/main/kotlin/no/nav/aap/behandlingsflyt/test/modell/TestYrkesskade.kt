@@ -9,4 +9,5 @@ data class TestYrkesskade(
     val skadeart: String? = null,
     val diagnose: String? = null,
     val skadebeskrivelse: String? = null,
+    val vedtaksdato: LocalDate? = null,
 )
