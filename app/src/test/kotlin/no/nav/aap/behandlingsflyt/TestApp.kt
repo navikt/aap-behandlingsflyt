@@ -55,9 +55,7 @@ import no.nav.aap.behandlingsflyt.test.testGatewayProvider
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
-import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
-import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.testutil.ManuellMotorImpl
 import no.nav.aap.verdityper.dokument.JournalpostId
@@ -257,23 +255,13 @@ private fun genererFengselsopphold() = InstitusjonsoppholdJSON(
     institusjonsnavn = "Azkaban"
 )
 
-private fun genererSykehusopphold() = listOf(
-    InstitusjonsoppholdJSON(
-        organisasjonsnummer = "12345",
-        kategori = Oppholdstype.H.name,
-        institusjonstype = Institusjonstype.HS.name,
-        startdato = LocalDate.of(2026, 2, 21),
-        forventetSluttdato = LocalDate.of(2026, 2, 23),
-        institusjonsnavn = "St. Mungos Hospital"
-    ),
-    InstitusjonsoppholdJSON(
-        organisasjonsnummer = "67890",
-        kategori = Oppholdstype.D.name,
-        institusjonstype = Institusjonstype.HS.name,
-        startdato = LocalDate.of(2026, 2, 23),
-        forventetSluttdato = LocalDate.of(2026, 12, 15),
-        institusjonsnavn = "Helgelandssykehus Dialyse, Sandnessjøen"
-    ),
+private fun genererSykehusopphold() = InstitusjonsoppholdJSON(
+    organisasjonsnummer = "12345",
+    kategori = Oppholdstype.H.name,
+    institusjonstype = Institusjonstype.HS.name,
+    forventetSluttdato = LocalDate.now().plusYears(1),
+    startdato = LocalDate.now().minusYears(2),
+    institusjonsnavn = "St. Mungos Hospital"
 )
 
 private fun genererBarn(dto: TestBarn): TestPerson {
@@ -351,10 +339,10 @@ private fun sendInnSøknad(dto: OpprettTestcaseDTO, gatewayProvider: GatewayProv
                     )
             },
             barn = barn,
-            institusjonsopphold = buildList{
-                if (dto.institusjoner.fengsel == true) add(genererFengselsopphold())
-                if (dto.institusjoner.sykehus == true) addAll(genererSykehusopphold())
-            },
+            institusjonsopphold = listOfNotNull(
+                if (dto.institusjoner.fengsel == true) genererFengselsopphold() else null,
+                if (dto.institusjoner.sykehus == true) genererSykehusopphold() else null,
+            ),
             inntekter = dto.inntekterPerAr.orEmpty().map { inn -> inn.to() },
             sykepenger = dto.sykepenger.map {
                 TestPerson.Sykepenger(
@@ -400,15 +388,10 @@ private fun sendInnSøknad(dto: OpprettTestcaseDTO, gatewayProvider: GatewayProv
         )
     )
 
-    val periode = Periode(
-        LocalDate.of(2025, 7, 25),
-        Tid.MAKS
-    )
-
     val sak = datasource.transaction { connection ->
         val repositoryProvider = repositoryRegistry.provider(connection)
         val sakService = PersonOgSakService(gatewayProvider, repositoryProvider)
-        val sak = sakService.finnEllerOpprett(ident, periode.fom)
+        val sak = sakService.finnEllerOpprett(ident, LocalDate.now())
 
         val flytJobbRepository = FlytJobbRepository(connection)
 
@@ -453,7 +436,7 @@ private fun opprettNySakOgBehandling(
             if (dto.steg == StegType.AVKLAR_SYKDOM) return sak
             løsSykdom(
                 behandling = behandling,
-                vurderingGjelderFra = sak.rettighetsperiode.fom,
+                vurderingGjelderFra = dto.søknadsdato ?: sak.rettighetsperiode.fom,
                 erArbeidsevnenNedsatt = dto.erArbeidsevnenNedsatt,
                 erNedsettelseIArbeidsevneMerEnnHalvparten = dto.erNedsettelseIArbeidsevneMerEnnHalvparten
             )
@@ -463,7 +446,7 @@ private fun opprettNySakOgBehandling(
 
         if (harBehandlingsgrunnlag) {
             if (dto.steg == StegType.VURDER_BISTANDSBEHOV) return sak
-            løsBistand(behandling, sak.rettighetsperiode.fom)
+            løsBistand(behandling, dto.søknadsdato ?: sak.rettighetsperiode.fom)
 
             // Vurderinger i sykdom
             if (dto.steg == StegType.REFUSJON_KRAV) return sak
