@@ -81,17 +81,17 @@ class YrkesskadeInformasjonskrav internal constructor(
         val oppgittYrkesskade = oppgittYrkesskade(kontekst.sakId, sak.rettighetsperiode)
         val oppgittYrkesskadeUtenSkadedato = oppgittYrkesskade(kontekst.sakId, null)
         val yrkesskader = registerYrkesskade + listOfNotNull(oppgittYrkesskade, oppgittYrkesskadeUtenSkadedato)
+        val harOppgittYrkesskade = harOppgittYrkesskade(
+            mottattDokumentRepository.hentDokumenterAvType(kontekst.sakId, InnsendingType.SØKNAD)
+        )
 
         val behandlingId = kontekst.behandlingId
         val gamleData = yrkesskadeRepository.hentHvisEksisterer(behandlingId)
 
         if (yrkesskader.isNotEmpty()) {
-            yrkesskadeRepository.lagre(
-                behandlingId,
-                Yrkesskader(yrkesskader)
-            )
+            yrkesskadeRepository.lagre(behandlingId, Yrkesskader(yrkesskader), harOppgittYrkesskade)
         } else if (yrkesskadeRepository.hentHvisEksisterer(behandlingId) != null) {
-            yrkesskadeRepository.lagre(behandlingId, null)
+            yrkesskadeRepository.lagre(behandlingId, null, harOppgittYrkesskade)
         }
         val nyeData = yrkesskadeRepository.hentHvisEksisterer(behandlingId)
 

@@ -34,6 +34,13 @@ class YrkesskadeRepositoryImpl(private val connection: DBConnection) : Yrkesskad
     }
 
     override fun hentHvisEksisterer(behandlingId: BehandlingId): YrkesskadeGrunnlag? {
+        val oppgittYrkesskadeISøknad = connection.queryFirstOrNull(
+            "SELECT OPPGITT_YRKESSKADE_I_SOKNAD FROM YRKESSKADE_GRUNNLAG WHERE AKTIV AND BEHANDLING_ID = ?"
+        ) {
+            setParams { setLong(1, behandlingId.toLong()) }
+            setRowMapper { it.getBoolean("OPPGITT_YRKESSKADE_I_SOKNAD") }
+        } ?: false
+
         return connection.queryList(
             """
             SELECT y.ID AS YRKESSKADE_ID, p.REFERANSE, p.YRKESSKADE_SAKSNUMMER, p.KILDESYSTEM, p.SKADEDATO,
@@ -63,6 +70,7 @@ class YrkesskadeRepositoryImpl(private val connection: DBConnection) : Yrkesskad
             }
         }.grupperOgMapTilGrunnlag(behandlingId)
             .firstOrNull()
+            ?.copy(oppgittYrkesskadeISøknad = oppgittYrkesskadeISøknad)
     }
 
     private data class YrkesskadeInternal(
@@ -102,7 +110,7 @@ class YrkesskadeRepositoryImpl(private val connection: DBConnection) : Yrkesskad
             }
     }
 
-    override fun lagre(behandlingId: BehandlingId, yrkesskader: Yrkesskader?) {
+    override fun lagre(behandlingId: BehandlingId, yrkesskader: Yrkesskader?, oppgittYrkesskadeISøknad: Boolean) {
         val yrkesskadeGrunnlag = hentHvisEksisterer(behandlingId)
 
         if (yrkesskadeGrunnlag?.yrkesskader == yrkesskader) return
@@ -113,10 +121,13 @@ class YrkesskadeRepositoryImpl(private val connection: DBConnection) : Yrkesskad
 
         val yrkesskadeId = connection.executeReturnKey("INSERT INTO YRKESSKADE DEFAULT VALUES")
 
-        connection.execute("INSERT INTO YRKESSKADE_GRUNNLAG (BEHANDLING_ID, YRKESSKADE_ID) VALUES (?, ?)") {
+        connection.execute(
+            "INSERT INTO YRKESSKADE_GRUNNLAG (BEHANDLING_ID, YRKESSKADE_ID, OPPGITT_YRKESSKADE_I_SOKNAD) VALUES (?, ?, ?)"
+        ) {
             setParams {
                 setLong(1, behandlingId.toLong())
                 setLong(2, yrkesskadeId)
+                setBoolean(3, oppgittYrkesskadeISøknad)
             }
         }
 
@@ -140,8 +151,9 @@ class YrkesskadeRepositoryImpl(private val connection: DBConnection) : Yrkesskad
                 setLocalDate(6, yrkesskade.vedtaksdato)
                 setString(7, yrkesskade.skadeart)
                 setString(8, yrkesskade.diagnose)
-                setString(9, yrkesskade.skadekombinasjoner
-                    ?.let { objectMapper.writeValueAsString(it) })
+                setString(
+                    9, yrkesskade.skadekombinasjoner
+                        ?.let { objectMapper.writeValueAsString(it) })
                 setString(10, yrkesskade.skadekombinasjonerTekst)
             }
         }
