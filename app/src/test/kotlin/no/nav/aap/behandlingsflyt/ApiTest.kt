@@ -152,6 +152,7 @@ class ApiTest {
         @BeforeAll
         fun beforeall() {
             System.setProperty("NAIS_CLUSTER_NAME", "LOCAL")
+            System.setProperty("KELVIN_KRYPTERT_STRING_SECRET_KEY","dGVzdC1ub2trZWwtZm9yLWtlbHZpbi1pZC0zMmJ5dGU=")
             server.start()
             port =
                 runBlocking { server.engine.resolvedConnectors().first { it.type == ConnectorType.HTTP }.port }
