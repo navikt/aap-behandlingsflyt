@@ -254,8 +254,27 @@ class BeregnTilkjentYtelseService(private val grunnlag: TilkjentYtelseGrunnlag) 
     }
 
     private class Barnetillegg(
+        /** Antall barn som gir rett til barnetillegg. */
         val antallBarn: Int,
+
+        /** Størrelsen på ugradert barnetilleggsats.
+         *
+         * Verdien er ugradert, i den forstand at:
+         * Hvis barnetilleggsatsen er spesifisert i AAP-forskriften § 8 til 38 kroner, og medlemmet får 50% AAP,
+         * så vil [barnetilleggsats] være 38.
+         **/
         val barnetilleggsats: Beløp,
+
+        /** Størrelsen på total, ugradert barnetillegg.
+         *
+         * Verdien er total i den forstand at den tar hensyn til antall barn.
+         *
+         * Den er ugradert i den forstand at hvis medlemmet har 2 barn, får 50 % AAP
+         * på grunn av samordning, og barnetilleggssatsen er spesifisert i AAP-forskriften § 8 til 38 kroner,
+         * så vil [barnetillegg] være 2 * 38 = 76. Altså vi har ikke redusert barnetillegget med 50% her.
+         *
+         * Spesifikasjon: [barnetillegg] = [barnetilleggsats] * [antallBarn].
+         */
         val barnetillegg: Beløp
     )
 }
