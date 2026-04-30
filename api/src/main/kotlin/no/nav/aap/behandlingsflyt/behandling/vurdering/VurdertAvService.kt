@@ -54,12 +54,10 @@ class VurdertAvService(
         definisjon: Definisjon,
         behandlingId: BehandlingId,
         vurdertAv: VurdertAvResponse?,
-        besluttetAv: VurdertAvResponse? = besluttetAv(definisjon, behandlingId),
-        kvalitetssikretAv: VurdertAvResponse? = kvalitetssikretAv(definisjon, behandlingId),
     ) = VurderingerMetaResponse(
         vurdertAv = vurdertAv,
-        kvalitetssikretAv = kvalitetssikretAv,
-        besluttetAv = besluttetAv,
+        kvalitetssikretAv = kvalitetssikretAv(definisjon, behandlingId),
+        besluttetAv = besluttetAv(definisjon, behandlingId),
     )
 
     fun medNavnOgEnhet(ident: String, dato: LocalDate): VurdertAvResponse {
