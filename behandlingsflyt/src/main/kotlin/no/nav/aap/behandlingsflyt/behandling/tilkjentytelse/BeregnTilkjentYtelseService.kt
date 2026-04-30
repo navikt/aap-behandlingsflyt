@@ -28,6 +28,7 @@ import no.nav.aap.komponenter.verdityper.Prosent.Companion.`100_PROSENT`
 import no.nav.aap.komponenter.verdityper.Prosent.Companion.`66_PROSENT`
 import no.nav.aap.komponenter.verdityper.Tid
 import org.slf4j.LoggerFactory
+import java.math.RoundingMode
 import java.time.LocalDate
 
 class TilkjentYtelseGrunnlag(
@@ -46,8 +47,23 @@ class BeregnTilkjentYtelseService(private val grunnlag: TilkjentYtelseGrunnlag) 
 
     private val log = LoggerFactory.getLogger(javaClass)
 
-    internal companion object {
-        const val ANTALL_ÅRLIGE_ARBEIDSDAGER = 260
+    companion object {
+        internal const val ANTALL_ÅRLIGE_ARBEIDSDAGER = 260
+
+        fun redusertDagsats(
+            dagsats: Beløp,
+            barnetillegg: Beløp,
+            barnepensjonDagsats: Beløp,
+            gradering: Prosent,
+        ) = maks(
+            Beløp(0),
+            Beløp(
+                dagsats.multiplisert(gradering)
+                    .pluss(barnetillegg.multiplisert(gradering))
+                    .minus(barnepensjonDagsats)
+                    .verdi().setScale(0, RoundingMode.HALF_UP)
+            )
+        )
     }
 
     /** Regner ut tilkjent ytelse, per dag. Utregningen er basert på:
