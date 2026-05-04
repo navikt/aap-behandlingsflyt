@@ -32,7 +32,7 @@ class PersonApiTest : BaseApiTest() {
             val response = createClient().post("/api/person/ident") {
                 header("Authorization", "Bearer ${getToken().token()}")
                 contentType(ContentType.Application.Json)
-                setBody(PersonIdentRequest(identifikator = person.identifikator))
+                setBody(PersonIdentRequest(personReferanse = person.identifikator))
             }
 
             assertThat(response.status).isEqualTo(HttpStatusCode.OK)
@@ -62,7 +62,7 @@ class PersonApiTest : BaseApiTest() {
             val response = createClient().post("/api/person/ident") {
                 header("Authorization", "Bearer ${getToken().token()}")
                 contentType(ContentType.Application.Json)
-                setBody(PersonIdentRequest(identifikator = person.identifikator))
+                setBody(PersonIdentRequest(personReferanse = person.identifikator))
             }
 
             assertThat(response.status).isEqualTo(HttpStatusCode.OK)
