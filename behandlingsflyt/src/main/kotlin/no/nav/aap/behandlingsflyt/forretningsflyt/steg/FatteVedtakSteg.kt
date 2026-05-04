@@ -40,6 +40,9 @@ class FatteVedtakSteg(
 ) : BehandlingSteg {
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
+        if (avklaringsbehovene.skalTilbakeføresEtterTotrinnsVurdering()) {
+            return TilbakeføresFraBeslutter
+        }
 
         val vedtakBehøverVurdering = vedtakBehøverVurdering(kontekst, avklaringsbehovene)
         val erTilstrekkeligVurdert = erTilstrekkeligVurdert(kontekst, avklaringsbehovene)
@@ -51,10 +54,6 @@ class FatteVedtakSteg(
             tilbakestillGrunnlag = {},
             kontekst = kontekst
         )
-
-        if (avklaringsbehovene.skalTilbakeføresEtterTotrinnsVurdering()) {
-            return TilbakeføresFraBeslutter
-        }
 
         val vedtakstidspunkt = if (vedtakBehøverVurdering)
             avklaringsbehovene.hentBehovForDefinisjon(Definisjon.FATTE_VEDTAK)

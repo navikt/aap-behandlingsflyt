@@ -20,6 +20,7 @@ import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
+import org.slf4j.LoggerFactory
 
 class KvalitetssikringsSteg(
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
@@ -28,6 +29,7 @@ class KvalitetssikringsSteg(
     private val trekkKlageService: TrekkKlageService,
     private val unleashGateway: UnleashGateway
 ) : BehandlingSteg {
+    private val log = LoggerFactory.getLogger(KvalitetssikringsSteg::class.java)
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         avklaringsbehovRepository = repositoryProvider.provide(),
         avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
@@ -39,6 +41,11 @@ class KvalitetssikringsSteg(
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
 
+        if (avklaringsbehovene.skalTilbakeføresEtterKvalitetssikring()) {
+            log.info("Skal tilbakeføres")
+            return TilbakeføresFraKvalitetsikrer
+        }
+        
         avklaringsbehovService.oppdaterAvklaringsbehov(
             definisjon = Definisjon.KVALITETSSIKRING,
             vedtakBehøverVurdering = { vedtakBehøverVurdering(kontekst, avklaringsbehovene) },
@@ -47,9 +54,7 @@ class KvalitetssikringsSteg(
             kontekst
         )
 
-        if (avklaringsbehovene.skalTilbakeføresEtterKvalitetssikring()) {
-            return TilbakeføresFraKvalitetsikrer
-        }
+
 
         return Fullført
     }
