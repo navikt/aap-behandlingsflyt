@@ -41,7 +41,7 @@ class OpprettJobbForGReguleringJobbUtfører(
         // TODO - er det best å slå opp aktuell G-justering basert på [datoIDag-1år, datoIDag] eller bare datoIDag-Året ?
         val årIDag = Year.now(clock)
         val aktuellGJustering = hentAktuellGJustering(årIDag)
-        if (aktuellGJustering == null) {
+        if (aktuellGJustering == null || aktuellGJustering.dato.isAfter(LocalDate.of(2025, 5, 1))) {
             log.info("Avslutter søk etter G-reguleringskandidater. Ingen G-justering for år: ${årIDag} funnet i Grunnbeløp.kt")
             return
         }
