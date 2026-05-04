@@ -38,7 +38,6 @@ class OpprettJobbForGReguleringJobbUtfører(
     private val log = LoggerFactory.getLogger(javaClass)
 
     override fun utfør(input: JobbInput) {
-        // TODO - er det best å slå opp aktuell G-justering basert på [datoIDag-1år, datoIDag] eller bare datoIDag-Året ?
         val årIDag = Year.now(clock)
         val aktuellGJustering = hentAktuellGJustering(årIDag)
         if (aktuellGJustering == null || aktuellGJustering.dato.isAfter(LocalDate.of(2025, 5, 1))) {
