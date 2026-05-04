@@ -32,7 +32,7 @@ class PdfgenGatewayImpl : PdfgenGateway {
         )
 
         val pdf = requireNotNull(
-            client.post(uri, httpRequest, { body, _ -> body.readBytes() })
+            client.post(uri, httpRequest) { body, _ -> body.readBytes() }
         )
 
         return pdf

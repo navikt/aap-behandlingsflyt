@@ -144,7 +144,7 @@ spec:
           namespace: teamdagpenger
         - application: tiltakspenger-datadeling
           namespace: tpts
-        - application: aap-saksbehandling-pdfgen
+        - application: saksbehandling-pdfgen
 
   env:
     - name: INTEGRASJON_PDL_URL
