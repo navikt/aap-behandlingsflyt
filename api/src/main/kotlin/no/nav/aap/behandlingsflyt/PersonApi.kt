@@ -20,7 +20,7 @@ import javax.sql.DataSource
 
 
 data class PersonIdentRequest (
-    val identifikator: UUID,
+    val personReferanse: UUID,
 )
 data class PersonIdentResponse(
     val ident: String
@@ -37,7 +37,7 @@ fun NormalOpenAPIRoute.personApi(
             try {
                 val personIdent = dataSource.transaction(readOnly = true) { connection ->
                     val repositoryProvider = repositoryRegistry.provider(connection)
-                    repositoryProvider.provide<PersonRepository>().hent(request.identifikator)
+                    repositoryProvider.provide<PersonRepository>().hent(request.personReferanse)
                 }.aktivIdent()
                 val tilgangGateway = gatewayProvider.provide<TilgangGateway>()
                 val harTilgang = tilgangGateway.sjekkTilgangTilPerson(personIdent.identifikator, token(), Operasjon.SE )
@@ -46,8 +46,8 @@ fun NormalOpenAPIRoute.personApi(
                 }
                 respond(PersonIdentResponse(personIdent.identifikator), HttpStatusCode.OK)
             } catch (e: NoSuchElementException) {
-                log.warn("Fant ikke ident for identifikator: ${request.identifikator}", e)
-                throw VerdiIkkeFunnetException("Fant ingen person for identifikator: ${request.identifikator}")
+                log.warn("Fant ikke ident for identifikator: ${request.personReferanse}", e)
+                throw VerdiIkkeFunnetException("Fant ingen person for identifikator: ${request.personReferanse}")
             }
         }
     }
