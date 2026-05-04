@@ -14,10 +14,12 @@ import java.net.URI
 
 class PdfgenGatewayImpl : PdfgenGateway {
     private val baseUri = URI.create(requiredConfigForKey("integrasjon.pdfgen.url"))
+    private val config = ClientConfig(scope = requiredConfigForKey("integrasjon.pdfgen.scope"))
+
     private val client = RestClient.withDefaultResponseHandler(
-        config = ClientConfig(),
+        config = config,
         tokenProvider = NoTokenTokenProvider(),
-        prometheus = prometheus
+        prometheus = prometheus,
     )
 
     override fun genererMeldekortPdf(request: MeldekortPdfRequest): ByteArray {
