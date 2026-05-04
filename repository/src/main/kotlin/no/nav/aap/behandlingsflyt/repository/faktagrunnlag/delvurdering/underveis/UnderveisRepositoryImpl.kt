@@ -116,6 +116,27 @@ class UnderveisRepositoryImpl(private val connection: DBConnection) : UnderveisR
         }
     }
 
+    override fun hentSakerMedAktuellGJustering(datoForGJustering: LocalDate): Set<SakId> {
+        val query = """
+            SELECT DISTINCT s.id as sakId
+            FROM underveis_grunnlag ug
+                JOIN underveis_periode up ON ug.perioder_id = up.perioder_id
+                JOIN behandling b ON ug.behandling_id = b.id
+                JOIN sak s ON b.sak_id = s.id
+            WHERE ug.aktiv = true
+                AND up.periode @> ?;
+        """.trimIndent()
+
+        return connection.queryList(query) {
+            setParams {
+                setLocalDate(1, datoForGJustering)
+            }
+            setRowMapper {
+                SakId(it.getLong("sakId"))
+            }
+        }.toSet()
+    }
+
     override fun hentSakerMedSisteUnderveisperiodeFørDato(sisteUnderveisDato: LocalDate): Set<SakId> {
         val query = """
             WITH siste_underveisperiode AS (SELECT ug.behandling_id, max(upper(periode)) AS siste_dato
