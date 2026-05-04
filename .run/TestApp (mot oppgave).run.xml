@@ -6,7 +6,6 @@
       <env name="NAIS_DATABASE_BEHANDLINGSFLYT_BEHANDLINGSFLYT_USERNAME" value="postgres" />
       <env name="NAIS_DATABASE_BEHANDLINGSFLYT_BEHANDLINGSFLYT_PASSWORD" value="" />
       <env name="INTEGRASJON_OPPGAVESTYRING_URL" value="http://localhost:8084" />
-      <env name="KELVIN_KRYPTERT_STRING_SECRET_KEY" value="dGVzdC1ub2trZWwtZm9yLWtlbHZpbi1pZC0zMmJ5dGU=" />
     </envs>
     <option name="MAIN_CLASS_NAME" value="no.nav.aap.behandlingsflyt.TestAppKt" />
     <module name="behandlingsflyt.app.test" />
