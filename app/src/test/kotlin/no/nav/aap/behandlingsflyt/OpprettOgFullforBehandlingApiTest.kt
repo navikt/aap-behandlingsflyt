@@ -12,6 +12,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.komponenter.dbconnect.transaction
+import no.nav.aap.behandlingsflyt.test.BehandlingStatusEnum
 import no.nav.aap.behandlingsflyt.test.BehandlingStatusRequest
 import no.nav.aap.behandlingsflyt.test.BehandlingStatusRespons
 import no.nav.aap.behandlingsflyt.test.FakePersoner
@@ -145,7 +146,7 @@ class OpprettOgFullforBehandlingApiTest {
         val behandlingStatus = pollBehandlingStatus(ident)
 
         assertThat(behandlingStatus?.ferdig).isTrue()
-        assertThat(behandlingStatus?.behandlingStatus).isEqualTo("AVSLUTTET")
+        assertThat(behandlingStatus?.behandlingStatus).isEqualTo(BehandlingStatusEnum.AVSLUTTET)
 
         val dataSource = initDatasource(dbConfig)
         dataSource.transaction { connection ->

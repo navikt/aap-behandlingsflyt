@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.test
 
+import com.papsign.ktor.openapigen.annotations.properties.description.Description
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.path.normal.post
 import com.papsign.ktor.openapigen.route.response.respond
@@ -85,7 +86,7 @@ fun NormalOpenAPIRoute.fullførBehandlingApi(
 
                 BehandlingStatusRespons(
                     saksnummer = sak.saksnummer.toString(),
-                    behandlingStatus = status.name,
+                    behandlingStatus = BehandlingStatusEnum.fraKontrakt(status),
                     ferdig = status == Status.AVSLUTTET,
                     soeknad = soeknadDetaljer,
                 )
@@ -98,21 +99,45 @@ fun NormalOpenAPIRoute.fullførBehandlingApi(
 data class OpprettOgFullforBehandlingRespons(val saksnummer: String)
 
 data class OpprettOgFullforBehandlingRequest(
+    @property:Description("Dolly-ident for test-personen.")
     val ident: String,
+    @property:Description("Om personen svarer at han/hun er student i søknaden.")
     val erStudent: Boolean,
+    @property:Description("Om personen svarer at han/hun har yrkesskade i søknaden. Urelatert til om det finnes yrkesskade i yrkesskaderegisteret.")
     val harYrkesskade: Boolean,
+    @property:Description("Om personen svarer at han/hun har bodd/jobbet i Norge i siste 5 år.")
     val harMedlemskap: Boolean,
+    @property:Description("Om søker svarte at hen mottar andre utbetalinger i søknaden.")
     val andreUtbetalinger: AndreUtbetalingerApiDto?
 )
 
 data class BehandlingStatusRequest(val ident: String)
 
 data class BehandlingStatusRespons(
+    @property:Description("Det opprettede saksnummeret.")
     val saksnummer: String,
-    val behandlingStatus: String?,
+    @property:Description("Sier om behandlingen er ferdigbehandlet. Om denne ikke er AVSLUTTET innen 1 min, er det antakelig en feil.")
+    val behandlingStatus: BehandlingStatusEnum?,
+    @property:Description("Om behandlingen er ferdigbehandlet.")
     val ferdig: Boolean,
     val soeknad: SoeknadDetaljer? = null,
 )
+
+enum class BehandlingStatusEnum {
+    OPPRETTET,
+    UTREDES,
+    IVERKSETTES,
+    AVSLUTTET;
+
+    companion object {
+        fun fraKontrakt(status: Status): BehandlingStatusEnum = when (status) {
+            Status.OPPRETTET -> OPPRETTET
+            Status.UTREDES -> UTREDES
+            Status.IVERKSETTES -> IVERKSETTES
+            Status.AVSLUTTET -> AVSLUTTET
+        }
+    }
+}
 
 data class SoeknadDetaljer(
     val erStudent: Boolean,
@@ -120,9 +145,3 @@ data class SoeknadDetaljer(
     val harMedlemskap: Boolean,
     val andreUtbetalinger: AndreUtbetalingerApiDto?,
 )
-
-/*
- *   - spørre på fnr i stedet
- *   - droppe æøå
- *   - fullfor -> follfoer
- */

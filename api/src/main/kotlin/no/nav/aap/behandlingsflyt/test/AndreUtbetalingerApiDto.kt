@@ -6,19 +6,19 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.AndreUtbetalinger
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.JaNei
 
 data class AndreUtbetalingerApiDto(
-    val loen: JaNei?,
+    val loenn: JaNei?,
     val afp: AfpDto? = null,
     val stoenad: List<AndreUtbetalingerYtelserApiDto>?,
 ) {
     fun tilKontrakt(): AndreUtbetalingerDto = AndreUtbetalingerDto(
-        lønn = loen,
+        lønn = loenn,
         afp = afp,
         stønad = stoenad?.map { it.tilKontrakt() },
     )
 
     companion object {
         fun fraKontrakt(dto: AndreUtbetalingerDto): AndreUtbetalingerApiDto = AndreUtbetalingerApiDto(
-            loen = dto.lønn,
+            loenn = dto.lønn,
             afp = dto.afp,
             stoenad = dto.stønad?.map { AndreUtbetalingerYtelserApiDto.fraKontrakt(it) },
         )
