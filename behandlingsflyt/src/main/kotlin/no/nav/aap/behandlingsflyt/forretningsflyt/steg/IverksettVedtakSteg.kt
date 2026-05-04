@@ -276,7 +276,7 @@ class IverksettVedtakSteg private constructor(
                 vilkårsresultatRepository = repositoryProvider.provide(),
             )
             val mellomlagretVurderingRepository = repositoryProvider.provide<MellomlagretVurderingRepository>()
-            val resultatUtleder = ResultatUtleder(repositoryProvider)
+            val resultatUtleder = ResultatUtleder(repositoryProvider, gatewayProvider)
             return IverksettVedtakSteg(
                 sakRepository = sakRepository,
                 refusjonkravRepository = refusjonkravRepository,

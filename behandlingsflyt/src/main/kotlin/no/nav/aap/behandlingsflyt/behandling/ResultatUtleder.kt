@@ -3,12 +3,12 @@ package no.nav.aap.behandlingsflyt.behandling
 import io.opentelemetry.instrumentation.annotations.WithSpan
 import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingService
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
+import no.nav.aap.behandlingsflyt.behandling.underveis.UnderveisService
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 
 enum class Resultat {
@@ -20,16 +20,16 @@ enum class Resultat {
 
 
 class ResultatUtleder(
-    private val underveisRepository: UnderveisRepository,
     private val behandlingRepository: BehandlingRepository,
     private val trukketSøknadService: TrukketSøknadService,
-    private val avbrytRevurderingService: AvbrytRevurderingService
+    private val avbrytRevurderingService: AvbrytRevurderingService,
+    private val underveisService: UnderveisService,
 ) {
-    constructor(repositoryProvider: RepositoryProvider) : this(
-        underveisRepository = repositoryProvider.provide(),
+    constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         behandlingRepository = repositoryProvider.provide(),
         trukketSøknadService = TrukketSøknadService(repositoryProvider),
-        avbrytRevurderingService = AvbrytRevurderingService(repositoryProvider)
+        avbrytRevurderingService = AvbrytRevurderingService(repositoryProvider),
+        underveisService = UnderveisService(repositoryProvider, gatewayProvider),
     )
 
     fun utledResultat(behandling: Behandling): Resultat? {
@@ -54,9 +54,16 @@ class ResultatUtleder(
         require(behandling.typeBehandling() == TypeBehandling.Revurdering) {
             "Kan ikke utlede resultat for ${behandling.typeBehandling()} ennå."
         }
+        val forrigeBehandlingId = requireNotNull(behandling.forrigeBehandlingId) {
+            "Revurdering skal alltid ha forrigeBehandlingId, men ${behandling.id} mangler det."
+        }
 
         if (avbrytRevurderingService.revurderingErAvbrutt(behandling.id)) {
             return Resultat.AVBRUTT
+        }
+
+        if (!harRett(forrigeBehandlingId) && harRett(behandling.id)) {
+            return Resultat.INNVILGELSE
         }
 
         return null
@@ -78,10 +85,7 @@ class ResultatUtleder(
             return Resultat.TRUKKET
         }
 
-        val harOppfyltPeriode = underveisRepository.hentHvisEksisterer(behandling.id)
-            ?.perioder
-            .orEmpty()
-            .any { it.utfall == Utfall.OPPFYLT }
+        val harOppfyltPeriode = harRett(behandling.id)
 
         return if (harOppfyltPeriode) Resultat.INNVILGELSE else Resultat.AVSLAG
     }
@@ -92,11 +96,11 @@ class ResultatUtleder(
             return false
         }
 
-        val harOppfyltPeriode = underveisRepository.hentHvisEksisterer(behandling.id)
-            ?.perioder
-            .orEmpty()
-            .any { it.utfall == Utfall.OPPFYLT }
+        val harOppfyltPeriode = harRett(behandling.id)
 
         return !harOppfyltPeriode
     }
+
+    fun harRett(behandlingId: BehandlingId) =
+        underveisService.rettighethetsType(behandlingId).isNotEmpty()
 }

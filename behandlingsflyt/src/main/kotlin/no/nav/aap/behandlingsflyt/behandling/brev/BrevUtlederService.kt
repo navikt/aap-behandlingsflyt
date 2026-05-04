@@ -87,7 +87,7 @@ class BrevUtlederService(
 ) {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         behandlingRepository = repositoryProvider.provide(),
-        resultatUtleder = ResultatUtleder(repositoryProvider),
+        resultatUtleder = ResultatUtleder(repositoryProvider, gatewayProvider),
         klageresultatUtleder = KlageresultatUtleder(repositoryProvider),
         vedtakRepository = repositoryProvider.provide(),
         beregningsgrunnlagRepository = repositoryProvider.provide(),
@@ -198,6 +198,11 @@ class BrevUtlederService(
                 ) {
                     return brevBehovArbeidssøker(behandling)
                 }
+
+                if (resultat == Resultat.INNVILGELSE) {
+                    return brevBehovInnvilgelse(behandling)
+                }
+
                 return VedtakEndring
             }
 

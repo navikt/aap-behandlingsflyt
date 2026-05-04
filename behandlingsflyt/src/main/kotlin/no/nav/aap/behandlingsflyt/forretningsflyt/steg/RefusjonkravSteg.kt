@@ -30,7 +30,7 @@ class RefusjonkravSteg private constructor(
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
         avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
         behandlingRepository = repositoryProvider.provide(),
-        resultatUtleder = ResultatUtleder(repositoryProvider),
+        resultatUtleder = ResultatUtleder(repositoryProvider, gatewayProvider),
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {

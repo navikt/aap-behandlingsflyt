@@ -22,6 +22,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.test.april
+import no.nav.aap.behandlingsflyt.test.minimalGatewayProvider
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.type.Periode
@@ -85,7 +86,7 @@ class SykdomUungåligAvslagTest(val unleashGateway: KClass<UnleashGateway>) :
         assertThat(vedtak.vedtakstidspunkt.toLocalDate()).isToday
 
         val resultat = dataSource.transaction {
-            ResultatUtleder(postgresRepositoryRegistry.provider(it)).utledResultatFørstegangsBehandling(behandling.id)
+            ResultatUtleder(postgresRepositoryRegistry.provider(it), minimalGatewayProvider { }).utledResultatFørstegangsBehandling(behandling.id)
         }
         assertThat(resultat).isEqualTo(Resultat.AVSLAG)
         val brevbestilling = hentBrevAvType(behandling, TypeBrev.VEDTAK_AVSLAG)
@@ -165,7 +166,7 @@ class SykdomUungåligAvslagTest(val unleashGateway: KClass<UnleashGateway>) :
         assertThat(vedtak.vedtakstidspunkt.toLocalDate()).isToday
 
         val resultat = dataSource.transaction {
-            ResultatUtleder(postgresRepositoryRegistry.provider(it)).utledResultatFørstegangsBehandling(behandling.id)
+            ResultatUtleder(postgresRepositoryRegistry.provider(it), minimalGatewayProvider { }).utledResultatFørstegangsBehandling(behandling.id)
         }
         assertThat(resultat).isEqualTo(Resultat.AVSLAG)
         val brevbestilling = hentBrevAvType(behandling, TypeBrev.VEDTAK_AVSLAG)
@@ -254,7 +255,7 @@ class SykdomUungåligAvslagTest(val unleashGateway: KClass<UnleashGateway>) :
         assertThat(vedtak.vedtakstidspunkt.toLocalDate()).isToday
 
         val resultat = dataSource.transaction {
-            ResultatUtleder(postgresRepositoryRegistry.provider(it)).utledResultatFørstegangsBehandling(behandling.id)
+            ResultatUtleder(postgresRepositoryRegistry.provider(it), minimalGatewayProvider { }).utledResultatFørstegangsBehandling(behandling.id)
         }
         assertThat(resultat).isEqualTo(Resultat.AVSLAG)
         val brevbestilling = hentBrevAvType(behandling, TypeBrev.VEDTAK_AVSLAG)
@@ -350,7 +351,7 @@ class SykdomUungåligAvslagTest(val unleashGateway: KClass<UnleashGateway>) :
         assertThat(vedtak.vedtakstidspunkt.toLocalDate()).isToday
 
         val resultat = dataSource.transaction {
-            ResultatUtleder(postgresRepositoryRegistry.provider(it)).utledResultatFørstegangsBehandling(behandling.id)
+            ResultatUtleder(postgresRepositoryRegistry.provider(it), minimalGatewayProvider { }).utledResultatFørstegangsBehandling(behandling.id)
         }
         assertThat(resultat).isEqualTo(Resultat.AVSLAG)
     }
