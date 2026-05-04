@@ -25,6 +25,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.test.PersonNavn
+import no.nav.aap.behandlingsflyt.test.april
 import no.nav.aap.behandlingsflyt.test.desember
 import no.nav.aap.behandlingsflyt.test.februar
 import no.nav.aap.behandlingsflyt.test.januar
@@ -236,8 +237,8 @@ class InstitusjonFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::cla
 
     @Test
     fun `institusjonsopphold med reduksjon og barnetillegg i forskjellige perioder - barnetillegg beholdes og AAP reduseres`() {
-        val fom = LocalDate.now().minusMonths(5)
-        val oppholdTom = LocalDate.now().plusMonths(6)
+        val fom = 1 desember 2025
+        val oppholdTom = 1 april 2026
         val barnetilleggFom = fom.minusMonths(5)
         val barnetilleggTom = fom.plusMonths(1)
         val tidligsteReduksjonsdato = fom.withDayOfMonth(1).plusMonths(4)
