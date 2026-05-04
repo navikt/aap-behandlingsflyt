@@ -25,6 +25,7 @@ import no.nav.aap.behandlingsflyt.mdc.LoggingKontekst
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersoninfoGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.BrevResponsDTO
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.DokumentResponsDTO
 import no.nav.aap.behandlingsflyt.tilgang.TilgangGateway
 import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
@@ -272,6 +273,26 @@ fun NormalOpenAPIRoute.brevApi(
                         )
                     }
                     respond(DokumentResponsDTO(pdf))
+                }
+            }
+
+            route("/{brevbestillingReferanse}/forhandsvis-html") {
+                authorizedGet<BrevbestillingReferanse, BrevResponsDTO>(authorizationParamPathConfig) { brevbestillingReferanse ->
+                    val html = dataSource.transaction { connection ->
+                        val repositoryProvider = repositoryRegistry.provider(connection)
+                        val brevbestillingRepository =
+                            repositoryProvider.provide<BrevbestillingRepository>()
+
+                        val brevbestilling = brevbestillingRepository.hent(brevbestillingReferanse)
+                            ?: throw VerdiIkkeFunnetException("Fant ikke brevbestilling med referanse $brevbestillingReferanse")
+
+                        val signaturService = SignaturService(repositoryProvider, gatewayProvider)
+                        brevbestillingGateway.forhåndsvisHtml(
+                            bestillingReferanse = brevbestillingReferanse,
+                            signaturer = signaturService.finnSignaturGrunnlag(brevbestilling, bruker()),
+                        )
+                    }
+                    respond(BrevResponsDTO(html))
                 }
             }
         }
