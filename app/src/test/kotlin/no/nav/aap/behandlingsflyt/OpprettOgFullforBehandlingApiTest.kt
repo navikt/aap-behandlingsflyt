@@ -103,9 +103,19 @@ class OpprettOgFullforBehandlingApiTest {
         )
     }
 
+    @Test
+    fun `oppretter og fullfører behandling automatisk uten medlemskap`() {
+        opprettOgVerifiserBehandling(
+            ident = "10107099952",
+            erStudent = false,
+            harMedlemskap = false,
+        )
+    }
+
     private fun opprettOgVerifiserBehandling(
         ident: String,
         erStudent: Boolean,
+        harMedlemskap: Boolean = true,
     ) {
         FakePersoner.leggTil(
             TestPerson(
@@ -123,7 +133,7 @@ class OpprettOgFullforBehandlingApiTest {
                     ident = ident,
                     erStudent = erStudent,
                     harYrkesskade = false,
-                    harMedlemskap = true,
+                    harMedlemskap = harMedlemskap,
                     andreUtbetalinger = null,
                 )
             )
@@ -132,7 +142,7 @@ class OpprettOgFullforBehandlingApiTest {
         requireNotNull(respons) { "Ingen respons fra opprettOgFullforBehandling" }
         val saksnummer = respons.saksnummer
 
-        val behandlingStatus = pollBehandlingStatus(saksnummer)
+        val behandlingStatus = pollBehandlingStatus(ident)
 
         assertThat(behandlingStatus?.ferdig).isTrue()
         assertThat(behandlingStatus?.behandlingStatus).isEqualTo("AVSLUTTET")
@@ -150,12 +160,12 @@ class OpprettOgFullforBehandlingApiTest {
         }
     }
 
-    private fun pollBehandlingStatus(saksnummer: String): BehandlingStatusRespons? = runBlocking {
+    private fun pollBehandlingStatus(ident: String): BehandlingStatusRespons? = runBlocking {
         repeat(120) {
             try {
                 val status = ccClient.post<BehandlingStatusRequest, BehandlingStatusRespons>(
                     URI.create("http://localhost:$port/api/test/behandlingStatus"),
-                    PostRequest(body = BehandlingStatusRequest(saksnummer = saksnummer))
+                    PostRequest(body = BehandlingStatusRequest(ident = ident))
                 )
                 if (status?.ferdig == true) return@runBlocking status
             } catch (e: Exception) {

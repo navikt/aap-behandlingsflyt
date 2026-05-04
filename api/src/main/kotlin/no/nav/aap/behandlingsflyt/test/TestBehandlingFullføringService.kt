@@ -8,6 +8,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarBist
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarManuellInntektVurderingLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarOppholdskravLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarPeriodisertForutgåendeMedlemskapLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarPeriodisertLovvalgMedlemskapLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSamordningAndreStatligeYtelserLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSamordningGraderingLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSamordningSykestipendLøsning
@@ -48,6 +49,10 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentVur
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.SykdomsvurderingLøsningDto
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
+import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.LovvalgDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.MedlemskapDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.PeriodisertManuellVurderingForLovvalgMedlemskapDto
+import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.EØSLandEllerLandMedAvtale
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
@@ -271,6 +276,24 @@ class TestBehandlingFullføringService(
                 )
             )
         }
+
+        Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP -> AvklarPeriodisertLovvalgMedlemskapLøsning(
+            løsningerForPerioder = listOf(
+                PeriodisertManuellVurderingForLovvalgMedlemskapDto(
+                    fom = sak.rettighetsperiode.fom,
+                    tom = null,
+                    begrunnelse = "Lovvalg Norge ok",
+                    lovvalg = LovvalgDto(
+                        begrunnelse = "Norsk lovvalg",
+                        lovvalgsEØSLandEllerLandMedAvtale = EØSLandEllerLandMedAvtale.NOR,
+                    ),
+                    medlemskap = MedlemskapDto(
+                        begrunnelse = "Medlem i folketrygden",
+                        varMedlemIFolketrygd = true,
+                    ),
+                )
+            )
+        )
 
         Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP -> AvklarPeriodisertForutgåendeMedlemskapLøsning(
             løsningerForPerioder = listOf(

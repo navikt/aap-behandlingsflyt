@@ -9,13 +9,12 @@ import no.nav.aap.behandlingsflyt.Tags
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.AndreUtbetalingerDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.StudentStatus
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadV0
-import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
@@ -43,7 +42,7 @@ fun NormalOpenAPIRoute.fullførBehandlingApi(
                             erStudent = req.erStudent,
                             harYrkesskade = req.harYrkesskade,
                             harMedlemskap = req.harMedlemskap,
-                            andreUtbetalinger = req.andreUtbetalinger,
+                            andreUtbetalinger = req.andreUtbetalinger?.tilKontrakt(),
                         )
                 }
                 thread(isDaemon = true) { service.fullforBehandling(sak) }
@@ -60,8 +59,10 @@ fun NormalOpenAPIRoute.fullførBehandlingApi(
             require(!Miljø.erProd()) { "Ikke tilgjengelig i produksjonsmiljøet" }
             val respons = dataSource.transaction(readOnly = true) { connection ->
                 val provider = repositoryRegistry.provider(connection)
-                val sak = provider.provide<SakRepository>().hentHvisFinnes(Saksnummer(req.saksnummer))
-                    ?: return@transaction BehandlingStatusRespons(req.saksnummer, null, false)
+                val person = provider.provide<PersonRepository>().finn(Ident(req.ident))
+                    ?: return@transaction BehandlingStatusRespons(req.ident, null, false)
+                val sak = provider.provide<SakRepository>().finnSakerFor(person).firstOrNull()
+                    ?: return@transaction BehandlingStatusRespons(req.ident, null, false)
                 val behandling = BehandlingService(provider, gatewayProvider)
                     .finnSisteYtelsesbehandlingFor(sak.id)
                     ?: return@transaction BehandlingStatusRespons(sak.saksnummer.toString(), null, false)
@@ -73,12 +74,12 @@ fun NormalOpenAPIRoute.fullførBehandlingApi(
                     ?.strukturerteData<SøknadV0>()
                     ?.data
 
-                val søknadDetaljer = søknad?.let {
-                    SøknadDetaljer(
+                val soeknadDetaljer = søknad?.let {
+                    SoeknadDetaljer(
                         erStudent = it.student?.erStudent == StudentStatus.Ja,
                         harYrkesskade = it.yrkesskade.equals("Ja", ignoreCase = true),
                         harMedlemskap = it.medlemskap?.harBoddINorgeSiste5År.equals("JA", ignoreCase = true),
-                        andreUtbetalinger = it.andreUtbetalinger,
+                        andreUtbetalinger = it.andreUtbetalinger?.let { a -> AndreUtbetalingerApiDto.fraKontrakt(a) },
                     )
                 }
 
@@ -86,7 +87,7 @@ fun NormalOpenAPIRoute.fullførBehandlingApi(
                     saksnummer = sak.saksnummer.toString(),
                     behandlingStatus = status.name,
                     ferdig = status == Status.AVSLUTTET,
-                    søknad = søknadDetaljer,
+                    soeknad = soeknadDetaljer,
                 )
             }
             respond(respons)
@@ -101,21 +102,27 @@ data class OpprettOgFullforBehandlingRequest(
     val erStudent: Boolean,
     val harYrkesskade: Boolean,
     val harMedlemskap: Boolean,
-    val andreUtbetalinger: AndreUtbetalingerDto?
+    val andreUtbetalinger: AndreUtbetalingerApiDto?
 )
 
-data class BehandlingStatusRequest(val saksnummer: String)
+data class BehandlingStatusRequest(val ident: String)
 
 data class BehandlingStatusRespons(
     val saksnummer: String,
     val behandlingStatus: String?,
     val ferdig: Boolean,
-    val søknad: SøknadDetaljer? = null,
+    val soeknad: SoeknadDetaljer? = null,
 )
 
-data class SøknadDetaljer(
+data class SoeknadDetaljer(
     val erStudent: Boolean,
-    val harYrkesskade: Boolean,
+    val harYrkesskade: Boolean, // dårlig navn,
     val harMedlemskap: Boolean,
-    val andreUtbetalinger: AndreUtbetalingerDto?,
+    val andreUtbetalinger: AndreUtbetalingerApiDto?,
 )
+
+/*
+ *   - spørre på fnr i stedet
+ *   - droppe æøå
+ *   - fullfor -> follfoer
+ */
