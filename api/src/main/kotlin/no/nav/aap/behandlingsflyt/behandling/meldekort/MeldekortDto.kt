@@ -17,11 +17,14 @@ enum class MeldekortProsesseringStatus {
 
 data class MeldeperiodeMedMeldekortDto(
     val meldeperiode: Periode,
-    val meldekort: MeldekortDto?
+    val meldekort: MeldekortDto?,
+    val tidligereMeldekort: List<MeldekortDto> = emptyList(),
 )
 
 data class MeldekortDto(
+    @Deprecated("Bruk journalpostId i stedet for id, da det er mer beskrivende")
     val id: String,
+    val journalpostId: String,
     val mottattTidspunkt: LocalDateTime,
     val begrunnelse: String? = null,
     val oppdatertAv: String? = null,
@@ -45,6 +48,7 @@ data class OppdaterMeldekortResponse(
 
 fun Meldekort.toDto(begrunnelse: String?, oppdatertAv: String?): MeldekortDto = MeldekortDto(
     id = journalpostId.identifikator,
+    journalpostId = journalpostId.identifikator,
     mottattTidspunkt = mottattTidspunkt,
     begrunnelse = begrunnelse,
     oppdatertAv = oppdatertAv,

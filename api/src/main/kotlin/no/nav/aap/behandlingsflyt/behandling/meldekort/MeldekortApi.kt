@@ -82,6 +82,7 @@ fun NormalOpenAPIRoute.meldekortApi(
 
                     meldeperioder.map { meldeperiode ->
                         val meldekort = nyesteMeldekortForMeldeperiode(meldekortene, meldeperiode)
+                        val tidligereMeldekortListe = tidligereMeldekortForMeldeperiode(meldekortene, meldeperiode)
 
                         if (meldekort != null) {
                             // Henter ut relevante metadata for meldekort hvor saksbehandler har korrigert timer
@@ -91,12 +92,18 @@ fun NormalOpenAPIRoute.meldekortApi(
 
                             MeldeperiodeMedMeldekortDto(
                                 meldeperiode = meldeperiode,
-                                meldekort = meldekort.toDto(meldekortData?.begrunnelse, meldekortData?.opprettetAv)
+                                meldekort = meldekort.toDto(meldekortData?.begrunnelse, meldekortData?.opprettetAv),
+                                tidligereMeldekort = tidligereMeldekortListe.map { tidligere ->
+                                    val ref = InnsendingReferanse(tidligere.journalpostId)
+                                    val data = mottatteDokumenter[ref]
+                                        ?.strukturerteData<MeldekortV0>()?.data
+                                    tidligere.toDto(data?.begrunnelse, data?.opprettetAv)
+                                },
                             )
                         } else {
                             MeldeperiodeMedMeldekortDto(
                                 meldeperiode = meldeperiode,
-                                meldekort = null
+                                meldekort = null,
                             )
                         }
                     }
@@ -207,6 +214,23 @@ private fun nyesteMeldekortForMeldeperiode(
 ): Meldekort? = meldekortene.lastOrNull { meldekort ->
     val arbeidsperiode = meldekort.arbeidsperiode()
     arbeidsperiode != null && meldeperiode.inneholder(arbeidsperiode)
+}
+
+/**
+ * Henter ut alle tidligere meldekort for en meldeperiode, sortert synkende på mottattTidspunkt (nyest først).
+ * Det nyeste meldekortet (som returneres av nyesteMeldekortForMeldeperiode) er ekskludert.
+ */
+private fun tidligereMeldekortForMeldeperiode(
+    meldekortene: List<Meldekort>,
+    meldeperiode: Periode
+): List<Meldekort> {
+    val nyeste = nyesteMeldekortForMeldeperiode(meldekortene, meldeperiode)
+    return meldekortene
+        .filter { meldekort ->
+            val arbeidsperiode = meldekort.arbeidsperiode()
+            arbeidsperiode != null && meldeperiode.inneholder(arbeidsperiode) && meldekort != nyeste
+        }
+        .sortedByDescending { it.mottattTidspunkt }
 }
 
 /**
