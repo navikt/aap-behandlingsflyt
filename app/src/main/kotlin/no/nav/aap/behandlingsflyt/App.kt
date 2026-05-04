@@ -106,7 +106,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.saksApi
 import no.nav.aap.behandlingsflyt.test.opprettDummySakApi
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
-import no.nav.aap.behandlingsflyt.utils.KryptertString
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbmigrering.Migrering
@@ -247,20 +246,14 @@ internal fun Application.server(
         }
     }
 
-    val kryptertIdentCodec = KryptertString(
-        secretKey = Base64.getDecoder().decode(
-            requiredConfigForKey("KELVIN_KRYPTERT_STRING_SECRET_KEY")
-        )
-    )
-
     routing {
         authenticate(IdentityProvider.ENTRA_ID.value) {
             install(NavIdentInterceptor)
 
             apiRouting {
                 configApi()
-                personApi(kryptertIdentCodec)
-                saksApi(dataSource, repositoryRegistry, gatewayProvider, kryptertIdentCodec)
+                personApi(dataSource, repositoryRegistry, gatewayProvider)
+                saksApi(dataSource, repositoryRegistry, gatewayProvider)
                 behandlingApi(dataSource, repositoryRegistry, gatewayProvider)
                 flytApi(dataSource, repositoryRegistry, gatewayProvider)
                 fatteVedtakGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)

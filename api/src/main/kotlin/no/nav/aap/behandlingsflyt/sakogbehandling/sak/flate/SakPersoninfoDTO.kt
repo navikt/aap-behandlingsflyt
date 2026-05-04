@@ -6,7 +6,7 @@ import java.util.UUID
 data class SakPersoninfoDTO(
     val fnr: String,
     val navn: String,
-    val kryptertIdent: String,
+    val identifikator: UUID,
     val fødselsdato: LocalDate?,
     val dødsdato: LocalDate?,
 )

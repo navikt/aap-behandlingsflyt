@@ -43,7 +43,6 @@ import no.nav.aap.tilgang.Operasjon
 import no.nav.aap.tilgang.SakPathParam
 import no.nav.aap.tilgang.authorizedGet
 import no.nav.aap.tilgang.authorizedPost
-import no.nav.aap.behandlingsflyt.utils.KryptertString
 import org.slf4j.LoggerFactory
 import javax.sql.DataSource
 
@@ -53,7 +52,6 @@ fun NormalOpenAPIRoute.saksApi(
     dataSource: DataSource,
     repositoryRegistry: RepositoryRegistry,
     gatewayProvider: GatewayProvider,
-    codec: KryptertString,
 ) {
     val tilgangGateway = gatewayProvider.provide<TilgangGateway>()
     val personinfoGateway = gatewayProvider.provide(PersoninfoGateway::class)
@@ -323,7 +321,7 @@ fun NormalOpenAPIRoute.saksApi(
                     SakPersoninfoDTO(
                         fnr = personinfo.ident.identifikator,
                         navn = personinfo.fulltNavn(),
-                        kryptertIdent = codec.encode(ident.identifikator),
+                        identifikator = sak.person.identifikator,
                         fødselsdato = personinfo.fødselsdato,
                         dødsdato = personinfo.dødsdato,
                     )
