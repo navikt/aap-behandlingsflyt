@@ -8,23 +8,19 @@ import no.nav.aap.komponenter.gateway.Factory
 import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
 import no.nav.aap.komponenter.httpklient.httpclient.RestClient
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
-import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureM2MTokenProvider
+import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.NoTokenTokenProvider
 import java.net.URI
 
 class PdfgenGatewayImpl : PdfgenGateway {
     private val baseUri = URI.create(requiredConfigForKey("integrasjon.pdfgen.url"))
-    val config = ClientConfig(
-        scope = requiredConfigForKey("integrasjon.pdfgen.scope"),
-    )
-
     private val client = RestClient.withDefaultResponseHandler(
-        config = config,
-        tokenProvider = AzureM2MTokenProvider,
+        config = ClientConfig(),
+        tokenProvider = NoTokenTokenProvider(),
         prometheus = prometheus
     )
 
     override fun genererMeldekortPdf(request: MeldekortPdfRequest): ByteArray {
-        val uri = baseUri.resolve("/api/v1/genpdf/aap-saksbehandling-pdfgen/meldekort")
+        val uri = baseUri.resolve("/api/v1/genpdf/aap-saksbehandling-meldekort/meldekort")
         val pdf = requireNotNull(
             client.post(uri = uri, request = PostRequest(body = request), mapper = { body, _ -> body })
         )
