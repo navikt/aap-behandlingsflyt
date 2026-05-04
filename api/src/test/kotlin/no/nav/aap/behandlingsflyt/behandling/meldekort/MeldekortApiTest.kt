@@ -29,6 +29,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.test.FakeDokarkivGateway
+import no.nav.aap.behandlingsflyt.test.FakePdfgenGateway
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.behandlingsflyt.test.MockDataSource
 import no.nav.aap.behandlingsflyt.test.april
@@ -73,6 +74,7 @@ class MeldekortApiTest : BaseApiTest() {
         register<NorgGateway>()
         register<AlleAvskruddUnleash>()
         register<FakeDokarkivGateway>()
+        register<FakePdfgenGateway>()
     }
 
     @Test
@@ -189,6 +191,7 @@ class MeldekortApiTest : BaseApiTest() {
             assertThat(meldeperiodeMedMeldekort.meldekort.dager).hasSize(2)
             assertThat(meldeperiodeMedMeldekort.meldekort.dager.map { it.dato }).containsExactlyInAnyOrder(dag1, dag2)
             assertThat(meldeperiodeMedMeldekort.meldekort.dager.map { it.timerArbeidet }).containsExactlyInAnyOrder(7.5, 3.0)
+            assertThat(meldeperiodeMedMeldekort.tidligereMeldekort).isEmpty()
         }
     }
 
@@ -313,6 +316,80 @@ class MeldekortApiTest : BaseApiTest() {
             assertThat(meldeperiodeMedMeldekort.meldekort.oppdatertAv).isEqualTo("Z654321")
             assertThat(meldeperiodeMedMeldekort.meldekort.dager).hasSize(1)
             assertThat(meldeperiodeMedMeldekort.meldekort.dager.first().timerArbeidet).isEqualTo(0.0)
+            assertThat(meldeperiodeMedMeldekort.tidligereMeldekort).hasSize(1)
+            assertThat(meldeperiodeMedMeldekort.tidligereMeldekort.first().id).isEqualTo(opprinneligMeldekort.journalpostId.identifikator)
+            assertThat(meldeperiodeMedMeldekort.tidligereMeldekort.first().mottattTidspunkt).isEqualTo(opprinneligMeldekort.mottattTidspunkt)
+        }
+    }
+
+    @Test
+    fun `returnerer tidligere meldekort sortert synkende på mottattTidspunkt`() {
+        val sak = nySak()
+        val behandling = opprettBehandling(sak, TypeBehandling.Førstegangsbehandling)
+
+        InMemoryVedtakRepository.lagre(behandling.id, LocalDateTime.now(), LocalDate.now())
+
+        val dag1 = 6 januar 2025
+        val meldeperiode = Periode(dag1, dag1.plusDays(13))
+
+        val førsteMeldekort = Meldekort(
+            journalpostId = JournalpostId("111"),
+            timerArbeidPerPeriode = setOf(
+                ArbeidIPeriode(Periode(dag1, dag1), TimerArbeid(BigDecimal("7.5"))),
+            ),
+            mottattTidspunkt = LocalDateTime.of(2025, 1, 20, 9, 0)
+        )
+        val andreMeldekort = Meldekort(
+            journalpostId = JournalpostId("222"),
+            timerArbeidPerPeriode = setOf(
+                ArbeidIPeriode(Periode(dag1, dag1), TimerArbeid(BigDecimal("5.0"))),
+            ),
+            mottattTidspunkt = LocalDateTime.of(2025, 1, 22, 9, 0)
+        )
+        val tredjeMeldekort = Meldekort(
+            journalpostId = JournalpostId("333"),
+            timerArbeidPerPeriode = setOf(
+                ArbeidIPeriode(Periode(dag1, dag1), TimerArbeid(BigDecimal("3.0"))),
+            ),
+            mottattTidspunkt = LocalDateTime.of(2025, 1, 25, 9, 0)
+        )
+
+        InMemoryUnderveisRepository.lagre(
+            behandlingId = behandling.id,
+            underveisperioder = listOf(underveisperiode(Utfall.OPPFYLT, meldeperiode)),
+            input = object : Faktagrunnlag {}
+        )
+
+        InMemoryMeldekortRepository.lagre(
+            behandling.id, setOf(førsteMeldekort, andreMeldekort, tredjeMeldekort)
+        )
+
+        InMemoryMottattDokumentRepository.lagre(mottattMeldekortDokument(førsteMeldekort, sak.id, behandling.id))
+        InMemoryMottattDokumentRepository.lagre(mottattMeldekortDokument(andreMeldekort, sak.id, behandling.id))
+        InMemoryMottattDokumentRepository.lagre(mottattMeldekortDokument(tredjeMeldekort, sak.id, behandling.id))
+
+        testApplication {
+            installApplication {
+                meldekortApi(MockDataSource(), inMemoryRepositoryRegistry, createTestGatewayProvider(), fixedClock)
+            }
+
+            val response = createClient().get("/api/meldekort/${sak.saksnummer}") {
+                header("Authorization", "Bearer ${getToken().token()}")
+            }
+
+            assertThat(response.status).isEqualTo(HttpStatusCode.OK)
+            val body = response.body<MeldeperioderMedMeldekortResponse>()
+            assertThat(body.meldeperioderMedMeldekort).hasSize(1)
+
+            val meldeperiodeMedMeldekort = body.meldeperioderMedMeldekort.first()
+            assertThat(meldeperiodeMedMeldekort.meldekort!!.id).isEqualTo(tredjeMeldekort.journalpostId.identifikator)
+
+            assertThat(meldeperiodeMedMeldekort.tidligereMeldekort).hasSize(2)
+            assertThat(meldeperiodeMedMeldekort.tidligereMeldekort.map { it.id })
+                .containsExactly(
+                    andreMeldekort.journalpostId.identifikator,
+                    førsteMeldekort.journalpostId.identifikator
+                )
         }
     }
 

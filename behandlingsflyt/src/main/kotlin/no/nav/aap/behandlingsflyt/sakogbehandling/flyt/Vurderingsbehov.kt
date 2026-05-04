@@ -16,7 +16,7 @@ enum class Vurderingsbehov {
     KLAGE_TRUKKET,
     REVURDER_MEDLEMSKAP,
     REVURDER_SAMORDNING,
-    REVURDER_LOVVALG,
+    REVURDER_LOVVALG,           // Brukes ikke lenger, men kan ikke slettes. Bruk LOVVALG_OG_MEDLEMSKAP isteden.
     REVURDER_BEREGNING,         // Beregningstidspunkt
     REVURDER_YRKESSKADE,        // Yrkesskade
     REVURDER_STUDENT,

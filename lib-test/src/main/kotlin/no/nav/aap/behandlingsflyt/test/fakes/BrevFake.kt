@@ -160,7 +160,6 @@ class BrevFake : FakeServer() {
                                 brevmal = brevmal,
                                 brevdata = BrevdataDto(
                                     delmaler = emptyList(),
-                                    faktagrunnlag = emptyList(),
                                     valg = emptyList(),
                                     betingetTekst = emptyList(),
                                     fritekster = emptyList(),

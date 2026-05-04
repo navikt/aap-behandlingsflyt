@@ -52,7 +52,8 @@ class ForutgåendeMedlemskapVurderingService(
         // No-op: av kun norske, hvor mange får nei på inntekt?
         val kunNorskStatsborgerskap =
             grunnlag.personopplysningGrunnlag?.brukerPersonopplysning?.statsborgerskap?.singleOrNull()?.land == "NOR"
-        prometheus.forutgåendeMedlemskapNorskOgUtfallInntekt(kunNorskStatsborgerskap && harIkkeSammenhengendePerioder).increment()
+        prometheus.forutgåendeMedlemskapNorskOgUtfallInntekt(kunNorskStatsborgerskap && harIkkeSammenhengendePerioder)
+            .increment()
 
         return KanBehandlesAutomatiskVurdering(
             originalResultat,
@@ -302,9 +303,7 @@ class ForutgåendeMedlemskapVurderingService(
                 )
             }
 
-        val visuellTidslinje = if (unleashGateway?.isEnabled(BehandlingsflytFeature.ForutgaaendeForbedringer) == true) {
-            byggVisuellTidslinje(inntektINorgeGrunnlag, forutgåendePeriode)
-        } else emptyList()
+        val visuellTidslinje = byggVisuellTidslinje(inntektINorgeGrunnlag, forutgåendePeriode)
 
         return TilhørighetVurdering(
             kilde = listOf(Kilde.A_INNTEKT, Kilde.AA_REGISTERET, Kilde.EREG),

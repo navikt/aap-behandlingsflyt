@@ -78,7 +78,7 @@ class PersonopplysningInformasjonskrav private constructor(
         val personopplysninger = hentPersonopplysninger(behandlingId)
         return if (personopplysninger != eksisterendeData) {
             listOf(
-                VurderingsbehovMedPeriode(Vurderingsbehov.REVURDER_LOVVALG)
+                VurderingsbehovMedPeriode(Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP)
             )
         } else {
             emptyList()
