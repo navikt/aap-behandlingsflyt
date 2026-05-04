@@ -12,7 +12,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.SaksnummerParameter
 import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForSakResolver
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
+import no.nav.aap.komponenter.httpklient.exception.VerdiIkkeFunnetException
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.SakPathParam
@@ -36,9 +36,8 @@ fun NormalOpenAPIRoute.rettighetsinfoApi(
                 val sakRepository = repositoryProvider.provide<SakRepository>()
                 val rettighetstypeRepository = repositoryProvider.provide<RettighetstypeRepository>()
 
-
                 val sak = sakRepository.hentHvisFinnes(Saksnummer(saksnummer.saksnummer))
-                    ?: throw UgyldigForespørselException("Sak med saksnummer ${saksnummer.saksnummer} finnes ikke")
+                    ?: throw VerdiIkkeFunnetException("Sak med saksnummer ${saksnummer.saksnummer} finnes ikke")
 
                 val sisteVedtatteYtelsesbehandling =
                     behandlingRepository.finnGjeldendeVedtattBehandlingForSak(sak.id) ?: return@transaction null
