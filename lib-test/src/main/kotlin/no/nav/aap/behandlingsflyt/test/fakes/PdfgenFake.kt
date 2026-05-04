@@ -18,7 +18,7 @@ class PdfgenFake : FakeServer() {
         installerContentNegotiation()
 
         routing {
-            post("/api/v1/genpdf/aap-saksbehandling-pdfgen/meldekort") {
+            post("/api/v1/genpdf/aap-saksbehandling-meldekort/meldekort") {
                 call.respondBytes(
                     bytes = FAKE_PDF_BYTES,
                     contentType = ContentType.Application.Pdf,
