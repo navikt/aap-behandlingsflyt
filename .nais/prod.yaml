@@ -265,4 +265,4 @@ spec:
     - name: INTEGRASJON_DOKARKIV_SCOPE
       value: api://prod-fss.teamdokumenthandtering.dokarkiv/.default
     - name: INTEGRASJON_PDFGEN_URL
-      value: http://aap-saksbehandling-pdfgen
+      value: http://saksbehandling-pdfgen
