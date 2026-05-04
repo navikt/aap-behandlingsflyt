@@ -30,7 +30,7 @@ fun NormalOpenAPIRoute.fullførBehandlingApi(
 ) {
     val service = TestBehandlingFullføringService(dataSource, repositoryRegistry, gatewayProvider)
     if (Miljø.erProd()) return
-    route("/api/test/opprettOgFullforBehandling").tag(Tags.Dolly) {
+    route("/api/test/opprettOgFullfoerBehandling").tag(Tags.Dolly) {
         @Suppress("UnauthorizedPost")
         post<Unit, OpprettOgFullforBehandlingRespons, OpprettOgFullforBehandlingRequest> { _, req ->
             require(!Miljø.erProd()) { "Ikke tilgjengelig i produksjonsmiljøet" }

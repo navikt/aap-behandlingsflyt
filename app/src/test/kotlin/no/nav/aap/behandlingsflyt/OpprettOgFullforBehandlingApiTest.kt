@@ -127,7 +127,7 @@ class OpprettOgFullforBehandlingApiTest {
         )
 
         val respons: OpprettOgFullforBehandlingRespons? = ccClient.post(
-            URI.create("http://localhost:$port/api/test/opprettOgFullforBehandling"),
+            URI.create("http://localhost:$port/api/test/opprettOgFullfoerBehandling"),
             PostRequest(
                 body = OpprettOgFullforBehandlingRequest(
                     ident = ident,
