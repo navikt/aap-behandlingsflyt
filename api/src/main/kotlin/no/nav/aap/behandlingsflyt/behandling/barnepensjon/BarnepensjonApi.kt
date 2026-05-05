@@ -29,7 +29,7 @@ fun NormalOpenAPIRoute.barnepensjonGrunnlagApi(
             getGrunnlag<BehandlingReferanse, BarnepensjonGrunnlagDto>(
                 relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
                 behandlingPathParam = BehandlingPathParam("referanse"),
-                avklaringsbehovKode = Definisjon.SAMORDNING_BARNEPENSJON.kode.toString()
+                påkrevdRolle = Definisjon.SAMORDNING_BARNEPENSJON.løsesAv
             ) { req ->
                 val respons = dataSource.transaction { connection ->
                     val repositoryProvider = repositoryRegistry.provider(connection)

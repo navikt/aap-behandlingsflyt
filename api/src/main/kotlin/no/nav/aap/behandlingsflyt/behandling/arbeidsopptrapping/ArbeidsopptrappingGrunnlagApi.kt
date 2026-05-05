@@ -39,7 +39,7 @@ fun NormalOpenAPIRoute.arbeidsopptrappingGrunnlagApi(
         getGrunnlag<BehandlingReferanse, ArbeidsopptrappingGrunnlagResponse>(
             relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
             behandlingPathParam = BehandlingPathParam("referanse"),
-            avklaringsbehovKode = Definisjon.ARBEIDSOPPTRAPPING.kode.toString()
+            påkrevdRolle = Definisjon.ARBEIDSOPPTRAPPING.løsesAv
         ) { behandlingReferanse ->
             val response =
                 dataSource.transaction { connection ->

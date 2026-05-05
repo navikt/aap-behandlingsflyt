@@ -37,7 +37,7 @@ fun NormalOpenAPIRoute.oppholdskravGrunnlagApi(
         getGrunnlag<BehandlingReferanse, OppholdskravGrunnlagResponse>(
             relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
             behandlingPathParam = BehandlingPathParam("referanse"),
-            avklaringsbehovKode = Definisjon.AVKLAR_OPPHOLDSKRAV.kode.toString(),
+            påkrevdRolle = Definisjon.AVKLAR_OPPHOLDSKRAV.løsesAv,
         ) { req ->
             val oppholdskravGrunnlag =
                 dataSource.transaction(readOnly = true) { connection ->
