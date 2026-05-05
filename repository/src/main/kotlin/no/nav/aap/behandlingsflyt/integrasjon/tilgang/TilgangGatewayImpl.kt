@@ -12,7 +12,7 @@ import java.util.UUID
 
 object TilgangGatewayImpl : TilgangGateway {
 
-    override fun sjekkTilgangTilBehandling(
+    override suspend fun sjekkTilgangTilBehandling(
         behandlingsreferanse: UUID,
         avklaringsbehov: Definisjon,
         token: OidcToken
@@ -26,7 +26,7 @@ object TilgangGatewayImpl : TilgangGateway {
         ).tilgang
     }
 
-    override fun sjekkTilgangTilSak(saksnummer: Saksnummer, token: OidcToken, operasjon: Operasjon): Boolean {
+    override suspend fun sjekkTilgangTilSak(saksnummer: Saksnummer, token: OidcToken, operasjon: Operasjon): Boolean {
         return no.nav.aap.tilgang.TilgangGateway.harTilgangTilSak(
             SakTilgangRequest(
                 saksnummer = saksnummer.toString(),
@@ -35,7 +35,7 @@ object TilgangGatewayImpl : TilgangGateway {
         ).tilgang
     }
 
-    override fun sjekkTilgangTilPerson(ident: String, token: OidcToken, operasjon: Operasjon): Boolean {
+    override suspend fun sjekkTilgangTilPerson(ident: String, token: OidcToken, operasjon: Operasjon): Boolean {
         return no.nav.aap.tilgang.TilgangGateway.harTilgangTilPerson(
             body = PersonTilgangRequest(ident),
             currentToken = token

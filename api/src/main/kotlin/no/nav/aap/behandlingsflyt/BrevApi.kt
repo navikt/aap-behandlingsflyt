@@ -96,6 +96,7 @@ fun NormalOpenAPIRoute.brevApi(
                         )
                     )
                 ) { behandlingReferanse ->
+                    class DataResultat(val avklaringsbehovene: Avklaringsbehovene, val brevGrunnlag: List<Pair<Definisjon, BrevGrunnlag.Brev>>)
                     val brevGrunnlag = dataSource.transaction(readOnly = true) { connection ->
                         val repositoryProvider = repositoryRegistry.provider(connection)
                         val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
@@ -127,7 +128,9 @@ fun NormalOpenAPIRoute.brevApi(
                                         + skrivBrevAvklaringsbehov.joinToString { it.toString() })
                         }
 
-                        val grunnlag = brevbestillinger.map { brevbestilling ->
+                        DataResultat(
+                            avklaringsbehovene = avklaringsbehovene,
+                            brevGrunnlag = brevbestillinger.map { brevbestilling ->
                             val brevbestillingResponse =
                                 brevbestillingService.hentBrevbestilling(brevbestilling.referanse)
 
@@ -161,7 +164,7 @@ fun NormalOpenAPIRoute.brevApi(
                                 }
                             }
 
-                            BrevGrunnlag.Brev(
+                            definisjon to BrevGrunnlag.Brev(
                                 avklaringsbehovKode = definisjon.kode,
                                 brevbestillingReferanse = brevbestillingResponse.referanse,
                                 brev = brevbestillingResponse.brev,
@@ -181,23 +184,21 @@ fun NormalOpenAPIRoute.brevApi(
                                     ident = personinfo.ident.identifikator
                                 ),
                                 signaturer = signaturer,
-                                harTilgangTilÅSendeBrev = utledHarTilgangTilÅSendeBrev(
-                                    behandlingReferanse.referanse,
-                                    token(),
-                                    avklaringsbehovene,
-                                    bruker(),
-                                    definisjon,
-                                    gatewayProvider
-                                )
+                                harTilgangTilÅSendeBrev = false, // nb. settes utenfor transaksjonen pga kall til tilgang som vi ønsker skal være async
                             )
-                        }
-
-                        BrevGrunnlag(
-                            grunnlag
-                        )
+                        })
                     }
 
-                    respond(brevGrunnlag)
+                    respond(BrevGrunnlag(brevGrunnlag.brevGrunnlag.map { (definisjon, grunnlag) ->
+                        grunnlag.copy(harTilgangTilÅSendeBrev = utledHarTilgangTilÅSendeBrev(
+                            behandlingReferanse.referanse,
+                            token(),
+                            brevGrunnlag.avklaringsbehovene,
+                            bruker(),
+                            definisjon,
+                            gatewayProvider
+                        ))
+                    }))
                 }
             }
         }
@@ -312,7 +313,7 @@ fun NormalOpenAPIRoute.brevApi(
     }
 }
 
-private fun utledHarTilgangTilÅSendeBrev(
+private suspend fun utledHarTilgangTilÅSendeBrev(
     behandlingReferanse: UUID,
     token: OidcToken,
     avklaringsbehovene: Avklaringsbehovene,
@@ -323,7 +324,7 @@ private fun utledHarTilgangTilÅSendeBrev(
     val tilgangGateway = gatewayProvider.provide<TilgangGateway>()
     val unleashGateway = gatewayProvider.provide<UnleashGateway>()
 
-    fun harTilgang(tilDefinisjon: Definisjon): Boolean =
+    suspend fun harTilgang(tilDefinisjon: Definisjon): Boolean =
         tilgangGateway.sjekkTilgangTilBehandling(behandlingReferanse, tilDefinisjon, token)
 
     return when (definisjon) {

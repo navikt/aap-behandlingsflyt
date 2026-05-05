@@ -8,7 +8,7 @@ import no.nav.aap.tilgang.Operasjon
 import java.util.*
 
 object FakeTilgangGateway : TilgangGateway {
-    override fun sjekkTilgangTilBehandling(
+    override suspend fun sjekkTilgangTilBehandling(
         behandlingsreferanse: UUID,
         avklaringsbehov: Definisjon,
         token: OidcToken
@@ -16,11 +16,11 @@ object FakeTilgangGateway : TilgangGateway {
         return true
     }
 
-    override fun sjekkTilgangTilSak(saksnummer: Saksnummer, token: OidcToken, operasjon: Operasjon): Boolean {
+    override suspend fun sjekkTilgangTilSak(saksnummer: Saksnummer, token: OidcToken, operasjon: Operasjon): Boolean {
         return true
     }
 
-    override fun sjekkTilgangTilPerson(
+    override suspend fun sjekkTilgangTilPerson(
         ident: String,
         token: OidcToken,
         operasjon: Operasjon
