@@ -252,6 +252,7 @@ class FatteVedtakStegTest {
         )
 
         val resultat = steg().utfør(kontekst)
+        // Stegtest gir ikke lenger mening da steget ikke "vet selv" at det blir tilbakeføring
         assertThat(resultat).isEqualTo(TilbakeføresFraBeslutter)
     }
 

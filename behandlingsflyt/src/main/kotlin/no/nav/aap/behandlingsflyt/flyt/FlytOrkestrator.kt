@@ -8,8 +8,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravGrunnlagImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.StegOrkestrator
-import no.nav.aap.behandlingsflyt.flyt.steg.TilbakeførtFraBeslutter
-import no.nav.aap.behandlingsflyt.flyt.steg.TilbakeførtFraKvalitetssikrer
 import no.nav.aap.behandlingsflyt.flyt.steg.Transisjon
 import no.nav.aap.behandlingsflyt.flyt.ventebehov.VentebehovEvaluererService
 import no.nav.aap.behandlingsflyt.flyt.ventebehov.VentebehovEvaluererServiceImpl
@@ -64,7 +62,8 @@ class FlytOrkestrator(
         gatewayProvider: GatewayProvider,
         stoppNårStatus: Set<Status> = emptySet(),
         markSavepointAt: Set<StegStatus>? = null,
-        behandlingHendelseService: BehandlingHendelseService = gatewayProvider.provide<BehandlingHendelseServiceProvider>().create(repositoryProvider, gatewayProvider),
+        behandlingHendelseService: BehandlingHendelseService = gatewayProvider.provide<BehandlingHendelseServiceProvider>()
+            .create(repositoryProvider, gatewayProvider),
     ) : this(
         ventebehovEvaluererService = VentebehovEvaluererServiceImpl(repositoryProvider),
         behandlingRepository = repositoryProvider.provide(),
@@ -195,10 +194,10 @@ class FlytOrkestrator(
                         en endring i rekkefølgen av stegene, så er dette en bug.
                         """.trimIndent().replace("\n", " ")
                     )
-
-                    val tilbakeflyt = behandlingFlyt.tilbakeflyt(tidligsteÅpneAvklaringsbehov)
-                    tilbakefør(kontekst, behandling, tilbakeflyt, avklaringsbehovene)
                 }
+
+                val tilbakeflyt = behandlingFlyt.tilbakeflyt(tidligsteÅpneAvklaringsbehov)
+                tilbakefør(kontekst, behandling, tilbakeflyt, avklaringsbehovene)
             }
         }
     }
@@ -229,20 +228,6 @@ class FlytOrkestrator(
                 behandling,
                 behandlingFlyt.faktagrunnlagForGjeldendeSteg()
             )
-
-            if (result.erTilbakeføring()) {
-                val tilbakeføringsflyt = when (result) {
-                    is TilbakeførtFraBeslutter -> behandlingFlyt.tilbakeflyt(avklaringsbehovene.tilbakeførtFraBeslutter())
-                    is TilbakeførtFraKvalitetssikrer -> behandlingFlyt.tilbakeflyt(avklaringsbehovene.tilbakeførtFraKvalitetssikrer())
-                    else -> {
-                        throw IllegalStateException("Uhåndtert transisjon ved tilbakeføring. Faktisk type: ${result.javaClass}.")
-                    }
-                }
-                log.info(
-                    "Tilbakeført fra '${gjeldendeSteg.type()}' til '${tilbakeføringsflyt.stegene().last()}'"
-                )
-                tilbakefør(kontekst, behandling, tilbakeføringsflyt, avklaringsbehovene)
-            }
 
             validerPlassering(behandlingFlyt, avklaringsbehovene.åpne())
 
@@ -308,7 +293,7 @@ class FlytOrkestrator(
         result: Transisjon,
         behandlingFlyt: BehandlingFlyt
     ): FlytSteg? {
-        val neste = if (result.erTilbakeføring() || !result.kanFortsette()) {
+        val neste = if (!result.kanFortsette()) {
             behandlingFlyt.aktivtSteg()
         } else {
             behandlingFlyt.neste()
@@ -363,7 +348,9 @@ class FlytOrkestrator(
         }
 
         log.info(
-            "Tilbakefører ${behandling.aktivtSteg()} for behandling ${behandling.referanse}. Vurderingsbehov: ${behandling.vurderingsbehov().map { it.type }}."
+            "Tilbakefører ${behandling.aktivtSteg()} for behandling ${behandling.referanse}. Vurderingsbehov: ${
+                behandling.vurderingsbehov().map { it.type }
+            }."
         )
         var neste: FlytSteg? = behandlingFlyt.aktivtSteg()
         while (true) {

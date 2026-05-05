@@ -3,7 +3,6 @@ package no.nav.aap.behandlingsflyt.flyt.steg
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 
 sealed interface Transisjon {
-    fun erTilbakeføring(): Boolean = false
     fun kanFortsette(): Boolean = true
 }
 
@@ -23,17 +22,5 @@ class FunnetAvklaringsbehov(private val avklaringsbehov: Definisjon) : Transisjo
 class FunnetVentebehov(private val ventebehov: Ventebehov) : Transisjon {
     fun ventebehov(): Ventebehov {
         return ventebehov
-    }
-}
-
-object TilbakeførtFraBeslutter : Transisjon {
-    override fun erTilbakeføring(): Boolean {
-        return true
-    }
-}
-
-object TilbakeførtFraKvalitetssikrer : Transisjon {
-    override fun erTilbakeføring(): Boolean {
-        return true
     }
 }
