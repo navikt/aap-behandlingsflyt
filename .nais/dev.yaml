@@ -279,3 +279,5 @@ spec:
       value: http://saksbehandling-pdfgen
     - name: INTEGRASJON_PDFGEN_SCOPE
       value: api://dev-gcp.aap.saksbehandling-pdfgen/.default
+    - name: ENABLE_TEXAS
+      value: "true"

@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.Lege
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.StoppetBehandling
 import no.nav.aap.behandlingsflyt.test.fakes.AaregFake
 import no.nav.aap.behandlingsflyt.test.fakes.AinntektFake
+import no.nav.aap.behandlingsflyt.test.fakes.AzureFake
 import no.nav.aap.behandlingsflyt.test.fakes.BrevFake
 import no.nav.aap.behandlingsflyt.test.fakes.DagpengerFake
 import no.nav.aap.behandlingsflyt.test.fakes.DatadelingFake
@@ -50,6 +51,7 @@ object FakeServers : AutoCloseable {
     private val brev = BrevFake()
 
     // Stateless fakes
+    private val azure = AzureFake()
     private val texas = TexasFake()
     private val oppgavestyring = OppgavestyringFake()
     private val sam = SamFake()
@@ -83,7 +85,7 @@ object FakeServers : AutoCloseable {
     private val dokarkiv = DokarkivFake()
 
     private val allFakes: List<FakeServer> = listOf(
-        texas, brev, yrkesskade, pdl, popp, oppgavestyring, inst2, sam, medl, tilgang, foreldrepenger, pesys,
+        azure, texas, brev, yrkesskade, pdl, popp, oppgavestyring, inst2, sam, medl, tilgang, foreldrepenger, pesys,
         sykepenger, statistikk, dokumentinnhenting, ainntekt, aareg, datadeling, utbetal, meldekort, tjenestePensjon,
         unleash, nom, norg, kabal, ereg, dagpenger, tiltakspenger, gosys, leaderElector, dokarkiv, pdfGen
     )
@@ -243,10 +245,19 @@ object FakeServers : AutoCloseable {
         System.setProperty("integrasjon.gosys.url", "http://localhost:${gosys.port()}")
         System.setProperty("integrasjon.gosys.scope", "scope")
 
-        // Texas
-        System.setProperty("nais.token.endpoint", "http://localhost:${texas.port()}/token")
-        System.setProperty("nais.token.exchange.endpoint", "http://localhost:${texas.port()}/token/exchange")
-        System.setProperty("nais.token.introspection.endpoint", "http://localhost:${texas.port()}/introspect")
+        if (System.getenv("ENABLE_TEXAS").toBoolean()) {
+            // Texas
+            System.setProperty("nais.token.endpoint", "http://localhost:${texas.port()}/token")
+            System.setProperty("nais.token.exchange.endpoint", "http://localhost:${texas.port()}/token/exchange")
+            System.setProperty("nais.token.introspection.endpoint", "http://localhost:${texas.port()}/introspect")
+        } else {
+            // Azure
+            System.setProperty("azure.openid.config.token.endpoint", "http://localhost:${azure.port()}/token/x12345")
+            System.setProperty("azure.app.client.id", "behandlingsflyt")
+            System.setProperty("azure.app.client.secret", "")
+            System.setProperty("azure.openid.config.jwks.uri", "http://localhost:${azure.port()}/jwks")
+            System.setProperty("azure.openid.config.issuer", "behandlingsflyt")
+        }
 
         // LeaderElector
         System.setProperty("ELECTOR_GET_URL", "http://localhost:${leaderElector.port()}")
@@ -276,3 +287,16 @@ object TexasPortHolder {
         return texasPort.get()
     }
 }
+
+object AzurePortHolder {
+    private val azurePort = AtomicInteger(0)
+
+    fun setPort(port: Int) {
+        azurePort.set(port)
+    }
+
+    fun getPort(): Int {
+        return azurePort.get()
+    }
+}
+
