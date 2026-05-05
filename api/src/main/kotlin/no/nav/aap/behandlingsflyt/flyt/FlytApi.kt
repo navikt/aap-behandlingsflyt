@@ -241,7 +241,7 @@ fun NormalOpenAPIRoute.flytApi(
                     relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
                     operasjon = Operasjon.SAKSBEHANDLE,
                     behandlingPathParam = BehandlingPathParam("referanse"),
-                    avklaringsbehovKode = MANUELT_SATT_PÅ_VENT_KODE
+                    påkrevdRolle = Definisjon.MANUELT_SATT_PÅ_VENT.løsesAv
                 )
             ) { request, body ->
                 dataSource.transaction { connection ->

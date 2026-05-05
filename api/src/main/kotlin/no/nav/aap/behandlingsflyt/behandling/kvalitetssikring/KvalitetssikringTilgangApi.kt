@@ -28,7 +28,7 @@ fun NormalOpenAPIRoute.kvalitetssikringTilgangApi(dataSource: DataSource, reposi
             AuthorizationParamPathConfig(
                 relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
                 operasjonerIKontekst = listOf(Operasjon.SAKSBEHANDLE),
-                avklaringsbehovKode = Definisjon.KVALITETSSIKRING.kode.toString(),
+                påkrevdRolle = Definisjon.KVALITETSSIKRING.løsesAv,
                 behandlingPathParam = BehandlingPathParam(
                     "referanse"
                 )

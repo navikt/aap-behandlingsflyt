@@ -37,7 +37,7 @@ fun NormalOpenAPIRoute.meldepliktOverstyringGrunnlagApi(
         getGrunnlag<BehandlingReferanse, MeldepliktOverstyringGrunnlagResponse>(
             relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
             behandlingPathParam = BehandlingPathParam("referanse"),
-            avklaringsbehovKode = Definisjon.OVERSTYR_IKKE_OPPFYLT_MELDEPLIKT.kode.toString(),
+            påkrevdRolle = Definisjon.OVERSTYR_IKKE_OPPFYLT_MELDEPLIKT.løsesAv,
         ) { req ->
             val meldepliktGrunnlag =
                 dataSource.transaction(readOnly = true) { connection ->

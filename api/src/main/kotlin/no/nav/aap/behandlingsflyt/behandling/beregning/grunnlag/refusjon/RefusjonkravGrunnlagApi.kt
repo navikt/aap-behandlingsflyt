@@ -42,7 +42,7 @@ fun NormalOpenAPIRoute.refusjonGrunnlagApi(
 
                 relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
                 behandlingPathParam = BehandlingPathParam("referanse"),
-                avklaringsbehovKode = Definisjon.REFUSJON_KRAV.kode.toString()
+                påkrevdRolle = Definisjon.REFUSJON_KRAV.løsesAv
             ) { req ->
                 val response = dataSource.transaction(readOnly = true) { connection ->
                     val repositoryProvider = repositoryRegistry.provider(connection)

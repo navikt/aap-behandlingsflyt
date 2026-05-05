@@ -45,7 +45,7 @@ fun NormalOpenAPIRoute.fatteVedtakGrunnlagApi(
             getGrunnlag<BehandlingReferanse, FatteVedtakGrunnlagDto>(
                 relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
                 behandlingPathParam = BehandlingPathParam("referanse"),
-                avklaringsbehovKode = FATTE_VEDTAK_KODE
+                påkrevdRolle = Definisjon.FATTE_VEDTAK.løsesAv
             ) { req ->
 
                 val dto = dataSource.transaction(readOnly = true) { connection ->

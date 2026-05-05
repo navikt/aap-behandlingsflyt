@@ -35,7 +35,7 @@ fun NormalOpenAPIRoute.lovvalgMedlemskapGrunnlagApi(
             getGrunnlag<BehandlingReferanse, PeriodisertLovvalgMedlemskapGrunnlagResponse>(
                 relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
                 behandlingPathParam = BehandlingPathParam("referanse"),
-                avklaringsbehovKode = Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP.kode.toString()
+                påkrevdRolle = Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP.løsesAv
             ) { req ->
                 val grunnlag =
                     dataSource.transaction { connection ->
