@@ -3,7 +3,6 @@ package no.nav.aap.behandlingsflyt.hendelse.datadeling
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelsePeriode
 import no.nav.aap.behandlingsflyt.datadeling.SakStatus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.GjeldendeStansEllerOpphør
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.DetaljertMeldekortDTO
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
@@ -46,9 +45,11 @@ interface ApiInternGateway : Gateway {
         behandlingId: BehandlingId
     )
 
-    fun hentArenaStatus(personidentifikatorer: Set<String>): ArenaStatusResponse
-
-    fun hentArenaStatusEllerNullVedFeil(personidentifikatorer: Set<String>): ArenaStatusResponse?
+    /*
+    Returnerer med overlegg `Result` slik at kalleren av metoden er nødt til å ta hensyn til at kallet kan feile.
+    Grunnen er at vi må passe på at Behandlingsflyt ikke feiler når Arena er utilgjengelig.
+     */
+    fun hentArenaStatus(personidentifikatorer: Set<String>): Result<ArenaStatusResponse>
 
     fun oppdaterIdenter(saksnummer: Saksnummer, identer: List<Ident>)
 }

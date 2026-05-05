@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.sakogbehandling.sak
 
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.ApiInternGateway
+import no.nav.aap.behandlingsflyt.hendelse.datadeling.ArenaStatusResponse
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
 import no.nav.aap.komponenter.gateway.GatewayProvider
@@ -38,10 +39,11 @@ class PersonOgSakService(
 
     private fun rapporterHvisOppretterPersonSomFinnesIArena(identliste: List<Ident>) {
         val personFinnesIKelvin = personRepository.finn(identliste) != null
-        val personFinnesIArena = apiInternGateway.hentArenaStatusEllerNullVedFeil(
+        val arenaStatus: ArenaStatusResponse? = apiInternGateway.hentArenaStatus(
             identliste.map { it.identifikator }.toSet()
-        )?.harArenaHistorikk
-        if (!personFinnesIKelvin && personFinnesIArena == true) {
+        ).getOrNull()
+        val personFinnesIArena = arenaStatus?.harArenaHistorikk == true
+        if (!personFinnesIKelvin && personFinnesIArena) {
             log.info("Oppretter person som har historikk i AAP-Arena i Kelvin")
         }
     }

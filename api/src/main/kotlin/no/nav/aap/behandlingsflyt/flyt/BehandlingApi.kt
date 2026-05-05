@@ -57,8 +57,8 @@ fun NormalOpenAPIRoute.behandlingApi(
         }.map { it.identifikator }.toSet()
         val apiInternGateway = gatewayProvider.provide(ApiInternGateway::class)
 
-        val arenaStatus: ArenaStatusDTO? = apiInternGateway.hentArenaStatusEllerNullVedFeil(identer)
-            ?.let { ArenaStatusDTO(harArenaHistorikk = it.harArenaHistorikk) }
+        val arenaStatus = apiInternGateway.hentArenaStatus(identer)
+            .getOrNull()?.let { ArenaStatusDTO(harArenaHistorikk = it.harArenaHistorikk) }
         return arenaStatus
     }
 

@@ -247,11 +247,15 @@ class ApiInternGatewayImpl : ApiInternGateway {
         )
     }
 
-    override fun hentArenaStatus(personidentifikatorer: Set<String>): ArenaStatusResponse {
-        // Kalles ofte fra saksbehandling, så cache den
-        return arenaStatusCache.get(personidentifikatorer) {
-            val sakerRequest = SakerRequest(personidentifikatorer = personidentifikatorer.toList())
-            doHentArenaStatus(sakerRequest)
+    override fun hentArenaStatus(personidentifikatorer: Set<String>): Result<ArenaStatusResponse> {
+        return runCatching {
+            // Kalles ofte fra saksbehandling, så cache den
+            arenaStatusCache.get(personidentifikatorer) {
+                val sakerRequest = SakerRequest(personidentifikatorer = personidentifikatorer.toList())
+                doHentArenaStatus(sakerRequest)
+            }
+        }.onFailure {
+            log.warn("Kall mot ApiInternGateway for å hente Arenastatus feilet", it)
         }
     }
 
@@ -263,14 +267,6 @@ class ApiInternGatewayImpl : ApiInternGateway {
         )
         requireNotNull(remoteResponse) { "Fikk ikke gyldig svar på om personen eksisterer i AAP-Arena" }
         return ArenaStatusResponse(remoteResponse.eksisterer)
-    }
-
-    override fun hentArenaStatusEllerNullVedFeil(personidentifikatorer: Set<String>): ArenaStatusResponse? {
-        return runCatching {
-            hentArenaStatus(personidentifikatorer)
-        }.onFailure {
-            log.warn("Kall mot ApiInternGateway for å hente Arenastatus feilet", it)
-        }.getOrNull()
     }
 
     override fun oppdaterIdenter(

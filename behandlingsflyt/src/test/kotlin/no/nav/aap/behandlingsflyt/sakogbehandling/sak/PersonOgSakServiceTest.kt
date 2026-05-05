@@ -27,6 +27,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -39,7 +40,7 @@ import java.time.LocalDate
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class PersonOgSakServiceTest {
     private val pdlGateway: IdentGateway = mockk()
-    private val apiInternGateway: ApiInternGateway = mockk(relaxed = true)
+    private val apiInternGateway: ApiInternGateway = mockk()
 
     private lateinit var dataSource: TestDataSource
 
@@ -48,9 +49,11 @@ class PersonOgSakServiceTest {
         dataSource = TestDataSource()
     }
 
-    @AfterAll
-    fun tearDown() {
-        dataSource.close()
+    @BeforeEach
+    fun beforeEach() {
+        // Result er en inline class — relaxed mocks håndterer ikke det,
+        // så vi må stubbe eksplisitt for å unngå ClassCastException.
+        every { apiInternGateway.hentArenaStatus(any()) } returns Result.success(ArenaStatusResponse(false))
     }
 
     @AfterEach
@@ -58,6 +61,11 @@ class PersonOgSakServiceTest {
         confirmVerified(apiInternGateway, pdlGateway)
         checkUnnecessaryStub(pdlGateway, apiInternGateway)
         clearMocks(pdlGateway, apiInternGateway)
+    }
+
+    @AfterAll
+    fun tearDown() {
+        dataSource.close()
     }
 
     @Nested
@@ -79,7 +87,6 @@ class PersonOgSakServiceTest {
             verify(exactly = 1) {
                 pdlGateway.hentAlleIdenterForPerson(ident)
                 apiInternGateway.hentArenaStatus(setOf(ident.identifikator))
-                apiInternGateway.hentArenaStatusEllerNullVedFeil(setOf(ident.identifikator))
             }
         }
 
@@ -103,7 +110,6 @@ class PersonOgSakServiceTest {
             verify(exactly = 2) {
                 pdlGateway.hentAlleIdenterForPerson(ident)
                 apiInternGateway.hentArenaStatus(setOf(ident.identifikator))
-                apiInternGateway.hentArenaStatusEllerNullVedFeil(setOf(ident.identifikator))
             }
         }
 
@@ -143,7 +149,6 @@ class PersonOgSakServiceTest {
             verify(exactly = 1) {
                 pdlGateway.hentAlleIdenterForPerson(aktivIdent)
                 apiInternGateway.hentArenaStatus(identliste.map { it.identifikator }.toSet())
-                apiInternGateway.hentArenaStatusEllerNullVedFeil(identliste.map { it.identifikator }.toSet())
             }
         }
 
@@ -151,7 +156,9 @@ class PersonOgSakServiceTest {
         fun `finnEllerOpprett rapporterer når person finnes i Arena men ikke i Kelvin`() {
             val ident = ident()
             every { pdlGateway.hentAlleIdenterForPerson(ident) } returns listOf(ident)
-            every { apiInternGateway.hentArenaStatus(setOf(ident.identifikator)) } returns ArenaStatusResponse(true)
+            every { apiInternGateway.hentArenaStatus(setOf(ident.identifikator)) } returns Result.success(
+                ArenaStatusResponse(true)
+            )
 
             val sak = dataSource.transaction { connection ->
                 val service = initPersonOgSakService(connection)
