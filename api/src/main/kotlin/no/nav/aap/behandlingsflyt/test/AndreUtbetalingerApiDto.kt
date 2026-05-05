@@ -6,23 +6,37 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.AndreUtbetalinger
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.JaNei
 
 data class AndreUtbetalingerApiDto(
-    val loenn: JaNei?,
+    val loenn: JANEI?,
     val afp: AfpDto? = null,
     val stoenad: List<AndreUtbetalingerYtelserApiDto>?,
 ) {
     fun tilKontrakt(): AndreUtbetalingerDto = AndreUtbetalingerDto(
-        lønn = loenn,
+        lønn = loenn?.tilKontrakt(),
         afp = afp,
         stønad = stoenad?.map { it.tilKontrakt() },
     )
 
     companion object {
         fun fraKontrakt(dto: AndreUtbetalingerDto): AndreUtbetalingerApiDto = AndreUtbetalingerApiDto(
-            loenn = dto.lønn,
+            loenn = dto.lønn?.fraKontrakt(),
             afp = dto.afp,
             stoenad = dto.stønad?.map { AndreUtbetalingerYtelserApiDto.fraKontrakt(it) },
         )
     }
+}
+
+enum class JANEI {
+    JA, NEI;
+
+    fun tilKontrakt() = when (this) {
+        JA -> JaNei.Ja
+        NEI -> JaNei.Nei
+    }
+}
+
+fun JaNei.fraKontrakt() = when (this) {
+    JaNei.Ja -> JANEI.JA
+    JaNei.Nei -> JANEI.NEI
 }
 
 enum class AndreUtbetalingerYtelserApiDto {
@@ -34,7 +48,7 @@ enum class AndreUtbetalingerYtelserApiDto {
     UTLAND,
     AFP,
     STIPEND,
-    LAN,
+    LAAN,
     NEI;
 
     fun tilKontrakt(): AndreUtbetalingerYtelserDto = when (this) {
@@ -46,7 +60,7 @@ enum class AndreUtbetalingerYtelserApiDto {
         UTLAND -> AndreUtbetalingerYtelserDto.UTLAND
         AFP -> AndreUtbetalingerYtelserDto.AFP
         STIPEND -> AndreUtbetalingerYtelserDto.STIPEND
-        LAN -> AndreUtbetalingerYtelserDto.LÅN
+        LAAN -> AndreUtbetalingerYtelserDto.LÅN
         NEI -> AndreUtbetalingerYtelserDto.NEI
     }
 
@@ -60,7 +74,7 @@ enum class AndreUtbetalingerYtelserApiDto {
             AndreUtbetalingerYtelserDto.UTLAND -> UTLAND
             AndreUtbetalingerYtelserDto.AFP -> AFP
             AndreUtbetalingerYtelserDto.STIPEND -> STIPEND
-            AndreUtbetalingerYtelserDto.LÅN -> LAN
+            AndreUtbetalingerYtelserDto.LÅN -> LAAN
             AndreUtbetalingerYtelserDto.NEI -> NEI
         }
     }

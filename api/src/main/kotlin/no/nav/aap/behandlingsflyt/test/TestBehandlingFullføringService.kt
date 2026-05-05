@@ -256,6 +256,18 @@ class TestBehandlingFullføringService(
                         eøsBeløp = null,
                         år = LocalDate.now().year - 1,
                         ferdigLignetPGI = null,
+                    ),
+                    ÅrsVurdering(
+                        beløp = BigDecimal("500000.00"),
+                        eøsBeløp = null,
+                        år = LocalDate.now().year - 2,
+                        ferdigLignetPGI = null,
+                    ),
+                    ÅrsVurdering(
+                        beløp = BigDecimal("500000.00"),
+                        eøsBeløp = null,
+                        år = LocalDate.now().year - 3,
+                        ferdigLignetPGI = null,
                     )
                 )
             )
