@@ -255,6 +255,24 @@ class ApiInternGatewayImpl : ApiInternGateway {
         }
     }
 
+    private fun doHentArenaStatus(sakerRequest: SakerRequest): ArenaStatusResponse {
+        val remoteResponse: PersonEksistererIAAPArena? = restClient.post(
+            uri.resolve("/arena/person/aap/eksisterer"),
+            PostRequest(body = sakerRequest),
+            mapper = { body, _ -> DefaultJsonMapper.fromJson(body) }
+        )
+        requireNotNull(remoteResponse) { "Fikk ikke gyldig svar på om personen eksisterer i AAP-Arena" }
+        return ArenaStatusResponse(remoteResponse.eksisterer)
+    }
+
+    override fun hentArenaStatusEllerNullVedFeil(personidentifikatorer: Set<String>): ArenaStatusResponse? {
+        return runCatching {
+            hentArenaStatus(personidentifikatorer)
+        }.onFailure {
+            log.warn("Kall mot ApiInternGateway for å hente Arenastatus feilet", it)
+        }.getOrNull()
+    }
+
     override fun oppdaterIdenter(
         saksnummer: Saksnummer,
         identer: List<Ident>
@@ -265,15 +283,5 @@ class ApiInternGatewayImpl : ApiInternGateway {
             PostRequest(body = OppdaterIdenterDto(saksnummer.toString(), identer.map(Ident::identifikator))),
             mapper = { _, _ -> }
         )
-    }
-
-    private fun doHentArenaStatus(sakerRequest: SakerRequest): ArenaStatusResponse {
-        val remoteResponse: PersonEksistererIAAPArena? = restClient.post(
-            uri.resolve("/arena/person/aap/eksisterer"),
-            PostRequest(body = sakerRequest),
-            mapper = { body, _ -> DefaultJsonMapper.fromJson(body) }
-        )
-        requireNotNull(remoteResponse) { "Fikk ikke gyldig svar på om personen eksisterer i AAP-Arena" }
-        return ArenaStatusResponse(remoteResponse.eksisterer)
     }
 }

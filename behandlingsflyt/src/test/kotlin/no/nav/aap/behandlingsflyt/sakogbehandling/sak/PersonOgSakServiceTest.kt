@@ -79,6 +79,7 @@ class PersonOgSakServiceTest {
             verify(exactly = 1) {
                 pdlGateway.hentAlleIdenterForPerson(ident)
                 apiInternGateway.hentArenaStatus(setOf(ident.identifikator))
+                apiInternGateway.hentArenaStatusEllerNullVedFeil(setOf(ident.identifikator))
             }
         }
 
@@ -102,6 +103,7 @@ class PersonOgSakServiceTest {
             verify(exactly = 2) {
                 pdlGateway.hentAlleIdenterForPerson(ident)
                 apiInternGateway.hentArenaStatus(setOf(ident.identifikator))
+                apiInternGateway.hentArenaStatusEllerNullVedFeil(setOf(ident.identifikator))
             }
         }
 
@@ -141,6 +143,7 @@ class PersonOgSakServiceTest {
             verify(exactly = 1) {
                 pdlGateway.hentAlleIdenterForPerson(aktivIdent)
                 apiInternGateway.hentArenaStatus(identliste.map { it.identifikator }.toSet())
+                apiInternGateway.hentArenaStatusEllerNullVedFeil(identliste.map { it.identifikator }.toSet())
             }
         }
 

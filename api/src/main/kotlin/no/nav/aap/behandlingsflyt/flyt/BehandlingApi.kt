@@ -55,14 +55,10 @@ fun NormalOpenAPIRoute.behandlingApi(
             val sakRepository = repositoryProvider.provide<SakRepository>()
             sakRepository.hent(sakId).person.identer()
         }.map { it.identifikator }.toSet()
+        val apiInternGateway = gatewayProvider.provide(ApiInternGateway::class)
 
-        val arenaStatus: ArenaStatusDTO? = runCatching {
-            gatewayProvider.provide(ApiInternGateway::class).hentArenaStatus(identer)
-        }.onFailure {
-            log.warn("Kall mot ApiInternGateway for å hente Arenastatus feilet", it)
-        }.getOrNull()?.let {
-            ArenaStatusDTO(harArenaHistorikk = it.harArenaHistorikk)
-        }
+        val arenaStatus: ArenaStatusDTO? = apiInternGateway.hentArenaStatusEllerNullVedFeil(identer)
+            ?.let { ArenaStatusDTO(harArenaHistorikk = it.harArenaHistorikk) }
         return arenaStatus
     }
 

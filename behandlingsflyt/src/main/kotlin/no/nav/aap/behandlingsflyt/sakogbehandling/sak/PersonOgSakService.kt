@@ -23,6 +23,7 @@ class PersonOgSakService(
         repositoryProvider.provide<PersonRepository>(),
         repositoryProvider.provide<SakRepository>()
     )
+
     private val log = LoggerFactory.getLogger(javaClass)
 
     fun finnEllerOpprett(ident: Ident, søknadsdato: LocalDate): Sak {
@@ -37,10 +38,10 @@ class PersonOgSakService(
 
     private fun rapporterHvisOppretterPersonSomFinnesIArena(identliste: List<Ident>) {
         val personFinnesIKelvin = personRepository.finn(identliste) != null
-        val personFinnesIArena = apiInternGateway.hentArenaStatus(
+        val personFinnesIArena = apiInternGateway.hentArenaStatusEllerNullVedFeil(
             identliste.map { it.identifikator }.toSet()
-        ).harArenaHistorikk
-        if (!personFinnesIKelvin && personFinnesIArena) {
+        )?.harArenaHistorikk
+        if (!personFinnesIKelvin && personFinnesIArena == true) {
             log.info("Oppretter person som har historikk i AAP-Arena i Kelvin")
         }
     }

@@ -63,6 +63,10 @@ class FakeApiInternGateway : ApiInternGateway {
         return ArenaStatusResponse(false)
     }
 
+    override fun hentArenaStatusEllerNullVedFeil(personidentifikatorer: Set<String>): ArenaStatusResponse? {
+        return hentArenaStatus(personidentifikatorer)
+    }
+
     override fun oppdaterIdenter(
         saksnummer: Saksnummer,
         identer: List<Ident>

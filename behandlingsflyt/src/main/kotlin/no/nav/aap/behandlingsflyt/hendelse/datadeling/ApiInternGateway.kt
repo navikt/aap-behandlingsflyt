@@ -46,8 +46,10 @@ interface ApiInternGateway : Gateway {
         behandlingId: BehandlingId
     )
 
-    fun oppdaterIdenter(saksnummer: Saksnummer, identer: List<Ident>)
-
     fun hentArenaStatus(personidentifikatorer: Set<String>): ArenaStatusResponse
+
+    fun hentArenaStatusEllerNullVedFeil(personidentifikatorer: Set<String>): ArenaStatusResponse?
+
+    fun oppdaterIdenter(saksnummer: Saksnummer, identer: List<Ident>)
 }
 
