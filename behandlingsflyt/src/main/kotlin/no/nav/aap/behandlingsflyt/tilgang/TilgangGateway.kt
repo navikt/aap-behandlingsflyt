@@ -10,4 +10,5 @@ import java.util.*
 interface TilgangGateway : Gateway {
     fun sjekkTilgangTilBehandling(behandlingsreferanse: UUID, avklaringsbehov: Definisjon, token: OidcToken): Boolean
     fun sjekkTilgangTilSak(saksnummer: Saksnummer, token: OidcToken, operasjon: Operasjon): Boolean
+    fun sjekkTilgangTilPerson(ident: String, token: OidcToken, operasjon: Operasjon): Boolean
 }

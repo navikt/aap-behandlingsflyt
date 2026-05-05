@@ -310,11 +310,11 @@ fun NormalOpenAPIRoute.saksApi(
 
                 val saksnummer = req.saksnummer
 
-                val ident = dataSource.transaction(readOnly = true) { connection ->
+                val sak = dataSource.transaction(readOnly = true) { connection ->
                     val repositoryProvider = repositoryRegistry.provider(connection)
-                    val sak = repositoryProvider.provide<SakRepository>().hent(saksnummer = Saksnummer(saksnummer))
-                    sak.person.aktivIdent()
+                    repositoryProvider.provide<SakRepository>().hent(saksnummer = Saksnummer(saksnummer))
                 }
+                val ident = sak.person.aktivIdent()
 
                 val personinfo = personinfoGateway.hentPersoninfoForIdent(ident, token())
 
@@ -322,6 +322,7 @@ fun NormalOpenAPIRoute.saksApi(
                     SakPersoninfoDTO(
                         fnr = personinfo.ident.identifikator,
                         navn = personinfo.fulltNavn(),
+                        personReferanse = sak.person.identifikator,
                         fødselsdato = personinfo.fødselsdato,
                         dødsdato = personinfo.dødsdato,
                     )

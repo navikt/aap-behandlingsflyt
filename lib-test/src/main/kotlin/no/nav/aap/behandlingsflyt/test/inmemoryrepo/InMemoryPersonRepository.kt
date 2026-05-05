@@ -22,6 +22,10 @@ object InMemoryPersonRepository : PersonRepository {
         return personer[personId]!!
     }
 
+    override fun hent(identifikator: UUID): Person {
+        return personer.values.find { it.identifikator == identifikator }!!
+    }
+
     override fun finn(ident: Ident): Person? {
         return personer.values.find { it.identer().contains(ident) }
     }

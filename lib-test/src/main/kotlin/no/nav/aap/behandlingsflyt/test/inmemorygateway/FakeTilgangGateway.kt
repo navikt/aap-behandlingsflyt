@@ -19,4 +19,12 @@ object FakeTilgangGateway : TilgangGateway {
     override fun sjekkTilgangTilSak(saksnummer: Saksnummer, token: OidcToken, operasjon: Operasjon): Boolean {
         return true
     }
+
+    override fun sjekkTilgangTilPerson(
+        ident: String,
+        token: OidcToken,
+        operasjon: Operasjon
+    ): Boolean {
+        return true
+    }
 }
