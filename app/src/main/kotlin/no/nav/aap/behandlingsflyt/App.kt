@@ -159,17 +159,18 @@ internal object AppConfig {
     // Tid appen får til å avslutte Motor, Kafka, etc
     val stansArbeidTimeout = shutdownGracePeriod - 1.seconds
 
-    // Vi skrur opp ktor sin default-verdi, som er "antall CPUer", fordi vi har en del venting på IO (db, kafka, http):
-    private const val ktorParallellitet = 8
-
-    // Vi følger ktor sin metodikk for å regne ut tuning parametre som funksjon av parallellitet
-    // https://github.com/ktorio/ktor/blob/3.3.1/ktor-server/ktor-server-core/common/src/io/ktor/server/engine/ApplicationEngine.kt#L30
-    const val connectionGroupSize = ktorParallellitet / 2 + 1
-    const val workerGroupSize = ktorParallellitet / 2 + 1
-    const val callGroupSize = 4 * ktorParallellitet
-
     const val ANTALL_WORKERS_FOR_MOTOR = 4
-    const val hikariMaxPoolSize = ktorParallellitet + 2 * ANTALL_WORKERS_FOR_MOTOR
+
+    // Vi følger *IKKE* ktor sin metodikk for å regne ut callGroupSize, for den metodikken antar at
+    // handlerene våre gjør async IO, men vi gjør ikke async IO, hverken mot database eller i HTTP-kall.
+    const val callGroupSize = 64
+
+    /* praktisk talt alle endepunkt hos oss starter med en transaksjon. Siden transaksjonen
+     * er blocking, er det i praksis hva som begrenser antall parallelle kall.
+     *
+     * Vi har maks 100 connections i prod, og vi kjører med 3-4 pods, så det er en begrenset ressurs.
+     */
+    const val hikariMaxPoolSize = 100 / 4 /* max connections / max antall pods */
 }
 
 val isTexasEnabled = configForKey("ENABLE_TEXAS").toBoolean()
@@ -183,8 +184,6 @@ fun main() {
     aktiverPostgresLogging()
 
     embeddedServer(Netty, configure = {
-        connectionGroupSize = AppConfig.connectionGroupSize
-        workerGroupSize = AppConfig.workerGroupSize
         callGroupSize = AppConfig.callGroupSize
 
         shutdownGracePeriod = AppConfig.shutdownGracePeriod.inWholeMilliseconds
