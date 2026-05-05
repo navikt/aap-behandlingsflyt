@@ -277,3 +277,5 @@ spec:
       value: api://dev-fss.teamdokumenthandtering.dokarkiv/.default
     - name: INTEGRASJON_PDFGEN_URL
       value: http://saksbehandling-pdfgen
+    - name: ENABLE_TEXAS
+      value: "true"
