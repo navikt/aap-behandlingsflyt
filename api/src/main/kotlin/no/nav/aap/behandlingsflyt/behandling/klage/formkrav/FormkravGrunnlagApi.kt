@@ -5,7 +5,7 @@ import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.formkrav.FormkravRepository
-import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.VURDER_FORMKRAV_KODE
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
@@ -29,7 +29,7 @@ fun NormalOpenAPIRoute.formkravGrunnlagApi(
         getGrunnlag<BehandlingReferanse, FormkravGrunnlagDto>(
             behandlingPathParam = BehandlingPathParam("referanse"),
             relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
-            avklaringsbehovKode = VURDER_FORMKRAV_KODE
+            påkrevdRolle = Definisjon.VURDER_FORMKRAV.løsesAv
         ) { req ->
             val respons = dataSource.transaction(readOnly = true) { connection ->
                 val repositoryProvider = repositoryRegistry.provider(connection)

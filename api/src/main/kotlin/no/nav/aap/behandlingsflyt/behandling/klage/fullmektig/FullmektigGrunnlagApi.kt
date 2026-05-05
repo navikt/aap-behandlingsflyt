@@ -5,7 +5,7 @@ import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.fullmektig.FullmektigRepository
-import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.FASTSETT_FULLMEKTIG_KODE
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.tilgang.kanSaksbehandle
@@ -27,7 +27,7 @@ fun NormalOpenAPIRoute.fullmektigGrunnlagApi(
         getGrunnlag<BehandlingReferanse, FullmektigGrunnlagDto>(
             relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
             behandlingPathParam = BehandlingPathParam("referanse"),
-            avklaringsbehovKode = FASTSETT_FULLMEKTIG_KODE
+            påkrevdRolle = Definisjon.FASTSETT_FULLMEKTIG.løsesAv
         ) { req ->
             val respons = dataSource.transaction(readOnly = true) { connection ->
                 val repositoryProvider = repositoryRegistry.provider(connection)
