@@ -247,12 +247,26 @@ class ApiInternGatewayImpl : ApiInternGateway {
         )
     }
 
-    override fun hentArenaStatus(personidentifikatorer: Set<String>): ArenaStatusResponse {
-        // Kalles ofte fra saksbehandling, så cache den
-        return arenaStatusCache.get(personidentifikatorer) {
-            val sakerRequest = SakerRequest(personidentifikatorer = personidentifikatorer.toList())
-            doHentArenaStatus(sakerRequest)
+    override fun hentArenaStatus(personidentifikatorer: Set<String>): Result<ArenaStatusResponse> {
+        return runCatching {
+            // Kalles ofte fra saksbehandling, så cache den
+            arenaStatusCache.get(personidentifikatorer) {
+                val sakerRequest = SakerRequest(personidentifikatorer = personidentifikatorer.toList())
+                doHentArenaStatus(sakerRequest)
+            }
+        }.onFailure {
+            log.warn("Kall mot ApiInternGateway for å hente Arenastatus feilet", it)
         }
+    }
+
+    private fun doHentArenaStatus(sakerRequest: SakerRequest): ArenaStatusResponse {
+        val remoteResponse: PersonEksistererIAAPArena? = restClient.post(
+            uri.resolve("/arena/person/aap/eksisterer"),
+            PostRequest(body = sakerRequest),
+            mapper = { body, _ -> DefaultJsonMapper.fromJson(body) }
+        )
+        requireNotNull(remoteResponse) { "Fikk ikke gyldig svar på om personen eksisterer i AAP-Arena" }
+        return ArenaStatusResponse(remoteResponse.eksisterer)
     }
 
     override fun oppdaterIdenter(
@@ -265,15 +279,5 @@ class ApiInternGatewayImpl : ApiInternGateway {
             PostRequest(body = OppdaterIdenterDto(saksnummer.toString(), identer.map(Ident::identifikator))),
             mapper = { _, _ -> }
         )
-    }
-
-    private fun doHentArenaStatus(sakerRequest: SakerRequest): ArenaStatusResponse {
-        val remoteResponse: PersonEksistererIAAPArena? = restClient.post(
-            uri.resolve("/arena/person/aap/eksisterer"),
-            PostRequest(body = sakerRequest),
-            mapper = { body, _ -> DefaultJsonMapper.fromJson(body) }
-        )
-        requireNotNull(remoteResponse) { "Fikk ikke gyldig svar på om personen eksisterer i AAP-Arena" }
-        return ArenaStatusResponse(remoteResponse.eksisterer)
     }
 }

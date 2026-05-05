@@ -48,16 +48,16 @@ class PersonOgSakServiceTest {
         dataSource = TestDataSource()
     }
 
-    @AfterAll
-    fun tearDown() {
-        dataSource.close()
-    }
-
     @AfterEach
     fun afterEach() {
         confirmVerified(apiInternGateway, pdlGateway)
         checkUnnecessaryStub(pdlGateway, apiInternGateway)
         clearMocks(pdlGateway, apiInternGateway)
+    }
+
+    @AfterAll
+    fun tearDown() {
+        dataSource.close()
     }
 
     @Nested
@@ -67,6 +67,7 @@ class PersonOgSakServiceTest {
         fun `finnEllerOpprett oppretter ny sak for ny person`() {
             val ident = ident()
             every { pdlGateway.hentAlleIdenterForPerson(ident) } returns listOf(ident)
+            every { apiInternGateway.hentArenaStatus(any()) } returns Result.success(ArenaStatusResponse(false))
 
             val sak = dataSource.transaction { connection ->
                 val service = initPersonOgSakService(connection)
@@ -86,6 +87,7 @@ class PersonOgSakServiceTest {
         fun `finnEllerOpprett returnerer eksisterende sak for samme person`() {
             val ident = ident()
             every { pdlGateway.hentAlleIdenterForPerson(ident) } returns listOf(ident)
+            every { apiInternGateway.hentArenaStatus(any()) } returns Result.success(ArenaStatusResponse(false))
 
             val sak1 = dataSource.transaction { connection ->
                 val service = initPersonOgSakService(connection)
@@ -128,6 +130,8 @@ class PersonOgSakServiceTest {
             val identliste = listOf(aktivIdent, gammelIdent)
 
             every { pdlGateway.hentAlleIdenterForPerson(aktivIdent) } returns identliste
+            every { apiInternGateway.hentArenaStatus(any()) } returns Result.success(ArenaStatusResponse(false))
+
 
             val sak = dataSource.transaction { connection ->
                 val service = initPersonOgSakService(connection)
@@ -148,7 +152,9 @@ class PersonOgSakServiceTest {
         fun `finnEllerOpprett rapporterer når person finnes i Arena men ikke i Kelvin`() {
             val ident = ident()
             every { pdlGateway.hentAlleIdenterForPerson(ident) } returns listOf(ident)
-            every { apiInternGateway.hentArenaStatus(setOf(ident.identifikator)) } returns ArenaStatusResponse(true)
+            every { apiInternGateway.hentArenaStatus(setOf(ident.identifikator)) } returns Result.success(
+                ArenaStatusResponse(true)
+            )
 
             val sak = dataSource.transaction { connection ->
                 val service = initPersonOgSakService(connection)
@@ -171,6 +177,7 @@ class PersonOgSakServiceTest {
         fun `finnEllerOpprett returnerer eksisterende sak når trukket søknad har skalTrekkes false`() {
             val ident = ident()
             every { pdlGateway.hentAlleIdenterForPerson(ident) } returns listOf(ident)
+            every { apiInternGateway.hentArenaStatus(any()) } returns Result.success(ArenaStatusResponse(false))
 
             val (opprinneligSak, sammeSak) = dataSource.transaction { connection ->
                 val repositoryProvider = postgresRepositoryRegistry.provider(connection)
@@ -214,6 +221,7 @@ class PersonOgSakServiceTest {
             val ident = ident()
             val søknadsdato = LocalDate.now()
             every { pdlGateway.hentAlleIdenterForPerson(ident) } returns listOf(ident)
+            every { apiInternGateway.hentArenaStatus(any()) } returns Result.success(ArenaStatusResponse(false))
 
             val (opprinneligSak, nySak) = dataSource.transaction { connection ->
                 val repositoryProvider = postgresRepositoryRegistry.provider(connection)
@@ -266,6 +274,7 @@ class PersonOgSakServiceTest {
             val ident = ident()
             val søknadsdato = LocalDate.now()
             every { pdlGateway.hentAlleIdenterForPerson(ident) } returns listOf(ident)
+            every { apiInternGateway.hentArenaStatus(any()) } returns Result.success(ArenaStatusResponse(false))
 
             dataSource.transaction { connection ->
                 val repositoryProvider = postgresRepositoryRegistry.provider(connection)
@@ -328,6 +337,7 @@ class PersonOgSakServiceTest {
         fun `finnSakerFor returnerer saker for person som har saker`() {
             val ident = ident()
             every { pdlGateway.hentAlleIdenterForPerson(ident) } returns listOf(ident)
+            every { apiInternGateway.hentArenaStatus(any()) } returns Result.success(ArenaStatusResponse(false))
 
             val (opprettetSak, funnetSaker) = dataSource.transaction { connection ->
                 val service = initPersonOgSakService(connection)
@@ -375,6 +385,7 @@ class PersonOgSakServiceTest {
 
             every { pdlGateway.hentAlleIdenterForPerson(aktivIdent) } returns identliste
             every { pdlGateway.hentAlleIdenterForPerson(gammelIdent) } returns identliste
+            every { apiInternGateway.hentArenaStatus(any()) } returns Result.success(ArenaStatusResponse(false))
 
             val (opprettetSak, funnetSaker) = dataSource.transaction { connection ->
                 val service = initPersonOgSakService(connection)

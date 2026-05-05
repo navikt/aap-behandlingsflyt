@@ -59,8 +59,8 @@ class FakeApiInternGateway : ApiInternGateway {
         // No-op
     }
 
-    override fun hentArenaStatus(personidentifikatorer: Set<String>): ArenaStatusResponse {
-        return ArenaStatusResponse(false)
+    override fun hentArenaStatus(personidentifikatorer: Set<String>): Result<ArenaStatusResponse> {
+        return Result.success(ArenaStatusResponse(false))
     }
 
     override fun oppdaterIdenter(
