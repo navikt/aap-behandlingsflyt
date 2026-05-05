@@ -25,7 +25,7 @@ fun NormalOpenAPIRoute.bekreftVurderingerOppfølgingApi(
             getGrunnlag<BehandlingReferanse, BekreftVurderingerOppfølgingDto>(
                 relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
                 behandlingPathParam = BehandlingPathParam("referanse"),
-                avklaringsbehovKode = Definisjon.BEKREFT_VURDERINGER_OPPFØLGING.kode.toString()
+                påkrevdRolle = Definisjon.BEKREFT_VURDERINGER_OPPFØLGING.løsesAv
             ) { req ->
                 val respons = dataSource.transaction { connection ->
                     val repositoryProvider = repositoryRegistry.provider(connection)

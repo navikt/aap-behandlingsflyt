@@ -127,7 +127,7 @@ fun NormalOpenAPIRoute.inntektsbortfallGrunnlagApi(
         getGrunnlag<BehandlingReferanse, InntektsbortfallGrunnlagResponse>(
             relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
             behandlingPathParam = BehandlingPathParam("referanse"),
-            avklaringsbehovKode = Definisjon.VURDER_INNTEKTSBORTFALL.kode.toString()
+            påkrevdRolle = Definisjon.VURDER_INNTEKTSBORTFALL.løsesAv
 
         ) { behandlingReferanse ->
             val (inntektsbortfallKanBehandlesAutomatisk, vurdering) = dataSource.transaction(readOnly = true) { connection ->

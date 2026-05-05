@@ -34,7 +34,7 @@ fun NormalOpenAPIRoute.sykdomsvurderingForBrevApi(
         getGrunnlag<BehandlingReferanse, SykdomsvurderingForBrevDto>(
             relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
             behandlingPathParam = BehandlingPathParam("referanse"),
-            avklaringsbehovKode = Definisjon.SKRIV_SYKDOMSVURDERING_BREV.kode.toString()
+            påkrevdRolle = Definisjon.SKRIV_SYKDOMSVURDERING_BREV.løsesAv
         ) { behandlingReferanse ->
             val grunnlag = dataSource.transaction { connection ->
                 val repositoryProvider = repositoryRegistry.provider(connection)
