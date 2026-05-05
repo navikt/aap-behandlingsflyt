@@ -69,6 +69,7 @@
       <env name="INTEGRASJON_TILTAKSPENGER_URL" value="https://tiltakspenger-datadeling.intern.dev.nav.no" />
       <env name="INTEGRASJON_TILTAKSPENGER_SCOPE" value="api://dev-gcp.tpts.tiltakspenger-datadeling/.default" />
       <env name="INTEGRASJON_PDFGEN_URL" value="https://aap-saksbehandling-pdfgen.intern.dev.nav.no" />
+      <env name="INTEGRASJON_PDFGEN_SCOPE" value="api://dev-gcp.aap.saksbehandling-pdfgen/.default" />
       <env name="NAIS_TOKEN_ENDPOINT" value="http://host.docker.internal:7164/api/v1/token" />
       <env name="NAIS_TOKEN_EXCHANGE_ENDPOINT" value="http://host.docker.internal:7164/api/v1/token/exchange" />
       <env name="NAIS_TOKEN_INTROSPECTION_ENDPOINT" value="http://host.docker.internal:7164/api/v1/introspect" />
