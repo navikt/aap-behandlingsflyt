@@ -46,7 +46,7 @@ fun NormalOpenAPIRoute.barnetilleggApi(
             getGrunnlag<BehandlingReferanse, BarnetilleggDto>(
                 relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
                 behandlingPathParam = BehandlingPathParam("referanse"),
-                avklaringsbehovKode = Definisjon.AVKLAR_BARNETILLEGG.kode.toString()
+                påkrevdRolle = Definisjon.AVKLAR_BARNETILLEGG.løsesAv
             ) { req ->
                 val dto = dataSource.transaction(readOnly = true) { connection ->
                     val repositoryProvider = repositoryRegistry.provider(connection)

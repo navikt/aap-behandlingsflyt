@@ -36,7 +36,7 @@ fun NormalOpenAPIRoute.sykepengerGrunnlagApi(
             getGrunnlag<BehandlingReferanse, SykepengerGrunnlagResponse>(
                 relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
                 behandlingPathParam = BehandlingPathParam("referanse"),
-                avklaringsbehovKode = Definisjon.AVKLAR_SYKEPENGEERSTATNING.kode.toString()
+                påkrevdRolle = Definisjon.AVKLAR_SYKEPENGEERSTATNING.løsesAv
             ) { req ->
                 val response = dataSource.transaction(readOnly = true) { connection ->
                     val repositoryProvider = repositoryRegistry.provider(connection)

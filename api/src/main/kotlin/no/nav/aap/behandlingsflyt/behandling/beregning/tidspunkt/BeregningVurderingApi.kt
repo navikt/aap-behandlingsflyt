@@ -41,7 +41,7 @@ fun NormalOpenAPIRoute.beregningVurderingApi(
             getGrunnlag<BehandlingReferanse, BeregningTidspunktAvklaringResponse>(
                 relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
                 behandlingPathParam = BehandlingPathParam("referanse"),
-                avklaringsbehovKode = Definisjon.FASTSETT_BEREGNINGSTIDSPUNKT.kode.toString()
+                påkrevdRolle = Definisjon.FASTSETT_BEREGNINGSTIDSPUNKT.løsesAv
             ) { req ->
                 val responsDto = dataSource.transaction(readOnly = true) { connection ->
                     val repositoryProvider = repositoryRegistry.provider(connection)
@@ -78,7 +78,7 @@ fun NormalOpenAPIRoute.beregningVurderingApi(
             getGrunnlag<BehandlingReferanse, BeregningYrkesskadeAvklaringResponse>(
                 relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
                 behandlingPathParam = BehandlingPathParam("referanse"),
-                avklaringsbehovKode = Definisjon.FASTSETT_YRKESSKADEINNTEKT.kode.toString()
+                påkrevdRolle = Definisjon.FASTSETT_YRKESSKADEINNTEKT.løsesAv
             ) { req ->
                 val responsDto = dataSource.transaction(readOnly = true) { connection ->
                     val repositoryProvider = repositoryRegistry.provider(connection)

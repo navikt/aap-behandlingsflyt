@@ -38,7 +38,7 @@ fun NormalOpenAPIRoute.overgangUforeGrunnlagApi(
             getGrunnlag<BehandlingReferanse, OvergangUføreGrunnlagResponse>(
                 relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
                 behandlingPathParam = BehandlingPathParam("referanse"),
-                avklaringsbehovKode = Definisjon.AVKLAR_OVERGANG_UFORE.kode.toString()
+                påkrevdRolle = Definisjon.AVKLAR_OVERGANG_UFORE.løsesAv
             ) { req ->
                 val respons = dataSource.transaction(readOnly = true) { connection ->
                     val repositoryProvider = repositoryRegistry.provider(connection)

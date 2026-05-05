@@ -12,6 +12,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.StansO
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeRepository
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.FORESLÅ_VEDTAK_VEDTAKSLENGDE_KODE
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
@@ -35,7 +36,7 @@ fun NormalOpenAPIRoute.foreslaaVedtakVedtakslengdeApi(
         route("/{referanse}/grunnlag/foreslaa-vedtak-vedtakslengde").getGrunnlag<BehandlingReferanse, VedtakslengdeVedtakResponse>(
             relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
             behandlingPathParam = BehandlingPathParam("referanse"),
-            avklaringsbehovKode = FORESLÅ_VEDTAK_VEDTAKSLENGDE_KODE
+            påkrevdRolle = Definisjon.FORESLÅ_VEDTAK_VEDTAKSLENGDE.løsesAv
         ) { behandlingReferanse ->
             val response =
                 dataSource.transaction(readOnly = true) { conn ->

@@ -18,7 +18,6 @@ import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingServi
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Status
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
-import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.SKRIV_BREV_KODE
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.mdc.LogKontekst
 import no.nav.aap.behandlingsflyt.mdc.LoggingKontekst
@@ -63,7 +62,7 @@ fun NormalOpenAPIRoute.brevApi(
     val authorizationParamPathConfig = AuthorizationParamPathConfig(
         relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
         operasjon = Operasjon.SAKSBEHANDLE,
-        avklaringsbehovKode = SKRIV_BREV_KODE,
+        påkrevdRolle = Definisjon.SKRIV_BREV.løsesAv,
         behandlingPathParam = BehandlingPathParam(
             param = "brevbestillingReferanse",
             resolver = {

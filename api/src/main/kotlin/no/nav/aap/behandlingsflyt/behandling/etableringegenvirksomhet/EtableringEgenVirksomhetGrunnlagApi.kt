@@ -30,7 +30,6 @@ import no.nav.aap.komponenter.tidslinje.somTidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.getGrunnlag
-import java.time.LocalDate
 import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.etableringEgenVirksomhetApi(
@@ -42,7 +41,7 @@ fun NormalOpenAPIRoute.etableringEgenVirksomhetApi(
         getGrunnlag<BehandlingReferanse, EtableringEgenVirksomhetGrunnlagResponse>(
             relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
             behandlingPathParam = BehandlingPathParam("referanse"),
-            avklaringsbehovKode = Definisjon.ETABLERING_EGEN_VIRKSOMHET.kode.toString()
+            påkrevdRolle = Definisjon.ETABLERING_EGEN_VIRKSOMHET.løsesAv
         ) { behandlingReferanse ->
             val response =
                 dataSource.transaction { connection ->
