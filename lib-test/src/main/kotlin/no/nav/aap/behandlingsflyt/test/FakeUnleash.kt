@@ -41,6 +41,7 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.MigrerStansOgOpphor to true,
         BehandlingsflytFeature.ForeslaaVedtakVedtakslengde to true,
         BehandlingsflytFeature.SamordningFaktagrunnlagBrev to true,
+        BehandlingsflytFeature.GReguleringsJobb to true,
         )
 )
 

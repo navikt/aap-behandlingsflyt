@@ -16,6 +16,7 @@ enum class BehandlingsflytFeature : FeatureToggle {
     AvslagLovvalgMedlemskap,
     ForeslaaVedtakVedtakslengde,
     SamordningFaktagrunnlagBrev,
+    GReguleringsJobb,
     ;
 
     override fun key(): String = name

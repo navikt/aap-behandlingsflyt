@@ -108,5 +108,6 @@ fun ÅrsakTilOpprettelse?.tilKontrakt(): no.nav.aap.behandlingsflyt.kontrakt.beh
         ÅrsakTilOpprettelse.AKTIVITETSPLIKT_11_9 -> no.nav.aap.behandlingsflyt.kontrakt.behandling.ÅrsakTilOpprettelse.AKTIVITETSPLIKT_11_9
         ÅrsakTilOpprettelse.TILBAKEKREVING_HENDELSE -> no.nav.aap.behandlingsflyt.kontrakt.behandling.ÅrsakTilOpprettelse.TILBAKEKREVING_HENDELSE
         ÅrsakTilOpprettelse.FAGSYSTEMINFO_BEHOV_HENDELSE -> no.nav.aap.behandlingsflyt.kontrakt.behandling.ÅrsakTilOpprettelse.FAGSYSTEMINFO_BEHOV_HENDELSE
+        ÅrsakTilOpprettelse.G_REGULERING -> no.nav.aap.behandlingsflyt.kontrakt.behandling.ÅrsakTilOpprettelse.G_REGULERING
         null -> no.nav.aap.behandlingsflyt.kontrakt.behandling.ÅrsakTilOpprettelse.UDEFINERT
     }
