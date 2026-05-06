@@ -22,7 +22,7 @@ object TilgangGatewayImpl : TilgangGateway {
         return no.nav.aap.tilgang.TilgangGateway.harTilgangTilBehandling(
             BehandlingTilgangRequest(
                 behandlingsreferanse = behandlingsreferanse,
-                avklaringsbehovKode = avklaringsbehov.kode.toString(),
+                påkrevdRolle = avklaringsbehov.løsesAv,
                 operasjon = Operasjon.SAKSBEHANDLE,
                 relevanteIdenter = relevanteIdenter
             ), token
