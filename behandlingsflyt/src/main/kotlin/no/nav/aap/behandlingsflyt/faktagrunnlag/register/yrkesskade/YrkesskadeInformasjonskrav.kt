@@ -77,22 +77,27 @@ class YrkesskadeInformasjonskrav internal constructor(
     ): Informasjonskrav.Endret {
         val sak = sakService.hent(kontekst.sakId)
 
-        val registerYrkesskade: List<Yrkesskade> = registerdata.yrkesskader
-        val oppgittYrkesskade = oppgittYrkesskade(kontekst.sakId, sak.rettighetsperiode)
-        val oppgittYrkesskadeUtenSkadedato = oppgittYrkesskade(kontekst.sakId, null)
-        val yrkesskader = registerYrkesskade + listOfNotNull(oppgittYrkesskade, oppgittYrkesskadeUtenSkadedato)
-        val harOppgittYrkesskade = harOppgittYrkesskade(
-            mottattDokumentRepository.hentDokumenterAvType(kontekst.sakId, InnsendingType.SØKNAD)
-        )
+        val registerYrkesskader: List<Yrkesskade> = registerdata.yrkesskader
+//        val oppgittYrkesskade = oppgittYrkesskade(kontekst.sakId, sak.rettighetsperiode) //TODO Thao: Sjekk om jeg har behov for å ta hensyn til oppgittYrkesskadeUtenSkadedato
+//        val oppgittYrkesskadeUtenSkadedato = oppgittYrkesskade(kontekst.sakId, null)
+//        val yrkesskader = registerYrkesskade + listOfNotNull(oppgittYrkesskade, oppgittYrkesskadeUtenSkadedato)
+        val mottattDokumenter = mottattDokumentRepository.hentDokumenterAvType(kontekst.sakId, InnsendingType.SØKNAD)
+        val harOppgittYrkesskade = harOppgittYrkesskade(mottattDokumenter)
 
         val behandlingId = kontekst.behandlingId
         val gamleData = yrkesskadeRepository.hentHvisEksisterer(behandlingId)
 
-        if (yrkesskader.isNotEmpty()) {
-            yrkesskadeRepository.lagre(behandlingId, Yrkesskader(yrkesskader), harOppgittYrkesskade)
-        } else if (yrkesskadeRepository.hentHvisEksisterer(behandlingId) != null) {
+        yrkesskadeRepository.lagre(
+            behandlingId,
+            registerYrkesskader = Yrkesskader(registerYrkesskader).takeIf { it.yrkesskader.isNotEmpty() },
+            oppgittYrkesskadeISøknad = harOppgittYrkesskade,
+        )
+
+        /*if (registerYrkesskader.isNotEmpty()) {
+            yrkesskadeRepository.lagre(behandlingId, Yrkesskader(registerYrkesskader), harOppgittYrkesskade)
+        } else if (yrkesskadeRepository.hentHvisEksisterer(behandlingId) != null) { // TODO Thao: Sjekk om jeg trenger denne else if
             yrkesskadeRepository.lagre(behandlingId, null, harOppgittYrkesskade)
-        }
+        }*/
         val nyeData = yrkesskadeRepository.hentHvisEksisterer(behandlingId)
 
         return if (nyeData == gamleData) IKKE_ENDRET else ENDRET
@@ -104,14 +109,13 @@ class YrkesskadeInformasjonskrav internal constructor(
     ): Yrkesskade? {
         val mottattDokumenter = mottattDokumentRepository.hentDokumenterAvType(id, InnsendingType.SØKNAD)
 
-        // FIXME Thao: Sjekk om det er behov for denne
-        /*if (harOppgittYrkesskade(mottattDokumenter)) {
+        if (harOppgittYrkesskade(mottattDokumenter)) {
             if (Miljø.er() in listOf(MiljøKode.DEV, MiljøKode.LOKALT)) {
                 return fakeOppgittYrkesskade(periode)
             }
 
-            *//* TODO: Modeller og vis informasjon fra søknad i kelvin. *//*
-        }*/
+            /* TODO: Modeller og vis informasjon fra søknad i kelvin. */
+        }
 
         return null
     }

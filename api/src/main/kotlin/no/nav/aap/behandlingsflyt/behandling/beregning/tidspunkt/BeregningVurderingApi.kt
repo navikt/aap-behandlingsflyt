@@ -9,6 +9,8 @@ import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.tilTidslinje
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.SkadekombinasjonRegister
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.Yrkesskade
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurdering
@@ -114,6 +116,11 @@ fun NormalOpenAPIRoute.beregningVurderingApi(
                                     it.saksnummer,
                                     it.kildesystem,
                                     skadedato,
+                                    it.vedtaksdato,
+                                    it.skadeart,
+                                    it.diagnose,
+                                    it.skadekombinasjoner,
+                                    it.skadekombinasjonerTekst,
                                     Grunnbeløp.finnGUnit(skadedato, Beløp(1)).beløp
                                 )
                             },

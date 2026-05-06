@@ -5,6 +5,6 @@ import no.nav.aap.lookup.repository.Repository
 
 interface YrkesskadeRepository : Repository {
     fun hentHvisEksisterer(behandlingId: BehandlingId): YrkesskadeGrunnlag?
-    fun lagre(behandlingId: BehandlingId, yrkesskader: Yrkesskader?, oppgittYrkesskadeISøknad: Boolean)
+    fun lagre(behandlingId: BehandlingId, registerYrkesskader: Yrkesskader?, oppgittYrkesskadeISøknad: Boolean?)
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId)
 }

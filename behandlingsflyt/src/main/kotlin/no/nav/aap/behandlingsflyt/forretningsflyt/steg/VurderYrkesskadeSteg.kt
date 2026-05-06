@@ -64,7 +64,8 @@ class VurderYrkesskadeSteg private constructor(
 
                 !tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(
                     flytKontekstMedPerioder, type()
-                ) && flytKontekstMedPerioder.vurderingsbehovRelevanteForSteg.isNotEmpty() && yrkesskadeGrunnlag?.yrkesskader?.harYrkesskade() == true
+                ) && flytKontekstMedPerioder.vurderingsbehovRelevanteForSteg.isNotEmpty()
+                        && (yrkesskadeGrunnlag?.yrkesskader?.harYrkesskade() == true || yrkesskadeGrunnlag?.oppgittYrkesskadeISøknad == true)
             }
 
             VurderingType.MELDEKORT,

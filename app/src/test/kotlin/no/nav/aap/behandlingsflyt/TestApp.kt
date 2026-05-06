@@ -275,7 +275,9 @@ private fun genererBarn(dto: TestBarn): TestPerson {
 
 private fun mapTilSøknad(dto: OpprettTestcaseDTO, urelaterteBarn: List<TestPerson>): SøknadV0 {
     val erStudent = if (dto.student) StudentStatus.Ja else StudentStatus.Nei
-    val harYrkesskade = if (dto.harYrkesskadeFraSøknad) "JA" else "NEI"
+//    val harYrkesskade = if (dto.harYrkesskadeFraSøknad) "JA" else "NEI" // FIXME Thao
+    val harYrkesskadeFraSøknad = dto.yrkesskader.any { it.kilde == "SØKNAD" && it.harYrkesskade }
+    val harYrkesskade = if (harYrkesskadeFraSøknad) "JA" else "NEI"
 
     val oppgitteBarn = if (urelaterteBarn.isNotEmpty()) {
         OppgitteBarn(
@@ -322,10 +324,10 @@ private fun sendInnSøknad(dto: OpprettTestcaseDTO, gatewayProvider: GatewayProv
             fødselsdato = Fødselsdato(dto.fødselsdato),
             yrkesskade = dto.yrkesskader.mapNotNull { entry ->
                 when (entry.kilde) {
-                    "SØKNAD" -> if (entry.harYrkesskade) TestYrkesskade() else null
+//                    "SØKNAD" -> if (entry.harYrkesskade) TestYrkesskade() else null //FIXME Thao
+                    "SØKNAD" -> null
                     "REGISTER" -> TestYrkesskade(
                         skadedato = entry.skadedato,
-                        saksreferanse = entry.saksreferanse,
                         skadeart = entry.skadeart,
                         diagnose = entry.diagnose,
                         skadebeskrivelse = entry.skadebeskrivelse,
@@ -474,7 +476,8 @@ private fun opprettNySakOgBehandling(
 
         if (harBehandlingsgrunnlag) {
             // Yrkesskade
-            if (dto.harYrkesskade) {
+            val harYrkesskade = dto.yrkesskader.any { it.kilde == "REGISTER" || (it.kilde == "SØKNAD" && it.harYrkesskade) }
+            if (harYrkesskade) {
                 if (dto.steg == StegType.VURDER_YRKESSKADE) return sak
                 løsYrkesSkade(behandling)
             }
@@ -490,7 +493,7 @@ private fun opprettNySakOgBehandling(
             }
 
             // Forutgående medlemskap
-            if (dto.harYrkesskade) {
+            if (harYrkesskade) {
                 løsFastsettYrkesskadeInntekt(behandling)
             }
             if (dto.steg == StegType.VURDER_MEDLEMSKAP) return sak

@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.behandling.beregning.tidspunkt
 
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.SkadekombinasjonRegister
 import no.nav.aap.komponenter.verdityper.Beløp
 import java.time.LocalDate
 
@@ -16,6 +17,11 @@ data class YrkesskadeTilVurderingResponse(
     val saksnummer: Int?,
     val kilde: String,
     val skadeDato: LocalDate,
+    val vedtaksdato: LocalDate? = null,
+    val skadeart: String? = null,
+    val diagnose: String? = null,
+    val skadekombinasjoner: List<SkadekombinasjonRegister>? = null,
+    val skadekombinasjonerTekst: String? = null,
     val grunnbeløp: Beløp
 )
 
