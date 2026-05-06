@@ -6,7 +6,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.AndreUtbetalinger
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.JaNei
 
 data class AndreUtbetalingerApiDto(
-    val loenn: JANEI?,
+    val loenn: JaNeiDto?,
     val afp: AfpDto? = null,
     val stoenad: List<AndreUtbetalingerYtelserApiDto>?,
 ) {
@@ -25,7 +25,7 @@ data class AndreUtbetalingerApiDto(
     }
 }
 
-enum class JANEI {
+enum class JaNeiDto {
     JA, NEI;
 
     fun tilKontrakt() = when (this) {
@@ -34,9 +34,9 @@ enum class JANEI {
     }
 }
 
-fun JaNei.fraKontrakt() = when (this) {
-    JaNei.Ja -> JANEI.JA
-    JaNei.Nei -> JANEI.NEI
+private fun JaNei.fraKontrakt() = when (this) {
+    JaNei.Ja -> JaNeiDto.JA
+    JaNei.Nei -> JaNeiDto.NEI
 }
 
 enum class AndreUtbetalingerYtelserApiDto {

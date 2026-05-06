@@ -21,7 +21,7 @@ import no.nav.aap.behandlingsflyt.test.BehandlingStatusRequest
 import no.nav.aap.behandlingsflyt.test.BehandlingStatusRespons
 import no.nav.aap.behandlingsflyt.test.FakePersoner
 import no.nav.aap.behandlingsflyt.test.Fakes
-import no.nav.aap.behandlingsflyt.test.JANEI
+import no.nav.aap.behandlingsflyt.test.JaNeiDto
 import no.nav.aap.behandlingsflyt.test.LokalUnleash
 import no.nav.aap.behandlingsflyt.test.OpprettOgFullforBehandlingRequest
 import no.nav.aap.behandlingsflyt.test.OpprettOgFullforBehandlingRespons
@@ -125,7 +125,7 @@ class OpprettOgFullforBehandlingApiTest {
             ident = "10107099956",
             erStudent = true,
             andreUtbetalingerApiDto = AndreUtbetalingerApiDto(
-                loenn = JANEI.JA,
+                loenn = JaNeiDto.JA,
                 afp = AfpDto("Nav"),
                 stoenad = listOf(AndreUtbetalingerYtelserApiDto.AFP)
             )
