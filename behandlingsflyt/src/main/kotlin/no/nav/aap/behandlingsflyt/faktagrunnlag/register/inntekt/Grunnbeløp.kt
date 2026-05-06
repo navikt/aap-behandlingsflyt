@@ -146,6 +146,17 @@ object Grunnbeløp {
                     .plus(Segment(Periode(siste.dato, Tid.MAKS), siste.beløp))
                     .let(::Tidslinje)
             }
+            fun finnGrunnbeløpForÅr(år: Year): GrunnbeløpDto? {
+                val grunnbeløpElement = grunnbeløpene.find { it.dato.year.equals(år) }
+                if (grunnbeløpElement != null) {
+                    return GrunnbeløpDto(
+                        dato = grunnbeløpElement.dato,
+                        beløp = grunnbeløpElement.beløp
+                    )
+                } else {
+                    return null
+                }
+            }
         }
     }
 
@@ -245,5 +256,14 @@ object Grunnbeløp {
 
     fun tilTidslinje(): Tidslinje<Beløp> {
         return Element.tilTidslinje()
+    }
+
+    data class GrunnbeløpDto(
+        val dato: LocalDate,
+        val beløp: Beløp
+    )
+
+    fun finnesGrunnbeløpForÅr(år: Year) :  GrunnbeløpDto? {
+        return Element.finnGrunnbeløpForÅr(år)
     }
 }
