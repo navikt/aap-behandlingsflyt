@@ -29,16 +29,12 @@ import no.nav.aap.komponenter.httpklient.httpclient.post
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.NoTokenTokenProvider
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
-import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureConfig
-import no.nav.aap.komponenter.server.AZURE
 import no.nav.aap.komponenter.server.auth.IdentityProvider
 import no.nav.aap.komponenter.server.commonKtorModule
 import java.net.URI
 import java.time.LocalDate
 import java.util.*
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation as ClientContentNegotiation
-
-val isTexasEnabled = System.getenv("ENABLE_TEXAS").toBoolean()
 
 open class BaseApiTest {
 
@@ -68,23 +64,15 @@ open class BaseApiTest {
             responseHandler = DefaultResponseHandler()
         )
 
-        val token = if (isTexasEnabled) {
-            client.post<Map<String, String>, TestToken>(
-                URI.create(requiredConfigForKey("nais.token.exchange.endpoint")),
-                PostRequest(
-                    body = mapOf(
-                        "user_token" to AzureTokenGen("audience").generate(false, "behandlingsflyt", "Z123456"),
-                        "target" to "behandlingsflyt"
-                    )
+        val token = client.post<Map<String, String>, TestToken>(
+            URI.create(requiredConfigForKey("nais.token.exchange.endpoint")),
+            PostRequest(
+                body = mapOf(
+                    "user_token" to AzureTokenGen("audience").generate(false, "behandlingsflyt", "Z123456"),
+                    "target" to "behandlingsflyt"
                 )
             )
-        } else {
-            client.post<Unit, TestToken>(
-                URI.create(requiredConfigForKey("azure.openid.config.token.endpoint")),
-                PostRequest(Unit)
-            )
-
-        }
+        )
         return OidcToken(token!!.access_token)
     }
 
@@ -99,28 +87,17 @@ open class BaseApiTest {
 
     fun ApplicationTestBuilder.installApplication(apiEndepunkt: NormalOpenAPIRoute.() -> Unit) {
         application {
-            if (isTexasEnabled) {
-                commonKtorModule(
-                    prometheus,
-                    InfoModel(
-                        title = "AAP - Behandlingsflyt", version = "vTestApi",
-                        description = "Api tester",
-                    ),
-                    identityProvider = IdentityProvider.ENTRA_ID
-                )
-            } else {
-                commonKtorModule(
-                    prometheus,
-                    AzureConfig(),
-                    InfoModel(
-                        title = "AAP - Behandlingsflyt", version = "vTestApi",
-                        description = "Api tester",
-                    )
-                )
-            }
+            commonKtorModule(
+                prometheus,
+                InfoModel(
+                    title = "AAP - Behandlingsflyt", version = "vTestApi",
+                    description = "Api tester",
+                ),
+                identityProvider = IdentityProvider.ENTRA_ID
+            )
 
             routing {
-                authenticate(if (isTexasEnabled) IdentityProvider.ENTRA_ID.value else AZURE) {
+                authenticate(IdentityProvider.ENTRA_ID.value) {
                     apiRouting(apiEndepunkt)
                 }
 
