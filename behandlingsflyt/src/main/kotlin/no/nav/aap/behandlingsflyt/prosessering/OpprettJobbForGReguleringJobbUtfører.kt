@@ -20,15 +20,9 @@ import java.time.Year
 
 /**
  * Kjøres daglig og oppretter jobber for G-Regulering. Jobber opprettes for saksbehandlingskandidater hvor innvilget
- * AAP-periode passerer G-justeringen lagt inn i lista i Grunnbeløp.kt det siste året siden kjøre-dato og etter
- * Kelvin ble lansert i produksjon (altså etter G-justeringen 1.mai 2025). G-regulering medfører omberegninger, slik
+ * AAP-periode passerer G-justeringen lagt inn i lista i Grunnbeløp.kt samme året som kjøre-datoen og etter 2025
+ * G-Justeringen da Kelvin ble lansert i produksjon. G-regulering medfører omberegninger, slik
  * at ytelsen blir korrekt både før og etter G-justering.
- *
- * Denne utplukk-jobben er tenkt å være deterministisk og re-kjørbar. Dvs. skal kunne kjøres med datoIdag/kjøredato
- * tilbake i tid og få samme resultat, og skal kunne kjøres flere ganger på samme dato uten å opprette duplikate jobber
- * for samme sak. Det burde kanskje også være mulig å tvinge omberegning ved å re-sette en status
- * (eks. G_REGULERING_2026 ??) på behandlingen og så kjøre jobben. Men her er omfanget ikke landet. Kan også være en
- * utvidelse til 2027 avhengig av tid, men lagt tilrette for i 2026 innføringen av jobben f.eks.
  */
 class OpprettJobbForGReguleringJobbUtfører(
     private val behandlingService: BehandlingService,
@@ -42,7 +36,7 @@ class OpprettJobbForGReguleringJobbUtfører(
 
     override fun utfør(input: JobbInput) {
         if (unleashGateway.isDisabled(BehandlingsflytFeature.GReguleringUtplukkJobb)) {
-            log.info("Feature toggle GReguleringsJobb er avskrudd, hopper over opprettelse av G-regulerings-jobber")
+            log.info("Feature toggle GReguleringUtplukkJobb er avskrudd, hopper over opprettelse av G-regulerings-jobber")
             return
         }
 
