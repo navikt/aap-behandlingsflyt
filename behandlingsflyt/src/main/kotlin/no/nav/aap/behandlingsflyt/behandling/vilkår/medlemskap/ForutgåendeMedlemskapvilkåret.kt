@@ -10,16 +10,20 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.type.Periode
 
 class ForutgåendeMedlemskapvilkåret(
     vilkårsresultat: Vilkårsresultat,
     private val rettighetsPeriode: Periode,
+    private val unleashGateway: UnleashGateway
 ) : Vilkårsvurderer<ForutgåendeMedlemskapGrunnlag> {
     private val vilkår = vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.MEDLEMSKAP)
 
     override fun vurder(grunnlag: ForutgåendeMedlemskapGrunnlag) {
-        val brukManuellVurderingForForutgåendeMedlemskap = grunnlag.medlemskapArbeidInntektGrunnlag?.vurderinger?.isNotEmpty() ?: false
+        val brukManuellVurderingForForutgåendeMedlemskap =
+            grunnlag.medlemskapArbeidInntektGrunnlag?.vurderinger?.isNotEmpty() ?: false
 
         if (brukManuellVurderingForForutgåendeMedlemskap) {
             val gjeldendeVurderinger = grunnlag.medlemskapArbeidInntektGrunnlag.gjeldendeVurderinger()
@@ -47,11 +51,14 @@ class ForutgåendeMedlemskapvilkåret(
                 .begrensetTil(rettighetsPeriode)
 
             vilkår.leggTilVurderinger(vilkårsvurderinger)
-        } else if (grunnlag.nyeSoknadGrunnlag == null)  {
+        } else if (grunnlag.nyeSoknadGrunnlag == null) {
             val vurderingsResultat = VurderingsResultat(Utfall.IKKE_RELEVANT, null, null)
             leggTilVurdering(grunnlag, vurderingsResultat)
         } else {
-            val kanBehandlesAutomatisk = ForutgåendeMedlemskapVurderingService().vurderTilhørighet(grunnlag, rettighetsPeriode).kanBehandlesAutomatisk
+            val kanBehandlesAutomatisk = ForutgåendeMedlemskapVurderingService(unleashGateway).vurderTilhørighet(
+                grunnlag,
+                rettighetsPeriode
+            ).kanBehandlesAutomatisk
             val utfall = if (kanBehandlesAutomatisk) Utfall.OPPFYLT else Utfall.IKKE_VURDERT
             val vurderingsResultat = VurderingsResultat(utfall, null, null)
             leggTilVurdering(grunnlag, vurderingsResultat)

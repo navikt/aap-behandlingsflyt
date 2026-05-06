@@ -26,6 +26,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.orEmpty
@@ -39,6 +40,7 @@ class VurderForutgåendeMedlemskapSteg private constructor(
     private val sykdomRepository: SykdomRepository,
     private val tidligereVurderinger: TidligereVurderinger,
     private val avklaringsbehovService: AvklaringsbehovService,
+    private val unleashGateway: UnleashGateway
 ) : BehandlingSteg, AvklaringsbehovMetadataUtleder {
 
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
@@ -49,6 +51,7 @@ class VurderForutgåendeMedlemskapSteg private constructor(
         sykdomRepository = repositoryProvider.provide(),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
         avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
+        unleashGateway = gatewayProvider.provide<UnleashGateway>()
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
@@ -69,12 +72,14 @@ class VurderForutgåendeMedlemskapSteg private constructor(
             VurderingType.REVURDERING -> {
                 vurderVilkår(kontekst, grunnlag.value)
             }
+
             VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
             VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9,
             VurderingType.MELDEKORT,
             VurderingType.UTVID_VEDTAKSLENGDE,
             VurderingType.AUTOMATISK_BREV,
-            VurderingType.IKKE_RELEVANT -> {}
+            VurderingType.IKKE_RELEVANT -> {
+            }
         }
 
         return Fullført
@@ -111,11 +116,15 @@ class VurderForutgåendeMedlemskapSteg private constructor(
                 ForutgåendeMedlemskapvilkåret(
                     vilkårsresultat,
                     kontekst.rettighetsperiode,
+                    unleashGateway
                 ).leggTilYrkesskadeVurdering()
                 vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
 
             } else {
-                ForutgåendeMedlemskapvilkåret(vilkårsresultat, kontekst.rettighetsperiode).vurder(grunnlag)
+                ForutgåendeMedlemskapvilkåret(
+                    vilkårsresultat, kontekst.rettighetsperiode,
+                    unleashGateway
+                ).vurder(grunnlag)
                 vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
             }
         }
@@ -126,7 +135,8 @@ class VurderForutgåendeMedlemskapSteg private constructor(
     ): Tidslinje<Boolean> {
         val grunnlag = hentGrunnlag(kontekst.sakId, kontekst.behandlingId)
         val tidligereVurderingsutfall = tidligereVurderinger.behandlingsutfall(kontekst, type())
-        val automatiskVilkårsvurderingForutgåendeMedlemskap = vilkårsvurderingForutgåendeMedlemskapUtenManuelleVurderinger(kontekst, grunnlag)
+        val automatiskVilkårsvurderingForutgåendeMedlemskap =
+            vilkårsvurderingForutgåendeMedlemskapUtenManuelleVurderinger(kontekst, grunnlag)
 
         return Tidslinje.zip2(tidligereVurderingsutfall, automatiskVilkårsvurderingForutgåendeMedlemskap)
             .mapValue { (behandlingsutfall, automatiskVilkårsvurderingLovvalg) ->
@@ -153,7 +163,8 @@ class VurderForutgåendeMedlemskapSteg private constructor(
         kontekst: FlytKontekstMedPerioder,
         grunnlag: ForutgåendeMedlemskapGrunnlag
     ): Tidslinje<Boolean> {
-        val automatiskVilkårsvurderingLovvalg = vilkårsvurderingForutgåendeMedlemskapUtenManuelleVurderinger(kontekst, grunnlag).mapValue { it.erOppfylt() }
+        val automatiskVilkårsvurderingLovvalg =
+            vilkårsvurderingForutgåendeMedlemskapUtenManuelleVurderinger(kontekst, grunnlag).mapValue { it.erOppfylt() }
         val automatiskVurderingOppfylt = automatiskVilkårsvurderingLovvalg.filter { it.verdi }.isNotEmpty()
         if (automatiskVurderingOppfylt) {
             return automatiskVilkårsvurderingLovvalg
@@ -178,9 +189,10 @@ class VurderForutgåendeMedlemskapSteg private constructor(
             ForutgåendeMedlemskapvilkåret(
                 vilkårsresultat,
                 kontekst.rettighetsperiode,
+                unleashGateway
             ).leggTilYrkesskadeVurdering()
         } else {
-            ForutgåendeMedlemskapvilkåret(vilkårsresultat, kontekst.rettighetsperiode)
+            ForutgåendeMedlemskapvilkåret(vilkårsresultat, kontekst.rettighetsperiode, unleashGateway)
                 .vurder(grunnlagUtenManuellVurdering)
         }
 
