@@ -4,6 +4,8 @@ import no.nav.aap.behandlingsflyt.behandling.gregulering.GReguleringService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.FlytJobbRepository
@@ -32,16 +34,22 @@ class OpprettJobbForGReguleringJobbUtfører(
     private val behandlingService: BehandlingService,
     private val gReguleringService: GReguleringService,
     private val flytJobbRepository: FlytJobbRepository,
-    private val clock: Clock = Clock.systemDefaultZone()
+    private val clock: Clock = Clock.systemDefaultZone(),
+    private val unleashGateway: UnleashGateway,
 ) : JobbUtfører {
 
     private val log = LoggerFactory.getLogger(javaClass)
 
     override fun utfør(input: JobbInput) {
+        if (unleashGateway.isDisabled(BehandlingsflytFeature.GReguleringsJobb)) {
+            log.info("Feature toggle GReguleringsJobb er avskrudd, hopper over opprettelse av G-regulerings-jobber")
+            return
+        }
+
         val årIDag = Year.now(clock)
         val aktuellGJustering = hentAktuellGJustering(årIDag)
-        if (aktuellGJustering == null || aktuellGJustering.dato.isAfter(LocalDate.of(2025, 5, 1))) {
-            log.info("Avslutter søk etter G-reguleringskandidater. Ingen G-justering for år: ${årIDag} funnet i Grunnbeløp.kt")
+        if (aktuellGJustering == null || aktuellGJustering.dato.isBefore(LocalDate.of(2025, 5, 1))) {
+            log.info("Avslutter søk etter G-reguleringskandidater. Ingen post 2025 G-justering funnet for år: ${årIDag} i Gunnbeløp.kt")
             return
         }
         val saker = hentKandidaterForGRegulering(aktuellGJustering.dato)
@@ -50,8 +58,7 @@ class OpprettJobbForGReguleringJobbUtfører(
         saker
             .also { log.info("Oppretter jobber for alle saker som er aktuelle kandidater for G-regulering. Antall = ${it.size}, Saker = $it") }
             .forEach {
-                // TODO: Lag ny OpprettBehandlingForGReguleringJobbUtfører..
-                flytJobbRepository.leggTil(JobbInput(OpprettBehandlingUtvidVedtakslengdeJobbUtfører).forSak(it.toLong()))
+                flytJobbRepository.leggTil(JobbInput(OpprettBehandlingGReguleringJobbUtfører).forSak(it.toLong()))
             }
     }
 
@@ -73,6 +80,7 @@ class OpprettJobbForGReguleringJobbUtfører(
                 behandlingService = BehandlingService(repositoryProvider, gatewayProvider),
                 gReguleringService = GReguleringService(repositoryProvider, gatewayProvider),
                 flytJobbRepository = repositoryProvider.provide(),
+                unleashGateway = gatewayProvider.provide(),
             )
         }
 
