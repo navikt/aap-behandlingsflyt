@@ -108,7 +108,8 @@ class HåndterTilbakekrevingHendelseService(
             ÅrsakTilOpprettelse.AKTIVITETSPLIKT_11_9,
             ÅrsakTilOpprettelse.UTVID_VEDTAKSLENGDE,
             ÅrsakTilOpprettelse.BARNETILLEGG_SATSENDRING,
-            ÅrsakTilOpprettelse.MIGRER_RETTIGHETSPERIODE -> FagsysteminfoSvarHendelse.RevurderingDto.Årsak.NYE_OPPLYSNINGER
+            ÅrsakTilOpprettelse.MIGRER_RETTIGHETSPERIODE,
+            ÅrsakTilOpprettelse.G_REGULERING -> FagsysteminfoSvarHendelse.RevurderingDto.Årsak.NYE_OPPLYSNINGER
 
             ÅrsakTilOpprettelse.MELDEKORT,
             ÅrsakTilOpprettelse.MANUELL_OPPRETTELSE -> FagsysteminfoSvarHendelse.RevurderingDto.Årsak.KORRIGERING

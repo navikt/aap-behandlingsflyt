@@ -39,6 +39,7 @@ object ProsesseringsJobber {
             OpprettJobbForMigrereRettighetsperiodeJobbUtfører,
             OppdaterOppgaveMedTilbakekrevingsbehandlingUtfører,
             OpprettBehandlingMigrereRettighetsperiodeJobbUtfører,
+            OpprettBehandlingGReguleringJobbUtfører,
             SendFagsysteminfoBehovTilTilbakekrevingUtfører,
             SjekkInstitusjonsOppholdJobbUtfører,
             HåndterUbehandletDokumentJobbUtfører,
