@@ -78,6 +78,7 @@ class FatteVedtakStegTest {
         trukketSøknadService = trukketSøknadService,
         vedtakService = vedtakService,
         virkningstidspunktUtleder = virkningstidspunktUtleder,
+        unleashGateway = gatewayProvider.provide()
     )
 
     @Test
