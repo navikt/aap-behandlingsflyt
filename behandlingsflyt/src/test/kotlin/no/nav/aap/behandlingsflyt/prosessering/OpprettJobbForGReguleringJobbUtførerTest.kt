@@ -42,11 +42,11 @@ class OpprettJobbForGReguleringJobbUtførerTest {
         )
 
     private fun enableToggle() {
-        every { unleashGateway.isDisabled(BehandlingsflytFeature.GReguleringsJobb) } returns false
+        every { unleashGateway.isDisabled(BehandlingsflytFeature.GReguleringUtplukkJobb) } returns false
     }
 
     private fun disableToggle() {
-        every { unleashGateway.isDisabled(BehandlingsflytFeature.GReguleringsJobb) } returns true
+        every { unleashGateway.isDisabled(BehandlingsflytFeature.GReguleringUtplukkJobb) } returns true
     }
 
     @Test

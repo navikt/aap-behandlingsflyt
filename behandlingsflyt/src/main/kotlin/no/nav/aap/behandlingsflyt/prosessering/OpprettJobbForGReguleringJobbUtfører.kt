@@ -41,7 +41,7 @@ class OpprettJobbForGReguleringJobbUtfører(
     private val log = LoggerFactory.getLogger(javaClass)
 
     override fun utfør(input: JobbInput) {
-        if (unleashGateway.isDisabled(BehandlingsflytFeature.GReguleringsJobb)) {
+        if (unleashGateway.isDisabled(BehandlingsflytFeature.GReguleringUtplukkJobb)) {
             log.info("Feature toggle GReguleringsJobb er avskrudd, hopper over opprettelse av G-regulerings-jobber")
             return
         }
