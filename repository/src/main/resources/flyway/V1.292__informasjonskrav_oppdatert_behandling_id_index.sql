@@ -1,0 +1,2 @@
+create index idx_informasjonskrav_oppdatert_behandling 
+on informasjonskrav_oppdatert (behandling_id);
