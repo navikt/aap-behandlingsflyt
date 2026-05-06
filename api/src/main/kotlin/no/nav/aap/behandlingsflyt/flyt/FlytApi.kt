@@ -244,22 +244,6 @@ fun NormalOpenAPIRoute.flytApi(
                     påkrevdRolle = Definisjon.MANUELT_SATT_PÅ_VENT.løsesAv
                 )
             ) { request, body ->
-                val åpentAvklaringsbehov = dataSource.transaction { connection ->
-                    val repositoryProvider = repositoryRegistry.provider(connection)
-                    val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
-                    val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
-                    val behandling = behandling(behandlingRepository, request)
-                    val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
-                    avklaringsbehovene.åpne().filterNot { it.erVentepunkt() }
-                        .sortedWith(behandling.flyt().avklaringsbehovComparator).first().definisjon
-                }
-                sjekkTilgangTilSettPåVent(
-                    åpentAvklaringsbehov = åpentAvklaringsbehov,
-                    tilgangGateway = tilgangGateway,
-                    token = token(),
-                    behandlingsreferanse = request.referanse,
-                )
-
                 dataSource.transaction { connection ->
                     val repositoryProvider = repositoryRegistry.provider(connection)
                     LoggingKontekst(
@@ -276,6 +260,18 @@ fun NormalOpenAPIRoute.flytApi(
                             request,
                             body.behandlingVersjon
                         )
+                        val avklaringsbehovRepository =
+                            repositoryProvider.provide<AvklaringsbehovRepository>()
+                        val behandling = behandling(behandlingRepository, request)
+                        val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
+                        sjekkTilgangTilSettPåVent(
+                            avklaringsbehovene = avklaringsbehovene,
+                            behandling = behandling,
+                            tilgangGateway = tilgangGateway,
+                            token = token(),
+                            behandlingsreferanse = request.referanse,
+                        )
+
 
                         val taSkriveLåsRepository =
                             repositoryProvider.provide<TaSkriveLåsRepository>()
@@ -291,6 +287,7 @@ fun NormalOpenAPIRoute.flytApi(
                                 )
                             )
                         taSkriveLåsRepository.verifiserSkrivelås(lås)
+
                     }
                 }
                 respondWithStatus(HttpStatusCode.NoContent)
@@ -349,12 +346,15 @@ private fun erStegGruppeFullført(
     return true
 }
 
-private suspend fun sjekkTilgangTilSettPåVent(
-    åpentAvklaringsbehov: Definisjon,
+private fun sjekkTilgangTilSettPåVent(
+    avklaringsbehovene: Avklaringsbehovene,
+    behandling: Behandling,
     tilgangGateway: TilgangGateway,
     token: OidcToken,
     behandlingsreferanse: UUID,
 ) {
+    val åpentAvklaringsbehov = avklaringsbehovene.åpne().filterNot { it.erVentepunkt() }
+        .sortedWith(behandling.flyt().avklaringsbehovComparator).first().definisjon
     val harTilgang =
         tilgangGateway.sjekkTilgangTilBehandling(
             behandlingsreferanse,
