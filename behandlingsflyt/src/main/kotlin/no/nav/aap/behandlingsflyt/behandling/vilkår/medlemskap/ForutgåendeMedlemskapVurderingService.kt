@@ -20,7 +20,7 @@ import no.nav.aap.komponenter.type.Periode
 import java.time.YearMonth
 
 class ForutgåendeMedlemskapVurderingService(
-    private val unleashGateway: UnleashGateway
+    private val unleashGateway: UnleashGateway? = null
 ) {
     fun vurderTilhørighet(
         grunnlag: ForutgåendeMedlemskapGrunnlag,
@@ -290,7 +290,7 @@ class ForutgåendeMedlemskapVurderingService(
         val inntektINorgeGrunnlag = grunnlag?.inntekterINorgeGrunnlag?.filter { it.beloep != 0.0 }
 
         val inntekterINorgePerioder = inntektINorgeGrunnlag?.map { it.periode }
-        val sammenhengendeInntektSiste5År = if (unleashGateway.isEnabled(BehandlingsflytFeature.ForutgaaendeGap)) {
+        val sammenhengendeInntektSiste5År = if (unleashGateway?.isEnabled(BehandlingsflytFeature.ForutgaaendeGap) == true) {
             sammenhengendePerioderMedEttMånedsgap(inntekterINorgePerioder, forutgåendePeriode)
         } else {
             sammenhengendePerioderAlleMndSiste5år(inntekterINorgePerioder, forutgåendePeriode)
