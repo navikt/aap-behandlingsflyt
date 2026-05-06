@@ -12,7 +12,6 @@ import no.nav.aap.behandlingsflyt.Tags
 import no.nav.aap.behandlingsflyt.behandling.Resultat
 import no.nav.aap.behandlingsflyt.behandling.ResultatUtleder
 import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Status
@@ -21,6 +20,7 @@ import no.nav.aap.behandlingsflyt.medAzureTokenGen
 import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersoninfoGateway
@@ -106,7 +106,8 @@ fun NormalOpenAPIRoute.saksApi(
             } else {
                 val sakerMedTilgang = saker.filter { sak ->
                     tilgangGateway.sjekkTilgangTilSak(
-                        Saksnummer(sak.saksnummer), token, Operasjon.SE
+                        Saksnummer(sak.saksnummer), token, Operasjon.SE,
+                        relevanteIdenterForSakResolver(repositoryRegistry, dataSource).resolve(sak.saksnummer)
                     )
                 }
 
@@ -265,7 +266,8 @@ fun NormalOpenAPIRoute.saksApi(
                             harTilgang = tilgangGateway.sjekkTilgangTilSak(
                                 saksnummer = sak.saksnummer,
                                 token(),
-                                Operasjon.SE
+                                Operasjon.SE,
+                                relevanteIdenter = relevanteIdenterForSakResolver(repositoryRegistry, dataSource).resolve(sak.saksnummer.toString())
                             )
                         )
                     }

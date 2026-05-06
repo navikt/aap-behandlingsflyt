@@ -46,6 +46,7 @@ import no.nav.aap.tilgang.AuthorizationBodyPathConfig
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.Operasjon
+import no.nav.aap.tilgang.RelevanteIdenter
 import no.nav.aap.tilgang.authorizedGet
 import no.nav.aap.tilgang.authorizedPost
 import no.nav.aap.tilgang.authorizedPut
@@ -187,7 +188,8 @@ fun NormalOpenAPIRoute.brevApi(
                                     avklaringsbehovene,
                                     bruker(),
                                     definisjon,
-                                    gatewayProvider
+                                    gatewayProvider,
+                                    relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource).resolve(behandlingReferanse.referanse.toString())
                                 )
                             )
                         }
@@ -318,13 +320,14 @@ private fun utledHarTilgangTilÅSendeBrev(
     avklaringsbehovene: Avklaringsbehovene,
     bruker: Bruker,
     definisjon: Definisjon,
-    gatewayProvider: GatewayProvider
+    gatewayProvider: GatewayProvider,
+    relevanteIdenter: RelevanteIdenter
 ): Boolean {
     val tilgangGateway = gatewayProvider.provide<TilgangGateway>()
     val unleashGateway = gatewayProvider.provide<UnleashGateway>()
 
     fun harTilgang(tilDefinisjon: Definisjon): Boolean =
-        tilgangGateway.sjekkTilgangTilBehandling(behandlingReferanse, tilDefinisjon, token)
+        tilgangGateway.sjekkTilgangTilBehandling(behandlingReferanse, tilDefinisjon, token, relevanteIdenter)
 
     return when (definisjon) {
         Definisjon.SKRIV_VEDTAKSBREV -> {
