@@ -132,6 +132,19 @@ class PersonRepositoryImpl(private val connection: DBConnection) : PersonReposit
         }
     }
 
+    override fun hent(identifikator: UUID): Person {
+        return connection.queryFirst("SELECT id FROM PERSON WHERE referanse = ?") {
+            setParams {
+                setUUID(1, identifikator)
+            }
+            setRowMapper { row ->
+                val personId = PersonId(row.getLong("id"))
+                val identer = hentIdenter(personId)
+                Person(personId, identifikator, identer)
+            }
+        }
+    }
+
     private fun hentIdenter(personId: PersonId): List<Ident> {
         return connection.queryList("SELECT ident, primaer FROM PERSON_IDENT WHERE person_id = ?") {
             setParams {

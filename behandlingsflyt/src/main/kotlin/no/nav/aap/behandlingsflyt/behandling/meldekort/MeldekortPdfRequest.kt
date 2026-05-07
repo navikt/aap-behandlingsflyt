@@ -38,7 +38,7 @@ data class MeldekortUke(
 
 data class MeldekortDag(
     val dag: String,
-    val timerArbeid: Double
+    val timerArbeid: String
 )
 
 fun MeldekortV0.tilPdfRequest(
@@ -52,6 +52,7 @@ fun MeldekortV0.tilPdfRequest(
     val norsk = Locale.of("nb", "NO")
 
     val uker = timerArbeidPerPeriode
+        .filter { it.timerArbeid > 0}
         .groupBy { it.fraOgMedDato.get(ukeFields.weekOfWeekBasedYear()) }
         .map { (ukenummer, dager) ->
             MeldekortUke(
@@ -61,7 +62,7 @@ fun MeldekortV0.tilPdfRequest(
                 dager = dager.map { dag ->
                     MeldekortDag(
                         dag = dag.fraOgMedDato.dayOfWeek.getDisplayName(TextStyle.FULL, norsk),
-                        timerArbeid = dag.timerArbeid
+                        timerArbeid = formaterTimer(dag.timerArbeid)
                     )
                 }
             )
@@ -83,4 +84,12 @@ fun MeldekortV0.tilPdfRequest(
         begrunnelse = this.begrunnelse,
         meldekort = MeldekortPdfData(timerArbeidPerUkeIPerioden = uker)
     )
+}
+
+fun formaterTimer(number: Double?): String {
+    return when {
+        number == null -> ""
+        number % 1.0 == 0.0 -> number.toInt().toString()
+        else -> number.toString()
+    }
 }

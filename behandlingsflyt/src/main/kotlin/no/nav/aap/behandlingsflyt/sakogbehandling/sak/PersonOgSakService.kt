@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.sakogbehandling.sak
 
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.ApiInternGateway
+import no.nav.aap.behandlingsflyt.hendelse.datadeling.ArenaStatusResponse
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
 import no.nav.aap.komponenter.gateway.GatewayProvider
@@ -23,6 +24,7 @@ class PersonOgSakService(
         repositoryProvider.provide<PersonRepository>(),
         repositoryProvider.provide<SakRepository>()
     )
+
     private val log = LoggerFactory.getLogger(javaClass)
 
     fun finnEllerOpprett(ident: Ident, søknadsdato: LocalDate): Sak {
@@ -37,9 +39,10 @@ class PersonOgSakService(
 
     private fun rapporterHvisOppretterPersonSomFinnesIArena(identliste: List<Ident>) {
         val personFinnesIKelvin = personRepository.finn(identliste) != null
-        val personFinnesIArena = apiInternGateway.hentArenaStatus(
+        val arenaStatus: ArenaStatusResponse? = apiInternGateway.hentArenaStatus(
             identliste.map { it.identifikator }.toSet()
-        ).harArenaHistorikk
+        ).getOrNull()
+        val personFinnesIArena = arenaStatus?.harArenaHistorikk == true
         if (!personFinnesIKelvin && personFinnesIArena) {
             log.info("Oppretter person som har historikk i AAP-Arena i Kelvin")
         }

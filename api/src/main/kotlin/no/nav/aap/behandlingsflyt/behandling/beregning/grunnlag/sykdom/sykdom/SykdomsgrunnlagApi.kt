@@ -43,7 +43,7 @@ fun NormalOpenAPIRoute.sykdomsgrunnlagApi(
             getGrunnlag<BehandlingReferanse, SykdomGrunnlagResponse>(
                 relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
                 behandlingPathParam = BehandlingPathParam("referanse"),
-                avklaringsbehovKode = Definisjon.AVKLAR_SYKDOM.kode.toString()
+                påkrevdRolle = Definisjon.AVKLAR_SYKDOM.løsesAv
             ) { req ->
                 val response = dataSource.transaction(readOnly = true) { connection ->
                     val repositoryProvider = repositoryRegistry.provider(connection)
@@ -106,7 +106,7 @@ fun NormalOpenAPIRoute.sykdomsgrunnlagApi(
             getGrunnlag<BehandlingReferanse, YrkesskadeVurderingGrunnlagResponse>(
                 relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
                 behandlingPathParam = BehandlingPathParam("referanse"),
-                avklaringsbehovKode = Definisjon.AVKLAR_YRKESSKADE.kode.toString()
+                påkrevdRolle = Definisjon.AVKLAR_YRKESSKADE.løsesAv
             ) { req ->
                 val response = dataSource.transaction(readOnly = true) { connection ->
                     val repositoryProvider = repositoryRegistry.provider(connection)

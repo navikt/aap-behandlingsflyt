@@ -42,7 +42,7 @@ fun NormalOpenAPIRoute.institusjonApi(
             getGrunnlag<BehandlingReferanse, SoningsGrunnlagDto>(
                 relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
                 behandlingPathParam = BehandlingPathParam("referanse"),
-                avklaringsbehovKode = Definisjon.AVKLAR_SONINGSFORRHOLD.kode.toString()
+                påkrevdRolle = Definisjon.AVKLAR_SONINGSFORRHOLD.løsesAv
             ) { req ->
                 val soningsgrunnlag = dataSource.transaction(readOnly = true) { connection ->
                     val repositoryProvider = repositoryRegistry.provider(connection)
@@ -115,7 +115,7 @@ fun NormalOpenAPIRoute.institusjonApi(
             getGrunnlag<BehandlingReferanse, HelseinstitusjonGrunnlagDto>(
                 relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
                 behandlingPathParam = BehandlingPathParam("referanse"),
-                avklaringsbehovKode = Definisjon.AVKLAR_HELSEINSTITUSJON.kode.toString()
+                påkrevdRolle = Definisjon.AVKLAR_HELSEINSTITUSJON.løsesAv
             ) { req ->
                 val grunnlagDto = dataSource.transaction(readOnly = true) { connection ->
                     val repositoryProvider = repositoryRegistry.provider(connection)

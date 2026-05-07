@@ -89,6 +89,7 @@ class BehandlingService(
         Vurderingsbehov.EFFEKTUER_AKTIVITETSPLIKT,
         Vurderingsbehov.EFFEKTUER_AKTIVITETSPLIKT_11_9,
         Vurderingsbehov.BARNETILLEGG_SATS_REGULERING,
+        Vurderingsbehov.G_REGULERING
     )
 
     fun finnEllerOpprettBehandling(sakId: SakId, vurderingsbehovOgÅrsak: VurderingsbehovOgÅrsak): OpprettetBehandling {

@@ -49,50 +49,51 @@ data class AvklarOppfolgingsoppgaveGrunnlagResponse(
 fun NormalOpenAPIRoute.avklarOppfolgingsoppgaveGrunnlag(
     dataSource: DataSource, repositoryRegistry: RepositoryRegistry
 ) {
-    route("/api/behandling/{referanse}/grunnlag/oppfolgingsoppgave").getGrunnlag<BehandlingReferanse, AvklarOppfolgingsoppgaveGrunnlagResponse>(
-        relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
-        behandlingPathParam = BehandlingPathParam("referanse"),
-        avklaringsbehovKode = Definisjon.AVKLAR_OPPFØLGINGSBEHOV_NAY.kode.toString()
-    ) { req ->
+    route("/api/behandling/{referanse}/grunnlag/oppfolgingsoppgave")
+        .getGrunnlag<BehandlingReferanse, AvklarOppfolgingsoppgaveGrunnlagResponse>(
+            relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
+            behandlingPathParam = BehandlingPathParam("referanse"),
+            påkrevdRolle = Definisjon.AVKLAR_OPPFØLGINGSBEHOV_NAY.løsesAv
+        ) { req ->
 
-        val respons = dataSource.transaction { connection ->
-            val repositoryProvider = repositoryRegistry.provider(connection)
-            val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+            val respons = dataSource.transaction { connection ->
+                val repositoryProvider = repositoryRegistry.provider(connection)
+                val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
 
-            val behandling = BehandlingReferanseService(behandlingRepository).behandling(req)
+                val behandling = BehandlingReferanseService(behandlingRepository).behandling(req)
 
-            val oppfølgingsBehandlingRepository =
-                repositoryProvider.provide<OppfølgingsBehandlingRepository>()
-            val oppfølgingsbehandlingvurdering =
-                oppfølgingsBehandlingRepository.hent(behandling.id)
+                val oppfølgingsBehandlingRepository =
+                    repositoryProvider.provide<OppfølgingsBehandlingRepository>()
+                val oppfølgingsbehandlingvurdering =
+                    oppfølgingsBehandlingRepository.hent(behandling.id)
 
-            val dokument =
-                requireNotNull(
-                    MottaDokumentService(repositoryProvider.provide()).hentOppfølgingsBehandlingDokument(
-                        behandling.id
-                    )
-                ) { "Skal alltid finnes dokumenter på oppfølgingsbehandlinger. BehandlingId: ${behandling.id}" }
+                val dokument =
+                    requireNotNull(
+                        MottaDokumentService(repositoryProvider.provide()).hentOppfølgingsBehandlingDokument(
+                            behandling.id
+                        )
+                    ) { "Skal alltid finnes dokumenter på oppfølgingsbehandlinger. BehandlingId: ${behandling.id}" }
 
-            AvklarOppfolgingsoppgaveGrunnlagResponse(
-                datoForOppfølging = dokument.datoForOppfølging,
-                hvaSkalFølgesOpp = dokument.hvaSkalFølgesOpp,
-                hvemSkalFølgeOpp = when (dokument.hvemSkalFølgeOpp) {
-                    no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.HvemSkalFølgeOpp.NasjonalEnhet -> HvemSkalFølgeOpp.NasjonalEnhet
-                    no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.HvemSkalFølgeOpp.Lokalkontor -> HvemSkalFølgeOpp.Lokalkontor
-                },
-                grunnlag = oppfølgingsbehandlingvurdering?.let {
-                    OppfølgingsoppgaveGrunnlagResponse(
-                        konsekvensAvOppfølging = when (it.konsekvensAvOppfølging) {
-                            no.nav.aap.behandlingsflyt.behandling.oppfølgingsbehandling.KonsekvensAvOppfølging.INGEN -> KonsekvensAvOppfølging.INGEN
-                            no.nav.aap.behandlingsflyt.behandling.oppfølgingsbehandling.KonsekvensAvOppfølging.OPPRETT_VURDERINGSBEHOV -> KonsekvensAvOppfølging.OPPRETT_VURDERINGSBEHOV
-                        },
-                        opplysningerTilRevurdering = it.opplysningerTilRevurdering,
-                        årsak = it.årsak,
-                        vurdertAv = it.vurdertAv
-                    )
-                })
+                AvklarOppfolgingsoppgaveGrunnlagResponse(
+                    datoForOppfølging = dokument.datoForOppfølging,
+                    hvaSkalFølgesOpp = dokument.hvaSkalFølgesOpp,
+                    hvemSkalFølgeOpp = when (dokument.hvemSkalFølgeOpp) {
+                        no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.HvemSkalFølgeOpp.NasjonalEnhet -> HvemSkalFølgeOpp.NasjonalEnhet
+                        no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.HvemSkalFølgeOpp.Lokalkontor -> HvemSkalFølgeOpp.Lokalkontor
+                    },
+                    grunnlag = oppfølgingsbehandlingvurdering?.let {
+                        OppfølgingsoppgaveGrunnlagResponse(
+                            konsekvensAvOppfølging = when (it.konsekvensAvOppfølging) {
+                                no.nav.aap.behandlingsflyt.behandling.oppfølgingsbehandling.KonsekvensAvOppfølging.INGEN -> KonsekvensAvOppfølging.INGEN
+                                no.nav.aap.behandlingsflyt.behandling.oppfølgingsbehandling.KonsekvensAvOppfølging.OPPRETT_VURDERINGSBEHOV -> KonsekvensAvOppfølging.OPPRETT_VURDERINGSBEHOV
+                            },
+                            opplysningerTilRevurdering = it.opplysningerTilRevurdering,
+                            årsak = it.årsak,
+                            vurdertAv = it.vurdertAv
+                        )
+                    })
+            }
+
+            respond(respons)
         }
-
-        respond(respons)
-    }
 }

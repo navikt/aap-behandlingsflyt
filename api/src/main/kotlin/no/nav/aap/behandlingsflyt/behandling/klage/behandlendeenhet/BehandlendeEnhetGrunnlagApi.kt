@@ -5,7 +5,7 @@ import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.behandlendeenhet.BehandlendeEnhetRepository
-import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.FASTSETT_BEHANDLENDE_ENHET_KODE
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
@@ -30,7 +30,7 @@ fun NormalOpenAPIRoute.behandlendeEnhetGrunnlagApi(
         getGrunnlag<BehandlingReferanse, BehandlendeEnhetGrunnlagDto>(
             relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
             behandlingPathParam = BehandlingPathParam("referanse"),
-            avklaringsbehovKode = FASTSETT_BEHANDLENDE_ENHET_KODE
+            påkrevdRolle = Definisjon.FASTSETT_BEHANDLENDE_ENHET.løsesAv
         ) { req ->
             val respons = dataSource.transaction(readOnly = true) { connection ->
                 val repositoryProvider = repositoryRegistry.provider(connection)

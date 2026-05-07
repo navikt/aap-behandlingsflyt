@@ -144,7 +144,7 @@ spec:
           namespace: teamdagpenger
         - application: tiltakspenger-datadeling
           namespace: tpts
-        - application: aap-saksbehandling-pdfgen
+        - application: saksbehandling-pdfgen
 
   env:
     - name: INTEGRASJON_PDL_URL
@@ -276,4 +276,8 @@ spec:
     - name: INTEGRASJON_DOKARKIV_SCOPE
       value: api://dev-fss.teamdokumenthandtering.dokarkiv/.default
     - name: INTEGRASJON_PDFGEN_URL
-      value: http://aap-saksbehandling-pdfgen
+      value: http://saksbehandling-pdfgen
+    - name: INTEGRASJON_PDFGEN_SCOPE
+      value: api://dev-gcp.aap.saksbehandling-pdfgen/.default
+    - name: ENABLE_TEXAS
+      value: "true"

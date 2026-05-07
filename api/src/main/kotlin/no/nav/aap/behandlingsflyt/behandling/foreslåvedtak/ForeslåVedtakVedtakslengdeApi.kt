@@ -12,12 +12,14 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.StansO
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeRepository
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.FORESLÅ_VEDTAK_VEDTAKSLENGDE_KODE
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
+import no.nav.aap.behandlingsflyt.tilgang.kanSaksbehandle
 import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.repository.RepositoryRegistry
@@ -32,73 +34,75 @@ fun NormalOpenAPIRoute.foreslaaVedtakVedtakslengdeApi(
     repositoryRegistry: RepositoryRegistry
 ) {
     route("/api/behandling") {
-        route("/{referanse}/grunnlag/foreslaa-vedtak-vedtakslengde").getGrunnlag<BehandlingReferanse, VedtakslengdeVedtakResponse>(
-            relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
-            behandlingPathParam = BehandlingPathParam("referanse"),
-            avklaringsbehovKode = FORESLÅ_VEDTAK_VEDTAKSLENGDE_KODE
-        ) { behandlingReferanse ->
-            val response =
-                dataSource.transaction(readOnly = true) { conn ->
-                    val repositoryProvider = repositoryRegistry.provider(conn)
-                    val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
-                    val behandling =
-                        BehandlingReferanseService(behandlingRepository).behandling(behandlingReferanse)
+        route("/{referanse}/grunnlag/foreslaa-vedtak-vedtakslengde")
+            .getGrunnlag<BehandlingReferanse, ForeslåvedtakVedtakslengdeRespons>(
+                relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
+                behandlingPathParam = BehandlingPathParam("referanse"),
+                påkrevdRolle = Definisjon.FORESLÅ_VEDTAK_VEDTAKSLENGDE.løsesAv
+            ) { behandlingReferanse ->
+                val response =
+                    dataSource.transaction(readOnly = true) { conn ->
+                        val repositoryProvider = repositoryRegistry.provider(conn)
+                        val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+                        val behandling =
+                            BehandlingReferanseService(behandlingRepository).behandling(behandlingReferanse)
 
-                    val gjeldendeSluttdato = repositoryProvider.provide<VedtakslengdeRepository>()
-                        .hentHvisEksisterer(behandling.id)
-                        ?.gjeldendeVurdering()
-                        ?.sluttdato
+                        val gjeldendeSluttdato = repositoryProvider.provide<VedtakslengdeRepository>()
+                            .hentHvisEksisterer(behandling.id)
+                            ?.gjeldendeVurdering()
+                            ?.sluttdato
 
-                    val rettighetstypeTidslinje = repositoryProvider.provide<RettighetstypeRepository>()
-                        .hentHvisEksisterer(behandling.id)
-                        ?.rettighetstypeTidslinje
+                        val rettighetstypeTidslinje = repositoryProvider.provide<RettighetstypeRepository>()
+                            .hentHvisEksisterer(behandling.id)
+                            ?.rettighetstypeTidslinje
 
-                    val stansOpphørGrunnlag =
-                        repositoryProvider.provide<StansOpphørRepository>().hentHvisEksisterer(behandling.id)
-                    val stansOgOpphør = stansOpphørGrunnlag?.stansOgOpphørMedHistorikk() ?: emptyMap()
-                    val referanseOppslag = behandlingRepository
-                        .hentAlleFor(behandling.sakId, TypeBehandling.ytelseBehandlingstyper())
-                        .associate { it.id to it.referanse }
+                        val stansOpphørGrunnlag =
+                            repositoryProvider.provide<StansOpphørRepository>().hentHvisEksisterer(behandling.id)
+                        val stansOgOpphør = stansOpphørGrunnlag?.stansOgOpphørMedHistorikk() ?: emptyMap()
+                        val referanseOppslag = behandlingRepository
+                            .hentAlleFor(behandling.sakId, TypeBehandling.ytelseBehandlingstyper())
+                            .associate { it.id to it.referanse }
 
-                    val stansOgOpphørDto = stansOgOpphør.map { (fom, historikk) ->
-                        StansOpphørDto(
-                            stansOpphørFraOgMed = fom,
-                            historikk = historikk.map { vurdering ->
-                                StansOpphørVurderingDto(
-                                    type = when (vurdering) {
-                                        is GjeldendeStansEllerOpphør -> when (vurdering.vurdering) {
-                                            is Opphør -> StansOpphørVurderingTypeDto.OPPHØR
-                                            is Stans -> StansOpphørVurderingTypeDto.STANS
-                                        }
-                                        is OpphevetStansEllerOpphør -> StansOpphørVurderingTypeDto.OPPHEVET
-                                    },
-                                    årsaker = when (vurdering) {
-                                        is GjeldendeStansEllerOpphør -> vurdering.vurdering.årsaker.toList()
-                                        is OpphevetStansEllerOpphør -> emptyList()
-                                    },
-                                    behandlingReferanse = requireNotNull(referanseOppslag[vurdering.vurdertIBehandling]) {
-                                        "Finner ikke ytelsesbehandling i sak med behandlingsid"
-                                    }.referanse
-                                )
-                            }
-                        )
+                        val stansOgOpphørDto = stansOgOpphør.map { (fom, historikk) ->
+                            StansOpphørDto(
+                                stansOpphørFraOgMed = fom,
+                                historikk = historikk.map { vurdering ->
+                                    StansOpphørVurderingDto(
+                                        type = when (vurdering) {
+                                            is GjeldendeStansEllerOpphør -> when (vurdering.vurdering) {
+                                                is Opphør -> StansOpphørVurderingTypeDto.OPPHØR
+                                                is Stans -> StansOpphørVurderingTypeDto.STANS
+                                            }
+
+                                            is OpphevetStansEllerOpphør -> StansOpphørVurderingTypeDto.OPPHEVET
+                                        },
+                                        årsaker = when (vurdering) {
+                                            is GjeldendeStansEllerOpphør -> vurdering.vurdering.årsaker.toList()
+                                            is OpphevetStansEllerOpphør -> emptyList()
+                                        },
+                                        behandlingReferanse = requireNotNull(referanseOppslag[vurdering.vurdertIBehandling]) {
+                                            "Finner ikke ytelsesbehandling i sak med behandlingsid"
+                                        }.referanse
+                                    )
+                                }
+                            )
+                        }
+
+                        val perioder = if (gjeldendeSluttdato == null || rettighetstypeTidslinje == null) {
+                            null
+                        } else {
+                            val rettighetsperiodeFom = repositoryProvider.provide<SakRepository>()
+                                .hent(behandling.sakId)
+                                .rettighetsperiode
+                                .fom
+                            val vedtakslengdePeriode = Periode(rettighetsperiodeFom, gjeldendeSluttdato)
+                            utledPerioder(rettighetstypeTidslinje, vedtakslengdePeriode)
+                        }
+
+                        ForeslåvedtakVedtakslengdeRespons(perioder, stansOgOpphørDto, kanSaksbehandle())
                     }
-
-                    val perioder = if (gjeldendeSluttdato == null || rettighetstypeTidslinje == null) {
-                        null
-                    } else {
-                        val rettighetsperiodeFom = repositoryProvider.provide<SakRepository>()
-                            .hent(behandling.sakId)
-                            .rettighetsperiode
-                            .fom
-                        val vedtakslengdePeriode = Periode(rettighetsperiodeFom, gjeldendeSluttdato)
-                        utledPerioder(rettighetstypeTidslinje, vedtakslengdePeriode)
-                    }
-
-                    VedtakslengdeVedtakResponse(perioder, stansOgOpphørDto)
-                }
-            respond(response)
-        }
+                respond(response)
+            }
     }
 }
 

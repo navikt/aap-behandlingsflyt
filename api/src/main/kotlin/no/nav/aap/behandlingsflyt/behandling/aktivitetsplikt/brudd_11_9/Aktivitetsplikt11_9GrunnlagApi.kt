@@ -14,7 +14,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt1
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_9Vurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Brudd
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Grunn
-import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.VURDER_BRUDD_11_9_KODE
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
@@ -48,7 +48,7 @@ fun NormalOpenAPIRoute.aktivitetsplikt11_9GrunnlagApi(
         getGrunnlag<BehandlingReferanse, Aktivitetsplikt11_9GrunnlagDto>(
             relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
             behandlingPathParam = BehandlingPathParam("referanse"),
-            avklaringsbehovKode = VURDER_BRUDD_11_9_KODE
+            påkrevdRolle = Definisjon.VURDER_BRUDD_11_9.løsesAv
         ) { behandlingsreferanse ->
             val respons = dataSource.transaction(readOnly = true) { connection ->
                 val repositoryProvider = repositoryRegistry.provider(connection)

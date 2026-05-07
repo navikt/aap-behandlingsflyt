@@ -29,7 +29,7 @@ fun NormalOpenAPIRoute.sykestipendGrunnlagApi(
             getGrunnlag<BehandlingReferanse, SykestipendGrunnlagResponse>(
                 relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
                 behandlingPathParam = BehandlingPathParam("referanse"),
-                avklaringsbehovKode = Definisjon.AVKLAR_SAMORDNING_SYKESTIPEND.kode.toString()
+                påkrevdRolle = Definisjon.AVKLAR_SAMORDNING_SYKESTIPEND.løsesAv
             ) { req ->
                 val response = dataSource.transaction(readOnly = true) { connection ->
                     val repositoryProvider = repositoryRegistry.provider(connection)

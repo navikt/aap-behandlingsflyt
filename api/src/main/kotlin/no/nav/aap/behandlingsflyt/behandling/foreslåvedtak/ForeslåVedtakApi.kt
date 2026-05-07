@@ -12,11 +12,12 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveis
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
-import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.FORESLÅ_VEDTAK_KODE
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
+import no.nav.aap.behandlingsflyt.tilgang.kanSaksbehandle
 import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
 import no.nav.aap.behandlingsflyt.utils.tilForeslåVedtakDataTidslinje
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -35,7 +36,7 @@ fun NormalOpenAPIRoute.foreslaaVedtakApi(
         route("/{referanse}/grunnlag/foreslaa-vedtak").getGrunnlag<BehandlingReferanse, ForeslåVedtakResponse>(
             relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
             behandlingPathParam = BehandlingPathParam("referanse"),
-            avklaringsbehovKode = FORESLÅ_VEDTAK_KODE
+            påkrevdRolle = Definisjon.FORESLÅ_VEDTAK.løsesAv
         ) { behandlingReferanse ->
             val response =
                 dataSource.transaction(readOnly = true) { conn ->
@@ -83,7 +84,7 @@ fun NormalOpenAPIRoute.foreslaaVedtakApi(
                     val avslagstidslinjer = utledAvslagstidslinjer(vilkårsresultat)
                     // Hvis avslag tidlig i behandlingen finnes ikke underveisgrunnlag
                     if (underveisGrunnlag == null) {
-                        ForeslåVedtakResponse(emptyList(), stansOgOpphørDto)
+                        ForeslåVedtakResponse(emptyList(), stansOgOpphørDto, kanSaksbehandle())
                     } else {
                         val foreslåVedtakPerioder =
                             underveisGrunnlag
@@ -108,6 +109,7 @@ fun NormalOpenAPIRoute.foreslaaVedtakApi(
                         ForeslåVedtakResponse(
                             foreslåVedtakPerioder,
                             stansOgOpphørDto,
+                            harTilgangTilÅSaksbehandle = kanSaksbehandle(),
                         )
                     }
                 }

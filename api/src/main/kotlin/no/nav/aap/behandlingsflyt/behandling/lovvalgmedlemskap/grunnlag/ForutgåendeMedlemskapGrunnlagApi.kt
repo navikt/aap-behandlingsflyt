@@ -35,7 +35,7 @@ fun NormalOpenAPIRoute.forutgåendeMedlemskapApi(
             getGrunnlag<BehandlingReferanse, PeriodisertForutgåendeMedlemskapGrunnlagResponse>(
                 relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
                 behandlingPathParam = BehandlingPathParam("referanse"),
-                avklaringsbehovKode =  Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP.kode.toString()
+                påkrevdRolle =  Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP.løsesAv
             ) { req ->
                 val grunnlag = dataSource.transaction { connection ->
                     val repositoryProvider = repositoryRegistry.provider(connection)

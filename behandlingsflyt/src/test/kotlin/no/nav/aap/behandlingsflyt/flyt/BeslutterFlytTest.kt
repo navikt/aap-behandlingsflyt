@@ -17,16 +17,23 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
-import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.verdityper.dokument.JournalpostId
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedClass
+import org.junit.jupiter.params.provider.MethodSource
 import java.time.LocalDate
 import java.time.LocalDateTime
+import kotlin.reflect.KClass
 
-class BeslutterFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
+@ParameterizedClass
+@MethodSource("unleashTestDataSource")
+class BeslutterFlytTest(val unleashGateway: KClass<UnleashGateway>) : AbstraktFlytOrkestratorTest(unleashGateway){
+    
     @Test
     fun `to-trinn og ingen endring i gruppe etter sendt tilbake fra beslutter`() {
         val fom = LocalDate.now()
@@ -109,7 +116,11 @@ class BeslutterFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class
             .beslutterGodkjennerIkke(underkjennVurderinger = listOf(Definisjon.AVKLAR_SYKDOM))
             .medKontekst {
                 assertThat(behandling.status()).isEqualTo(Status.UTREDES)
-                assertThat(åpneAvklaringsbehov).anySatisfy { assertThat(it.definisjon).isEqualTo(Definisjon.AVKLAR_SYKDOM) }
+                if (gatewayProvider.provide<UnleashGateway>().isEnabled(BehandlingsflytFeature.FjernTilbakefoeringTransisjon)) {
+                    assertThat(åpneAvklaringsbehov).allSatisfy { assertThat(it.definisjon).isEqualTo(Definisjon.AVKLAR_SYKDOM) }
+                } else {
+                    assertThat(åpneAvklaringsbehov.map{it.definisjon}).containsExactlyInAnyOrder(Definisjon.AVKLAR_SYKDOM, Definisjon.FATTE_VEDTAK)
+                }
             }.løsAvklaringsBehov(
                 AvklarSykdomLøsning(
                     løsningerForPerioder = listOf(

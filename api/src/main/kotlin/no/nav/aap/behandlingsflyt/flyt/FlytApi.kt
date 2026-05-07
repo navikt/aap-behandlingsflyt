@@ -41,6 +41,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.tilgang.TilgangGateway
 import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
+import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForSakResolver
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -58,6 +59,7 @@ import no.nav.aap.motor.api.JobbInfoDto
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.Operasjon
+import no.nav.aap.tilgang.RelevanteIdenter
 import no.nav.aap.tilgang.authorizedGet
 import no.nav.aap.tilgang.authorizedPost
 import org.slf4j.LoggerFactory
@@ -85,7 +87,7 @@ fun NormalOpenAPIRoute.flytApi(
                 val dto = dataSource.transaction(readOnly = true) { connection ->
                     val repositoryProvider = repositoryRegistry.provider(connection)
                     val sakRepository = repositoryProvider.provide<SakRepository>()
-                    val resultatUtleder = ResultatUtleder(repositoryProvider)
+                    val resultatUtleder = ResultatUtleder(repositoryProvider, gatewayProvider)
                     val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
                     val vilkårsresultatRepository =
                         repositoryProvider.provide<VilkårsresultatRepository>()
@@ -241,7 +243,7 @@ fun NormalOpenAPIRoute.flytApi(
                     relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
                     operasjon = Operasjon.SAKSBEHANDLE,
                     behandlingPathParam = BehandlingPathParam("referanse"),
-                    avklaringsbehovKode = MANUELT_SATT_PÅ_VENT_KODE
+                    påkrevdRolle = Definisjon.MANUELT_SATT_PÅ_VENT.løsesAv
                 )
             ) { request, body ->
                 dataSource.transaction { connection ->
@@ -264,12 +266,14 @@ fun NormalOpenAPIRoute.flytApi(
                             repositoryProvider.provide<AvklaringsbehovRepository>()
                         val behandling = behandling(behandlingRepository, request)
                         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
+                        val relevanteIdenter = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource).resolve(request.referanse.toString())
                         sjekkTilgangTilSettPåVent(
                             avklaringsbehovene = avklaringsbehovene,
                             behandling = behandling,
                             tilgangGateway = tilgangGateway,
                             token = token(),
                             behandlingsreferanse = request.referanse,
+                            relevanteIdenter = relevanteIdenter
                         )
 
 
@@ -352,6 +356,7 @@ private fun sjekkTilgangTilSettPåVent(
     tilgangGateway: TilgangGateway,
     token: OidcToken,
     behandlingsreferanse: UUID,
+    relevanteIdenter: RelevanteIdenter
 ) {
     val åpentAvklaringsbehov = avklaringsbehovene.åpne().filterNot { it.erVentepunkt() }
         .sortedWith(behandling.flyt().avklaringsbehovComparator).first().definisjon
@@ -359,7 +364,8 @@ private fun sjekkTilgangTilSettPåVent(
         tilgangGateway.sjekkTilgangTilBehandling(
             behandlingsreferanse,
             åpentAvklaringsbehov,
-            token
+            token,
+            relevanteIdenter
         )
 
     if (!harTilgang) {

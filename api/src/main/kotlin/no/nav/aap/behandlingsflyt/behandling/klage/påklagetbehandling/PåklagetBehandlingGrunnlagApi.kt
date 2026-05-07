@@ -32,7 +32,7 @@ fun NormalOpenAPIRoute.påklagetBehandlingGrunnlagApi(
         getGrunnlag<BehandlingReferanse, PåklagetBehandlingGrunnlagDto>(
             relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
             behandlingPathParam = BehandlingPathParam("referanse"),
-            avklaringsbehovKode = Definisjon.FASTSETT_PÅKLAGET_BEHANDLING.kode.toString()
+            påkrevdRolle = Definisjon.FASTSETT_PÅKLAGET_BEHANDLING.løsesAv
         ) { behandlingReferanse ->
             val respons = dataSource.transaction(readOnly = true) { connection ->
                 val repositoryProvider = repositoryRegistry.provider(connection)

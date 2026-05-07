@@ -27,7 +27,7 @@ fun NormalOpenAPIRoute.rettighetsperiodeGrunnlagApi(
         .getGrunnlag<BehandlingReferanse, RettighetsperiodeGrunnlagResponse>(
             relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
             behandlingPathParam = BehandlingPathParam("referanse"),
-            avklaringsbehovKode = Definisjon.VURDER_RETTIGHETSPERIODE.kode.toString()
+            påkrevdRolle = Definisjon.VURDER_RETTIGHETSPERIODE.løsesAv
 
         ) { req ->
             val rettighetsperiodeGrunnlagDto = dataSource.transaction(readOnly = true) { connection ->

@@ -14,10 +14,10 @@ import no.nav.aap.komponenter.httpklient.httpclient.RestClient
 import no.nav.aap.komponenter.httpklient.httpclient.post
 import no.nav.aap.komponenter.httpklient.httpclient.request.GetRequest
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
+import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
 import no.nav.aap.komponenter.json.DefaultJsonMapper
 import no.nav.aap.oppgave.enhet.OppgaveEnhetResponse
 import no.nav.aap.komponenter.httpklient.httpclient.get
-import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureM2MTokenProvider
 import java.net.URI
 
 object OppgavestyringGatewayImpl : OppgavestyringGateway {
@@ -26,7 +26,7 @@ object OppgavestyringGatewayImpl : OppgavestyringGateway {
 
     private val client = RestClient.withDefaultResponseHandler(
         config = config,
-        tokenProvider = AzureM2MTokenProvider,
+        tokenProvider = ClientCredentialsTokenProvider,
         prometheus = prometheus
     )
 

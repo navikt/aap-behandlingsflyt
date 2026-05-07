@@ -33,7 +33,7 @@ fun NormalOpenAPIRoute.vedtakslengdeGrunnlagApi(
         getGrunnlag<BehandlingReferanse, VedtakslengdeGrunnlagResponse>(
             relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
             behandlingPathParam = BehandlingPathParam("referanse"),
-            avklaringsbehovKode = Definisjon.AVKLAR_VEDTAKSLENGDE.kode.toString(),
+            påkrevdRolle = Definisjon.AVKLAR_VEDTAKSLENGDE.løsesAv,
         ) { req ->
             val vedtakslengdeGrunnlag =
                 dataSource.transaction(readOnly = true) { connection ->

@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.prometheus
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.gateway.Factory
 import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
+import no.nav.aap.komponenter.httpklient.httpclient.Header
 import no.nav.aap.komponenter.httpklient.httpclient.RestClient
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.NoTokenTokenProvider
@@ -13,18 +14,28 @@ import java.net.URI
 
 class PdfgenGatewayImpl : PdfgenGateway {
     private val baseUri = URI.create(requiredConfigForKey("integrasjon.pdfgen.url"))
+    private val config = ClientConfig(scope = requiredConfigForKey("integrasjon.pdfgen.scope"))
+
     private val client = RestClient.withDefaultResponseHandler(
-        config = ClientConfig(),
+        config = config,
         tokenProvider = NoTokenTokenProvider(),
-        prometheus = prometheus
+        prometheus = prometheus,
     )
 
     override fun genererMeldekortPdf(request: MeldekortPdfRequest): ByteArray {
         val uri = baseUri.resolve("/api/v1/genpdf/aap-saksbehandling-meldekort/meldekort")
-        val pdf = requireNotNull(
-            client.post(uri = uri, request = PostRequest(body = request), mapper = { body, _ -> body })
+        val httpRequest = PostRequest(
+            body = request,
+            additionalHeaders = listOf(
+                Header("Accept", "application/pdf")
+            )
         )
-        return pdf.readBytes()
+
+        val pdf = requireNotNull(
+            client.post(uri, httpRequest) { body, _ -> body.readBytes() }
+        )
+
+        return pdf
     }
 
     companion object : Factory<PdfgenGateway> {

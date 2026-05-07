@@ -40,7 +40,7 @@ import no.nav.aap.komponenter.gateway.Factory
 import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
 import no.nav.aap.komponenter.httpklient.httpclient.RestClient
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
-import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureM2MTokenProvider
+import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
 import no.nav.aap.komponenter.json.DefaultJsonMapper
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
@@ -72,7 +72,7 @@ class ApiInternGatewayImpl : ApiInternGateway {
 
     private val restClient = RestClient.withDefaultResponseHandler(
         config = ClientConfig(scope = requiredConfigForKey("integrasjon.datadeling.scope")),
-        tokenProvider = AzureM2MTokenProvider,
+        tokenProvider = ClientCredentialsTokenProvider,
         prometheus = prometheus
     )
 
@@ -247,12 +247,26 @@ class ApiInternGatewayImpl : ApiInternGateway {
         )
     }
 
-    override fun hentArenaStatus(personidentifikatorer: Set<String>): ArenaStatusResponse {
-        // Kalles ofte fra saksbehandling, så cache den
-        return arenaStatusCache.get(personidentifikatorer) {
-            val sakerRequest = SakerRequest(personidentifikatorer = personidentifikatorer.toList())
-            doHentArenaStatus(sakerRequest)
+    override fun hentArenaStatus(personidentifikatorer: Set<String>): Result<ArenaStatusResponse> {
+        return runCatching {
+            // Kalles ofte fra saksbehandling, så cache den
+            arenaStatusCache.get(personidentifikatorer) {
+                val sakerRequest = SakerRequest(personidentifikatorer = personidentifikatorer.toList())
+                doHentArenaStatus(sakerRequest)
+            }
+        }.onFailure {
+            log.warn("Kall mot ApiInternGateway for å hente Arenastatus feilet", it)
         }
+    }
+
+    private fun doHentArenaStatus(sakerRequest: SakerRequest): ArenaStatusResponse {
+        val remoteResponse: PersonEksistererIAAPArena? = restClient.post(
+            uri.resolve("/arena/person/aap/eksisterer"),
+            PostRequest(body = sakerRequest),
+            mapper = { body, _ -> DefaultJsonMapper.fromJson(body) }
+        )
+        requireNotNull(remoteResponse) { "Fikk ikke gyldig svar på om personen eksisterer i AAP-Arena" }
+        return ArenaStatusResponse(remoteResponse.eksisterer)
     }
 
     override fun oppdaterIdenter(
@@ -265,15 +279,5 @@ class ApiInternGatewayImpl : ApiInternGateway {
             PostRequest(body = OppdaterIdenterDto(saksnummer.toString(), identer.map(Ident::identifikator))),
             mapper = { _, _ -> }
         )
-    }
-
-    private fun doHentArenaStatus(sakerRequest: SakerRequest): ArenaStatusResponse {
-        val remoteResponse: PersonEksistererIAAPArena? = restClient.post(
-            uri.resolve("/arena/person/aap/eksisterer"),
-            PostRequest(body = sakerRequest),
-            mapper = { body, _ -> DefaultJsonMapper.fromJson(body) }
-        )
-        requireNotNull(remoteResponse) { "Fikk ikke gyldig svar på om personen eksisterer i AAP-Arena" }
-        return ArenaStatusResponse(remoteResponse.eksisterer)
     }
 }

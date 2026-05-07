@@ -47,7 +47,7 @@ fun NormalOpenAPIRoute.samordningGrunnlag(
                 behandlingPathParam = BehandlingPathParam(
                     "referanse"
                 ),
-                avklaringsbehovKode = Definisjon.AVKLAR_SAMORDNING_UFØRE.kode.toString()
+                påkrevdRolle = Definisjon.AVKLAR_SAMORDNING_UFØRE.løsesAv
             ) { behandlingReferanse ->
                 val (registerGrunnlag, vurdering) =
                     dataSource.transaction { connection ->
@@ -82,7 +82,7 @@ fun NormalOpenAPIRoute.samordningGrunnlag(
                     BehandlingPathParam(
                         "referanse"
                     ),
-                avklaringsbehovKode = Definisjon.SAMORDNING_REFUSJONS_KRAV.kode.toString(),
+                påkrevdRolle = Definisjon.SAMORDNING_REFUSJONS_KRAV.løsesAv,
             ) { req ->
                 val (tp, vurdering) =
                     dataSource.transaction { connection ->
@@ -126,7 +126,7 @@ fun NormalOpenAPIRoute.samordningGrunnlag(
             getGrunnlag<BehandlingReferanse, SamordningYtelseVurderingGrunnlagDTO>(
                 relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
                 behandlingPathParam = BehandlingPathParam("referanse"),
-                avklaringsbehovKode = Definisjon.AVKLAR_SAMORDNING_GRADERING.kode.toString()
+                påkrevdRolle = Definisjon.AVKLAR_SAMORDNING_GRADERING.løsesAv
             ) { req ->
                 val (registerYtelser, samordningPair, tp) =
                     dataSource.transaction { connection ->
@@ -190,7 +190,7 @@ fun NormalOpenAPIRoute.samordningGrunnlag(
                     BehandlingPathParam(
                         "referanse"
                     ),
-                avklaringsbehovKode = Definisjon.SAMORDNING_ANDRE_STATLIGE_YTELSER.kode.toString(),
+                påkrevdRolle = Definisjon.SAMORDNING_ANDRE_STATLIGE_YTELSER.løsesAv,
             ) { behandlingReferanse ->
                 val (samordningAndreStatligeYtelserVurdering,
                      samordningAndreStatligeYtelserHistoriskeVurdering,
@@ -275,7 +275,7 @@ fun NormalOpenAPIRoute.samordningGrunnlag(
                     BehandlingPathParam(
                         "referanse"
                     ),
-                avklaringsbehovKode = Definisjon.SAMORDNING_ARBEIDSGIVER.kode.toString(),
+                påkrevdRolle = Definisjon.SAMORDNING_ARBEIDSGIVER.løsesAv,
             ) { behandlingReferanse ->
                 val (samordningArbeidsgiverVurdering, historskeSamordningArbeidsgiverVurderinger,harFåttEkstrautbetalingFraArbeidsgiver) =
                     dataSource.transaction { connection ->

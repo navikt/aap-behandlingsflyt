@@ -5,7 +5,7 @@ import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.svarfraandreinstans.SvarFraAndreinstansRepository
-import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.HÅNDTER_SVAR_FRA_ANDREINSTANS_KODE
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.KabalHendelseV0
@@ -26,7 +26,7 @@ fun NormalOpenAPIRoute.svarFraAndreinstansGrunnlagApi(
         getGrunnlag<BehandlingReferanse, SvarFraAndreinstansGrunnlagDto>(
             relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
             behandlingPathParam = BehandlingPathParam("referanse"),
-                avklaringsbehovKode = HÅNDTER_SVAR_FRA_ANDREINSTANS_KODE
+            påkrevdRolle = Definisjon.HÅNDTER_SVAR_FRA_ANDREINSTANS.løsesAv
         ) { req ->
             val respons = dataSource.transaction(readOnly = true) {
                 val repositoryProvider = repositoryRegistry.provider(it)
@@ -38,7 +38,7 @@ fun NormalOpenAPIRoute.svarFraAndreinstansGrunnlagApi(
                     .first()
                     .strukturerteData<KabalHendelseV0>()?.data
                 requireNotNull(hendelse) { "Fant ikke tilhørende kabalhendelse" }
-                
+
                 val grunnlag = repositoryProvider.provide<SvarFraAndreinstansRepository>()
                     .hentHvisEksisterer(behandling.id)
 

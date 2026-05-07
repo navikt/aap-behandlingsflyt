@@ -29,6 +29,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.lookup.repository.RepositoryProvider
@@ -58,13 +60,15 @@ class FlytOrkestrator(
     private val ventebehovEvaluererService: VentebehovEvaluererService,
     private val stegOrkestrator: StegOrkestrator,
     private val stoppNårStatus: Set<Status> = emptySet(),
+    private val unleashGateway: UnleashGateway
 ) {
     constructor(
         repositoryProvider: RepositoryProvider,
         gatewayProvider: GatewayProvider,
         stoppNårStatus: Set<Status> = emptySet(),
         markSavepointAt: Set<StegStatus>? = null,
-        behandlingHendelseService: BehandlingHendelseService = gatewayProvider.provide<BehandlingHendelseServiceProvider>().create(repositoryProvider, gatewayProvider),
+        behandlingHendelseService: BehandlingHendelseService = gatewayProvider.provide<BehandlingHendelseServiceProvider>()
+            .create(repositoryProvider, gatewayProvider),
     ) : this(
         ventebehovEvaluererService = VentebehovEvaluererServiceImpl(repositoryProvider),
         behandlingRepository = repositoryProvider.provide(),
@@ -76,6 +80,7 @@ class FlytOrkestrator(
         behandlingHendelseService = behandlingHendelseService,
         stegOrkestrator = StegOrkestrator(repositoryProvider, gatewayProvider, markSavepointAt),
         stoppNårStatus = stoppNårStatus,
+        unleashGateway = gatewayProvider.provide()
     )
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -195,7 +200,9 @@ class FlytOrkestrator(
                         en endring i rekkefølgen av stegene, så er dette en bug.
                         """.trimIndent().replace("\n", " ")
                     )
+                }
 
+                if (unleashGateway.isEnabled(BehandlingsflytFeature.FjernTilbakefoeringTransisjon) || (!sendtTilbakeFraBeslutterNå && !sendtTilbakeFraKvalitetssikrerNå)) {
                     val tilbakeflyt = behandlingFlyt.tilbakeflyt(tidligsteÅpneAvklaringsbehov)
                     tilbakefør(kontekst, behandling, tilbakeflyt, avklaringsbehovene)
                 }
@@ -363,7 +370,9 @@ class FlytOrkestrator(
         }
 
         log.info(
-            "Tilbakefører ${behandling.aktivtSteg()} for behandling ${behandling.referanse}. Vurderingsbehov: ${behandling.vurderingsbehov().map { it.type }}."
+            "Tilbakefører ${behandling.aktivtSteg()} for behandling ${behandling.referanse}. Vurderingsbehov: ${
+                behandling.vurderingsbehov().map { it.type }
+            }."
         )
         var neste: FlytSteg? = behandlingFlyt.aktivtSteg()
         while (true) {

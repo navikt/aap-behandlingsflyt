@@ -23,6 +23,7 @@ import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.getGrunnlag
+import java.time.LocalDate
 import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.meldepliktOverstyringGrunnlagApi(
@@ -36,7 +37,7 @@ fun NormalOpenAPIRoute.meldepliktOverstyringGrunnlagApi(
         getGrunnlag<BehandlingReferanse, MeldepliktOverstyringGrunnlagResponse>(
             relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
             behandlingPathParam = BehandlingPathParam("referanse"),
-            avklaringsbehovKode = Definisjon.OVERSTYR_IKKE_OPPFYLT_MELDEPLIKT.kode.toString(),
+            påkrevdRolle = Definisjon.OVERSTYR_IKKE_OPPFYLT_MELDEPLIKT.løsesAv,
         ) { req ->
             val meldepliktGrunnlag =
                 dataSource.transaction(readOnly = true) { connection ->
@@ -66,10 +67,12 @@ fun NormalOpenAPIRoute.meldepliktOverstyringGrunnlagApi(
                     // Grunnlaget vil være tomt til underveis har kjørt, 
                     // men siden det er frivillig overstyring der steget automatisk returnerer Fullført, er dette greit
                     val underveisGrunnlag = underveisRepository.hentHvisEksisterer(behandling.id)
+                    val now = LocalDate.now()
 
                     MeldepliktOverstyringGrunnlagResponse(
                         harTilgangTilÅSaksbehandle = kanSaksbehandle(),
                         perioderIkkeMeldt = underveisGrunnlag?.perioder
+                            ?.filter { it.meldePeriode.fom <= now }
                             ?.filter { it.meldepliktStatus == MeldepliktStatus.IKKE_MELDT_SEG }
                             ?.map { it.meldePeriode }
                             ?.distinctBy { it.fom }

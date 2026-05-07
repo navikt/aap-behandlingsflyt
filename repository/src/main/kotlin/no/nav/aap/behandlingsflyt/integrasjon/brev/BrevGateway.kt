@@ -50,11 +50,12 @@ import no.nav.aap.komponenter.httpklient.httpclient.put
 import no.nav.aap.komponenter.httpklient.httpclient.request.GetRequest
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
 import no.nav.aap.komponenter.httpklient.httpclient.request.PutRequest
-import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureM2MTokenProvider
+import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
 import no.nav.aap.komponenter.json.DefaultJsonMapper
 import org.slf4j.LoggerFactory
 import java.io.InputStream
 import java.net.URI
+import kotlin.collections.orEmpty
 
 class BrevGateway : BrevbestillingGateway {
 
@@ -73,7 +74,7 @@ class BrevGateway : BrevbestillingGateway {
 
     private val client = RestClient(
         config = config,
-        tokenProvider = AzureM2MTokenProvider,
+        tokenProvider = ClientCredentialsTokenProvider,
         responseHandler = HåndterConflictResponseHandler(),
         prometheus = prometheus
     )
@@ -215,6 +216,29 @@ class BrevGateway : BrevbestillingGateway {
                 })
         )
         return response
+    }
+
+    override fun forhåndsvisHtml(
+        bestillingReferanse: BrevbestillingReferanse,
+        signaturer: List<SignaturGrunnlag>
+    ): String {
+
+        val httpRequest = PostRequest(
+            body = ForhandsvisBrevRequest(signaturer),
+            additionalHeaders = listOf(
+                Header("Accept", "application/json")
+            )
+        )
+
+        val response: InputStream = requireNotNull(
+            client.post(
+                uri = baseUri.resolve("/api/bestilling/$bestillingReferanse/forhandsvis-html"),
+                request = httpRequest,
+                mapper = { body, _ ->
+                    body
+                })
+        )
+        return response.readAllBytes().toString(Charsets.UTF_8)
     }
 
     override fun avbryt(bestillingReferanse: BrevbestillingReferanse) {

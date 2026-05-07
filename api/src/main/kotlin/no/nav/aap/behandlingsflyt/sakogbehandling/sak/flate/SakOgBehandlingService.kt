@@ -21,7 +21,7 @@ class SakOgBehandlingService(
     private val tilbakekrevingRepository: TilbakekrevingRepository,
 ) {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
-        resultatUtleder = ResultatUtleder(repositoryProvider),
+        resultatUtleder = ResultatUtleder(repositoryProvider, gatewayProvider),
         sakRepository = repositoryProvider.provide(),
         behandlingRepository = repositoryProvider.provide(),
         tilbakekrevingRepository = repositoryProvider.provide(),

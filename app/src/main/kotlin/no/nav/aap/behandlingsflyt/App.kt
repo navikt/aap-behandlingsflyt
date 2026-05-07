@@ -107,13 +107,16 @@ import no.nav.aap.behandlingsflyt.test.fullførBehandlingApi
 import no.nav.aap.behandlingsflyt.test.opprettDummySakApi
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
+import no.nav.aap.komponenter.config.configForKey
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbmigrering.Migrering
 import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureConfig
 import no.nav.aap.komponenter.json.DefaultJsonMapper
 import no.nav.aap.komponenter.miljo.Miljø
 import no.nav.aap.komponenter.repository.RepositoryRegistry
+import no.nav.aap.komponenter.server.AZURE
 import no.nav.aap.komponenter.server.auth.IdentityProvider
 import no.nav.aap.komponenter.server.commonKtorModule
 import no.nav.aap.komponenter.server.plugins.NavIdentInterceptor
@@ -134,8 +137,8 @@ import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit
 import java.util.logging.Level
 import java.util.logging.Logger
+import kotlin.jvm.java
 import kotlin.time.Duration.Companion.seconds
-
 
 fun utledSubtypesTilMottattHendelseDTO(): List<Class<*>> {
     return Innsending::class.sealedSubclasses.map { it.java }.toList()
@@ -156,18 +159,21 @@ internal object AppConfig {
     // Tid appen får til å avslutte Motor, Kafka, etc
     val stansArbeidTimeout = shutdownGracePeriod - 1.seconds
 
-    // Vi skrur opp ktor sin default-verdi, som er "antall CPUer", fordi vi har en del venting på IO (db, kafka, http):
-    private const val ktorParallellitet = 8
-
-    // Vi følger ktor sin metodikk for å regne ut tuning parametre som funksjon av parallellitet
-    // https://github.com/ktorio/ktor/blob/3.3.1/ktor-server/ktor-server-core/common/src/io/ktor/server/engine/ApplicationEngine.kt#L30
-    const val connectionGroupSize = ktorParallellitet / 2 + 1
-    const val workerGroupSize = ktorParallellitet / 2 + 1
-    const val callGroupSize = 4 * ktorParallellitet
-
     const val ANTALL_WORKERS_FOR_MOTOR = 4
-    const val hikariMaxPoolSize = ktorParallellitet + 2 * ANTALL_WORKERS_FOR_MOTOR
+
+    // Vi følger *IKKE* ktor sin metodikk for å regne ut callGroupSize, for den metodikken antar at
+    // handlerene våre gjør async IO, men vi gjør ikke async IO, hverken mot database eller i HTTP-kall.
+    const val callGroupSize = 64
+
+    /* praktisk talt alle endepunkt hos oss starter med en transaksjon. Siden transaksjonen
+     * er blocking, er det i praksis hva som begrenser antall parallelle kall.
+     *
+     * Vi har maks 100 connections i prod, og vi kjører med 3-4 pods, så det er en begrenset ressurs.
+     */
+    const val hikariMaxPoolSize = 100 / 4 /* max connections / max antall pods */
 }
+
+val isTexasEnabled = configForKey("ENABLE_TEXAS").toBoolean()
 
 fun main() {
     Thread.currentThread().setUncaughtExceptionHandler { _, e ->
@@ -178,8 +184,6 @@ fun main() {
     aktiverPostgresLogging()
 
     embeddedServer(Netty, configure = {
-        connectionGroupSize = AppConfig.connectionGroupSize
-        workerGroupSize = AppConfig.workerGroupSize
         callGroupSize = AppConfig.callGroupSize
 
         shutdownGracePeriod = AppConfig.shutdownGracePeriod.inWholeMilliseconds
@@ -206,18 +210,30 @@ internal fun Application.server(
     DefaultJsonMapper.objectMapper()
         .registerSubtypes(utledSubtypesTilAvklaringsbehovLøsning() + utledSubtypesTilMottattHendelseDTO())
 
-    commonKtorModule(
-        prometheus = prometheus,
-        infoModel = InfoModel(
-            title = "AAP - Behandlingsflyt",
-            version = ApplikasjonsVersjon.versjon,
-            description = """
+    if (isTexasEnabled) {
+        commonKtorModule(
+            prometheus = prometheus,
+            infoModel = InfoModel(
+                title = "AAP - Behandlingsflyt",
+                version = ApplikasjonsVersjon.versjon,
+                description = """
                 For å teste API i dev, besøk
                 <a href="https://azure-token-generator.intern.dev.nav.no/api/m2m?aud=dev-gcp:aap:behandlingsflyt">Token Generator</a> for å få token.
                 """.trimIndent(),
-        ),
-        identityProvider = IdentityProvider.ENTRA_ID
-    )
+            ),
+            identityProvider = IdentityProvider.ENTRA_ID
+        )
+    } else {
+        commonKtorModule(
+            prometheus, AzureConfig(), InfoModel(
+                title = "AAP - Behandlingsflyt", version = ApplikasjonsVersjon.versjon,
+                description = """
+                For å teste API i dev, besøk
+                <a href="https://azure-token-generator.intern.dev.nav.no/api/m2m?aud=dev-gcp:aap:behandlingsflyt">Token Generator</a> for å få token.
+                """.trimIndent(),
+            )
+        )
+    }
 
     install(StatusPages, StatusPagesConfigHelper.setup())
 
@@ -248,11 +264,12 @@ internal fun Application.server(
     }
 
     routing {
-        authenticate(IdentityProvider.ENTRA_ID.value) {
+        authenticate(if (isTexasEnabled) IdentityProvider.ENTRA_ID.value else AZURE) {
             install(NavIdentInterceptor)
 
             apiRouting {
                 configApi()
+                personApi(dataSource, repositoryRegistry, gatewayProvider)
                 saksApi(dataSource, repositoryRegistry, gatewayProvider)
                 behandlingApi(dataSource, repositoryRegistry, gatewayProvider)
                 flytApi(dataSource, repositoryRegistry, gatewayProvider)

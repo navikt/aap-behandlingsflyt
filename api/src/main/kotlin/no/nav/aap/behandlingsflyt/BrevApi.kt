@@ -18,13 +18,13 @@ import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingServi
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Status
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
-import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.SKRIV_BREV_KODE
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.mdc.LogKontekst
 import no.nav.aap.behandlingsflyt.mdc.LoggingKontekst
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersoninfoGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.BrevResponsDTO
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.DokumentResponsDTO
 import no.nav.aap.behandlingsflyt.tilgang.TilgangGateway
 import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
@@ -46,6 +46,7 @@ import no.nav.aap.tilgang.AuthorizationBodyPathConfig
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.Operasjon
+import no.nav.aap.tilgang.RelevanteIdenter
 import no.nav.aap.tilgang.authorizedGet
 import no.nav.aap.tilgang.authorizedPost
 import no.nav.aap.tilgang.authorizedPut
@@ -62,7 +63,7 @@ fun NormalOpenAPIRoute.brevApi(
     val authorizationParamPathConfig = AuthorizationParamPathConfig(
         relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
         operasjon = Operasjon.SAKSBEHANDLE,
-        avklaringsbehovKode = SKRIV_BREV_KODE,
+        påkrevdRolle = Definisjon.SKRIV_BREV.løsesAv,
         behandlingPathParam = BehandlingPathParam(
             param = "brevbestillingReferanse",
             resolver = {
@@ -187,7 +188,8 @@ fun NormalOpenAPIRoute.brevApi(
                                     avklaringsbehovene,
                                     bruker(),
                                     definisjon,
-                                    gatewayProvider
+                                    gatewayProvider,
+                                    relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource).resolve(behandlingReferanse.referanse.toString())
                                 )
                             )
                         }
@@ -274,6 +276,26 @@ fun NormalOpenAPIRoute.brevApi(
                     respond(DokumentResponsDTO(pdf))
                 }
             }
+
+            route("/{brevbestillingReferanse}/forhandsvis-html") {
+                authorizedGet<BrevbestillingReferanse, BrevResponsDTO>(authorizationParamPathConfig) { brevbestillingReferanse ->
+                    val html = dataSource.transaction { connection ->
+                        val repositoryProvider = repositoryRegistry.provider(connection)
+                        val brevbestillingRepository =
+                            repositoryProvider.provide<BrevbestillingRepository>()
+
+                        val brevbestilling = brevbestillingRepository.hent(brevbestillingReferanse)
+                            ?: throw VerdiIkkeFunnetException("Fant ikke brevbestilling med referanse $brevbestillingReferanse")
+
+                        val signaturService = SignaturService(repositoryProvider, gatewayProvider)
+                        brevbestillingGateway.forhåndsvisHtml(
+                            bestillingReferanse = brevbestillingReferanse,
+                            signaturer = signaturService.finnSignaturGrunnlag(brevbestilling, bruker()),
+                        )
+                    }
+                    respond(BrevResponsDTO(html))
+                }
+            }
         }
         route("/{brevbestillingReferanse}/kan-distribuere-brev") {
             authorizedPost<BrevbestillingReferanse, KanDistribuereBrevReponse, KanDistribuereBrevRequest>(
@@ -298,13 +320,14 @@ private fun utledHarTilgangTilÅSendeBrev(
     avklaringsbehovene: Avklaringsbehovene,
     bruker: Bruker,
     definisjon: Definisjon,
-    gatewayProvider: GatewayProvider
+    gatewayProvider: GatewayProvider,
+    relevanteIdenter: RelevanteIdenter
 ): Boolean {
     val tilgangGateway = gatewayProvider.provide<TilgangGateway>()
     val unleashGateway = gatewayProvider.provide<UnleashGateway>()
 
     fun harTilgang(tilDefinisjon: Definisjon): Boolean =
-        tilgangGateway.sjekkTilgangTilBehandling(behandlingReferanse, tilDefinisjon, token)
+        tilgangGateway.sjekkTilgangTilBehandling(behandlingReferanse, tilDefinisjon, token, relevanteIdenter)
 
     return when (definisjon) {
         Definisjon.SKRIV_VEDTAKSBREV -> {
