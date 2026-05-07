@@ -87,6 +87,6 @@ class OpprettJobbForGReguleringJobbUtfører(
         /**
          * Kjøres hver dag kl 05:15
          */
-        override val cron = CronExpression.createWithoutSeconds("0 5 15 * *")
+        override val cron = CronExpression.createWithoutSeconds("15 5 * * *")
     }
 }

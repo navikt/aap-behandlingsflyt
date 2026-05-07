@@ -7,7 +7,6 @@ import io.mockk.Runs
 import io.mockk.verify
 import no.nav.aap.behandlingsflyt.behandling.gregulering.GReguleringService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.test.fixedClock
 import no.nav.aap.behandlingsflyt.test.juni
@@ -25,7 +24,6 @@ class OpprettJobbForGReguleringJobbUtførerTest {
     private val dagensDato = 1 juni 2025
     private val clock = fixedClock(dagensDato)
 
-    private val behandlingService = mockk<BehandlingService>()
     private val gReguleringService = mockk<GReguleringService>()
     private val flytJobbRepository = mockk<FlytJobbRepository>()
     private val unleashGateway = mockk<UnleashGateway>()
@@ -34,7 +32,6 @@ class OpprettJobbForGReguleringJobbUtførerTest {
 
     private fun opprettUtfører() =
         OpprettJobbForGReguleringJobbUtfører(
-            behandlingService = behandlingService,
             gReguleringService = gReguleringService,
             flytJobbRepository = flytJobbRepository,
             clock = clock,
@@ -56,6 +53,17 @@ class OpprettJobbForGReguleringJobbUtførerTest {
         opprettUtfører().utfør(jobbInput)
 
         verify(exactly = 0) { gReguleringService.finnesGrunnbeløpForÅr(any()) }
+        verify(exactly = 0) { gReguleringService.hentSakerForGRegulering(any()) }
+        verify(exactly = 0) { flytJobbRepository.leggTil(any()) }
+    }
+
+    @Test
+    fun `skal ikke opprette jobber når ingen G-justering finnes for inneværende år`() {
+        enableToggle()
+        every { gReguleringService.finnesGrunnbeløpForÅr(Year.of(2025)) } returns null
+
+        opprettUtfører().utfør(jobbInput)
+
         verify(exactly = 0) { gReguleringService.hentSakerForGRegulering(any()) }
         verify(exactly = 0) { flytJobbRepository.leggTil(any()) }
     }

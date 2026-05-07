@@ -123,18 +123,20 @@ class UnderveisRepositoryImpl(private val connection: DBConnection) : UnderveisR
                 JOIN underveis_periode up ON ug.perioder_id = up.perioder_id
                 JOIN gjeldende_vedtatte_behandlinger gvb ON gvb.behandling_id = ug.behandling_id
                 JOIN behandling b ON ug.behandling_id = b.id
-                JOIN g_regulering_historikk grh ON s.id = grh.sak_id
                 JOIN sak s ON b.sak_id = s.id
-            WHERE grh.regulerings_aar != ?
-                AND ug.aktiv = true
+            WHERE ug.aktiv = true
                 AND up.periode @> ?::date
-                AND up.utfall = 'OPPFYLT';
+                AND up.utfall = 'OPPFYLT'
+                AND NOT EXISTS (
+                    SELECT 1 FROM g_regulering_historikk grh
+                    WHERE grh.sak_id = s.id AND grh.regulerings_aar = ?
+                );
         """.trimIndent()
 
         return connection.queryList(query) {
             setParams {
-                setInt(1, datoForGJustering.year)
-                setLocalDate(2, datoForGJustering)
+                setLocalDate(1, datoForGJustering)
+                setInt(2, datoForGJustering.year)
             }
             setRowMapper {
                 SakId(it.getLong("sakId"))

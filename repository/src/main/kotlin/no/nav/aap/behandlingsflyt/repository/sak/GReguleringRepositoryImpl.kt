@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.GReguleringRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.lookup.repository.Factory
+import java.time.Year
 
 class GReguleringRepositoryImpl(private val connection: DBConnection) : GReguleringRepository {
 
@@ -14,26 +15,26 @@ class GReguleringRepositoryImpl(private val connection: DBConnection) : GReguler
         }
     }
 
-    override fun harGReguleringForÅr(sakId: SakId, år: Int): Boolean {
+    override fun harGReguleringForÅr(sakId: SakId, år: Year): Boolean {
         return connection.queryFirstOrNull(
             """SELECT 1 FROM g_regulering_historikk WHERE sak_id = ? AND regulerings_aar = ?"""
         ) {
             setParams {
                 setLong(1, sakId.toLong())
-                setInt(2, år)
+                setInt(2, år.value)
             }
             setRowMapper { true }
         } ?: false
     }
 
-    override fun registrerGRegulering(sakId: SakId, år: Int) {
+    override fun registrerGRegulering(sakId: SakId, år: Year) {
         connection.execute(
             """INSERT INTO g_regulering_historikk (sak_id, regulerings_aar) VALUES (?, ?)
                ON CONFLICT (sak_id, regulerings_aar) DO NOTHING"""
         ) {
             setParams {
                 setLong(1, sakId.toLong())
-                setInt(2, år)
+                setInt(2, år.value)
             }
         }
     }

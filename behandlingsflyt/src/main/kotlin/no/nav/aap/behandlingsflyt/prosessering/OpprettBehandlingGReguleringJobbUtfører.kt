@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
-import no.nav.aap.behandlingsflyt.behandling.gregulering.GReguleringService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
@@ -17,12 +16,12 @@ import no.nav.aap.motor.JobbUtfører
 import no.nav.aap.motor.ProvidersJobbSpesifikasjon
 import org.slf4j.LoggerFactory
 import java.time.Clock
+import java.time.Year
 
 class OpprettBehandlingGReguleringJobbUtfører(
     private val prosesserBehandlingService: ProsesserBehandlingService,
     private val behandlingService: BehandlingService,
     private val gReguleringRepository: GReguleringRepository,
-    private val gReguleringService: GReguleringService,
     private val unleashGateway: UnleashGateway,
     private val clock: Clock = Clock.systemDefaultZone(),
 ) : JobbUtfører {
@@ -36,11 +35,16 @@ class OpprettBehandlingGReguleringJobbUtfører(
         }
 
         val sakId = SakId(input.sakId())
-        val gJusteringÅr = Integer.parseInt(input.parameter("gJusteringÅr"))
+        val gJusteringÅr = Year.of(Integer.parseInt(input.parameter("gJusteringÅr")))
 
         val sisteYtelsesbehandling = behandlingService.finnSisteYtelsesbehandlingFor(sakId)
         if (sisteYtelsesbehandling != null && sisteYtelsesbehandling.status().erÅpen()) {
             log.info("Sak med id $sakId har allerede en åpen behandling (${sisteYtelsesbehandling.id}), oppretter ikke G-regulering")
+            return
+        }
+
+        if (gReguleringRepository.harGReguleringForÅr(sakId, gJusteringÅr)) {
+            log.info("Sak $sakId er allerede G-regulert for år $gJusteringÅr")
             return
         }
 
@@ -71,7 +75,6 @@ class OpprettBehandlingGReguleringJobbUtfører(
                 prosesserBehandlingService = ProsesserBehandlingService(repositoryProvider, gatewayProvider),
                 behandlingService = BehandlingService(repositoryProvider, gatewayProvider),
                 gReguleringRepository = repositoryProvider.provide(),
-                gReguleringService = GReguleringService(repositoryProvider, gatewayProvider),
                 unleashGateway = gatewayProvider.provide(),
             )
         }
