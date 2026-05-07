@@ -12,17 +12,7 @@ data class Yrkesskade(
     val diagnose: String? = null,
     val skadekombinasjoner: List<SkadekombinasjonRegister>? = null,
     val skadekombinasjonerTekst: String? = null,
-) {
-    companion object {
-        fun skadekombinasjonerTilSkadebeskrivelse(list: List<SkadekombinasjonRegister>?): String =
-            list?.joinToString(", ") {
-                "${
-                    it.skadetype.replaceFirstChar { c -> c.uppercase() }.lowercase()
-                        .replaceFirstChar { c -> c.uppercase() }
-                } i ${it.kroppsdel.lowercase()}"
-            } ?: ""
-    }
-}
+)
 
 data class SkadekombinasjonRegister(
     val kroppsdel: String,

@@ -23,12 +23,8 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadV0
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.gateway.GatewayProvider
-import no.nav.aap.komponenter.miljo.Miljø
-import no.nav.aap.komponenter.miljo.MiljøKode
-import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
 
 class YrkesskadeInformasjonskrav internal constructor(
@@ -75,12 +71,8 @@ class YrkesskadeInformasjonskrav internal constructor(
         registerdata: YrkesskadeRegisterdata,
         kontekst: FlytKontekstMedPerioder
     ): Informasjonskrav.Endret {
-        val sak = sakService.hent(kontekst.sakId)
 
         val registerYrkesskader: List<Yrkesskade> = registerdata.yrkesskader
-//        val oppgittYrkesskade = oppgittYrkesskade(kontekst.sakId, sak.rettighetsperiode) //TODO Thao: Sjekk om jeg har behov for å ta hensyn til oppgittYrkesskadeUtenSkadedato
-//        val oppgittYrkesskadeUtenSkadedato = oppgittYrkesskade(kontekst.sakId, null)
-//        val yrkesskader = registerYrkesskade + listOfNotNull(oppgittYrkesskade, oppgittYrkesskadeUtenSkadedato)
         val mottattDokumenter = mottattDokumentRepository.hentDokumenterAvType(kontekst.sakId, InnsendingType.SØKNAD)
         val harOppgittYrkesskade = harOppgittYrkesskade(mottattDokumenter)
 
@@ -93,31 +85,9 @@ class YrkesskadeInformasjonskrav internal constructor(
             oppgittYrkesskadeISøknad = harOppgittYrkesskade,
         )
 
-        /*if (registerYrkesskader.isNotEmpty()) {
-            yrkesskadeRepository.lagre(behandlingId, Yrkesskader(registerYrkesskader), harOppgittYrkesskade)
-        } else if (yrkesskadeRepository.hentHvisEksisterer(behandlingId) != null) { // TODO Thao: Sjekk om jeg trenger denne else if
-            yrkesskadeRepository.lagre(behandlingId, null, harOppgittYrkesskade)
-        }*/
         val nyeData = yrkesskadeRepository.hentHvisEksisterer(behandlingId)
 
         return if (nyeData == gamleData) IKKE_ENDRET else ENDRET
-    }
-
-    private fun oppgittYrkesskade(
-        id: SakId,
-        periode: Periode?,
-    ): Yrkesskade? {
-        val mottattDokumenter = mottattDokumentRepository.hentDokumenterAvType(id, InnsendingType.SØKNAD)
-
-        if (harOppgittYrkesskade(mottattDokumenter)) {
-            if (Miljø.er() in listOf(MiljøKode.DEV, MiljøKode.LOKALT)) {
-                return fakeOppgittYrkesskade(periode)
-            }
-
-            /* TODO: Modeller og vis informasjon fra søknad i kelvin. */
-        }
-
-        return null
     }
 
     private fun harOppgittYrkesskade(mottattDokumenter: Set<MottattDokument>): Boolean {
@@ -128,26 +98,6 @@ class YrkesskadeInformasjonskrav internal constructor(
             }
             yrkesskadeString == "JA"
         }
-    }
-
-    // FIXME Thao: Fjern denne da det ikke er behov
-    private fun fakeOppgittYrkesskade(
-        periode: Periode?
-    ): Yrkesskade {
-        check(Miljø.er() in listOf(MiljøKode.DEV, MiljøKode.LOKALT))
-        check(!Miljø.erProd())
-
-        return Yrkesskade(
-            ref = "YRK" + "-" + Math.floor(Math.random() * 100),
-            saksnummer = (10000000..99999999).random(),
-            kildesystem = "KELVIN",
-            skadedato = periode?.fom?.minusDays(60),
-            vedtaksdato = periode?.fom?.minusDays(35),
-            skadeart = "Brudd",
-            diagnose = "Forstuing",
-            skadekombinasjoner = listOf(SkadekombinasjonRegister(kroppsdel = "Venstre legg", skadetype = "Brudd")),
-            skadekombinasjonerTekst = null
-        )
     }
 
     companion object : Informasjonskravkonstruktør {

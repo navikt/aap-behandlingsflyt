@@ -24,7 +24,7 @@ data class TestYrkesskadeDto(
     val skadeart: String? = null,           // brukes når kilde=REGISTER
     val diagnose: String? = null,           // brukes når kilde=REGISTER
     val skadebeskrivelse: String? = null,   // brukes når kilde=REGISTER
-    val skadedato: LocalDate? = LocalDate.now(),
+    val skadedato: LocalDate? = null,
     val saksreferanse: String = "1234",
     val vedtaksdato: LocalDate? = null,
 )
