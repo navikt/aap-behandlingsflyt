@@ -18,7 +18,8 @@ enum class BehandlingsflytFeature : FeatureToggle {
     SamordningFaktagrunnlagBrev,
     GReguleringsJobb,
     GReguleringUtplukkJobb,
-    ForutgaaendeGap
+    ForutgaaendeGap,
+    FjernTilbakefoeringTransisjon,
     ;
 
     override fun key(): String = name
