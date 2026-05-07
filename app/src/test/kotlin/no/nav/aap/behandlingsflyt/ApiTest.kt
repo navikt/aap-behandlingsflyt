@@ -38,7 +38,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.SaksinfoDTO
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.UtvidetSaksinfoDTO
 import no.nav.aap.behandlingsflyt.test.AzureTokenGen
 import no.nav.aap.behandlingsflyt.test.FakePersoner
-import no.nav.aap.behandlingsflyt.test.FakeServers
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.behandlingsflyt.test.LokalUnleash
 import no.nav.aap.behandlingsflyt.test.fakes.TestToken
@@ -56,8 +55,8 @@ import no.nav.aap.komponenter.httpklient.httpclient.request.GetRequest
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.NoTokenTokenProvider
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
-import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
-import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.OnBehalfOfTokenProvider
+import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureM2MTokenProvider
+import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureOBOTokenProvider
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.GUnit
 import no.nav.aap.verdityper.dokument.JournalpostId
@@ -96,13 +95,13 @@ class ApiTest {
 
         private val client: RestClient<InputStream> = RestClient(
             config = ClientConfig(scope = "behandlingsflyt"),
-            tokenProvider = OnBehalfOfTokenProvider,
+            tokenProvider = AzureOBOTokenProvider,
             responseHandler = DefaultResponseHandler()
         )
 
         private val ccClient: RestClient<InputStream> = RestClient(
             config = ClientConfig(scope = "behandlingsflyt"),
-            tokenProvider = ClientCredentialsTokenProvider,
+            tokenProvider = AzureM2MTokenProvider,
             responseHandler = DefaultResponseHandler()
         )
 
@@ -118,15 +117,6 @@ class ApiTest {
                 tokenProvider = NoTokenTokenProvider(),
                 responseHandler = DefaultResponseHandler()
             )
-
-            if (!isTexasEnabled) {
-                return OidcToken(
-                    client.post<Unit, TestToken>(
-                        URI.create(requiredConfigForKey("azure.openid.config.token.endpoint")),
-                        PostRequest(Unit)
-                    )!!.access_token
-                )
-            }
 
             val response = if (isApp) {
                 client.post<Unit, TestToken>(
