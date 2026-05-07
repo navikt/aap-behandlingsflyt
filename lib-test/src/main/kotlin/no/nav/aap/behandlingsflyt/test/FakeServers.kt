@@ -151,7 +151,9 @@ object FakeServers : AutoCloseable {
         System.setProperty("integrasjon.pesys.scope", "scope")
 
         // Tilgang
-        System.setProperty("integrasjon.tilgang.url", "http://localhost:${tilgang.port()}")
+        if (System.getenv("INTEGRASJON_TILGANG_URL").isNullOrEmpty()) {
+            System.setProperty("integrasjon.tilgang.url", "http://localhost:${tilgang.port()}")
+        }
         System.setProperty("integrasjon.tilgang.scope", "scope")
 
         // Foreldrepenger
