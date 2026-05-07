@@ -16,6 +16,6 @@ interface UnderveisRepository : Repository {
         input: Faktagrunnlag
     )
     fun hentSakerMedSisteUnderveisperiodeFørDato(sisteUnderveisDato: LocalDate): Set<SakId>
-    fun hentSakerMedAktuellGJustering(datoForGJustering: LocalDate, nyttGrunnbeløp: Beløp): Set<SakId>
+    fun hentSakerForGRegulering(datoForGJustering: LocalDate, nyttGrunnbeløp: Beløp): Set<SakId>
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId)
 }

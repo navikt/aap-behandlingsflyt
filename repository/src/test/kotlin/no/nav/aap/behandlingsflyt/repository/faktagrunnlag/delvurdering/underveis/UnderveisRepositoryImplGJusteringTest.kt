@@ -73,7 +73,7 @@ class UnderveisRepositoryImplGJusteringTest {
         }
 
         val resultat = dataSource.transaction { connection ->
-            UnderveisRepositoryImpl(connection).hentSakerMedAktuellGJustering(gJusteringsdato, nyttGrunnbeløp)
+            UnderveisRepositoryImpl(connection).hentSakerForGRegulering(gJusteringsdato, nyttGrunnbeløp)
         }
 
         assertThat(resultat).containsExactly(sak.id)
@@ -97,7 +97,7 @@ class UnderveisRepositoryImplGJusteringTest {
         }
 
         val resultat = dataSource.transaction { connection ->
-            UnderveisRepositoryImpl(connection).hentSakerMedAktuellGJustering(gJusteringsdato, nyttGrunnbeløp)
+            UnderveisRepositoryImpl(connection).hentSakerForGRegulering(gJusteringsdato, nyttGrunnbeløp)
         }
 
         assertThat(resultat).isEmpty()
@@ -121,7 +121,7 @@ class UnderveisRepositoryImplGJusteringTest {
         }
 
         val resultat = dataSource.transaction { connection ->
-            UnderveisRepositoryImpl(connection).hentSakerMedAktuellGJustering(gJusteringsdato, nyttGrunnbeløp)
+            UnderveisRepositoryImpl(connection).hentSakerForGRegulering(gJusteringsdato, nyttGrunnbeløp)
         }
 
         assertThat(resultat).isEmpty()
@@ -143,7 +143,7 @@ class UnderveisRepositoryImplGJusteringTest {
         }
 
         val resultat = dataSource.transaction { connection ->
-            UnderveisRepositoryImpl(connection).hentSakerMedAktuellGJustering(gJusteringsdato, nyttGrunnbeløp)
+            UnderveisRepositoryImpl(connection).hentSakerForGRegulering(gJusteringsdato, nyttGrunnbeløp)
         }
 
         assertThat(resultat).isEmpty()
@@ -181,7 +181,7 @@ class UnderveisRepositoryImplGJusteringTest {
         }
 
         val resultat = dataSource.transaction { connection ->
-            UnderveisRepositoryImpl(connection).hentSakerMedAktuellGJustering(gJusteringsdato, nyttGrunnbeløp)
+            UnderveisRepositoryImpl(connection).hentSakerForGRegulering(gJusteringsdato, nyttGrunnbeløp)
         }
 
         assertThat(resultat).containsExactly(sakMedTreff.id)
@@ -206,7 +206,7 @@ class UnderveisRepositoryImplGJusteringTest {
         }
 
         val resultat = dataSource.transaction { connection ->
-            UnderveisRepositoryImpl(connection).hentSakerMedAktuellGJustering(gJusteringsdato, nyttGrunnbeløp)
+            UnderveisRepositoryImpl(connection).hentSakerForGRegulering(gJusteringsdato, nyttGrunnbeløp)
         }
 
         assertThat(resultat).containsExactly(sak.id)
@@ -242,7 +242,7 @@ class UnderveisRepositoryImplGJusteringTest {
         }
 
         val resultat = dataSource.transaction { connection ->
-            UnderveisRepositoryImpl(connection).hentSakerMedAktuellGJustering(gJusteringsdato, nyttGrunnbeløp)
+            UnderveisRepositoryImpl(connection).hentSakerForGRegulering(gJusteringsdato, nyttGrunnbeløp)
         }
 
         assertThat(resultat).isEmpty()
@@ -279,7 +279,7 @@ class UnderveisRepositoryImplGJusteringTest {
         }
 
         val resultat = dataSource.transaction { connection ->
-            UnderveisRepositoryImpl(connection).hentSakerMedAktuellGJustering(gJusteringsdato, nyttGrunnbeløp)
+            UnderveisRepositoryImpl(connection).hentSakerForGRegulering(gJusteringsdato, nyttGrunnbeløp)
         }
 
         assertThat(resultat).containsExactly(sak.id)

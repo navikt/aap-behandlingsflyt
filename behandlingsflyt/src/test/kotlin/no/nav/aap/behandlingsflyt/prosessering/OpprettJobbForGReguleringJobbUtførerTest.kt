@@ -56,7 +56,7 @@ class OpprettJobbForGReguleringJobbUtførerTest {
         opprettUtfører().utfør(jobbInput)
 
         verify(exactly = 0) { gReguleringService.finnesGrunnbeløpForÅr(any()) }
-        verify(exactly = 0) { gReguleringService.hentSakerMedAktuellGJustering(any()) }
+        verify(exactly = 0) { gReguleringService.hentSakerForGRegulering(any()) }
         verify(exactly = 0) { flytJobbRepository.leggTil(any()) }
     }
 
@@ -69,7 +69,7 @@ class OpprettJobbForGReguleringJobbUtførerTest {
 
         every { gReguleringService.finnesGrunnbeløpForÅr(Year.of(2025)) } returns
             Grunnbeløp.GrunnbeløpDto(dato = gjusteringDato, beløp = Beløp(130_160))
-        every { gReguleringService.hentSakerMedAktuellGJustering(gjusteringDato) } returns setOf(sakId)
+        every { gReguleringService.hentSakerForGRegulering(gjusteringDato) } returns setOf(sakId)
         every { flytJobbRepository.leggTil(any()) } just Runs
 
         opprettUtfører().utfør(jobbInput)

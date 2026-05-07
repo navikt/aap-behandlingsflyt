@@ -117,7 +117,7 @@ class UnderveisRepositoryImpl(private val connection: DBConnection) : UnderveisR
         }
     }
 
-    override fun hentSakerMedAktuellGJustering(datoForGJustering: LocalDate, nyttGrunnbeløp: Beløp): Set<SakId> {
+    override fun hentSakerForGRegulering(datoForGJustering: LocalDate, nyttGrunnbeløp: Beløp): Set<SakId> {
         // Plukker kun saker der grunnbeløpet i gjeldende tilkjent ytelse for G-justeringsdatoen
         // er ulikt det nye grunnbeløpet. Saker som allerede er G-regulert (riktig grunnbeløp i TY) ekskluderes.
         val query = """

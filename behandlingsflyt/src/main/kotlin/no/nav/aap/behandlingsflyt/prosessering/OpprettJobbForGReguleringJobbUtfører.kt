@@ -61,7 +61,7 @@ class OpprettJobbForGReguleringJobbUtfører(
     }
 
     private fun hentKandidaterForGRegulering(datoForGJustering: LocalDate): Set<SakId> {
-        val alleSaker = gReguleringService.hentSakerMedAktuellGJustering(datoForGJustering)
+        val alleSaker = gReguleringService.hentSakerForGRegulering(datoForGJustering)
 
         // TODO: Filtrer saker
 
