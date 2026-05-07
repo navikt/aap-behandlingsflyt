@@ -22,7 +22,8 @@ class GReguleringService(
     private val log = LoggerFactory.getLogger(javaClass)
 
     fun hentSakerMedAktuellGJustering(datoForGJustering: LocalDate): Set<SakId> {
-        return underveisRepository.hentSakerMedAktuellGJustering(datoForGJustering)
+        val nyttGrunnbeløp = Grunnbeløp.finnGrunnbeløp(datoForGJustering)
+        return underveisRepository.hentSakerMedAktuellGJustering(datoForGJustering, nyttGrunnbeløp)
     }
 
     fun finnesGrunnbeløpForÅr(år: Year) : Grunnbeløp.GrunnbeløpDto? {
