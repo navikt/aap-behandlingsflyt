@@ -146,10 +146,17 @@ class AvklaringsbehovService(
                     OPPRETTET, AVBRUTT ->
                         avklaringsbehovene.avslutt(definisjon, "Behovet var åpent, men er nå tilstrekkelig vurdert.")
 
-                    AVSLUTTET,
                     SENDT_TILBAKE_FRA_BESLUTTER,
+                    SENDT_TILBAKE_FRA_KVALITETSSIKRER ->
+                        // Løsningen er komplett og konsistent, men vurdert ikke god nok av et menneske
+                        avklaringsbehovene.oppdaterPerioder(
+                            avklaringsbehov.definisjon,
+                            perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert(),
+                            perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering()
+                        )
+
                     KVALITETSSIKRET,
-                    SENDT_TILBAKE_FRA_KVALITETSSIKRER,
+                    AVSLUTTET,
                     TOTRINNS_VURDERT -> {
                         /* uendret status */
                     }
