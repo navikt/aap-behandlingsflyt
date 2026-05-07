@@ -2,7 +2,6 @@ package no.nav.aap.behandlingsflyt.prosessering
 
 import no.nav.aap.behandlingsflyt.behandling.gregulering.GReguleringService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
@@ -25,7 +24,6 @@ import java.time.Year
  * at ytelsen blir korrekt både før og etter G-justering.
  */
 class OpprettJobbForGReguleringJobbUtfører(
-    private val behandlingService: BehandlingService,
     private val gReguleringService: GReguleringService,
     private val flytJobbRepository: FlytJobbRepository,
     private val clock: Clock = Clock.systemDefaultZone(),
@@ -52,7 +50,12 @@ class OpprettJobbForGReguleringJobbUtfører(
         saker
             .also { log.info("Oppretter jobber for alle saker som er aktuelle kandidater for G-regulering. Antall = ${it.size}, Saker = $it") }
             .forEach {
-                flytJobbRepository.leggTil(JobbInput(OpprettBehandlingGReguleringJobbUtfører).forSak(it.toLong()))
+                flytJobbRepository
+                    .leggTil(
+                        JobbInput(OpprettBehandlingGReguleringJobbUtfører)
+                            .forSak(it.toLong())
+                            .medParameter("gJusteringÅr", aktuellGJustering.dato.year.toString())
+                    )
             }
     }
 
@@ -61,7 +64,7 @@ class OpprettJobbForGReguleringJobbUtfører(
     }
 
     private fun hentKandidaterForGRegulering(datoForGJustering: LocalDate): Set<SakId> {
-        val alleSaker = gReguleringService.hentSakerMedAktuellGJustering(datoForGJustering)
+        val alleSaker = gReguleringService.hentSakerForGRegulering(datoForGJustering)
 
         // TODO: Filtrer saker
 
@@ -71,7 +74,6 @@ class OpprettJobbForGReguleringJobbUtfører(
     companion object : ProvidersJobbSpesifikasjon {
         override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): JobbUtfører {
             return OpprettJobbForGReguleringJobbUtfører(
-                behandlingService = BehandlingService(repositoryProvider, gatewayProvider),
                 gReguleringService = GReguleringService(repositoryProvider, gatewayProvider),
                 flytJobbRepository = repositoryProvider.provide(),
                 unleashGateway = gatewayProvider.provide(),
@@ -83,8 +85,8 @@ class OpprettJobbForGReguleringJobbUtfører(
         override val beskrivelse = "Skal opprette jobber for omberegning av ytelse i saker, G-regulering"
 
         /**
-         * Kjøres hver dag kl 05:00
+         * Kjøres hver dag kl 05:15
          */
-        override val cron = CronExpression.createWithoutSeconds("0 5 * * *")
+        override val cron = CronExpression.createWithoutSeconds("0 5 15 * *")
     }
 }

@@ -29,7 +29,7 @@ object InMemoryUnderveisRepository : UnderveisRepository {
         )
     }
 
-    override fun hentSakerMedAktuellGJustering(datoForGJustering: LocalDate): Set<SakId> {
+    override fun hentSakerForGRegulering(datoForGJustering: LocalDate): Set<SakId> {
         TODO("Not yet implemented")
     }
 

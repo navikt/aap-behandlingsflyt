@@ -64,7 +64,7 @@ class UnderveisRepositoryImplGJusteringTest {
         }
 
         val resultat = dataSource.transaction { connection ->
-            UnderveisRepositoryImpl(connection).hentSakerMedAktuellGJustering(gJusteringsdato)
+            UnderveisRepositoryImpl(connection).hentSakerForGRegulering(gJusteringsdato)
         }
 
         assertThat(resultat).containsExactly(sak.id)
@@ -88,7 +88,7 @@ class UnderveisRepositoryImplGJusteringTest {
         }
 
         val resultat = dataSource.transaction { connection ->
-            UnderveisRepositoryImpl(connection).hentSakerMedAktuellGJustering(gJusteringsdato)
+            UnderveisRepositoryImpl(connection).hentSakerForGRegulering(gJusteringsdato)
         }
 
         assertThat(resultat).isEmpty()
@@ -112,7 +112,7 @@ class UnderveisRepositoryImplGJusteringTest {
         }
 
         val resultat = dataSource.transaction { connection ->
-            UnderveisRepositoryImpl(connection).hentSakerMedAktuellGJustering(gJusteringsdato)
+            UnderveisRepositoryImpl(connection).hentSakerForGRegulering(gJusteringsdato)
         }
 
         assertThat(resultat).isEmpty()
@@ -134,7 +134,7 @@ class UnderveisRepositoryImplGJusteringTest {
         }
 
         val resultat = dataSource.transaction { connection ->
-            UnderveisRepositoryImpl(connection).hentSakerMedAktuellGJustering(gJusteringsdato)
+            UnderveisRepositoryImpl(connection).hentSakerForGRegulering(gJusteringsdato)
         }
 
         assertThat(resultat).isEmpty()
@@ -172,7 +172,7 @@ class UnderveisRepositoryImplGJusteringTest {
         }
 
         val resultat = dataSource.transaction { connection ->
-            UnderveisRepositoryImpl(connection).hentSakerMedAktuellGJustering(gJusteringsdato)
+            UnderveisRepositoryImpl(connection).hentSakerForGRegulering(gJusteringsdato)
         }
 
         assertThat(resultat).containsExactly(sakMedTreff.id)
@@ -197,7 +197,7 @@ class UnderveisRepositoryImplGJusteringTest {
         }
 
         val resultat = dataSource.transaction { connection ->
-            UnderveisRepositoryImpl(connection).hentSakerMedAktuellGJustering(gJusteringsdato)
+            UnderveisRepositoryImpl(connection).hentSakerForGRegulering(gJusteringsdato)
         }
 
         assertThat(resultat).containsExactly(sak.id)

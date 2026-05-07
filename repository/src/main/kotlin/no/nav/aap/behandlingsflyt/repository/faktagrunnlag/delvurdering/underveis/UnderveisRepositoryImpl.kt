@@ -116,22 +116,25 @@ class UnderveisRepositoryImpl(private val connection: DBConnection) : UnderveisR
         }
     }
 
-    override fun hentSakerMedAktuellGJustering(datoForGJustering: LocalDate): Set<SakId> {
+    override fun hentSakerForGRegulering(datoForGJustering: LocalDate): Set<SakId> {
         val query = """
             SELECT DISTINCT s.id as sakId
             FROM underveis_grunnlag ug
                 JOIN underveis_periode up ON ug.perioder_id = up.perioder_id
                 JOIN gjeldende_vedtatte_behandlinger gvb ON gvb.behandling_id = ug.behandling_id
                 JOIN behandling b ON ug.behandling_id = b.id
+                JOIN g_regulering_historikk grh ON s.id = grh.sak_id
                 JOIN sak s ON b.sak_id = s.id
-            WHERE ug.aktiv = true
+            WHERE grh.regulerings_aar != ?
+                AND ug.aktiv = true
                 AND up.periode @> ?::date
                 AND up.utfall = 'OPPFYLT';
         """.trimIndent()
 
         return connection.queryList(query) {
             setParams {
-                setLocalDate(1, datoForGJustering)
+                setInt(1, datoForGJustering.year)
+                setLocalDate(2, datoForGJustering)
             }
             setRowMapper {
                 SakId(it.getLong("sakId"))
