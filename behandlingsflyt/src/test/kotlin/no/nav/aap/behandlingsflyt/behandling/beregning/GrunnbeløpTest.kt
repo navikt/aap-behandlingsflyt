@@ -67,4 +67,20 @@ class GrunnbeløpTest {
 
         assertThat(finnGUnit.gUnit.multiplisert(Beløp(15200))).isEqualTo(Beløp(1000))
     }
+
+    @Test
+    fun `aktiverGJustering2026 legger til grunnbeløp for 2026`() {
+        Grunnbeløp.aktiverGJustering2026()
+
+        assertThat(Grunnbeløp.finnGrunnbeløp(1 mai 2026)).isEqualTo(Beløp(999_000))
+        assertThat(Grunnbeløp.gjennomsnittGrunnbeløp(1 mai 2026)).isEqualTo(Beløp(999_001))
+    }
+
+    @Test
+    fun `aktiverGJustering2026 er idempotent`() {
+        Grunnbeløp.aktiverGJustering2026()
+        Grunnbeløp.aktiverGJustering2026()
+
+        assertThat(Grunnbeløp.finnGrunnbeløp(1 mai 2026)).isEqualTo(Beløp(999_000))
+    }
 }
