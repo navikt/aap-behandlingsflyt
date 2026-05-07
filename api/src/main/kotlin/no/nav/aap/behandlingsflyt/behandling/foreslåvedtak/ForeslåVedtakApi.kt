@@ -17,6 +17,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
+import no.nav.aap.behandlingsflyt.tilgang.kanSaksbehandle
 import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
 import no.nav.aap.behandlingsflyt.utils.tilForeslåVedtakDataTidslinje
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -83,7 +84,7 @@ fun NormalOpenAPIRoute.foreslaaVedtakApi(
                     val avslagstidslinjer = utledAvslagstidslinjer(vilkårsresultat)
                     // Hvis avslag tidlig i behandlingen finnes ikke underveisgrunnlag
                     if (underveisGrunnlag == null) {
-                        ForeslåVedtakResponse(emptyList(), stansOgOpphørDto)
+                        ForeslåVedtakResponse(emptyList(), stansOgOpphørDto, kanSaksbehandle())
                     } else {
                         val foreslåVedtakPerioder =
                             underveisGrunnlag
@@ -108,6 +109,7 @@ fun NormalOpenAPIRoute.foreslaaVedtakApi(
                         ForeslåVedtakResponse(
                             foreslåVedtakPerioder,
                             stansOgOpphørDto,
+                            harTilgangTilÅSaksbehandle = kanSaksbehandle(),
                         )
                     }
                 }

@@ -10,7 +10,8 @@ data class VedtakslengdeVedtakDto(
     val utfall: Utfall,
 )
 
-data class VedtakslengdeVedtakResponse(
+data class ForeslåvedtakVedtakslengdeRespons(
     val perioder: List<VedtakslengdeVedtakDto>?,
     val stansOpphør: List<StansOpphørDto>,
+    val harTilgangTilÅSaksbehandle: Boolean
 )
