@@ -121,12 +121,10 @@ class UnderveisRepositoryImpl(private val connection: DBConnection) : UnderveisR
         // Plukker kun saker der grunnbeløpet i gjeldende tilkjent ytelse for G-justeringsdatoen
         // er ulikt det nye grunnbeløpet. Saker som allerede er G-regulert (riktig grunnbeløp i TY) ekskluderes.
         val query = """
-            SELECT DISTINCT s.id as sakId
+            SELECT DISTINCT gvb.sak_id as sakId
             FROM underveis_grunnlag ug
                 JOIN underveis_periode up ON ug.perioder_id = up.perioder_id
                 JOIN gjeldende_vedtatte_behandlinger gvb ON gvb.behandling_id = ug.behandling_id
-                JOIN behandling b ON ug.behandling_id = b.id
-                JOIN sak s ON b.sak_id = s.id
                 LEFT JOIN tilkjent_ytelse ty ON ty.behandling_id = ug.behandling_id AND ty.aktiv = TRUE
                 LEFT JOIN tilkjent_periode tp
                     ON tp.tilkjent_ytelse_id = ty.id
