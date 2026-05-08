@@ -87,7 +87,8 @@ class ManglendeLigningGrunnlagSteg internal constructor(
                     VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9,
                     VurderingType.UTVID_VEDTAKSLENGDE,
                     VurderingType.MIGRER_RETTIGHETSPERIODE,
-                    VurderingType.IKKE_RELEVANT ->
+                    VurderingType.G_REGULERING,
+VurderingType.IKKE_RELEVANT ->
                         false
                 }
             },

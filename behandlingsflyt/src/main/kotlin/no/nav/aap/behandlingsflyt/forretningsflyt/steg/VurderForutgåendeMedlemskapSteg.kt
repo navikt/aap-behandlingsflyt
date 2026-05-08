@@ -78,7 +78,8 @@ class VurderForutgåendeMedlemskapSteg private constructor(
             VurderingType.MELDEKORT,
             VurderingType.UTVID_VEDTAKSLENGDE,
             VurderingType.AUTOMATISK_BREV,
-            VurderingType.IKKE_RELEVANT -> {
+            VurderingType.G_REGULERING,
+VurderingType.IKKE_RELEVANT -> {
             }
         }
 
