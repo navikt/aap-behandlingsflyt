@@ -6,6 +6,7 @@ plugins {
 dependencies {
     implementation(project(":behandlingsflyt"))
 
+    implementation(libs.coroutinesCore)
     implementation(libs.opentelemetryInstrumentationAnnotations)
     implementation(libs.logbackClassic)
     implementation(libs.verdityper)

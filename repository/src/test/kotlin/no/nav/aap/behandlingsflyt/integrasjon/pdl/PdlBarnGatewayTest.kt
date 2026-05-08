@@ -110,7 +110,7 @@ class PdlBarnGatewayTest {
     }
 
     @Test
-    fun `hentBarn skal kaste feil når barn mangler både ident og navn-fødselsdato kombinasjon`() {
+    fun `hentBarn skal hoppe over barn som mangler både ident og navn-fødselsdato kombinasjon`() {
         val pdlResponse = lagPdlRelasjonResponse(
             listOf(lagBarnRelasjonUtenIdentOgData())
         )
@@ -124,9 +124,11 @@ class PdlBarnGatewayTest {
             )
         } returns pdlResponse
 
-        assertThrows<IllegalStateException> {
-            gateway.hentBarn(mockPerson, emptyList(), emptyList())
-        }
+        val resultat = gateway.hentBarn(mockPerson, emptyList(), emptyList())
+
+        assertTrue(resultat.registerBarn.isEmpty())
+        assertTrue(resultat.oppgitteBarnFraPDL.isEmpty())
+        assertTrue(resultat.saksbehandlerOppgitteBarnPDL.isEmpty())
     }
 
     @Test

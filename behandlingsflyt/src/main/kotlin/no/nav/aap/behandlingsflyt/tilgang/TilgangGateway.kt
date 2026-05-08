@@ -9,19 +9,19 @@ import no.nav.aap.tilgang.RelevanteIdenter
 import java.util.*
 
 interface TilgangGateway : Gateway {
-    fun sjekkTilgangTilBehandling(
+    suspend fun sjekkTilgangTilBehandling(
         behandlingsreferanse: UUID,
         avklaringsbehov: Definisjon,
         token: OidcToken,
         relevanteIdenter: RelevanteIdenter
     ): Boolean
 
-    fun sjekkTilgangTilSak(
+    suspend fun sjekkTilgangTilSak(
         saksnummer: Saksnummer,
         token: OidcToken,
         operasjon: Operasjon,
         relevanteIdenter: RelevanteIdenter,
     ): Boolean
 
-    fun sjekkTilgangTilPerson(ident: String, token: OidcToken, operasjon: Operasjon): Boolean
+    suspend fun sjekkTilgangTilPerson(ident: String, token: OidcToken, operasjon: Operasjon): Boolean
 }

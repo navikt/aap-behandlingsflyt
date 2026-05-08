@@ -9,11 +9,11 @@ import no.nav.aap.tilgang.Operasjon
 import no.nav.aap.tilgang.PersonTilgangRequest
 import no.nav.aap.tilgang.RelevanteIdenter
 import no.nav.aap.tilgang.SakTilgangRequest
-import java.util.UUID
+import java.util.*
 
 object TilgangGatewayImpl : TilgangGateway {
 
-    override fun sjekkTilgangTilBehandling(
+    override suspend fun sjekkTilgangTilBehandling(
         behandlingsreferanse: UUID,
         avklaringsbehov: Definisjon,
         token: OidcToken,
@@ -29,7 +29,7 @@ object TilgangGatewayImpl : TilgangGateway {
         ).tilgang
     }
 
-    override fun sjekkTilgangTilSak(
+    override suspend fun sjekkTilgangTilSak(
         saksnummer: Saksnummer,
         token: OidcToken,
         operasjon: Operasjon,
@@ -44,7 +44,7 @@ object TilgangGatewayImpl : TilgangGateway {
         ).tilgang
     }
 
-    override fun sjekkTilgangTilPerson(ident: String, token: OidcToken, operasjon: Operasjon): Boolean {
+    override suspend fun sjekkTilgangTilPerson(ident: String, token: OidcToken, operasjon: Operasjon): Boolean {
         return no.nav.aap.tilgang.TilgangGateway.harTilgangTilPerson(
             body = PersonTilgangRequest(ident),
             currentToken = token
