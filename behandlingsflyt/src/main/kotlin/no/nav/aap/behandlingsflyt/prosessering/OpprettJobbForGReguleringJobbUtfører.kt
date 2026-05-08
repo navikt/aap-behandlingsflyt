@@ -40,6 +40,8 @@ class OpprettJobbForGReguleringJobbUtfører(
             return
         }
 
+        // TODO: Dette virker ikke etter nyttår, 1.jan 2027 - må identifisere en "G-Periode" (1.mai - 1.mai neste-år)
+        //  og bruke dette til å finne aktuellGJustering - ikke kalenderår for å finne G-justering/Grunnbeløp
         val årIDag = Year.now(clock)
         val aktuellGJustering = hentAktuellGJustering(årIDag)
         if (aktuellGJustering == null || aktuellGJustering.dato.isBefore(LocalDate.of(2025, 5, 1))) {

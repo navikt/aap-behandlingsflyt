@@ -285,6 +285,123 @@ class UnderveisRepositoryImplGJusteringTest {
         assertThat(resultat).containsExactly(sak.id)
     }
 
+    @Test
+    fun `returnerer sak der ytelse er pauset på g-justeringsdato og gjenopptas uten ny tilkjent ytelse ennå`() {
+        val gammeltGrunnbeløp = Beløp(124_028)
+        val sak = dataSource.transaction { sak(it, 1 januar 2025) }
+        dataSource.transaction { connection ->
+            val behandling = finnEllerOpprettBehandling(connection, sak)
+            VedtakService(postgresRepositoryRegistry.provider(connection))
+                .lagreVedtak(behandling.id, LocalDateTime.now(), gJusteringsdato)
+            BehandlingRepositoryImpl(connection).oppdaterBehandlingStatus(behandling.id, Status.AVSLUTTET)
+            UnderveisRepositoryImpl(connection).lagre(
+                behandlingId = behandling.id,
+                underveisperioder = listOf(
+                    oppfyltPeriode(Periode(LocalDate.of(2025, 1, 1), LocalDate.of(2025, 4, 30))),
+                    ikkeOppfyltPeriode(Periode(LocalDate.of(2025, 5, 1), LocalDate.of(2025, 5, 31))),
+                    oppfyltPeriode(Periode(LocalDate.of(2025, 6, 1), LocalDate.of(2025, 7, 31))),
+                ),
+                input = object : Faktagrunnlag {},
+            )
+            // Tilkjent ytelse er kun beregnet for perioden FØR pausen (med gammelt grunnbeløp)
+            // — perioden etter pausen har ingen TY ennå
+            TilkjentYtelseRepositoryImpl(connection).lagre(
+                behandlingId = behandling.id,
+                tilkjent = listOf(
+                    tilkjentYtelsePeriode(
+                        periode = Periode(LocalDate.of(2025, 1, 1), LocalDate.of(2025, 4, 30)),
+                        grunnbeløp = gammeltGrunnbeløp,
+                    )
+                ),
+                faktagrunnlag = tomtTilkjentYtelseGrunnlag,
+                versjon = "test",
+            )
+        }
+
+        val resultat = dataSource.transaction { connection ->
+            UnderveisRepositoryImpl(connection).hentSakerForGRegulering(gJusteringsdato, nyttGrunnbeløp)
+        }
+
+        assertThat(resultat).containsExactly(sak.id)
+    }
+
+    @Test
+    fun `returnerer sak der ytelse er pauset på g-justeringsdato og gjenopptas i g-justeringsåret med gammelt grunnbeløp`() {
+        val gammeltGrunnbeløp = Beløp(124_028)
+        val sak = dataSource.transaction { sak(it, 1 januar 2025) }
+        dataSource.transaction { connection ->
+            val behandling = finnEllerOpprettBehandling(connection, sak)
+            VedtakService(postgresRepositoryRegistry.provider(connection))
+                .lagreVedtak(behandling.id, LocalDateTime.now(), gJusteringsdato)
+            BehandlingRepositoryImpl(connection).oppdaterBehandlingStatus(behandling.id, Status.AVSLUTTET)
+            UnderveisRepositoryImpl(connection).lagre(
+                behandlingId = behandling.id,
+                underveisperioder = listOf(
+                    oppfyltPeriode(Periode(LocalDate.of(2025, 1, 1), LocalDate.of(2025, 4, 30))),
+                    ikkeOppfyltPeriode(Periode(LocalDate.of(2025, 5, 1), LocalDate.of(2025, 5, 31))),
+                    oppfyltPeriode(Periode(LocalDate.of(2025, 6, 1), LocalDate.of(2025, 7, 31))),
+                ),
+                input = object : Faktagrunnlag {},
+            )
+            // Tilkjent ytelse for perioden etter pausen er beregnet med gammelt grunnbeløp
+            TilkjentYtelseRepositoryImpl(connection).lagre(
+                behandlingId = behandling.id,
+                tilkjent = listOf(
+                    tilkjentYtelsePeriode(
+                        periode = Periode(LocalDate.of(2025, 6, 1), LocalDate.of(2025, 7, 31)),
+                        grunnbeløp = gammeltGrunnbeløp,
+                    )
+                ),
+                faktagrunnlag = tomtTilkjentYtelseGrunnlag,
+                versjon = "test",
+            )
+        }
+
+        val resultat = dataSource.transaction { connection ->
+            UnderveisRepositoryImpl(connection).hentSakerForGRegulering(gJusteringsdato, nyttGrunnbeløp)
+        }
+
+        assertThat(resultat).containsExactly(sak.id)
+    }
+
+    @Test
+    fun `returnerer ikke sak der ytelse er pauset og gjenopptas med nytt grunnbeløp`() {
+        val sak = dataSource.transaction { sak(it, 1 januar 2025) }
+        dataSource.transaction { connection ->
+            val behandling = finnEllerOpprettBehandling(connection, sak)
+            VedtakService(postgresRepositoryRegistry.provider(connection))
+                .lagreVedtak(behandling.id, LocalDateTime.now(), gJusteringsdato)
+            BehandlingRepositoryImpl(connection).oppdaterBehandlingStatus(behandling.id, Status.AVSLUTTET)
+            UnderveisRepositoryImpl(connection).lagre(
+                behandlingId = behandling.id,
+                underveisperioder = listOf(
+                    oppfyltPeriode(Periode(LocalDate.of(2025, 1, 1), LocalDate.of(2025, 4, 30))),
+                    ikkeOppfyltPeriode(Periode(LocalDate.of(2025, 5, 1), LocalDate.of(2025, 5, 31))),
+                    oppfyltPeriode(Periode(LocalDate.of(2025, 6, 1), LocalDate.of(2025, 7, 31))),
+                ),
+                input = object : Faktagrunnlag {},
+            )
+            // Tilkjent ytelse for perioden etter pausen er allerede beregnet med nytt grunnbeløp
+            TilkjentYtelseRepositoryImpl(connection).lagre(
+                behandlingId = behandling.id,
+                tilkjent = listOf(
+                    tilkjentYtelsePeriode(
+                        periode = Periode(LocalDate.of(2025, 6, 1), LocalDate.of(2025, 7, 31)),
+                        grunnbeløp = nyttGrunnbeløp,
+                    )
+                ),
+                faktagrunnlag = tomtTilkjentYtelseGrunnlag,
+                versjon = "test",
+            )
+        }
+
+        val resultat = dataSource.transaction { connection ->
+            UnderveisRepositoryImpl(connection).hentSakerForGRegulering(gJusteringsdato, nyttGrunnbeløp)
+        }
+
+        assertThat(resultat).isEmpty()
+    }
+
     private fun tilkjentYtelsePeriode(periode: Periode, grunnbeløp: Beløp) = TilkjentYtelsePeriode(
         periode = periode,
         tilkjent = Tilkjent(
