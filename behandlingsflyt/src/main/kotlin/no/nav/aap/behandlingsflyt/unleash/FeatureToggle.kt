@@ -20,6 +20,7 @@ enum class BehandlingsflytFeature : FeatureToggle {
     GReguleringUtplukkJobb,
     ForutgaaendeGap,
     FjernTilbakefoeringTransisjon,
+    GrunnbeloepInformasjonskrav,
     ;
 
     override fun key(): String = name
