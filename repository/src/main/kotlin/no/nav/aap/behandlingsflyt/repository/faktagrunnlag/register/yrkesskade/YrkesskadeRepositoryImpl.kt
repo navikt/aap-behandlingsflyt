@@ -29,7 +29,7 @@ class YrkesskadeRepositoryImpl(private val connection: DBConnection) : Yrkesskad
         data class GrunnlagMeta(
             val grunnlagId: Long,
             val yrkesskadeId: Long?,
-            val oppgittYrkesskadeISøknad: Boolean?,
+            val oppgittYrkesskadeISøknad: Boolean,
         )
 
         val meta = connection.queryFirstOrNull<GrunnlagMeta>(

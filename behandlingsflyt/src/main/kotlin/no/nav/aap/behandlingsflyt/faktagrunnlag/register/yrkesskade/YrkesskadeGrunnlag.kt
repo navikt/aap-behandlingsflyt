@@ -9,5 +9,5 @@ data class YrkesskadeGrunnlag(
     val id: Long,
     val behandlingId: BehandlingId,
     val yrkesskader: Yrkesskader,
-    val oppgittYrkesskadeISøknad: Boolean?,
+    val oppgittYrkesskadeISøknad: Boolean,
 )
