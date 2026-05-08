@@ -27,6 +27,7 @@ class AvklarSamordningUføreLøser(
         løsning: AvklarSamordningUføreLøsning
     ): LøsningsResultat {
         validerAllePerioderErVurdert(kontekst.behandlingId(), løsning)
+        validerIkkeDupliserteVurderinger(løsning)
         samordningUføreRepository.lagre(
             kontekst.behandlingId(),
             SamordningUføreVurdering(
@@ -41,6 +42,18 @@ class AvklarSamordningUføreLøser(
             )
         )
         return LøsningsResultat("Vurdert samordning uføre")
+    }
+
+    private fun validerIkkeDupliserteVurderinger(løsning: AvklarSamordningUføreLøsning) {
+        val duplikatLøsningPåSammeVirkningstidspunkt = løsning.samordningUføreVurdering.vurderingPerioder
+            .groupingBy { it.virkningstidspunkt }
+            .eachCount()
+            .filter { it.value > 1 }
+            .keys
+
+        if (duplikatLøsningPåSammeVirkningstidspunkt.isNotEmpty()) {
+            throw UgyldigForespørselException("Det finnes duplikate vurderinger på samme virkningstidspunkt ${duplikatLøsningPåSammeVirkningstidspunkt.first()}. Dette er ikke tillatt - vennligst fjern en av radene.")
+        }
     }
 
     private fun validerAllePerioderErVurdert(behandlingId: BehandlingId, løsning: AvklarSamordningUføreLøsning) {
