@@ -12,7 +12,7 @@ import no.nav.aap.komponenter.httpklient.httpclient.Header
 import no.nav.aap.komponenter.httpklient.httpclient.RestClient
 import no.nav.aap.komponenter.httpklient.httpclient.request.GetRequest
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
-import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureM2MTokenProvider
+import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
 import no.nav.aap.komponenter.json.DefaultJsonMapper
 import org.slf4j.LoggerFactory
 import java.net.URI
@@ -78,7 +78,7 @@ object InstitusjonsoppholdGatewayImpl : InstitusjonsoppholdGateway {
     private val config = ClientConfig(scope = requiredConfigForKey("integrasjon.institusjonsopphold.scope"))
     private val client = RestClient.withDefaultResponseHandler(
         config = config,
-        tokenProvider = AzureM2MTokenProvider,
+        tokenProvider = ClientCredentialsTokenProvider,
         prometheus = prometheus
     )
 

@@ -247,10 +247,19 @@ object FakeServers : AutoCloseable {
         System.setProperty("integrasjon.gosys.url", "http://localhost:${gosys.port()}")
         System.setProperty("integrasjon.gosys.scope", "scope")
 
-        // Texas
-        System.setProperty("nais.token.endpoint", "http://localhost:${texas.port()}/token")
-        System.setProperty("nais.token.exchange.endpoint", "http://localhost:${texas.port()}/token/exchange")
-        System.setProperty("nais.token.introspection.endpoint", "http://localhost:${texas.port()}/introspect")
+        if (System.getenv("ENABLE_TEXAS").toBoolean()) {
+            // Texas
+            System.setProperty("nais.token.endpoint", "http://localhost:${texas.port()}/token")
+            System.setProperty("nais.token.exchange.endpoint", "http://localhost:${texas.port()}/token/exchange")
+            System.setProperty("nais.token.introspection.endpoint", "http://localhost:${texas.port()}/introspect")
+        } else {
+            // Azure
+            System.setProperty("azure.openid.config.token.endpoint", "http://localhost:${azure.port()}/token/x12345")
+            System.setProperty("azure.app.client.id", "behandlingsflyt")
+            System.setProperty("azure.app.client.secret", "")
+            System.setProperty("azure.openid.config.jwks.uri", "http://localhost:${azure.port()}/jwks")
+            System.setProperty("azure.openid.config.issuer", "behandlingsflyt")
+        }
 
         // LeaderElector
         System.setProperty("ELECTOR_GET_URL", "http://localhost:${leaderElector.port()}")
