@@ -212,14 +212,16 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
             INSERT INTO SYKDOM_VURDERING (
                 SYKDOM_VURDERINGER_ID,
                 BEGRUNNELSE, VURDERINGEN_GJELDER_FRA,
-                ER_ARBEIDSEVNE_NEDSATT, HAR_SYKDOM_SKADE_LYTE,
+                ER_ARBEIDSEVNE_NEDSATT, 
+                HAR_NEDSATT_ARBEIDSEVNE,
+                HAR_SYKDOM_SKADE_LYTE,
                 ER_SYKDOM_SKADE_LYTE_VESETLING_DEL, ER_NEDSETTELSE_MER_ENN_HALVPARTEN,
                 ER_NEDSETTELSE_MER_ENN_YRKESSKADE_GRENSE, ER_NEDSETTELSE_AV_EN_VISS_VARIGHET,
                 ER_NEDSETTELSE_MINST_HALVPARTEN, ER_NEDSETTELSE_MER_ENN_YRKESSKADEGRENSE,
                 YRKESSKADE_BEGRUNNELSE, KODEVERK,
                 DIAGNOSE, OPPRETTET_TID, VURDERT_AV_IDENT, VURDERT_I_BEHANDLING, VURDERINGEN_GJELDER_TIL)
             VALUES
-            (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """.trimIndent()
 
         for (vurdering in vurderinger) {
@@ -229,20 +231,21 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
                     setString(2, vurdering.begrunnelse)
                     setLocalDate(3, vurdering.vurderingenGjelderFra)
                     setBoolean(4, vurdering.erArbeidsevnenNedsatt)
-                    setBoolean(5, vurdering.harSkadeSykdomEllerLyte)
-                    setBoolean(6, vurdering.erSkadeSykdomEllerLyteVesentligdel)
-                    setBoolean(7, vurdering.erNedsettelseIArbeidsevneMerEnnHalvparten)
-                    setBoolean(8, vurdering.erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense)
-                    setBoolean(9, vurdering.erNedsettelseIArbeidsevneAvEnVissVarighet)
-                    setEnumName(10, vurdering.erNedsettelseMinstHalvparten)
-                    setEnumName(11, vurdering.erNedsettelseMerEnnYrkesskadegrense)
-                    setString(12, vurdering.yrkesskadeBegrunnelse)
-                    setString(13, vurdering.diagnose?.kodeverk)
-                    setString(14, vurdering.diagnose?.hoveddiagnose)
-                    setInstant(15, vurdering.opprettet)
-                    setString(16, vurdering.vurdertAv.ident)
-                    setLong(17, vurdering.vurdertIBehandling.id)
-                    setLocalDate(18, vurdering.vurderingenGjelderTil)
+                    setEnumName(5, vurdering.harNedsattArbeidsevne)
+                    setBoolean(6, vurdering.harSkadeSykdomEllerLyte)
+                    setBoolean(7, vurdering.erSkadeSykdomEllerLyteVesentligdel)
+                    setBoolean(8, vurdering.erNedsettelseIArbeidsevneMerEnnHalvparten)
+                    setBoolean(9, vurdering.erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense)
+                    setBoolean(10, vurdering.erNedsettelseIArbeidsevneAvEnVissVarighet)
+                    setEnumName(11, vurdering.erNedsettelseMinstHalvparten)
+                    setEnumName(12, vurdering.erNedsettelseMerEnnYrkesskadegrense)
+                    setString(13, vurdering.yrkesskadeBegrunnelse)
+                    setString(14, vurdering.diagnose?.kodeverk)
+                    setString(15, vurdering.diagnose?.hoveddiagnose)
+                    setInstant(16, vurdering.opprettet)
+                    setString(17, vurdering.vurdertAv.ident)
+                    setLong(18, vurdering.vurdertIBehandling.id)
+                    setLocalDate(19, vurdering.vurderingenGjelderTil)
                 }
             }
 
@@ -334,6 +337,7 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
                    ER_NEDSETTELSE_MINST_HALVPARTEN, 
                    ER_NEDSETTELSE_MER_ENN_YRKESSKADEGRENSE,
                    ER_ARBEIDSEVNE_NEDSATT,
+                   HAR_NEDSATT_ARBEIDSEVNE,
                    YRKESSKADE_BEGRUNNELSE,
                    KODEVERK,
                    DIAGNOSE,
@@ -365,6 +369,7 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
             erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = row.getBooleanOrNull("ER_NEDSETTELSE_MER_ENN_YRKESSKADE_GRENSE"),
             erNedsettelseIArbeidsevneAvEnVissVarighet = row.getBooleanOrNull("ER_NEDSETTELSE_AV_EN_VISS_VARIGHET"),
             erArbeidsevnenNedsatt = row.getBooleanOrNull("ER_ARBEIDSEVNE_NEDSATT"),
+            harNedsattArbeidsevne = row.getEnumOrNull("HAR_NEDSATT_ARBEIDSEVNE"),
             yrkesskadeBegrunnelse = row.getStringOrNull("YRKESSKADE_BEGRUNNELSE"),
             diagnose = row.getStringOrNull("KODEVERK")?.let {
                 Diagnose(
@@ -537,6 +542,7 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
                    ER_NEDSETTELSE_MINST_HALVPARTEN, 
                    ER_NEDSETTELSE_MER_ENN_YRKESSKADEGRENSE,
                    ER_ARBEIDSEVNE_NEDSATT,
+                   HAR_NEDSATT_ARBEIDSEVNE,
                    YRKESSKADE_BEGRUNNELSE,
                    KODEVERK,
                    DIAGNOSE,
