@@ -76,3 +76,13 @@ data class FradragYtelse(
     val fraOgMed: LocalDate,
     val tilOgMed: LocalDate,
 )
+
+data class YrkesskadeBeregningBrev(
+    val yrkesskader: List<Yrkesskade>,
+    val andelAvNedsettelseSomSkyldesYrkesskade: Int?,
+) {
+    data class Yrkesskade(
+        val yrkesskadedato: LocalDate,
+        val arbeidsinntektPaaSkadetidspunktet: BigDecimal,
+    )
+}

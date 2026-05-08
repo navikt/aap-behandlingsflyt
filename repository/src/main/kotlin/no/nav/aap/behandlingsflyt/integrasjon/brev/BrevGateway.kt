@@ -9,6 +9,7 @@ import no.nav.aap.behandlingsflyt.behandling.brev.ForholdTilAndreYtelser
 import no.nav.aap.behandlingsflyt.behandling.brev.TilkjentYtelse
 import no.nav.aap.behandlingsflyt.behandling.brev.UtvidVedtakslengde
 import no.nav.aap.behandlingsflyt.behandling.brev.VurderesForUføretrygd
+import no.nav.aap.behandlingsflyt.behandling.brev.YrkesskadeBeregningBrev
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingGateway
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingReferanse
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.HåndterConflictResponseHandler
@@ -362,6 +363,9 @@ class BrevGateway : BrevbestillingGateway {
                     brevBehov.forholdTilAndreYtelser?.let { forholdTilAndreYtelser ->
                         add(forholdTilAndreYtelserTilFaktagrunnlag(forholdTilAndreYtelser))
                     }
+                    brevBehov.yrkesskadeBeregning?.let { yrkesskadeBeregning ->
+                        add(yrkesskadeBeregningTilFaktagrunnlag(yrkesskadeBeregning))
+                    }
                 }
 
             is VurderesForUføretrygd -> {
@@ -428,6 +432,18 @@ class BrevGateway : BrevbestillingGateway {
             minsteÅrligYtelse = tilkjentYtelse.minsteÅrligYtelse?.heltallverdi(),
             minsteÅrligYtelseUnder25 = tilkjentYtelse.minsteÅrligYtelseUnder25?.heltallverdi(),
             årligYtelse = tilkjentYtelse.årligYtelse?.heltallverdi()
+        )
+    }
+
+    private fun yrkesskadeBeregningTilFaktagrunnlag(yrkesskadeBeregning: YrkesskadeBeregningBrev): Faktagrunnlag.YrkesskadeBeregning {
+        return Faktagrunnlag.YrkesskadeBeregning(
+            yrkesskader = yrkesskadeBeregning.yrkesskader.map {
+                Faktagrunnlag.YrkesskadeBeregning.Yrkesskade(
+                    yrkesskadedato = it.yrkesskadedato,
+                    arbeidsinntektPaaSkadetidspunktet = it.arbeidsinntektPaaSkadetidspunktet,
+                )
+            },
+            andelAvNedsettelseSomSkyldesYrkesskade = yrkesskadeBeregning.andelAvNedsettelseSomSkyldesYrkesskade,
         )
     }
 

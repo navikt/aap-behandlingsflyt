@@ -34,10 +34,12 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsopptrapping
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsopptrapping.perioderMedArbeidsopptrapping
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.barnepensjon.BarnepensjonRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.refusjonskrav.TjenestepensjonRefusjonsKravVurderingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.sykestipend.SykestipendRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdomsvurderingbrev.SykdomsvurderingForBrevRepository
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
@@ -58,8 +60,10 @@ import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.Prosent
+import no.nav.aap.komponenter.verdityper.Prosent.Companion.`0_PROSENT`
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
+import java.math.BigDecimal
 import java.math.RoundingMode
 import java.time.LocalDate
 
@@ -85,6 +89,8 @@ class BrevUtlederService(
     private val sykestipendRepository: SykestipendRepository,
     private val barnepensjonRepository: BarnepensjonRepository,
     private val samordningAndreStatligeYtelserRepository: SamordningAndreStatligeYtelserRepository,
+    private val sykdomRepository: SykdomRepository,
+    private val yrkesskadeRepository: YrkesskadeRepository,
 ) {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         behandlingRepository = repositoryProvider.provide(),
@@ -108,6 +114,8 @@ class BrevUtlederService(
         sykestipendRepository = repositoryProvider.provide(),
         barnepensjonRepository = repositoryProvider.provide(),
         samordningAndreStatligeYtelserRepository = repositoryProvider.provide(),
+        sykdomRepository = repositoryProvider.provide(),
+        yrkesskadeRepository = repositoryProvider.provide(),
     )
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -155,7 +163,7 @@ class BrevUtlederService(
                 if (resultat == Resultat.AVBRUTT) {
                     return null
                 }
-                
+
                 if (skalSendeVedtakForArbeidsopptrapping) {
                     return VedtakArbeidsopptrapping11_23SjetteLedd
                 }
@@ -182,7 +190,7 @@ class BrevUtlederService(
                 if (vurderingsbehov == setOf(UTVID_VEDTAKSLENGDE)) {
                     return brevBehovUtvidVedtakslengde(behandling)
                 }
-                
+
                 if (harRettighetsType(
                         behandling.id,
                         RettighetsType.VURDERES_FOR_UFØRETRYGD
@@ -333,6 +341,8 @@ class BrevUtlederService(
             null
         }
 
+        val yrkesskadeBeregning = utledYrkesskadeBeregning(behandling.id)
+
         return Innvilgelse(
             virkningstidspunkt = vedtak.virkningstidspunkt,
             sisteDagMedYtelse = underveisGrunnlag.sisteDagMedYtelse(),
@@ -340,6 +350,7 @@ class BrevUtlederService(
             tilkjentYtelse = tilkjentYtelse,
             sykdomsvurdering = sykdomsvurdering,
             forholdTilAndreYtelser = samordning,
+            yrkesskadeBeregning = yrkesskadeBeregning,
         )
     }
 
@@ -400,6 +411,51 @@ class BrevUtlederService(
 
             null -> GrunnlagBeregning(null, emptyList(), null)
         }
+    }
+
+    /**
+     * 🔴 Rød sone — kobler tre datakilder via `referanse` (saksnummer).
+     * Implementer og verifiser logikken selv.
+     *
+     * Kilder:
+     * 1. sykdomRepository → Yrkesskadevurdering.relevanteSaker + andelAvNedsettelsen
+     * 2. yrkesskadeRepository → Yrkesskade.skadedato per ref (primær), YrkesskadeSak.manuellYrkesskadeDato (fallback)
+     * 3. beregningVurderingRepository → YrkesskadeBeløpVurdering.antattÅrligInntekt per referanse
+     *    (arbeidsinntekt på skadetidspunktet)
+     */
+    private fun utledYrkesskadeBeregning(behandlingId: BehandlingId): YrkesskadeBeregningBrev? {
+        //TODO("🔴 Implementer utledning av yrkesskadeBeregning — se kdoc over")
+        val sykdomGrunnlag = sykdomRepository.hentHvisEksisterer(behandlingId)
+        val manueltRegistrerteYrkesskade = sykdomGrunnlag?.yrkesskadevurdering?.relevanteSaker ?: emptyList()
+
+        val yrkesSkadeGrunnlag = yrkesskadeRepository.hentHvisEksisterer(behandlingId)
+        val kompysSaker = yrkesSkadeGrunnlag?.yrkesskader?.yrkesskader ?: emptyList()
+        val andelAvNedsettelsen = sykdomGrunnlag?.yrkesskadevurdering?.andelAvNedsettelsen?.prosentverdi()
+
+        val beregning = beregningVurderingRepository.hentHvisEksisterer(behandlingId)?.yrkesskadeBeløpVurdering
+
+        if ((yrkesSkadeGrunnlag == null && sykdomGrunnlag?.yrkesskadevurdering == null)
+            || sykdomGrunnlag?.yrkesskadevurdering?.andelAvNedsettelsen == `0_PROSENT`
+            || sykdomGrunnlag?.yrkesskadevurdering?.andelAvNedsettelsen == null) return null
+
+        val matchedeSkader = manueltRegistrerteYrkesskade.map { ys ->
+            val inntekt = beregning?.vurderinger?.first { it.referanse == ys.referanse }?.antattÅrligInntekt
+            YrkesskadeBeregningBrev.Yrkesskade(
+                ys.manuellYrkesskadeDato!!, //TODO()
+                inntekt?.verdi!! //TODO()
+            )
+        }  + kompysSaker.map { ys ->
+            val inntekt = beregning?.vurderinger?.first{ it.referanse == ys.ref}?.antattÅrligInntekt
+            YrkesskadeBeregningBrev.Yrkesskade(
+                ys.skadedato!!, //TODO()
+                inntekt?.verdi!!,//TODO()
+            )
+        }
+
+        return YrkesskadeBeregningBrev(
+            yrkesskader = matchedeSkader,
+            andelAvNedsettelseSomSkyldesYrkesskade = andelAvNedsettelsen
+        )
     }
 
     private fun hentSykdomsvurdering(behandlingId: BehandlingId): String? {
@@ -551,12 +607,12 @@ class BrevUtlederService(
 
         val harForholdTilAndreYtelser =
             samordningAndreYtelser.isNotEmpty() ||
-            samordningUføre.isNotEmpty() ||
-            reduksjonArbeidsgiver.isNotEmpty() ||
-            refusjonskravTjenestepensjon != null ||
-            sykestipend.isNotEmpty() ||
-            samordningBarnepensjon.isNotEmpty() ||
-            fradragAndreYtelser.isNotEmpty()
+                    samordningUføre.isNotEmpty() ||
+                    reduksjonArbeidsgiver.isNotEmpty() ||
+                    refusjonskravTjenestepensjon != null ||
+                    sykestipend.isNotEmpty() ||
+                    samordningBarnepensjon.isNotEmpty() ||
+                    fradragAndreYtelser.isNotEmpty()
 
         if (!harForholdTilAndreYtelser) return null
 
