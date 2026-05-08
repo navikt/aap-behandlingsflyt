@@ -63,6 +63,8 @@ import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.klage.FormkravReposit
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
+import no.nav.aap.behandlingsflyt.test.FakeUnleashBaseWithDefaultDisabled
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
@@ -75,7 +77,7 @@ import java.time.LocalDateTime
 import java.util.*
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status as AvklaringsbehovStatus
 
-class KlageFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
+class KlageFlytTest : AbstraktFlytOrkestratorTest(KlageFlytTestUnleash::class) {
     @Test
     fun `Teste Klageflyt - Omgjøring av 22-13 og revurdering genereres `() {
         val periode = Periode(LocalDate.now().minusMonths(3), LocalDate.now().plusYears(3))
@@ -1379,3 +1381,5 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
     }
 
 }
+
+object KlageFlytTestUnleash: FakeUnleashBaseWithDefaultDisabled(listOf(BehandlingsflytFeature.FjernTilbakefoeringTransisjon))
