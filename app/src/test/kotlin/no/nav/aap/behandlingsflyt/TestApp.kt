@@ -474,7 +474,7 @@ private fun opprettNySakOgBehandling(
 
         if (harBehandlingsgrunnlag) {
             // Yrkesskade
-            val harYrkesskade = dto.yrkesskader.any { it.kilde == "REGISTER" || (it.kilde == "SØKNAD" && it.harYrkesskade) }
+            val harYrkesskade = dto.yrkesskader.any { it.kilde == "REGISTER" }
             if (harYrkesskade) {
                 if (dto.steg == StegType.VURDER_YRKESSKADE) return sak
                 løsYrkesSkade(behandling)
@@ -484,6 +484,10 @@ private fun opprettNySakOgBehandling(
             if (dto.steg == StegType.FASTSETT_BEREGNINGSTIDSPUNKT) return sak
             løsBeregningstidspunkt(behandling)
 
+            if (harYrkesskade) {
+                løsFastsettYrkesskadeInntekt(behandling)
+            }
+
             val manglendeInntektsÅr = manglendeInntektsår(dto)
             if (manglendeInntektsÅr.isNotEmpty()) {
                 if (dto.steg == StegType.MANGLENDE_LIGNING) return sak
@@ -491,11 +495,10 @@ private fun opprettNySakOgBehandling(
             }
 
             // Forutgående medlemskap
-            if (harYrkesskade) {
-                løsFastsettYrkesskadeInntekt(behandling)
+            if (!harYrkesskade) {
+                if ((dto.steg == StegType.VURDER_MEDLEMSKAP)) return sak
+                løsForutgåendeMedlemskap(behandling, sak)
             }
-            if (dto.steg == StegType.VURDER_MEDLEMSKAP) return sak
-            løsForutgåendeMedlemskap(behandling, sak)
 
             // Oppholdskrav
             if (dto.steg == StegType.VURDER_OPPHOLDSKRAV) return sak
