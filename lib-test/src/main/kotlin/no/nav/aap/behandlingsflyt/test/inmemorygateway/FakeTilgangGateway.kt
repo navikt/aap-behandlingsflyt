@@ -10,7 +10,7 @@ import no.nav.aap.behandlingsflyt.pip.IdentPåSak
 import no.nav.aap.tilgang.RelevanteIdenter
 
 object FakeTilgangGateway : TilgangGateway {
-    override suspend fun sjekkTilgangTilBehandling(
+    override fun sjekkTilgangTilBehandling(
         behandlingsreferanse: UUID,
         avklaringsbehov: Definisjon,
         token: OidcToken,
@@ -19,7 +19,7 @@ object FakeTilgangGateway : TilgangGateway {
         return true
     }
 
-    override suspend fun sjekkTilgangTilSak(
+    override fun sjekkTilgangTilSak(
         saksnummer: Saksnummer,
         token: OidcToken,
         operasjon: Operasjon,
@@ -28,7 +28,7 @@ object FakeTilgangGateway : TilgangGateway {
         return true
     }
 
-    override suspend fun sjekkTilgangTilPerson(
+    override fun sjekkTilgangTilPerson(
         ident: String,
         token: OidcToken,
         operasjon: Operasjon

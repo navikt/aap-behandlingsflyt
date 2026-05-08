@@ -1,7 +1,7 @@
 [versions]
 ktor = "3.4.0"
 komponenter = "2.0.55"
-tilgang = "1.0.212"
+tilgang = "1.0.206"
 utbetaling = "0.0.104"
 brev = "0.0.259"
 oppgave = "0.0.170"
@@ -80,7 +80,6 @@ mockOauth2Server = { module = "no.nav.security:mock-oauth2-server", version = "3
 mockk = { module = "io.mockk:mockk", version = "1.14.6" }
 
 ktorOpenApiGenerator = { module = "no.nav.aap.kelvin:ktor-openapi-generator", version.ref = "komponenter" }
-coroutinesCore = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version = "1.10.2" }
 
 [bundles]
 junit = ["junitApi", "junitJupiterEngine", "junitJupiterParams", "assertJ"]
