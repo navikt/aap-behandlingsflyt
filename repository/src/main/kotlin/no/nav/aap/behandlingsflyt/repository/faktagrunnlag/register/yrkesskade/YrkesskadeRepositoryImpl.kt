@@ -139,7 +139,7 @@ class YrkesskadeRepositoryImpl(private val connection: DBConnection) : Yrkesskad
     override fun slett(behandlingId: BehandlingId) {
         val yrkesskadeIds = getYrkesskadeIds(behandlingId)
 
-        connection.executeReturnUpdated(
+        val deletedRows = connection.executeReturnUpdated(
             """
             DELETE FROM YRKESSKADE_DATO WHERE YRKESSKADE_ID = ANY(?::bigint[]);
             DELETE FROM YRKESSKADE_GRUNNLAG WHERE BEHANDLING_ID = ?;
@@ -152,7 +152,8 @@ class YrkesskadeRepositoryImpl(private val connection: DBConnection) : Yrkesskad
                 setLongArray(3, yrkesskadeIds)
             }
         }
-        log.info("Slettet yrkesskade-data for behandling ${behandlingId.id}")
+
+        log.info("Slettet $deletedRows rader fra yrkesskade_grunnlag")
     }
 
     private fun getYrkesskadeIds(behandlingId: BehandlingId): List<Long> =
