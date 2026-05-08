@@ -5,8 +5,8 @@ import com.papsign.ktor.openapigen.annotations.Response
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjonstype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Oppholdstype
-import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.AndreUtbetalingerDto
+import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.komponenter.verdityper.Beløp
 import org.jetbrains.annotations.NotNull
@@ -18,10 +18,21 @@ data class Institusjoner(
     val sykehus: Boolean? = false,
 )
 
+data class TestYrkesskadeDto(
+    val kilde: String = "REGISTER",         // "SØKNAD" eller "REGISTER"
+    val harYrkesskade: Boolean = false,     // brukes når kilde=SØKNAD
+    val skadeart: String? = null,           // brukes når kilde=REGISTER
+    val diagnose: String? = null,           // brukes når kilde=REGISTER
+    val skadebeskrivelse: String? = null,   // brukes når kilde=REGISTER
+    val skadedato: LocalDate? = null,
+    val saksreferanse: String = "1234",
+    val vedtaksdato: LocalDate? = null,
+)
+
 @Response(statusCode = 202)
 data class OpprettTestcaseDTO(
     @param:JsonProperty(value = "fødselsdato", required = true) val fødselsdato: LocalDate,
-    @param:NotNull @param:JsonProperty(value = "yrkesskade", defaultValue = "false") val yrkesskade: Boolean,
+    @param:NotNull @param:JsonProperty(value = "yrkesskader") val yrkesskader: List<TestYrkesskadeDto> = emptyList(),
     @param:JsonProperty(value = "uføre") val uføre: Int?,
     @param:JsonProperty(value = "uføretidspunkt") val uføreTidspunkt: LocalDate?,
     @param:JsonProperty(value = "uføregradTom") val uføregradTom: LocalDate?,
@@ -40,7 +51,13 @@ data class OpprettTestcaseDTO(
     val steg: StegType? = null,
     val erArbeidsevnenNedsatt: Boolean = true,
     val erNedsettelseIArbeidsevneMerEnnHalvparten: Boolean = true,
-)
+) {
+    val harYrkesskadeFraSøknad: Boolean
+        get() = yrkesskader.any { it.kilde == "SØKNAD" && it.harYrkesskade }
+
+    val harYrkesskade: Boolean
+        get() = harYrkesskadeFraSøknad || yrkesskader.any { it.kilde == "REGISTER" }
+}
 
 data class LeggTilInstitusjonsoppholdDTO(
     @param:JsonProperty(value = "opphold", required = true)

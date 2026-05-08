@@ -23,12 +23,8 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadV0
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.gateway.GatewayProvider
-import no.nav.aap.komponenter.miljo.Miljø
-import no.nav.aap.komponenter.miljo.MiljøKode
-import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
 
 class YrkesskadeInformasjonskrav internal constructor(
@@ -75,44 +71,23 @@ class YrkesskadeInformasjonskrav internal constructor(
         registerdata: YrkesskadeRegisterdata,
         kontekst: FlytKontekstMedPerioder
     ): Informasjonskrav.Endret {
-        val sak = sakService.hent(kontekst.sakId)
 
-        val registerYrkesskade: List<Yrkesskade> = registerdata.yrkesskader
-        val oppgittYrkesskade = oppgittYrkesskade(kontekst.sakId, sak.rettighetsperiode)
-        val oppgittYrkesskadeUtenSkadedato = oppgittYrkesskade(kontekst.sakId, null)
-        val yrkesskader = registerYrkesskade + listOfNotNull(oppgittYrkesskade, oppgittYrkesskadeUtenSkadedato)
+        val registerYrkesskader: List<Yrkesskade> = registerdata.yrkesskader
+        val mottattDokumenter = mottattDokumentRepository.hentDokumenterAvType(kontekst.sakId, InnsendingType.SØKNAD)
+        val harOppgittYrkesskade = harOppgittYrkesskade(mottattDokumenter)
 
         val behandlingId = kontekst.behandlingId
         val gamleData = yrkesskadeRepository.hentHvisEksisterer(behandlingId)
 
-        if (yrkesskader.isNotEmpty()) {
-            yrkesskadeRepository.lagre(
-                behandlingId,
-                Yrkesskader(yrkesskader)
-            )
-        } else if (yrkesskadeRepository.hentHvisEksisterer(behandlingId) != null) {
-            yrkesskadeRepository.lagre(behandlingId, null)
-        }
+        yrkesskadeRepository.lagre(
+            behandlingId,
+            registerYrkesskader = Yrkesskader(registerYrkesskader).takeIf { it.yrkesskader.isNotEmpty() },
+            oppgittYrkesskadeISøknad = harOppgittYrkesskade,
+        )
+
         val nyeData = yrkesskadeRepository.hentHvisEksisterer(behandlingId)
 
         return if (nyeData == gamleData) IKKE_ENDRET else ENDRET
-    }
-
-    private fun oppgittYrkesskade(
-        id: SakId,
-        periode: Periode?,
-    ): Yrkesskade? {
-        val mottattDokumenter = mottattDokumentRepository.hentDokumenterAvType(id, InnsendingType.SØKNAD)
-
-        if (harOppgittYrkesskade(mottattDokumenter)) {
-            if (Miljø.er() in listOf(MiljøKode.DEV, MiljøKode.LOKALT)) {
-                return fakeOppgittYrkesskade(periode)
-            }
-
-            /* TODO: Modeller og vis informasjon fra søknad i kelvin. */
-        }
-
-        return null
     }
 
     private fun harOppgittYrkesskade(mottattDokumenter: Set<MottattDokument>): Boolean {
@@ -123,25 +98,6 @@ class YrkesskadeInformasjonskrav internal constructor(
             }
             yrkesskadeString == "JA"
         }
-    }
-
-    private fun fakeOppgittYrkesskade(
-        periode: Periode?
-    ): Yrkesskade {
-        check(Miljø.er() in listOf(MiljøKode.DEV, MiljøKode.LOKALT))
-        check(!Miljø.erProd())
-
-        val skadedato = if (periode != null) {
-            periode.fom.minusDays(60)
-        } else {
-            null
-        }
-        return Yrkesskade(
-            ref = "YRK" + "-" + Math.floor(Math.random() * 100),
-            saksnummer = null,
-            kildesystem = "KELVIN",
-            skadedato = skadedato,
-        )
     }
 
     companion object : Informasjonskravkonstruktør {
