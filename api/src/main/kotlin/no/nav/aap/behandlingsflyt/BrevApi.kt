@@ -5,7 +5,6 @@ import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import io.ktor.http.*
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.behandling.brev.BrevGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.brev.BrevGrunnlag.Brev.Mottaker
 import no.nav.aap.behandlingsflyt.behandling.brev.SignaturService
@@ -98,11 +97,11 @@ fun NormalOpenAPIRoute.brevApi(
                     )
                 ) { behandlingReferanse ->
                     class DataResultat(
-                        val avklaringsbehovene: Avklaringsbehovene,
+                        val harIkkeGjortNoenVurderinger: Boolean,
                         val brevGrunnlag: List<Pair<Definisjon, BrevGrunnlag.Brev>>
                     )
 
-                    val brevGrunnlag = dataSource.transaction(readOnly = true) { connection ->
+                    val databasetilstand = dataSource.transaction(readOnly = true) { connection ->
                         val repositoryProvider = repositoryRegistry.provider(connection)
                         val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
                         val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
@@ -134,7 +133,10 @@ fun NormalOpenAPIRoute.brevApi(
                         }
 
                         DataResultat(
-                            avklaringsbehovene = avklaringsbehovene,
+                            harIkkeGjortNoenVurderinger = avklaringsbehovene
+                                .alle()
+                            .filter { it.erTotrinn() }
+                            .none { it.brukere().contains(bruker().ident) },
                             brevGrunnlag = brevbestillinger.map { brevbestilling ->
                                 val brevbestillingResponse =
                                     brevbestillingService.hentBrevbestilling(brevbestilling.referanse)
@@ -194,12 +196,12 @@ fun NormalOpenAPIRoute.brevApi(
                             })
                     }
 
-                    respond(BrevGrunnlag(brevGrunnlag.brevGrunnlag.map { (definisjon, grunnlag) ->
+                    respond(BrevGrunnlag(databasetilstand.brevGrunnlag.map { (definisjon, grunnlag) ->
                         grunnlag.copy(
                             harTilgangTilÅSendeBrev = utledHarTilgangTilÅSendeBrev(
                                 behandlingReferanse.referanse,
                                 token(),
-                                brevGrunnlag.avklaringsbehovene,
+                                databasetilstand.harIkkeGjortNoenVurderinger,
                                 bruker(),
                                 definisjon,
                                 gatewayProvider,
@@ -326,7 +328,7 @@ fun NormalOpenAPIRoute.brevApi(
 private suspend fun utledHarTilgangTilÅSendeBrev(
     behandlingReferanse: UUID,
     token: OidcToken,
-    avklaringsbehovene: Avklaringsbehovene,
+    harIkkeGjortNoenVurderinger: Boolean,
     bruker: Bruker,
     definisjon: Definisjon,
     gatewayProvider: GatewayProvider,
@@ -342,10 +344,6 @@ private suspend fun utledHarTilgangTilÅSendeBrev(
         Definisjon.SKRIV_VEDTAKSBREV -> {
             val harTilgang = harTilgang(definisjon)
             if (!unleashGateway.isEnabled(BehandlingsflytFeature.IngenValidering, bruker.ident)) {
-                val harIkkeGjortNoenVurderinger = avklaringsbehovene
-                    .alle()
-                    .filter { it.erTotrinn() }
-                    .none { it.brukere().contains(bruker.ident) }
                 harTilgang && harIkkeGjortNoenVurderinger
             } else {
                 harTilgang
