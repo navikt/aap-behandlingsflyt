@@ -1,5 +1,7 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
@@ -33,9 +35,10 @@ class OpprettBehandlingGReguleringJobbUtfører(
 
         val sakId = SakId(input.sakId())
 
+        // Åpne førstegangsbehandlinger trenger ikke egen g-regulering. Disse oppdateres evnt med informasjonskrav.
         val sisteYtelsesbehandling = behandlingService.finnSisteYtelsesbehandlingFor(sakId)
-        if (sisteYtelsesbehandling != null && sisteYtelsesbehandling.status().erÅpen()) {
-            log.info("Sak med id $sakId har allerede en åpen behandling (${sisteYtelsesbehandling.id}), oppretter ikke G-regulering")
+        if (sisteYtelsesbehandling != null && erÅpenFørstegangsbehandling(sisteYtelsesbehandling)) {
+            log.info("Sak med id $sakId har en åpen førstegangsbehandling (${sisteYtelsesbehandling.id}), oppretter ikke G-regulering")
             return
         }
 
@@ -62,6 +65,10 @@ class OpprettBehandlingGReguleringJobbUtfører(
             behandling.status().erVedtatt() &&
                 behandling.vurderingsbehov().any { it.type == Vurderingsbehov.G_REGULERING }
         }
+    }
+
+    private fun erÅpenFørstegangsbehandling(behandling: Behandling): Boolean {
+        return behandling.status().erÅpen() && behandling.typeBehandling() == TypeBehandling.Førstegangsbehandling
     }
 
     private fun opprettNyBehandling(sakId: SakId): BehandlingService.OpprettetBehandling =
