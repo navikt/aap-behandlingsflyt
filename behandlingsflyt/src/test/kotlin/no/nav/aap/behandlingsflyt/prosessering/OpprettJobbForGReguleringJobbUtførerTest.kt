@@ -103,6 +103,7 @@ class OpprettJobbForGReguleringJobbUtførerTest {
         utfører.utfør(jobbInput)
 
         verify(exactly = 1) { flytJobbRepository.leggTil(any()) }
+        verify(exactly = 1) { gReguleringService.finnesGrunnbeløpForÅr(Year.of(2026)) }
         verify(exactly = 0) { gReguleringService.finnesGrunnbeløpForÅr(Year.of(2027)) }
     }
 
@@ -131,5 +132,6 @@ class OpprettJobbForGReguleringJobbUtførerTest {
 
         verify(exactly = 1) { flytJobbRepository.leggTil(any()) }
         verify(exactly = 0) { gReguleringService.finnesGrunnbeløpForÅr(Year.of(2026)) }
+        verify(exactly = 1) { gReguleringService.finnesGrunnbeløpForÅr(Year.of(2027)) }
     }
 }
