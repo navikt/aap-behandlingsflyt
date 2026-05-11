@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.LøsningForPeriode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.SkadekombinasjonRegister
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.Yrkesskade
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Diagnose
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
@@ -23,12 +24,22 @@ data class RegistrertYrkesskade(
     val saksnummer: Int?,
     val skadedato: LocalDate?,
     val kilde: String,
+    val vedtaksdato: LocalDate? = null,
+    val skadeart: String? = null,
+    val diagnose: String? = null,
+    val skadekombinasjoner: List<SkadekombinasjonRegister>? = null,
+    val skadekombinasjonerTekst: String? = null,
 ) {
     constructor(yrkesskade: Yrkesskade) : this(
-        yrkesskade.ref,
-        yrkesskade.saksnummer,
-        yrkesskade.skadedato,
-        yrkesskade.kildesystem
+        ref = yrkesskade.ref,
+        saksnummer = yrkesskade.saksnummer,
+        skadedato = yrkesskade.skadedato,
+        kilde = yrkesskade.kildesystem,
+        vedtaksdato = yrkesskade.vedtaksdato,
+        skadeart = yrkesskade.skadeart,
+        diagnose = yrkesskade.diagnose,
+        skadekombinasjoner = yrkesskade.skadekombinasjoner,
+        skadekombinasjonerTekst = yrkesskade.skadekombinasjonerTekst,
     )
 }
 

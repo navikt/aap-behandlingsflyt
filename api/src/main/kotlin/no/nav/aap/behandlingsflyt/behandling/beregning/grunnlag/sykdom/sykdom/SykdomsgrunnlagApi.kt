@@ -124,10 +124,12 @@ fun NormalOpenAPIRoute.sykdomsgrunnlagApi(
                     val innhentedeYrkesskader = yrkesskadeGrunnlag?.yrkesskader?.yrkesskader.orEmpty()
                         .map { yrkesskade -> RegistrertYrkesskade(yrkesskade) }
 
+                    val oppgittYrkesskadeISøknad = yrkesskadeGrunnlag?.oppgittYrkesskadeISøknad ?: false
+
                     YrkesskadeVurderingGrunnlagResponse(
                         kanSaksbehandle(),
                         opplysninger = InnhentetSykdomsOpplysninger(
-                            oppgittYrkesskadeISøknad = false,
+                            oppgittYrkesskadeISøknad = oppgittYrkesskadeISøknad,
                             innhentedeYrkesskader = innhentedeYrkesskader,
                         ),
                         yrkesskadeVurdering = sykdomGrunnlag?.yrkesskadevurdering?.toResponse(ansattInfoService),

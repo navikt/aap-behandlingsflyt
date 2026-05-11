@@ -4,7 +4,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.Lege
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.StoppetBehandling
 import no.nav.aap.behandlingsflyt.test.fakes.AaregFake
 import no.nav.aap.behandlingsflyt.test.fakes.AinntektFake
-import no.nav.aap.behandlingsflyt.test.fakes.AzureFake
 import no.nav.aap.behandlingsflyt.test.fakes.BrevFake
 import no.nav.aap.behandlingsflyt.test.fakes.DagpengerFake
 import no.nav.aap.behandlingsflyt.test.fakes.DatadelingFake
@@ -51,7 +50,6 @@ object FakeServers : AutoCloseable {
     private val brev = BrevFake()
 
     // Stateless fakes
-    private val azure = AzureFake()
     private val texas = TexasFake()
     private val oppgavestyring = OppgavestyringFake()
     private val sam = SamFake()
@@ -85,7 +83,7 @@ object FakeServers : AutoCloseable {
     private val dokarkiv = DokarkivFake()
 
     private val allFakes: List<FakeServer> = listOf(
-        azure, texas, brev, yrkesskade, pdl, popp, oppgavestyring, inst2, sam, medl, tilgang, foreldrepenger, pesys,
+        texas, brev, yrkesskade, pdl, popp, oppgavestyring, inst2, sam, medl, tilgang, foreldrepenger, pesys,
         sykepenger, statistikk, dokumentinnhenting, ainntekt, aareg, datadeling, utbetal, meldekort, tjenestePensjon,
         unleash, nom, norg, kabal, ereg, dagpenger, tiltakspenger, gosys, leaderElector, dokarkiv, pdfGen
     )
@@ -280,16 +278,3 @@ object TexasPortHolder {
         return texasPort.get()
     }
 }
-
-object AzurePortHolder {
-    private val azurePort = AtomicInteger(0)
-
-    fun setPort(port: Int) {
-        azurePort.set(port)
-    }
-
-    fun getPort(): Int {
-        return azurePort.get()
-    }
-}
-
