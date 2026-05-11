@@ -110,9 +110,9 @@ class ForutgåendeMedlemskapVurderingService(
         forutgåendePeriode: Periode
     ): TilhørighetVurdering {
         val relevantePerioder = grunnlag.filter {
-            (it.sluttdato != null && forutgåendePeriode.inneholder(it.sluttdato)) || (forutgåendePeriode.inneholder(
-                it.startdato
-            ))
+            (it.sluttdato != null && forutgåendePeriode.inneholder(it.sluttdato))
+                    || forutgåendePeriode.inneholder(it.startdato)
+                    || (it.sluttdato == null && it.startdato.isBefore(forutgåendePeriode.fom))
         }
 
         val maritimtArbeid = relevantePerioder.map {

@@ -141,7 +141,7 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: 
             deaktiverGrunnlag(behandlingId)
         }
 
-        val arbeiderId = lagreArbeidGrunnlag(arbeidGrunnlag)
+        val arbeiderId = lagreArbeidGrunnlag(arbeidGrunnlag, enhetGrunnlag)
         val inntekterINorgeId = lagreArbeidsInntektGrunnlag(inntektGrunnlag, enhetGrunnlag)
 
         val grunnlagQuery = """
@@ -228,7 +228,7 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: 
         }
     }
 
-    private fun lagreArbeidGrunnlag(arbeidGrunnlag: List<ArbeidINorgeGrunnlag>): Long? {
+    private fun lagreArbeidGrunnlag(arbeidGrunnlag: List<ArbeidINorgeGrunnlag>, enhetGrunnlag: List<EnhetGrunnlag>): Long? {
         if (arbeidGrunnlag.isEmpty()) return null
 
         val arbeiderQuery = """
@@ -238,8 +238,10 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: 
 
         for (forhold in arbeidGrunnlag) {
             val arbeidQuery = """
-                INSERT INTO ARBEID_FORUTGAAENDE (identifikator, arbeidsforhold_kode, arbeider_id, startdato, sluttdato) VALUES (?, ?, ?, ?, ?)
+                INSERT INTO ARBEID_FORUTGAAENDE (identifikator, arbeidsforhold_kode, arbeider_id, startdato, sluttdato) VALUES (?, ?, ?, ?, ?, ?)
             """.trimIndent()
+            val orgNavn =
+                enhetGrunnlag.firstOrNull { it.orgnummer == forhold.identifikator }?.orgNavn
 
             connection.execute(arbeidQuery) {
                 setParams {
@@ -248,6 +250,7 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: 
                     setLong(3, arbeiderId)
                     setLocalDate(4, forhold.startdato)
                     setLocalDate(5, forhold.sluttdato)
+                    setString(6, orgNavn)
                 }
             }
         }
