@@ -15,7 +15,7 @@ import java.time.Instant
 import java.time.LocalDate
 
 data class InnhentetSykdomsOpplysninger(
-    val oppgittYrkesskadeISøknad: Boolean,
+    val oppgittYrkesskadeISøknad: Boolean? = null,
     val innhentedeYrkesskader: List<RegistrertYrkesskade>,
 )
 
