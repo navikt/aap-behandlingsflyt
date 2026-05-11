@@ -44,7 +44,8 @@ data class ArbeidINorgeGrunnlag(
     val identifikator: String,
     val arbeidsforholdKode: Arbeidsforholdtype,
     val startdato: LocalDate,
-    val sluttdato: LocalDate?
+    val sluttdato: LocalDate?,
+    val organisasjonsNavn: String? = null
 )
 
 enum class Arbeidsforholdtype(val kode: String) {

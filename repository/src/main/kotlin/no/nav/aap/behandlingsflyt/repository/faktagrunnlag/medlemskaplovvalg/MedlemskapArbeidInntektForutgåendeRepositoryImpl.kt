@@ -238,7 +238,7 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: 
 
         for (forhold in arbeidGrunnlag) {
             val arbeidQuery = """
-                INSERT INTO ARBEID_FORUTGAAENDE (identifikator, arbeidsforhold_kode, arbeider_id, startdato, sluttdato) VALUES (?, ?, ?, ?, ?, ?)
+                INSERT INTO ARBEID_FORUTGAAENDE (identifikator, arbeidsforhold_kode, arbeider_id, startdato, sluttdato, organisasjonsnavn) VALUES (?, ?, ?, ?, ?, ?)
             """.trimIndent()
             val orgNavn =
                 enhetGrunnlag.firstOrNull { it.orgnummer == forhold.identifikator }?.orgNavn
@@ -375,6 +375,7 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: 
                     arbeidsforholdKode = Arbeidsforholdtype.fraKode(it.getString("arbeidsforhold_kode")),
                     startdato = it.getLocalDate("startdato"),
                     sluttdato = it.getLocalDateOrNull("sluttdato"),
+                    organisasjonsNavn = it.getString("organisasjonsnavn"),
                 )
             }
         }
