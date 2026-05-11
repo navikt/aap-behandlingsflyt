@@ -13,9 +13,11 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerV
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Yrkesskadevurdering
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.orEmpty
+import org.slf4j.LoggerFactory
 
 class SykepengeerstatningVilkår(vilkårsresultat: Vilkårsresultat) :
     Vilkårsvurderer<SykepengerErstatningFaktagrunnlag> {
+    private val log = LoggerFactory.getLogger(javaClass)
     private val vilkår: Vilkår = vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.SYKEPENGEERSTATNING)
 
     override fun vurder(grunnlag: SykepengerErstatningFaktagrunnlag) {
@@ -49,8 +51,12 @@ class SykepengeerstatningVilkår(vilkårsresultat: Vilkårsresultat) :
         yrkesskadeVurdering: Yrkesskadevurdering?,
         grunnlag: SykepengerErstatningFaktagrunnlag,
     ): Vilkårsvurdering {
+        if (sykdomsvurdering?.erKonsistentMedSykepengeerstatningGammel(yrkesskadeVurdering) != sykdomsvurdering?.erKonsistentMedSykepengeerstatning(yrkesskadeVurdering)) {
+            log.error("Fant diff i sykepengeerstatningvilkår. Fortsetter med gammelt vilkår ")
+        }
+        
         return if (sykepengeerstatningVurdering?.harRettPå == true &&
-            sykdomsvurdering?.erKonsistentMedSykepengeerstatning(yrkesskadeVurdering) ?: false
+            sykdomsvurdering?.erKonsistentMedSykepengeerstatningGammel(yrkesskadeVurdering) ?: false // TODO: Bytt ut denne med ny
         ) {
             Vilkårsvurdering(
                 Vilkårsperiode(
