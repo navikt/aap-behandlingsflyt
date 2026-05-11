@@ -45,19 +45,13 @@ class OpprettJobbForGReguleringJobbUtfører(
             return
         }
 
-        // G-perioden løper fra 1. mai hvert år til 30. april neste år. Dersom vi er i januar-april
-        // er forrige års G-justering fortsatt den aktuelle.
-        val dagensDato = LocalDate.now(clock)
-        val gPeriodeÅr = if (dagensDato.monthValue < 5) {
-            Year.of(dagensDato.year - 1)
-        } else {
-            Year.of(dagensDato.year)
-        }
+        val gPeriodeÅr = gPeriodeÅr(LocalDate.now(clock))
         val aktuellGJustering = hentAktuellGJustering(gPeriodeÅr)
         if (aktuellGJustering == null || aktuellGJustering.dato.isBefore(LocalDate.of(2025, 5, 1))) {
             log.info("Avslutter søk etter G-reguleringskandidater. Ingen post 2025 G-justering funnet for G-periode-år: ${gPeriodeÅr} i Gunnbeløp.kt")
             return
         }
+
         val saker = hentKandidaterForGRegulering(aktuellGJustering.dato)
 
         log.info("Fant ${saker.size} kandidater for G-regulering for gitt G-justering (?) ${aktuellGJustering?.dato}")
@@ -71,6 +65,9 @@ class OpprettJobbForGReguleringJobbUtfører(
     private fun hentAktuellGJustering(år: Year) : Grunnbeløp.GrunnbeløpDto? {
         return gReguleringService.finnesGrunnbeløpForÅr(år)
     }
+
+    internal fun gPeriodeÅr(dato: LocalDate): Year =
+        if (dato.monthValue < 5) Year.of(dato.year - 1) else Year.of(dato.year)
 
     private fun hentKandidaterForGRegulering(datoForGJustering: LocalDate): Set<SakId> {
         val alleSaker = gReguleringService.hentSakerForGRegulering(datoForGJustering)

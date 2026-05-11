@@ -8,6 +8,8 @@ import io.mockk.verify
 import no.nav.aap.behandlingsflyt.behandling.gregulering.GReguleringService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
+import no.nav.aap.behandlingsflyt.test.april
+import no.nav.aap.behandlingsflyt.test.desember
 import no.nav.aap.behandlingsflyt.test.fixedClock
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.behandlingsflyt.test.juni
@@ -17,6 +19,7 @@ import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.JobbInput
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.Year
@@ -128,5 +131,29 @@ class OpprettJobbForGReguleringJobbUtførerTest {
         verify(exactly = 1) { flytJobbRepository.leggTil(any()) }
         verify(exactly = 0) { gReguleringService.finnesGrunnbeløpForÅr(Year.of(2026)) }
         verify(exactly = 1) { gReguleringService.finnesGrunnbeløpForÅr(Year.of(2027)) }
+    }
+
+    @Test
+    fun `gPeriodeÅr - dato i januar gir forrige år`() {
+        val utfører = opprettUtfører()
+        assertThat(utfører.gPeriodeÅr(15 januar 2027)).isEqualTo(Year.of(2026))
+    }
+
+    @Test
+    fun `gPeriodeÅr - dato 30 april gir forrige år`() {
+        val utfører = opprettUtfører()
+        assertThat(utfører.gPeriodeÅr(30 april 2027)).isEqualTo(Year.of(2026))
+    }
+
+    @Test
+    fun `gPeriodeÅr - dato 1 mai gir inneværende år`() {
+        val utfører = opprettUtfører()
+        assertThat(utfører.gPeriodeÅr(1 mai 2027)).isEqualTo(Year.of(2027))
+    }
+
+    @Test
+    fun `gPeriodeÅr - dato i desember gir inneværende år`() {
+        val utfører = opprettUtfører()
+        assertThat(utfører.gPeriodeÅr(31 desember 2027)).isEqualTo(Year.of(2027))
     }
 }
