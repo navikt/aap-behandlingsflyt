@@ -52,7 +52,7 @@ class RettighetsperiodeSteg(
                     VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
                     VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9,
                     VurderingType.G_REGULERING,
-VurderingType.IKKE_RELEVANT ->
+                    VurderingType.IKKE_RELEVANT ->
                         false
                 }
             },
@@ -80,7 +80,7 @@ VurderingType.IKKE_RELEVANT ->
             VurderingType.UTVID_VEDTAKSLENGDE,
             VurderingType.MIGRER_RETTIGHETSPERIODE,
             VurderingType.G_REGULERING,
-VurderingType.IKKE_RELEVANT,
+            VurderingType.IKKE_RELEVANT,
             VurderingType.MELDEKORT,
             VurderingType.AUTOMATISK_BREV,
             VurderingType.EFFEKTUER_AKTIVITETSPLIKT,

@@ -79,7 +79,7 @@ class VurderForutgåendeMedlemskapSteg private constructor(
             VurderingType.UTVID_VEDTAKSLENGDE,
             VurderingType.AUTOMATISK_BREV,
             VurderingType.G_REGULERING,
-VurderingType.IKKE_RELEVANT -> {
+            VurderingType.IKKE_RELEVANT -> {
             }
         }
 

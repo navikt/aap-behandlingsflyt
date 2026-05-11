@@ -78,7 +78,7 @@ class VurderLovvalgSteg private constructor(
             VurderingType.MELDEKORT,
             VurderingType.AUTOMATISK_BREV,
             VurderingType.G_REGULERING,
-VurderingType.IKKE_RELEVANT -> {
+            VurderingType.IKKE_RELEVANT -> {
                 /* noop */
             }
         }

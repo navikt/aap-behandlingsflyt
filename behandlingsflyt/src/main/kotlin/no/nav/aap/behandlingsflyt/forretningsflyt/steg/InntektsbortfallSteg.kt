@@ -59,7 +59,7 @@ class InntektsbortfallSteg private constructor(
                     VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
                     VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9,
                     VurderingType.G_REGULERING,
-VurderingType.IKKE_RELEVANT ->
+                    VurderingType.IKKE_RELEVANT ->
                         false
                 }
             },
