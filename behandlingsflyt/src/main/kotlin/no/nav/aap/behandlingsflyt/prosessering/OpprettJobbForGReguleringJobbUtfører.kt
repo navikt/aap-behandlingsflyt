@@ -20,9 +20,12 @@ import java.time.Year
 
 /**
  * Kjøres daglig og oppretter jobber for G-Regulering. Jobber opprettes for saksbehandlingskandidater hvor innvilget
- * AAP-periode passerer G-justeringen lagt inn i lista i Grunnbeløp.kt samme G-periode som kjøre-datoen og etter 2025
- * G-Justeringen da Kelvin ble lansert i produksjon. G-regulering medfører omberegninger, slik
- * at ytelsen blir korrekt både før og etter G-justering.
+ * AAP-periode ikke har en endring i beregnet ytelse for ny G-periode. Dette forutsetter at ny G-justering er lagt inn i
+ * Grunnbeløp.kt for inneværende G-periode basert på jobb-kjøretidspunktet.
+ *
+ * Alle G-Justeringen fra Kelvin ble lansert i produksjon i 2025 blir ignorert, første aktuelle G-periode er 2026/2027.
+ *
+ * G-regulering medfører omberegninger, slik at ytelsen blir korrekt både før og etter G-justering.
  *
  * G-perioden løper fra 1. mai hvert år til 30. april neste år. G-justeringen for år N (datert 1. mai N)
  * er aktuell fra 1. mai N til 30. april N+1.
