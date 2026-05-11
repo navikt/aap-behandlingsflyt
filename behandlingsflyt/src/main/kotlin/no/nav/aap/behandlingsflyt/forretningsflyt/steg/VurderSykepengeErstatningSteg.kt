@@ -108,7 +108,7 @@ class VurderSykepengeErstatningSteg private constructor(
                 is TidligereVurderinger.IkkeBehandlingsgrunnlag -> false
                 is TidligereVurderinger.UunngåeligAvslag -> false
                 is TidligereVurderinger.PotensieltOppfylt -> when (behandlingsutfall.rettighetstype) {
-                    null -> sykdomsvurdering?.erKonsistentMedSykepengeerstatning(yrkesskadevurdering) == true
+                    null -> sykdomsvurdering?.erKonsistentMedSykepengeerstatningGammel(yrkesskadevurdering) == true
                     else -> false
                 }
             }
