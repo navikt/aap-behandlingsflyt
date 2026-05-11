@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.yrkesskade
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.SkadekombinasjonRegister
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.Yrkesskade
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.Yrkesskader
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
@@ -31,6 +32,23 @@ class YrkesskadeRepositoryImplTest {
         @AfterAll
         @JvmStatic
         fun tearDown() = dataSource.close()
+
+        private val yrkesskadeMedAlleFelter = Yrkesskade(
+            ref = "ref",
+            saksnummer = 123,
+            kildesystem = "KOMPYS",
+            skadedato = 4 juni 2019,
+            vedtaksdato = 1 mai 2020,
+            skadeart = "Arbeidsulykke",
+            diagnose = "Lumbago",
+            skadekombinasjoner = listOf(
+                SkadekombinasjonRegister(
+                    kroppsdel = "korsrygg",
+                    skadetype = "belastningsskade"
+                )
+            ),
+            skadekombinasjonerTekst = "Belastningsskade i korsrygg",
+        )
     }
 
     @Test
@@ -54,12 +72,41 @@ class YrkesskadeRepositoryImplTest {
             val yrkesskadeRepository = YrkesskadeRepositoryImpl(connection)
             yrkesskadeRepository.lagre(
                 behandling.id,
-                Yrkesskader(listOf(Yrkesskade(ref = "ref", saksnummer = 123, kildesystem = "INFOTRYGD", skadedato = 4 juni 2019)))
+                registerYrkesskader = Yrkesskader(listOf(yrkesskadeMedAlleFelter)),
+                oppgittYrkesskadeISøknad = true,
             )
             val yrkesskadeGrunnlag = yrkesskadeRepository.hentHvisEksisterer(behandling.id)
-            assertThat(yrkesskadeGrunnlag?.yrkesskader).isEqualTo(
-                Yrkesskader(listOf(Yrkesskade(ref = "ref", saksnummer = 123, kildesystem = "INFOTRYGD", skadedato = 4 juni 2019)))
+
+            assertThat(yrkesskadeGrunnlag?.oppgittYrkesskadeISøknad).isTrue()
+
+            val hentet = yrkesskadeGrunnlag?.yrkesskader?.yrkesskader?.single()
+            assertThat(hentet?.ref).isEqualTo("ref")
+            assertThat(hentet?.saksnummer).isEqualTo(123)
+            assertThat(hentet?.kildesystem).isEqualTo("KOMPYS")
+            assertThat(hentet?.skadedato).isEqualTo(4 juni 2019)
+            assertThat(hentet?.vedtaksdato).isEqualTo(1 mai 2020)
+            assertThat(hentet?.skadeart).isEqualTo("Arbeidsulykke")
+            assertThat(hentet?.diagnose).isEqualTo("Lumbago")
+            assertThat(hentet?.skadekombinasjonerTekst).isEqualTo("Belastningsskade i korsrygg")
+        }
+    }
+
+    @Test
+    fun `Lagrer og henter oppgittYrkesskadeISøknad uten registerdata`() {
+        dataSource.transaction { connection ->
+            val sak = sak(connection)
+            val behandling = finnEllerOpprettBehandling(connection, sak)
+
+            val yrkesskadeRepository = YrkesskadeRepositoryImpl(connection)
+            yrkesskadeRepository.lagre(
+                behandling.id,
+                registerYrkesskader = null,
+                oppgittYrkesskadeISøknad = true,
             )
+            val yrkesskadeGrunnlag = yrkesskadeRepository.hentHvisEksisterer(behandling.id)
+            assertThat(yrkesskadeGrunnlag).isNotNull()
+            assertThat(yrkesskadeGrunnlag?.oppgittYrkesskadeISøknad).isTrue()
+            assertThat(yrkesskadeGrunnlag?.yrkesskader?.yrkesskader).isEmpty()
         }
     }
 
@@ -69,16 +116,32 @@ class YrkesskadeRepositoryImplTest {
             val sak = sak(connection)
             val behandling = finnEllerOpprettBehandling(connection, sak)
 
-            val yrkesskade = Yrkesskade(ref = "ref", saksnummer = 123, kildesystem = "INFOTRYGD", skadedato = null)
+            val yrkesskade = Yrkesskade(
+                ref = "ref",
+                saksnummer = 123,
+                kildesystem = "INFOTRYGD",
+                skadedato = null,
+                vedtaksdato = 1 mai 2020,
+                skadeart = "Yrkessykdom",
+                diagnose = "Karpaltunnelsyndrom",
+                skadekombinasjoner = listOf(SkadekombinasjonRegister(kroppsdel = "håndledd", skadetype = "nerveskade")),
+                skadekombinasjonerTekst = "Nerveskade i håndledd",
+            )
             val yrkesskadeRepository = YrkesskadeRepositoryImpl(connection)
             yrkesskadeRepository.lagre(
                 behandling.id,
-                Yrkesskader(listOf(yrkesskade))
+                registerYrkesskader = Yrkesskader(listOf(yrkesskade)),
+                oppgittYrkesskadeISøknad = false,
             )
             val yrkesskadeGrunnlag = yrkesskadeRepository.hentHvisEksisterer(behandling.id)
-            assertThat(yrkesskadeGrunnlag?.yrkesskader).isEqualTo(
-                Yrkesskader(listOf(yrkesskade))
-            )
+            assertThat(yrkesskadeGrunnlag?.oppgittYrkesskadeISøknad).isFalse()
+
+            val hentet = yrkesskadeGrunnlag?.yrkesskader?.yrkesskader?.single()
+            assertThat(hentet?.skadedato).isNull()
+            assertThat(hentet?.vedtaksdato).isEqualTo(1 mai 2020)
+            assertThat(hentet?.skadeart).isEqualTo("Yrkessykdom")
+            assertThat(hentet?.diagnose).isEqualTo("Karpaltunnelsyndrom")
+            assertThat(hentet?.skadekombinasjonerTekst).isEqualTo("Nerveskade i håndledd")
         }
     }
 
@@ -91,15 +154,60 @@ class YrkesskadeRepositoryImplTest {
             val yrkesskadeRepository = YrkesskadeRepositoryImpl(connection)
             yrkesskadeRepository.lagre(
                 behandling.id,
-                Yrkesskader(listOf(Yrkesskade(ref = "ref", saksnummer = 123, kildesystem = "INFOTRYGD", skadedato = 4 juni 2019)))
+                registerYrkesskader = Yrkesskader(
+                    listOf(
+                        Yrkesskade(
+                            ref = "ref", saksnummer = 123, kildesystem = "INFOTRYGD", skadedato = 4 juni 2019,
+                            vedtaksdato = 1 mai 2020, skadeart = "Arbeidsulykke", diagnose = "Lumbago",
+                            skadekombinasjoner = listOf(
+                                SkadekombinasjonRegister(
+                                    kroppsdel = "korsrygg",
+                                    skadetype = "belastningsskade"
+                                )
+                            ),
+                            skadekombinasjonerTekst = "Belastningsskade i korsrygg",
+                        )
+                    )
+                ),
+                oppgittYrkesskadeISøknad = true,
             )
             yrkesskadeRepository.lagre(
                 behandling.id,
-                Yrkesskader(listOf(Yrkesskade(ref = "ref", saksnummer = 123, kildesystem = "INFOTRYGD", skadedato = 4 mai 2019)))
+                registerYrkesskader = Yrkesskader(
+                    listOf(
+                        Yrkesskade(
+                            ref = "ref", saksnummer = 123, kildesystem = "INFOTRYGD", skadedato = 4 mai 2019,
+                            vedtaksdato = 1 mai 2020, skadeart = "Arbeidsulykke", diagnose = "Lumbago",
+                            skadekombinasjoner = listOf(
+                                SkadekombinasjonRegister(
+                                    kroppsdel = "korsrygg",
+                                    skadetype = "belastningsskade"
+                                )
+                            ),
+                            skadekombinasjonerTekst = "Belastningsskade i korsrygg",
+                        )
+                    )
+                ),
+                oppgittYrkesskadeISøknad = true,
             )
             yrkesskadeRepository.lagre(
                 behandling.id,
-                Yrkesskader(listOf(Yrkesskade(ref = "ref", saksnummer = 123, kildesystem = "INFOTRYGD", skadedato = 4 mai 2019)))
+                registerYrkesskader = Yrkesskader(
+                    listOf(
+                        Yrkesskade(
+                            ref = "ref", saksnummer = 123, kildesystem = "INFOTRYGD", skadedato = 4 mai 2019,
+                            vedtaksdato = 1 mai 2020, skadeart = "Arbeidsulykke", diagnose = "Lumbago",
+                            skadekombinasjoner = listOf(
+                                SkadekombinasjonRegister(
+                                    kroppsdel = "korsrygg",
+                                    skadetype = "belastningsskade"
+                                )
+                            ),
+                            skadekombinasjonerTekst = "Belastningsskade i korsrygg",
+                        )
+                    )
+                ),
+                oppgittYrkesskadeISøknad = true,
             )
 
             val opplysninger =
@@ -113,9 +221,7 @@ class YrkesskadeRepositoryImplTest {
                     WHERE b.SAK_ID = ?
                     """.trimIndent()
                 ) {
-                    setParams {
-                        setLong(1, sak.id.toLong())
-                    }
+                    setParams { setLong(1, sak.id.toLong()) }
                     setRowMapper { row -> row.getLocalDate("SKADEDATO") }
                 }
             assertThat(opplysninger)
@@ -132,15 +238,21 @@ class YrkesskadeRepositoryImplTest {
             val yrkesskadeRepository = YrkesskadeRepositoryImpl(connection)
             yrkesskadeRepository.lagre(
                 behandling1.id,
-                Yrkesskader(listOf(Yrkesskade(ref = "ref", saksnummer = 123, kildesystem = "INFOTRYGD", skadedato = 4 juni 2019)))
+                registerYrkesskader = Yrkesskader(listOf(yrkesskadeMedAlleFelter)),
+                oppgittYrkesskadeISøknad = true,
             )
             BehandlingRepositoryImpl(connection).oppdaterBehandlingStatus(behandling1.id, Status.AVSLUTTET)
             val behandling2 = finnEllerOpprettBehandling(connection, sak)
 
             val yrkesskadeGrunnlag = yrkesskadeRepository.hentHvisEksisterer(behandling2.id)
-            assertThat(yrkesskadeGrunnlag?.yrkesskader).isEqualTo(
-                Yrkesskader(listOf(Yrkesskade(ref = "ref", saksnummer = 123, kildesystem = "INFOTRYGD", skadedato = 4 juni 2019)))
-            )
+            assertThat(yrkesskadeGrunnlag?.oppgittYrkesskadeISøknad).isTrue()
+
+            val hentet = yrkesskadeGrunnlag?.yrkesskader?.yrkesskader?.single()
+            assertThat(hentet?.skadedato).isEqualTo(4 juni 2019)
+            assertThat(hentet?.vedtaksdato).isEqualTo(1 mai 2020)
+            assertThat(hentet?.skadeart).isEqualTo("Arbeidsulykke")
+            assertThat(hentet?.diagnose).isEqualTo("Lumbago")
+            assertThat(hentet?.skadekombinasjonerTekst).isEqualTo("Belastningsskade i korsrygg")
         }
     }
 
@@ -162,19 +274,35 @@ class YrkesskadeRepositoryImplTest {
             val yrkesskadeRepository = YrkesskadeRepositoryImpl(connection)
             yrkesskadeRepository.lagre(
                 behandling1.id,
-                Yrkesskader(listOf(Yrkesskade(ref = "ref", saksnummer = 123, kildesystem = "INFOTRYGD", skadedato = 4 juni 2019)))
+                registerYrkesskader = Yrkesskader(
+                    listOf(
+                        Yrkesskade(
+                            ref = "ref", saksnummer = 123, kildesystem = "INFOTRYGD", skadedato = 4 juni 2019,
+                            skadeart = "Arbeidsulykke", diagnose = "Lumbago",
+                            skadekombinasjonerTekst = "Belastningsskade i korsrygg",
+                        )
+                    )
+                ),
+                oppgittYrkesskadeISøknad = false,
             )
             yrkesskadeRepository.lagre(
                 behandling1.id,
-                Yrkesskader(listOf(Yrkesskade(ref = "ref", saksnummer = 123, kildesystem = "INFOTRYGD", skadedato = 4 mai 2019)))
+                registerYrkesskader = Yrkesskader(
+                    listOf(
+                        Yrkesskade(
+                            ref = "ref", saksnummer = 123, kildesystem = "INFOTRYGD", skadedato = 4 mai 2019,
+                            skadeart = "Arbeidsulykke", diagnose = "Lumbago",
+                            skadekombinasjonerTekst = "Belastningsskade i korsrygg",
+                        )
+                    )
+                ),
+                oppgittYrkesskadeISøknad = false,
             )
             BehandlingRepositoryImpl(connection).oppdaterBehandlingStatus(behandling1.id, Status.AVSLUTTET)
             val behandling2 = finnEllerOpprettBehandling(connection, sak)
 
             val yrkesskadeGrunnlag = yrkesskadeRepository.hentHvisEksisterer(behandling2.id)
-            assertThat(yrkesskadeGrunnlag?.yrkesskader).isEqualTo(
-                Yrkesskader(listOf(Yrkesskade(ref = "ref", saksnummer = 123, kildesystem = "INFOTRYGD", skadedato = 4 mai 2019)))
-            )
+            assertThat(yrkesskadeGrunnlag?.yrkesskader?.yrkesskader?.single()?.skadedato).isEqualTo(4 mai 2019)
         }
     }
 
@@ -186,17 +314,34 @@ class YrkesskadeRepositoryImplTest {
             val yrkesskadeRepository = YrkesskadeRepositoryImpl(connection)
             yrkesskadeRepository.lagre(
                 behandling.id,
-                Yrkesskader(listOf(Yrkesskade(ref = "ref", saksnummer = 123, kildesystem = "INFOTRYGD", skadedato = 4 juni 2019)))
+                registerYrkesskader = Yrkesskader(
+                    listOf(
+                        Yrkesskade(
+                            ref = "ref", saksnummer = 123, kildesystem = "INFOTRYGD", skadedato = 4 juni 2019,
+                            skadeart = "Arbeidsulykke", diagnose = "Hjernerystelse",
+                            skadekombinasjonerTekst = "Kjemikalieeksponering i hjerne",
+                        )
+                    )
+                ),
+                oppgittYrkesskadeISøknad = true,
             )
-
             yrkesskadeRepository.lagre(
                 behandling.id,
-                Yrkesskader(
+                registerYrkesskader = Yrkesskader(
                     listOf(
-                        Yrkesskade(ref = "rexxf", saksnummer = 123, kildesystem = "INFOTRYGD", skadedato = 5 juni 2019),
-                        Yrkesskade(ref = "rxef", saksnummer = 123, kildesystem = "INFOTRYGD", skadedato = 8 mai 2019)
+                        Yrkesskade(
+                            ref = "rexxf", saksnummer = 123, kildesystem = "INFOTRYGD", skadedato = 5 juni 2019,
+                            skadeart = "Yrkessykdom", diagnose = "Hørselstap",
+                            skadekombinasjonerTekst = "Hørseltap i venstre øre",
+                        ),
+                        Yrkesskade(
+                            ref = "rxef", saksnummer = 123, kildesystem = "INFOTRYGD", skadedato = 8 mai 2019,
+                            skadeart = "Arbeidsulykke", diagnose = "Håndleddsfraktur",
+                            skadekombinasjonerTekst = "Bruddskade i håndledd",
+                        )
                     )
-                )
+                ),
+                oppgittYrkesskadeISøknad = true,
             )
 
             assertDoesNotThrow { yrkesskadeRepository.slett(behandling.id) }
@@ -212,21 +357,48 @@ class YrkesskadeRepositoryImplTest {
 
             yrkesskadeRepository.lagre(
                 behandling.id,
-                Yrkesskader(listOf(Yrkesskade(ref = "ref", saksnummer = 123, kildesystem = "INFOTRYGD", skadedato = 4 juni 2019)))
+                registerYrkesskader = Yrkesskader(
+                    listOf(
+                        Yrkesskade(
+                            ref = "ref", saksnummer = 123, kildesystem = "INFOTRYGD", skadedato = 4 juni 2019,
+                            vedtaksdato = 1 mai 2020, skadeart = "Arbeidsulykke", diagnose = "Lumbago",
+                            skadekombinasjoner = listOf(
+                                SkadekombinasjonRegister(
+                                    kroppsdel = "korsrygg",
+                                    skadetype = "belastningsskade"
+                                )
+                            ),
+                            skadekombinasjonerTekst = "Belastningsskade i korsrygg",
+                        )
+                    )
+                ),
+                oppgittYrkesskadeISøknad = true,
             )
             val orginaltGrunnlag = yrkesskadeRepository.hentHvisEksisterer(behandling.id)
-            assertThat(orginaltGrunnlag?.yrkesskader).isEqualTo(
-                Yrkesskader(listOf(Yrkesskade(ref = "ref", saksnummer = 123, kildesystem = "INFOTRYGD", skadedato = 4 juni 2019)))
-            )
+            assertThat(orginaltGrunnlag?.yrkesskader?.yrkesskader?.single()?.skadedato).isEqualTo(4 juni 2019)
+            assertThat(orginaltGrunnlag?.oppgittYrkesskadeISøknad).isTrue()
 
             yrkesskadeRepository.lagre(
                 behandling.id,
-                Yrkesskader(listOf(Yrkesskade(ref = "ref", saksnummer = 123, kildesystem = "INFOTRYGD", skadedato = 4 mai 2019)))
+                registerYrkesskader = Yrkesskader(
+                    listOf(
+                        Yrkesskade(
+                            ref = "ref", saksnummer = 123, kildesystem = "INFOTRYGD", skadedato = 4 mai 2019,
+                            vedtaksdato = 1 mai 2020, skadeart = "Arbeidsulykke", diagnose = "Lumbago",
+                            skadekombinasjoner = listOf(
+                                SkadekombinasjonRegister(
+                                    kroppsdel = "korsrygg",
+                                    skadetype = "belastningsskade"
+                                )
+                            ),
+                            skadekombinasjonerTekst = "Belastningsskade i korsrygg",
+                        )
+                    )
+                ),
+                oppgittYrkesskadeISøknad = true,
             )
             val oppdatertGrunnlag = yrkesskadeRepository.hentHvisEksisterer(behandling.id)
-            assertThat(oppdatertGrunnlag?.yrkesskader).isEqualTo(
-                Yrkesskader(listOf(Yrkesskade(ref = "ref", saksnummer = 123, kildesystem = "INFOTRYGD", skadedato = 4 mai 2019)))
-            )
+            assertThat(oppdatertGrunnlag?.yrkesskader?.yrkesskader?.single()?.skadedato).isEqualTo(4 mai 2019)
 
             data class Opplysning(val behandlingId: Long, val aktiv: Boolean, val ref: String, val skadedato: LocalDate)
 
@@ -241,9 +413,7 @@ class YrkesskadeRepositoryImplTest {
                     WHERE b.SAK_ID = ?
                     """.trimIndent()
                 ) {
-                    setParams {
-                        setLong(1, sak.id.toLong())
-                    }
+                    setParams { setLong(1, sak.id.toLong()) }
                     setRowMapper { row ->
                         Opplysning(
                             behandlingId = row.getLong("ID"),
@@ -270,11 +440,29 @@ class YrkesskadeRepositoryImplTest {
             val yrkesskadeRepository = YrkesskadeRepositoryImpl(connection)
             yrkesskadeRepository.lagre(
                 behandling1.id,
-                Yrkesskader(listOf(Yrkesskade(ref = "ref", saksnummer = 123, kildesystem = "INFOTRYGD", skadedato = 4 juni 2019)))
+                registerYrkesskader = Yrkesskader(
+                    listOf(
+                        Yrkesskade(
+                            ref = "ref", saksnummer = 123, kildesystem = "INFOTRYGD", skadedato = 4 juni 2019,
+                            skadeart = "Arbeidsulykke", diagnose = "Lumbago",
+                            skadekombinasjonerTekst = "Belastningsskade i korsrygg",
+                        )
+                    )
+                ),
+                oppgittYrkesskadeISøknad = true,
             )
             yrkesskadeRepository.lagre(
                 behandling1.id,
-                Yrkesskader(listOf(Yrkesskade(ref = "ref", saksnummer = 123, kildesystem = "INFOTRYGD", skadedato = 4 mai 2019)))
+                registerYrkesskader = Yrkesskader(
+                    listOf(
+                        Yrkesskade(
+                            ref = "ref", saksnummer = 123, kildesystem = "INFOTRYGD", skadedato = 4 mai 2019,
+                            skadeart = "Arbeidsulykke", diagnose = "Lumbago",
+                            skadekombinasjonerTekst = "Belastningsskade i korsrygg",
+                        )
+                    )
+                ),
+                oppgittYrkesskadeISøknad = true,
             )
             BehandlingRepositoryImpl(connection).oppdaterBehandlingStatus(behandling1.id, Status.AVSLUTTET)
             val behandling2 = finnEllerOpprettBehandling(connection, sak)
@@ -293,9 +481,7 @@ class YrkesskadeRepositoryImplTest {
                     WHERE b.SAK_ID = ?
                     """.trimIndent()
                 ) {
-                    setParams {
-                        setLong(1, sak.id.toLong())
-                    }
+                    setParams { setLong(1, sak.id.toLong()) }
                     setRowMapper { row ->
                         Grunnlag(
                             yrkesskadeId = row.getLong("YRKESSKADE_ID"),
@@ -308,8 +494,7 @@ class YrkesskadeRepositoryImplTest {
                         )
                     }
                 }
-            assertThat(opplysninger.map(Grunnlag::yrkesskadeId).distinct())
-                .hasSize(2)
+            assertThat(opplysninger.map(Grunnlag::yrkesskadeId).distinct()).hasSize(2)
             assertThat(opplysninger.map(Grunnlag::opplysning))
                 .hasSize(3)
                 .containsExactly(

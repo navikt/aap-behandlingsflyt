@@ -22,6 +22,9 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.FeatureToggle
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.LocalDateTime
@@ -37,6 +40,7 @@ class FatteVedtakSteg(
     private val klageresultatUtleder: KlageresultatUtleder,
     private val vedtakService: VedtakService,
     private val virkningstidspunktUtleder: VirkningstidspunktUtleder,
+    private val unleashGateway: UnleashGateway
 ) : BehandlingSteg {
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
@@ -52,7 +56,7 @@ class FatteVedtakSteg(
             kontekst = kontekst
         )
 
-        if (avklaringsbehovene.skalTilbakeføresEtterTotrinnsVurdering()) {
+        if (unleashGateway.isDisabled(BehandlingsflytFeature.FjernTilbakefoeringTransisjon) && avklaringsbehovene.skalTilbakeføresEtterTotrinnsVurdering()) {
             return TilbakeføresFraBeslutter
         }
 
@@ -121,14 +125,12 @@ class FatteVedtakSteg(
         kontekst: FlytKontekstMedPerioder,
         avklaringsbehovene: Avklaringsbehovene
     ): Boolean {
-        val erKlage = kontekst.behandlingType == TypeBehandling.Klage
         val erTrukketEllerIngenGrunnlag =
             tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type()) ||
                     trekkKlageService.klageErTrukket(kontekst.behandlingId)
 
         return when {
             erTrukketEllerIngenGrunnlag -> true
-            erKlage -> true
             avklaringsbehovene.harAvklaringsbehovSomKreverToTrinnMenIkkeErGodkjent() -> false
             else -> true
         }
@@ -149,6 +151,7 @@ class FatteVedtakSteg(
                 klageresultatUtleder = KlageresultatUtleder(repositoryProvider),
                 vedtakService = VedtakService(repositoryProvider),
                 virkningstidspunktUtleder = VirkningstidspunktUtleder(repositoryProvider),
+                unleashGateway = gatewayProvider.provide()
             )
         }
 

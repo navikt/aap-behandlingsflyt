@@ -69,6 +69,7 @@ class TilbakekrevingRepositoryImpl(private val connection: DBConnection) : Tilba
             ) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?::daterange)
             ON CONFLICT(TILBAKEKREVING_BEHANDLING_ID) DO UPDATE SET 
                 HENDELSE_OPPRETTET = EXCLUDED.HENDELSE_OPPRETTET,
+                EKSTERN_BEHANDLING_ID = EXCLUDED.EKSTERN_BEHANDLING_ID,
                 VARSEL_SENDT = EXCLUDED.VARSEL_SENDT,
                 BEHANDLINGSSTATUS = EXCLUDED.BEHANDLINGSSTATUS,
                 TOTALT_FEILUTBETALT_BELOP = EXCLUDED.TOTALT_FEILUTBETALT_BELOP,

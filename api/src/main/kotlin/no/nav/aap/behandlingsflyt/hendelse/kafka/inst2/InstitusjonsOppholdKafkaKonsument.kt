@@ -77,6 +77,7 @@ class InstitusjonsOppholdKafkaKonsument(
                         val søknadErTrukket = trukketSøknadService.søknadErTrukket(sisteYtelsesBehandling.id)
                         if (søknadErTrukket) {
                             log.info("Institusjonsopphold oppdateres ikke, da sak med ${saken.id} er trukket")
+                            continue
                         }
                     }
                         val institusjonsopphold = institusjonsoppholdKlient.hentDataForHendelse(meldingVerdi.oppholdId)

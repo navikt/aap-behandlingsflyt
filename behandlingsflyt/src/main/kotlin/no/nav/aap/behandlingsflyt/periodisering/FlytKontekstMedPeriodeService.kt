@@ -10,6 +10,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType.AUTOMATISK_
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType.EFFEKTUER_AKTIVITETSPLIKT
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType.FØRSTEGANGSBEHANDLING
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType.G_REGULERING
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType.IKKE_RELEVANT
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType.MELDEKORT
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType.MIGRER_RETTIGHETSPERIODE
@@ -61,6 +62,7 @@ class FlytKontekstMedPeriodeService(
         return when {
             FØRSTEGANGSBEHANDLING in vurderingTyper -> FØRSTEGANGSBEHANDLING
             REVURDERING in vurderingTyper -> REVURDERING
+            G_REGULERING in vurderingTyper -> G_REGULERING
             MELDEKORT in vurderingTyper -> MELDEKORT
             EFFEKTUER_AKTIVITETSPLIKT in vurderingTyper -> EFFEKTUER_AKTIVITETSPLIKT
             EFFEKTUER_AKTIVITETSPLIKT_11_9 in vurderingTyper -> EFFEKTUER_AKTIVITETSPLIKT_11_9
@@ -81,7 +83,6 @@ class FlytKontekstMedPeriodeService(
             Vurderingsbehov.MOTTATT_LEGEERKLÆRING,
             Vurderingsbehov.MOTTATT_AVVIST_LEGEERKLÆRING,
             Vurderingsbehov.MOTTATT_DIALOGMELDING,
-            Vurderingsbehov.G_REGULERING,
             Vurderingsbehov.REVURDER_MEDLEMSKAP,
             Vurderingsbehov.REVURDER_BEREGNING,
             Vurderingsbehov.REVURDER_YRKESSKADE,
@@ -135,6 +136,7 @@ class FlytKontekstMedPeriodeService(
             Vurderingsbehov.UTVID_VEDTAKSLENGDE -> UTVID_VEDTAKSLENGDE
             Vurderingsbehov.MIGRER_RETTIGHETSPERIODE -> MIGRER_RETTIGHETSPERIODE
             Vurderingsbehov.BARNETILLEGG_SATS_REGULERING -> AUTOMATISK_BREV
+            Vurderingsbehov.G_REGULERING -> G_REGULERING
         }
     }
 }

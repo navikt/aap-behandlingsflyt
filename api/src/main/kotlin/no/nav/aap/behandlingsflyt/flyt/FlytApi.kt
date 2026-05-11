@@ -22,7 +22,6 @@ import no.nav.aap.behandlingsflyt.flyt.flate.visning.ProsesseringStatus
 import no.nav.aap.behandlingsflyt.flyt.flate.visning.Visning
 import no.nav.aap.behandlingsflyt.hendelse.mottak.BehandlingSattPåVent
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
-import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.MANUELT_SATT_PÅ_VENT_KODE
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
@@ -58,6 +57,7 @@ import no.nav.aap.motor.api.JobbInfoDto
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.Operasjon
+import no.nav.aap.tilgang.RelevanteIdenter
 import no.nav.aap.tilgang.authorizedGet
 import no.nav.aap.tilgang.authorizedPost
 import org.slf4j.LoggerFactory
@@ -244,6 +244,25 @@ fun NormalOpenAPIRoute.flytApi(
                     påkrevdRolle = Definisjon.MANUELT_SATT_PÅ_VENT.løsesAv
                 )
             ) { request, body ->
+                val (åpentAvklaringsbehov, relevanteIdenter) = dataSource.transaction { connection ->
+                    val repositoryProvider = repositoryRegistry.provider(connection)
+                    val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+                    val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
+                    val behandling = behandling(behandlingRepository, request)
+                    val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
+                    val åpentAvklaringsbehov = avklaringsbehovene.åpne().filterNot { it.erVentepunkt() }
+                        .sortedWith(behandling.flyt().avklaringsbehovComparator).first().definisjon
+                    val relevanteIdenter = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource).resolve(request.referanse.toString())
+                    Pair(åpentAvklaringsbehov, relevanteIdenter)
+                }
+                sjekkTilgangTilSettPåVent(
+                    åpentAvklaringsbehov = åpentAvklaringsbehov,
+                    tilgangGateway = tilgangGateway,
+                    token = token(),
+                    behandlingsreferanse = request.referanse,
+                    relevanteIdenter = relevanteIdenter,
+                )
+
                 dataSource.transaction { connection ->
                     val repositoryProvider = repositoryRegistry.provider(connection)
                     LoggingKontekst(
@@ -260,19 +279,6 @@ fun NormalOpenAPIRoute.flytApi(
                             request,
                             body.behandlingVersjon
                         )
-                        val avklaringsbehovRepository =
-                            repositoryProvider.provide<AvklaringsbehovRepository>()
-                        val behandling = behandling(behandlingRepository, request)
-                        val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
-                        sjekkTilgangTilSettPåVent(
-                            avklaringsbehovene = avklaringsbehovene,
-                            behandling = behandling,
-                            tilgangGateway = tilgangGateway,
-                            token = token(),
-                            behandlingsreferanse = request.referanse,
-                        )
-
-
                         val taSkriveLåsRepository =
                             repositoryProvider.provide<TaSkriveLåsRepository>()
                         val lås = taSkriveLåsRepository.lås(request.referanse)
@@ -287,7 +293,6 @@ fun NormalOpenAPIRoute.flytApi(
                                 )
                             )
                         taSkriveLåsRepository.verifiserSkrivelås(lås)
-
                     }
                 }
                 respondWithStatus(HttpStatusCode.NoContent)
@@ -346,20 +351,19 @@ private fun erStegGruppeFullført(
     return true
 }
 
-private fun sjekkTilgangTilSettPåVent(
-    avklaringsbehovene: Avklaringsbehovene,
-    behandling: Behandling,
+private suspend fun sjekkTilgangTilSettPåVent(
+    åpentAvklaringsbehov: Definisjon,
     tilgangGateway: TilgangGateway,
     token: OidcToken,
     behandlingsreferanse: UUID,
+    relevanteIdenter: RelevanteIdenter
 ) {
-    val åpentAvklaringsbehov = avklaringsbehovene.åpne().filterNot { it.erVentepunkt() }
-        .sortedWith(behandling.flyt().avklaringsbehovComparator).first().definisjon
     val harTilgang =
         tilgangGateway.sjekkTilgangTilBehandling(
             behandlingsreferanse,
             åpentAvklaringsbehov,
-            token
+            token,
+            relevanteIdenter
         )
 
     if (!harTilgang) {

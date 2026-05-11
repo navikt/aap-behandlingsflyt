@@ -47,7 +47,7 @@ class KvalitetssikringsSteg(
             kontekst
         )
 
-        if (avklaringsbehovene.skalTilbakeføresEtterKvalitetssikring()) {
+        if (unleashGateway.isDisabled(BehandlingsflytFeature.FjernTilbakefoeringTransisjon) && avklaringsbehovene.skalTilbakeføresEtterKvalitetssikring()) {
             return TilbakeføresFraKvalitetsikrer
         }
 

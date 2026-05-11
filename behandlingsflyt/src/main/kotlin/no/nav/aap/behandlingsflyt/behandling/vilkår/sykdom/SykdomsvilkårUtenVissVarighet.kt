@@ -10,7 +10,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.Bistandsvurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ErNedsettelseMerEnnYrkesskadegrenseValg
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ErNedsettelseMinstHalvpartenValg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerVurdering
@@ -19,9 +19,11 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.somSykdomsv
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.komponenter.type.Periode
+import org.slf4j.LoggerFactory
 
 class SykdomsvilkårUtenVissVarighet(vilkårsresultat: Vilkårsresultat) : Vilkårsvurderer<SykdomsFaktagrunnlag> {
     private val vilkår: Vilkår = vilkårsresultat.finnVilkår(Vilkårtype.SYKDOMSVILKÅRET)
+    private val log = LoggerFactory.getLogger(javaClass)
 
     override fun vurder(grunnlag: SykdomsFaktagrunnlag) {
         val tidslinje = vurderVilkårUtenMutering(grunnlag)
@@ -36,7 +38,8 @@ class SykdomsvilkårUtenVissVarighet(vilkårsresultat: Vilkårsresultat) : Vilk�
             grunnlag.yrkesskadevurdering
         )
 
-        val sykdomsvurderingTidslinje = grunnlag.sykdomsvurderinger.somSykdomsvurderingTidslinje(grunnlag.sisteDagMedMuligYtelse)
+        val sykdomsvurderingTidslinje =
+            grunnlag.sykdomsvurderinger.somSykdomsvurderingTidslinje(grunnlag.sisteDagMedMuligYtelse)
 
         val bistandvurderingtidslinje =
             grunnlag.bistandvurderingFaktagrunnlag
@@ -65,7 +68,6 @@ class SykdomsvilkårUtenVissVarighet(vilkårsresultat: Vilkårsresultat) : Vilk�
                     grunnlag
                 )
             }
-
     }
 
     private fun kombinerAlleTidslinjer(
@@ -113,12 +115,14 @@ class SykdomsvilkårUtenVissVarighet(vilkårsresultat: Vilkårsresultat) : Vilk�
         var avslagsårsak: Avslagsårsak? = null
         var innvilgelsesårsak: Innvilgelsesårsak?
 
+        validerNyeHjelpemetoder(sykdomVurdering)
+
         if (sykdomVurdering?.erOppfyltForOrdinærEllerYrkesskadeSettBortIfraÅrsakssammenhengMedUtlededeFelter() == true
             && yrkesskadeVurdering?.erÅrsakssammenheng == true
         ) {
             utfall = Utfall.OPPFYLT
             innvilgelsesårsak = Innvilgelsesårsak.YRKESSKADE_ÅRSAKSSAMMENHENG
-        } else if (sykdomVurdering?.erOppfyltOrdinærMedUtlededeFelter() == true
+        } else if (sykdomVurdering?.erOppfyltOrdinærMedUtlededeFelterGammel() == true
             && bistandsvurdering?.erBehovForBistand() == true
         ) {
             utfall = Utfall.OPPFYLT
@@ -133,8 +137,6 @@ class SykdomsvilkårUtenVissVarighet(vilkårsresultat: Vilkårsresultat) : Vilk�
             innvilgelsesårsak = null
             utfall = Utfall.IKKE_OPPFYLT
 
-            val nedsettelseHalvparten = sykdomVurdering?.utledErNedsettelseMinstHalvparten()
-
             avslagsårsak = when {
                 sykdomVurdering?.harSkadeSykdomEllerLyte == false ->
                     Avslagsårsak.IKKE_SYKDOM_SKADE_LYTE
@@ -142,7 +144,7 @@ class SykdomsvilkårUtenVissVarighet(vilkårsresultat: Vilkårsresultat) : Vilk�
                 sykdomVurdering?.erSkadeSykdomEllerLyteVesentligdel == false ->
                     Avslagsårsak.IKKE_SYKDOM_SKADE_LYTE_VESENTLIGDEL
 
-                nedsettelseHalvparten == ErNedsettelseMinstHalvpartenValg.JA_FORBIGÅENDE_PROBLEMER ->
+                utledHvorvidtVissVarighetErAvslagsårsak(sykdomVurdering) ->
                     Avslagsårsak.IKKE_SYKDOM_AV_VISS_VARIGHET
 
                 else ->
@@ -162,4 +164,30 @@ class SykdomsvilkårUtenVissVarighet(vilkårsresultat: Vilkårsresultat) : Vilk�
         )
     }
 
+    private fun validerNyeHjelpemetoder(sykdomsvurdering: Sykdomsvurdering?) {
+        if (sykdomsvurdering == null) {
+            return
+        }
+
+        if (sykdomsvurdering.erOppfyltForOrdinærEllerYrkesskadeSettBortIfraÅrsakssammenhengMedUtlededeFelter() != sykdomsvurdering.erOppfyltForOrdinærEllerYrkesskadeSettBortIfraÅrsakssammenheng()) {
+            log.error("Ulikt resultat for erOppfyltForOrdinærEllerYrkesskadeSettBortIfraÅrsakssammenheng")
+        }
+        if (sykdomsvurdering.erOppfyltOrdinærMedUtlededeFelterGammel() != sykdomsvurdering.erOppfyltOrdinærMedUtlededeFelter()) {
+            log.error("Ulikt resultat for erOppfyltOrdinærMedUtlededeFelter")
+        }
+        if (sykdomsvurdering.skalVurderesForSykepengeerstatningMedUtlededeFelter() != sykdomsvurdering.skalVurderesForSykepengeerstatning()) {
+            log.error("Ulikt resultat for skalVurderesForSykepengeerstatning")
+        }
+    }
+
+    private fun utledHvorvidtVissVarighetErAvslagsårsak(sykdomsvurdering: Sykdomsvurdering?): Boolean {
+        val gammelSjekk =
+            sykdomsvurdering?.utledErNedsettelseMinstHalvparten() == ErNedsettelseMinstHalvpartenValg.JA_FORBIGÅENDE_PROBLEMER
+        val nySjekk = sykdomsvurdering?.utledHarNedsattArbeidsevne() == ArbeidsevneNedsattValg.JA_FORBIGÅENDE_PROBLEMER
+
+        if (gammelSjekk != nySjekk) {
+            log.error("Ulikt resultat for viss varighet som avslagsårsak")
+        }
+        return gammelSjekk
+    }
 }

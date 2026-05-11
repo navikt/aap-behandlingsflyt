@@ -6,21 +6,29 @@ import no.nav.aap.behandlingsflyt.tilgang.TilgangGateway
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
 import no.nav.aap.tilgang.Operasjon
 import java.util.*
+import no.nav.aap.behandlingsflyt.pip.IdentPåSak
+import no.nav.aap.tilgang.RelevanteIdenter
 
 object FakeTilgangGateway : TilgangGateway {
-    override fun sjekkTilgangTilBehandling(
+    override suspend fun sjekkTilgangTilBehandling(
         behandlingsreferanse: UUID,
         avklaringsbehov: Definisjon,
-        token: OidcToken
+        token: OidcToken,
+        relevanteIdenter: RelevanteIdenter
     ): Boolean {
         return true
     }
 
-    override fun sjekkTilgangTilSak(saksnummer: Saksnummer, token: OidcToken, operasjon: Operasjon): Boolean {
+    override suspend fun sjekkTilgangTilSak(
+        saksnummer: Saksnummer,
+        token: OidcToken,
+        operasjon: Operasjon,
+        relevanteIdenter: RelevanteIdenter
+    ): Boolean {
         return true
     }
 
-    override fun sjekkTilgangTilPerson(
+    override suspend fun sjekkTilgangTilPerson(
         ident: String,
         token: OidcToken,
         operasjon: Operasjon

@@ -13,6 +13,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
 import no.nav.aap.komponenter.verdityper.Dagsatser
+import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.komponenter.verdityper.TimerArbeid
@@ -114,6 +115,45 @@ class UnderveisRepositoryImpl(private val connection: DBConnection) : UnderveisR
 
             lagreNyttGrunnlag(behandlingId, underveisperioder, input)
         }
+    }
+
+    override fun hentSakerForGRegulering(datoForGJustering: LocalDate, nyttGrunnbeløp: Beløp): Set<SakId> {
+        // Plukker saker der tilkjent ytelse bruker gammelt grunnbeløp, i to scenarioer:
+        // 1. OPPFYLT underveisperiode inneholder G-justeringsdatoen (inkl. saker uten TY ennå)
+        // 2. Ytelse var pauset på G-justeringsdatoen, gjenopptas i G-justeringsåret med gammelt grunnbeløp i TY
+        // Saker som allerede er G-regulert (riktig grunnbeløp i TY) ekskluderes.
+        val query = """
+            SELECT DISTINCT gvb.sak_id as sakId
+            FROM underveis_grunnlag ug
+                JOIN underveis_periode up ON ug.perioder_id = up.perioder_id
+                JOIN gjeldende_vedtatte_behandlinger gvb ON gvb.behandling_id = ug.behandling_id
+                LEFT JOIN tilkjent_ytelse ty ON ty.behandling_id = ug.behandling_id AND ty.aktiv = TRUE
+                LEFT JOIN tilkjent_periode tp
+                    ON tp.tilkjent_ytelse_id = ty.id
+                    AND tp.periode && daterange(?::date, ?::date, '[)')
+            WHERE ug.aktiv = true
+                AND up.utfall = 'OPPFYLT'
+                AND (
+                    (up.periode @> ?::date AND (tp.grunnbelop IS NULL OR tp.grunnbelop <> ?))
+                    OR
+                    (ty.id IS NOT NULL AND up.periode && daterange(?::date, ?::date, '[)') AND (tp.grunnbelop IS NULL OR tp.grunnbelop <> ?))
+                );
+        """.trimIndent()
+
+        return connection.queryList(query) {
+            setParams {
+                setLocalDate(1, datoForGJustering)
+                setLocalDate(2, datoForGJustering.plusYears(1))
+                setLocalDate(3, datoForGJustering)
+                setBigDecimal(4, nyttGrunnbeløp.verdi())
+                setLocalDate(5, datoForGJustering)
+                setLocalDate(6, datoForGJustering.plusYears(1))
+                setBigDecimal(7, nyttGrunnbeløp.verdi())
+            }
+            setRowMapper {
+                SakId(it.getLong("sakId"))
+            }
+        }.toSet()
     }
 
     override fun hentSakerMedSisteUnderveisperiodeFørDato(sisteUnderveisDato: LocalDate): Set<SakId> {

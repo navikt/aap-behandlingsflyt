@@ -17,7 +17,9 @@ enum class BehandlingsflytFeature : FeatureToggle {
     ForeslaaVedtakVedtakslengde,
     SamordningFaktagrunnlagBrev,
     GReguleringsJobb,
+    GReguleringUtplukkJobb,
     ForutgaaendeGap,
+    FjernTilbakefoeringTransisjon,
     MaritimtArbeid
     ;
 

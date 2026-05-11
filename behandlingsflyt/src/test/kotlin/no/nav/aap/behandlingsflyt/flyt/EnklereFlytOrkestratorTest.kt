@@ -34,11 +34,13 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
+import no.nav.aap.behandlingsflyt.test.FakeUnleashBaseWithDefaultDisabled
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryservice.InMemoryBehandlingService
 import no.nav.aap.behandlingsflyt.test.modell.genererIdent
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
@@ -70,6 +72,7 @@ class EnklereFlytOrkestratorTest {
             avklaringsbehovRepository = avklaringsbehovRepository,
             stegKonstruktør = DummyStegKonstruktør(),
         ),
+        unleashGateway = EnklereFlytOrkestratorTestUnleash
     )
 
     private val stopperTidligereFlytOrkestrator = FlytOrkestrator(
@@ -91,6 +94,7 @@ class EnklereFlytOrkestratorTest {
             stegKonstruktør = DummyStegKonstruktør(),
         ),
         stoppNårStatus = setOf(Status.IVERKSETTES),
+        unleashGateway = EnklereFlytOrkestratorTestUnleash
     )
 
     @Test
@@ -233,6 +237,7 @@ class EnklereFlytOrkestratorTest {
                 avklaringsbehovRepository = avklaringsbehovRepository,
                 stegKonstruktør = DummyStegKonstruktør(),
             ),
+            unleashGateway = EnklereFlytOrkestratorTestUnleash
         )
 
         flytOrkestrator.forberedOgProsesserBehandling(behandling)
@@ -747,3 +752,7 @@ class EnklereFlytOrkestratorTest {
         }
     }
 }
+
+object EnklereFlytOrkestratorTestUnleash : FakeUnleashBaseWithDefaultDisabled(
+    enabledFlags = listOf(BehandlingsflytFeature.FjernTilbakefoeringTransisjon)
+)

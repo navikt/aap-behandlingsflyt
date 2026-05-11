@@ -45,6 +45,7 @@ class FastsettMeldeperiodeSteg(
             VurderingType.AUTOMATISK_BREV,
             VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
             VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9,
+            VurderingType.G_REGULERING,
             VurderingType.IKKE_RELEVANT -> {
                 return Fullført
             }

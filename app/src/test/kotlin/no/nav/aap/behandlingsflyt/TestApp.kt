@@ -43,7 +43,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.SaksnummerParameter
-import no.nav.aap.behandlingsflyt.test.AzurePortHolder
 import no.nav.aap.behandlingsflyt.test.FakeServers
 import no.nav.aap.behandlingsflyt.test.FiktivtHelseoppholdNavnGenerator
 import no.nav.aap.behandlingsflyt.test.JSONTestPersonService
@@ -70,7 +69,6 @@ import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 import java.util.concurrent.TimeUnit
 import javax.sql.DataSource
-import kotlin.collections.map
 import kotlin.random.Random
 
 private val log = LoggerFactory.getLogger("TestApp")
@@ -84,7 +82,6 @@ data class IdentOgOpphold(val ident: String, val opphold: List<Institusjonsoppho
 fun main() {
     val dbConfig = initDbConfig()
 
-    AzurePortHolder.setPort(8081)
     FakeServers.start(JSONTestPersonService()) // azurePort = 8081)
 
     // Starter server
@@ -275,7 +272,8 @@ private fun genererBarn(dto: TestBarn): TestPerson {
 
 private fun mapTilSøknad(dto: OpprettTestcaseDTO, urelaterteBarn: List<TestPerson>): SøknadV0 {
     val erStudent = if (dto.student) StudentStatus.Ja else StudentStatus.Nei
-    val harYrkesskade = if (dto.yrkesskade) "JA" else "NEI"
+    val harYrkesskadeFraSøknad = dto.yrkesskader.any { it.kilde == "SØKNAD" && it.harYrkesskade }
+    val harYrkesskade = if (harYrkesskadeFraSøknad) "JA" else "NEI"
 
     val oppgitteBarn = if (urelaterteBarn.isNotEmpty()) {
         OppgitteBarn(
@@ -320,10 +318,19 @@ private fun sendInnSøknad(dto: OpprettTestcaseDTO, gatewayProvider: GatewayProv
         TestPerson(
             identer = setOf(ident),
             fødselsdato = Fødselsdato(dto.fødselsdato),
-            yrkesskade = if (dto.yrkesskade) listOf(
-                TestYrkesskade(),
-                TestYrkesskade(skadedato = null, saksreferanse = "ABCDE")
-            ) else emptyList(),
+            yrkesskade = dto.yrkesskader.mapNotNull { entry ->
+                when (entry.kilde) {
+                    "SØKNAD" -> null
+                    "REGISTER" -> TestYrkesskade(
+                        skadedato = entry.skadedato,
+                        skadeart = entry.skadeart,
+                        diagnose = entry.diagnose,
+                        skadebeskrivelse = entry.skadebeskrivelse,
+                        vedtaksdato = entry.vedtaksdato,
+                    )
+                    else -> null
+                }
+            },
             uføre = dto.uføre?.let {
                 Uføre(
                     virkningstidspunkt = dto.uføreTidspunkt!!,
@@ -464,7 +471,8 @@ private fun opprettNySakOgBehandling(
 
         if (harBehandlingsgrunnlag) {
             // Yrkesskade
-            if (dto.yrkesskade) {
+            val harYrkesskade = dto.yrkesskader.any { it.kilde == "REGISTER" }
+            if (harYrkesskade) {
                 if (dto.steg == StegType.VURDER_YRKESSKADE) return sak
                 løsYrkesSkade(behandling)
             }
@@ -473,6 +481,10 @@ private fun opprettNySakOgBehandling(
             if (dto.steg == StegType.FASTSETT_BEREGNINGSTIDSPUNKT) return sak
             løsBeregningstidspunkt(behandling)
 
+            if (harYrkesskade) {
+                løsFastsettYrkesskadeInntekt(behandling)
+            }
+
             val manglendeInntektsÅr = manglendeInntektsår(dto)
             if (manglendeInntektsÅr.isNotEmpty()) {
                 if (dto.steg == StegType.MANGLENDE_LIGNING) return sak
@@ -480,11 +492,10 @@ private fun opprettNySakOgBehandling(
             }
 
             // Forutgående medlemskap
-            if (dto.yrkesskade) {
-                løsFastsettYrkesskadeInntekt(behandling)
+            if (!harYrkesskade) {
+                if ((dto.steg == StegType.VURDER_MEDLEMSKAP)) return sak
+                løsForutgåendeMedlemskap(behandling, sak)
             }
-            if (dto.steg == StegType.VURDER_MEDLEMSKAP) return sak
-            løsForutgåendeMedlemskap(behandling, sak)
 
             // Oppholdskrav
             if (dto.steg == StegType.VURDER_OPPHOLDSKRAV) return sak
