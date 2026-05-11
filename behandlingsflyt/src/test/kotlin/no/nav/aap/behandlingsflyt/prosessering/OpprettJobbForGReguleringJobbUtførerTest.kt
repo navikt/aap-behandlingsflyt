@@ -10,7 +10,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.test.fixedClock
+import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.behandlingsflyt.test.juni
+import no.nav.aap.behandlingsflyt.test.mai
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.verdityper.Beløp
@@ -75,5 +77,59 @@ class OpprettJobbForGReguleringJobbUtførerTest {
         opprettUtfører().utfør(jobbInput)
 
         verify(exactly = 1) { flytJobbRepository.leggTil(any()) }
+    }
+
+    @Test
+    fun `skal bruke forrige års G-justering når dagsdato er i januar (før 1 mai)`() {
+        enableToggle()
+
+        val utfører = OpprettJobbForGReguleringJobbUtfører(
+            behandlingService = behandlingService,
+            gReguleringService = gReguleringService,
+            flytJobbRepository = flytJobbRepository,
+            clock = fixedClock(15 januar 2027),
+            unleashGateway = unleashGateway,
+        )
+
+        // 15. jan 2027 → G-periode-år = 2026 → leter etter 2026-G-justeringen
+        val gjusteringDato = LocalDate.of(2026, 5, 1)
+        val sakId = SakId(99L)
+
+        every { gReguleringService.finnesGrunnbeløpForÅr(Year.of(2026)) } returns
+            Grunnbeløp.GrunnbeløpDto(dato = gjusteringDato, beløp = Beløp(135_000))
+        every { gReguleringService.hentSakerForGRegulering(gjusteringDato) } returns setOf(sakId)
+        every { flytJobbRepository.leggTil(any()) } just Runs
+
+        utfører.utfør(jobbInput)
+
+        verify(exactly = 1) { flytJobbRepository.leggTil(any()) }
+        verify(exactly = 0) { gReguleringService.finnesGrunnbeløpForÅr(Year.of(2027)) }
+    }
+
+    @Test
+    fun `skal bruke inneværende års G-justering når dagsdato er 1 mai eller etter`() {
+        enableToggle()
+
+        val utfører = OpprettJobbForGReguleringJobbUtfører(
+            behandlingService = behandlingService,
+            gReguleringService = gReguleringService,
+            flytJobbRepository = flytJobbRepository,
+            clock = fixedClock(1 mai 2027),
+            unleashGateway = unleashGateway,
+        )
+
+        // 1. mai 2027 → G-periode-år = 2027 → leter etter 2027-G-justeringen
+        val gjusteringDato = LocalDate.of(2027, 5, 1)
+        val sakId = SakId(77L)
+
+        every { gReguleringService.finnesGrunnbeløpForÅr(Year.of(2027)) } returns
+            Grunnbeløp.GrunnbeløpDto(dato = gjusteringDato, beløp = Beløp(140_000))
+        every { gReguleringService.hentSakerForGRegulering(gjusteringDato) } returns setOf(sakId)
+        every { flytJobbRepository.leggTil(any()) } just Runs
+
+        utfører.utfør(jobbInput)
+
+        verify(exactly = 1) { flytJobbRepository.leggTil(any()) }
+        verify(exactly = 0) { gReguleringService.finnesGrunnbeløpForÅr(Year.of(2026)) }
     }
 }

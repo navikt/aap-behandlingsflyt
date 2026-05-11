@@ -20,9 +20,12 @@ import java.time.Year
 
 /**
  * Kjøres daglig og oppretter jobber for G-Regulering. Jobber opprettes for saksbehandlingskandidater hvor innvilget
- * AAP-periode passerer G-justeringen lagt inn i lista i Grunnbeløp.kt samme året som kjøre-datoen og etter 2025
+ * AAP-periode passerer G-justeringen lagt inn i lista i Grunnbeløp.kt samme G-periode som kjøre-datoen og etter 2025
  * G-Justeringen da Kelvin ble lansert i produksjon. G-regulering medfører omberegninger, slik
  * at ytelsen blir korrekt både før og etter G-justering.
+ *
+ * G-perioden løper fra 1. mai hvert år til 30. april neste år. G-justeringen for år N (datert 1. mai N)
+ * er aktuell fra 1. mai N til 30. april N+1.
  */
 class OpprettJobbForGReguleringJobbUtfører(
     private val behandlingService: BehandlingService,
@@ -40,12 +43,17 @@ class OpprettJobbForGReguleringJobbUtfører(
             return
         }
 
-        // TODO: Dette virker ikke etter nyttår, 1.jan 2027 - må identifisere en "G-Periode" (1.mai - 1.mai neste-år)
-        //  og bruke dette til å finne aktuellGJustering - ikke kalenderår for å finne G-justering/Grunnbeløp
-        val årIDag = Year.now(clock)
-        val aktuellGJustering = hentAktuellGJustering(årIDag)
+        // G-perioden løper fra 1. mai hvert år til 30. april neste år. Dersom vi er i januar-april
+        // er forrige års G-justering fortsatt den aktuelle.
+        val dagensDato = LocalDate.now(clock)
+        val gPeriodeÅr = if (dagensDato.monthValue < 5) {
+            Year.of(dagensDato.year - 1)
+        } else {
+            Year.of(dagensDato.year)
+        }
+        val aktuellGJustering = hentAktuellGJustering(gPeriodeÅr)
         if (aktuellGJustering == null || aktuellGJustering.dato.isBefore(LocalDate.of(2025, 5, 1))) {
-            log.info("Avslutter søk etter G-reguleringskandidater. Ingen post 2025 G-justering funnet for år: ${årIDag} i Gunnbeløp.kt")
+            log.info("Avslutter søk etter G-reguleringskandidater. Ingen post 2025 G-justering funnet for G-periode-år: ${gPeriodeÅr} i Gunnbeløp.kt")
             return
         }
         val saker = hentKandidaterForGRegulering(aktuellGJustering.dato)
