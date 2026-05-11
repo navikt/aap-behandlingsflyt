@@ -377,7 +377,7 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: 
                     arbeidsforholdKode = Arbeidsforholdtype.fraKode(it.getString("arbeidsforhold_kode")),
                     startdato = it.getLocalDate("startdato"),
                     sluttdato = it.getLocalDateOrNull("sluttdato"),
-                    organisasjonsNavn = it.getString("organisasjonsnavn"),
+                    organisasjonsNavn = it.getStringOrNull("organisasjonsnavn"),
                 )
             }
         }

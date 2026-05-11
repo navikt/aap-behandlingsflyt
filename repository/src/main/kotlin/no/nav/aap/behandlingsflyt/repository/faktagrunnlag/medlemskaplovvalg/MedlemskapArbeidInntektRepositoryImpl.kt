@@ -401,7 +401,7 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
         if (arbeiderINorgeId == null) return emptyList()
 
         val query = """
-            SELECT * FROM ARBEID WHERE arbeider_id = ?
+            SELECT * FROM ARBEID WHERE arbeider_id = ? AND arbeidsforhold_kode != 'maritimtArbeidsforhold'
         """.trimIndent()
         return connection.queryList(query) {
             setParams {
@@ -415,7 +415,7 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
                     sluttdato = it.getLocalDateOrNull("sluttdato"),
                 )
             }
-        }.filter { it.arbeidsforholdKode != Arbeidsforholdtype.MARITIMT_ARBEIDSFORHOLD }
+        }
     }
 
     private fun hentInntekterINorgeGrunnlag(inntekterINorgeId: Long?): List<InntektINorgeGrunnlag> {
