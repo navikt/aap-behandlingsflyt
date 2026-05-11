@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.integrasjon.yrkesskade
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.SkadekombinasjonRegister
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.Yrkesskade
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.adapter.YrkesskadeRegisterGateway
 import no.nav.aap.behandlingsflyt.prometheus
@@ -56,13 +57,20 @@ object YrkesskadeRegisterGatewayImpl : YrkesskadeRegisterGateway {
 
         return response
             .saker
-            .filter { it.resultat in gyldigeStatuser}
+            .filter { it.resultat in gyldigeStatuser }
             .map { yrkesskade ->
                 Yrkesskade(
                     ref = yrkesskade.saksreferanse,
                     saksnummer = yrkesskade.saksnr,
                     kildesystem = yrkesskade.kildesystem,
-                    skadedato = yrkesskade.skadedato
+                    skadedato = yrkesskade.skadedato,
+                    vedtaksdato = yrkesskade.vedtaksdato,
+                    skadeart = yrkesskade.skadeart,
+                    diagnose = yrkesskade.diagnose,
+                    skadekombinasjoner = yrkesskade.skadekombinasjoner?.map {
+                        SkadekombinasjonRegister(kroppsdel = it.kroppsdel, skadetype = it.skadetype)
+                    },
+                    skadekombinasjonerTekst = yrkesskade.skadekombinasjonerTekst,
                 )
             }
     }

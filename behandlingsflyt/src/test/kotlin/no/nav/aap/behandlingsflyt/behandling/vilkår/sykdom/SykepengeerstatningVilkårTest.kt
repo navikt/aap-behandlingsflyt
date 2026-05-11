@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.behandling.vilkår.sykdom
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerErstatningGrunnlag
@@ -145,6 +146,7 @@ class SykepengeerstatningVilkårTest {
         erNedsettelseIArbeidsevneMerEnnHalvparten: Boolean = true,
         erNedsettelseIArbeidsevneAvEnVissVarighet: Boolean? = true,
         erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense: Boolean = true,
+        harNedsattArbeidsevne: ArbeidsevneNedsattValg = ArbeidsevneNedsattValg.JA,
         erArbeidsevnenNedsatt: Boolean = true,
         vurderingenGjelderFra: LocalDate,
         vurderingenGjelderTil: LocalDate? = null,
@@ -161,6 +163,7 @@ class SykepengeerstatningVilkårTest {
         erNedsettelseMinstHalvparten = null,
         erNedsettelseMerEnnYrkesskadegrense = null,
         erArbeidsevnenNedsatt = erArbeidsevnenNedsatt,
+        harNedsattArbeidsevne = harNedsattArbeidsevne,
         yrkesskadeBegrunnelse = null,
         vurderingenGjelderFra = vurderingenGjelderFra,
         vurderingenGjelderTil = vurderingenGjelderTil,

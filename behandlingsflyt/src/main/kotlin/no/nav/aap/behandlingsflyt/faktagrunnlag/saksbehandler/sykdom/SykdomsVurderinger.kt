@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom
 
-import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
@@ -26,7 +25,9 @@ data class Sykdomsvurdering(
     val erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense: Boolean?,
     val erNedsettelseMerEnnYrkesskadegrense: ErNedsettelseMerEnnYrkesskadegrenseValg?,
     val yrkesskadeBegrunnelse: String?,
+    @Deprecated("Erstattes av harNedsattArbeidsevne")
     val erArbeidsevnenNedsatt: Boolean?,
+    val harNedsattArbeidsevne: ArbeidsevneNedsattValg?,
     val diagnose: Diagnose?,
     val vurdertIBehandling: BehandlingId,
     val opprettet: Instant,
@@ -219,6 +220,12 @@ data class YrkesskadeSak(
     val referanse: String,
     val manuellYrkesskadeDato: LocalDate?,
 )
+
+enum class ArbeidsevneNedsattValg {
+    JA,
+    JA_FORBIGÅENDE_PROBLEMER,
+    NEI,
+}
 
 enum class ErNedsettelseMinstHalvpartenValg {
     JA,

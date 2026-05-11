@@ -8,6 +8,7 @@ import io.mockk.verify
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSykdomLøsning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
@@ -102,6 +103,7 @@ private fun sykdomsvurdering(
     erNedsettelseIArbeidsevneAvEnVissVarighet: Boolean? = true,
     erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense: Boolean = true,
     erArbeidsevnenNedsatt: Boolean = true,
+    harNedsattArbeidsevne: ArbeidsevneNedsattValg = ArbeidsevneNedsattValg.JA,
     vurderingenGjelderFra: LocalDate = 1 januar 2020,
     vurderingenGjelderTil: LocalDate? = null,
     opprettet: LocalDateTime = LocalDateTime.now(),
@@ -116,6 +118,7 @@ private fun sykdomsvurdering(
     erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense,
 
     erArbeidsevnenNedsatt = erArbeidsevnenNedsatt,
+    harNedsattArbeidsevne = harNedsattArbeidsevne,
     yrkesskadeBegrunnelse = null,
     vurderingenGjelderFra = vurderingenGjelderFra,
     vurderingenGjelderTil = vurderingenGjelderTil,

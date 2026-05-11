@@ -149,7 +149,7 @@ class InformasjonskravGrunnlagTest {
     }
 
     @Test
-    fun `Yrkesskadedata er utdatert, men har ingen endring fra registeret`() {
+    fun `Yrkesskadedata utdatert uten endring, oppgittYrkesskadeISoeknad lagres alltid`() {
         dataSource.transaction { connection ->
             val (_, kontekst) = klargjør(connection)
             val informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(
@@ -165,7 +165,7 @@ class InformasjonskravGrunnlagTest {
                 kontekst
             )
 
-            assertThat(erOppdatert).isEmpty()
+            assertThat(erOppdatert).isNotEmpty()
         }
     }
 

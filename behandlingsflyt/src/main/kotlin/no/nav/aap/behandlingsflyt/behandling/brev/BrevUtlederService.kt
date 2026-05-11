@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.behandling.brev
 import no.nav.aap.behandlingsflyt.behandling.Resultat
 import no.nav.aap.behandlingsflyt.behandling.ResultatUtleder
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
+import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.BeregnTilkjentYtelseService
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.BeregnTilkjentYtelseService.Companion.ANTALL_ÅRLIGE_ARBEIDSDAGER
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.MINSTE_ÅRLIG_YTELSE_TIDSLINJE
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
@@ -477,9 +478,11 @@ class BrevUtlederService(
             val gradertBarnetillegg =
                 Beløp(tilkjent.barnetillegg.multiplisert(gradering).verdi().setScale(0, RoundingMode.HALF_UP))
             val gradertDagsatsInkludertBarnetillegg =
-                Beløp(
-                    tilkjent.dagsats.pluss(tilkjent.barnetillegg).multiplisert(gradering).verdi()
-                        .setScale(0, RoundingMode.HALF_UP)
+                BeregnTilkjentYtelseService.redusertDagsats(
+                    dagsats = tilkjent.dagsats,
+                    barnetillegg = tilkjent.barnetillegg,
+                    barnepensjonDagsats = Beløp(0),
+                    gradering = gradering,
                 )
 
             TilkjentYtelse(

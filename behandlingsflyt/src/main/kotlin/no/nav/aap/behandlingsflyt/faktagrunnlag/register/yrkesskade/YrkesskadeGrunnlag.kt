@@ -5,4 +5,9 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 /**
  * Yrkesskade-grunnlag fra register.
  */
-data class YrkesskadeGrunnlag(val id: Long, val behandlingId: BehandlingId, val yrkesskader: Yrkesskader)
+data class YrkesskadeGrunnlag(
+    val id: Long,
+    val behandlingId: BehandlingId,
+    val yrkesskader: Yrkesskader,
+    val oppgittYrkesskadeISøknad: Boolean?,
+)

@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.sykdom
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.test.januar
@@ -23,6 +24,7 @@ class SykdomsInformasjonskravTest {
             erNedsettelseMinstHalvparten = null,
             erNedsettelseMerEnnYrkesskadegrense = null,
             erArbeidsevnenNedsatt = true,
+            harNedsattArbeidsevne = ArbeidsevneNedsattValg.JA,
             yrkesskadeBegrunnelse = null,
             vurderingenGjelderFra = 1 januar 2020,
             vurderingenGjelderTil = null,
@@ -48,6 +50,7 @@ class SykdomsInformasjonskravTest {
             erNedsettelseMinstHalvparten = null,
             erNedsettelseMerEnnYrkesskadegrense = null,
             erArbeidsevnenNedsatt = true,
+            harNedsattArbeidsevne = ArbeidsevneNedsattValg.JA,
             yrkesskadeBegrunnelse = null,
             vurderingenGjelderFra = 1 januar 2020,
             vurdertAv = Bruker("Z00000"),
@@ -73,6 +76,7 @@ class SykdomsInformasjonskravTest {
             erNedsettelseMinstHalvparten = null,
             erNedsettelseMerEnnYrkesskadegrense = null,
             erArbeidsevnenNedsatt = true,
+            harNedsattArbeidsevne = ArbeidsevneNedsattValg.JA,
             yrkesskadeBegrunnelse = null,
             vurderingenGjelderFra = 1 januar 2020,
             vurdertAv = Bruker("Z00000"),
@@ -98,6 +102,7 @@ class SykdomsInformasjonskravTest {
             erNedsettelseMinstHalvparten = null,
             erNedsettelseMerEnnYrkesskadegrense = null,
             erArbeidsevnenNedsatt = true,
+            harNedsattArbeidsevne = ArbeidsevneNedsattValg.JA,
             yrkesskadeBegrunnelse = null,
             vurderingenGjelderFra = 1 januar 2020,
             vurdertAv = Bruker("Z00000"),
@@ -123,6 +128,7 @@ class SykdomsInformasjonskravTest {
             erNedsettelseMinstHalvparten = null,
             erNedsettelseMerEnnYrkesskadegrense = null,
             erArbeidsevnenNedsatt = true,
+            harNedsattArbeidsevne = ArbeidsevneNedsattValg.JA,
             yrkesskadeBegrunnelse = null,
             vurderingenGjelderFra = 1 januar 2020,
             vurdertAv = Bruker("Z00000"),
@@ -148,6 +154,7 @@ class SykdomsInformasjonskravTest {
             erNedsettelseMinstHalvparten = null,
             erNedsettelseMerEnnYrkesskadegrense = null,
             erArbeidsevnenNedsatt = true,
+            harNedsattArbeidsevne = ArbeidsevneNedsattValg.JA,
             yrkesskadeBegrunnelse = null,
             vurderingenGjelderFra = 1 januar 2020,
             vurdertAv = Bruker("Z00000"),
@@ -173,6 +180,7 @@ class SykdomsInformasjonskravTest {
             erNedsettelseMinstHalvparten = null,
             erNedsettelseMerEnnYrkesskadegrense = null,
             erArbeidsevnenNedsatt = true,
+            harNedsattArbeidsevne = ArbeidsevneNedsattValg.JA,
             yrkesskadeBegrunnelse = null,
             vurderingenGjelderFra = 1 januar 2020,
             vurdertAv = Bruker("Z00000"),
@@ -198,6 +206,7 @@ class SykdomsInformasjonskravTest {
             erNedsettelseMinstHalvparten = null,
             erNedsettelseMerEnnYrkesskadegrense = null,
             erArbeidsevnenNedsatt = true,
+            harNedsattArbeidsevne = ArbeidsevneNedsattValg.JA,
             yrkesskadeBegrunnelse = null,
             vurderingenGjelderFra = 1 januar 2020,
             vurdertAv = Bruker("Z00000"),
@@ -223,6 +232,7 @@ class SykdomsInformasjonskravTest {
             erNedsettelseMinstHalvparten = null,
             erNedsettelseMerEnnYrkesskadegrense = null,
             erArbeidsevnenNedsatt = true,
+            harNedsattArbeidsevne = ArbeidsevneNedsattValg.JA,
             yrkesskadeBegrunnelse = null,
             vurderingenGjelderFra = 1 januar 2020,
             vurdertAv = Bruker("Z00000"),

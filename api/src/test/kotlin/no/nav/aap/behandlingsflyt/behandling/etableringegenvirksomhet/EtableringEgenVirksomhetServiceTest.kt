@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.behandling.etableringegenvirksomhet
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.Bistandsvurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ErNedsettelseMerEnnYrkesskadegrenseValg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ErNedsettelseMinstHalvpartenValg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
@@ -51,6 +52,7 @@ class EtableringEgenVirksomhetServiceTest {
                     erNedsettelseMerEnnYrkesskadegrense = ErNedsettelseMerEnnYrkesskadegrenseValg.JA,
                     yrkesskadeBegrunnelse = null,
                     erArbeidsevnenNedsatt = true,
+                    harNedsattArbeidsevne = ArbeidsevneNedsattValg.JA,
                     diagnose = null,
                     vurdertIBehandling = behandling.id,
                     opprettet = Instant.now(),

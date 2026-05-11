@@ -1,8 +1,10 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.LøsningForPeriode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.SkadekombinasjonRegister
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.Yrkesskade
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Diagnose
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ErNedsettelseMerEnnYrkesskadegrenseValg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ErNedsettelseMinstHalvpartenValg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
@@ -22,12 +24,22 @@ data class RegistrertYrkesskade(
     val saksnummer: Int?,
     val skadedato: LocalDate?,
     val kilde: String,
+    val vedtaksdato: LocalDate? = null,
+    val skadeart: String? = null,
+    val diagnose: String? = null,
+    val skadekombinasjoner: List<SkadekombinasjonRegister>? = null,
+    val skadekombinasjonerTekst: String? = null,
 ) {
     constructor(yrkesskade: Yrkesskade) : this(
-        yrkesskade.ref,
-        yrkesskade.saksnummer,
-        yrkesskade.skadedato,
-        yrkesskade.kildesystem
+        ref = yrkesskade.ref,
+        saksnummer = yrkesskade.saksnummer,
+        skadedato = yrkesskade.skadedato,
+        kilde = yrkesskade.kildesystem,
+        vedtaksdato = yrkesskade.vedtaksdato,
+        skadeart = yrkesskade.skadeart,
+        diagnose = yrkesskade.diagnose,
+        skadekombinasjoner = yrkesskade.skadekombinasjoner,
+        skadekombinasjonerTekst = yrkesskade.skadekombinasjonerTekst,
     )
 }
 
@@ -60,6 +72,7 @@ data class SykdomsvurderingLøsningDto(
             vurderingenGjelderTil = tom,
             dokumenterBruktIVurdering = dokumenterBruktIVurdering,
             erArbeidsevnenNedsatt = erArbeidsevnenNedsatt,
+            harNedsattArbeidsevne = utledHarNedsattArbeidsevne(),
             harSkadeSykdomEllerLyte = harSkadeSykdomEllerLyte,
             erSkadeSykdomEllerLyteVesentligdel = erSkadeSykdomEllerLyteVesentligdel,
             erNedsettelseIArbeidsevneMerEnnHalvparten = erNedsettelseIArbeidsevneMerEnnHalvparten,
@@ -75,11 +88,23 @@ data class SykdomsvurderingLøsningDto(
         )
     }
 
+    private fun utledHarNedsattArbeidsevne(): ArbeidsevneNedsattValg? {
+        if (erArbeidsevnenNedsatt == null) return null
+        if (!erArbeidsevnenNedsatt) return ArbeidsevneNedsattValg.NEI
+
+        val erSykdomMedVissVarighet =
+            utledErNedsettelseMinstHalvparten() == ErNedsettelseMinstHalvpartenValg.JA_FORBIGÅENDE_PROBLEMER || utledErNedsettelseMerEnnYrkesskadegrense() == ErNedsettelseMerEnnYrkesskadegrenseValg.JA_FORBIGÅENDE_PROBLEMER
+        if (erSykdomMedVissVarighet) {
+            return ArbeidsevneNedsattValg.JA_FORBIGÅENDE_PROBLEMER
+        }
+        return ArbeidsevneNedsattValg.JA
+    }
+
     private fun utledErNedsettelseMinstHalvparten(): ErNedsettelseMinstHalvpartenValg? {
         if (erNedsettelseMinstHalvparten != null) {
             return erNedsettelseMinstHalvparten
         }
-        
+
         return when (erNedsettelseIArbeidsevneMerEnnHalvparten) {
             true if erNedsettelseIArbeidsevneAvEnVissVarighet == true ->
                 ErNedsettelseMinstHalvpartenValg.JA
