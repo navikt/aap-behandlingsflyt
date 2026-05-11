@@ -432,7 +432,8 @@ class BrevUtlederService(
         val kompysSaker = yrkesSkadeGrunnlag?.yrkesskader?.yrkesskader ?: emptyList()
         val andelAvNedsettelsen = sykdomGrunnlag?.yrkesskadevurdering?.andelAvNedsettelsen?.prosentverdi()
 
-        val beregning = beregningVurderingRepository.hentHvisEksisterer(behandlingId)?.yrkesskadeBeløpVurdering
+        val beregning =
+            beregningVurderingRepository.hentHvisEksisterer(behandlingId)?.yrkesskadeBeløpVurdering ?: return null
 
         if ((yrkesSkadeGrunnlag == null && sykdomGrunnlag?.yrkesskadevurdering == null)
             || sykdomGrunnlag?.yrkesskadevurdering?.andelAvNedsettelsen == `0_PROSENT`
@@ -444,9 +445,10 @@ class BrevUtlederService(
             val skadedato = kompysSak?.skadedato
                 ?: ys.manuellYrkesskadeDato
                 ?: error("Mangler skadedato for yrkesskade med referanse ${ys.referanse}")
-            val inntekt = requireNotNull(beregning?.vurderinger?.firstOrNull { it.referanse == ys.referanse }?.antattÅrligInntekt) {
-                "Mangler antattÅrligInntekt for yrkesskade med referanse ${ys.referanse}"
-            }
+            val inntekt =
+                requireNotNull(beregning?.vurderinger?.firstOrNull { it.referanse == ys.referanse }?.antattÅrligInntekt) {
+                    "Mangler antattÅrligInntekt for yrkesskade med referanse ${ys.referanse}"
+                }
             YrkesskadeBeregningBrev.Yrkesskade(skadedato, inntekt.verdi)
         }
 
