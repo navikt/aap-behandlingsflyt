@@ -2,7 +2,6 @@ package no.nav.aap.behandlingsflyt.prosessering
 
 import no.nav.aap.behandlingsflyt.behandling.gregulering.GReguleringService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
@@ -32,7 +31,6 @@ import java.time.Year
  * er aktuell fra 1. mai N til 30. april N+1.
  */
 class OpprettJobbForGReguleringJobbUtfører(
-    private val behandlingService: BehandlingService,
     private val gReguleringService: GReguleringService,
     private val flytJobbRepository: FlytJobbRepository,
     private val clock: Clock = Clock.systemDefaultZone(),
@@ -85,7 +83,6 @@ class OpprettJobbForGReguleringJobbUtfører(
     companion object : ProvidersJobbSpesifikasjon {
         override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): JobbUtfører {
             return OpprettJobbForGReguleringJobbUtfører(
-                behandlingService = BehandlingService(repositoryProvider, gatewayProvider),
                 gReguleringService = GReguleringService(repositoryProvider, gatewayProvider),
                 flytJobbRepository = repositoryProvider.provide(),
                 unleashGateway = gatewayProvider.provide(),
