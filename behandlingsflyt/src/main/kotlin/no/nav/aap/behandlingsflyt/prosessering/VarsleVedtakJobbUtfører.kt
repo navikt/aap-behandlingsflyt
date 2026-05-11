@@ -98,6 +98,8 @@ class VarsleVedtakJobbUtfører(
         if (relevantEndring.contains(true) && tpYtelser?.isNotEmpty()?:false) {
             log.info("Varsler SAM for behandling med referanse ${behandling.referanse} og saksnummer ${sak.saksnummer}. Årsak: førstegangsbehandling=${førstegangsbehandling}, endringIRettighetstype=${endringIRettighetsTypeTidslinje}")
             samGateway.varsleVedtak(request)
+        }else{
+            log.info("Varsler ikke SAM for behandling med referanse ${behandling.referanse} og saksnummer ${sak.saksnummer}. Årsak: førstegangsbehandling=${førstegangsbehandling}, endringIRettighetstype=${endringIRettighetsTypeTidslinje}, tpYtelser=${tpYtelser?.size ?: 0}")
         }
 
         val flytJobbRepository: FlytJobbRepository = repositoryProvider.provide()
