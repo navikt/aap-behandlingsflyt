@@ -436,20 +436,18 @@ class BrevUtlederService(
 
         if ((yrkesSkadeGrunnlag == null && sykdomGrunnlag?.yrkesskadevurdering == null)
             || sykdomGrunnlag?.yrkesskadevurdering?.andelAvNedsettelsen == `0_PROSENT`
-            || sykdomGrunnlag?.yrkesskadevurdering?.andelAvNedsettelsen == null) return null
+            || sykdomGrunnlag?.yrkesskadevurdering?.andelAvNedsettelsen == null
+        ) return null
 
         val matchedeSkader = manueltRegistrerteYrkesskade.map { ys ->
-            val inntekt = beregning?.vurderinger?.first { it.referanse == ys.referanse }?.antattÅrligInntekt
-            YrkesskadeBeregningBrev.Yrkesskade(
-                ys.manuellYrkesskadeDato!!, //TODO()
-                inntekt?.verdi!! //TODO()
-            )
-        }  + kompysSaker.map { ys ->
-            val inntekt = beregning?.vurderinger?.first{ it.referanse == ys.ref}?.antattÅrligInntekt
-            YrkesskadeBeregningBrev.Yrkesskade(
-                ys.skadedato!!, //TODO()
-                inntekt?.verdi!!,//TODO()
-            )
+            val kompysSak = kompysSaker.firstOrNull { it.ref == ys.referanse }
+            val skadedato = kompysSak?.skadedato
+                ?: ys.manuellYrkesskadeDato
+                ?: error("Mangler skadedato for yrkesskade med referanse ${ys.referanse}")
+            val inntekt = requireNotNull(beregning?.vurderinger?.firstOrNull { it.referanse == ys.referanse }?.antattÅrligInntekt) {
+                "Mangler antattÅrligInntekt for yrkesskade med referanse ${ys.referanse}"
+            }
+            YrkesskadeBeregningBrev.Yrkesskade(skadedato, inntekt.verdi)
         }
 
         return YrkesskadeBeregningBrev(
