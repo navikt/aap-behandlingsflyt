@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.behandling.etableringegenvirksomhet.Etablering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.Bistandsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EierVirksomhet
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetLøsningDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ErNedsettelseMerEnnYrkesskadegrenseValg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ErNedsettelseMinstHalvpartenValg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
@@ -183,6 +184,7 @@ class EtableringEgenVirksomhetLøserTest {
                     vurderingenGjelderTil = LocalDate.now().plusMonths(6),
                     dokumenterBruktIVurdering = emptyList(),
                     harSkadeSykdomEllerLyte = true,
+                    harNedsattArbeidsevne = ArbeidsevneNedsattValg.JA,
                     erSkadeSykdomEllerLyteVesentligdel = true,
                     erNedsettelseIArbeidsevneAvEnVissVarighet = true,
                     erNedsettelseIArbeidsevneMerEnnHalvparten = true,

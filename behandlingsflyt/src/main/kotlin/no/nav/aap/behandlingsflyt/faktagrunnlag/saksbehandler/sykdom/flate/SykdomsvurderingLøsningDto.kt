@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.LøsningFo
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.SkadekombinasjonRegister
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.Yrkesskade
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Diagnose
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ErNedsettelseMerEnnYrkesskadegrenseValg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ErNedsettelseMinstHalvpartenValg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
@@ -71,6 +72,7 @@ data class SykdomsvurderingLøsningDto(
             vurderingenGjelderTil = tom,
             dokumenterBruktIVurdering = dokumenterBruktIVurdering,
             erArbeidsevnenNedsatt = erArbeidsevnenNedsatt,
+            harNedsattArbeidsevne = utledHarNedsattArbeidsevne(),
             harSkadeSykdomEllerLyte = harSkadeSykdomEllerLyte,
             erSkadeSykdomEllerLyteVesentligdel = erSkadeSykdomEllerLyteVesentligdel,
             erNedsettelseIArbeidsevneMerEnnHalvparten = erNedsettelseIArbeidsevneMerEnnHalvparten,
@@ -86,11 +88,23 @@ data class SykdomsvurderingLøsningDto(
         )
     }
 
+    private fun utledHarNedsattArbeidsevne(): ArbeidsevneNedsattValg? {
+        if (erArbeidsevnenNedsatt == null) return null
+        if (!erArbeidsevnenNedsatt) return ArbeidsevneNedsattValg.NEI
+
+        val erSykdomMedVissVarighet =
+            utledErNedsettelseMinstHalvparten() == ErNedsettelseMinstHalvpartenValg.JA_FORBIGÅENDE_PROBLEMER || utledErNedsettelseMerEnnYrkesskadegrense() == ErNedsettelseMerEnnYrkesskadegrenseValg.JA_FORBIGÅENDE_PROBLEMER
+        if (erSykdomMedVissVarighet) {
+            return ArbeidsevneNedsattValg.JA_FORBIGÅENDE_PROBLEMER
+        }
+        return ArbeidsevneNedsattValg.JA
+    }
+
     private fun utledErNedsettelseMinstHalvparten(): ErNedsettelseMinstHalvpartenValg? {
         if (erNedsettelseMinstHalvparten != null) {
             return erNedsettelseMinstHalvparten
         }
-        
+
         return when (erNedsettelseIArbeidsevneMerEnnHalvparten) {
             true if erNedsettelseIArbeidsevneAvEnVissVarighet == true ->
                 ErNedsettelseMinstHalvpartenValg.JA

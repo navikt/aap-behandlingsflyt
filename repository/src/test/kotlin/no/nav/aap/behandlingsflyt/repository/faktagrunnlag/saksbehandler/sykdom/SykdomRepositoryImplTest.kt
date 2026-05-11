@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.sykdom
 
 import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingVurdering
 import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingÅrsak
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Diagnose
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ErNedsettelseMerEnnYrkesskadegrenseValg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ErNedsettelseMinstHalvpartenValg
@@ -55,6 +56,7 @@ internal class SykdomRepositoryImplTest {
             vurderingenGjelderTil = null,
             dokumenterBruktIVurdering = listOf(JournalpostId("1")),
             harSkadeSykdomEllerLyte = true,
+            harNedsattArbeidsevne = ArbeidsevneNedsattValg.JA,
             erSkadeSykdomEllerLyteVesentligdel = true,
             erNedsettelseIArbeidsevneAvEnVissVarighet = true,
             erNedsettelseIArbeidsevneMerEnnHalvparten = true,
@@ -82,6 +84,7 @@ internal class SykdomRepositoryImplTest {
             erNedsettelseIArbeidsevneAvEnVissVarighet = true,
             erNedsettelseIArbeidsevneMerEnnHalvparten = false,
             erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = true,
+            harNedsattArbeidsevne = ArbeidsevneNedsattValg.JA,
             erNedsettelseMinstHalvparten = ErNedsettelseMinstHalvpartenValg.NEI,
             erNedsettelseMerEnnYrkesskadegrense = ErNedsettelseMerEnnYrkesskadegrenseValg.JA,
             yrkesskadeBegrunnelse = null,
@@ -106,6 +109,7 @@ internal class SykdomRepositoryImplTest {
             erNedsettelseMerEnnYrkesskadegrense = null,
             yrkesskadeBegrunnelse = "y",
             erArbeidsevnenNedsatt = true,
+            harNedsattArbeidsevne = ArbeidsevneNedsattValg.JA,
             vurdertAv = Bruker("Z00000"),
             opprettet = Instant.now(),
             diagnose = null,
@@ -280,6 +284,7 @@ internal class SykdomRepositoryImplTest {
                             erNedsettelseMerEnnYrkesskadegrense = null,
                             yrkesskadeBegrunnelse = "b",
                             erArbeidsevnenNedsatt = true,
+                            harNedsattArbeidsevne = ArbeidsevneNedsattValg.JA_FORBIGÅENDE_PROBLEMER,
                             vurdertAv = Bruker("Z00000"),
                             vurdertIBehandling = behandling.id,
                             diagnose = null,
