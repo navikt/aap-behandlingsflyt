@@ -29,7 +29,7 @@ class YrkesskadeRepositoryImpl(private val connection: DBConnection) : Yrkesskad
         data class GrunnlagMeta(
             val grunnlagId: Long,
             val yrkesskadeId: Long?,
-            val oppgittYrkesskadeISøknad: Boolean,
+            val oppgittYrkesskadeISøknad: Boolean?,
         )
 
         val meta = connection.queryFirstOrNull<GrunnlagMeta>(
@@ -44,7 +44,7 @@ class YrkesskadeRepositoryImpl(private val connection: DBConnection) : Yrkesskad
                 GrunnlagMeta(
                     grunnlagId = it.getLong("GRUNNLAG_ID"),
                     yrkesskadeId = it.getLongOrNull("YRKESSKADE_ID"),
-                    oppgittYrkesskadeISøknad = it.getBoolean("OPPGITT_YRKESSKADE_I_SOKNAD"),
+                    oppgittYrkesskadeISøknad = it.getBooleanOrNull("OPPGITT_YRKESSKADE_I_SOKNAD"),
                 )
             }
         } ?: return null
