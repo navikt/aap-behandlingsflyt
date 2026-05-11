@@ -45,27 +45,6 @@ data class Sykdomsvurdering(
                 else true
     }
 
-    @Deprecated("Erstattet av erOppfyltForOrdinærEllerYrkesskadeSettBortIfraÅrsakssammenhengMedUtlededeFelter")
-    fun erOppfyltForYrkesskadeSettBortIfraÅrsakssammenheng(
-        kravdato: LocalDate,
-        periodenVurderingenGjelderFor: Periode
-    ): Boolean {
-        val erTilstrekkeligNedsattArbeidsevne = erNedsettelseIArbeidsevneMerEnnHalvparten == true
-                || erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense == true
-
-        return harSkadeSykdomEllerLyte
-                && erArbeidsevnenNedsatt == true
-                && erSkadeSykdomEllerLyteVesentligdel == true
-                && erTilstrekkeligNedsattArbeidsevne
-                && erVissVarighetOmRelevant(kravdato, periodenVurderingenGjelderFor)
-    }
-
-    private fun erVissVarighetOmRelevant(kravdato: LocalDate, periodenVurderingenGjelderFor: Periode): Boolean {
-        return if (erFørsteVurdering(kravdato, periodenVurderingenGjelderFor))
-            erNedsettelseIArbeidsevneAvEnVissVarighet == true
-        else true
-    }
-
     fun erOppfyltOrdinærSettBortIfraVissVarighet(): Boolean {
         return harSkadeSykdomEllerLyte
                 && erArbeidsevnenNedsatt == true
