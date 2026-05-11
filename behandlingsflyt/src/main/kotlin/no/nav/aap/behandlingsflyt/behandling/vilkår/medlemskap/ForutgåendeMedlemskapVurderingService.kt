@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap
 
+import no.nav.aap.behandlingsflyt.behandling.lovvalg.ArbeidINorgeGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.ForutgåendeMedlemskapArbeidInntektGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.ForutgåendeMedlemskapGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.InntektINorgeGrunnlag
@@ -84,8 +85,52 @@ class ForutgåendeMedlemskapVurderingService(
         val harUtenlandsAdresse = utenlandskAdresse(grunnlag.personopplysningGrunnlag, forutgåendePeriode)
         val annetLovvalgsland = lovvalgslandIkkeErNorge(grunnlag.medlemskapArbeidInntektGrunnlag?.medlemskapGrunnlag)
         val utenforEØS = manglerStatsborgerskapIEØSiPerioden(grunnlag.personopplysningGrunnlag, forutgåendePeriode)
+        val arbeidPåSkip =
+            maritimtArbeid(
+                grunnlag.medlemskapArbeidInntektGrunnlag?.arbeiderINorgeGrunnlag ?: emptyList(),
+                forutgåendePeriode
+            )
+
+        if (unleashGateway?.isEnabled(BehandlingsflytFeature.MaritimtArbeid) == true) {
+            return listOf(
+                harJobbetIUtland,
+                harHattUtenlandsOpphold,
+                harUtenlandsAdresse,
+                annetLovvalgsland,
+                utenforEØS,
+                arbeidPåSkip
+            )
+        }
 
         return listOf(harJobbetIUtland, harHattUtenlandsOpphold, harUtenlandsAdresse, annetLovvalgsland, utenforEØS)
+    }
+
+    private fun maritimtArbeid(
+        grunnlag: List<ArbeidINorgeGrunnlag>,
+        forutgåendePeriode: Periode
+    ): TilhørighetVurdering {
+        val relevantePerioder = grunnlag.filter {
+            (it.sluttdato != null && forutgåendePeriode.inneholder(it.sluttdato)) || (forutgåendePeriode.inneholder(
+                it.startdato
+            ))
+        }
+
+        val maritimtArbeid = relevantePerioder.map {
+            MaritimtArbeidINorgeGrunnlag(
+                virksomhetId = it.identifikator,
+                fom = it.startdato,
+                tom = it.sluttdato
+            )
+        }
+
+        return TilhørighetVurdering(
+            kilde = listOf(Kilde.AA_REGISTERET),
+            indikasjon = Indikasjon.I_NORGE,
+            opplysning = "Har hatt arbeid på skip i perioden",
+            resultat = maritimtArbeid.isNotEmpty(),
+            maritimtArbeidINorge = maritimtArbeid,
+            vurdertPeriode = VurdertPeriode.SISTE_5_ÅR.beskrivelse
+        )
     }
 
     private fun oppgittJobbetIUtland(
@@ -290,11 +335,12 @@ class ForutgåendeMedlemskapVurderingService(
         val inntektINorgeGrunnlag = grunnlag?.inntekterINorgeGrunnlag?.filter { it.beloep != 0.0 }
 
         val inntekterINorgePerioder = inntektINorgeGrunnlag?.map { it.periode }
-        val sammenhengendeInntektSiste5År = if (unleashGateway?.isEnabled(BehandlingsflytFeature.ForutgaaendeGap) == true) {
-            sammenhengendePerioderMedEttMånedsgap(inntekterINorgePerioder, forutgåendePeriode)
-        } else {
-            sammenhengendePerioderAlleMndSiste5år(inntekterINorgePerioder, forutgåendePeriode)
-        }
+        val sammenhengendeInntektSiste5År =
+            if (unleashGateway?.isEnabled(BehandlingsflytFeature.ForutgaaendeGap) == true) {
+                sammenhengendePerioderMedEttMånedsgap(inntekterINorgePerioder, forutgåendePeriode)
+            } else {
+                sammenhengendePerioderAlleMndSiste5år(inntekterINorgePerioder, forutgåendePeriode)
+            }
 
         val arbeidInntektINorgeGrunnlag =
             inntektINorgeGrunnlag?.map {

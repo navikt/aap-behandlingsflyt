@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag
 
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.ArbeidINorgeGrunnlag
+import no.nav.aap.behandlingsflyt.behandling.lovvalg.Arbeidsforholdtype
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.EnhetGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForForutgåendeMedlemskap
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.utenlandsopphold.UtenlandsOppholdData
@@ -366,7 +367,7 @@ internal class MedlemskapArbeidInntektForutgåendeRepositoryImplTest {
     private fun arbeidGrunnlag(): List<ArbeidINorgeGrunnlag> = listOf(
         ArbeidINorgeGrunnlag(
             identifikator = "1234",
-            arbeidsforholdKode = "ordinaertArbeidsforhold",
+            arbeidsforholdKode = Arbeidsforholdtype.ORDINAERT_ARBEIDSFORHOLD,
             startdato = 1 mai 2020,
             sluttdato = null
         )

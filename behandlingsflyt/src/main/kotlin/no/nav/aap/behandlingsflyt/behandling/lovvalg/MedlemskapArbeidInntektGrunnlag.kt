@@ -42,10 +42,20 @@ data class InntektINorgeGrunnlag(
 
 data class ArbeidINorgeGrunnlag(
     val identifikator: String,
-    val arbeidsforholdKode: String,
+    val arbeidsforholdKode: Arbeidsforholdtype,
     val startdato: LocalDate,
     val sluttdato: LocalDate?
 )
+
+enum class Arbeidsforholdtype(val kode: String) {
+    ORDINAERT_ARBEIDSFORHOLD("ordinaertArbeidsforhold"),
+    MARITIMT_ARBEIDSFORHOLD("maritimtArbeidsforhold");
+
+    companion object {
+        fun fraKode(kode: String): Arbeidsforholdtype =
+            entries.first { it.kode == kode }
+    }
+}
 
 data class EnhetGrunnlag(
     val orgnummer: String,

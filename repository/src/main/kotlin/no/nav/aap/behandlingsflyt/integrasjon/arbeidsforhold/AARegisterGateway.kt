@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.integrasjon.arbeidsforhold
 
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.ArbeidINorgeGrunnlag
+import no.nav.aap.behandlingsflyt.behandling.lovvalg.Arbeidsforholdtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aaregisteret.ArbeidsforholdGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aaregisteret.ArbeidsforholdRequest
 import no.nav.aap.behandlingsflyt.prometheus
@@ -41,14 +42,15 @@ class AARegisterGateway : ArbeidsforholdGateway {
         )
         val response: ArbeidsforholdoversiktResponse = requireNotNull(client.post(uri = url, request = httpRequest))
 
-        return response.arbeidsforholdoversikter.filter { it.arbeidssted.type.uppercase() == "UNDERENHET" }.map { arbeidsforhold ->
-            ArbeidINorgeGrunnlag(
-                identifikator = arbeidsforhold.arbeidssted.identer.first().ident,
-                arbeidsforholdKode = arbeidsforhold.type.kode,
-                startdato = arbeidsforhold.startdato,
-                sluttdato = arbeidsforhold.sluttdato
-            )
-        }
+        return response.arbeidsforholdoversikter.filter { it.arbeidssted.type.uppercase() == "UNDERENHET" }
+            .map { arbeidsforhold ->
+                ArbeidINorgeGrunnlag(
+                    identifikator = arbeidsforhold.arbeidssted.identer.first().ident,
+                    arbeidsforholdKode = Arbeidsforholdtype.fraKode(arbeidsforhold.type.kode),
+                    startdato = arbeidsforhold.startdato,
+                    sluttdato = arbeidsforhold.sluttdato
+                )
+            }
     }
 
     override fun hentAARegisterData(request: ArbeidsforholdRequest): List<ArbeidINorgeGrunnlag> {

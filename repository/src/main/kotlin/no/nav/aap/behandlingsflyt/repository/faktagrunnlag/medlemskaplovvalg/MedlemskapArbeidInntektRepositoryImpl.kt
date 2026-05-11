@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.medlemskaplovvalg
 
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.ArbeidINorgeGrunnlag
+import no.nav.aap.behandlingsflyt.behandling.lovvalg.Arbeidsforholdtype
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.EnhetGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.InntektINorgeGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.MedlemskapArbeidInntektGrunnlag
@@ -172,7 +173,7 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
             connection.execute(arbeidQuery) {
                 setParams {
                     setString(1, forhold.identifikator)
-                    setString(2, forhold.arbeidsforholdKode)
+                    setString(2, forhold.arbeidsforholdKode.kode)
                     setLong(3, arbeiderId)
                     setLocalDate(4, forhold.startdato)
                     setLocalDate(5, forhold.sluttdato)
@@ -409,12 +410,12 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
             setRowMapper {
                 ArbeidINorgeGrunnlag(
                     identifikator = it.getString("identifikator"),
-                    arbeidsforholdKode = it.getString("arbeidsforhold_kode"),
+                    arbeidsforholdKode = Arbeidsforholdtype.fraKode(it.getString("arbeidsforhold_kode")),
                     startdato = it.getLocalDate("startdato"),
                     sluttdato = it.getLocalDateOrNull("sluttdato"),
                 )
             }
-        }
+        }.filter { it.arbeidsforholdKode != Arbeidsforholdtype.MARITIMT_ARBEIDSFORHOLD }
     }
 
     private fun hentInntekterINorgeGrunnlag(inntekterINorgeId: Long?): List<InntektINorgeGrunnlag> {
