@@ -60,7 +60,6 @@ class OpprettBehandlingGReguleringJobbUtførerTest {
     @Test
     fun `skal opprette behandling med vurderingsbehov G_REGULERING når gjeldende behandling finnes`() {
         enableToggle()
-        every { behandlingService.finnSisteYtelsesbehandlingFor(sakId) } returns null
         every { behandlingRepository.hentAlleFor(sakId) } returns emptyList()
         every { behandlingService.finnBehandlingMedSisteFattedeVedtak(sakId) } returns behandlingMedVedtak()
         every {
@@ -91,7 +90,6 @@ class OpprettBehandlingGReguleringJobbUtførerTest {
     @Test
     fun `skal ikke opprette behandling når det ikke finnes gjeldende behandling`() {
         enableToggle()
-        every { behandlingService.finnSisteYtelsesbehandlingFor(sakId) } returns null
         every { behandlingRepository.hentAlleFor(sakId) } returns emptyList()
         every { behandlingService.finnBehandlingMedSisteFattedeVedtak(sakId) } returns null
 
@@ -107,27 +105,36 @@ class OpprettBehandlingGReguleringJobbUtførerTest {
 
         opprettUtfører().utfør(jobbInput)
 
-        verify(exactly = 0) { behandlingService.finnSisteYtelsesbehandlingFor(any()) }
         verify(exactly = 0) { behandlingService.finnBehandlingMedSisteFattedeVedtak(any()) }
         verify(exactly = 0) { prosesserBehandlingService.triggProsesserBehandling(any<BehandlingService.OpprettetBehandling>()) }
     }
 
     @Test
-    fun `skal ikke opprette behandling når saken har en åpen behandling`() {
+    fun `skal opprette G-regulering selv om saken har en åpen behandling`() {
         enableToggle()
-        every { behandlingService.finnSisteYtelsesbehandlingFor(sakId) } returns behandling(status = Status.OPPRETTET)
+        every { behandlingRepository.hentAlleFor(sakId) } returns listOf(
+            behandling(status = Status.OPPRETTET)
+        )
+        every { behandlingService.finnBehandlingMedSisteFattedeVedtak(sakId) } returns behandlingMedVedtak()
+        every {
+            behandlingService.finnEllerOpprettBehandling(
+                sakId = sakId,
+                vurderingsbehovOgÅrsak = match { vurderingsbehovOgÅrsak ->
+                    vurderingsbehovOgÅrsak.årsak == ÅrsakTilOpprettelse.G_REGULERING &&
+                        vurderingsbehovOgÅrsak.vurderingsbehov.single().type == Vurderingsbehov.G_REGULERING
+                }
+            )
+        } returns opprettetBehandling()
+        every { prosesserBehandlingService.triggProsesserBehandling(any<BehandlingService.OpprettetBehandling>()) } just Runs
 
         opprettUtfører().utfør(jobbInput)
 
-        verify(exactly = 0) { prosesserBehandlingService.triggProsesserBehandling(any<BehandlingService.OpprettetBehandling>()) }
-        verify(exactly = 0) { behandlingService.finnEllerOpprettBehandling(any<SakId>(), any<VurderingsbehovOgÅrsak>()) }
-        verify(exactly = 0) { behandlingService.finnBehandlingMedSisteFattedeVedtak(any()) }
+        verify(exactly = 1) { prosesserBehandlingService.triggProsesserBehandling(any<BehandlingService.OpprettetBehandling>()) }
     }
 
     @Test
     fun `skal ikke opprette behandling når det allerede finnes en fullført G-regulering`() {
         enableToggle()
-        every { behandlingService.finnSisteYtelsesbehandlingFor(sakId) } returns null
         every { behandlingRepository.hentAlleFor(sakId) } returns listOf(
             behandling(
                 status = Status.AVSLUTTET,

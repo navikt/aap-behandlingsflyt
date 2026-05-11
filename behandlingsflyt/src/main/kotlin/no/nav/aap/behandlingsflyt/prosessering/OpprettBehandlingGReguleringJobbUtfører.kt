@@ -33,12 +33,6 @@ class OpprettBehandlingGReguleringJobbUtfører(
 
         val sakId = SakId(input.sakId())
 
-        val sisteYtelsesbehandling = behandlingService.finnSisteYtelsesbehandlingFor(sakId)
-        if (sisteYtelsesbehandling != null && sisteYtelsesbehandling.status().erÅpen()) {
-            log.info("Sak med id $sakId har allerede en åpen behandling (${sisteYtelsesbehandling.id}), oppretter ikke G-regulering")
-            return
-        }
-
         // TODO: Midlertidig sjekk — erstatt med pr-år-logikk når permanent løsning er på plass
         if (harFullførtGRegulering(sakId)) {
             log.info("Sak med id $sakId har allerede en fullført G-regulering, oppretter ikke ny")
