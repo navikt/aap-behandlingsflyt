@@ -122,6 +122,7 @@ class ForutgåendeMedlemskapVurderingService(
             .map {
                 BestemtArbeidsgruppeINorgeGrunnlag(
                     virksomhetId = it.identifikator,
+                    virksomhetNavn = it.organisasjonsNavn,
                     fom = it.startdato,
                     tom = it.sluttdato
                 )
