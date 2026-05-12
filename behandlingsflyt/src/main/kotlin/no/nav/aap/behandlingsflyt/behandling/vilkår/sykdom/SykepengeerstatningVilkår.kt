@@ -56,7 +56,7 @@ class SykepengeerstatningVilkår(vilkårsresultat: Vilkårsresultat) :
         }
         
         return if (sykepengeerstatningVurdering?.harRettPå == true &&
-            sykdomsvurdering?.erKonsistentMedSykepengeerstatning(yrkesskadeVurdering) ?: false // TODO: Bytt ut denne med ny
+            sykdomsvurdering?.erKonsistentMedSykepengeerstatning(yrkesskadeVurdering) ?: false
         ) {
             Vilkårsvurdering(
                 Vilkårsperiode(
