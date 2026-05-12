@@ -11,14 +11,17 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.test.FakeUnleashBaseWithDefaultDisabled
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryTilkjentYtelseRepository
 import no.nav.aap.behandlingsflyt.test.januar
+import no.nav.aap.behandlingsflyt.test.juli
 import no.nav.aap.behandlingsflyt.test.juni
 import no.nav.aap.behandlingsflyt.test.mai
+import no.nav.aap.behandlingsflyt.test.mars
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.GUnit
 import no.nav.aap.komponenter.verdityper.Prosent.Companion.`0_PROSENT`
 import no.nav.aap.komponenter.verdityper.Prosent.Companion.`100_PROSENT`
+import no.nav.aap.komponenter.verdityper.Tid
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -45,6 +48,7 @@ class GrunnbeløpInformasjonskravTest {
     fun `skal returnere IKKE_ENDRET når ingen tilkjent ytelse finnes`() {
         val resultat = informasjonskrav.oppdater(IngenInput, IngenRegisterData, kontekst())
 
+        Grunnbeløp.tilTidslinje().begrensetTil(Periode(1 januar 2025, Tid.MAKS))
         assertThat(resultat).isEqualTo(Informasjonskrav.Endret.IKKE_ENDRET)
     }
 
@@ -97,6 +101,34 @@ class GrunnbeløpInformasjonskravTest {
             tomtTilkjentYtelseGrunnlag,
             ""
         )
+
+        val resultat = informasjonskrav.oppdater(IngenInput, IngenRegisterData, kontekst)
+
+        assertThat(resultat).isEqualTo(Informasjonskrav.Endret.ENDRET)
+    }
+
+    @Test
+    fun `skal returnere ENDRET når periode krysser G-grensen med gammelt grunnbeløp`() {
+        val periodeFom = 1 mars 2025
+        val periodeTom = 1 juli 2025
+        val gammeltG = Grunnbeløp.finnGrunnbeløp(periodeFom) // G som gjelder fra mai 2024
+
+        val kontekst = kontekst()
+        lagreTilkjentYtelse(kontekst, periodeFom, periodeTom, gammeltG)
+
+        val resultat = informasjonskrav.oppdater(IngenInput, IngenRegisterData, kontekst)
+
+        assertThat(resultat).isEqualTo(Informasjonskrav.Endret.ENDRET)
+    }
+
+    @Test
+    fun `skal returnere ENDRET når periode krysser G-grensen med nytt grunnbeløp`() {
+        val periodeFom = 1 mars 2025
+        val periodeTom = 1 juli 2025
+        val nyttG = Grunnbeløp.finnGrunnbeløp(1 mai 2025) // G som gjelder fra mai 2025
+
+        val kontekst = kontekst()
+        lagreTilkjentYtelse(kontekst, periodeFom, periodeTom, nyttG)
 
         val resultat = informasjonskrav.oppdater(IngenInput, IngenRegisterData, kontekst)
 

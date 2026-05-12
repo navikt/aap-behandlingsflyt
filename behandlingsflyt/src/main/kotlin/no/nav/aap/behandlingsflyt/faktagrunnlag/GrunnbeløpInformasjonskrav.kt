@@ -56,13 +56,20 @@ class GrunnbeløpInformasjonskrav(
     ): Informasjonskrav.Endret {
         val tilkjentYtelsePerioder = tilkjentYtelseRepository.hentHvisEksisterer(kontekst.behandlingId)
             ?: return IKKE_ENDRET
-        
-        // Sjekker om tilkjent ytelse har perioder hvor anvendt grunnbeløp er forskjellig fra gjeldende
-        // grunnbeløp for perioden.
-        // TODO skal vi legge inn en sperre på hvilke grunnbeløp vi sjekker?
+
+        // Fanger opp at G endres underveis i en periode med tilkjent ytelse:
+        //
+        //   Tilkjent:    |------------ G=124 028 ------------|
+        //   Gjeldende G: |--- G=124 028 ---|--- G=130 160 ---|
+        //                21. apr         1. mai            5. mai
+        //                                  ↑
+        //                            G endres her → ENDRET
+        //
+        val grunnbeløpTidslinje = Grunnbeløp.tilTidslinje()
         val harEndretGrunnbeløp = tilkjentYtelsePerioder.any { periode ->
-            val gjeldende = Grunnbeløp.finnGrunnbeløp(periode.periode.fom)
-            gjeldende != periode.tilkjent.grunnbeløp
+            grunnbeløpTidslinje.begrensetTil(periode.periode).segmenter().any { segment ->
+                segment.verdi != periode.tilkjent.grunnbeløp
+            }
         }
 
         return if (harEndretGrunnbeløp) ENDRET else IKKE_ENDRET
