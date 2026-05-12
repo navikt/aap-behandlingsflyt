@@ -124,7 +124,7 @@ class ForutgåendeMedlemskapVurderingServiceTest {
 
         assertThat(vurdering.resultat).isTrue
         assertThat(vurdering.maritimtArbeidINorge).hasSize(1)
-        assertThat(vurdering.maritimtArbeidINorge!!.first().virksomhetId).isEqualTo("skip-org-123")
+        assertThat(vurdering.maritimtArbeidINorge!!.first().virksomhetId).isEqualTo("123412341")
     }
 
     @Test

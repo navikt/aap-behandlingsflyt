@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap
 
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.ArbeidINorgeGrunnlag
+import no.nav.aap.behandlingsflyt.behandling.lovvalg.Arbeidsforholdtype
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.ForutgåendeMedlemskapArbeidInntektGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.ForutgåendeMedlemskapGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.InntektINorgeGrunnlag
@@ -110,9 +111,10 @@ class ForutgåendeMedlemskapVurderingService(
         forutgåendePeriode: Periode
     ): TilhørighetVurdering {
         val relevantePerioder = grunnlag.filter {
-            (it.sluttdato != null && forutgåendePeriode.inneholder(it.sluttdato))
+            it.arbeidsforholdKode == Arbeidsforholdtype.MARITIMT_ARBEIDSFORHOLD
+                    && ((it.sluttdato != null && forutgåendePeriode.inneholder(it.sluttdato))
                     || forutgåendePeriode.inneholder(it.startdato)
-                    || (it.sluttdato == null && it.startdato.isBefore(forutgåendePeriode.fom))
+                    || (it.sluttdato == null && it.startdato.isBefore(forutgåendePeriode.fom)))
         }
 
         val maritimtArbeid = relevantePerioder.map {
