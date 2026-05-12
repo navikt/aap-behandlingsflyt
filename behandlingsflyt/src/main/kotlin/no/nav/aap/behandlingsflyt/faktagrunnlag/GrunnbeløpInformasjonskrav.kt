@@ -73,6 +73,7 @@ class GrunnbeløpInformasjonskrav(
         val tilkjentYtelseTidslinje = tilkjentYtelsePerioder.tilTidslinje()
         val grunnbeløpTidslinje = Grunnbeløp.tilTidslinje()
 
+        // Sjekker om grunnbeløpet brukt i eksisterende tilkjent ytelse-periode er forskjellig fra gjeldende grunnbeløp.
         val endredeGrunnbeløp = tilkjentYtelseTidslinje
             .innerJoin(oppfyltUnderveisTidslinje, { ty, _ -> ty })
             .innerJoin(grunnbeløpTidslinje, { ty, grunnbeløp ->
