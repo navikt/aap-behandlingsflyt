@@ -25,6 +25,7 @@ class SykdomsvurderingTest {
             erNedsettelseMinstHalvparten = null,
             erNedsettelseMerEnnYrkesskadegrense = null,
             erArbeidsevnenNedsatt = true,
+            harNedsattArbeidsevne = ArbeidsevneNedsattValg.JA,
             yrkesskadeBegrunnelse = null,
             erNedsettelseIArbeidsevneAvEnVissVarighet = false,
             vurderingenGjelderFra = 1 januar 2020,
@@ -32,7 +33,7 @@ class SykdomsvurderingTest {
             vurdertAv = Bruker("Z00000"),
             opprettet = Instant.now(),
             vurdertIBehandling = BehandlingId(1L),
-            diagnose = null
+            diagnose = null,
         )
 
         assertThat(
@@ -64,6 +65,7 @@ class SykdomsvurderingTest {
             erNedsettelseMinstHalvparten = null,
             erNedsettelseMerEnnYrkesskadegrense = null,
             erArbeidsevnenNedsatt = true,
+            harNedsattArbeidsevne = ArbeidsevneNedsattValg.JA,
             yrkesskadeBegrunnelse = null,
             erNedsettelseIArbeidsevneAvEnVissVarighet = erNedsettelseIArbeidsevneAvEnVissVarighet,
             vurderingenGjelderFra = kravdato.plusDays(1),
@@ -90,6 +92,7 @@ class SykdomsvurderingTest {
             erNedsettelseMinstHalvparten = null,
             erNedsettelseMerEnnYrkesskadegrense = null,
             erArbeidsevnenNedsatt = true,
+            harNedsattArbeidsevne = ArbeidsevneNedsattValg.JA,
             yrkesskadeBegrunnelse = null,
             erNedsettelseIArbeidsevneAvEnVissVarighet = false,
             vurderingenGjelderFra = gjelderFra,

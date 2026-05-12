@@ -4,7 +4,6 @@ import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.GUnit
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.komponenter.verdityper.Prosent.Companion.`100_PROSENT`
-import java.math.RoundingMode
 import java.time.LocalDate
 
 /**
@@ -59,28 +58,25 @@ data class Tilkjent(
     fun redusertDagsats(): Beløp {
         if (redusertDagsats != null) return redusertDagsats
 
-        return maks(
-            Beløp(0),
-            Beløp(
-                dagsats.multiplisert(gradering)
-                    .pluss(barnetillegg.multiplisert(gradering))
-                    .minus(barnepensjonDagsats)
-                    .verdi().setScale(0, RoundingMode.HALF_UP)
-            )
+        /* I historiske behandlinger, så er ikke `redusertDagsats` lagret
+         * ned. Regner derfor ut her. Burde vurdere å backfille, slik at
+         * vi ikke trenger denne kodesnutten.
+         */
+        return BeregnTilkjentYtelseService.redusertDagsats(
+            dagsats = dagsats,
+            barnetillegg = barnetillegg,
+            barnepensjonDagsats = barnepensjonDagsats,
+            gradering = gradering,
         )
     }
 
     @Suppress("FunctionName")
     fun dagsatsFor11_9Reduksjon(): Beløp {
-        return maks(
-            Beløp(0),
-            Beløp(
-                dagsats.multiplisert(graderingGrunnlag.graderingForDagsats11_9Reduksjon())
-                    .pluss(barnetillegg.multiplisert(graderingGrunnlag.graderingForDagsats11_9Reduksjon()))
-                    .minus(barnepensjonDagsats)
-                    .verdi()
-                    .setScale(0, RoundingMode.HALF_UP)
-            )
+        return BeregnTilkjentYtelseService.redusertDagsats(
+            dagsats = dagsats,
+            barnetillegg = barnetillegg,
+            barnepensjonDagsats = barnepensjonDagsats,
+            gradering = graderingGrunnlag.graderingForDagsats11_9Reduksjon(),
         )
     }
 }

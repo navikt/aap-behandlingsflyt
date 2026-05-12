@@ -16,14 +16,18 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Re
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ErNedsettelseMinstHalvpartenValg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.SykdomsvurderingLøsningDto
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.sykdom.SykdomRepositoryImpl
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.test.april
 import no.nav.aap.behandlingsflyt.test.minimalGatewayProvider
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
+import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
@@ -61,6 +65,7 @@ class SykepengeerstatningFlytTest(val unleashGateway: KClass<UnleashGateway>) :
                 assertThat(åpneAvklaringsbehov.map { it.definisjon }).describedAs(
                     "Bistandsbehov skal ikke vurderes hvis viss varighet er nei"
                 ).doesNotContain(Definisjon.AVKLAR_BISTANDSBEHOV)
+                validerAtSykdomsvurderingHarSattNedsattArbeidsevneMedForbigåendeValg(behandling.id)
             }
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
@@ -102,6 +107,15 @@ class SykepengeerstatningFlytTest(val unleashGateway: KClass<UnleashGateway>) :
                 assertThat(resultat).isEqualTo(Resultat.INNVILGELSE)
             }
 
+    }
+
+    private fun validerAtSykdomsvurderingHarSattNedsattArbeidsevneMedForbigåendeValg(id: BehandlingId) {
+        dataSource.transaction { connection ->
+            val sykdomsgrunnlag = SykdomRepositoryImpl(connection).hent(id)
+            val vurderinger = sykdomsgrunnlag.sykdomsvurderinger
+            assertThat(vurderinger).hasSize(1)
+            assertThat(vurderinger.first().harNedsattArbeidsevne).isEqualTo(ArbeidsevneNedsattValg.JA_FORBIGÅENDE_PROBLEMER)
+        }
     }
 
     @Test

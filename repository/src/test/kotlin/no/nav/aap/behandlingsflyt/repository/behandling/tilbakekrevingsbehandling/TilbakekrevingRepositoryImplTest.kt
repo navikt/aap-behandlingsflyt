@@ -65,11 +65,16 @@ class TilbakekrevingRepositoryImplTest {
             assertThat(behandlinger.first().behandlingsstatus).isEqualTo(TilbakekrevingBehandlingsstatus.OPPRETTET)
 
 
-            repo.lagre(sak.id, hendelse.copy(behandlingsstatus = TilbakekrevingBehandlingsstatus.TIL_BEHANDLING))
+            val nyEksternBehandlingId = UUID.randomUUID().toString()
+            repo.lagre(sak.id, hendelse.copy(
+                behandlingsstatus = TilbakekrevingBehandlingsstatus.TIL_BEHANDLING,
+                eksternBehandlingId = nyEksternBehandlingId
+            ))
             val behandlingerEtterHendelse2 = repo.hent(sak.id)
 
             assertThat(behandlingerEtterHendelse2).hasSize(1)
             assertThat(behandlingerEtterHendelse2.first().behandlingsstatus).isEqualTo(TilbakekrevingBehandlingsstatus.TIL_BEHANDLING)
+            assertThat(behandlingerEtterHendelse2.first().eksternBehandlingId).isEqualTo(nyEksternBehandlingId)
         }
 
     }

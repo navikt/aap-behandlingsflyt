@@ -127,7 +127,7 @@ fun NormalOpenAPIRoute.sykdomsgrunnlagApi(
                     YrkesskadeVurderingGrunnlagResponse(
                         kanSaksbehandle(),
                         opplysninger = InnhentetSykdomsOpplysninger(
-                            oppgittYrkesskadeISøknad = false,
+                            oppgittYrkesskadeISøknad = yrkesskadeGrunnlag?.oppgittYrkesskadeISøknad,
                             innhentedeYrkesskader = innhentedeYrkesskader,
                         ),
                         yrkesskadeVurdering = sykdomGrunnlag?.yrkesskadevurdering?.toResponse(ansattInfoService),

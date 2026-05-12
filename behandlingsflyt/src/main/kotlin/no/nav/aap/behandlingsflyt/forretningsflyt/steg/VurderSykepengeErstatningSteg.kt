@@ -82,6 +82,7 @@ class VurderSykepengeErstatningSteg private constructor(
             VurderingType.AUTOMATISK_BREV,
             VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
             VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9,
+            VurderingType.G_REGULERING,
             VurderingType.IKKE_RELEVANT -> {
                 /* noop */
             }
@@ -108,7 +109,7 @@ class VurderSykepengeErstatningSteg private constructor(
                 is TidligereVurderinger.IkkeBehandlingsgrunnlag -> false
                 is TidligereVurderinger.UunngåeligAvslag -> false
                 is TidligereVurderinger.PotensieltOppfylt -> when (behandlingsutfall.rettighetstype) {
-                    null -> sykdomsvurdering?.erKonsistentMedSykepengeerstatning(yrkesskadevurdering) == true
+                    null -> sykdomsvurdering?.erKonsistentMedSykepengeerstatningGammel(yrkesskadevurdering) == true
                     else -> false
                 }
             }

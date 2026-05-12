@@ -7,15 +7,19 @@ import io.mockk.Runs
 import io.mockk.verify
 import no.nav.aap.behandlingsflyt.behandling.gregulering.GReguleringService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
+import no.nav.aap.behandlingsflyt.test.april
+import no.nav.aap.behandlingsflyt.test.desember
 import no.nav.aap.behandlingsflyt.test.fixedClock
+import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.behandlingsflyt.test.juni
+import no.nav.aap.behandlingsflyt.test.mai
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.JobbInput
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.Year
@@ -25,7 +29,6 @@ class OpprettJobbForGReguleringJobbUtførerTest {
     private val dagensDato = 1 juni 2025
     private val clock = fixedClock(dagensDato)
 
-    private val behandlingService = mockk<BehandlingService>()
     private val gReguleringService = mockk<GReguleringService>()
     private val flytJobbRepository = mockk<FlytJobbRepository>()
     private val unleashGateway = mockk<UnleashGateway>()
@@ -34,7 +37,6 @@ class OpprettJobbForGReguleringJobbUtførerTest {
 
     private fun opprettUtfører() =
         OpprettJobbForGReguleringJobbUtfører(
-            behandlingService = behandlingService,
             gReguleringService = gReguleringService,
             flytJobbRepository = flytJobbRepository,
             clock = clock,
@@ -56,7 +58,7 @@ class OpprettJobbForGReguleringJobbUtførerTest {
         opprettUtfører().utfør(jobbInput)
 
         verify(exactly = 0) { gReguleringService.finnesGrunnbeløpForÅr(any()) }
-        verify(exactly = 0) { gReguleringService.hentSakerMedAktuellGJustering(any()) }
+        verify(exactly = 0) { gReguleringService.hentSakerForGRegulering(any()) }
         verify(exactly = 0) { flytJobbRepository.leggTil(any()) }
     }
 
@@ -69,11 +71,89 @@ class OpprettJobbForGReguleringJobbUtførerTest {
 
         every { gReguleringService.finnesGrunnbeløpForÅr(Year.of(2025)) } returns
             Grunnbeløp.GrunnbeløpDto(dato = gjusteringDato, beløp = Beløp(130_160))
-        every { gReguleringService.hentSakerMedAktuellGJustering(gjusteringDato) } returns setOf(sakId)
+        every { gReguleringService.hentSakerForGRegulering(gjusteringDato) } returns setOf(sakId)
         every { flytJobbRepository.leggTil(any()) } just Runs
 
         opprettUtfører().utfør(jobbInput)
 
         verify(exactly = 1) { flytJobbRepository.leggTil(any()) }
+    }
+
+    @Test
+    fun `skal bruke forrige års G-justering når dagsdato er i januar (før 1 mai)`() {
+        enableToggle()
+
+        val utfører = OpprettJobbForGReguleringJobbUtfører(
+            gReguleringService = gReguleringService,
+            flytJobbRepository = flytJobbRepository,
+            clock = fixedClock(15 januar 2027),
+            unleashGateway = unleashGateway,
+        )
+
+        // 15. jan 2027 → G-periode-år = 2026 → leter etter 2026-G-justeringen
+        val gjusteringDato = LocalDate.of(2026, 5, 1)
+        val sakId = SakId(99L)
+
+        every { gReguleringService.finnesGrunnbeløpForÅr(Year.of(2026)) } returns
+            Grunnbeløp.GrunnbeløpDto(dato = gjusteringDato, beløp = Beløp(135_000))
+        every { gReguleringService.hentSakerForGRegulering(gjusteringDato) } returns setOf(sakId)
+        every { flytJobbRepository.leggTil(any()) } just Runs
+
+        utfører.utfør(jobbInput)
+
+        verify(exactly = 1) { flytJobbRepository.leggTil(any()) }
+        verify(exactly = 1) { gReguleringService.finnesGrunnbeløpForÅr(Year.of(2026)) }
+        verify(exactly = 0) { gReguleringService.finnesGrunnbeløpForÅr(Year.of(2027)) }
+    }
+
+    @Test
+    fun `skal bruke inneværende års G-justering når dagsdato er 1 mai eller etter`() {
+        enableToggle()
+
+        val utfører = OpprettJobbForGReguleringJobbUtfører(
+            gReguleringService = gReguleringService,
+            flytJobbRepository = flytJobbRepository,
+            clock = fixedClock(1 mai 2027),
+            unleashGateway = unleashGateway,
+        )
+
+        // 1. mai 2027 → G-periode-år = 2027 → leter etter 2027-G-justeringen
+        val gjusteringDato = LocalDate.of(2027, 5, 1)
+        val sakId = SakId(77L)
+
+        every { gReguleringService.finnesGrunnbeløpForÅr(Year.of(2027)) } returns
+            Grunnbeløp.GrunnbeløpDto(dato = gjusteringDato, beløp = Beløp(140_000))
+        every { gReguleringService.hentSakerForGRegulering(gjusteringDato) } returns setOf(sakId)
+        every { flytJobbRepository.leggTil(any()) } just Runs
+
+        utfører.utfør(jobbInput)
+
+        verify(exactly = 1) { flytJobbRepository.leggTil(any()) }
+        verify(exactly = 0) { gReguleringService.finnesGrunnbeløpForÅr(Year.of(2026)) }
+        verify(exactly = 1) { gReguleringService.finnesGrunnbeløpForÅr(Year.of(2027)) }
+    }
+
+    @Test
+    fun `gPeriodeÅr - dato i januar gir forrige år`() {
+        val utfører = opprettUtfører()
+        assertThat(utfører.gPeriodeÅr(15 januar 2027)).isEqualTo(Year.of(2026))
+    }
+
+    @Test
+    fun `gPeriodeÅr - dato 30 april gir forrige år`() {
+        val utfører = opprettUtfører()
+        assertThat(utfører.gPeriodeÅr(30 april 2027)).isEqualTo(Year.of(2026))
+    }
+
+    @Test
+    fun `gPeriodeÅr - dato 1 mai gir inneværende år`() {
+        val utfører = opprettUtfører()
+        assertThat(utfører.gPeriodeÅr(1 mai 2027)).isEqualTo(Year.of(2027))
+    }
+
+    @Test
+    fun `gPeriodeÅr - dato i desember gir inneværende år`() {
+        val utfører = opprettUtfører()
+        assertThat(utfører.gPeriodeÅr(31 desember 2027)).isEqualTo(Year.of(2027))
     }
 }

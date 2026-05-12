@@ -133,7 +133,7 @@ class TidligereVurderingerImpl(
                         .orEmpty()
 
                 tidligereVurderinger.leftJoin(sykdomstidslinje) { segmentPeriode, foreløpigUtfall, sykdomsvurdering ->
-                    val sykdomDefinitivtAvslag = sykdomsvurdering?.erOppfyltOrdinærMedUtlededeFelter() == false
+                    val sykdomDefinitivtAvslag = sykdomsvurdering?.erOppfyltOrdinærMedUtlededeFelterGammel() == false
                             && !sykdomsvurdering.erOppfyltForOrdinærEllerYrkesskadeSettBortIfraÅrsakssammenhengMedUtlededeFelter()
                             && !sykdomsvurdering.erKonsistentMedSykepengeerstatningSettBortIfraÅrsakssammenheng()
                             && !potensieltOppfyltOvergangArbeid(

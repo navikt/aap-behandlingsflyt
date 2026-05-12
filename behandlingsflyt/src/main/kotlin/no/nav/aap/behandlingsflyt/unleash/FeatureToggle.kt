@@ -21,6 +21,7 @@ enum class BehandlingsflytFeature : FeatureToggle {
     ForutgaaendeGap,
     FjernTilbakefoeringTransisjon,
     GrunnbeloepInformasjonskrav,
+    MaritimtArbeid
     ;
 
     override fun key(): String = name

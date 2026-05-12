@@ -10,6 +10,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.Uføre
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangarbeid.OvergangArbeidRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
@@ -208,6 +209,7 @@ class OvergangArbeidStegTest {
         erNedsettelseMinstHalvparten = null,
         erNedsettelseMerEnnYrkesskadegrense = null,
         erArbeidsevnenNedsatt = true,
+        harNedsattArbeidsevne = ArbeidsevneNedsattValg.JA,
         yrkesskadeBegrunnelse = null,
         erNedsettelseIArbeidsevneAvEnVissVarighet = true,
         vurderingenGjelderFra = vurderingenGjelderFra,
@@ -228,6 +230,7 @@ class OvergangArbeidStegTest {
         erNedsettelseMinstHalvparten = null,
         erNedsettelseMerEnnYrkesskadegrense = null,
         erArbeidsevnenNedsatt = true,
+        harNedsattArbeidsevne = ArbeidsevneNedsattValg.JA,
         yrkesskadeBegrunnelse = "",
         erNedsettelseIArbeidsevneAvEnVissVarighet = true,
         vurderingenGjelderFra = vurderingenGjelderFra,

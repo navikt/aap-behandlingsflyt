@@ -14,6 +14,7 @@ import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import io.ktor.server.plugins.statuspages.*
 import io.ktor.server.routing.*
+import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import no.nav.aap.behandlingsflyt.api.actuator.actuator
@@ -120,6 +121,7 @@ import no.nav.aap.komponenter.server.plugins.NavIdentInterceptor
 import no.nav.aap.motor.Motor
 import no.nav.aap.motor.api.motorApi
 import no.nav.aap.motor.retry.RetryService
+import no.nav.aap.tilgang.TilgangGateway
 import org.apache.kafka.common.serialization.Deserializer
 import org.slf4j.LoggerFactory
 import org.slf4j.bridge.SLF4JBridgeHandler
@@ -219,14 +221,23 @@ internal fun Application.server(
 
     install(StatusPages, StatusPagesConfigHelper.setup())
 
-    val dataSource = initDatasource(dbConfig)
-    Migrering.migrate(dataSource)
+    val dedicatedMotorConnections = AppConfig.ANTALL_WORKERS_FOR_MOTOR * 2
+    val fellesDataSource = initDatasource(
+        dbConfig,
+        maximumPoolSize = AppConfig.hikariMaxPoolSize - dedicatedMotorConnections,
+    )
+    val motorDataSource = initDatasource(
+        dbConfig,
+        maximumPoolSize = dedicatedMotorConnections,
+    )
+    Migrering.migrate(fellesDataSource)
 
-    val scheduler = utførMigreringer(dataSource, gatewayProvider, environment.log)
+    val scheduler = utførMigreringer(fellesDataSource, gatewayProvider, environment.log)
 
-    val motor = startMotor(dataSource, repositoryRegistry, gatewayProvider)
+    val motor = startMotor(motorDataSource, repositoryRegistry, gatewayProvider)
 
-    startKafkakonsumenter(dataSource, repositoryRegistry, gatewayProvider)
+    startKafkakonsumenter(fellesDataSource, repositoryRegistry, gatewayProvider)
+    TilgangGateway.initialiserPrometheus(prometheus)
 
     monitor.subscribe(ApplicationStopPreparing) { environment ->
         environment.log.info("ktor forbereder seg på å stoppe.")
@@ -239,7 +250,8 @@ internal fun Application.server(
         try {
             scheduler.shutdownNow()
             // Helt til slutt, nå som vi har stanset Motor, etc. Lukk database-koblingen.
-            dataSource.close()
+            fellesDataSource.close()
+            motorDataSource.close()
         } catch (_: Exception) {
             // Ignorert
         }
@@ -251,86 +263,86 @@ internal fun Application.server(
 
             apiRouting {
                 configApi()
-                personApi(dataSource, repositoryRegistry, gatewayProvider)
-                saksApi(dataSource, repositoryRegistry, gatewayProvider)
-                behandlingApi(dataSource, repositoryRegistry, gatewayProvider)
-                flytApi(dataSource, repositoryRegistry, gatewayProvider)
-                fatteVedtakGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
-                kvalitetssikringApi(dataSource, repositoryRegistry, gatewayProvider)
-                kvalitetssikringTilgangApi(dataSource, repositoryRegistry)
-                bistandsgrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
-                meldepliktsgrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
-                meldepliktOverstyringGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
-                vedtakslengdeGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
-                arbeidsevneGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
-                arbeidsopptrappingGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
-                etableringEgenVirksomhetApi(dataSource, repositoryRegistry, gatewayProvider)
-                overgangUforeGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
-                medlemskapsgrunnlagApi(dataSource, repositoryRegistry)
-                studentgrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
-                sykestipendGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
-                sykdomsgrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
-                sykdomsvurderingForBrevApi(dataSource, repositoryRegistry, gatewayProvider)
-                sykepengerGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
-                inntektsbortfallGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
-                oppholdskravGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
-                institusjonApi(dataSource, repositoryRegistry, gatewayProvider)
-                avklaringsbehovApi(dataSource, repositoryRegistry, gatewayProvider)
-                tilkjentYtelseApi(dataSource, repositoryRegistry)
-                foreslaaVedtakApi(dataSource, repositoryRegistry)
-                foreslaaVedtakVedtakslengdeApi(dataSource, repositoryRegistry)
-                trukketSøknadGrunnlagApi(dataSource, repositoryRegistry)
-                avbrytRevurderingGrunnlagApi(dataSource, repositoryRegistry)
-                rettighetsperiodeGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
-                beregningVurderingApi(dataSource, repositoryRegistry, gatewayProvider)
-                beregningsGrunnlagApi(dataSource, repositoryRegistry)
-                aldersGrunnlagApi(dataSource, repositoryRegistry)
-                barnetilleggApi(dataSource, repositoryRegistry, gatewayProvider)
-                motorApi(dataSource)
-                behandlingsflytPipApi(dataSource, repositoryRegistry)
-                auditlogApi(dataSource, repositoryRegistry)
-                refusjonGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
-                manglendeGrunnlagApi(dataSource, repositoryRegistry)
-                mellomlagretVurderingApi(dataSource, repositoryRegistry, gatewayProvider)
-                rettighetsinfoApi(dataSource, repositoryRegistry)
-                tidligereVurderingerApi(dataSource, repositoryRegistry, gatewayProvider)
-                barnepensjonGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
-                bekreftVurderingerOppfølgingApi(dataSource, repositoryRegistry, gatewayProvider)
+                personApi(fellesDataSource, repositoryRegistry, gatewayProvider)
+                saksApi(fellesDataSource, repositoryRegistry, gatewayProvider)
+                behandlingApi(fellesDataSource, repositoryRegistry, gatewayProvider)
+                flytApi(fellesDataSource, repositoryRegistry, gatewayProvider)
+                fatteVedtakGrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
+                kvalitetssikringApi(fellesDataSource, repositoryRegistry, gatewayProvider)
+                kvalitetssikringTilgangApi(fellesDataSource, repositoryRegistry)
+                bistandsgrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
+                meldepliktsgrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
+                meldepliktOverstyringGrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
+                vedtakslengdeGrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
+                arbeidsevneGrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
+                arbeidsopptrappingGrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
+                etableringEgenVirksomhetApi(fellesDataSource, repositoryRegistry, gatewayProvider)
+                overgangUforeGrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
+                medlemskapsgrunnlagApi(fellesDataSource, repositoryRegistry)
+                studentgrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
+                sykestipendGrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
+                sykdomsgrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
+                sykdomsvurderingForBrevApi(fellesDataSource, repositoryRegistry, gatewayProvider)
+                sykepengerGrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
+                inntektsbortfallGrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
+                oppholdskravGrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
+                institusjonApi(fellesDataSource, repositoryRegistry, gatewayProvider)
+                avklaringsbehovApi(fellesDataSource, repositoryRegistry, gatewayProvider)
+                tilkjentYtelseApi(fellesDataSource, repositoryRegistry)
+                foreslaaVedtakApi(fellesDataSource, repositoryRegistry)
+                foreslaaVedtakVedtakslengdeApi(fellesDataSource, repositoryRegistry)
+                trukketSøknadGrunnlagApi(fellesDataSource, repositoryRegistry)
+                avbrytRevurderingGrunnlagApi(fellesDataSource, repositoryRegistry)
+                rettighetsperiodeGrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
+                beregningVurderingApi(fellesDataSource, repositoryRegistry, gatewayProvider)
+                beregningsGrunnlagApi(fellesDataSource, repositoryRegistry)
+                aldersGrunnlagApi(fellesDataSource, repositoryRegistry)
+                barnetilleggApi(fellesDataSource, repositoryRegistry, gatewayProvider)
+                motorApi(fellesDataSource)
+                behandlingsflytPipApi(fellesDataSource, repositoryRegistry)
+                auditlogApi(fellesDataSource, repositoryRegistry)
+                refusjonGrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
+                manglendeGrunnlagApi(fellesDataSource, repositoryRegistry)
+                mellomlagretVurderingApi(fellesDataSource, repositoryRegistry, gatewayProvider)
+                rettighetsinfoApi(fellesDataSource, repositoryRegistry)
+                tidligereVurderingerApi(fellesDataSource, repositoryRegistry, gatewayProvider)
+                barnepensjonGrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
+                bekreftVurderingerOppfølgingApi(fellesDataSource, repositoryRegistry, gatewayProvider)
                 // Klage
-                påklagetBehandlingGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
-                fullmektigGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
-                formkravGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
-                behandlendeEnhetGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
-                klagebehandlingKontorGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
-                klagebehandlingNayGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
-                klageresultatApi(dataSource, repositoryRegistry)
-                trekkKlageGrunnlagApi(dataSource, repositoryRegistry)
+                påklagetBehandlingGrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
+                fullmektigGrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
+                formkravGrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
+                behandlendeEnhetGrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
+                klagebehandlingKontorGrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
+                klagebehandlingNayGrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
+                klageresultatApi(fellesDataSource, repositoryRegistry)
+                trekkKlageGrunnlagApi(fellesDataSource, repositoryRegistry)
                 // Svar fra kabal
-                svarFraAndreinstansGrunnlagApi(dataSource, repositoryRegistry)
+                svarFraAndreinstansGrunnlagApi(fellesDataSource, repositoryRegistry)
                 // Oppfølgingsbehandling
-                avklarOppfolgingsoppgaveGrunnlag(dataSource, repositoryRegistry)
-                oppfølgingsOppgaveApi(dataSource, repositoryRegistry)
+                avklarOppfolgingsoppgaveGrunnlag(fellesDataSource, repositoryRegistry)
+                oppfølgingsOppgaveApi(fellesDataSource, repositoryRegistry)
                 // Aktivitetsplikt
-                aktivitetsplikt11_7GrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
-                aktivitetsplikt11_9GrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
+                aktivitetsplikt11_7GrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
+                aktivitetsplikt11_9GrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
                 // Meldekort
-                meldekortApi(dataSource, repositoryRegistry, gatewayProvider)
+                meldekortApi(fellesDataSource, repositoryRegistry, gatewayProvider)
                 // Flytt
-                brevApi(dataSource, repositoryRegistry, gatewayProvider)
-                dokumentinnhentingApi(dataSource, repositoryRegistry, gatewayProvider)
-                mottattHendelseApi(dataSource, repositoryRegistry)
-                underveisVurderingerApi(dataSource, repositoryRegistry)
-                lovvalgMedlemskapApi(dataSource, repositoryRegistry, gatewayProvider)
-                lovvalgMedlemskapGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
-                samordningGrunnlag(dataSource, repositoryRegistry, gatewayProvider)
-                forutgåendeMedlemskapApi(dataSource, repositoryRegistry, gatewayProvider)
-                driftApi(dataSource, repositoryRegistry, gatewayProvider)
-                simuleringApi(dataSource, repositoryRegistry, gatewayProvider)
-                overgangArbeidGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
+                brevApi(fellesDataSource, repositoryRegistry, gatewayProvider)
+                dokumentinnhentingApi(fellesDataSource, repositoryRegistry, gatewayProvider)
+                mottattHendelseApi(fellesDataSource, repositoryRegistry)
+                underveisVurderingerApi(fellesDataSource, repositoryRegistry)
+                lovvalgMedlemskapApi(fellesDataSource, repositoryRegistry, gatewayProvider)
+                lovvalgMedlemskapGrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
+                samordningGrunnlag(fellesDataSource, repositoryRegistry, gatewayProvider)
+                forutgåendeMedlemskapApi(fellesDataSource, repositoryRegistry, gatewayProvider)
+                driftApi(fellesDataSource, repositoryRegistry, gatewayProvider)
+                simuleringApi(fellesDataSource, repositoryRegistry, gatewayProvider)
+                overgangArbeidGrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
                 // Endepunkter kun tilgjengelig lokalt og i test
                 if (!Miljø.erProd()) {
-                    opprettDummySakApi(dataSource, repositoryRegistry, gatewayProvider)
-                    fullførBehandlingApi(dataSource, repositoryRegistry, gatewayProvider)
+                    opprettDummySakApi(fellesDataSource, repositoryRegistry, gatewayProvider)
+                    fullførBehandlingApi(fellesDataSource, repositoryRegistry, gatewayProvider)
                 }
             }
         }
@@ -522,12 +534,15 @@ val postgresConfig = Properties().apply {
     put("assumeMinServerVersion", "16.0") // raskere oppstart av driver
 }
 
-fun initDatasource(dbConfig: DbConfig): HikariDataSource = HikariDataSource(HikariConfig().apply {
+fun initDatasource(
+    dbConfig: DbConfig,
+    maximumPoolSize: Int = AppConfig.hikariMaxPoolSize,
+): HikariDataSource = HikariDataSource(HikariConfig().apply {
     jdbcUrl = dbConfig.url
     username = dbConfig.username
     password = dbConfig.password
     dataSourceProperties = postgresConfig
-    maximumPoolSize = AppConfig.hikariMaxPoolSize
+    this.maximumPoolSize = maximumPoolSize
     minimumIdle = 1
     connectionTestQuery = "SELECT 1"
     metricRegistry = prometheus

@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Faktagrunnlag
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
+import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.lookup.repository.Repository
 import java.time.LocalDate
 
@@ -15,6 +16,6 @@ interface UnderveisRepository : Repository {
         input: Faktagrunnlag
     )
     fun hentSakerMedSisteUnderveisperiodeFørDato(sisteUnderveisDato: LocalDate): Set<SakId>
-    fun hentSakerMedAktuellGJustering(datoForGJustering: LocalDate): Set<SakId>
+    fun hentSakerForGRegulering(datoForGJustering: LocalDate, nyttGrunnbeløp: Beløp): Set<SakId>
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId)
 }

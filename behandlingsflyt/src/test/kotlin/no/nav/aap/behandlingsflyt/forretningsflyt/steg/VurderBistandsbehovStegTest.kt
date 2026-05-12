@@ -7,6 +7,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovServ
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.Bistandsvurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
@@ -92,6 +93,7 @@ class VurderBistandsbehovStegTest {
                             erNedsettelseMinstHalvparten = null,
                             erNedsettelseMerEnnYrkesskadegrense = null,
                             erArbeidsevnenNedsatt = true,
+                            harNedsattArbeidsevne = ArbeidsevneNedsattValg.JA,
                             yrkesskadeBegrunnelse = null,
                             erNedsettelseIArbeidsevneAvEnVissVarighet = true,
                             vurderingenGjelderFra = nyRettighetsperiode.fom,

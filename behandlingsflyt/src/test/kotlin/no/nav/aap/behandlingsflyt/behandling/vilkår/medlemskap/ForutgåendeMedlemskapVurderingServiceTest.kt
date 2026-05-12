@@ -1,5 +1,7 @@
 package no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap
 
+import no.nav.aap.behandlingsflyt.behandling.lovvalg.ArbeidINorgeGrunnlag
+import no.nav.aap.behandlingsflyt.behandling.lovvalg.Arbeidsforholdtype
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.ForutgåendeMedlemskapArbeidInntektGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.ForutgåendeMedlemskapGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.InntektINorgeGrunnlag
@@ -14,6 +16,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Pers
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Statsborgerskap
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.behandlingsflyt.test.FakeUnleashBase
+import no.nav.aap.behandlingsflyt.test.FakeUnleashBaseWithDefaultDisabled
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.type.Periode
@@ -102,6 +105,38 @@ class ForutgåendeMedlemskapVurderingServiceTest {
         assertThat(entries).hasSize(1)
         assertThat(entries.first().periodeMangler).isFalse()
         assertThat(entries.first().inntekter).hasSize(2)
+    }
+
+    @Test
+    fun `maritimtArbeid inkluderer arbeidsforhold som startet før relevant periode og fortsatt pågår`() {
+        val rettighetsperiode = Periode(LocalDate.now(), LocalDate.now().plusYears(1))
+        val serviceWithMaritimtArbeid = ForutgåendeMedlemskapVurderingService(
+            FakeUnleashBaseWithDefaultDisabled(listOf(BehandlingsflytFeature.MaritimtArbeid))
+        )
+
+        val vurdering = serviceWithMaritimtArbeid
+            .vurderTilhørighet(
+                lagGrunnlagMedMaritimtArbeid(startdato = LocalDate.now().minusYears(7), sluttdato = null),
+                rettighetsperiode
+            )
+            .tilhørighetVurdering
+            .single { it.opplysning == "Har hatt arbeid på skip i perioden" }
+
+        assertThat(vurdering.resultat).isTrue
+        assertThat(vurdering.maritimtArbeidINorge).hasSize(1)
+        assertThat(vurdering.maritimtArbeidINorge!!.first().virksomhetId).isEqualTo("123412341")
+    }
+
+    @Test
+    fun `stopp behandling når arbeidstaker har jobbet på skip i perioden`() {
+        val rettighetsperiode = Periode(LocalDate.now(), LocalDate.now().plusYears(1))
+        val service = ForutgåendeMedlemskapVurderingService(
+            FakeUnleashBaseWithDefaultDisabled(listOf(BehandlingsflytFeature.MaritimtArbeid))
+        )
+
+        val resultat = service.vurderTilhørighet(lagGrunnlagMedMaritimtArbeid(), rettighetsperiode)
+
+        assertThat(resultat.kanBehandlesAutomatisk).isFalse
     }
 
     private fun lagGrunnlag(
@@ -438,4 +473,46 @@ class ForutgåendeMedlemskapVurderingServiceTest {
             nyeSoknadGrunnlag = UtenlandsOppholdData(true, true, false, false, null)
         )
     }
+
+    private fun lagGrunnlagMedMaritimtArbeid(
+        startdato: LocalDate = LocalDate.now().minusYears(3),
+        sluttdato: LocalDate? = LocalDate.now().minusYears(1)
+    ): ForutgåendeMedlemskapGrunnlag =
+        ForutgåendeMedlemskapGrunnlag(
+            medlemskapArbeidInntektGrunnlag = ForutgåendeMedlemskapArbeidInntektGrunnlag(
+                medlemskapGrunnlag = null,
+                inntekterINorgeGrunnlag = listOf(
+                    InntektINorgeGrunnlag(
+                        "1", 1.0, "NOR", "NOR", "type",
+                        Periode(LocalDate.now().minusYears(5), LocalDate.now()),
+                        "orgname"
+                    )
+                ),
+                arbeiderINorgeGrunnlag = listOf(
+                    ArbeidINorgeGrunnlag(
+                        identifikator = "123412341",
+                        arbeidsforholdKode = Arbeidsforholdtype.MARITIMT_ARBEIDSFORHOLD,
+                        startdato = startdato,
+                        sluttdato = sluttdato
+                    )
+                ),
+                vurderinger = emptyList()
+            ),
+            personopplysningGrunnlag = PersonopplysningMedHistorikkGrunnlag(
+                brukerPersonopplysning = PersonopplysningMedHistorikk(
+                    fødselsdato = Fødselsdato(LocalDate.now().minusYears(40)),
+                    id = 1,
+                    dødsdato = null,
+                    statsborgerskap = listOf(Statsborgerskap("NOR")),
+                    folkeregisterStatuser = listOf(
+                        FolkeregisterStatus(
+                            status = PersonStatus.bosatt,
+                            gyldighetstidspunkt = LocalDate.now(),
+                            opphoerstidspunkt = LocalDate.now()
+                        )
+                    )
+                ),
+            ),
+            nyeSoknadGrunnlag = UtenlandsOppholdData(true, true, false, false, null)
+        )
 }
