@@ -66,6 +66,7 @@ import org.slf4j.LoggerFactory
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.time.LocalDate
+import kotlin.collections.emptyList
 
 class BrevUtlederService(
     private val resultatUtleder: ResultatUtleder,
@@ -433,7 +434,7 @@ class BrevUtlederService(
         val andelAvNedsettelsen = sykdomGrunnlag?.yrkesskadevurdering?.andelAvNedsettelsen?.prosentverdi()
 
         val beregning =
-            beregningVurderingRepository.hentHvisEksisterer(behandlingId)?.yrkesskadeBeløpVurdering ?: return null
+            beregningVurderingRepository.hentHvisEksisterer(behandlingId)?.yrkesskadeBeløpVurdering
 
         if ((yrkesSkadeGrunnlag == null && sykdomGrunnlag?.yrkesskadevurdering == null)
             || sykdomGrunnlag?.yrkesskadevurdering?.andelAvNedsettelsen == `0_PROSENT`
@@ -445,17 +446,15 @@ class BrevUtlederService(
             val skadedato = kompysSak?.skadedato
                 ?: ys.manuellYrkesskadeDato
                 ?: error("Mangler skadedato for yrkesskade med referanse ${ys.referanse}")
-            val inntekt =
-                requireNotNull(beregning.vurderinger.firstOrNull { it.referanse == ys.referanse }?.antattÅrligInntekt) {
-                    "Mangler antattÅrligInntekt for yrkesskade med referanse ${ys.referanse}"
-                }
-            YrkesskadeBeregningBrev.Yrkesskade(skadedato, inntekt.verdi)
+            val inntekt = beregning?.vurderinger?.firstOrNull { it.referanse == ys.referanse }?.antattÅrligInntekt
+            YrkesskadeBeregningBrev.Yrkesskade(skadedato, inntekt?.verdi)
         }
 
         return YrkesskadeBeregningBrev(
             yrkesskader = matchedeSkader,
             andelAvNedsettelseSomSkyldesYrkesskade = andelAvNedsettelsen
         )
+
     }
 
     private fun hentSykdomsvurdering(behandlingId: BehandlingId): String? {

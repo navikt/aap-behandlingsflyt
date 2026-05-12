@@ -83,6 +83,6 @@ data class YrkesskadeBeregningBrev(
 ) {
     data class Yrkesskade(
         val yrkesskadedato: LocalDate,
-        val arbeidsinntektPaaSkadetidspunktet: BigDecimal,
+        val arbeidsinntektPaaSkadetidspunktet: BigDecimal?,
     )
 }

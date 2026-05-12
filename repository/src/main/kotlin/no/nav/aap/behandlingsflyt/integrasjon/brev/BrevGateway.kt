@@ -55,6 +55,7 @@ import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureM
 import no.nav.aap.komponenter.json.DefaultJsonMapper
 import org.slf4j.LoggerFactory
 import java.io.InputStream
+import java.math.BigDecimal
 import java.net.URI
 import kotlin.collections.orEmpty
 
@@ -440,7 +441,7 @@ class BrevGateway : BrevbestillingGateway {
             yrkesskader = yrkesskadeBeregning.yrkesskader.map {
                 Faktagrunnlag.YrkesskadeBeregning.Yrkesskade(
                     yrkesskadedato = it.yrkesskadedato,
-                    arbeidsinntektPaaSkadetidspunktet = it.arbeidsinntektPaaSkadetidspunktet,
+                    arbeidsinntektPaaSkadetidspunktet = it.arbeidsinntektPaaSkadetidspunktet  ?: BigDecimal.ZERO,
                 )
             },
             andelAvNedsettelseSomSkyldesYrkesskade = yrkesskadeBeregning.andelAvNedsettelseSomSkyldesYrkesskade,
