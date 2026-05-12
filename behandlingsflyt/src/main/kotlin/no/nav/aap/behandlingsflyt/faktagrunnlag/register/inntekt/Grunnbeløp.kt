@@ -14,7 +14,7 @@ object Grunnbeløp {
     @Synchronized
     fun aktiverGJustering2026() {
         if (finnesGrunnbeløpForÅr(Year.of(2026)) == null) {
-            element(2026, 5, 999_000, 999_001)
+            element(2026, 5, 132_000, 131_387)
         }
     }
 
