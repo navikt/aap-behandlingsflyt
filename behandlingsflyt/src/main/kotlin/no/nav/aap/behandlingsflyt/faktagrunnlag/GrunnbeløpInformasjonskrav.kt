@@ -51,7 +51,7 @@ class GrunnbeløpInformasjonskrav(
         oppdatert: InformasjonskravOppdatert?
     ): Boolean {
         return unleashGateway.isEnabled(BehandlingsflytFeature.GrunnbeloepInformasjonskrav)
-                && kontekst.vurderingType in setOf(FØRSTEGANGSBEHANDLING, REVURDERING, MELDEKORT)
+                && kontekst.vurderingType in setOf(FØRSTEGANGSBEHANDLING, REVURDERING)
     }
 
     override fun klargjør(kontekst: FlytKontekstMedPerioder) = IngenInput
