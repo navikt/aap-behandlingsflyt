@@ -120,7 +120,7 @@ class ForutgåendeMedlemskapVurderingServiceTest {
                 rettighetsperiode
             )
             .tilhørighetVurdering
-            .single { it.opplysning == "Har hatt arbeid på skip i perioden" }
+            .single { it.opplysning == "Har hatt maritimt arbeidsforhold" }
 
         assertThat(vurdering.resultat).isTrue
         assertThat(vurdering.bestemtArbeidsgruppeINorge).hasSize(1)
