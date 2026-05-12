@@ -4,22 +4,28 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fød
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.SkadekombinasjonRegister
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.Yrkesskade
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.adapter.YrkesskadeRegisterGateway
+import no.nav.aap.behandlingsflyt.integrasjon.unleash.UnleashGatewayImpl
 import no.nav.aap.behandlingsflyt.prometheus
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
 import no.nav.aap.komponenter.httpklient.httpclient.Header
 import no.nav.aap.komponenter.httpklient.httpclient.RestClient
+import no.nav.aap.komponenter.httpklient.httpclient.error.InternalServerErrorHttpResponsException
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureM2MTokenProvider
 import no.nav.aap.komponenter.json.DefaultJsonMapper
+import no.nav.aap.komponenter.miljo.Miljø
+import org.slf4j.LoggerFactory
 import java.net.URI
 
 /**
  * Se Swagger: https://yrkesskade-saker.intern.dev.nav.no/swagger-ui/index.html#/Saker%20API/hentSaker
  */
 object YrkesskadeRegisterGatewayImpl : YrkesskadeRegisterGateway {
+    private val log = LoggerFactory.getLogger(javaClass)
     private val url = URI.create(requiredConfigForKey("integrasjon.yrkesskade.url")).resolve("/api/v1/saker/")
     private val config = ClientConfig(
         scope = requiredConfigForKey("integrasjon.yrkesskade.scope"),
@@ -32,6 +38,10 @@ object YrkesskadeRegisterGatewayImpl : YrkesskadeRegisterGateway {
     )
 
     override fun innhent(person: Person, fødselsdato: Fødselsdato): List<Yrkesskade> {
+        if (UnleashGatewayImpl.isEnabled(BehandlingsflytFeature.TaNedPesysOgInfotrygd) && !Miljø.erProd()) {
+            log.info("Toggle for å ta ned PESYS og Infotrygd er aktivert. Kaster feil.")
+            throw InternalServerErrorHttpResponsException("Infotrygd er nede!")
+        }
         val identer = person.identer().map(Ident::identifikator)
         //TODO: fra når skal yrkesskade hentes
         val request = YrkesskadeRequest(identer, fødselsdato.toLocalDate())
