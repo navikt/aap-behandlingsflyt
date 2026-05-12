@@ -86,8 +86,8 @@ class ForutgåendeMedlemskapVurderingService(
         val harUtenlandsAdresse = utenlandskAdresse(grunnlag.personopplysningGrunnlag, forutgåendePeriode)
         val annetLovvalgsland = lovvalgslandIkkeErNorge(grunnlag.medlemskapArbeidInntektGrunnlag?.medlemskapGrunnlag)
         val utenforEØS = manglerStatsborgerskapIEØSiPerioden(grunnlag.personopplysningGrunnlag, forutgåendePeriode)
-        val arbeidPåSkip =
-            maritimtArbeid(
+        val bestemtArbeidsgruppe =
+            bestemtArbeidsgruppe(
                 grunnlag.medlemskapArbeidInntektGrunnlag?.arbeiderINorgeGrunnlag ?: emptyList(),
                 forutgåendePeriode
             )
@@ -99,38 +99,40 @@ class ForutgåendeMedlemskapVurderingService(
                 harUtenlandsAdresse,
                 annetLovvalgsland,
                 utenforEØS,
-                arbeidPåSkip
+                bestemtArbeidsgruppe
             )
         }
 
         return listOf(harJobbetIUtland, harHattUtenlandsOpphold, harUtenlandsAdresse, annetLovvalgsland, utenforEØS)
     }
 
-    private fun maritimtArbeid(
+    private fun bestemtArbeidsgruppe(
         grunnlag: List<ArbeidINorgeGrunnlag>,
         forutgåendePeriode: Periode
     ): TilhørighetVurdering {
         val relevantePerioder = grunnlag.filter {
-            it.arbeidsforholdKode == Arbeidsforholdtype.MARITIMT_ARBEIDSFORHOLD
-                    && ((it.sluttdato != null && forutgåendePeriode.inneholder(it.sluttdato))
+            (it.sluttdato != null && forutgåendePeriode.inneholder(it.sluttdato))
                     || forutgåendePeriode.inneholder(it.startdato)
-                    || (it.sluttdato == null && it.startdato.isBefore(forutgåendePeriode.fom)))
+                    || (it.sluttdato == null && it.startdato.isBefore(forutgåendePeriode.fom))
         }
 
-        val maritimtArbeid = relevantePerioder.map {
-            MaritimtArbeidINorgeGrunnlag(
-                virksomhetId = it.identifikator,
-                fom = it.startdato,
-                tom = it.sluttdato
-            )
+        val bestemtArbeidsgruppe = relevantePerioder.filter {
+            it.arbeidsforholdKode == Arbeidsforholdtype.MARITIMT_ARBEIDSFORHOLD
         }
+            .map {
+                BestemtArbeidsgruppeINorgeGrunnlag(
+                    virksomhetId = it.identifikator,
+                    fom = it.startdato,
+                    tom = it.sluttdato
+                )
+            }
 
         return TilhørighetVurdering(
             kilde = listOf(Kilde.AA_REGISTERET),
-            indikasjon = Indikasjon.I_NORGE,
-            opplysning = "Har hatt arbeid på skip i perioden",
-            resultat = maritimtArbeid.isNotEmpty(),
-            maritimtArbeidINorge = maritimtArbeid,
+            indikasjon = Indikasjon.UTENFOR_NORGE,
+            opplysning = "Har hatt maritimt arbeidsforhold",
+            resultat = bestemtArbeidsgruppe.isNotEmpty(),
+            bestemtArbeidsgruppeINorge = bestemtArbeidsgruppe,
             vurdertPeriode = VurdertPeriode.SISTE_5_ÅR.beskrivelse
         )
     }

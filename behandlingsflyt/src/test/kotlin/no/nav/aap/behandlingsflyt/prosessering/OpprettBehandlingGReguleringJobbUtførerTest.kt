@@ -113,15 +113,43 @@ class OpprettBehandlingGReguleringJobbUtførerTest {
     }
 
     @Test
-    fun `skal ikke opprette behandling når saken har en åpen behandling`() {
+    fun `skal ikke opprette behandling når saken har en åpen førstegangsbehandling`() {
         enableToggle()
-        every { behandlingService.finnSisteYtelsesbehandlingFor(sakId) } returns behandling(status = Status.OPPRETTET)
+        every { behandlingService.finnSisteYtelsesbehandlingFor(sakId) } returns behandling(
+            status = Status.OPPRETTET,
+            typeBehandling = TypeBehandling.Førstegangsbehandling,
+        )
 
         opprettUtfører().utfør(jobbInput)
 
         verify(exactly = 0) { prosesserBehandlingService.triggProsesserBehandling(any<BehandlingService.OpprettetBehandling>()) }
         verify(exactly = 0) { behandlingService.finnEllerOpprettBehandling(any<SakId>(), any<VurderingsbehovOgÅrsak>()) }
         verify(exactly = 0) { behandlingService.finnBehandlingMedSisteFattedeVedtak(any()) }
+    }
+
+    @Test
+    fun `skal opprette behandling når saken har en åpen revurdering`() {
+        enableToggle()
+        every { behandlingService.finnSisteYtelsesbehandlingFor(sakId) } returns behandling(
+            status = Status.UTREDES,
+            typeBehandling = TypeBehandling.Revurdering,
+        )
+        every { behandlingRepository.hentAlleFor(sakId) } returns emptyList()
+        every { behandlingService.finnBehandlingMedSisteFattedeVedtak(sakId) } returns behandlingMedVedtak()
+        every {
+            behandlingService.finnEllerOpprettBehandling(
+                sakId = sakId,
+                vurderingsbehovOgÅrsak = match { vurderingsbehovOgÅrsak ->
+                    vurderingsbehovOgÅrsak.årsak == ÅrsakTilOpprettelse.G_REGULERING &&
+                        vurderingsbehovOgÅrsak.vurderingsbehov.single().type == Vurderingsbehov.G_REGULERING
+                }
+            )
+        } returns opprettetBehandling()
+        every { prosesserBehandlingService.triggProsesserBehandling(any<BehandlingService.OpprettetBehandling>()) } just Runs
+
+        opprettUtfører().utfør(jobbInput)
+
+        verify(exactly = 1) { prosesserBehandlingService.triggProsesserBehandling(any<BehandlingService.OpprettetBehandling>()) }
     }
 
     @Test
@@ -145,12 +173,13 @@ class OpprettBehandlingGReguleringJobbUtførerTest {
     private fun behandling(
         status: Status = Status.IVERKSETTES,
         vurderingsbehov: List<VurderingsbehovMedPeriode> = emptyList(),
+        typeBehandling: TypeBehandling = TypeBehandling.Førstegangsbehandling,
     ) =
         Behandling(
             sakId = sakId,
             id = behandlingId,
             referanse = BehandlingReferanse(),
-            typeBehandling = TypeBehandling.Førstegangsbehandling,
+            typeBehandling = typeBehandling,
             status = status,
             vurderingsbehov = vurderingsbehov,
             opprettetTidspunkt = LocalDateTime.now(clock),

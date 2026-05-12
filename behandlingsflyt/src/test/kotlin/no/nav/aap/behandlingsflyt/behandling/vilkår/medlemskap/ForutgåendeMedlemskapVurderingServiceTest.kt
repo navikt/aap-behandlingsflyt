@@ -120,11 +120,11 @@ class ForutgåendeMedlemskapVurderingServiceTest {
                 rettighetsperiode
             )
             .tilhørighetVurdering
-            .single { it.opplysning == "Har hatt arbeid på skip i perioden" }
+            .single { it.opplysning == "Har hatt maritimt arbeidsforhold" }
 
         assertThat(vurdering.resultat).isTrue
-        assertThat(vurdering.maritimtArbeidINorge).hasSize(1)
-        assertThat(vurdering.maritimtArbeidINorge!!.first().virksomhetId).isEqualTo("123412341")
+        assertThat(vurdering.bestemtArbeidsgruppeINorge).hasSize(1)
+        assertThat(vurdering.bestemtArbeidsgruppeINorge!!.first().virksomhetId).isEqualTo("123412341")
     }
 
     @Test
