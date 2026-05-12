@@ -77,7 +77,7 @@ object UføreGateway : UføreRegisterGateway {
     }
 
     override fun innhentMedHistorikk(person: Person, fraDato: LocalDate): Set<Uføre> {
-        if (UnleashGatewayImpl.isEnabled(BehandlingsflytFeature.TaNedPesysOgInfotrygd) && !Miljø.erProd()) {
+        if (UnleashGatewayImpl.isEnabled(BehandlingsflytFeature.TaNedPesysOgInfotrygd) && Miljø.erDev()) {
             log.info("Toggle for å ta ned PESYS og Infotrygd er aktivert. Kaster feil.")
             throw InternalServerErrorHttpResponsException("PESYS er nede!")
         }
@@ -121,7 +121,7 @@ object UføreGateway : UføreRegisterGateway {
     }
 
     override fun hentÅpenUføreSøknad(person: Person): UføreSøknad? {
-        if (UnleashGatewayImpl.isEnabled(BehandlingsflytFeature.TaNedPesysOgInfotrygd) && !Miljø.erProd()) {
+        if (UnleashGatewayImpl.isEnabled(BehandlingsflytFeature.TaNedPesysOgInfotrygd) && Miljø.erDev()) {
             log.info("Toggle for å ta ned PESYS og Infotrygd er aktivert. Kaster feil.")
             throw InternalServerErrorHttpResponsException("PESYS er nede!")
         }

@@ -38,7 +38,7 @@ object YrkesskadeRegisterGatewayImpl : YrkesskadeRegisterGateway {
     )
 
     override fun innhent(person: Person, fødselsdato: Fødselsdato): List<Yrkesskade> {
-        if (UnleashGatewayImpl.isEnabled(BehandlingsflytFeature.TaNedPesysOgInfotrygd) && !Miljø.erProd()) {
+        if (UnleashGatewayImpl.isEnabled(BehandlingsflytFeature.TaNedPesysOgInfotrygd) && Miljø.erDev()) {
             log.info("Toggle for å ta ned PESYS og Infotrygd er aktivert. Kaster feil.")
             throw InternalServerErrorHttpResponsException("Infotrygd er nede!")
         }
