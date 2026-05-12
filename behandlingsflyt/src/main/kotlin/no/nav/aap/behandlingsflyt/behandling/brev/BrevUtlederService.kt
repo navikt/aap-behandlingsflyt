@@ -63,7 +63,6 @@ import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.komponenter.verdityper.Prosent.Companion.`0_PROSENT`
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
-import java.math.BigDecimal
 import java.math.RoundingMode
 import java.time.LocalDate
 import kotlin.collections.emptyList
@@ -427,10 +426,10 @@ class BrevUtlederService(
     private fun utledYrkesskadeBeregning(behandlingId: BehandlingId): YrkesskadeBeregningBrev? {
         //TODO("🔴 Implementer utledning av yrkesskadeBeregning — se kdoc over")
         val sykdomGrunnlag = sykdomRepository.hentHvisEksisterer(behandlingId)
-        val manueltRegistrerteYrkesskade = sykdomGrunnlag?.yrkesskadevurdering?.relevanteSaker ?: emptyList()
+        val yrkesSkaderMedManuelledatoer = sykdomGrunnlag?.yrkesskadevurdering?.relevanteSaker ?: emptyList()
 
         val yrkesSkadeGrunnlag = yrkesskadeRepository.hentHvisEksisterer(behandlingId)
-        val kompysSaker = yrkesSkadeGrunnlag?.yrkesskader?.yrkesskader ?: emptyList()
+        val yrkesSkaderFraEksterntRegister = yrkesSkadeGrunnlag?.yrkesskader?.yrkesskader ?: emptyList()
         val andelAvNedsettelsen = sykdomGrunnlag?.yrkesskadevurdering?.andelAvNedsettelsen?.prosentverdi()
 
         val beregning =
@@ -441,12 +440,12 @@ class BrevUtlederService(
             || sykdomGrunnlag?.yrkesskadevurdering?.andelAvNedsettelsen == null
         ) return null
 
-        val matchedeSkader = manueltRegistrerteYrkesskade.map { ys ->
-            val kompysSak = kompysSaker.firstOrNull { it.ref == ys.referanse }
-            val skadedato = kompysSak?.skadedato
-                ?: ys.manuellYrkesskadeDato
-                ?: error("Mangler skadedato for yrkesskade med referanse ${ys.referanse}")
-            val inntekt = beregning?.vurderinger?.firstOrNull { it.referanse == ys.referanse }?.antattÅrligInntekt
+        val matchedeSkader = yrkesSkaderFraEksterntRegister.map { ys ->
+            val internsak = yrkesSkaderMedManuelledatoer.firstOrNull { it.referanse == ys.ref }
+            val skadedato = ys.skadedato
+                ?: internsak?.manuellYrkesskadeDato
+                ?: error("Mangler skadedato for yrkesskade med referanse ${ys.ref}")
+            val inntekt = beregning?.vurderinger?.firstOrNull { it.referanse == ys.ref }?.antattÅrligInntekt
             YrkesskadeBeregningBrev.Yrkesskade(skadedato, inntekt?.verdi)
         }
 
