@@ -4,12 +4,19 @@ import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.GraderingGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Minstesats
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Tilkjent
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelsePeriode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.ArbeidsGradering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
 import no.nav.aap.behandlingsflyt.help.flytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.help.tomtTilkjentYtelseGrunnlag
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.test.FakeUnleashBaseWithDefaultDisabled
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryTilkjentYtelseRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryUnderveisRepository
+import no.nav.aap.behandlingsflyt.test.april
+import no.nav.aap.behandlingsflyt.test.desember
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.behandlingsflyt.test.juli
 import no.nav.aap.behandlingsflyt.test.juni
@@ -18,13 +25,16 @@ import no.nav.aap.behandlingsflyt.test.mars
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
+import no.nav.aap.komponenter.verdityper.Dagsatser
 import no.nav.aap.komponenter.verdityper.GUnit
 import no.nav.aap.komponenter.verdityper.Prosent.Companion.`0_PROSENT`
 import no.nav.aap.komponenter.verdityper.Prosent.Companion.`100_PROSENT`
 import no.nav.aap.komponenter.verdityper.Tid
+import no.nav.aap.komponenter.verdityper.TimerArbeid
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import java.math.BigDecimal
 import java.time.LocalDate
 
 class GrunnbeløpInformasjonskravTest {
@@ -37,9 +47,12 @@ class GrunnbeløpInformasjonskravTest {
 
     @BeforeEach
     fun setup() {
-        InMemoryTilkjentYtelseRepository.slett(kontekst().behandlingId)
+        val kontekst = kontekst()
+        InMemoryTilkjentYtelseRepository.slett(kontekst.behandlingId)
+        InMemoryUnderveisRepository.slett(kontekst.behandlingId)
         informasjonskrav = GrunnbeløpInformasjonskrav(
             tilkjentYtelseRepository = InMemoryTilkjentYtelseRepository,
+            underveisRepository = InMemoryUnderveisRepository,
             unleashGateway = unleash,
         )
     }
@@ -55,11 +68,12 @@ class GrunnbeløpInformasjonskravTest {
     @Test
     fun `skal returnere IKKE_ENDRET når alle perioder har gjeldende grunnbeløp`() {
         val periodeFom = 1 juni 2025
-        val periodeTom = LocalDate.of(2025, 12, 31)
+        val periodeTom = 31 desember 2025
         val gjeldendeG = Grunnbeløp.finnGrunnbeløp(periodeFom)
 
         val kontekst = kontekst()
         lagreTilkjentYtelse(kontekst, periodeFom, periodeTom, gjeldendeG)
+        lagreOppfyltUnderveis(kontekst, periodeFom, periodeTom)
 
         val resultat = informasjonskrav.oppdater(IngenInput, IngenRegisterData, kontekst)
 
@@ -69,11 +83,12 @@ class GrunnbeløpInformasjonskravTest {
     @Test
     fun `skal returnere ENDRET når en periode har utdatert grunnbeløp`() {
         val periodeFom = 1 juni 2025
-        val periodeTom = LocalDate.of(2025, 12, 31)
+        val periodeTom = 31 desember 2025
         val utdatertG = Beløp(124_028) // G fra 2024
 
         val kontekst = kontekst()
         lagreTilkjentYtelse(kontekst, periodeFom, periodeTom, utdatertG)
+        lagreOppfyltUnderveis(kontekst, periodeFom, periodeTom)
 
         val resultat = informasjonskrav.oppdater(IngenInput, IngenRegisterData, kontekst)
 
@@ -85,11 +100,11 @@ class GrunnbeløpInformasjonskravTest {
         val kontekst = kontekst()
 
         val periode1Fom = 1 januar 2025
-        val periode1Tom = LocalDate.of(2025, 4, 30)
+        val periode1Tom = 30 april 2025
         val gForPeriode1 = Grunnbeløp.finnGrunnbeløp(periode1Fom)
 
         val periode2Fom = 1 mai 2025
-        val periode2Tom = LocalDate.of(2025, 12, 31)
+        val periode2Tom = 31 desember 2025
         val utdatertG = Beløp(124_028) // G fra 2024, men perioden starter etter 1. mai 2025
 
         InMemoryTilkjentYtelseRepository.lagre(
@@ -101,6 +116,7 @@ class GrunnbeløpInformasjonskravTest {
             tomtTilkjentYtelseGrunnlag,
             ""
         )
+        lagreOppfyltUnderveis(kontekst, periode1Fom, periode2Tom)
 
         val resultat = informasjonskrav.oppdater(IngenInput, IngenRegisterData, kontekst)
 
@@ -115,6 +131,7 @@ class GrunnbeløpInformasjonskravTest {
 
         val kontekst = kontekst()
         lagreTilkjentYtelse(kontekst, periodeFom, periodeTom, gammeltG)
+        lagreOppfyltUnderveis(kontekst, periodeFom, periodeTom)
 
         val resultat = informasjonskrav.oppdater(IngenInput, IngenRegisterData, kontekst)
 
@@ -129,6 +146,7 @@ class GrunnbeløpInformasjonskravTest {
 
         val kontekst = kontekst()
         lagreTilkjentYtelse(kontekst, periodeFom, periodeTom, nyttG)
+        lagreOppfyltUnderveis(kontekst, periodeFom, periodeTom)
 
         val resultat = informasjonskrav.oppdater(IngenInput, IngenRegisterData, kontekst)
 
@@ -136,10 +154,26 @@ class GrunnbeløpInformasjonskravTest {
     }
 
     @Test
+    fun `skal returnere IKKE_ENDRET når G er utdatert men underveis er ikke oppfylt`() {
+        val periodeFom = 1 juni 2025
+        val periodeTom = 31 desember 2025
+        val utdatertG = Beløp(124_028) // G fra 2024
+
+        val kontekst = kontekst()
+        lagreTilkjentYtelse(kontekst, periodeFom, periodeTom, utdatertG)
+        lagreIkkeOppfyltUnderveis(kontekst, periodeFom, periodeTom)
+
+        val resultat = informasjonskrav.oppdater(IngenInput, IngenRegisterData, kontekst)
+
+        assertThat(resultat).isEqualTo(Informasjonskrav.Endret.IKKE_ENDRET)
+    }
+
+    @Test
     fun `skal ikke være relevant når feature toggle er avskrudd`() {
         val disabledUnleash = FakeUnleashBaseWithDefaultDisabled(emptyList())
         val krav = GrunnbeløpInformasjonskrav(
             tilkjentYtelseRepository = InMemoryTilkjentYtelseRepository,
+            underveisRepository = InMemoryUnderveisRepository,
             unleashGateway = disabledUnleash,
         )
 
@@ -163,6 +197,57 @@ class GrunnbeløpInformasjonskravTest {
             listOf(lagTilkjentYtelsePeriode(fom, tom, grunnbeløp)),
             tomtTilkjentYtelseGrunnlag,
             ""
+        )
+    }
+
+    private fun lagreOppfyltUnderveis(
+        kontekst: no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder,
+        fom: LocalDate,
+        tom: LocalDate
+    ) {
+        InMemoryUnderveisRepository.lagre(
+            kontekst.behandlingId,
+            listOf(lagUnderveisperiode(fom, tom, Utfall.OPPFYLT)),
+            input = object : Faktagrunnlag {}
+        )
+    }
+
+    private fun lagreIkkeOppfyltUnderveis(
+        kontekst: no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder,
+        fom: LocalDate,
+        tom: LocalDate
+    ) {
+        InMemoryUnderveisRepository.lagre(
+            kontekst.behandlingId,
+            listOf(lagUnderveisperiode(fom, tom, Utfall.IKKE_OPPFYLT)),
+            input = object : Faktagrunnlag {}
+        )
+    }
+
+    private fun lagUnderveisperiode(
+        fom: LocalDate,
+        tom: LocalDate,
+        utfall: Utfall
+    ): Underveisperiode {
+        return Underveisperiode(
+            periode = Periode(fom, tom),
+            meldePeriode = Periode(fom, tom),
+            utfall = utfall,
+            rettighetsType = if (utfall == Utfall.OPPFYLT) RettighetsType.BISTANDSBEHOV else null,
+            avslagsårsak = if (utfall == Utfall.IKKE_OPPFYLT) no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisÅrsak.IKKE_GRUNNLEGGENDE_RETT else null,
+            grenseverdi = `100_PROSENT`,
+            institusjonsoppholdReduksjon = `0_PROSENT`,
+            arbeidsgradering = ArbeidsGradering(
+                totaltAntallTimer = TimerArbeid(BigDecimal.ZERO),
+                andelArbeid = `0_PROSENT`,
+                fastsattArbeidsevne = `100_PROSENT`,
+                gradering = `100_PROSENT`,
+                opplysningerMottatt = null,
+            ),
+            trekk = Dagsatser(0),
+            brukerAvKvoter = emptySet(),
+            meldepliktStatus = null,
+            meldepliktGradering = `0_PROSENT`,
         )
     }
 

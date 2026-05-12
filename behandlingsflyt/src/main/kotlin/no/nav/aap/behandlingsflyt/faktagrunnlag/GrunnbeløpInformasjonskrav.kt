@@ -1,8 +1,11 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag
 
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
+import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.tilTidslinje
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.ENDRET
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.IKKE_ENDRET
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
@@ -13,12 +16,17 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType.REVURDERING
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.komponenter.tidslinje.filterNotNull
 import no.nav.aap.lookup.repository.RepositoryProvider
+import org.slf4j.LoggerFactory
 
 class GrunnbeløpInformasjonskrav(
     private val tilkjentYtelseRepository: TilkjentYtelseRepository,
+    private val underveisRepository: UnderveisRepository,
     private val unleashGateway: UnleashGateway,
 ) : Informasjonskrav<IngenInput, IngenRegisterData> {
+
+    private val logger = LoggerFactory.getLogger(javaClass)
     
     companion object : Informasjonskravkonstruktør {
         override val navn = InformasjonskravNavn.GRUNNBELØP
@@ -29,6 +37,7 @@ class GrunnbeløpInformasjonskrav(
         ): GrunnbeløpInformasjonskrav {
             return GrunnbeløpInformasjonskrav(
                 tilkjentYtelseRepository = repositoryProvider.provide(),
+                underveisRepository = repositoryProvider.provide(),
                 unleashGateway = gatewayProvider.provide(),
             )
         }
@@ -54,25 +63,29 @@ class GrunnbeløpInformasjonskrav(
         registerdata: IngenRegisterData,
         kontekst: FlytKontekstMedPerioder
     ): Informasjonskrav.Endret {
+        val underveisGrunnlag = underveisRepository.hentHvisEksisterer(kontekst.behandlingId)
+            ?: return IKKE_ENDRET
+
         val tilkjentYtelsePerioder = tilkjentYtelseRepository.hentHvisEksisterer(kontekst.behandlingId)
             ?: return IKKE_ENDRET
 
-        // Fanger opp at G endres underveis i en periode med tilkjent ytelse:
-        //
-        //   Tilkjent:    |------------ G=124 028 ------------|
-        //   Gjeldende G: |--- G=124 028 ---|--- G=130 160 ---|
-        //                21. apr         1. mai            5. mai
-        //                                  ↑
-        //                            G endres her → ENDRET
-        //
+        val oppfyltUnderveisTidslinje = underveisGrunnlag.somTidslinje().filter { it.verdi.utfall == Utfall.OPPFYLT }
+        val tilkjentYtelseTidslinje = tilkjentYtelsePerioder.tilTidslinje()
         val grunnbeløpTidslinje = Grunnbeløp.tilTidslinje()
-        val harEndretGrunnbeløp = tilkjentYtelsePerioder.any { periode ->
-            grunnbeløpTidslinje.begrensetTil(periode.periode).segmenter().any { segment ->
-                segment.verdi != periode.tilkjent.grunnbeløp
-            }
-        }
 
-        return if (harEndretGrunnbeløp) ENDRET else IKKE_ENDRET
+        val endredeGrunnbeløp = tilkjentYtelseTidslinje
+            .innerJoin(oppfyltUnderveisTidslinje, { ty, _ -> ty })
+            .innerJoin(grunnbeløpTidslinje, { ty, grunnbeløp ->
+                ty.grunnbeløp != grunnbeløp
+            })
+            .filter { it.verdi }
+
+        if (endredeGrunnbeløp.isNotEmpty()) {
+            logger.info("Perioder med endrede grunnbeløp: " + endredeGrunnbeløp.perioder())
+            return ENDRET
+        } else {
+            return IKKE_ENDRET
+        }
     }
 
     override fun flettOpplysningerFraAtomærBehandling(kontekst: FlytKontekst): Informasjonskrav.Endret {
