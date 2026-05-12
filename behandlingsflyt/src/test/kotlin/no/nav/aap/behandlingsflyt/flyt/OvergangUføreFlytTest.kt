@@ -13,6 +13,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.BistandLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.UføreSøknadVedtakResultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.flate.OvergangUføreLøsningDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.SykdomsvurderingLøsningDto
 import no.nav.aap.behandlingsflyt.help.assertTidslinje
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
@@ -71,11 +72,8 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::
                             harSkadeSykdomEllerLyte = true,
                             erSkadeSykdomEllerLyteVesentligdel = true,
                             erNedsettelseIArbeidsevneMerEnnHalvparten = true,
-                            erNedsettelseIArbeidsevneAvEnVissVarighet = true,
-                            erNedsettelseMinstHalvparten = null,
-                            erNedsettelseMerEnnYrkesskadegrense = null,
                             erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
-                            erArbeidsevnenNedsatt = true,
+                            harNedsattArbeidsevne = ArbeidsevneNedsattValg.JA,
                             yrkesskadeBegrunnelse = null,
                             fom = søknadstidspunkt,
                             tom = null
@@ -311,18 +309,15 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::
                             fom = ikkeLengerSykDato,
                             tom = null,
                             dokumenterBruktIVurdering = emptyList(),
-                            erArbeidsevnenNedsatt = false,
+                            harNedsattArbeidsevne = ArbeidsevneNedsattValg.NEI,
                             harSkadeSykdomEllerLyte = false,
                             erSkadeSykdomEllerLyteVesentligdel = null,
-                            erNedsettelseIArbeidsevneAvEnVissVarighet = null,
                             erNedsettelseIArbeidsevneMerEnnHalvparten = null,
                             erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
                             yrkesskadeBegrunnelse = null,
                             kodeverk = null,
                             hoveddiagnose = null,
                             bidiagnoser = null,
-                            erNedsettelseMinstHalvparten = null,
-                            erNedsettelseMerEnnYrkesskadegrense = null,
                         )
                     ),
                 )

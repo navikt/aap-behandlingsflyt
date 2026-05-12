@@ -53,6 +53,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.LovvalgDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.MedlemskapDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.PeriodisertManuellVurderingForLovvalgMedlemskapDto
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.EØSLandEllerLandMedAvtale
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
@@ -178,14 +179,11 @@ class TestBehandlingFullføringService(
                     harSkadeSykdomEllerLyte = true,
                     kodeverk = "ICPC2",
                     hoveddiagnose = "A03",
-                    erArbeidsevnenNedsatt = true,
+                    harNedsattArbeidsevne = ArbeidsevneNedsattValg.JA,
                     erNedsettelseIArbeidsevneMerEnnHalvparten = true,
                     erSkadeSykdomEllerLyteVesentligdel = true,
-                    erNedsettelseIArbeidsevneAvEnVissVarighet = true,
                     erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
                     yrkesskadeBegrunnelse = null,
-                    erNedsettelseMinstHalvparten = null,
-                    erNedsettelseMerEnnYrkesskadegrense = null,
                     fom = sak.rettighetsperiode.fom,
                     tom = null,
                 )

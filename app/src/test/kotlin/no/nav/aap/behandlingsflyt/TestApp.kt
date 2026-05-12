@@ -20,6 +20,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Opp
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.Uføre
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreSøknad
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
 import no.nav.aap.behandlingsflyt.integrasjon.institusjonsopphold.InstitusjonsoppholdJSON
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
@@ -444,12 +445,12 @@ private fun opprettNySakOgBehandling(
             løsSykdom(
                 behandling = behandling,
                 vurderingGjelderFra = dto.søknadsdato ?: sak.rettighetsperiode.fom,
-                erArbeidsevnenNedsatt = dto.erArbeidsevnenNedsatt,
+                harNedsattArbeidsevne = if (dto.harNedsattArbeidsevne) ArbeidsevneNedsattValg.JA else ArbeidsevneNedsattValg.NEI,
                 erNedsettelseIArbeidsevneMerEnnHalvparten = dto.erNedsettelseIArbeidsevneMerEnnHalvparten
             )
         }
 
-        val harBehandlingsgrunnlag = dto.erArbeidsevnenNedsatt && dto.erNedsettelseIArbeidsevneMerEnnHalvparten
+        val harBehandlingsgrunnlag = dto.harNedsattArbeidsevne && dto.erNedsettelseIArbeidsevneMerEnnHalvparten
 
         if (harBehandlingsgrunnlag) {
             if (dto.steg == StegType.VURDER_BISTANDSBEHOV) return sak

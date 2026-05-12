@@ -18,6 +18,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravVurderingDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.SykdomsvurderingLøsningDto
 import no.nav.aap.behandlingsflyt.help.assertTidslinje
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
@@ -64,16 +65,13 @@ class YrkesskadeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
                             begrunnelse = "Er ikke syk nok",
                             dokumenterBruktIVurdering = listOf(JournalpostId("1231299")),
                             harSkadeSykdomEllerLyte = false,
-                            erArbeidsevnenNedsatt = null,
+                            harNedsattArbeidsevne = null,
                             erSkadeSykdomEllerLyteVesentligdel = null,
-                            erNedsettelseIArbeidsevneAvEnVissVarighet = null,
                             erNedsettelseIArbeidsevneMerEnnHalvparten = null,
                             erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
                             yrkesskadeBegrunnelse = null,
                             fom = sak.rettighetsperiode.fom,
                             tom = null,
-                            erNedsettelseMinstHalvparten = null,
-                            erNedsettelseMerEnnYrkesskadegrense = null,
                         )
                     )
                 )
@@ -656,11 +654,8 @@ class YrkesskadeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
                             harSkadeSykdomEllerLyte = true,
                             erSkadeSykdomEllerLyteVesentligdel = true,
                             erNedsettelseIArbeidsevneMerEnnHalvparten = true,
-                            erNedsettelseIArbeidsevneAvEnVissVarighet = true,
-                            erNedsettelseMinstHalvparten = null,
-                            erNedsettelseMerEnnYrkesskadegrense = null,
                             erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
-                            erArbeidsevnenNedsatt = true,
+                            harNedsattArbeidsevne = ArbeidsevneNedsattValg.JA,
                             yrkesskadeBegrunnelse = null,
                             fom = periode.fom,
                             tom = null,
@@ -698,12 +693,9 @@ class YrkesskadeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
                         begrunnelse = "Er ikke syk nok",
                         dokumenterBruktIVurdering = listOf(JournalpostId("1231299")),
                         harSkadeSykdomEllerLyte = true,
-                        erArbeidsevnenNedsatt = true,
+                        harNedsattArbeidsevne = ArbeidsevneNedsattValg.JA,
                         erSkadeSykdomEllerLyteVesentligdel = null,
-                        erNedsettelseIArbeidsevneAvEnVissVarighet = null,
                         erNedsettelseIArbeidsevneMerEnnHalvparten = false,
-                        erNedsettelseMinstHalvparten = null,
-                        erNedsettelseMerEnnYrkesskadegrense = null,
                         erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = false,
                         yrkesskadeBegrunnelse = "Skade under grense for yrkesskade",
                         fom = periode.fom,
@@ -747,16 +739,13 @@ class YrkesskadeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
                             begrunnelse = "Er ikke syk nok",
                             dokumenterBruktIVurdering = listOf(JournalpostId("1231299")),
                             harSkadeSykdomEllerLyte = false, // person er ikke lenger syk
-                            erArbeidsevnenNedsatt = null,
+                            harNedsattArbeidsevne = null,
                             erSkadeSykdomEllerLyteVesentligdel = null,
-                            erNedsettelseIArbeidsevneAvEnVissVarighet = null,
                             erNedsettelseIArbeidsevneMerEnnHalvparten = null,
                             erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
                             yrkesskadeBegrunnelse = null,
                             fom = LocalDateTime.now().minusDays(5).toLocalDate(),
                             tom = null,
-                            erNedsettelseMinstHalvparten = null,
-                            erNedsettelseMerEnnYrkesskadegrense = null,
                         )
                     )
                 )

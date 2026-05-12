@@ -418,13 +418,9 @@ class StatistikkJobbUtførerTest {
                         dokumenterBruktIVurdering = emptyList(),
                         harSkadeSykdomEllerLyte = true,
                         erSkadeSykdomEllerLyteVesentligdel = true,
-                        erNedsettelseIArbeidsevneAvEnVissVarighet = true,
                         erNedsettelseIArbeidsevneMerEnnHalvparten = true,
                         erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = true,
-                        erNedsettelseMinstHalvparten = null,
-                        erNedsettelseMerEnnYrkesskadegrense = null,
                         yrkesskadeBegrunnelse = "begr",
-                        erArbeidsevnenNedsatt = true,
                         harNedsattArbeidsevne = ArbeidsevneNedsattValg.JA,
                         diagnose = Diagnose(
                             kodeverk = "KODEVERK",

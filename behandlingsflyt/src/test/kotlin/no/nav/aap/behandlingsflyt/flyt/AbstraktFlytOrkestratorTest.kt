@@ -76,6 +76,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.rettighetsperiode.
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.rettighetsperiode.RettighetsperiodeVurderingDTO
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.VurderingerForSamordning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.sykestipend.SamordningSykestipendVurderingDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerGrunn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.PeriodisertSykepengerVurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.SykdomsvurderingLøsningDto
@@ -458,6 +459,11 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
         vissVarighet: Boolean? = true,
         erOppfylt: Boolean = true,
     ): Behandling {
+        val harNedsattArbeidsevne = when {
+            vissVarighet == false -> ArbeidsevneNedsattValg.JA_FORBIGÅENDE_PROBLEMER
+            erOppfylt -> ArbeidsevneNedsattValg.JA
+            else -> ArbeidsevneNedsattValg.NEI
+        }
         return løsAvklaringsBehov(
             behandling,
             AvklarSykdomLøsning(
@@ -472,14 +478,11 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
                             erOppfylt -> true
                             else -> null
                         },
-                        erNedsettelseIArbeidsevneAvEnVissVarighet = vissVarighet.takeIf { erOppfylt },
                         erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense,
-                        erArbeidsevnenNedsatt = true.takeIf { erOppfylt },
+                        harNedsattArbeidsevne = harNedsattArbeidsevne,
                         yrkesskadeBegrunnelse = if (erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense != null) "test" else null,
                         fom = vurderingGjelderFra,
                         tom = null,
-                        erNedsettelseMinstHalvparten = null,
-                        erNedsettelseMerEnnYrkesskadegrense = null,
                     )
                 )
             ),

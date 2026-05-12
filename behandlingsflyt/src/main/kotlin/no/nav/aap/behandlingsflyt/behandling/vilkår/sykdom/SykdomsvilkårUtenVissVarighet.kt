@@ -11,7 +11,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.Bistandsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ErNedsettelseMinstHalvpartenValg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Yrkesskadevurdering
@@ -115,21 +114,19 @@ class SykdomsvilkårUtenVissVarighet(vilkårsresultat: Vilkårsresultat) : Vilk�
         var avslagsårsak: Avslagsårsak? = null
         var innvilgelsesårsak: Innvilgelsesårsak?
 
-        validerNyeHjelpemetoder(sykdomVurdering)
-
-        if (sykdomVurdering?.erOppfyltForOrdinærEllerYrkesskadeSettBortIfraÅrsakssammenhengMedUtlededeFelter() == true
+        if (sykdomVurdering?.erOppfyltForOrdinærEllerYrkesskadeSettBortIfraÅrsakssammenheng() == true
             && yrkesskadeVurdering?.erÅrsakssammenheng == true
         ) {
             utfall = Utfall.OPPFYLT
             innvilgelsesårsak = Innvilgelsesårsak.YRKESSKADE_ÅRSAKSSAMMENHENG
-        } else if (sykdomVurdering?.erOppfyltOrdinærMedUtlededeFelterGammel() == true
+        } else if (sykdomVurdering?.erOppfyltOrdinærMedUtlededeFelter() == true
             && bistandsvurdering?.erBehovForBistand() == true
         ) {
             utfall = Utfall.OPPFYLT
             innvilgelsesårsak = null
         } else if (sykepengeerstatningVilkår.isEmpty() // Bakoverkompatibel - denne inngangen er egentlig ikke riktig
             && sykepengerVurdering?.harRettPå == true
-            && sykdomVurdering?.skalVurderesForSykepengeerstatningMedUtlededeFelter() == true
+            && sykdomVurdering?.skalVurderesForSykepengeerstatning() == true
         ) {
             utfall = Utfall.OPPFYLT
             innvilgelsesårsak = Innvilgelsesårsak.SYKEPENGEERSTATNING
@@ -144,7 +141,7 @@ class SykdomsvilkårUtenVissVarighet(vilkårsresultat: Vilkårsresultat) : Vilk�
                 sykdomVurdering?.erSkadeSykdomEllerLyteVesentligdel == false ->
                     Avslagsårsak.IKKE_SYKDOM_SKADE_LYTE_VESENTLIGDEL
 
-                utledHvorvidtVissVarighetErAvslagsårsak(sykdomVurdering) ->
+                sykdomVurdering?.harNedsattArbeidsevne == ArbeidsevneNedsattValg.JA_FORBIGÅENDE_PROBLEMER ->
                     Avslagsårsak.IKKE_SYKDOM_AV_VISS_VARIGHET
 
                 else ->
@@ -162,32 +159,5 @@ class SykdomsvilkårUtenVissVarighet(vilkårsresultat: Vilkårsresultat) : Vilk�
                 faktagrunnlag = grunnlag,
             )
         )
-    }
-
-    private fun validerNyeHjelpemetoder(sykdomsvurdering: Sykdomsvurdering?) {
-        if (sykdomsvurdering == null) {
-            return
-        }
-
-        if (sykdomsvurdering.erOppfyltForOrdinærEllerYrkesskadeSettBortIfraÅrsakssammenhengMedUtlededeFelter() != sykdomsvurdering.erOppfyltForOrdinærEllerYrkesskadeSettBortIfraÅrsakssammenheng()) {
-            log.error("Ulikt resultat for erOppfyltForOrdinærEllerYrkesskadeSettBortIfraÅrsakssammenheng")
-        }
-        if (sykdomsvurdering.erOppfyltOrdinærMedUtlededeFelterGammel() != sykdomsvurdering.erOppfyltOrdinærMedUtlededeFelter()) {
-            log.error("Ulikt resultat for erOppfyltOrdinærMedUtlededeFelter")
-        }
-        if (sykdomsvurdering.skalVurderesForSykepengeerstatningMedUtlededeFelter() != sykdomsvurdering.skalVurderesForSykepengeerstatning()) {
-            log.error("Ulikt resultat for skalVurderesForSykepengeerstatning")
-        }
-    }
-
-    private fun utledHvorvidtVissVarighetErAvslagsårsak(sykdomsvurdering: Sykdomsvurdering?): Boolean {
-        val gammelSjekk =
-            sykdomsvurdering?.utledErNedsettelseMinstHalvparten() == ErNedsettelseMinstHalvpartenValg.JA_FORBIGÅENDE_PROBLEMER
-        val nySjekk = sykdomsvurdering?.utledHarNedsattArbeidsevne() == ArbeidsevneNedsattValg.JA_FORBIGÅENDE_PROBLEMER
-
-        if (gammelSjekk != nySjekk) {
-            log.error("Ulikt resultat for viss varighet som avslagsårsak")
-        }
-        return gammelSjekk
     }
 }

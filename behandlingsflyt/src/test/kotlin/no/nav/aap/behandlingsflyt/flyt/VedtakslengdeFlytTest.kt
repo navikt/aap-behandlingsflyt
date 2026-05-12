@@ -20,6 +20,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.Bist
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.UføreSøknadVedtakResultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.flate.OvergangUføreLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentVurderingDTO
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.SykdomsvurderingLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeVurderingDto
@@ -122,11 +123,8 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::c
                             harSkadeSykdomEllerLyte = true,
                             erSkadeSykdomEllerLyteVesentligdel = true,
                             erNedsettelseIArbeidsevneMerEnnHalvparten = true,
-                            erNedsettelseIArbeidsevneAvEnVissVarighet = true,
-                            erNedsettelseMinstHalvparten = null,
-                            erNedsettelseMerEnnYrkesskadegrense = null,
                             erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
-                            erArbeidsevnenNedsatt = true,
+                            harNedsattArbeidsevne = ArbeidsevneNedsattValg.JA,
                             yrkesskadeBegrunnelse = null,
                             fom = startDato,
                             tom = overgangDato.minusDays(1)
@@ -137,11 +135,8 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::c
                             harSkadeSykdomEllerLyte = false,
                             erSkadeSykdomEllerLyteVesentligdel = false,
                             erNedsettelseIArbeidsevneMerEnnHalvparten = false,
-                            erNedsettelseIArbeidsevneAvEnVissVarighet = false,
                             erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
-                            erNedsettelseMinstHalvparten = null,
-                            erNedsettelseMerEnnYrkesskadegrense = null,
-                            erArbeidsevnenNedsatt = false,
+                            harNedsattArbeidsevne = ArbeidsevneNedsattValg.NEI,
                             yrkesskadeBegrunnelse = null,
                             fom = overgangDato,
                             tom = null
@@ -210,11 +205,8 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::c
                             harSkadeSykdomEllerLyte = true,
                             erSkadeSykdomEllerLyteVesentligdel = true,
                             erNedsettelseIArbeidsevneMerEnnHalvparten = true,
-                            erNedsettelseIArbeidsevneAvEnVissVarighet = true,
-                            erNedsettelseMinstHalvparten = null,
-                            erNedsettelseMerEnnYrkesskadegrense = null,
                             erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
-                            erArbeidsevnenNedsatt = true,
+                            harNedsattArbeidsevne = ArbeidsevneNedsattValg.JA,
                             yrkesskadeBegrunnelse = null,
                             fom = startDato,
                             tom = overgangDato.minusDays(1)
@@ -225,11 +217,8 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::c
                             harSkadeSykdomEllerLyte = false,
                             erSkadeSykdomEllerLyteVesentligdel = false,
                             erNedsettelseIArbeidsevneMerEnnHalvparten = false,
-                            erNedsettelseIArbeidsevneAvEnVissVarighet = false,
                             erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
-                            erNedsettelseMinstHalvparten = null,
-                            erNedsettelseMerEnnYrkesskadegrense = null,
-                            erArbeidsevnenNedsatt = false,
+                            harNedsattArbeidsevne = ArbeidsevneNedsattValg.NEI,
                             yrkesskadeBegrunnelse = null,
                             fom = overgangDato,
                             tom = null
@@ -299,11 +288,8 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::c
                             harSkadeSykdomEllerLyte = true,
                             erSkadeSykdomEllerLyteVesentligdel = true,
                             erNedsettelseIArbeidsevneMerEnnHalvparten = true,
-                            erNedsettelseIArbeidsevneAvEnVissVarighet = true,
-                            erNedsettelseMinstHalvparten = null,
-                            erNedsettelseMerEnnYrkesskadegrense = null,
                             erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
-                            erArbeidsevnenNedsatt = true,
+                            harNedsattArbeidsevne = ArbeidsevneNedsattValg.JA,
                             yrkesskadeBegrunnelse = null,
                             fom = startDato,
                             tom = overgangDato.minusDays(1)
@@ -314,11 +300,8 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::c
                             harSkadeSykdomEllerLyte = false,
                             erSkadeSykdomEllerLyteVesentligdel = false,
                             erNedsettelseIArbeidsevneMerEnnHalvparten = false,
-                            erNedsettelseIArbeidsevneAvEnVissVarighet = false,
-                            erNedsettelseMinstHalvparten = null,
-                            erNedsettelseMerEnnYrkesskadegrense = null,
                             erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
-                            erArbeidsevnenNedsatt = false,
+                            harNedsattArbeidsevne = ArbeidsevneNedsattValg.NEI,
                             yrkesskadeBegrunnelse = null,
                             fom = overgangDato,
                             tom = tilbakeTilBistandDato.minusDays(1)
@@ -329,11 +312,8 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::c
                             harSkadeSykdomEllerLyte = true,
                             erSkadeSykdomEllerLyteVesentligdel = true,
                             erNedsettelseIArbeidsevneMerEnnHalvparten = true,
-                            erNedsettelseIArbeidsevneAvEnVissVarighet = true,
-                            erNedsettelseMinstHalvparten = null,
-                            erNedsettelseMerEnnYrkesskadegrense = null,
                             erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
-                            erArbeidsevnenNedsatt = true,
+                            harNedsattArbeidsevne = ArbeidsevneNedsattValg.JA,
                             yrkesskadeBegrunnelse = null,
                             fom = tilbakeTilBistandDato,
                             tom = null
