@@ -129,8 +129,8 @@ class ForutgåendeMedlemskapVurderingService(
 
         return TilhørighetVurdering(
             kilde = listOf(Kilde.AA_REGISTERET),
-            indikasjon = Indikasjon.I_NORGE,
-            opplysning = "Har hatt arbeid på skip i perioden",
+            indikasjon = Indikasjon.UTENFOR_NORGE,
+            opplysning = "Har hatt maritimt arbeidsforhold",
             resultat = bestemtArbeidsgruppe.isNotEmpty(),
             bestemtArbeidsgruppeINorge = bestemtArbeidsgruppe,
             vurdertPeriode = VurdertPeriode.SISTE_5_ÅR.beskrivelse
