@@ -73,7 +73,21 @@ class GrunnbeløpInformasjonskrav(
         val tilkjentYtelseTidslinje = tilkjentYtelsePerioder.tilTidslinje()
         val grunnbeløpTidslinje = Grunnbeløp.tilTidslinje()
 
-        // Sjekker om grunnbeløpet brukt i eksisterende tilkjent ytelse-periode er forskjellig fra gjeldende grunnbeløp.
+        /*
+         * Eksempel: 2-ukers meldeperiode (24.apr – 7.mai) som krysser G-grensen 1.mai
+         *
+         *                       24.apr              1.mai             7.mai
+         *                       |                   |                 |
+         * Tilkjent ytelse:      |-------------- G=124 028 ------------|
+         * Oppfylt underveis:    |--------------- OPPFYLT -------------|
+         * Gjeldende grunnbeløp: |----- 124 028 -----|----- 130 160 ---|
+         *                       |                   |                 |
+         * 1) join(underveis):   |-------------- G=124 028 ------------|
+         * 2) join(grunnbeløp):  |------- false -----|----- true ------|
+         * 3) filter { true }:                       |----- true ------|
+         *
+         * → ENDRET (grunnbeløpet har endret seg etter 1. mai)
+         */
         val endredeGrunnbeløp = tilkjentYtelseTidslinje
             .innerJoin(oppfyltUnderveisTidslinje, { ty, _ -> ty })
             .innerJoin(grunnbeløpTidslinje, { ty, grunnbeløp ->
