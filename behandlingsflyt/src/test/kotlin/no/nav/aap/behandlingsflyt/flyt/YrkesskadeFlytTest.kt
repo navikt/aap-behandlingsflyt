@@ -29,6 +29,7 @@ import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.undervei
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
+import no.nav.aap.behandlingsflyt.test.modell.TestYrkesskade
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
@@ -787,4 +788,54 @@ class YrkesskadeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
         assertThat(revurderingVedtak.vedtakstidspunkt.toLocalDate()).isToday
     }
 
+    @Test
+    fun `skal håndtere flere yrkesskader - noen fra Kompys og noen manuelt registrert`() {
+        val søknadsdato = LocalDate.now()
+
+        // Person med to yrkesskader fra Kompys
+        val person = TestPersoner.PERSON_MED_YRKESSKADE().medYrkesskade(
+            listOf(
+                TestYrkesskade(saksreferanse = "YRK-00-1"),
+                TestYrkesskade(saksreferanse = "YRK-00-2"),
+            )
+        )
+        val manuellSkadedato = LocalDate.now().minusYears(3)
+        val manuellReferanse = "MANUELL-REF-1"
+
+        val (sak, behandling) = sendInnFørsteSøknad(
+            mottattTidspunkt = søknadsdato.atStartOfDay(),
+            person = person,
+            søknad = TestSøknader.STANDARD_SØKNAD
+        )
+
+        val oppdatertBehandling = behandling
+            .løsSykdom(søknadsdato)
+            .løsBistand(søknadsdato)
+            .løsRefusjonskrav()
+            .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
+            .kvalitetssikre()
+            .løsAvklaringsBehov(
+                AvklarYrkesskadeLøsning(
+                    yrkesskadesvurdering = YrkesskadevurderingDto(
+                        begrunnelse = "Alle fra Kompys er relevante, pluss at en manuell er lagt til",
+                        relevanteSaker = person.yrkesskade.map { it.saksreferanse } + manuellReferanse,
+                        relevanteYrkesskadeSaker = person.yrkesskade.map {
+                            YrkesskadeSakDto(it.saksreferanse, null) // skadedato fra Kompys
+                        } + YrkesskadeSakDto(manuellReferanse, manuellSkadedato), // manuelt registrert dato
+                        andelAvNedsettelsen = 50,
+                        erÅrsakssammenheng = true
+                    )
+                )
+            )
+            .løsBeregningstidspunkt()
+            .løsYrkesskadeInntekt(person.yrkesskade + TestYrkesskade(saksreferanse = manuellReferanse))
+            .løsOppholdskrav(søknadsdato)
+            .løsAndreStatligeYtelser()
+            .løsAvklaringsBehov(ForeslåVedtakLøsning())
+            .fattVedtak()
+            .løsVedtaksbrev(typeBrev = TypeBrev.VEDTAK_INNVILGELSE)
+
+        assertThat(oppdatertBehandling.status()).isEqualTo(Status.AVSLUTTET)
+    }
 }

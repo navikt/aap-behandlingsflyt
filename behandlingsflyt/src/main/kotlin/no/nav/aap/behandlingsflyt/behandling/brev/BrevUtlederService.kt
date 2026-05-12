@@ -446,7 +446,7 @@ class BrevUtlederService(
                 ?: ys.manuellYrkesskadeDato
                 ?: error("Mangler skadedato for yrkesskade med referanse ${ys.referanse}")
             val inntekt =
-                requireNotNull(beregning?.vurderinger?.firstOrNull { it.referanse == ys.referanse }?.antattÅrligInntekt) {
+                requireNotNull(beregning.vurderinger.firstOrNull { it.referanse == ys.referanse }?.antattÅrligInntekt) {
                     "Mangler antattÅrligInntekt for yrkesskade med referanse ${ys.referanse}"
                 }
             YrkesskadeBeregningBrev.Yrkesskade(skadedato, inntekt.verdi)
