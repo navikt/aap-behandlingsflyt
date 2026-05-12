@@ -72,10 +72,11 @@ class MeldingOmVedtakBrevSteg(
                 definisjon,
                 vedtakBehøverVurdering = {
                     vedtakBehøverVurdering(
-                    kontekst.behandlingId,
-                        avklaringsbehovRepository.hentAvklaringsbehovene(
-                            kontekst.behandlingId
-                        ), behandlingErAvbrutt, definisjon, brevBehov
+                        kontekst.behandlingId,
+                        avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId),
+                        behandlingErAvbrutt,
+                        definisjon,
+                        brevBehov
                     )
                 },
                 erTilstrekkeligVurdert =
@@ -116,20 +117,24 @@ class MeldingOmVedtakBrevSteg(
         brevBehov: BrevBehov?
     ): Boolean {
         val harManueltBrevbehov = (!behandlingErAvbrutt && brevBehov != null && !brevBehov.typeBrev.erAutomatiskBrev())
-        
+
         val behovForBeslutterbrev = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.SKRIV_VEDTAKSBREV)
         val harBeslutterSkrevetBrev = behovForBeslutterbrev?.historikk?.any { it.status == Status.AVSLUTTET } ?: false
-        
+
         val erBeslutterbehovAvbrutt = behovForBeslutterbrev?.status() == Status.AVBRUTT
-        
-        if (harBeslutterSkrevetBrev && erBeslutterbehovAvbrutt && brevBehov != null) {
+        val harÅpentSaksbehandlerbehov =
+            avklaringsbehovene.hentBehovForDefinisjon(Definisjon.SKRIV_VEDTAKSBREV_SAKSBEHANDLER)?.erÅpent() ?: false
+
+        if (brevBehov?.typeBrev == TypeBrev.KLAGE_OPPRETTHOLDELSE && erBeslutterbehovAvbrutt && harÅpentSaksbehandlerbehov) {
             val brevbestilling = brevbestillingService.hentBestillinger(behandlingId, brevBehov.typeBrev)
                 .maxByOrNull { it.opprettet }
+
+            log.info("Gjenopptar bestilling for behandling $behandlingId, bestillingsreferanse ${brevbestilling?.referanse}")
             if (brevbestilling?.status == BrevStatus.AVBRUTT) {
                 brevbestillingService.gjenopptaBestilling(behandlingId, brevbestilling.referanse)
             }
         }
-        
+
         return when (brevBehov) {
             is KlageOpprettholdelse -> !harBeslutterSkrevetBrev && harManueltBrevbehov && forDefinisjon == Definisjon.SKRIV_VEDTAKSBREV_SAKSBEHANDLER
             else -> harManueltBrevbehov && forDefinisjon == Definisjon.SKRIV_VEDTAKSBREV
