@@ -11,6 +11,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.Bistandsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ErNedsettelseMerEnnYrkesskadegrenseValg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ErNedsettelseMinstHalvpartenValg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerVurdering
@@ -183,6 +184,7 @@ class SykdomsvilkårUtenVissVarighet(vilkårsresultat: Vilkårsresultat) : Vilk�
     private fun utledHvorvidtVissVarighetErAvslagsårsak(sykdomsvurdering: Sykdomsvurdering?): Boolean {
         val gammelSjekk =
             sykdomsvurdering?.utledErNedsettelseMinstHalvparten() == ErNedsettelseMinstHalvpartenValg.JA_FORBIGÅENDE_PROBLEMER
+                    || sykdomsvurdering?.utledErNedsettelseMerEnnYrkesskadegrense() == ErNedsettelseMerEnnYrkesskadegrenseValg.JA_FORBIGÅENDE_PROBLEMER
         val nySjekk = sykdomsvurdering?.utledHarNedsattArbeidsevne() == ArbeidsevneNedsattValg.JA_FORBIGÅENDE_PROBLEMER
 
         if (gammelSjekk != nySjekk) {
