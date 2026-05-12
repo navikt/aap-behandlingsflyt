@@ -12,6 +12,9 @@ import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingRepos
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelse2Dto
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.rettighetstype.RettighetstypeRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.Opphør
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.Stans
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.StansOpphørRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Innvilgelsesårsak
@@ -194,16 +197,22 @@ fun NormalOpenAPIRoute.driftApi(
         }
 
         @Suppress("unused")
+        class StansOpphørDTO(
+            val fom: LocalDate,
+            val stansOpphør: String,
+            val årsaker: List<String>,
+        )
+        @Suppress("unused")
         class RettighetstypePeriodeDto(
             val periode: Periode,
             val rettighetstypeUnderveis: RettighetsType?,
             val rettighetstypeGrunnlag: RettighetsType?,
         )
-
         @Suppress("unused")
         class DriftRettighetsinfoDto(
             val sisteDagMedRett: LocalDate?,
             val rettighetsperioder: List<RettighetstypePeriodeDto>,
+            val stansOpphør: List<StansOpphørDTO>,
         )
         route("/behandling/{referanse}/rettighetsinfo") {
             authorizedPost<BehandlingReferanse, DriftRettighetsinfoDto, Unit>(
@@ -217,6 +226,7 @@ fun NormalOpenAPIRoute.driftApi(
                     val rettighetstypeRepository = repositoryProvider.provide<RettighetstypeRepository>()
                     val underveisRepository = repositoryProvider.provide<UnderveisRepository>()
                     val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+                    val stansOpphørRepository = repositoryProvider.provide<StansOpphørRepository>()
 
                     val behandling = behandlingRepository.hent(params)
                     val grunnlagRettighetstyper = rettighetstypeRepository
@@ -245,6 +255,19 @@ fun NormalOpenAPIRoute.driftApi(
                     DriftRettighetsinfoDto(
                         sisteDagMedRett = sisteDagMedRett,
                         rettighetsperioder = rettighetstyper.verdier().toList(),
+                        stansOpphør = stansOpphørRepository.hentHvisEksisterer(behandling.id)
+                            ?.gjeldendeStansOgOpphør()
+                            .orEmpty()
+                            .map {
+                                StansOpphørDTO(
+                                    fom = it.fom,
+                                    stansOpphør = when (it.vurdering) {
+                                        is Opphør -> "OPPHØR"
+                                        is Stans -> "STANS"
+                                    },
+                                    årsaker = it.vurdering.årsaker.toList().map { it.toString() },
+                                )
+                            },
                     )
                 }
                 respond(res)
