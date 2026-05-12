@@ -207,12 +207,12 @@ fun NormalOpenAPIRoute.driftApi(
             val periode: Periode,
             val rettighetstypeUnderveis: RettighetsType?,
             val rettighetstypeGrunnlag: RettighetsType?,
-            val stansOpphør: List<StansOpphørDTO>,
         )
         @Suppress("unused")
         class DriftRettighetsinfoDto(
             val sisteDagMedRett: LocalDate?,
             val rettighetsperioder: List<RettighetstypePeriodeDto>,
+            val stansOpphør: List<StansOpphørDTO>,
         )
         route("/behandling/{referanse}/rettighetsinfo") {
             authorizedPost<BehandlingReferanse, DriftRettighetsinfoDto, Unit>(
@@ -246,19 +246,6 @@ fun NormalOpenAPIRoute.driftApi(
                                 periode = periode,
                                 rettighetstypeGrunnlag = rettighetstypeGrunnlag,
                                 rettighetstypeUnderveis = rettighetstypeUnderveis,
-                                stansOpphør = stansOpphørRepository.hentHvisEksisterer(behandling.id)
-                                    ?.gjeldendeStansOgOpphør()
-                                    .orEmpty()
-                                    .map {
-                                        StansOpphørDTO(
-                                            fom = it.fom,
-                                            stansOpphør = when (it.vurdering) {
-                                                is Opphør -> "OPPHØR"
-                                                is Stans -> "STANS"
-                                            },
-                                            årsaker = it.vurdering.årsaker.toList().map { it.toString() },
-                                        )
-                                    },
                             )
                         }
 
@@ -268,6 +255,19 @@ fun NormalOpenAPIRoute.driftApi(
                     DriftRettighetsinfoDto(
                         sisteDagMedRett = sisteDagMedRett,
                         rettighetsperioder = rettighetstyper.verdier().toList(),
+                        stansOpphør = stansOpphørRepository.hentHvisEksisterer(behandling.id)
+                            ?.gjeldendeStansOgOpphør()
+                            .orEmpty()
+                            .map {
+                                StansOpphørDTO(
+                                    fom = it.fom,
+                                    stansOpphør = when (it.vurdering) {
+                                        is Opphør -> "OPPHØR"
+                                        is Stans -> "STANS"
+                                    },
+                                    årsaker = it.vurdering.årsaker.toList().map { it.toString() },
+                                )
+                            },
                     )
                 }
                 respond(res)
