@@ -14,6 +14,7 @@ import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import io.ktor.server.plugins.statuspages.*
 import io.ktor.server.routing.*
+import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import no.nav.aap.behandlingsflyt.api.actuator.actuator
@@ -120,6 +121,7 @@ import no.nav.aap.komponenter.server.plugins.NavIdentInterceptor
 import no.nav.aap.motor.Motor
 import no.nav.aap.motor.api.motorApi
 import no.nav.aap.motor.retry.RetryService
+import no.nav.aap.tilgang.TilgangGateway
 import org.apache.kafka.common.serialization.Deserializer
 import org.slf4j.LoggerFactory
 import org.slf4j.bridge.SLF4JBridgeHandler
@@ -235,6 +237,7 @@ internal fun Application.server(
     val motor = startMotor(motorDataSource, repositoryRegistry, gatewayProvider)
 
     startKafkakonsumenter(fellesDataSource, repositoryRegistry, gatewayProvider)
+    TilgangGateway.initialiserPrometheus(prometheus)
 
     monitor.subscribe(ApplicationStopPreparing) { environment ->
         environment.log.info("ktor forbereder seg på å stoppe.")
