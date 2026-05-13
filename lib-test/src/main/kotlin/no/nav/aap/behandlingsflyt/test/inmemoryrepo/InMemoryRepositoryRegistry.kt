@@ -63,6 +63,7 @@ val inMemoryRepositoryRegistry = RepositoryRegistry().apply {
     register<InMemorySykestipendRepository>()
     register<InMemoryBarnepensjonRepository>()
     register<InMemorySamordningAndreStatligeYtelserRepository>()
+    register<InMemoryYrkesskadeRepository>()
 }
 
 val inMemoryRepositoryProvider = inMemoryRepositoryRegistry.provider(MockConnection().toDBConnection())

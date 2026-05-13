@@ -57,6 +57,7 @@ data class ArbeidInntektINorgeGrunnlag(
 
 data class BestemtArbeidsgruppeINorgeGrunnlag(
     val virksomhetId: String,
+    val virksomhetNavn: String?,
     val fom: LocalDate,
     val tom: LocalDate?,
 )

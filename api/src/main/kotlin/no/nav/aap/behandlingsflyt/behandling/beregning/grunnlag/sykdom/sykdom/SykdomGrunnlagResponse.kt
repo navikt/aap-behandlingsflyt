@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.PeriodiserteVurderingerDto
 import no.nav.aap.behandlingsflyt.VurderingDto
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ErNedsettelseMerEnnYrkesskadegrenseValg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ErNedsettelseMinstHalvpartenValg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
@@ -37,17 +38,19 @@ data class SykdomsvurderingResponse(
     val begrunnelse: String,
     val vurderingenGjelderFra: LocalDate?, @Deprecated("Bruk fom")
     val dokumenterBruktIVurdering: List<JournalpostId>,
+    @Deprecated("Bruk harArbeidsevneNedsatt")
     val erArbeidsevnenNedsatt: Boolean?,
+    val harNedsattArbeidsevne: ArbeidsevneNedsattValg?,
     val harSkadeSykdomEllerLyte: Boolean,
     val erSkadeSykdomEllerLyteVesentligdel: Boolean?,
-    val erNedsettelseMinstHalvparten: ErNedsettelseMinstHalvpartenValg?,
-    val erNedsettelseMerEnnYrkesskadegrense: ErNedsettelseMerEnnYrkesskadegrenseValg?,
-    @Deprecated("Bruk erNedsettelseMinstHalvparten")
     val erNedsettelseIArbeidsevneMerEnnHalvparten: Boolean?,
-    @Deprecated("Bruk erNedsettelseMinstHalvparten/erNedsettelseMerEnnYrkesskadegrense")
-    val erNedsettelseIArbeidsevneAvEnVissVarighet: Boolean?,
-    @Deprecated("Bruk erNedsettelseMerEnnYrkesskadegrense")
+    @Deprecated("Bruk erNedsettelseIArbeidsevneMerEnnHalvparten")
+    val erNedsettelseMinstHalvparten: ErNedsettelseMinstHalvpartenValg?,
+    @Deprecated("Bruk erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense")
+    val erNedsettelseMerEnnYrkesskadegrense: ErNedsettelseMerEnnYrkesskadegrenseValg?,
     val erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense: Boolean?,
+    @Deprecated("Bruk harNedsattArbeidsevne")
+    val erNedsettelseIArbeidsevneAvEnVissVarighet: Boolean?,
     val yrkesskadeBegrunnelse: String?,
     val kodeverk: String? = null,
     val hoveddiagnose: String? = null,
@@ -83,6 +86,7 @@ data class SykdomsvurderingResponse(
             vurderingenGjelderFra = sykdomsvurdering.vurderingenGjelderFra,
             dokumenterBruktIVurdering = sykdomsvurdering.dokumenterBruktIVurdering,
             erArbeidsevnenNedsatt = sykdomsvurdering.erArbeidsevnenNedsatt,
+            harNedsattArbeidsevne = sykdomsvurdering.harNedsattArbeidsevne,
             harSkadeSykdomEllerLyte = sykdomsvurdering.harSkadeSykdomEllerLyte,
             erSkadeSykdomEllerLyteVesentligdel = sykdomsvurdering.erSkadeSykdomEllerLyteVesentligdel,
             erNedsettelseMinstHalvparten = sykdomsvurdering.erNedsettelseMinstHalvparten,

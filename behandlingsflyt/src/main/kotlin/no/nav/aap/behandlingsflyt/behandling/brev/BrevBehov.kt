@@ -12,6 +12,7 @@ data class Innvilgelse(
     val tilkjentYtelse: TilkjentYtelse?,
     val sykdomsvurdering: String?,
     val forholdTilAndreYtelser: ForholdTilAndreYtelser?,
+    val yrkesskadeBeregning: YrkesskadeBeregningBrev? = null,
 ) : BrevBehov(TypeBrev.VEDTAK_INNVILGELSE)
 
 data class VurderesForUføretrygd(
