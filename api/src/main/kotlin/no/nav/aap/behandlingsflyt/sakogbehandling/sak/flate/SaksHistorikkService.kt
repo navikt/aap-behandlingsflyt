@@ -172,7 +172,7 @@ class SaksHistorikkService(
 
                             if (nyesteVurdering?.skalTrekkes == true) {
                                 avklaringsbehov.historikk
-                                    .filter { it.status != Status.AVSLUTTET }
+                                    .filter { it.status == Status.AVSLUTTET }
                                     .map { h ->
                                         BehandlingHendelseDTO(
                                             hendelse = BehandlingHendelseType.SØKNAD_TRUKKET,
