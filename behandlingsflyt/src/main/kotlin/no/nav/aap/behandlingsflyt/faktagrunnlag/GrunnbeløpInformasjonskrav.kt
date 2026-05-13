@@ -8,15 +8,15 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveis
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType.FØRSTEGANGSBEHANDLING
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType.MELDEKORT
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType.G_REGULERING
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType.REVURDERING
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
-import no.nav.aap.komponenter.tidslinje.filterNotNull
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
 
@@ -51,7 +51,7 @@ class GrunnbeløpInformasjonskrav(
         oppdatert: InformasjonskravOppdatert?
     ): Boolean {
         return unleashGateway.isEnabled(BehandlingsflytFeature.GrunnbeloepInformasjonskrav)
-                && kontekst.vurderingType in setOf(FØRSTEGANGSBEHANDLING, REVURDERING)
+                && kontekst.vurderingType in setOf(FØRSTEGANGSBEHANDLING, REVURDERING, G_REGULERING)
     }
 
     override fun klargjør(kontekst: FlytKontekstMedPerioder) = IngenInput
@@ -63,10 +63,22 @@ class GrunnbeløpInformasjonskrav(
         registerdata: IngenRegisterData,
         kontekst: FlytKontekstMedPerioder
     ): Informasjonskrav.Endret {
-        val underveisGrunnlag = underveisRepository.hentHvisEksisterer(kontekst.behandlingId)
+        return informasjonskravEndret(kontekst.behandlingId)
+    }
+
+    override fun flettOpplysningerFraAtomærBehandling(kontekst: FlytKontekst): Informasjonskrav.Endret {
+        /*
+         * Trenger ikke å flette inn opplysninger, men dette trigger at steget for tilkjent ytelse kjører på nytt og
+         * dermed beregner med nytt grunnbeløp dersom det har endret seg.
+         */
+        return informasjonskravEndret(kontekst.behandlingId)
+    }
+
+    private fun informasjonskravEndret(behandlingId: BehandlingId): Informasjonskrav.Endret {
+        val underveisGrunnlag = underveisRepository.hentHvisEksisterer(behandlingId)
             ?: return IKKE_ENDRET
 
-        val tilkjentYtelsePerioder = tilkjentYtelseRepository.hentHvisEksisterer(kontekst.behandlingId)
+        val tilkjentYtelsePerioder = tilkjentYtelseRepository.hentHvisEksisterer(behandlingId)
             ?: return IKKE_ENDRET
 
         val oppfyltUnderveisTidslinje = underveisGrunnlag.somTidslinje().filter { it.verdi.utfall == Utfall.OPPFYLT }
@@ -101,10 +113,5 @@ class GrunnbeløpInformasjonskrav(
         } else {
             return IKKE_ENDRET
         }
-    }
-
-    override fun flettOpplysningerFraAtomærBehandling(kontekst: FlytKontekst): Informasjonskrav.Endret {
-        // Trenger ikke å flette inn opplysninger da beregningen av tilkjent ytelse uansett kjøres på nytt
-        return IKKE_ENDRET
     }
 }
