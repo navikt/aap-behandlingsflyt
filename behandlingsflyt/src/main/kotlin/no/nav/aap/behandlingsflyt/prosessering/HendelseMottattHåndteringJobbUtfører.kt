@@ -170,21 +170,19 @@ class HendelseMottattHåndteringJobbUtfører(
 
             InnsendingType.LEGEERKLÆRING -> {
                 val sisteYtelsesBehandling = behandlingService.finnSisteYtelsesbehandlingFor(sakId)
-                if (sisteYtelsesBehandling == null) {
-                    log.info("Fant ingen behandling for sak med sakId: $sakId - kan ikke håndtere legeerklæringen")
-                } else {
-                    if (!trukketSøknadService.søknadErTrukket(sisteYtelsesBehandling.id)) {
-                        håndterMottattDokumentService.håndterMottatteDokumenter(
-                            sakId,
-                            referanse,
-                            mottattTidspunkt,
-                            innsendingType,
-                            parsedMelding
-                        )
-                    } else {
-                        log.info("Legeerklæring håndteres ikke fordi søknad er trukket for sakId: $sakId")
-                    }
+                if (sisteYtelsesBehandling != null &&
+                    trukketSøknadService.søknadErTrukket(sisteYtelsesBehandling.id)
+                ) {
+                    log.info("Legeerklæring håndteres ikke fordi søknad er trukket for sakId: $sakId")
+                    return
                 }
+                håndterMottattDokumentService.håndterMottatteDokumenter(
+                    sakId,
+                    referanse,
+                    mottattTidspunkt,
+                    innsendingType,
+                    parsedMelding
+                )
             }
 
             else -> {
