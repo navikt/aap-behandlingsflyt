@@ -26,6 +26,7 @@ data class TilhørighetVurdering(
     val oppgittUtenlandsOppholdGrunnlag: List<OppgittUtenlandsOppholdGrunnlag>? = null,
     val utenlandsAddresserGrunnlag: UtenlandsAdresserGrunnlag? = null,
     val visuellTidslinje: List<VisuellTidslinjeArbeidInntektINorge> = emptyList(),
+    val bestemtArbeidsgruppeINorge: List<BestemtArbeidsgruppeINorgeGrunnlag>? = null,
 )
 
 data class VisuellTidslinjeInntektDetalj(
@@ -52,6 +53,13 @@ data class ArbeidInntektINorgeGrunnlag(
     val virksomhetNavn: String?,
     val beloep: Double,
     val periode: Periode,
+)
+
+data class BestemtArbeidsgruppeINorgeGrunnlag(
+    val virksomhetId: String,
+    val virksomhetNavn: String?,
+    val fom: LocalDate,
+    val tom: LocalDate?,
 )
 
 data class MottarSykepengerGrunnlag(

@@ -45,6 +45,8 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.GReguleringUtplukkJobb to true,
         BehandlingsflytFeature.ForutgaaendeGap to true,
         BehandlingsflytFeature.FjernTilbakefoeringTransisjon to true,
+        BehandlingsflytFeature.MaritimtArbeid to true,
+        BehandlingsflytFeature.TaNedPesysOgInfotrygd to false
         )
 )
 

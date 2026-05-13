@@ -64,6 +64,7 @@ class SykestipendSteg private constructor(
                     VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
                     VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9,
                     VurderingType.AUTOMATISK_BREV,
+                    VurderingType.G_REGULERING,
                     VurderingType.IKKE_RELEVANT ->
                         false
                 }

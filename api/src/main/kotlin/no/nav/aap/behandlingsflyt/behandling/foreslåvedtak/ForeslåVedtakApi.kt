@@ -3,8 +3,6 @@ package no.nav.aap.behandlingsflyt.behandling.foreslåvedtak
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.GjeldendeStansEllerOpphør
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.OpphevetStansEllerOpphør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.Opphør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.Stans
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.StansOpphørRepository
@@ -50,7 +48,9 @@ fun NormalOpenAPIRoute.foreslaaVedtakApi(
                     val vilkårsresultat = vilkårsresultatRepository.hent(behandling.id)
                     val stansOpphørGrunnlag =
                         repositoryProvider.provide<StansOpphørRepository>().hentHvisEksisterer(behandling.id)
-                    val stansOgOpphør = stansOpphørGrunnlag?.stansOgOpphørMedHistorikk() ?: emptyMap()
+                    val stansOgOpphør = stansOpphørGrunnlag?.gjeldendeStansOgOpphør()
+                        ?.associate({ it.fom to listOf(it) })
+                        .orEmpty()
                     val referanseOppslag = behandlingRepository
                         .hentAlleFor(behandling.sakId, TypeBehandling.ytelseBehandlingstyper())
                         .associate { it.id to it.referanse }
@@ -60,18 +60,11 @@ fun NormalOpenAPIRoute.foreslaaVedtakApi(
                             stansOpphørFraOgMed = fom,
                             historikk = historikk.map { vurdering ->
                                 StansOpphørVurderingDto(
-                                    type = when (vurdering) {
-                                        is GjeldendeStansEllerOpphør -> when (vurdering.vurdering) {
-                                            is Opphør -> StansOpphørVurderingTypeDto.OPPHØR
-                                            is Stans -> StansOpphørVurderingTypeDto.STANS
-                                        }
-
-                                        is OpphevetStansEllerOpphør -> StansOpphørVurderingTypeDto.OPPHEVET
+                                    type = when (vurdering.vurdering) {
+                                        is Opphør -> StansOpphørVurderingTypeDto.OPPHØR
+                                        is Stans -> StansOpphørVurderingTypeDto.STANS
                                     },
-                                    årsaker = when (vurdering) {
-                                        is GjeldendeStansEllerOpphør -> vurdering.vurdering.årsaker.toList()
-                                        is OpphevetStansEllerOpphør -> emptyList()
-                                    },
+                                    årsaker = vurdering.vurdering.årsaker.toList(),
                                     behandlingReferanse = requireNotNull(referanseOppslag[vurdering.vurdertIBehandling]) {
                                         "Finner ikke ytelsesbehandling i sak med behandlingsid"
                                     }

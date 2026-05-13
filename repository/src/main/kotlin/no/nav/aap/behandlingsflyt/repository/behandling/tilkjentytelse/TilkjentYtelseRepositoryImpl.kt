@@ -8,7 +8,6 @@ import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelsePeriod
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
-import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.GUnit
 import no.nav.aap.komponenter.verdityper.Prosent
@@ -110,9 +109,7 @@ class TilkjentYtelseRepositoryImpl(private val connection: DBConnection) :
                 setLong(1, behandlingId.toLong())
             }
         }
-        tilkjent.forEach { segment ->
-            lagrePeriode(tilkjentYtelseId, segment.periode, segment.tilkjent)
-        }
+        lagrePerioder(tilkjentYtelseId, tilkjent)
 
         if (faktagrunnlag != null && versjon != null) {
             connection.execute(
@@ -146,8 +143,8 @@ class TilkjentYtelseRepositoryImpl(private val connection: DBConnection) :
         log.info("Slettet $deletedRows rader fra tilkjent_periode")
     }
 
-    private fun lagrePeriode(tilkjentYtelseId: Long, periode: Periode, tilkjent: Tilkjent) {
-        connection.execute(
+    private fun lagrePerioder(tilkjentYtelseId: Long, perioder: List<TilkjentYtelsePeriode>) {
+        connection.executeBatch(
             """
             INSERT INTO TILKJENT_PERIODE (TILKJENT_YTELSE_ID, PERIODE, DAGSATS, GRADERING, BARNETILLEGG,
                                           GRUNNLAGSFAKTOR, GRUNNLAG, ANTALL_BARN, BARNETILLEGGSATS, GRUNNBELOP, 
@@ -155,9 +152,10 @@ class TilkjentYtelseRepositoryImpl(private val connection: DBConnection) :
                                            SAMORDNING_UFORE_GRADERING, SAMORDNING_ARBEIDSGIVER_GRADERING, 
                                            MELDEPLIKT_GRADERING, MINSTESATS, REDUSERT_DAGSATS, BARNEPENSJON_DAGSATS)
             VALUES (?, ?::daterange, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """.trimIndent()
+        """.trimIndent(),
+            perioder,
         ) {
-            setParams {
+            setParams { (periode, tilkjent) ->
                 setLong(1, tilkjentYtelseId)
                 setPeriode(2, periode)
                 setBigDecimal(3, tilkjent.dagsats.verdi())

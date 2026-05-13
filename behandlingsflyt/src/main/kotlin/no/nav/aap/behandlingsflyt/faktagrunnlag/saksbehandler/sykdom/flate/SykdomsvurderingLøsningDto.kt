@@ -46,9 +46,9 @@ data class SykdomsvurderingLøsningDto(
 
     override val fom: LocalDate,
     override val tom: LocalDate?,
-    val harNedsattArbeidsevne: ArbeidsevneNedsattValg?,
     val dokumenterBruktIVurdering: List<JournalpostId>,
     val harSkadeSykdomEllerLyte: Boolean,
+    val harNedsattArbeidsevne: ArbeidsevneNedsattValg? = null,
     val erSkadeSykdomEllerLyteVesentligdel: Boolean?,
     val erNedsettelseIArbeidsevneMerEnnHalvparten: Boolean?,
     val erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense: Boolean?,

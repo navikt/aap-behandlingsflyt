@@ -36,13 +36,6 @@ spec:
         pointInTimeRecovery: true
         databases:
           - name: behandlingsflyt
-        flags:
-          - name: cloudsql.enable_pgaudit
-            value: "true"
-          - name: pgaudit.log
-            value: "write,ddl,role"
-          - name: "pgaudit.log_parameter"
-            value: "on"
   terminationGracePeriodSeconds: 30
   liveness:
     path: /actuator/live

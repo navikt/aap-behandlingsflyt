@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.medlemskaplovvalg
 
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.ArbeidINorgeGrunnlag
+import no.nav.aap.behandlingsflyt.behandling.lovvalg.Arbeidsforholdtype
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.EnhetGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.ForutgåendeMedlemskapArbeidInntektGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.InntektINorgeGrunnlag
@@ -140,7 +141,7 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: 
             deaktiverGrunnlag(behandlingId)
         }
 
-        val arbeiderId = lagreArbeidGrunnlag(arbeidGrunnlag)
+        val arbeiderId = lagreArbeidGrunnlag(arbeidGrunnlag, enhetGrunnlag)
         val inntekterINorgeId = lagreArbeidsInntektGrunnlag(inntektGrunnlag, enhetGrunnlag)
 
         val grunnlagQuery = """
@@ -229,7 +230,7 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: 
         }
     }
 
-    private fun lagreArbeidGrunnlag(arbeidGrunnlag: List<ArbeidINorgeGrunnlag>): Long? {
+    private fun lagreArbeidGrunnlag(arbeidGrunnlag: List<ArbeidINorgeGrunnlag>, enhetGrunnlag: List<EnhetGrunnlag>): Long? {
         if (arbeidGrunnlag.isEmpty()) return null
 
         val arbeiderQuery = """
@@ -239,16 +240,19 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: 
 
         for (forhold in arbeidGrunnlag) {
             val arbeidQuery = """
-                INSERT INTO ARBEID_FORUTGAAENDE (identifikator, arbeidsforhold_kode, arbeider_id, startdato, sluttdato) VALUES (?, ?, ?, ?, ?)
+                INSERT INTO ARBEID_FORUTGAAENDE (identifikator, arbeidsforhold_kode, arbeider_id, startdato, sluttdato, organisasjonsnavn) VALUES (?, ?, ?, ?, ?, ?)
             """.trimIndent()
+            val orgNavn =
+                enhetGrunnlag.firstOrNull { it.orgnummer == forhold.identifikator }?.orgNavn
 
             connection.execute(arbeidQuery) {
                 setParams {
                     setString(1, forhold.identifikator)
-                    setString(2, forhold.arbeidsforholdKode)
+                    setString(2, forhold.arbeidsforholdKode.kode)
                     setLong(3, arbeiderId)
                     setLocalDate(4, forhold.startdato)
                     setLocalDate(5, forhold.sluttdato)
+                    setString(6, orgNavn)
                 }
             }
         }
@@ -370,9 +374,10 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: 
             setRowMapper {
                 ArbeidINorgeGrunnlag(
                     identifikator = it.getString("identifikator"),
-                    arbeidsforholdKode = it.getString("arbeidsforhold_kode"),
+                    arbeidsforholdKode = Arbeidsforholdtype.fraKode(it.getString("arbeidsforhold_kode")),
                     startdato = it.getLocalDate("startdato"),
                     sluttdato = it.getLocalDateOrNull("sluttdato"),
+                    organisasjonsNavn = it.getStringOrNull("organisasjonsnavn"),
                 )
             }
         }

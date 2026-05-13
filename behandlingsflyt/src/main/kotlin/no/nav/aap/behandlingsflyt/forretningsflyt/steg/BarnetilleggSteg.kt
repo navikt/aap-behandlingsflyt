@@ -74,6 +74,7 @@ class BarnetilleggSteg(
             VurderingType.MIGRER_RETTIGHETSPERIODE,
             VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
             VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9,
+            VurderingType.G_REGULERING,
             VurderingType.IKKE_RELEVANT ->
                 false
         }

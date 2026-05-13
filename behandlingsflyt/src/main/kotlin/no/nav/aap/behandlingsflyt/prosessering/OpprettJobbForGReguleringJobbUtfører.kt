@@ -2,7 +2,6 @@ package no.nav.aap.behandlingsflyt.prosessering
 
 import no.nav.aap.behandlingsflyt.behandling.gregulering.GReguleringService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
@@ -20,12 +19,18 @@ import java.time.Year
 
 /**
  * Kjøres daglig og oppretter jobber for G-Regulering. Jobber opprettes for saksbehandlingskandidater hvor innvilget
- * AAP-periode passerer G-justeringen lagt inn i lista i Grunnbeløp.kt samme året som kjøre-datoen og etter 2025
- * G-Justeringen da Kelvin ble lansert i produksjon. G-regulering medfører omberegninger, slik
- * at ytelsen blir korrekt både før og etter G-justering.
+ * AAP-periode ikke har en endring i grunnbeløpet benyttet i beregninger av ytelse for ny G-periode. Dette forutsetter
+ * at ny G-justering finnes i Grunnbeløp.kt for inneværende G-periode. G-periode utledes fra jobb-kjøretidspunktet.
+ *
+ * Alle G-Justeringen fra før Kelvin ble lansert i produksjon i 2025 ignoreres for G-regulering. Første aktuelle
+ * G-periode er 2026/2027.
+ *
+ * G-regulering medfører omberegninger, slik at ytelsen blir korrekt både før og etter G-justering.
+ *
+ * G-perioden løper fra 1. mai hvert år til 30. april neste år. G-justeringen for år N (datert 1. mai N)
+ * er aktuell fra 1. mai N til 30. april N+1.
  */
 class OpprettJobbForGReguleringJobbUtfører(
-    private val behandlingService: BehandlingService,
     private val gReguleringService: GReguleringService,
     private val flytJobbRepository: FlytJobbRepository,
     private val clock: Clock = Clock.systemDefaultZone(),
@@ -40,12 +45,13 @@ class OpprettJobbForGReguleringJobbUtfører(
             return
         }
 
-        val årIDag = Year.now(clock)
-        val aktuellGJustering = hentAktuellGJustering(årIDag)
+        val gPeriodeÅr = gPeriodeÅr(LocalDate.now(clock))
+        val aktuellGJustering = hentAktuellGJustering(gPeriodeÅr)
         if (aktuellGJustering == null || aktuellGJustering.dato.isBefore(LocalDate.of(2025, 5, 1))) {
-            log.info("Avslutter søk etter G-reguleringskandidater. Ingen post 2025 G-justering funnet for år: ${årIDag} i Gunnbeløp.kt")
+            log.info("Avslutter søk etter G-reguleringskandidater. Ingen post 2025 G-justering funnet for G-periode-år: ${gPeriodeÅr} i Gunnbeløp.kt")
             return
         }
+
         val saker = hentKandidaterForGRegulering(aktuellGJustering.dato)
 
         log.info("Fant ${saker.size} kandidater for G-regulering for gitt G-justering (?) ${aktuellGJustering?.dato}")
@@ -60,8 +66,11 @@ class OpprettJobbForGReguleringJobbUtfører(
         return gReguleringService.finnesGrunnbeløpForÅr(år)
     }
 
+    internal fun gPeriodeÅr(dato: LocalDate): Year =
+        if (dato.monthValue < 5) Year.of(dato.year - 1) else Year.of(dato.year)
+
     private fun hentKandidaterForGRegulering(datoForGJustering: LocalDate): Set<SakId> {
-        val alleSaker = gReguleringService.hentSakerMedAktuellGJustering(datoForGJustering)
+        val alleSaker = gReguleringService.hentSakerForGRegulering(datoForGJustering)
 
         // TODO: Filtrer saker
 
@@ -71,7 +80,6 @@ class OpprettJobbForGReguleringJobbUtfører(
     companion object : ProvidersJobbSpesifikasjon {
         override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): JobbUtfører {
             return OpprettJobbForGReguleringJobbUtfører(
-                behandlingService = BehandlingService(repositoryProvider, gatewayProvider),
                 gReguleringService = GReguleringService(repositoryProvider, gatewayProvider),
                 flytJobbRepository = repositoryProvider.provide(),
                 unleashGateway = gatewayProvider.provide(),
