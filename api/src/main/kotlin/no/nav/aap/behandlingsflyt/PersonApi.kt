@@ -17,16 +17,14 @@ import no.nav.aap.komponenter.server.auth.token
 import no.nav.aap.tilgang.Operasjon
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
-import java.util.UUID
+import java.util.*
 import javax.sql.DataSource
 
 
-data class PersonIdentRequest (
+data class PersonIdentRequest(
     val personReferanse: UUID,
 )
-data class PersonIdentResponse(
-    val ident: String
-)
+
 data class PersoninfoDTO(
     val fnr: String,
     val navn: String,
@@ -41,30 +39,30 @@ fun NormalOpenAPIRoute.personApi(
     gatewayProvider: GatewayProvider,
 ) {
     val personinfoGateway = gatewayProvider.provide(PersoninfoGateway::class)
-        route("/api/person/personinformasjon") {
-            post<Unit, PersoninfoDTO, PersonIdentRequest> { _, request ->
-                try {
-                    val personIdent = dataSource.transaction(readOnly = true) { connection ->
-                        val repositoryProvider = repositoryRegistry.provider(connection)
-                        repositoryProvider.provide<PersonRepository>().hent(request.personReferanse)
-                    }.aktivIdent()
-                    val tilgangGateway = gatewayProvider.provide<TilgangGateway>()
-                    val harTilgang = tilgangGateway.sjekkTilgangTilPerson(personIdent.identifikator, token(), Operasjon.SE )
-                    if (!harTilgang) {
-                        throw IkkeTillattException("Har ikke tilgang til person")
-                    }
-                    val personinfo = personinfoGateway.hentPersoninfoForIdent(personIdent, token())
-                    respond(
-                        PersoninfoDTO(
-                            fnr = personinfo.ident.identifikator,
-                            navn = personinfo.fulltNavn(),
-                            fødselsdato = personinfo.fødselsdato,
-                            dødsdato = personinfo.dødsdato,
-                        ),HttpStatusCode.OK)
-                } catch (e: NoSuchElementException) {
-                    log.warn("Fant ikke ident for identifikator: ${request.personReferanse}", e)
-                    throw VerdiIkkeFunnetException("Fant ingen person for identifikator: ${request.personReferanse}")
+    route("/api/person/personinformasjon") {
+        post<Unit, PersoninfoDTO, PersonIdentRequest> { _, request ->
+            try {
+                val personIdent = dataSource.transaction(readOnly = true) { connection ->
+                    val repositoryProvider = repositoryRegistry.provider(connection)
+                    repositoryProvider.provide<PersonRepository>().hent(request.personReferanse)
+                }.aktivIdent()
+                val tilgangGateway = gatewayProvider.provide<TilgangGateway>()
+                val harTilgang = tilgangGateway.sjekkTilgangTilPerson(personIdent.identifikator, token(), Operasjon.SE)
+                if (!harTilgang) {
+                    throw IkkeTillattException("Har ikke tilgang til person")
                 }
+                val personinfo = personinfoGateway.hentPersoninfoForIdent(personIdent, token())
+                respond(
+                    PersoninfoDTO(
+                        fnr = personinfo.ident.identifikator,
+                        navn = personinfo.fulltNavn(),
+                        fødselsdato = personinfo.fødselsdato,
+                        dødsdato = personinfo.dødsdato,
+                    ), HttpStatusCode.OK
+                )
+            } catch (e: NoSuchElementException) {
+                log.warn("Fant ikke ident for identifikator: ${request.personReferanse}", e)
+                throw VerdiIkkeFunnetException("Fant ingen person for identifikator: ${request.personReferanse}")
             }
         }
     }
