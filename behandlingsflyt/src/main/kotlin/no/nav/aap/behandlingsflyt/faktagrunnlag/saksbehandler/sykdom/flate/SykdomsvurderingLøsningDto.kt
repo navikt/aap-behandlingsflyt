@@ -49,13 +49,18 @@ data class SykdomsvurderingLøsningDto(
     override val fom: LocalDate,
     override val tom: LocalDate?,
     val dokumenterBruktIVurdering: List<JournalpostId>,
-    val erArbeidsevnenNedsatt: Boolean?,
     val harSkadeSykdomEllerLyte: Boolean,
+    @Deprecated("Erstattes av harNedsattArbeidsevne")
+    val erArbeidsevnenNedsatt: Boolean?,
+    val harNedsattArbeidsevne: ArbeidsevneNedsattValg? = null,
     val erSkadeSykdomEllerLyteVesentligdel: Boolean?,
+    @Deprecated("Bakes inn i harNedsattArbeidsevne")
     val erNedsettelseIArbeidsevneAvEnVissVarighet: Boolean?,
     val erNedsettelseIArbeidsevneMerEnnHalvparten: Boolean?,
+    @Deprecated("Bruk erNedsettelseIArbeidsevneMerEnnHalvparten")
     val erNedsettelseMinstHalvparten: ErNedsettelseMinstHalvpartenValg?,
     val erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense: Boolean?,
+    @Deprecated("Bruk erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense")
     val erNedsettelseMerEnnYrkesskadegrense: ErNedsettelseMerEnnYrkesskadegrenseValg?,
     val yrkesskadeBegrunnelse: String?,
     val kodeverk: String? = null,
@@ -89,6 +94,8 @@ data class SykdomsvurderingLøsningDto(
     }
 
     private fun utledHarNedsattArbeidsevne(): ArbeidsevneNedsattValg? {
+        if (harNedsattArbeidsevne != null) return harNedsattArbeidsevne
+
         if (erArbeidsevnenNedsatt == null) return null
         if (!erArbeidsevnenNedsatt) return ArbeidsevneNedsattValg.NEI
 
