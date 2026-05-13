@@ -68,12 +68,12 @@ class ForeldrepengevedtakKafkaKonsument(
                 for (saken in saker) {
                     val sisteYtelsesBehandling = behandlingService.finnSisteYtelsesbehandlingFor(saken.id)
                     if (sisteYtelsesBehandling == null) {
-                        log.info("Det finnes ingen behandling - oppretter ikke mottatt sykepengehendelse for sak ${saken.saksnummer}")
+                        log.info("Det finnes ingen behandling - oppretter ikke mottatt foreldrepengehendelse for sak ${saken.saksnummer}")
                         continue
                     }
                     val søknadErTrukket = trukketSøknadService.søknadErTrukket(sisteYtelsesBehandling.id)
                     if (søknadErTrukket) {
-                        log.info("Søknad er trukket - oppretter ikke mottatt sykepengehendelse for sak ${saken.saksnummer}")
+                        log.info("Søknad er trukket - oppretter ikke mottatt foreldrepengehendelse for sak ${saken.saksnummer}")
                         continue
                     }
 
