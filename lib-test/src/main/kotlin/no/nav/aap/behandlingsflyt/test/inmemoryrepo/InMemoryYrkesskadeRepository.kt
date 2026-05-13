@@ -16,17 +16,13 @@ object InMemoryYrkesskadeRepository : YrkesskadeRepository {
         memory[behandlingId]
 
     override fun lagre(behandlingId: BehandlingId, registerYrkesskader: Yrkesskader?, oppgittYrkesskadeISøknad: Boolean?) {
-        if (registerYrkesskader != null) {
-            val existing = memory[behandlingId]
-            memory[behandlingId] = YrkesskadeGrunnlag(
-                id = existing?.id ?: idSeq.getAndIncrement(),
-                behandlingId = behandlingId,
-                yrkesskader = registerYrkesskader,
-                oppgittYrkesskadeISøknad = oppgittYrkesskadeISøknad,
-            )
-        } else {
-            memory.remove(behandlingId)
-        }
+        val existing = memory[behandlingId]
+        memory[behandlingId] = YrkesskadeGrunnlag(
+            id = existing?.id ?: idSeq.getAndIncrement(),
+            behandlingId = behandlingId,
+            yrkesskader = registerYrkesskader ?: Yrkesskader(emptyList()),
+            oppgittYrkesskadeISøknad = oppgittYrkesskadeISøknad,
+        )
     }
 
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
