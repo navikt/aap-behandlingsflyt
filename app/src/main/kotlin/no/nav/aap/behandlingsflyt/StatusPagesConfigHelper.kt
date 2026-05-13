@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt
 
 import com.fasterxml.jackson.core.JacksonException
+import io.ktor.client.plugins.HttpRequestTimeoutException
 import io.ktor.http.*
 import io.ktor.serialization.*
 import io.ktor.server.application.*
@@ -92,6 +93,7 @@ object StatusPagesConfigHelper {
                     call.respondWithError(InternfeilException("Feil ved kall til '$uri'"))
                 }
 
+                is HttpRequestTimeoutException,
                 is HttpTimeoutException -> {
                     logger.warn("Timeout ved kall til '$uri'", cause)
                     call.respondWithError(
