@@ -52,7 +52,7 @@ data class SykdomsvurderingLøsningDto(
     val harSkadeSykdomEllerLyte: Boolean,
     @Deprecated("Erstattes av harNedsattArbeidsevne")
     val erArbeidsevnenNedsatt: Boolean?,
-    val harNedsattArbeidsevne: ArbeidsevneNedsattValg?,
+    val harNedsattArbeidsevne: ArbeidsevneNedsattValg? = null,
     val erSkadeSykdomEllerLyteVesentligdel: Boolean?,
     @Deprecated("Bakes inn i harNedsattArbeidsevne")
     val erNedsettelseIArbeidsevneAvEnVissVarighet: Boolean?,
@@ -94,6 +94,8 @@ data class SykdomsvurderingLøsningDto(
     }
 
     private fun utledHarNedsattArbeidsevne(): ArbeidsevneNedsattValg? {
+        if (harNedsattArbeidsevne != null) return harNedsattArbeidsevne
+
         if (erArbeidsevnenNedsatt == null) return null
         if (!erArbeidsevnenNedsatt) return ArbeidsevneNedsattValg.NEI
 
