@@ -56,6 +56,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.UTVID_VED
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.komponenter.miljo.Miljø
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.verdityper.Beløp
@@ -341,7 +342,9 @@ class BrevUtlederService(
             null
         }
 
-        val yrkesskadeBeregning = utledYrkesskadeBeregning(behandling.id)
+        val yrkesskadeBeregning = if (Miljø.erDev())
+            utledYrkesskadeBeregning(behandling.id)
+        else null
 
         return Innvilgelse(
             virkningstidspunkt = vedtak.virkningstidspunkt,
@@ -413,18 +416,7 @@ class BrevUtlederService(
         }
     }
 
-    /**
-     * 🔴 Rød sone — kobler tre datakilder via `referanse` (saksnummer).
-     * Implementer og verifiser logikken selv.
-     *
-     * Kilder:
-     * 1. sykdomRepository → Yrkesskadevurdering.relevanteSaker + andelAvNedsettelsen
-     * 2. yrkesskadeRepository → Yrkesskade.skadedato per ref (primær), YrkesskadeSak.manuellYrkesskadeDato (fallback)
-     * 3. beregningVurderingRepository → YrkesskadeBeløpVurdering.antattÅrligInntekt per referanse
-     *    (arbeidsinntekt på skadetidspunktet)
-     */
     private fun utledYrkesskadeBeregning(behandlingId: BehandlingId): YrkesskadeBeregningBrev? {
-        //TODO("🔴 Implementer utledning av yrkesskadeBeregning — se kdoc over")
         val sykdomGrunnlag = sykdomRepository.hentHvisEksisterer(behandlingId)
         val yrkesSkaderMedManuelledatoer = sykdomGrunnlag?.yrkesskadevurdering?.relevanteSaker ?: emptyList()
 
