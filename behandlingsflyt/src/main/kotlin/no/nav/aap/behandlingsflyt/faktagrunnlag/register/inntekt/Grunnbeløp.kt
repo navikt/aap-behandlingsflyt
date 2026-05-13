@@ -147,7 +147,7 @@ object Grunnbeløp {
                     .let(::Tidslinje)
             }
             fun finnGrunnbeløpForÅr(år: Year): GrunnbeløpDto? {
-                val grunnbeløpElement = grunnbeløpene.find { it.dato.year.equals(år) }
+                val grunnbeløpElement = grunnbeløpene.find { Year.of(it.dato.year) == år }
                 if (grunnbeløpElement != null) {
                     return GrunnbeløpDto(
                         dato = grunnbeløpElement.dato,

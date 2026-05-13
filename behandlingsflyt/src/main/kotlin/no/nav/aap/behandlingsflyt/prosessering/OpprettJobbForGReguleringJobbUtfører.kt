@@ -71,10 +71,12 @@ class OpprettJobbForGReguleringJobbUtfører(
 
     private fun hentKandidaterForGRegulering(datoForGJustering: LocalDate): Set<SakId> {
         val alleSaker = gReguleringService.hentSakerForGRegulering(datoForGJustering)
+        log.info("Antall saker som er kandidater for G-regulering: ${alleSaker.size}")
 
         // TODO: Filtrer saker
-
         return alleSaker
+            .filter { it.id == 0L }
+            .toSet()
     }
 
     companion object : ProvidersJobbSpesifikasjon {
