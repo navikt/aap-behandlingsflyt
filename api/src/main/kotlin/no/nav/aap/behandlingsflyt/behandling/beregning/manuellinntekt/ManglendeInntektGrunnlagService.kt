@@ -1,6 +1,8 @@
 package no.nav.aap.behandlingsflyt.behandling.beregning.manuellinntekt
 
-import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
+import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.ManuellInntektGrunnlagRepository
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
@@ -15,7 +17,10 @@ class ManglendeInntektGrunnlagService(
         behandlingRepository = repositoryProvider.provide()
     )
 
-    fun mapManuellVurderinger(behandlingsreferanse: BehandlingReferanse): ManuellInntektGrunnlagVurdering? {
+    fun mapManuellVurderinger(
+        behandlingsreferanse: BehandlingReferanse,
+        vurdertAvService: VurdertAvService,
+    ): ManuellInntektGrunnlagVurdering? {
         val behandling = behandlingRepository.hent(behandlingsreferanse.referanse.let(::BehandlingReferanse))
 
         val grunnlag = manuellInntektGrunnlagRepository.hentHvisEksisterer(behandling.id)
@@ -34,22 +39,37 @@ class ManglendeInntektGrunnlagService(
 
         return ManuellInntektGrunnlagVurdering(
             begrunnelse = manuelleInntekter.first().begrunnelse,
-            vurdertAv = VurdertAvResponse(
-                manuelleInntekter.first().vurdertAv,
-                manuelleInntekter.first().opprettet.toLocalDate()
+            vurderingerMeta = vurdertAvService.byggVurderingerMeta(
+                definisjon = Definisjon.FASTSETT_MANUELL_INNTEKT,
+                behandlingId = behandling.id,
+                vurdertAv = vurdertAvService.medNavnOgEnhet(
+                    ident = manuelleInntekter.first().vurdertAv,
+                    tidspunkt = manuelleInntekter.first().opprettet,
+                ),
             ),
             årsVurderinger = årsVurderinger
         )
     }
 
-    fun mapHistoriskeManuelleVurderinger(behandlingsreferanse: BehandlingReferanse): List<ManuellInntektGrunnlagVurdering> {
+    fun mapHistoriskeManuelleVurderinger(
+        behandlingsreferanse: BehandlingReferanse,
+        vurdertAvService: VurdertAvService,
+    ): List<ManuellInntektGrunnlagVurdering> {
         val behandling = behandlingRepository.hent(behandlingsreferanse.referanse.let(::BehandlingReferanse))
-        val historiskeVurderinger =
-            manuellInntektGrunnlagRepository.hentHistoriskeVurderinger(behandling.sakId, behandling.id)
+        val historiskeVurderinger = behandlingRepository.hentAlleFor(
+            behandling.sakId,
+            TypeBehandling.ytelseBehandlingstyper(),
+        ).filter { it.id != behandling.id }
+            .mapNotNull { historiskBehandling ->
+                manuellInntektGrunnlagRepository.hentHvisEksisterer(historiskBehandling.id)
+                    ?.manuelleInntekter
+                    ?.takeIf { it.isNotEmpty() }
+                    ?.let { historiskBehandling.id to it }
+            }
 
         val mappedHistoriskeVurderinger = historiskeVurderinger
-            .sortedByDescending { it.first().opprettet }
-            .map { historiskManuellInntektSet ->
+            .sortedByDescending { it.second.first().opprettet }
+            .map { (behandlingId, historiskManuellInntektSet) ->
 
             val årsVurderinger = historiskManuellInntektSet.map { historiskManuellInntekt ->
                 ÅrData(
@@ -62,9 +82,13 @@ class ManglendeInntektGrunnlagService(
 
             ManuellInntektGrunnlagVurdering(
                 begrunnelse = historiskManuellInntektSet.first().begrunnelse,
-                vurdertAv = VurdertAvResponse(
-                    historiskManuellInntektSet.first().vurdertAv,
-                    historiskManuellInntektSet.first().opprettet.toLocalDate()
+                vurderingerMeta = vurdertAvService.byggVurderingerMeta(
+                    definisjon = Definisjon.FASTSETT_MANUELL_INNTEKT,
+                    behandlingId = behandlingId,
+                    vurdertAv = vurdertAvService.medNavnOgEnhet(
+                        ident = historiskManuellInntektSet.first().vurdertAv,
+                        tidspunkt = historiskManuellInntektSet.first().opprettet,
+                    ),
                 ),
                 årsVurderinger = årsVurderinger
             )

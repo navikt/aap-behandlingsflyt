@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt
 
-import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
+import no.nav.aap.behandlingsflyt.behandling.vurdering.VurderingerMetaResponse
 import no.nav.aap.komponenter.type.Periode
 import java.time.LocalDate
 
@@ -11,14 +11,8 @@ interface VurderingDto {
     /** Til og med. Hvis null er slutt-datoen implisitt. I rekkefølge regnes `null` som senere enn konkrete datoer. */
     val tom: LocalDate?
 
-    /** Ident til den som har gjort vurderingen. */
-    val vurdertAv: VurdertAvResponse?
-
-    /** Hvem som har kvalitetssikret vurderinge. `null` hvis ikke kvalitetssikret. */
-    val kvalitetssikretAv: VurdertAvResponse?
-
-    /** Hvem som har besluttet vurderingen. `null` hvis ikke besluttet. */
-    val besluttetAv: VurdertAvResponse?
+    /** Samlet metadata om hvem som har vurdert, kvalitetssikret eller besluttet. */
+    val vurderingerMeta: VurderingerMetaResponse
 }
 
 /** Oversikt over en pågående vurdering av et vilkår.

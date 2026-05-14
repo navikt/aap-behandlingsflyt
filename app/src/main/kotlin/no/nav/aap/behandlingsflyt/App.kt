@@ -14,7 +14,6 @@ import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import io.ktor.server.plugins.statuspages.*
 import io.ktor.server.routing.*
-import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import no.nav.aap.behandlingsflyt.api.actuator.actuator
@@ -291,7 +290,7 @@ internal fun Application.server(
                 tilkjentYtelseApi(fellesDataSource, repositoryRegistry)
                 foreslaaVedtakApi(fellesDataSource, repositoryRegistry)
                 foreslaaVedtakVedtakslengdeApi(fellesDataSource, repositoryRegistry)
-                trukketSøknadGrunnlagApi(fellesDataSource, repositoryRegistry)
+                trukketSøknadGrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
                 avbrytRevurderingGrunnlagApi(fellesDataSource, repositoryRegistry)
                 rettighetsperiodeGrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
                 beregningVurderingApi(fellesDataSource, repositoryRegistry, gatewayProvider)
@@ -302,7 +301,7 @@ internal fun Application.server(
                 behandlingsflytPipApi(fellesDataSource, repositoryRegistry)
                 auditlogApi(fellesDataSource, repositoryRegistry)
                 refusjonGrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
-                manglendeGrunnlagApi(fellesDataSource, repositoryRegistry)
+                manglendeGrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
                 mellomlagretVurderingApi(fellesDataSource, repositoryRegistry, gatewayProvider)
                 rettighetsinfoApi(fellesDataSource, repositoryRegistry)
                 tidligereVurderingerApi(fellesDataSource, repositoryRegistry, gatewayProvider)
@@ -318,7 +317,7 @@ internal fun Application.server(
                 klageresultatApi(fellesDataSource, repositoryRegistry)
                 trekkKlageGrunnlagApi(fellesDataSource, repositoryRegistry)
                 // Svar fra kabal
-                svarFraAndreinstansGrunnlagApi(fellesDataSource, repositoryRegistry)
+                svarFraAndreinstansGrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
                 // Oppfølgingsbehandling
                 avklarOppfolgingsoppgaveGrunnlag(fellesDataSource, repositoryRegistry)
                 oppfølgingsOppgaveApi(fellesDataSource, repositoryRegistry)
