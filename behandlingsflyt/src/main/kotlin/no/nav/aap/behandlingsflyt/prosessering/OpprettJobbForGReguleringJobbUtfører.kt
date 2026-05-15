@@ -62,7 +62,7 @@ class OpprettJobbForGReguleringJobbUtfører(
             }
     }
 
-    private fun hentAktuellGJustering(år: Year) : Grunnbeløp.GrunnbeløpDto? {
+    private fun hentAktuellGJustering(år: Year) : Grunnbeløp.GrunnbeløpMedDato? {
         return gReguleringService.finnesGrunnbeløpForÅr(år)
     }
 
@@ -71,10 +71,10 @@ class OpprettJobbForGReguleringJobbUtfører(
 
     private fun hentKandidaterForGRegulering(datoForGJustering: LocalDate): Set<SakId> {
         val alleSaker = gReguleringService.hentSakerForGRegulering(datoForGJustering)
+        log.info("Antall saker som er kandidater for G-regulering: ${alleSaker.size}")
 
-        // TODO: Filtrer saker
-
-        return alleSaker
+        val sakIdFilter = unleashGateway.hentSakIdFilter(BehandlingsflytFeature.GReguleringUtplukkJobb)
+        return alleSaker.filter { it.id in sakIdFilter }.toSet()
     }
 
     companion object : ProvidersJobbSpesifikasjon {

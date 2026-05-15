@@ -1,7 +1,6 @@
 package no.nav.aap.behandlingsflyt.kontrakt.datadeling
 
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
-import no.nav.aap.behandlingsflyt.kontrakt.sak.Status
 import java.math.BigDecimal
 import java.time.Instant
 import java.time.LocalDate
@@ -19,6 +18,7 @@ public data class DatadelingDTO(
     val sak: SakDTO,
     val tilkjent: List<TilkjentDTO>,
     val rettighetsTypeTidsLinje: List<RettighetsTypePeriode>,
+    val muligMaksdato: LocalDate?,
     val behandlingsReferanse: String,
     val samId: String? = null,
     val vedtakId: Long,
