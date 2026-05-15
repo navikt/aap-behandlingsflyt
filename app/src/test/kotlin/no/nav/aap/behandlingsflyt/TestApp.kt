@@ -398,7 +398,7 @@ private fun sendInnSøknad(dto: OpprettTestcaseDTO, gatewayProvider: GatewayProv
     val sak = datasource.transaction { connection ->
         val repositoryProvider = repositoryRegistry.provider(connection)
         val sakService = PersonOgSakService(gatewayProvider, repositoryProvider)
-        val sak = sakService.finnEllerOpprett(ident, LocalDate.now())
+        val sak = sakService.finnEllerOpprett(ident, dto.søknadsdato ?: LocalDate.now())
 
         val flytJobbRepository = FlytJobbRepository(connection)
 
@@ -499,7 +499,7 @@ private fun opprettNySakOgBehandling(
 
             // Oppholdskrav
             if (dto.steg == StegType.VURDER_OPPHOLDSKRAV) return sak
-            løsOppholdskrav(behandling)
+            løsOppholdskrav(behandling, sak)
 
             // Institusjonsopphold
             if (dto.steg == StegType.DU_ER_ET_ANNET_STED) return sak
