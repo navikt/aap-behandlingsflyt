@@ -128,7 +128,9 @@ class VedtakslengdeStegTest {
                 rettighetstypeService = RettighetstypeService(
                     InMemoryRettighetstypeRepository,
                     InMemoryVilkårsresultatRepository,
-                    InMemoryUnderveisRepository
+                    InMemoryUnderveisRepository,
+                    InMemorySakRepository,
+                    InMemoryBehandlingRepository
                 ),
                 stansOpphørRepository = mockk(),
                 clock = fixedClock(dagensDato),
