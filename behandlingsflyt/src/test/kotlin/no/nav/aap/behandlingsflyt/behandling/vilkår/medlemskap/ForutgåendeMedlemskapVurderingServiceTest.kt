@@ -1,10 +1,15 @@
 package no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap
 
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.ArbeidINorgeGrunnlag
+import no.nav.aap.behandlingsflyt.behandling.lovvalg.ArbeidAnsettelsesdetaljGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.Arbeidsforholdtype
+import no.nav.aap.behandlingsflyt.behandling.lovvalg.Fartsomraade
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.ForutgåendeMedlemskapArbeidInntektGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.ForutgåendeMedlemskapGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.InntektINorgeGrunnlag
+import no.nav.aap.behandlingsflyt.behandling.lovvalg.Skipsregister
+import no.nav.aap.behandlingsflyt.behandling.lovvalg.Skipstype
+import no.nav.aap.behandlingsflyt.behandling.lovvalg.Yrke
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.utenlandsopphold.UtenlandsOppholdData
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapUnntakGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.Unntak
@@ -15,7 +20,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Pers
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningMedHistorikkGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Statsborgerskap
 import no.nav.aap.behandlingsflyt.test.Fakes
-import no.nav.aap.behandlingsflyt.test.FakeUnleashBase
 import no.nav.aap.behandlingsflyt.test.FakeUnleashBaseWithDefaultDisabled
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.komponenter.tidslinje.Segment
@@ -125,6 +129,11 @@ class ForutgåendeMedlemskapVurderingServiceTest {
         assertThat(vurdering.resultat).isTrue
         assertThat(vurdering.bestemtArbeidsgruppeINorge).hasSize(1)
         assertThat(vurdering.bestemtArbeidsgruppeINorge!!.first().virksomhetId).isEqualTo("123412341")
+        assertThat(vurdering.bestemtArbeidsgruppeINorge.first().skipsregister?.kode).isEqualTo("nor")
+        assertThat(vurdering.bestemtArbeidsgruppeINorge.first().skipstype?.kode).isEqualTo("annet")
+        assertThat(vurdering.bestemtArbeidsgruppeINorge.first().fartsomraade?.kode).isEqualTo("innenriks")
+        assertThat(vurdering.bestemtArbeidsgruppeINorge.first().yrke?.kode).isEqualTo("6411104")
+        assertThat(vurdering.bestemtArbeidsgruppeINorge.first().yrke?.beskrivelse).isEqualTo("FISKER")
     }
 
     @Test
@@ -493,7 +502,15 @@ class ForutgåendeMedlemskapVurderingServiceTest {
                         identifikator = "123412341",
                         arbeidsforholdKode = Arbeidsforholdtype.MARITIMT_ARBEIDSFORHOLD,
                         startdato = startdato,
-                        sluttdato = sluttdato
+                        sluttdato = sluttdato,
+                        ansettelsesdetaljer = listOf(
+                            ArbeidAnsettelsesdetaljGrunnlag(
+                                skipsregister = Skipsregister(kode = "nor", beskrivelse = "NOR"),
+                                skipstype = Skipstype(kode = "annet", beskrivelse = "Annet"),
+                                fartsomraade = Fartsomraade(kode = "innenriks", beskrivelse = "Innenriks"),
+                                yrke = Yrke(kode = "6411104", beskrivelse = "FISKER"),
+                            )
+                        )
                     )
                 ),
                 vurderinger = emptyList()

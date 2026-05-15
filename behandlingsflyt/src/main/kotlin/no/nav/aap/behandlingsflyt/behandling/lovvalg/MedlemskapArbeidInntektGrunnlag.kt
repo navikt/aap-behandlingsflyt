@@ -45,8 +45,22 @@ data class ArbeidINorgeGrunnlag(
     val arbeidsforholdKode: Arbeidsforholdtype,
     val startdato: LocalDate,
     val sluttdato: LocalDate?,
-    val organisasjonsNavn: String? = null
+    val organisasjonsNavn: String? = null,
+    val yrke: Yrke? = null,
+    val ansettelsesdetaljer: List<ArbeidAnsettelsesdetaljGrunnlag> = emptyList()
 )
+
+data class ArbeidAnsettelsesdetaljGrunnlag(
+    val skipsregister: Skipsregister? = null,
+    val skipstype: Skipstype? = null,
+    val fartsomraade: Fartsomraade? = null,
+    val yrke: Yrke? = null,
+)
+
+data class Skipsregister(val kode: String, val beskrivelse: String? = null)
+data class Skipstype(val kode: String, val beskrivelse: String? = null)
+data class Fartsomraade(val kode: String, val beskrivelse: String? = null)
+data class Yrke(val kode: String, val beskrivelse: String? = null)
 
 enum class Arbeidsforholdtype(val kode: String) {
     ORDINAERT_ARBEIDSFORHOLD("ordinaertArbeidsforhold"),

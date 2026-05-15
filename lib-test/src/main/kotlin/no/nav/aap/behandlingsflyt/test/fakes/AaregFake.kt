@@ -73,10 +73,27 @@ class AaregFake : FakeServer() {
                   },
                   "startdato": "2005-01-16",
                   "sluttdato": null,
-                  "yrke": {
-                    "kode": "7125102",
-                    "beskrivelse": "BYGNINGSSNEKKER"
-                  },
+                  "ansettelsesdetaljer": [
+                    {
+                      "type": "Ordinaer",
+                      "yrke": {
+                        "kode": "7125102",
+                        "beskrivelse": "BYGNINGSSNEKKER"
+                      },
+                      "fartsomraade": {
+                        "kode": "innenriks",
+                        "beskrivelse": "Innenriks"
+                      },
+                      "skipsregister": {
+                        "kode": "nor",
+                        "beskrivelse": "NOR"
+                      },
+                      "fartoeystype": {
+                        "kode": "Gigaskip",
+                        "beskrivelse": "meget stort skip"
+                      }
+                    }
+                  ],
                   "avtaltStillingsprosent": 100,
                   "permisjonsprosent": null,
                   "permitteringsprosent": null

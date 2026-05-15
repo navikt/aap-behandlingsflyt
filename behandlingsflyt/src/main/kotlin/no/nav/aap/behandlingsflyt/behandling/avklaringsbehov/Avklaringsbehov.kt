@@ -32,7 +32,7 @@ class Avklaringsbehov(
 
     val perioderVedtaketBehøverVurdering: List<Periode>?
         get() = aktivHistorikk
-            .lastOrNull { it.status == Status.OPPRETTET }
+            .lastOrNull { it.status.erÅpent() }
             ?.perioderVedtaketBehøverVurdering
             ?.sorted()
 
