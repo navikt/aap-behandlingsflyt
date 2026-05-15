@@ -5,6 +5,7 @@ import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.response.respondWithStatus
 import com.papsign.ktor.openapigen.route.route
 import io.ktor.http.*
+import kotlinx.coroutines.runBlocking
 import no.nav.aap.behandlingsflyt.behandling.Resultat
 import no.nav.aap.behandlingsflyt.behandling.ResultatUtleder
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
@@ -252,7 +253,12 @@ fun NormalOpenAPIRoute.flytApi(
                     val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
                     val åpentAvklaringsbehov = avklaringsbehovene.åpne().filterNot { it.erVentepunkt() }
                         .sortedWith(behandling.flyt().avklaringsbehovComparator).first().definisjon
-                    val relevanteIdenter = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource).resolve(request.referanse.toString())
+                    val relevanteIdenter = runBlocking {
+                        relevanteIdenterForBehandlingResolver(
+                            repositoryRegistry,
+                            dataSource
+                        ).resolve(request.referanse.toString())
+                    }
                     Pair(åpentAvklaringsbehov, relevanteIdenter)
                 }
                 sjekkTilgangTilSettPåVent(
