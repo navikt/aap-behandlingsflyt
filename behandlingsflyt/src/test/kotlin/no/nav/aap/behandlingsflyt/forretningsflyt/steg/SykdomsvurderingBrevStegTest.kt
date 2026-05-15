@@ -131,7 +131,7 @@ class SykdomsvurderingBrevStegTest {
         )
 
     private fun sak(person: Person): Sak =
-        sakRepository.finnEllerOpprett(person, Periode(LocalDate.now(), LocalDate.now().plusYears(1)))
+        sakRepository.finnEllerOpprett(person, LocalDate.now())
 
     private fun person(): Person =
         Person(PersonId(random.nextLong()), UUID.randomUUID(), listOf(genererIdent(LocalDate.now().minusYears(23))))

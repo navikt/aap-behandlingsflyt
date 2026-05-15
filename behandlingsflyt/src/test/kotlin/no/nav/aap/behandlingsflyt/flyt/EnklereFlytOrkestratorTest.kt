@@ -102,7 +102,7 @@ class EnklereFlytOrkestratorTest {
         val person = Person(UUID.randomUUID(), listOf(genererIdent(LocalDate.now().minusYears(23))))
 
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(1))
-        val sak = sakRepository.finnEllerOpprett(person, periode)
+        val sak = sakRepository.finnEllerOpprett(person, periode.fom)
         val behandling = behandlingRepository.opprettBehandling(
             sakId = sak.id,
             vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
@@ -175,7 +175,7 @@ class EnklereFlytOrkestratorTest {
     fun `skal gå gjennom alle stegene definert i behandlingsflyt`() {
         val person = Person(UUID.randomUUID(), listOf(genererIdent(LocalDate.now().minusYears(23))))
 
-        val sak = sakRepository.finnEllerOpprett(person, Periode(LocalDate.now(), LocalDate.now().plusYears(1)))
+        val sak = sakRepository.finnEllerOpprett(person, LocalDate.now())
         val behandling =
             behandlingRepository.opprettBehandling(
                 sakId = sak.id,
@@ -201,7 +201,7 @@ class EnklereFlytOrkestratorTest {
     @Test
     fun `hendelse blir avgitt ved en automatisk lukket behandling`() {
         val person = Person(UUID.randomUUID(), listOf(genererIdent(LocalDate.now().minusYears(23))))
-        val sak = sakRepository.finnEllerOpprett(person, Periode(LocalDate.now(), LocalDate.now().plusYears(1)))
+        val sak = sakRepository.finnEllerOpprett(person, LocalDate.now())
         val behandling =
             behandlingRepository.opprettBehandling(
                 sakId = sak.id,
@@ -250,7 +250,7 @@ class EnklereFlytOrkestratorTest {
     fun `skal ikke kunne gå forbi et åpent avklaringsbehov`() {
         val person = Person(UUID.randomUUID(), listOf(genererIdent(LocalDate.now().minusYears(23))))
 
-        val sak = sakRepository.finnEllerOpprett(person, Periode(LocalDate.now(), LocalDate.now().plusYears(1)))
+        val sak = sakRepository.finnEllerOpprett(person, LocalDate.now())
         val behandling =
             behandlingRepository.opprettBehandling(
                 sakId = sak.id,
@@ -332,7 +332,7 @@ class EnklereFlytOrkestratorTest {
     fun `skal hoppe tilbake til steget behovet finnes i når det løses i UTFØRT status og står i senere steg`() {
         val person = Person(UUID.randomUUID(), listOf(genererIdent(LocalDate.now().minusYears(23))))
 
-        val sak = sakRepository.finnEllerOpprett(person, Periode(LocalDate.now(), LocalDate.now().plusYears(1)))
+        val sak = sakRepository.finnEllerOpprett(person, LocalDate.now())
         val behandling =
             behandlingRepository.opprettBehandling(
                 sakId = sak.id,
@@ -720,7 +720,7 @@ class EnklereFlytOrkestratorTest {
     @Test
     fun `skal rulle tilbake hvis åpent avklaringsbehov er passert`() {
         val person = Person(UUID.randomUUID(), listOf(genererIdent(LocalDate.now().minusYears(23))))
-        val sak = sakRepository.finnEllerOpprett(person, Periode(LocalDate.now(), LocalDate.now().plusYears(1)))
+        val sak = sakRepository.finnEllerOpprett(person, LocalDate.now())
         val behandling =
             behandlingRepository.opprettBehandling(
                 sakId = sak.id,

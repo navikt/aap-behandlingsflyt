@@ -346,7 +346,7 @@ class ManglendeLigningGrunnlagStegTest {
     }
 
     private fun sak(person: Person): Sak =
-        sakRepository.finnEllerOpprett(person, Periode(LocalDate.now(), LocalDate.now().plusYears(1)))
+        sakRepository.finnEllerOpprett(person, LocalDate.now())
 
     private fun person(): Person = Person(
         PersonId(Random(1235123).nextLong()), UUID.randomUUID(), listOf(genererIdent(LocalDate.now().minusYears(23)))
