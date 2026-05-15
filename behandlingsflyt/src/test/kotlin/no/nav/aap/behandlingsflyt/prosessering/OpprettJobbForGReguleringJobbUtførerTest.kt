@@ -47,6 +47,11 @@ class OpprettJobbForGReguleringJobbUtførerTest {
         every { unleashGateway.isDisabled(BehandlingsflytFeature.GReguleringUtplukkJobb) } returns false
     }
 
+    private fun enableToggleWithFilter(vararg sakIds: Long) {
+        every { unleashGateway.isDisabled(BehandlingsflytFeature.GReguleringUtplukkJobb) } returns false
+        every { unleashGateway.hentSakIdFilter(BehandlingsflytFeature.GReguleringUtplukkJobb) } returns sakIds.toSet()
+    }
+
     private fun disableToggle() {
         every { unleashGateway.isDisabled(BehandlingsflytFeature.GReguleringUtplukkJobb) } returns true
     }
@@ -64,13 +69,12 @@ class OpprettJobbForGReguleringJobbUtførerTest {
 
     @Test
     fun `skal opprette jobber for kandidater når feature toggle er på`() {
-        enableToggle()
-
         val gjusteringDato = LocalDate.of(2025, 5, 1)
         val sakId = SakId(42L)
+        enableToggleWithFilter(sakId.id)
 
         every { gReguleringService.finnesGrunnbeløpForÅr(Year.of(2025)) } returns
-            Grunnbeløp.GrunnbeløpDto(dato = gjusteringDato, beløp = Beløp(130_160))
+            Grunnbeløp.GrunnbeløpMedDato(dato = gjusteringDato, beløp = Beløp(130_160))
         every { gReguleringService.hentSakerForGRegulering(gjusteringDato) } returns setOf(sakId)
         every { flytJobbRepository.leggTil(any()) } just Runs
 
@@ -80,8 +84,25 @@ class OpprettJobbForGReguleringJobbUtførerTest {
     }
 
     @Test
+    fun `skal ikke opprette jobber når sak-id ikke er i filterlisten`() {
+        val gjusteringDato = LocalDate.of(2025, 5, 1)
+        val sakId = SakId(42L)
+        enableToggleWithFilter(99L) // Kun sak 99 er tillatt, ikke 42
+
+        every { gReguleringService.finnesGrunnbeløpForÅr(Year.of(2025)) } returns
+            Grunnbeløp.GrunnbeløpMedDato(dato = gjusteringDato, beløp = Beløp(130_160))
+        every { gReguleringService.hentSakerForGRegulering(gjusteringDato) } returns setOf(sakId)
+
+        opprettUtfører().utfør(jobbInput)
+
+        verify(exactly = 0) { flytJobbRepository.leggTil(any()) }
+    }
+
+    @Test
     fun `skal bruke forrige års G-justering når dagsdato er i januar (før 1 mai)`() {
-        enableToggle()
+        val gjusteringDato = LocalDate.of(2026, 5, 1)
+        val sakId = SakId(99L)
+        enableToggleWithFilter(sakId.id)
 
         val utfører = OpprettJobbForGReguleringJobbUtfører(
             gReguleringService = gReguleringService,
@@ -91,11 +112,8 @@ class OpprettJobbForGReguleringJobbUtførerTest {
         )
 
         // 15. jan 2027 → G-periode-år = 2026 → leter etter 2026-G-justeringen
-        val gjusteringDato = LocalDate.of(2026, 5, 1)
-        val sakId = SakId(99L)
-
         every { gReguleringService.finnesGrunnbeløpForÅr(Year.of(2026)) } returns
-            Grunnbeløp.GrunnbeløpDto(dato = gjusteringDato, beløp = Beløp(135_000))
+            Grunnbeløp.GrunnbeløpMedDato(dato = gjusteringDato, beløp = Beløp(135_000))
         every { gReguleringService.hentSakerForGRegulering(gjusteringDato) } returns setOf(sakId)
         every { flytJobbRepository.leggTil(any()) } just Runs
 
@@ -108,7 +126,9 @@ class OpprettJobbForGReguleringJobbUtførerTest {
 
     @Test
     fun `skal bruke inneværende års G-justering når dagsdato er 1 mai eller etter`() {
-        enableToggle()
+        val gjusteringDato = LocalDate.of(2027, 5, 1)
+        val sakId = SakId(77L)
+        enableToggleWithFilter(sakId.id)
 
         val utfører = OpprettJobbForGReguleringJobbUtfører(
             gReguleringService = gReguleringService,
@@ -118,11 +138,8 @@ class OpprettJobbForGReguleringJobbUtførerTest {
         )
 
         // 1. mai 2027 → G-periode-år = 2027 → leter etter 2027-G-justeringen
-        val gjusteringDato = LocalDate.of(2027, 5, 1)
-        val sakId = SakId(77L)
-
         every { gReguleringService.finnesGrunnbeløpForÅr(Year.of(2027)) } returns
-            Grunnbeløp.GrunnbeløpDto(dato = gjusteringDato, beløp = Beløp(140_000))
+            Grunnbeløp.GrunnbeløpMedDato(dato = gjusteringDato, beløp = Beløp(140_000))
         every { gReguleringService.hentSakerForGRegulering(gjusteringDato) } returns setOf(sakId)
         every { flytJobbRepository.leggTil(any()) } just Runs
 
