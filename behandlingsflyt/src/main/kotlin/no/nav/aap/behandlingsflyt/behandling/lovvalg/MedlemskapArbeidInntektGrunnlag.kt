@@ -46,7 +46,6 @@ data class ArbeidINorgeGrunnlag(
     val startdato: LocalDate,
     val sluttdato: LocalDate?,
     val organisasjonsNavn: String? = null,
-    val yrke: Yrke? = null,
     val ansettelsesdetaljer: List<ArbeidAnsettelsesdetaljGrunnlag> = emptyList()
 )
 
