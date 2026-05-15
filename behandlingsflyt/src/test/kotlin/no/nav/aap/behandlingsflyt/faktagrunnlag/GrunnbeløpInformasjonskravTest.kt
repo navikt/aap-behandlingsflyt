@@ -11,6 +11,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Ut
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
 import no.nav.aap.behandlingsflyt.help.flytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.help.tomtTilkjentYtelseGrunnlag
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.test.FakeUnleashBaseWithDefaultDisabled
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryTilkjentYtelseRepository
@@ -169,6 +170,43 @@ class GrunnbeløpInformasjonskravTest {
     }
 
     @Test
+    fun `flettOpplysninger skal returnere IKKE_ENDRET når ingen tilkjent ytelse finnes`() {
+        val resultat = informasjonskrav.flettOpplysningerFraAtomærBehandling(flytKontekst())
+
+        assertThat(resultat).isEqualTo(Informasjonskrav.Endret.IKKE_ENDRET)
+    }
+
+    @Test
+    fun `flettOpplysninger skal returnere ENDRET når en periode har utdatert grunnbeløp`() {
+        val periodeFom = 1 juni 2025
+        val periodeTom = 31 desember 2025
+        val utdatertG = Beløp(124_028) // G fra 2024
+
+        val kontekst = kontekst()
+        lagreTilkjentYtelse(kontekst, periodeFom, periodeTom, utdatertG)
+        lagreOppfyltUnderveis(kontekst, periodeFom, periodeTom)
+
+        val resultat = informasjonskrav.flettOpplysningerFraAtomærBehandling(flytKontekst())
+
+        assertThat(resultat).isEqualTo(Informasjonskrav.Endret.ENDRET)
+    }
+
+    @Test
+    fun `flettOpplysninger skal returnere IKKE_ENDRET når G er utdatert men underveis er ikke oppfylt`() {
+        val periodeFom = 1 juni 2025
+        val periodeTom = 31 desember 2025
+        val utdatertG = Beløp(124_028) // G fra 2024
+
+        val kontekst = kontekst()
+        lagreTilkjentYtelse(kontekst, periodeFom, periodeTom, utdatertG)
+        lagreIkkeOppfyltUnderveis(kontekst, periodeFom, periodeTom)
+
+        val resultat = informasjonskrav.flettOpplysningerFraAtomærBehandling(flytKontekst())
+
+        assertThat(resultat).isEqualTo(Informasjonskrav.Endret.IKKE_ENDRET)
+    }
+
+    @Test
     fun `skal ikke være relevant når feature toggle er avskrudd`() {
         val disabledUnleash = FakeUnleashBaseWithDefaultDisabled(emptyList())
         val krav = GrunnbeløpInformasjonskrav(
@@ -184,6 +222,16 @@ class GrunnbeløpInformasjonskravTest {
 
     private fun kontekst() = flytKontekstMedPerioder {
         vurderingType = VurderingType.REVURDERING
+    }
+
+    private fun flytKontekst(): FlytKontekst {
+        val k = kontekst()
+        return FlytKontekst(
+            sakId = k.sakId,
+            behandlingId = k.behandlingId,
+            forrigeBehandlingId = k.forrigeBehandlingId,
+            behandlingType = k.behandlingType,
+        )
     }
 
     private fun lagreTilkjentYtelse(
