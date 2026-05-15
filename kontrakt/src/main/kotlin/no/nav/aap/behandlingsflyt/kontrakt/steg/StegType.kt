@@ -302,6 +302,11 @@ public enum class StegType(
         status = Status.UTREDES,
     ),
 
+    AVBRYT_AKTIVITETSPLIKTBEHANDLING(
+        gruppe = StegGruppe.AVBRYT_AKTIVITETSPLIKTBEHANDLING,
+        status = Status.UTREDES,
+    ),
+
     // Aktivitetsplikt slutt
     
     UDEFINERT(
