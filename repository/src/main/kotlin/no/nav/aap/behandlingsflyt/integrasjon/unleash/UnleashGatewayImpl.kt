@@ -38,6 +38,7 @@ object UnleashGatewayImpl : UnleashGateway {
                     ?.split(",")
                     ?.mapNotNull { it.trim().toLongOrNull() }
                     ?.toSet()
+                    ?.takeIf { it.isNotEmpty() }
                     ?: setOf(0L)
             }
             .orElse(setOf(0L))
