@@ -119,7 +119,8 @@ class ApiInternGatewayImpl : ApiInternGateway {
         vedtaksDato: LocalDate,
         rettighetsTypeTidslinje: Tidslinje<RettighetsType>,
         stansOpphørGrunnlag: Set<GjeldendeStansEllerOpphør>?,
-        arenavedtak: Tidslinje<UtledArenaVedtakstype.ArenaVedtak>
+        arenavedtak: Tidslinje<UtledArenaVedtakstype.ArenaVedtak>,
+        muligMaksdato: LocalDate?
     ) {
         log.info("Sender behandling for behandlingId=${behandling.id} med vedtakId=$vedtakId, sak: ${sak.saksnummer}. Beregningsgrunnlag: $beregningsgrunnlag")
         restClient.post(
@@ -160,6 +161,7 @@ class ApiInternGatewayImpl : ApiInternGateway {
                             segment.verdi.toString()
                         )
                     },
+                    muligMaksdato = muligMaksdato,
                     vedtakId = vedtakId,
                     samId = samId,
                     stansOpphørVurdering = stansOpphørGrunnlag.orEmpty().map {
@@ -170,7 +172,8 @@ class ApiInternGatewayImpl : ApiInternGateway {
                                 is Stans -> StansEllerOpphørEnumDTO.STANS
                                 is Opphør -> StansEllerOpphørEnumDTO.OPPHØR
                             },
-                            avslagsårsaker = it.vurdering.årsaker.mapNotNull { mapAvslagsårsak(it) }.toSet(),
+                            avslagsårsaker = it.vurdering.årsaker.mapNotNull { årsak -> mapAvslagsårsak(årsak) }
+                                .toSet(),
                         )
                     }.toSet(),
                     arenavedtak = arenavedtak.segmenter().map {

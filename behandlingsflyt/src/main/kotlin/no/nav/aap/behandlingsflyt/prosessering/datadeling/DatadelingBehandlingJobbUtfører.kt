@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.prosessering.datadeling
 
 import no.nav.aap.behandlingsflyt.behandling.StansOpphørService
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
+import no.nav.aap.behandlingsflyt.behandling.underveis.RettighetstypeService
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.samid.SamIdRepository
@@ -31,6 +32,7 @@ class DatadelingBehandlingJobbUtfører(
     private val samIdRepository: SamIdRepository,
     private val beregningsgrunnlagRepository: BeregningsgrunnlagRepository,
     private val stansOpphørService: StansOpphørService,
+    private val rettighetstypeService: RettighetstypeService,
     private val utledArenaVedtakstype: UtledArenaVedtakstype,
 ) : JobbUtfører {
     private val log = LoggerFactory.getLogger(javaClass)
@@ -73,17 +75,20 @@ class DatadelingBehandlingJobbUtfører(
 
         val stansOpphør = stansOpphørService.vedtattStansOpphør(behandling.id).toSet()
 
+        val maksdato = rettighetstypeService.sisteDagMedRett(sak.saksnummer)
+
         apiInternGateway.sendBehandling(
-            sak,
-            behandling,
-            vedtakId,
-            samId,
-            tilkjentYtelse,
-            beregningsgrunnlagIKroner,
-            vedtaksTidspunkt.toLocalDate(),
-            vilkårsresultatTidslinje,
-            stansOpphør,
-            utledArenaVedtakstype.utledVedtak(sak),
+            sak = sak,
+            behandling = behandling,
+            vedtakId = vedtakId,
+            samId = samId,
+            tilkjent = tilkjentYtelse,
+            beregningsgrunnlag = beregningsgrunnlagIKroner,
+            vedtaksDato = vedtaksTidspunkt.toLocalDate(),
+            rettighetsTypeTidslinje = vilkårsresultatTidslinje,
+            muligMaksdato = maksdato,
+            stansOpphørGrunnlag = stansOpphør,
+            arenavedtak = utledArenaVedtakstype.utledVedtak(sak),
         )
     }
 
@@ -107,6 +112,7 @@ class DatadelingBehandlingJobbUtfører(
                     repositoryProvider.provide(),
                     repositoryProvider.provide(),
                 ),
+                rettighetstypeService = RettighetstypeService(repositoryProvider, gatewayProvider),
                 utledArenaVedtakstype = UtledArenaVedtakstype(repositoryProvider, gatewayProvider),
             )
         }
