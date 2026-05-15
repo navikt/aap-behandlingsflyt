@@ -16,7 +16,6 @@ import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.json.DefaultJsonMapper
-import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
@@ -120,8 +119,7 @@ class MellomlagretVurderingRepositoryImplTest {
     private fun opprettBehandling(connection: DBConnection): BehandlingId {
         val person = PersonRepositoryImpl(connection).finnEllerOpprett(listOf(Ident("ident", true)))
         val sakId = SakRepositoryImpl(connection).finnEllerOpprett(
-            person,
-            Periode(LocalDate.now(), LocalDate.now().plusDays(5))
+            person, LocalDate.now()
         ).id
         return BehandlingRepositoryImpl(connection).opprettBehandling(
             sakId,

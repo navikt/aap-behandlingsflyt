@@ -1,8 +1,9 @@
 package no.nav.aap.behandlingsflyt.behandling.student.sykestipend
 
-import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
+import no.nav.aap.behandlingsflyt.behandling.vurdering.VurderingerMetaResponse
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.sykestipend.SykestipendVurdering
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.komponenter.type.Periode
 
 data class SykestipendGrunnlagResponse(
@@ -15,7 +16,7 @@ data class SykestipendGrunnlagResponse(
 data class SykestipendvurderingResponse(
     val begrunnelse: String,
     val perioder: List<Periode>,
-    val vurdertAv: VurdertAvResponse
+    val vurderingerMeta: VurderingerMetaResponse,
 ) {
 
     companion object {
@@ -23,9 +24,13 @@ data class SykestipendvurderingResponse(
             SykestipendvurderingResponse(
                 begrunnelse = sykestipendVurdering.begrunnelse,
                 perioder = sykestipendVurdering.perioder.sortedBy { it.fom },
-                vurdertAv = vurdertAvService.medNavnOgEnhet(
-                    sykestipendVurdering.vurdertAv.ident,
-                    sykestipendVurdering.opprettet
+                vurderingerMeta = vurdertAvService.byggVurderingerMeta(
+                    definisjon = Definisjon.AVKLAR_SAMORDNING_SYKESTIPEND,
+                    behandlingId = sykestipendVurdering.vurdertIBehandling,
+                    vurdertAv = vurdertAvService.medNavnOgEnhet(
+                        sykestipendVurdering.vurdertAv.ident,
+                        sykestipendVurdering.opprettet,
+                    ),
                 )
             )
     }

@@ -32,7 +32,6 @@ import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryVilkårsresultatRepo
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryProvider
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.behandlingsflyt.test.modell.genererIdent
-import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
@@ -48,7 +47,7 @@ class VurderBistandsbehovStegTest {
 
     @Test
     fun `Gjeldende vurdering er ikke god nok dersom den ikke dekker hele rettighetsperioden`() {
-        val nyRettighetsperiode = Periode(1 januar 2020, 1 januar 2021)
+        val søknadsdato = 1 januar 2020
         
         val bistandMock: BistandRepository = mockk(relaxed = true) {
             every { hentHvisEksisterer(any()) } returns BistandGrunnlag(
@@ -59,7 +58,7 @@ class VurderBistandsbehovStegTest {
                         erBehovForAktivBehandling = true,
                         erBehovForArbeidsrettetTiltak = true,
                         erBehovForAnnenOppfølging = false,
-                        vurderingenGjelderFra = nyRettighetsperiode.fom.plusDays(10),
+                        vurderingenGjelderFra = søknadsdato.plusDays(10),
                         vurdertAv = "Z00000",
                         skalVurdereAapIOvergangTilArbeid = null,
                         overgangBegrunnelse = null,
@@ -71,7 +70,7 @@ class VurderBistandsbehovStegTest {
         }
 
         val person = person()
-        val sak = sak(person, nyRettighetsperiode)
+        val sak = sak(person, søknadsdato)
         val behandling = behandling(sak, typeBehandling = TypeBehandling.Førstegangsbehandling)
         val kontekstMedPerioder = flytKontekstMedPerioder(sak, behandling)
 
@@ -96,7 +95,7 @@ class VurderBistandsbehovStegTest {
                             harNedsattArbeidsevne = ArbeidsevneNedsattValg.JA,
                             yrkesskadeBegrunnelse = null,
                             erNedsettelseIArbeidsevneAvEnVissVarighet = true,
-                            vurderingenGjelderFra = nyRettighetsperiode.fom,
+                            vurderingenGjelderFra = søknadsdato,
                             vurderingenGjelderTil = null,
                             vurdertAv = Bruker("Z00000"),
                             opprettet = Instant.now(),
@@ -156,8 +155,8 @@ class VurderBistandsbehovStegTest {
             )
         )
 
-    private fun sak(person: Person, periode: Periode): Sak =
-        sakRepository.finnEllerOpprett(person, periode)
+    private fun sak(person: Person, søknadsdato: LocalDate): Sak =
+        sakRepository.finnEllerOpprett(person, søknadsdato)
 
     private fun person(): Person =
         Person(PersonId(random.nextLong()), UUID.randomUUID(), listOf(genererIdent(LocalDate.now().minusYears(23))))

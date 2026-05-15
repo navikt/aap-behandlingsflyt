@@ -6,6 +6,7 @@ import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovMetadataService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
+import no.nav.aap.behandlingsflyt.behandling.vurdering.VurderingerMetaResponse
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeRepository
@@ -148,12 +149,14 @@ private fun Yrkesskadevurdering.toResponse(ansattInfoService: AnsattInfoService)
         relevanteYrkesskadeSaker = relevanteSaker.map { YrkesskadeSakResponse(it.referanse, it.manuellYrkesskadeDato) },
         andelAvNedsettelsen = andelAvNedsettelsen?.prosentverdi(),
         erÅrsakssammenheng = erÅrsakssammenheng,
-        vurdertAv = VurdertAvResponse(
-            ident = vurdertAv,
-            dato = requireNotNull(vurdertTidspunkt?.toLocalDate()) { "Fant ikke vurderingstidspunkt for yrkesskadevurdering" },
-            ansattnavn = navnOgEnhet?.navn,
-            enhetsnavn = navnOgEnhet?.enhet,
-        )
+        vurderingerMeta = VurderingerMetaResponse(
+            vurdertAv = VurdertAvResponse(
+                ident = vurdertAv,
+                dato = requireNotNull(vurdertTidspunkt?.toLocalDate()) { "Fant ikke vurderingstidspunkt for yrkesskadevurdering" },
+                ansattnavn = navnOgEnhet?.navn,
+                enhetsnavn = navnOgEnhet?.enhet,
+            )
+        ),
     )
 }
 

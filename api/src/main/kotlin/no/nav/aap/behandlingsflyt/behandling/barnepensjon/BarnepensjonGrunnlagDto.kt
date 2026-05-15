@@ -1,9 +1,10 @@
 package no.nav.aap.behandlingsflyt.behandling.barnepensjon
 
-import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
+import no.nav.aap.behandlingsflyt.behandling.vurdering.VurderingerMetaResponse
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.barnepensjon.BarnepensjonGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.barnepensjon.BarnepensjonVurdering
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.komponenter.verdityper.Beløp
 
 data class BarnepensjonGrunnlagDto(
@@ -37,7 +38,7 @@ data class BarnepensjonGrunnlagDto(
 data class BarnepensjonVurderingDto(
     val perioder: List<BarnepensjonVurderingPeriodeDto>,
     val begrunnelse: String,
-    val vurdertAv: VurdertAvResponse
+    val vurderingerMeta: VurderingerMetaResponse,
 ) {
     companion object {
         fun fraDomene(
@@ -54,7 +55,11 @@ data class BarnepensjonVurderingDto(
                     )
                 },
                 begrunnelse = vurdering.begrunnelse,
-                vurdertAv = vurdertAvService.medNavnOgEnhet(vurdertAv, vurdering.opprettet)
+                vurderingerMeta = vurdertAvService.byggVurderingerMeta(
+                    definisjon = Definisjon.SAMORDNING_BARNEPENSJON,
+                    behandlingId = vurdering.vurdertIBehandling,
+                    vurdertAv = vurdertAvService.medNavnOgEnhet(vurdertAv, vurdering.opprettet),
+                ),
             )
         }
     }

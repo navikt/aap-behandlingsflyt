@@ -3,7 +3,7 @@ package no.nav.aap.behandlingsflyt.behandling.grunnlag.samordning
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
-import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
+import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
 import no.nav.aap.behandlingsflyt.behandling.samordning.SamordningPeriodeSammenligner
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.SamordningAndreStatligeYtelserRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.arbeidsgiver.SamordningArbeidsgiverRepository
@@ -38,8 +38,6 @@ fun NormalOpenAPIRoute.samordningGrunnlag(
     repositoryRegistry: RepositoryRegistry,
     gatewayProvider: GatewayProvider,
 ) {
-    val ansattInfoService = AnsattInfoService(gatewayProvider)
-
     route("/api/behandling") {
         route("/{referanse}/grunnlag/samordning-ufore") {
             getGrunnlag<BehandlingReferanse, SamordningUføreVurderingGrunnlagDTO>(
@@ -49,29 +47,27 @@ fun NormalOpenAPIRoute.samordningGrunnlag(
                 ),
                 påkrevdRolle = Definisjon.AVKLAR_SAMORDNING_UFØRE.løsesAv
             ) { behandlingReferanse ->
-                val (registerGrunnlag, vurdering) =
-                    dataSource.transaction { connection ->
-                        val repositoryProvider = repositoryRegistry.provider(connection)
-                        val samordningUføreRepository = repositoryProvider.provide<SamordningUføreRepository>()
-                        val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
-                        val uføreRepository = repositoryProvider.provide<UføreRepository>()
+                val dto = dataSource.transaction { connection ->
+                    val repositoryProvider = repositoryRegistry.provider(connection)
+                    val samordningUføreRepository = repositoryProvider.provide<SamordningUføreRepository>()
+                    val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+                    val uføreRepository = repositoryProvider.provide<UføreRepository>()
+                    val vurdertAvService = VurdertAvService(repositoryProvider, gatewayProvider)
 
-                        val behandling = behandlingRepository.hent(behandlingReferanse)
-                        val samordningUføreVurdering =
-                            samordningUføreRepository.hentHvisEksisterer(behandling.id)?.vurdering
-                        val uføregrunnlagMedEndretStatus =
-                            UførePeriodeSammenligner(uføreRepository).hentUføreGrunnlagMedEndretStatus(behandling.id)
+                    val behandling = behandlingRepository.hent(behandlingReferanse)
+                    val samordningUføreVurdering =
+                        samordningUføreRepository.hentHvisEksisterer(behandling.id)?.vurdering
+                    val uføregrunnlagMedEndretStatus =
+                        UførePeriodeSammenligner(uføreRepository).hentUføreGrunnlagMedEndretStatus(behandling.id)
 
-                        Pair(uføregrunnlagMedEndretStatus, samordningUføreVurdering)
-                    }
-
-                respond(
                     SamordningUføreVurderingGrunnlagDTO(
                         harTilgangTilÅSaksbehandle = kanSaksbehandle(),
-                        vurdering = mapSamordningUføreVurdering(vurdering, ansattInfoService),
-                        grunnlag = mapSamordningUføreGrunnlag(registerGrunnlag)
+                        vurdering = mapSamordningUføreVurdering(samordningUføreVurdering, behandling.id, vurdertAvService),
+                        grunnlag = mapSamordningUføreGrunnlag(uføregrunnlagMedEndretStatus)
                     )
-                )
+                }
+
+                respond(dto)
             }
         }
 
@@ -128,39 +124,37 @@ fun NormalOpenAPIRoute.samordningGrunnlag(
                 behandlingPathParam = BehandlingPathParam("referanse"),
                 påkrevdRolle = Definisjon.AVKLAR_SAMORDNING_GRADERING.løsesAv
             ) { req ->
-                val (registerYtelser, samordningPair, tp) =
-                    dataSource.transaction { connection ->
-                        val repositoryProvider = repositoryRegistry.provider(connection)
-                        val samordningRepository = repositoryProvider.provide<SamordningVurderingRepository>()
-                        val samordningYtelseRepository = repositoryProvider.provide<SamordningYtelseRepository>()
-                        val tjenestePensjonRepository = repositoryProvider.provide<TjenestePensjonRepository>()
+                val dto = dataSource.transaction { connection ->
+                    val repositoryProvider = repositoryRegistry.provider(connection)
+                    val samordningRepository = repositoryProvider.provide<SamordningVurderingRepository>()
+                    val samordningYtelseRepository = repositoryProvider.provide<SamordningYtelseRepository>()
+                    val tjenestePensjonRepository = repositoryProvider.provide<TjenestePensjonRepository>()
+                    val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+                    val vurdertAvService = VurdertAvService(repositoryProvider, gatewayProvider)
 
-                        val behandling =
-                            BehandlingReferanseService(
-                                repositoryProvider.provide<BehandlingRepository>()
-                            ).behandling(req)
+                    val behandling = BehandlingReferanseService(behandlingRepository).behandling(req)
+                    val samordning = samordningRepository.hentHvisEksisterer(behandling.id)
+                    val historiskeVurderinger = behandlingRepository.hentAlleFor(
+                        behandling.sakId,
+                        TypeBehandling.ytelseBehandlingstyper()
+                    ).filter { it.id != behandling.id }
+                        .mapNotNull { historiskBehandling ->
+                            samordningRepository.hentHvisEksisterer(historiskBehandling.id)?.let {
+                                historiskBehandling.id to it
+                            }
+                        }
 
-                        val samordning = samordningRepository.hentHvisEksisterer(behandling.id)
-                        val historiskeVurderinger =
-                            samordningRepository.hentHistoriskeVurderinger(behandling.sakId, behandling.id)
+                    val perioderMedEndringer =
+                        SamordningPeriodeSammenligner(samordningYtelseRepository).hentPerioderMarkertMedEndringer(
+                            behandling.id
+                        )
 
-                        val perioderMedEndringer =
-                            SamordningPeriodeSammenligner(samordningYtelseRepository).hentPerioderMarkertMedEndringer(
-                                behandling.id
-                            )
+                    val tp = tjenestePensjonRepository.hentHvisEksisterer(behandling.id)
 
-                        val tp = tjenestePensjonRepository.hentHvisEksisterer(behandling.id)
-
-                        Triple(perioderMedEndringer, Pair(samordning, historiskeVurderinger), tp)
-                    }
-
-                val (samordning, historiskeVurderinger) = samordningPair
-
-                respond(
                     SamordningYtelseVurderingGrunnlagDTO(
                         harTilgangTilÅSaksbehandle = kanSaksbehandle(),
                         ytelser =
-                            registerYtelser.map { ytelse ->
+                            perioderMedEndringer.map { ytelse ->
                                 SamordningYtelseDTO(
                                     ytelseType = ytelse.ytelseType,
                                     periode = Periode(fom = ytelse.periode.fom, tom = ytelse.periode.tom),
@@ -172,14 +166,16 @@ fun NormalOpenAPIRoute.samordningGrunnlag(
                                 )
                             },
                         vurdering = samordning?.let {
-                            mapSamordningVurdering(it, ansattInfoService)
+                            mapSamordningVurdering(it, behandling.id, vurdertAvService)
                         },
-                        historiskeVurderinger = historiskeVurderinger.map {
-                            mapSamordningVurdering(it, ansattInfoService)
+                        historiskeVurderinger = historiskeVurderinger.map { (behandlingId, vurdering) ->
+                            mapSamordningVurdering(vurdering, behandlingId, vurdertAvService)
                         },
                         tpYtelser = tp,
                     )
-                )
+                }
+
+                respond(dto)
             }
         }
 
@@ -192,78 +188,67 @@ fun NormalOpenAPIRoute.samordningGrunnlag(
                     ),
                 påkrevdRolle = Definisjon.SAMORDNING_ANDRE_STATLIGE_YTELSER.løsesAv,
             ) { behandlingReferanse ->
-                val (samordningAndreStatligeYtelserVurdering,
-                     samordningAndreStatligeYtelserHistoriskeVurdering,
-                     samordningAndreStatligeYtelserPerioder) =
-                    dataSource.transaction { connection ->
-                        val repositoryProvider = repositoryRegistry.provider(connection)
-                        val samordningAndreStatligeYtelserRepository =
-                            repositoryProvider.provide<SamordningAndreStatligeYtelserRepository>()
+                val dto = dataSource.transaction { connection ->
+                    val repositoryProvider = repositoryRegistry.provider(connection)
+                    val samordningAndreStatligeYtelserRepository =
+                        repositoryProvider.provide<SamordningAndreStatligeYtelserRepository>()
 
-                        val sakRepository = repositoryProvider.provide<SakRepository>()
-                        val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
-                        val dagpengerRepository = repositoryProvider.provide<DagpengerRepository>()
-                        val tiltakspengerRepository = repositoryProvider.provide<TiltakspengerRepository>();
+                    val sakRepository = repositoryProvider.provide<SakRepository>()
+                    val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+                    val dagpengerRepository = repositoryProvider.provide<DagpengerRepository>()
+                    val tiltakspengerRepository = repositoryProvider.provide<TiltakspengerRepository>()
+                    val vurdertAvService = VurdertAvService(repositoryProvider, gatewayProvider)
 
-                        val behandling = behandlingRepository.hent(behandlingReferanse)
-                        val sak = sakRepository.hent(behandling.sakId)
+                    val behandling = behandlingRepository.hent(behandlingReferanse)
+                    val sak = sakRepository.hent(behandling.sakId)
 
-                        val historiskeBehandlinger = behandlingRepository.hentAlleFor(
-                            sak.id,
-                            TypeBehandling.ytelseBehandlingstyper()
-                        ).filter { it.id != behandling.id }
+                    val historiskeBehandlinger = behandlingRepository.hentAlleFor(
+                        sak.id,
+                        TypeBehandling.ytelseBehandlingstyper()
+                    ).filter { it.id != behandling.id }
 
-                        val vurdering =
-                            samordningAndreStatligeYtelserRepository.hentHvisEksisterer(behandling.id)?.vurdering
+                    val vurdering =
+                        samordningAndreStatligeYtelserRepository.hentHvisEksisterer(behandling.id)?.vurdering
 
-                        val historiskeVurderinger =
-                            historiskeBehandlinger.mapNotNull { historiskeBehandling ->
-                                samordningAndreStatligeYtelserRepository.hentHvisEksisterer(historiskeBehandling.id)?.vurdering
-                            }
-
-                        val dagpengerGrunnlag = dagpengerRepository.hent(behandling.id).map {
-                            AndreStatligeYtelserPeriodeDto(
-                                fom = it.periode.fom,
-                                tom = it.periode.tom,
-                                ytelseType = mapDagpengerYtelseType(it.dagpengerYtelseType),
-                                kilde = mapDagpengerKilde(it.kilde)
-                            )
+                    val historiskeVurderinger = historiskeBehandlinger.mapNotNull { historiskeBehandling ->
+                        samordningAndreStatligeYtelserRepository.hentHvisEksisterer(historiskeBehandling.id)?.vurdering?.let {
+                            historiskeBehandling.id to it
                         }
-
-                        val tiltakspengerGrunnlag = tiltakspengerRepository.hent(behandling.id).map {
-                            AndreStatligeYtelserPeriodeDto(
-                                fom = it.fraOgMed,
-                                tom = it.tilOgMed,
-                                ytelseType = mapTiltakspengerYtelseType(it.tiltakspengerYtelseType),
-                                kilde = mapTiltakspengerKilde(it.kilde)
-                            )
-                        }
-
-                        val andreStatligeYtelserGrunnlag = dagpengerGrunnlag + tiltakspengerGrunnlag;
-
-                        Triple(vurdering, historiskeVurderinger, andreStatligeYtelserGrunnlag)
                     }
 
-                val navnOgEnhet = samordningAndreStatligeYtelserVurdering?.let {
-                    ansattInfoService.hentAnsattNavnOgEnhet(it.vurdertAv)
-                }
+                    val dagpengerGrunnlag = dagpengerRepository.hent(behandling.id).map {
+                        AndreStatligeYtelserPeriodeDto(
+                            fom = it.periode.fom,
+                            tom = it.periode.tom,
+                            ytelseType = mapDagpengerYtelseType(it.dagpengerYtelseType),
+                            kilde = mapDagpengerKilde(it.kilde)
+                        )
+                    }
 
-                val historiskeVurderinger = samordningAndreStatligeYtelserHistoriskeVurdering.map { vurdering ->
-                    mapSamordningAndreStatligeYtelserVurderingDTO(vurdering, navnOgEnhet)
-                }
+                    val tiltakspengerGrunnlag = tiltakspengerRepository.hent(behandling.id).map {
+                        AndreStatligeYtelserPeriodeDto(
+                            fom = it.fraOgMed,
+                            tom = it.tilOgMed,
+                            ytelseType = mapTiltakspengerYtelseType(it.tiltakspengerYtelseType),
+                            kilde = mapTiltakspengerKilde(it.kilde)
+                        )
+                    }
 
-                val vurdering = samordningAndreStatligeYtelserVurdering?.let { vurdering ->
-                    mapSamordningAndreStatligeYtelserVurderingDTO(vurdering, navnOgEnhet)
-                }
+                    val andreStatligeYtelserGrunnlag = dagpengerGrunnlag + tiltakspengerGrunnlag
 
-                respond(
                     SamordningAndreStatligeYtelserGrunnlagDTO(
                         harTilgangTilÅSaksbehandle = kanSaksbehandle(),
-                        vurdering = vurdering,
-                        historiskeVurderinger = historiskeVurderinger,
-                        perioder = samordningAndreStatligeYtelserPerioder,
+                        vurdering = vurdering?.let {
+                            mapSamordningAndreStatligeYtelserVurderingDTO(it, behandling.id, vurdertAvService)
+                        },
+                        historiskeVurderinger = historiskeVurderinger.map { (behandlingId, vurderingDto) ->
+                            mapSamordningAndreStatligeYtelserVurderingDTO(vurderingDto, behandlingId, vurdertAvService)
+                        },
+                        perioder = andreStatligeYtelserGrunnlag,
                     )
-                )
+                }
+
+                respond(dto)
             }
         }
 
@@ -277,56 +262,44 @@ fun NormalOpenAPIRoute.samordningGrunnlag(
                     ),
                 påkrevdRolle = Definisjon.SAMORDNING_ARBEIDSGIVER.løsesAv,
             ) { behandlingReferanse ->
-                val (samordningArbeidsgiverVurdering, historskeSamordningArbeidsgiverVurderinger,harFåttEkstrautbetalingFraArbeidsgiver) =
-                    dataSource.transaction { connection ->
-                        val repositoryProvider = repositoryRegistry.provider(connection)
-                        val samordningArbeidsgiverRepository =
-                            repositoryProvider.provide<SamordningArbeidsgiverRepository>()
-                        val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
-                        val behandling = behandlingRepository.hent(behandlingReferanse)
+                val dto = dataSource.transaction { connection ->
+                    val repositoryProvider = repositoryRegistry.provider(connection)
+                    val samordningArbeidsgiverRepository =
+                        repositoryProvider.provide<SamordningArbeidsgiverRepository>()
+                    val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+                    val vurdertAvService = VurdertAvService(repositoryProvider, gatewayProvider)
+                    val behandling = behandlingRepository.hent(behandlingReferanse)
 
-                        val vurdering = samordningArbeidsgiverRepository.hentHvisEksisterer(behandling.id)?.vurdering
+                    val vurdering = samordningArbeidsgiverRepository.hentHvisEksisterer(behandling.id)?.vurdering
 
-                        val historiskeBehandlinger = behandlingRepository.hentAlleFor(
-                            behandling.sakId,
-                            TypeBehandling.ytelseBehandlingstyper()
-                        ).filter { it.id != behandling.id }
+                    val historiskeBehandlinger = behandlingRepository.hentAlleFor(
+                        behandling.sakId,
+                        TypeBehandling.ytelseBehandlingstyper()
+                    ).filter { it.id != behandling.id }
 
-                        val historskeSamordningArbeidsgiverVurderinger =
-                            historiskeBehandlinger.mapNotNull { historiskeBehandling ->
-                                samordningArbeidsgiverRepository.hentHvisEksisterer(historiskeBehandling.id)?.vurdering
-                            }
-
-                        val andreYtelserRepository = repositoryProvider.provide<AndreYtelserOppgittISøknadRepository>()
-                        val andreUtbetalinger = andreYtelserRepository.hentHvisEksisterer(behandling.id)
-                        val harFåttEkstrautbetalingFraArbeidsgiver  = andreUtbetalinger?.ekstraLønn
-
-                        Triple(vurdering, historskeSamordningArbeidsgiverVurderinger,harFåttEkstrautbetalingFraArbeidsgiver)
+                    val historiskeSamordningArbeidsgiverVurderinger = historiskeBehandlinger.mapNotNull { historiskeBehandling ->
+                        samordningArbeidsgiverRepository.hentHvisEksisterer(historiskeBehandling.id)?.vurdering?.let {
+                            historiskeBehandling.id to it
+                        }
                     }
 
-                val navnOgEnhet = samordningArbeidsgiverVurdering?.let {
-                    ansattInfoService.hentAnsattNavnOgEnhet(it.vurdertAv)
-                }
+                    val andreYtelserRepository = repositoryProvider.provide<AndreYtelserOppgittISøknadRepository>()
+                    val andreUtbetalinger = andreYtelserRepository.hentHvisEksisterer(behandling.id)
+                    val harFåttEkstrautbetalingFraArbeidsgiver = andreUtbetalinger?.ekstraLønn
 
-                val historiskeVurderingererDTO = historskeSamordningArbeidsgiverVurderinger.map { vurdering ->
-                    val navnOgEnhet = vurdering.let {
-                        ansattInfoService.hentAnsattNavnOgEnhet(it.vurdertAv)
-                    }
-                    mapSamordningArbeidsgiverVurdering(vurdering, navnOgEnhet)
-                }
-
-                val vurdering = samordningArbeidsgiverVurdering?.let { vurdering ->
-                    mapSamordningArbeidsgiverVurdering(vurdering, navnOgEnhet)
-                }
-
-                respond(
                     SamordningArbeidsgiverGrunnlagDTO(
                         harTilgangTilÅSaksbehandle = kanSaksbehandle(),
-                        vurdering = vurdering,
-                        historiskeVurderinger = historiskeVurderingererDTO,
+                        vurdering = vurdering?.let {
+                            mapSamordningArbeidsgiverVurdering(it, behandling.id, vurdertAvService)
+                        },
+                        historiskeVurderinger = historiskeSamordningArbeidsgiverVurderinger.map { (behandlingId, historiskVurdering) ->
+                            mapSamordningArbeidsgiverVurdering(historiskVurdering, behandlingId, vurdertAvService)
+                        },
                         harFåttEkstrautbetalingFraArbeidsgiver = harFåttEkstrautbetalingFraArbeidsgiver
                     )
-                )
+                }
+
+                respond(dto)
             }
         }
     }

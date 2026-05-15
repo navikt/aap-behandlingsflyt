@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.behandling.arbeidsopptrapping
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
+import no.nav.aap.behandlingsflyt.behandling.vurdering.VurderingerMetaResponse
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsopptrapping.ArbeidsopptrappingGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsopptrapping.ArbeidsopptrappingRepository
@@ -80,9 +81,11 @@ fun NormalOpenAPIRoute.arbeidsopptrappingGrunnlagApi(
                         kanVurderes = listOf(sak.rettighetsperiode),
                         behøverVurderinger = listOf(),
                         ikkeVurderbarePerioder = ikkeVurderbarePerioder,
-                        kvalitetssikretAv = vurdertAvService.kvalitetssikretAv(
-                            Definisjon.ARBEIDSOPPTRAPPING,
-                            behandling.id
+                        vurderingerMeta = VurderingerMetaResponse(
+                            kvalitetssikretAv = vurdertAvService.kvalitetssikretAv(
+                                Definisjon.ARBEIDSOPPTRAPPING,
+                                behandling.id,
+                            ),
                         ),
                         ikkeRelevantePerioder = emptyList(/* Avklaringsbehovet er frivillig, så vi har ikke denne opplysningen lett tilgjengelig. */),
                     )
