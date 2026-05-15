@@ -303,7 +303,7 @@ internal fun Application.server(
                 refusjonGrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
                 manglendeGrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
                 mellomlagretVurderingApi(fellesDataSource, repositoryRegistry, gatewayProvider)
-                rettighetsinfoApi(fellesDataSource, repositoryRegistry)
+                rettighetsinfoApi(fellesDataSource, repositoryRegistry, gatewayProvider)
                 tidligereVurderingerApi(fellesDataSource, repositoryRegistry, gatewayProvider)
                 barnepensjonGrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
                 bekreftVurderingerOppfølgingApi(fellesDataSource, repositoryRegistry, gatewayProvider)
