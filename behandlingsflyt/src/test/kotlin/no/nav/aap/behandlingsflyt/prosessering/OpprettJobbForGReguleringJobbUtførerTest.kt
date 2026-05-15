@@ -70,7 +70,7 @@ class OpprettJobbForGReguleringJobbUtførerTest {
         val sakId = SakId(42L)
 
         every { gReguleringService.finnesGrunnbeløpForÅr(Year.of(2025)) } returns
-            Grunnbeløp.GrunnbeløpDto(dato = gjusteringDato, beløp = Beløp(130_160))
+            Grunnbeløp.GrunnbeløpMedDato(dato = gjusteringDato, beløp = Beløp(130_160))
         every { gReguleringService.hentSakerForGRegulering(gjusteringDato) } returns setOf(sakId)
         every { flytJobbRepository.leggTil(any()) } just Runs
 
@@ -95,7 +95,7 @@ class OpprettJobbForGReguleringJobbUtførerTest {
         val sakId = SakId(99L)
 
         every { gReguleringService.finnesGrunnbeløpForÅr(Year.of(2026)) } returns
-            Grunnbeløp.GrunnbeløpDto(dato = gjusteringDato, beløp = Beløp(135_000))
+            Grunnbeløp.GrunnbeløpMedDato(dato = gjusteringDato, beløp = Beløp(135_000))
         every { gReguleringService.hentSakerForGRegulering(gjusteringDato) } returns setOf(sakId)
         every { flytJobbRepository.leggTil(any()) } just Runs
 
@@ -122,7 +122,7 @@ class OpprettJobbForGReguleringJobbUtførerTest {
         val sakId = SakId(77L)
 
         every { gReguleringService.finnesGrunnbeløpForÅr(Year.of(2027)) } returns
-            Grunnbeløp.GrunnbeløpDto(dato = gjusteringDato, beløp = Beløp(140_000))
+            Grunnbeløp.GrunnbeløpMedDato(dato = gjusteringDato, beløp = Beløp(140_000))
         every { gReguleringService.hentSakerForGRegulering(gjusteringDato) } returns setOf(sakId)
         every { flytJobbRepository.leggTil(any()) } just Runs
 

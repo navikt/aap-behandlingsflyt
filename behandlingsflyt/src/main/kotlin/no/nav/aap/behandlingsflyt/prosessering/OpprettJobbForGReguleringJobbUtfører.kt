@@ -62,7 +62,7 @@ class OpprettJobbForGReguleringJobbUtfører(
             }
     }
 
-    private fun hentAktuellGJustering(år: Year) : Grunnbeløp.GrunnbeløpDto? {
+    private fun hentAktuellGJustering(år: Year) : Grunnbeløp.GrunnbeløpMedDato? {
         return gReguleringService.finnesGrunnbeløpForÅr(år)
     }
 
