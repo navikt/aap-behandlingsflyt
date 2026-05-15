@@ -1,7 +1,12 @@
 package no.nav.aap.behandlingsflyt.integrasjon.arbeidsforhold
 
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.ArbeidINorgeGrunnlag
+import no.nav.aap.behandlingsflyt.behandling.lovvalg.ArbeidAnsettelsesdetaljGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.Arbeidsforholdtype
+import no.nav.aap.behandlingsflyt.behandling.lovvalg.Fartsomraade
+import no.nav.aap.behandlingsflyt.behandling.lovvalg.Skipsregister
+import no.nav.aap.behandlingsflyt.behandling.lovvalg.Skipstype
+import no.nav.aap.behandlingsflyt.behandling.lovvalg.Yrke
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aaregisteret.ArbeidsforholdGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aaregisteret.ArbeidsforholdRequest
 import no.nav.aap.behandlingsflyt.prometheus
@@ -42,13 +47,38 @@ class AARegisterGateway : ArbeidsforholdGateway {
         )
         val response: ArbeidsforholdoversiktResponse = requireNotNull(client.post(uri = url, request = httpRequest))
 
-        return response.arbeidsforholdoversikter.filter { it.arbeidssted.type.uppercase() == "UNDERENHET" }
+        return response.arbeidsforholdoversikter
+            .filter { it.arbeidssted.type.uppercase() == "UNDERENHET" }
             .map { arbeidsforhold ->
                 ArbeidINorgeGrunnlag(
                     identifikator = arbeidsforhold.arbeidssted.identer.first().ident,
                     arbeidsforholdKode = Arbeidsforholdtype.fraKode(arbeidsforhold.type.kode),
                     startdato = arbeidsforhold.startdato,
-                    sluttdato = arbeidsforhold.sluttdato
+                    sluttdato = arbeidsforhold.sluttdato,
+                    yrke = arbeidsforhold.yrke?.kode?.let { kode -> Yrke(kode, arbeidsforhold.yrke.beskrivelse) },
+                    ansettelsesdetaljer = arbeidsforhold.ansettelsesdetaljer.map { detalj ->
+                        ArbeidAnsettelsesdetaljGrunnlag(
+                            skipsregister = detalj.skipsregister?.kode?.let { kode ->
+                                Skipsregister(
+                                    kode,
+                                    detalj.skipsregister.beskrivelse
+                                )
+                            },
+                            skipstype = detalj.fartoeystype?.kode?.let { kode ->
+                                Skipstype(
+                                    kode,
+                                    detalj.fartoeystype.beskrivelse
+                                )
+                            },
+                            fartsomraade = detalj.fartsomraade?.kode?.let { kode ->
+                                Fartsomraade(
+                                    kode,
+                                    detalj.fartsomraade.beskrivelse
+                                )
+                            },
+                            yrke = detalj.yrke?.kode?.let { kode -> Yrke(kode, detalj.yrke.beskrivelse) },
+                        )
+                    }
                 )
             }
     }
