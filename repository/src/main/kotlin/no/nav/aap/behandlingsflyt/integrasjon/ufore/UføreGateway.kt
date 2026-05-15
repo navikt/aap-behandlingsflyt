@@ -5,20 +5,16 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreRegisterGa
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreSøknad
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreSøknadRequest
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreSøknadResponse
-import no.nav.aap.behandlingsflyt.integrasjon.unleash.UnleashGatewayImpl
 import no.nav.aap.behandlingsflyt.prometheus
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
 import no.nav.aap.komponenter.httpklient.httpclient.Header
 import no.nav.aap.komponenter.httpklient.httpclient.RestClient
 import no.nav.aap.komponenter.httpklient.httpclient.error.IkkeFunnetException
-import no.nav.aap.komponenter.httpklient.httpclient.error.InternalServerErrorHttpResponsException
 import no.nav.aap.komponenter.httpklient.httpclient.post
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureM2MTokenProvider
-import no.nav.aap.komponenter.miljo.Miljø
 import no.nav.aap.komponenter.verdityper.Prosent
 import org.slf4j.LoggerFactory
 import java.net.URI
@@ -77,10 +73,6 @@ object UføreGateway : UføreRegisterGateway {
     }
 
     override fun innhentMedHistorikk(person: Person, fraDato: LocalDate): Set<Uføre> {
-        if (UnleashGatewayImpl.isEnabled(BehandlingsflytFeature.TaNedPesysOgInfotrygd) && Miljø.erDev()) {
-            log.info("Toggle for å ta ned PESYS og Infotrygd er aktivert. Kaster feil.")
-            throw InternalServerErrorHttpResponsException("PESYS er nede!")
-        }
         val datoString = fraDato.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
         val request =
             UføreRequest(person.identer().filter { it.aktivIdent }.map { it.identifikator }.first(), datoString)
@@ -121,10 +113,6 @@ object UføreGateway : UføreRegisterGateway {
     }
 
     override fun hentÅpenUføreSøknad(person: Person): UføreSøknad? {
-        if (UnleashGatewayImpl.isEnabled(BehandlingsflytFeature.TaNedPesysOgInfotrygd) && Miljø.erDev()) {
-            log.info("Toggle for å ta ned PESYS og Infotrygd er aktivert. Kaster feil.")
-            throw InternalServerErrorHttpResponsException("PESYS er nede!")
-        }
         val response = queryÅpenUføreSøknad(UføreSøknadRequest(person.aktivIdent().identifikator))
         return response?.soknad
     }
