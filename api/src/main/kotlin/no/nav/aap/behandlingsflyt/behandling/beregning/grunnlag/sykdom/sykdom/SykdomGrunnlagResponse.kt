@@ -2,7 +2,7 @@ package no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.sykdom
 
 import no.nav.aap.behandlingsflyt.PeriodiserteVurderingerDto
 import no.nav.aap.behandlingsflyt.VurderingDto
-import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
+import no.nav.aap.behandlingsflyt.behandling.vurdering.VurderingerMetaResponse
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ErNedsettelseMerEnnYrkesskadegrenseValg
@@ -28,11 +28,9 @@ data class SykdomGrunnlagResponse(
     ): PeriodiserteVurderingerDto<SykdomsvurderingResponse>
 
 data class SykdomsvurderingResponse(
-    override val vurdertAv: VurdertAvResponse,
+    override val vurderingerMeta: VurderingerMetaResponse,
     override val fom: LocalDate,
     override val tom: LocalDate?,
-    override val kvalitetssikretAv: VurdertAvResponse?,
-    override val besluttetAv: VurdertAvResponse?,
 
     /** Hvis null, så gjelder den fra starten. */
     val begrunnelse: String,
@@ -100,14 +98,10 @@ data class SykdomsvurderingResponse(
             bidiagnoser = sykdomsvurdering.diagnose?.bidiagnoser.orEmpty(),
             fom = fom,
             tom = tom,
-            vurdertAv = vurdertAvService.medNavnOgEnhet(sykdomsvurdering.vurdertAv.ident, sykdomsvurdering.opprettet),
-            kvalitetssikretAv = vurdertAvService.kvalitetssikretAv(
+            vurderingerMeta = vurdertAvService.byggVurderingerMeta(
                 definisjon = Definisjon.AVKLAR_SYKDOM,
                 behandlingId = sykdomsvurdering.vurdertIBehandling,
-            ),
-            besluttetAv = vurdertAvService.besluttetAv(
-                definisjon = Definisjon.AVKLAR_SYKDOM,
-                behandlingId = sykdomsvurdering.vurdertIBehandling,
+                vurdertAv = vurdertAvService.medNavnOgEnhet(sykdomsvurdering.vurdertAv.ident, sykdomsvurdering.opprettet),
             ),
         )
     }

@@ -7,13 +7,15 @@ data class ArbeidsforholdoversiktResponse(
 )
 
 data class ArbeidsforholdOversikt(
-    val type: Kodeverksentitet,
+    val type: ArbeidsforholdTypeResponse,
     val arbeidssted: Arbeidssted,
     val startdato: LocalDate,
-    val sluttdato: LocalDate?
+    val sluttdato: LocalDate? = null,
+    val ansettelsesdetaljer: List<Ansettelsesdetalj> = emptyList(),
+    val yrke: Kodeverksentitet? = null
 )
 
-data class Kodeverksentitet(
+data class ArbeidsforholdTypeResponse(
     val kode: String
 )
 
@@ -25,4 +27,16 @@ data class Arbeidssted(
 data class Ident(
     val type: String,
     val ident: String
+)
+
+data class Ansettelsesdetalj(
+    val fartsomraade: Kodeverksentitet? = null,
+    val skipsregister: Kodeverksentitet? = null,
+    val fartoeystype: Kodeverksentitet? = null,
+    val yrke: Kodeverksentitet? = null
+)
+
+data class Kodeverksentitet(
+    val kode: String? = null,
+    val beskrivelse: String? = null
 )

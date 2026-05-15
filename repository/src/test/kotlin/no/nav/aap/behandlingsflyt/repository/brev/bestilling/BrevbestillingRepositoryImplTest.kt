@@ -18,7 +18,6 @@ import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
-import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
@@ -76,10 +75,20 @@ internal class BrevbestillingRepositoryImplTest {
             assertThat(oppdatertBrevbestilling.first().typeBrev).isEqualTo(typeBrev)
 
             val behandling2 = opprettBehandling(sakId, connection)
-            brevbestillingRepository.lagre(behandling2, typeBrev, BrevbestillingReferanse(UUID.randomUUID()), Status.FORHÅNDSVISNING_KLAR)
+            brevbestillingRepository.lagre(
+                behandling2,
+                typeBrev,
+                BrevbestillingReferanse(UUID.randomUUID()),
+                Status.FORHÅNDSVISNING_KLAR
+            )
 
             val behandling3 = opprettBehandling(opprettSak(connection), connection) // annen sak
-            brevbestillingRepository.lagre(behandling3, typeBrev, BrevbestillingReferanse(UUID.randomUUID()), Status.FORHÅNDSVISNING_KLAR)
+            brevbestillingRepository.lagre(
+                behandling3,
+                typeBrev,
+                BrevbestillingReferanse(UUID.randomUUID()),
+                Status.FORHÅNDSVISNING_KLAR
+            )
 
             assertThat(brevbestillingRepository.hent(sakId, typeBrev)).hasSize(2)
         }
@@ -89,7 +98,7 @@ internal class BrevbestillingRepositoryImplTest {
         val person = PersonRepositoryImpl(connection).finnEllerOpprett(listOf(ident()))
         return SakRepositoryImpl(connection).finnEllerOpprett(
             person,
-            Periode(LocalDate.now(), LocalDate.now().plusDays(5))
+            LocalDate.now()
         ).id
     }
 

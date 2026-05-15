@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.beregning.manuellinntekt
 
+import no.nav.aap.behandlingsflyt.behandling.vurdering.VurderingerMetaResponse
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
 import java.math.BigDecimal
 
@@ -28,7 +29,7 @@ data class ManuellInntektGrunnlagResponse(
 
 data class ManuellInntektGrunnlagVurdering(
     val begrunnelse: String,
-    val vurdertAv: VurdertAvResponse,
+    val vurderingerMeta: VurderingerMetaResponse,
     val årsVurderinger: List<ÅrData>,
 )
 

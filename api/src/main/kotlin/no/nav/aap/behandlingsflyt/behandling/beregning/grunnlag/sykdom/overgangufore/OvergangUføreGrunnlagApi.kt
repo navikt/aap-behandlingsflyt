@@ -6,6 +6,7 @@ import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovMetadataService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.sykdom.SykdomsvurderingResponse
+import no.nav.aap.behandlingsflyt.behandling.vurdering.VurderingerMetaResponse
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreSøknadRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreRepository
@@ -95,9 +96,11 @@ fun NormalOpenAPIRoute.overgangUforeGrunnlagApi(
                         behøverVurderinger = avklaringsbehov?.perioderVedtaketBehøverVurdering().orEmpty().toList(),
                         perioderSomIkkeErTilstrekkeligVurdert = avklaringsbehov?.perioderSomIkkeErTilstrekkeligVurdert()
                             .orEmpty().toList(),
-                        kvalitetssikretAv = vurdertAvService.kvalitetssikretAv(
-                            Definisjon.AVKLAR_OVERGANG_UFORE,
-                            behandling.id
+                        vurderingerMeta = VurderingerMetaResponse(
+                            kvalitetssikretAv = vurdertAvService.kvalitetssikretAv(
+                                Definisjon.AVKLAR_OVERGANG_UFORE,
+                                behandling.id,
+                            ),
                         ),
                         uføreSøknadOpplysninger = uføreSøknad?.let { UføreSøknadOpplysninger(it.uføreSøknad.soknadsdato) }
                     )

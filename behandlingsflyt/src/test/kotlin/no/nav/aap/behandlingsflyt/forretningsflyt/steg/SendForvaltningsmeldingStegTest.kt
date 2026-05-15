@@ -198,7 +198,7 @@ class SendForvaltningsmeldingStegTest {
 
     private fun opprettSakOgbehandlingForForvaltningsmelding(typeBehandling: TypeBehandling): Behandling {
         val person = Person(PersonId(1), UUID.randomUUID(), listOf(genererIdent(LocalDate.now().minusYears(23))))
-        val sak = InMemorySakRepository.finnEllerOpprett(person, periode)
+        val sak = InMemorySakRepository.finnEllerOpprett(person, periode.fom)
         return InMemoryBehandlingRepository.opprettBehandling(
             sak.id,
             typeBehandling,
@@ -223,7 +223,7 @@ class SendForvaltningsmeldingStegTest {
 
     private fun opprettSakOgbehandlingForKlageMottatt(typeBehandling: TypeBehandling): Behandling {
         val person = Person(PersonId(1), UUID.randomUUID(), listOf(genererIdent(LocalDate.now().minusYears(23))))
-        val sak = InMemorySakRepository.finnEllerOpprett(person, periode)
+        val sak = InMemorySakRepository.finnEllerOpprett(person, periode.fom)
         return InMemoryBehandlingRepository.opprettBehandling(
             sak.id,
             typeBehandling,

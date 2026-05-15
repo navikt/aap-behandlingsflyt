@@ -2,7 +2,7 @@ package no.nav.aap.behandlingsflyt.behandling.arbeidsevne
 
 import no.nav.aap.behandlingsflyt.PeriodiserteVurderingerDto
 import no.nav.aap.behandlingsflyt.VurderingDto
-import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
+import no.nav.aap.behandlingsflyt.behandling.vurdering.VurderingerMetaResponse
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneVurdering
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
@@ -23,9 +23,7 @@ data class ArbeidsevneGrunnlagDto(
 data class PeriodisertArbeidsevneVurderingDto(
     override val fom: LocalDate,
     override val tom: LocalDate?,
-    override val vurdertAv: VurdertAvResponse?,
-    override val kvalitetssikretAv: VurdertAvResponse? = null,
-    override val besluttetAv: VurdertAvResponse? = null,
+    override val vurderingerMeta: VurderingerMetaResponse,
     val begrunnelse: String,
     val arbeidsevne: Int,
 ) : VurderingDto
@@ -49,14 +47,10 @@ fun ArbeidsevneVurdering.toResponse(
     PeriodisertArbeidsevneVurderingDto(
         fom = fom,
         tom = tom,
-        vurdertAv = vurdertAvService.medNavnOgEnhet(vurdertAv, opprettetTid.toLocalDate()),
-        besluttetAv = vurdertAvService.besluttetAv(
+        vurderingerMeta = vurdertAvService.byggVurderingerMeta(
             definisjon = Definisjon.FRITAK_MELDEPLIKT,
-            behandlingId = vurdertIBehandling
-        ),
-        kvalitetssikretAv = vurdertAvService.kvalitetssikretAv(
-            definisjon = Definisjon.FRITAK_MELDEPLIKT,
-            behandlingId = vurdertIBehandling
+            behandlingId = vurdertIBehandling,
+            vurdertAv = vurdertAvService.medNavnOgEnhet(vurdertAv, opprettetTid.toLocalDate()),
         ),
         begrunnelse = begrunnelse,
         arbeidsevne = arbeidsevne.prosentverdi(),
