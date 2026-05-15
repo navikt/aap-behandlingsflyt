@@ -34,6 +34,15 @@ object InMemoryPersonRepository : PersonRepository {
         return personer.values.find { it.identer().intersect(identer.toSet()).isNotEmpty() }
     }
 
+    override fun oppdaterIdenter(
+        person: Person,
+        identer: List<Ident>
+    ): Person {
+        val oppdatertPerson = Person(person.id, person.identifikator, identer)
+        personer[person.id] = oppdatertPerson
+        return oppdatertPerson
+    }
+
     override fun slett(behandlingId: BehandlingId) {
     }
 

@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.UnparsedStrukturertDokument
 import no.nav.aap.behandlingsflyt.hendelse.mottak.HåndterDialogMeldingService
+import no.nav.aap.behandlingsflyt.hendelse.mottak.HåndterFolkeregisterIdentHendelseService
 import no.nav.aap.behandlingsflyt.hendelse.mottak.HåndterKlageService
 import no.nav.aap.behandlingsflyt.hendelse.mottak.HåndterMottattDokumentService
 import no.nav.aap.behandlingsflyt.hendelse.mottak.HåndterVedtakHendelseService
@@ -49,8 +50,9 @@ class HendelseMottattHåndteringJobbUtfører(
     private val håndterDialogMeldingService: HåndterDialogMeldingService,
     private val håndterVedtakHendelseService: HåndterVedtakHendelseService,
     private val håndterUførevedtakService: HåndterUførevedtakService,
+    private val håndterFolkeregisterIdentHendelseService: HåndterFolkeregisterIdentHendelseService,
     private val behandlingService: BehandlingService,
-    private val trukketSøknadService: TrukketSøknadService
+    private val trukketSøknadService: TrukketSøknadService,
 ) : JobbUtfører {
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -159,6 +161,13 @@ class HendelseMottattHåndteringJobbUtfører(
                 )
             }
 
+            InnsendingType.PDL_HENDELSE_FOLKEREGISTERIDENT -> {
+                håndterFolkeregisterIdentHendelseService.håndterOppdatertFolkeregisterIdentForSak(
+                    sakId = sakId,
+                    referanse = referanse,
+                )
+            }
+
             InnsendingType.UFØRE_VEDTAK_HENDELSE -> {
                 håndterUførevedtakService.håndterMottattUførevedtakHendelse(
                     sakId = sakId,
@@ -242,8 +251,9 @@ class HendelseMottattHåndteringJobbUtfører(
                 håndterDialogMeldingService = HåndterDialogMeldingService(repositoryProvider, gatewayProvider),
                 håndterVedtakHendelseService = HåndterVedtakHendelseService(repositoryProvider, gatewayProvider),
                 håndterUførevedtakService = HåndterUførevedtakService(repositoryProvider, gatewayProvider),
+                håndterFolkeregisterIdentHendelseService = HåndterFolkeregisterIdentHendelseService(repositoryProvider, gatewayProvider),
                 behandlingService = BehandlingService(repositoryProvider, gatewayProvider),
-                trukketSøknadService = TrukketSøknadService(repositoryProvider)
+                trukketSøknadService = TrukketSøknadService(repositoryProvider),
             )
         }
 
