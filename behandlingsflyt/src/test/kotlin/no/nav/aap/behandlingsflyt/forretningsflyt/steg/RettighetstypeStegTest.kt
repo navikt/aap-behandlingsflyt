@@ -45,7 +45,7 @@ class RettighetstypeStegTest {
         val rettighetsperiode = Periode(1 januar 2020, Tid.MAKS)
         val person = genererPerson(rettighetsperiode.fom.minusYears(25))
 
-        val sak = sakRepository.finnEllerOpprett(person, rettighetsperiode)
+        val sak = sakRepository.finnEllerOpprett(person, rettighetsperiode.fom)
         val behandling = behandlingRepository.opprettBehandling(
             sak.id,
             TypeBehandling.Førstegangsbehandling,
