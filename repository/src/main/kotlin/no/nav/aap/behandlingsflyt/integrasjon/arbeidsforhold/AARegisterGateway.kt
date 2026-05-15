@@ -19,9 +19,12 @@ import no.nav.aap.komponenter.httpklient.httpclient.error.IkkeFunnetException
 import no.nav.aap.komponenter.httpklient.httpclient.post
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureM2MTokenProvider
+import no.nav.aap.komponenter.miljo.Miljø
+import org.slf4j.LoggerFactory
 import java.net.URI
 
 class AARegisterGateway : ArbeidsforholdGateway {
+    private val log = LoggerFactory.getLogger(javaClass)
     private val url =
         URI.create(requiredConfigForKey("integrasjon.aareg.url") + "/api/v2/arbeidstaker/arbeidsforholdoversikt")
     private val config = ClientConfig(scope = requiredConfigForKey("integrasjon.aareg.scope"))
@@ -46,6 +49,10 @@ class AARegisterGateway : ArbeidsforholdGateway {
             )
         )
         val response: ArbeidsforholdoversiktResponse = requireNotNull(client.post(uri = url, request = httpRequest))
+
+        if (Miljø.erDev()) {
+            log.info("AARegister response: $response")
+        }
 
         return response.arbeidsforholdoversikter
             .filter { it.arbeidssted.type.uppercase() == "UNDERENHET" }
