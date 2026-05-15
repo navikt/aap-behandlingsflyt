@@ -73,10 +73,8 @@ class OpprettJobbForGReguleringJobbUtfører(
         val alleSaker = gReguleringService.hentSakerForGRegulering(datoForGJustering)
         log.info("Antall saker som er kandidater for G-regulering: ${alleSaker.size}")
 
-        // TODO: Filtrer saker
-        return alleSaker
-            .filter { it.id == 0L }
-            .toSet()
+        val sakIdFilter = unleashGateway.hentSakIdFilter(BehandlingsflytFeature.GReguleringUtplukkJobb)
+        return alleSaker.filter { it.id in sakIdFilter }.toSet()
     }
 
     companion object : ProvidersJobbSpesifikasjon {

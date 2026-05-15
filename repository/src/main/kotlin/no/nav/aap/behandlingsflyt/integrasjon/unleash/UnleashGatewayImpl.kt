@@ -28,4 +28,18 @@ object UnleashGatewayImpl : UnleashGateway {
                 .addProperty("typeBrev", typeBrev.name)
                 .build()
         )
+
+    override fun hentSakIdFilter(featureToggle: FeatureToggle): Set<Long> {
+        val variant = unleash.getVariant(featureToggle.key())
+        if (!variant.isEnabled) return setOf(0L)
+        return variant.getPayload()
+            .map { payload ->
+                payload.value
+                    ?.split(",")
+                    ?.mapNotNull { it.trim().toLongOrNull() }
+                    ?.toSet()
+                    ?: setOf(0L)
+            }
+            .orElse(setOf(0L))
+    }
 }
