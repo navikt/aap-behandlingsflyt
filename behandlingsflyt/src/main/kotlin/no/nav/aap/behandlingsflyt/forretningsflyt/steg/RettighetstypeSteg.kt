@@ -89,8 +89,7 @@ class RettighetstypeSteg(
                 )
 
 
-            else -> {
-            }
+            else -> {}
         }
 
         return Fullført
