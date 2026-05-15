@@ -41,16 +41,13 @@ class RettighetstypeService(
 
     fun sisteDagMedRett(saksnummer: Saksnummer): LocalDate? {
         val sak = sakRepository.hentHvisFinnes(saksnummer)
-            ?: throw UgyldigForespørselException("Sak med saksnummer ${saksnummer} finnes ikke")
+            ?: throw UgyldigForespørselException("Sak med saksnummer $saksnummer finnes ikke")
 
-        val sisteVedtatteYtelsesbehandling =
-            behandlingRepository.finnGjeldendeVedtattBehandlingForSak(sak.id) ?: return null
-
-        val rettighetstypeTidslinje =
-            rettighetstypeRepository.hentHvisEksisterer(sisteVedtatteYtelsesbehandling.behandlingId)?.rettighetstypeTidslinje
-                ?: return null
-
-        return rettighetstypeTidslinje.perioder().maxOfOrNull { it.tom }
+        return behandlingRepository.finnGjeldendeVedtattBehandlingForSak(sak.id)?.let {
+            rettighetstypeRepository.hentHvisEksisterer(it.behandlingId)?.rettighetstypeTidslinje
+        }?.let {
+            it.perioder().maxOfOrNull { periode -> periode.tom }
+        }
     }
 
     /**
