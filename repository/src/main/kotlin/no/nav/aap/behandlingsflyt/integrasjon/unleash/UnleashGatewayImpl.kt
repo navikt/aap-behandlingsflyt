@@ -29,18 +29,16 @@ object UnleashGatewayImpl : UnleashGateway {
                 .build()
         )
 
-    override fun hentSakIdFilter(featureToggle: FeatureToggle): Set<Long> {
+    override fun getVariantValue(featureToggle: FeatureToggle, variantName: String): String {
         val variant = unleash.getVariant(featureToggle.key())
-        if (!variant.isEnabled) return setOf(0L)
-        return variant.getPayload()
-            .map { payload ->
-                payload.value
-                    ?.split(",")
-                    ?.mapNotNull { it.trim().toLongOrNull() }
-                    ?.toSet()
-                    ?.takeIf { it.isNotEmpty() }
-                    ?: setOf(0L)
-            }
-            .orElse(setOf(0L))
+        return if (variant.isEnabled && variant.name == variantName) {
+            variant.getPayload().map { it.value }.orElse("")
+        } else ""
     }
+
+    override fun isVariantEnabled(featureToggle: FeatureToggle, variantName: String): Boolean {
+        val variant = unleash.getVariant(featureToggle.key())
+        return variant.isEnabled && variant.name == variantName
+    }
+
 }

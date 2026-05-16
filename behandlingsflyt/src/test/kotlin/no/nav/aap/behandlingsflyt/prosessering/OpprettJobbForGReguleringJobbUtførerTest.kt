@@ -49,7 +49,9 @@ class OpprettJobbForGReguleringJobbUtførerTest {
 
     private fun enableToggleWithFilter(vararg sakIds: Long) {
         every { unleashGateway.isDisabled(BehandlingsflytFeature.GReguleringUtplukkJobb) } returns false
-        every { unleashGateway.hentSakIdFilter(BehandlingsflytFeature.GReguleringUtplukkJobb) } returns sakIds.toSet()
+        every { unleashGateway.isVariantEnabled(BehandlingsflytFeature.GReguleringUtplukkJobb, "sak-id-filter") } returns true
+        every { unleashGateway.isVariantEnabled(BehandlingsflytFeature.GReguleringUtplukkJobb, "maks-antall-saker") } returns false
+        every { unleashGateway.getVariantValue(BehandlingsflytFeature.GReguleringUtplukkJobb, "sak-id-filter") } returns sakIds.joinToString(",")
     }
 
     private fun disableToggle() {

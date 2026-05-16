@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.behandling.gregulering.GReguleringService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature.GReguleringUtplukkJobb
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
@@ -40,7 +41,7 @@ class OpprettJobbForGReguleringJobbUtfører(
     private val log = LoggerFactory.getLogger(javaClass)
 
     override fun utfør(input: JobbInput) {
-        if (unleashGateway.isDisabled(BehandlingsflytFeature.GReguleringUtplukkJobb)) {
+        if (unleashGateway.isDisabled(GReguleringUtplukkJobb)) {
             log.info("Feature toggle GReguleringUtplukkJobb er avskrudd, hopper over opprettelse av G-regulerings-jobber")
             return
         }
@@ -73,9 +74,29 @@ class OpprettJobbForGReguleringJobbUtfører(
         val alleSaker = gReguleringService.hentSakerForGRegulering(datoForGJustering)
         log.info("Antall saker som er kandidater for G-regulering: ${alleSaker.size}")
 
-        val sakIdFilter = unleashGateway.hentSakIdFilter(BehandlingsflytFeature.GReguleringUtplukkJobb)
-        return alleSaker.filter { it.id in sakIdFilter }.toSet()
+        if (gradvisUtrulling("sak-id-filter")) {
+            val rawVerdier = unleashGateway.getVariantValue(GReguleringUtplukkJobb, "sak-id-filter").split(",")
+            val sakIdFilter = rawVerdier.mapNotNull { token ->
+                val trimmet = token.trim()
+                trimmet.toLongOrNull().also { parsed ->
+                    if (parsed == null && trimmet.isNotEmpty()) {
+                        log.warn("Ugyldig sak-id i variant-filter: '$trimmet'")
+                    }
+                }
+            }.toSet()
+            return alleSaker.filter { it.id in sakIdFilter }.toSet()
+        } else if (gradvisUtrulling("maks-antall-saker")) {
+            val maksAntallSaker = unleashGateway.getVariantValue(GReguleringUtplukkJobb, "maks-antall-saker")
+                .trim()
+                .toIntOrNull() ?: return emptySet()
+            return alleSaker.take(maksAntallSaker).toSet()
+        } else {
+            return emptySet()
+        }
     }
+
+    private fun gradvisUtrulling(variantNavn: String): Boolean =
+        unleashGateway.isVariantEnabled(GReguleringUtplukkJobb, variantNavn)
 
     companion object : ProvidersJobbSpesifikasjon {
         override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): JobbUtfører {
