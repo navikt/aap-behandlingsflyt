@@ -75,15 +75,16 @@ class OpprettJobbForGReguleringJobbUtfører(
         log.info("Antall saker som er kandidater for G-regulering: ${alleSaker.size}")
 
         if (gradvisUtrulling("sak-id-filter")) {
-            val rawVerdier = unleashGateway.getVariantValue(GReguleringUtplukkJobb, "sak-id-filter").split(",")
-            val sakIdFilter = rawVerdier.mapNotNull { token ->
-                val trimmet = token.trim()
-                trimmet.toLongOrNull().also { parsed ->
-                    if (parsed == null && trimmet.isNotEmpty()) {
-                        log.warn("Ugyldig sak-id i variant-filter: '$trimmet'")
-                    }
-                }
-            }.toSet()
+            val sakIdTekster = unleashGateway.getVariantValue(GReguleringUtplukkJobb, "sak-id-filter")
+                .split(",")
+                .map { it.trim() }
+                .filter { it.isNotEmpty() }
+            val parsedSakIder = sakIdTekster.map { it.toLongOrNull() }
+            if (parsedSakIder.any { it == null }) {
+                log.warn("Ugyldig verdi i sak-id-filter. Hopper over opprettelse av G-reguleringsjobber")
+                return emptySet()
+            }
+            val sakIdFilter = parsedSakIder.filterNotNull().toSet()
             return alleSaker.filter { it.id in sakIdFilter }.toSet()
         } else if (gradvisUtrulling("maks-antall-saker")) {
             val maksAntallSaker = unleashGateway.getVariantValue(GReguleringUtplukkJobb, "maks-antall-saker")
