@@ -47,6 +47,11 @@ class PersonRepositoryImpl(private val connection: DBConnection) : PersonReposit
         }
     }
 
+    override fun oppdaterIdenter(person: Person, identer: List<Ident>): Person {
+        oppdater(person, identer)
+        return hent(person.id)
+    }
+
     private fun oppdater(person: Person, identer: List<Ident>) {
         require(identer.filter { it.aktivIdent }.size < 2)
 

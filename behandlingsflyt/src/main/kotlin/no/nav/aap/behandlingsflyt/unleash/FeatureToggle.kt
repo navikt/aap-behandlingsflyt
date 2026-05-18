@@ -21,6 +21,8 @@ enum class BehandlingsflytFeature : FeatureToggle {
     FjernTilbakefoeringTransisjon,
     MaritimtArbeid,
     ForstegangsbehandlingEtterAvslagOppgave,
+    GrunnbeloepInformasjonskrav,
+    GJustering2026,
     BackfillYrkesskadeNyeFelter,
     ;
 

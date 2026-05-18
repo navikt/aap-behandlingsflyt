@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt
 
 import io.confluent.kafka.serializers.KafkaAvroDeserializer
 import io.confluent.kafka.serializers.KafkaAvroSerializer
+import no.nav.aap.behandlingsflyt.help.FakePdlGateway
 import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaConsumerConfig
 import no.nav.aap.behandlingsflyt.hendelse.kafka.SchemaRegistryConfig
 import no.nav.aap.behandlingsflyt.hendelse.kafka.person.PdlHendelseKafkaKonsument
@@ -67,6 +68,7 @@ class PdlHendelseKafkaKonsumentTest {
         gatewayProvider = createGatewayProvider {
             register<AlleAvskruddUnleash>()
             register<FakeOppgavestyringGateway>()
+            register<FakePdlGateway>()
         },
         pollTimeout = 50.milliseconds,
     )

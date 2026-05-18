@@ -6,6 +6,7 @@ package no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov
 public const val VURDER_BRUDD_11_7_KODE: String = "4101"
 public const val VENTE_PÅ_FRIST_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT: String = "4102"
 public const val VURDER_BRUDD_11_9_KODE: String = "4201"
+public const val AVBRYT_AKTIVITETSPLIKTBEHANDING: String = "4301"
 public const val AVKLAR_STUDENT_KODE: String = "5001"
 public const val OVERSTYR_IKKE_OPPFYKT_MELDEPLIKT_KODE: String = "5002"
 public const val AVKLAR_SYKDOM_KODE: String = "5003"
@@ -91,6 +92,11 @@ public enum class AvklaringsbehovKode {
      * [VURDER_BRUDD_11_9_KODE]
      */
     `4201`,
+
+    /**
+     * [AVBRYT_AKTIVITETSPLIKTBEHANDING]
+     */
+    `4301`,
 
     /**
      * [AVKLAR_STUDENT_KODE]

@@ -48,6 +48,20 @@ class ForutgåendeMedlemskapVurderingServiceTest {
     }
 
     @Test
+    fun `stopp om akkumulert gap overstiger ti måneder med gap-toleranse`() {
+        val rettighetsFom = LocalDate.now().withDayOfMonth(1)
+        val rettighetsperiode = Periode(rettighetsFom, rettighetsFom.plusYears(1))
+        val service = ForutgåendeMedlemskapVurderingService(
+            FakeUnleashBaseWithDefaultDisabled(listOf(BehandlingsflytFeature.ForutgaaendeGap))
+        )
+        val grunnlag = lagGrunnlagMedAkkumulerteEnMånedsgap(rettighetsFom, antallGapMåneder = 11)
+
+        val resultat = service.vurderTilhørighet(grunnlag, rettighetsperiode)
+
+        assertThat(resultat.kanBehandlesAutomatisk).isFalse
+    }
+
+    @Test
     fun `automatisk om medl er oppfylt`() {
         val grunnlag = lagGrunnlag(true, false, true)
         val resultat = service.vurderTilhørighet(grunnlag, Periode(LocalDate.now(), LocalDate.now().plusYears(1)))
@@ -488,6 +502,65 @@ class ForutgåendeMedlemskapVurderingServiceTest {
             InntektINorgeGrunnlag("virksomhet-A", 1000.0, "NOR", "NOR", "type", fullCoverage, "Virksomhet A"),
             InntektINorgeGrunnlag("virksomhet-B", 2000.0, "NOR", "NOR", "type", fullCoverage, "Virksomhet B"),
         )
+
+        return ForutgåendeMedlemskapGrunnlag(
+            medlemskapArbeidInntektGrunnlag = ForutgåendeMedlemskapArbeidInntektGrunnlag(
+                medlemskapGrunnlag = null,
+                inntekterINorgeGrunnlag = inntekterINorgeGrunnlag,
+                arbeiderINorgeGrunnlag = emptyList(),
+                vurderinger = emptyList()
+            ),
+            personopplysningGrunnlag = PersonopplysningMedHistorikkGrunnlag(
+                brukerPersonopplysning = PersonopplysningMedHistorikk(
+                    fødselsdato = Fødselsdato(LocalDate.now().minusYears(18)),
+                    id = 1,
+                    dødsdato = null,
+                    statsborgerskap = listOf(Statsborgerskap("NOR")),
+                    folkeregisterStatuser = listOf(
+                        FolkeregisterStatus(
+                            status = PersonStatus.bosatt,
+                            gyldighetstidspunkt = LocalDate.now(),
+                            opphoerstidspunkt = LocalDate.now()
+                        )
+                    )
+                ),
+            ),
+            nyeSoknadGrunnlag = UtenlandsOppholdData(true, true, false, false, null)
+        )
+    }
+
+    private fun lagGrunnlagMedAkkumulerteEnMånedsgap(
+        rettighetsFom: LocalDate,
+        antallGapMåneder: Int
+    ): ForutgåendeMedlemskapGrunnlag {
+        val startMåned = YearMonth.from(rettighetsFom.minusYears(5))
+        val sluttMåned = YearMonth.from(rettighetsFom)
+        val inntekterINorgeGrunnlag = mutableListOf<InntektINorgeGrunnlag>()
+
+        var nåMåned = startMåned
+        var månedIndeks = 0
+        var opprettedeGap = 0
+
+        while (!nåMåned.isAfter(sluttMåned)) {
+            val skalVæreGap = opprettedeGap < antallGapMåneder && månedIndeks % 5 == 0
+            if (skalVæreGap) {
+                opprettedeGap++
+            } else {
+                inntekterINorgeGrunnlag.add(
+                    InntektINorgeGrunnlag(
+                        "1",
+                        1.0,
+                        "NOR",
+                        "NOR",
+                        "type",
+                        Periode(nåMåned.atDay(1), nåMåned.atEndOfMonth()),
+                        "orgname"
+                    )
+                )
+            }
+            nåMåned = nåMåned.plusMonths(1)
+            månedIndeks++
+        }
 
         return ForutgåendeMedlemskapGrunnlag(
             medlemskapArbeidInntektGrunnlag = ForutgåendeMedlemskapArbeidInntektGrunnlag(
