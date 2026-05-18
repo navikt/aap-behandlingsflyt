@@ -10,6 +10,14 @@ import java.time.LocalDate
 import java.time.Year
 
 object Grunnbeløp {
+
+    @Synchronized
+    fun aktiverGJustering2026() {
+        if (finnesGrunnbeløpForÅr(Year.of(2026)) == null) {
+            element(2026, 5, 132_000, 131_387)
+        }
+    }
+
     private val grunnbeløpene = sortedSetOf<Element>()
     private val gjennomsnittsbeløpene = sortedSetOf<GjennomsnittElement>()
 
