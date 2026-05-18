@@ -10,9 +10,6 @@ interface UnleashGateway : Gateway {
     fun isDisabled(featureToggle: FeatureToggle, ident: String): Boolean = !isEnabled(featureToggle, ident)
     fun isEnabled(featureToggle: FeatureToggle, ident: String, typeBrev: TypeBrev): Boolean
 
-    /**
-     * Les sak-id-filter fra Unleash-variant (CSV-payload). Standard er {0}, som sikrer at ingen
-     * reelle saker prosesseres før man eksplisitt konfigurerer en liste via Unleash-varianten.
-     */
-    fun hentSakIdFilter(featureToggle: FeatureToggle): Set<Long> = setOf(0L)
+    fun isVariantEnabled(featureToggle: FeatureToggle, variantName: String): Boolean
+    fun getVariantValue(featureToggle: FeatureToggle, variantName: String): String
 }

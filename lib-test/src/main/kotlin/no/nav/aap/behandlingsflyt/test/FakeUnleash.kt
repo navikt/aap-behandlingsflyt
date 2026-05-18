@@ -15,6 +15,10 @@ open class FakeUnleashBase(
     override fun isEnabled(featureToggle: FeatureToggle, ident: String) = isEnabled(featureToggle)
 
     override fun isEnabled(featureToggle: FeatureToggle, ident: String, typeBrev: TypeBrev) = isEnabled(featureToggle)
+
+    override fun isVariantEnabled(featureToggle: FeatureToggle, variantName: String) = false
+
+    override fun getVariantValue(featureToggle: FeatureToggle, variantName: String) = ""
 }
 
 open class FakeUnleashBaseWithDefaultDisabled(
@@ -26,6 +30,10 @@ open class FakeUnleashBaseWithDefaultDisabled(
     override fun isEnabled(featureToggle: FeatureToggle, ident: String) = isEnabled(featureToggle)
 
     override fun isEnabled(featureToggle: FeatureToggle, ident: String, typeBrev: TypeBrev) = isEnabled(featureToggle)
+
+    override fun isVariantEnabled(featureToggle: FeatureToggle, variantName: String) = false
+
+    override fun getVariantValue(featureToggle: FeatureToggle, variantName: String) = ""
 }
 
 
