@@ -21,7 +21,7 @@ import java.util.*
 import javax.sql.DataSource
 
 
-data class PersonIdentRequest(
+data class PersoninfoRequest(
     val personReferanse: UUID,
 )
 
@@ -40,7 +40,7 @@ fun NormalOpenAPIRoute.personApi(
 ) {
     val personinfoGateway = gatewayProvider.provide(PersoninfoGateway::class)
     route("/api/person/personinformasjon") {
-        post<Unit, PersoninfoDTO, PersonIdentRequest> { _, request ->
+        post<Unit, PersoninfoDTO, PersoninfoRequest> { _, request ->
             try {
                 val personIdent = dataSource.transaction(readOnly = true) { connection ->
                     val repositoryProvider = repositoryRegistry.provider(connection)
