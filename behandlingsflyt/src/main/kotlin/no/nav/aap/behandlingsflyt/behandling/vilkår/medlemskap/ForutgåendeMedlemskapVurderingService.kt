@@ -5,6 +5,8 @@ import no.nav.aap.behandlingsflyt.behandling.lovvalg.Arbeidsforholdtype
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.ForutgåendeMedlemskapArbeidInntektGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.ForutgåendeMedlemskapGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.InntektINorgeGrunnlag
+import no.nav.aap.behandlingsflyt.behandling.lovvalg.Skipsregister
+import no.nav.aap.behandlingsflyt.behandling.lovvalg.Skipstype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.utenlandsopphold.UtenlandsOppholdData
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapUnntakGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonStatus
@@ -119,25 +121,31 @@ class ForutgåendeMedlemskapVurderingService(
         val bestemtArbeidsgruppe = relevantePerioder.filter {
             it.arbeidsforholdKode == Arbeidsforholdtype.MARITIMT_ARBEIDSFORHOLD
         }
-            .map {
-                val ansettelsesdetalj =
-                    it.ansettelsesdetaljer.firstOrNull() // Bruker bare én per nå, ser ann om dette bør ekspanderes
+            .mapNotNull {
+                val utslagsGivendeAnsettelsesDetalj =
+                    it.ansettelsesdetaljer.filter { detalj -> detalj.skipstype == Skipstype.TURIST && detalj.skipsregister == Skipsregister.NIS }
+                if (utslagsGivendeAnsettelsesDetalj.isEmpty()) return@mapNotNull null
+
                 BestemtArbeidsgruppeINorgeGrunnlag(
                     virksomhetId = it.identifikator,
                     virksomhetNavn = it.organisasjonsNavn,
                     fom = it.startdato,
                     tom = it.sluttdato,
-                    skipsregister = ansettelsesdetalj?.skipsregister,
-                    skipstype = ansettelsesdetalj?.skipstype,
-                    fartsomraade = ansettelsesdetalj?.fartsomraade,
-                    yrke = ansettelsesdetalj?.yrke,
+                    ansettelsesDetaljer = utslagsGivendeAnsettelsesDetalj.map { utslag ->
+                        AsettelsesDetalj(
+                            skipsregister = utslag.skipsregister,
+                            skipstype = utslag.skipstype,
+                            fartsomraade = utslag.fartsomraade,
+                            yrke = utslag.yrke,
+                        )
+                    }
                 )
             }
 
         return TilhørighetVurdering(
             kilde = listOf(Kilde.AA_REGISTERET),
             indikasjon = Indikasjon.UTENFOR_NORGE,
-            opplysning = "Har hatt maritimt arbeidsforhold",
+            opplysning = "Har hatt arbeidsforhold på NIS-registrert turistskip",
             resultat = bestemtArbeidsgruppe.isNotEmpty(),
             bestemtArbeidsgruppeINorge = bestemtArbeidsgruppe,
             vurdertPeriode = VurdertPeriode.SISTE_5_ÅR.beskrivelse
