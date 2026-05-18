@@ -194,7 +194,7 @@ internal fun Application.server(
         .registerSubtypes(utledSubtypesTilAvklaringsbehovLøsning() + utledSubtypesTilMottattHendelseDTO())
 
     val unleashGateway: UnleashGateway = gatewayProvider.provide()
-    if (unleashGateway.isEnabled(BehandlingsflytFeature.GJustering2026)) {
+    if (unleashGateway.isEnabled(BehandlingsflytFeature.GJustering2026) && Miljø.erDev()) {
         Grunnbeløp.aktiverGJustering2026()
     }
 
