@@ -584,6 +584,13 @@ public enum class Definisjon(
         løsesISteg = StegType.VURDER_AKTIVITETSPLIKT_11_7,
         løsesAv = listOf(Rolle.SAKSBEHANDLER_OPPFOLGING),
         defaultFrist = Period.ofWeeks(3),
+    ),
+
+    AVBRYT_AKTIVITETSPLIKTBEHANDING(
+        kode = AvklaringsbehovKode.`4301`,
+        type = BehovType.MANUELT_PÅKREVD,
+        løsesISteg = StegType.AVBRYT_AKTIVITETSPLIKTBEHANDLING,
+        løsesAv = listOf(Rolle.SAKSBEHANDLER_OPPFOLGING),
     );
 
     public companion object {
