@@ -14,13 +14,13 @@ enum class BehandlingsflytFeature : FeatureToggle {
     VisIkkeRelevantPeriode,
     MigrerStansOgOpphor,
     AvslagLovvalgMedlemskap,
-    ForeslaaVedtakVedtakslengde,
     SamordningFaktagrunnlagBrev,
     GReguleringsJobb,
     GReguleringUtplukkJobb,
     ForutgaaendeGap,
     FjernTilbakefoeringTransisjon,
     MaritimtArbeid,
+    ForstegangsbehandlingEtterAvslagOppgave,
     GrunnbeloepInformasjonskrav,
     ;
 
