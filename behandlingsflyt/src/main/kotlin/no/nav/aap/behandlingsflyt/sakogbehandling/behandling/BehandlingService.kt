@@ -58,10 +58,11 @@ class BehandlingService(
     fun utledFaktiskBehandlingstype(behandling: Behandling): TypeBehandling {
         return when (behandling.typeBehandling()) {
             TypeBehandling.Revurdering -> {
-                requireNotNull(behandling.forrigeBehandlingId) {
+                val forrigeBehandlingId = requireNotNull(behandling.forrigeBehandlingId) {
                     "Revurdering skal alltid ha forrigeBehandling"
                 }
-                if (!resultatUtleder.harRett(behandling.forrigeBehandlingId!!)) {
+                val vurderingsbehov = behandling.vurderingsbehov().map { it.type }
+                if (!resultatUtleder.harRett(forrigeBehandlingId) && vurderingsbehov.contains(Vurderingsbehov.MOTTATT_SØKNAD)) {
                     TypeBehandling.Førstegangsbehandling
                 } else {
                     TypeBehandling.Revurdering
