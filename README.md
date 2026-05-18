@@ -13,12 +13,15 @@ Behandlingsflyt for Arbeidsavklaringspenger (AAP). Definerer flyten for ulike be
 APIene er dokumentert med Swagger: https://aap-behandlingsflyt.intern.dev.nav.no/swagger-ui/index.html
 
 ## Publiserte artefakter
+
 Gjennom Gradle sin publish task produserer prosjektets Github Workflow artefakter som lastes opp til Github Packages.
 
 ### kontrakt/kontrakt.jar
+
 Inneholder domeneobjekter som brukes i kommunikasjon med Behandlingsflyt sine tjenester. 
 
 ### sbom/sbom.xml
+
 Dependency-liste (software bill of materials, sbom). 
 Filen viser avhengigheter til tredjeparts- og NAV-artefakter for hver modul i dette prosjektet. Publiseres til Github Packages, på https://github.com/navikt/aap-behandlingsflyt/packages/2754153
 
