@@ -13,7 +13,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType.FØRSTEGANGSBEHANDLING
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType.G_REGULERING
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType.MELDEKORT
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType.REVURDERING
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
@@ -52,7 +51,7 @@ class GrunnbeløpInformasjonskrav(
         oppdatert: InformasjonskravOppdatert?
     ): Boolean {
         return unleashGateway.isEnabled(BehandlingsflytFeature.GrunnbeloepInformasjonskrav)
-                && kontekst.vurderingType in setOf(FØRSTEGANGSBEHANDLING, REVURDERING, MELDEKORT, G_REGULERING)
+                && kontekst.vurderingType in setOf(FØRSTEGANGSBEHANDLING, REVURDERING, G_REGULERING)
     }
 
     override fun klargjør(kontekst: FlytKontekstMedPerioder) = IngenInput
