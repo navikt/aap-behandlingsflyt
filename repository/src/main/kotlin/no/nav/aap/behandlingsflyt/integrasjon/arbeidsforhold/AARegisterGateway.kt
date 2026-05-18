@@ -19,14 +19,11 @@ import no.nav.aap.komponenter.httpklient.httpclient.error.IkkeFunnetException
 import no.nav.aap.komponenter.httpklient.httpclient.post
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureM2MTokenProvider
-import no.nav.aap.komponenter.miljo.Miljø
-import org.slf4j.LoggerFactory
 import java.net.URI
 
 class AARegisterGateway : ArbeidsforholdGateway {
-    private val log = LoggerFactory.getLogger(javaClass)
     private val url =
-        URI.create(requiredConfigForKey("integrasjon.aareg.url") + "/api/v2/arbeidstaker/arbeidsforholdoversikt")
+        URI.create(requiredConfigForKey("integrasjon.aareg.url") + "/api/v2/arbeidstaker/arbeidsforhold")
     private val config = ClientConfig(scope = requiredConfigForKey("integrasjon.aareg.scope"))
 
     companion object : Factory<ArbeidsforholdGateway> {
@@ -48,40 +45,27 @@ class AARegisterGateway : ArbeidsforholdGateway {
                 Header("Accept", "application/json")
             )
         )
-        val response: ArbeidsforholdoversiktResponse = requireNotNull(client.post(uri = url, request = httpRequest))
+        val response: List<ArbeidsforholdResponse> = requireNotNull(client.post(uri = url, request = httpRequest))
 
-        if (Miljø.erDev()) {
-            log.info("AARegister response: $response")
-        }
-
-        return response.arbeidsforholdoversikter
+        return response
             .filter { it.arbeidssted.type.uppercase() == "UNDERENHET" }
-            .map { arbeidsforhold ->
+            .mapNotNull { arbeidsforhold ->
+                val startdato = arbeidsforhold.ansettelsesperiode?.startdato ?: return@mapNotNull null
                 ArbeidINorgeGrunnlag(
                     identifikator = arbeidsforhold.arbeidssted.identer.first().ident,
                     arbeidsforholdKode = Arbeidsforholdtype.fraKode(arbeidsforhold.type.kode),
-                    startdato = arbeidsforhold.startdato,
-                    sluttdato = arbeidsforhold.sluttdato,
-                    yrke = arbeidsforhold.yrke?.kode?.let { kode -> Yrke(kode, arbeidsforhold.yrke.beskrivelse) },
+                    startdato = startdato,
+                    sluttdato = arbeidsforhold.ansettelsesperiode.sluttdato,
                     ansettelsesdetaljer = arbeidsforhold.ansettelsesdetaljer.map { detalj ->
                         ArbeidAnsettelsesdetaljGrunnlag(
                             skipsregister = detalj.skipsregister?.kode?.let { kode ->
-                                Skipsregister(
-                                    kode,
-                                    detalj.skipsregister.beskrivelse
-                                )
+                                Skipsregister.fraKode(kode)
                             },
                             skipstype = detalj.fartoeystype?.kode?.let { kode ->
-                                Skipstype(
-                                    kode,
-                                    detalj.fartoeystype.beskrivelse
-                                )
+                                Skipstype.fraKode(kode)
                             },
                             fartsomraade = detalj.fartsomraade?.kode?.let { kode ->
-                                Fartsomraade(
-                                    kode,
-                                    detalj.fartsomraade.beskrivelse
-                                )
+                                Fartsomraade.fraKode(kode)
                             },
                             yrke = detalj.yrke?.kode?.let { kode -> Yrke(kode, detalj.yrke.beskrivelse) },
                         )
