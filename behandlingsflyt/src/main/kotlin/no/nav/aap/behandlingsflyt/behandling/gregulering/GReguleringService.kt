@@ -45,13 +45,6 @@ class GReguleringService(
         val tilkjentYtelseTidslinje = tilkjentYtelsePerioder.tilTidslinje()
         val grunnbeløpTidslinje = Grunnbeløp.tilTidslinje()
 
-        val endredeGrunnbeløp = tilkjentYtelseTidslinje
-            .innerJoin(oppfyltUnderveisTidslinje, { ty, _ -> ty })
-            .innerJoin(grunnbeløpTidslinje, { ty, grunnbeløp ->
-                ty.grunnbeløp != grunnbeløp
-            })
-            .filter { it.verdi }
-
         /*
          * Eksempel: 2-ukers meldeperiode (24.apr – 7.mai) som krysser G-grensen 1.mai
          *
@@ -67,6 +60,13 @@ class GReguleringService(
          *
          * → true (grunnbeløpet har endret seg etter 1. mai)
          */
+        val endredeGrunnbeløp = tilkjentYtelseTidslinje
+            .innerJoin(oppfyltUnderveisTidslinje, { ty, _ -> ty })
+            .innerJoin(grunnbeløpTidslinje, { ty, grunnbeløp ->
+                ty.grunnbeløp != grunnbeløp
+            })
+            .filter { it.verdi }
+
         if (endredeGrunnbeløp.isNotEmpty()) {
             logger.info("Perioder med endrede grunnbeløp: " + endredeGrunnbeløp.perioder())
             return true
