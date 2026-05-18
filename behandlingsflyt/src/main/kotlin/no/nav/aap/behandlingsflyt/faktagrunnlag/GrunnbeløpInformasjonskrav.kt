@@ -69,10 +69,15 @@ class GrunnbeløpInformasjonskrav(
 
     override fun flettOpplysningerFraAtomærBehandling(kontekst: FlytKontekst): Informasjonskrav.Endret {
         /*
-         * Trenger ikke å flette inn opplysninger, men dette trigger at steget for tilkjent ytelse kjører på nytt og
-         * dermed beregner med nytt grunnbeløp dersom det har endret seg.
+         * Denne vil føre til at behandlingen tilbakeføres til steget tilkjent ytelse. I dette tilfellet er det ikke
+         * aktuelt å flette inn nye opplysninger så i prinsippet er dette strengt tatt ikke nødvendig da den åpne
+         * behandlingen vil prosesseres og dermed gå gjennom alle informasjonskravene på nytt.
          */
-        return informasjonskravEndret(kontekst.behandlingId)
+        if (unleashGateway.isEnabled(BehandlingsflytFeature.GrunnbeloepInformasjonskrav)) {
+            return informasjonskravEndret(kontekst.behandlingId)
+        } else {
+            return IKKE_ENDRET
+        }
     }
 
     private fun informasjonskravEndret(behandlingId: BehandlingId): Informasjonskrav.Endret {
