@@ -54,7 +54,7 @@ class OpprettJobbForGReguleringJobbUtfører(
 
         val saker = hentKandidaterForGRegulering(aktuellGJustering.dato)
 
-        log.info("Fant ${saker.size} kandidater for G-regulering for gitt G-justering (?) ${aktuellGJustering?.dato}")
+        log.info("Fant ${saker.size} kandidater for G-regulering for gitt G-justering ${aktuellGJustering?.dato}")
         saker
             .also { log.info("Oppretter jobber for alle saker som er aktuelle kandidater for G-regulering. Antall = ${it.size}, Saker = $it") }
             .forEach {
