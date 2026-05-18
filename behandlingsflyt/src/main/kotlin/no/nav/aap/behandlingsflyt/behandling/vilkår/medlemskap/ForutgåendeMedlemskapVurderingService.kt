@@ -413,12 +413,14 @@ class ForutgåendeMedlemskapVurderingService(
         val sluttMnd = YearMonth.from(forutgåendePeriode.fom.plusYears(5))
 
         var konsekutiveGap = 0
+        var akkumulerteGap = 0
         var nåMnd = startMnd
         while (!nåMnd.isAfter(sluttMnd)) {
             val mndPeriode = Periode(nåMnd.atDay(1), nåMnd.atEndOfMonth())
             if (perioder.none { it.overlapper(mndPeriode) }) {
                 konsekutiveGap++
-                if (konsekutiveGap > 1) return false
+                akkumulerteGap++
+                if (konsekutiveGap > 1 || akkumulerteGap > 10) return false
             } else {
                 konsekutiveGap = 0
             }
