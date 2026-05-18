@@ -428,8 +428,8 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
             diagnose = rad.kodeverk?.let {
                 Diagnose(
                     kodeverk = it,
-                    rad.diagnose,
-                    bidiagnoserMap[rad.id].orEmpty()
+                    hoveddiagnose = rad.diagnose,
+                    bidiagnoser = bidiagnoserMap[rad.id].orEmpty()
                 )
             },
             opprettet = rad.opprettetTid,
