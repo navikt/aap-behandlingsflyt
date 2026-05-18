@@ -13,6 +13,7 @@ import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import io.ktor.server.plugins.statuspages.*
 import io.ktor.server.routing.*
+import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import no.nav.aap.behandlingsflyt.api.actuator.actuator
@@ -195,6 +196,7 @@ internal fun Application.server(
     dbConfig: DbConfig,
     repositoryRegistry: RepositoryRegistry,
     gatewayProvider: GatewayProvider,
+    prometheus: PrometheusMeterRegistry = no.nav.aap.behandlingsflyt.prometheus,
 ) {
     DefaultJsonMapper.objectMapper()
         .registerSubtypes(utledSubtypesTilAvklaringsbehovLøsning() + utledSubtypesTilMottattHendelseDTO())
@@ -223,16 +225,18 @@ internal fun Application.server(
     val fellesDataSource = initDatasource(
         dbConfig,
         maximumPoolSize = AppConfig.hikariMaxPoolSize - dedicatedMotorConnections,
+        prometheus = prometheus,
     )
     val motorDataSource = initDatasource(
         dbConfig,
         maximumPoolSize = dedicatedMotorConnections,
+        prometheus = prometheus,
     )
     Migrering.migrate(fellesDataSource)
 
     val scheduler = utførMigreringer(fellesDataSource, gatewayProvider, environment.log)
 
-    val motor = startMotor(motorDataSource, repositoryRegistry, gatewayProvider)
+    val motor = startMotor(motorDataSource, repositoryRegistry, gatewayProvider, prometheus)
 
     startKafkakonsumenter(fellesDataSource, repositoryRegistry, gatewayProvider)
     TilgangGateway.initialiserPrometheus(prometheus)
@@ -452,7 +456,7 @@ private fun utførMigreringer(
     /* Prøv på nytt, for å se om vi er elected til leader, hvert 9. minutt. Hvis vi blir elected, så vil metoden
      * aldri returnere, og med fixed delay, så blir det heller ikke skjedulert flere tasks.
     **/
-    scheduler.scheduleWithFixedDelay(Runnable {
+    scheduler.scheduleWithFixedDelay({
         val unleashGateway: UnleashGateway = gatewayProvider.provide()
         val isLeader = isLeader(log)
         log.info("isLeader = $isLeader")
@@ -469,6 +473,7 @@ fun Application.startMotor(
     dataSource: HikariDataSource,
     repositoryRegistry: RepositoryRegistry,
     gatewayProvider: GatewayProvider,
+    prometheus: PrometheusMeterRegistry = no.nav.aap.behandlingsflyt.prometheus,
 ): Motor {
     val motor = Motor(
         dataSource = dataSource,
@@ -520,6 +525,7 @@ val postgresConfig = Properties().apply {
 fun initDatasource(
     dbConfig: DbConfig,
     maximumPoolSize: Int = AppConfig.hikariMaxPoolSize,
+    prometheus: PrometheusMeterRegistry = no.nav.aap.behandlingsflyt.prometheus,
 ): HikariDataSource = HikariDataSource(HikariConfig().apply {
     jdbcUrl = dbConfig.url
     username = dbConfig.username
