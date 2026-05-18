@@ -1,10 +1,13 @@
 package no.nav.aap.behandlingsflyt.hendelse.mottak
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Klage
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.KlageV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.OmgjøringKlageRevurdering
+import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
@@ -13,9 +16,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
-import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
-import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingService
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
@@ -38,6 +38,7 @@ class HåndterKlageService(
         mottaDokumentService = MottaDokumentService(repositoryProvider),
         behandlingRepository = repositoryProvider.provide(),
     )
+
     private val log = LoggerFactory.getLogger(javaClass)
 
     fun håndterMottatteKlage(
@@ -65,15 +66,15 @@ class HåndterKlageService(
                     ).åpenBehandling
                 } ?: error("Fant ikke behandling for å håndtere mottatt klage på sak $sakId")
 
-                val behandlingSkrivelås = låsRepository.låsBehandling(behandling.id)
-
+                if (behandling.status().erÅpen()) {
+                    val behandlingSkrivelås = låsRepository.låsBehandling(behandling.id)
+                    prosesserBehandling.triggProsesserBehandling(
+                        behandling,
+                        vurderingsbehov = vurderingsbehov.map { it.type }
+                    )
+                    låsRepository.verifiserSkrivelås(behandlingSkrivelås)
+                }
                 mottaDokumentService.markerSomBehandlet(sakId, behandling.id, referanse)
-
-                prosesserBehandling.triggProsesserBehandling(
-                    behandling,
-                    vurderingsbehov = vurderingsbehov.map { it.type }
-                )
-                låsRepository.verifiserSkrivelås(behandlingSkrivelås)
             }
         }
     }
