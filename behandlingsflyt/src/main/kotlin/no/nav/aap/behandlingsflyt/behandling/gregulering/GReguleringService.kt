@@ -21,7 +21,7 @@ class GReguleringService(
         return underveisRepository.hentSakerForGRegulering(datoForGJustering, nyttGrunnbeløp)
     }
 
-    fun finnesGrunnbeløpForÅr(år: Year) : Grunnbeløp.GrunnbeløpDto? {
+    fun finnesGrunnbeløpForÅr(år: Year) : Grunnbeløp.GrunnbeløpMedDato? {
         return Grunnbeløp.finnesGrunnbeløpForÅr(år)
     }
 }

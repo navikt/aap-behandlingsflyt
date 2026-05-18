@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.sakogbehandling.behandling
 
+import no.nav.aap.behandlingsflyt.behandling.ResultatUtleder
 import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingService
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopierer
@@ -23,6 +24,7 @@ class BehandlingService(
     private val behandlingRepository: BehandlingRepository,
     private val trukketSøknadService: TrukketSøknadService,
     private val avbrytRevurderingService: AvbrytRevurderingService,
+    private val resultatUtleder: ResultatUtleder,
     private val unleashGateway: UnleashGateway
 ) {
     constructor(
@@ -34,6 +36,7 @@ class BehandlingService(
         behandlingRepository = repositoryProvider.provide(),
         trukketSøknadService = TrukketSøknadService(repositoryProvider),
         avbrytRevurderingService = AvbrytRevurderingService(repositoryProvider),
+        resultatUtleder = ResultatUtleder(repositoryProvider, gatewayProvider),
         unleashGateway = gatewayProvider.provide()
     )
 
@@ -50,6 +53,24 @@ class BehandlingService(
         val alleBehandlingerMedVedtak =
             behandlingRepository.hentAlleMedVedtakFor(sak.person, TypeBehandling.ytelseBehandlingstyper())
         return alleBehandlingerMedVedtak.maxByOrNull { it.vedtakstidspunkt }
+    }
+
+    fun utledFaktiskBehandlingstype(behandling: Behandling): TypeBehandling {
+        return when (behandling.typeBehandling()) {
+            TypeBehandling.Revurdering -> {
+                val forrigeBehandlingId = requireNotNull(behandling.forrigeBehandlingId) {
+                    "Revurdering skal alltid ha forrigeBehandling"
+                }
+                val vurderingsbehov = behandling.vurderingsbehov().map { it.type }
+                if (!resultatUtleder.harRett(forrigeBehandlingId) && vurderingsbehov.contains(Vurderingsbehov.MOTTATT_SØKNAD)) {
+                    TypeBehandling.Førstegangsbehandling
+                } else {
+                    TypeBehandling.Revurdering
+                }
+            }
+
+            else -> behandling.typeBehandling()
+        }
     }
 
     sealed interface OpprettetBehandling {
@@ -370,7 +391,7 @@ class BehandlingService(
         }
 
         val sortedListOfBehandlingId = mutableListOf<BehandlingId>()
-        var currentBehandlingId = ytelsesbehandlinger.find { it.forrigeBehandlingId==null }?.id
+        var currentBehandlingId = ytelsesbehandlinger.find { it.forrigeBehandlingId == null }?.id
         while (currentBehandlingId != null) {
             sortedListOfBehandlingId.add(currentBehandlingId)
             currentBehandlingId = nesteId[currentBehandlingId]

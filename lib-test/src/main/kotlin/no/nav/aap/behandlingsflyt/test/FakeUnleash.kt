@@ -39,7 +39,6 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.KvalitetssikringVed2213 to true,
         BehandlingsflytFeature.VisIkkeRelevantPeriode to true,
         BehandlingsflytFeature.MigrerStansOgOpphor to true,
-        BehandlingsflytFeature.ForeslaaVedtakVedtakslengde to true,
         BehandlingsflytFeature.SamordningFaktagrunnlagBrev to true,
         BehandlingsflytFeature.GReguleringsJobb to true,
         BehandlingsflytFeature.GReguleringUtplukkJobb to true,
