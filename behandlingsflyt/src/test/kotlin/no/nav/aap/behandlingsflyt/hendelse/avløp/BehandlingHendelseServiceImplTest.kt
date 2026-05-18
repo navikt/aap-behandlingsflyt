@@ -9,6 +9,7 @@ import no.nav.aap.behandlingsflyt.prosessering.VarsleOppgaveOmHendelseJobbUtFør
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
+import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryFlytJobbRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
@@ -23,7 +24,9 @@ import java.util.*
 class BehandlingHendelseServiceImplTest {
     private val person = Person(UUID.randomUUID(), listOf(genererIdent(1 januar 2020)))
 
-    val behandlingHendelseSerice = BehandlingHendelseServiceImpl(inMemoryRepositoryProvider, createGatewayProvider { })
+    val behandlingHendelseSerice = BehandlingHendelseServiceImpl(
+        inMemoryRepositoryProvider,
+        createGatewayProvider { register<AlleAvskruddUnleash>() })
 
     @Test
     fun `Avklaringsbehov sorteres i rekkefølgen de kan løses i`() {

@@ -21,9 +21,12 @@ import no.nav.aap.behandlingsflyt.prosessering.statistikk.StatistikkJobbUtfører
 import no.nav.aap.behandlingsflyt.prosessering.statistikk.tilKontrakt
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.json.DefaultJsonMapper
 import no.nav.aap.lookup.repository.RepositoryProvider
@@ -36,13 +39,17 @@ class BehandlingHendelseServiceImpl(
     private val flytJobbRepository: FlytJobbRepository,
     private val sakService: SakService,
     private val dokumentRepository: MottattDokumentRepository,
-    private val pipService: PipService
+    private val pipService: PipService,
+    private val behandlingService: BehandlingService,
+    private val unleashGateway: UnleashGateway
 ) : BehandlingHendelseService {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         flytJobbRepository = repositoryProvider.provide(),
         sakService = SakService(repositoryProvider, gatewayProvider),
         dokumentRepository = repositoryProvider.provide(),
-        pipService = PipService(repositoryProvider)
+        pipService = PipService(repositoryProvider),
+        behandlingService = BehandlingService(repositoryProvider, gatewayProvider),
+        unleashGateway = gatewayProvider.provide()
     )
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -76,9 +83,15 @@ class BehandlingHendelseServiceImpl(
             versjon = ApplikasjonsVersjon.versjon
         )
 
+        // Bør prate med øvrige konsumenter før vi begynner å sende utledet førstegangsbehandling 
+        val hendelseTilOppgave =
+            if (unleashGateway.isEnabled(BehandlingsflytFeature.ForstegangsbehandlingEtterAvslagOppgave))
+                hendelse.copy(behandlingType = behandlingService.utledFaktiskBehandlingstype(behandling))
+            else hendelse
+
         log.info("Legger til flytjobber til statistikk og stoppethendelse for behandling: ${behandling.id}")
         flytJobbRepository.leggTil(
-            JobbInput(jobb = VarsleOppgaveOmHendelseJobbUtFører).medPayload(hendelse)
+            JobbInput(jobb = VarsleOppgaveOmHendelseJobbUtFører).medPayload(hendelseTilOppgave)
                 .forBehandling(sak.id.id, behandling.id.id)
         )
         flytJobbRepository.leggTil(
@@ -205,7 +218,10 @@ class BehandlingHendelseServiceImpl(
 }
 
 class BehandlingHendelseServiceFactory : BehandlingHendelseServiceProvider {
-    override fun create(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): BehandlingHendelseService {
+    override fun create(
+        repositoryProvider: RepositoryProvider,
+        gatewayProvider: GatewayProvider
+    ): BehandlingHendelseService {
         return BehandlingHendelseServiceImpl(repositoryProvider, gatewayProvider)
     }
 
