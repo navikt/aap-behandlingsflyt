@@ -64,6 +64,10 @@ data class BestemtArbeidsgruppeINorgeGrunnlag(
     val virksomhetNavn: String?,
     val fom: LocalDate,
     val tom: LocalDate?,
+    val ansettelsesDetaljer: List<AsettelsesDetalj>? = emptyList(),
+)
+
+data class AsettelsesDetalj(
     val skipsregister: Skipsregister? = null,
     val skipstype: Skipstype? = null,
     val fartsomraade: Fartsomraade? = null,

@@ -46,7 +46,6 @@ data class ArbeidINorgeGrunnlag(
     val startdato: LocalDate,
     val sluttdato: LocalDate?,
     val organisasjonsNavn: String? = null,
-    val yrke: Yrke? = null,
     val ansettelsesdetaljer: List<ArbeidAnsettelsesdetaljGrunnlag> = emptyList()
 )
 
@@ -57,9 +56,38 @@ data class ArbeidAnsettelsesdetaljGrunnlag(
     val yrke: Yrke? = null,
 )
 
-data class Skipsregister(val kode: String, val beskrivelse: String? = null)
-data class Skipstype(val kode: String, val beskrivelse: String? = null)
-data class Fartsomraade(val kode: String, val beskrivelse: String? = null)
+enum class Skipsregister(val kode: String) {
+    NIS("nis"),
+    NOR("nor"),
+    UTL("utl");
+
+    companion object {
+        fun fraKode(kode: String): Skipsregister =
+            entries.first { it.kode == kode }
+    }
+}
+
+enum class Skipstype(val kode: String) {
+    ANNET("annet"),
+    BOREPLATTFORM("boreplattform"),
+    TURIST("turist");
+
+    companion object {
+        fun fraKode(kode: String): Skipstype =
+            entries.first { it.kode == kode }
+    }
+}
+
+enum class Fartsomraade(val kode: String) {
+    INNENRIKS("innenriks"),
+    UTENRIKS("utenriks");
+
+    companion object {
+        fun fraKode(kode: String): Fartsomraade =
+            entries.first { it.kode == kode }
+    }
+}
+
 data class Yrke(val kode: String, val beskrivelse: String? = null)
 
 enum class Arbeidsforholdtype(val kode: String) {

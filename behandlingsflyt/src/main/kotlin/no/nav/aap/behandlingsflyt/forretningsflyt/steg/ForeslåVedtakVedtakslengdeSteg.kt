@@ -13,8 +13,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
@@ -23,7 +21,6 @@ class ForeslåVedtakVedtakslengdeSteg internal constructor(
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
     private val tidligereVurderinger: TidligereVurderinger,
     private val avklaringsbehovService: AvklaringsbehovService,
-    private val unleashGateway: UnleashGateway,
 ) : BehandlingSteg {
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -32,7 +29,6 @@ class ForeslåVedtakVedtakslengdeSteg internal constructor(
         avklaringsbehovRepository = repositoryProvider.provide(),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
         avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
-        unleashGateway = gatewayProvider.provide(),
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
@@ -52,9 +48,6 @@ class ForeslåVedtakVedtakslengdeSteg internal constructor(
         kontekst: FlytKontekstMedPerioder,
         avklaringsbehovene: Avklaringsbehovene
     ): Boolean {
-        if (unleashGateway.isDisabled(BehandlingsflytFeature.ForeslaaVedtakVedtakslengde)) {
-            return false
-        }
         return tidligereVurderinger.harBehandlingsgrunnlag(kontekst, type())
                 && skalInnomForeslåVedtak(avklaringsbehovene, kontekst.vurderingsbehovRelevanteForSteg)
     }

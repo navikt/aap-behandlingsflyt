@@ -113,9 +113,9 @@ internal class MedlemskapArbeidInntektForutgåendeRepositoryImplTest {
                         sluttdato = null,
                         ansettelsesdetaljer = listOf(
                             ArbeidAnsettelsesdetaljGrunnlag(
-                                skipsregister = Skipsregister(kode = "annet-register", beskrivelse = "Annet register"),
-                                skipstype = Skipstype(kode = "annet-skip", beskrivelse = "Annet skip"),
-                                fartsomraade = Fartsomraade(kode = "innenriks", beskrivelse = "Innenriks"),
+                                skipsregister = Skipsregister.NOR,
+                                skipstype = Skipstype.ANNET,
+                                fartsomraade = Fartsomraade.INNENRIKS,
                                 yrke = Yrke(kode = "6411104", beskrivelse = "FISKER"),
                             )
                         )
@@ -128,9 +128,9 @@ internal class MedlemskapArbeidInntektForutgåendeRepositoryImplTest {
 
             val lagretArbeid = repo.hentHvisEksisterer(behandling.id)!!.arbeiderINorgeGrunnlag.single()
             assertThat(lagretArbeid.ansettelsesdetaljer).hasSize(1)
-            assertThat(lagretArbeid.ansettelsesdetaljer.first().skipsregister?.kode).isEqualTo("annet-register")
-            assertThat(lagretArbeid.ansettelsesdetaljer.first().skipstype?.kode).isEqualTo("annet-skip")
-            assertThat(lagretArbeid.ansettelsesdetaljer.first().fartsomraade?.kode).isEqualTo("innenriks")
+            assertThat(lagretArbeid.ansettelsesdetaljer.first().skipsregister).isEqualTo(Skipsregister.NOR)
+            assertThat(lagretArbeid.ansettelsesdetaljer.first().skipstype).isEqualTo(Skipstype.ANNET)
+            assertThat(lagretArbeid.ansettelsesdetaljer.first().fartsomraade).isEqualTo(Fartsomraade.INNENRIKS)
             assertThat(lagretArbeid.ansettelsesdetaljer.first().yrke?.kode).isEqualTo("6411104")
             assertThat(lagretArbeid.ansettelsesdetaljer.first().yrke?.beskrivelse).isEqualTo("FISKER")
         }
