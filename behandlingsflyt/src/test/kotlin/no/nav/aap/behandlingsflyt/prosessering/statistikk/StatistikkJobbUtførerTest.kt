@@ -560,6 +560,7 @@ class StatistikkJobbUtførerTest {
                         årsaker = setOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Avslagsårsak.BRUKER_OVER_67)
                     )
                 ),
+                samordning = TODO(),
             )
         )
     }
