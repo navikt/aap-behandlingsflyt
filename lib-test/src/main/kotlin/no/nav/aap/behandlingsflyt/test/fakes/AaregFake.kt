@@ -81,21 +81,21 @@ class AaregFake : FakeServer() {
                       "kode": "7125102",
                       "beskrivelse": "BYGNINGSSNEKKER"
                     },
-                    "fartsomraade": {
-                      "kode": "innenriks",
-                      "beskrivelse": "Innenriks"
-                    },
-                    "skipsregister": {
-                      "kode": "nor",
-                      "beskrivelse": "NOR"
-                    },
-                    "fartoeystype": {
-                      "kode": "Gigaskip",
-                      "beskrivelse": "meget stort skip"
-                    }
-                  }
-                ]
-              }
+                     "fartsomraade": {
+                       "kode": "innenriks",
+                       "beskrivelse": "Innenriks"
+                     },
+                     "skipsregister": {
+                       "kode": "nor",
+                       "beskrivelse": "NOR"
+                     },
+                     "fartoeystype": {
+                       "kode": "annet",
+                       "beskrivelse": "Annet"
+                     }
+                   }
+                 ]
+               }
             ]
         """.trimIndent()
     }

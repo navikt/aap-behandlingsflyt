@@ -129,9 +129,9 @@ class ForutgåendeMedlemskapVurderingServiceTest {
         assertThat(vurdering.resultat).isTrue
         assertThat(vurdering.bestemtArbeidsgruppeINorge).hasSize(1)
         assertThat(vurdering.bestemtArbeidsgruppeINorge!!.first().virksomhetId).isEqualTo("123412341")
-        assertThat(vurdering.bestemtArbeidsgruppeINorge.first().skipsregister?.kode).isEqualTo("nor")
-        assertThat(vurdering.bestemtArbeidsgruppeINorge.first().skipstype?.kode).isEqualTo("annet")
-        assertThat(vurdering.bestemtArbeidsgruppeINorge.first().fartsomraade?.kode).isEqualTo("innenriks")
+        assertThat(vurdering.bestemtArbeidsgruppeINorge.first().skipsregister).isEqualTo(Skipsregister.NOR)
+        assertThat(vurdering.bestemtArbeidsgruppeINorge.first().skipstype).isEqualTo(Skipstype.ANNET)
+        assertThat(vurdering.bestemtArbeidsgruppeINorge.first().fartsomraade).isEqualTo(Fartsomraade.INNENRIKS)
         assertThat(vurdering.bestemtArbeidsgruppeINorge.first().yrke?.kode).isEqualTo("6411104")
         assertThat(vurdering.bestemtArbeidsgruppeINorge.first().yrke?.beskrivelse).isEqualTo("FISKER")
     }
@@ -505,9 +505,9 @@ class ForutgåendeMedlemskapVurderingServiceTest {
                         sluttdato = sluttdato,
                         ansettelsesdetaljer = listOf(
                             ArbeidAnsettelsesdetaljGrunnlag(
-                                skipsregister = Skipsregister(kode = "nor", beskrivelse = "NOR"),
-                                skipstype = Skipstype(kode = "annet", beskrivelse = "Annet"),
-                                fartsomraade = Fartsomraade(kode = "innenriks", beskrivelse = "Innenriks"),
+                                skipsregister = Skipsregister.NOR,
+                                skipstype = Skipstype.ANNET,
+                                fartsomraade = Fartsomraade.INNENRIKS,
                                 yrke = Yrke(kode = "6411104", beskrivelse = "FISKER"),
                             )
                         )

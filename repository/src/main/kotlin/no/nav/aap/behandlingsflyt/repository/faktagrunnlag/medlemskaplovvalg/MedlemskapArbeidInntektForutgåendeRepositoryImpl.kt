@@ -285,27 +285,21 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: 
             INSERT INTO ARBEID_DETALJER (
                 arbeid_forutgaaende_id,
                 skipsregister_kode,
-                skipsregister_beskrivelse,
                 skipstype_kode,
-                skipstype_beskrivelse,
                 fartsomraade_kode,
-                fartsomraade_beskrivelse,
                 yrke_kode,
                 yrke_beskrivelse
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (?, ?, ?, ?, ?, ?)
         """.trimIndent()
 
         connection.executeBatch(query, ansettelsesdetaljer) {
             setParams { detalj ->
                 setLong(1, arbeidId)
                 setString(2, detalj.skipsregister?.kode)
-                setString(3, detalj.skipsregister?.beskrivelse)
-                setString(4, detalj.skipstype?.kode)
-                setString(5, detalj.skipstype?.beskrivelse)
-                setString(6, detalj.fartsomraade?.kode)
-                setString(7, detalj.fartsomraade?.beskrivelse)
-                setString(8, detalj.yrke?.kode)
-                setString(9, detalj.yrke?.beskrivelse)
+                setString(3, detalj.skipstype?.kode)
+                setString(4, detalj.fartsomraade?.kode)
+                setString(5, detalj.yrke?.kode)
+                setString(6, detalj.yrke?.beskrivelse)
             }
         }
     }
@@ -447,11 +441,11 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: 
             setRowMapper {
                 ArbeidAnsettelsesdetaljGrunnlag(
                     skipsregister = it.getStringOrNull("skipsregister_kode")
-                        ?.let { kode -> Skipsregister(kode, it.getStringOrNull("skipsregister_beskrivelse")) },
+                        ?.let { kode -> Skipsregister.fraKode(kode) },
                     skipstype = it.getStringOrNull("skipstype_kode")
-                        ?.let { kode -> Skipstype(kode, it.getStringOrNull("skipstype_beskrivelse")) },
+                        ?.let { kode -> Skipstype.fraKode(kode) },
                     fartsomraade = it.getStringOrNull("fartsomraade_kode")
-                        ?.let { kode -> Fartsomraade(kode, it.getStringOrNull("fartsomraade_beskrivelse")) },
+                        ?.let { kode -> Fartsomraade.fraKode(kode) },
                     yrke = it.getStringOrNull("yrke_kode")
                         ?.let { kode -> Yrke(kode, it.getStringOrNull("yrke_beskrivelse")) },
                 )

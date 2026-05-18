@@ -120,7 +120,8 @@ class ForutgåendeMedlemskapVurderingService(
             it.arbeidsforholdKode == Arbeidsforholdtype.MARITIMT_ARBEIDSFORHOLD
         }
             .map {
-                val ansettelsesdetalj = it.ansettelsesdetaljer.firstOrNull() // Bruker bare én per nå, ser ann om dette bør ekspanderes
+                val ansettelsesdetalj =
+                    it.ansettelsesdetaljer.firstOrNull() // Bruker bare én per nå, ser ann om dette bør ekspanderes
                 BestemtArbeidsgruppeINorgeGrunnlag(
                     virksomhetId = it.identifikator,
                     virksomhetNavn = it.organisasjonsNavn,

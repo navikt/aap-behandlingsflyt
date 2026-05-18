@@ -59,22 +59,13 @@ class AARegisterGateway : ArbeidsforholdGateway {
                     ansettelsesdetaljer = arbeidsforhold.ansettelsesdetaljer.map { detalj ->
                         ArbeidAnsettelsesdetaljGrunnlag(
                             skipsregister = detalj.skipsregister?.kode?.let { kode ->
-                                Skipsregister(
-                                    kode,
-                                    detalj.skipsregister.beskrivelse
-                                )
+                                Skipsregister.fraKode(kode)
                             },
                             skipstype = detalj.fartoeystype?.kode?.let { kode ->
-                                Skipstype(
-                                    kode,
-                                    detalj.fartoeystype.beskrivelse
-                                )
+                                Skipstype.fraKode(kode)
                             },
                             fartsomraade = detalj.fartsomraade?.kode?.let { kode ->
-                                Fartsomraade(
-                                    kode,
-                                    detalj.fartsomraade.beskrivelse
-                                )
+                                Fartsomraade.fraKode(kode)
                             },
                             yrke = detalj.yrke?.kode?.let { kode -> Yrke(kode, detalj.yrke.beskrivelse) },
                         )
