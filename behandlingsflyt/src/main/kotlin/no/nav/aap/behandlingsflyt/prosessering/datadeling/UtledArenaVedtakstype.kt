@@ -14,6 +14,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingMedVedtak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.utils.Diff
@@ -132,7 +133,8 @@ class UtledArenaVedtakstype(
                 return avslagsvedtak(søknader, behandling, eksisterendeVedtak)
             }
 
-            val harSøkt = søknader.any { it.behandlingId == behandling.id }
+            val harSøkt = behandling.årsakTilOpprettelse == ÅrsakTilOpprettelse.SØKNAD
+                    || Vurderingsbehov.MOTTATT_SØKNAD in behandling.vurderingsbehov
 
             var arenaVedtak =
                 Tidslinje.map2(eksisterendeVedtak, rettighetsTyper) { eksisterendeVedtak, rettighetsType ->
