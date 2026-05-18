@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.sykdom
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Diagnose
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ErNedsettelseMerEnnYrkesskadegrenseValg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ErNedsettelseMinstHalvpartenValg
@@ -323,8 +324,52 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
         )
     }
 
+    private data class SykdomsvurderingRad(
+        val id: Long,
+        val begrunnelse: String,
+        val vurderingenGjelderFra: LocalDate,
+        val harSykdomSkadeLyte: Boolean,
+        val erSykdomSkadeLyteVesentligdel: Boolean?,
+        val erNedsettelseMerEnnHalvparten: Boolean?,
+        val erNedsettelseMerEnnYrkesskadeGrense: Boolean?,
+        val erNedsettelseAvEnVissVarighet: Boolean?,
+        val erNedsettelseMinstHalvparten: ErNedsettelseMinstHalvpartenValg?,
+        val erNedsettelseMerEnnYrkesskadegrense: ErNedsettelseMerEnnYrkesskadegrenseValg?,
+        val erArbeidsevnenNedsatt: Boolean?,
+        val harNedsattArbeidsevne: ArbeidsevneNedsattValg?,
+        val yrkesskadeBegrunnelse: String?,
+        val kodeverk: String?,
+        val diagnose: String?,
+        val opprettetTid: java.time.Instant,
+        val vurdertAvIdent: String,
+        val vurdertIBehandling: Long,
+        val vurderingenGjelderTil: LocalDate?,
+    )
+
+    private fun mapSykdomsvurderingRad(row: Row): SykdomsvurderingRad = SykdomsvurderingRad(
+        id = row.getLong("id"),
+        begrunnelse = row.getString("BEGRUNNELSE"),
+        vurderingenGjelderFra = row.getLocalDate("VURDERINGEN_GJELDER_FRA"),
+        harSykdomSkadeLyte = row.getBoolean("HAR_SYKDOM_SKADE_LYTE"),
+        erSykdomSkadeLyteVesentligdel = row.getBooleanOrNull("ER_SYKDOM_SKADE_LYTE_VESETLING_DEL"),
+        erNedsettelseMerEnnHalvparten = row.getBooleanOrNull("ER_NEDSETTELSE_MER_ENN_HALVPARTEN"),
+        erNedsettelseMerEnnYrkesskadeGrense = row.getBooleanOrNull("ER_NEDSETTELSE_MER_ENN_YRKESSKADE_GRENSE"),
+        erNedsettelseAvEnVissVarighet = row.getBooleanOrNull("ER_NEDSETTELSE_AV_EN_VISS_VARIGHET"),
+        erNedsettelseMinstHalvparten = row.getEnumOrNull("ER_NEDSETTELSE_MINST_HALVPARTEN"),
+        erNedsettelseMerEnnYrkesskadegrense = row.getEnumOrNull("ER_NEDSETTELSE_MER_ENN_YRKESSKADEGRENSE"),
+        erArbeidsevnenNedsatt = row.getBooleanOrNull("ER_ARBEIDSEVNE_NEDSATT"),
+        harNedsattArbeidsevne = row.getEnumOrNull("HAR_NEDSATT_ARBEIDSEVNE"),
+        yrkesskadeBegrunnelse = row.getStringOrNull("YRKESSKADE_BEGRUNNELSE"),
+        kodeverk = row.getStringOrNull("KODEVERK"),
+        diagnose = row.getStringOrNull("DIAGNOSE"),
+        opprettetTid = row.getInstant("OPPRETTET_TID"),
+        vurdertAvIdent = row.getString("VURDERT_AV_IDENT"),
+        vurdertIBehandling = row.getLong("VURDERT_I_BEHANDLING"),
+        vurderingenGjelderTil = row.getLocalDateOrNull("VURDERINGEN_GJELDER_TIL"),
+    )
+
     private fun mapSykdommer(sykdomVurderingerId: Long?): List<Sykdomsvurdering> {
-        return connection.queryList(
+        val rader = connection.queryList(
             """
             SELECT id,
                    BEGRUNNELSE,
@@ -349,64 +394,71 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
             WHERE SYKDOM_VURDERINGER_ID = ?
             """.trimIndent()
         ) {
-            setParams {
-                setLong(1, sykdomVurderingerId)
-            }
-            setRowMapper(::sykdomsvurderingRowmapper)
+            setParams { setLong(1, sykdomVurderingerId) }
+            setRowMapper(::mapSykdomsvurderingRad)
         }
+        return mapSykdomsvurderingRader(rader)
     }
 
+    private fun mapSykdomsvurderingRader(rader: List<SykdomsvurderingRad>): List<Sykdomsvurdering> {
+        if (rader.isEmpty()) return emptyList()
+        val ids = rader.map { it.id }
+        val bidiagnoserMap = hentAlleBidiagnoser(ids)
+        val dokumenterMap = hentAlleSykdomsDokumenter(ids)
+        return rader.map { rad -> sykdomsvurderingRowmapper(rad, bidiagnoserMap, dokumenterMap) }
+    }
 
-    private fun sykdomsvurderingRowmapper(row: Row): Sykdomsvurdering {
-        val sykdomsvurderingId = row.getLong("id")
+    private fun sykdomsvurderingRowmapper(
+        rad: SykdomsvurderingRad,
+        bidiagnoserMap: Map<Long, List<String>>,
+        dokumenterMap: Map<Long, List<JournalpostId>>,
+    ): Sykdomsvurdering {
         return Sykdomsvurdering(
-            begrunnelse = row.getString("BEGRUNNELSE"),
-            vurderingenGjelderFra = row.getLocalDate("VURDERINGEN_GJELDER_FRA"),
-            dokumenterBruktIVurdering = hentSykdomsDokumenter(sykdomsvurderingId),
-            harSkadeSykdomEllerLyte = row.getBoolean("HAR_SYKDOM_SKADE_LYTE"),
-            erSkadeSykdomEllerLyteVesentligdel = row.getBooleanOrNull("ER_SYKDOM_SKADE_LYTE_VESETLING_DEL"),
-            erNedsettelseIArbeidsevneMerEnnHalvparten = row.getBooleanOrNull("ER_NEDSETTELSE_MER_ENN_HALVPARTEN"),
-            erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = row.getBooleanOrNull("ER_NEDSETTELSE_MER_ENN_YRKESSKADE_GRENSE"),
-            erNedsettelseIArbeidsevneAvEnVissVarighet = row.getBooleanOrNull("ER_NEDSETTELSE_AV_EN_VISS_VARIGHET"),
-            erArbeidsevnenNedsatt = row.getBooleanOrNull("ER_ARBEIDSEVNE_NEDSATT"),
-            harNedsattArbeidsevne = row.getEnumOrNull("HAR_NEDSATT_ARBEIDSEVNE"),
-            yrkesskadeBegrunnelse = row.getStringOrNull("YRKESSKADE_BEGRUNNELSE"),
-            diagnose = row.getStringOrNull("KODEVERK")?.let {
+            begrunnelse = rad.begrunnelse,
+            vurderingenGjelderFra = rad.vurderingenGjelderFra,
+            dokumenterBruktIVurdering = dokumenterMap[rad.id].orEmpty(),
+            harSkadeSykdomEllerLyte = rad.harSykdomSkadeLyte,
+            erSkadeSykdomEllerLyteVesentligdel = rad.erSykdomSkadeLyteVesentligdel,
+            erNedsettelseIArbeidsevneMerEnnHalvparten = rad.erNedsettelseMerEnnHalvparten,
+            erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = rad.erNedsettelseMerEnnYrkesskadeGrense,
+            erNedsettelseIArbeidsevneAvEnVissVarighet = rad.erNedsettelseAvEnVissVarighet,
+            erArbeidsevnenNedsatt = rad.erArbeidsevnenNedsatt,
+            harNedsattArbeidsevne = rad.harNedsattArbeidsevne,
+            yrkesskadeBegrunnelse = rad.yrkesskadeBegrunnelse,
+            diagnose = rad.kodeverk?.let {
                 Diagnose(
                     kodeverk = it,
-                    row.getStringOrNull("DIAGNOSE"),
-                    hentBidiagnoser(sykdomsvurderingId)
+                    rad.diagnose,
+                    bidiagnoserMap[rad.id].orEmpty()
                 )
             },
-            opprettet = row.getInstant("OPPRETTET_TID"),
-            vurdertAv = Bruker(row.getString("VURDERT_AV_IDENT")),
-            vurdertIBehandling = BehandlingId(row.getLong("VURDERT_I_BEHANDLING")),
-            vurderingenGjelderTil = row.getLocalDateOrNull("VURDERINGEN_GJELDER_TIL"),
-            erNedsettelseMinstHalvparten = row.getEnumOrNull("ER_NEDSETTELSE_MINST_HALVPARTEN"),
-            erNedsettelseMerEnnYrkesskadegrense = row.getEnumOrNull("ER_NEDSETTELSE_MER_ENN_YRKESSKADEGRENSE")
+            opprettet = rad.opprettetTid,
+            vurdertAv = Bruker(rad.vurdertAvIdent),
+            vurdertIBehandling = BehandlingId(rad.vurdertIBehandling),
+            vurderingenGjelderTil = rad.vurderingenGjelderTil,
+            erNedsettelseMinstHalvparten = rad.erNedsettelseMinstHalvparten,
+            erNedsettelseMerEnnYrkesskadegrense = rad.erNedsettelseMerEnnYrkesskadegrense
         )
     }
 
-    private fun hentBidiagnoser(vurderingId: Long): List<String> {
-        return connection.queryList("SELECT KODE FROM SYKDOM_VURDERING_BIDIAGNOSER WHERE VURDERING_ID = ?") {
-            setParams {
-                setLong(1, vurderingId)
-            }
-            setRowMapper { row ->
-                row.getString("KODE")
-            }
-        }
+    private fun hentAlleBidiagnoser(vurderingIds: List<Long>): Map<Long, List<String>> {
+        if (vurderingIds.isEmpty()) return emptyMap()
+        return connection.queryList(
+            "SELECT VURDERING_ID, KODE FROM SYKDOM_VURDERING_BIDIAGNOSER WHERE VURDERING_ID = ANY(?::bigint[])"
+        ) {
+            setParams { setLongArray(1, vurderingIds) }
+            setRowMapper { row -> row.getLong("VURDERING_ID") to row.getString("KODE") }
+        }.groupBy({ it.first }, { it.second })
     }
 
-    private fun hentSykdomsDokumenter(yrkesskadeId: Long): List<JournalpostId> {
-        return connection.queryList("SELECT JOURNALPOST FROM SYKDOM_VURDERING_DOKUMENTER WHERE VURDERING_ID = ?") {
-            setParams {
-                setLong(1, yrkesskadeId)
-            }
-            setRowMapper { row ->
-                JournalpostId(row.getString("JOURNALPOST"))
-            }
-        }
+    private fun hentAlleSykdomsDokumenter(vurderingIds: List<Long>): Map<Long, List<JournalpostId>> {
+        if (vurderingIds.isEmpty()) return emptyMap()
+        return connection.queryList(
+            "SELECT VURDERING_ID, JOURNALPOST FROM SYKDOM_VURDERING_DOKUMENTER WHERE VURDERING_ID = ANY(?::bigint[])"
+        ) {
+            setParams { setLongArray(1, vurderingIds) }
+            setRowMapper { row -> row.getLong("VURDERING_ID") to JournalpostId(row.getString("JOURNALPOST")) }
+        }.groupBy({ it.first }, { it.second })
     }
 
     private fun mapYrkesskade(yrkesskadeId: Long?): Yrkesskadevurdering? {
@@ -469,13 +521,14 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
                 AND AR.BEHANDLING_ID IS NULL
             """.trimIndent()
 
-        return connection.queryList(query) {
+        val rader = connection.queryList(query) {
             setParams {
                 setLong(1, sakId.id)
                 setLong(2, behandlingId.id)
             }
-            setRowMapper(::sykdomsvurderingRowmapper)
+            setRowMapper(::mapSykdomsvurderingRad)
         }
+        return mapSykdomsvurderingRader(rader)
     }
 
     override fun hentBehandlingIderMedUmigrerteSykdomsvurderinger(sisteBehandlingId: Long): List<BehandlingId> {
@@ -529,7 +582,7 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
     override fun hentSykdomsvurderingMedId(behandlingId: BehandlingId): List<SykdomsvurderingMedId> {
         val sykdomVurderingerIds = getSykdomVurderingerIds(behandlingId)
         
-        return connection.queryList(
+        val rader = connection.queryList(
             """
             SELECT id,
                    BEGRUNNELSE,
@@ -554,15 +607,17 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
             WHERE SYKDOM_VURDERINGER_ID = ANY(?::bigint[])
             """.trimIndent()
         ) {
-            setParams {
-                setLongArray(1, sykdomVurderingerIds)
-            }
-            setRowMapper { row ->
-                SykdomsvurderingMedId(
-                    id = row.getLong("id"),
-                    sykdomsvurdering = sykdomsvurderingRowmapper(row)
-                )
-            }
+            setParams { setLongArray(1, sykdomVurderingerIds) }
+            setRowMapper(::mapSykdomsvurderingRad)
+        }
+        val ids = rader.map { it.id }
+        val bidiagnoserMap = hentAlleBidiagnoser(ids)
+        val dokumenterMap = hentAlleSykdomsDokumenter(ids)
+        return rader.map { rad ->
+            SykdomsvurderingMedId(
+                id = rad.id,
+                sykdomsvurdering = sykdomsvurderingRowmapper(rad, bidiagnoserMap, dokumenterMap)
+            )
         }
     }
 
