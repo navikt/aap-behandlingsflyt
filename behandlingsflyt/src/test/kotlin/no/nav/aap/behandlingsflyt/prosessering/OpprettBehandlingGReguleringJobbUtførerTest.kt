@@ -5,6 +5,7 @@ import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.verify
+import no.nav.aap.behandlingsflyt.behandling.gregulering.GReguleringService
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakId
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
@@ -13,7 +14,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingMedVedtak
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
@@ -38,14 +38,14 @@ class OpprettBehandlingGReguleringJobbUtførerTest {
 
     private val prosesserBehandlingService = mockk<ProsesserBehandlingService>()
     private val behandlingService = mockk<BehandlingService>()
-    private val behandlingRepository = mockk<BehandlingRepository>()
+    private val gReguleringService = mockk<GReguleringService>()
     private val unleashGateway = mockk<UnleashGateway>()
 
     private fun opprettUtfører() =
         OpprettBehandlingGReguleringJobbUtfører(
             prosesserBehandlingService = prosesserBehandlingService,
             behandlingService = behandlingService,
-            behandlingRepository = behandlingRepository,
+            gReguleringService = gReguleringService,
             unleashGateway = unleashGateway,
         )
 
@@ -58,11 +58,11 @@ class OpprettBehandlingGReguleringJobbUtførerTest {
     }
 
     @Test
-    fun `skal opprette behandling med vurderingsbehov G_REGULERING når gjeldende behandling finnes`() {
+    fun `skal opprette behandling når grunnbeløpet er endret for gjeldende behandling`() {
         enableToggle()
         every { behandlingService.finnSisteYtelsesbehandlingFor(sakId) } returns null
-        every { behandlingRepository.hentAlleFor(sakId) } returns emptyList()
         every { behandlingService.finnBehandlingMedSisteFattedeVedtak(sakId) } returns behandlingMedVedtak()
+        every { gReguleringService.erGrunnbeløpEndretForBehandling(behandlingId) } returns true
         every {
             behandlingService.finnEllerOpprettBehandling(
                 sakId = sakId,
@@ -89,10 +89,22 @@ class OpprettBehandlingGReguleringJobbUtførerTest {
     }
 
     @Test
+    fun `skal ikke opprette behandling når grunnbeløpet ikke er endret for gjeldende behandling`() {
+        enableToggle()
+        every { behandlingService.finnSisteYtelsesbehandlingFor(sakId) } returns null
+        every { behandlingService.finnBehandlingMedSisteFattedeVedtak(sakId) } returns behandlingMedVedtak()
+        every { gReguleringService.erGrunnbeløpEndretForBehandling(behandlingId) } returns false
+
+        opprettUtfører().utfør(jobbInput)
+
+        verify(exactly = 0) { prosesserBehandlingService.triggProsesserBehandling(any<BehandlingService.OpprettetBehandling>()) }
+        verify(exactly = 0) { behandlingService.finnEllerOpprettBehandling(any<SakId>(), any<VurderingsbehovOgÅrsak>()) }
+    }
+
+    @Test
     fun `skal ikke opprette behandling når det ikke finnes gjeldende behandling`() {
         enableToggle()
         every { behandlingService.finnSisteYtelsesbehandlingFor(sakId) } returns null
-        every { behandlingRepository.hentAlleFor(sakId) } returns emptyList()
         every { behandlingService.finnBehandlingMedSisteFattedeVedtak(sakId) } returns null
 
         opprettUtfører().utfør(jobbInput)
@@ -128,14 +140,14 @@ class OpprettBehandlingGReguleringJobbUtførerTest {
     }
 
     @Test
-    fun `skal opprette behandling når saken har en åpen revurdering`() {
+    fun `skal opprette behandling når saken har en åpen revurdering og grunnbeløpet er endret`() {
         enableToggle()
         every { behandlingService.finnSisteYtelsesbehandlingFor(sakId) } returns behandling(
             status = Status.UTREDES,
             typeBehandling = TypeBehandling.Revurdering,
         )
-        every { behandlingRepository.hentAlleFor(sakId) } returns emptyList()
         every { behandlingService.finnBehandlingMedSisteFattedeVedtak(sakId) } returns behandlingMedVedtak()
+        every { gReguleringService.erGrunnbeløpEndretForBehandling(behandlingId) } returns true
         every {
             behandlingService.finnEllerOpprettBehandling(
                 sakId = sakId,
@@ -150,24 +162,6 @@ class OpprettBehandlingGReguleringJobbUtførerTest {
         opprettUtfører().utfør(jobbInput)
 
         verify(exactly = 1) { prosesserBehandlingService.triggProsesserBehandling(any<BehandlingService.OpprettetBehandling>()) }
-    }
-
-    @Test
-    fun `skal ikke opprette behandling når det allerede finnes en fullført G-regulering`() {
-        enableToggle()
-        every { behandlingService.finnSisteYtelsesbehandlingFor(sakId) } returns null
-        every { behandlingRepository.hentAlleFor(sakId) } returns listOf(
-            behandling(
-                status = Status.AVSLUTTET,
-                vurderingsbehov = listOf(VurderingsbehovMedPeriode(Vurderingsbehov.G_REGULERING))
-            )
-        )
-
-        opprettUtfører().utfør(jobbInput)
-
-        verify(exactly = 0) { prosesserBehandlingService.triggProsesserBehandling(any<BehandlingService.OpprettetBehandling>()) }
-        verify(exactly = 0) { behandlingService.finnEllerOpprettBehandling(any<SakId>(), any<VurderingsbehovOgÅrsak>()) }
-        verify(exactly = 0) { behandlingService.finnBehandlingMedSisteFattedeVedtak(any()) }
     }
 
     private fun behandling(
