@@ -37,6 +37,7 @@ interface ApiInternGateway : Gateway {
         rettighetsTypeTidslinje: Tidslinje<RettighetsType>,
         stansOpphørGrunnlag: Set<GjeldendeStansEllerOpphør>?,
         arenavedtak: Tidslinje<UtledArenaVedtakstype.ArenaVedtak>,
+        muligMaksdato: LocalDate?,
     )
 
     fun sendDetaljertMeldekortListe(
@@ -45,7 +46,7 @@ interface ApiInternGateway : Gateway {
         behandlingId: BehandlingId
     )
 
-    /*
+    /**
     Returnerer med overlegg `Result` slik at kalleren av metoden er nødt til å ta hensyn til at kallet kan feile.
     Grunnen er at vi må passe på at Behandlingsflyt ikke feiler når Arena er utilgjengelig.
      */

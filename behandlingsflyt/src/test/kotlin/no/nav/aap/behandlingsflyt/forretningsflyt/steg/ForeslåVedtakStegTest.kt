@@ -58,7 +58,7 @@ class ForeslåVedtakStegTest {
         val person =
             Person(PersonId(random.nextLong()), UUID.randomUUID(), listOf(genererIdent(LocalDate.now().minusYears(23))))
 
-        val sak = sakRepository.finnEllerOpprett(person, Periode(LocalDate.now(), LocalDate.now().plusYears(1)))
+        val sak = sakRepository.finnEllerOpprett(person, LocalDate.now())
         val behandling =
             behandlingRepository.opprettBehandling(
                 sakId = sak.id,
@@ -86,7 +86,7 @@ class ForeslåVedtakStegTest {
         val person =
             Person(PersonId(random.nextLong()), UUID.randomUUID(), listOf(genererIdent(LocalDate.now().minusYears(23))))
 
-        val sak = sakRepository.finnEllerOpprett(person, Periode(LocalDate.now(), LocalDate.now().plusYears(1)))
+        val sak = sakRepository.finnEllerOpprett(person, LocalDate.now())
         val behandling =
             behandlingRepository.opprettBehandling(
                 sakId = sak.id,
@@ -120,7 +120,7 @@ class ForeslåVedtakStegTest {
         val person =
             Person(PersonId(random.nextLong()), UUID.randomUUID(), listOf(genererIdent(LocalDate.now().minusYears(23))))
 
-        val sak = sakRepository.finnEllerOpprett(person, Periode(LocalDate.now(), LocalDate.now().plusYears(1)))
+        val sak = sakRepository.finnEllerOpprett(person, LocalDate.now())
         val behandling =
             behandlingRepository.opprettBehandling(
                 sakId = sak.id,
@@ -155,7 +155,7 @@ class ForeslåVedtakStegTest {
         val person =
             Person(PersonId(random.nextLong()), UUID.randomUUID(), listOf(genererIdent(LocalDate.now().minusYears(23))))
 
-        val sak = sakRepository.finnEllerOpprett(person, Periode(LocalDate.now(), LocalDate.now().plusYears(1)))
+        val sak = sakRepository.finnEllerOpprett(person, LocalDate.now())
         val behandling =
             behandlingRepository.opprettBehandling(
                 sakId = sak.id,
@@ -195,7 +195,7 @@ class ForeslåVedtakStegTest {
         val person =
             Person(PersonId(random.nextLong()), UUID.randomUUID(), listOf(genererIdent(LocalDate.now().minusYears(23))))
 
-        val sak = sakRepository.finnEllerOpprett(person, Periode(LocalDate.now(), LocalDate.now().plusYears(1)))
+        val sak = sakRepository.finnEllerOpprett(person, LocalDate.now())
         val behandling =
             behandlingRepository.opprettBehandling(
                 sakId = sak.id,
@@ -230,7 +230,7 @@ class ForeslåVedtakStegTest {
         val person =
             Person(PersonId(random.nextLong()), UUID.randomUUID(), listOf(genererIdent(LocalDate.now().minusYears(23))))
 
-        val sak = sakRepository.finnEllerOpprett(person, Periode(LocalDate.now(), LocalDate.now().plusYears(1)))
+        val sak = sakRepository.finnEllerOpprett(person, LocalDate.now())
         val behandling =
             behandlingRepository.opprettBehandling(
                 sakId = sak.id,
