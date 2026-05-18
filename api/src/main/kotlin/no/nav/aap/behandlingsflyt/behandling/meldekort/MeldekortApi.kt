@@ -77,7 +77,7 @@ fun NormalOpenAPIRoute.meldekortApi(
                     val meldeperioder = hentAktuelleMeldeperioder(underveisGrunnlag, clock)
                     val meldekortene = meldekortRepository.hentHvisEksisterer(behandling.id)?.meldekort().orEmpty()
                     val mottatteDokumenter = mottattDokumentRepository
-                        .hentDokumenterAvType(behandling.id, InnsendingType.MELDEKORT)
+                        .hentDokumenterAvType(sak.id, InnsendingType.MELDEKORT)
                         .associateBy { it.referanse }
 
                     meldeperioder.map { meldeperiode ->
