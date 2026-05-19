@@ -56,6 +56,7 @@ class FatteVedtakStegTest {
     @BeforeEach
     fun setup() {
         every { trekkKlageService.klageErTrukket(any()) } returns false
+        every { avbrytAktivitetspliktbehandlingService.behandlingErAvbrutt(any()) } returns false
     }
 
     private fun kontekst(

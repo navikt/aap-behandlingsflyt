@@ -52,6 +52,7 @@ class MeldingOmVedtakBrevStegTest {
         every { brevbestillingService.bestill(any(), any(), any(), any()) } returns UUID.randomUUID()
         every { brevbestillingService.erAlleBestillingerOmVedtakIEndeTilstand(any()) } returns true
         every { brevbestillingService.harBestillingOmVedtak(any()) } returns false
+        every { avbrytAktivitetspliktbehandlingService.behandlingErAvbrutt(any()) } returns false
     }
 
 
