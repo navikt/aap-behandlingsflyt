@@ -94,7 +94,6 @@ class MeldekortApiTest : BaseApiTest() {
             assertThat(response.status).isEqualTo(HttpStatusCode.OK)
             val body = response.body<MeldeperioderMedMeldekortResponse>()
             assertThat(body.meldeperioderMedMeldekort).isEmpty()
-            assertThat(body.meldekortProsesseringStatus).isEqualTo(MeldekortProsesseringStatus.KLAR)
         }
     }
 
@@ -125,8 +124,6 @@ class MeldekortApiTest : BaseApiTest() {
             assertThat(response.status).isEqualTo(HttpStatusCode.OK)
             val body = response.body<MeldeperioderMedMeldekortResponse>()
             assertThat(body.meldeperioderMedMeldekort).hasSize(1)
-
-            assertThat(body.meldekortProsesseringStatus).isEqualTo(MeldekortProsesseringStatus.KLAR)
 
             val meldeperiodeMedMeldekort = body.meldeperioderMedMeldekort.first()
             assertThat(meldeperiodeMedMeldekort.meldeperiode).isEqualTo(meldeperiode)
@@ -186,7 +183,6 @@ class MeldekortApiTest : BaseApiTest() {
             assertThat(response.status).isEqualTo(HttpStatusCode.OK)
             val body = response.body<MeldeperioderMedMeldekortResponse>()
             assertThat(body.meldeperioderMedMeldekort).hasSize(1)
-            assertThat(body.meldekortProsesseringStatus).isEqualTo(MeldekortProsesseringStatus.KLAR)
 
             val meldeperiodeMedMeldekort = body.meldeperioderMedMeldekort.first()
             assertThat(meldeperiodeMedMeldekort.meldeperiode).isEqualTo(meldeperiode)
@@ -256,7 +252,6 @@ class MeldekortApiTest : BaseApiTest() {
             assertThat(response.status).isEqualTo(HttpStatusCode.OK)
             val body = response.body<MeldeperioderMedMeldekortResponse>()
             assertThat(body.meldeperioderMedMeldekort).hasSize(2)
-            assertThat(body.meldekortProsesseringStatus).isEqualTo(MeldekortProsesseringStatus.KLAR)
             assertThat(body.meldeperioderMedMeldekort.mapNotNull { it.meldekort?.id })
                 .containsExactlyInAnyOrder(meldekort1.journalpostId.identifikator, meldekort2.journalpostId.identifikator)
         }
@@ -328,7 +323,6 @@ class MeldekortApiTest : BaseApiTest() {
             assertThat(response.status).isEqualTo(HttpStatusCode.OK)
             val body = response.body<MeldeperioderMedMeldekortResponse>()
             assertThat(body.meldeperioderMedMeldekort).hasSize(1)
-            assertThat(body.meldekortProsesseringStatus).isEqualTo(MeldekortProsesseringStatus.KLAR)
 
             val meldeperiodeMedMeldekort = body.meldeperioderMedMeldekort.first()
             assertThat(meldeperiodeMedMeldekort.meldekort).isNotNull
@@ -451,27 +445,35 @@ class MeldekortApiTest : BaseApiTest() {
             assertThat(response.status).isEqualTo(HttpStatusCode.OK)
             val body = response.body<MeldeperioderMedMeldekortResponse>()
             assertThat(body.meldeperioderMedMeldekort).hasSize(2)
-            assertThat(body.meldekortProsesseringStatus).isEqualTo(MeldekortProsesseringStatus.KLAR)
             assertThat(body.meldeperioderMedMeldekort.first().meldeperiode).isEqualTo(forrigeMeldeperiode)
             assertThat(body.meldeperioderMedMeldekort.last().meldeperiode).isEqualTo(inneværendeMeldeperiode)
         }
     }
 
     @Test
-    fun `returnerer prosesseringsStatus PROSESSERER når det finnes ventende meldekort-jobber`() {
+    fun `prosessering - returnerer KLAR når ingen ventende meldekort-jobber`() {
         val sak = nySak()
-        val behandling = opprettBehandling(sak, TypeBehandling.Førstegangsbehandling)
+        opprettBehandling(sak, TypeBehandling.Førstegangsbehandling)
 
-        InMemoryVedtakRepository.lagre(behandling.id, LocalDateTime.now(), LocalDate.now())
+        testApplication {
+            installApplication {
+                meldekortApi(MockDataSource(), inMemoryRepositoryRegistry, createTestGatewayProvider(), fixedClock)
+            }
 
-        val dag1 = 6 januar 2025
-        val meldeperiode = Periode(dag1, dag1.plusDays(13))
+            val response = createClient().get("/api/meldekort/${sak.saksnummer}/prosessering") {
+                header("Authorization", "Bearer ${getToken().token()}")
+            }
 
-        InMemoryUnderveisRepository.lagre(
-            behandlingId = behandling.id,
-            underveisperioder = listOf(underveisperiode(Utfall.OPPFYLT, meldeperiode)),
-            input = object : Faktagrunnlag {}
-        )
+            assertThat(response.status).isEqualTo(HttpStatusCode.OK)
+            val body = response.body<MeldekortProsesseringResponse>()
+            assertThat(body.meldekortProsesseringStatus).isEqualTo(MeldekortProsesseringStatus.KLAR)
+        }
+    }
+
+    @Test
+    fun `prosessering - returnerer PROSESSERER_MELDEKORT når det finnes ventende meldekort-jobber`() {
+        val sak = nySak()
+        opprettBehandling(sak, TypeBehandling.Førstegangsbehandling)
 
         InMemoryFlytJobbRepository.leggTil(
             HendelseMottattHåndteringJobbUtfører.nyJobb(
@@ -488,14 +490,13 @@ class MeldekortApiTest : BaseApiTest() {
                 meldekortApi(MockDataSource(), inMemoryRepositoryRegistry, createTestGatewayProvider(), fixedClock)
             }
 
-            val response = createClient().get("/api/meldekort/${sak.saksnummer}") {
+            val response = createClient().get("/api/meldekort/${sak.saksnummer}/prosessering") {
                 header("Authorization", "Bearer ${getToken().token()}")
             }
 
             assertThat(response.status).isEqualTo(HttpStatusCode.OK)
-            val body = response.body<MeldeperioderMedMeldekortResponse>()
+            val body = response.body<MeldekortProsesseringResponse>()
             assertThat(body.meldekortProsesseringStatus).isEqualTo(MeldekortProsesseringStatus.PROSESSERER_MELDEKORT)
-            assertThat(body.meldeperioderMedMeldekort).hasSize(1)
         }
     }
 

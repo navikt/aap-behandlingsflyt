@@ -33,7 +33,9 @@ data class SamordningUføreVurdering(
                         neste.virkningstidspunkt.minusDays(1)
                     ), verdi = gjeldende.uføregradTilSamordning
                 )
-            }.plus(Segment(Periode(sisteElement.virkningstidspunkt, Tid.MAKS), sisteElement.uføregradTilSamordning)).let(::Tidslinje)
+            }.plus(Segment(Periode(sisteElement.virkningstidspunkt, Tid.MAKS), sisteElement.uføregradTilSamordning))
+                .let(::Tidslinje)
+                .komprimer()
     }
 }
 

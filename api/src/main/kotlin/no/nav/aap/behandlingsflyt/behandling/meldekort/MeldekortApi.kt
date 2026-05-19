@@ -67,7 +67,6 @@ fun NormalOpenAPIRoute.meldekortApi(
                 val underveisRepository = repositoryProvider.provide<UnderveisRepository>()
                 val sakRepository = repositoryProvider.provide<SakRepository>()
                 val mottattDokumentRepository = repositoryProvider.provide<MottattDokumentRepository>()
-                val flytJobbRepository = repositoryProvider.provide<FlytJobbRepository>()
                 val behandlingService = BehandlingService(repositoryProvider, gatewayProvider)
 
                 val sak = sakRepository.hent(Saksnummer(req.saksnummer))
@@ -112,7 +111,6 @@ fun NormalOpenAPIRoute.meldekortApi(
 
                 MeldeperioderMedMeldekortResponse(
                     meldeperioderMedMeldekort = meldeperiodeMedMeldekort?.toSet() ?: emptySet(),
-                    meldekortProsesseringStatus = hentProsesseringStatus(flytJobbRepository, sak)
                 )
             }
 
@@ -163,6 +161,31 @@ fun NormalOpenAPIRoute.meldekortApi(
 
             respond(response)
         }
+
+        route("prosessering") {
+            authorizedGet<SaksnummerParameter, MeldekortProsesseringResponse>(
+                AuthorizationParamPathConfig(
+                    relevanteIdenterResolver = relevanteIdenterForSakResolver(repositoryRegistry, dataSource),
+                    sakPathParam = SakPathParam("saksnummer")
+                ),
+                null,
+                modules = arrayOf(TagModule(listOf(Tags.Sak))),
+            ) { req ->
+                val response = dataSource.transaction(readOnly = true) { connection ->
+                    val repositoryProvider = repositoryRegistry.provider(connection)
+                    val sakRepository = repositoryProvider.provide<SakRepository>()
+                    val flytJobbRepository = repositoryProvider.provide<FlytJobbRepository>()
+
+                    val sak = sakRepository.hent(Saksnummer(req.saksnummer))
+                    MeldekortProsesseringResponse(
+                        meldekortProsesseringStatus = hentProsesseringStatus(flytJobbRepository, sak)
+                    )
+                }
+
+                respond(response)
+            }
+        }
+
     }
 }
 

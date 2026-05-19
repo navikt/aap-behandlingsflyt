@@ -8,7 +8,7 @@ import java.time.LocalDateTime
 data class SamordningArbeidsgiverGrunnlag(
     val vurdering: SamordningArbeidsgiverVurdering,
 ) {
-    fun tilTidslinje(): Tidslinje<Unit>{
+    fun tilTidslinje(): Tidslinje<Unit> {
         return vurdering.tilTidslinje()
     }
 }
@@ -22,15 +22,16 @@ data class SamordningArbeidsgiverVurdering(
 )
 
 
-
 data class SamordningArbeidsgiverVurderingerDTO(
     val begrunnelse: String,
     val perioder: List<Periode>,
 )
 
 fun SamordningArbeidsgiverVurdering.tilTidslinje(): Tidslinje<Unit> {
-    val segmenter = perioder.map { periode -> Segment(
-        periode,Unit)
-     }
-    return Tidslinje(segmenter )
+    val segmenter = perioder.map { periode ->
+        Segment(
+            periode, Unit
+        )
+    }
+    return Tidslinje(segmenter).komprimer()
 }
