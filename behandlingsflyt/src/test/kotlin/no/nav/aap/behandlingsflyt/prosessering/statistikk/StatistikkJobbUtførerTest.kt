@@ -49,6 +49,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Diagnoser
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Grunnlag11_19DTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.ResultatKode
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.RettighetstypePeriode
+import no.nav.aap.behandlingsflyt.kontrakt.statistikk.SamordningDTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.StansEllerOpphør
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.StoppetBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.TilkjentYtelseDTO
@@ -559,6 +560,12 @@ class StatistikkJobbUtførerTest {
                         fom = 1 april 2020,
                         årsaker = setOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Avslagsårsak.BRUKER_OVER_67)
                     )
+                ),
+                samordning = SamordningDTO(
+                    uføre = emptyList(),
+                    statligeYtelser = emptyList(),
+                    avregningAndreYtelser = emptyList(),
+                    arbeidsgiver = emptyList()
                 ),
             )
         )
