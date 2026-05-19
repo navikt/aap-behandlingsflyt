@@ -17,7 +17,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andresta
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.SamordningAndreStatligeYtelserRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.arbeidsgiver.SamordningArbeidsgiverRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.GjeldendeStansEllerOpphør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.Opphør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.Stans
@@ -84,7 +83,6 @@ class AvsluttetBehandlingTilStatistikk(
     private val avbrytRevurderingService: AvbrytRevurderingService,
     private val samordningAndreStatligeYtelserRepository: SamordningAndreStatligeYtelserRepository,
     private val samordningService: SamordningService,
-    private val samordningVurderingRepository: SamordningVurderingRepository,
     private val samordningArbeidsgiverRepository: SamordningArbeidsgiverRepository,
     private val samordningUføreRepository: SamordningUføreRepository,
     private val meldepliktRepository: MeldepliktRepository,
@@ -107,7 +105,6 @@ class AvsluttetBehandlingTilStatistikk(
         avbrytRevurderingService = AvbrytRevurderingService(repositoryProvider),
         meldepliktRepository = repositoryProvider.provide(),
         samordningAndreStatligeYtelserRepository = repositoryProvider.provide(),
-        samordningVurderingRepository = repositoryProvider.provide(),
         samordningService = SamordningService(repositoryProvider),
         samordningArbeidsgiverRepository = repositoryProvider.provide(),
         samordningUføreRepository = repositoryProvider.provide(),
@@ -175,6 +172,37 @@ class AvsluttetBehandlingTilStatistikk(
                 .erYtelsesbehandling() && !avbrytRevurderingService.revurderingErAvbrutt(behandling.id)
         ) stansOpphørService.vedtattStansOpphør(behandling.id) else emptyList()
 
+        return AvsluttetBehandlingDTO(
+            vilkårsResultat = VilkårsResultatDTO(
+                typeBehandling = behandling.typeBehandling(), vilkår = vilkårsresultat.alle().map { res ->
+                    VilkårDTO(
+                        vilkårType = Vilkårtype.valueOf(res.type.toString()),
+                        perioder = res.vilkårsperioder().map { periode ->
+                            VilkårsPeriodeDTO(
+                                fraDato = periode.periode.fom,
+                                tilDato = periode.periode.tom,
+                                utfall = Utfall.valueOf(periode.utfall.toString()),
+                                manuellVurdering = periode.manuellVurdering,
+                                innvilgelsesårsak = periode.innvilgelsesårsak?.toString(),
+                                avslagsårsak = periode.avslagsårsak?.toString()
+                            )
+                        })
+                }),
+            tilkjentYtelse = TilkjentYtelseDTO(perioder = tilkjentYtelse.orEmpty()),
+            beregningsGrunnlag = beregningsGrunnlagDTO,
+            diagnoser = hentDiagnose(behandling),
+            rettighetstypePerioder = rettighetstypePerioder,
+            resultat = hentResultat(behandling),
+            vedtakstidspunkt = vedtakTidspunkt,
+            fritaksvurderinger = fritaksvurderinger,
+            perioderMedArbeidsopptrapping = perioderMedArbeidsopptrapping.map { PeriodeDTO(it.fom, it.tom) },
+            institusjonsopphold = institusjonsopphold.map { PeriodeDTO(it.fom, it.tom) },
+            vedtattStansOpphør = vedtattStansOpphør.map { it.tilKontrakt() },
+            samordning = utledSamordningDto(behandling),
+        )
+    }
+
+    private fun utledSamordningDto(behandling: Behandling): SamordningDTO {
         val arbeidsgiverSamordning =
             samordningArbeidsgiverRepository.hentHvisEksisterer(behandling.id)?.tilTidslinje().orEmpty().segmenter()
                 .map {
@@ -194,7 +222,6 @@ class AvsluttetBehandlingTilStatistikk(
                             Ytelse.SVANGERSKAPSPENGER -> SamordningDTO.SamordningYtelser.SVANGERSKAPSPENGER
                             Ytelse.OMSORGSPENGER -> SamordningDTO.SamordningYtelser.OMSORGSPENGER
                             Ytelse.OPPLÆRINGSPENGER -> SamordningDTO.SamordningYtelser.OPPLÆRINGSPENGER
-                            Ytelse.UKJENT_SLUTTDATO_PÅ_YTELSE -> SamordningDTO.SamordningYtelser.UKJENT_SLUTTDATO_PÅ_YTELSE
                             Ytelse.FERIE_I_SYKEPENGEPERIODE -> SamordningDTO.SamordningYtelser.FERIE_I_SYKEPENGEPERIODE
                         },
                         prosent = ytelseGradering.gradering.prosentverdi()
@@ -231,38 +258,11 @@ class AvsluttetBehandlingTilStatistikk(
                     )
                 }
 
-        return AvsluttetBehandlingDTO(
-            vilkårsResultat = VilkårsResultatDTO(
-                typeBehandling = behandling.typeBehandling(), vilkår = vilkårsresultat.alle().map { res ->
-                    VilkårDTO(
-                        vilkårType = Vilkårtype.valueOf(res.type.toString()),
-                        perioder = res.vilkårsperioder().map { periode ->
-                            VilkårsPeriodeDTO(
-                                fraDato = periode.periode.fom,
-                                tilDato = periode.periode.tom,
-                                utfall = Utfall.valueOf(periode.utfall.toString()),
-                                manuellVurdering = periode.manuellVurdering,
-                                innvilgelsesårsak = periode.innvilgelsesårsak?.toString(),
-                                avslagsårsak = periode.avslagsårsak?.toString()
-                            )
-                        })
-                }),
-            tilkjentYtelse = TilkjentYtelseDTO(perioder = tilkjentYtelse.orEmpty()),
-            beregningsGrunnlag = beregningsGrunnlagDTO,
-            diagnoser = hentDiagnose(behandling),
-            rettighetstypePerioder = rettighetstypePerioder,
-            resultat = hentResultat(behandling),
-            vedtakstidspunkt = vedtakTidspunkt,
-            fritaksvurderinger = fritaksvurderinger,
-            perioderMedArbeidsopptrapping = perioderMedArbeidsopptrapping.map { PeriodeDTO(it.fom, it.tom) },
-            institusjonsopphold = institusjonsopphold.map { PeriodeDTO(it.fom, it.tom) },
-            vedtattStansOpphør = vedtattStansOpphør.map { it.tilKontrakt() },
-            samordning = SamordningDTO(
-                uføre = samordningUføre,
-                arbeidsgiver = arbeidsgiverSamordning,
-                statligeYtelser = samordningYtelserSamornding,
-                avregningAndreYtelser = andreYtelser
-            )
+        return SamordningDTO(
+            uføre = samordningUføre,
+            arbeidsgiver = arbeidsgiverSamordning,
+            statligeYtelser = samordningYtelserSamornding,
+            avregningAndreYtelser = andreYtelser
         )
     }
 
