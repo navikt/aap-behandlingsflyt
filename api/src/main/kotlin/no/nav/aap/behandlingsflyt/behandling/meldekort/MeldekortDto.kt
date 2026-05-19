@@ -25,7 +25,8 @@ data class MeldekortDto(
     @Deprecated("Bruk journalpostId i stedet for id, da det er mer beskrivende")
     val id: String,
     val journalpostId: String,
-    val mottattTidspunkt: LocalDateTime,
+    val meldeDato: LocalDateTime,
+    val oppdatertTidspunkt: LocalDateTime? = null,
     val begrunnelse: String? = null,
     val oppdatertAv: String? = null,
     val dager: Set<DagDto>,
@@ -38,24 +39,28 @@ data class DagDto(
 
 data class OppdaterMeldekortRequest(
     val meldeperiode: Periode,
+    val meldeDato: LocalDate,
     val begrunnelse: String,
     val dager: Set<DagDto>,
 )
 
 data class OppdaterMeldekortResponse(
     val journalpostId: String,
+    val oppdatertTidspunkt: LocalDateTime,
 )
 
-fun Meldekort.toDto(begrunnelse: String?, oppdatertAv: String?): MeldekortDto = MeldekortDto(
-    id = journalpostId.identifikator,
-    journalpostId = journalpostId.identifikator,
-    mottattTidspunkt = mottattTidspunkt,
-    begrunnelse = begrunnelse,
-    oppdatertAv = oppdatertAv,
-    dager = timerArbeidPerPeriode.map { arbeid ->
-        DagDto(
-            dato = arbeid.periode.fom,
-            timerArbeidet = arbeid.timerArbeid.antallTimer.toDouble()
-        )
-    }.toSet()
-)
+fun Meldekort.toDto(begrunnelse: String?, oppdatertAv: String?, oppdatertTidspunkt: LocalDateTime?): MeldekortDto =
+    MeldekortDto(
+        id = journalpostId.identifikator,
+        journalpostId = journalpostId.identifikator,
+        meldeDato = mottattTidspunkt,
+        oppdatertTidspunkt = oppdatertTidspunkt,
+        begrunnelse = begrunnelse,
+        oppdatertAv = oppdatertAv,
+        dager = timerArbeidPerPeriode.map { arbeid ->
+            DagDto(
+                dato = arbeid.periode.fom,
+                timerArbeidet = arbeid.timerArbeid.antallTimer.toDouble()
+            )
+        }.toSet()
+    )

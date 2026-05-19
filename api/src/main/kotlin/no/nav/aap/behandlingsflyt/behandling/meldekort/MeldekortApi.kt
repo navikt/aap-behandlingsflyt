@@ -42,6 +42,7 @@ import java.time.Clock
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.LocalTime
 import java.time.ZoneId
 import javax.sql.DataSource
 
@@ -87,17 +88,17 @@ fun NormalOpenAPIRoute.meldekortApi(
                         if (meldekort != null) {
                             // Henter ut relevante metadata for meldekort hvor saksbehandler har korrigert timer
                             val innsendingReferanse = InnsendingReferanse(meldekort.journalpostId)
-                            val meldekortData = mottatteDokumenter[innsendingReferanse]
-                                ?.strukturerteData<MeldekortV0>()?.data
+                            val mottattDokument = mottatteDokumenter[innsendingReferanse]
+                            val meldekortData = mottattDokument?.strukturerteData<MeldekortV0>()?.data
 
                             MeldeperiodeMedMeldekortDto(
                                 meldeperiode = meldeperiode,
-                                meldekort = meldekort.toDto(meldekortData?.begrunnelse, meldekortData?.opprettetAv),
+                                meldekort = meldekort.toDto(meldekortData?.begrunnelse, meldekortData?.opprettetAv, mottattDokument?.opprettetTid),
                                 tidligereMeldekort = tidligereMeldekortListe.map { tidligere ->
                                     val ref = InnsendingReferanse(tidligere.journalpostId)
-                                    val data = mottatteDokumenter[ref]
-                                        ?.strukturerteData<MeldekortV0>()?.data
-                                    tidligere.toDto(data?.begrunnelse, data?.opprettetAv)
+                                    val tidligereDokument = mottatteDokumenter[ref]
+                                    val data = tidligereDokument?.strukturerteData<MeldekortV0>()?.data
+                                    tidligere.toDto(data?.begrunnelse, data?.opprettetAv, tidligereDokument?.opprettetTid)
                                 },
                             )
                         } else {
@@ -149,12 +150,15 @@ fun NormalOpenAPIRoute.meldekortApi(
                     tidspunkt = tidspunkt
                 )
 
-                val innsending = tilInnsending(sak, journalpostId, tidspunkt, meldekort)
+                val innsending = tilInnsending(sak, journalpostId, LocalDateTime.of(body.meldeDato, LocalTime.MIDNIGHT), meldekort)
 
                 // Oppretter mottatt hendelse som prosesseres som en meldekort-behandling
                 MottattHendelseService(repositoryProvider).registrerMottattHendelse(innsending)
 
-                OppdaterMeldekortResponse(journalpostId.identifikator)
+                OppdaterMeldekortResponse(
+                    journalpostId = journalpostId.identifikator,
+                    oppdatertTidspunkt = LocalDateTime.ofInstant(tidspunkt, ZoneId.of("Europe/Oslo")),
+                )
             }
 
             respond(response)
@@ -179,14 +183,14 @@ private fun hentProsesseringStatus(
 private fun tilInnsending(
     sak: Sak,
     journalpostId: JournalpostId,
-    tidspunkt: Instant,
+    mottattTidspunkt: LocalDateTime,
     meldekort: MeldekortV0
 ): Innsending = Innsending(
     saksnummer = sak.saksnummer,
     referanse = InnsendingReferanse(journalpostId),
     type = InnsendingType.MELDEKORT,
     kanal = Kanal.DIGITAL,
-    mottattTidspunkt = LocalDateTime.ofInstant(tidspunkt, ZoneId.of("Europe/Oslo")),
+    mottattTidspunkt = mottattTidspunkt,
     melding = meldekort,
 )
 
