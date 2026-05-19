@@ -1,10 +1,10 @@
-package no.nav.aap.behandlingsflyt.faktagrunnlag
+package no.nav.aap.behandlingsflyt.behandling.gregulering
 
-import no.nav.aap.behandlingsflyt.behandling.gregulering.GReguleringService
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.GraderingGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Minstesats
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Tilkjent
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelsePeriode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.Faktagrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.ArbeidsGradering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
@@ -12,9 +12,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Ut
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
 import no.nav.aap.behandlingsflyt.help.flytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.help.tomtTilkjentYtelseGrunnlag
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
-import no.nav.aap.behandlingsflyt.test.FakeUnleashBaseWithDefaultDisabled
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryTilkjentYtelseRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryUnderveisRepository
 import no.nav.aap.behandlingsflyt.test.april
@@ -24,53 +22,44 @@ import no.nav.aap.behandlingsflyt.test.juli
 import no.nav.aap.behandlingsflyt.test.juni
 import no.nav.aap.behandlingsflyt.test.mai
 import no.nav.aap.behandlingsflyt.test.mars
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.Dagsatser
 import no.nav.aap.komponenter.verdityper.GUnit
 import no.nav.aap.komponenter.verdityper.Prosent.Companion.`0_PROSENT`
 import no.nav.aap.komponenter.verdityper.Prosent.Companion.`100_PROSENT`
-import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.komponenter.verdityper.TimerArbeid
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.time.LocalDate
 
-class GrunnbeløpInformasjonskravTest {
+class GReguleringServiceTest {
 
-    private val unleash = FakeUnleashBaseWithDefaultDisabled(
-        listOf(BehandlingsflytFeature.GrunnbeloepInformasjonskrav)
-    )
-
-    private lateinit var informasjonskrav: GrunnbeløpInformasjonskrav
+    private lateinit var service: GReguleringService
 
     @BeforeEach
     fun setup() {
         val kontekst = kontekst()
         InMemoryTilkjentYtelseRepository.slett(kontekst.behandlingId)
         InMemoryUnderveisRepository.slett(kontekst.behandlingId)
-        informasjonskrav = GrunnbeløpInformasjonskrav(
-            gReguleringService = GReguleringService(
-                underveisRepository = InMemoryUnderveisRepository,
-                tilkjentYtelseRepository = InMemoryTilkjentYtelseRepository,
-            ),
-            unleashGateway = unleash,
+        service = GReguleringService(
+            underveisRepository = InMemoryUnderveisRepository,
+            tilkjentYtelseRepository = InMemoryTilkjentYtelseRepository,
         )
     }
 
     @Test
-    fun `skal returnere IKKE_ENDRET når ingen tilkjent ytelse finnes`() {
-        val resultat = informasjonskrav.oppdater(IngenInput, IngenRegisterData, kontekst())
+    fun `skal returnere false når ingen tilkjent ytelse finnes`() {
+        val resultat = service.erGrunnbeløpEndretForBehandling(kontekst().behandlingId)
 
-        Grunnbeløp.tilTidslinje().begrensetTil(Periode(1 januar 2025, Tid.MAKS))
-        assertThat(resultat).isEqualTo(Informasjonskrav.Endret.IKKE_ENDRET)
+        assertThat(resultat).isFalse()
     }
 
     @Test
-    fun `skal returnere IKKE_ENDRET når alle perioder har gjeldende grunnbeløp`() {
+    fun `skal returnere false når alle perioder har gjeldende grunnbeløp`() {
         val periodeFom = 1 juni 2025
         val periodeTom = 31 desember 2025
         val gjeldendeG = Grunnbeløp.finnGrunnbeløp(periodeFom)
@@ -79,28 +68,28 @@ class GrunnbeløpInformasjonskravTest {
         lagreTilkjentYtelse(kontekst, periodeFom, periodeTom, gjeldendeG)
         lagreOppfyltUnderveis(kontekst, periodeFom, periodeTom)
 
-        val resultat = informasjonskrav.oppdater(IngenInput, IngenRegisterData, kontekst)
+        val resultat = service.erGrunnbeløpEndretForBehandling(kontekst.behandlingId)
 
-        assertThat(resultat).isEqualTo(Informasjonskrav.Endret.IKKE_ENDRET)
+        assertThat(resultat).isFalse()
     }
 
     @Test
-    fun `skal returnere ENDRET når en periode har utdatert grunnbeløp`() {
+    fun `skal returnere true når en periode har utdatert grunnbeløp`() {
         val periodeFom = 1 juni 2025
         val periodeTom = 31 desember 2025
-        val utdatertG = Beløp(124_028) // G fra 2024
+        val utdatertG = Beløp(124_028)
 
         val kontekst = kontekst()
         lagreTilkjentYtelse(kontekst, periodeFom, periodeTom, utdatertG)
         lagreOppfyltUnderveis(kontekst, periodeFom, periodeTom)
 
-        val resultat = informasjonskrav.oppdater(IngenInput, IngenRegisterData, kontekst)
+        val resultat = service.erGrunnbeløpEndretForBehandling(kontekst.behandlingId)
 
-        assertThat(resultat).isEqualTo(Informasjonskrav.Endret.ENDRET)
+        assertThat(resultat).isTrue()
     }
 
     @Test
-    fun `skal returnere ENDRET når minst én av flere perioder har utdatert grunnbeløp`() {
+    fun `skal returnere true når minst én av flere perioder har utdatert grunnbeløp`() {
         val kontekst = kontekst()
 
         val periode1Fom = 1 januar 2025
@@ -109,7 +98,7 @@ class GrunnbeløpInformasjonskravTest {
 
         val periode2Fom = 1 mai 2025
         val periode2Tom = 31 desember 2025
-        val utdatertG = Beløp(124_028) // G fra 2024, men perioden starter etter 1. mai 2025
+        val utdatertG = Beløp(124_028)
 
         InMemoryTilkjentYtelseRepository.lagre(
             kontekst.behandlingId,
@@ -122,125 +111,62 @@ class GrunnbeløpInformasjonskravTest {
         )
         lagreOppfyltUnderveis(kontekst, periode1Fom, periode2Tom)
 
-        val resultat = informasjonskrav.oppdater(IngenInput, IngenRegisterData, kontekst)
+        val resultat = service.erGrunnbeløpEndretForBehandling(kontekst.behandlingId)
 
-        assertThat(resultat).isEqualTo(Informasjonskrav.Endret.ENDRET)
+        assertThat(resultat).isTrue()
     }
 
     @Test
-    fun `skal returnere ENDRET når periode krysser G-grensen med gammelt grunnbeløp`() {
+    fun `skal returnere true når periode krysser G-grensen med gammelt grunnbeløp`() {
         val periodeFom = 1 mars 2025
         val periodeTom = 1 juli 2025
-        val gammeltG = Grunnbeløp.finnGrunnbeløp(periodeFom) // G som gjelder fra mai 2024
+        val gammeltG = Grunnbeløp.finnGrunnbeløp(periodeFom)
 
         val kontekst = kontekst()
         lagreTilkjentYtelse(kontekst, periodeFom, periodeTom, gammeltG)
         lagreOppfyltUnderveis(kontekst, periodeFom, periodeTom)
 
-        val resultat = informasjonskrav.oppdater(IngenInput, IngenRegisterData, kontekst)
+        val resultat = service.erGrunnbeløpEndretForBehandling(kontekst.behandlingId)
 
-        assertThat(resultat).isEqualTo(Informasjonskrav.Endret.ENDRET)
+        assertThat(resultat).isTrue()
     }
 
     @Test
-    fun `skal returnere ENDRET når periode krysser G-grensen med nytt grunnbeløp`() {
+    fun `skal returnere true når periode krysser G-grensen med nytt grunnbeløp`() {
         val periodeFom = 1 mars 2025
         val periodeTom = 1 juli 2025
-        val nyttG = Grunnbeløp.finnGrunnbeløp(1 mai 2025) // G som gjelder fra mai 2025
+        val nyttG = Grunnbeløp.finnGrunnbeløp(1 mai 2025)
 
         val kontekst = kontekst()
         lagreTilkjentYtelse(kontekst, periodeFom, periodeTom, nyttG)
         lagreOppfyltUnderveis(kontekst, periodeFom, periodeTom)
 
-        val resultat = informasjonskrav.oppdater(IngenInput, IngenRegisterData, kontekst)
+        val resultat = service.erGrunnbeløpEndretForBehandling(kontekst.behandlingId)
 
-        assertThat(resultat).isEqualTo(Informasjonskrav.Endret.ENDRET)
+        assertThat(resultat).isTrue()
     }
 
     @Test
-    fun `skal returnere IKKE_ENDRET når G er utdatert men underveis er ikke oppfylt`() {
+    fun `skal returnere false når G er utdatert men underveis er ikke oppfylt`() {
         val periodeFom = 1 juni 2025
         val periodeTom = 31 desember 2025
-        val utdatertG = Beløp(124_028) // G fra 2024
+        val utdatertG = Beløp(124_028)
 
         val kontekst = kontekst()
         lagreTilkjentYtelse(kontekst, periodeFom, periodeTom, utdatertG)
         lagreIkkeOppfyltUnderveis(kontekst, periodeFom, periodeTom)
 
-        val resultat = informasjonskrav.oppdater(IngenInput, IngenRegisterData, kontekst)
+        val resultat = service.erGrunnbeløpEndretForBehandling(kontekst.behandlingId)
 
-        assertThat(resultat).isEqualTo(Informasjonskrav.Endret.IKKE_ENDRET)
-    }
-
-    @Test
-    fun `flettOpplysninger skal returnere IKKE_ENDRET når ingen tilkjent ytelse finnes`() {
-        val resultat = informasjonskrav.flettOpplysningerFraAtomærBehandling(flytKontekst())
-
-        assertThat(resultat).isEqualTo(Informasjonskrav.Endret.IKKE_ENDRET)
-    }
-
-    @Test
-    fun `flettOpplysninger skal returnere ENDRET når en periode har utdatert grunnbeløp`() {
-        val periodeFom = 1 juni 2025
-        val periodeTom = 31 desember 2025
-        val utdatertG = Beløp(124_028) // G fra 2024
-
-        val kontekst = kontekst()
-        lagreTilkjentYtelse(kontekst, periodeFom, periodeTom, utdatertG)
-        lagreOppfyltUnderveis(kontekst, periodeFom, periodeTom)
-
-        val resultat = informasjonskrav.flettOpplysningerFraAtomærBehandling(flytKontekst())
-
-        assertThat(resultat).isEqualTo(Informasjonskrav.Endret.ENDRET)
-    }
-
-    @Test
-    fun `flettOpplysninger skal returnere IKKE_ENDRET når G er utdatert men underveis er ikke oppfylt`() {
-        val periodeFom = 1 juni 2025
-        val periodeTom = 31 desember 2025
-        val utdatertG = Beløp(124_028) // G fra 2024
-
-        val kontekst = kontekst()
-        lagreTilkjentYtelse(kontekst, periodeFom, periodeTom, utdatertG)
-        lagreIkkeOppfyltUnderveis(kontekst, periodeFom, periodeTom)
-
-        val resultat = informasjonskrav.flettOpplysningerFraAtomærBehandling(flytKontekst())
-
-        assertThat(resultat).isEqualTo(Informasjonskrav.Endret.IKKE_ENDRET)
-    }
-
-    @Test
-    fun `skal ikke være relevant når feature toggle er avskrudd`() {
-        val disabledUnleash = FakeUnleashBaseWithDefaultDisabled(emptyList())
-        val krav = GrunnbeløpInformasjonskrav(
-            gReguleringService = GReguleringService(
-                underveisRepository = InMemoryUnderveisRepository,
-                tilkjentYtelseRepository = InMemoryTilkjentYtelseRepository,
-            ),
-            unleashGateway = disabledUnleash,
-        )
-
-        val erRelevant = krav.erRelevant(kontekst(), no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.BEREGN_TILKJENT_YTELSE, null)
-
-        assertThat(erRelevant).isFalse()
+        assertThat(resultat).isFalse()
     }
 
     private fun kontekst() = flytKontekstMedPerioder {
         vurderingType = VurderingType.REVURDERING
     }
 
-    private fun flytKontekst(): FlytKontekst {
-        val k = kontekst()
-        return FlytKontekst(
-            sakId = k.sakId,
-            behandlingId = k.behandlingId,
-            forrigeBehandlingId = k.forrigeBehandlingId,
-            behandlingType = k.behandlingType,
-        )
-    }
-
     private fun lagreTilkjentYtelse(
-        kontekst: no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder,
+        kontekst: FlytKontekstMedPerioder,
         fom: LocalDate,
         tom: LocalDate,
         grunnbeløp: Beløp
@@ -254,7 +180,7 @@ class GrunnbeløpInformasjonskravTest {
     }
 
     private fun lagreOppfyltUnderveis(
-        kontekst: no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder,
+        kontekst: FlytKontekstMedPerioder,
         fom: LocalDate,
         tom: LocalDate
     ) {
@@ -266,7 +192,7 @@ class GrunnbeløpInformasjonskravTest {
     }
 
     private fun lagreIkkeOppfyltUnderveis(
-        kontekst: no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder,
+        kontekst: FlytKontekstMedPerioder,
         fom: LocalDate,
         tom: LocalDate
     ) {
@@ -322,7 +248,7 @@ class GrunnbeløpInformasjonskravTest {
                     samordningArbeidsgiverGradering = `0_PROSENT`,
                     meldepliktGradering = `0_PROSENT`,
                 ),
-                grunnlagsfaktor = GUnit(java.math.BigDecimal("2.0")),
+                grunnlagsfaktor = GUnit(BigDecimal("2.0")),
                 grunnbeløp = grunnbeløp,
                 antallBarn = 0,
                 barnetilleggsats = Beløp(0),
