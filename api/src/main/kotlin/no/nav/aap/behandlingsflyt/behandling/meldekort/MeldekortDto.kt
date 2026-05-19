@@ -7,7 +7,6 @@ import java.time.LocalDateTime
 
 data class MeldeperioderMedMeldekortResponse(
     val meldeperioderMedMeldekort: Set<MeldeperiodeMedMeldekortDto>,
-    val meldekortProsesseringStatus: MeldekortProsesseringStatus = MeldekortProsesseringStatus.KLAR,
 )
 
 enum class MeldekortProsesseringStatus {
@@ -44,6 +43,10 @@ data class OppdaterMeldekortRequest(
 
 data class OppdaterMeldekortResponse(
     val journalpostId: String,
+)
+
+data class MeldekortProsesseringResponse(
+    val meldekortProsesseringStatus: MeldekortProsesseringStatus,
 )
 
 fun Meldekort.toDto(begrunnelse: String?, oppdatertAv: String?): MeldekortDto = MeldekortDto(
