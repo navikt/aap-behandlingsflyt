@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg.aktivitetsplikt
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.avbrytaktivitetspliktbehandling.AvbrytAktivitetspliktbehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
@@ -15,12 +16,20 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
+import org.slf4j.LoggerFactory
 
 class IverksettBruddSteg private constructor(
     private val behandlingService: BehandlingService,
-    private val prosesserBehandlingService: ProsesserBehandlingService
+    private val prosesserBehandlingService: ProsesserBehandlingService,
+    private val avbrytAktivitetspliktbehandlingService: AvbrytAktivitetspliktbehandlingService
 ) : BehandlingSteg {
+    private val log = LoggerFactory.getLogger(this::class.java)
+
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
+        if (avbrytAktivitetspliktbehandlingService.behandlingErAvbrutt(kontekst.behandlingId)) {
+            log.info("Behandling ${kontekst.behandlingId} er avbrutt, hopper over iverksettelse av brudd")
+            return Fullført
+        }
         val effektueringsbehandling = when (kontekst.behandlingType) {
             TypeBehandling.Aktivitetsplikt -> {
                 behandlingService.finnEllerOpprettBehandling(
@@ -62,7 +71,8 @@ class IverksettBruddSteg private constructor(
         ): BehandlingSteg {
             return IverksettBruddSteg(
                 BehandlingService(repositoryProvider, gatewayProvider),
-                ProsesserBehandlingService(repositoryProvider, gatewayProvider)
+                ProsesserBehandlingService(repositoryProvider, gatewayProvider),
+                AvbrytAktivitetspliktbehandlingService(repositoryProvider)
             )
         }
 

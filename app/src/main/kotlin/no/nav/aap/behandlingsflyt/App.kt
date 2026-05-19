@@ -19,6 +19,7 @@ import kotlinx.coroutines.launch
 import no.nav.aap.behandlingsflyt.api.actuator.actuator
 import no.nav.aap.behandlingsflyt.api.config.definisjoner.configApi
 import no.nav.aap.behandlingsflyt.auditlog.auditlogApi
+import no.nav.aap.behandlingsflyt.behandling.aktivitetsplikt.avbrytaktivitetspliktbehandling.avbrytAktivitetspliktbehandlingGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.aktivitetsplikt.brudd_11_7.aktivitetsplikt11_7GrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.aktivitetsplikt.brudd_11_9.aktivitetsplikt11_9GrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.arbeidsevne.arbeidsevneGrunnlagApi
@@ -327,6 +328,7 @@ internal fun Application.server(
                 // Aktivitetsplikt
                 aktivitetsplikt11_7GrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
                 aktivitetsplikt11_9GrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
+                avbrytAktivitetspliktbehandlingGrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
                 // Meldekort
                 meldekortApi(fellesDataSource, repositoryRegistry, gatewayProvider)
                 // Flytt

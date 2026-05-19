@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.avbrytaktivitetspliktbehandling.AvbrytAktivitetspliktbehandlingService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Endring
 import no.nav.aap.behandlingsflyt.behandling.brev.BrevUtlederService
@@ -42,6 +43,7 @@ class MeldingOmVedtakBrevStegTest {
     val sakRepository = InMemorySakRepository
     val avklaringsbehovRepository = InMemoryAvklaringsbehovRepository
     val avklaringsbehovService = AvklaringsbehovService(inMemoryRepositoryProvider)
+    val avbrytAktivitetspliktbehandlingService = mockk<AvbrytAktivitetspliktbehandlingService>()
 
     @BeforeEach
     fun setup() {
@@ -101,6 +103,7 @@ class MeldingOmVedtakBrevStegTest {
             avklaringsbehovService = avklaringsbehovService,
             avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
             unleashGateway = AlleAvskruddUnleash,
+            avbrytAktivitetspliktbehandlingService = avbrytAktivitetspliktbehandlingService
         )
 
         // Runde-1
@@ -176,6 +179,7 @@ class MeldingOmVedtakBrevStegTest {
             avklaringsbehovService = avklaringsbehovService,
             avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
             unleashGateway = AlleAvskruddUnleash,
+            avbrytAktivitetspliktbehandlingService = avbrytAktivitetspliktbehandlingService
         )
         every { brevUtlederService.utledBehovForMeldingOmVedtak(any()) } returns null
 
@@ -219,6 +223,7 @@ class MeldingOmVedtakBrevStegTest {
             avklaringsbehovService = avklaringsbehovService,
             avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
             unleashGateway = AlleAvskruddUnleash,
+            avbrytAktivitetspliktbehandlingService = avbrytAktivitetspliktbehandlingService
         )
         every { trekkKlageService.klageErTrukket(any()) } returns true
 

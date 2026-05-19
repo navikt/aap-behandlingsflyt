@@ -8,6 +8,7 @@ import io.ktor.http.*
 import kotlinx.coroutines.runBlocking
 import no.nav.aap.behandlingsflyt.behandling.Resultat
 import no.nav.aap.behandlingsflyt.behandling.ResultatUtleder
+import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.avbrytaktivitetspliktbehandling.AvbrytAktivitetspliktbehandlingService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovOrkestrator
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
@@ -62,7 +63,7 @@ import no.nav.aap.tilgang.RelevanteIdenter
 import no.nav.aap.tilgang.authorizedGet
 import no.nav.aap.tilgang.authorizedPost
 import org.slf4j.LoggerFactory
-import java.util.UUID
+import java.util.*
 import javax.sql.DataSource
 
 private val log = LoggerFactory.getLogger("flytApi")
@@ -101,6 +102,8 @@ fun NormalOpenAPIRoute.flytApi(
                     )
                     val flytJobbRepository = repositoryProvider.provide<FlytJobbRepository>()
                     val gruppeVisningService = DynamiskStegGruppeVisningService(repositoryProvider)
+                    val avbrytAktivitetspliktbehandlingService =
+                        AvbrytAktivitetspliktbehandlingService(repositoryProvider)
 
                     val jobber = flytJobbRepository.hentJobberForBehandling(behandling.id.toLong())
                         .filter { it.type() == ProsesserBehandlingJobbUtfører.type }
@@ -147,6 +150,10 @@ fun NormalOpenAPIRoute.flytApi(
                         ((behandling.typeBehandling() == TypeBehandling.Revurdering) && (resultatUtleder.utledResultatRevurderingsBehandling(
                             behandling
                         ) == Resultat.AVBRUTT)) -> ResultatKode.AVBRUTT
+
+                        ((behandling.typeBehandling() == TypeBehandling.Aktivitetsplikt || behandling.typeBehandling() == TypeBehandling.Aktivitetsplikt11_9) && (avbrytAktivitetspliktbehandlingService.behandlingErAvbrutt(
+                            behandling.id
+                        ))) -> ResultatKode.AVBRUTT
 
                         else -> null
                     }
