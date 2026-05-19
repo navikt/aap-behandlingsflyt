@@ -50,7 +50,6 @@ public data class SamordningDTO(
         SVANGERSKAPSPENGER,
         OMSORGSPENGER,
         OPPLÆRINGSPENGER,
-        UKJENT_SLUTTDATO_PÅ_YTELSE,
         FERIE_I_SYKEPENGEPERIODE,
     }
 
