@@ -8,6 +8,7 @@ import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.behandlingsflyt.test.MockDataSource
+import no.nav.aap.behandlingsflyt.test.inmemorygateway.FakePersoninfoGateway
 import no.nav.aap.behandlingsflyt.test.inmemorygateway.FakeTilgangGateway
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryPersonRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryRegistry
@@ -26,19 +27,18 @@ class PersonApiTest : BaseApiTest() {
             installApplication {
                 personApi(MockDataSource(), inMemoryRepositoryRegistry, createGatewayProvider {
                     register<FakeTilgangGateway>()
+                    register<FakePersoninfoGateway>()
                 })
             }
 
-            val response = createClient().post("/api/person/ident") {
+            val response = createClient().post("/api/person/personinformasjon") {
                 header("Authorization", "Bearer ${getToken().token()}")
                 contentType(ContentType.Application.Json)
-                setBody(PersonIdentRequest(personReferanse = person.identifikator))
+                setBody(PersoninfoRequest(personReferanse = person.identifikator))
             }
 
             assertThat(response.status).isEqualTo(HttpStatusCode.OK)
-            assertThat(response.body<PersonIdentResponse>()).isEqualTo(
-                PersonIdentResponse(ident = ident)
-            )
+            assertThat(response.body<PersoninfoDTO>().fnr).isEqualTo(ident)
         }
     }
 
@@ -56,19 +56,18 @@ class PersonApiTest : BaseApiTest() {
             installApplication {
                 personApi(MockDataSource(), inMemoryRepositoryRegistry, createGatewayProvider {
                     register<FakeTilgangGateway>()
+                    register<FakePersoninfoGateway>()
                 })
             }
 
-            val response = createClient().post("/api/person/ident") {
+            val response = createClient().post("/api/person/personinformasjon") {
                 header("Authorization", "Bearer ${getToken().token()}")
                 contentType(ContentType.Application.Json)
-                setBody(PersonIdentRequest(personReferanse = person.identifikator))
+                setBody(PersoninfoRequest(personReferanse = person.identifikator))
             }
 
             assertThat(response.status).isEqualTo(HttpStatusCode.OK)
-            assertThat(response.body<PersonIdentResponse>()).isEqualTo(
-                PersonIdentResponse(ident = aktivIdent)
-            )
+            assertThat(response.body<PersoninfoDTO>().fnr).isEqualTo(aktivIdent)
         }
     }
 }
