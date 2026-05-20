@@ -51,6 +51,7 @@ class MigreringManglendeDokumentasjon(
     fun utførMigrering() {
         var ferdig = false
         var minimumBehandlingId = BehandlingId(0)
+        log.info("Begynner migrering av Manglende dokumentasjon")
         while (!ferdig) {
             dataSource.transaction { connection ->
                 val repositoryProvider = repositoryRegistry.provider(connection)
@@ -82,6 +83,7 @@ class MigreringManglendeDokumentasjon(
                     log.info("MigreringManglendeDokumentasjon fant ingen flere behandlinger å migrere")
                     return@transaction
                 }
+                log.info("Fant $behandlingId for migrering av manglende dokumentasjon")
 
                 taSkriveLåsRepository.withLåstBehandling(behandlingId) { _ ->
                     val vilkårsresultat = vilkårsresultatRepository.hent(behandlingId)
@@ -95,6 +97,7 @@ class MigreringManglendeDokumentasjon(
 
                     /* sjekk om avslagsårsak fortsatt finnes nå som vi har låst behandlingen. */
                     if (vilkårsvurderinger.isEmpty()) {
+                        log.info("ingen forekomster av manglende dokumentasjon etter lås")
                         return@withLåstBehandling
                     }
 
