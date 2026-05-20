@@ -69,8 +69,22 @@ class ForutgåendeMedlemskapVurderingServiceTest {
     }
 
     @Test
-    fun `Bruker har ferskt statsborgerskap utenfor EØS`() {
+    fun `Bruker har statsborgerskap utenfor EØS og norsk statsborgerskap`() {
         val grunnlag = lagGrunnlagSomFerskUtenforEØSStatsborger(true, true, true)
+        val resultat = service.vurderTilhørighet(grunnlag, Periode(LocalDate.now(), LocalDate.now().plusYears(1)))
+        val vurdering = resultat.tilhørighetVurdering
+            .single { it.opplysning == "Har statsborgerskap utenfor EØS i perioden" }
+        assertThat(vurdering.resultat).isFalse
+    }
+
+    @Test
+    fun `Bruker har statsborgerskap utenfor EØS uten norsk statsborgerskap`() {
+        val grunnlag = lagGrunnlagSomFerskUtenforEØSStatsborger(
+            godkjentPgaUnntakIMedl = true,
+            godkjentPgaInntekt = true,
+            inntektHarHull = true,
+            harNorskStatsborgerskap = false
+        )
         val resultat = service.vurderTilhørighet(grunnlag, Periode(LocalDate.now(), LocalDate.now().plusYears(1)))
         val vurdering = resultat.tilhørighetVurdering
             .single { it.opplysning == "Har statsborgerskap utenfor EØS i perioden" }
@@ -393,7 +407,8 @@ class ForutgåendeMedlemskapVurderingServiceTest {
     private fun lagGrunnlagSomFerskUtenforEØSStatsborger(
         godkjentPgaUnntakIMedl: Boolean,
         godkjentPgaInntekt: Boolean,
-        inntektHarHull: Boolean
+        inntektHarHull: Boolean,
+        harNorskStatsborgerskap: Boolean = true
     ): ForutgåendeMedlemskapGrunnlag {
         val inntekterINorgeGrunnlag = if (godkjentPgaInntekt) {
             listOf(
@@ -471,18 +486,24 @@ class ForutgåendeMedlemskapVurderingServiceTest {
                     fødselsdato = Fødselsdato(LocalDate.now().minusYears(18)),
                     id = 1,
                     dødsdato = null,
-                    statsborgerskap = listOf(
-                        Statsborgerskap(
-                            "ETH",
-                            gyldigFraOgMed = LocalDate.now().minusYears(2),
-                            LocalDate.now().minusYears(1)
-                        ),
-                        Statsborgerskap(
-                            "NOR",
-                            gyldigFraOgMed = LocalDate.now().minusYears(1),
-                            LocalDate.now()
-                        )
-                    ),
+                    statsborgerskap =
+                        listOf(
+                            Statsborgerskap(
+                                "ETH",
+                                gyldigFraOgMed = LocalDate.now().minusYears(2),
+                                LocalDate.now().minusYears(1)
+                            ),
+                        ) + if (harNorskStatsborgerskap) {
+                            listOf(
+                                Statsborgerskap(
+                                    "NOR",
+                                    gyldigFraOgMed = LocalDate.now().minusYears(1),
+                                    LocalDate.now()
+                                )
+                            )
+                        } else {
+                            emptyList()
+                        },
                     folkeregisterStatuser = listOf(
                         FolkeregisterStatus(
                             status = PersonStatus.bosatt,
