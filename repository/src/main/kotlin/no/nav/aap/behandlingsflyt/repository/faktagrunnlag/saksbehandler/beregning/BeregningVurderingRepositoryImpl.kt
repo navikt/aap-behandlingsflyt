@@ -210,7 +210,6 @@ class BeregningVurderingRepositoryImpl(private val connection: DBConnection) : B
     override fun slett(behandlingId: BehandlingId) {
         val beregningTidspunktVurderingIds = getBeregningTidspunktVurderingIds(behandlingId)
         val beregningYrkesskadeIds = getBeregningYrkesskadeIds(behandlingId)
-        val yrkesskadeInntekterIds = getYrkesskadeInntekterIds(beregningYrkesskadeIds)
 
         val deletedRows = connection.executeReturnUpdated(
             """
@@ -224,7 +223,7 @@ class BeregningVurderingRepositoryImpl(private val connection: DBConnection) : B
             setParams {
                 setLong(1, behandlingId.id)
                 setLongArray(2, beregningTidspunktVurderingIds)
-                setLongArray(3, yrkesskadeInntekterIds)
+                setLongArray(3, beregningYrkesskadeIds)
                 setLongArray(4, beregningYrkesskadeIds)
             }
         }
@@ -256,20 +255,6 @@ class BeregningVurderingRepositoryImpl(private val connection: DBConnection) : B
         setParams { setLong(1, behandlingId.id) }
         setRowMapper { row ->
             row.getLong("tidspunkt_vurdering_id")
-        }
-    }
-
-    private fun getYrkesskadeInntekterIds(yrkeskadeInntekterIds: List<Long>): List<Long> = connection.queryList(
-        """
-                    SELECT id
-                    FROM YRKESSKADE_INNTEKTER
-                    WHERE id = ANY(?::bigint[]);
-                 
-                """.trimIndent()
-    ) {
-        setParams { setLongArray(1, yrkeskadeInntekterIds) }
-        setRowMapper { row ->
-            row.getLong("id")
         }
     }
 
