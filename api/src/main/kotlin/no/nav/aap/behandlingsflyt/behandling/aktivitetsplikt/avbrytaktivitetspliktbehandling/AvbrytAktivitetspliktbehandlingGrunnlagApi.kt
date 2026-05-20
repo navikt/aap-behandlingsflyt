@@ -3,13 +3,13 @@ package no.nav.aap.behandlingsflyt.behandling.aktivitetsplikt.avbrytaktivitetspl
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
-import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
+import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.avbrytaktivitetspliktbehandling.AvbrytAktivitetspliktbehandlingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.avbrytaktivitetspliktbehandling.AvbrytAktivitetspliktbehandlingVurdering
-import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.avbrytaktivitetspliktbehandling.AvbrytAktivitetspliktbehandlingÅrsakDto
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
@@ -25,8 +25,6 @@ fun NormalOpenAPIRoute.avbrytAktivitetspliktbehandlingGrunnlagApi(
     repositoryRegistry: RepositoryRegistry,
     gatewayProvider: GatewayProvider,
 ) {
-    val ansattInfoService = AnsattInfoService(gatewayProvider)
-
     route("api/aktivitetsplikt/{referanse}/grunnlag/avbryt") {
         getGrunnlag<BehandlingReferanse, AvbrytAktivitetspliktbehandlingGrunnlagDto>(
             relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
@@ -38,6 +36,7 @@ fun NormalOpenAPIRoute.avbrytAktivitetspliktbehandlingGrunnlagApi(
                 val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
                 val avbrytAktivitetspliktbehandlingRepository =
                     repositoryProvider.provide<AvbrytAktivitetspliktbehandlingRepository>()
+                val vurdertAvService = VurdertAvService(repositoryProvider, gatewayProvider)
 
                 val behandlingId =
                     BehandlingReferanseService(behandlingRepository).behandling(req).id
@@ -50,8 +49,7 @@ fun NormalOpenAPIRoute.avbrytAktivitetspliktbehandlingGrunnlagApi(
                     )
                 } else {
                     AvbrytAktivitetspliktbehandlingGrunnlagDto(
-                        vurdering = grunnlag.vurdering.tilDto(ansattInfoService),
-
+                        vurdering = grunnlag.vurdering.tilDto(vurdertAvService, behandlingId),
                         )
                 }
             }
@@ -60,14 +58,21 @@ fun NormalOpenAPIRoute.avbrytAktivitetspliktbehandlingGrunnlagApi(
     }
 }
 
-private fun AvbrytAktivitetspliktbehandlingVurdering.tilDto(ansattInfoService: AnsattInfoService): AvbrytAktivitetspliktbehandlingVurderingDto {
+private fun AvbrytAktivitetspliktbehandlingVurdering.tilDto(
+    vurdertAvService: VurdertAvService,
+    behandlingId: BehandlingId
+): AvbrytAktivitetspliktbehandlingVurderingDto {
     return AvbrytAktivitetspliktbehandlingVurderingDto(
         årsak = this.årsak.let { AvbrytAktivitetspliktbehandlingÅrsakDto.valueOf(it.name) },
         begrunnelse = this.begrunnelse,
-        vurdertAv = VurdertAvResponse.fraIdent(
-            this.vurdertAv.ident,
-            this.opprettetTidspunkt?.toLocalDate(),
-            ansattInfoService,
+        vurderingerMeta = vurdertAvService.byggVurderingerMeta(
+            Definisjon.AVBRYT_AKTIVITETSPLIKTBEHANDING,
+            behandlingId = behandlingId,
+            vurdertAv = vurdertAvService.medNavnOgEnhet(
+                this.vurdertAv.ident,
+                requireNotNull(this.opprettetTidspunkt?.toLocalDate()) {
+                    "Opprettet tidspunkt for vurdering kan ikke være null"
+                })
         )
     )
 }
