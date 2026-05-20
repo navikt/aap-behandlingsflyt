@@ -34,6 +34,19 @@ internal class SykepengerErstatningRepositoryImplTest {
         val behandling = dataSource.transaction { connection ->
             finnEllerOpprettBehandling(connection, sak(connection))
         }
+        val behandling2 = dataSource.transaction { connection ->
+            finnEllerOpprettBehandling(connection, sak(connection))
+        }
+        val vurderingSak2 = SykepengerVurdering(
+            begrunnelse = "urelatert",
+            dokumenterBruktIVurdering = listOf(JournalpostId("3212")),
+            harRettPå = true,
+            grunn = null,
+            vurdertAv = "saksbehandler",
+            gjelderFra = LocalDate.now(),
+            vurdertIBehandling = behandling2.id
+        )
+
         val vurdering1 = SykepengerVurdering(
             begrunnelse = "yolo",
             dokumenterBruktIVurdering = listOf(JournalpostId("123"), JournalpostId("321")),
@@ -57,6 +70,9 @@ internal class SykepengerErstatningRepositoryImplTest {
         dataSource.transaction { connection ->
             SykepengerErstatningRepositoryImpl(connection).lagre(behandling.id, listOf(vurdering1, vurdering2))
         }
+        dataSource.transaction { connection ->
+            SykepengerErstatningRepositoryImpl(connection).lagre(behandling2.id, listOf(vurderingSak2))
+        }
 
         val res = dataSource.transaction {
             SykepengerErstatningRepositoryImpl(it).hentHvisEksisterer(behandling.id)
@@ -73,12 +89,17 @@ internal class SykepengerErstatningRepositoryImplTest {
 
         // Test sletting
         dataSource.transaction { connection ->
-            SykepengerErstatningRepositoryImpl(connection).slett(behandling.id)
+            SykepengerErstatningRepositoryImpl(connection).slett(behandling2.id)
         }
 
-        val res3 = dataSource.transaction {
+        val speBehandling2 = dataSource.transaction {
+            SykepengerErstatningRepositoryImpl(it).hentHvisEksisterer(behandling2.id)
+        }
+        assertThat(speBehandling2).isNull()
+        val speBehandling1 = dataSource.transaction {
             SykepengerErstatningRepositoryImpl(it).hentHvisEksisterer(behandling.id)
         }
-        assertThat(res3).isNull()
+        assertThat(speBehandling1).isNotNull()
+        assertThat(speBehandling1?.vurderinger?.size).isEqualTo(2)
     }
 }
