@@ -27,10 +27,22 @@ public class Saksnummer(private val identifikator: String) {
     public companion object {
 
         /**
-         * Gjør saksnummer "human readable"
+         * Gjør saksnummer "human readable".
          */
-        public fun valueOf(id: Long): Saksnummer =
-            Saksnummer((id * 1000).toString(36).normalize())
+        public fun valueOf(id: Long): Saksnummer {
+            val cluster = System.getenv("NAIS_CLUSTER_NAME").orEmpty().lowercase()
+            /* Prefix for saker fra testmiljøet og lokalt, slik at hvis man gjør en endring
+             * på en sak i feil database (miljø), så vil ikke endringen ha noen effekt.
+             */
+            val prefix = when {
+                cluster.contains("dev") -> "TEST_"
+                cluster.contains("local") -> "LOCAL_"
+                else -> ""
+            }
+            return Saksnummer(
+                (prefix + (id * 1000).toString(36)).normalize()
+            )
+        }
 
         @JsonCreator
         @JvmStatic
