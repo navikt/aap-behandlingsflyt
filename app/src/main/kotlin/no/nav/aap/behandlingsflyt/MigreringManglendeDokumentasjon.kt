@@ -69,6 +69,7 @@ class MigreringManglendeDokumentasjon(
                     where
                         vilkar_resultat.aktiv
                         and vilkar_periode.avslagsarsak = 'MANGLENDE_DOKUMENTASJON'
+                        and vilkar.type = 'SYKDOMSVILKÅRET'
                         and behandling.id > ?
                     order by behandling.id
                     limit 1
@@ -98,6 +99,7 @@ class MigreringManglendeDokumentasjon(
                     /* sjekk om avslagsårsak fortsatt finnes nå som vi har låst behandlingen. */
                     if (vilkårsvurderinger.isEmpty()) {
                         log.info("ingen forekomster av manglende dokumentasjon etter lås")
+                        minimumBehandlingId = behandlingId
                         return@withLåstBehandling
                     }
 
