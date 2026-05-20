@@ -4,8 +4,6 @@ import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import io.ktor.http.HttpStatusCode
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonElement
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.brev.BrevGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.brev.BrevGrunnlag.Brev.Mottaker
@@ -25,6 +23,7 @@ import no.nav.aap.behandlingsflyt.mdc.LoggingKontekst
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersoninfoGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.BrevmalPreviewResponsDTO
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.BrevResponsDTO
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.DokumentResponsDTO
 import no.nav.aap.behandlingsflyt.tilgang.TilgangGateway
@@ -311,7 +310,7 @@ fun NormalOpenAPIRoute.brevApi(
             }
 
             route("/{brevbestillingReferanse}/brevmal-preview") {
-                authorizedGet<BrevbestillingReferanse, JsonElement>(authorizationParamPathConfig) { brevbestillingReferanse ->
+                authorizedGet<BrevbestillingReferanse, BrevmalPreviewResponsDTO>(authorizationParamPathConfig) { brevbestillingReferanse ->
                     val json = dataSource.transaction { connection ->
                         val repositoryProvider = repositoryRegistry.provider(connection)
                         val brevbestillingRepository =
@@ -327,7 +326,7 @@ fun NormalOpenAPIRoute.brevApi(
                         )
                     }
 
-                    respond(Json.parseToJsonElement(json))
+                    respond(BrevmalPreviewResponsDTO(json))
                 }
             }
         }
