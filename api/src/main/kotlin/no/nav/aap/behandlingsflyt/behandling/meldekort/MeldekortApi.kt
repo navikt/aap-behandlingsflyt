@@ -41,7 +41,6 @@ import no.nav.aap.verdityper.dokument.Kanal
 import java.time.Clock
 import java.time.Instant
 import java.time.LocalDate
-import java.time.LocalDateTime
 import java.time.ZoneId
 import javax.sql.DataSource
 
@@ -91,12 +90,12 @@ fun NormalOpenAPIRoute.meldekortApi(
 
                             MeldeperiodeMedMeldekortDto(
                                 meldeperiode = meldeperiode,
-                                meldekort = meldekort.toDto(meldekortData?.begrunnelse, meldekortData?.opprettetAv, mottattDokument?.opprettetTid),
+                                meldekort = meldekort.toDto(meldekortData?.begrunnelse, meldekortData?.opprettetAv, mottattDokument?.opprettetTid?.toLocalDate()),
                                 tidligereMeldekort = tidligereMeldekortListe.map { tidligere ->
                                     val ref = InnsendingReferanse(tidligere.journalpostId)
                                     val tidligereDokument = mottatteDokumenter[ref]
                                     val data = tidligereDokument?.strukturerteData<MeldekortV0>()?.data
-                                    tidligere.toDto(data?.begrunnelse, data?.opprettetAv, tidligereDokument?.opprettetTid)
+                                    tidligere.toDto(data?.begrunnelse, data?.opprettetAv, tidligereDokument?.opprettetTid?.toLocalDate())
                                 },
                             )
                         } else {
@@ -154,7 +153,7 @@ fun NormalOpenAPIRoute.meldekortApi(
 
                 OppdaterMeldekortResponse(
                     journalpostId = journalpostId.identifikator,
-                    oppdatertTidspunkt = LocalDateTime.ofInstant(tidspunkt, ZoneId.of("Europe/Oslo")),
+                    oppdatertTidspunkt = LocalDate.ofInstant(tidspunkt, ZoneId.of("Europe/Oslo")),
                 )
             }
 

@@ -189,7 +189,7 @@ class MeldekortApiTest : BaseApiTest() {
             assertThat(meldeperiodeMedMeldekort.meldekort).isNotNull
             assertThat(meldeperiodeMedMeldekort.meldekort!!.id).isEqualTo(meldekort.journalpostId.identifikator)
             assertThat(meldeperiodeMedMeldekort.meldekort.meldeDato).isEqualTo(meldekort.mottattTidspunkt.toLocalDate())
-            assertThat(meldeperiodeMedMeldekort.meldekort.oppdatertTidspunkt).isEqualTo(LocalDateTime.of(2025, 1, 20, 10, 0))
+            assertThat(meldeperiodeMedMeldekort.meldekort.oppdatertTidspunkt).isEqualTo(LocalDate.of(2025, 1, 20))
             assertThat(meldeperiodeMedMeldekort.meldekort.begrunnelse).isEqualTo("Korrigering av timer")
             assertThat(meldeperiodeMedMeldekort.meldekort.oppdatertAv).isEqualTo("Z123456")
             assertThat(meldeperiodeMedMeldekort.meldekort.dager).hasSize(2)
@@ -328,7 +328,7 @@ class MeldekortApiTest : BaseApiTest() {
             assertThat(meldeperiodeMedMeldekort.meldekort).isNotNull
             assertThat(meldeperiodeMedMeldekort.meldekort!!.id).isEqualTo(korrigertMeldekort.journalpostId.identifikator)
             assertThat(meldeperiodeMedMeldekort.meldekort.meldeDato).isEqualTo(korrigertMeldekort.mottattTidspunkt.toLocalDate())
-            assertThat(meldeperiodeMedMeldekort.meldekort.oppdatertTidspunkt).isEqualTo(LocalDateTime.of(2025, 1, 25, 11, 0))
+            assertThat(meldeperiodeMedMeldekort.meldekort.oppdatertTidspunkt).isEqualTo(LocalDate.of(2025, 1, 25))
             assertThat(meldeperiodeMedMeldekort.meldekort.begrunnelse).isEqualTo("Feil i opprinnelig rapportering")
             assertThat(meldeperiodeMedMeldekort.meldekort.oppdatertAv).isEqualTo("Z654321")
             assertThat(meldeperiodeMedMeldekort.meldekort.dager).hasSize(1)
@@ -336,7 +336,7 @@ class MeldekortApiTest : BaseApiTest() {
             assertThat(meldeperiodeMedMeldekort.tidligereMeldekort).hasSize(1)
             assertThat(meldeperiodeMedMeldekort.tidligereMeldekort.first().id).isEqualTo(opprinneligMeldekort.journalpostId.identifikator)
             assertThat(meldeperiodeMedMeldekort.tidligereMeldekort.first().meldeDato).isEqualTo(opprinneligMeldekort.mottattTidspunkt.toLocalDate())
-            assertThat(meldeperiodeMedMeldekort.tidligereMeldekort.first().oppdatertTidspunkt).isEqualTo(LocalDateTime.of(2025, 1, 20, 10, 0))
+            assertThat(meldeperiodeMedMeldekort.tidligereMeldekort.first().oppdatertTidspunkt).isEqualTo(LocalDate.of(2025, 1, 20))
         }
     }
 
@@ -535,7 +535,7 @@ class MeldekortApiTest : BaseApiTest() {
             val body = response.body<OppdaterMeldekortResponse>()
             assertThat(body.journalpostId).isNotBlank()
             // fixedClock = 2025-04-01T00:00:00Z = 2025-04-01T02:00:00 i Europe/Oslo (CEST)
-            assertThat(body.oppdatertTidspunkt).isEqualTo(LocalDateTime.of(2025, 4, 1, 2, 0, 0))
+            assertThat(body.oppdatertTidspunkt).isEqualTo(LocalDate.of(2025, 4, 1))
         }
     }
 
