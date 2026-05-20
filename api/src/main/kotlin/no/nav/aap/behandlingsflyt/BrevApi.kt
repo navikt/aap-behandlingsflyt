@@ -41,7 +41,6 @@ import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.komponenter.server.auth.bruker
 import no.nav.aap.komponenter.server.auth.token
-import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.tilgang.AuthorizationBodyPathConfig
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
@@ -54,7 +53,6 @@ import no.nav.aap.tilgang.authorizedPut
 import org.slf4j.LoggerFactory
 import java.util.*
 import javax.sql.DataSource
-import kotlin.collections.emptyList
 
 private val log = LoggerFactory.getLogger("BrevAPI")
 fun NormalOpenAPIRoute.brevApi(
@@ -119,9 +117,9 @@ fun NormalOpenAPIRoute.brevApi(
                         val personIdent = sak.person.aktivIdent()
                         val personinfo = personinfoGateway.hentPersoninfoForIdent(personIdent, token())
                         val rettighetsPerioder =
-                            rettighetstypeRepository.hentHvisEksisterer(behandling.id)?.rettighetstypeTidslinje?.perioder()?.toList()
+                            rettighetstypeRepository.hentHvisEksisterer(behandling.id)?.rettighetstypeTidslinje?.perioder()
+                                ?.toList()
                                 ?: emptyList()
-
 
                         val skrivBrevAvklaringsbehov = avklaringsbehovene
                             .hentBehovForDefinisjon(
@@ -143,8 +141,8 @@ fun NormalOpenAPIRoute.brevApi(
                         DataResultat(
                             harIkkeGjortNoenVurderinger = avklaringsbehovene
                                 .alle()
-                            .filter { it.erTotrinn() }
-                            .none { it.brukere().contains(bruker().ident) },
+                                .filter { it.erTotrinn() }
+                                .none { it.brukere().contains(bruker().ident) },
                             brevGrunnlag = brevbestillinger.map { brevbestilling ->
                                 val brevbestillingResponse =
                                     brevbestillingService.hentBrevbestilling(brevbestilling.referanse)
