@@ -92,6 +92,21 @@ class ForutgåendeMedlemskapVurderingServiceTest {
     }
 
     @Test
+    fun `Bruker har statsborgerskap utenfor EØS og norsk statsborgerskap utgått før perioden`() {
+        val grunnlag = lagGrunnlagSomFerskUtenforEØSStatsborger(
+            godkjentPgaUnntakIMedl = true,
+            godkjentPgaInntekt = true,
+            inntektHarHull = true,
+            harNorskStatsborgerskap = true,
+            norskStatsborgerskapUtgåttFørPerioden = true
+        )
+        val resultat = service.vurderTilhørighet(grunnlag, Periode(LocalDate.now(), LocalDate.now().plusYears(1)))
+        val vurdering = resultat.tilhørighetVurdering
+            .single { it.opplysning == "Har statsborgerskap utenfor EØS i perioden" }
+        assertThat(vurdering.resultat).isTrue
+    }
+
+    @Test
     fun `Bruker har gammelt statsborgerskap utenfor EØS`() {
         val grunnlag = lagGrunnlagSomMedSteingammeltUtenforEØSStatsborgerskap(true, true, true)
         val resultat = service.vurderTilhørighet(grunnlag, Periode(LocalDate.now(), LocalDate.now().plusYears(1)))
@@ -408,7 +423,8 @@ class ForutgåendeMedlemskapVurderingServiceTest {
         godkjentPgaUnntakIMedl: Boolean,
         godkjentPgaInntekt: Boolean,
         inntektHarHull: Boolean,
-        harNorskStatsborgerskap: Boolean = true
+        harNorskStatsborgerskap: Boolean = true,
+        norskStatsborgerskapUtgåttFørPerioden: Boolean = false
     ): ForutgåendeMedlemskapGrunnlag {
         val inntekterINorgeGrunnlag = if (godkjentPgaInntekt) {
             listOf(
@@ -497,8 +513,8 @@ class ForutgåendeMedlemskapVurderingServiceTest {
                             listOf(
                                 Statsborgerskap(
                                     "NOR",
-                                    gyldigFraOgMed = LocalDate.now().minusYears(1),
-                                    LocalDate.now()
+                                    gyldigFraOgMed = if (norskStatsborgerskapUtgåttFørPerioden) LocalDate.now().minusYears(20) else LocalDate.now().minusYears(1),
+                                    gyldigTilOgMed = if (norskStatsborgerskapUtgåttFørPerioden) LocalDate.now().minusYears(9) else LocalDate.now()
                                 )
                             )
                         } else {
