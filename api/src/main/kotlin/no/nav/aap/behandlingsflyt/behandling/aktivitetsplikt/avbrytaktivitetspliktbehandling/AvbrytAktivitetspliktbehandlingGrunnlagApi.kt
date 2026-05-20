@@ -43,15 +43,9 @@ fun NormalOpenAPIRoute.avbrytAktivitetspliktbehandlingGrunnlagApi(
 
                 val grunnlag = avbrytAktivitetspliktbehandlingRepository.hentHvisEksisterer(behandlingId)
 
-                if (grunnlag == null) {
-                    AvbrytAktivitetspliktbehandlingGrunnlagDto(
-                        vurdering = null,
-                    )
-                } else {
-                    AvbrytAktivitetspliktbehandlingGrunnlagDto(
-                        vurdering = grunnlag.vurdering.tilDto(vurdertAvService, behandlingId),
-                        )
-                }
+                AvbrytAktivitetspliktbehandlingGrunnlagDto(
+                    vurdering = grunnlag?.vurdering?.tilDto(vurdertAvService, behandlingId)
+                )
             }
             respond(respons)
         }

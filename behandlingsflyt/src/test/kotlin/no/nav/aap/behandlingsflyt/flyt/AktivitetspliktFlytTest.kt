@@ -349,13 +349,13 @@ class AktivitetspliktFlytTest :
 
         aktivitetspliktBehandling = hentBehandling(aktivitetspliktBehandling.referanse)
             .medKontekst {
-                assertThat(this.behandling).extracting { it.aktivtSteg() }
+                assertThat(this.behandling.aktivtSteg())
                     .isEqualTo(StegType.VURDER_AKTIVITETSPLIKT_11_7)
 
             }
             .leggTilVurderingsbehov(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.AKTIVITETSPLIKTBEHANDLING_AVBRUTT)
             .medKontekst {
-                assertThat(this.behandling).extracting { it.aktivtSteg() }
+                assertThat(this.behandling.aktivtSteg())
                     .isEqualTo(StegType.AVBRYT_AKTIVITETSPLIKTBEHANDLING)
             }.løsAvklaringsBehov(
                 AvbrytAktivitetspliktbehandlingLøsning(
@@ -390,13 +390,13 @@ class AktivitetspliktFlytTest :
 
         aktivitetspliktBehandling = hentBehandling(aktivitetspliktBehandling.referanse)
             .medKontekst {
-                assertThat(this.behandling).extracting { it.aktivtSteg() }
+                assertThat(this.behandling.aktivtSteg())
                     .isEqualTo(StegType.VURDER_AKTIVITETSPLIKT_11_9)
 
             }
             .leggTilVurderingsbehov(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.AKTIVITETSPLIKTBEHANDLING_AVBRUTT)
             .medKontekst {
-                assertThat(this.behandling).extracting { it.aktivtSteg() }
+                assertThat(this.behandling.aktivtSteg())
                     .isEqualTo(StegType.AVBRYT_AKTIVITETSPLIKTBEHANDLING)
             }.løsAvklaringsBehov(
                 AvbrytAktivitetspliktbehandlingLøsning(
