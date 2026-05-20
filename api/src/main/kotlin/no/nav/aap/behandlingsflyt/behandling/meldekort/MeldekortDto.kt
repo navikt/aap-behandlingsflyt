@@ -24,7 +24,7 @@ data class MeldekortDto(
     @Deprecated("Bruk journalpostId i stedet for id, da det er mer beskrivende")
     val id: String,
     val journalpostId: String,
-    val meldeDato: LocalDateTime,
+    val meldeDato: LocalDate,
     val oppdatertTidspunkt: LocalDateTime? = null,
     val begrunnelse: String? = null,
     val oppdatertAv: String? = null,
@@ -56,7 +56,7 @@ fun Meldekort.toDto(begrunnelse: String?, oppdatertAv: String?, oppdatertTidspun
     MeldekortDto(
         id = journalpostId.identifikator,
         journalpostId = journalpostId.identifikator,
-        meldeDato = mottattTidspunkt,
+        meldeDato = mottattTidspunkt.toLocalDate(),
         oppdatertTidspunkt = oppdatertTidspunkt,
         begrunnelse = begrunnelse,
         oppdatertAv = oppdatertAv,
