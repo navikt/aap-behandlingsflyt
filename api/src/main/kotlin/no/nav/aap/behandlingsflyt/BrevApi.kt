@@ -3,7 +3,9 @@ package no.nav.aap.behandlingsflyt
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
-import io.ktor.http.*
+import io.ktor.http.HttpStatusCode
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonElement
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.brev.BrevGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.brev.BrevGrunnlag.Brev.Mottaker
@@ -305,6 +307,27 @@ fun NormalOpenAPIRoute.brevApi(
                         )
                     }
                     respond(BrevResponsDTO(html))
+                }
+            }
+
+            route("/{brevbestillingReferanse}/brevmal-preview") {
+                authorizedGet<BrevbestillingReferanse, JsonElement>(authorizationParamPathConfig) { brevbestillingReferanse ->
+                    val json = dataSource.transaction { connection ->
+                        val repositoryProvider = repositoryRegistry.provider(connection)
+                        val brevbestillingRepository =
+                            repositoryProvider.provide<BrevbestillingRepository>()
+
+                        val brevbestilling = brevbestillingRepository.hent(brevbestillingReferanse)
+                            ?: throw VerdiIkkeFunnetException("Fant ikke brevbestilling med referanse $brevbestillingReferanse")
+
+                        val signaturService = SignaturService(repositoryProvider, gatewayProvider)
+                        brevbestillingGateway.brevbyggerPreview(
+                            bestillingReferanse = brevbestillingReferanse,
+                            signaturer = signaturService.finnSignaturGrunnlag(brevbestilling, bruker()),
+                        )
+                    }
+
+                    respond(Json.parseToJsonElement(json))
                 }
             }
         }
