@@ -24,7 +24,7 @@ class AvbrytAktivitetspliktbehandlingRepositoryImpl(
             """
                 select *
                 from avbryt_aktivitetspliktbehandling_grunnlag as grunnlag
-                left join avbryt_aktivitetspliktbehandling_vurdering as vurdering on grunnlag.id = vurdering.id
+                left join avbryt_aktivitetspliktbehandling_vurdering as vurdering on grunnlag.vurdering_id = vurdering.id
                 where grunnlag.aktiv = true and grunnlag.behandling_id = ?
             """.trimIndent()
         ) {
