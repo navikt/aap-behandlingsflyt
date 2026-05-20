@@ -326,7 +326,8 @@ class ForutgåendeMedlemskapVurderingService(
             grunnlag?.brukerPersonopplysning?.statsborgerskap
                 ?.any { it.erGyldigIPeriode(forutgåendePeriode) && it.land !in EØSLandEllerLandMedAvtale.gyldigeEØSLand.map { it.name } }
         val harNorskStatsborgerskap =
-            grunnlag?.brukerPersonopplysning?.statsborgerskap?.any { it.land == EØSLandEllerLandMedAvtale.NOR.toString() }
+            grunnlag?.brukerPersonopplysning?.statsborgerskap
+                ?.any { it.land == EØSLandEllerLandMedAvtale.NOR.toString() && it.erGyldigIPeriode(forutgåendePeriode) }
 
         val manglerStatsborgerskapGrunnlag =
             grunnlag?.brukerPersonopplysning?.statsborgerskap
