@@ -16,6 +16,7 @@ import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingRepos
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingService
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Status
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.rettighetstype.RettighetstypeRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.mdc.LogKontekst
@@ -40,6 +41,7 @@ import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.komponenter.server.auth.bruker
 import no.nav.aap.komponenter.server.auth.token
+import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.tilgang.AuthorizationBodyPathConfig
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
@@ -52,6 +54,7 @@ import no.nav.aap.tilgang.authorizedPut
 import org.slf4j.LoggerFactory
 import java.util.*
 import javax.sql.DataSource
+import kotlin.collections.emptyList
 
 private val log = LoggerFactory.getLogger("BrevAPI")
 fun NormalOpenAPIRoute.brevApi(
@@ -98,13 +101,14 @@ fun NormalOpenAPIRoute.brevApi(
                 ) { behandlingReferanse ->
                     class DataResultat(
                         val harIkkeGjortNoenVurderinger: Boolean,
-                        val brevGrunnlag: List<Pair<Definisjon, BrevGrunnlag.Brev>>
+                        val brevGrunnlag: List<Pair<Definisjon, BrevGrunnlag.Brev>>,
                     )
 
                     val databasetilstand = dataSource.transaction(readOnly = true) { connection ->
                         val repositoryProvider = repositoryRegistry.provider(connection)
                         val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
                         val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
+                        val rettighetstypeRepository = repositoryProvider.provide<RettighetstypeRepository>()
                         val signaturService = SignaturService(repositoryProvider, gatewayProvider)
                         val brevbestillingService = BrevbestillingService(repositoryProvider, gatewayProvider)
                         val brevbestillinger = brevbestillingService.hentBrevbestillinger(behandlingReferanse)
@@ -114,6 +118,10 @@ fun NormalOpenAPIRoute.brevApi(
                         val sak = SakService(repositoryProvider, gatewayProvider).hent(behandling.sakId)
                         val personIdent = sak.person.aktivIdent()
                         val personinfo = personinfoGateway.hentPersoninfoForIdent(personIdent, token())
+                        val rettighetsPerioder =
+                            rettighetstypeRepository.hentHvisEksisterer(behandling.id)?.rettighetstypeTidslinje?.perioder()?.toList()
+                                ?: emptyList()
+
 
                         val skrivBrevAvklaringsbehov = avklaringsbehovene
                             .hentBehovForDefinisjon(
@@ -192,6 +200,7 @@ fun NormalOpenAPIRoute.brevApi(
                                     ),
                                     signaturer = signaturer,
                                     harTilgangTilÅSendeBrev = false, // nb. settes utenfor transaksjonen pga kall til tilgang som vi ønsker skal være async
+                                    rettighetsPerioder = rettighetsPerioder,
                                 )
                             })
                     }

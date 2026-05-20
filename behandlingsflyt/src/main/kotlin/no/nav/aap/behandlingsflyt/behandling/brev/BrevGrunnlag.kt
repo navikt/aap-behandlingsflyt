@@ -6,6 +6,7 @@ import no.nav.aap.brev.kontrakt.Brevtype
 import no.nav.aap.brev.kontrakt.BrevdataDto
 import no.nav.aap.brev.kontrakt.Signatur
 import no.nav.aap.brev.kontrakt.Språk
+import no.nav.aap.komponenter.type.Periode
 import java.time.LocalDateTime
 import java.util.*
 
@@ -25,6 +26,7 @@ data class BrevGrunnlag(
         val mottaker: Mottaker,
         val signaturer: List<Signatur>,
         val harTilgangTilÅSendeBrev: Boolean,
+        val rettighetsPerioder: List<Periode>,
     ) {
         data class Mottaker(val navn: String, val ident: String)
     }
