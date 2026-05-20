@@ -42,7 +42,6 @@ import java.time.Clock
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
-import java.time.LocalTime
 import java.time.ZoneId
 import javax.sql.DataSource
 
@@ -148,7 +147,7 @@ fun NormalOpenAPIRoute.meldekortApi(
                     tidspunkt = tidspunkt
                 )
 
-                val innsending = tilInnsending(sak, journalpostId, LocalDateTime.of(body.meldeDato, LocalTime.MIDNIGHT), meldekort)
+                val innsending = tilInnsending(sak, journalpostId, body.meldeDato, meldekort)
 
                 // Oppretter mottatt hendelse som prosesseres som en meldekort-behandling
                 MottattHendelseService(repositoryProvider).registrerMottattHendelse(innsending)
@@ -206,14 +205,14 @@ private fun hentProsesseringStatus(
 private fun tilInnsending(
     sak: Sak,
     journalpostId: JournalpostId,
-    mottattTidspunkt: LocalDateTime,
+    meldeDato: LocalDate,
     meldekort: MeldekortV0
 ): Innsending = Innsending(
     saksnummer = sak.saksnummer,
     referanse = InnsendingReferanse(journalpostId),
     type = InnsendingType.MELDEKORT,
     kanal = Kanal.DIGITAL,
-    mottattTidspunkt = mottattTidspunkt,
+    mottattTidspunkt = meldeDato.atStartOfDay(),
     melding = meldekort,
 )
 
