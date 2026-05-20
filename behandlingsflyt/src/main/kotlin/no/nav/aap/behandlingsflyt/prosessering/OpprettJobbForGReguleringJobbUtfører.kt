@@ -113,8 +113,8 @@ class OpprettJobbForGReguleringJobbUtfører(
         override val beskrivelse = "Skal opprette jobber for omberegning av ytelse i saker, G-regulering"
 
         /**
-         * Kjøres hver dag kl 05:00
+         * Kjøres hver dag kl 05:00 og 17:00
          */
-        override val cron = CronExpression.createWithoutSeconds("0 5 * * *")
+        override val cron = CronExpression.createWithoutSeconds("0 5,17 * * *")
     }
 }
