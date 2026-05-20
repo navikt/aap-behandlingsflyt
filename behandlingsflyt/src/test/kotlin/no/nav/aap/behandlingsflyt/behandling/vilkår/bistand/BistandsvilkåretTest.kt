@@ -135,7 +135,7 @@ class BistandsvilkåretTest {
             val førstegangsbehandling = finnEllerOpprettBehandling(connection, sak)
 
             val bistandsvurdering1 = Bistandsvurdering(
-                vurdertIBehandling = BehandlingId(1),
+                vurdertIBehandling = førstegangsbehandling.id,
                 begrunnelse = "Begrunnelse",
                 erBehovForAktivBehandling = true,
                 erBehovForArbeidsrettetTiltak = true,
