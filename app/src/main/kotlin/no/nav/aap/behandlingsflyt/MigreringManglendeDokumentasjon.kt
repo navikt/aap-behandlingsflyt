@@ -37,8 +37,11 @@ class MigreringManglendeDokumentasjon(
             log.info("isLeader = $isLeader")
 
             if (unleashGateway.isEnabled(BehandlingsflytFeature.MigrerManglendeDokumentasjon) && isLeader) {
-                // kjør migreringer
-                utførMigrering()
+                try {
+                    utførMigrering()
+                } catch (e: Exception) {
+                    log.warn("feil ved migrering av manglende dokumentasjon: {}", e.javaClass.name, e)
+                }
             }
 
         }, 1, 9, TimeUnit.MINUTES)
