@@ -72,8 +72,8 @@ class GrunnbeløpTest {
     fun `aktiverGJustering2026 legger til grunnbeløp for 2026`() {
         Grunnbeløp.aktiverGJustering2026()
 
-        assertThat(Grunnbeløp.finnGrunnbeløp(1 mai 2026)).isEqualTo(Beløp(132_000))
-        assertThat(Grunnbeløp.gjennomsnittGrunnbeløp(1 mai 2026)).isEqualTo(Beløp(131_387))
+        assertThat(Grunnbeløp.finnGrunnbeløp(1 mai 2026)).isEqualTo(Beløp(136_549))
+        assertThat(Grunnbeløp.gjennomsnittGrunnbeløp(1 mai 2026)).isEqualTo(Beløp(134_419))
     }
 
     @Test
@@ -81,6 +81,6 @@ class GrunnbeløpTest {
         Grunnbeløp.aktiverGJustering2026()
         Grunnbeløp.aktiverGJustering2026()
 
-        assertThat(Grunnbeløp.finnGrunnbeløp(1 mai 2026)).isEqualTo(Beløp(132_000))
+        assertThat(Grunnbeløp.finnGrunnbeløp(1 mai 2026)).isEqualTo(Beløp(136_549))
     }
 }
