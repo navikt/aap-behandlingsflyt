@@ -86,4 +86,5 @@ fun testGatewayProvider(
         register<DokarkivGatewayImpl>()
         register<PdfgenGatewayImpl>()
         register<DummyBehandlingHendelseServiceFactory>()
+        extensions()
     }

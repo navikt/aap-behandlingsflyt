@@ -84,7 +84,7 @@ data class IdentOgOpphold(val ident: String, val opphold: List<Institusjonsoppho
 fun main() {
     val dbConfig = initDbConfig()
 
-    FakeServers.start(JSONTestPersonService()) // azurePort = 8081)
+    FakeServers.start(JSONTestPersonService())
 
     // Starter server
     embeddedServer(Netty, configure = {
