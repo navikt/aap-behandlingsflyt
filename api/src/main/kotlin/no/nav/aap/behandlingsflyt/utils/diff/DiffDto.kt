@@ -11,35 +11,16 @@ import no.nav.aap.behandlingsflyt.utils.Uendret as DomeneUendret
     use = JsonTypeInfo.Id.NAME,
     include = JsonTypeInfo.As.PROPERTY,
     property = "diff",
+    visible = true
 )
 sealed interface DiffDto<T>
 
-@JsonTypeInfo(
-    use = JsonTypeInfo.Id.NAME,
-    include = JsonTypeInfo.As.PROPERTY,
-    property = "diff",
-)
 data class LagtTil<T>(val lagtTil: T) : DiffDto<T>
 
-@JsonTypeInfo(
-    use = JsonTypeInfo.Id.NAME,
-    include = JsonTypeInfo.As.PROPERTY,
-    property = "diff",
-)
 data class Fjernet<T>(val fjernet: T) : DiffDto<T>
 
-@JsonTypeInfo(
-    use = JsonTypeInfo.Id.NAME,
-    include = JsonTypeInfo.As.PROPERTY,
-    property = "diff",
-)
 data class Uendret<T>(val uendret: T) : DiffDto<T>
 
-@JsonTypeInfo(
-    use = JsonTypeInfo.Id.NAME,
-    include = JsonTypeInfo.As.PROPERTY,
-    property = "diff",
-)
 data class Endret<T>(val fra: T, val til: T) : DiffDto<T>
 
 fun <T> Diff<T>.somDto(): DiffDto<T> = when (this) {
