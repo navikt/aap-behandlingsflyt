@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter
 
-import com.fasterxml.jackson.annotation.JsonFormat
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
@@ -12,7 +11,6 @@ import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
-import java.time.ZonedDateTime
 import java.util.*
 
 public sealed interface TilbakekrevingHendelse : Melding
@@ -137,7 +135,10 @@ public data class TilbakekrevingKafkaDto(
 
 public data class TilbakekrevingVenterKafkaDto(
     val grunn: TilbakekrevingGrunn,
-    val gjenopptas: LocalDate,
+    //HACK: Finnes meldinger med 3 forskjellige skrivemåter. De 2 nederste kan slettes når alle meldinger med feilstaving er passert.
+    val gjenopptas: LocalDate? = null,
+    val gjennoptas: LocalDate? = null,
+    val gjenoptas: LocalDate? = null,
 )
 
 public enum class TilbakekrevingGrunn {
