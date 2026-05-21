@@ -24,7 +24,8 @@ enum class BehandlingsflytFeature : FeatureToggle {
     GrunnbeloepInformasjonskrav,
     GJustering2026,
     AlleEndringerKreverKvalitetssikring,
-    RevurderingEtterAvslagSkalKvalitetssikres
+    RevurderingEtterAvslagSkalKvalitetssikres,
+    MeldepliktForsteFraForsteInnvilgelse,
     ;
 
     override fun key(): String = name

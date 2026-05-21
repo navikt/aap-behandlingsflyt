@@ -1,10 +1,11 @@
 package no.nav.aap.behandlingsflyt.test.inmemoryservice
 
-import no.nav.aap.behandlingsflyt.behandling.ResultatUtleder
-import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.avbrytaktivitetspliktbehandling.AvbrytAktivitetspliktbehandlingService
+
 import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingService
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
+import no.nav.aap.behandlingsflyt.behandling.underveis.UnderveisService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopierer
+import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.avbrytaktivitetspliktbehandling.AvbrytAktivitetspliktbehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
@@ -15,8 +16,6 @@ import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryTrukketSøknadRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryProvider
 import no.nav.aap.behandlingsflyt.test.minimalGatewayProvider
-
-val InMemoryResultatUtleder = ResultatUtleder(inMemoryRepositoryProvider, minimalGatewayProvider())
 
 val InMemoryBehandlingService = BehandlingService(
     grunnlagKopierer = object : GrunnlagKopierer {
@@ -32,7 +31,7 @@ val InMemoryBehandlingService = BehandlingService(
     avbrytRevurderingService = AvbrytRevurderingService(
         InMemoryAvbrytRevurderingRepository
     ),
-    resultatUtleder = InMemoryResultatUtleder,
+    underveisService = UnderveisService(inMemoryRepositoryProvider, minimalGatewayProvider {  }),
     avbrytAktivitetspliktbehandlingService = AvbrytAktivitetspliktbehandlingService(
         InMemoryAvbrytAktivitetspliktbehandlingRepository
     )
