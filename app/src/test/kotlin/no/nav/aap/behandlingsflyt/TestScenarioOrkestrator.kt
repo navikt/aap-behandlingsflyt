@@ -214,7 +214,7 @@ class TestScenarioOrkestrator(
             KvalitetssikringLøsning(alleAvklaringsbehov.filter { behov -> behov.erTotrinn() || behov.kreverKvalitetssikring() }
                 .map { behov ->
                     TotrinnsVurdering(
-                        behov.definisjon.kode, true, "begrunnelse", emptyList()
+                        behov.definisjon.kode, true, "begrunnelse", emptyList(), emptyList()
                     )
                 }),
             bruker
@@ -459,7 +459,11 @@ class TestScenarioOrkestrator(
                     .filter { behov -> behov.erTotrinn() }
                     .map { behov ->
                         TotrinnsVurdering(
-                            behov.definisjon.kode, behov.definisjon != returVed, "begrunnelse", emptyList()
+                            behov.definisjon.kode,
+                            behov.definisjon != returVed,
+                            "begrunnelse",
+                            emptyList(),
+                            emptyList()
                         )
                     }),
             Bruker("BESLUTTER")

@@ -104,7 +104,7 @@ fun main() {
                 datasource,
                 jobber = ProsesseringsJobber.alle(),
                 repositoryRegistry = repositoryRegistry,
-                gatewayProvider
+                gatewayProvider = gatewayProvider
             )
         }.value
 

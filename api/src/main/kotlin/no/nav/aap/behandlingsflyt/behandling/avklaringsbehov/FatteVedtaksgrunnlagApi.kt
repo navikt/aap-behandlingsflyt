@@ -192,9 +192,10 @@ private fun tilKvalitetssikring(it: Avklaringsbehov): TotrinnsVurdering {
             it.definisjon.kode,
             godkjent,
             sisteVurdering?.begrunnelse,
-            sisteVurdering?.årsakTilRetur.orEmpty()
+            sisteVurdering?.årsakTilRetur.orEmpty(),
+            emptyList(),
         )
     } else {
-        TotrinnsVurdering(it.definisjon.kode, null, null, emptyList())
+        TotrinnsVurdering(it.definisjon.kode, null, null, emptyList(), emptyList())
     }
 }
