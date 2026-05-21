@@ -256,7 +256,7 @@ class UnderveisService(
         return vedtattUnderveis?.perioder?.maxOfOrNull { it.periode.tom }
     }
 
-    fun rettighethetsType(behandlingId: BehandlingId): Tidslinje<RettighetsType> {
+    fun rettighetsType(behandlingId: BehandlingId): Tidslinje<RettighetsType> {
         return underveisRepository.hentHvisEksisterer(behandlingId)
             ?.somTidslinje().orEmpty()
             .mapNotNull { it.rettighetsType }

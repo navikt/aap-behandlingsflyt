@@ -106,5 +106,5 @@ class ResultatUtleder(
     }
 
     fun harRett(behandlingId: BehandlingId) =
-        underveisService.rettighethetsType(behandlingId).isNotEmpty()
+        underveisService.rettighetsType(behandlingId).isNotEmpty()
 }
