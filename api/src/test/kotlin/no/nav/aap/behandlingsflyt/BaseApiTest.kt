@@ -65,7 +65,7 @@ open class BaseApiTest {
         )
 
         val token = client.post<Map<String, String>, TestToken>(
-            URI.create(requiredConfigForKey("nais.token.exchange.endpoint")),
+            URI.create(requiredConfigForKey("NAIS_TOKEN_EXCHANGE_ENDPOINT")),
             PostRequest(
                 body = mapOf(
                     "user_token" to AzureTokenGen("audience").generate(false, "behandlingsflyt", "Z123456"),

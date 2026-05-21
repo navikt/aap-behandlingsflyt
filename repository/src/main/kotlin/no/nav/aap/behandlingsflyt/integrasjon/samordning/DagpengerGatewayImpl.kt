@@ -20,8 +20,8 @@ import java.time.LocalDate
 
 // https://navikt.github.io/dp-datadeling/openapi.html
 class DagpengerGatewayImpl: DagpengerGateway {
-    private val url = URI.create(requiredConfigForKey("integrasjon.dagpenger.url") + "/dagpenger/datadeling/v1/perioder")
-    private val config = ClientConfig(scope = requiredConfigForKey("integrasjon.dagpenger.scope"))
+    private val url = URI.create(requiredConfigForKey("INTEGRASJON_DAGPENGER_URL") + "/dagpenger/datadeling/v1/perioder")
+    private val config = ClientConfig(scope = requiredConfigForKey("INTEGRASJON_DAGPENGER_SCOPE"))
 
     companion object : Factory<DagpengerGateway> {
         override fun konstruer(): DagpengerGateway {

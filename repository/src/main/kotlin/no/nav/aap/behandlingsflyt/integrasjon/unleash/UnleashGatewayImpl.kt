@@ -12,9 +12,9 @@ object UnleashGatewayImpl : UnleashGateway {
     private val unleash = DefaultUnleash(
         UnleashConfig
             .builder()
-            .appName(requiredConfigForKey("nais.app.name"))
-            .unleashAPI("${requiredConfigForKey("unleash.server.api.url")}/api")
-            .apiKey(requiredConfigForKey("unleash.server.api.token"))
+            .appName(requiredConfigForKey("NAIS_APP_NAME"))
+            .unleashAPI("${requiredConfigForKey("UNLEASH_SERVER_API_URL")}/api")
+            .apiKey(requiredConfigForKey("UNLEASH_SERVER_API_TOKEN"))
             .build()
     )
 

@@ -21,8 +21,8 @@ import no.nav.aap.komponenter.httpklient.httpclient.get
 import java.net.URI
 
 object OppgavestyringGatewayImpl : OppgavestyringGateway {
-    private val url = URI.create(requiredConfigForKey("integrasjon.oppgavestyring.url"))
-    private val config = ClientConfig(scope = requiredConfigForKey("integrasjon.oppgavestyring.scope"))
+    private val url = URI.create(requiredConfigForKey("INTEGRASJON_OPPGAVESTYRING_URL"))
+    private val config = ClientConfig(scope = requiredConfigForKey("INTEGRASJON_OPPGAVESTYRING_SCOPE"))
 
     private val client = RestClient.withDefaultResponseHandler(
         config = config,
