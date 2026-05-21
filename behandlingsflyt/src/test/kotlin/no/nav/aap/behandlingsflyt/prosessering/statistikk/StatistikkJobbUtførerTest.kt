@@ -113,6 +113,7 @@ import java.time.temporal.ChronoUnit
 
 @Fakes
 class StatistikkJobbUtførerTest {
+    private val gatewayProvider = minimalGatewayProvider {  }
     companion object {
         private lateinit var dataSource: TestDataSource
 
@@ -342,7 +343,7 @@ class StatistikkJobbUtførerTest {
                     ),
                 ),
             )
-            VedtakService(postgresRepositoryRegistry.provider(connection)).lagreVedtak(
+            VedtakService(postgresRepositoryRegistry.provider(connection), gatewayProvider).lagreVedtak(
                 opprettetBehandling.id, vedtakstidspunkt, LocalDate.now()
             )
             beregningsgrunnlagRepository.lagre(

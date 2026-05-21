@@ -147,7 +147,7 @@ fun NormalOpenAPIRoute.behandlingApi(
                         virkningstidspunkt = virkningstidspunkt,
                         kravMottatt = kravMottatt,
                         tilhørendeKlagebehandling = tilhørendeKlagebehandling?.referanse,
-                        vedtaksdato = VedtakService(repositoryProvider).vedtakstidspunkt(behandling)?.toLocalDate(),
+                        vedtaksdato = VedtakService(repositoryProvider, gatewayProvider).vedtakstidspunkt(behandling)?.toLocalDate(),
                         vurderingsbehovOgÅrsaker = vurderingsbehovOgÅrsaker,
                         arenaStatus = hentArenaStatus(behandling.sakId)
                     )
