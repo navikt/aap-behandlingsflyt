@@ -390,7 +390,9 @@ private fun finnSaksinfo(
                     behandlingRepository.hentAlleFor(sak.id)
                         .filter { it.erYtelsesbehandling() }
                         .maxByOrNull { it.opprettetTidspunkt }
-                        ?.let { resultatUtleder.utledResultat(it) }
+                        ?.let {
+                            resultatUtleder.utledResultat(it).takeIf { res -> res == Resultat.TRUKKET }
+                        }
                 } else {
                     resultatUtleder.utledResultat(gjeldendeBehandling)
                 }
