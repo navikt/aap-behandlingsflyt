@@ -7,6 +7,7 @@ import no.nav.aap.behandlingsflyt.behandling.tilbakekrevingsbehandling.Tilbakekr
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
@@ -19,12 +20,14 @@ class SakOgBehandlingService(
     private val sakRepository: SakRepository,
     private val behandlingRepository: BehandlingRepository,
     private val tilbakekrevingRepository: TilbakekrevingRepository,
+    private val behandlingService: BehandlingService,
 ) {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         resultatUtleder = ResultatUtleder(repositoryProvider, gatewayProvider),
         sakRepository = repositoryProvider.provide(),
         behandlingRepository = repositoryProvider.provide(),
         tilbakekrevingRepository = repositoryProvider.provide(),
+        behandlingService = BehandlingService(repositoryProvider, gatewayProvider),
     )
 
     fun finnSakOgBehandlinger(saksnummer: Saksnummer): SakOgBehandlinger {
@@ -40,7 +43,7 @@ class SakOgBehandlingService(
                 val vurderingsbehov = behandling.vurderingsbehov().map(VurderingsbehovMedPeriode::type)
                 BehandlinginfoDTO(
                     referanse = behandling.referanse.referanse,
-                    typeBehandling = behandling.typeBehandling(),
+                    typeBehandling = behandlingService.utledFaktiskBehandlingstype(behandling),
                     status = behandling.status(),
                     vurderingsbehov = vurderingsbehov,
                     årsakTilOpprettelse = behandling.årsakTilOpprettelse,
