@@ -1382,4 +1382,4 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(KlageFlytTestUnleash::class) {
 
 }
 
-object KlageFlytTestUnleash: FakeUnleashBaseWithDefaultDisabled(listOf(BehandlingsflytFeature.FjernTilbakefoeringTransisjon))
+object KlageFlytTestUnleash: FakeUnleashBaseWithDefaultDisabled(emptyList())

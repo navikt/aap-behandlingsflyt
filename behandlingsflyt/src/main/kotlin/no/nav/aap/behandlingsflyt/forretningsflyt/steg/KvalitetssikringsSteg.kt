@@ -10,7 +10,6 @@ import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
-import no.nav.aap.behandlingsflyt.flyt.steg.TilbakeføresFraKvalitetsikrer
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
@@ -46,11 +45,6 @@ class KvalitetssikringsSteg(
             tilbakestillGrunnlag = {},
             kontekst
         )
-
-        if (unleashGateway.isDisabled(BehandlingsflytFeature.FjernTilbakefoeringTransisjon) && avklaringsbehovene.skalTilbakeføresEtterKvalitetssikring()) {
-            return TilbakeføresFraKvalitetsikrer
-        }
-
         return Fullført
     }
 
