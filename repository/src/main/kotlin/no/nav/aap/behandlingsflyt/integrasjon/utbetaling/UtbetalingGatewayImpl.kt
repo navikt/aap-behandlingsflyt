@@ -20,8 +20,8 @@ import java.net.URI
 
 object UtbetalingGatewayImpl : UtbetalingGateway {
 
-    private val baseUri = URI.create(requiredConfigForKey("integrasjon.utbetal.url"))
-    private val config = ClientConfig(scope = requiredConfigForKey("integrasjon.utbetal.scope"))
+    private val baseUri = URI.create(requiredConfigForKey("INTEGRASJON_UTBETAL_URL"))
+    private val config = ClientConfig(scope = requiredConfigForKey("INTEGRASJON_UTBETAL_SCOPE"))
 
     private val client = RestClient(
         config = config,

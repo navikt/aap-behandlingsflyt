@@ -36,9 +36,9 @@ class GosysGateway : OppgaveGateway {
 
 
     private val log = LoggerFactory.getLogger(javaClass)
-    private val baseUri = URI.create(requiredConfigForKey("integrasjon.gosys.url"))
+    private val baseUri = URI.create(requiredConfigForKey("INTEGRASJON_GOSYS_URL"))
     val config = ClientConfig(
-        scope = requiredConfigForKey("integrasjon.gosys.scope"),
+        scope = requiredConfigForKey("INTEGRASJON_GOSYS_SCOPE"),
     )
     private val client = RestClient.withDefaultResponseHandler(
         config = config,

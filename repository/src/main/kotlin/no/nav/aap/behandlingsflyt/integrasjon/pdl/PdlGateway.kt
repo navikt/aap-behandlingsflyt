@@ -12,9 +12,9 @@ import no.nav.aap.komponenter.json.DefaultJsonMapper
 import java.net.URI
 
 object PdlGateway {
-    val url: URI = URI.create(requiredConfigForKey("integrasjon.pdl.url"))
+    val url: URI = URI.create(requiredConfigForKey("INTEGRASJON_PDL_URL"))
     val config = ClientConfig(
-        scope = requiredConfigForKey("integrasjon.pdl.scope"),
+        scope = requiredConfigForKey("INTEGRASJON_PDL_SCOPE"),
         additionalHeaders = listOf(Header("Behandlingsnummer", "B287"))
     )
     val client = RestClient(

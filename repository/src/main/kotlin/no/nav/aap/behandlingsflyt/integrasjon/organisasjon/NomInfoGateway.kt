@@ -23,9 +23,9 @@ import java.time.Duration
 
 class NomInfoGateway : AnsattInfoGateway {
 
-    private val graphqlUrl = URI.create(requiredConfigForKey("integrasjon.nom.url"))
+    private val graphqlUrl = URI.create(requiredConfigForKey("INTEGRASJON_NOM_URL"))
     private val config = ClientConfig(
-        scope = requiredConfigForKey("integrasjon.nom.scope"),
+        scope = requiredConfigForKey("INTEGRASJON_NOM_SCOPE"),
     )
 
     private val client = RestClient(

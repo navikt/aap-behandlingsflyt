@@ -20,7 +20,7 @@ import javax.sql.DataSource
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
-val UFØRE_VEDTAK_TOPIC = requiredConfigForKey("integrasjon.ufore.vedtak.topic")
+val UFØRE_VEDTAK_TOPIC = requiredConfigForKey("INTEGRASJON_UFORE_VEDTAK_TOPIC")
 
 class UførevedtakKafkaKonsument(
     config: KafkaConsumerConfig<String, String>,
