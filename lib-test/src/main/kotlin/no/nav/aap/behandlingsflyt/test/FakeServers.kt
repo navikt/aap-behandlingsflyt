@@ -174,7 +174,7 @@ object FakeServers : AutoCloseable {
         // Dokumentinnhenting
         System.setProperty(
             "INTEGRASJON_DOKUMENTINNHENTING_URL",
-            "HTTP://LOCALHOST:${DOKUMENTINNHENTING_PORT()}"
+            "http://localhost:${dokumentinnhenting.port()}"
         )
         System.setProperty("INTEGRASJON_DOKUMENTINNHENTING_SCOPE", "scope")
 
