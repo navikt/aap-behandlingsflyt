@@ -25,6 +25,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersoninfoBulkGateway
@@ -106,7 +107,7 @@ fun NormalOpenAPIRoute.behandlingApi(
 
                     DetaljertBehandlingDTO(
                         referanse = behandling.referanse.referanse,
-                        type = behandling.typeBehandling(),
+                        type = BehandlingService(repositoryProvider, gatewayProvider).utledFaktiskBehandlingstype(behandling),
                         status = behandling.status(),
                         opprettet = behandling.opprettetTidspunkt,
                         skalForberede = behandling.harIkkeVærtAktivitetIDetSiste() && !behandling.status()
