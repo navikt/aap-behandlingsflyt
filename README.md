@@ -99,7 +99,7 @@ eller [obo-token](http://azure-token-generator.intern.dev.nav.no/api/obo?aud=dev
 
 For å rekjøre en jobb, kan følgende kommandoer kjøres:
 ```shell
-token=$(curl -s -XPOST http://localhost:8081/token/Z12345 | jq -r '.access_token')
+token=$(curl -s -XPOST http://localhost:8081/token | jq -r '.access_token')
 
 curl -X 'GET' \
   'http://0.0.0.0:8080/drift/api/jobb/rekjorAlleFeilede' \
@@ -110,7 +110,7 @@ curl -X 'GET' \
 Send inn dokument til TestApp:
 
 ```shell
-token=$(curl -s -XPOST http://localhost:8081/token/Z12345 | jq -r '.access_token')
+token=$(curl -s -XPOST http://localhost:8081/token | jq -r '.access_token')
 saksnummer=4LDY7G0
 asInnsendingId=$(uuidgen)
 

@@ -99,10 +99,13 @@ object FakeServers : AutoCloseable {
             return
         }
 
+
         fakePersoner = testPersonService
         allFakes.forEach { it.start() }
         setProperties()
         started.set(true)
+
+        log.info("Texas-port: ${texas.port()}")
     }
 
     private fun setProperties() {
@@ -264,17 +267,5 @@ object FakeServers : AutoCloseable {
             return
         }
         allFakes.forEach { it.stop() }
-    }
-}
-
-object TexasPortHolder {
-    private val texasPort = AtomicInteger(0)
-
-    fun setPort(port: Int) {
-        texasPort.set(port)
-    }
-
-    fun getPort(): Int {
-        return texasPort.get()
     }
 }

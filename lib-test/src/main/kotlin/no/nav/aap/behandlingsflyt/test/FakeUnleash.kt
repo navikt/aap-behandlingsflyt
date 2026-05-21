@@ -56,6 +56,7 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.MaritimtArbeid to true,
         BehandlingsflytFeature.GJustering2026 to false,
         BehandlingsflytFeature.BackfillYrkesskadeNyeFelter to true,
+        BehandlingsflytFeature.ForstegangsbehandlingEtterAvslagOppgave to true,
         )
 )
 
