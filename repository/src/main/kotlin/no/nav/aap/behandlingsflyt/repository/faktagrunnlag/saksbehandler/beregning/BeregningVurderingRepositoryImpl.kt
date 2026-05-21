@@ -209,7 +209,7 @@ class BeregningVurderingRepositoryImpl(private val connection: DBConnection) : B
 
     override fun slett(behandlingId: BehandlingId) {
         val beregningTidspunktVurderingIds = getBeregningTidspunktVurderingIds(behandlingId)
-        val beregningYrkesskadeIds = getBeregningYrkesskadeIds(behandlingId)
+        val beregningsFaktaGrunnlagYrkesskadeVurderingIds = getBeregningsFaktaGrunnlagYrkesskadeVurderingIds(behandlingId)
 
         val deletedRows = connection.executeReturnUpdated(
             """
@@ -223,14 +223,14 @@ class BeregningVurderingRepositoryImpl(private val connection: DBConnection) : B
             setParams {
                 setLong(1, behandlingId.id)
                 setLongArray(2, beregningTidspunktVurderingIds)
-                setLongArray(3, beregningYrkesskadeIds)
-                setLongArray(4, beregningYrkesskadeIds)
+                setLongArray(3, beregningsFaktaGrunnlagYrkesskadeVurderingIds)
+                setLongArray(4, beregningsFaktaGrunnlagYrkesskadeVurderingIds)
             }
         }
         log.info("Slettet $deletedRows rader fra BEREGNINGSFAKTA_GRUNNLAG")
     }
 
-    private fun getBeregningYrkesskadeIds(behandlingId: BehandlingId): List<Long> = connection.queryList(
+    private fun getBeregningsFaktaGrunnlagYrkesskadeVurderingIds(behandlingId: BehandlingId): List<Long> = connection.queryList(
         """
                     SELECT yrkesskade_vurdering_id
                     FROM BEREGNINGSFAKTA_GRUNNLAG
