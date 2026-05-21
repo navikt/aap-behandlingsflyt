@@ -10,11 +10,12 @@ import no.nav.aap.behandlingsflyt.help.flytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.help.opprettInMemorySakOgBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
-import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.test.FakeTidligereVurderinger
+import no.nav.aap.behandlingsflyt.test.FakeUnleashBaseWithDefaultDisabled
 import no.nav.aap.behandlingsflyt.test.LokalUnleash
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryProvider
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
@@ -88,6 +89,28 @@ class KvalitetssikringsStegTest {
         }
     }
 
+    @Test
+    fun `om et behov godkjennes, og løses på nytt, så skal det kvalitetssikres på nytt`() {
+        Scenario().apply {
+            opprettOgLøs(Definisjon.AVKLAR_SYKDOM)
+
+            kjørSteg()
+            assertStatus(Definisjon.KVALITETSSIKRING, Status.OPPRETTET)
+
+            kvalitetssikre(Definisjon.AVKLAR_SYKDOM, godkjent = true)
+            assertStatus(Definisjon.AVKLAR_SYKDOM, Status.KVALITETSSIKRET)
+
+            kjørSteg()
+            assertStatus(Definisjon.KVALITETSSIKRING, Status.AVSLUTTET)
+
+            opprettOgLøs(Definisjon.AVKLAR_SYKDOM)
+
+            kjørSteg()
+            assertStatus(Definisjon.AVKLAR_SYKDOM, Status.AVSLUTTET)
+            assertStatus(Definisjon.KVALITETSSIKRING, Status.OPPRETTET)
+        }
+    }
+
     private class Scenario {
         private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(1))
         private val behandling = opprettInMemorySakOgBehandling(periode.fom).second
@@ -100,7 +123,9 @@ class KvalitetssikringsStegTest {
             ),
             tidligereVurderinger = FakeTidligereVurderinger(),
             trekkKlageService = TrekkKlageService(inMemoryRepositoryProvider),
-            unleashGateway = AlleAvskruddUnleash,
+            unleashGateway = FakeUnleashBaseWithDefaultDisabled(
+                enabledFlags = listOf(BehandlingsflytFeature.AlleEndringerKreverKvalitetssikring)
+            )
         )
 
         fun kjørSteg() {
