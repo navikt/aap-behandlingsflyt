@@ -48,8 +48,10 @@ class DatadelingMeldekortService(
 
         val underveisGrunnlag = underveisRepository.hentHvisEksisterer(behandlingId)
 
+        val helePerioden = underveisGrunnlag?.somTidslinje()?.helePerioden() ?: sak.rettighetsperiodeEttÅrFraStartDato()
+
         val meldePeriodene =
-            meldeperiodeRepository.hentMeldeperioder(behandlingId, sak.rettighetsperiodeEttÅrFraStartDato())
+            meldeperiodeRepository.hentMeldeperioder(behandlingId, helePerioden)
         if (meldePeriodene.isEmpty()) {
             log.warn("Ingen meldeperioder funnet for behandlingId=${behandlingId.id}")
             return emptyList()
