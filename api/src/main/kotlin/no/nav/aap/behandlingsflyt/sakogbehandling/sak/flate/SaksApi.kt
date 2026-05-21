@@ -383,9 +383,17 @@ private fun finnSaksinfo(
             emptyList()
         } else {
             repositoryProvider.provide<SakRepository>().finnSakerFor(person).map { sak ->
-                val resultat = behandlingRepository.finnGjeldendeVedtattBehandlingForSak(sak.id)
+                val gjeldendeBehandling = behandlingRepository.finnGjeldendeVedtattBehandlingForSak(sak.id)
                     ?.let { behandlingRepository.hent(it.behandlingId) }
-                    ?.let { resultatUtleder.utledResultat(it) }
+
+                val resultat = if (gjeldendeBehandling == null) {
+                    behandlingRepository.hentAlleFor(sak.id)
+                        .filter { it.erYtelsesbehandling() }
+                        .maxByOrNull { it.opprettetTidspunkt }
+                        ?.let { resultatUtleder.utledResultat(it) }
+                } else {
+                    resultatUtleder.utledResultat(gjeldendeBehandling)
+                }
 
                 SaksinfoDTO(
                     saksnummer = sak.saksnummer.toString(),
