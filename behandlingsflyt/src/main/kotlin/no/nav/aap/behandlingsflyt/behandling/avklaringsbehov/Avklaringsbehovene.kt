@@ -306,8 +306,7 @@ class Avklaringsbehovene(
         kontekst: FlytKontekst,
         repositoryProvider: RepositoryProvider
     ) {
-        if (kontekst.behandlingType == TypeBehandling.Revurdering
-            && løsning.definisjon().erFrivillig()
+        if (løsning.definisjon().erFrivillig()
             && løsning.løsningerForPerioder.isEmpty()
         ) {
             return
