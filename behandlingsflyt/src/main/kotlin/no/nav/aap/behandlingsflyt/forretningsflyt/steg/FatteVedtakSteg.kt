@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.avbrytaktivitetspliktbehandling.AvbrytAktivitetspliktbehandlingService
 import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
@@ -35,6 +36,7 @@ class FatteVedtakSteg(
     private val avklaringsbehovService: AvklaringsbehovService,
     private val avbrytRevurderingService: AvbrytRevurderingService,
     private val trukketSøknadService: TrukketSøknadService,
+    private val avbrytAktivitetspliktbehandlingService: AvbrytAktivitetspliktbehandlingService,
     private val tidligereVurderinger: TidligereVurderinger,
     private val klageresultatUtleder: KlageresultatUtleder,
     private val vedtakService: VedtakService,
@@ -105,7 +107,8 @@ class FatteVedtakSteg(
         avklaringsbehovene: Avklaringsbehovene
     ): Boolean {
         if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type()) ||
-            trekkKlageService.klageErTrukket(kontekst.behandlingId)
+            trekkKlageService.klageErTrukket(kontekst.behandlingId) ||
+            avbrytAktivitetspliktbehandlingService.behandlingErAvbrutt(kontekst.behandlingId)
         ) {
             return false
         }
@@ -146,6 +149,7 @@ class FatteVedtakSteg(
                 avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
                 avbrytRevurderingService = AvbrytRevurderingService(repositoryProvider),
                 trukketSøknadService = TrukketSøknadService(repositoryProvider),
+                avbrytAktivitetspliktbehandlingService = AvbrytAktivitetspliktbehandlingService(repositoryProvider),
                 tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
                 klageresultatUtleder = KlageresultatUtleder(repositoryProvider),
                 vedtakService = VedtakService(repositoryProvider),

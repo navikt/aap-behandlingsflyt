@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg.aktivitetsplikt
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.avbrytaktivitetspliktbehandling.AvbrytAktivitetspliktbehandlingService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
@@ -37,6 +38,7 @@ class VurderAktivitetsplikt11_7Steg(
     private val behandlingRepository: BehandlingRepository,
     private val brevbestillingService: BrevbestillingService,
     private val avklaringsbehovService: AvklaringsbehovService,
+    private val avbrytAktivitetspliktbehandlingService: AvbrytAktivitetspliktbehandlingService
 ) : BehandlingSteg {
     private val brevBehov = ForhåndsvarselBruddAktivitetsplikt
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
@@ -100,14 +102,14 @@ class VurderAktivitetsplikt11_7Steg(
         brevbestilling?.let { it.status in listOf(Status.SENDT, Status.FULLFØRT) } ?: false
 
     private fun vedtakBehøver11_7Vurdering(kontekst: FlytKontekstMedPerioder): Boolean {
-        return Vurderingsbehov.AKTIVITETSPLIKT_11_7 in kontekst.vurderingsbehovRelevanteForSteg
+        return Vurderingsbehov.AKTIVITETSPLIKT_11_7 in kontekst.vurderingsbehovRelevanteForSteg && !avbrytAktivitetspliktbehandlingService.behandlingErAvbrutt(kontekst.behandlingId)
     }
 
     private fun vedtakBehøverForhåndsvarselVurdering(
         vurderingForBehandling: Aktivitetsplikt11_7Vurdering?,
         kontekst: FlytKontekstMedPerioder
     ): Boolean {
-        if (vurderingForBehandling == null || vurderingForBehandling.erOppfylt) {
+        if (vurderingForBehandling == null || vurderingForBehandling.erOppfylt || avbrytAktivitetspliktbehandlingService.behandlingErAvbrutt(kontekst.behandlingId)) {
             return false
         } else {
             bestillEllerGjenopprettBrev(kontekst)
@@ -218,6 +220,7 @@ class VurderAktivitetsplikt11_7Steg(
                 behandlingRepository = repositoryProvider.provide(),
                 brevbestillingService = BrevbestillingService(repositoryProvider, gatewayProvider),
                 avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
+                avbrytAktivitetspliktbehandlingService = AvbrytAktivitetspliktbehandlingService(repositoryProvider),
                 )
         }
 

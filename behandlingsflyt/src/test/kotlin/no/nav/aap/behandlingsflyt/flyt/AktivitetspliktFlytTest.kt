@@ -1,13 +1,13 @@
 package no.nav.aap.behandlingsflyt.flyt
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvbrytAktivitetspliktbehandlingLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivBrevAvklaringsbehovLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivForhåndsvarselBruddAktivitetspliktBrevLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VentePåFristForhåndsvarselAktivitetsplikt11_7Løsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VurderBrudd11_7Løsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VurderBrudd11_9Løsning
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7LøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Repository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Vurdering
@@ -15,9 +15,12 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt1
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Brudd
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Grunn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Utfall
+import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.avbrytaktivitetspliktbehandling.AvbrytAktivitetspliktbehandlingLøsningDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.avbrytaktivitetspliktbehandling.AvbrytAktivitetspliktbehandlingÅrsakDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisÅrsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.help.assertTidslinje
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
@@ -31,13 +34,14 @@ import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
-import no.nav.aap.behandlingsflyt.test.FakePersoner
 import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
+import no.nav.aap.behandlingsflyt.test.FakePersoner
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -325,6 +329,89 @@ class AktivitetspliktFlytTest :
                 assertThat(it.second).isEqualTo(UnderveisÅrsak.IKKE_GRUNNLEGGENDE_RETT)
             }
         )
+    }
+
+
+    @Test
+    fun `Kan avbryte aktivitetsplikt 11-7`() {
+        val person = TestPersoner.STANDARD_PERSON()
+        val sak = happyCaseFørstegangsbehandling(person = person, sendMeldekort = false)
+
+        var aktivitetspliktBehandling = dataSource.transaction { connection ->
+            opprettAktivitetspliktBehandling(
+                Vurderingsbehov.AKTIVITETSPLIKT_11_7,
+                postgresRepositoryRegistry.provider(connection),
+                sak
+            )
+        }
+
+        prosesserBehandling(aktivitetspliktBehandling)
+
+        aktivitetspliktBehandling = hentBehandling(aktivitetspliktBehandling.referanse)
+            .medKontekst {
+                assertThat(this.behandling.aktivtSteg())
+                    .isEqualTo(StegType.VURDER_AKTIVITETSPLIKT_11_7)
+
+            }
+            .leggTilVurderingsbehov(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.AKTIVITETSPLIKTBEHANDLING_AVBRUTT)
+            .medKontekst {
+                assertThat(this.behandling.aktivtSteg())
+                    .isEqualTo(StegType.AVBRYT_AKTIVITETSPLIKTBEHANDLING)
+            }.løsAvklaringsBehov(
+                AvbrytAktivitetspliktbehandlingLøsning(
+                    behovstype = AvklaringsbehovKode.`4301`,
+                    vurdering = AvbrytAktivitetspliktbehandlingLøsningDto(
+                        årsak = AvbrytAktivitetspliktbehandlingÅrsakDto.BEHANDLINGEN_BLE_OPPRETTET_VED_EN_FEIL,
+                        begrunnelse = "Trykket på feil knapp",
+                    )
+                )
+            ).medKontekst {
+                assertThat(this.åpneAvklaringsbehov).isEmpty()
+            }
+
+        val behandlingFraRepo = hentBehandling(aktivitetspliktBehandling.referanse)
+        assertThat(behandlingFraRepo.status()).isEqualTo(Status.AVSLUTTET)
+    }
+
+    @Test
+    fun `Kan avbryte aktivitetsplikt 11-9`() {
+        val person = TestPersoner.STANDARD_PERSON()
+        val sak = happyCaseFørstegangsbehandling(person = person, sendMeldekort = false)
+
+        var aktivitetspliktBehandling = dataSource.transaction { connection ->
+            opprettAktivitetspliktBehandling(
+                Vurderingsbehov.AKTIVITETSPLIKT_11_9,
+                postgresRepositoryRegistry.provider(connection),
+                sak
+            )
+        }
+
+        prosesserBehandling(aktivitetspliktBehandling)
+
+        aktivitetspliktBehandling = hentBehandling(aktivitetspliktBehandling.referanse)
+            .medKontekst {
+                assertThat(this.behandling.aktivtSteg())
+                    .isEqualTo(StegType.VURDER_AKTIVITETSPLIKT_11_9)
+
+            }
+            .leggTilVurderingsbehov(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.AKTIVITETSPLIKTBEHANDLING_AVBRUTT)
+            .medKontekst {
+                assertThat(this.behandling.aktivtSteg())
+                    .isEqualTo(StegType.AVBRYT_AKTIVITETSPLIKTBEHANDLING)
+            }.løsAvklaringsBehov(
+                AvbrytAktivitetspliktbehandlingLøsning(
+                    behovstype = AvklaringsbehovKode.`4301`,
+                    vurdering = AvbrytAktivitetspliktbehandlingLøsningDto(
+                        årsak = AvbrytAktivitetspliktbehandlingÅrsakDto.BEHANDLINGEN_BLE_OPPRETTET_VED_EN_FEIL,
+                        begrunnelse = "Trykket på feil knapp",
+                    )
+                )
+            ).medKontekst {
+                assertThat(this.åpneAvklaringsbehov).isEmpty()
+            }
+
+        val behandlingFraRepo = hentBehandling(aktivitetspliktBehandling.referanse)
+        assertThat(behandlingFraRepo.status()).isEqualTo(Status.AVSLUTTET)
     }
 
     private fun opprettAktivitetspliktBehandlingMedVurdering(

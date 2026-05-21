@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.avbrytaktivitetspliktbehandling.AvbrytAktivitetspliktbehandlingService
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
@@ -25,6 +26,7 @@ class Aktivitetsplikt11_7Informasjonskrav(
     private val tidligereVurderinger: TidligereVurderinger,
     private val behandlingRepository: BehandlingRepository,
     private val aktivitetsplikt11_7Repository: Aktivitetsplikt11_7Repository,
+    private val avbrytAktivitetspliktbehandlingService: AvbrytAktivitetspliktbehandlingService,
     private val unleashGateway: UnleashGateway
 ) : Informasjonskrav<IngenInput, IngenRegisterData> {
     companion object : Informasjonskravkonstruktør {
@@ -38,6 +40,7 @@ class Aktivitetsplikt11_7Informasjonskrav(
                 TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
                 repositoryProvider.provide(),
                 repositoryProvider.provide(),
+                AvbrytAktivitetspliktbehandlingService(repositoryProvider),
                 gatewayProvider.provide()
             )
         }
@@ -68,6 +71,7 @@ class Aktivitetsplikt11_7Informasjonskrav(
                 behandlingRepository
                     .hentAlleFor(kontekst.sakId, listOf(TypeBehandling.Aktivitetsplikt))
                     .filter { it.status().erAvsluttet() }
+                    .filterNot { avbrytAktivitetspliktbehandlingService.behandlingErAvbrutt(it.id) }
                     .maxByOrNull { it.opprettetTidspunkt }
             requireNotNull(nyesteIverksatteAktivitetspliktBehandling) {
                 "Fant ingen iverksatte aktivitetspliktbehandlinger for sak ${kontekst.sakId}, men vurderingstype er ${VurderingType.EFFEKTUER_AKTIVITETSPLIKT}"

@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.sakogbehandling.behandling
 
 import no.nav.aap.behandlingsflyt.behandling.ResultatUtleder
+import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.avbrytaktivitetspliktbehandling.AvbrytAktivitetspliktbehandlingService
 import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingService
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopierer
@@ -25,6 +26,7 @@ class BehandlingService(
     private val trukketSøknadService: TrukketSøknadService,
     private val avbrytRevurderingService: AvbrytRevurderingService,
     private val resultatUtleder: ResultatUtleder,
+    private val avbrytAktivitetspliktbehandlingService: AvbrytAktivitetspliktbehandlingService,
     private val unleashGateway: UnleashGateway
 ) {
     constructor(
@@ -37,6 +39,7 @@ class BehandlingService(
         trukketSøknadService = TrukketSøknadService(repositoryProvider),
         avbrytRevurderingService = AvbrytRevurderingService(repositoryProvider),
         resultatUtleder = ResultatUtleder(repositoryProvider, gatewayProvider),
+        avbrytAktivitetspliktbehandlingService = AvbrytAktivitetspliktbehandlingService(repositoryProvider),
         unleashGateway = gatewayProvider.provide()
     )
 
@@ -220,7 +223,7 @@ class BehandlingService(
             }
         }
 
-        val forrige = aktivitetspliktBehandlinger.firstOrNull()?.id
+        val forrige = aktivitetspliktBehandlinger.filterNot { avbrytAktivitetspliktbehandlingService.behandlingErAvbrutt(it.id) }.firstOrNull()?.id
 
         return behandlingRepository.opprettBehandling(
             sakId = sakId,
