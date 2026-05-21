@@ -172,11 +172,10 @@ object FakeServers : AutoCloseable {
         System.setProperty("integrasjon.sykepenger.scope", "scope")
 
         // Dokumentinnhenting
-        System.setProperty(
-            "integrasjon.dokumentinnhenting.url",
-            "http://localhost:${dokumentinnhenting.port()}"
-        )
-        System.setProperty("integrasjon.dokumentinnhenting.scope", "scope")
+        if (System.getenv("INTEGRASJON_DOKUMENTINNHENTING_URL").isNullOrEmpty()) {
+            System.setProperty("integrasjon.dokumentinnhenting.url", "http://localhost:${dokumentinnhenting.port()}")
+        }
+        System.setProperty("integrasjon.dokumentinnhenting.scope", "dokumentinnhenting")
 
         // Dagpenger
         System.setProperty("integrasjon.dagpenger.url", "http://localhost:${dagpenger.port()}")
@@ -255,6 +254,7 @@ object FakeServers : AutoCloseable {
         System.setProperty("integrasjon.gosys.scope", "scope")
 
         // Texas
+        println("TEXAS PORT ${texas.port()}")
         System.setProperty("nais.token.endpoint", "http://localhost:${texas.port()}/token")
         System.setProperty("nais.token.exchange.endpoint", "http://localhost:${texas.port()}/token/exchange")
         System.setProperty("nais.token.introspection.endpoint", "http://localhost:${texas.port()}/introspect")
