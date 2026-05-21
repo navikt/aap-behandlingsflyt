@@ -48,7 +48,8 @@ class DatadelingMeldekortService(
 
         val underveisGrunnlag = underveisRepository.hentHvisEksisterer(behandlingId)
 
-        val meldePeriodene = meldeperiodeRepository.hentMeldeperioder(behandlingId, sak.rettighetsperiode)
+        val meldePeriodene =
+            meldeperiodeRepository.hentMeldeperioder(behandlingId, sak.rettighetsperiodeEttÅrFraStartDato())
         if (meldePeriodene.isEmpty()) {
             log.warn("Ingen meldeperioder funnet for behandlingId=${behandlingId.id}")
             return emptyList()
