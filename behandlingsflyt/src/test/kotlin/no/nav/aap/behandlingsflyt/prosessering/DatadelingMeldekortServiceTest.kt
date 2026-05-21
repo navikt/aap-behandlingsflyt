@@ -12,7 +12,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Re
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepositoryImpl
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.ArbeidIPeriode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.StrukturertDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Meldekort
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Status
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
@@ -20,6 +20,8 @@ import no.nav.aap.behandlingsflyt.help.opprettSak
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ArbeidIPeriodeV0
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.MeldekortV0
 import no.nav.aap.behandlingsflyt.prosessering.datadeling.DatadelingMeldekortService
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.meldeperiode.MeldeperiodeRepositoryImpl
@@ -78,7 +80,8 @@ class DatadelingMeldekortServiceTest {
             val testMeg = DatadelingMeldekortService(
                 sakRepository,
                 underveisRepository,
-                meldeperiodeRepository
+                meldeperiodeRepository = meldeperiodeRepository,
+                mottattDokumentRepository = mottattDokumentRepository
             )
 
             // Legg inn testdata
@@ -156,7 +159,8 @@ private fun lagreUnderveisGrunnlag(
     meldeperioder: List<Periode>,
     testPeriode: Periode,
 ): UnderveisGrunnlag {
-    val testGrunnlag = Aldersgrunnlag(testPeriode, Fødselsdato(LocalDate.now().minusYears(20)), grenseForAntallMånederFørFylte18 = 3)
+    val testGrunnlag =
+        Aldersgrunnlag(testPeriode, Fødselsdato(LocalDate.now().minusYears(20)), grenseForAntallMånederFørFylte18 = 3)
     underveisRepository.lagre(
         testBehandling.id,
         listOf(testUnderveisperiode(testPeriode, meldeperioder.first())),
@@ -215,6 +219,23 @@ private fun lagreMeldekort(
     meldekortRepository: MeldekortRepositoryImpl
 ): Meldekort {
     val mottattTidspunkt = meldeperiode.tom.plusDays(1).atStartOfDay()
+    val periodeStart = meldeperiode.fom
+    val strukturertDokument = MeldekortV0(
+        harDuArbeidet = true,
+        timerArbeidPerPeriode = listOf(
+            ArbeidIPeriodeV0(
+                fraOgMedDato = periodeStart, tilOgMedDato = periodeStart.plusDays(1), timerArbeid = 4.0
+            ), ArbeidIPeriodeV0(
+                periodeStart.plusDays(2), periodeStart.plusDays(3),
+                4.5
+            ), ArbeidIPeriodeV0(
+                periodeStart.plusDays(4), periodeStart.plusDays(5),
+                7.5
+            )
+        ),
+        begrunnelse = "...",
+        opprettetAv = "..."
+    )
     val mottattMeldekort = MottattDokument(
         referanse = referanse,
         sakId = testSak.id,
@@ -223,25 +244,18 @@ private fun lagreMeldekort(
         type = InnsendingType.MELDEKORT,
         kanal = Kanal.DIGITAL,
         status = Status.BEHANDLET,
-        strukturertDokument = null,
+        strukturertDokument = StrukturertDokument(strukturertDokument),
     )
     mottattDokumentRepository.lagre(mottattMeldekort)
-    val periodeStart = meldeperiode.fom
+
     meldekortRepository.lagre(
         testBehandling.id, setOf(
-            Meldekort(
-                mottattMeldekort.referanse.asJournalpostId, setOf(
-                    ArbeidIPeriode(
-                        Periode(periodeStart, periodeStart.plusDays(1)), TimerArbeid(4.0.toBigDecimal())
-                    ), ArbeidIPeriode(
-                        Periode(periodeStart.plusDays(2), periodeStart.plusDays(3)),
-                        TimerArbeid(4.5.toBigDecimal())
-                    ), ArbeidIPeriode(
-                        Periode(periodeStart.plusDays(4), periodeStart.plusDays(5)),
-                        TimerArbeid(7.5.toBigDecimal())
-                    )
-                ), mottattTidspunkt = mottattMeldekort.mottattTidspunkt
+            Meldekort.fraKontrakt(
+                mottattMeldekort.referanse.asJournalpostId,
+                mottattMeldekort.mottattTidspunkt,
+                strukturertDokument
             )
+
         )
     )
 
