@@ -11,6 +11,8 @@ import io.ktor.server.routing.*
 import io.ktor.server.testing.*
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
@@ -38,7 +40,7 @@ import io.ktor.client.plugins.contentnegotiation.ContentNegotiation as ClientCon
 
 open class BaseApiTest {
 
-    fun opprettBehandling(sak: Sak, typeBehandling: TypeBehandling) =
+    fun opprettBehandling(sak: Sak, typeBehandling: TypeBehandling, forrigeBehandlingId: BehandlingId? = null) =
         InMemoryBehandlingRepository.opprettBehandling(
             sak.id,
             typeBehandling = typeBehandling,
@@ -46,7 +48,7 @@ open class BaseApiTest {
                 vurderingsbehov = listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_SØKNAD)),
                 årsak = ÅrsakTilOpprettelse.SØKNAD,
             ),
-            forrigeBehandlingId = null,
+            forrigeBehandlingId = forrigeBehandlingId,
         )
 
     fun nySak(søknadsDato: LocalDate = LocalDate.now()) = InMemorySakRepository.finnEllerOpprett(
