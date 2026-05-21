@@ -12,7 +12,8 @@ data class UbehandletMeldekort(
     val timerArbeidPerPeriode: Set<ArbeidIPeriode>,
     val mottattTidspunkt: LocalDateTime,
     val harDuArbeidet: Boolean?,
-    val digitalisertAvPostmottak: Boolean?
+    val digitalisertAvPostmottak: Boolean?,
+    val endretAvSaksbehandler: Boolean?,
 ) {
     companion object {
         fun fraKontrakt(
@@ -32,7 +33,8 @@ data class UbehandletMeldekort(
                     }.toSet(),
                     mottattTidspunkt = mottattTidspunkt,
                     harDuArbeidet = meldekort.harDuArbeidet,
-                    digitalisertAvPostmottak = digitalisertAvPostmottak
+                    digitalisertAvPostmottak = digitalisertAvPostmottak,
+                    endretAvSaksbehandler = meldekort.opprettetAv != null
                 )
             }
         }

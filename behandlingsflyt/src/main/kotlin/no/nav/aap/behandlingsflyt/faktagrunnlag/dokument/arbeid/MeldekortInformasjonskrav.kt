@@ -84,7 +84,7 @@ class MeldekortInformasjonskrav private constructor(
             )
             allePlussNye.add(nyttMeldekort)
 
-            if (ubehandletMeldekort.digitalisertAvPostmottak == true) {
+            if (ubehandletMeldekort.digitalisertAvPostmottak == true || ubehandletMeldekort.endretAvSaksbehandler == true) {
                 flytJobbRepository.leggTil(
                     JobbInput(jobb = DigitaliserteMeldekortTilMeldekortBackendJobbUtfører).medPayload(
                         ubehandletMeldekort.journalpostId
