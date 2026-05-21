@@ -254,7 +254,6 @@ object FakeServers : AutoCloseable {
         System.setProperty("integrasjon.gosys.scope", "scope")
 
         // Texas
-        println("TEXAS PORT ${texas.port()}")
         System.setProperty("nais.token.endpoint", "http://localhost:${texas.port()}/token")
         System.setProperty("nais.token.exchange.endpoint", "http://localhost:${texas.port()}/token/exchange")
         System.setProperty("nais.token.introspection.endpoint", "http://localhost:${texas.port()}/introspect")
