@@ -67,7 +67,7 @@ class UtbetalingService(
             tjenestepensjonRefusjonsKravVurderingRepository = repositoryProvider.provide<TjenestepensjonRefusjonsKravVurderingRepository>(),
             samordningAndreStatligeYtelserRepository = repositoryProvider.provide<SamordningAndreStatligeYtelserRepository>(),
             samordningArbeidsgiverYtelserRepository = repositoryProvider.provide<SamordningArbeidsgiverRepository>(),
-            vedtakService = VedtakService(repositoryProvider),
+            vedtakService = VedtakService(repositoryProvider, gatewayProvider),
             behandlingRepository = repositoryProvider.provide<BehandlingRepository>(),
         ),
         meldeperiodeRepository = repositoryProvider.provide<MeldeperiodeRepository>(),

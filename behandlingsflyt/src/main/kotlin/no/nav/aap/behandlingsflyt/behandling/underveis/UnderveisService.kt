@@ -77,7 +77,7 @@ class UnderveisService(
         meldeperiodeRepository = repositoryProvider.provide(),
         overstyringMeldepliktRepository = repositoryProvider.provide(),
         arbeidsopptrappingRepository = repositoryProvider.provide(),
-        vedtakService = VedtakService(repositoryProvider),
+        vedtakService = VedtakService(repositoryProvider, gatewayProvider),
         vedtakslengdeRepository = repositoryProvider.provide(),
         behandlingRepository = repositoryProvider.provide(),
         unleashGateway = gatewayProvider.provide(),
