@@ -14,7 +14,6 @@ import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakService
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageresultatUtleder
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
-import no.nav.aap.behandlingsflyt.flyt.steg.TilbakeføresFraBeslutter
 import no.nav.aap.behandlingsflyt.help.flytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
@@ -231,33 +230,6 @@ class FatteVedtakStegTest {
             )
         verify { vedtakService.lagreVedtak(kontekst.behandlingId, nå.plusMinutes(8), virkningstidspunkt) }
         assertThat(resultat).isEqualTo(Fullført)
-    }
-
-    @Test
-    fun `lagrer ikke vedtak dersom totrinnsvurdering ikke er godkjent`() {
-        val kontekst = kontekst(
-            behandlingType = TypeBehandling.Førstegangsbehandling,
-            vurderingsbehov = Vurderingsbehov.MOTTATT_SØKNAD
-        )
-
-        every { tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, StegType.FATTE_VEDTAK) } returns false
-        every { trukketSøknadService.søknadErTrukket(kontekst.behandlingId) } returns false
-
-        opprettAvklaringsbehovMedEndringer(
-            behandlingId = kontekst.behandlingId,
-            definisjon = Definisjon.AVKLAR_SAMORDNING_GRADERING,
-            endringer = listOf(
-                Endring(
-                    status = Status.SENDT_TILBAKE_FRA_BESLUTTER,
-                    tidsstempel = LocalDateTime.now().plusMinutes(1),
-                    begrunnelse = "Begrunnelse",
-                    endretAv = "Ident",
-                ),
-            )
-        )
-
-        val resultat = steg().utfør(kontekst)
-        assertThat(resultat).isEqualTo(TilbakeføresFraBeslutter)
     }
 
     @Test

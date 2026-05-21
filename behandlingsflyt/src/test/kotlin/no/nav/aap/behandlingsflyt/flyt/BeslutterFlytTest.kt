@@ -17,7 +17,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
@@ -32,8 +31,8 @@ import kotlin.reflect.KClass
 
 @ParameterizedClass
 @MethodSource("unleashTestDataSource")
-class BeslutterFlytTest(val unleashGateway: KClass<UnleashGateway>) : AbstraktFlytOrkestratorTest(unleashGateway){
-    
+class BeslutterFlytTest(val unleashGateway: KClass<UnleashGateway>) : AbstraktFlytOrkestratorTest(unleashGateway) {
+
     @Test
     fun `to-trinn og ingen endring i gruppe etter sendt tilbake fra beslutter`() {
         val fom = LocalDate.now()
@@ -116,11 +115,8 @@ class BeslutterFlytTest(val unleashGateway: KClass<UnleashGateway>) : AbstraktFl
             .beslutterGodkjennerIkke(underkjennVurderinger = listOf(Definisjon.AVKLAR_SYKDOM))
             .medKontekst {
                 assertThat(behandling.status()).isEqualTo(Status.UTREDES)
-                if (gatewayProvider.provide<UnleashGateway>().isEnabled(BehandlingsflytFeature.FjernTilbakefoeringTransisjon)) {
-                    assertThat(åpneAvklaringsbehov).allSatisfy { assertThat(it.definisjon).isEqualTo(Definisjon.AVKLAR_SYKDOM) }
-                } else {
-                    assertThat(åpneAvklaringsbehov.map{it.definisjon}).containsExactlyInAnyOrder(Definisjon.AVKLAR_SYKDOM, Definisjon.FATTE_VEDTAK)
-                }
+                assertThat(åpneAvklaringsbehov).allSatisfy { assertThat(it.definisjon).isEqualTo(Definisjon.AVKLAR_SYKDOM) }
+
             }.løsAvklaringsBehov(
                 AvklarSykdomLøsning(
                     løsningerForPerioder = listOf(
