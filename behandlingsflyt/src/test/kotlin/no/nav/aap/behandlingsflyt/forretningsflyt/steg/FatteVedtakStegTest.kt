@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.avbrytaktivitetspliktbehandling.AvbrytAktivitetspliktbehandlingService
 import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Endring
@@ -13,7 +14,6 @@ import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakService
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageresultatUtleder
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
-import no.nav.aap.behandlingsflyt.flyt.steg.TilbakeføresFraBeslutter
 import no.nav.aap.behandlingsflyt.help.flytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
@@ -47,6 +47,7 @@ class FatteVedtakStegTest {
     val trukketSøknadService = mockk<TrukketSøknadService>()
     val vedtakService = mockk<VedtakService>(relaxed = true)
     val virkningstidspunktUtleder = mockk<VirkningstidspunktUtleder>(relaxed = true)
+    val avbrytAktivitetspliktbehandlingService = mockk<AvbrytAktivitetspliktbehandlingService>()
     val gatewayProvider = createGatewayProvider {
         register<AlleAvskruddUnleash>()
     }
@@ -54,6 +55,7 @@ class FatteVedtakStegTest {
     @BeforeEach
     fun setup() {
         every { trekkKlageService.klageErTrukket(any()) } returns false
+        every { avbrytAktivitetspliktbehandlingService.behandlingErAvbrutt(any()) } returns false
     }
 
     private fun kontekst(
@@ -78,7 +80,8 @@ class FatteVedtakStegTest {
         trukketSøknadService = trukketSøknadService,
         vedtakService = vedtakService,
         virkningstidspunktUtleder = virkningstidspunktUtleder,
-        unleashGateway = gatewayProvider.provide()
+        unleashGateway = gatewayProvider.provide(),
+        avbrytAktivitetspliktbehandlingService = avbrytAktivitetspliktbehandlingService
     )
 
     @Test
@@ -227,33 +230,6 @@ class FatteVedtakStegTest {
             )
         verify { vedtakService.lagreVedtak(kontekst.behandlingId, nå.plusMinutes(8), virkningstidspunkt) }
         assertThat(resultat).isEqualTo(Fullført)
-    }
-
-    @Test
-    fun `lagrer ikke vedtak dersom totrinnsvurdering ikke er godkjent`() {
-        val kontekst = kontekst(
-            behandlingType = TypeBehandling.Førstegangsbehandling,
-            vurderingsbehov = Vurderingsbehov.MOTTATT_SØKNAD
-        )
-
-        every { tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, StegType.FATTE_VEDTAK) } returns false
-        every { trukketSøknadService.søknadErTrukket(kontekst.behandlingId) } returns false
-
-        opprettAvklaringsbehovMedEndringer(
-            behandlingId = kontekst.behandlingId,
-            definisjon = Definisjon.AVKLAR_SAMORDNING_GRADERING,
-            endringer = listOf(
-                Endring(
-                    status = Status.SENDT_TILBAKE_FRA_BESLUTTER,
-                    tidsstempel = LocalDateTime.now().plusMinutes(1),
-                    begrunnelse = "Begrunnelse",
-                    endretAv = "Ident",
-                ),
-            )
-        )
-
-        val resultat = steg().utfør(kontekst)
-        assertThat(resultat).isEqualTo(TilbakeføresFraBeslutter)
     }
 
     @Test

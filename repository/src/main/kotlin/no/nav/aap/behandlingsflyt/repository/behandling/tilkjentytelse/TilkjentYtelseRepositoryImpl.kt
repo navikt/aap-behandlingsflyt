@@ -199,8 +199,7 @@ class TilkjentYtelseRepositoryImpl(private val connection: DBConnection) :
             select faktagrunnlag, tilkjent_ytelse_sporing.versjon
              from tilkjent_ytelse_sporing
              join tilkjent_ytelse on tilkjent_ytelse.id = tilkjent_ytelse_sporing.tilkjent_ytelse_id
-             join behandling on tilkjent_ytelse.behandling_id = behandling.id
-             where tilkjent_ytelse.aktiv and behandling.id = ?
+             where tilkjent_ytelse.aktiv and tilkjent_ytelse.behandling_id = ?
         """.trimIndent()
         ) {
             setParams {

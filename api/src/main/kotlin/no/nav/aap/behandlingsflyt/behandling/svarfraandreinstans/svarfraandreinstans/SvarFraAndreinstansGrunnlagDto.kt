@@ -1,8 +1,11 @@
 package no.nav.aap.behandlingsflyt.behandling.svarfraandreinstans.svarfraandreinstans
 
+import no.nav.aap.behandlingsflyt.behandling.vurdering.VurderingerMetaResponse
+import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.Hjemmel
 import no.nav.aap.behandlingsflyt.faktagrunnlag.svarfraandreinstans.SvarFraAndreinstansKonsekvens
 import no.nav.aap.behandlingsflyt.faktagrunnlag.svarfraandreinstans.SvarFraAndreinstansVurdering
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.AnkeUtfall
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.BehandlingEventType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.KabalHendelseV0
@@ -11,6 +14,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.OmgjoeringsUtfall
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.TrygderettUtfall
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.avsluttetTidspunkt
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.opprettetTidspunkt
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import java.time.LocalDateTime
 
 data class SvarFraAndreinstansGrunnlagDto(
@@ -31,7 +35,7 @@ data class SvarFraAndreinstansVurderingDto(
     val begrunnelse: String,
     val konsekvens: SvarFraAndreinstansKonsekvens,
     val vilkårSomOmgjøres: List<Hjemmel>,
-    val vurdertAv: String
+    val vurderingerMeta: VurderingerMetaResponse,
 )
 
 enum class Utfall {
@@ -132,11 +136,23 @@ internal fun KabalHendelseV0.tilDto(): SvarFraAndreinstansDto {
     )
 }
 
-internal fun SvarFraAndreinstansVurdering.tilDto(): SvarFraAndreinstansVurderingDto {
+internal fun SvarFraAndreinstansVurdering.tilDto(
+    vurdertAvService: VurdertAvService,
+    behandlingId: BehandlingId,
+): SvarFraAndreinstansVurderingDto {
     return SvarFraAndreinstansVurderingDto(
         begrunnelse = this.begrunnelse,
         konsekvens = this.konsekvens,
         vilkårSomOmgjøres = this.vilkårSomOmgjøres,
-        vurdertAv = this.vurdertAv
+        vurderingerMeta = vurdertAvService.byggVurderingerMeta(
+            definisjon = Definisjon.HÅNDTER_SVAR_FRA_ANDREINSTANS,
+            behandlingId = behandlingId,
+            vurdertAv = vurdertAvService.medNavnOgEnhet(
+                ident = this.vurdertAv,
+                instant = requireNotNull(this.opprettet) {
+                    "Fant ikke opprettet tidspunkt for svar fra andreinstans-vurdering"
+                },
+            ),
+        ),
     )
 }

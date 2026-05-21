@@ -14,14 +14,17 @@ enum class BehandlingsflytFeature : FeatureToggle {
     VisIkkeRelevantPeriode,
     MigrerStansOgOpphor,
     AvslagLovvalgMedlemskap,
-    ForeslaaVedtakVedtakslengde,
     SamordningFaktagrunnlagBrev,
     GReguleringsJobb,
     GReguleringUtplukkJobb,
     ForutgaaendeGap,
     FjernTilbakefoeringTransisjon,
     MaritimtArbeid,
-    TaNedPesysOgInfotrygd,
+    ForstegangsbehandlingEtterAvslagOppgave,
+    GrunnbeloepInformasjonskrav,
+    GJustering2026,
+    BackfillYrkesskadeNyeFelter,
+    MigrerManglendeDokumentasjon,
     ;
 
     override fun key(): String = name

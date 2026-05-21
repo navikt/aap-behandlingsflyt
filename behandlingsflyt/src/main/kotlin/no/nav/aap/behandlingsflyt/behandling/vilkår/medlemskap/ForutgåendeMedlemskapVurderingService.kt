@@ -5,6 +5,8 @@ import no.nav.aap.behandlingsflyt.behandling.lovvalg.Arbeidsforholdtype
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.ForutgåendeMedlemskapArbeidInntektGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.ForutgåendeMedlemskapGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.InntektINorgeGrunnlag
+import no.nav.aap.behandlingsflyt.behandling.lovvalg.Skipsregister
+import no.nav.aap.behandlingsflyt.behandling.lovvalg.Skipstype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.utenlandsopphold.UtenlandsOppholdData
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapUnntakGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonStatus
@@ -119,19 +121,31 @@ class ForutgåendeMedlemskapVurderingService(
         val bestemtArbeidsgruppe = relevantePerioder.filter {
             it.arbeidsforholdKode == Arbeidsforholdtype.MARITIMT_ARBEIDSFORHOLD
         }
-            .map {
+            .mapNotNull {
+                val utslagsGivendeAnsettelsesDetalj =
+                    it.ansettelsesdetaljer.filter { detalj -> detalj.skipstype == Skipstype.TURIST && detalj.skipsregister == Skipsregister.NIS }
+                if (utslagsGivendeAnsettelsesDetalj.isEmpty()) return@mapNotNull null
+
                 BestemtArbeidsgruppeINorgeGrunnlag(
                     virksomhetId = it.identifikator,
                     virksomhetNavn = it.organisasjonsNavn,
                     fom = it.startdato,
-                    tom = it.sluttdato
+                    tom = it.sluttdato,
+                    ansettelsesDetaljer = utslagsGivendeAnsettelsesDetalj.map { utslag ->
+                        AsettelsesDetalj(
+                            skipsregister = utslag.skipsregister,
+                            skipstype = utslag.skipstype,
+                            fartsomraade = utslag.fartsomraade,
+                            yrke = utslag.yrke,
+                        )
+                    }
                 )
             }
 
         return TilhørighetVurdering(
             kilde = listOf(Kilde.AA_REGISTERET),
             indikasjon = Indikasjon.UTENFOR_NORGE,
-            opplysning = "Har hatt maritimt arbeidsforhold",
+            opplysning = "Har hatt arbeidsforhold på NIS-registrert turistskip",
             resultat = bestemtArbeidsgruppe.isNotEmpty(),
             bestemtArbeidsgruppeINorge = bestemtArbeidsgruppe,
             vurdertPeriode = VurdertPeriode.SISTE_5_ÅR.beskrivelse
@@ -311,6 +325,9 @@ class ForutgåendeMedlemskapVurderingService(
         val fantStatsborgerskapUtenforEØSiPerioden =
             grunnlag?.brukerPersonopplysning?.statsborgerskap
                 ?.any { it.erGyldigIPeriode(forutgåendePeriode) && it.land !in EØSLandEllerLandMedAvtale.gyldigeEØSLand.map { it.name } }
+        val harNorskStatsborgerskap =
+            grunnlag?.brukerPersonopplysning?.statsborgerskap
+                ?.any { it.land == EØSLandEllerLandMedAvtale.NOR.toString() && it.erGyldigIPeriode(forutgåendePeriode) }
 
         val manglerStatsborgerskapGrunnlag =
             grunnlag?.brukerPersonopplysning?.statsborgerskap
@@ -327,7 +344,7 @@ class ForutgåendeMedlemskapVurderingService(
             kilde = listOf(Kilde.PDL),
             indikasjon = Indikasjon.UTENFOR_NORGE,
             opplysning = "Har statsborgerskap utenfor EØS i perioden",
-            resultat = fantStatsborgerskapUtenforEØSiPerioden == true,
+            resultat = fantStatsborgerskapUtenforEØSiPerioden == true && harNorskStatsborgerskap != true,
             manglerStatsborgerskapGrunnlag = manglerStatsborgerskapGrunnlag,
             vurdertPeriode = VurdertPeriode.SISTE_5_ÅR.beskrivelse
         )
@@ -399,12 +416,14 @@ class ForutgåendeMedlemskapVurderingService(
         val sluttMnd = YearMonth.from(forutgåendePeriode.fom.plusYears(5))
 
         var konsekutiveGap = 0
+        var akkumulerteGap = 0
         var nåMnd = startMnd
         while (!nåMnd.isAfter(sluttMnd)) {
             val mndPeriode = Periode(nåMnd.atDay(1), nåMnd.atEndOfMonth())
             if (perioder.none { it.overlapper(mndPeriode) }) {
                 konsekutiveGap++
-                if (konsekutiveGap > 1) return false
+                akkumulerteGap++
+                if (konsekutiveGap > 1 || akkumulerteGap > 10) return false
             } else {
                 konsekutiveGap = 0
             }

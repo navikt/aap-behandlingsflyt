@@ -4,6 +4,7 @@ import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
+import no.nav.aap.behandlingsflyt.behandling.vurdering.VurderingerMetaResponse
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.påklagetbehandling.PåklagetBehandlingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.påklagetbehandling.PåklagetBehandlingVurderingMedReferanse
@@ -79,13 +80,15 @@ fun mapTilPåklagetBehandlingGrunnlagDto(
             )
         },
         harTilgangTilÅSaksbehandle = harTilgangTilÅSaksbehandle,
-        vurdertAv = påklagetBehandlingVurderingMedReferanse?.let {
-            VurdertAvResponse.fraIdent(
-                it.vurdertAv,
-                it.opprettet,
-                ansattInfoService
-            )
-        }
+        vurderingerMeta = VurderingerMetaResponse(
+            vurdertAv = påklagetBehandlingVurderingMedReferanse?.let {
+                VurdertAvResponse.fraIdent(
+                    it.vurdertAv,
+                    it.opprettet,
+                    ansattInfoService,
+                )
+            }
+        )
     )
 }
         

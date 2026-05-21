@@ -2,6 +2,8 @@ package no.nav.aap.behandlingsflyt
 
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
+import io.micrometer.prometheusmetrics.PrometheusConfig
+import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
@@ -72,6 +74,7 @@ class OpprettOgFullforBehandlingApiTest {
                 dbConfig = dbConfig,
                 repositoryRegistry = postgresRepositoryRegistry,
                 gatewayProvider = testGatewayProvider(LokalUnleash::class),
+                prometheus = PrometheusMeterRegistry(PrometheusConfig.DEFAULT),
             )
         }
 

@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.behandling.oppholdskrav
 import no.nav.aap.behandlingsflyt.PeriodiserteVurderingerDto
 import no.nav.aap.behandlingsflyt.VurderingDto
 import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
+import no.nav.aap.behandlingsflyt.behandling.vurdering.VurderingerMetaResponse
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
@@ -24,9 +25,7 @@ data class OppholdskravVurderingDto(
     val land: String?,
     override val fom: LocalDate,
     override val tom: LocalDate?,
-    override val vurdertAv: VurdertAvResponse?,
-    override val kvalitetssikretAv: VurdertAvResponse? = null,
-    override val besluttetAv: VurdertAvResponse? = null
+    override val vurderingerMeta: VurderingerMetaResponse,
 ): VurderingDto
 
 fun OppholdskravVurdering.tilDto(
@@ -35,12 +34,15 @@ fun OppholdskravVurdering.tilDto(
 ): List<OppholdskravVurderingDto> =
     perioder.map {
         OppholdskravVurderingDto(
+            vurderingerMeta = vurdertAvService.byggVurderingerMeta(
+                definisjon = Definisjon.AVKLAR_OPPHOLDSKRAV,
+                behandlingId = vurdertIBehandling,
+                vurdertAv = VurdertAvResponse.fraIdent(vurdertAv, opprettet.toLocalDate(), ansattInfoService),
+            ),
             oppfylt = it.oppfylt,
             begrunnelse = it.begrunnelse,
             land = it.land,
             fom = it.fom,
             tom = it.tom,
-            vurdertAv = VurdertAvResponse.fraIdent(vurdertAv, opprettet.toLocalDate(), ansattInfoService),
-            besluttetAv = vurdertAvService.besluttetAv(Definisjon.AVKLAR_OPPHOLDSKRAV, vurdertIBehandling)
         )
     }

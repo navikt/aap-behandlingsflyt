@@ -28,4 +28,17 @@ object UnleashGatewayImpl : UnleashGateway {
                 .addProperty("typeBrev", typeBrev.name)
                 .build()
         )
+
+    override fun getVariantValue(featureToggle: FeatureToggle, variantName: String): String {
+        val variant = unleash.getVariant(featureToggle.key())
+        return if (variant.isEnabled && variant.name == variantName) {
+            variant.getPayload().map { it.value }.orElse("")
+        } else ""
+    }
+
+    override fun isVariantEnabled(featureToggle: FeatureToggle, variantName: String): Boolean {
+        val variant = unleash.getVariant(featureToggle.key())
+        return variant.isEnabled && variant.name == variantName
+    }
+
 }

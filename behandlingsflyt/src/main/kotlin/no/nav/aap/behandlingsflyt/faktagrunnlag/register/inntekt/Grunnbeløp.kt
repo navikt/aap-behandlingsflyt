@@ -10,6 +10,14 @@ import java.time.LocalDate
 import java.time.Year
 
 object Grunnbeløp {
+
+    @Synchronized
+    fun aktiverGJustering2026() {
+        if (finnesGrunnbeløpForÅr(Year.of(2026)) == null) {
+            element(2026, 5, 136_549,  134_419)
+        }
+    }
+
     private val grunnbeløpene = sortedSetOf<Element>()
     private val gjennomsnittsbeløpene = sortedSetOf<GjennomsnittElement>()
 
@@ -146,10 +154,10 @@ object Grunnbeløp {
                     .plus(Segment(Periode(siste.dato, Tid.MAKS), siste.beløp))
                     .let(::Tidslinje)
             }
-            fun finnGrunnbeløpForÅr(år: Year): GrunnbeløpDto? {
-                val grunnbeløpElement = grunnbeløpene.find { it.dato.year.equals(år) }
+            fun finnGrunnbeløpForÅr(år: Year): GrunnbeløpMedDato? {
+                val grunnbeløpElement = grunnbeløpene.find { Year.of(it.dato.year) == år }
                 if (grunnbeløpElement != null) {
-                    return GrunnbeløpDto(
+                    return GrunnbeløpMedDato(
                         dato = grunnbeløpElement.dato,
                         beløp = grunnbeløpElement.beløp
                     )
@@ -258,12 +266,12 @@ object Grunnbeløp {
         return Element.tilTidslinje()
     }
 
-    data class GrunnbeløpDto(
+    data class GrunnbeløpMedDato(
         val dato: LocalDate,
         val beløp: Beløp
     )
 
-    fun finnesGrunnbeløpForÅr(år: Year) :  GrunnbeløpDto? {
+    fun finnesGrunnbeløpForÅr(år: Year) :  GrunnbeløpMedDato? {
         return Element.finnGrunnbeløpForÅr(år)
     }
 }

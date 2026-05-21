@@ -5,8 +5,10 @@ import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.response.respondWithStatus
 import com.papsign.ktor.openapigen.route.route
 import io.ktor.http.*
+import kotlinx.coroutines.runBlocking
 import no.nav.aap.behandlingsflyt.behandling.Resultat
 import no.nav.aap.behandlingsflyt.behandling.ResultatUtleder
+import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.avbrytaktivitetspliktbehandling.AvbrytAktivitetspliktbehandlingService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovOrkestrator
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
@@ -100,6 +102,8 @@ fun NormalOpenAPIRoute.flytApi(
                     )
                     val flytJobbRepository = repositoryProvider.provide<FlytJobbRepository>()
                     val gruppeVisningService = DynamiskStegGruppeVisningService(repositoryProvider)
+                    val avbrytAktivitetspliktbehandlingService =
+                        AvbrytAktivitetspliktbehandlingService(repositoryProvider)
 
                     val jobber = flytJobbRepository.hentJobberForBehandling(behandling.id.toLong())
                         .filter { it.type() == ProsesserBehandlingJobbUtfører.type }
@@ -146,6 +150,10 @@ fun NormalOpenAPIRoute.flytApi(
                         ((behandling.typeBehandling() == TypeBehandling.Revurdering) && (resultatUtleder.utledResultatRevurderingsBehandling(
                             behandling
                         ) == Resultat.AVBRUTT)) -> ResultatKode.AVBRUTT
+
+                        ((behandling.typeBehandling() == TypeBehandling.Aktivitetsplikt || behandling.typeBehandling() == TypeBehandling.Aktivitetsplikt11_9) && (avbrytAktivitetspliktbehandlingService.behandlingErAvbrutt(
+                            behandling.id
+                        ))) -> ResultatKode.AVBRUTT
 
                         else -> null
                     }
@@ -252,7 +260,12 @@ fun NormalOpenAPIRoute.flytApi(
                     val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
                     val åpentAvklaringsbehov = avklaringsbehovene.åpne().filterNot { it.erVentepunkt() }
                         .sortedWith(behandling.flyt().avklaringsbehovComparator).first().definisjon
-                    val relevanteIdenter = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource).resolve(request.referanse.toString())
+                    val relevanteIdenter = runBlocking {
+                        relevanteIdenterForBehandlingResolver(
+                            repositoryRegistry,
+                            dataSource
+                        ).resolve(request.referanse.toString())
+                    }
                     Pair(åpentAvklaringsbehov, relevanteIdenter)
                 }
                 sjekkTilgangTilSettPåVent(

@@ -4,6 +4,10 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.KildesystemM
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.AdresseType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.GyldigPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonStatus
+import no.nav.aap.behandlingsflyt.behandling.lovvalg.Fartsomraade
+import no.nav.aap.behandlingsflyt.behandling.lovvalg.Skipsregister
+import no.nav.aap.behandlingsflyt.behandling.lovvalg.Skipstype
+import no.nav.aap.behandlingsflyt.behandling.lovvalg.Yrke
 import no.nav.aap.komponenter.type.Periode
 import java.time.LocalDate
 
@@ -60,6 +64,14 @@ data class BestemtArbeidsgruppeINorgeGrunnlag(
     val virksomhetNavn: String?,
     val fom: LocalDate,
     val tom: LocalDate?,
+    val ansettelsesDetaljer: List<AsettelsesDetalj>? = emptyList(),
+)
+
+data class AsettelsesDetalj(
+    val skipsregister: Skipsregister? = null,
+    val skipstype: Skipstype? = null,
+    val fartsomraade: Fartsomraade? = null,
+    val yrke: Yrke? = null,
 )
 
 data class MottarSykepengerGrunnlag(

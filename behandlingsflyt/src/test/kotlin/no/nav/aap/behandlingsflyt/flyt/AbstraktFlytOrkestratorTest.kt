@@ -70,6 +70,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.ÅrsVurd
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.BistandLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.flate.FritaksvurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangarbeid.flate.OvergangArbeidVurderingLøsningDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.UføreSøknadVedtakResultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.flate.OvergangUføreLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravVurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.rettighetsperiode.RettighetsperiodeHarRett
@@ -80,7 +81,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Arbeidsevne
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerGrunn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.PeriodisertSykepengerVurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.SykdomsvurderingLøsningDto
-import no.nav.aap.behandlingsflyt.flyt.testutil.DummyBehandlingHendelseService
 import no.nav.aap.behandlingsflyt.help.assertTidslinje
 import no.nav.aap.behandlingsflyt.hendelse.mottak.BehandlingSattPåVent
 import no.nav.aap.behandlingsflyt.hendelse.mottak.MottattHendelseService
@@ -524,21 +524,23 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
     }
 
     @JvmName("løsOvergangUføreExt")
-    protected fun Behandling.løsOvergangUføre(fom: LocalDate, tom: LocalDate? = null): Behandling {
-        return løsOvergangUføre(this, fom, tom)
-    }
-
-    protected fun løsOvergangUføre(behandling: Behandling, fom: LocalDate, tom: LocalDate? = null): Behandling {
+    protected fun Behandling.løsOvergangUføre(
+        fom: LocalDate,
+        tom: LocalDate? = null,
+        brukerHarSøktOmUføretrygd: Boolean = false,
+        brukerHarFåttVedtakOmUføretrygd: UføreSøknadVedtakResultat? = null,
+        brukerHarRettPåAap: Boolean? = false,
+    ): Behandling {
         return løsAvklaringsBehov(
-            behandling = behandling,
+            behandling = this,
             avklaringsBehovLøsning =
                 AvklarOvergangUføreLøsning(
                     listOf(
                         OvergangUføreLøsningDto(
                             begrunnelse = "Løsning",
-                            brukerHarSøktOmUføretrygd = false,
-                            brukerHarFåttVedtakOmUføretrygd = null,
-                            brukerRettPåAAP = false,
+                            brukerHarSøktOmUføretrygd = brukerHarSøktOmUføretrygd,
+                            brukerHarFåttVedtakOmUføretrygd = brukerHarFåttVedtakOmUføretrygd,
+                            brukerRettPåAAP = brukerHarRettPåAap,
                             fom = fom,
                             tom = tom,
                             overgangBegrunnelse = null

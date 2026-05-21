@@ -291,6 +291,7 @@ fun NormalOpenAPIRoute.driftApi(
                     val sak = sakRepository.hentHvisFinnes(Saksnummer(params.saksnummer))
                         ?: throw VerdiIkkeFunnetException("Sak med saksnummer ${params.saksnummer} finnes ikke")
 
+                    val vedtak = behandlingRepository.hentAlleMedVedtakFor(sak.person)
                     val behandlinger = behandlingRepository.hentAlleFor(sak.id)
                         .map { behandling ->
                             val avklaringsbehovene = avklaringsbehovRepository
@@ -310,7 +311,7 @@ fun NormalOpenAPIRoute.driftApi(
                                     }
                                 }.sortedByDescending { it.tidsstempel }
 
-                            BehandlingDriftsinfo.fra(behandling, avklaringsbehovene)
+                            BehandlingDriftsinfo.fra(behandling, avklaringsbehovene, vedtak.find { it.id == behandling.id }?.vedtakstidspunkt )
                         }
                         .sortedByDescending { it.opprettet }
 
@@ -405,10 +406,11 @@ private data class BehandlingDriftsinfo(
     val vurderingsbehov: List<Vurderingsbehov>,
     val årsakTilOpprettelse: ÅrsakTilOpprettelse?,
     val opprettet: LocalDateTime,
+    val vedtatt: LocalDateTime?,
     val avklaringsbehov: List<ForenkletAvklaringsbehov>,
 ) {
     companion object {
-        fun fra(behandling: Behandling, avklaringsbehovene: List<ForenkletAvklaringsbehov>) =
+        fun fra(behandling: Behandling, avklaringsbehovene: List<ForenkletAvklaringsbehov>, vedtatt: LocalDateTime?) =
             BehandlingDriftsinfo(
                 referanse = behandling.referanse.referanse,
                 type = behandling.typeBehandling().identifikator(),
@@ -417,6 +419,7 @@ private data class BehandlingDriftsinfo(
                 årsakTilOpprettelse = behandling.årsakTilOpprettelse,
                 opprettet = behandling.opprettetTidspunkt,
                 avklaringsbehov = avklaringsbehovene,
+                vedtatt = vedtatt,
             )
     }
 }

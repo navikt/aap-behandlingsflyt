@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.behandling.klage.formkrav
 
 import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
+import no.nav.aap.behandlingsflyt.behandling.vurdering.VurderingerMetaResponse
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.formkrav.FormkravGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.formkrav.FormkravVurdering
@@ -20,7 +21,7 @@ data class FormkravVurderingDto(
     val likevelBehandles: Boolean?,
     val erKonkret: Boolean,
     val erSignert: Boolean,
-    val vurdertAv: VurdertAvResponse?
+    val vurderingerMeta: VurderingerMetaResponse,
 )
 
 internal fun FormkravVurdering.tilDto(ansattInfoService: AnsattInfoService) =
@@ -30,7 +31,9 @@ internal fun FormkravVurdering.tilDto(ansattInfoService: AnsattInfoService) =
         erFristOverholdt = erFristOverholdt,
         erKonkret = erKonkret,
         erSignert = erSignert,
-        vurdertAv = VurdertAvResponse.fraIdent(vurdertAv, opprettet, ansattInfoService),
+        vurderingerMeta = VurderingerMetaResponse(
+            vurdertAv = VurdertAvResponse.fraIdent(vurdertAv, opprettet, ansattInfoService),
+        ),
         likevelBehandles = likevelBehandles
     )
 

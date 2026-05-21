@@ -5,6 +5,7 @@ import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.server.testing.*
 import no.nav.aap.behandlingsflyt.BaseApiTest
+import no.nav.aap.behandlingsflyt.behandling.vurdering.VurderingerMetaResponse
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreSøknad
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreVurdering
@@ -65,9 +66,11 @@ class OvergangUforeGrunnlagApiTest : BaseApiTest() {
             brukerRettPåAAP = vurdering.brukerRettPåAAP,
             fom = vurdering.fom,
             tom = vurdering.tom,
-            vurdertAv = VurdertAvResponse(vurdering.vurdertAv, LocalDate.now(), "Test Testesen", "Lokalenhetsnavn"),
-            kvalitetssikretAv = null,
-            besluttetAv = null
+            vurderingerMeta = VurderingerMetaResponse(
+                vurdertAv = VurdertAvResponse(vurdering.vurdertAv, LocalDate.now(), "Test Testesen", "Lokalenhetsnavn"),
+                kvalitetssikretAv = null,
+                besluttetAv = null,
+            ),
         )
         val uføreSøknadOpplysninger = UføreSøknadOpplysninger(
             uføreSøknad.soknadsdato

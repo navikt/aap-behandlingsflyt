@@ -7,6 +7,7 @@ import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
 import no.nav.aap.behandlingsflyt.behandling.brev.ForhåndsvarselBruddAktivitetsplikt
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingService
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Status
+import no.nav.aap.behandlingsflyt.behandling.vurdering.VurderingerMetaResponse
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Repository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Varsel
@@ -106,7 +107,7 @@ data class Aktivitetsplikt11_7VurderingDto(
     val erOppfylt: Boolean,
     val utfall: Utfall?,
     val gjelderFra: LocalDate,
-    val vurdertAv: VurdertAvResponse?,
+    val vurderingerMeta: VurderingerMetaResponse,
     val skalIgnorereVarselFrist: Boolean
 )
 
@@ -121,7 +122,9 @@ internal fun Aktivitetsplikt11_7Vurdering.tilDto(ansattInfoService: AnsattInfoSe
         erOppfylt = erOppfylt,
         utfall = utfall,
         gjelderFra = fom,
-        vurdertAv = VurdertAvResponse.fraIdent(vurdertAv, opprettet, ansattInfoService),
+        vurderingerMeta = VurderingerMetaResponse(
+            vurdertAv = VurdertAvResponse.fraIdent(vurdertAv, opprettet, ansattInfoService),
+        ),
         skalIgnorereVarselFrist = this.skalIgnorereVarselFrist
     )
 }

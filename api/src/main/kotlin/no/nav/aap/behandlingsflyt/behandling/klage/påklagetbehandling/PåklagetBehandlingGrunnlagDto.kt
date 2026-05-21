@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.klage.påklagetbehandling
 
-import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
+import no.nav.aap.behandlingsflyt.behandling.vurdering.VurderingerMetaResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.påklagetbehandling.PåklagetVedtakType
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
@@ -15,7 +15,7 @@ data class PåklagetBehandlingGrunnlagDto(
     val behandlinger: List<BehandlingMedVedtakDto>,
     val gjeldendeVurdering: PåklagetBehandlingVurderingDto?,
     val harTilgangTilÅSaksbehandle: Boolean,
-    val vurdertAv: VurdertAvResponse?
+    val vurderingerMeta: VurderingerMetaResponse,
 )
 
 data class PåklagetBehandlingVurderingDto(

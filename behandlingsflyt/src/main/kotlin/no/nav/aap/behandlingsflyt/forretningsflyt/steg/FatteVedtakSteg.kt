@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.avbrytaktivitetspliktbehandling.AvbrytAktivitetspliktbehandlingService
 import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
@@ -16,14 +17,11 @@ import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
-import no.nav.aap.behandlingsflyt.flyt.steg.TilbakeføresFraBeslutter
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
-import no.nav.aap.behandlingsflyt.unleash.FeatureToggle
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
@@ -36,6 +34,7 @@ class FatteVedtakSteg(
     private val avklaringsbehovService: AvklaringsbehovService,
     private val avbrytRevurderingService: AvbrytRevurderingService,
     private val trukketSøknadService: TrukketSøknadService,
+    private val avbrytAktivitetspliktbehandlingService: AvbrytAktivitetspliktbehandlingService,
     private val tidligereVurderinger: TidligereVurderinger,
     private val klageresultatUtleder: KlageresultatUtleder,
     private val vedtakService: VedtakService,
@@ -55,10 +54,6 @@ class FatteVedtakSteg(
             tilbakestillGrunnlag = {},
             kontekst = kontekst
         )
-
-        if (unleashGateway.isDisabled(BehandlingsflytFeature.FjernTilbakefoeringTransisjon) && avklaringsbehovene.skalTilbakeføresEtterTotrinnsVurdering()) {
-            return TilbakeføresFraBeslutter
-        }
 
         val vedtakstidspunkt = if (vedtakBehøverVurdering)
             avklaringsbehovene.hentBehovForDefinisjon(Definisjon.FATTE_VEDTAK)
@@ -106,7 +101,8 @@ class FatteVedtakSteg(
         avklaringsbehovene: Avklaringsbehovene
     ): Boolean {
         if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type()) ||
-            trekkKlageService.klageErTrukket(kontekst.behandlingId)
+            trekkKlageService.klageErTrukket(kontekst.behandlingId) ||
+            avbrytAktivitetspliktbehandlingService.behandlingErAvbrutt(kontekst.behandlingId)
         ) {
             return false
         }
@@ -147,6 +143,7 @@ class FatteVedtakSteg(
                 avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
                 avbrytRevurderingService = AvbrytRevurderingService(repositoryProvider),
                 trukketSøknadService = TrukketSøknadService(repositoryProvider),
+                avbrytAktivitetspliktbehandlingService = AvbrytAktivitetspliktbehandlingService(repositoryProvider),
                 tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
                 klageresultatUtleder = KlageresultatUtleder(repositoryProvider),
                 vedtakService = VedtakService(repositoryProvider),

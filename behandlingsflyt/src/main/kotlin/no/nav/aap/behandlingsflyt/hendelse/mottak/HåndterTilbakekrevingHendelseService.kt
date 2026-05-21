@@ -75,7 +75,7 @@ class HåndterTilbakekrevingHendelseService(
             eksternFagsakId = this.eksternFagsakId,
             hendelseOpprettet = this.hendelseOpprettet,
             eksternBehandlingId = this.eksternBehandlingId,
-            sakOpprettet = this.tilbakekreving.sakOpprettet,
+            sakOpprettet = this.tilbakekreving.sakOpprettet.toLocalDateTime(),
             varselSendt = this.tilbakekreving.varselSendt,
             behandlingsstatus = TilbakekrevingBehandlingsstatus.valueOf(
                 this.tilbakekreving.behandlingsstatus.name

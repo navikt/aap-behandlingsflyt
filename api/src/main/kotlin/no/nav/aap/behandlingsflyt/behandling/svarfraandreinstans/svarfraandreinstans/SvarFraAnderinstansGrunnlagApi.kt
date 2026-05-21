@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.behandling.svarfraandreinstans.svarfraandrein
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
+import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.svarfraandreinstans.SvarFraAndreinstansRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
@@ -13,6 +14,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.behandlingsflyt.tilgang.kanSaksbehandle
 import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
 import no.nav.aap.komponenter.dbconnect.transaction
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.getGrunnlag
@@ -20,7 +22,8 @@ import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.svarFraAndreinstansGrunnlagApi(
     dataSource: DataSource,
-    repositoryRegistry: RepositoryRegistry
+    repositoryRegistry: RepositoryRegistry,
+    gatewayProvider: GatewayProvider,
 ) {
     route("api/svar-fra-andreinstans/{referanse}/grunnlag/svar-fra-andreinstans") {
         getGrunnlag<BehandlingReferanse, SvarFraAndreinstansGrunnlagDto>(
@@ -30,6 +33,7 @@ fun NormalOpenAPIRoute.svarFraAndreinstansGrunnlagApi(
         ) { req ->
             val respons = dataSource.transaction(readOnly = true) {
                 val repositoryProvider = repositoryRegistry.provider(it)
+                val vurdertAvService = VurdertAvService(repositoryProvider, gatewayProvider)
                 val behandling = repositoryProvider.provide<BehandlingRepository>()
                     .hent(req)
 
@@ -44,7 +48,7 @@ fun NormalOpenAPIRoute.svarFraAndreinstansGrunnlagApi(
 
                 SvarFraAndreinstansGrunnlagDto(
                     svarFraAndreinstans = hendelse.tilDto(),
-                    gjeldendeVurdering = grunnlag?.vurdering?.tilDto(),
+                    gjeldendeVurdering = grunnlag?.vurdering?.tilDto(vurdertAvService, behandling.id),
                     harTilgangTilÅSaksbehandle = kanSaksbehandle()
                 )
             }

@@ -2,18 +2,19 @@ package no.nav.aap.behandlingsflyt.integrasjon.arbeidsforhold
 
 import java.time.LocalDate
 
-data class ArbeidsforholdoversiktResponse(
-    val arbeidsforholdoversikter: List<ArbeidsforholdOversikt> = emptyList()
-)
-
-data class ArbeidsforholdOversikt(
-    val type: Kodeverksentitet,
+data class ArbeidsforholdResponse(
+    val type: ArbeidsforholdTypeResponse,
     val arbeidssted: Arbeidssted,
-    val startdato: LocalDate,
-    val sluttdato: LocalDate?
+    val ansettelsesperiode: AnsettelsesperiodeResponse? = null,
+    val ansettelsesdetaljer: List<Ansettelsesdetalj> = emptyList()
 )
 
-data class Kodeverksentitet(
+data class AnsettelsesperiodeResponse(
+    val startdato: LocalDate,
+    val sluttdato: LocalDate? = null
+)
+
+data class ArbeidsforholdTypeResponse(
     val kode: String
 )
 
@@ -25,4 +26,16 @@ data class Arbeidssted(
 data class Ident(
     val type: String,
     val ident: String
+)
+
+data class Ansettelsesdetalj(
+    val fartsomraade: Kodeverksentitet? = null,
+    val skipsregister: Kodeverksentitet? = null,
+    val fartoeystype: Kodeverksentitet? = null,
+    val yrke: Kodeverksentitet? = null
+)
+
+data class Kodeverksentitet(
+    val kode: String? = null,
+    val beskrivelse: String? = null
 )

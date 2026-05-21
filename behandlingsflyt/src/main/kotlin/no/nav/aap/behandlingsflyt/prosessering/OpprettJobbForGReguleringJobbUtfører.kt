@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.behandling.gregulering.GReguleringService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature.GReguleringUtplukkJobb
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
@@ -40,7 +41,7 @@ class OpprettJobbForGReguleringJobbUtfører(
     private val log = LoggerFactory.getLogger(javaClass)
 
     override fun utfør(input: JobbInput) {
-        if (unleashGateway.isDisabled(BehandlingsflytFeature.GReguleringUtplukkJobb)) {
+        if (unleashGateway.isDisabled(GReguleringUtplukkJobb)) {
             log.info("Feature toggle GReguleringUtplukkJobb er avskrudd, hopper over opprettelse av G-regulerings-jobber")
             return
         }
@@ -54,7 +55,7 @@ class OpprettJobbForGReguleringJobbUtfører(
 
         val saker = hentKandidaterForGRegulering(aktuellGJustering.dato)
 
-        log.info("Fant ${saker.size} kandidater for G-regulering for gitt G-justering (?) ${aktuellGJustering?.dato}")
+        log.info("Fant ${saker.size} kandidater for G-regulering for gitt G-justering ${aktuellGJustering?.dato}")
         saker
             .also { log.info("Oppretter jobber for alle saker som er aktuelle kandidater for G-regulering. Antall = ${it.size}, Saker = $it") }
             .forEach {
@@ -62,7 +63,7 @@ class OpprettJobbForGReguleringJobbUtfører(
             }
     }
 
-    private fun hentAktuellGJustering(år: Year) : Grunnbeløp.GrunnbeløpDto? {
+    private fun hentAktuellGJustering(år: Year) : Grunnbeløp.GrunnbeløpMedDato? {
         return gReguleringService.finnesGrunnbeløpForÅr(år)
     }
 
@@ -71,11 +72,32 @@ class OpprettJobbForGReguleringJobbUtfører(
 
     private fun hentKandidaterForGRegulering(datoForGJustering: LocalDate): Set<SakId> {
         val alleSaker = gReguleringService.hentSakerForGRegulering(datoForGJustering)
+        log.info("Antall saker som er kandidater for G-regulering: ${alleSaker.size}")
 
-        // TODO: Filtrer saker
-
-        return alleSaker
+        if (gradvisUtrulling("sak-id-filter")) {
+            val sakIdTekster = unleashGateway.getVariantValue(GReguleringUtplukkJobb, "sak-id-filter")
+                .split(",")
+                .map { it.trim() }
+                .filter { it.isNotEmpty() }
+            val parsedSakIder = sakIdTekster.map { it.toLongOrNull() }
+            if (parsedSakIder.any { it == null }) {
+                log.warn("Ugyldig verdi i sak-id-filter. Hopper over opprettelse av G-reguleringsjobber")
+                return emptySet()
+            }
+            val sakIdFilter = parsedSakIder.filterNotNull().toSet()
+            return alleSaker.filter { it.id in sakIdFilter }.toSet()
+        } else if (gradvisUtrulling("maks-antall-saker")) {
+            val maksAntallSaker = unleashGateway.getVariantValue(GReguleringUtplukkJobb, "maks-antall-saker")
+                .trim()
+                .toIntOrNull() ?: return emptySet()
+            return alleSaker.take(maksAntallSaker).toSet()
+        } else {
+            return emptySet()
+        }
     }
+
+    private fun gradvisUtrulling(variantNavn: String): Boolean =
+        unleashGateway.isVariantEnabled(GReguleringUtplukkJobb, variantNavn)
 
     companion object : ProvidersJobbSpesifikasjon {
         override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): JobbUtfører {
@@ -91,8 +113,8 @@ class OpprettJobbForGReguleringJobbUtfører(
         override val beskrivelse = "Skal opprette jobber for omberegning av ytelse i saker, G-regulering"
 
         /**
-         * Kjøres hver dag kl 05:00
+         * Kjøres hver dag kl 05:00 og 17:00
          */
-        override val cron = CronExpression.createWithoutSeconds("0 5 * * *")
+        override val cron = CronExpression.createWithoutSeconds("0 5,17 * * *")
     }
 }

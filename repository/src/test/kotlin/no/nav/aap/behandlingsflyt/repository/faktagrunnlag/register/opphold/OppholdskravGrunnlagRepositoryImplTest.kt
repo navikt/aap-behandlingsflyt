@@ -12,7 +12,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅ
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
-import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
@@ -139,13 +138,16 @@ class OppholdskravGrunnlagRepositoryImplTest {
         }
 
         assertThat(grunnlag).isNotNull
-        assertLikeVurdering(oppholdskravVurdering,grunnlag!!.vurderinger.first())
+        assertLikeVurdering(oppholdskravVurdering, grunnlag!!.vurderinger.first())
 
         assertThat(grunnlag.vurderinger).hasSize(1)
 
     }
 
-    private fun assertLikeVurdering(oppholdskravVurdering1 : OppholdskravVurdering,oppholdskravVurdering2 : OppholdskravVurdering) {
+    private fun assertLikeVurdering(
+        oppholdskravVurdering1: OppholdskravVurdering,
+        oppholdskravVurdering2: OppholdskravVurdering
+    ) {
         assertThat(oppholdskravVurdering1.vurdertAv).isEqualTo(oppholdskravVurdering2.vurdertAv)
         assertThat(oppholdskravVurdering1.perioder).isEqualTo(oppholdskravVurdering2.perioder)
         assertThat(oppholdskravVurdering1.vurdertIBehandling).isEqualTo(oppholdskravVurdering2.vurdertIBehandling)
@@ -159,10 +161,7 @@ class OppholdskravGrunnlagRepositoryImplTest {
         val behandling = dataSource.transaction { connection ->
             val sak = SakRepositoryImpl(connection).finnEllerOpprett(
                 person,
-                Periode(
-                    fom = LocalDate.parse("2025-01-01"),
-                    tom = LocalDate.parse("2025-08-01")
-                )
+                LocalDate.parse("2025-01-01")
             )
 
             BehandlingRepositoryImpl(connection).opprettBehandling(

@@ -2,6 +2,8 @@ package no.nav.aap.behandlingsflyt
 
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
+import io.micrometer.prometheusmetrics.PrometheusConfig
+import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import kotlinx.coroutines.runBlocking
 import no.nav.aap.behandlingsflyt.integrasjon.defaultGatewayProvider
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
@@ -60,7 +62,8 @@ fun main() {
         server(
             dbConfig = dbConfig,
             repositoryRegistry = postgresRepositoryRegistry,
-            gatewayProvider = defaultGatewayProvider()
+            gatewayProvider = defaultGatewayProvider(),
+            prometheus = PrometheusMeterRegistry(PrometheusConfig.DEFAULT),
         )
     }.start()
 

@@ -4,6 +4,7 @@ import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.behandling.beregning.BeregningService
+import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektGrunnlagRepository
@@ -14,20 +15,19 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.behandlingsflyt.tilgang.kanSaksbehandle
 import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
 import no.nav.aap.komponenter.dbconnect.transaction
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.getGrunnlag
-import org.slf4j.LoggerFactory
 import java.math.BigDecimal
 import java.time.MonthDay
 import java.time.Year
 import javax.sql.DataSource
 
-private val log = LoggerFactory.getLogger("ManuellInntektGrunnlagApi")
-
 fun NormalOpenAPIRoute.manglendeGrunnlagApi(
     dataSource: DataSource,
-    repositoryRegistry: RepositoryRegistry
+    repositoryRegistry: RepositoryRegistry,
+    gatewayProvider: GatewayProvider,
 ) {
     route("/api/behandling") {
         route("/{referanse}/grunnlag/beregning/manuellinntekt") {
@@ -42,6 +42,7 @@ fun NormalOpenAPIRoute.manglendeGrunnlagApi(
                     val beregningService = BeregningService(provider)
                     val manuellInntektRepository = provider.provide<ManuellInntektGrunnlagRepository>()
                     val inntektRepository = provider.provide<InntektGrunnlagRepository>()
+                    val vurdertAvService = VurdertAvService(provider, gatewayProvider)
 
                     val behandling = behandlingRepository.hent(req.referanse.let(::BehandlingReferanse))
                     val relevanteÅr = beregningService.utledRelevanteBeregningsÅr(behandling.id)
@@ -66,8 +67,8 @@ fun NormalOpenAPIRoute.manglendeGrunnlagApi(
                     val manglendeInntektGrunnlagService =
                         ManglendeInntektGrunnlagService(repositoryRegistry.provider(it))
 
-                    val mappedVurdering = manglendeInntektGrunnlagService.mapManuellVurderinger(req)
-                    val mappedNyHistorikk = manglendeInntektGrunnlagService.mapHistoriskeManuelleVurderinger(req)
+                    val mappedVurdering = manglendeInntektGrunnlagService.mapManuellVurderinger(req, vurdertAvService)
+                    val mappedNyHistorikk = manglendeInntektGrunnlagService.mapHistoriskeManuelleVurderinger(req, vurdertAvService)
 
                     // Gjennomsnittlig G-verdi første januar i året vi er interessert i
                     val gVerdi = Grunnbeløp.gjennomsnittGrunnbeløp(

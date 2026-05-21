@@ -21,7 +21,7 @@ class AaregFake : FakeServer() {
         }
         installerStatusPages("AAREG")
         routing {
-            post("/api/v2/arbeidstaker/arbeidsforholdoversikt") {
+            post("/api/v2/arbeidstaker/arbeidsforhold") {
                 call.respond(aaregResponse)
             }
         }
@@ -30,59 +30,73 @@ class AaregFake : FakeServer() {
     companion object {
         @Language("JSON")
         private val aaregResponse = """
-            {
-              "arbeidsforholdoversikter": [
-                {
-                  "type": {
-                    "kode": "ordinaertArbeidsforhold",
-                    "beskrivelse": "Ordinært arbeidsforhold"
-                  },
-                  "arbeidstaker": {
-                    "identer": [
-                      {
-                        "type": "AKTORID",
-                        "ident": "2336200023418",
-                        "gjeldende": true
-                      },
-                      {
-                        "type": "FOLKEREGISTERIDENT",
-                        "ident": "244991*****",
-                        "gjeldende": true
-                      }
-                    ]
-                  },
-                  "arbeidssted": {
-                    "type": "Underenhet",
-                    "identer": [
-                      {
-                        "type": "ORGANISASJONSNUMMER",
-                        "ident": "896929119",
-                        "gjeldende": null
-                      }
-                    ]
-                  },
-                  "opplysningspliktig": {
-                    "type": "Hovedenhet",
-                    "identer": [
-                      {
-                        "type": "ORGANISASJONSNUMMER",
-                        "ident": "963743254",
-                        "gjeldende": null
-                      }
-                    ]
-                  },
+            [
+              {
+                "type": {
+                  "kode": "ordinaertArbeidsforhold",
+                  "beskrivelse": "Ordinært arbeidsforhold"
+                },
+                "arbeidstaker": {
+                  "identer": [
+                    {
+                      "type": "AKTORID",
+                      "ident": "2336200023418",
+                      "gjeldende": true
+                    },
+                    {
+                      "type": "FOLKEREGISTERIDENT",
+                      "ident": "244991*****",
+                      "gjeldende": true
+                    }
+                  ]
+                },
+                "arbeidssted": {
+                  "type": "Underenhet",
+                  "identer": [
+                    {
+                      "type": "ORGANISASJONSNUMMER",
+                      "ident": "896929119",
+                      "gjeldende": null
+                    }
+                  ]
+                },
+                "opplysningspliktig": {
+                  "type": "Hovedenhet",
+                  "identer": [
+                    {
+                      "type": "ORGANISASJONSNUMMER",
+                      "ident": "963743254",
+                      "gjeldende": null
+                    }
+                  ]
+                },
+                "ansettelsesperiode": {
                   "startdato": "2005-01-16",
-                  "sluttdato": null,
-                  "yrke": {
-                    "kode": "7125102",
-                    "beskrivelse": "BYGNINGSSNEKKER"
-                  },
-                  "avtaltStillingsprosent": 100,
-                  "permisjonsprosent": null,
-                  "permitteringsprosent": null
-                }
-              ]
-            }
+                  "sluttdato": null
+                },
+                "ansettelsesdetaljer": [
+                  {
+                    "type": "Ordinaer",
+                    "yrke": {
+                      "kode": "7125102",
+                      "beskrivelse": "BYGNINGSSNEKKER"
+                    },
+                     "fartsomraade": {
+                       "kode": "innenriks",
+                       "beskrivelse": "Innenriks"
+                     },
+                     "skipsregister": {
+                       "kode": "nor",
+                       "beskrivelse": "NOR"
+                     },
+                     "fartoeystype": {
+                       "kode": "annet",
+                       "beskrivelse": "Annet"
+                     }
+                   }
+                 ]
+               }
+            ]
         """.trimIndent()
     }
 }

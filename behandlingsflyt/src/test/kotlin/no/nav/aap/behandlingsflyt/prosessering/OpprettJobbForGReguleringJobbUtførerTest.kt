@@ -47,6 +47,23 @@ class OpprettJobbForGReguleringJobbUtførerTest {
         every { unleashGateway.isDisabled(BehandlingsflytFeature.GReguleringUtplukkJobb) } returns false
     }
 
+    private fun enableToggleWithSakIdFilter(vararg sakIds: Long) =
+        enableToggleWithSakIdFilter(sakIds.joinToString(","))
+
+    private fun enableToggleWithSakIdFilter(filterVerdi: String) {
+        every { unleashGateway.isDisabled(BehandlingsflytFeature.GReguleringUtplukkJobb) } returns false
+        every { unleashGateway.isVariantEnabled(BehandlingsflytFeature.GReguleringUtplukkJobb, "sak-id-filter") } returns true
+        every { unleashGateway.isVariantEnabled(BehandlingsflytFeature.GReguleringUtplukkJobb, "maks-antall-saker") } returns false
+        every { unleashGateway.getVariantValue(BehandlingsflytFeature.GReguleringUtplukkJobb, "sak-id-filter") } returns filterVerdi
+    }
+
+    private fun enableToggleWithMaksAntallSaker(maksAntallSaker: String) {
+        every { unleashGateway.isDisabled(BehandlingsflytFeature.GReguleringUtplukkJobb) } returns false
+        every { unleashGateway.isVariantEnabled(BehandlingsflytFeature.GReguleringUtplukkJobb, "sak-id-filter") } returns false
+        every { unleashGateway.isVariantEnabled(BehandlingsflytFeature.GReguleringUtplukkJobb, "maks-antall-saker") } returns true
+        every { unleashGateway.getVariantValue(BehandlingsflytFeature.GReguleringUtplukkJobb, "maks-antall-saker") } returns maksAntallSaker
+    }
+
     private fun disableToggle() {
         every { unleashGateway.isDisabled(BehandlingsflytFeature.GReguleringUtplukkJobb) } returns true
     }
@@ -64,13 +81,12 @@ class OpprettJobbForGReguleringJobbUtførerTest {
 
     @Test
     fun `skal opprette jobber for kandidater når feature toggle er på`() {
-        enableToggle()
-
         val gjusteringDato = LocalDate.of(2025, 5, 1)
         val sakId = SakId(42L)
+        enableToggleWithSakIdFilter(sakId.id)
 
         every { gReguleringService.finnesGrunnbeløpForÅr(Year.of(2025)) } returns
-            Grunnbeløp.GrunnbeløpDto(dato = gjusteringDato, beløp = Beløp(130_160))
+            Grunnbeløp.GrunnbeløpMedDato(dato = gjusteringDato, beløp = Beløp(130_160))
         every { gReguleringService.hentSakerForGRegulering(gjusteringDato) } returns setOf(sakId)
         every { flytJobbRepository.leggTil(any()) } just Runs
 
@@ -80,8 +96,25 @@ class OpprettJobbForGReguleringJobbUtførerTest {
     }
 
     @Test
+    fun `skal ikke opprette jobber når sak-id ikke er i filterlisten`() {
+        val gjusteringDato = LocalDate.of(2025, 5, 1)
+        val sakId = SakId(42L)
+        enableToggleWithSakIdFilter(99L) // Kun sak 99 er tillatt, ikke 42
+
+        every { gReguleringService.finnesGrunnbeløpForÅr(Year.of(2025)) } returns
+            Grunnbeløp.GrunnbeløpMedDato(dato = gjusteringDato, beløp = Beløp(130_160))
+        every { gReguleringService.hentSakerForGRegulering(gjusteringDato) } returns setOf(sakId)
+
+        opprettUtfører().utfør(jobbInput)
+
+        verify(exactly = 0) { flytJobbRepository.leggTil(any()) }
+    }
+
+    @Test
     fun `skal bruke forrige års G-justering når dagsdato er i januar (før 1 mai)`() {
-        enableToggle()
+        val gjusteringDato = LocalDate.of(2026, 5, 1)
+        val sakId = SakId(99L)
+        enableToggleWithSakIdFilter(sakId.id)
 
         val utfører = OpprettJobbForGReguleringJobbUtfører(
             gReguleringService = gReguleringService,
@@ -91,11 +124,8 @@ class OpprettJobbForGReguleringJobbUtførerTest {
         )
 
         // 15. jan 2027 → G-periode-år = 2026 → leter etter 2026-G-justeringen
-        val gjusteringDato = LocalDate.of(2026, 5, 1)
-        val sakId = SakId(99L)
-
         every { gReguleringService.finnesGrunnbeløpForÅr(Year.of(2026)) } returns
-            Grunnbeløp.GrunnbeløpDto(dato = gjusteringDato, beløp = Beløp(135_000))
+            Grunnbeløp.GrunnbeløpMedDato(dato = gjusteringDato, beløp = Beløp(135_000))
         every { gReguleringService.hentSakerForGRegulering(gjusteringDato) } returns setOf(sakId)
         every { flytJobbRepository.leggTil(any()) } just Runs
 
@@ -108,7 +138,9 @@ class OpprettJobbForGReguleringJobbUtførerTest {
 
     @Test
     fun `skal bruke inneværende års G-justering når dagsdato er 1 mai eller etter`() {
-        enableToggle()
+        val gjusteringDato = LocalDate.of(2027, 5, 1)
+        val sakId = SakId(77L)
+        enableToggleWithSakIdFilter(sakId.id)
 
         val utfører = OpprettJobbForGReguleringJobbUtfører(
             gReguleringService = gReguleringService,
@@ -118,11 +150,8 @@ class OpprettJobbForGReguleringJobbUtførerTest {
         )
 
         // 1. mai 2027 → G-periode-år = 2027 → leter etter 2027-G-justeringen
-        val gjusteringDato = LocalDate.of(2027, 5, 1)
-        val sakId = SakId(77L)
-
         every { gReguleringService.finnesGrunnbeløpForÅr(Year.of(2027)) } returns
-            Grunnbeløp.GrunnbeløpDto(dato = gjusteringDato, beløp = Beløp(140_000))
+            Grunnbeløp.GrunnbeløpMedDato(dato = gjusteringDato, beløp = Beløp(140_000))
         every { gReguleringService.hentSakerForGRegulering(gjusteringDato) } returns setOf(sakId)
         every { flytJobbRepository.leggTil(any()) } just Runs
 
@@ -131,6 +160,68 @@ class OpprettJobbForGReguleringJobbUtførerTest {
         verify(exactly = 1) { flytJobbRepository.leggTil(any()) }
         verify(exactly = 0) { gReguleringService.finnesGrunnbeløpForÅr(Year.of(2026)) }
         verify(exactly = 1) { gReguleringService.finnesGrunnbeløpForÅr(Year.of(2027)) }
+    }
+
+    @Test
+    fun `skal begrense antall jobber når maks-antall-saker variant er aktiv`() {
+        val gjusteringDato = LocalDate.of(2025, 5, 1)
+        enableToggleWithMaksAntallSaker("2")
+
+        every { gReguleringService.finnesGrunnbeløpForÅr(Year.of(2025)) } returns
+            Grunnbeløp.GrunnbeløpMedDato(dato = gjusteringDato, beløp = Beløp(130_160))
+        every { gReguleringService.hentSakerForGRegulering(gjusteringDato) } returns
+            setOf(SakId(42L), SakId(99L), SakId(123L))
+        every { flytJobbRepository.leggTil(any()) } just Runs
+
+        opprettUtfører().utfør(jobbInput)
+
+        verify(exactly = 2) { flytJobbRepository.leggTil(any()) }
+    }
+
+    @Test
+    fun `skal ikke opprette jobber når maks-antall-saker variant har ugyldig verdi`() {
+        val gjusteringDato = LocalDate.of(2025, 5, 1)
+        enableToggleWithMaksAntallSaker("ikke-tall")
+
+        every { gReguleringService.finnesGrunnbeløpForÅr(Year.of(2025)) } returns
+            Grunnbeløp.GrunnbeløpMedDato(dato = gjusteringDato, beløp = Beløp(130_160))
+        every { gReguleringService.hentSakerForGRegulering(gjusteringDato) } returns
+            setOf(SakId(42L), SakId(99L))
+
+        opprettUtfører().utfør(jobbInput)
+
+        verify(exactly = 0) { flytJobbRepository.leggTil(any()) }
+    }
+
+    @Test
+    fun `skal ikke opprette jobber når maks-antall-saker variant har tom verdi`() {
+        val gjusteringDato = LocalDate.of(2025, 5, 1)
+        enableToggleWithMaksAntallSaker("")
+
+        every { gReguleringService.finnesGrunnbeløpForÅr(Year.of(2025)) } returns
+            Grunnbeløp.GrunnbeløpMedDato(dato = gjusteringDato, beløp = Beløp(130_160))
+        every { gReguleringService.hentSakerForGRegulering(gjusteringDato) } returns
+            setOf(SakId(42L), SakId(99L))
+
+        opprettUtfører().utfør(jobbInput)
+
+        verify(exactly = 0) { flytJobbRepository.leggTil(any()) }
+    }
+
+    @Test
+    fun `skal ikke opprette jobber når payload inneholder ugyldige og gyldige verdier`() {
+        val gjusteringDato = LocalDate.of(2025, 5, 1)
+        enableToggleWithSakIdFilter("42, abc, , 99, 123x")
+
+        every { gReguleringService.finnesGrunnbeløpForÅr(Year.of(2025)) } returns
+            Grunnbeløp.GrunnbeløpMedDato(dato = gjusteringDato, beløp = Beløp(130_160))
+        every { gReguleringService.hentSakerForGRegulering(gjusteringDato) } returns
+            setOf(SakId(42L), SakId(77L), SakId(99L))
+        every { flytJobbRepository.leggTil(any()) } just Runs
+
+        opprettUtfører().utfør(jobbInput)
+
+        verify(exactly = 0) { flytJobbRepository.leggTil(any()) }
     }
 
     @Test

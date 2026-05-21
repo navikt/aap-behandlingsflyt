@@ -392,6 +392,7 @@ private fun finnSaksinfo(
                     opprettetTidspunkt = sak.opprettetTidspunkt,
                     periode = sak.rettighetsperiode,
                     ident = sak.person.aktivIdent().identifikator,
+                    tilstand = SakTilstandDto.fra(resultat),
                     resultat = resultat.let {
                         when (it) {
                             Resultat.INNVILGELSE -> ResultatKode.INNVILGET
