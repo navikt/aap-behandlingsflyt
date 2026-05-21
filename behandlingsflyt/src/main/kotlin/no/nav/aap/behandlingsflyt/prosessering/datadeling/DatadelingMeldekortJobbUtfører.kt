@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.prosessering.datadeling
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.meldeperiode.MeldeperiodeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.MeldekortRepository
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.ApiInternGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
@@ -20,6 +21,7 @@ class DatadelingMeldekortJobbUtfører(
     private val underveisRepository: UnderveisRepository,
     private val meldekortRepository: MeldekortRepository,
     private val meldeperiodeRepository: MeldeperiodeRepository,
+    private val mottattDokumentRepository: MottattDokumentRepository,
     private val apiInternGateway: ApiInternGateway,
 ) : JobbUtfører {
 
@@ -27,7 +29,7 @@ class DatadelingMeldekortJobbUtfører(
     private val service = DatadelingMeldekortService(
         saksRepository,
         underveisRepository,
-        meldekortRepository,
+        mottattDokumentRepository,
         meldeperiodeRepository,
     )
 
@@ -60,6 +62,7 @@ class DatadelingMeldekortJobbUtfører(
                 underveisRepository = repositoryProvider.provide<UnderveisRepository>(),
                 meldekortRepository = repositoryProvider.provide<MeldekortRepository>(),
                 meldeperiodeRepository = repositoryProvider.provide<MeldeperiodeRepository>(),
+                mottattDokumentRepository = repositoryProvider.provide<MottattDokumentRepository>(),
             )
         }
 

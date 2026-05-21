@@ -4,10 +4,11 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.meldeperiode.Meldep
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Meldekort
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.MeldekortRepository
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.ArbeidIPeriodeDTO
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.DetaljertMeldekortDTO
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
@@ -19,7 +20,7 @@ import org.slf4j.LoggerFactory
 class DatadelingMeldekortService(
     private val saksRepository: SakRepository,
     private val underveisRepository: UnderveisRepository,
-    private val meldekortRepository: MeldekortRepository,
+    private val mottattDokumentRepository: MottattDokumentRepository,
     private val meldeperiodeRepository: MeldeperiodeRepository,
 ) {
     private val log = LoggerFactory.getLogger(javaClass)
@@ -30,20 +31,24 @@ class DatadelingMeldekortService(
         val sak = saksRepository.hent(sakId)
         val personIdent = sak.person.aktivIdent()
 
-        val meldekortene = meldekortRepository.hentHvisEksisterer(behandlingId)?.meldekort().orEmpty()
+        val meldekortene = mottattDokumentRepository.hentDokumenterAvType(behandlingId, InnsendingType.MELDEKORT)
+            .map { it to it.strukturerteData<no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Meldekort>()?.data!! }
+            .map { (dokument, m) ->
+                Meldekort.fraKontrakt(
+                    dokument.referanse.asJournalpostId,
+                    dokument.mottattTidspunkt,
+                    m
+                )
+            }
+
+
         if (meldekortene.isEmpty()) {
             return emptyList()
         }
 
         val underveisGrunnlag = underveisRepository.hentHvisEksisterer(behandlingId)
-        if (underveisGrunnlag == null) {
-            log.warn("Ingen UnderveisGrunnlag funnet for behandlingId=${behandlingId.id}")
-            // hvis det ikke finnes UnderveisGrunnlag, finnes det heller ingen meldekort å rapportere
-            return emptyList()
-        }
 
-        val aktuellPeriode = underveisGrunnlag.somTidslinje().helePerioden()
-        val meldePeriodene = meldeperiodeRepository.hentMeldeperioder(behandlingId, aktuellPeriode)
+        val meldePeriodene = meldeperiodeRepository.hentMeldeperioder(behandlingId, sak.rettighetsperiode)
         if (meldePeriodene.isEmpty()) {
             log.warn("Ingen meldeperioder funnet for behandlingId=${behandlingId.id}")
             return emptyList()
@@ -51,7 +56,7 @@ class DatadelingMeldekortService(
 
         val kontraktObjekter = meldekortene.mapNotNull { meldekort ->
             val arbeidsperiode = meldekort.arbeidsperiode()
-            val meldekortetsPeriode = finnMeldekortetsPeriode(arbeidsperiode, meldePeriodene)
+            val meldekortetsPeriode = arbeidsperiode?.let { finnMeldekortetsPeriode(arbeidsperiode, meldePeriodene) }
 
             if (arbeidsperiode == null) {
                 log.warn(
@@ -77,7 +82,7 @@ class DatadelingMeldekortService(
         personIdent: Ident,
         saksnummer: Saksnummer,
         behandlingId: BehandlingId,
-        underveisGrunnlag: UnderveisGrunnlag,
+        underveisGrunnlag: UnderveisGrunnlag?,
         meldeperiode: Periode,
     ): DetaljertMeldekortDTO {
         val meldekortetsUnderveisperiode = underveisperiodeOmBareEn(underveisGrunnlag, meldeperiode, behandlingId)
@@ -105,11 +110,11 @@ class DatadelingMeldekortService(
     }
 
     private fun underveisperiodeOmBareEn(
-        underveisGrunnlag: UnderveisGrunnlag, meldeperiode: Periode, behandlingId: BehandlingId
+        underveisGrunnlag: UnderveisGrunnlag?, meldeperiode: Periode, behandlingId: BehandlingId
     ): Underveisperiode? {
-        val underveisPerioderEksakt = underveisGrunnlag.perioder.filter {
+        val underveisPerioderEksakt = underveisGrunnlag?.perioder?.filter {
             it.meldePeriode == meldeperiode
-        }
+        }.orEmpty()
         if (underveisPerioderEksakt.size == 1) {
             return underveisPerioderEksakt.first()
         } else if (underveisPerioderEksakt.isEmpty()) {
@@ -128,14 +133,8 @@ class DatadelingMeldekortService(
     }
 
     private fun finnMeldekortetsPeriode(
-        arbeidsperiode: Periode?, meldeperioder: List<Periode>
+        arbeidsperiode: Periode, meldeperioder: List<Periode>
     ): Periode? {
-        return arbeidsperiode?.let {
-            meldeperioder.firstOrNull {
-                // Alle arbeidsperiodene i meldekortet må være innenfor en og samme meldekortperiode.
-                // MeldekortPerioder overlapper ikke med hverandre.
-                it.inneholder(arbeidsperiode)
-            }
-        }
+        return meldeperioder.firstOrNull { it.overlapper(arbeidsperiode) }
     }
 }

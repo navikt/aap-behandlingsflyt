@@ -78,7 +78,6 @@ class DatadelingMeldekortServiceTest {
             val testMeg = DatadelingMeldekortService(
                 sakRepository,
                 underveisRepository,
-                meldekortRepository,
                 meldeperiodeRepository
             )
 
