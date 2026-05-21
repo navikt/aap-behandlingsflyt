@@ -36,6 +36,8 @@ import no.nav.aap.behandlingsflyt.test.fakes.UnleashFake
 import no.nav.aap.behandlingsflyt.test.fakes.UtbetalFake
 import no.nav.aap.behandlingsflyt.test.fakes.YrkesskadeFake
 import org.slf4j.LoggerFactory
+import java.io.BufferedWriter
+import java.io.FileWriter
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -105,7 +107,11 @@ object FakeServers : AutoCloseable {
         setProperties()
         started.set(true)
 
-        log.info("Texas-port: ${texas.port()}")
+        val texasPort = texas.port()
+        val writer = BufferedWriter(FileWriter(".texas_port.txt"))
+        writer.use {
+            it.write(texasPort.toString(10))
+        }
     }
 
     private fun setProperties() {
