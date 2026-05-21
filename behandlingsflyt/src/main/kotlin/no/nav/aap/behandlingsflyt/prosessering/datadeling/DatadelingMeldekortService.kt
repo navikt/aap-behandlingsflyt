@@ -32,12 +32,12 @@ class DatadelingMeldekortService(
         val personIdent = sak.person.aktivIdent()
 
         val meldekortene = mottattDokumentRepository.hentDokumenterAvType(behandlingId, InnsendingType.MELDEKORT)
-            .map { it to it.strukturerteData<no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Meldekort>()?.data!! }
+            .map { it to it.strukturerteData<no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Meldekort>()?.data }
             .map { (dokument, m) ->
                 Meldekort.fraKontrakt(
                     dokument.referanse.asJournalpostId,
                     dokument.mottattTidspunkt,
-                    m
+                    requireNotNull(m) { "Meldekort mangler strukturert data. JournalpostId=${dokument.referanse.asJournalpostId}" }
                 )
             }
 
