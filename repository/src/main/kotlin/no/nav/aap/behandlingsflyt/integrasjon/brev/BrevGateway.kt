@@ -455,6 +455,10 @@ class BrevGateway : BrevbestillingGateway {
             inntekterPerÅr = grunnlagBeregning.inntekterPerÅr.map {
                 Faktagrunnlag.GrunnlagBeregning.InntektPerÅr(it.år, it.inntekt)
             },
+            // TODO: map beregningsutfallKategori når aap-brev:kontrakt er oppdatert med feltet
+            //   beregningsutfallKategori = grunnlagBeregning.beregningsutfallKategori?.let {
+            //       Faktagrunnlag.GrunnlagBeregning.BeregningsutfallKategori.valueOf(it.name)
+            //   },
         )
 
     }
