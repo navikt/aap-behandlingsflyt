@@ -23,7 +23,44 @@ data class GrunnlagBeregning(
     val beregningstidspunkt: LocalDate?,
     val inntekterPerÅr: List<InntektPerÅr>,
     val beregningsgrunnlag: Beløp?,
-)
+    val beregningsmetode: Beregningsmetode? = null,
+    val beregningstype: Beregningstype? = null,
+    val uføreValgKategori: UføreValgKategori? = null,
+    val yrkesskadeValgKategori: YrkesskadeValgKategori? = null,
+    val beregningsutfallKategori: BeregningsutfallKategori? = null,
+) {
+    enum class Beregningsmetode { SISTE_ÅR, TREÅRS_GJENNOMSNITT }
+    enum class Beregningstype { STANDARD, UFØRE, YRKESSKADE, YRKESSKADE_UFØRE }
+
+    /** Kun satt for [Beregningstype.UFØRE] og [Beregningstype.YRKESSKADE_UFØRE]. Null ellers. */
+    enum class UføreValgKategori {
+        /** § 11-19: Beregningstidspunkt = uføretidspunktet. [GrunnlagUføre.Type.STANDARD]. */
+        UFORETIDSPUNKT,
+        /** § 11-28 fjerde ledd: Ytterligere nedsatt-tidspunktet ga høyere grunnlag. Én uføregrad-periode. */
+        YTTERLIGERE_NEDSATT,
+        /** § 11-28 fjerde ledd: Som [YTTERLIGERE_NEDSATT], men uføregrad ble økt underveis (flere perioder). */
+        YTTERLIGERE_NEDSATT_OKT_UFOREGRAD,
+    }
+
+    /** Kun satt for [Beregningstype.YRKESSKADE] og [Beregningstype.YRKESSKADE_UFØRE]. Null ellers. */
+    enum class YrkesskadeValgKategori {
+        /** § 11-22: Ordinær beregning (§ 11-19) ga like mye eller mer. */
+        STANDARD_VINNER,
+        /** § 11-22 tredje ledd: Yrkesskadeandel > 70 % → sykepengegrunnlaget på skadetidspunktet (§ 8-55) brukes. */
+        SYKEPENGEGRUNNLAG,
+        /** § 11-22 andre ledd: Yrkesskadeberegningen vant med proporsjonal fordel (andel ≤ 70 %). */
+        FORDEL_70_ELLER_MINDRE,
+    }
+
+    /** Alltid satt når beregningsgrunnlag foreligger. Resultat av § 11-16-beregningen. */
+    enum class BeregningsutfallKategori {
+        SISTE_AAR,
+        GJENNOMSNITT,
+        MINSTESATS_25_ELLER_MER,
+        MINSTESATS_UNDER_25,
+        INNTEKT_OVER_6G,
+    }
+}
 
 data class InntektPerÅr(val år: Year, val inntekt: BigDecimal)
 

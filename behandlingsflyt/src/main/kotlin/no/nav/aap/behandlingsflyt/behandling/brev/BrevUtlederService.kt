@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.avbrytaktivitets
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.BeregnTilkjentYtelseService
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.BeregnTilkjentYtelseService.Companion.ANTALL_ÅRLIGE_ARBEIDSDAGER
+import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Minstesats
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.MINSTE_ÅRLIG_YTELSE_TIDSLINJE
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.tilTidslinje
@@ -398,24 +399,28 @@ class BrevUtlederService(
             if (grunnlag != null && dato != null) beregnBeregningsgrunnlagBeløp(grunnlag, dato) else null
         val beregningstidspunktVurdering =
             beregningVurderingRepository.hentHvisEksisterer(behandlingId)?.tidspunktVurdering
+        val minstesats = dato?.let {
+            tilkjentYtelseRepository.hentHvisEksisterer(behandlingId)?.tilTidslinje()?.segment(it)?.verdi?.minsteSats
+        }
 
         return when (grunnlag) {
             is Grunnlag11_19 -> {
-                utledGrunnlagBeregning11_9(grunnlag, beregningstidspunktVurdering, beregningsgrunnlag)
+                utledGrunnlagBeregning11_9(grunnlag, beregningstidspunktVurdering, beregningsgrunnlag, GrunnlagBeregning.Beregningstype.STANDARD, minstesats)
             }
 
             is GrunnlagUføre -> {
-                utledGrunnlagBeregningUføre(grunnlag, beregningstidspunktVurdering, beregningsgrunnlag)
+                utledGrunnlagBeregningUføre(grunnlag, beregningstidspunktVurdering, beregningsgrunnlag, GrunnlagBeregning.Beregningstype.UFØRE, minstesats)
             }
 
             is GrunnlagYrkesskade -> {
+                val yrkesskadeValgKategori = utledYrkesskadeValgKategori(grunnlag)
                 when (val underliggende = grunnlag.underliggende()) {
                     is Grunnlag11_19 -> {
-                        utledGrunnlagBeregning11_9(underliggende, beregningstidspunktVurdering, beregningsgrunnlag)
+                        utledGrunnlagBeregning11_9(underliggende, beregningstidspunktVurdering, beregningsgrunnlag, GrunnlagBeregning.Beregningstype.YRKESSKADE, minstesats, yrkesskadeValgKategori)
                     }
 
                     is GrunnlagUføre -> {
-                        utledGrunnlagBeregningUføre(underliggende, beregningstidspunktVurdering, beregningsgrunnlag)
+                        utledGrunnlagBeregningUføre(underliggende, beregningstidspunktVurdering, beregningsgrunnlag, GrunnlagBeregning.Beregningstype.YRKESSKADE_UFØRE, minstesats, yrkesskadeValgKategori)
                     }
 
                     is GrunnlagYrkesskade -> throw IllegalStateException("GrunnlagYrkesskade kan ikke ha grunnlag som også er GrunnlagYrkesskade")
@@ -423,6 +428,18 @@ class BrevUtlederService(
             }
 
             null -> GrunnlagBeregning(null, emptyList(), null)
+        }
+    }
+
+    private fun utledYrkesskadeValgKategori(grunnlag: GrunnlagYrkesskade): GrunnlagBeregning.YrkesskadeValgKategori {
+        val underliggendeGrunnlag = grunnlag.underliggende().grunnlaget()
+        return when {
+            grunnlag.grunnlagEtterYrkesskadeFordel() <= underliggendeGrunnlag ->
+                GrunnlagBeregning.YrkesskadeValgKategori.STANDARD_VINNER
+            grunnlag.benyttetAndelForYrkesskade() > grunnlag.terskelverdiForYrkesskade() ->
+                GrunnlagBeregning.YrkesskadeValgKategori.SYKEPENGEGRUNNLAG
+            else ->
+                GrunnlagBeregning.YrkesskadeValgKategori.FORDEL_70_ELLER_MINDRE
         }
     }
 
@@ -467,13 +484,26 @@ class BrevUtlederService(
         grunnlag: Grunnlag11_19,
         beregningstidspunktVurdering: BeregningstidspunktVurdering?,
         beregningsgrunnlag: Beløp?,
+        beregningstype: GrunnlagBeregning.Beregningstype,
+        minstesats: Minstesats?,
+        yrkesskadeValgKategori: GrunnlagBeregning.YrkesskadeValgKategori? = null,
     ): GrunnlagBeregning {
         val beregningstidspunkt = beregningstidspunktVurdering?.nedsattArbeidsevneEllerStudieevneDato
         val inntekter = grunnlag.inntekter().grunnlagInntektTilInntektPerÅr()
+        val beregningsmetode = if (grunnlag.erGjennomsnitt()) {
+            GrunnlagBeregning.Beregningsmetode.TREÅRS_GJENNOMSNITT
+        } else {
+            GrunnlagBeregning.Beregningsmetode.SISTE_ÅR
+        }
         return GrunnlagBeregning(
             beregningstidspunkt = beregningstidspunkt,
             inntekterPerÅr = inntekter,
             beregningsgrunnlag = beregningsgrunnlag,
+            beregningsmetode = beregningsmetode,
+            beregningstype = beregningstype,
+            uføreValgKategori = null,
+            yrkesskadeValgKategori = yrkesskadeValgKategori,
+            beregningsutfallKategori = utledBeregningsutfallKategori(grunnlag, minstesats),
         )
     }
 
@@ -481,14 +511,52 @@ class BrevUtlederService(
         grunnlag: GrunnlagUføre,
         beregningstidspunktVurdering: BeregningstidspunktVurdering?,
         beregningsgrunnlag: Beløp?,
+        beregningstype: GrunnlagBeregning.Beregningstype,
+        minstesats: Minstesats?,
+        yrkesskadeValgKategori: GrunnlagBeregning.YrkesskadeValgKategori? = null,
     ): GrunnlagBeregning {
         val beregningstidspunkt = utledBeregningstidspunktUføre(grunnlag, beregningstidspunktVurdering)
         val inntekter = utledInntekterPerÅrUføre(grunnlag)
+        val vinnende = when (grunnlag.type()) {
+            GrunnlagUføre.Type.STANDARD -> grunnlag.underliggende()
+            GrunnlagUføre.Type.YTTERLIGERE_NEDSATT -> grunnlag.underliggendeYtterligereNedsatt()
+        }
+        val beregningsmetode = if (vinnende.erGjennomsnitt()) {
+            GrunnlagBeregning.Beregningsmetode.TREÅRS_GJENNOMSNITT
+        } else {
+            GrunnlagBeregning.Beregningsmetode.SISTE_ÅR
+        }
+        val uføreValgKategori = when (grunnlag.type()) {
+            GrunnlagUføre.Type.STANDARD -> GrunnlagBeregning.UføreValgKategori.UFORETIDSPUNKT
+            GrunnlagUføre.Type.YTTERLIGERE_NEDSATT ->
+                if (grunnlag.uføregrader().size > 1) GrunnlagBeregning.UføreValgKategori.YTTERLIGERE_NEDSATT_OKT_UFOREGRAD
+                else GrunnlagBeregning.UføreValgKategori.YTTERLIGERE_NEDSATT
+        }
         return GrunnlagBeregning(
             beregningstidspunkt = beregningstidspunkt,
             inntekterPerÅr = inntekter,
             beregningsgrunnlag = beregningsgrunnlag,
+            beregningsmetode = beregningsmetode,
+            beregningstype = beregningstype,
+            uføreValgKategori = uføreValgKategori,
+            yrkesskadeValgKategori = yrkesskadeValgKategori,
+            beregningsutfallKategori = utledBeregningsutfallKategori(vinnende, minstesats),
         )
+    }
+
+    private fun utledBeregningsutfallKategori(
+        grunnlag: Grunnlag11_19,
+        minstesats: Minstesats?,
+    ): GrunnlagBeregning.BeregningsutfallKategori {
+        return when (minstesats) {
+            Minstesats.MINSTESATS_OVER_25 -> GrunnlagBeregning.BeregningsutfallKategori.MINSTESATS_25_ELLER_MER
+            Minstesats.MINSTESATS_UNDER_25 -> GrunnlagBeregning.BeregningsutfallKategori.MINSTESATS_UNDER_25
+            else -> when {
+                grunnlag.inntekter().any { it.er6GBegrenset } -> GrunnlagBeregning.BeregningsutfallKategori.INNTEKT_OVER_6G
+                grunnlag.erGjennomsnitt() -> GrunnlagBeregning.BeregningsutfallKategori.GJENNOMSNITT
+                else -> GrunnlagBeregning.BeregningsutfallKategori.SISTE_AAR
+            }
+        }
     }
 
     private fun utledTilkjentYtelse(behandlingId: BehandlingId, oppslagsDato: LocalDate): TilkjentYtelse? {
