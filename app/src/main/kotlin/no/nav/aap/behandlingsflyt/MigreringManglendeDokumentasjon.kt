@@ -50,7 +50,6 @@ class MigreringManglendeDokumentasjon(
 
     fun utførMigrering() {
         var ferdig = false
-        var minimumBehandlingId = BehandlingId(0)
         log.info("Begynner migrering av Manglende dokumentasjon")
         while (!ferdig) {
             dataSource.transaction { connection ->
@@ -61,21 +60,17 @@ class MigreringManglendeDokumentasjon(
 
                 val behandlingId = connection.queryFirstOrNull(
                     """
-                    select behandling.id
-                    from behandling
-                    join vilkar_resultat on behandling.id = vilkar_resultat.behandling_id
+                    select vilkar_resultat.behandling_id as id
+                    from vilkar_resultat
                     join vilkar on vilkar_resultat.id = vilkar.resultat_id
                     join vilkar_periode on vilkar.id = vilkar_periode.vilkar_id
                     where
                         vilkar_resultat.aktiv
                         and vilkar_periode.avslagsarsak = 'MANGLENDE_DOKUMENTASJON'
                         and vilkar.type = 'SYKDOMSVILKÅRET'
-                        and behandling.id > ?
-                    order by behandling.id
                     limit 1
                 """
                 ) {
-                    setParams { setLong(1, minimumBehandlingId.id) }
                     setRowMapper { BehandlingId(it.getLong("id")) }
                 }
 
@@ -99,7 +94,6 @@ class MigreringManglendeDokumentasjon(
                     /* sjekk om avslagsårsak fortsatt finnes nå som vi har låst behandlingen. */
                     if (vilkårsvurderinger.isEmpty()) {
                         log.info("ingen forekomster av manglende dokumentasjon etter lås")
-                        minimumBehandlingId = behandlingId
                         return@withLåstBehandling
                     }
 
@@ -122,7 +116,6 @@ class MigreringManglendeDokumentasjon(
                         }
                     sykdomsvilkaret.leggTilVurderinger(oppdatertePerioder)
                     vilkårsresultatRepository.lagre(behandlingId, vilkårsresultat)
-                    minimumBehandlingId = behandlingId
                     log.info("migrerte $behandlingId")
                 }
             }
