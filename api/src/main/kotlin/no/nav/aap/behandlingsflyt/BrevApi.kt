@@ -16,7 +16,7 @@ import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingRepos
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingService
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Status
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.rettighetstype.RettighetstypeRepository
+import no.nav.aap.behandlingsflyt.behandling.underveis.UnderveisService
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.mdc.LogKontekst
@@ -106,7 +106,6 @@ fun NormalOpenAPIRoute.brevApi(
                         val repositoryProvider = repositoryRegistry.provider(connection)
                         val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
                         val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
-                        val rettighetstypeRepository = repositoryProvider.provide<RettighetstypeRepository>()
                         val signaturService = SignaturService(repositoryProvider, gatewayProvider)
                         val brevbestillingService = BrevbestillingService(repositoryProvider, gatewayProvider)
                         val brevbestillinger = brevbestillingService.hentBrevbestillinger(behandlingReferanse)
@@ -116,10 +115,7 @@ fun NormalOpenAPIRoute.brevApi(
                         val sak = SakService(repositoryProvider, gatewayProvider).hent(behandling.sakId)
                         val personIdent = sak.person.aktivIdent()
                         val personinfo = personinfoGateway.hentPersoninfoForIdent(personIdent, token())
-                        val rettighetsPerioder =
-                            rettighetstypeRepository.hentHvisEksisterer(behandling.id)?.rettighetstypeTidslinje?.perioder()
-                                ?.toList()
-                                ?: emptyList()
+                        val rettighetsPerioder = UnderveisService(repositoryProvider, gatewayProvider).rettighethetsType(behandling.id).perioder().toList()
 
                         val skrivBrevAvklaringsbehov = avklaringsbehovene
                             .hentBehovForDefinisjon(
