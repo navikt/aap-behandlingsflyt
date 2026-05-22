@@ -8,6 +8,7 @@ import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.BeregnTilkjentYtelse
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.BeregnTilkjentYtelseService.Companion.ANTALL_ÅRLIGE_ARBEIDSDAGER
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Minstesats
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.MINSTE_ÅRLIG_YTELSE_TIDSLINJE
+import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelsePeriode
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.tilTidslinje
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakRepository
@@ -325,10 +326,11 @@ class BrevUtlederService(
         checkNotNull(datoAvklartForJobbsøk) {
             "Vedtak for behandling for arbeidssøker mangler datoAvklartForJobbsøk"
         }
+        val perioder = tilkjentYtelseRepository.hentHvisEksisterer(behandling.id)
         return Arbeidssøker(
             datoAvklartForJobbsøk = datoAvklartForJobbsøk,
             sisteDagMedYtelse = underveisGrunnlag.sisteDagMedYtelse(),
-            tilkjentYtelse = utledTilkjentYtelse(behandling.id, datoAvklartForJobbsøk)
+            tilkjentYtelse = utledTilkjentYtelse(behandling.id, datoAvklartForJobbsøk, perioder)
         )
     }
 
@@ -339,9 +341,11 @@ class BrevUtlederService(
         checkNotNull(vedtak.virkningstidspunkt) {
             "Vedtak for behandling med innvilgelse mangler virkningstidspunkt"
         }
-        val grunnlagBeregning = hentGrunnlagBeregning(behandling.id, vedtak.virkningstidspunkt)
+        val dato = vedtak.virkningstidspunkt
+        val perioder = tilkjentYtelseRepository.hentHvisEksisterer(behandling.id)
+        val grunnlagBeregning = hentGrunnlagBeregning(behandling.id, dato, perioder)
 
-        val tilkjentYtelse = utledTilkjentYtelse(behandling.id, vedtak.virkningstidspunkt)
+        val tilkjentYtelse = utledTilkjentYtelse(behandling.id, dato, perioder)
 
         val sykdomsvurdering = hentSykdomsvurdering(behandling.id)
 
@@ -375,12 +379,13 @@ class BrevUtlederService(
 
     private fun brevBehovVurderesForUføretrygd(behandling: Behandling): VurderesForUføretrygd {
         // Sender per nå ikke med dato som betyr at beregningsgrunnlag (beløp) blir null
-        val grunnlagBeregning = hentGrunnlagBeregning(behandling.id, null)
+        val perioder = tilkjentYtelseRepository.hentHvisEksisterer(behandling.id)
+        val grunnlagBeregning = hentGrunnlagBeregning(behandling.id, null, perioder)
         val kravdatoUføretrygd = overgangUføreRepository.hentHvisEksisterer(behandling.id)?.kravdatoUføretrygd()
         checkNotNull(kravdatoUføretrygd) {
             "Vedtak vurdert for uføretrygd mangler kravdato"
         }
-        val tilkjentYtelse = utledTilkjentYtelse(behandling.id, kravdatoUføretrygd)
+        val tilkjentYtelse = utledTilkjentYtelse(behandling.id, kravdatoUføretrygd, perioder)
         val underveisGrunnlag = underveisRepository.hent(behandling.id)
         return VurderesForUføretrygd(
             kravdatoUføretrygd = kravdatoUføretrygd,
@@ -392,7 +397,8 @@ class BrevUtlederService(
 
     private fun hentGrunnlagBeregning(
         behandlingId: BehandlingId,
-        dato: LocalDate?
+        dato: LocalDate?,
+        perioder: List<TilkjentYtelsePeriode>?
     ): GrunnlagBeregning {
         val grunnlag = beregningsgrunnlagRepository.hentHvisEksisterer(behandlingId)
         val beregningsgrunnlag =
@@ -400,7 +406,7 @@ class BrevUtlederService(
         val beregningstidspunktVurdering =
             beregningVurderingRepository.hentHvisEksisterer(behandlingId)?.tidspunktVurdering
         val minstesats = dato?.let {
-            tilkjentYtelseRepository.hentHvisEksisterer(behandlingId)?.tilTidslinje()?.segment(it)?.verdi?.minsteSats
+            perioder?.tilTidslinje()?.segment(it)?.verdi?.minsteSats
         }
 
         return when (grunnlag) {
@@ -559,13 +565,12 @@ class BrevUtlederService(
         }
     }
 
-    private fun utledTilkjentYtelse(behandlingId: BehandlingId, oppslagsDato: LocalDate): TilkjentYtelse? {
+    private fun utledTilkjentYtelse(behandlingId: BehandlingId, oppslagsDato: LocalDate, perioder: List<TilkjentYtelsePeriode>?): TilkjentYtelse? {
         /**
          * Henter data basert på virkningstidspunkt.
          */
 
-        val tilkjentYtelseTidslinje =
-            tilkjentYtelseRepository.hentHvisEksisterer(behandlingId)?.tilTidslinje() ?: return null
+        val tilkjentYtelseTidslinje = perioder?.tilTidslinje() ?: return null
         val underveidGrunnlag = underveisRepository.hent(behandlingId)
         val underveisTidslinje = Tidslinje(underveidGrunnlag.perioder.map { Segment(it.periode, it) })
 
