@@ -94,5 +94,7 @@ data class YrkesskadeBeregningBrev(
     data class Yrkesskade(
         val yrkesskadedato: LocalDate,
         val arbeidsinntektPaaSkadetidspunktet: BigDecimal?,
+        val relevantForArbeidsevne: Boolean,
+        val diagnose: String?,
     )
 }

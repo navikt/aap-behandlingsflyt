@@ -441,7 +441,9 @@ class BrevGateway : BrevbestillingGateway {
             yrkesskader = yrkesskadeBeregning.yrkesskader.map {
                 Faktagrunnlag.YrkesskadeBeregning.Yrkesskade(
                     yrkesskadedato = it.yrkesskadedato,
-                    arbeidsinntektPaaSkadetidspunktet = it.arbeidsinntektPaaSkadetidspunktet  ?: BigDecimal.ZERO,
+                    arbeidsinntektPaaSkadetidspunktet = it.arbeidsinntektPaaSkadetidspunktet,
+                    relevantForArbeidsevne = it.relevantForArbeidsevne,
+                    diagnose = it.diagnose,
                 )
             },
             andelAvNedsettelseSomSkyldesYrkesskade = yrkesskadeBeregning.andelAvNedsettelseSomSkyldesYrkesskade,
@@ -455,10 +457,9 @@ class BrevGateway : BrevbestillingGateway {
             inntekterPerÅr = grunnlagBeregning.inntekterPerÅr.map {
                 Faktagrunnlag.GrunnlagBeregning.InntektPerÅr(it.år, it.inntekt)
             },
-            // TODO: map beregningsutfallKategori når aap-brev:kontrakt er oppdatert med feltet
-            //   beregningsutfallKategori = grunnlagBeregning.beregningsutfallKategori?.let {
-            //       Faktagrunnlag.GrunnlagBeregning.BeregningsutfallKategori.valueOf(it.name)
-            //   },
+               beregningsutfallKategori = grunnlagBeregning.beregningsutfallKategori?.let {
+                   Faktagrunnlag.GrunnlagBeregning.BeregningsutfallKategori.valueOf(it.name)
+               },
         )
 
     }

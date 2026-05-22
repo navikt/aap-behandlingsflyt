@@ -454,7 +454,12 @@ class BrevUtlederService(
                 ?: internsak?.manuellYrkesskadeDato
                 ?: error("Mangler skadedato for yrkesskade med referanse ${ys.ref}")
             val inntekt = beregning?.vurderinger?.firstOrNull { it.referanse == ys.ref }?.antattÅrligInntekt
-            YrkesskadeBeregningBrev.Yrkesskade(skadedato, inntekt?.verdi)
+            YrkesskadeBeregningBrev.Yrkesskade(
+                yrkesskadedato = skadedato,
+                arbeidsinntektPaaSkadetidspunktet = inntekt?.verdi,
+                relevantForArbeidsevne = internsak != null,
+                diagnose = ys.diagnose,
+            )
         }
 
         return YrkesskadeBeregningBrev(
