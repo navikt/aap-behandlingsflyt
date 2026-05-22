@@ -64,7 +64,7 @@ object StatusPagesConfigHelper {
 
                 is OverlappendeInstitusjonsoppholdException -> {
                     logger.warn("Feil i institusjonsopphold, må rettes i Inst2:", cause)
-                    call.respondWithError(InternfeilException(message = "Feil i institusjonsopphold, må rettes i Inst2"))
+                    call.respondWithError(InternfeilException(message = "Feil i institusjonsopphold, flere overlappende opphold på samme dato, må rettes i Inst2"))
                 }
 
                 is ManglerTilgangException -> {
