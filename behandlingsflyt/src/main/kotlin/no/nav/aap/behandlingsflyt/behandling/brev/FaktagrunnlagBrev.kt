@@ -29,7 +29,7 @@ data class GrunnlagBeregning(
     enum class BeregningsutfallKategori {
         SISTE_AAR,
         GJENNOMSNITT,
-        MINSTESATS_25_ELLER_MER,
+        MINSTESATS_OVER_25,
         MINSTESATS_UNDER_25,
         INNTEKT_OVER_6G,
     }
