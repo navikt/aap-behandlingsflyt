@@ -514,7 +514,7 @@ class SignaturServiceTest {
 
         val signaturer = signaturService.finnSignaturGrunnlag(brevbestilling, Bruker(""))
 
-        assertThat(signaturer).containsExactlyInAnyOrder(
+        assertThat(signaturer).containsExactly(
             SignaturGrunnlag(navIdent = saksbehandlerIdent, rolle = Rolle.SAKSBEHANDLER_NASJONAL, enhet = "4567"),
             SignaturGrunnlag(navIdent = kvalitetssikrerIdent, rolle = Rolle.KVALITETSSIKRER, enhet = "3456"),
             SignaturGrunnlag(navIdent = veilederIdent, rolle = Rolle.SAKSBEHANDLER_OPPFOLGING, enhet = "1234"),
