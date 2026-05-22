@@ -54,8 +54,8 @@ class SaksHistorikkService(
         val erVedtatt =
             avklaringsbehovene.filter { it.erIkkeAvbrutt() && it.erTotrinn() }.all { it.erTotrinnsVurdert() }
         val alleBehovErKvalitetssikret =
-            avklaringsbehovene.filter { it.erIkkeAvbrutt() && it.definisjon.kvalitetssikres }
-                .all { it.erKvalitetssikretTidligere() }
+            avklaringsbehovene.filter { it.erIkkeAvbrutt() && it.kreverKvalitetssikring()}
+                .all { it.erKvalitetssikret() }
 
         return behandlingerMedBehov.mapNotNull { behandling ->
             val hendelser = behandling.avklaringsbehov

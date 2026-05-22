@@ -37,11 +37,17 @@ class KvalitetssikringsSteg(
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
+        val erTilstrekkeligVurdert =
+            if (unleashGateway.isEnabled(BehandlingsflytFeature.AlleEndringerKreverKvalitetssikring)) {
+                erTilstrekkeligVurdertNy(avklaringsbehovene)
+            } else {
+                erTilstrekkeligVurdertGammel(avklaringsbehovene)
+            }
 
         avklaringsbehovService.oppdaterAvklaringsbehov(
             definisjon = Definisjon.KVALITETSSIKRING,
             vedtakBehøverVurdering = { vedtakBehøverVurdering(kontekst, avklaringsbehovene) },
-            erTilstrekkeligVurdert = { erTilstrekkeligVurdert(avklaringsbehovene) },
+            erTilstrekkeligVurdert = { erTilstrekkeligVurdert },
             tilbakestillGrunnlag = {},
             kontekst
         )
@@ -67,7 +73,11 @@ class KvalitetssikringsSteg(
         }
     }
 
-    private fun erTilstrekkeligVurdert(avklaringsbehovene: Avklaringsbehovene): Boolean {
+    private fun erTilstrekkeligVurdertNy(avklaringsbehovene: Avklaringsbehovene): Boolean {
+        return !avklaringsbehovene.harAvklaringsbehovSomKreverKvalitetssikringMenIkkeErGodkjent()
+    }
+
+    private fun erTilstrekkeligVurdertGammel(avklaringsbehovene: Avklaringsbehovene): Boolean {
         if (avklaringsbehovene.alle()
                 .filter { it.kreverKvalitetssikring() }
                 .any { it.status() == Status.SENDT_TILBAKE_FRA_KVALITETSSIKRER || it.status() == Status.SENDT_TILBAKE_FRA_BESLUTTER }
@@ -82,7 +92,7 @@ class KvalitetssikringsSteg(
         /**
          * Om et behov aldri tidligere har blitt kvalitetssikret, ikke tilstrekkelig vurdert:
          */
-        if (aktuelleAvklaringsbehovForKvalitetssikring.any { !it.erKvalitetssikretTidligere() }) {
+        if (aktuelleAvklaringsbehovForKvalitetssikring.any { !it.harBlittKvalitetssikretTidligere() }) {
             return false
         }
 
@@ -164,6 +174,7 @@ class KvalitetssikringsSteg(
 
         return true
     }
+
 
     companion object : FlytSteg {
         override fun konstruer(
