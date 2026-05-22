@@ -25,7 +25,7 @@ data class GrunnlagBeregning(
     val beregningsgrunnlag: Beløp?,
     val beregningsutfallKategori: BeregningsutfallKategori? = null,
 ) {
-    /** Resultat av § 11-16-beregningen. Alltid satt når beregningsgrunnlag foreligger. */
+    /** Resultat av § 11-19-beregningen. Null kun når beregningsgrunnlag er null (manglende dato, f.eks. VurderesForUføretrygd). */
     enum class BeregningsutfallKategori {
         SISTE_AAR,
         GJENNOMSNITT,

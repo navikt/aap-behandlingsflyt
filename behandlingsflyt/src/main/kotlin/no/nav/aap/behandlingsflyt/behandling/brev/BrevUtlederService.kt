@@ -339,6 +339,7 @@ class BrevUtlederService(
         checkNotNull(vedtak.virkningstidspunkt) {
             "Vedtak for behandling med innvilgelse mangler virkningstidspunkt"
         }
+        // TODO: hentGrunnlagBeregning og utledTilkjentYtelse kaller begge tilkjentYtelseRepository — slå sammen til én henting her
         val grunnlagBeregning = hentGrunnlagBeregning(behandling.id, vedtak.virkningstidspunkt)
 
         val tilkjentYtelse = utledTilkjentYtelse(behandling.id, vedtak.virkningstidspunkt)
