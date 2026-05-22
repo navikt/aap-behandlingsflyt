@@ -15,7 +15,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
@@ -78,22 +77,20 @@ class KvalitetssikringsSteg(
         }
 
         val behandling = behandlingRepository.hent(kontekst.behandlingId)
-        return when (kontekst.behandlingType) {
+        val behandlingstype =
+            if (unleashGateway.isEnabled(BehandlingsflytFeature.RevurderingEtterAvslagSkalKvalitetssikres)) {
+                behandlingService.utledFaktiskBehandlingstype(behandling)
+            } else {
+                kontekst.behandlingType
+            }
+        return when (behandlingstype) {
             TypeBehandling.Førstegangsbehandling,
             TypeBehandling.Klage -> {
                 avklaringsbehovene.harAvklaringsbehovSomKreverKvalitetssikring()
             }
 
-            TypeBehandling.Revurdering -> unleashGateway.isEnabled(BehandlingsflytFeature.RevurderingEtterAvslagSkalKvalitetssikres) && revurderingSkalKvalitetssikres(
-                behandling
-            )
-
             else -> false
         }
-    }
-
-    private fun revurderingSkalKvalitetssikres(behandling: Behandling): Boolean {
-        return behandlingService.utledFaktiskBehandlingstype(behandling) == TypeBehandling.Førstegangsbehandling
     }
 
     private fun erTilstrekkeligVurdertNy(avklaringsbehovene: Avklaringsbehovene): Boolean {
