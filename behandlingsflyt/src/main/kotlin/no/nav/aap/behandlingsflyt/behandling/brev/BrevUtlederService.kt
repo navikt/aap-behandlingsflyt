@@ -457,7 +457,7 @@ class BrevUtlederService(
             YrkesskadeBeregningBrev.Yrkesskade(
                 yrkesskadedato = skadedato,
                 arbeidsinntektPaaSkadetidspunktet = inntekt?.verdi,
-                relevantForArbeidsevne = internsak != null,
+                relevantForArbeidsevne = true, // TODO må utledes. Hvordan?
                 diagnose = ys.diagnose,
             )
         }
