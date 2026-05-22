@@ -172,11 +172,10 @@ object FakeServers : AutoCloseable {
         System.setProperty("INTEGRASJON_SYKEPENGER_SCOPE", "scope")
 
         // Dokumentinnhenting
-        System.setProperty(
-            "INTEGRASJON_DOKUMENTINNHENTING_URL",
-            "http://localhost:${dokumentinnhenting.port()}"
-        )
-        System.setProperty("INTEGRASJON_DOKUMENTINNHENTING_SCOPE", "scope")
+        if (System.getenv("INTEGRASJON_DOKUMENTINNHENTING_URL").isNullOrEmpty()) {
+            System.setProperty("INTEGRASJON_DOKUMENTINNHENTING_URL", "http://localhost:${dokumentinnhenting.port()}")
+        }
+        System.setProperty("INTEGRASJON_DOKUMENTINNHENTING_SCOPE", "dokumentinnhenting")
 
         // Dagpenger
         System.setProperty("INTEGRASJON_DAGPENGER_URL", "http://localhost:${dagpenger.port()}")
