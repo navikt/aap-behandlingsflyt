@@ -36,7 +36,6 @@ import java.util.*
 @Fakes
 class TilkjentYtelseApiTest : BaseApiTest() {
 
-
     @Test
     fun `teste v2`() {
         val ds = MockDataSource()
@@ -83,7 +82,6 @@ class TilkjentYtelseApiTest : BaseApiTest() {
 
             val respons =
                 sendGetRequest(
-                    behandling.id,
                     "/api/behandling/tilkjentV2/${behandling.referanse.referanse}"
                 )
             assertThat(respons.status).isEqualTo(HttpStatusCode.OK)
@@ -220,7 +218,6 @@ class TilkjentYtelseApiTest : BaseApiTest() {
 
             val responsBehandling1 =
                 sendGetRequest(
-                    behandling.id,
                     "/api/behandling/tilkjent-med-diff/${behandling.referanse.referanse}"
                 )
             assertThat(responsBehandling1.status).isEqualTo(HttpStatusCode.OK)
@@ -232,7 +229,6 @@ class TilkjentYtelseApiTest : BaseApiTest() {
 
             val responsBehandling2 =
                 sendGetRequest(
-                    behandling.id,
                     "/api/behandling/tilkjent-med-diff/${behandling2.referanse.referanse}"
                 )
             assertThat(responsBehandling2.status).isEqualTo(HttpStatusCode.OK)
@@ -432,7 +428,6 @@ class TilkjentYtelseApiTest : BaseApiTest() {
     )
 
     private suspend fun ApplicationTestBuilder.sendGetRequest(
-        payload: Any,
         path: String
     ): HttpResponse {
         val client = createClient()
@@ -440,7 +435,6 @@ class TilkjentYtelseApiTest : BaseApiTest() {
             header("Authorization", "Bearer ${getToken().token()}")
             header("X-callid", UUID.randomUUID().toString())
             contentType(ContentType.Application.Json)
-            setBody(payload)
         }
     }
 }

@@ -11,7 +11,6 @@ import no.nav.aap.behandlingsflyt.utils.Uendret as DomeneUendret
     use = JsonTypeInfo.Id.NAME,
     include = JsonTypeInfo.As.PROPERTY,
     property = "diff",
-    visible = true
 )
 sealed interface DiffDto<T>
 
