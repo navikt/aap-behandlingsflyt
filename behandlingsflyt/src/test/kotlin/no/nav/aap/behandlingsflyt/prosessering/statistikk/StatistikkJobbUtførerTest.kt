@@ -46,7 +46,9 @@ import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Avslagstype
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.AvsluttetBehandlingDTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.BeregningsgrunnlagDTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Diagnoser
+import no.nav.aap.behandlingsflyt.kontrakt.statistikk.DiagnoserMedPeriode
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Grunnlag11_19DTO
+import no.nav.aap.behandlingsflyt.kontrakt.statistikk.PeriodeDTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.ResultatKode
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.RettighetstypePeriode
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.SamordningDTO
@@ -113,7 +115,8 @@ import java.time.temporal.ChronoUnit
 
 @Fakes
 class StatistikkJobbUtførerTest {
-    private val gatewayProvider = minimalGatewayProvider {  }
+    private val gatewayProvider = minimalGatewayProvider { }
+
     companion object {
         private lateinit var dataSource: TestDataSource
 
@@ -225,7 +228,9 @@ class StatistikkJobbUtførerTest {
 
         dataSource.transaction { connection ->
             StatistikkJobbUtfører(
-                statistikkMetoder = StatistikkMetoder(postgresRepositoryRegistry.provider(connection), minimalGatewayProvider {  }),
+                statistikkMetoder = StatistikkMetoder(
+                    postgresRepositoryRegistry.provider(connection),
+                    minimalGatewayProvider { }),
                 statistikkGateway = StatistikkGatewayImpl(),
             ).utfør(
                 JobbInput(StatistikkJobbUtfører).medPayload(hendelse2)
@@ -500,7 +505,9 @@ class StatistikkJobbUtførerTest {
         dataSource.transaction { connection ->
             StatistikkJobbUtfører(
                 statistikkGateway = StatistikkGatewayImpl(),
-                statistikkMetoder = StatistikkMetoder(postgresRepositoryRegistry.provider(connection), minimalGatewayProvider {  }),
+                statistikkMetoder = StatistikkMetoder(
+                    postgresRepositoryRegistry.provider(connection),
+                    minimalGatewayProvider { }),
             ).utfør(
                 JobbInput(StatistikkJobbUtfører).medPayload(hendelse2)
             )
@@ -568,7 +575,15 @@ class StatistikkJobbUtførerTest {
                     avregningAndreYtelser = emptyList(),
                     arbeidsgiver = emptyList()
                 ),
-            )
+                diagnoserPeriodisert = listOf(
+                    DiagnoserMedPeriode(
+                        periodeDTO = PeriodeDTO(LocalDate.now().minusDays(1), LocalDate.now().plusDays(1)),
+                        kodeverk = "KODEVERK",
+                        diagnosekode = "PEST",
+                        bidiagnoser = listOf("KOLERA")
+                    )
+                )
+            ),
         )
     }
 
@@ -620,7 +635,9 @@ class StatistikkJobbUtførerTest {
                 påklagetBehandlingRepository = InMemoryPåklagetBehandlingRepository,
                 meldekortRepository = InMemoryMeldekortRepository,
                 klagedokumentInformasjonUtleder = KlagedokumentInformasjonUtleder(inMemoryRepositoryProvider),
-                avsluttetBehandlingTilStatistikk = AvsluttetBehandlingTilStatistikk(inMemoryRepositoryProvider, minimalGatewayProvider {  }),
+                avsluttetBehandlingTilStatistikk = AvsluttetBehandlingTilStatistikk(
+                    inMemoryRepositoryProvider,
+                    minimalGatewayProvider { }),
             )
         )
 
