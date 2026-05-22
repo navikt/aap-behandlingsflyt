@@ -23,7 +23,17 @@ data class GrunnlagBeregning(
     val beregningstidspunkt: LocalDate?,
     val inntekterPerÅr: List<InntektPerÅr>,
     val beregningsgrunnlag: Beløp?,
-)
+    val beregningsutfallKategori: BeregningsutfallKategori? = null,
+) {
+    /** Resultat av § 11-16-beregningen. Alltid satt når beregningsgrunnlag foreligger. */
+    enum class BeregningsutfallKategori {
+        SISTE_AAR,
+        GJENNOMSNITT,
+        MINSTESATS_25_ELLER_MER,
+        MINSTESATS_UNDER_25,
+        INNTEKT_OVER_6G,
+    }
+}
 
 data class InntektPerÅr(val år: Year, val inntekt: BigDecimal)
 
