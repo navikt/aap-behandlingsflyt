@@ -221,16 +221,8 @@ class Avklaringsbehovene(
         return alle().filter { it.erÅpent() }.toList()
     }
 
-    fun skalTilbakeføresEtterTotrinnsVurdering(): Boolean {
-        return tilbakeførtFraBeslutter().isNotEmpty()
-    }
-
     override fun skalTilbakeføresEtterKvalitetssikring(): Boolean {
         return tilbakeførtFraKvalitetssikrer().isNotEmpty()
-    }
-
-    fun tilbakeførtFraBeslutter(): List<Avklaringsbehov> {
-        return alle().filter { it.status() == Status.SENDT_TILBAKE_FRA_BESLUTTER }.toList()
     }
 
     fun tilbakeførtFraKvalitetssikrer(): List<Avklaringsbehov> {
@@ -268,6 +260,10 @@ class Avklaringsbehovene(
         return alle()
             .filter { avklaringsbehov -> avklaringsbehov.kreverKvalitetssikring() }
             .any { avklaringsbehov -> avklaringsbehov.erIkkeAvbrutt() }
+    }
+
+    fun harAvklaringsbehovSomKreverKvalitetssikringMenIkkeErGodkjent(): Boolean {
+        return alle().any { it.erIkkeAvbrutt() && it.kreverKvalitetssikring() && !it.erKvalitetssikret() }
     }
 
     fun harVærtSendtTilbakeFraBeslutterTidligere(): Boolean {

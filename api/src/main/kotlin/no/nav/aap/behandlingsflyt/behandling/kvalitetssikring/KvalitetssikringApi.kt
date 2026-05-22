@@ -157,7 +157,7 @@ private fun kvalitetssikringsVurdering(avklaringsbehovene: Avklaringsbehovene, f
 }
 
 private fun tilKvalitetssikring(it: no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov): TotrinnsVurdering {
-    return if (it.erKvalitetssikretTidligere() || it.harVærtSendtTilbakeFraKvalitetssikrerTidligere()) {
+    return if (it.harBlittKvalitetssikretTidligere() || it.harVærtSendtTilbakeFraKvalitetssikrerTidligere()) {
         val sisteVurdering =
             it.aktivHistorikk.lastOrNull {
                 it.status in setOf(
@@ -167,7 +167,7 @@ private fun tilKvalitetssikring(it: no.nav.aap.behandlingsflyt.behandling.avklar
             }
 
         val godkjent = when (it.status()) {
-            Status.AVSLUTTET -> if (it.erKvalitetssikretTidligere()) null else false
+            Status.AVSLUTTET -> if (it.harBlittKvalitetssikretTidligere()) null else false
             else -> it.status() == Status.KVALITETSSIKRET
         }
 
