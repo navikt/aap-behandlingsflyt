@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovForSak
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovOperasjonerRepository
+import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status.SENDT_TILBAKE_FRA_BESLUTTER
@@ -44,7 +45,8 @@ class SaksHistorikkService(
             Definisjon.SKRIV_VEDTAKSBREV,
             Definisjon.BESTILL_LEGEERKLÆRING,
             Definisjon.MANUELT_SATT_PÅ_VENT,
-            Definisjon.KVALITETSSIKRING
+            Definisjon.KVALITETSSIKRING,
+            Definisjon.VURDER_TREKK_AV_SØKNAD
         )
 
         val avklaringsbehovene = behandlingerMedBehov.flatMap { it.avklaringsbehov }
@@ -161,6 +163,24 @@ class SaksHistorikkService(
                                         begrunnelse = h.begrunnelse
                                     )
                                 }
+                        }
+
+                        Definisjon.VURDER_TREKK_AV_SØKNAD -> {
+                            val nyesteVurdering = repositoryProvider.provide<TrukketSøknadRepository>()
+                                .hentTrukketSøknadVurderinger(behandling.behandlingId)
+                                .maxByOrNull { it.vurdert }
+
+                            if (nyesteVurdering?.skalTrekkes == true) {
+                                avklaringsbehov.historikk
+                                    .filter { it.status == Status.AVSLUTTET }
+                                    .map { h ->
+                                        BehandlingHendelseDTO(
+                                            hendelse = BehandlingHendelseType.SØKNAD_TRUKKET,
+                                            tidspunkt = h.tidsstempel,
+                                            utførtAv = h.endretAv,
+                                        )
+                                    }
+                            } else emptyList()
                         }
 
                         else -> emptyList()

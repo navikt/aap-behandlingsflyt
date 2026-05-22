@@ -35,4 +35,5 @@ enum class BehandlingHendelseType {
     MOTTATT_DIALOGMELDING,
     BESTILT_LEGEERKLÆRING,
     KVALITETSSIKRET,
+    SØKNAD_TRUKKET
 }
