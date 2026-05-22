@@ -26,6 +26,6 @@ class SkrivVedtaksbrevKlageLøser(
     }
 
     override fun forBehov(): Definisjon {
-        return Definisjon.SKRIV_VEDTAKSBREV_KLAGE
+        return Definisjon.SKRIV_VEDTAKSBREV_SAKSBEHANDLER
     }
 }

@@ -100,7 +100,7 @@ public enum class Definisjon(
             Rolle.BESLUTTER
         )
     ),
-    SKRIV_VEDTAKSBREV_KLAGE(
+    SKRIV_VEDTAKSBREV_SAKSBEHANDLER(
         kode = AvklaringsbehovKode.`5041`,
         løsesISteg = StegType.BREV,
         type = BehovType.MANUELT_PÅKREVD,

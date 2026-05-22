@@ -6,20 +6,20 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKont
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.LøsningsResultat
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.SkrivVedtaksbrevKlageLøser
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
-import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.SKRIV_VEDTAKSBREV_KLAGE_KODE
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.SKRIV_VEDTAKSBREV_SAKSBEHANDLER_KODE
 import no.nav.aap.brev.kontrakt.MottakerDto
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import java.util.UUID
 
 
-@JsonTypeName(value = SKRIV_VEDTAKSBREV_KLAGE_KODE)
+@JsonTypeName(value = SKRIV_VEDTAKSBREV_SAKSBEHANDLER_KODE)
 class SkrivVedtaksbrevKlageLøsning(
     @param:JsonProperty("brevbestillingReferanse", required = true) val brevbestillingReferanse: UUID,
     @param:JsonProperty("handling", required = true) val handling: SkrivBrevAvklaringsbehovLøsning.Handling,
     @param:JsonProperty("mottakere") val mottakere: List<MottakerDto> = emptyList(),
     @param:JsonProperty("begrunnelse") val begrunnelse: String? = null,
-    @param:JsonProperty("behovstype", required = true, defaultValue = SKRIV_VEDTAKSBREV_KLAGE_KODE)
+    @param:JsonProperty("behovstype", required = true, defaultValue = SKRIV_VEDTAKSBREV_SAKSBEHANDLER_KODE)
     val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`5041`
 ) : EnkeltAvklaringsbehovLøsning {
     override fun løs(repositoryProvider: RepositoryProvider, kontekst: AvklaringsbehovKontekst, gatewayProvider: GatewayProvider): LøsningsResultat {
