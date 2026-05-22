@@ -288,6 +288,11 @@ public enum class AvklaringsbehovKode {
     `5040`,
 
     /**
+     * [SKRIV_VEDTAKSBREV_SAKSBEHANDLER_KODE]
+     */
+    `5041`,
+    
+    /**
      * [SKRIV_BREV_KODE]
      */
     `5050`,
