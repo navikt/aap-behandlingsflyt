@@ -99,6 +99,7 @@ import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.verdityper.Dagsatser
 import no.nav.aap.komponenter.verdityper.GUnit
 import no.nav.aap.komponenter.verdityper.Prosent
+import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.komponenter.verdityper.TimerArbeid
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.verdityper.dokument.JournalpostId
@@ -577,7 +578,7 @@ class StatistikkJobbUtførerTest {
                 ),
                 diagnoserPeriodisert = listOf(
                     DiagnoserMedPeriode(
-                        periodeDTO = PeriodeDTO(LocalDate.now().minusDays(1), LocalDate.now().plusDays(1)),
+                        periodeDTO = PeriodeDTO(1 januar 2020, Tid.MAKS),
                         kodeverk = "KODEVERK",
                         diagnosekode = "PEST",
                         bidiagnoser = listOf("KOLERA")
