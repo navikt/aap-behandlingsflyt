@@ -243,6 +243,29 @@ class BrevGateway : BrevbestillingGateway {
         return response.readAllBytes().toString(Charsets.UTF_8)
     }
 
+    override fun brevbyggerPreview(
+        bestillingReferanse: BrevbestillingReferanse,
+        signaturer: List<SignaturGrunnlag>
+    ): String {
+
+        val httpRequest = PostRequest(
+            body = ForhandsvisBrevRequest(signaturer),
+            additionalHeaders = listOf(
+                Header("Accept", "application/json")
+            )
+        )
+
+        val response: InputStream = requireNotNull(
+            client.post(
+                uri = baseUri.resolve("/api/bestilling/$bestillingReferanse/brevbygger-preview"),
+                request = httpRequest,
+                mapper = { body, _ ->
+                    body
+                })
+        )
+        return response.readAllBytes().toString(Charsets.UTF_8)
+    }
+
     override fun avbryt(bestillingReferanse: BrevbestillingReferanse) {
         val url = baseUri.resolve("/api/avbryt")
 
