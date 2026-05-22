@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
-import no.nav.aap.behandlingsflyt.behandling.ResultatUtleder
 import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
@@ -12,6 +11,7 @@ import no.nav.aap.behandlingsflyt.help.flytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.help.opprettInMemorySakOgBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.test.FakeTidligereVurderinger
 import no.nav.aap.behandlingsflyt.test.FakeUnleashBaseWithDefaultDisabled
 import no.nav.aap.behandlingsflyt.test.LokalUnleash
@@ -130,8 +130,8 @@ class KvalitetssikringsStegTest {
                 enabledFlags = listOf(BehandlingsflytFeature.AlleEndringerKreverKvalitetssikring)
             ),
             avbrytRevurderingService = AvbrytRevurderingService(inMemoryRepositoryProvider.provide()),
-            resultatUtleder = ResultatUtleder(inMemoryRepositoryProvider, minimalGatewayProvider()),
-            behandlingRepository = inMemoryRepositoryProvider.provide()
+            behandlingRepository = inMemoryRepositoryProvider.provide(),
+            behandlingService = BehandlingService(inMemoryRepositoryProvider, minimalGatewayProvider())
         )
 
         fun kjørSteg() {
