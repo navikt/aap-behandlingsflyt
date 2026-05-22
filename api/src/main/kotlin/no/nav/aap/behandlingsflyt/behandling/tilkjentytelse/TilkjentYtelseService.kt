@@ -1,14 +1,17 @@
 package no.nav.aap.behandlingsflyt.behandling.tilkjentytelse
 
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.meldeperiode.MeldeperiodeRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Meldekort
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.MeldekortRepository
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
-import no.nav.aap.behandlingsflyt.utils.diffTidslinjer
 import no.nav.aap.behandlingsflyt.utils.diff.somDto
+import no.nav.aap.behandlingsflyt.utils.diffTidslinjer
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.komponenter.tidslinje.Tidslinje
@@ -36,7 +39,7 @@ class TilkjentYtelseService(
             nå = gjeldendeTilkjentYtelse.tilTidslinje()
         ).mapValue { it.somDto() }
 
-        return TilkjentYtelse2MedDiffDto( diff.verdier().toList())
+        return TilkjentYtelse2MedDiffDto(diff.verdier().toList())
     }
 
     private fun hentTilkjentYtelseForBehandling(behandlingId: BehandlingId): TilkjentYtelse2Dto {
@@ -46,6 +49,7 @@ class TilkjentYtelseService(
                 repositoryFactory.provide<TilkjentYtelseRepository>()
             val meldekortRepository = repositoryFactory.provide<MeldekortRepository>()
             val meldeperiodeRepository = repositoryFactory.provide<MeldeperiodeRepository>()
+            val underveisRepository = repositoryFactory.provide<UnderveisRepository>()
 
             val meldekortene =
                 meldekortRepository.hentHvisEksisterer(behandlingId)
@@ -62,12 +66,14 @@ class TilkjentYtelseService(
             } else {
                 emptyList()
             }
+            val underveisTidslinje = underveisRepository.hentHvisEksisterer(behandlingId)?.somTidslinje().orEmpty()
 
             TilkjentYtelse2Dto(
                 perioder = mapTilkjentYtelsePerioder(
                     meldeperioder,
                     tilkjentYtelseTidslinje,
-                    meldekortene
+                    meldekortene,
+                    underveisTidslinje
                 )
             )
         }
@@ -86,7 +92,8 @@ class TilkjentYtelseService(
     private fun mapTilkjentYtelsePerioder(
         meldeperioder: List<Periode>,
         tilkjentYtelseTidslinje: Tidslinje<Tilkjent>,
-        meldekortene: List<Meldekort>
+        meldekortene: List<Meldekort>,
+        underveisTidslinje: Tidslinje<Underveisperiode>
     ): List<TilkjentYtelsePeriode2Dto> = meldeperioder.map { meldeperiode ->
         val begrensetTil = tilkjentYtelseTidslinje.begrensetTil(meldeperiode)
 
@@ -102,6 +109,9 @@ class TilkjentYtelseService(
                 it.periode.overlapper(meldeperiode)
             }
         }
+        val meldepliktStatus = underveisTidslinje.begrensetTil(meldeperiode).segmenter().firstOrNull()?.verdi?.meldepliktStatus
+
+        val meldekortStatus = utledMeldekortStatusFor(meldepliktStatus, sisteAktuelleMeldekort)
 
         TilkjentYtelsePeriode2Dto(
             meldeperiode = meldeperiode,
@@ -114,7 +124,7 @@ class TilkjentYtelseService(
                     mottattTidspunkt = meldekort.mottattTidspunkt,
                 )
             },
-            meldekortStatus = null,
+            meldekortStatus = meldekortStatus,
             vurdertePerioder = begrensetTil
                 .segmenter()
                 .map {
@@ -133,11 +143,30 @@ class TilkjentYtelseService(
                             institusjonGradering = it.verdi.graderingGrunnlag.institusjonGradering.prosentverdi(),
                             arbeidsgiverGradering = it.verdi.graderingGrunnlag.samordningArbeidsgiverGradering.prosentverdi(),
                             totalReduksjon = 100.minus(it.verdi.gradering.prosentverdi()),
-                            effektivDagsats = it.verdi.redusertDagsats().verdi().toDouble()
+                            effektivDagsats = it.verdi.redusertDagsats().verdi().toDouble(),
                         )
                     )
                 }
                 .komprimerLikeFelter())
+    }
+
+    private fun utledMeldekortStatusFor(
+        meldepliktStatus: MeldepliktStatus?,
+        sisteAktuelleMeldekort: Meldekort?
+    ): MeldekortStatus {
+        if (sisteAktuelleMeldekort == null) {
+            return MeldekortStatus.IKKE_AVKLART
+        }
+        return when (meldepliktStatus) {
+            MeldepliktStatus.FØR_VEDTAK,
+            MeldepliktStatus.FØRSTE_MELDEPERIODE_MED_RETT,
+            MeldepliktStatus.FRITAK,
+            MeldepliktStatus.MELDT_SEG,
+            MeldepliktStatus.RIMELIG_GRUNN -> MeldekortStatus.LEVERT_OK
+
+            MeldepliktStatus.IKKE_MELDT_SEG -> MeldekortStatus.LEVERT_FOR_SENT
+            else -> MeldekortStatus.IKKE_AVKLART
+        }
     }
 
 }
