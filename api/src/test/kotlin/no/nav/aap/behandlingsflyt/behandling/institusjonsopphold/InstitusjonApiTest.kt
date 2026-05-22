@@ -147,7 +147,7 @@ class InstitusjonApiTest {
                 oppholdene = Oppholdene(id = 1L, opphold = listOf(opphold1, opphold2))
             )
 
-            assertThrows<IllegalArgumentException> {
+            assertThrows<OverlappendeInstitusjonsoppholdException> {
                 byggTidslinjeForInstitusjonsopphold(grunnlag, Institusjonstype.HS)
             }
         }
