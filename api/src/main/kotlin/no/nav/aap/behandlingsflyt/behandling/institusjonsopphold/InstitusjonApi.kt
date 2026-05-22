@@ -325,8 +325,14 @@ fun byggTidslinjeForInstitusjonsopphold(
     if (segments.size < 2) return Tidslinje(segments)
 
     val håndterOverlapp = segments.zipWithNext { current, next ->
-        require(current.periode.tom <= next.periode.fom) {
-            "For stort overlapp mellom periodene ${current.periode} og ${next.periode}"
+
+        if (current.periode.tom > next.periode.fom) {
+            throw OverlappendeInstitusjonsoppholdException(
+                "Overlappende institusjonsopphold funnet: " +
+                        "(${current.periode}) overlapper med " +
+                        "(${next.periode}). " +
+                        "Oppholdene må korrigeres i kildesystemet (INST2)."
+            )
         }
 
         if (current.periode.tom == next.periode.fom) {

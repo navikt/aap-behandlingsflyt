@@ -7,6 +7,7 @@ import io.ktor.serialization.*
 import io.ktor.server.application.*
 import io.ktor.server.plugins.statuspages.*
 import io.ktor.server.response.*
+import no.nav.aap.behandlingsflyt.behandling.institusjonsopphold.OverlappendeInstitusjonsoppholdException
 import no.nav.aap.behandlingsflyt.exception.BehandlingUnderProsesseringException
 import no.nav.aap.behandlingsflyt.exception.FlytOperasjonException
 import no.nav.aap.behandlingsflyt.exception.KanIkkeVurdereEgneVurderingerException
@@ -59,6 +60,11 @@ object StatusPagesConfigHelper {
                             message = cause.body().message ?: "Ukjent feil i behandlingsflyt"
                         )
                     )
+                }
+
+                is OverlappendeInstitusjonsoppholdException -> {
+                    logger.warn("Feil i institusjonsopphold, må rettes i Inst2:", cause)
+                    call.respondWithError(IkkeTillattException(message = "Feil i institusjonsopphold, må rettes i Inst2"))
                 }
 
                 is ManglerTilgangException -> {
