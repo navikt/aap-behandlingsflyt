@@ -224,7 +224,7 @@ private fun tilMeldekort(oppdaterMeldekortRequest: OppdaterMeldekortRequest, vur
             ArbeidIPeriodeV0(
                 fraOgMedDato = it.dato,
                 tilOgMedDato = it.dato,
-                timerArbeid = it.timerArbeidet ?: 0.0,
+                timerArbeid = it.timerArbeidet,
             )
         }
     )

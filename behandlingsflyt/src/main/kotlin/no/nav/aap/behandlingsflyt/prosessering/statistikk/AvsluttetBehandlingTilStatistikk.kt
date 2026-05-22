@@ -100,7 +100,7 @@ class AvsluttetBehandlingTilStatistikk(
         beregningVurderingRepository = repositoryProvider.provide(),
         sykdomRepository = repositoryProvider.provide(),
         underveisRepository = repositoryProvider.provide(),
-        vedtakService = VedtakService(repositoryProvider),
+        vedtakService = VedtakService(repositoryProvider, gatewayProvider),
         klageresultatUtleder = KlageresultatUtleder(repositoryProvider),
         avbrytRevurderingService = AvbrytRevurderingService(repositoryProvider),
         meldepliktRepository = repositoryProvider.provide(),
@@ -109,10 +109,7 @@ class AvsluttetBehandlingTilStatistikk(
         samordningArbeidsgiverRepository = repositoryProvider.provide(),
         samordningUføreRepository = repositoryProvider.provide(),
         arbeidsopptrappingRepository = repositoryProvider.provide(),
-        stansOpphørService = StansOpphørService(
-            repositoryProvider.provide(),
-            repositoryProvider.provide(), repositoryProvider.provide()
-        ),
+        stansOpphørService = StansOpphørService(repositoryProvider, gatewayProvider),
         resultatUtleder = ResultatUtleder(repositoryProvider, gatewayProvider),
     )
 

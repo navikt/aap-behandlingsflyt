@@ -6,7 +6,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveis
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.orEmpty
+import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.LocalDate
 
 class StansOpphørService(
@@ -14,6 +16,12 @@ class StansOpphørService(
     private val underveisRepository: UnderveisRepository,
     private val stansOpphørRepository: StansOpphørRepository
 ) {
+    constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
+        vedtakslengdeRepository = repositoryProvider.provide(),
+        underveisRepository = repositoryProvider.provide(),
+        stansOpphørRepository = repositoryProvider.provide(),
+    )
+
     /**
      * Antas å kjøre etter at behandlingen er vedtatt (status IVERKSETTES eller status AVSLUTTET).
      *

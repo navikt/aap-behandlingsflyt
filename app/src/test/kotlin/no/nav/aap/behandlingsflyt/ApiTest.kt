@@ -122,12 +122,12 @@ class ApiTest {
 
             val response = if (isApp) {
                 client.post<Unit, TestToken>(
-                    URI.create(requiredConfigForKey("nais.token.endpoint")),
+                    URI.create(requiredConfigForKey("NAIS_TOKEN_ENDPOINT")),
                     PostRequest(Unit)
                 )
             } else {
                 client.post<Map<String, String>, TestToken>(
-                    URI.create(requiredConfigForKey("nais.token.exchange.endpoint")),
+                    URI.create(requiredConfigForKey("NAIS_TOKEN_EXCHANGE_ENDPOINT")),
                     PostRequest(
                         body = mapOf(
                             "user_token" to AzureTokenGen("aud").generate(false, "behandlingsflyt", "Z123456"),

@@ -34,7 +34,7 @@ fun getToken(): OidcToken {
     )
     return token ?: OidcToken(
         client.post<Unit, TestToken>(
-            URI.create(requiredConfigForKey("nais.token.endpoint")),
+            URI.create(requiredConfigForKey("NAIS_TOKEN_ENDPOINT")),
             PostRequest(Unit)
         )!!.access_token
     )

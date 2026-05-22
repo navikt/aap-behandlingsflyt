@@ -69,9 +69,9 @@ class BrevGateway : BrevbestillingGateway {
 
     private val log = LoggerFactory.getLogger(javaClass)
 
-    private val baseUri = URI.create(requiredConfigForKey("integrasjon.brev.url"))
+    private val baseUri = URI.create(requiredConfigForKey("INTEGRASJON_BREV_URL"))
     val config = ClientConfig(
-        scope = requiredConfigForKey("integrasjon.brev.scope"),
+        scope = requiredConfigForKey("INTEGRASJON_BREV_SCOPE"),
     )
 
     private val client = RestClient(
@@ -235,6 +235,29 @@ class BrevGateway : BrevbestillingGateway {
         val response: InputStream = requireNotNull(
             client.post(
                 uri = baseUri.resolve("/api/bestilling/$bestillingReferanse/forhandsvis-html"),
+                request = httpRequest,
+                mapper = { body, _ ->
+                    body
+                })
+        )
+        return response.readAllBytes().toString(Charsets.UTF_8)
+    }
+
+    override fun brevbyggerPreview(
+        bestillingReferanse: BrevbestillingReferanse,
+        signaturer: List<SignaturGrunnlag>
+    ): String {
+
+        val httpRequest = PostRequest(
+            body = ForhandsvisBrevRequest(signaturer),
+            additionalHeaders = listOf(
+                Header("Accept", "application/json")
+            )
+        )
+
+        val response: InputStream = requireNotNull(
+            client.post(
+                uri = baseUri.resolve("/api/bestilling/$bestillingReferanse/brevbygger-preview"),
                 request = httpRequest,
                 mapper = { body, _ ->
                     body

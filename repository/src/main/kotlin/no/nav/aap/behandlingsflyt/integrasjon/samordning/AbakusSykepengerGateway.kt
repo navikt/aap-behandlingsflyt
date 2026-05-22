@@ -16,8 +16,8 @@ import java.net.URI
 import java.time.LocalDate
 
 class AbakusSykepengerGateway : SykepengerGateway {
-    private val url = URI.create(requiredConfigForKey("integrasjon.sykepenger.url") + "/utbetalte-perioder-aap")
-    private val config = ClientConfig(scope = requiredConfigForKey("integrasjon.sykepenger.scope"))
+    private val url = URI.create(requiredConfigForKey("INTEGRASJON_SYKEPENGER_URL") + "/utbetalte-perioder-aap")
+    private val config = ClientConfig(scope = requiredConfigForKey("INTEGRASJON_SYKEPENGER_SCOPE"))
 
     companion object : Factory<SykepengerGateway> {
         override fun konstruer(): SykepengerGateway {

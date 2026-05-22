@@ -7,18 +7,18 @@ import java.util.UUID
 import kotlin.collections.plus
 
 enum class Azp(val uuid: UUID) {
-    Brev(UUID.fromString(requiredConfigForKey("integrasjon.brev.azp"))),
-    Tilgang(UUID.fromString(requiredConfigForKey("integrasjon.tilgang.azp"))),
-    Postmottak(UUID.fromString(requiredConfigForKey("integrasjon.postmottak.azp"))),
-    Dokumentinnhenting(UUID.fromString(requiredConfigForKey("integrasjon.dokumentinnhenting.azp"))),
-    Saksbehandling(UUID.fromString(requiredConfigForKey("integrasjon.saksbehandling.azp"))),
+    Brev(UUID.fromString(requiredConfigForKey("INTEGRASJON_BREV_AZP"))),
+    Tilgang(UUID.fromString(requiredConfigForKey("INTEGRASJON_TILGANG_AZP"))),
+    Postmottak(UUID.fromString(requiredConfigForKey("INTEGRASJON_POSTMOTTAK_AZP"))),
+    Dokumentinnhenting(UUID.fromString(requiredConfigForKey("INTEGRASJON_DOKUMENTINNHENTING_AZP"))),
+    Saksbehandling(UUID.fromString(requiredConfigForKey("INTEGRASJON_SAKSBEHANDLING_AZP"))),
 }
 
 fun AuthorizationMachineToMachineConfig.medAzureTokenGen(): AuthorizationMachineToMachineConfig {
     if (!Miljø.erDev()) return this
     return this.copy(
         authorizedAzps = this.authorizedAzps
-                + UUID.fromString(requiredConfigForKey("integrasjon.azure.token.generator.azp"))
+                + UUID.fromString(requiredConfigForKey("INTEGRASJON_AZURE_TOKEN_GENERATOR_AZP"))
     )
 }
       

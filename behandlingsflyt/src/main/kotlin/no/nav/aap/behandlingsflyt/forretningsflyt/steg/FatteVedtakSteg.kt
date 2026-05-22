@@ -146,7 +146,7 @@ class FatteVedtakSteg(
                 avbrytAktivitetspliktbehandlingService = AvbrytAktivitetspliktbehandlingService(repositoryProvider),
                 tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
                 klageresultatUtleder = KlageresultatUtleder(repositoryProvider),
-                vedtakService = VedtakService(repositoryProvider),
+                vedtakService = VedtakService(repositoryProvider, gatewayProvider),
                 virkningstidspunktUtleder = VirkningstidspunktUtleder(repositoryProvider),
                 unleashGateway = gatewayProvider.provide()
             )

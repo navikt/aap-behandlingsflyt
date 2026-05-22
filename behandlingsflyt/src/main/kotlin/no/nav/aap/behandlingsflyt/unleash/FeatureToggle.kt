@@ -25,6 +25,7 @@ enum class BehandlingsflytFeature : FeatureToggle {
     GJustering2026,
     BackfillYrkesskadeNyeFelter,
     MigrerManglendeDokumentasjon,
+    AlleEndringerKreverKvalitetssikring
     ;
 
     override fun key(): String = name

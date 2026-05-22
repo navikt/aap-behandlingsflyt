@@ -30,9 +30,9 @@ class KabalGateway : AndreinstansGateway {
 
     private val log = LoggerFactory.getLogger(javaClass)
 
-    private val baseUri = URI.create(requiredConfigForKey("integrasjon.kabal.url"))
+    private val baseUri = URI.create(requiredConfigForKey("INTEGRASJON_KABAL_URL"))
     val config = ClientConfig(
-        scope = requiredConfigForKey("integrasjon.kabal.scope"),
+        scope = requiredConfigForKey("INTEGRASJON_KABAL_SCOPE"),
     )
 
     private val client = withDefaultResponseHandler(

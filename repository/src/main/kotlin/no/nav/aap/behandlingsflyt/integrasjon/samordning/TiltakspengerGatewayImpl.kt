@@ -18,8 +18,8 @@ import java.time.LocalDate
 
 // https://tiltakspenger-datadeling.intern.dev.nav.no/swagger
 class TiltakspengerGatewayImpl : TiltakspengerGateway {
-    private val url = URI.create(requiredConfigForKey("integrasjon.tiltakspenger.url") + "/vedtak/perioder")
-    private val config = ClientConfig(scope = requiredConfigForKey("integrasjon.tiltakspenger.scope"))
+    private val url = URI.create(requiredConfigForKey("INTEGRASJON_TILTAKSPENGER_URL") + "/vedtak/perioder")
+    private val config = ClientConfig(scope = requiredConfigForKey("INTEGRASJON_TILTAKSPENGER_SCOPE"))
 
     companion object : Factory<TiltakspengerGateway> {
         override fun konstruer(): TiltakspengerGateway {
