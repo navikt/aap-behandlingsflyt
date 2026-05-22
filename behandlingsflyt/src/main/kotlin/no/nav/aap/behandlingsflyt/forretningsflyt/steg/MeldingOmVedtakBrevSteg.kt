@@ -15,6 +15,7 @@ import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.prosessering.OpprettJobbForTriggBarnetilleggSatsJobbUtfører
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
@@ -54,13 +55,22 @@ class MeldingOmVedtakBrevSteg(
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        val behandlingErAvbrutt = avbrytAktivitetspliktbehandlingService.behandlingErAvbrutt(kontekst.behandlingId) || trekkKlageService.klageErTrukket(kontekst.behandlingId)
+        val behandlingErAvbrutt =
+            avbrytAktivitetspliktbehandlingService.behandlingErAvbrutt(kontekst.behandlingId)
+                    || trekkKlageService.klageErTrukket(kontekst.behandlingId)
         val brevBehov = brevUtlederService.utledBehovForMeldingOmVedtak(kontekst.behandlingId)
         val harBestillingOmVedtakBrev = brevbestillingService.harBestillingOmVedtak(kontekst.behandlingId)
+
+        val definisjon = when (kontekst.behandlingType) {
+            TypeBehandling.Klage -> Definisjon.SKRIV_VEDTAKSBREV_KLAGE
+            else -> Definisjon.SKRIV_VEDTAKSBREV
+        }
+
         avklaringsbehovService.oppdaterAvklaringsbehov(
-            Definisjon.SKRIV_VEDTAKSBREV,
+            definisjon,
             vedtakBehøverVurdering = { vedtakBehøverVurdering(behandlingErAvbrutt, brevBehov) },
-            erTilstrekkeligVurdert = { brevbestillingService.erAlleBestillingerOmVedtakIEndeTilstand(kontekst.behandlingId) },
+            erTilstrekkeligVurdert =
+                { brevbestillingService.erAlleBestillingerOmVedtakIEndeTilstand(kontekst.behandlingId) },
             tilbakestillGrunnlag = { tilbakestillGrunnlag(kontekst.behandlingId) },
             kontekst
         )

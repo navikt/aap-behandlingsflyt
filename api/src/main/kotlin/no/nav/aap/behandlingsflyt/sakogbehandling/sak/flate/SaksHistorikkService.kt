@@ -43,6 +43,7 @@ class SaksHistorikkService(
             Definisjon.FATTE_VEDTAK,
             Definisjon.FORESLÅ_VEDTAK,
             Definisjon.SKRIV_VEDTAKSBREV,
+            Definisjon.SKRIV_VEDTAKSBREV_KLAGE,
             Definisjon.BESTILL_LEGEERKLÆRING,
             Definisjon.MANUELT_SATT_PÅ_VENT,
             Definisjon.KVALITETSSIKRING,
@@ -110,7 +111,7 @@ class SaksHistorikkService(
                                 }
                         }
 
-                        Definisjon.SKRIV_VEDTAKSBREV -> {
+                        Definisjon.SKRIV_VEDTAKSBREV, Definisjon.SKRIV_VEDTAKSBREV_KLAGE -> {
                             avklaringsbehov.historikk
                                 .filter { it.status == Status.AVSLUTTET }
                                 .map { h ->

@@ -100,6 +100,14 @@ public enum class Definisjon(
             Rolle.BESLUTTER
         )
     ),
+    SKRIV_VEDTAKSBREV_KLAGE(
+        kode = AvklaringsbehovKode.`5041`,
+        løsesISteg = StegType.BREV,
+        type = BehovType.MANUELT_PÅKREVD,
+        løsesAv = listOf(
+            Rolle.SAKSBEHANDLER_NASJONAL
+        )
+    ),
     VURDER_RETTIGHETSPERIODE(
         kode = AvklaringsbehovKode.`5029`,
         løsesISteg = StegType.VURDER_RETTIGHETSPERIODE,

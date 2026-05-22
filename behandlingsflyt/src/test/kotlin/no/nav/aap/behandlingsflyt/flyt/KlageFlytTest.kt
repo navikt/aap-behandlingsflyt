@@ -722,9 +722,9 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(KlageFlytTestUnleash::class) {
         // MeldingOmVedtakBrevSteg
         åpneAvklaringsbehov = hentÅpneAvklaringsbehov(klagebehandling.id)
         assertThat(åpneAvklaringsbehov).hasSize(1)
-        assertThat(åpneAvklaringsbehov.first().definisjon).isEqualTo(Definisjon.SKRIV_VEDTAKSBREV)
+        assertThat(åpneAvklaringsbehov.first().definisjon).isEqualTo(Definisjon.SKRIV_VEDTAKSBREV_KLAGE)
 
-        klagebehandling.løsVedtaksbrev(TypeBrev.KLAGE_OPPRETTHOLDELSE)
+        klagebehandling.løsVedtaksbrevKlage(TypeBrev.KLAGE_OPPRETTHOLDELSE)
 
         // OpprettholdelseSteg
         val steghistorikk = hentStegHistorikk(klagebehandling.id)
