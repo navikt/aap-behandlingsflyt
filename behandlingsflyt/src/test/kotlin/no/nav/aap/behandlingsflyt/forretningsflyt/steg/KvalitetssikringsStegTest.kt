@@ -1,5 +1,7 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
+import no.nav.aap.behandlingsflyt.behandling.ResultatUtleder
+import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.KvalitetssikrerLøser
@@ -15,6 +17,7 @@ import no.nav.aap.behandlingsflyt.test.FakeUnleashBaseWithDefaultDisabled
 import no.nav.aap.behandlingsflyt.test.LokalUnleash
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryProvider
+import no.nav.aap.behandlingsflyt.test.minimalGatewayProvider
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
@@ -125,7 +128,10 @@ class KvalitetssikringsStegTest {
             trekkKlageService = TrekkKlageService(inMemoryRepositoryProvider),
             unleashGateway = FakeUnleashBaseWithDefaultDisabled(
                 enabledFlags = listOf(BehandlingsflytFeature.AlleEndringerKreverKvalitetssikring)
-            )
+            ),
+            avbrytRevurderingService = AvbrytRevurderingService(inMemoryRepositoryProvider.provide()),
+            resultatUtleder = ResultatUtleder(inMemoryRepositoryProvider, minimalGatewayProvider()),
+            behandlingRepository = inMemoryRepositoryProvider.provide()
         )
 
         fun kjørSteg() {
