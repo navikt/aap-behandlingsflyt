@@ -52,4 +52,5 @@ interface BrevbestillingGateway : Gateway {
 
     fun forhåndsvis(bestillingReferanse: BrevbestillingReferanse, signaturer: List<SignaturGrunnlag>): InputStream
     fun forhåndsvisHtml(bestillingReferanse: BrevbestillingReferanse, signaturer: List<SignaturGrunnlag>): String
+    fun brevbyggerPreview(bestillingReferanse: BrevbestillingReferanse, signaturer: List<SignaturGrunnlag>): String
 }

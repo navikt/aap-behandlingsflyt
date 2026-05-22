@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag
 
+import no.nav.aap.behandlingsflyt.behandling.gregulering.GReguleringService
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.GraderingGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Minstesats
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Tilkjent
@@ -52,8 +53,10 @@ class GrunnbeløpInformasjonskravTest {
         InMemoryTilkjentYtelseRepository.slett(kontekst.behandlingId)
         InMemoryUnderveisRepository.slett(kontekst.behandlingId)
         informasjonskrav = GrunnbeløpInformasjonskrav(
-            tilkjentYtelseRepository = InMemoryTilkjentYtelseRepository,
-            underveisRepository = InMemoryUnderveisRepository,
+            gReguleringService = GReguleringService(
+                underveisRepository = InMemoryUnderveisRepository,
+                tilkjentYtelseRepository = InMemoryTilkjentYtelseRepository,
+            ),
             unleashGateway = unleash,
         )
     }
@@ -210,8 +213,10 @@ class GrunnbeløpInformasjonskravTest {
     fun `skal ikke være relevant når feature toggle er avskrudd`() {
         val disabledUnleash = FakeUnleashBaseWithDefaultDisabled(emptyList())
         val krav = GrunnbeløpInformasjonskrav(
-            tilkjentYtelseRepository = InMemoryTilkjentYtelseRepository,
-            underveisRepository = InMemoryUnderveisRepository,
+            gReguleringService = GReguleringService(
+                underveisRepository = InMemoryUnderveisRepository,
+                tilkjentYtelseRepository = InMemoryTilkjentYtelseRepository,
+            ),
             unleashGateway = disabledUnleash,
         )
 

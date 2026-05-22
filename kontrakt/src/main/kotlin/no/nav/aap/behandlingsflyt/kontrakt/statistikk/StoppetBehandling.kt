@@ -26,6 +26,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.sak.Status as SakStatus
  * @param identerForSak Identer på sak. Brukes for å filtrere kode 6-personer.
  * @param tidspunktSisteEndring Brukes i statistikk-appen for å utlede avsluttet-tid for automatiske behandlinger.
  * @param hendelsesTidspunkt Når denne hendelsen ble opprettet i Behandlingsflyt.
+ * @param avsluttetBehandling Hvis behandlingen er avsluttet, skal denne inneholde data om ytelsen.
  */
 public data class StoppetBehandling(
     val saksnummer: String,

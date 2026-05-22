@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
+import io.micrometer.prometheusmetrics.PrometheusConfig
+import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import no.nav.aap.behandlingsflyt.behandling.grunnlag.medlemskap.MedlemskapGrunnlagDto
@@ -120,12 +122,12 @@ class ApiTest {
 
             val response = if (isApp) {
                 client.post<Unit, TestToken>(
-                    URI.create(requiredConfigForKey("nais.token.endpoint")),
+                    URI.create(requiredConfigForKey("NAIS_TOKEN_ENDPOINT")),
                     PostRequest(Unit)
                 )
             } else {
                 client.post<Map<String, String>, TestToken>(
-                    URI.create(requiredConfigForKey("nais.token.exchange.endpoint")),
+                    URI.create(requiredConfigForKey("NAIS_TOKEN_EXCHANGE_ENDPOINT")),
                     PostRequest(
                         body = mapOf(
                             "user_token" to AzureTokenGen("aud").generate(false, "behandlingsflyt", "Z123456"),
@@ -143,7 +145,8 @@ class ApiTest {
             server(
                 dbConfig = dbConfig,
                 repositoryRegistry = postgresRepositoryRegistry,
-                gatewayProvider = testGatewayProvider(LokalUnleash::class)
+                gatewayProvider = testGatewayProvider(LokalUnleash::class),
+                prometheus = PrometheusMeterRegistry(PrometheusConfig.DEFAULT),
             )
         }
 

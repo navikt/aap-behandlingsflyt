@@ -1,11 +1,12 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.avbrytaktivitetspliktbehandling
 
-import no.nav.aap.behandlingsflyt.behandling.avbrytaktivitetspliktbehandling.AvbrytAktivitetspliktbehandlingGrunnlag
-import no.nav.aap.behandlingsflyt.behandling.avbrytaktivitetspliktbehandling.AvbrytAktivitetspliktbehandlingRepository
-import no.nav.aap.behandlingsflyt.behandling.avbrytaktivitetspliktbehandling.AvbrytAktivitetspliktbehandlingVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.avbrytaktivitetspliktbehandling.AvbrytAktivitetspliktbehandlingGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.avbrytaktivitetspliktbehandling.AvbrytAktivitetspliktbehandlingRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.avbrytaktivitetspliktbehandling.AvbrytAktivitetspliktbehandlingVurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.verdityper.Bruker
+import no.nav.aap.lookup.repository.Factory
 
 class AvbrytAktivitetspliktbehandlingRepositoryImpl(
     private val connection: DBConnection
@@ -24,7 +25,7 @@ class AvbrytAktivitetspliktbehandlingRepositoryImpl(
             """
                 select *
                 from avbryt_aktivitetspliktbehandling_grunnlag as grunnlag
-                left join avbryt_aktivitetspliktbehandling_vurdering as vurdering on grunnlag.id = vurdering.id
+                left join avbryt_aktivitetspliktbehandling_vurdering as vurdering on grunnlag.vurdering_id = vurdering.id
                 where grunnlag.aktiv = true and grunnlag.behandling_id = ?
             """.trimIndent()
         ) {
@@ -36,7 +37,8 @@ class AvbrytAktivitetspliktbehandlingRepositoryImpl(
                     vurdering = AvbrytAktivitetspliktbehandlingVurdering(
                         årsak = it.getEnum("aarsak"),
                         begrunnelse = it.getString("begrunnelse"),
-                        vurdertAv = Bruker(ident = it.getString("vurdert_av"))
+                        vurdertAv = Bruker(ident = it.getString("vurdert_av")),
+                        opprettetTidspunkt = it.getLocalDateTime("opprettet_tid"),
                     )
                 )
             }
@@ -96,5 +98,11 @@ class AvbrytAktivitetspliktbehandlingRepositoryImpl(
 
     override fun slett(behandlingId: BehandlingId) {
         // Skal ikke gjøres
+    }
+
+    companion object : Factory<AvbrytAktivitetspliktbehandlingRepository> {
+        override fun konstruer(connection: DBConnection): AvbrytAktivitetspliktbehandlingRepository {
+            return AvbrytAktivitetspliktbehandlingRepositoryImpl(connection)
+        }
     }
 }

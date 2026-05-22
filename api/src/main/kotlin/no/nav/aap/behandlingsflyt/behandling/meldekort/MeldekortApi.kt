@@ -41,7 +41,6 @@ import no.nav.aap.verdityper.dokument.Kanal
 import java.time.Clock
 import java.time.Instant
 import java.time.LocalDate
-import java.time.LocalDateTime
 import java.time.ZoneId
 import javax.sql.DataSource
 
@@ -66,7 +65,6 @@ fun NormalOpenAPIRoute.meldekortApi(
                 val underveisRepository = repositoryProvider.provide<UnderveisRepository>()
                 val sakRepository = repositoryProvider.provide<SakRepository>()
                 val mottattDokumentRepository = repositoryProvider.provide<MottattDokumentRepository>()
-                val flytJobbRepository = repositoryProvider.provide<FlytJobbRepository>()
                 val behandlingService = BehandlingService(repositoryProvider, gatewayProvider)
 
                 val sak = sakRepository.hent(Saksnummer(req.saksnummer))
@@ -87,17 +85,17 @@ fun NormalOpenAPIRoute.meldekortApi(
                         if (meldekort != null) {
                             // Henter ut relevante metadata for meldekort hvor saksbehandler har korrigert timer
                             val innsendingReferanse = InnsendingReferanse(meldekort.journalpostId)
-                            val meldekortData = mottatteDokumenter[innsendingReferanse]
-                                ?.strukturerteData<MeldekortV0>()?.data
+                            val mottattDokument = mottatteDokumenter[innsendingReferanse]
+                            val meldekortData = mottattDokument?.strukturerteData<MeldekortV0>()?.data
 
                             MeldeperiodeMedMeldekortDto(
                                 meldeperiode = meldeperiode,
-                                meldekort = meldekort.toDto(meldekortData?.begrunnelse, meldekortData?.opprettetAv),
+                                meldekort = meldekort.toDto(meldekortData?.begrunnelse, meldekortData?.opprettetAv, mottattDokument?.opprettetTid?.toLocalDate()),
                                 tidligereMeldekort = tidligereMeldekortListe.map { tidligere ->
                                     val ref = InnsendingReferanse(tidligere.journalpostId)
-                                    val data = mottatteDokumenter[ref]
-                                        ?.strukturerteData<MeldekortV0>()?.data
-                                    tidligere.toDto(data?.begrunnelse, data?.opprettetAv)
+                                    val tidligereDokument = mottatteDokumenter[ref]
+                                    val data = tidligereDokument?.strukturerteData<MeldekortV0>()?.data
+                                    tidligere.toDto(data?.begrunnelse, data?.opprettetAv, tidligereDokument?.opprettetTid?.toLocalDate())
                                 },
                             )
                         } else {
@@ -111,7 +109,6 @@ fun NormalOpenAPIRoute.meldekortApi(
 
                 MeldeperioderMedMeldekortResponse(
                     meldeperioderMedMeldekort = meldeperiodeMedMeldekort?.toSet() ?: emptySet(),
-                    meldekortProsesseringStatus = hentProsesseringStatus(flytJobbRepository, sak)
                 )
             }
 
@@ -149,16 +146,44 @@ fun NormalOpenAPIRoute.meldekortApi(
                     tidspunkt = tidspunkt
                 )
 
-                val innsending = tilInnsending(sak, journalpostId, tidspunkt, meldekort)
+                val innsending = tilInnsending(sak, journalpostId, body.meldeDato, meldekort)
 
                 // Oppretter mottatt hendelse som prosesseres som en meldekort-behandling
                 MottattHendelseService(repositoryProvider).registrerMottattHendelse(innsending)
 
-                OppdaterMeldekortResponse(journalpostId.identifikator)
+                OppdaterMeldekortResponse(
+                    journalpostId = journalpostId.identifikator,
+                    oppdatertTidspunkt = LocalDate.ofInstant(tidspunkt, ZoneId.of("Europe/Oslo")),
+                )
             }
 
             respond(response)
         }
+
+        route("prosessering") {
+            authorizedGet<SaksnummerParameter, MeldekortProsesseringResponse>(
+                AuthorizationParamPathConfig(
+                    relevanteIdenterResolver = relevanteIdenterForSakResolver(repositoryRegistry, dataSource),
+                    sakPathParam = SakPathParam("saksnummer")
+                ),
+                null,
+                modules = arrayOf(TagModule(listOf(Tags.Sak))),
+            ) { req ->
+                val response = dataSource.transaction(readOnly = true) { connection ->
+                    val repositoryProvider = repositoryRegistry.provider(connection)
+                    val sakRepository = repositoryProvider.provide<SakRepository>()
+                    val flytJobbRepository = repositoryProvider.provide<FlytJobbRepository>()
+
+                    val sak = sakRepository.hent(Saksnummer(req.saksnummer))
+                    MeldekortProsesseringResponse(
+                        meldekortProsesseringStatus = hentProsesseringStatus(flytJobbRepository, sak)
+                    )
+                }
+
+                respond(response)
+            }
+        }
+
     }
 }
 
@@ -179,14 +204,14 @@ private fun hentProsesseringStatus(
 private fun tilInnsending(
     sak: Sak,
     journalpostId: JournalpostId,
-    tidspunkt: Instant,
+    meldeDato: LocalDate,
     meldekort: MeldekortV0
 ): Innsending = Innsending(
     saksnummer = sak.saksnummer,
     referanse = InnsendingReferanse(journalpostId),
     type = InnsendingType.MELDEKORT,
     kanal = Kanal.DIGITAL,
-    mottattTidspunkt = LocalDateTime.ofInstant(tidspunkt, ZoneId.of("Europe/Oslo")),
+    mottattTidspunkt = meldeDato.atStartOfDay(),
     melding = meldekort,
 )
 
@@ -199,7 +224,7 @@ private fun tilMeldekort(oppdaterMeldekortRequest: OppdaterMeldekortRequest, vur
             ArbeidIPeriodeV0(
                 fraOgMedDato = it.dato,
                 tilOgMedDato = it.dato,
-                timerArbeid = it.timerArbeidet ?: 0.0,
+                timerArbeid = it.timerArbeidet,
             )
         }
     )

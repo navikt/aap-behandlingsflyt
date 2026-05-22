@@ -83,12 +83,18 @@ class KvalitetssikringFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash
 
                 assertThat(avklaringsbehovene.hentBehovForDefinisjon(Definisjon.KVALITETSSIKRING))
                     .extracting { it?.status() }
-                    .isEqualTo(AvklaringsbehovStatus.OPPRETTET)
+                    .describedAs { "Avklaringsbehovet skal først gjenåpnes når flyten er tilbake igjen til kvalitetssikring" }
+                    .isEqualTo(AvklaringsbehovStatus.AVSLUTTET)
+            }
+            .løsSykdom(fom)
+            .bekreftVurderinger()
+            .medKontekst {
+                assertThat(åpneAvklaringsbehov).hasSize(1)
+                assertThat(åpneAvklaringsbehov.first().definisjon)
+                    .describedAs { "Kvalitetssikring skal gjenåpnes etter ny løsning av underkjent behov" }
+                    .isEqualTo(Definisjon.KVALITETSSIKRING)
             }
 
-        val stegetsEgetBehov = hentAlleAvklaringsbehov(behandling)
-            .filter { behov -> behov.definisjon == Definisjon.KVALITETSSIKRING }
-        assertThat(stegetsEgetBehov.first().status()).isEqualTo(AvklaringsbehovStatus.OPPRETTET)
     }
 
     @Test

@@ -46,7 +46,10 @@ fun minimalGatewayProvider(
         extensions()
     }
 
-fun testGatewayProvider(unleashGateway: KClass<out UnleashGateway> = AlleAvskruddUnleash::class) =
+fun testGatewayProvider(
+    unleashGateway: KClass<out UnleashGateway> = AlleAvskruddUnleash::class,
+    extensions: GatewayRegistry.() -> Unit = {},
+) =
     createGatewayProvider {
         register<PdlBarnGateway>()
         register<PdlIdentGateway>()
@@ -83,4 +86,5 @@ fun testGatewayProvider(unleashGateway: KClass<out UnleashGateway> = AlleAvskrud
         register<DokarkivGatewayImpl>()
         register<PdfgenGatewayImpl>()
         register<DummyBehandlingHendelseServiceFactory>()
+        extensions()
     }

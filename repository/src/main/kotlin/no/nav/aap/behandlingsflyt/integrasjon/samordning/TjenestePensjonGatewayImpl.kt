@@ -22,8 +22,8 @@ import java.net.URI
  */
 class TjenestePensjonGatewayImpl : TjenestePensjonGateway {
     private val url =
-        URI.create(requiredConfigForKey("integrasjon.tjenestepensjon.url") + "/api/tjenestepensjon/getActiveForholdMedActiveYtelser")
-    private val config = ClientConfig(scope = requiredConfigForKey("integrasjon.tjenestepensjon.scope"))
+        URI.create(requiredConfigForKey("INTEGRASJON_TJENESTEPENSJON_URL") + "/api/tjenestepensjon/getActiveForholdMedActiveYtelser")
+    private val config = ClientConfig(scope = requiredConfigForKey("INTEGRASJON_TJENESTEPENSJON_SCOPE"))
 
     private val log = LoggerFactory.getLogger(javaClass)
 

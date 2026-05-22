@@ -20,6 +20,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Opp
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.Uføre
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreSøknad
+import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseServiceFactory
+import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseServiceProvider
 import no.nav.aap.behandlingsflyt.integrasjon.institusjonsopphold.InstitusjonsoppholdJSON
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
@@ -82,7 +84,7 @@ data class IdentOgOpphold(val ident: String, val opphold: List<Institusjonsoppho
 fun main() {
     val dbConfig = initDbConfig()
 
-    FakeServers.start(JSONTestPersonService()) // azurePort = 8081)
+    FakeServers.start(JSONTestPersonService())
 
     // Starter server
     embeddedServer(Netty, configure = {
@@ -91,7 +93,9 @@ fun main() {
             port = 8080
         }
     }) {
-        val gatewayProvider = testGatewayProvider(LokalUnleash::class)
+        val gatewayProvider = testGatewayProvider(LokalUnleash::class) {
+            register<BehandlingHendelseServiceFactory>()
+        }
         val repositoryRegistry = postgresRepositoryRegistry
 
         // Useful for connecting to the test database locally
@@ -220,7 +224,7 @@ private fun slåSammenInstitusjonsopphold(
     val oppdaterte = fraFrontend.map { nytt ->
         val eksisterende = fraDb.find { it.startdato == nytt.oppholdFom }
         eksisterende?.let {
-            if ( it.forventetSluttdato != nytt.oppholdTom)
+            if (it.forventetSluttdato != nytt.oppholdTom)
                 it.copy(forventetSluttdato = nytt.oppholdTom)
             else it
         } ?: genererInstitusjonsopphold(nytt)
@@ -306,7 +310,11 @@ private fun mapTilSøknad(dto: OpprettTestcaseDTO, urelaterteBarn: List<TestPers
     )
 }
 
-private fun sendInnSøknad(dto: OpprettTestcaseDTO, gatewayProvider: GatewayProvider, repositoryRegistry: RepositoryRegistry): Sak {
+private fun sendInnSøknad(
+    dto: OpprettTestcaseDTO,
+    gatewayProvider: GatewayProvider,
+    repositoryRegistry: RepositoryRegistry
+): Sak {
     val ident = genererIdent(dto.fødselsdato)
     val barn = dto.barn.filter { it.harRelasjon }.map { genererBarn(it) }
     val urelaterteBarnIPDL = dto.barn.filter { !it.harRelasjon && it.skalFinnesIPDL }.map { genererBarn(it) }
@@ -328,6 +336,7 @@ private fun sendInnSøknad(dto: OpprettTestcaseDTO, gatewayProvider: GatewayProv
                         skadebeskrivelse = entry.skadebeskrivelse,
                         vedtaksdato = entry.vedtaksdato,
                     )
+
                     else -> null
                 }
             },
@@ -398,7 +407,7 @@ private fun sendInnSøknad(dto: OpprettTestcaseDTO, gatewayProvider: GatewayProv
     val sak = datasource.transaction { connection ->
         val repositoryProvider = repositoryRegistry.provider(connection)
         val sakService = PersonOgSakService(gatewayProvider, repositoryProvider)
-        val sak = sakService.finnEllerOpprett(ident, LocalDate.now())
+        val sak = sakService.finnEllerOpprett(ident, dto.søknadsdato ?: LocalDate.now())
 
         val flytJobbRepository = FlytJobbRepository(connection)
 
@@ -499,7 +508,7 @@ private fun opprettNySakOgBehandling(
 
             // Oppholdskrav
             if (dto.steg == StegType.VURDER_OPPHOLDSKRAV) return sak
-            løsOppholdskrav(behandling)
+            løsOppholdskrav(behandling, sak)
 
             // Institusjonsopphold
             if (dto.steg == StegType.DU_ER_ET_ANNET_STED) return sak

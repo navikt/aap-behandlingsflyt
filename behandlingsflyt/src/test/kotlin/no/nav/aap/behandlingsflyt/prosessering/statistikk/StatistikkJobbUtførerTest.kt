@@ -46,9 +46,12 @@ import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Avslagstype
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.AvsluttetBehandlingDTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.BeregningsgrunnlagDTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Diagnoser
+import no.nav.aap.behandlingsflyt.kontrakt.statistikk.DiagnoserMedPeriode
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Grunnlag11_19DTO
+import no.nav.aap.behandlingsflyt.kontrakt.statistikk.PeriodeDTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.ResultatKode
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.RettighetstypePeriode
+import no.nav.aap.behandlingsflyt.kontrakt.statistikk.SamordningDTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.StansEllerOpphør
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.StoppetBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.TilkjentYtelseDTO
@@ -96,6 +99,7 @@ import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.verdityper.Dagsatser
 import no.nav.aap.komponenter.verdityper.GUnit
 import no.nav.aap.komponenter.verdityper.Prosent
+import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.komponenter.verdityper.TimerArbeid
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.verdityper.dokument.JournalpostId
@@ -112,6 +116,8 @@ import java.time.temporal.ChronoUnit
 
 @Fakes
 class StatistikkJobbUtførerTest {
+    private val gatewayProvider = minimalGatewayProvider { }
+
     companion object {
         private lateinit var dataSource: TestDataSource
 
@@ -223,7 +229,9 @@ class StatistikkJobbUtførerTest {
 
         dataSource.transaction { connection ->
             StatistikkJobbUtfører(
-                statistikkMetoder = StatistikkMetoder(postgresRepositoryRegistry.provider(connection), minimalGatewayProvider {  }),
+                statistikkMetoder = StatistikkMetoder(
+                    postgresRepositoryRegistry.provider(connection),
+                    minimalGatewayProvider { }),
                 statistikkGateway = StatistikkGatewayImpl(),
             ).utfør(
                 JobbInput(StatistikkJobbUtfører).medPayload(hendelse2)
@@ -341,7 +349,7 @@ class StatistikkJobbUtførerTest {
                     ),
                 ),
             )
-            VedtakService(postgresRepositoryRegistry.provider(connection)).lagreVedtak(
+            VedtakService(postgresRepositoryRegistry.provider(connection), gatewayProvider).lagreVedtak(
                 opprettetBehandling.id, vedtakstidspunkt, LocalDate.now()
             )
             beregningsgrunnlagRepository.lagre(
@@ -498,7 +506,9 @@ class StatistikkJobbUtførerTest {
         dataSource.transaction { connection ->
             StatistikkJobbUtfører(
                 statistikkGateway = StatistikkGatewayImpl(),
-                statistikkMetoder = StatistikkMetoder(postgresRepositoryRegistry.provider(connection), minimalGatewayProvider {  }),
+                statistikkMetoder = StatistikkMetoder(
+                    postgresRepositoryRegistry.provider(connection),
+                    minimalGatewayProvider { }),
             ).utfør(
                 JobbInput(StatistikkJobbUtfører).medPayload(hendelse2)
             )
@@ -560,7 +570,21 @@ class StatistikkJobbUtførerTest {
                         årsaker = setOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Avslagsårsak.BRUKER_OVER_67)
                     )
                 ),
-            )
+                samordning = SamordningDTO(
+                    uføre = emptyList(),
+                    statligeYtelser = emptyList(),
+                    avregningAndreYtelser = emptyList(),
+                    arbeidsgiver = emptyList()
+                ),
+                diagnoserPeriodisert = listOf(
+                    DiagnoserMedPeriode(
+                        periodeDTO = PeriodeDTO(1 januar 2020, Tid.MAKS),
+                        kodeverk = "KODEVERK",
+                        diagnosekode = "PEST",
+                        bidiagnoser = listOf("KOLERA")
+                    )
+                )
+            ),
         )
     }
 
@@ -612,7 +636,9 @@ class StatistikkJobbUtførerTest {
                 påklagetBehandlingRepository = InMemoryPåklagetBehandlingRepository,
                 meldekortRepository = InMemoryMeldekortRepository,
                 klagedokumentInformasjonUtleder = KlagedokumentInformasjonUtleder(inMemoryRepositoryProvider),
-                avsluttetBehandlingTilStatistikk = AvsluttetBehandlingTilStatistikk(inMemoryRepositoryProvider, minimalGatewayProvider {  }),
+                avsluttetBehandlingTilStatistikk = AvsluttetBehandlingTilStatistikk(
+                    inMemoryRepositoryProvider,
+                    minimalGatewayProvider { }),
             )
         )
 

@@ -77,7 +77,7 @@ class UnderveisService(
         meldeperiodeRepository = repositoryProvider.provide(),
         overstyringMeldepliktRepository = repositoryProvider.provide(),
         arbeidsopptrappingRepository = repositoryProvider.provide(),
-        vedtakService = VedtakService(repositoryProvider),
+        vedtakService = VedtakService(repositoryProvider, gatewayProvider),
         vedtakslengdeRepository = repositoryProvider.provide(),
         behandlingRepository = repositoryProvider.provide(),
         unleashGateway = gatewayProvider.provide(),
@@ -256,7 +256,7 @@ class UnderveisService(
         return vedtattUnderveis?.perioder?.maxOfOrNull { it.periode.tom }
     }
 
-    fun rettighethetsType(behandlingId: BehandlingId): Tidslinje<RettighetsType> {
+    fun rettighetsType(behandlingId: BehandlingId): Tidslinje<RettighetsType> {
         return underveisRepository.hentHvisEksisterer(behandlingId)
             ?.somTidslinje().orEmpty()
             .mapNotNull { it.rettighetsType }

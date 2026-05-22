@@ -17,10 +17,10 @@ import no.nav.aap.komponenter.verdityper.Bruker
 import java.net.URI
 
 object DokarkivGatewayImpl : DokarkivGateway {
-    private val baseUrl = requiredConfigForKey("integrasjon.dokarkiv.url")
+    private val baseUrl = requiredConfigForKey("INTEGRASJON_DOKARKIV_URL")
 
     private val httpClient = RestClient.withDefaultResponseHandler(
-        ClientConfig(scope = requiredConfigForKey("integrasjon.dokarkiv.scope")),
+        ClientConfig(scope = requiredConfigForKey("INTEGRASJON_DOKARKIV_SCOPE")),
         tokenProvider = AzureM2MTokenProvider,
         prometheus = prometheus
     )

@@ -222,8 +222,8 @@ class EtableringEgenVirksomhetRepositoryImpl(private val connection: DBConnectio
                 setLongArray(2, vurderingerIds)
                 setLongArray(3, vurderingerIds)
                 setLongArray(4, utviklingIds)
-                setLongArray(5, utviklingIds)
-                setLongArray(6, oppstartIds)
+                setLongArray(5, oppstartIds)
+                setLongArray(6, utviklingIds)
                 setLongArray(7, oppstartIds)
             }
         }

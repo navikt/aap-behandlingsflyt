@@ -20,9 +20,9 @@ import java.net.URI
  * Se Swagger: https://yrkesskade-saker.intern.dev.nav.no/swagger-ui/index.html#/Saker%20API/hentSaker
  */
 object YrkesskadeRegisterGatewayImpl : YrkesskadeRegisterGateway {
-    private val url = URI.create(requiredConfigForKey("integrasjon.yrkesskade.url")).resolve("/api/v1/saker/")
+    private val url = URI.create(requiredConfigForKey("INTEGRASJON_YRKESSKADE_URL")).resolve("/api/v1/saker/")
     private val config = ClientConfig(
-        scope = requiredConfigForKey("integrasjon.yrkesskade.scope"),
+        scope = requiredConfigForKey("INTEGRASJON_YRKESSKADE_SCOPE"),
         additionalHeaders = listOf(Header("Nav-Consumer-Id", "aap-behandlingsflyt"))
     )
     private val client = RestClient.withDefaultResponseHandler(

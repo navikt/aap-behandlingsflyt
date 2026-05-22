@@ -754,5 +754,5 @@ class EnklereFlytOrkestratorTest {
 }
 
 object EnklereFlytOrkestratorTestUnleash : FakeUnleashBaseWithDefaultDisabled(
-    enabledFlags = listOf(BehandlingsflytFeature.FjernTilbakefoeringTransisjon)
+    enabledFlags = emptyList()
 )

@@ -17,7 +17,7 @@ class DefaultAuditLogConfig(
     private val repositoryRegistry: RepositoryRegistry,
 ) {
     private val auditLogger = LoggerFactory.getLogger("auditLogger")
-    private val app = requiredConfigForKey("nais.app.name")
+    private val app = requiredConfigForKey("NAIS_APP_NAME")
 
     fun fraBehandlingPathParam(pathParam: String, dataSource: DataSource) =
         AuditLogPathParamConfig(
