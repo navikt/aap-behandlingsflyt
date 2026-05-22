@@ -61,19 +61,20 @@ class MeldingOmVedtakBrevSteg(
         val brevBehov = brevUtlederService.utledBehovForMeldingOmVedtak(kontekst.behandlingId)
         val harBestillingOmVedtakBrev = brevbestillingService.harBestillingOmVedtak(kontekst.behandlingId)
 
-        val definisjon = when (brevBehov) {
-            is KlageOpprettholdelse -> Definisjon.SKRIV_VEDTAKSBREV_SAKSBEHANDLER
-            else -> Definisjon.SKRIV_VEDTAKSBREV
+        listOf(
+            Definisjon.SKRIV_VEDTAKSBREV,
+            Definisjon.SKRIV_VEDTAKSBREV_SAKSBEHANDLER
+        ).forEach { definisjon ->
+            avklaringsbehovService.oppdaterAvklaringsbehov(
+                definisjon,
+                vedtakBehøverVurdering = { vedtakBehøverVurdering(behandlingErAvbrutt, definisjon, brevBehov) },
+                erTilstrekkeligVurdert =
+                    { brevbestillingService.erAlleBestillingerOmVedtakIEndeTilstand(kontekst.behandlingId) },
+                tilbakestillGrunnlag = { tilbakestillGrunnlag(kontekst.behandlingId) },
+                kontekst
+            )
         }
 
-        avklaringsbehovService.oppdaterAvklaringsbehov(
-            definisjon,
-            vedtakBehøverVurdering = { vedtakBehøverVurdering(behandlingErAvbrutt, brevBehov) },
-            erTilstrekkeligVurdert =
-                { brevbestillingService.erAlleBestillingerOmVedtakIEndeTilstand(kontekst.behandlingId) },
-            tilbakestillGrunnlag = { tilbakestillGrunnlag(kontekst.behandlingId) },
-            kontekst
-        )
         if (brevBehov != null && !behandlingErAvbrutt && !harBestillingOmVedtakBrev) {
             bestillBrev(kontekst, brevBehov)
         }
@@ -97,8 +98,16 @@ class MeldingOmVedtakBrevSteg(
         }
     }
 
-    private fun vedtakBehøverVurdering(behandlingErAvbrutt: Boolean, brevBehov: BrevBehov?): Boolean {
-        return !behandlingErAvbrutt && brevBehov != null && !brevBehov.typeBrev.erAutomatiskBrev()
+    private fun vedtakBehøverVurdering(
+        behandlingErAvbrutt: Boolean,
+        forDefinisjon: Definisjon,
+        brevBehov: BrevBehov?
+    ): Boolean {
+        val harManueltBrevbehov = (!behandlingErAvbrutt && brevBehov != null && !brevBehov.typeBrev.erAutomatiskBrev())
+        return when (brevBehov) {
+            is KlageOpprettholdelse -> harManueltBrevbehov && forDefinisjon == Definisjon.SKRIV_VEDTAKSBREV_SAKSBEHANDLER
+            else -> harManueltBrevbehov && forDefinisjon == Definisjon.SKRIV_VEDTAKSBREV
+        }
     }
 
     private fun bestillBrev(kontekst: FlytKontekstMedPerioder, brevBehov: BrevBehov) {
