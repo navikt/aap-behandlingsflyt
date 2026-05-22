@@ -238,8 +238,6 @@ internal fun Application.server(
     val scheduler = utførMigreringer(fellesDataSource, gatewayProvider, environment.log)
 
     val motor = startMotor(motorDataSource, repositoryRegistry, gatewayProvider, prometheus)
-    val manglendeDokumentasjonMigrering = MigreringManglendeDokumentasjon(repositoryRegistry, gatewayProvider, fellesDataSource)
-        .migrer()
 
     startKafkakonsumenter(fellesDataSource, repositoryRegistry, gatewayProvider)
     TilgangGateway.initialiserPrometheus(prometheus)
@@ -255,7 +253,6 @@ internal fun Application.server(
         try {
             scheduler.shutdownNow()
             // Helt til slutt, nå som vi har stanset Motor, etc. Lukk database-koblingen.
-            manglendeDokumentasjonMigrering.shutdownNow()
             fellesDataSource.close()
             motorDataSource.close()
         } catch (_: Exception) {
