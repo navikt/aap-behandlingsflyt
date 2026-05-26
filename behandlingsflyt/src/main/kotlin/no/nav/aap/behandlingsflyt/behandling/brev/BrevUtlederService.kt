@@ -401,9 +401,9 @@ class BrevUtlederService(
         val beregningstidspunktVurdering =
             beregningVurderingRepository.hentHvisEksisterer(behandlingId)?.tidspunktVurdering
         // TODO: tilkjentYtelseRepository kalles også i utledTilkjentYtelse — trekk hentingen opp til kallstedet og send ned til begge
-        val minstesats = dato?.let {
+        val minstesats = if (Miljø.erDev()) dato?.let {
             tilkjentYtelseRepository.hentHvisEksisterer(behandlingId)?.tilTidslinje()?.segment(it)?.verdi?.minsteSats
-        }
+        } else null
 
         return when (grunnlag) {
             is Grunnlag11_19 -> {
@@ -486,7 +486,7 @@ class BrevUtlederService(
             beregningstidspunkt = beregningstidspunkt,
             inntekterPerÅr = inntekter,
             beregningsgrunnlag = beregningsgrunnlag,
-            beregningsutfallKategori = utledBeregningsutfallKategori(grunnlag, minstesats),
+            beregningsutfallKategori = if (Miljø.erDev()) utledBeregningsutfallKategori(grunnlag, minstesats) else null,
         )
     }
 
@@ -506,7 +506,7 @@ class BrevUtlederService(
             beregningstidspunkt = beregningstidspunkt,
             inntekterPerÅr = inntekter,
             beregningsgrunnlag = beregningsgrunnlag,
-            beregningsutfallKategori = utledBeregningsutfallKategori(vinnende, minstesats),
+            beregningsutfallKategori = if (Miljø.erDev()) utledBeregningsutfallKategori(vinnende, minstesats) else null,
         )
     }
 
