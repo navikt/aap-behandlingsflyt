@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.yrkesskade
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.BackfillKandidat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.SkadekombinasjonRegister
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.Yrkesskade
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeGrunnlag
@@ -133,52 +132,6 @@ class YrkesskadeRepositoryImpl(private val connection: DBConnection) : Yrkesskad
                     setString(10, yrkesskade.skadekombinasjonerTekst)
                     setLocalDateTime(11, LocalDateTime.now())
                 }
-            }
-        }
-    }
-
-    override fun hentKandidaterForBackfill(): List<BackfillKandidat> =
-        connection.queryList(
-            """
-        SELECT yd.id AS yrkesskade_dato_id, yg.behandling_id,
-               yd.referanse, yd.yrkesskade_saksnummer, yd.kildesystem, yd.skadedato
-        FROM yrkesskade_dato yd
-        JOIN yrkesskade y           ON y.id = yd.yrkesskade_id
-        JOIN yrkesskade_grunnlag yg ON yg.yrkesskade_id = y.id AND yg.aktiv = true
-        WHERE yd.skadeart IS NULL
-        """
-        ) {
-            setRowMapper { row ->
-                BackfillKandidat(
-                    yrkesskadeDatoId = row.getLong("yrkesskade_dato_id"),
-                    behandlingId = BehandlingId(row.getLong("behandling_id")),
-                    ref = row.getString("referanse"),
-                    saksnummer = row.getIntOrNull("yrkesskade_saksnummer"),
-                    kildesystem = row.getStringOrNull("kildesystem") ?: "UKJENT",
-                    skadedato = row.getLocalDateOrNull("skadedato"),
-                )
-            }
-        }
-
-    override fun backfillYrkesskadeDato(yrkesskadeDatoId: Long, yrkesskade: Yrkesskade) {
-        connection.execute(
-            """
-        UPDATE yrkesskade_dato
-        SET vedtaksdato              = ?,
-            skadeart                 = ?,
-            diagnose                 = ?,
-            skadekombinasjoner       = ?,
-            skadekombinasjoner_tekst = ?
-        WHERE id = ?
-        """
-        ) {
-            setParams {
-                setLocalDate(1, yrkesskade.vedtaksdato)
-                setString(2, yrkesskade.skadeart)
-                setString(3, yrkesskade.diagnose)
-                setString(4, yrkesskade.skadekombinasjoner?.joinToString(","))
-                setString(5, yrkesskade.skadekombinasjonerTekst)
-                setLong(6, yrkesskadeDatoId)
             }
         }
     }
