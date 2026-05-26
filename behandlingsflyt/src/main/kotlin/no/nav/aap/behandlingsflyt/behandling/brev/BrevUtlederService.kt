@@ -540,9 +540,7 @@ class BrevUtlederService(
         }
         val uføreValgKategori = when (grunnlag.type()) {
             GrunnlagUføre.Type.STANDARD -> GrunnlagBeregning.UføreValgKategori.UFORETIDSPUNKT
-            GrunnlagUføre.Type.YTTERLIGERE_NEDSATT ->
-                if (grunnlag.uføregrader().size > 1) GrunnlagBeregning.UføreValgKategori.YTTERLIGERE_NEDSATT_OKT_UFOREGRAD
-                else GrunnlagBeregning.UføreValgKategori.YTTERLIGERE_NEDSATT
+            GrunnlagUføre.Type.YTTERLIGERE_NEDSATT -> GrunnlagBeregning.UføreValgKategori.YTTERLIGERE_NEDSATT
         }
         return GrunnlagBeregning(
             beregningstidspunkt = beregningstidspunkt,

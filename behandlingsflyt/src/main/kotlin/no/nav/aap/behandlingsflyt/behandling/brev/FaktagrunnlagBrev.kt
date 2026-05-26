@@ -36,10 +36,8 @@ data class GrunnlagBeregning(
     enum class UføreValgKategori {
         /** § 11-28 fjerde ledd: Beregningstidspunkt = uføretidspunktet. [GrunnlagUføre.Type.STANDARD]. */
         UFORETIDSPUNKT,
-        /** § 11-28 fjerde ledd: Ytterligere nedsatt-tidspunktet ga høyere grunnlag. Én uføregrad-periode. */
+        /** § 11-28 fjerde ledd: Ytterligere nedsatt-tidspunktet ga høyere grunnlag. */
         YTTERLIGERE_NEDSATT,
-        /** § 11-28 fjerde ledd: Som [YTTERLIGERE_NEDSATT], men uføregrad ble økt underveis (flere perioder). */
-        YTTERLIGERE_NEDSATT_OKT_UFOREGRAD,
     }
 
     /** Kun satt for [Beregningstype.YRKESSKADE] og [Beregningstype.YRKESSKADE_UFØRE]. Null ellers. */
