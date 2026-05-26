@@ -68,6 +68,8 @@ import no.nav.aap.komponenter.verdityper.TimerArbeid
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.util.ReadsSystemProperty
+import org.junit.jupiter.api.util.RestoreSystemProperties
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -87,6 +89,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertIs
 import kotlin.test.assertNotNull
 
+@ReadsSystemProperty
 class BrevUtlederServiceTest {
     val repositoryProvider = inMemoryRepositoryProvider
     val gatewayProvider = createGatewayProvider {
@@ -451,16 +454,12 @@ class BrevUtlederServiceTest {
     }
 
     @Nested
+    @RestoreSystemProperties
     inner class TestGruppe_BeregningsutfallKategori {
 
         @BeforeEach
         fun settDevMiljø() {
             System.setProperty("NAIS_CLUSTER_NAME", "dev-gcp")
-        }
-
-        @AfterEach
-        fun tilbakestillMiljø() {
-            System.clearProperty("NAIS_CLUSTER_NAME")
         }
 
         @Test

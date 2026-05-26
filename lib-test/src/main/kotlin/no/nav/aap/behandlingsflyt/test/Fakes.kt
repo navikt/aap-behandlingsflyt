@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.test
 
 import org.junit.jupiter.api.extension.ExtendWith
+import org.junit.jupiter.api.util.ReadsSystemProperty
 
 @Target(
     AnnotationTarget.FUNCTION,
@@ -13,4 +14,5 @@ import org.junit.jupiter.api.extension.ExtendWith
 @ExtendWith(
     FakesExtension::class
 )
+@ReadsSystemProperty
 annotation class Fakes
