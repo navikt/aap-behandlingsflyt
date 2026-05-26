@@ -148,9 +148,8 @@ class InstitusjonApiTest {
                 oppholdene = Oppholdene(id = 1L, opphold = listOf(opphold1, opphold2))
             )
 
-            assertThrows<UgyldigForespørselException> {
-                byggTidslinjeForInstitusjonsopphold(grunnlag, Institusjonstype.HS)
-            }
+            val result = byggTidslinjeForInstitusjonsopphold(grunnlag, Institusjonstype.HS)
+            assertThat(result.isInvalid).isTrue()
         }
 
         @Test

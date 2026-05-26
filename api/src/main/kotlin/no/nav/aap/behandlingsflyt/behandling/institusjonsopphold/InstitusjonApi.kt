@@ -330,7 +330,7 @@ fun byggTidslinjeForInstitusjonsopphold(
     segments.zipWithNext { current, next ->
         if (current.periode.tom > next.periode.fom) {
             return Validation.Invalid(
-                Tidslinje(segments),
+                Tidslinje(),
                 "Overlappende institusjonsopphold funnet: " +
                         "(${current.periode}) overlapper med " +
                         "(${next.periode}). " +
@@ -340,16 +340,6 @@ fun byggTidslinjeForInstitusjonsopphold(
     }
 
     val håndterOverlapp = segments.zipWithNext { current, next ->
-
-        if (current.periode.tom > next.periode.fom) {
-            throw UgyldigForespørselException(
-                "Overlappende institusjonsopphold funnet: " +
-                        "(${current.periode}) overlapper med " +
-                        "(${next.periode}). " +
-                        "Oppholdene må korrigeres i kildesystemet (INST2)."
-            )
-        }
-
         if (current.periode.tom == next.periode.fom) {
             current.copy(periode = Periode(current.periode.fom, current.periode.tom.minusDays(1)))
         } else {
