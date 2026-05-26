@@ -14,7 +14,9 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
 
 class DatadelingMeldekortService(
@@ -23,6 +25,13 @@ class DatadelingMeldekortService(
     private val mottattDokumentRepository: MottattDokumentRepository,
     private val meldeperiodeRepository: MeldeperiodeRepository,
 ) {
+    constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
+        saksRepository = repositoryProvider.provide(),
+        underveisRepository = repositoryProvider.provide(),
+        mottattDokumentRepository = repositoryProvider.provide(),
+        meldeperiodeRepository = repositoryProvider.provide(),
+    )
+
     private val log = LoggerFactory.getLogger(javaClass)
 
     internal fun opprettKontraktObjekter(

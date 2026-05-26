@@ -1,14 +1,9 @@
 package no.nav.aap.behandlingsflyt.prosessering.datadeling
 
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.meldeperiode.MeldeperiodeRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.MeldekortRepository
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.ApiInternGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.JobbInput
@@ -17,27 +12,17 @@ import no.nav.aap.motor.ProvidersJobbSpesifikasjon
 import org.slf4j.LoggerFactory
 
 class DatadelingMeldekortJobbUtfører(
-    private val saksRepository: SakRepository,
-    private val underveisRepository: UnderveisRepository,
-    private val meldekortRepository: MeldekortRepository,
-    private val meldeperiodeRepository: MeldeperiodeRepository,
-    private val mottattDokumentRepository: MottattDokumentRepository,
     private val apiInternGateway: ApiInternGateway,
+    private val datadelingMeldekortService: DatadelingMeldekortService
 ) : JobbUtfører {
 
     private val log = LoggerFactory.getLogger(javaClass)
-    private val service = DatadelingMeldekortService(
-        saksRepository,
-        underveisRepository,
-        mottattDokumentRepository,
-        meldeperiodeRepository,
-    )
 
     override fun utfør(input: JobbInput) {
         val sakId = SakId(input.sakId())
         val behandlingId = BehandlingId(input.behandlingId())
 
-        val kontraktObjekter = service.opprettKontraktObjekter(sakId, behandlingId)
+        val kontraktObjekter = datadelingMeldekortService.opprettKontraktObjekter(sakId, behandlingId)
 
         if (kontraktObjekter.isEmpty()) {
             log.info("Ingen meldekort-detaljer å sende, tom liste mottatt for sakId=${sakId}, behandlingId=${behandlingId}")
@@ -54,15 +39,9 @@ class DatadelingMeldekortJobbUtfører(
                 """.trimIndent()
 
         override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): JobbUtfører {
-            val sakRepository = repositoryProvider.provide<SakRepository>()
-
             return DatadelingMeldekortJobbUtfører(
                 apiInternGateway = gatewayProvider.provide(ApiInternGateway::class),
-                saksRepository = sakRepository,
-                underveisRepository = repositoryProvider.provide<UnderveisRepository>(),
-                meldekortRepository = repositoryProvider.provide<MeldekortRepository>(),
-                meldeperiodeRepository = repositoryProvider.provide<MeldeperiodeRepository>(),
-                mottattDokumentRepository = repositoryProvider.provide<MottattDokumentRepository>(),
+                datadelingMeldekortService = DatadelingMeldekortService(repositoryProvider, gatewayProvider)
             )
         }
 
