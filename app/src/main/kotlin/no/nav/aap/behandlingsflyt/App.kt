@@ -232,8 +232,6 @@ internal fun Application.server(
     Migrering.migrate(fellesDataSource)
 
     val motor = startMotor(motorDataSource, repositoryRegistry, gatewayProvider, prometheus)
-    val manglendeDokumentasjonMigrering = MigreringManglendeDokumentasjon(repositoryRegistry, gatewayProvider, fellesDataSource)
-        .migrer()
 
     startKafkakonsumenter(fellesDataSource, repositoryRegistry, gatewayProvider)
     TilgangGateway.initialiserPrometheus(prometheus)
@@ -248,7 +246,6 @@ internal fun Application.server(
         environment.log.info("ktor har fullført nedstoppingen sin. Eventuelle requester og annet arbeid som ikke ble fullført innen timeout ble avbrutt.")
         try {
             // Helt til slutt, nå som vi har stanset Motor, etc. Lukk database-koblingen.
-            manglendeDokumentasjonMigrering.shutdownNow()
             fellesDataSource.close()
             motorDataSource.close()
         } catch (_: Exception) {

@@ -379,7 +379,7 @@ class ForutgåendeMedlemskapVurderingService(
         return TilhørighetVurdering(
             kilde = listOf(Kilde.A_INNTEKT, Kilde.AA_REGISTERET, Kilde.EREG),
             indikasjon = Indikasjon.I_NORGE,
-            opplysning = "Sammenhengende arbeid og inntekt i Norge siste 5 år",
+            opplysning = "Arbeids- og inntektshistorikk i Norge siste 5 år",
             resultat = sammenhengendeInntektSiste5År,
             arbeidInntektINorgeGrunnlag = arbeidInntektINorgeGrunnlag,
             vurdertPeriode = VurdertPeriode.SISTE_5_ÅR.beskrivelse,

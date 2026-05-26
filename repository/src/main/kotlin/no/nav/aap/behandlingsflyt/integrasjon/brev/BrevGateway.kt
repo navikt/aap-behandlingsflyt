@@ -464,7 +464,9 @@ class BrevGateway : BrevbestillingGateway {
             yrkesskader = yrkesskadeBeregning.yrkesskader.map {
                 Faktagrunnlag.YrkesskadeBeregning.Yrkesskade(
                     yrkesskadedato = it.yrkesskadedato,
-                    arbeidsinntektPaaSkadetidspunktet = it.arbeidsinntektPaaSkadetidspunktet  ?: BigDecimal.ZERO,
+                    arbeidsinntektPaaSkadetidspunktet = it.arbeidsinntektPaaSkadetidspunktet,
+                    relevantForArbeidsevne = it.relevantForArbeidsevne,
+                    diagnose = it.diagnose,
                 )
             },
             andelAvNedsettelseSomSkyldesYrkesskade = yrkesskadeBeregning.andelAvNedsettelseSomSkyldesYrkesskade,
@@ -478,9 +480,20 @@ class BrevGateway : BrevbestillingGateway {
             inntekterPerÅr = grunnlagBeregning.inntekterPerÅr.map {
                 Faktagrunnlag.GrunnlagBeregning.InntektPerÅr(it.år, it.inntekt)
             },
+            beregningsutfallKategori = grunnlagBeregning.tilKontrakt(),
         )
 
     }
+
+    private fun GrunnlagBeregning.tilKontrakt(): Faktagrunnlag.GrunnlagBeregning.BeregningsutfallKategori? =
+        when (beregningsutfallKategori) {
+            GrunnlagBeregning.BeregningsutfallKategori.SISTE_AAR -> Faktagrunnlag.GrunnlagBeregning.BeregningsutfallKategori.SISTE_AAR
+            GrunnlagBeregning.BeregningsutfallKategori.GJENNOMSNITT -> Faktagrunnlag.GrunnlagBeregning.BeregningsutfallKategori.GJENNOMSNITT
+            GrunnlagBeregning.BeregningsutfallKategori.MINSTESATS_OVER_25 -> Faktagrunnlag.GrunnlagBeregning.BeregningsutfallKategori.MINSTESATS_OVER_25
+            GrunnlagBeregning.BeregningsutfallKategori.MINSTESATS_UNDER_25 -> Faktagrunnlag.GrunnlagBeregning.BeregningsutfallKategori.MINSTESATS_UNDER_25
+            GrunnlagBeregning.BeregningsutfallKategori.INNTEKT_OVER_6G -> Faktagrunnlag.GrunnlagBeregning.BeregningsutfallKategori.INNTEKT_OVER_6G
+            null -> null
+        }
 
     private fun forholdTilAndreYtelserTilFaktagrunnlag(forholdTilAndreYtelser: ForholdTilAndreYtelser): Faktagrunnlag {
         return Faktagrunnlag.ForholdTilAndreYtelser(
