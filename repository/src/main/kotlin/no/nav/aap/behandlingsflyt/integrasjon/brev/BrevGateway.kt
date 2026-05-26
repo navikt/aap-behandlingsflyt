@@ -480,12 +480,11 @@ class BrevGateway : BrevbestillingGateway {
             inntekterPerÅr = grunnlagBeregning.inntekterPerÅr.map {
                 Faktagrunnlag.GrunnlagBeregning.InntektPerÅr(it.år, it.inntekt)
             },
-            beregningsutfallKategori = grunnlagBeregning.tilKontrakt(),
+            beregningsutfallKategori = grunnlagBeregning.utfallTilKontrakt(),
         )
-
     }
 
-    private fun GrunnlagBeregning.tilKontrakt(): Faktagrunnlag.GrunnlagBeregning.BeregningsutfallKategori? =
+    private fun GrunnlagBeregning.utfallTilKontrakt(): Faktagrunnlag.GrunnlagBeregning.BeregningsutfallKategori? =
         when (beregningsutfallKategori) {
             GrunnlagBeregning.BeregningsutfallKategori.SISTE_AAR -> Faktagrunnlag.GrunnlagBeregning.BeregningsutfallKategori.SISTE_AAR
             GrunnlagBeregning.BeregningsutfallKategori.GJENNOMSNITT -> Faktagrunnlag.GrunnlagBeregning.BeregningsutfallKategori.GJENNOMSNITT
@@ -494,6 +493,10 @@ class BrevGateway : BrevbestillingGateway {
             GrunnlagBeregning.BeregningsutfallKategori.INNTEKT_OVER_6G -> Faktagrunnlag.GrunnlagBeregning.BeregningsutfallKategori.INNTEKT_OVER_6G
             null -> null
         }
+
+    // TODO: Legg til mapping av beregningstype, beregningsmetode, uføreValgKategori, yrkesskadeValgKategori
+    //       når aap-brev:kontrakt er publisert med nye felt (beregningsgrunnlag_i_brev_full)
+
 
     private fun forholdTilAndreYtelserTilFaktagrunnlag(forholdTilAndreYtelser: ForholdTilAndreYtelser): Faktagrunnlag {
         return Faktagrunnlag.ForholdTilAndreYtelser(

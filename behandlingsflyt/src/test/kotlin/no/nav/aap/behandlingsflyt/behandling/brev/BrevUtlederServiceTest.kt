@@ -442,6 +442,9 @@ class BrevUtlederServiceTest {
                             InntektPerÅr(Year.of(2022), inntekt = BigDecimal("200000.00")),
                         ),
                         beregningsgrunnlag = null,
+                        beregningsmetode = GrunnlagBeregning.Beregningsmetode.SISTE_ÅR,
+                        beregningstype = GrunnlagBeregning.Beregningstype.STANDARD,
+                        uføreValgKategori = null,
                         beregningsutfallKategori = null // kun satt i dev (Miljø.erDev())
                     ),
                     tilkjentYtelse = null
