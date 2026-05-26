@@ -514,7 +514,7 @@ class BrevUtlederService(
             beregningsmetode = beregningsmetode,
             beregningstype = beregningstype,
             uføreValgKategori = null,
-            yrkesskadeValgKategori = yrkesskadeValgKategori,
+            yrkesskadeValgKategori = if (Miljø.erDev()) yrkesskadeValgKategori else null,
             beregningsutfallKategori = if (Miljø.erDev()) utledBeregningsutfallKategori(grunnlag, minstesats) else null,
         )
     }
@@ -548,8 +548,8 @@ class BrevUtlederService(
             beregningsgrunnlag = beregningsgrunnlag,
             beregningsmetode = beregningsmetode,
             beregningstype = beregningstype,
-            uføreValgKategori = uføreValgKategori,
-            yrkesskadeValgKategori = yrkesskadeValgKategori,
+            uføreValgKategori = if (Miljø.erDev()) uføreValgKategori else null,
+            yrkesskadeValgKategori = if (Miljø.erDev()) yrkesskadeValgKategori else null,
             beregningsutfallKategori = if (Miljø.erDev()) utledBeregningsutfallKategori(vinnende, minstesats) else null,
         )
     }
