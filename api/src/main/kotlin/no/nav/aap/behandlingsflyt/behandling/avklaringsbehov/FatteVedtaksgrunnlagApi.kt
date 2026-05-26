@@ -193,9 +193,14 @@ private fun tilKvalitetssikring(it: Avklaringsbehov): TotrinnsVurdering {
             godkjent,
             sisteVurdering?.begrunnelse,
             sisteVurdering?.årsakTilRetur.orEmpty(),
-            emptyList(),
+            markeringer = emptyList(),
         )
     } else {
-        TotrinnsVurdering(it.definisjon.kode, null, null, emptyList(), emptyList())
+        TotrinnsVurdering(
+            it.definisjon.kode,
+            null,
+            null,
+            emptyList(),
+            markeringer = emptyList())
     }
 }

@@ -176,9 +176,14 @@ private fun tilKvalitetssikring(it: no.nav.aap.behandlingsflyt.behandling.avklar
             godkjent,
             sisteVurdering?.begrunnelse,
             sisteVurdering?.årsakTilRetur.orEmpty(),
-            emptyList(),
+            markeringer = emptyList(),
         )
     } else {
-        TotrinnsVurdering(it.definisjon.kode, null, null, emptyList(), emptyList())
+        TotrinnsVurdering(
+            it.definisjon.kode,
+            null,
+            null,
+            emptyList(),
+            markeringer = emptyList())
     }
 }

@@ -236,7 +236,7 @@ class TestBehandlingFullføringService(
         Definisjon.KVALITETSSIKRING -> KvalitetssikringLøsning(
             alleAvklaringsbehov
                 .filter { it.erIkkeAvbrutt() && (it.erTotrinn() || it.kreverKvalitetssikring()) }
-                .map { TotrinnsVurdering(it.definisjon.kode, true, "begrunnelse", emptyList(), emptyList()) }
+                .map { TotrinnsVurdering(it.definisjon.kode, true, "begrunnelse", emptyList(), markeringer = emptyList()) }
         )
 
         Definisjon.FASTSETT_BEREGNINGSTIDSPUNKT -> FastsettBeregningstidspunktLøsning(
@@ -362,7 +362,7 @@ class TestBehandlingFullføringService(
         Definisjon.FATTE_VEDTAK -> FatteVedtakLøsning(
             alleAvklaringsbehov
                 .filter { it.erIkkeAvbrutt() && it.erTotrinn() }
-                .map { TotrinnsVurdering(it.definisjon.kode, true, "begrunnelse", emptyList(), emptyList()) }
+                .map { TotrinnsVurdering(it.definisjon.kode, true, "begrunnelse", emptyList(), markeringer = emptyList()) }
         )
 
         Definisjon.SKRIV_VEDTAKSBREV -> {

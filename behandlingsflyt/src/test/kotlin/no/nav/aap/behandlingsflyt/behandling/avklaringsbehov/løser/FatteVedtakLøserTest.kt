@@ -84,7 +84,7 @@ class FatteVedtakLøserTest {
                         godkjent = false,
                         begrunnelse = "nei",
                         grunner = null,
-                        emptyList()
+                        markeringer = emptyList()
                     )
                 ),
                 behovstype = AvklaringsbehovKode.`5010`
