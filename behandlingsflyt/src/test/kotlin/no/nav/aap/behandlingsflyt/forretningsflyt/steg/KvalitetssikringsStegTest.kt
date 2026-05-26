@@ -170,7 +170,8 @@ class KvalitetssikringsStegTest {
                             definisjon = it.kode,
                             godkjent = it in godkjente,
                             begrunnelse = if (it in underkjente) "Ikke godkjent" else null,
-                            grunner = emptyList()
+                            grunner = emptyList(),
+                            markeringer = emptyList()
                         )
                     }
                 )

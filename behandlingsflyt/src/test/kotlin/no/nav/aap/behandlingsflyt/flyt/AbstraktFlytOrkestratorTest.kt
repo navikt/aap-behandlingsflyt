@@ -1254,7 +1254,11 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
             KvalitetssikringLøsning(alleAvklaringsbehov.filter { behov -> behov.erTotrinn() || behov.kreverKvalitetssikring() }
                 .map { behov ->
                     TotrinnsVurdering(
-                        behov.definisjon.kode, behov.definisjon !in underkjennVurderinger, "begrunnelse", emptyList()
+                        behov.definisjon.kode,
+                        behov.definisjon !in underkjennVurderinger,
+                        "begrunnelse",
+                        emptyList(),
+                        markeringer = emptyList()
                     )
                 }),
             bruker,
@@ -1349,7 +1353,8 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
                             behov.definisjon.kode,
                             behov.definisjon !in underkjennVurderinger,
                             "begrunnelse",
-                            emptyList()
+                            emptyList(),
+                            markeringer = emptyList()
                         )
                     }),
             Bruker("BESLUTTER")
