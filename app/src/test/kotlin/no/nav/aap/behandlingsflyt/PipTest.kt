@@ -36,13 +36,11 @@ import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.util.WritesSystemProperty
 import java.io.InputStream
 import java.net.URI
 import java.time.LocalDate
 
 @Fakes
-@WritesSystemProperty
 class PipTest {
     companion object {
         private val postgres = postgreSQLContainer()
