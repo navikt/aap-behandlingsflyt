@@ -106,12 +106,6 @@ object FakeServers : AutoCloseable {
         allFakes.forEach { it.start() }
         setProperties()
         started.set(true)
-
-        val texasPort = texas.port()
-        val writer = BufferedWriter(FileWriter(".texas_port.txt"))
-        writer.use {
-            it.write(texasPort.toString(10))
-        }
     }
 
     private fun setProperties() {
