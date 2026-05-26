@@ -34,7 +34,7 @@ data class GrunnlagBeregning(
 
     /** Kun satt for [Beregningstype.UFØRE] og [Beregningstype.YRKESSKADE_UFØRE]. Null ellers. */
     enum class UføreValgKategori {
-        /** § 11-19: Beregningstidspunkt = uføretidspunktet. [GrunnlagUføre.Type.STANDARD]. */
+        /** § 11-28 fjerde ledd: Beregningstidspunkt = uføretidspunktet. [GrunnlagUføre.Type.STANDARD]. */
         UFORETIDSPUNKT,
         /** § 11-28 fjerde ledd: Ytterligere nedsatt-tidspunktet ga høyere grunnlag. Én uføregrad-periode. */
         YTTERLIGERE_NEDSATT,
@@ -52,11 +52,11 @@ data class GrunnlagBeregning(
         FORDEL_70_ELLER_MINDRE,
     }
 
-    /** Alltid satt når beregningsgrunnlag foreligger. Resultat av § 11-16-beregningen. */
+    /** Resultat av § 11-19-beregningen. Kun satt i dev (Miljø.erDev()). */
     enum class BeregningsutfallKategori {
         SISTE_AAR,
         GJENNOMSNITT,
-        MINSTESATS_25_ELLER_MER,
+        MINSTESATS_OVER_25,
         MINSTESATS_UNDER_25,
         INNTEKT_OVER_6G,
     }
@@ -121,5 +121,7 @@ data class YrkesskadeBeregningBrev(
     data class Yrkesskade(
         val yrkesskadedato: LocalDate,
         val arbeidsinntektPaaSkadetidspunktet: BigDecimal?,
+        val relevantForArbeidsevne: Boolean,
+        val diagnose: String?,
     )
 }

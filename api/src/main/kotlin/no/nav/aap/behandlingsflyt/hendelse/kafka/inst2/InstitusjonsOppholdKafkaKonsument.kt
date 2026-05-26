@@ -23,7 +23,7 @@ import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
 val INSTITUSJONSOPPHOLD_EVENT_TOPIC: String =
-    requiredConfigForKey("integrasjon.institusjonsopphold.event.topic")
+    requiredConfigForKey("INTEGRASJON_INSTITUSJONSOPPHOLD_EVENT_TOPIC")
 
 class InstitusjonsOppholdKafkaKonsument(
     config: KafkaConsumerConfig<String, InstitusjonsOppholdHendelseKafkaMelding>,

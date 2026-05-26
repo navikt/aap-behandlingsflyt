@@ -1,7 +1,5 @@
 package no.nav.aap.behandlingsflyt.test.inmemoryrepo
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.BackfillKandidat
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.Yrkesskade
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.Yrkesskader
@@ -36,37 +34,6 @@ object InMemoryYrkesskadeRepository : YrkesskadeRepository {
             yrkesskader = nyeYrkesskader,
             oppgittYrkesskadeISøknad = oppgittYrkesskadeISøknad,
         )
-    }
-
-    override fun hentKandidaterForBackfill(): List<BackfillKandidat> =
-        yrkesskadeDatoIndex.entries.mapNotNull { (datoId, pair) ->
-            val (behandlingId, index) = pair
-            val grunnlag = memory[behandlingId] ?: return@mapNotNull null
-            val yrkesskade = grunnlag.yrkesskader.yrkesskader.getOrNull(index) ?: return@mapNotNull null
-            if (yrkesskade.skadeart != null) return@mapNotNull null
-            BackfillKandidat(
-                yrkesskadeDatoId = datoId,
-                behandlingId = behandlingId,
-                ref = yrkesskade.ref,
-                saksnummer = yrkesskade.saksnummer,
-                kildesystem = yrkesskade.kildesystem,
-                skadedato = yrkesskade.skadedato,
-            )
-        }
-
-    override fun backfillYrkesskadeDato(yrkesskadeDatoId: Long, yrkesskade: Yrkesskade) {
-        val (behandlingId, index) = yrkesskadeDatoIndex[yrkesskadeDatoId] ?: return
-        val grunnlag = memory[behandlingId] ?: return
-        val oppdatert = grunnlag.yrkesskader.yrkesskader.toMutableList()
-        val eksisterende = oppdatert.getOrNull(index) ?: return
-        oppdatert[index] = eksisterende.copy(
-            vedtaksdato = yrkesskade.vedtaksdato,
-            skadeart = yrkesskade.skadeart,
-            diagnose = yrkesskade.diagnose,
-            skadekombinasjoner = yrkesskade.skadekombinasjoner,
-            skadekombinasjonerTekst = yrkesskade.skadekombinasjonerTekst,
-        )
-        memory[behandlingId] = grunnlag.copy(yrkesskader = Yrkesskader(oppdatert))
     }
 
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {

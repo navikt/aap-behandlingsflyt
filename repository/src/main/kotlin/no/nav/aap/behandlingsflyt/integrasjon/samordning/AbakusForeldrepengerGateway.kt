@@ -19,8 +19,8 @@ import java.net.URI
  * Henter alle ytelser i fpabakus
  */
 class AbakusForeldrepengerGateway : ForeldrepengerGateway {
-    private val url = URI.create(requiredConfigForKey("integrasjon.foreldrepenger.url") + "/hent-ytelse-vedtak")
-    private val config = ClientConfig(scope = requiredConfigForKey("integrasjon.foreldrepenger.scope"))
+    private val url = URI.create(requiredConfigForKey("INTEGRASJON_FORELDREPENGER_URL") + "/hent-ytelse-vedtak")
+    private val config = ClientConfig(scope = requiredConfigForKey("INTEGRASJON_FORELDREPENGER_SCOPE"))
 
     companion object : Factory<ForeldrepengerGateway> {
         override fun konstruer(): ForeldrepengerGateway {

@@ -99,7 +99,7 @@ class StegOrkestrator(
                                 return resultat
                             }
 
-                            if (!resultat.kanFortsette() || resultat.erTilbakeføring()) {
+                            if (!resultat.kanFortsette()) {
                                 return resultat
                             }
                             gjeldendeStegStatus = gjeldendeStegStatus.neste()

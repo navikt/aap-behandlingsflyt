@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSet
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.PeriodisertAvklaringsbehovLøsning
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
@@ -221,16 +222,8 @@ class Avklaringsbehovene(
         return alle().filter { it.erÅpent() }.toList()
     }
 
-    fun skalTilbakeføresEtterTotrinnsVurdering(): Boolean {
-        return tilbakeførtFraBeslutter().isNotEmpty()
-    }
-
     override fun skalTilbakeføresEtterKvalitetssikring(): Boolean {
         return tilbakeførtFraKvalitetssikrer().isNotEmpty()
-    }
-
-    fun tilbakeførtFraBeslutter(): List<Avklaringsbehov> {
-        return alle().filter { it.status() == Status.SENDT_TILBAKE_FRA_BESLUTTER }.toList()
     }
 
     fun tilbakeførtFraKvalitetssikrer(): List<Avklaringsbehov> {
@@ -270,6 +263,10 @@ class Avklaringsbehovene(
             .any { avklaringsbehov -> avklaringsbehov.erIkkeAvbrutt() }
     }
 
+    fun harAvklaringsbehovSomKreverKvalitetssikringMenIkkeErGodkjent(): Boolean {
+        return alle().any { it.erIkkeAvbrutt() && it.kreverKvalitetssikring() && !it.erKvalitetssikret() }
+    }
+
     fun harVærtSendtTilbakeFraBeslutterTidligere(): Boolean {
         return alle().any { avklaringsbehov -> avklaringsbehov.harVærtSendtTilbakeFraBeslutterTidligere() }
     }
@@ -305,6 +302,12 @@ class Avklaringsbehovene(
         kontekst: FlytKontekst,
         repositoryProvider: RepositoryProvider
     ) {
+        if (løsning.definisjon().erFrivillig()
+            && løsning.løsningerForPerioder.isEmpty()
+        ) {
+            return
+        }
+
         val perioderDekketAvLøsning = løsning.løsningerForPerioder.sortedBy { it.fom }
             .somTidslinje { Periode(fom = it.fom, tom = it.tom ?: Tid.MAKS) }
             .map { true }.komprimer()

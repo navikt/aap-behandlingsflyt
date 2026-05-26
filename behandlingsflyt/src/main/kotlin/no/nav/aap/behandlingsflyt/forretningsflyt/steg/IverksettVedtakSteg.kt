@@ -8,7 +8,6 @@ import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.VirkningstidspunktUtleder
 import no.nav.aap.behandlingsflyt.behandling.utbetaling.UtbetalingService
 import no.nav.aap.behandlingsflyt.behandling.vedtak.Vedtak
-import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakRepository
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.NavKontorPeriodeDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravRepository
@@ -269,7 +268,6 @@ class IverksettVedtakSteg private constructor(
             val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
             val sakRepository = repositoryProvider.provide<SakRepository>()
             val refusjonkravRepository = repositoryProvider.provide<RefusjonkravRepository>()
-            val vedtakRepository = repositoryProvider.provide<VedtakRepository>()
             val flytJobbRepository = repositoryProvider.provide<FlytJobbRepository>()
             val gosysService = GosysService(gatewayProvider)
             val virkningstidspunktUtlederService = VirkningstidspunktUtleder(
@@ -285,7 +283,7 @@ class IverksettVedtakSteg private constructor(
                     repositoryProvider = repositoryProvider,
                     gatewayProvider = gatewayProvider
                 ),
-                vedtakService = VedtakService(vedtakRepository, behandlingRepository),
+                vedtakService = VedtakService(repositoryProvider, gatewayProvider),
                 virkningstidspunktUtleder = virkningstidspunktUtlederService,
                 trukketSøknadService = TrukketSøknadService(repositoryProvider),
                 avbrytRevurderingService = AvbrytRevurderingService(repositoryProvider),

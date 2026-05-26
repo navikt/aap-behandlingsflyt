@@ -341,6 +341,7 @@ class BrevUtlederService(
         checkNotNull(vedtak.virkningstidspunkt) {
             "Vedtak for behandling med innvilgelse mangler virkningstidspunkt"
         }
+        // TODO: hentGrunnlagBeregning og utledTilkjentYtelse kaller begge tilkjentYtelseRepository — trekk hentingen opp hit og send ned til begge
         val dato = vedtak.virkningstidspunkt
         val perioder = tilkjentYtelseRepository.hentHvisEksisterer(behandling.id)
         val grunnlagBeregning = hentGrunnlagBeregning(behandling.id, dato, perioder)
@@ -471,7 +472,12 @@ class BrevUtlederService(
                 ?: internsak?.manuellYrkesskadeDato
                 ?: error("Mangler skadedato for yrkesskade med referanse ${ys.ref}")
             val inntekt = beregning?.vurderinger?.firstOrNull { it.referanse == ys.ref }?.antattÅrligInntekt
-            YrkesskadeBeregningBrev.Yrkesskade(skadedato, inntekt?.verdi)
+            YrkesskadeBeregningBrev.Yrkesskade(
+                yrkesskadedato = skadedato,
+                arbeidsinntektPaaSkadetidspunktet = inntekt?.verdi,
+                relevantForArbeidsevne = true, // TODO må utledes. Hvordan?
+                diagnose = ys.diagnose,
+            )
         }
 
         return YrkesskadeBeregningBrev(
@@ -509,7 +515,7 @@ class BrevUtlederService(
             beregningstype = beregningstype,
             uføreValgKategori = null,
             yrkesskadeValgKategori = yrkesskadeValgKategori,
-            beregningsutfallKategori = utledBeregningsutfallKategori(grunnlag, minstesats),
+            beregningsutfallKategori = if (Miljø.erDev()) utledBeregningsutfallKategori(grunnlag, minstesats) else null,
         )
     }
 
@@ -546,7 +552,7 @@ class BrevUtlederService(
             beregningstype = beregningstype,
             uføreValgKategori = uføreValgKategori,
             yrkesskadeValgKategori = yrkesskadeValgKategori,
-            beregningsutfallKategori = utledBeregningsutfallKategori(vinnende, minstesats),
+            beregningsutfallKategori = if (Miljø.erDev()) utledBeregningsutfallKategori(vinnende, minstesats) else null,
         )
     }
 
@@ -555,7 +561,7 @@ class BrevUtlederService(
         minstesats: Minstesats?,
     ): GrunnlagBeregning.BeregningsutfallKategori {
         return when (minstesats) {
-            Minstesats.MINSTESATS_OVER_25 -> GrunnlagBeregning.BeregningsutfallKategori.MINSTESATS_25_ELLER_MER
+            Minstesats.MINSTESATS_OVER_25 -> GrunnlagBeregning.BeregningsutfallKategori.MINSTESATS_OVER_25
             Minstesats.MINSTESATS_UNDER_25 -> GrunnlagBeregning.BeregningsutfallKategori.MINSTESATS_UNDER_25
             else -> when {
                 grunnlag.inntekter().any { it.er6GBegrenset } -> GrunnlagBeregning.BeregningsutfallKategori.INNTEKT_OVER_6G

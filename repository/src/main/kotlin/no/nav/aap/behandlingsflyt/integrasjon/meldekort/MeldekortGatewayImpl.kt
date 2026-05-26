@@ -17,10 +17,10 @@ import no.nav.aap.meldekort.kontrakt.sak.OppdaterIdenterV0
 import java.net.URI
 
 class MeldekortGatewayImpl : MeldekortGateway {
-    private val url = URI.create(requiredConfigForKey("integrasjon.meldekort.url"))
+    private val url = URI.create(requiredConfigForKey("INTEGRASJON_MELDEKORT_URL"))
 
     private val client = RestClient.withDefaultResponseHandler(
-        config = ClientConfig(scope = requiredConfigForKey("integrasjon.meldekort.scope")),
+        config = ClientConfig(scope = requiredConfigForKey("INTEGRASJON_MELDEKORT_SCOPE")),
         tokenProvider = AzureM2MTokenProvider,
         prometheus = prometheus
     )

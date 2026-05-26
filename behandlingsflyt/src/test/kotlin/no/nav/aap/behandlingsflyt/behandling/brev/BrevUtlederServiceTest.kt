@@ -66,6 +66,8 @@ import no.nav.aap.komponenter.verdityper.GUnit
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.komponenter.verdityper.TimerArbeid
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -439,11 +441,205 @@ class BrevUtlederServiceTest {
                             InntektPerÅr(Year.of(2023), inntekt = BigDecimal("210000.00")),
                             InntektPerÅr(Year.of(2022), inntekt = BigDecimal("200000.00")),
                         ),
-                        beregningsgrunnlag = null
+                        beregningsgrunnlag = null,
+                        beregningsutfallKategori = null // kun satt i dev (Miljø.erDev())
                     ),
                     tilkjentYtelse = null
                 )
             )
+        }
+    }
+
+    @Nested
+    inner class TestGruppe_BeregningsutfallKategori {
+
+        @BeforeEach
+        fun settDevMiljø() {
+            System.setProperty("NAIS_CLUSTER_NAME", "dev-gcp")
+        }
+
+        @AfterEach
+        fun tilbakestillMiljø() {
+            System.clearProperty("NAIS_CLUSTER_NAME")
+        }
+
+        @Test
+        fun `utleder SISTE_AAR når siste år er bestemmende`() {
+            val (_, revurdering) = gittRevurderingMedGrunnlag(
+                grunnlag = Grunnlag11_19(
+                    grunnlaget = GUnit(2),
+                    erGjennomsnitt = false,
+                    gjennomsnittligInntektIG = GUnit(0),
+                    inntekter = listOf(grunnlagInntekt(2024, 220_000))
+                )
+            )
+
+            val resultat = brevUtlederService.utledBehovForMeldingOmVedtak(revurdering.id)
+
+            assertIs<VurderesForUføretrygd>(resultat)
+            assertEquals(GrunnlagBeregning.BeregningsutfallKategori.SISTE_AAR, resultat.grunnlagBeregning?.beregningsutfallKategori)
+        }
+
+        @Test
+        fun `utleder GJENNOMSNITT når gjennomsnitt er bestemmende`() {
+            val (_, revurdering) = gittRevurderingMedGrunnlag(
+                grunnlag = Grunnlag11_19(
+                    grunnlaget = GUnit(2),
+                    erGjennomsnitt = true,
+                    gjennomsnittligInntektIG = GUnit(0),
+                    inntekter = listOf(grunnlagInntekt(2024, 220_000))
+                )
+            )
+
+            val resultat = brevUtlederService.utledBehovForMeldingOmVedtak(revurdering.id)
+
+            assertIs<VurderesForUføretrygd>(resultat)
+            assertEquals(GrunnlagBeregning.BeregningsutfallKategori.GJENNOMSNITT, resultat.grunnlagBeregning?.beregningsutfallKategori)
+        }
+
+        @Test
+        fun `utleder INNTEKT_OVER_6G når inntekt er 6G-begrenset`() {
+            val (_, revurdering) = gittRevurderingMedGrunnlag(
+                grunnlag = Grunnlag11_19(
+                    grunnlaget = GUnit(2),
+                    erGjennomsnitt = false,
+                    gjennomsnittligInntektIG = GUnit(0),
+                    inntekter = listOf(
+                        GrunnlagInntekt(
+                            år = Year.of(2024),
+                            inntektIKroner = Beløp(900_000),
+                            grunnbeløp = Beløp(124_028), // G-verdi 2024
+                            inntektIG = GUnit("7.26"),   // 900k / 124028 ≈ 7.26G (over 6G)
+                            inntekt6GBegrenset = GUnit(6),
+                            er6GBegrenset = true,
+                        )
+                    )
+                )
+            )
+
+            val resultat = brevUtlederService.utledBehovForMeldingOmVedtak(revurdering.id)
+
+            assertIs<VurderesForUføretrygd>(resultat)
+            assertEquals(GrunnlagBeregning.BeregningsutfallKategori.INNTEKT_OVER_6G, resultat.grunnlagBeregning?.beregningsutfallKategori)
+        }
+
+        @Test
+        fun `utleder MINSTESATS_OVER_25 når minstesats over 25 pst er bestemmende`() {
+            val behandling = gittInnvilgelseBehandlingMedGrunnlag(
+                grunnlag = Grunnlag11_19(
+                    grunnlaget = GUnit(2),
+                    erGjennomsnitt = false,
+                    gjennomsnittligInntektIG = GUnit(0),
+                    inntekter = listOf(grunnlagInntekt(2024, 100_000))
+                ),
+                minstesats = Minstesats.MINSTESATS_OVER_25
+            )
+
+            val resultat = brevUtlederService.utledBehovForMeldingOmVedtak(behandling.id)
+
+            assertIs<Innvilgelse>(resultat)
+            assertEquals(GrunnlagBeregning.BeregningsutfallKategori.MINSTESATS_OVER_25, resultat.grunnlagBeregning?.beregningsutfallKategori)
+        }
+
+        @Test
+        fun `utleder MINSTESATS_UNDER_25 når minstesats under 25 pst er bestemmende`() {
+            val behandling = gittInnvilgelseBehandlingMedGrunnlag(
+                grunnlag = Grunnlag11_19(
+                    grunnlaget = GUnit(2),
+                    erGjennomsnitt = false,
+                    gjennomsnittligInntektIG = GUnit(0),
+                    inntekter = listOf(grunnlagInntekt(2024, 100_000))
+                ),
+                minstesats = Minstesats.MINSTESATS_UNDER_25
+            )
+
+            val resultat = brevUtlederService.utledBehovForMeldingOmVedtak(behandling.id)
+
+            assertIs<Innvilgelse>(resultat)
+            assertEquals(GrunnlagBeregning.BeregningsutfallKategori.MINSTESATS_UNDER_25, resultat.grunnlagBeregning?.beregningsutfallKategori)
+        }
+
+        private fun gittRevurderingMedGrunnlag(
+            grunnlag: Grunnlag11_19,
+        ): Pair<Behandling, Behandling> {
+            val kravdato = LocalDate.of(2023, 2, 20)
+            val sisteDag = 31 desember 2023
+
+            val førstegangsbehandling = gittBehandling(TypeBehandling.Førstegangsbehandling)
+            val revurdering = gittBehandling(
+                typeBehandling = TypeBehandling.Revurdering,
+                forrigeBehandlingId = førstegangsbehandling.id,
+                vurderingsbehov = listOf(Vurderingsbehov.OVERGANG_UFORE)
+            )
+            gittUnderveisGrunnlag(
+                førstegangsbehandling.id,
+                underveisperiode(Periode(1 januar 2023, sisteDag), RettighetsType.BISTANDSBEHOV, Utfall.OPPFYLT)
+            )
+            gittUnderveisGrunnlag(
+                revurdering.id,
+                underveisperiode(Periode(1 januar 2023, 28 februar 2023), RettighetsType.BISTANDSBEHOV, Utfall.OPPFYLT),
+                underveisperiode(Periode(1 mars 2023, sisteDag), RettighetsType.VURDERES_FOR_UFØRETRYGD, Utfall.OPPFYLT),
+            )
+            beregningsgrunnlagRepository.lagre(revurdering.id, grunnlag)
+            beregningVurderingRepository.lagre(
+                revurdering.id,
+                BeregningstidspunktVurdering(
+                    begrunnelse = "",
+                    nedsattArbeidsevneEllerStudieevneDato = kravdato,
+                    ytterligereNedsattBegrunnelse = null,
+                    ytterligereNedsattArbeidsevneDato = null,
+                    vurdertAv = ""
+                )
+            )
+            vedtakRepository.lagre(revurdering.id, LocalDateTime.now(), kravdato)
+            overgangUføreRepository.lagre(
+                revurdering.id,
+                listOf(
+                    OvergangUføreVurdering(
+                        begrunnelse = "test",
+                        brukerHarSøktOmUføretrygd = true,
+                        brukerHarFåttVedtakOmUføretrygd = UføreSøknadVedtakResultat.NEI,
+                        brukerRettPåAAP = true,
+                        fom = kravdato,
+                        tom = sisteDag,
+                        vurdertAv = "meg",
+                        vurdertIBehandling = revurdering.id,
+                    )
+                )
+            )
+            return Pair(førstegangsbehandling, revurdering)
+        }
+
+        // brevBehovVurderesForUføretrygd kaller hentGrunnlagBeregning med dato=null, så
+        // minstesats-kategorier krever Innvilgelse-scenariet der dato=virkningstidspunkt.
+        private fun gittInnvilgelseBehandlingMedGrunnlag(
+            grunnlag: Grunnlag11_19,
+            minstesats: Minstesats,
+        ): Behandling {
+            val behandling = gittBehandling(TypeBehandling.Førstegangsbehandling)
+            gittUnderveisGrunnlag(
+                behandling.id,
+                underveisperiode(Periode(virkningstidspunkt, 31 desember 2025), RettighetsType.BISTANDSBEHOV, Utfall.OPPFYLT)
+            )
+            beregningsgrunnlagRepository.lagre(behandling.id, grunnlag)
+            beregningVurderingRepository.lagre(
+                behandling.id,
+                BeregningstidspunktVurdering(
+                    begrunnelse = "",
+                    nedsattArbeidsevneEllerStudieevneDato = virkningstidspunkt,
+                    ytterligereNedsattBegrunnelse = null,
+                    ytterligereNedsattArbeidsevneDato = null,
+                    vurdertAv = ""
+                )
+            )
+            val periode = Periode(virkningstidspunkt, 31 desember 2025)
+            tilkjentYtelseRepository.lagre(
+                behandling.id,
+                listOf(TilkjentYtelsePeriode(periode, tilkjentYtelseDto(Beløp("1000.00"), periode.tom).copy(minsteSats = minstesats))),
+                mockk<TilkjentYtelseGrunnlag>(),
+                ""
+            )
+            return behandling
         }
     }
 

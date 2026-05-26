@@ -135,10 +135,7 @@ public data class TilbakekrevingKafkaDto(
 
 public data class TilbakekrevingVenterKafkaDto(
     val grunn: TilbakekrevingGrunn,
-    //HACK: Finnes meldinger med 3 forskjellige skrivemåter. De 2 nederste kan slettes når alle meldinger med feilstaving er passert.
-    val gjenopptas: LocalDate? = null,
-    val gjennoptas: LocalDate? = null,
-    val gjenoptas: LocalDate? = null,
+    val gjenopptas: LocalDate,
 )
 
 public enum class TilbakekrevingGrunn {

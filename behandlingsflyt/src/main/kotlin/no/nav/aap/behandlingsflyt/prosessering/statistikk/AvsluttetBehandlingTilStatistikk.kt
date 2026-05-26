@@ -38,6 +38,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.AvsluttetBehandlingDTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.BeregningsgrunnlagDTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Diagnoser
+import no.nav.aap.behandlingsflyt.kontrakt.statistikk.DiagnoserMedPeriode
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Fritakvurdering
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Grunnlag11_19DTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.GrunnlagUføreDTO
@@ -100,7 +101,7 @@ class AvsluttetBehandlingTilStatistikk(
         beregningVurderingRepository = repositoryProvider.provide(),
         sykdomRepository = repositoryProvider.provide(),
         underveisRepository = repositoryProvider.provide(),
-        vedtakService = VedtakService(repositoryProvider),
+        vedtakService = VedtakService(repositoryProvider, gatewayProvider),
         klageresultatUtleder = KlageresultatUtleder(repositoryProvider),
         avbrytRevurderingService = AvbrytRevurderingService(repositoryProvider),
         meldepliktRepository = repositoryProvider.provide(),
@@ -109,10 +110,7 @@ class AvsluttetBehandlingTilStatistikk(
         samordningArbeidsgiverRepository = repositoryProvider.provide(),
         samordningUføreRepository = repositoryProvider.provide(),
         arbeidsopptrappingRepository = repositoryProvider.provide(),
-        stansOpphørService = StansOpphørService(
-            repositoryProvider.provide(),
-            repositoryProvider.provide(), repositoryProvider.provide()
-        ),
+        stansOpphørService = StansOpphørService(repositoryProvider, gatewayProvider),
         resultatUtleder = ResultatUtleder(repositoryProvider, gatewayProvider),
     )
 
@@ -172,6 +170,7 @@ class AvsluttetBehandlingTilStatistikk(
                 .erYtelsesbehandling() && !avbrytRevurderingService.revurderingErAvbrutt(behandling.id)
         ) stansOpphørService.vedtattStansOpphør(behandling.id) else emptyList()
 
+        val diagnoserPeriodisert = hentDiagnose(behandling)
         return AvsluttetBehandlingDTO(
             vilkårsResultat = VilkårsResultatDTO(
                 typeBehandling = behandling.typeBehandling(), vilkår = vilkårsresultat.alle().map { res ->
@@ -190,7 +189,12 @@ class AvsluttetBehandlingTilStatistikk(
                 }),
             tilkjentYtelse = TilkjentYtelseDTO(perioder = tilkjentYtelse.orEmpty()),
             beregningsGrunnlag = beregningsGrunnlagDTO,
-            diagnoser = hentDiagnose(behandling),
+            diagnoser = diagnoserPeriodisert.lastOrNull()?.let { Diagnoser(
+                kodeverk = it.kodeverk,
+                diagnosekode = it.diagnosekode,
+                bidiagnoser = it.bidiagnoser
+            ) },
+            diagnoserPeriodisert = diagnoserPeriodisert,
             rettighetstypePerioder = rettighetstypePerioder,
             resultat = hentResultat(behandling),
             vedtakstidspunkt = vedtakTidspunkt,
@@ -313,28 +317,32 @@ class AvsluttetBehandlingTilStatistikk(
                 )
             }
 
-    private fun hentDiagnose(behandling: Behandling): Diagnoser? {
+    private fun hentDiagnose(behandling: Behandling): List<DiagnoserMedPeriode> {
         val sykdomsvurdering = sykdomRepository.hentHvisEksisterer(behandling.id)
-            ?.sykdomsvurderinger.orEmpty()
-            .filter { it.diagnose != null }
-            .maxByOrNull { it.opprettet }
+            ?.somSykdomsvurderingstidslinje()
+            .orEmpty()
 
-        if (sykdomsvurdering == null) {
+        if (sykdomsvurdering.isEmpty()) {
             log.info("Fant ikke sykdomsvurdering for behandling ${behandling.referanse} (id: ${behandling.id})")
-            return null
+            return emptyList()
         }
 
-        val diagnose = sykdomsvurdering.diagnose
-        if (diagnose?.hoveddiagnose == null) {
-            log.info("Fant sykdomsvurdering, men ingen diagnose eller kodeverk for behandling ${behandling.referanse} (id: ${behandling.id})")
-            return null
-        }
+        return sykdomsvurdering.map { it.diagnose }
+            .komprimer().segmenter().mapNotNull { (periode, diagnose) ->
+                if (diagnose == null) return@mapNotNull null
 
-        return Diagnoser(
-            kodeverk = diagnose.kodeverk,
-            diagnosekode = diagnose.hoveddiagnose,
-            bidiagnoser = diagnose.bidiagnoser.orEmpty(),
-        )
+                if (diagnose.hoveddiagnose == null) {
+                    log.info("Fant sykdomsvurdering, men ingen diagnose eller kodeverk for behandling ${behandling.referanse} (id: ${behandling.id})")
+                    return@mapNotNull null
+                }
+
+                DiagnoserMedPeriode(
+                    periodeDTO = PeriodeDTO(periode.fom, periode.tom),
+                    kodeverk = diagnose.kodeverk,
+                    diagnosekode = diagnose.hoveddiagnose,
+                    bidiagnoser = diagnose.bidiagnoser.orEmpty(),
+                )
+            }
     }
 
     private fun hentResultat(behandling: Behandling): ResultatKode? {
