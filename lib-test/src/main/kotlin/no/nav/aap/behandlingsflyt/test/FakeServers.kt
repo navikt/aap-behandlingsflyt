@@ -268,3 +268,15 @@ object FakeServers : AutoCloseable {
         allFakes.forEach { it.stop() }
     }
 }
+
+object TexasPortHolder {
+    private val texasPort = AtomicInteger(0)
+
+    fun setPort(port: Int) {
+        texasPort.set(port)
+    }
+
+    fun getPort(): Int {
+        return texasPort.get()
+    }
+}
