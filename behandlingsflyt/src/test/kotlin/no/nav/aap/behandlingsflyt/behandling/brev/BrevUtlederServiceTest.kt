@@ -561,7 +561,6 @@ class BrevUtlederServiceTest {
 
         private fun gittRevurderingMedGrunnlag(
             grunnlag: Grunnlag11_19,
-            minstesats: Minstesats = Minstesats.IKKE_MINSTESATS,
         ): Pair<Behandling, Behandling> {
             val kravdato = LocalDate.of(2023, 2, 20)
             val sisteDag = 31 desember 2023
