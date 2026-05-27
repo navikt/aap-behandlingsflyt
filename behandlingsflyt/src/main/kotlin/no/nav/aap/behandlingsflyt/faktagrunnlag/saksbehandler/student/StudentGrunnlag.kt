@@ -55,6 +55,7 @@ fun StudentGrunnlag?.harPeriodeSomIkkeErOppfylt(maksDato: LocalDate = Tid.MAKS):
     return tidslinje.segmenter().any { !it.verdi.erOppfylt() }
 }
 
-fun StudentGrunnlag?.søkerOppgirStudentstatus(): Boolean {
+fun StudentGrunnlag?.skalVurdereStudent(): Boolean {
     return this?.oppgittStudent?.erStudent() == true
+            && this.oppgittStudent.skalGjenopptaStudieStatus != SkalGjenopptaStudieStatus.NEI
 }
