@@ -88,6 +88,7 @@ class OpprettJobbForGReguleringJobbUtførerTest {
         every { gReguleringService.finnesGrunnbeløpForÅr(Year.of(2025)) } returns
             Grunnbeløp.GrunnbeløpMedDato(dato = gjusteringDato, beløp = Beløp(130_160))
         every { gReguleringService.hentSakerForGRegulering(gjusteringDato) } returns setOf(sakId)
+        every { flytJobbRepository.hentJobberForSak(sakId.toLong()) } returns emptyList()
         every { flytJobbRepository.leggTil(any()) } just Runs
 
         opprettUtfører().utfør(jobbInput)
@@ -127,6 +128,7 @@ class OpprettJobbForGReguleringJobbUtførerTest {
         every { gReguleringService.finnesGrunnbeløpForÅr(Year.of(2026)) } returns
             Grunnbeløp.GrunnbeløpMedDato(dato = gjusteringDato, beløp = Beløp(135_000))
         every { gReguleringService.hentSakerForGRegulering(gjusteringDato) } returns setOf(sakId)
+        every { flytJobbRepository.hentJobberForSak(sakId.toLong()) } returns emptyList()
         every { flytJobbRepository.leggTil(any()) } just Runs
 
         utfører.utfør(jobbInput)
@@ -153,6 +155,7 @@ class OpprettJobbForGReguleringJobbUtførerTest {
         every { gReguleringService.finnesGrunnbeløpForÅr(Year.of(2027)) } returns
             Grunnbeløp.GrunnbeløpMedDato(dato = gjusteringDato, beløp = Beløp(140_000))
         every { gReguleringService.hentSakerForGRegulering(gjusteringDato) } returns setOf(sakId)
+        every { flytJobbRepository.hentJobberForSak(sakId.toLong()) } returns emptyList()
         every { flytJobbRepository.leggTil(any()) } just Runs
 
         utfører.utfør(jobbInput)
@@ -171,6 +174,7 @@ class OpprettJobbForGReguleringJobbUtførerTest {
             Grunnbeløp.GrunnbeløpMedDato(dato = gjusteringDato, beløp = Beløp(130_160))
         every { gReguleringService.hentSakerForGRegulering(gjusteringDato) } returns
             setOf(SakId(42L), SakId(99L), SakId(123L))
+        every { flytJobbRepository.hentJobberForSak(any()) } returns emptyList()
         every { flytJobbRepository.leggTil(any()) } just Runs
 
         opprettUtfører().utfør(jobbInput)
@@ -246,5 +250,64 @@ class OpprettJobbForGReguleringJobbUtførerTest {
     fun `gPeriodeÅr - dato i desember gir inneværende år`() {
         val utfører = opprettUtfører()
         assertThat(utfører.gPeriodeÅr(31 desember 2027)).isEqualTo(Year.of(2027))
+    }
+
+    @Test
+    fun `skal ikke opprette jobb for sak som allerede har ventende G-regulering jobb`() {
+        val gjusteringDato = LocalDate.of(2025, 5, 1)
+        val sakId = SakId(42L)
+        enableToggleWithSakIdFilter(sakId.id)
+
+        every { gReguleringService.finnesGrunnbeløpForÅr(Year.of(2025)) } returns
+            Grunnbeløp.GrunnbeløpMedDato(dato = gjusteringDato, beløp = Beløp(130_160))
+        every { gReguleringService.hentSakerForGRegulering(gjusteringDato) } returns setOf(sakId)
+
+        val eksisterendeJobb = JobbInput(OpprettBehandlingGReguleringJobbUtfører).forSak(sakId.toLong())
+        every { flytJobbRepository.hentJobberForSak(sakId.toLong()) } returns listOf(eksisterendeJobb)
+
+        opprettUtfører().utfør(jobbInput)
+
+        verify(exactly = 0) { flytJobbRepository.leggTil(any()) }
+    }
+
+    @Test
+    fun `skal kun opprette jobb for saker som ikke allerede har ventende G-regulering jobb`() {
+        val gjusteringDato = LocalDate.of(2025, 5, 1)
+        val sakMedEksisterendeJobb = SakId(42L)
+        val sakUtenEksisterendeJobb = SakId(99L)
+        enableToggleWithSakIdFilter(sakMedEksisterendeJobb.id, sakUtenEksisterendeJobb.id)
+
+        every { gReguleringService.finnesGrunnbeløpForÅr(Year.of(2025)) } returns
+            Grunnbeløp.GrunnbeløpMedDato(dato = gjusteringDato, beløp = Beløp(130_160))
+        every { gReguleringService.hentSakerForGRegulering(gjusteringDato) } returns
+            setOf(sakMedEksisterendeJobb, sakUtenEksisterendeJobb)
+
+        val eksisterendeJobb = JobbInput(OpprettBehandlingGReguleringJobbUtfører).forSak(sakMedEksisterendeJobb.toLong())
+        every { flytJobbRepository.hentJobberForSak(sakMedEksisterendeJobb.toLong()) } returns listOf(eksisterendeJobb)
+        every { flytJobbRepository.hentJobberForSak(sakUtenEksisterendeJobb.toLong()) } returns emptyList()
+        every { flytJobbRepository.leggTil(any()) } just Runs
+
+        opprettUtfører().utfør(jobbInput)
+
+        verify(exactly = 1) { flytJobbRepository.leggTil(match { it.sakId() == sakUtenEksisterendeJobb.toLong() }) }
+    }
+
+    @Test
+    fun `skal opprette jobb for sak som har andre ventende jobber men ikke G-regulering jobb`() {
+        val gjusteringDato = LocalDate.of(2025, 5, 1)
+        val sakId = SakId(42L)
+        enableToggleWithSakIdFilter(sakId.id)
+
+        every { gReguleringService.finnesGrunnbeløpForÅr(Year.of(2025)) } returns
+            Grunnbeløp.GrunnbeløpMedDato(dato = gjusteringDato, beløp = Beløp(130_160))
+        every { gReguleringService.hentSakerForGRegulering(gjusteringDato) } returns setOf(sakId)
+
+        val annenJobb = JobbInput(OpprettBehandlingUtvidVedtakslengdeJobbUtfører).forSak(sakId.toLong())
+        every { flytJobbRepository.hentJobberForSak(sakId.toLong()) } returns listOf(annenJobb)
+        every { flytJobbRepository.leggTil(any()) } just Runs
+
+        opprettUtfører().utfør(jobbInput)
+
+        verify(exactly = 1) { flytJobbRepository.leggTil(any()) }
     }
 }
