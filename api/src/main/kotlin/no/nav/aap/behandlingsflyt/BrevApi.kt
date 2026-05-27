@@ -121,6 +121,7 @@ fun NormalOpenAPIRoute.brevApi(
                                 listOf(
                                     Definisjon.SKRIV_BREV,
                                     Definisjon.SKRIV_VEDTAKSBREV,
+                                    Definisjon.SKRIV_VEDTAKSBREV_SAKSBEHANDLER,
                                     Definisjon.SKRIV_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT_BREV,
                                     Definisjon.SKRIV_FORHÅNDSVARSEL_KLAGE_FORMKRAV_BREV
                                 )
@@ -158,6 +159,12 @@ fun NormalOpenAPIRoute.brevApi(
                                         Definisjon.SKRIV_VEDTAKSBREV
                                     }
 
+                                    brevbestilling.typeBrev.erVedtak() &&
+                                            skrivBrevAvklaringsbehov.any { it.definisjon == Definisjon.SKRIV_VEDTAKSBREV_SAKSBEHANDLER }
+                                        -> {
+                                        Definisjon.SKRIV_VEDTAKSBREV_SAKSBEHANDLER
+                                    }
+                                    
                                     brevbestilling.typeBrev == TypeBrev.FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT &&
                                             skrivBrevAvklaringsbehov.any { it.definisjon == Definisjon.SKRIV_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT_BREV } -> {
                                         Definisjon.SKRIV_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT_BREV
@@ -363,7 +370,7 @@ private suspend fun utledHarTilgangTilÅSendeBrev(
         tilgangGateway.sjekkTilgangTilBehandling(behandlingReferanse, tilDefinisjon, token, relevanteIdenter)
 
     return when (definisjon) {
-        Definisjon.SKRIV_VEDTAKSBREV -> {
+        Definisjon.SKRIV_VEDTAKSBREV, Definisjon.SKRIV_VEDTAKSBREV_SAKSBEHANDLER -> {
             val harTilgang = harTilgang(definisjon)
             if (!unleashGateway.isEnabled(BehandlingsflytFeature.IngenValidering, bruker.ident)) {
                 harTilgang && harIkkeGjortNoenVurderinger

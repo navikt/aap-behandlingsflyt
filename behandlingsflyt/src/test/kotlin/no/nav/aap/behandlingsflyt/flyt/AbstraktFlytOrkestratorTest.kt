@@ -33,6 +33,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.Periodiser
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.RefusjonkravLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivBrevAvklaringsbehovLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivVedtaksbrevLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivVedtaksbrevKlageLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SykdomsvurderingForBrevLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VurderInntektsbortfallLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VurderRettighetsperiodeLøsning
@@ -1443,10 +1444,23 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
         )
     }
 
+    protected fun vedtaksbrevKlageLøsning(brevbestillingReferanse: UUID): AvklaringsbehovLøsning {
+        return SkrivVedtaksbrevKlageLøsning(
+            brevbestillingReferanse = brevbestillingReferanse,
+            handling = SkrivBrevAvklaringsbehovLøsning.Handling.FERDIGSTILL
+        )
+    }
+
     protected fun Behandling.løsVedtaksbrev(typeBrev: TypeBrev = TypeBrev.VEDTAK_INNVILGELSE): Behandling {
         val brevbestilling = hentBrevAvType(this, typeBrev)
 
         return this.løsAvklaringsBehov(vedtaksbrevLøsning(brevbestilling.referanse.brevbestillingReferanse))
+    }
+
+    protected fun Behandling.løsVedtaksbrevKlage(typeBrev: TypeBrev = TypeBrev.VEDTAK_INNVILGELSE): Behandling {
+        val brevbestilling = hentBrevAvType(this, typeBrev)
+
+        return this.løsAvklaringsBehov(vedtaksbrevKlageLøsning(brevbestilling.referanse.brevbestillingReferanse))
     }
 
     protected fun prosesserBehandling(behandling: Behandling): Behandling {
