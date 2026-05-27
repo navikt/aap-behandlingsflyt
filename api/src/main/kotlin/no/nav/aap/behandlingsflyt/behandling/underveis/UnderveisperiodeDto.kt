@@ -3,10 +3,14 @@ package no.nav.aap.behandlingsflyt.behandling.underveis
 import com.papsign.ktor.openapigen.annotations.properties.description.Description
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Kvote
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.ArbeidsGradering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisÅrsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
+import no.nav.aap.behandlingsflyt.utils.diff.DiffDto
+import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.tidslinje.somTidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Dagsatser
 import no.nav.aap.komponenter.verdityper.Prosent
@@ -61,3 +65,12 @@ data class RettighetsTypeDto(
         rettighetsType = rettighetsType,
         hjemmel = rettighetsType.hjemmel)
 }
+
+data class UnderveisGrunnlagDto(val perioder: List<UnderveisperiodeDto>) {
+    fun somTidslinje(): Tidslinje<UnderveisperiodeDto> {
+        return perioder.somTidslinje { it.periode }
+    }
+}
+fun UnderveisGrunnlag.tilDto() = UnderveisGrunnlagDto(perioder = perioder.map { UnderveisperiodeDto(it) })
+
+data class UnderveisGrunnlagMedDiffDto(val perioder: List<DiffDto<UnderveisperiodeDto>>) {}
