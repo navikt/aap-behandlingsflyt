@@ -21,11 +21,8 @@ data class TestToken(
 )
 
 class TexasFake : FakeServer() {
-    override val server = embeddedServer(Netty, port = 0, module = module())
-    override fun start() {
-        server.start()
-        TexasPortHolder.setPort(port())
-    }
+    override val server = embeddedServer(Netty, port = TexasPortHolder.getPort(), module = module())
+    override fun start() { server.start() }
 
     private fun module(): Application.() -> Unit = {
         install(ContentNegotiation) {

@@ -97,15 +97,13 @@ object FakeServers : AutoCloseable {
     internal val legeerklæringStatuser: MutableList<LegeerklæringStatusResponse> get() = dokumentinnhenting.statuser
 
     fun start(testPersonService: TestPersonService = FakePersoner) {
-        if (started.get()) {
+        if (!started.compareAndSet(false, true)) {
             return
         }
-
 
         fakePersoner = testPersonService
         allFakes.forEach { it.start() }
         setProperties()
-        started.set(true)
     }
 
     private fun setProperties() {
