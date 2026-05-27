@@ -9,7 +9,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
-import no.nav.aap.behandlingsflyt.utils.diff.DiffDto
 import no.nav.aap.behandlingsflyt.utils.diff.somDto
 import no.nav.aap.behandlingsflyt.utils.diffTidslinjer
 import no.nav.aap.komponenter.dbconnect.transaction
