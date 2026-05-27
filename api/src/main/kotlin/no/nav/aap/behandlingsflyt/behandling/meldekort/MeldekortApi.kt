@@ -72,15 +72,15 @@ fun NormalOpenAPIRoute.meldekortApi(
 
                 val meldeperiodeMedMeldekort = sisteFattedeVedtaksBehandling?.let { behandling ->
                     val underveisGrunnlag = underveisRepository.hentHvisEksisterer(behandling.id) ?: return@let null
-                    val meldeperioder = hentAktuelleMeldeperioder(underveisGrunnlag, clock)
+                    val perioder = hentAktuellePerioder(underveisGrunnlag, clock)
                     val meldekortene = meldekortRepository.hentHvisEksisterer(behandling.id)?.meldekort().orEmpty()
                     val mottatteDokumenter = mottattDokumentRepository
                         .hentDokumenterAvType(sak.id, InnsendingType.MELDEKORT)
                         .associateBy { it.referanse }
 
-                    meldeperioder.map { meldeperiode ->
-                        val meldekort = nyesteMeldekortForMeldeperiode(meldekortene, meldeperiode)
-                        val tidligereMeldekortListe = tidligereMeldekortForMeldeperiode(meldekortene, meldeperiode)
+                    perioder.map { periode ->
+                        val meldekort = nyesteMeldekortForMeldeperiode(meldekortene, periode)
+                        val tidligereMeldekortListe = tidligereMeldekortForMeldeperiode(meldekortene, periode)
 
                         if (meldekort != null) {
                             // Henter ut relevante metadata for meldekort hvor saksbehandler har korrigert timer
@@ -89,7 +89,7 @@ fun NormalOpenAPIRoute.meldekortApi(
                             val meldekortData = mottattDokument?.strukturerteData<MeldekortV0>()?.data
 
                             MeldeperiodeMedMeldekortDto(
-                                meldeperiode = meldeperiode,
+                                meldeperiode = periode,
                                 meldekort = meldekort.toDto(meldekortData?.begrunnelse, meldekortData?.opprettetAv, mottattDokument?.opprettetTid?.toLocalDate()),
                                 tidligereMeldekort = tidligereMeldekortListe.map { tidligere ->
                                     val ref = InnsendingReferanse(tidligere.journalpostId)
@@ -100,7 +100,7 @@ fun NormalOpenAPIRoute.meldekortApi(
                             )
                         } else {
                             MeldeperiodeMedMeldekortDto(
-                                meldeperiode = meldeperiode,
+                                meldeperiode = periode,
                                 meldekort = null,
                             )
                         }
@@ -275,15 +275,15 @@ private fun tidligereMeldekortForMeldeperiode(
  * - Gi fritak, dersom bruker skulle hatt fritak.
  * - Gi rimelig grunn, dersom bruker faktisk hadde rimelig grunn til ikke å ha meldt seg.
  */
-private fun hentAktuelleMeldeperioder(
+private fun hentAktuellePerioder(
     underveisGrunnlag: UnderveisGrunnlag,
     clock: Clock
 ): List<Periode> {
-    val meldeperioder = underveisGrunnlag.perioder
+    val perioder = underveisGrunnlag.perioder
         .filter { it.rettighetsType != null }
-        .map { it.meldePeriode }
+        .map { it.periode }
         .sortedBy { it.fom }
         .takeWhile { it.fom < LocalDate.now(clock) }
 
-    return meldeperioder
+    return perioder
 }
