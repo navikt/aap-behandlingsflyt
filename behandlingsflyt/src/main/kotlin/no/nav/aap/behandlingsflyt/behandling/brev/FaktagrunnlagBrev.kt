@@ -23,7 +23,17 @@ data class GrunnlagBeregning(
     val beregningstidspunkt: LocalDate?,
     val inntekterPerÅr: List<InntektPerÅr>,
     val beregningsgrunnlag: Beløp?,
-)
+    val beregningsutfallKategori: BeregningsutfallKategori? = null,
+) {
+    /** Resultat av § 11-19-beregningen. Null kun når beregningsgrunnlag er null (manglende dato, f.eks. VurderesForUføretrygd). */
+    enum class BeregningsutfallKategori {
+        SISTE_AAR,
+        GJENNOMSNITT,
+        MINSTESATS_OVER_25,
+        MINSTESATS_UNDER_25,
+        INNTEKT_OVER_6G,
+    }
+}
 
 data class InntektPerÅr(val år: Year, val inntekt: BigDecimal)
 
@@ -84,5 +94,7 @@ data class YrkesskadeBeregningBrev(
     data class Yrkesskade(
         val yrkesskadedato: LocalDate,
         val arbeidsinntektPaaSkadetidspunktet: BigDecimal?,
+        val relevantForArbeidsevne: Boolean,
+        val diagnose: String?,
     )
 }

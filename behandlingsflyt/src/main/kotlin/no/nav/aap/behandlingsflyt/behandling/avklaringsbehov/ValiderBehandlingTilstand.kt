@@ -82,6 +82,7 @@ internal object ValiderBehandlingTilstand {
             AvklaringsbehovKode.`9003`,
             AvklaringsbehovKode.`5050`,
             AvklaringsbehovKode.`5051`,
+            AvklaringsbehovKode.`5041`,
         )
         return forsøkerÅLøseAvklaringsbehovFørGjeldendeSteg && erGjeldendeStegLåstForOppdateringAvOpplysninger && !erAvklaringsbehovUnntattForSjekk
     }

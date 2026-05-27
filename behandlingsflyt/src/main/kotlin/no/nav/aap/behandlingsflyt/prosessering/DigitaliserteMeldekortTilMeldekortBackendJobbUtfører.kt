@@ -29,7 +29,7 @@ class DigitaliserteMeldekortTilMeldekortBackendJobbUtfører(
         val journalpost = mottattDokumentRepository.hent(InnsendingReferanse(journalpostId))
         val ubehandletMeldekort = mottaDokumentService.tilUbehandletMeldekort(journalpost)
 
-        if ( ubehandletMeldekort.harDuArbeidet == null || ubehandletMeldekort.timerArbeidPerPeriode.isEmpty()) return
+        if (ubehandletMeldekort.harDuArbeidet == null || ubehandletMeldekort.timerArbeidPerPeriode.isEmpty()) return
 
         val request = BehandslingsflytUtfyllingRequest(
             saksnummer = sak.saksnummer.toString(),

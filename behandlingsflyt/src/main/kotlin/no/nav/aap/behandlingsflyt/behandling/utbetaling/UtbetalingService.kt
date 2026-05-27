@@ -93,7 +93,7 @@ class UtbetalingService(
             forrigeBehandling?.id?.let { tilkjentYtelseRepository.hentHvisEksisterer(forrigeBehandling.id) }
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId)
 
-        return if (tilkjentYtelse != null && tilkjentYtelse.isNotEmpty()) {
+        return if (!tilkjentYtelse.isNullOrEmpty()) {
             val helePerioden = tilkjentYtelse.minMaxPeriode()
             val meldeperioder = meldeperiodeRepository.hentMeldeperioder(behandlingId, helePerioden)
             val saksnummer = sak.saksnummer.toString()
@@ -266,10 +266,6 @@ class UtbetalingService(
             )
         }
 
-}
-
-private fun List<Periode>.first(periode: Periode): Periode {
-    return this.first {Periode(it.fom, it.tom).inneholder(periode)}
 }
 
 private fun List<TilkjentYtelsePeriode>.minMaxPeriode(): Periode {

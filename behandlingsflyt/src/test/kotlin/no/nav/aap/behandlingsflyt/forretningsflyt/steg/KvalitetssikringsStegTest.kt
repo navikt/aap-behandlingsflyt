@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
+import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.KvalitetssikrerLøser
@@ -10,11 +11,13 @@ import no.nav.aap.behandlingsflyt.help.flytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.help.opprettInMemorySakOgBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.test.FakeTidligereVurderinger
 import no.nav.aap.behandlingsflyt.test.FakeUnleashBaseWithDefaultDisabled
 import no.nav.aap.behandlingsflyt.test.LokalUnleash
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryProvider
+import no.nav.aap.behandlingsflyt.test.minimalGatewayProvider
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
@@ -125,7 +128,10 @@ class KvalitetssikringsStegTest {
             trekkKlageService = TrekkKlageService(inMemoryRepositoryProvider),
             unleashGateway = FakeUnleashBaseWithDefaultDisabled(
                 enabledFlags = listOf(BehandlingsflytFeature.AlleEndringerKreverKvalitetssikring)
-            )
+            ),
+            avbrytRevurderingService = AvbrytRevurderingService(inMemoryRepositoryProvider.provide()),
+            behandlingRepository = inMemoryRepositoryProvider.provide(),
+            behandlingService = BehandlingService(inMemoryRepositoryProvider, minimalGatewayProvider())
         )
 
         fun kjørSteg() {
@@ -164,7 +170,8 @@ class KvalitetssikringsStegTest {
                             definisjon = it.kode,
                             godkjent = it in godkjente,
                             begrunnelse = if (it in underkjente) "Ikke godkjent" else null,
-                            grunner = emptyList()
+                            grunner = emptyList(),
+                            markeringer = emptyList()
                         )
                     }
                 )
