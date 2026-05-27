@@ -52,14 +52,34 @@ class OpprettJobbForGReguleringJobbUtførerTest {
 
     private fun enableToggleWithSakIdFilter(filterVerdi: String) {
         every { unleashGateway.isDisabled(BehandlingsflytFeature.GReguleringUtplukkJobb) } returns false
-        every { unleashGateway.isVariantEnabled(BehandlingsflytFeature.GReguleringUtplukkJobb, "sak-id-filter") } returns true
+        every { unleashGateway.isVariantEnabled(BehandlingsflytFeature.GReguleringUtplukkJobb, "inkluder-sak-ider") } returns true
+        every { unleashGateway.isVariantEnabled(BehandlingsflytFeature.GReguleringUtplukkJobb, "ekskluder-sak-ider") } returns false
         every { unleashGateway.isVariantEnabled(BehandlingsflytFeature.GReguleringUtplukkJobb, "maks-antall-saker") } returns false
-        every { unleashGateway.getVariantValue(BehandlingsflytFeature.GReguleringUtplukkJobb, "sak-id-filter") } returns filterVerdi
+        every { unleashGateway.getVariantValue(BehandlingsflytFeature.GReguleringUtplukkJobb, "inkluder-sak-ider") } returns filterVerdi
+    }
+
+    private fun enableToggleWithEkskluderSakIdFilter(filterVerdi: String, maksAntallSaker: String = "1000") {
+        every { unleashGateway.isDisabled(BehandlingsflytFeature.GReguleringUtplukkJobb) } returns false
+        every { unleashGateway.isVariantEnabled(BehandlingsflytFeature.GReguleringUtplukkJobb, "inkluder-sak-ider") } returns false
+        every { unleashGateway.isVariantEnabled(BehandlingsflytFeature.GReguleringUtplukkJobb, "ekskluder-sak-ider") } returns true
+        every { unleashGateway.isVariantEnabled(BehandlingsflytFeature.GReguleringUtplukkJobb, "maks-antall-saker") } returns true
+        every { unleashGateway.getVariantValue(BehandlingsflytFeature.GReguleringUtplukkJobb, "ekskluder-sak-ider") } returns filterVerdi
+        every { unleashGateway.getVariantValue(BehandlingsflytFeature.GReguleringUtplukkJobb, "maks-antall-saker") } returns maksAntallSaker
+    }
+
+    private fun enableToggleWithInkluderOgEkskluderSakIdFilter(inkluderSakIder: String, ekskluderSakIder: String) {
+        every { unleashGateway.isDisabled(BehandlingsflytFeature.GReguleringUtplukkJobb) } returns false
+        every { unleashGateway.isVariantEnabled(BehandlingsflytFeature.GReguleringUtplukkJobb, "inkluder-sak-ider") } returns true
+        every { unleashGateway.isVariantEnabled(BehandlingsflytFeature.GReguleringUtplukkJobb, "ekskluder-sak-ider") } returns true
+        every { unleashGateway.isVariantEnabled(BehandlingsflytFeature.GReguleringUtplukkJobb, "maks-antall-saker") } returns false
+        every { unleashGateway.getVariantValue(BehandlingsflytFeature.GReguleringUtplukkJobb, "inkluder-sak-ider") } returns inkluderSakIder
+        every { unleashGateway.getVariantValue(BehandlingsflytFeature.GReguleringUtplukkJobb, "ekskluder-sak-ider") } returns ekskluderSakIder
     }
 
     private fun enableToggleWithMaksAntallSaker(maksAntallSaker: String) {
         every { unleashGateway.isDisabled(BehandlingsflytFeature.GReguleringUtplukkJobb) } returns false
-        every { unleashGateway.isVariantEnabled(BehandlingsflytFeature.GReguleringUtplukkJobb, "sak-id-filter") } returns false
+        every { unleashGateway.isVariantEnabled(BehandlingsflytFeature.GReguleringUtplukkJobb, "inkluder-sak-ider") } returns false
+        every { unleashGateway.isVariantEnabled(BehandlingsflytFeature.GReguleringUtplukkJobb, "ekskluder-sak-ider") } returns false
         every { unleashGateway.isVariantEnabled(BehandlingsflytFeature.GReguleringUtplukkJobb, "maks-antall-saker") } returns true
         every { unleashGateway.getVariantValue(BehandlingsflytFeature.GReguleringUtplukkJobb, "maks-antall-saker") } returns maksAntallSaker
     }
@@ -176,6 +196,57 @@ class OpprettJobbForGReguleringJobbUtførerTest {
         opprettUtfører().utfør(jobbInput)
 
         verify(exactly = 2) { flytJobbRepository.leggTil(any()) }
+    }
+
+    @Test
+    fun `skal opprette jobber kun for ikke-ekskluderte saker når ekskluder-sak-ider er aktiv`() {
+        val gjusteringDato = LocalDate.of(2025, 5, 1)
+        enableToggleWithEkskluderSakIdFilter("42, 99")
+
+        every { gReguleringService.finnesGrunnbeløpForÅr(Year.of(2025)) } returns
+            Grunnbeløp.GrunnbeløpMedDato(dato = gjusteringDato, beløp = Beløp(130_160))
+        every { gReguleringService.hentSakerForGRegulering(gjusteringDato) } returns
+            setOf(SakId(42L), SakId(77L), SakId(99L))
+        every { flytJobbRepository.leggTil(any()) } just Runs
+
+        opprettUtfører().utfør(jobbInput)
+
+        verify(exactly = 1) { flytJobbRepository.leggTil(any()) }
+    }
+
+    @Test
+    fun `skal ikke opprette jobber når ekskluder-sak-ider inneholder ugyldige verdier`() {
+        val gjusteringDato = LocalDate.of(2025, 5, 1)
+        enableToggleWithEkskluderSakIdFilter("42, abc, , 99x")
+
+        every { gReguleringService.finnesGrunnbeløpForÅr(Year.of(2025)) } returns
+            Grunnbeløp.GrunnbeløpMedDato(dato = gjusteringDato, beløp = Beløp(130_160))
+        every { gReguleringService.hentSakerForGRegulering(gjusteringDato) } returns
+            setOf(SakId(42L), SakId(77L), SakId(99L))
+        every { flytJobbRepository.leggTil(any()) } just Runs
+
+        opprettUtfører().utfør(jobbInput)
+
+        verify(exactly = 0) { flytJobbRepository.leggTil(any()) }
+    }
+
+    @Test
+    fun `skal først ekskludere saker før inkluder-filter anvendes når begge er aktive`() {
+        val gjusteringDato = LocalDate.of(2025, 5, 1)
+        enableToggleWithInkluderOgEkskluderSakIdFilter(
+            inkluderSakIder = "42, 77",
+            ekskluderSakIder = "42",
+        )
+
+        every { gReguleringService.finnesGrunnbeløpForÅr(Year.of(2025)) } returns
+            Grunnbeløp.GrunnbeløpMedDato(dato = gjusteringDato, beløp = Beløp(130_160))
+        every { gReguleringService.hentSakerForGRegulering(gjusteringDato) } returns
+            setOf(SakId(42L), SakId(77L), SakId(99L))
+        every { flytJobbRepository.leggTil(any()) } just Runs
+
+        opprettUtfører().utfør(jobbInput)
+
+        verify(exactly = 1) { flytJobbRepository.leggTil(any()) }
     }
 
     @Test

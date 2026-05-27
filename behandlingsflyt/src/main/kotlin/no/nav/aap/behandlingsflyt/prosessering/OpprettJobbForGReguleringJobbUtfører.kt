@@ -3,7 +3,6 @@ package no.nav.aap.behandlingsflyt.prosessering
 import no.nav.aap.behandlingsflyt.behandling.gregulering.GReguleringService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature.GReguleringUtplukkJobb
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
@@ -17,6 +16,7 @@ import org.slf4j.LoggerFactory
 import java.time.Clock
 import java.time.LocalDate
 import java.time.Year
+import kotlin.collections.toSet
 
 /**
  * Kjøres daglig og oppretter jobber for G-Regulering. Jobber opprettes for saksbehandlingskandidater hvor innvilget
@@ -74,26 +74,50 @@ class OpprettJobbForGReguleringJobbUtfører(
         val alleSaker = gReguleringService.hentSakerForGRegulering(datoForGJustering)
         log.info("Antall saker som er kandidater for G-regulering: ${alleSaker.size}")
 
-        if (gradvisUtrulling("sak-id-filter")) {
-            val sakIdTekster = unleashGateway.getVariantValue(GReguleringUtplukkJobb, "sak-id-filter")
+        var kandidater = alleSaker.toSet<SakId?>()
+        if (gradvisUtrulling("ekskluder-sak-ider")) {
+            val ekskluderSakIder = unleashGateway.getVariantValue(GReguleringUtplukkJobb, "ekskluder-sak-ider")
                 .split(",")
                 .map { it.trim() }
                 .filter { it.isNotEmpty() }
-            val parsedSakIder = sakIdTekster.map { it.toLongOrNull() }
-            if (parsedSakIder.any { it == null }) {
-                log.warn("Ugyldig verdi i sak-id-filter. Hopper over opprettelse av G-reguleringsjobber")
+                .map (SakId::fromStringOrNull)
+                .toSet()
+            if (ekskluderSakIder.any { it == null }) {
+                log.warn("Ugyldig verdi i unleash variant 'ekskluder-sak-ider'. Avbryter uttrekk til G-regulering")
                 return emptySet()
             }
-            val sakIdFilter = parsedSakIder.filterNotNull().toSet()
-            return alleSaker.filter { it.id in sakIdFilter }.toSet()
+            kandidater = alleSaker - ekskluderSakIder
+        }
+
+        if (gradvisUtrulling("inkluder-sak-ider")) {
+            val inkluderSakIder = unleashGateway.getVariantValue(GReguleringUtplukkJobb, "inkluder-sak-ider")
+                .split(",")
+                .map { it.trim() }
+                .filter { it.isNotEmpty() }
+                .map (SakId::fromStringOrNull)
+                .toSet()
+            if (inkluderSakIder.any { it == null }) {
+                log.warn("Ugyldig verdi i unleash variant 'inkluder-sak-ider'. Avbryter uttrekk til G-regulering")
+                return emptySet()
+            }
+            kandidater = kandidater.filterNotNull().filter { it in inkluderSakIder }.toSet()
         } else if (gradvisUtrulling("maks-antall-saker")) {
             val maksAntallSaker = unleashGateway.getVariantValue(GReguleringUtplukkJobb, "maks-antall-saker")
                 .trim()
-                .toIntOrNull() ?: return emptySet()
-            return alleSaker.take(maksAntallSaker).toSet()
+                .toIntOrNull()
+            if (maksAntallSaker == null) {
+                log.warn("Ugyldig verdi i unleash variant 'maks-antall-saker'. Avbryter uttrekk til G-regulering")
+                return emptySet()
+            }
+            kandidater = kandidater.take(maksAntallSaker).toSet()
         } else {
-            return emptySet()
+            // uten eksplisitt 'inkluder-sak-ider' eller 'maks-antall-saker' i unleash gjør jobben ikke noe
+            // tanken er at g-regulering må være en bevisst handling og for å plukke opp alle kan 'maks-antall-saker'
+            // settes til et antall større enn alleSaker for å rydde unna etterslengende iverksatte saker over tid
+            kandidater = emptySet()
         }
+
+        return kandidater.filterNotNull().toSet()
     }
 
     private fun gradvisUtrulling(variantNavn: String): Boolean =
