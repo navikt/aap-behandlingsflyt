@@ -89,7 +89,7 @@ class OpprettJobbForGReguleringJobbUtførerTest {
     }
 
     @Test
-    fun `skal ikke opprette jobber når feature toggle er avskrudd`() {
+    fun `feature toggle deaktivert - uttrekk hoppes over`() {
         disableToggle()
 
         opprettUtfører().utfør(jobbInput)
@@ -100,7 +100,7 @@ class OpprettJobbForGReguleringJobbUtførerTest {
     }
 
     @Test
-    fun `skal opprette jobber for kandidater når feature toggle er på`() {
+    fun `inkluder-sak-ider - oppretter jobb for sak som er i filterlisten`() {
         val gjusteringDato = LocalDate.of(2025, 5, 1)
         val sakId = SakId(42L)
         enableToggleWithSakIdFilter(sakId.id)
@@ -116,7 +116,7 @@ class OpprettJobbForGReguleringJobbUtførerTest {
     }
 
     @Test
-    fun `skal ikke opprette jobber når sak-id ikke er i filterlisten`() {
+    fun `inkluder-sak-ider - oppretter ingen jobber for sak som ikke er i filterlisten`() {
         val gjusteringDato = LocalDate.of(2025, 5, 1)
         val sakId = SakId(42L)
         enableToggleWithSakIdFilter(99L) // Kun sak 99 er tillatt, ikke 42
@@ -131,7 +131,7 @@ class OpprettJobbForGReguleringJobbUtførerTest {
     }
 
     @Test
-    fun `skal bruke forrige års G-justering når dagsdato er i januar (før 1 mai)`() {
+    fun `G-periode - dato i januar bruker forrige års G-justering`() {
         val gjusteringDato = LocalDate.of(2026, 5, 1)
         val sakId = SakId(99L)
         enableToggleWithSakIdFilter(sakId.id)
@@ -157,7 +157,7 @@ class OpprettJobbForGReguleringJobbUtførerTest {
     }
 
     @Test
-    fun `skal bruke inneværende års G-justering når dagsdato er 1 mai eller etter`() {
+    fun `G-periode - dato 1 mai eller etter bruker inneværende års G-justering`() {
         val gjusteringDato = LocalDate.of(2027, 5, 1)
         val sakId = SakId(77L)
         enableToggleWithSakIdFilter(sakId.id)
@@ -183,7 +183,7 @@ class OpprettJobbForGReguleringJobbUtførerTest {
     }
 
     @Test
-    fun `skal begrense antall jobber når maks-antall-saker variant er aktiv`() {
+    fun `maks-antall-saker - begrenser opprettede jobber til angitt maks`() {
         val gjusteringDato = LocalDate.of(2025, 5, 1)
         enableToggleWithMaksAntallSaker("2")
 
@@ -199,7 +199,7 @@ class OpprettJobbForGReguleringJobbUtførerTest {
     }
 
     @Test
-    fun `skal opprette jobber kun for ikke-ekskluderte saker når ekskluder-sak-ider er aktiv`() {
+    fun `ekskluder-sak-ider - oppretter jobber kun for saker som ikke er ekskludert`() {
         val gjusteringDato = LocalDate.of(2025, 5, 1)
         enableToggleWithEkskluderSakIdFilter("42, 99")
 
@@ -215,7 +215,7 @@ class OpprettJobbForGReguleringJobbUtførerTest {
     }
 
     @Test
-    fun `skal ikke opprette jobber når ekskluder-sak-ider inneholder ugyldige verdier`() {
+    fun `ekskluder-sak-ider - avbryter uttrekk ved ugyldig verdi i payload`() {
         val gjusteringDato = LocalDate.of(2025, 5, 1)
         enableToggleWithEkskluderSakIdFilter("42, abc, , 99x")
 
@@ -231,7 +231,7 @@ class OpprettJobbForGReguleringJobbUtførerTest {
     }
 
     @Test
-    fun `skal først ekskludere saker før inkluder-filter anvendes når begge er aktive`() {
+    fun `ekskluder-sak-ider kjøres før inkluder-sak-ider når begge varianter er aktive`() {
         val gjusteringDato = LocalDate.of(2025, 5, 1)
         enableToggleWithInkluderOgEkskluderSakIdFilter(
             inkluderSakIder = "42, 77",
@@ -250,7 +250,7 @@ class OpprettJobbForGReguleringJobbUtførerTest {
     }
 
     @Test
-    fun `skal ikke opprette jobber når maks-antall-saker variant har ugyldig verdi`() {
+    fun `maks-antall-saker - avbryter uttrekk ved ugyldig verdi`() {
         val gjusteringDato = LocalDate.of(2025, 5, 1)
         enableToggleWithMaksAntallSaker("ikke-tall")
 
@@ -265,7 +265,7 @@ class OpprettJobbForGReguleringJobbUtførerTest {
     }
 
     @Test
-    fun `skal ikke opprette jobber når maks-antall-saker variant har tom verdi`() {
+    fun `maks-antall-saker - avbryter uttrekk ved tom verdi`() {
         val gjusteringDato = LocalDate.of(2025, 5, 1)
         enableToggleWithMaksAntallSaker("")
 
@@ -280,7 +280,7 @@ class OpprettJobbForGReguleringJobbUtførerTest {
     }
 
     @Test
-    fun `skal ikke opprette jobber når payload inneholder ugyldige og gyldige verdier`() {
+    fun `inkluder-sak-ider - avbryter uttrekk ved ugyldig verdi i payload`() {
         val gjusteringDato = LocalDate.of(2025, 5, 1)
         enableToggleWithSakIdFilter("42, abc, , 99, 123x")
 
@@ -302,13 +302,13 @@ class OpprettJobbForGReguleringJobbUtførerTest {
     }
 
     @Test
-    fun `gPeriodeÅr - dato 30 april gir forrige år`() {
+    fun `gPeriodeÅr - dato 30 april (grense før ny G-periode) gir forrige år`() {
         val utfører = opprettUtfører()
         assertThat(utfører.gPeriodeÅr(30 april 2027)).isEqualTo(Year.of(2026))
     }
 
     @Test
-    fun `gPeriodeÅr - dato 1 mai gir inneværende år`() {
+    fun `gPeriodeÅr - dato 1 mai (første dag i ny G-periode) gir inneværende år`() {
         val utfører = opprettUtfører()
         assertThat(utfører.gPeriodeÅr(1 mai 2027)).isEqualTo(Year.of(2027))
     }
