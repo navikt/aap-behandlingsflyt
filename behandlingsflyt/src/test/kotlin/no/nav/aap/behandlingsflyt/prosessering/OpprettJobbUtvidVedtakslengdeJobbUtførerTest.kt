@@ -58,6 +58,7 @@ class OpprettJobbUtvidVedtakslengdeJobbUtførerTest {
             nySluttdato = dagensDato.plusYears(1),
         )
         every { behandlingService.finnBehandlingMedSisteFattedeVedtak(sakId) } returns behandlingMedVedtak()
+        every { flytJobbRepository.hentJobberForSak(sakId.toLong()) } returns emptyList()
         every { flytJobbRepository.leggTil(match { it.sakId() == sakId.id }) } just Runs
 
         opprettJobbUtfører().utfør(jobbInput)
@@ -101,6 +102,7 @@ class OpprettJobbUtvidVedtakslengdeJobbUtførerTest {
             forrigeSluttdato = dagensDato,
         )
         every { behandlingService.finnBehandlingMedSisteFattedeVedtak(sakId) } returns behandlingMedVedtak()
+        every { flytJobbRepository.hentJobberForSak(sakId.toLong()) } returns emptyList()
         every { flytJobbRepository.leggTil(match { it.sakId() == sakId.id }) } just Runs
 
         opprettJobbUtfører().utfør(jobbInput)
@@ -164,6 +166,50 @@ class OpprettJobbUtvidVedtakslengdeJobbUtførerTest {
             nySluttdato = dagensDato.plusYears(1),
         )
         every { behandlingService.finnBehandlingMedSisteFattedeVedtak(sakId) } returns behandlingMedVedtak()
+        every { flytJobbRepository.hentJobberForSak(sakId.toLong()) } returns emptyList()
+        every { flytJobbRepository.leggTil(match { it.sakId() == sakId.id }) } just Runs
+
+        opprettJobbUtfører().utfør(jobbInput)
+
+        val slot = slot<JobbInput>()
+        verify(exactly = 1) { flytJobbRepository.leggTil(capture(slot)) }
+
+        assertThat(slot.captured)
+            .usingRecursiveComparison()
+            .isEqualTo(jobbInputSak)
+    }
+
+    @Test
+    fun `skal ikke opprette jobb for sak som allerede har ventende utvidVedtakslengde-jobb`() {
+        val eksisterendeJobb = JobbInput(OpprettBehandlingUtvidVedtakslengdeJobbUtfører).forSak(sakId.id)
+
+        every { vedtakslengdeService.hentSakerAktuelleForUtvidelseAvVedtakslengde(any()) } returns setOf(sakId)
+        every { behandlingService.finnSisteYtelsesbehandlingFor(sakId) } returns null
+        every { vedtakslengdeService.hentNesteVedtakslengdeUtvidelse(behandlingId, behandlingId) } returns VedtakslengdeUtvidelse.Automatisk(
+            forrigeSluttdato = dagensDato,
+            nySluttdato = dagensDato.plusYears(1),
+        )
+        every { behandlingService.finnBehandlingMedSisteFattedeVedtak(sakId) } returns behandlingMedVedtak()
+        every { flytJobbRepository.hentJobberForSak(sakId.toLong()) } returns listOf(eksisterendeJobb)
+
+        opprettJobbUtfører().utfør(jobbInput)
+
+        verify(exactly = 0) { flytJobbRepository.leggTil(any()) }
+    }
+
+    @Test
+    fun `skal opprette jobb for sak som har andre ventende jobber men ikke utvidVedtakslengde-jobb`() {
+        val jobbInputSak = JobbInput(OpprettBehandlingUtvidVedtakslengdeJobbUtfører).forSak(sakId.id)
+        val annenJobb = JobbInput(OpprettBehandlingFritakMeldepliktJobbUtfører).forSak(sakId.id)
+
+        every { vedtakslengdeService.hentSakerAktuelleForUtvidelseAvVedtakslengde(any()) } returns setOf(sakId)
+        every { behandlingService.finnSisteYtelsesbehandlingFor(sakId) } returns null
+        every { vedtakslengdeService.hentNesteVedtakslengdeUtvidelse(behandlingId, behandlingId) } returns VedtakslengdeUtvidelse.Automatisk(
+            forrigeSluttdato = dagensDato,
+            nySluttdato = dagensDato.plusYears(1),
+        )
+        every { behandlingService.finnBehandlingMedSisteFattedeVedtak(sakId) } returns behandlingMedVedtak()
+        every { flytJobbRepository.hentJobberForSak(sakId.toLong()) } returns listOf(annenJobb)
         every { flytJobbRepository.leggTil(match { it.sakId() == sakId.id }) } just Runs
 
         opprettJobbUtfører().utfør(jobbInput)
