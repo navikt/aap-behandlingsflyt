@@ -122,7 +122,7 @@ class ForutgåendeMedlemskapVurderingServiceTest {
 
         val vurdering = service.vurderTilhørighet(grunnlag, rettighetsperiode)
             .tilhørighetVurdering
-            .single { it.opplysning == "Sammenhengende arbeid og inntekt i Norge siste 5 år" }
+            .single { it.opplysning == "Arbeids- og inntektshistorikk i Norge siste 5 år" }
         val tidslinje = vurdering.visuellTidslinje
 
         val gapMåned = YearMonth.from(LocalDate.now().minusYears(2))
@@ -145,7 +145,7 @@ class ForutgåendeMedlemskapVurderingServiceTest {
 
         val vurdering = service.vurderTilhørighet(grunnlag, rettighetsperiode)
             .tilhørighetVurdering
-            .single { it.opplysning == "Sammenhengende arbeid og inntekt i Norge siste 5 år" }
+            .single { it.opplysning == "Arbeids- og inntektshistorikk i Norge siste 5 år" }
         val tidslinje = vurdering.visuellTidslinje
 
         val entries = tidslinje.filter { YearMonth.from(it.periode.fom) == YearMonth.from(månedMedFlereInntekter) }

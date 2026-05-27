@@ -11,6 +11,7 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import no.nav.aap.behandlingsflyt.test.AzureTokenGen
+import no.nav.aap.behandlingsflyt.test.TexasPortHolder
 
 @Suppress("PropertyName", "ConstructorParameterNaming")
 data class TestToken(
@@ -20,7 +21,7 @@ data class TestToken(
 )
 
 class TexasFake : FakeServer() {
-    override val server = embeddedServer(Netty, port = 0, module = module())
+    override val server = embeddedServer(Netty, port = TexasPortHolder.getPort(), module = module())
     override fun start() { server.start() }
 
     private fun module(): Application.() -> Unit = {

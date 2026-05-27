@@ -63,15 +63,11 @@ class DokumentinnhentingFake : FakeServer() {
                 )
                 call.respond(dialogmeldingId.toString())
             }
-        }
-        routing {
             get("/api/dokumentinnhenting/syfo/status/{saksnummer}") {
                 val req = call.receive<HentStatusLegeerklæring>()
                 val filtered = statuser.filter { it.saksnummer == req.saksnummer }
                 call.respond(filtered)
             }
-        }
-        routing {
             post("/api/dokumentinnhenting/syfo/brevpreview") {
                 val req = call.receive<ForhåndsvisBrevRequest>()
                 val fnr = 12341234123

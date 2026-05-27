@@ -97,21 +97,13 @@ object FakeServers : AutoCloseable {
     internal val legeerklæringStatuser: MutableList<LegeerklæringStatusResponse> get() = dokumentinnhenting.statuser
 
     fun start(testPersonService: TestPersonService = FakePersoner) {
-        if (started.get()) {
+        if (!started.compareAndSet(false, true)) {
             return
         }
-
 
         fakePersoner = testPersonService
         allFakes.forEach { it.start() }
         setProperties()
-        started.set(true)
-
-        val texasPort = texas.port()
-        val writer = BufferedWriter(FileWriter(".texas_port.txt"))
-        writer.use {
-            it.write(texasPort.toString(10))
-        }
     }
 
     private fun setProperties() {
@@ -272,5 +264,17 @@ object FakeServers : AutoCloseable {
             return
         }
         allFakes.forEach { it.stop() }
+    }
+}
+
+object TexasPortHolder {
+    private val texasPort = AtomicInteger(0)
+
+    fun setPort(port: Int) {
+        texasPort.set(port)
+    }
+
+    fun getPort(): Int {
+        return texasPort.get()
     }
 }

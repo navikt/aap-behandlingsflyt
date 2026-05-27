@@ -102,7 +102,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.InstitusjonsOppho
 import no.nav.aap.behandlingsflyt.pip.behandlingsflytPipApi
 import no.nav.aap.behandlingsflyt.prosessering.BehandlingsflytLogInfoProvider
 import no.nav.aap.behandlingsflyt.prosessering.ProsesseringsJobber
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.yrkesskade.YrkesskadeBackfillMigrering
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.saksApi
 import no.nav.aap.behandlingsflyt.test.fullførBehandlingApi
@@ -126,9 +125,6 @@ import org.apache.kafka.common.serialization.Deserializer
 import org.slf4j.LoggerFactory
 import org.slf4j.bridge.SLF4JBridgeHandler
 import java.util.*
-import java.util.concurrent.Executors
-import java.util.concurrent.ScheduledExecutorService
-import java.util.concurrent.TimeUnit
 import java.util.logging.Level
 import java.util.logging.Logger
 import kotlin.time.Duration.Companion.seconds
@@ -235,11 +231,7 @@ internal fun Application.server(
     )
     Migrering.migrate(fellesDataSource)
 
-    val scheduler = utførMigreringer(fellesDataSource, gatewayProvider, environment.log)
-
     val motor = startMotor(motorDataSource, repositoryRegistry, gatewayProvider, prometheus)
-    val manglendeDokumentasjonMigrering = MigreringManglendeDokumentasjon(repositoryRegistry, gatewayProvider, fellesDataSource)
-        .migrer()
 
     startKafkakonsumenter(fellesDataSource, repositoryRegistry, gatewayProvider)
     TilgangGateway.initialiserPrometheus(prometheus)
@@ -253,9 +245,7 @@ internal fun Application.server(
     monitor.subscribe(ApplicationStopped) { environment ->
         environment.log.info("ktor har fullført nedstoppingen sin. Eventuelle requester og annet arbeid som ikke ble fullført innen timeout ble avbrutt.")
         try {
-            scheduler.shutdownNow()
             // Helt til slutt, nå som vi har stanset Motor, etc. Lukk database-koblingen.
-            manglendeDokumentasjonMigrering.shutdownNow()
             fellesDataSource.close()
             motorDataSource.close()
         } catch (_: Exception) {
@@ -449,29 +439,6 @@ private fun <K, V> Application.startKonsument(konsument: KafkaKonsument<K, V>) {
             konsument.lukk()
         }
     }
-}
-
-// Bruker leaderElector for å sikre at kun en pod kjører migreringen og spinner opp en egen tråd for å ikke blokkere.
-private fun utførMigreringer(
-    dataSource: HikariDataSource,
-    gatewayProvider: GatewayProvider,
-    log: io.ktor.util.logging.Logger
-): ScheduledExecutorService {
-    val scheduler = Executors.newScheduledThreadPool(1)
-    /* Prøv på nytt, for å se om vi er elected til leader, hvert 9. minutt. Hvis vi blir elected, så vil metoden
-     * aldri returnere, og med fixed delay, så blir det heller ikke skjedulert flere tasks.
-    **/
-    scheduler.scheduleWithFixedDelay({
-        val unleashGateway: UnleashGateway = gatewayProvider.provide()
-        val isLeader = isLeader(log)
-        log.info("isLeader = $isLeader")
-
-        if (unleashGateway.isEnabled(BehandlingsflytFeature.BackfillYrkesskadeNyeFelter) && isLeader) {
-            YrkesskadeBackfillMigrering(dataSource, postgresRepositoryRegistry, gatewayProvider).migrer()
-        }
-
-    }, 1, 9, TimeUnit.MINUTES)
-    return scheduler
 }
 
 fun Application.startMotor(
