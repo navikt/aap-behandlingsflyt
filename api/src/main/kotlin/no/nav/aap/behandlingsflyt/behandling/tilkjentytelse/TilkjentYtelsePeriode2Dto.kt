@@ -8,16 +8,9 @@ data class TilkjentYtelsePeriode2Dto(
     val meldeperiode: Periode,
     val levertMeldekortDato: LocalDate?,
     val sisteLeverteMeldekort: MeldekortDto?,
-    val vurdertePerioder: List<VurdertPeriode>,
-    val meldekortStatus: MeldekortStatus?,
+    val meldekortStatus: MeldekortStaus?,
+    val vurdertePerioder: List<VurdertPeriode>
 )
-
-enum class MeldekortStatus {
-    IKKE_AVKLART,
-    LEVERT_OK,
-    LEVERT_FOR_SENT,
-}
-
 
 data class MeldekortDto(
     val timerArbeidPerPeriode: ArbeidIPeriodeDto,
@@ -25,3 +18,10 @@ data class MeldekortDto(
 )
 
 data class ArbeidIPeriodeDto(val timerArbeid: Double)
+
+
+enum class MeldekortStaus {
+    IKKE_LEVERT,
+    LEVERT_ETTER_FRIST,
+    OVERFØRT_TIL_ØKONOMI
+}

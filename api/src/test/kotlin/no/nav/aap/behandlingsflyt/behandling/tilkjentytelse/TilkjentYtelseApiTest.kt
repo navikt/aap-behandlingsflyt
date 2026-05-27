@@ -100,7 +100,7 @@ class TilkjentYtelseApiTest : BaseApiTest() {
                                 timerArbeidPerPeriode = ArbeidIPeriodeDto(11.0),
                                 mottattTidspunkt = LocalDate.parse("2025-08-07").atTime(10, 0),
                             ),
-                            meldekortStatus = MeldekortStatus.IKKE_AVKLART,
+                            meldekortStatus = null,
                             vurdertePerioder = listOf(
                                 VurdertPeriode(
                                     periode = Periode(
@@ -121,7 +121,7 @@ class TilkjentYtelseApiTest : BaseApiTest() {
                                 timerArbeidPerPeriode = ArbeidIPeriodeDto(11.0),
                                 mottattTidspunkt = rettighetsperiode.fom.plusDays(1).atTime(10, 0),
                             ),
-                            meldekortStatus = MeldekortStatus.IKKE_AVKLART,
+                            meldekortStatus = null,
                             vurdertePerioder = listOf(
                                 VurdertPeriode(
                                     periode = Periode(
@@ -139,7 +139,7 @@ class TilkjentYtelseApiTest : BaseApiTest() {
                             ),
                             levertMeldekortDato = null,
                             sisteLeverteMeldekort = null,
-                            meldekortStatus = MeldekortStatus.IKKE_AVKLART,
+                            meldekortStatus = null,
                             vurdertePerioder = listOf(
                                 VurdertPeriode(
                                     periode = Periode(
@@ -245,7 +245,7 @@ class TilkjentYtelseApiTest : BaseApiTest() {
                                 ),
                                 levertMeldekortDato = null,
                                 sisteLeverteMeldekort = null,
-                                meldekortStatus = MeldekortStatus.IKKE_AVKLART,
+                                meldekortStatus = null,
                                 vurdertePerioder = listOf(
                                     VurdertPeriode(
                                         periode = Periode(
@@ -268,7 +268,7 @@ class TilkjentYtelseApiTest : BaseApiTest() {
                                     timerArbeidPerPeriode = ArbeidIPeriodeDto(11.0),
                                     mottattTidspunkt = LocalDate.parse("2025-08-07").atTime(10, 0),
                                 ),
-                                meldekortStatus = MeldekortStatus.IKKE_AVKLART,
+                                meldekortStatus = null,
                                 vurdertePerioder = listOf(
                                     VurdertPeriode(
                                         periode = Periode(
@@ -292,7 +292,7 @@ class TilkjentYtelseApiTest : BaseApiTest() {
                                         timerArbeidPerPeriode = ArbeidIPeriodeDto(11.0),
                                         mottattTidspunkt = LocalDate.parse("2025-08-07").atTime(10, 0),
                                     ),
-                                    meldekortStatus = MeldekortStatus.IKKE_AVKLART,
+                                    meldekortStatus = null,
                                     vurdertePerioder = listOf(
                                         VurdertPeriode(
                                             periode = Periode(
@@ -313,7 +313,7 @@ class TilkjentYtelseApiTest : BaseApiTest() {
                                     timerArbeidPerPeriode = ArbeidIPeriodeDto(11.0),
                                     mottattTidspunkt = LocalDate.parse("2025-08-07").atTime(10, 0),
                                 ),
-                                meldekortStatus = MeldekortStatus.IKKE_AVKLART,
+                                meldekortStatus = null,
                                 vurdertePerioder = listOf(
                                     VurdertPeriode(
                                         periode = Periode(
@@ -334,7 +334,7 @@ class TilkjentYtelseApiTest : BaseApiTest() {
                                 ),
                                 levertMeldekortDato = null,
                                 sisteLeverteMeldekort = null,
-                                meldekortStatus = MeldekortStatus.IKKE_AVKLART,
+                                meldekortStatus = null,
                                 vurdertePerioder = listOf(
                                     VurdertPeriode(
                                         periode = Periode(
