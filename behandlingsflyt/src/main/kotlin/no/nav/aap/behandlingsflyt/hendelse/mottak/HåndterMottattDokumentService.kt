@@ -71,7 +71,7 @@ class HåndterMottattDokumentService(
             låsRepository.låsBehandling(it.id)
         }
 
-        sakService.oppdaterRettighetsperioden(sakId, brevkategori, mottattTidspunkt.toLocalDate())
+        sakService.oppdaterRettighetsperioden(sak, brevkategori, mottattTidspunkt.toLocalDate())
 
         if (skalMarkereDokumentSomBehandlet(melding)) {
             require(opprettetBehandling is BehandlingService.Ordinær) {

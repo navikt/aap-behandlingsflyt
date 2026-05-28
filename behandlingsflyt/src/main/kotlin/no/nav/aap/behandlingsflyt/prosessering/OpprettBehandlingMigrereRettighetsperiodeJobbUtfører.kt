@@ -58,7 +58,7 @@ class OpprettBehandlingMigrereRettighetsperiodeJobbUtfører(
         if (behandlingFørMigrering.status().erÅpen()) {
             throw IllegalArgumentException("Kan ikke migrere sak når det finnes en åpen behandling")
         }
-        sakService.overstyrRettighetsperioden(sak.id, sak.rettighetsperiode.fom, Tid.MAKS)
+        sakService.overstyrRettighetsperioden(sak, sak.rettighetsperiode.fom, Tid.MAKS)
         val utvidVedtakslengdeBehandling = opprettNyBehandling(sak)
         prosesserBehandlingService.triggProsesserBehandling(utvidVedtakslengdeBehandling)
         validerTilstandEtterMigrering(sak, sakId, behandlingFørMigrering)

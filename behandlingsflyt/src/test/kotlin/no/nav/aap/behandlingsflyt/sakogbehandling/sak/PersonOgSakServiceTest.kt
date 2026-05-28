@@ -16,10 +16,10 @@ import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
 import no.nav.aap.behandlingsflyt.test.ident
+import no.nav.aap.behandlingsflyt.test.minimalGatewayProvider
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
-import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.verdityper.dokument.JournalpostId
@@ -226,6 +226,7 @@ class PersonOgSakServiceTest {
             val (opprinneligSak, nySak) = dataSource.transaction { connection ->
                 val repositoryProvider = postgresRepositoryRegistry.provider(connection)
                 val sakRepository = repositoryProvider.provide<SakRepository>()
+                val sakService = SakService(repositoryProvider, minimalGatewayProvider {  })
                 val service = PersonOgSakService(
                     pdlGateway,
                     apiInternGateway,
@@ -249,10 +250,7 @@ class PersonOgSakServiceTest {
                 )
 
                 // Justere rettighetsperioden for å unngå SQLException på overlappende periode
-                sakRepository.oppdaterRettighetsperiode(
-                    opprinneligSak.id,
-                    Periode(Tid.MIN, Tid.MIN.plusDays(1))
-                )
+                sakService.overstyrRettighetsperioden(opprinneligSak, Tid.MIN, Tid.MIN.plusDays(1))
 
                 val nySak = service.finnEllerOpprett(ident, søknadsdato)
                 opprinneligSak to nySak
