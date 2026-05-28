@@ -212,6 +212,7 @@ class OpprettJobbForGReguleringJobbUtførerTest {
         every { gReguleringService.hentSakerForGRegulering(gjusteringDato) } returns
             setOf(SakId(42L), SakId(77L), SakId(99L))
         every { flytJobbRepository.leggTil(any()) } just Runs
+        every { flytJobbRepository.hentJobberForSak(any()) } returns emptyList()
 
         opprettUtfører().utfør(jobbInput)
 
@@ -247,6 +248,7 @@ class OpprettJobbForGReguleringJobbUtførerTest {
         every { gReguleringService.hentSakerForGRegulering(gjusteringDato) } returns
             setOf(SakId(42L), SakId(77L), SakId(99L))
         every { flytJobbRepository.leggTil(any()) } just Runs
+        every { flytJobbRepository.hentJobberForSak(any()) } returns emptyList()
 
         opprettUtfører().utfør(jobbInput)
 
