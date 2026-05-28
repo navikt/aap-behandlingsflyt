@@ -16,7 +16,9 @@ import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingRepos
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingService
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Status
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
+import no.nav.aap.behandlingsflyt.behandling.gregulering.GReguleringService
 import no.nav.aap.behandlingsflyt.behandling.underveis.UnderveisService
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.mdc.LogKontekst
@@ -116,7 +118,9 @@ fun NormalOpenAPIRoute.brevApi(
                         val sak = SakService(repositoryProvider, gatewayProvider).hent(behandling.sakId)
                         val personIdent = sak.person.aktivIdent()
                         val personinfo = personinfoGateway.hentPersoninfoForIdent(personIdent, token())
-                        val rettighetsPerioder = UnderveisService(repositoryProvider, gatewayProvider).rettighethetsType(behandling.id).perioder().toList()
+                        val rettighetsType = UnderveisService(repositoryProvider, gatewayProvider).rettighetsType(behandling.id)
+                        val erGrunnbeløpetEndret = GReguleringService(repositoryProvider, gatewayProvider).erGrunnbeløpEndretForRettighetsTypeTidslinje(rettighetsType)
+
 
                         val skrivBrevAvklaringsbehov = avklaringsbehovene
                             .hentBehovForDefinisjon(
@@ -195,7 +199,7 @@ fun NormalOpenAPIRoute.brevApi(
                                     ),
                                     signaturer = signaturer,
                                     harTilgangTilÅSendeBrev = false, // nb. settes utenfor transaksjonen pga kall til tilgang som vi ønsker skal være async
-                                    rettighetsPerioder = rettighetsPerioder,
+                                    erGrunnbeløpetEndret = erGrunnbeløpetEndret,
                                 )
                             })
                     }

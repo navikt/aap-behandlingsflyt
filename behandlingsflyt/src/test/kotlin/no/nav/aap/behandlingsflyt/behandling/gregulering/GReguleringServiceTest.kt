@@ -161,6 +161,32 @@ class GReguleringServiceTest {
         assertThat(resultat).isFalse()
     }
 
+    @Test
+    fun `skal returnere true når rettighet spenner over G-regulering`() {
+        val periodeFom = 1 april 2025
+        val periodeTom = 31 desember 2025
+
+        val kontekst = kontekst()
+        lagreOppfyltUnderveis(kontekst, periodeFom, periodeTom)
+
+        val resultat = service.erGrunnbeløpEndretForRettighetsTypeTidslinje(kontekst.behandlingId)
+
+        assertThat(resultat).isTrue()
+    }
+
+    @Test
+    fun `skal returnere false når rettighet ikke spenner over G-regulering`() {
+        val periodeFom = 1 mai 2025
+        val periodeTom = 31 desember 2025
+
+        val kontekst = kontekst()
+        lagreOppfyltUnderveis(kontekst, periodeFom, periodeTom)
+
+        val resultat = service.erGrunnbeløpEndretForRettighetsTypeTidslinje(kontekst.behandlingId)
+
+        assertThat(resultat).isFalse()
+    }
+
     private fun kontekst() = flytKontekstMedPerioder {
         vurderingType = VurderingType.REVURDERING
     }

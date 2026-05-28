@@ -26,7 +26,7 @@ data class BrevGrunnlag(
         val mottaker: Mottaker,
         val signaturer: List<Signatur>,
         val harTilgangTilÅSendeBrev: Boolean,
-        val rettighetsPerioder: List<Periode>,
+        val erGrunnbeløpetEndret: Boolean,
     ) {
         data class Mottaker(val navn: String, val ident: String)
     }
