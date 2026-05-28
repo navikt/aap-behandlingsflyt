@@ -10,13 +10,13 @@ import no.nav.aap.behandlingsflyt.behandling.dokumentinnhenting.BestillLegeerkl�
 import no.nav.aap.behandlingsflyt.behandling.dokumentinnhenting.ForhåndsvisBrevRequest
 import no.nav.aap.behandlingsflyt.behandling.dokumentinnhenting.HentStatusLegeerklæring
 import no.nav.aap.behandlingsflyt.behandling.dokumentinnhenting.PurringLegeerklæringRequest
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.LegeerklæringStatusResponse
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.MeldingStatusType
+import no.nav.aap.dokumentinnhenting.kontrakt.DialogmeldingStatusTilBehandslingsflytDto
+import no.nav.aap.dokumentinnhenting.kontrakt.DialogmeldingStatusTilBehandslingsflytDto.MeldingStatusType
 import java.time.LocalDateTime
 import java.util.*
 
 class DokumentinnhentingFake : FakeServer() {
-    internal val statuser = mutableListOf<LegeerklæringStatusResponse>()
+    internal val statuser = mutableListOf<DialogmeldingStatusTilBehandslingsflytDto>()
 
     override val server = embeddedServer(Netty, port = 0, module = module())
     override fun start() {
@@ -31,34 +31,36 @@ class DokumentinnhentingFake : FakeServer() {
                 val dto = call.receive<BestillLegeerklæringDto>()
                 val dialogmeldingId = UUID.randomUUID()
                 statuser.add(
-                    LegeerklæringStatusResponse(
-                        dialogmeldingId,
-                        MeldingStatusType.OK,
-                        "",
-                        dto.behandlerRef,
-                        dto.behandlerNavn,
-                        UUID.randomUUID().toString(),
-                        dto.saksnummer,
-                        LocalDateTime.now(),
-                        dto.fritekst
+                    DialogmeldingStatusTilBehandslingsflytDto(
+                        dialogmeldingUuid = dialogmeldingId,
+                        status = MeldingStatusType.OK,
+                        statusTekst = "",
+                        behandlerRef = dto.behandlerRef,
+                        behandlerNavn = dto.behandlerNavn,
+                        personId = UUID.randomUUID().toString(),
+                        saksnummer = dto.saksnummer,
+                        opprettet = LocalDateTime.now(),
+                        behandlingsReferanse = dto.behandlingsReferanse,
+                        fritekst = dto.fritekst
                     )
                 )
                 call.respond(dialogmeldingId.toString())
             }
             post("/api/dokumentinnhenting/syfo/purring") {
-                call.receive<PurringLegeerklæringRequest>()
+                val request = call.receive<PurringLegeerklæringRequest>()
                 val dialogmeldingId = UUID.randomUUID()
                 statuser.add(
-                    LegeerklæringStatusResponse(
-                        dialogmeldingId,
-                        MeldingStatusType.OK,
-                        "",
-                        "behandlerRef",
-                        "behandlerNavn",
-                        UUID.randomUUID().toString(),
-                        "saksnummer",
-                        LocalDateTime.now(),
-                        "fritekst"
+                    DialogmeldingStatusTilBehandslingsflytDto(
+                        dialogmeldingUuid = dialogmeldingId,
+                        status = MeldingStatusType.OK,
+                        statusTekst = "",
+                        behandlerRef = "behandlerRef",
+                        behandlerNavn = "behandlerNavn",
+                        personId = UUID.randomUUID().toString(),
+                        saksnummer = "saksnummer",
+                        opprettet = LocalDateTime.now(),
+                        behandlingsReferanse = request.behandlingsReferanse,
+                        fritekst = "fritekst"
                     )
                 )
                 call.respond(dialogmeldingId.toString())
