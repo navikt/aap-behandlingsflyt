@@ -76,12 +76,7 @@ class OpprettJobbForGReguleringJobbUtfører(
 
         var kandidater = alleSaker.toSet<SakId?>()
         if (gradvisUtrulling("ekskluder-sak-ider")) {
-            val ekskluderSakIder = unleashGateway.getVariantValue(GReguleringUtplukkJobb, "ekskluder-sak-ider")
-                .split(",")
-                .map { it.trim() }
-                .filter { it.isNotEmpty() }
-                .map (SakId::fromStringOrNull)
-                .toSet()
+            val ekskluderSakIder = hentSakIderFraUnleashVariant("ekskluder-sak-ider")
             if (ekskluderSakIder.any { it == null }) {
                 log.warn("Ugyldig verdi i unleash variant 'ekskluder-sak-ider'. Avbryter uttrekk til G-regulering")
                 return emptySet()
@@ -90,12 +85,7 @@ class OpprettJobbForGReguleringJobbUtfører(
         }
 
         if (gradvisUtrulling("inkluder-sak-ider")) {
-            val inkluderSakIder = unleashGateway.getVariantValue(GReguleringUtplukkJobb, "inkluder-sak-ider")
-                .split(",")
-                .map { it.trim() }
-                .filter { it.isNotEmpty() }
-                .map (SakId::fromStringOrNull)
-                .toSet()
+            val inkluderSakIder = hentSakIderFraUnleashVariant("inkluder-sak-ider")
             if (inkluderSakIder.any { it == null }) {
                 log.warn("Ugyldig verdi i unleash variant 'inkluder-sak-ider'. Avbryter uttrekk til G-regulering")
                 return emptySet()
@@ -118,6 +108,15 @@ class OpprettJobbForGReguleringJobbUtfører(
         }
 
         return kandidater.filterNotNull().toSet()
+    }
+
+    private fun hentSakIderFraUnleashVariant(variantNavn: String): Set<SakId?> {
+        return unleashGateway.getVariantValue(GReguleringUtplukkJobb, variantNavn)
+            .split(",")
+            .map { it.trim() }
+            .filter { it.isNotEmpty() }
+            .map(SakId::fromStringOrNull)
+            .toSet()
     }
 
     private fun gradvisUtrulling(variantNavn: String): Boolean =
