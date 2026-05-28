@@ -461,6 +461,68 @@ class SignaturServiceTest {
         )
     }
 
+    @Test
+    fun `SKRIV_VEDTAKSBREV_SAKSBEHANDLER gir saksbehandler nasjonal som brevskriver uten beslutter`() {
+        val behandling = gittBehandling()
+        val brevbestilling = Brevbestilling(
+            id = 0,
+            behandlingId = behandling.id,
+            typeBrev = TypeBrev.KLAGE_OPPRETTHOLDELSE,
+            referanse = BrevbestillingReferanse(UUID.randomUUID()),
+            status = Status.FORHÅNDSVISNING_KLAR,
+            opprettet = LocalDateTime.now()
+        )
+        val veilederIdent = "v000000"
+        val kvalitetssikrerIdent = "k000000"
+        val saksbehandlerIdent = "s000000"
+
+        // SAKSBEHANDLER_OPPFOLGING
+        leggTilEndring(
+            behandling = behandling,
+            definisjon = Definisjon.VURDER_KLAGE_KONTOR,
+            endretAv = veilederIdent,
+            status = AvklaringsbehovStatus.AVSLUTTET,
+            oppgaveEnhet = "1234"
+        )
+
+        // SAKSBEHANDLER_NASJONAL
+        leggTilEndring(
+            behandling = behandling,
+            definisjon = Definisjon.FASTSETT_PÅKLAGET_BEHANDLING,
+            endretAv = saksbehandlerIdent,
+            status = AvklaringsbehovStatus.AVSLUTTET,
+            oppgaveEnhet = "2345"
+        )
+
+        // KVALITETSSIKRER
+        leggTilEndring(
+            behandling = behandling,
+            definisjon = Definisjon.KVALITETSSIKRING,
+            endretAv = kvalitetssikrerIdent,
+            status = AvklaringsbehovStatus.AVSLUTTET,
+            oppgaveEnhet = "3456"
+        )
+
+        // SAKSBEHANDLER_NASJONAL skriver vedtaksbrev (ikke beslutter)
+        leggTilEndring(
+            behandling = behandling,
+            definisjon = Definisjon.SKRIV_VEDTAKSBREV_SAKSBEHANDLER,
+            endretAv = saksbehandlerIdent,
+            status = AvklaringsbehovStatus.AVSLUTTET,
+            oppgaveEnhet = "4567"
+        )
+
+        val signaturer = signaturService.finnSignaturGrunnlag(brevbestilling, Bruker(""))
+
+        assertThat(signaturer).containsExactly(
+            SignaturGrunnlag(navIdent = saksbehandlerIdent, rolle = Rolle.SAKSBEHANDLER_NASJONAL, enhet = "4567"),
+            SignaturGrunnlag(navIdent = kvalitetssikrerIdent, rolle = Rolle.KVALITETSSIKRER, enhet = "3456"),
+            SignaturGrunnlag(navIdent = veilederIdent, rolle = Rolle.SAKSBEHANDLER_OPPFOLGING, enhet = "1234"),
+        )
+        // Verifiser at det ikke er noen BESLUTTER-signatur
+        assertThat(signaturer.none { it.rolle == Rolle.BESLUTTER }).isTrue()
+    }
+
     private fun leggTilEndring(
         behandling: Behandling,
         definisjon: Definisjon,

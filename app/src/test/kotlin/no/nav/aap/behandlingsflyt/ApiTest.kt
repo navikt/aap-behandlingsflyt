@@ -8,7 +8,7 @@ import io.micrometer.prometheusmetrics.PrometheusConfig
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
-import no.nav.aap.behandlingsflyt.behandling.grunnlag.medlemskap.MedlemskapGrunnlagDto
+import no.nav.aap.behandlingsflyt.behandling.lovvalgmedlemskap.grunnlag.PeriodisertLovvalgMedlemskapGrunnlagResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag11_19
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagInntekt
@@ -207,14 +207,14 @@ class ApiTest {
             return@transaction behandling
         }
 
-        val medlemskapGrunnlag: MedlemskapGrunnlagDto? = client.get(
+        val medlemskapGrunnlag: PeriodisertLovvalgMedlemskapGrunnlagResponse? = client.get(
             URI.create("http://localhost:$port/")
-                .resolve("api/behandling/${opprettetBehandling.referanse}/grunnlag/medlemskap"),
+                .resolve("api/behandling/${opprettetBehandling.referanse}/grunnlag/lovvalgmedlemskap"),
             GetRequest(currentToken = getToken())
         )
 
         assertThat(medlemskapGrunnlag).isNotNull
-        assertThat(medlemskapGrunnlag?.medlemskap?.unntak).isNotEmpty
+        assertThat(medlemskapGrunnlag?.kanVurderes).isNotEmpty
     }
 
     @Test

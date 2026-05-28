@@ -17,6 +17,7 @@ import no.nav.aap.behandlingsflyt.test.mars
 import no.nav.aap.behandlingsflyt.test.november
 import no.nav.aap.behandlingsflyt.test.oktober
 import no.nav.aap.behandlingsflyt.test.september
+import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
@@ -36,7 +37,7 @@ class InstitusjonApiTest {
     inner class ByggTidslinjeForOpphold {
         @Test
         fun `byggTidslinjeForInstitusjonsopphold returnerer tom tidslinje når grunnlag er null`() {
-            val tidslinje = byggTidslinjeForInstitusjonsopphold(null, Institusjonstype.HS)
+            val tidslinje = byggTidslinjeForInstitusjonsopphold(null, Institusjonstype.HS).get()
 
             assertThat(tidslinje.segmenter()).isEmpty()
         }
@@ -47,7 +48,7 @@ class InstitusjonApiTest {
                 oppholdene = Oppholdene(id = 1L, opphold = emptyList())
             )
 
-            val tidslinje = byggTidslinjeForInstitusjonsopphold(grunnlag, Institusjonstype.HS)
+            val tidslinje = byggTidslinjeForInstitusjonsopphold(grunnlag, Institusjonstype.HS).get()
 
             assertThat(tidslinje.segmenter()).isEmpty()
         }
@@ -68,7 +69,7 @@ class InstitusjonApiTest {
                 oppholdene = Oppholdene(id = 1L, opphold = listOf(oppholdHelseinst, oppholdFengsel))
             )
 
-            val tidslinje = byggTidslinjeForInstitusjonsopphold(grunnlag, Institusjonstype.HS)
+            val tidslinje = byggTidslinjeForInstitusjonsopphold(grunnlag, Institusjonstype.HS).get()
 
             assertThat(tidslinje.segmenter()).hasSize(1)
 
@@ -94,7 +95,7 @@ class InstitusjonApiTest {
                 oppholdene = Oppholdene(id = 1L, opphold = listOf(opphold1, opphold2))
             )
 
-            val tidslinje = byggTidslinjeForInstitusjonsopphold(grunnlag, Institusjonstype.HS)
+            val tidslinje = byggTidslinjeForInstitusjonsopphold(grunnlag, Institusjonstype.HS).get()
             val segmenter = tidslinje.segmenter().toList()
 
             assertThat(segmenter).hasSize(2)
@@ -120,7 +121,7 @@ class InstitusjonApiTest {
                 oppholdene = Oppholdene(id = 1L, opphold = listOf(opphold1, opphold2))
             )
 
-            val tidslinje = byggTidslinjeForInstitusjonsopphold(grunnlag, Institusjonstype.HS)
+            val tidslinje = byggTidslinjeForInstitusjonsopphold(grunnlag, Institusjonstype.HS).get()
             val segmenter = tidslinje.segmenter().toList()
 
             assertThat(segmenter).hasSize(2)
@@ -147,9 +148,8 @@ class InstitusjonApiTest {
                 oppholdene = Oppholdene(id = 1L, opphold = listOf(opphold1, opphold2))
             )
 
-            assertThrows<IllegalArgumentException> {
-                byggTidslinjeForInstitusjonsopphold(grunnlag, Institusjonstype.HS)
-            }
+            val result = byggTidslinjeForInstitusjonsopphold(grunnlag, Institusjonstype.HS)
+            assertThat(result.isInvalid).isTrue()
         }
 
         @Test
@@ -173,7 +173,7 @@ class InstitusjonApiTest {
                 oppholdene = Oppholdene(id = 1L, opphold = listOf(opphold1, opphold2, opphold3))
             )
 
-            val tidslinje = byggTidslinjeForInstitusjonsopphold(grunnlag, Institusjonstype.HS)
+            val tidslinje = byggTidslinjeForInstitusjonsopphold(grunnlag, Institusjonstype.HS).get()
             val segmenter = tidslinje.segmenter().toList()
 
             assertThat(segmenter).hasSize(3)
