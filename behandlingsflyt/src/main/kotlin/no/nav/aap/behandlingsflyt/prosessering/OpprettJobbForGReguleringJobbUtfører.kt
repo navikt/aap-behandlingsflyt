@@ -57,6 +57,7 @@ class OpprettJobbForGReguleringJobbUtfører(
 
         log.info("Fant ${saker.size} kandidater for G-regulering for gitt G-justering ${aktuellGJustering?.dato}")
         saker
+            .filterNot { finnesAlleredeGReguleringJobbForSak(it) }
             .also { log.info("Oppretter jobber for alle saker som er aktuelle kandidater for G-regulering. Antall = ${it.size}, Saker = $it") }
             .forEach {
                 flytJobbRepository.leggTil(JobbInput(OpprettBehandlingGReguleringJobbUtfører).forSak(it.toLong()))
@@ -118,6 +119,10 @@ class OpprettJobbForGReguleringJobbUtfører(
             .map(SakId::fromStringOrNull)
             .toSet()
     }
+
+    private fun finnesAlleredeGReguleringJobbForSak(sakId: SakId): Boolean =
+        flytJobbRepository.hentJobberForSak(sakId.toLong())
+            .any { it.type() == OpprettBehandlingGReguleringJobbUtfører.type }
 
     private fun gradvisUtrulling(variantNavn: String): Boolean =
         unleashGateway.isVariantEnabled(GReguleringUtplukkJobb, variantNavn)
