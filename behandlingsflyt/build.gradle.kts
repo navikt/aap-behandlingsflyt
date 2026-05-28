@@ -55,6 +55,7 @@ dependencies {
     api(libs.motor)
     api(libs.gateway)
     api(libs.utbetalKontrakt)
+    api(libs.dokumentinnhentingKontrakt)
     implementation(libs.dbconnect)
     // TODO: fjern denne avhengigheten når alle RestClient-instanser er i repository-modulen
     implementation(libs.httpklient)
