@@ -1,9 +1,7 @@
 package no.nav.aap.behandlingsflyt.prosessering.datadeling
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.meldeperiode.MeldeperiodeRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Meldekort
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.ArbeidIPeriodeDTO
@@ -82,7 +80,7 @@ class DatadelingMeldekortService(
                 null
             } else {
                 tilKontrakt(
-                    meldekort, personIdent, sak.saksnummer, behandlingId, underveisGrunnlag, meldekortetsPeriode
+                    meldekort, personIdent, sak.saksnummer, behandlingId, meldekortetsPeriode
                 )
             }
         }
@@ -94,14 +92,8 @@ class DatadelingMeldekortService(
         personIdent: Ident,
         saksnummer: Saksnummer,
         behandlingId: BehandlingId,
-        underveisGrunnlag: UnderveisGrunnlag?,
         meldeperiode: Periode,
     ): DetaljertMeldekortDTO {
-        val meldekortetsUnderveisperiode = underveisperiodeOmBareEn(underveisGrunnlag, meldeperiode, behandlingId)
-        val meldepliktStatus = meldekortetsUnderveisperiode?.meldepliktStatus
-        val rettighetsType = meldekortetsUnderveisperiode?.rettighetsType
-        val avslagsårsak = meldekortetsUnderveisperiode?.avslagsårsak
-
         return DetaljertMeldekortDTO(
             personIdent = personIdent.identifikator,
             saksnummer = saksnummer,
@@ -115,33 +107,7 @@ class DatadelingMeldekortService(
                     it.periode.fom, it.periode.tom, it.timerArbeid.antallTimer
                 )
             },
-            meldepliktStatusKode = meldepliktStatus?.name,
-            rettighetsTypeKode = rettighetsType?.name,
-            avslagsårsakKode = avslagsårsak?.name
         )
-    }
-
-    private fun underveisperiodeOmBareEn(
-        underveisGrunnlag: UnderveisGrunnlag?, meldeperiode: Periode, behandlingId: BehandlingId
-    ): Underveisperiode? {
-        val underveisPerioderEksakt = underveisGrunnlag?.perioder?.filter {
-            it.meldePeriode == meldeperiode
-        }.orEmpty()
-        if (underveisPerioderEksakt.size == 1) {
-            return underveisPerioderEksakt.first()
-        } else if (underveisPerioderEksakt.isEmpty()) {
-            log.warn(
-                "Ingen underveisperiode som matcher meldeperiode=$meldeperiode funnet på behandlingId=${behandlingId}. "
-            )
-            return null
-        } else {
-            log.info(
-                "Flere underveisperioder funnet for samme meldeperiode på behandlingId=${behandlingId}. " +
-                        "Kan da ikke entydig angi statuser for hele meldeperioden under ett."
-            )
-            return null
-        }
-
     }
 
     private fun finnMeldekortetsPeriode(

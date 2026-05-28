@@ -1,21 +1,11 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
 
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus
-import no.nav.aap.behandlingsflyt.behandling.vilkår.alder.Aldersgrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.ArbeidsGradering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisperiodeId
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisÅrsak
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.StrukturertDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Meldekort
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Status
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.help.opprettSak
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
@@ -36,15 +26,11 @@ import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.type.Periode
-import no.nav.aap.komponenter.verdityper.Dagsatser
-import no.nav.aap.komponenter.verdityper.Prosent
-import no.nav.aap.komponenter.verdityper.TimerArbeid
 import no.nav.aap.verdityper.dokument.Kanal
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
-import java.math.BigDecimal
 import java.time.LocalDate
 
 
@@ -100,11 +86,6 @@ class DatadelingMeldekortServiceTest {
             val periodeStart = testSak.opprettetTidspunkt.plusDays(1).toLocalDate()
 
             val meldeperioder = lagreMeldeperioder(periodeStart, meldeperiodeRepository, testBehandling)
-            val testUnderveisGrunnlag = lagreUnderveisGrunnlag(
-                underveisRepository, testBehandling, meldeperioder,
-                testPeriode
-            )
-            val testUnderveisperiode = testUnderveisGrunnlag.perioder.first()
 
             val testMeldekort = lagreMeldekort(
                 InnsendingReferanse(InnsendingReferanse.Type.JOURNALPOST, 100001.toString()),
@@ -141,35 +122,11 @@ class DatadelingMeldekortServiceTest {
                 }
                 val timetall = timerArbeidPerPeriode.sumOf { it.timerArbeidet }
                 assertThat(timetall).isEqualTo(16.0.toBigDecimal())
-
-
-                assertThat(avslagsårsakKode).isEqualTo(testUnderveisperiode.avslagsårsak?.name)
-                assertThat(rettighetsTypeKode).isEqualTo(testUnderveisperiode.rettighetsType?.name)
-                assertThat(meldepliktStatusKode).isEqualTo(testUnderveisperiode.meldepliktStatus?.name)
             }
 
         }
     }
 
-}
-
-private fun lagreUnderveisGrunnlag(
-    underveisRepository: UnderveisRepositoryImpl,
-    testBehandling: Behandling,
-    meldeperioder: List<Periode>,
-    testPeriode: Periode,
-): UnderveisGrunnlag {
-    val testGrunnlag =
-        Aldersgrunnlag(testPeriode, Fødselsdato(LocalDate.now().minusYears(20)), grenseForAntallMånederFørFylte18 = 3)
-    underveisRepository.lagre(
-        testBehandling.id,
-        listOf(testUnderveisperiode(testPeriode, meldeperioder.first())),
-        testGrunnlag
-    )
-    val lagretUnderveisperiode = underveisRepository.hent(testBehandling.id)
-    assertThat(lagretUnderveisperiode.perioder).hasSize(1)
-
-    return lagretUnderveisperiode
 }
 
 private fun lagreMeldeperioder(
@@ -184,31 +141,6 @@ private fun lagreMeldeperioder(
     assertThat(meldeperioderDb).hasSize(3)
     return meldeperioderDb
 }
-
-private fun testUnderveisperiode(testPeriode: Periode, meldeperiode: Periode): Underveisperiode =
-    Underveisperiode(
-        testPeriode,
-        utfall = Utfall.OPPFYLT,
-        rettighetsType = RettighetsType.BISTANDSBEHOV,
-        avslagsårsak = UnderveisÅrsak.VARIGHETSKVOTE_BRUKT_OPP,
-        grenseverdi = Prosent.`100_PROSENT`,
-        arbeidsgradering = ArbeidsGradering(
-            totaltAntallTimer = TimerArbeid(
-                antallTimer = BigDecimal(0)
-            ),
-            andelArbeid = Prosent.`100_PROSENT`,
-            fastsattArbeidsevne = Prosent.`100_PROSENT`,
-            gradering = Prosent.`100_PROSENT`,
-            opplysningerMottatt = null,
-        ),
-        trekk = Dagsatser(0),
-        brukerAvKvoter = emptySet(),
-        id = UnderveisperiodeId(0),
-        institusjonsoppholdReduksjon = Prosent(0),
-        meldepliktStatus = MeldepliktStatus.RIMELIG_GRUNN,
-        meldePeriode = meldeperiode,
-        meldepliktGradering = Prosent(0),
-    )
 
 private fun lagreMeldekort(
     referanse: InnsendingReferanse,
