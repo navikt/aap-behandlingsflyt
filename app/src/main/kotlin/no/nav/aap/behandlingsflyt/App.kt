@@ -45,7 +45,6 @@ import no.nav.aap.behandlingsflyt.behandling.brev.sykdomsvurderingForBrevApi
 import no.nav.aap.behandlingsflyt.behandling.etableringegenvirksomhet.etableringEgenVirksomhetApi
 import no.nav.aap.behandlingsflyt.behandling.foreslåvedtak.foreslaaVedtakApi
 import no.nav.aap.behandlingsflyt.behandling.foreslåvedtak.foreslaaVedtakVedtakslengdeApi
-import no.nav.aap.behandlingsflyt.behandling.grunnlag.medlemskap.medlemskapsgrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.grunnlag.samordning.samordningGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.inntektsbortfall.inntektsbortfallGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.institusjonsopphold.institusjonApi
@@ -274,7 +273,6 @@ internal fun Application.server(
                 arbeidsopptrappingGrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
                 etableringEgenVirksomhetApi(fellesDataSource, repositoryRegistry, gatewayProvider)
                 overgangUforeGrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
-                medlemskapsgrunnlagApi(fellesDataSource, repositoryRegistry)
                 studentgrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
                 sykestipendGrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
                 sykdomsgrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
