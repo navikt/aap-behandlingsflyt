@@ -17,7 +17,6 @@ import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import no.nav.aap.behandlingsflyt.api.actuator.actuator
-import no.nav.aap.behandlingsflyt.api.config.definisjoner.configApi
 import no.nav.aap.behandlingsflyt.auditlog.auditlogApi
 import no.nav.aap.behandlingsflyt.behandling.aktivitetsplikt.avbrytaktivitetspliktbehandling.avbrytAktivitetspliktbehandlingGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.aktivitetsplikt.brudd_11_7.aktivitetsplikt11_7GrunnlagApi
@@ -257,7 +256,6 @@ internal fun Application.server(
             install(NavIdentInterceptor)
 
             apiRouting {
-                configApi()
                 personApi(fellesDataSource, repositoryRegistry, gatewayProvider)
                 saksApi(fellesDataSource, repositoryRegistry, gatewayProvider)
                 behandlingApi(fellesDataSource, repositoryRegistry, gatewayProvider)
