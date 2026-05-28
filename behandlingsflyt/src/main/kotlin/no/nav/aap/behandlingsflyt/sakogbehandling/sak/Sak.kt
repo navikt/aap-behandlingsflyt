@@ -9,10 +9,16 @@ class Sak(
     val id: SakId,
     val saksnummer: Saksnummer,
     val person: Person,
-    val rettighetsperiode: Periode,
+    rettighetsperiode: Periode,
     private val status: Status = Status.OPPRETTET,
     val opprettetTidspunkt: LocalDateTime = LocalDateTime.now(),
 ) {
+
+    /** Selv om rettighetsperiode settes når den endres i databasen, så er det i dag veldig mange kopier
+     * av denne behandlingen som ikke blir mutert. Du burde derfor fortsatt lese fra databasen til vi
+     * kommer dit at behandlingen injectes over alt i flyten. */
+    var rettighetsperiode: Periode = rettighetsperiode
+        internal set
 
     fun status(): Status {
         return status
