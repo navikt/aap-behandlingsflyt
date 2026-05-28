@@ -37,8 +37,15 @@ class OpprettJobbUtvidVedtakslengdeJobbUtfører(
         val saker = hentKandidaterForUtvidelseAvVedtakslengde(datoForUtvidelse)
 
         log.info("Fant ${saker.size} kandidater for utvidelse av vedtakslengde per $datoForUtvidelse")
-        saker
-            .also { log.info("Oppretter jobber for alle saker som er aktuelle kandidator for utvidelse av vedtakslengde. Antall = ${it.size}, Saker = $it") }
+
+        val (sakerSomHarEksisterendeJobb, sakerSomIkkeHarEksisterendeJobb) = saker.partition { finnesAlleredeUtvidVedtakslengdeJobbForSak(it) }
+
+        if (sakerSomHarEksisterendeJobb.isNotEmpty()) {
+            log.info("Filtrerer bort ${sakerSomHarEksisterendeJobb.size} saker som allerede har ventende utvidVedtakslengde-jobb. Saker: $sakerSomHarEksisterendeJobb")
+        }
+
+        sakerSomIkkeHarEksisterendeJobb
+            .also { log.info("Oppretter jobber for ${it.size} saker som er aktuelle kandidator for utvidelse av vedtakslengde. Saker: $it") }
             .forEach {
                 flytJobbRepository.leggTil(JobbInput(OpprettBehandlingUtvidVedtakslengdeJobbUtfører).forSak(it.toLong()))
             }
@@ -95,6 +102,10 @@ class OpprettJobbUtvidVedtakslengdeJobbUtfører(
             forrigeBehandlingId = sisteGjeldendeBehandling.id,
         )
     }
+
+    private fun finnesAlleredeUtvidVedtakslengdeJobbForSak(sakId: SakId): Boolean =
+        flytJobbRepository.hentJobberForSak(sakId.toLong())
+            .any { it.type() == OpprettBehandlingUtvidVedtakslengdeJobbUtfører.type }
 
     private data class KategoriserteKandidater(
         val automatiske: Set<SakId> = emptySet(),

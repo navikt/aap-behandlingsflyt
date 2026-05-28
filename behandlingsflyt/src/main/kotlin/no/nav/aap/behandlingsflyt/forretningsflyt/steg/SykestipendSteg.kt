@@ -9,7 +9,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.sykestipend.SykestipendRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.søkerOppgirStudentstatus
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.skalVurdereStudent
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
@@ -49,7 +49,7 @@ class SykestipendSteg private constructor(
                 when (kontekst.vurderingType) {
                     VurderingType.FØRSTEGANGSBEHANDLING ->
                         tidligereVurderinger.muligMedRettTilAAP(kontekst, type())
-                                && studentGrunnlag.søkerOppgirStudentstatus()
+                                && studentGrunnlag.skalVurdereStudent()
                                 && studentGrunnlag?.vurderinger?.any { it.erOppfylt() } == true
 
                     VurderingType.REVURDERING ->

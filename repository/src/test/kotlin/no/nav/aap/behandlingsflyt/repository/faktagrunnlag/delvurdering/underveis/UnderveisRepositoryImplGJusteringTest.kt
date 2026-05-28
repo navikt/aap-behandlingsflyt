@@ -21,6 +21,7 @@ import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.tilkjentytelse.TilkjentYtelseRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.test.januar
+import no.nav.aap.behandlingsflyt.test.minimalGatewayProvider
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.type.Periode
@@ -41,6 +42,7 @@ import java.time.LocalDateTime
 class UnderveisRepositoryImplGJusteringTest {
 
     private lateinit var dataSource: TestDataSource
+    private val gatewayProvider = minimalGatewayProvider {  }
 
     @BeforeEach
     fun setUp() {
@@ -60,7 +62,7 @@ class UnderveisRepositoryImplGJusteringTest {
         val sak = dataSource.transaction { sak(it, 1 januar 2025) }
         dataSource.transaction { connection ->
             val behandling = finnEllerOpprettBehandling(connection, sak)
-            VedtakService(postgresRepositoryRegistry.provider(connection))
+            VedtakService(postgresRepositoryRegistry.provider(connection), gatewayProvider)
                 .lagreVedtak(behandling.id, LocalDateTime.now(), gJusteringsdato)
             BehandlingRepositoryImpl(connection).oppdaterBehandlingStatus(behandling.id, Status.AVSLUTTET)
             UnderveisRepositoryImpl(connection).lagre(
@@ -84,7 +86,7 @@ class UnderveisRepositoryImplGJusteringTest {
         val sak = dataSource.transaction { sak(it, 1 januar 2025) }
         dataSource.transaction { connection ->
             val behandling = finnEllerOpprettBehandling(connection, sak)
-            VedtakService(postgresRepositoryRegistry.provider(connection))
+            VedtakService(postgresRepositoryRegistry.provider(connection), gatewayProvider)
                 .lagreVedtak(behandling.id, LocalDateTime.now(), gJusteringsdato)
             BehandlingRepositoryImpl(connection).oppdaterBehandlingStatus(behandling.id, Status.AVSLUTTET)
             UnderveisRepositoryImpl(connection).lagre(
@@ -108,7 +110,7 @@ class UnderveisRepositoryImplGJusteringTest {
         val sak = dataSource.transaction { sak(it, 1 januar 2025) }
         dataSource.transaction { connection ->
             val behandling = finnEllerOpprettBehandling(connection, sak)
-            VedtakService(postgresRepositoryRegistry.provider(connection))
+            VedtakService(postgresRepositoryRegistry.provider(connection), gatewayProvider)
                 .lagreVedtak(behandling.id, LocalDateTime.now(), gJusteringsdato)
             BehandlingRepositoryImpl(connection).oppdaterBehandlingStatus(behandling.id, Status.AVSLUTTET)
             UnderveisRepositoryImpl(connection).lagre(
@@ -156,7 +158,7 @@ class UnderveisRepositoryImplGJusteringTest {
 
         dataSource.transaction { connection ->
             val behandlingMedTreff = finnEllerOpprettBehandling(connection, sakMedTreff)
-            VedtakService(postgresRepositoryRegistry.provider(connection))
+            VedtakService(postgresRepositoryRegistry.provider(connection), gatewayProvider)
                 .lagreVedtak(behandlingMedTreff.id, LocalDateTime.now(), gJusteringsdato)
             BehandlingRepositoryImpl(connection).oppdaterBehandlingStatus(behandlingMedTreff.id, Status.AVSLUTTET)
             UnderveisRepositoryImpl(connection).lagre(
@@ -168,7 +170,7 @@ class UnderveisRepositoryImplGJusteringTest {
             )
 
             val behandlingUtenTreff = finnEllerOpprettBehandling(connection, sakUtenTreff)
-            VedtakService(postgresRepositoryRegistry.provider(connection))
+            VedtakService(postgresRepositoryRegistry.provider(connection), gatewayProvider)
                 .lagreVedtak(behandlingUtenTreff.id, LocalDateTime.now(), gJusteringsdato)
             BehandlingRepositoryImpl(connection).oppdaterBehandlingStatus(behandlingUtenTreff.id, Status.AVSLUTTET)
             UnderveisRepositoryImpl(connection).lagre(
@@ -192,7 +194,7 @@ class UnderveisRepositoryImplGJusteringTest {
         val sak = dataSource.transaction { sak(it, 1 januar 2025) }
         dataSource.transaction { connection ->
             val behandling = finnEllerOpprettBehandling(connection, sak)
-            VedtakService(postgresRepositoryRegistry.provider(connection))
+            VedtakService(postgresRepositoryRegistry.provider(connection), gatewayProvider)
                 .lagreVedtak(behandling.id, LocalDateTime.now(), gJusteringsdato)
             BehandlingRepositoryImpl(connection).oppdaterBehandlingStatus(behandling.id, Status.AVSLUTTET)
             UnderveisRepositoryImpl(connection).lagre(
@@ -217,7 +219,7 @@ class UnderveisRepositoryImplGJusteringTest {
         val sak = dataSource.transaction { sak(it, 1 januar 2025) }
         dataSource.transaction { connection ->
             val behandling = finnEllerOpprettBehandling(connection, sak)
-            VedtakService(postgresRepositoryRegistry.provider(connection))
+            VedtakService(postgresRepositoryRegistry.provider(connection), gatewayProvider)
                 .lagreVedtak(behandling.id, LocalDateTime.now(), gJusteringsdato)
             BehandlingRepositoryImpl(connection).oppdaterBehandlingStatus(behandling.id, Status.AVSLUTTET)
             UnderveisRepositoryImpl(connection).lagre(
@@ -254,7 +256,7 @@ class UnderveisRepositoryImplGJusteringTest {
         val sak = dataSource.transaction { sak(it, 1 januar 2025) }
         dataSource.transaction { connection ->
             val behandling = finnEllerOpprettBehandling(connection, sak)
-            VedtakService(postgresRepositoryRegistry.provider(connection))
+            VedtakService(postgresRepositoryRegistry.provider(connection), gatewayProvider)
                 .lagreVedtak(behandling.id, LocalDateTime.now(), gJusteringsdato)
             BehandlingRepositoryImpl(connection).oppdaterBehandlingStatus(behandling.id, Status.AVSLUTTET)
             UnderveisRepositoryImpl(connection).lagre(
@@ -291,7 +293,7 @@ class UnderveisRepositoryImplGJusteringTest {
         val sak = dataSource.transaction { sak(it, 1 januar 2025) }
         dataSource.transaction { connection ->
             val behandling = finnEllerOpprettBehandling(connection, sak)
-            VedtakService(postgresRepositoryRegistry.provider(connection))
+            VedtakService(postgresRepositoryRegistry.provider(connection), gatewayProvider)
                 .lagreVedtak(behandling.id, LocalDateTime.now(), gJusteringsdato)
             BehandlingRepositoryImpl(connection).oppdaterBehandlingStatus(behandling.id, Status.AVSLUTTET)
             UnderveisRepositoryImpl(connection).lagre(
@@ -331,7 +333,7 @@ class UnderveisRepositoryImplGJusteringTest {
         val sak = dataSource.transaction { sak(it, 1 januar 2025) }
         dataSource.transaction { connection ->
             val behandling = finnEllerOpprettBehandling(connection, sak)
-            VedtakService(postgresRepositoryRegistry.provider(connection))
+            VedtakService(postgresRepositoryRegistry.provider(connection), gatewayProvider)
                 .lagreVedtak(behandling.id, LocalDateTime.now(), gJusteringsdato)
             BehandlingRepositoryImpl(connection).oppdaterBehandlingStatus(behandling.id, Status.AVSLUTTET)
             UnderveisRepositoryImpl(connection).lagre(
@@ -369,7 +371,7 @@ class UnderveisRepositoryImplGJusteringTest {
         val sak = dataSource.transaction { sak(it, 1 januar 2025) }
         dataSource.transaction { connection ->
             val behandling = finnEllerOpprettBehandling(connection, sak)
-            VedtakService(postgresRepositoryRegistry.provider(connection))
+            VedtakService(postgresRepositoryRegistry.provider(connection), gatewayProvider)
                 .lagreVedtak(behandling.id, LocalDateTime.now(), gJusteringsdato)
             BehandlingRepositoryImpl(connection).oppdaterBehandlingStatus(behandling.id, Status.AVSLUTTET)
             UnderveisRepositoryImpl(connection).lagre(

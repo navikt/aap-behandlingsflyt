@@ -36,6 +36,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Tidslinje
@@ -77,7 +78,7 @@ class UnderveisService(
         meldeperiodeRepository = repositoryProvider.provide(),
         overstyringMeldepliktRepository = repositoryProvider.provide(),
         arbeidsopptrappingRepository = repositoryProvider.provide(),
-        vedtakService = VedtakService(repositoryProvider),
+        vedtakService = VedtakService(repositoryProvider, gatewayProvider),
         vedtakslengdeRepository = repositoryProvider.provide(),
         behandlingRepository = repositoryProvider.provide(),
         unleashGateway = gatewayProvider.provide(),
@@ -140,7 +141,7 @@ class UnderveisService(
     }
 
     fun vurder(sakId: SakId, behandlingId: BehandlingId): Tidslinje<Vurdering> {
-        val input = genererInput(sakId, behandlingId)
+        val input = genererInput(behandlingId)
 
         val vurderRegler = vurderRegler(input)
         underveisRepository.lagre(
@@ -157,7 +158,7 @@ class UnderveisService(
         }
     }
 
-    private fun genererInput(sakId: SakId, behandlingId: BehandlingId): UnderveisInput {
+    private fun genererInput(behandlingId: BehandlingId): UnderveisInput {
         val sak = sakService.hentSakFor(behandlingId)
         val vilkårsresultat = vilkårsresultatRepository.hent(behandlingId)
 
@@ -185,7 +186,10 @@ class UnderveisService(
         val periodeForVurdering = utledPeriodeForUnderveisvurderinger(behandlingId, sak)
         val meldeperioder = meldeperiodeRepository.hentMeldeperioder(behandlingId, periodeForVurdering)
 
-        val vedtaksdatoFørstegangsbehandling = vedtakService.vedtakstidspunktFørstegangsbehandling(sakId)
+        val vedtaksdatoFørstegangsbehandling = if (unleashGateway.isEnabled(BehandlingsflytFeature.MeldepliktForsteFraForsteInnvilgelse))
+            vedtakService.vedtakstidspunktFørsteInnvilgelse(sak)
+        else
+            vedtakService.vedtakstidspunktFørstegangsbehandling(sak.id)
 
         val rettighetstypeGrunnlag = rettighetstypeRepository.hentHvisEksisterer(behandlingId)
 
@@ -256,10 +260,13 @@ class UnderveisService(
         return vedtattUnderveis?.perioder?.maxOfOrNull { it.periode.tom }
     }
 
-    fun rettighethetsType(behandlingId: BehandlingId): Tidslinje<RettighetsType> {
+    fun rettighetsType(behandlingId: BehandlingId): Tidslinje<RettighetsType> {
         return underveisRepository.hentHvisEksisterer(behandlingId)
-            ?.somTidslinje().orEmpty()
-            .mapNotNull { it.rettighetsType }
-            .komprimer()
+            ?.rettighetstyper()
+            .orEmpty()
+    }
+
+    fun harRett(behandlingId: BehandlingId): Boolean {
+        return rettighetsType(behandlingId).isNotEmpty()
     }
 }

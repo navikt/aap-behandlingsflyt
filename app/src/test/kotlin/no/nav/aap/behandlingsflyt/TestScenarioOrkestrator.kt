@@ -81,7 +81,7 @@ import javax.sql.DataSource
 class TestScenarioOrkestrator(
     private val gatewayProvider: GatewayProvider,
     private val datasource: DataSource,
-    private val motor: ManuellMotorImpl
+    private val motor: ManuellMotorImpl,
 ) {
     fun løsStudent(behandling: Behandling): Behandling {
         return løsAvklaringsBehov(
@@ -210,7 +210,7 @@ class TestScenarioOrkestrator(
             KvalitetssikringLøsning(alleAvklaringsbehov.filter { behov -> behov.erTotrinn() || behov.kreverKvalitetssikring() }
                 .map { behov ->
                     TotrinnsVurdering(
-                        behov.definisjon.kode, true, "begrunnelse", emptyList()
+                        behov.definisjon.kode, true, "begrunnelse", emptyList(), markeringer = emptyList()
                     )
                 }),
             bruker
@@ -455,7 +455,11 @@ class TestScenarioOrkestrator(
                     .filter { behov -> behov.erTotrinn() }
                     .map { behov ->
                         TotrinnsVurdering(
-                            behov.definisjon.kode, behov.definisjon != returVed, "begrunnelse", emptyList()
+                            behov.definisjon.kode,
+                            behov.definisjon != returVed,
+                            "begrunnelse",
+                            emptyList(),
+                            markeringer = emptyList()
                         )
                     }),
             Bruker("BESLUTTER")

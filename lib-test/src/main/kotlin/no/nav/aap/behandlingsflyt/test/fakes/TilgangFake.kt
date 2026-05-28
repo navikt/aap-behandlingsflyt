@@ -24,8 +24,6 @@ class TilgangFake : FakeServer() {
                 call.receive<SakTilgangRequest>()
                 call.respond(TilgangResponse(true))
             }
-        }
-        routing {
             post("/tilgang/behandling") {
                 call.receive<BehandlingTilgangRequest>()
                 call.respond(
@@ -35,8 +33,6 @@ class TilgangFake : FakeServer() {
                     )
                 )
             }
-        }
-        routing {
             post("/tilgang/journalpost") {
                 call.receive<JournalpostTilgangRequest>()
                 call.respond(TilgangResponse(true))

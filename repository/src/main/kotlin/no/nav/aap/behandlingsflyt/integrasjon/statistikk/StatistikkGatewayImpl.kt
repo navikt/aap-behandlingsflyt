@@ -21,12 +21,12 @@ class StatistikkGatewayImpl : StatistikkGateway {
     }
 
     private val restClient = RestClient.withDefaultResponseHandler(
-        config = ClientConfig(scope = requiredConfigForKey("integrasjon.statistikk.scope")),
+        config = ClientConfig(scope = requiredConfigForKey("INTEGRASJON_STATISTIKK_SCOPE")),
         tokenProvider = AzureM2MTokenProvider,
         prometheus = prometheus
     )
 
-    private val uri = URI.create(requiredConfigForKey("integrasjon.statistikk.url"))
+    private val uri = URI.create(requiredConfigForKey("INTEGRASJON_STATISTIKK_URL"))
 
     override fun avgiStatistikk(hendelse: StoppetBehandling) {
         restClient.post<_, Unit>(

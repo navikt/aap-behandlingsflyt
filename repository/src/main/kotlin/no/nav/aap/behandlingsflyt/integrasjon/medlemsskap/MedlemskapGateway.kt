@@ -18,8 +18,8 @@ import no.nav.aap.komponenter.type.Periode
 import java.net.URI
 
 class MedlemskapGateway : MedlemskapGateway {
-    private val url = URI.create(requiredConfigForKey("integrasjon.medl.url"))
-    private val config = ClientConfig(scope = requiredConfigForKey("integrasjon.medl.scope"))
+    private val url = URI.create(requiredConfigForKey("INTEGRASJON_MEDL_URL"))
+    private val config = ClientConfig(scope = requiredConfigForKey("INTEGRASJON_MEDL_SCOPE"))
 
     private val client = RestClient.withDefaultResponseHandler(
         config = config,

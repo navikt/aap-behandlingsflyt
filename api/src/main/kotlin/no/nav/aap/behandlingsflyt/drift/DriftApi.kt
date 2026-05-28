@@ -291,6 +291,10 @@ fun NormalOpenAPIRoute.driftApi(
                     val sak = sakRepository.hentHvisFinnes(Saksnummer(params.saksnummer))
                         ?: throw VerdiIkkeFunnetException("Sak med saksnummer ${params.saksnummer} finnes ikke")
 
+                    val andreSakerPåBruker = sakRepository.finnSakerFor(sak.person)
+                        .filterNot { it.id == sak.id }
+                        .map { it.saksnummer.toString() }
+
                     val vedtak = behandlingRepository.hentAlleMedVedtakFor(sak.person)
                     val behandlinger = behandlingRepository.hentAlleFor(sak.id)
                         .map { behandling ->
@@ -321,6 +325,7 @@ fun NormalOpenAPIRoute.driftApi(
                         rettighetsperiode = sak.rettighetsperiode,
                         opprettetTidspunkt = sak.opprettetTidspunkt,
                         behandlinger = behandlinger,
+                        andreSakerPåBruker = andreSakerPåBruker,
                     )
                 }
 
@@ -397,6 +402,7 @@ private data class SakDriftsinfoDTO(
     val rettighetsperiode: Periode,
     val opprettetTidspunkt: LocalDateTime = LocalDateTime.now(),
     val behandlinger: List<BehandlingDriftsinfo>,
+    val andreSakerPåBruker: List<String>,
 )
 
 private data class BehandlingDriftsinfo(

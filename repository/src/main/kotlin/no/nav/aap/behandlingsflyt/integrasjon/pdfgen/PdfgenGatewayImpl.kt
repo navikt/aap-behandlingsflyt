@@ -13,8 +13,8 @@ import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.NoTokenTokenPr
 import java.net.URI
 
 class PdfgenGatewayImpl : PdfgenGateway {
-    private val baseUri = URI.create(requiredConfigForKey("integrasjon.pdfgen.url"))
-    private val config = ClientConfig(scope = requiredConfigForKey("integrasjon.pdfgen.scope"))
+    private val baseUri = URI.create(requiredConfigForKey("INTEGRASJON_PDFGEN_URL"))
+    private val config = ClientConfig(scope = requiredConfigForKey("INTEGRASJON_PDFGEN_SCOPE"))
 
     private val client = RestClient.withDefaultResponseHandler(
         config = config,

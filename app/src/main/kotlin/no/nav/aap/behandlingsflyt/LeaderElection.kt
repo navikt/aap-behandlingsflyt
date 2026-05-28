@@ -9,7 +9,7 @@ import java.net.http.HttpRequest
 import java.net.http.HttpResponse
 
 fun isLeader(log: io.ktor.util.logging.Logger): Boolean {
-    val electorUrl = requiredConfigForKey("elector.get.url")
+    val electorUrl = requiredConfigForKey("ELECTOR_GET_URL")
     val client = HttpClient.newHttpClient()
     val response = client.send(
         HttpRequest.newBuilder().uri(URI.create(electorUrl)).GET().build(),

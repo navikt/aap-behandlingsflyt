@@ -15,10 +15,6 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepo
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.BehandlingTilstandValidator
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.FrivilligeAvklaringsbehov
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkår
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.flyt.flate.visning.DynamiskStegGruppeVisningService
 import no.nav.aap.behandlingsflyt.flyt.flate.visning.ProsesseringStatus
 import no.nav.aap.behandlingsflyt.flyt.flate.visning.Visning
@@ -89,8 +85,6 @@ fun NormalOpenAPIRoute.flytApi(
                     val sakRepository = repositoryProvider.provide<SakRepository>()
                     val resultatUtleder = ResultatUtleder(repositoryProvider, gatewayProvider)
                     val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
-                    val vilkårsresultatRepository =
-                        repositoryProvider.provide<VilkårsresultatRepository>()
                     val avklaringsbehovRepository =
                         repositoryProvider.provide<AvklaringsbehovRepository>()
 
@@ -144,7 +138,6 @@ fun NormalOpenAPIRoute.flytApi(
                     )
                     val vurdertStegPair =
                         utledVurdertGruppe(prosessering, aktivtSteg, flyt, avklaringsbehovene)
-                    val vilkårsresultat = vilkårResultat(vilkårsresultatRepository, behandling.id)
                     val alleAvklaringsbehov = alleAvklaringsbehovInkludertFrivillige.alle()
                     val resultatKode = when {
                         ((behandling.typeBehandling() == TypeBehandling.Revurdering) && (resultatUtleder.utledResultatRevurderingsBehandling(
@@ -189,10 +182,6 @@ fun NormalOpenAPIRoute.flytApi(
                                                     kravdato = sak.rettighetsperiode.fom,
                                                 )
                                             },
-                                        vilkårDTO = hentUtRelevantVilkårForSteg(
-                                            vilkårsresultat = vilkårsresultat,
-                                            stegType = stegType
-                                        )
                                     )
                                 }
                             )
@@ -221,28 +210,7 @@ fun NormalOpenAPIRoute.flytApi(
                 respond(dto)
             }
         }
-        route("/{referanse}/resultat") {
-            authorizedGet<BehandlingReferanse, BehandlingResultatDto>(
-                AuthorizationParamPathConfig(
-                    relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
-                    behandlingPathParam = BehandlingPathParam("referanse")
-                ),
-            ) { req ->
-                val dto = dataSource.transaction(readOnly = true) { connection ->
-                    val repositoryProvider = repositoryRegistry.provider(connection)
-                    val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
-                    val vilkårsresultatRepository =
-                        repositoryProvider.provide<VilkårsresultatRepository>()
 
-                    val behandling = behandling(behandlingRepository, req)
-
-                    val vilkårResultat = vilkårResultat(vilkårsresultatRepository, behandling.id)
-
-                    BehandlingResultatDto(alleVilkår(vilkårResultat))
-                }
-                respond(dto)
-            }
-        }
         route("/{referanse}/sett-på-vent") {
             authorizedPost<BehandlingReferanse, BehandlingResultatDto, SettPåVentRequest>(
                 AuthorizationParamPathConfig(
@@ -543,25 +511,6 @@ private fun utledVisningAvKvalitetsikrerKort(
 private fun harÅpentKvalitetssikringsAvklaringsbehov(avklaringsbehovene: FrivilligeAvklaringsbehov): Boolean =
     avklaringsbehovene.hentBehovForDefinisjon(Definisjon.KVALITETSSIKRING)?.erÅpent() == true
 
-private fun alleVilkår(vilkårResultat: Vilkårsresultat): List<VilkårDTO> {
-    return vilkårResultat.alle().map { vilkår ->
-        VilkårDTO(
-            vilkår.type,
-            perioder = vilkår.vilkårsperioder().map { vp ->
-                VilkårsperiodeDTO(
-                    vp.periode,
-                    vp.utfall,
-                    vp.manuellVurdering,
-                    vp.begrunnelse,
-                    vp.avslagsårsak,
-                    vp.innvilgelsesårsak
-                )
-            },
-            vurdertDato = vilkår.vurdertTidspunkt?.toLocalDate()
-        )
-    }
-}
-
 private fun behandling(behandlingRepository: BehandlingRepository, req: BehandlingReferanse): Behandling {
     return BehandlingReferanseService(behandlingRepository).behandling(req)
 }
@@ -573,13 +522,6 @@ private fun avklaringsbehov(
     return avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId)
 }
 
-private fun vilkårResultat(
-    vilkårsresultatRepository: VilkårsresultatRepository,
-    behandlingId: BehandlingId
-): Vilkårsresultat {
-    return vilkårsresultatRepository.hent(behandlingId)
-}
-
 private fun erEtterBeslutterstegetHvisEksisterer(flyt: BehandlingFlyt, aktivtSteg: StegType): Boolean {
     return flyt.stegene().contains(StegType.FATTE_VEDTAK) && !flyt.erStegFør(
         aktivtSteg,
@@ -587,44 +529,3 @@ private fun erEtterBeslutterstegetHvisEksisterer(flyt: BehandlingFlyt, aktivtSte
     )
 }
 
-private fun hentUtRelevantVilkårForSteg(vilkårsresultat: Vilkårsresultat, stegType: StegType): VilkårDTO? {
-    var vilkår: Vilkår? = null
-    if (stegType == StegType.AVKLAR_SYKDOM) {
-        vilkår = vilkårsresultat.optionalVilkår(Vilkårtype.SYKDOMSVILKÅRET)
-    }
-    if (stegType == StegType.VURDER_ALDER) {
-        vilkår = vilkårsresultat.optionalVilkår(Vilkårtype.ALDERSVILKÅRET)
-    }
-    if (stegType == StegType.VURDER_BISTANDSBEHOV) {
-        vilkår = vilkårsresultat.optionalVilkår(Vilkårtype.BISTANDSVILKÅRET)
-    }
-    if (stegType == StegType.VURDER_LOVVALG) {
-        vilkår = vilkårsresultat.optionalVilkår(Vilkårtype.LOVVALG)
-    }
-    if (stegType == StegType.VURDER_MEDLEMSKAP) {
-        vilkår = vilkårsresultat.optionalVilkår(Vilkårtype.MEDLEMSKAP)
-    }
-    if (stegType == StegType.OVERGANG_ARBEID) {
-        vilkår = vilkårsresultat.optionalVilkår(Vilkårtype.OVERGANGARBEIDVILKÅRET)
-    }
-    if (stegType == StegType.OVERGANG_UFORE) {
-        vilkår = vilkårsresultat.optionalVilkår(Vilkårtype.OVERGANGUFØREVILKÅRET)
-    }
-    if (vilkår == null) {
-        return null
-    }
-    return VilkårDTO(
-        vilkår.type,
-        perioder = vilkår.vilkårsperioder().map { vp ->
-            VilkårsperiodeDTO(
-                vp.periode,
-                vp.utfall,
-                vp.manuellVurdering,
-                vp.begrunnelse,
-                vp.avslagsårsak,
-                vp.innvilgelsesårsak
-            )
-        },
-        vurdertDato = vilkår.vurdertTidspunkt?.toLocalDate()
-    )
-}

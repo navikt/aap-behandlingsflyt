@@ -48,6 +48,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.SaksnummerParameter
 import no.nav.aap.behandlingsflyt.test.FakeServers
 import no.nav.aap.behandlingsflyt.test.FiktivtHelseoppholdNavnGenerator
 import no.nav.aap.behandlingsflyt.test.JSONTestPersonService
+import no.nav.aap.behandlingsflyt.test.TexasPortHolder
 import no.nav.aap.behandlingsflyt.test.LokalUnleash
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.behandlingsflyt.test.modell.TestYrkesskade
@@ -84,6 +85,7 @@ data class IdentOgOpphold(val ident: String, val opphold: List<Institusjonsoppho
 fun main() {
     val dbConfig = initDbConfig()
 
+    TexasPortHolder.setPort(8081)
     FakeServers.start(JSONTestPersonService())
 
     // Starter server
@@ -108,7 +110,7 @@ fun main() {
                 datasource,
                 jobber = ProsesseringsJobber.alle(),
                 repositoryRegistry = repositoryRegistry,
-                gatewayProvider
+                gatewayProvider = gatewayProvider
             )
         }.value
 

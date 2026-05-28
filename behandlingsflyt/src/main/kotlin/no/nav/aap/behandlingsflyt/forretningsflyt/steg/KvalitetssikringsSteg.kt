@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
+import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
@@ -14,6 +15,8 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
@@ -25,6 +28,9 @@ class KvalitetssikringsSteg(
     private val avklaringsbehovService: AvklaringsbehovService,
     private val tidligereVurderinger: TidligereVurderinger,
     private val trekkKlageService: TrekkKlageService,
+    private val avbrytRevurderingService: AvbrytRevurderingService,
+    private val behandlingRepository: BehandlingRepository,
+    private val behandlingService: BehandlingService,
     private val unleashGateway: UnleashGateway
 ) : BehandlingSteg {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
@@ -32,16 +38,25 @@ class KvalitetssikringsSteg(
         avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
         trekkKlageService = TrekkKlageService(repositoryProvider),
+        avbrytRevurderingService = AvbrytRevurderingService(repositoryProvider),
+        behandlingRepository = repositoryProvider.provide(),
+        behandlingService = BehandlingService(repositoryProvider, gatewayProvider),
         unleashGateway = gatewayProvider.provide()
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
+        val erTilstrekkeligVurdert =
+            if (unleashGateway.isEnabled(BehandlingsflytFeature.AlleEndringerKreverKvalitetssikring)) {
+                erTilstrekkeligVurdertNy(avklaringsbehovene)
+            } else {
+                erTilstrekkeligVurdertGammel(avklaringsbehovene)
+            }
 
         avklaringsbehovService.oppdaterAvklaringsbehov(
             definisjon = Definisjon.KVALITETSSIKRING,
             vedtakBehøverVurdering = { vedtakBehøverVurdering(kontekst, avklaringsbehovene) },
-            erTilstrekkeligVurdert = { erTilstrekkeligVurdert(avklaringsbehovene) },
+            erTilstrekkeligVurdert = { erTilstrekkeligVurdert },
             tilbakestillGrunnlag = {},
             kontekst
         )
@@ -52,12 +67,23 @@ class KvalitetssikringsSteg(
         kontekst: FlytKontekstMedPerioder, avklaringsbehovene: Avklaringsbehovene
     ): Boolean {
         if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())
-            || trekkKlageService.klageErTrukket(kontekst.behandlingId)
+            || trekkKlageService.klageErTrukket(
+                kontekst.behandlingId
+            )
+            || avbrytRevurderingService.revurderingErAvbrutt(kontekst.behandlingId)
+
         ) {
             return false
         }
 
-        return when (kontekst.behandlingType) {
+        val behandling = behandlingRepository.hent(kontekst.behandlingId)
+        val behandlingstype =
+            if (unleashGateway.isEnabled(BehandlingsflytFeature.RevurderingEtterAvslagSkalKvalitetssikres)) {
+                behandlingService.utledFaktiskBehandlingstype(behandling)
+            } else {
+                kontekst.behandlingType
+            }
+        return when (behandlingstype) {
             TypeBehandling.Førstegangsbehandling,
             TypeBehandling.Klage -> {
                 avklaringsbehovene.harAvklaringsbehovSomKreverKvalitetssikring()
@@ -67,7 +93,11 @@ class KvalitetssikringsSteg(
         }
     }
 
-    private fun erTilstrekkeligVurdert(avklaringsbehovene: Avklaringsbehovene): Boolean {
+    private fun erTilstrekkeligVurdertNy(avklaringsbehovene: Avklaringsbehovene): Boolean {
+        return !avklaringsbehovene.harAvklaringsbehovSomKreverKvalitetssikringMenIkkeErGodkjent()
+    }
+
+    private fun erTilstrekkeligVurdertGammel(avklaringsbehovene: Avklaringsbehovene): Boolean {
         if (avklaringsbehovene.alle()
                 .filter { it.kreverKvalitetssikring() }
                 .any { it.status() == Status.SENDT_TILBAKE_FRA_KVALITETSSIKRER || it.status() == Status.SENDT_TILBAKE_FRA_BESLUTTER }
@@ -82,7 +112,7 @@ class KvalitetssikringsSteg(
         /**
          * Om et behov aldri tidligere har blitt kvalitetssikret, ikke tilstrekkelig vurdert:
          */
-        if (aktuelleAvklaringsbehovForKvalitetssikring.any { !it.erKvalitetssikretTidligere() }) {
+        if (aktuelleAvklaringsbehovForKvalitetssikring.any { !it.harBlittKvalitetssikretTidligere() }) {
             return false
         }
 
@@ -164,6 +194,7 @@ class KvalitetssikringsSteg(
 
         return true
     }
+
 
     companion object : FlytSteg {
         override fun konstruer(

@@ -172,7 +172,7 @@ class SamordningYtelseRepositoryImpl(private val dbConnection: DBConnection) : S
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
         val eksisterendeGrunnlag = hentHvisEksisterer(fraBehandling)
         if (eksisterendeGrunnlag == null) {
-            log.warn("Prøver å kopiere fra behandling $fraBehandling til $tilBehandling, men fant ingen grunnlag for behandlingen")
+            log.info("Prøver å kopiere fra behandling $fraBehandling til $tilBehandling, men fant ingen grunnlag for behandlingen")
             return
         }
         val query = """

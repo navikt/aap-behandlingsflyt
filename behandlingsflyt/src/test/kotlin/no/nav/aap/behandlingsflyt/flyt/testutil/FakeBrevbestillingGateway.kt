@@ -117,6 +117,13 @@ class FakeBrevbestillingGateway : BrevbestillingGateway {
         return "Brevtekst"
     }
 
+    override fun brevbyggerPreview(
+        bestillingReferanse: BrevbestillingReferanse,
+        signaturer: List<SignaturGrunnlag>
+    ): String {
+        return "{}"
+    }
+
     companion object : Factory<BrevbestillingGateway> {
         override fun konstruer(): BrevbestillingGateway = FakeBrevbestillingGateway()
     }

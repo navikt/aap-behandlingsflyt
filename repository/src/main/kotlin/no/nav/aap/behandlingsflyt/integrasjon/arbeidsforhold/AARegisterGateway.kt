@@ -23,8 +23,8 @@ import java.net.URI
 
 class AARegisterGateway : ArbeidsforholdGateway {
     private val url =
-        URI.create(requiredConfigForKey("integrasjon.aareg.url") + "/api/v2/arbeidstaker/arbeidsforhold")
-    private val config = ClientConfig(scope = requiredConfigForKey("integrasjon.aareg.scope"))
+        URI.create(requiredConfigForKey("INTEGRASJON_AAREG_URL") + "/api/v2/arbeidstaker/arbeidsforhold")
+    private val config = ClientConfig(scope = requiredConfigForKey("INTEGRASJON_AAREG_SCOPE"))
 
     companion object : Factory<ArbeidsforholdGateway> {
         override fun konstruer(): ArbeidsforholdGateway {
