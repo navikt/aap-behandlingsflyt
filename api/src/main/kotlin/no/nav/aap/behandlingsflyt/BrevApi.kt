@@ -17,8 +17,6 @@ import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingServi
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Status
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.behandling.gregulering.GReguleringService
-import no.nav.aap.behandlingsflyt.behandling.underveis.UnderveisService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.mdc.LogKontekst
@@ -118,8 +116,7 @@ fun NormalOpenAPIRoute.brevApi(
                         val sak = SakService(repositoryProvider, gatewayProvider).hent(behandling.sakId)
                         val personIdent = sak.person.aktivIdent()
                         val personinfo = personinfoGateway.hentPersoninfoForIdent(personIdent, token())
-                        val rettighetsType = UnderveisService(repositoryProvider, gatewayProvider).rettighetsType(behandling.id)
-                        val erGrunnbeløpetEndret = GReguleringService(repositoryProvider, gatewayProvider).erGrunnbeløpEndretForRettighetsTypeTidslinje(rettighetsType)
+                        val erGrunnbeløpetEndret = GReguleringService(repositoryProvider, gatewayProvider).erGrunnbeløpEndretForRettighetsTypeTidslinje(behandling.id)
 
 
                         val skrivBrevAvklaringsbehov = avklaringsbehovene
