@@ -12,16 +12,19 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Ut
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
 import no.nav.aap.behandlingsflyt.help.flytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.help.tomtTilkjentYtelseGrunnlag
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
-import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryTilkjentYtelseRepository
-import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryUnderveisRepository
 import no.nav.aap.behandlingsflyt.test.april
 import no.nav.aap.behandlingsflyt.test.desember
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryTilkjentYtelseRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryUnderveisRepository
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.behandlingsflyt.test.juli
 import no.nav.aap.behandlingsflyt.test.juni
 import no.nav.aap.behandlingsflyt.test.mai
 import no.nav.aap.behandlingsflyt.test.mars
+import no.nav.aap.behandlingsflyt.test.november
+import no.nav.aap.behandlingsflyt.test.oktober
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.Dagsatser
@@ -29,9 +32,6 @@ import no.nav.aap.komponenter.verdityper.GUnit
 import no.nav.aap.komponenter.verdityper.Prosent.Companion.`0_PROSENT`
 import no.nav.aap.komponenter.verdityper.Prosent.Companion.`100_PROSENT`
 import no.nav.aap.komponenter.verdityper.TimerArbeid
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
-import no.nav.aap.behandlingsflyt.test.november
-import no.nav.aap.behandlingsflyt.test.oktober
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -221,21 +221,6 @@ class GReguleringServiceTest {
             listOf(lagTilkjentYtelsePeriode(fom, tom, grunnbeløp)),
             tomtTilkjentYtelseGrunnlag,
             ""
-        )
-    }
-
-    private fun lagreOppfyltUnderveisFlereRettighetstyper(
-        kontekst: FlytKontekstMedPerioder,
-        fom: LocalDate,
-        tom: LocalDate
-    ) {
-        InMemoryUnderveisRepository.lagre(
-            kontekst.behandlingId,
-            listOf(
-                lagUnderveisperiode(1 juni 2025, 31 oktober 2025, Utfall.OPPFYLT),
-                lagUnderveisperiode(1 november 2025, 31 desember 2025, Utfall.OPPFYLT, rettighetstype = RettighetsType.VURDERES_FOR_UFØRETRYGD)
-            ),
-            input = object : Faktagrunnlag {}
         )
     }
 
