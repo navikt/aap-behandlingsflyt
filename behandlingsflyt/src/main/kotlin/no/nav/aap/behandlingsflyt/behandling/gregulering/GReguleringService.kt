@@ -74,11 +74,10 @@ class GReguleringService(
         }
         return false
     }
-
-    fun erGrunnbeløpEndretForRettighetsTypeTidslinje(behandlingId: BehandlingId): Boolean {
         /*
          * Er grunnbeløpet endret i perioden som tidslinjen dekker
          */
+    fun erGrunnbeløpEndretForRettighetsTypeTidslinje(behandlingId: BehandlingId): Boolean {
         val rettighetsTypeTidslinje = underveisRepository.hentHvisEksisterer(behandlingId)
                 ?.somTidslinje().orEmpty()
                 .mapNotNull { it.rettighetsType }
