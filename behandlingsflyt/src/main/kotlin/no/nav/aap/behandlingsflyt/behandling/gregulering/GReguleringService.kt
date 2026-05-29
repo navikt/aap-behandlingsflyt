@@ -83,7 +83,11 @@ class GReguleringService(
                 .mapNotNull { it.rettighetsType }
                 .komprimer()
         val grunnbeløpTidslinje = Grunnbeløp.tilTidslinje()
-        val kombinert = rettighetsTypeTidslinje.innerJoin(grunnbeløpTidslinje) { _, beløp -> beløp }
-        return kombinert.perioder().toList().size > 1
+
+        val rettighetstypeKombinertMedGrunnbeløp = rettighetsTypeTidslinje
+            .innerJoin(grunnbeløpTidslinje) { _, beløp -> beløp }
+            .komprimer()
+
+        return rettighetstypeKombinertMedGrunnbeløp.perioder().toSet().size > 1
     }
 }

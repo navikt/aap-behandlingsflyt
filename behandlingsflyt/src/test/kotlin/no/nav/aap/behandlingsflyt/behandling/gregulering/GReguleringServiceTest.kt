@@ -30,6 +30,8 @@ import no.nav.aap.komponenter.verdityper.Prosent.Companion.`0_PROSENT`
 import no.nav.aap.komponenter.verdityper.Prosent.Companion.`100_PROSENT`
 import no.nav.aap.komponenter.verdityper.TimerArbeid
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
+import no.nav.aap.behandlingsflyt.test.november
+import no.nav.aap.behandlingsflyt.test.oktober
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -187,6 +189,23 @@ class GReguleringServiceTest {
         assertThat(resultat).isFalse()
     }
 
+    @Test
+    fun `skal returnere false når det er flere rettigheter i periode som ikke spenner over G-regulering`() {
+        val kontekst = kontekst()
+        InMemoryUnderveisRepository.lagre(
+            kontekst.behandlingId,
+            listOf(
+                lagUnderveisperiode(1 juni 2025, 31 oktober 2025, Utfall.OPPFYLT, RettighetsType.BISTANDSBEHOV),
+                lagUnderveisperiode(1 november 2025, 31 desember 2025, Utfall.OPPFYLT, RettighetsType.VURDERES_FOR_UFØRETRYGD)
+            ),
+            input = object : Faktagrunnlag {}
+        )
+
+        val resultat = service.erGrunnbeløpEndretForRettighetsTypeTidslinje(kontekst.behandlingId)
+
+        assertThat(resultat).isFalse()
+    }
+
     private fun kontekst() = flytKontekstMedPerioder {
         vurderingType = VurderingType.REVURDERING
     }
@@ -202,6 +221,21 @@ class GReguleringServiceTest {
             listOf(lagTilkjentYtelsePeriode(fom, tom, grunnbeløp)),
             tomtTilkjentYtelseGrunnlag,
             ""
+        )
+    }
+
+    private fun lagreOppfyltUnderveisFlereRettighetstyper(
+        kontekst: FlytKontekstMedPerioder,
+        fom: LocalDate,
+        tom: LocalDate
+    ) {
+        InMemoryUnderveisRepository.lagre(
+            kontekst.behandlingId,
+            listOf(
+                lagUnderveisperiode(1 juni 2025, 31 oktober 2025, Utfall.OPPFYLT),
+                lagUnderveisperiode(1 november 2025, 31 desember 2025, Utfall.OPPFYLT, rettighetstype = RettighetsType.VURDERES_FOR_UFØRETRYGD)
+            ),
+            input = object : Faktagrunnlag {}
         )
     }
 
@@ -232,13 +266,14 @@ class GReguleringServiceTest {
     private fun lagUnderveisperiode(
         fom: LocalDate,
         tom: LocalDate,
-        utfall: Utfall
+        utfall: Utfall,
+        rettighetstype: RettighetsType = RettighetsType.BISTANDSBEHOV
     ): Underveisperiode {
         return Underveisperiode(
             periode = Periode(fom, tom),
             meldePeriode = Periode(fom, tom),
             utfall = utfall,
-            rettighetsType = if (utfall == Utfall.OPPFYLT) RettighetsType.BISTANDSBEHOV else null,
+            rettighetsType = if (utfall == Utfall.OPPFYLT) rettighetstype else null,
             avslagsårsak = if (utfall == Utfall.IKKE_OPPFYLT) no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisÅrsak.IKKE_GRUNNLEGGENDE_RETT else null,
             grenseverdi = `100_PROSENT`,
             institusjonsoppholdReduksjon = `0_PROSENT`,
