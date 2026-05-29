@@ -104,7 +104,7 @@ class UnderveisGrunnlagApiTest : BaseApiTest() {
     fun `underveis med diff skal gi lagt til for første behandling`() {
         val ds = MockDataSource()
         val sak = nySak(LocalDate.parse("2025-01-01"))
-        val behandling = opprettBehandling(sak, TypeBehandling.Revurdering)
+        val behandling = opprettBehandling(sak, TypeBehandling.Førstegangsbehandling)
 
         val periode1 = Periode(LocalDate.parse("2025-01-01"), LocalDate.parse("2025-01-14"))
         val periode2 = Periode(LocalDate.parse("2025-01-15"), LocalDate.parse("2025-01-28"))
@@ -370,7 +370,6 @@ class UnderveisGrunnlagApiTest : BaseApiTest() {
         val client = createClient()
         return client.get(path) {
             header("Authorization", "Bearer ${getToken().token()}")
-            header("X-callid", UUID.randomUUID().toString())
             contentType(ContentType.Application.Json)
         }
     }

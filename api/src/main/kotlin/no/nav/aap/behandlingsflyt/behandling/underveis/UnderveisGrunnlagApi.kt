@@ -57,7 +57,8 @@ fun NormalOpenAPIRoute.underveisVurderingerApi(datasource: DataSource, repositor
         ),
         null,
         info(
-            summary = "Hente underveisperioder med diff-vurderinger på gjeldende og forrige behandling")
+            summary = "Hente underveisperioder med diff-vurderinger på gjeldende og forrige behandling"
+        )
     ) { behandlingReferanse ->
         val (gjeldendeUnderveisGrunnlag, forrigeUnderveisGrunnlag) = datasource.transaction(readOnly = true) { conn ->
             val repositoryProvider = repositoryRegistry.provider(conn)
@@ -66,19 +67,17 @@ fun NormalOpenAPIRoute.underveisVurderingerApi(datasource: DataSource, repositor
                 BehandlingReferanseService(behandlingRepository).behandling(behandlingReferanse)
             val underveisRepository = repositoryProvider.provide<UnderveisRepository>()
             val underveisGrunnlag = underveisRepository.hentHvisEksisterer(behandling.id)
-            val underveisGrunnlagForrigeBehandling = behandling.forrigeBehandlingId?.let { underveisRepository.hentHvisEksisterer(it) }
+            val underveisGrunnlagForrigeBehandling =
+                behandling.forrigeBehandlingId?.let { underveisRepository.hentHvisEksisterer(it) }
             Pair(underveisGrunnlag, underveisGrunnlagForrigeBehandling)
         }
 
-        if (gjeldendeUnderveisGrunnlag == null) {
-            respond(UnderveisGrunnlagMedDiffDto(emptyList()))
-        } else {
-            val diff = diffTidslinjer(
-                forrigeUnderveisGrunnlag?.tilDto()?.somTidslinje() ?: Tidslinje(),
-                gjeldendeUnderveisGrunnlag.tilDto().somTidslinje()
-            ).mapValue { it.somDto() }
-            respond(UnderveisGrunnlagMedDiffDto(diff.verdier().toList()))
-        }
+        val diff = diffTidslinjer(
+            forrigeUnderveisGrunnlag?.tilDto()?.somTidslinje() ?: Tidslinje(),
+            gjeldendeUnderveisGrunnlag?.tilDto()?.somTidslinje() ?: Tidslinje(),
+        ).mapValue { it.somDto() }
+
+        respond(UnderveisGrunnlagMedDiffDto(diff.verdier().toList()))
     }
 
 }

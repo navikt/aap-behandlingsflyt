@@ -66,11 +66,7 @@ data class RettighetsTypeDto(
         hjemmel = rettighetsType.hjemmel)
 }
 
-data class UnderveisGrunnlagDto(val perioder: List<UnderveisperiodeDto>) {
-    fun somTidslinje(): Tidslinje<UnderveisperiodeDto> {
-        return perioder.somTidslinje { it.periode }
-    }
-}
-fun UnderveisGrunnlag.tilDto() = UnderveisGrunnlagDto(perioder = perioder.map { UnderveisperiodeDto(it) })
+fun UnderveisGrunnlag.tilDto() = perioder.map { UnderveisperiodeDto(it) }
+fun List<UnderveisperiodeDto>.somTidslinje() = this.somTidslinje { it.periode }
 
-data class UnderveisGrunnlagMedDiffDto(val perioder: List<DiffDto<UnderveisperiodeDto>>) {}
+data class UnderveisGrunnlagMedDiffDto(val perioder: List<DiffDto<UnderveisperiodeDto>>)
