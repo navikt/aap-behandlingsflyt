@@ -1,13 +1,13 @@
 package no.nav.aap.behandlingsflyt.integrasjon.dokumentinnhenting
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.BrevRequest
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.BrevResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.DokumentinnhentingGateway
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.LegeerklæringBestillingRequest
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.LegeerklæringPurringRequest
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.LegeerklæringStatusResponse
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.MarkerDialogmeldingSomMottattRequest
 import no.nav.aap.behandlingsflyt.prometheus
+import no.nav.aap.dokumentinnhenting.kontrakt.BehandlingsflytToDokumentInnhentingBestillingDto
+import no.nav.aap.dokumentinnhenting.kontrakt.DialogmeldingForhåndsvisningDto
+import no.nav.aap.dokumentinnhenting.kontrakt.DialogmeldingStatusTilBehandslingsflytDto
+import no.nav.aap.dokumentinnhenting.kontrakt.ForhåndsvisDialogmeldingDto
+import no.nav.aap.dokumentinnhenting.kontrakt.LegeerklæringPurringDto
+import no.nav.aap.dokumentinnhenting.kontrakt.MarkerBestillingSomMottattDto
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.gateway.Factory
 import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
@@ -39,7 +39,7 @@ class DokumentinnhentingGatewayImpl : DokumentinnhentingGateway {
         }
     }
 
-    override fun bestillLegeerklæring(request: LegeerklæringBestillingRequest): String {
+    override fun bestillLegeerklæring(request: BehandlingsflytToDokumentInnhentingBestillingDto): String {
         val request = PostRequest(
             body = request,
             additionalHeaders = listOf(
@@ -51,7 +51,7 @@ class DokumentinnhentingGatewayImpl : DokumentinnhentingGateway {
         return requireNotNull(client.post(uri = URI.create("$syfoUri/dialogmeldingbestilling"), request))
     }
 
-    override fun purrPåLegeerklæring(purringRequest: LegeerklæringPurringRequest): String {
+    override fun purrPåLegeerklæring(purringRequest: LegeerklæringPurringDto): String {
         val request = PostRequest(
             body = purringRequest,
             additionalHeaders = listOf(
@@ -62,7 +62,7 @@ class DokumentinnhentingGatewayImpl : DokumentinnhentingGateway {
         return requireNotNull(client.post(uri = URI.create("$syfoUri/purring"), request))
     }
 
-    override fun markerDialogmeldingStatusSomMottatt(markerSomMottattRequest: MarkerDialogmeldingSomMottattRequest): LegeerklæringStatusResponse {
+    override fun markerDialogmeldingStatusSomMottatt(markerSomMottattRequest: MarkerBestillingSomMottattDto): DialogmeldingStatusTilBehandslingsflytDto {
         val request = PostRequest(
             body = markerSomMottattRequest,
             additionalHeaders = listOf(
@@ -80,7 +80,7 @@ class DokumentinnhentingGatewayImpl : DokumentinnhentingGateway {
         )
     }
 
-    override fun legeerklæringStatus(saksnummer: String): List<LegeerklæringStatusResponse> {
+    override fun legeerklæringStatus(saksnummer: String): List<DialogmeldingStatusTilBehandslingsflytDto> {
         val request = GetRequest(
             additionalHeaders = listOf(
                 Header("Nav-Consumer-Id", "aap-behandlingsflyt"),
@@ -96,7 +96,7 @@ class DokumentinnhentingGatewayImpl : DokumentinnhentingGateway {
         )
     }
 
-    override fun forhåndsvisBrev(request: BrevRequest): BrevResponse {
+    override fun forhåndsvisDialogmelding(request: ForhåndsvisDialogmeldingDto): DialogmeldingForhåndsvisningDto {
         val request = PostRequest(
             body = request,
             additionalHeaders = listOf(

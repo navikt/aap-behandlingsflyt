@@ -137,14 +137,14 @@ private fun utledIkkeVurderbarePerioder(
 
     val førsteDagIOppfyltPeriode = zipped
         .filter {
-            it.verdi.first?.erOppfyltForOrdinærEllerYrkesskadeSettBortIfraÅrsakssammenhengMedUtlededeFelter() == true || it.verdi.second?.erBehovForBistand() != true
+            it.verdi.first?.erOppfyltForOrdinærEllerYrkesskadeSettBortIfraÅrsakssammenheng() == true || it.verdi.second?.erBehovForBistand() != true
         }.perioder().toList().firstOrNull()?.fom
 
     if (førsteDagIOppfyltPeriode == null) return emptyList()
 
     val mapped = zipped
         .filter {
-            it.verdi.first?.erOppfyltForOrdinærEllerYrkesskadeSettBortIfraÅrsakssammenhengMedUtlededeFelter() != true
+            it.verdi.first?.erOppfyltForOrdinærEllerYrkesskadeSettBortIfraÅrsakssammenheng() != true
                     || it.verdi.second?.erBehovForArbeidsrettetTiltak != true
         }
 

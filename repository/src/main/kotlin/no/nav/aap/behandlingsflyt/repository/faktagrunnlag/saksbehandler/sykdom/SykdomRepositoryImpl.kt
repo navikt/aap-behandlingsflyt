@@ -1,8 +1,6 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.sykdom
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Diagnose
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ErNedsettelseMerEnnYrkesskadegrenseValg
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ErNedsettelseMinstHalvpartenValg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
@@ -212,16 +210,14 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
             INSERT INTO SYKDOM_VURDERING (
                 SYKDOM_VURDERINGER_ID,
                 BEGRUNNELSE, VURDERINGEN_GJELDER_FRA,
-                ER_ARBEIDSEVNE_NEDSATT, 
                 HAR_NEDSATT_ARBEIDSEVNE,
                 HAR_SYKDOM_SKADE_LYTE,
                 ER_SYKDOM_SKADE_LYTE_VESETLING_DEL, ER_NEDSETTELSE_MER_ENN_HALVPARTEN,
-                ER_NEDSETTELSE_MER_ENN_YRKESSKADE_GRENSE, ER_NEDSETTELSE_AV_EN_VISS_VARIGHET,
-                ER_NEDSETTELSE_MINST_HALVPARTEN, ER_NEDSETTELSE_MER_ENN_YRKESSKADEGRENSE,
+                ER_NEDSETTELSE_MER_ENN_YRKESSKADE_GRENSE,
                 YRKESSKADE_BEGRUNNELSE, KODEVERK,
                 DIAGNOSE, OPPRETTET_TID, VURDERT_AV_IDENT, VURDERT_I_BEHANDLING, VURDERINGEN_GJELDER_TIL)
             VALUES
-            (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """.trimIndent()
 
         for (vurdering in vurderinger) {
@@ -230,22 +226,18 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
                     setLong(1, sykdomsvurderingerId)
                     setString(2, vurdering.begrunnelse)
                     setLocalDate(3, vurdering.vurderingenGjelderFra)
-                    setBoolean(4, vurdering.erArbeidsevnenNedsatt)
-                    setEnumName(5, vurdering.harNedsattArbeidsevne)
-                    setBoolean(6, vurdering.harSkadeSykdomEllerLyte)
-                    setBoolean(7, vurdering.erSkadeSykdomEllerLyteVesentligdel)
-                    setBoolean(8, vurdering.erNedsettelseIArbeidsevneMerEnnHalvparten)
-                    setBoolean(9, vurdering.erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense)
-                    setBoolean(10, vurdering.erNedsettelseIArbeidsevneAvEnVissVarighet)
-                    setEnumName(11, vurdering.erNedsettelseMinstHalvparten)
-                    setEnumName(12, vurdering.erNedsettelseMerEnnYrkesskadegrense)
-                    setString(13, vurdering.yrkesskadeBegrunnelse)
-                    setString(14, vurdering.diagnose?.kodeverk)
-                    setString(15, vurdering.diagnose?.hoveddiagnose)
-                    setInstant(16, vurdering.opprettet)
-                    setString(17, vurdering.vurdertAv.ident)
-                    setLong(18, vurdering.vurdertIBehandling.id)
-                    setLocalDate(19, vurdering.vurderingenGjelderTil)
+                    setEnumName(4, vurdering.harNedsattArbeidsevne)
+                    setBoolean(5, vurdering.harSkadeSykdomEllerLyte)
+                    setBoolean(6, vurdering.erSkadeSykdomEllerLyteVesentligdel)
+                    setBoolean(7, vurdering.erNedsettelseIArbeidsevneMerEnnHalvparten)
+                    setBoolean(8, vurdering.erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense)
+                    setString(9, vurdering.yrkesskadeBegrunnelse)
+                    setString(10, vurdering.diagnose?.kodeverk)
+                    setString(11, vurdering.diagnose?.hoveddiagnose)
+                    setInstant(12, vurdering.opprettet)
+                    setString(13, vurdering.vurdertAv.ident)
+                    setLong(14, vurdering.vurdertIBehandling.id)
+                    setLocalDate(15, vurdering.vurderingenGjelderTil)
                 }
             }
 
@@ -333,9 +325,6 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
                    ER_SYKDOM_SKADE_LYTE_VESETLING_DEL,
                    ER_NEDSETTELSE_MER_ENN_HALVPARTEN,
                    ER_NEDSETTELSE_MER_ENN_YRKESSKADE_GRENSE,
-                   ER_NEDSETTELSE_AV_EN_VISS_VARIGHET,
-                   ER_NEDSETTELSE_MINST_HALVPARTEN, 
-                   ER_NEDSETTELSE_MER_ENN_YRKESSKADEGRENSE,
                    ER_ARBEIDSEVNE_NEDSATT,
                    HAR_NEDSATT_ARBEIDSEVNE,
                    YRKESSKADE_BEGRUNNELSE,
@@ -367,8 +356,6 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
             erSkadeSykdomEllerLyteVesentligdel = row.getBooleanOrNull("ER_SYKDOM_SKADE_LYTE_VESETLING_DEL"),
             erNedsettelseIArbeidsevneMerEnnHalvparten = row.getBooleanOrNull("ER_NEDSETTELSE_MER_ENN_HALVPARTEN"),
             erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = row.getBooleanOrNull("ER_NEDSETTELSE_MER_ENN_YRKESSKADE_GRENSE"),
-            erNedsettelseIArbeidsevneAvEnVissVarighet = row.getBooleanOrNull("ER_NEDSETTELSE_AV_EN_VISS_VARIGHET"),
-            erArbeidsevnenNedsatt = row.getBooleanOrNull("ER_ARBEIDSEVNE_NEDSATT"),
             harNedsattArbeidsevne = row.getEnumOrNull("HAR_NEDSATT_ARBEIDSEVNE"),
             yrkesskadeBegrunnelse = row.getStringOrNull("YRKESSKADE_BEGRUNNELSE"),
             diagnose = row.getStringOrNull("KODEVERK")?.let {
@@ -382,8 +369,6 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
             vurdertAv = Bruker(row.getString("VURDERT_AV_IDENT")),
             vurdertIBehandling = BehandlingId(row.getLong("VURDERT_I_BEHANDLING")),
             vurderingenGjelderTil = row.getLocalDateOrNull("VURDERINGEN_GJELDER_TIL"),
-            erNedsettelseMinstHalvparten = row.getEnumOrNull("ER_NEDSETTELSE_MINST_HALVPARTEN"),
-            erNedsettelseMerEnnYrkesskadegrense = row.getEnumOrNull("ER_NEDSETTELSE_MER_ENN_YRKESSKADEGRENSE")
         )
     }
 
@@ -505,27 +490,6 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
         }
     }
 
-    override fun oppdaterNyeFelter(
-        sykdomVurderingId: Long,
-        erNedsettelseMinstHalvparten: ErNedsettelseMinstHalvpartenValg?,
-        erNedsettelseMerEnnYrkesskadegrense: ErNedsettelseMerEnnYrkesskadegrenseValg?
-    ) {
-        val query = """
-            UPDATE sykdom_vurdering
-            SET er_nedsettelse_minst_halvparten = ?,
-                er_nedsettelse_mer_enn_yrkesskadegrense = ?
-            WHERE id = ?
-        """.trimIndent()
-
-        connection.execute(query) {
-            setParams {
-                setEnumName(1, erNedsettelseMinstHalvparten)
-                setEnumName(2, erNedsettelseMerEnnYrkesskadegrense)
-                setLong(3, sykdomVurderingId)
-            }
-        }
-    }
-
     override fun hentSykdomsvurderingMedId(behandlingId: BehandlingId): List<SykdomsvurderingMedId> {
         val sykdomVurderingerIds = getSykdomVurderingerIds(behandlingId)
         
@@ -538,10 +502,6 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
                    ER_SYKDOM_SKADE_LYTE_VESETLING_DEL,
                    ER_NEDSETTELSE_MER_ENN_HALVPARTEN,
                    ER_NEDSETTELSE_MER_ENN_YRKESSKADE_GRENSE,
-                   ER_NEDSETTELSE_AV_EN_VISS_VARIGHET,
-                   ER_NEDSETTELSE_MINST_HALVPARTEN, 
-                   ER_NEDSETTELSE_MER_ENN_YRKESSKADEGRENSE,
-                   ER_ARBEIDSEVNE_NEDSATT,
                    HAR_NEDSATT_ARBEIDSEVNE,
                    YRKESSKADE_BEGRUNNELSE,
                    KODEVERK,

@@ -1,8 +1,8 @@
 package no.nav.aap.behandlingsflyt.behandling.dokumentinnhenting
 
 import com.papsign.ktor.openapigen.annotations.parameters.PathParam
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.DokumentasjonType
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.dokumentinnhenting.kontrakt.DokumentasjonType
 import no.nav.aap.tilgang.Rolle
 import no.nav.aap.tilgang.plugin.kontrakt.Behandlingsreferanse
 import no.nav.aap.tilgang.plugin.kontrakt.Saksreferanse

@@ -108,7 +108,7 @@ private fun utledIkkeVurderbarePerioder(
 
     val mapped = Tidslinje.zip2(sykdomsvurderinger, bistandsvurderinger)
         .filter {
-            it.verdi.first?.erOppfyltForOrdinærEllerYrkesskadeSettBortIfraÅrsakssammenhengMedUtlededeFelter() != true || it.verdi.second?.erBehovForBistand() != true
+            it.verdi.first?.erOppfyltForOrdinærEllerYrkesskadeSettBortIfraÅrsakssammenheng() != true || it.verdi.second?.erBehovForBistand() != true
         }
     return mapped.perioder().toList()
 }

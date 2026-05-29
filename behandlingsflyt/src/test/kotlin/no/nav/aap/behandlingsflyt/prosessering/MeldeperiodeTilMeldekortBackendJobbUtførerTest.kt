@@ -1,10 +1,8 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus.IKKE_MELDT_SEG
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus.FØR_VEDTAK
-import no.nav.aap.behandlingsflyt.behandling.vedtak.Vedtak
-import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakId
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus.IKKE_MELDT_SEG
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.ArbeidsGradering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
@@ -19,7 +17,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.Meldepl
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Status
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
@@ -33,7 +30,6 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions.assertEquals
 import java.math.BigDecimal
 import java.time.LocalDate
-import java.time.LocalDateTime
 import java.util.*
 import kotlin.test.Test
 
@@ -85,12 +81,7 @@ class MeldeperiodeTilMeldekortBackendJobbUtførerTest {
                 status = Status.UTREDES,
             ),
             meldeperioder = underveisperioder.map { it.meldePeriode }.toSet().sorted(),
-            vedtak = Vedtak(
-                id = VedtakId(0),
-                behandlingId = BehandlingId(0),
-                vedtakstidspunkt = LocalDateTime.parse("2025-05-05T10:43:44.561"),
-                virkningstidspunkt = LocalDate.parse("2025-05-13"),
-            ),
+            vedtaksdatoFørsteInnvilgelse = LocalDate.parse("2025-05-13"),
             meldepliktGrunnlag = MeldepliktGrunnlag(emptyList()),
             underveisGrunnlag = UnderveisGrunnlag(
                 id = 0,
