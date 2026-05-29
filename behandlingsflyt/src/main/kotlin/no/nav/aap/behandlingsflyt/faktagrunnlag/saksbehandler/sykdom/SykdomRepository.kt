@@ -23,12 +23,6 @@ interface SykdomRepository : Repository {
 
     fun hentBehandlingIderMedUmigrerteSykdomsvurderinger(sisteBehandlingId: Long): List<BehandlingId>
 
-    fun oppdaterNyeFelter(
-        sykdomVurderingId: Long,
-        erNedsettelseMinstHalvparten: ErNedsettelseMinstHalvpartenValg?,
-        erNedsettelseMerEnnYrkesskadegrense: ErNedsettelseMerEnnYrkesskadegrenseValg?
-    )
-
     fun hentSykdomsvurderingMedId(behandlingId: BehandlingId): List<SykdomsvurderingMedId>
 }
 

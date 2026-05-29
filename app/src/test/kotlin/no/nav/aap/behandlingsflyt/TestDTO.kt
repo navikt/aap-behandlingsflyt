@@ -49,7 +49,7 @@ data class OpprettTestcaseDTO(
     val søknadsdato: LocalDate? = null,
     val andreUtbetalinger: AndreUtbetalingerDto? = null,
     val steg: StegType? = null,
-    val erArbeidsevnenNedsatt: Boolean = true,
+    val harNedsattArbeidsevne: Boolean = true,
     val erNedsettelseIArbeidsevneMerEnnHalvparten: Boolean = true,
 ) {
     val harYrkesskadeFraSøknad: Boolean

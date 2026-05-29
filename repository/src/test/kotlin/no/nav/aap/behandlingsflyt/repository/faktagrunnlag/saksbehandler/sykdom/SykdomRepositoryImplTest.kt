@@ -4,8 +4,6 @@ import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurdering
 import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingÅrsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Diagnose
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ErNedsettelseMerEnnYrkesskadegrenseValg
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ErNedsettelseMinstHalvpartenValg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.YrkesskadeSak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Yrkesskadevurdering
@@ -58,13 +56,9 @@ internal class SykdomRepositoryImplTest {
             harSkadeSykdomEllerLyte = true,
             harNedsattArbeidsevne = ArbeidsevneNedsattValg.JA,
             erSkadeSykdomEllerLyteVesentligdel = true,
-            erNedsettelseIArbeidsevneAvEnVissVarighet = true,
             erNedsettelseIArbeidsevneMerEnnHalvparten = true,
             erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = true,
-            erNedsettelseMinstHalvparten = ErNedsettelseMinstHalvpartenValg.JA,
-            erNedsettelseMerEnnYrkesskadegrense = null,
             yrkesskadeBegrunnelse = "b",
-            erArbeidsevnenNedsatt = true,
             vurdertAv = Bruker("Z00000"),
             opprettet = Instant.now(),
             diagnose = Diagnose("ICDP", "PEST", listOf("KOLERA", "ARGUSØYNE")),
@@ -81,14 +75,10 @@ internal class SykdomRepositoryImplTest {
             dokumenterBruktIVurdering = listOf(JournalpostId("2")),
             harSkadeSykdomEllerLyte = true,
             erSkadeSykdomEllerLyteVesentligdel = true,
-            erNedsettelseIArbeidsevneAvEnVissVarighet = true,
             erNedsettelseIArbeidsevneMerEnnHalvparten = false,
             erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = true,
             harNedsattArbeidsevne = ArbeidsevneNedsattValg.JA,
-            erNedsettelseMinstHalvparten = ErNedsettelseMinstHalvpartenValg.NEI,
-            erNedsettelseMerEnnYrkesskadegrense = ErNedsettelseMerEnnYrkesskadegrenseValg.JA,
             yrkesskadeBegrunnelse = null,
-            erArbeidsevnenNedsatt = true,
             vurdertAv = Bruker("Z00000"),
             opprettet = Instant.now(),
             diagnose = null,
@@ -102,13 +92,9 @@ internal class SykdomRepositoryImplTest {
             dokumenterBruktIVurdering = listOf(JournalpostId("3")),
             harSkadeSykdomEllerLyte = true,
             erSkadeSykdomEllerLyteVesentligdel = true,
-            erNedsettelseIArbeidsevneAvEnVissVarighet = true,
             erNedsettelseIArbeidsevneMerEnnHalvparten = true,
             erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = true,
-            erNedsettelseMinstHalvparten = null,
-            erNedsettelseMerEnnYrkesskadegrense = null,
             yrkesskadeBegrunnelse = "y",
-            erArbeidsevnenNedsatt = true,
             harNedsattArbeidsevne = ArbeidsevneNedsattValg.JA,
             vurdertAv = Bruker("Z00000"),
             opprettet = Instant.now(),
@@ -277,14 +263,10 @@ internal class SykdomRepositoryImplTest {
                             dokumenterBruktIVurdering = listOf(JournalpostId("1")),
                             harSkadeSykdomEllerLyte = true,
                             erSkadeSykdomEllerLyteVesentligdel = true,
-                            erNedsettelseIArbeidsevneAvEnVissVarighet = false,
                             erNedsettelseIArbeidsevneMerEnnHalvparten = true,
                             erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
-                            erNedsettelseMinstHalvparten = ErNedsettelseMinstHalvpartenValg.JA_FORBIGÅENDE_PROBLEMER,
-                            erNedsettelseMerEnnYrkesskadegrense = null,
                             yrkesskadeBegrunnelse = "b",
-                            erArbeidsevnenNedsatt = true,
-                            harNedsattArbeidsevne = ArbeidsevneNedsattValg.JA_FORBIGÅENDE_PROBLEMER,
+                            harNedsattArbeidsevne = ArbeidsevneNedsattValg.JA,
                             vurdertAv = Bruker("Z00000"),
                             vurdertIBehandling = behandling.id,
                             diagnose = null,
