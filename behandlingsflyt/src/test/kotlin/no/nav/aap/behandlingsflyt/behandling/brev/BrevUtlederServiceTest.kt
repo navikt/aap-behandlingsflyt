@@ -889,6 +889,66 @@ class BrevUtlederServiceTest {
         }
     }
 
+    @Test
+    fun `førstegangsbehandling med kun 11-18 perioder skal gi vurderesforuføretrygdbrev`() {
+        val kravdatoUføretrygd = 20 februar 2023
+        val behandling = gittBehandling(TypeBehandling.Førstegangsbehandling)
+        val førsteDagMedYtelse = 1 januar 2025
+        val sisteDagMedYtelse = 31 august 2025
+
+        gittUnderveisGrunnlag(
+            behandling.id,
+            underveisperiode(
+                periode = Periode(førsteDagMedYtelse, sisteDagMedYtelse),
+                rettighetsType = RettighetsType.VURDERES_FOR_UFØRETRYGD,
+                utfall = Utfall.OPPFYLT,
+            ),
+        )
+
+        overgangUføreRepository.lagre(
+            behandling.id,
+            listOf(
+                OvergangUføreVurdering(
+                    begrunnelse = "Begrunnelse",
+                    brukerHarSøktOmUføretrygd = true,
+                    brukerHarFåttVedtakOmUføretrygd = UføreSøknadVedtakResultat.NEI,
+                    brukerRettPåAAP = true,
+                    fom = kravdatoUføretrygd,
+                    tom = sisteDagMedYtelse,
+                    vurdertAv = "Veileder",
+                    vurdertIBehandling = behandling.id,
+                )
+            )
+        )
+
+        val resultat = brevUtlederService.utledBehovForMeldingOmVedtak(behandling.id)
+
+        assertIs<VurderesForUføretrygd>(resultat)
+    }
+
+    @Test
+    fun `førstegangsbehandling med både ordinær AAP og 11-18 skal gi innvilgelsesbrev`() {
+        val behandling = gittBehandling(TypeBehandling.Førstegangsbehandling)
+
+        gittUnderveisGrunnlag(
+            behandling.id,
+            underveisperiode(
+                periode = Periode(1 januar 2025, 31 januar 2025),
+                rettighetsType = RettighetsType.BISTANDSBEHOV,
+                utfall = Utfall.OPPFYLT,
+            ),
+            underveisperiode(
+                periode = Periode(1 februar 2025, 31 august 2025),
+                rettighetsType = RettighetsType.VURDERES_FOR_UFØRETRYGD,
+                utfall = Utfall.OPPFYLT,
+            ),
+        )
+
+        val resultat = brevUtlederService.utledBehovForMeldingOmVedtak(behandling.id)
+
+        assertIs<Innvilgelse>(resultat)
+    }
+
 
     @Nested
     inner class TestGruppe_AvslagBrev {

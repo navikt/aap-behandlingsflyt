@@ -148,7 +148,7 @@ class BrevUtlederService(
                 return when (resultat) {
                     Resultat.INNVILGELSE -> {
                         val perioder = underveisRepository.hentHvisEksisterer(behandling.id)?.perioder.orEmpty()
-                        val harOrdinærAAP = perioder.any { it.rettighetsType != RettighetsType.VURDERES_FOR_UFØRETRYGD && it.rettighetsType != RettighetsType.ARBEIDSSØKER }
+                        val harOrdinærAAP = perioder.any { it.rettighetsType == RettighetsType.BISTANDSBEHOV }
                         val harUføretrygd = perioder.any { it.rettighetsType == RettighetsType.VURDERES_FOR_UFØRETRYGD }
 
                         if (harUføretrygd && !harOrdinærAAP) {
