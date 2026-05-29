@@ -144,7 +144,7 @@ class BrevUtlederService(
                 }
 
                 val resultat = resultatUtleder.utledResultatFørstegangsBehandling(behandlingId)
-                if (Miljø.erDev()) {
+                if (Miljø.erLokal()) {
                     return when (resultat) {
                         Resultat.INNVILGELSE -> {
                             val perioder = underveisRepository.hentHvisEksisterer(behandling.id)?.perioder.orEmpty()
