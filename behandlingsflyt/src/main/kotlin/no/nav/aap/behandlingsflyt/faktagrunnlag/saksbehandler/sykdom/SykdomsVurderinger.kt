@@ -29,6 +29,11 @@ data class Sykdomsvurdering(
         if (!harSkadeSykdomEllerLyte && erSkadeSykdomEllerLyteVesentligdel == true) {
             return false
         }
+        
+        if (harSkadeSykdomEllerLyte && harNedsattArbeidsevne == null) {
+            return false
+        }
+        
         if (harNedsattArbeidsevne == ArbeidsevneNedsattValg.NEI && (erNedsettelseIArbeidsevneMerEnnHalvparten == true)) {
             return false
         }
