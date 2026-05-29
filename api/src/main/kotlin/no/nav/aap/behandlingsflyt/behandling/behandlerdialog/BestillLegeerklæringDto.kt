@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.behandling.dokumentinnhenting
+package no.nav.aap.behandlingsflyt.behandling.behandlerdialog
 
 import com.papsign.ktor.openapigen.annotations.parameters.PathParam
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
