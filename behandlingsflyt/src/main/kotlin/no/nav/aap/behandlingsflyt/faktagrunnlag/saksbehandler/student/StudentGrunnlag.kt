@@ -2,7 +2,6 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student
 
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.tidslinje.Tidslinje
-import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.komponenter.tidslinje.somTidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Tid
@@ -47,15 +46,10 @@ data class StudentGrunnlag(
     }
 }
 
-fun StudentGrunnlag?.harPeriodeSomIkkeErOppfylt(maksDato: LocalDate = Tid.MAKS): Boolean {
-    val tidslinje = this?.somStudenttidslinje(maksDato).orEmpty()
-    if (tidslinje.isEmpty()) {
-        return true
-    }
-    return tidslinje.segmenter().any { !it.verdi.erOppfylt() }
-}
-
 fun StudentGrunnlag?.skalVurdereStudent(): Boolean {
-    return this?.oppgittStudent?.erStudent() == true
-            && this.oppgittStudent.skalGjenopptaStudieStatus != SkalGjenopptaStudieStatus.NEI
+    return this?.oppgittStudent?.erStudentStatus == ErStudentStatus.AVBRUTT
+            && this.oppgittStudent.skalGjenopptaStudieStatus in listOf(
+        SkalGjenopptaStudieStatus.JA,
+        SkalGjenopptaStudieStatus.VET_IKKE
+    )
 }
