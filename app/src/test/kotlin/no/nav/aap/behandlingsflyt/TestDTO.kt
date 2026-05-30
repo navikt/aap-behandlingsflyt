@@ -71,6 +71,10 @@ data class InstitusjonsoppholdItemDTO(
     @param:JsonProperty(value = "oppholdTom", required = true) val oppholdTom: LocalDate,
 )
 
+data class LeggTilYrkesskadeDTO(
+    val yrkesskader: List<TestYrkesskadeDto> = listOf(TestYrkesskadeDto()),
+)
+
 data class TestBarn(
     @param:JsonProperty(value = "fodselsdato", required = true) val fodselsdato: LocalDate,
     val harRelasjon: Boolean = true,

@@ -148,12 +148,26 @@ fun main() {
                 }
 
                 route("/endre/{saksnummer}/legg-til-yrkesskade") {
-                    post<SaksnummerParameter, Unit, Unit> { param, _ ->
+                    post<SaksnummerParameter, Unit, LeggTilYrkesskadeDTO> { param, dto ->
                         val ident = hentIdentForSak(Saksnummer(param.saksnummer))
 
                         val fakePersoner = JSONTestPersonService()
+                        val nyeYrkesskader = dto.yrkesskader.mapNotNull { entry ->
+                            when (entry.kilde) {
+                                "SØKNAD" -> null
+                                "REGISTER" -> TestYrkesskade(
+                                    skadedato = entry.skadedato,
+                                    skadeart = entry.skadeart,
+                                    diagnose = entry.diagnose,
+                                    skadebeskrivelse = entry.skadebeskrivelse,
+                                    vedtaksdato = entry.vedtaksdato,
+                                )
+                                else -> null
+                            }
+                        }.ifEmpty { listOf(TestYrkesskade()) }
+
                         val oppdatertPerson = fakePersoner.hentPerson(ident)?.let {
-                            it.medYrkesskade(it.yrkesskade + TestYrkesskade())
+                            it.medYrkesskade(it.yrkesskade + nyeYrkesskader)
                         }
 
                         if (oppdatertPerson != null) {
