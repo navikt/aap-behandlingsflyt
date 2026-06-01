@@ -67,7 +67,6 @@ class TidligereVurderingerImpl(
     private val avbrytRevurderingService: AvbrytRevurderingService,
     private val sykdomRepository: SykdomRepository,
     private val bistandRepository: BistandRepository,
-    private val studentRepository: StudentRepository,
     private val unleashGateway: UnleashGateway
 ) : TidligereVurderinger {
 
@@ -81,7 +80,6 @@ class TidligereVurderingerImpl(
         avbrytRevurderingService = AvbrytRevurderingService(repositoryProvider),
         sykdomRepository = repositoryProvider.provide(),
         bistandRepository = repositoryProvider.provide(),
-        studentRepository = repositoryProvider.provide(),
         unleashGateway = gatewayProvider.provide()
     )
 
@@ -133,9 +131,9 @@ class TidligereVurderingerImpl(
                         .orEmpty()
 
                 tidligereVurderinger.leftJoin(sykdomstidslinje) { segmentPeriode, foreløpigUtfall, sykdomsvurdering ->
-                    val sykdomDefinitivtAvslag = sykdomsvurdering?.erOppfyltOrdinærMedUtlededeFelterGammel() == false
-                            && !sykdomsvurdering.erOppfyltForOrdinærEllerYrkesskadeSettBortIfraÅrsakssammenhengMedUtlededeFelter()
-                            && !sykdomsvurdering.erKonsistentMedSykepengeerstatningSettBortIfraÅrsakssammenheng()
+                    val sykdomDefinitivtAvslag = sykdomsvurdering?.erOppfyltOrdinærMedUtlededeFelter() == false
+                            && !sykdomsvurdering.erOppfyltForOrdinærEllerYrkesskadeSettBortIfraÅrsakssammenheng()
+                            && !sykdomsvurdering.skalVurderesForSykepengeerstatning()
                             && !potensieltOppfyltOvergangArbeid(
                         kontekst.rettighetsperiode,
                         segmentPeriode,
@@ -170,7 +168,7 @@ class TidligereVurderingerImpl(
                     val erBistandOppfylt = bistandvurdering?.erBehovForBistand() == true
 
                     when {
-                        erBistandOppfylt && sykdomvurdering?.erOppfyltForOrdinærEllerYrkesskadeSettBortIfraÅrsakssammenhengMedUtlededeFelter() == true ->
+                        erBistandOppfylt && sykdomvurdering?.erOppfyltForOrdinærEllerYrkesskadeSettBortIfraÅrsakssammenheng() == true ->
                             TidligereVurderinger.PotensieltOppfylt(RettighetsType.BISTANDSBEHOV)
 
                         else -> TidligereVurderinger.PotensieltOppfylt(null)
@@ -203,7 +201,7 @@ class TidligereVurderingerImpl(
                             RettighetsType.ARBEIDSSØKER
                         )
 
-                        foreløpigUtfall is TidligereVurderinger.PotensieltOppfylt && foreløpigUtfall.rettighetstype == null && sykdomsvurdering?.erKonsistentMedSykepengeerstatningSettBortIfraÅrsakssammenheng() != true -> TidligereVurderinger.UunngåeligAvslag
+                        foreløpigUtfall is TidligereVurderinger.PotensieltOppfylt && foreløpigUtfall.rettighetstype == null && sykdomsvurdering?.skalVurderesForSykepengeerstatning() != true -> TidligereVurderinger.UunngåeligAvslag
 
                         else -> TidligereVurderinger.PotensieltOppfylt(null)
                     }
@@ -381,7 +379,7 @@ class TidligereVurderingerImpl(
     ): Boolean {
         val harTidligereInnvilgetSykdomsvurdering =
             sykdomstidslinje.begrensetTil(Periode(Tid.MIN, segmentPeriode.fom.minusDays(1))).segmenter()
-                .any { it.verdi.erOppfyltForOrdinærEllerYrkesskadeSettBortIfraÅrsakssammenhengMedUtlededeFelter() }
+                .any { it.verdi.erOppfyltForOrdinærEllerYrkesskadeSettBortIfraÅrsakssammenheng() }
 
         val erIkkeFørsteSykdomsvurdering = !Sykdomsvurdering.erFørsteVurdering(rettighetsperiode.fom, segmentPeriode)
         return erIkkeFørsteSykdomsvurdering && harTidligereInnvilgetSykdomsvurdering

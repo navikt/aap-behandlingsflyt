@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.test
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.LegeerklæringStatusResponse
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.StoppetBehandling
 import no.nav.aap.behandlingsflyt.test.fakes.AaregFake
 import no.nav.aap.behandlingsflyt.test.fakes.AinntektFake
@@ -35,9 +34,8 @@ import no.nav.aap.behandlingsflyt.test.fakes.TjenestePensjonFake
 import no.nav.aap.behandlingsflyt.test.fakes.UnleashFake
 import no.nav.aap.behandlingsflyt.test.fakes.UtbetalFake
 import no.nav.aap.behandlingsflyt.test.fakes.YrkesskadeFake
+import no.nav.aap.dokumentinnhenting.kontrakt.DialogmeldingStatusTilBehandslingsflytDto
 import org.slf4j.LoggerFactory
-import java.io.BufferedWriter
-import java.io.FileWriter
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -94,24 +92,16 @@ object FakeServers : AutoCloseable {
 
     // Forwarded state
     internal val statistikkHendelser: MutableList<StoppetBehandling> get() = statistikk.hendelser
-    internal val legeerklæringStatuser: MutableList<LegeerklæringStatusResponse> get() = dokumentinnhenting.statuser
+    internal val legeerklæringStatuser: MutableList<DialogmeldingStatusTilBehandslingsflytDto> get() = dokumentinnhenting.statuser
 
     fun start(testPersonService: TestPersonService = FakePersoner) {
-        if (started.get()) {
+        if (!started.compareAndSet(false, true)) {
             return
         }
-
 
         fakePersoner = testPersonService
         allFakes.forEach { it.start() }
         setProperties()
-        started.set(true)
-
-        val texasPort = texas.port()
-        val writer = BufferedWriter(FileWriter(".texas_port.txt"))
-        writer.use {
-            it.write(texasPort.toString(10))
-        }
     }
 
     private fun setProperties() {
@@ -272,5 +262,17 @@ object FakeServers : AutoCloseable {
             return
         }
         allFakes.forEach { it.stop() }
+    }
+}
+
+object TexasPortHolder {
+    private val texasPort = AtomicInteger(0)
+
+    fun setPort(port: Int) {
+        texasPort.set(port)
+    }
+
+    fun getPort(): Int {
+        return texasPort.get()
     }
 }

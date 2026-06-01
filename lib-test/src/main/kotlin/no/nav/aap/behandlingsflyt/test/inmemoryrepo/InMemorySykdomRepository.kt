@@ -1,7 +1,5 @@
 package no.nav.aap.behandlingsflyt.test.inmemoryrepo
 
- import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ErNedsettelseMerEnnYrkesskadegrenseValg
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ErNedsettelseMinstHalvpartenValg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
@@ -82,13 +80,6 @@ object InMemorySykdomRepository : SykdomRepository {
 
     override fun hentBehandlingIderMedUmigrerteSykdomsvurderinger(sisteBehandlingId: Long): List<BehandlingId> {
         return emptyList()
-    }
-
-    override fun oppdaterNyeFelter(
-        sykdomVurderingId: Long,
-        erNedsettelseMinstHalvparten: ErNedsettelseMinstHalvpartenValg?,
-        erNedsettelseMerEnnYrkesskadegrense: ErNedsettelseMerEnnYrkesskadegrenseValg?
-    ) {
     }
 
     override fun hentSykdomsvurderingMedId(behandlingId: BehandlingId): List<SykdomsvurderingMedId> {

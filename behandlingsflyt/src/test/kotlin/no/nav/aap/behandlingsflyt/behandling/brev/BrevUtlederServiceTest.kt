@@ -523,6 +523,37 @@ class BrevUtlederServiceTest {
         }
 
         @Test
+        fun `utleder GJENNOMSNITT selv om et ikke-brukt år er 6G-begrenset`() {
+            // Regresjonstest: tidligere ble INNTEKT_OVER_6G feilaktig valgt fordi koden sjekket
+            // om *noen* av de tre inntektsårene var 6G-begrenset, ikke om det *brukte* grunnlaget var det.
+            // Eksempel: 2024=500k, 2023=700k (6G-begrenset), 2022=300k → gjennomsnitt brukes, ikke siste år.
+            val (_, revurdering) = gittRevurderingMedGrunnlag(
+                grunnlag = Grunnlag11_19(
+                    grunnlaget = GUnit("4.27"),
+                    erGjennomsnitt = true,
+                    gjennomsnittligInntektIG = GUnit("4.27"),
+                    inntekter = listOf(
+                        grunnlagInntekt(2024, 500_000),                          // 4.09G — ikke 6G-begrenset
+                        GrunnlagInntekt(                                          // 6.02G — 6G-begrenset, men ikke brukt
+                            år = Year.of(2023),
+                            inntektIKroner = Beløp(700_000),
+                            grunnbeløp = Beløp(116_239),
+                            inntektIG = GUnit("6.02"),
+                            inntekt6GBegrenset = GUnit(6),
+                            er6GBegrenset = true,
+                        ),
+                        grunnlagInntekt(2022, 300_000),                          // 2.73G — ikke 6G-begrenset
+                    )
+                )
+            )
+
+            val resultat = brevUtlederService.utledBehovForMeldingOmVedtak(revurdering.id)
+
+            assertIs<VurderesForUføretrygd>(resultat)
+            assertEquals(GrunnlagBeregning.BeregningsutfallKategori.GJENNOMSNITT, resultat.grunnlagBeregning?.beregningsutfallKategori)
+        }
+
+        @Test
         fun `utleder MINSTESATS_OVER_25 når minstesats over 25 pst er bestemmende`() {
             val behandling = gittInnvilgelseBehandlingMedGrunnlag(
                 grunnlag = Grunnlag11_19(

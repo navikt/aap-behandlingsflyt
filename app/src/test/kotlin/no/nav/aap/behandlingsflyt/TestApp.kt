@@ -21,7 +21,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fød
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.Uføre
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreSøknad
 import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseServiceFactory
-import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseServiceProvider
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
 import no.nav.aap.behandlingsflyt.integrasjon.institusjonsopphold.InstitusjonsoppholdJSON
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
@@ -48,6 +48,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.SaksnummerParameter
 import no.nav.aap.behandlingsflyt.test.FakeServers
 import no.nav.aap.behandlingsflyt.test.FiktivtHelseoppholdNavnGenerator
 import no.nav.aap.behandlingsflyt.test.JSONTestPersonService
+import no.nav.aap.behandlingsflyt.test.TexasPortHolder
 import no.nav.aap.behandlingsflyt.test.LokalUnleash
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.behandlingsflyt.test.modell.TestYrkesskade
@@ -84,6 +85,7 @@ data class IdentOgOpphold(val ident: String, val opphold: List<Institusjonsoppho
 fun main() {
     val dbConfig = initDbConfig()
 
+    TexasPortHolder.setPort(8081)
     FakeServers.start(JSONTestPersonService())
 
     // Starter server
@@ -108,7 +110,7 @@ fun main() {
                 datasource,
                 jobber = ProsesseringsJobber.alle(),
                 repositoryRegistry = repositoryRegistry,
-                gatewayProvider
+                gatewayProvider = gatewayProvider
             )
         }.value
 
@@ -453,12 +455,12 @@ private fun opprettNySakOgBehandling(
             løsSykdom(
                 behandling = behandling,
                 vurderingGjelderFra = dto.søknadsdato ?: sak.rettighetsperiode.fom,
-                erArbeidsevnenNedsatt = dto.erArbeidsevnenNedsatt,
+                harNedsattArbeidsevne = if (dto.harNedsattArbeidsevne) ArbeidsevneNedsattValg.JA else ArbeidsevneNedsattValg.NEI,
                 erNedsettelseIArbeidsevneMerEnnHalvparten = dto.erNedsettelseIArbeidsevneMerEnnHalvparten
             )
         }
 
-        val harBehandlingsgrunnlag = dto.erArbeidsevnenNedsatt && dto.erNedsettelseIArbeidsevneMerEnnHalvparten
+        val harBehandlingsgrunnlag = dto.harNedsattArbeidsevne && dto.erNedsettelseIArbeidsevneMerEnnHalvparten
 
         if (harBehandlingsgrunnlag) {
             if (dto.steg == StegType.VURDER_BISTANDSBEHOV) return sak

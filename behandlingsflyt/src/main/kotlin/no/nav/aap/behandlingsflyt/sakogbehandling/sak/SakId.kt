@@ -7,4 +7,9 @@ data class SakId(val id: Long) {
     fun toLong(): Long {
         return id
     }
+    companion object {
+        fun fromStringOrNull(source: String?): SakId? {
+            return source?.toLongOrNull()?.let { SakId(it) }
+        }
+    }
 }

@@ -154,7 +154,4 @@ public data class DetaljertMeldekortDTO(
     val meldeperiodeTom: LocalDate,
     val mottattTidspunkt: LocalDateTime,
     val timerArbeidPerPeriode: List<ArbeidIPeriodeDTO>,
-    val meldepliktStatusKode: String?,
-    val rettighetsTypeKode: String?,
-    val avslagsårsakKode: String?
 )

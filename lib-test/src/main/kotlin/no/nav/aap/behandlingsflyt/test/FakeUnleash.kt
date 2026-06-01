@@ -53,9 +53,9 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.ForutgaaendeGap to true,
         BehandlingsflytFeature.GrunnbeloepInformasjonskrav to true,
         BehandlingsflytFeature.MaritimtArbeid to true,
-        BehandlingsflytFeature.GJustering2026 to false,
         BehandlingsflytFeature.ForstegangsbehandlingEtterAvslagOppgave to true,
         BehandlingsflytFeature.AlleEndringerKreverKvalitetssikring to true,
+        BehandlingsflytFeature.MeldepliktForsteFraForsteInnvilgelse to true,
         BehandlingsflytFeature.RevurderingEtterAvslagSkalKvalitetssikres to true
         )
 )

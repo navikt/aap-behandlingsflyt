@@ -18,8 +18,11 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingRef
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.tilgang.kanSaksbehandle
 import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
+import no.nav.aap.behandlingsflyt.utils.Validation
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.komponenter.httpklient.exception.InternfeilException
+import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
@@ -131,6 +134,7 @@ fun NormalOpenAPIRoute.institusjonApi(
 
                     val grunnlag = institusjonsoppholdRepository.hentHvisEksisterer(behandling.id)
                     val oppholdInfo = byggTidslinjeForInstitusjonsopphold(grunnlag, Institusjonstype.HS)
+                        .getOrThrow { InternfeilException(it.errorMessage) }
 
                     // Hent alle vurderinger gruppert per opphold fra repository
                     val vurderingerGruppertPerOpphold =
@@ -314,7 +318,7 @@ fun hentOppholdSomSkalVurderes(
 fun byggTidslinjeForInstitusjonsopphold(
     grunnlag: InstitusjonsoppholdGrunnlag?,
     type: Institusjonstype
-): Tidslinje<Institusjon> {
+): Validation<Tidslinje<Institusjon>> {
     val segments = grunnlag
         ?.oppholdene
         ?.opphold
@@ -322,13 +326,21 @@ fun byggTidslinjeForInstitusjonsopphold(
         ?.sortedBy { it.periode.fom }
         .orEmpty()
 
-    if (segments.size < 2) return Tidslinje(segments)
+    if (segments.size < 2) return Validation.Valid(Tidslinje(segments))
+
+    segments.zipWithNext { current, next ->
+        if (current.periode.tom > next.periode.fom) {
+            return Validation.Invalid(
+                Tidslinje(),
+                "Overlappende institusjonsopphold funnet: " +
+                        "(${current.periode}) overlapper med " +
+                        "(${next.periode}). " +
+                        "Oppholdene må korrigeres i kildesystemet (INST2)."
+            )
+        }
+    }
 
     val håndterOverlapp = segments.zipWithNext { current, next ->
-        require(current.periode.tom <= next.periode.fom) {
-            "For stort overlapp mellom periodene ${current.periode} og ${next.periode}"
-        }
-
         if (current.periode.tom == next.periode.fom) {
             current.copy(periode = Periode(current.periode.fom, current.periode.tom.minusDays(1)))
         } else {
@@ -336,7 +348,7 @@ fun byggTidslinjeForInstitusjonsopphold(
         }
     } + segments.last()
 
-    return Tidslinje(håndterOverlapp)
+    return Validation.Valid(Tidslinje(håndterOverlapp))
 }
 
 private fun byggTidslinjeAvType(

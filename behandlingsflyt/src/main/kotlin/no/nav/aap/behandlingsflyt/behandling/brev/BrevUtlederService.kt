@@ -518,8 +518,8 @@ class BrevUtlederService(
             Minstesats.MINSTESATS_OVER_25 -> GrunnlagBeregning.BeregningsutfallKategori.MINSTESATS_OVER_25
             Minstesats.MINSTESATS_UNDER_25 -> GrunnlagBeregning.BeregningsutfallKategori.MINSTESATS_UNDER_25
             else -> when {
-                grunnlag.inntekter().any { it.er6GBegrenset } -> GrunnlagBeregning.BeregningsutfallKategori.INNTEKT_OVER_6G
                 grunnlag.erGjennomsnitt() -> GrunnlagBeregning.BeregningsutfallKategori.GJENNOMSNITT
+                grunnlag.inntekter().first().er6GBegrenset -> GrunnlagBeregning.BeregningsutfallKategori.INNTEKT_OVER_6G
                 else -> GrunnlagBeregning.BeregningsutfallKategori.SISTE_AAR
             }
         }

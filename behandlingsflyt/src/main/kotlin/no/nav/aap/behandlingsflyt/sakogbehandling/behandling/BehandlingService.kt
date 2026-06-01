@@ -1,11 +1,11 @@
 package no.nav.aap.behandlingsflyt.sakogbehandling.behandling
 
-import no.nav.aap.behandlingsflyt.behandling.ResultatUtleder
-import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.avbrytaktivitetspliktbehandling.AvbrytAktivitetspliktbehandlingService
 import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingService
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
+import no.nav.aap.behandlingsflyt.behandling.underveis.UnderveisService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopierer
 import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopiererImpl
+import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.avbrytaktivitetspliktbehandling.AvbrytAktivitetspliktbehandlingService
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
@@ -25,7 +25,7 @@ class BehandlingService(
     private val behandlingRepository: BehandlingRepository,
     private val trukketSøknadService: TrukketSøknadService,
     private val avbrytRevurderingService: AvbrytRevurderingService,
-    private val resultatUtleder: ResultatUtleder,
+    private val underveisService: UnderveisService,
     private val avbrytAktivitetspliktbehandlingService: AvbrytAktivitetspliktbehandlingService,
     private val unleashGateway: UnleashGateway
 ) {
@@ -38,7 +38,7 @@ class BehandlingService(
         behandlingRepository = repositoryProvider.provide(),
         trukketSøknadService = TrukketSøknadService(repositoryProvider),
         avbrytRevurderingService = AvbrytRevurderingService(repositoryProvider),
-        resultatUtleder = ResultatUtleder(repositoryProvider, gatewayProvider),
+        underveisService = UnderveisService(repositoryProvider, gatewayProvider),
         avbrytAktivitetspliktbehandlingService = AvbrytAktivitetspliktbehandlingService(repositoryProvider),
         unleashGateway = gatewayProvider.provide()
     )
@@ -65,7 +65,7 @@ class BehandlingService(
                     "Revurdering skal alltid ha forrigeBehandling"
                 }
                 val vurderingsbehov = behandling.vurderingsbehov().map { it.type }
-                if (!resultatUtleder.harRett(forrigeBehandlingId) && vurderingsbehov.contains(Vurderingsbehov.MOTTATT_SØKNAD)) {
+                if (!underveisService.harRett(forrigeBehandlingId) && vurderingsbehov.contains(Vurderingsbehov.MOTTATT_SØKNAD)) {
                     TypeBehandling.Førstegangsbehandling
                 } else {
                     TypeBehandling.Revurdering
