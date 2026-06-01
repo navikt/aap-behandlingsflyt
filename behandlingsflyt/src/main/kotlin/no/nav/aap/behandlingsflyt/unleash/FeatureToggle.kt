@@ -22,7 +22,6 @@ enum class BehandlingsflytFeature : FeatureToggle {
     MaritimtArbeid,
     ForstegangsbehandlingEtterAvslagOppgave,
     GrunnbeloepInformasjonskrav,
-    GJustering2026,
     AlleEndringerKreverKvalitetssikring,
     RevurderingEtterAvslagSkalKvalitetssikres,
     MeldepliktForsteFraForsteInnvilgelse,

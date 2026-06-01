@@ -19,9 +19,10 @@ import java.time.Year
 import kotlin.collections.toSet
 
 /**
- * Kjøres daglig og oppretter jobber for G-Regulering. Jobber opprettes for saksbehandlingskandidater hvor innvilget
- * AAP-periode ikke har en endring i grunnbeløpet benyttet i beregninger av ytelse for ny G-periode. Dette forutsetter
- * at ny G-justering finnes i Grunnbeløp.kt for inneværende G-periode. G-periode utledes fra jobb-kjøretidspunktet.
+ * Kjøres 05:00 og 17:00 daglig og oppretter jobber for G-Regulering. Jobber opprettes for saksbehandlingskandidater
+ * hvor innvilget AAP-periode ikke har en endring i grunnbeløpet benyttet i beregninger av ytelse for ny G-periode.
+ * Dette forutsetter at ny G-justering finnes i Grunnbeløp.kt for inneværende G-periode. G-periode utledes fra
+ * jobb-kjøretidspunktet.
  *
  * Alle G-Justeringen fra før Kelvin ble lansert i produksjon i 2025 ignoreres for G-regulering. Første aktuelle
  * G-periode er 2026/2027.
