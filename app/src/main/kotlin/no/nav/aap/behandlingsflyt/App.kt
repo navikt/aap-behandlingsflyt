@@ -156,8 +156,9 @@ internal object AppConfig {
      * er blocking, er det i praksis hva som begrenser antall parallelle kall.
      *
      * Vi har maks 100 connections i prod, og vi kjører med 3-4 pods, så det er en begrenset ressurs.
+     * Bruker kun 96 connections for å beholde noen til administrasjon.
      */
-    const val hikariMaxPoolSize = 100 / 4 /* max connections / max antall pods */
+    const val hikariMaxPoolSize = 96 / 4 /* max connections / max antall pods */
 }
 
 fun main() {
