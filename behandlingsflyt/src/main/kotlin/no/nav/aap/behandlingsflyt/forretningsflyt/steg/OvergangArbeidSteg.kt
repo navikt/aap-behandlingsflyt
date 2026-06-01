@@ -133,7 +133,7 @@ class OvergangArbeidSteg internal constructor(
                                 return@map4 false
                             }
 
-                            sykdomsvurdering?.erOppfyltForOrdinærEllerYrkesskadeSettBortIfraÅrsakssammenhengMedUtlededeFelter() != true
+                            sykdomsvurdering?.erOppfyltForOrdinærEllerYrkesskadeSettBortIfraÅrsakssammenheng() != true
                                     || erDelvisUfør(uføregrad)
                         }
 

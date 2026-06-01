@@ -9,6 +9,15 @@ on:
       - '.run/*'
       - 'docker-compose.yaml'
   workflow_dispatch:
+    inputs:
+      cluster:
+        description: Cluster
+        required: true
+        default: dev-gcp
+        type: choice
+        options:
+          - dev-gcp
+          - prod-gcp
 
 jobs:
   build:
@@ -58,7 +67,7 @@ jobs:
         id: docker-push
         with:
             team: aap # required
-            
+
     outputs:
         image: ${{ steps.docker-push.outputs.image }}
 

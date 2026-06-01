@@ -300,8 +300,8 @@ class InstitusjonFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::cla
 
     @Test
     fun `institusjonsopphold med barnetillegg i samme periode gir full AAP og barnetillegg`() {
-        val fom = LocalDate.now().minusMonths(5)
-        val oppholdTom = LocalDate.now().plusMonths(2)
+        val fom = 1 desember 2025
+        val oppholdTom = 1 februar 2026
         val barnetilleggTom = oppholdTom.plusMonths(3)
         val barnFødselsdato = fom.minusYears(5)
 
