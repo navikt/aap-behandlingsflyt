@@ -144,7 +144,7 @@ class BrevUtlederService(
                 }
 
                 val resultat = resultatUtleder.utledResultatFørstegangsBehandling(behandlingId)
-                if (Miljø.erLokal()) {
+                if (Miljø.erLokal() || Miljø.erDev()) {
                     return when (resultat) {
                         Resultat.INNVILGELSE -> {
                             val perioder = underveisRepository.hentHvisEksisterer(behandling.id)?.perioder.orEmpty()
@@ -165,7 +165,7 @@ class BrevUtlederService(
 
                         Resultat.TRUKKET -> null
                         Resultat.AVBRUTT -> null
-                    }
+                    }.also { log.info("Brukt brevtype $it")}
                 } else {
                     return when (resultat) {
                         Resultat.INNVILGELSE -> {
