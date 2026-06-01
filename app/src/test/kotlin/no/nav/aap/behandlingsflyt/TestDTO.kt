@@ -19,7 +19,7 @@ data class Institusjoner(
 )
 
 data class TestYrkesskadeDto(
-    val kilde: String = "REGISTER",         // "SØKNAD" eller "REGISTER"
+    val kilde: Kilde = Kilde.REGISTER,         // "SØKNAD" eller "REGISTER"
     val harYrkesskade: Boolean = false,     // brukes når kilde=SØKNAD
     val skadeart: String? = null,           // brukes når kilde=REGISTER
     val diagnose: String? = null,           // brukes når kilde=REGISTER
@@ -53,10 +53,15 @@ data class OpprettTestcaseDTO(
     val erNedsettelseIArbeidsevneMerEnnHalvparten: Boolean = true,
 ) {
     val harYrkesskadeFraSøknad: Boolean
-        get() = yrkesskader.any { it.kilde == "SØKNAD" && it.harYrkesskade }
+        get() = yrkesskader.any { it.kilde == Kilde.SØKNAD && it.harYrkesskade }
 
     val harYrkesskade: Boolean
-        get() = harYrkesskadeFraSøknad || yrkesskader.any { it.kilde == "REGISTER" }
+        get() = harYrkesskadeFraSøknad || yrkesskader.any { it.kilde == Kilde.REGISTER }
+}
+
+enum class Kilde {
+    SØKNAD,
+    REGISTER
 }
 
 data class LeggTilInstitusjonsoppholdDTO(

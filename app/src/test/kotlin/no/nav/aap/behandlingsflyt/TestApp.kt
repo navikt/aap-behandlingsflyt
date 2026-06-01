@@ -154,15 +154,14 @@ fun main() {
                         val fakePersoner = JSONTestPersonService()
                         val nyeYrkesskader = dto.yrkesskader.mapNotNull { entry ->
                             when (entry.kilde) {
-                                "SØKNAD" -> null
-                                "REGISTER" -> TestYrkesskade(
+                                Kilde.SØKNAD -> null
+                                Kilde.REGISTER -> TestYrkesskade(
                                     skadedato = entry.skadedato,
                                     skadeart = entry.skadeart,
                                     diagnose = entry.diagnose,
                                     skadebeskrivelse = entry.skadebeskrivelse,
                                     vedtaksdato = entry.vedtaksdato,
                                 )
-                                else -> null
                             }
                         }.ifEmpty { listOf(TestYrkesskade()) }
 
@@ -292,7 +291,7 @@ private fun genererBarn(dto: TestBarn): TestPerson {
 
 private fun mapTilSøknad(dto: OpprettTestcaseDTO, urelaterteBarn: List<TestPerson>): SøknadV0 {
     val erStudent = if (dto.student) StudentStatus.Ja else StudentStatus.Nei
-    val harYrkesskadeFraSøknad = dto.yrkesskader.any { it.kilde == "SØKNAD" && it.harYrkesskade }
+    val harYrkesskadeFraSøknad = dto.yrkesskader.any { it.kilde == Kilde.SØKNAD && it.harYrkesskade }
     val harYrkesskade = if (harYrkesskadeFraSøknad) "JA" else "NEI"
 
     val oppgitteBarn = if (urelaterteBarn.isNotEmpty()) {
@@ -344,16 +343,14 @@ private fun sendInnSøknad(
             fødselsdato = Fødselsdato(dto.fødselsdato),
             yrkesskade = dto.yrkesskader.mapNotNull { entry ->
                 when (entry.kilde) {
-                    "SØKNAD" -> null
-                    "REGISTER" -> TestYrkesskade(
+                    Kilde.SØKNAD -> null
+                    Kilde.REGISTER -> TestYrkesskade(
                         skadedato = entry.skadedato,
                         skadeart = entry.skadeart,
                         diagnose = entry.diagnose,
                         skadebeskrivelse = entry.skadebeskrivelse,
                         vedtaksdato = entry.vedtaksdato,
                     )
-
-                    else -> null
                 }
             },
             uføre = dto.uføre?.let {
@@ -496,7 +493,7 @@ private fun opprettNySakOgBehandling(
 
         if (harBehandlingsgrunnlag) {
             // Yrkesskade
-            val harYrkesskade = dto.yrkesskader.any { it.kilde == "REGISTER" }
+            val harYrkesskade = dto.yrkesskader.any { it.kilde == Kilde.REGISTER }
             if (harYrkesskade) {
                 if (dto.steg == StegType.VURDER_YRKESSKADE) return sak
                 løsYrkesSkade(behandling)
