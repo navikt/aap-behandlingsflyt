@@ -34,22 +34,24 @@ class FinnSaksinfoTest {
     @Test
     fun `person finnes ikke - returnerer tom liste`() {
         val result = dataSource.transaction(readOnly = true) { connection ->
-            SakOgBehandlingService(postgresRepositoryRegistry.provider(connection), createGatewayProvider { register<AlleAvskruddUnleash>()})
-                .finnSaksinfo(Ident("00000000000"))
+            SakOgBehandlingService(
+                postgresRepositoryRegistry.provider(connection),
+                createGatewayProvider { register<AlleAvskruddUnleash>() }).finnSaksinfo(Ident("00000000000"))
         }
 
         assertThat(result).isEmpty()
     }
 
     @Test
-    fun `person har sak uten behandlinger - returnerer sak med null resultat`() {
+    fun `person har sak uten behandlinger - returnerer sak med null-resultat`() {
         val sak = dataSource.transaction { connection ->
             opprettSak(connection, LocalDate.now())
         }
 
         val result = dataSource.transaction(readOnly = true) { connection ->
-            SakOgBehandlingService(postgresRepositoryRegistry.provider(connection), createGatewayProvider { register<AlleAvskruddUnleash>()})
-                .finnSaksinfo(Ident(sak.person.aktivIdent().identifikator))
+            SakOgBehandlingService(
+                postgresRepositoryRegistry.provider(connection),
+                createGatewayProvider { register<AlleAvskruddUnleash>() }).finnSaksinfo(Ident(sak.person.aktivIdent().identifikator))
         }
 
         assertThat(result).hasSize(1)
@@ -58,7 +60,7 @@ class FinnSaksinfoTest {
     }
 
     @Test
-    fun `person har sak med behandling som ikke er trukket - ingen gjeldende vedtatt behandling gir null resultat`() {
+    fun `person har sak med behandling som ikke er trukket - ingen gjeldende vedtatt behandling gir null-resultat`() {
         val sak = dataSource.transaction { connection ->
             opprettSak(connection, LocalDate.now())
         }
@@ -67,8 +69,9 @@ class FinnSaksinfoTest {
         }
 
         val result = dataSource.transaction(readOnly = true) { connection ->
-            SakOgBehandlingService(postgresRepositoryRegistry.provider(connection), createGatewayProvider { register<AlleAvskruddUnleash>()})
-                .finnSaksinfo(Ident(sak.person.aktivIdent().identifikator))
+            SakOgBehandlingService(
+                postgresRepositoryRegistry.provider(connection),
+                createGatewayProvider { register<AlleAvskruddUnleash>() }).finnSaksinfo(Ident(sak.person.aktivIdent().identifikator))
         }
 
         assertThat(result).hasSize(1)
@@ -85,8 +88,7 @@ class FinnSaksinfoTest {
         }
         dataSource.transaction { connection ->
             TrukketSøknadRepositoryImpl(connection).lagreTrukketSøknadVurdering(
-                behandlingId = behandling.id,
-                vurdering = TrukketSøknadVurdering(
+                behandlingId = behandling.id, vurdering = TrukketSøknadVurdering(
                     journalpostId = JournalpostId("123"),
                     begrunnelse = "Søker trekker søknaden",
                     skalTrekkes = true,
@@ -97,8 +99,9 @@ class FinnSaksinfoTest {
         }
 
         val result = dataSource.transaction(readOnly = true) { connection ->
-            SakOgBehandlingService(postgresRepositoryRegistry.provider(connection), createGatewayProvider { register<AlleAvskruddUnleash>()})
-                .finnSaksinfo(Ident(sak.person.aktivIdent().identifikator))
+            SakOgBehandlingService(
+                postgresRepositoryRegistry.provider(connection),
+                createGatewayProvider { register<AlleAvskruddUnleash>() }).finnSaksinfo(Ident(sak.person.aktivIdent().identifikator))
         }
 
         assertThat(result).hasSize(1)
@@ -106,7 +109,7 @@ class FinnSaksinfoTest {
     }
 
     @Test
-    fun `person har sak med behandling der søknad IKKE skal trekkes - returnerer null resultat`() {
+    fun `person har sak med behandling der søknad IKKE skal trekkes - returnerer null-resultat`() {
         val sak = dataSource.transaction { connection ->
             opprettSak(connection, LocalDate.now())
         }
@@ -115,8 +118,7 @@ class FinnSaksinfoTest {
         }
         dataSource.transaction { connection ->
             TrukketSøknadRepositoryImpl(connection).lagreTrukketSøknadVurdering(
-                behandlingId = behandling.id,
-                vurdering = TrukketSøknadVurdering(
+                behandlingId = behandling.id, vurdering = TrukketSøknadVurdering(
                     journalpostId = JournalpostId("123"),
                     begrunnelse = "Søker ombestemte seg",
                     skalTrekkes = false,
@@ -127,60 +129,69 @@ class FinnSaksinfoTest {
         }
 
         val result = dataSource.transaction(readOnly = true) { connection ->
-            SakOgBehandlingService(postgresRepositoryRegistry.provider(connection), createGatewayProvider { register<AlleAvskruddUnleash>()})
-                .finnSaksinfo(Ident(sak.person.aktivIdent().identifikator))
+            SakOgBehandlingService(
+                postgresRepositoryRegistry.provider(connection),
+                createGatewayProvider { register<AlleAvskruddUnleash>() }).finnSaksinfo(Ident(sak.person.aktivIdent().identifikator))
         }
 
         assertThat(result).hasSize(1)
         assertThat(result.single().resultat).isNull()
     }
 
+    /* TODO: Dette resultatet kan være misvisende
+     * Ønsker vi at resultatet skal si noe om at det finnes en åpen behandling?
+     */
     @Test
-    fun `sak med ferdigbehandlet FGB og åpen revurdering - bruker FGB som gjeldende vedtatt behandling`() {
+    fun `sak med ferdigbehandlet førstegangsbehandling og åpen revurdering - bruker restultat fra førstegangsbehandling`() {
         val sak = dataSource.transaction { connection -> opprettSak(connection, LocalDate.now()) }
 
-        // Opprett og avslutt FGB med vedtak - dette gjør den til gjeldende vedtatt behandling
-        val fgb = dataSource.transaction { connection ->
+        // Opprett og avslutt førstegangsbehandling med vedtak - dette gjør den til gjeldende vedtatt behandling
+        val førstegangsbehandling = dataSource.transaction { connection ->
             val behandling = finnEllerOpprettBehandling(connection, sak)
             BehandlingRepositoryImpl(connection).oppdaterBehandlingStatus(behandling.id, Status.AVSLUTTET)
             VedtakRepositoryImpl(connection).lagre(behandling.id, LocalDateTime.now(), LocalDate.now())
             behandling
         }
 
-        // Opprett revurdering (FGB er avsluttet, så ny behandling blir en revurdering)
+        // Opprett revurdering (førstegangsbehandling er avsluttet, så ny behandling blir en revurdering)
         dataSource.transaction { connection ->
             finnEllerOpprettBehandling(
-                connection, sak,
+                connection,
+                sak,
                 vurderingsbehov = listOf(VurderingsbehovMedPeriode(Vurderingsbehov.REVURDER_LOVVALG)),
                 årsakTilOpprettelse = ÅrsakTilOpprettelse.MANUELL_OPPRETTELSE
             )
         }
 
         val result = dataSource.transaction(readOnly = true) { connection ->
-            SakOgBehandlingService(postgresRepositoryRegistry.provider(connection), createGatewayProvider { register<AlleAvskruddUnleash>()})
-                .finnSaksinfo(Ident(sak.person.aktivIdent().identifikator))
+            SakOgBehandlingService(
+                postgresRepositoryRegistry.provider(connection),
+                createGatewayProvider { register<AlleAvskruddUnleash>() }).finnSaksinfo(Ident(sak.person.aktivIdent().identifikator))
         }
 
-        // Gjeldende vedtatt behandling er FGB - resultatet utledes fra FGB (avslag uten underveisdata)
+        // Gjeldende vedtatt behandling er førstegangsbehandling - resultatet utledes fra førstegangsbehandling (avslag uten underveisdata)
         assertThat(result).hasSize(1)
         assertThat(result.single().resultat).isEqualTo(ResultatKode.AVSLAG)
     }
 
     @Test
-    fun `sak med ferdigbehandlet FGB og ferdigbehandlet revurdering - bruker revurdering som gjeldende vedtatt behandling`() {
+    fun `sak med ferdigbehandlet førstegangsbehandling og ferdigbehandlet revurdering - bruker revurdering som gjeldende vedtatt behandling`() {
         val sak = dataSource.transaction { connection -> opprettSak(connection, LocalDate.now()) }
 
-        // Opprett og avslutt FGB med vedtak
+        // Opprett og avslutt førstegangsbehandling med vedtak
         dataSource.transaction { connection ->
             val behandling = finnEllerOpprettBehandling(connection, sak)
             BehandlingRepositoryImpl(connection).oppdaterBehandlingStatus(behandling.id, Status.AVSLUTTET)
-            VedtakRepositoryImpl(connection).lagre(behandling.id, LocalDateTime.now().minusWeeks(1), LocalDate.now().minusWeeks(1))
+            VedtakRepositoryImpl(connection).lagre(
+                behandling.id, LocalDateTime.now().minusWeeks(1), LocalDate.now().minusWeeks(1)
+            )
         }
 
         // Opprett og avslutt revurdering med vedtak - denne tar over som gjeldende vedtatt behandling
         dataSource.transaction { connection ->
             val revurdering = finnEllerOpprettBehandling(
-                connection, sak,
+                connection,
+                sak,
                 vurderingsbehov = listOf(VurderingsbehovMedPeriode(Vurderingsbehov.REVURDER_LOVVALG)),
                 årsakTilOpprettelse = ÅrsakTilOpprettelse.MANUELL_OPPRETTELSE
             )
@@ -189,11 +200,12 @@ class FinnSaksinfoTest {
         }
 
         val result = dataSource.transaction(readOnly = true) { connection ->
-            SakOgBehandlingService(postgresRepositoryRegistry.provider(connection), createGatewayProvider { register<AlleAvskruddUnleash>()})
-                .finnSaksinfo(Ident(sak.person.aktivIdent().identifikator))
+            SakOgBehandlingService(
+                postgresRepositoryRegistry.provider(connection),
+                createGatewayProvider { register<AlleAvskruddUnleash>() }).finnSaksinfo(Ident(sak.person.aktivIdent().identifikator))
         }
 
-        // Gjeldende vedtatt behandling er revurderingen - uten søknadsvurderingsbehov gir den null resultat
+        // Gjeldende vedtatt behandling er revurderingen - uten søknadsvurderingsbehov gir den null-resultat
         assertThat(result).hasSize(1)
         assertThat(result.single().resultat).isNull()
     }
