@@ -928,6 +928,7 @@ class BrevUtlederServiceTest {
 
     @Test
     @Disabled
+    // Testen klarer ikke helt at funksjonaliteten ligger bak feature toggle, enabler den når vi går i prod med ny kode
     fun `førstegangsbehandling med både ordinær AAP og 11-18 skal gi innvilgelsesbrev`() {
         val behandling = gittBehandling(TypeBehandling.Førstegangsbehandling)
         gittUnderveisGrunnlag(
