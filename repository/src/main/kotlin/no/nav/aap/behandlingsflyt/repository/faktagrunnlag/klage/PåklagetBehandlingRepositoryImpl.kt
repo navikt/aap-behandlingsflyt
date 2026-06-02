@@ -90,8 +90,8 @@ class PåklagetBehandlingRepositoryImpl(private val connection: DBConnection) : 
     private fun lagreVurdering(vurdering: PåklagetBehandlingVurdering): Long {
         val query = """
             INSERT INTO PAAKLAGET_BEHANDLING_VURDERING 
-            (TYPE_VEDTAK, PAAKLAGET_BEHANDLING_ID, VURDERT_AV) 
-            VALUES (?, ?, ?)
+            (TYPE_VEDTAK, PAAKLAGET_BEHANDLING_ID, VURDERT_AV, OPPRETTET_TID) 
+            VALUES (?, ?, ?, ?)
         """.trimIndent()
 
         return connection.executeReturnKey(query) {
@@ -99,6 +99,7 @@ class PåklagetBehandlingRepositoryImpl(private val connection: DBConnection) : 
                 setEnumName(1, vurdering.påklagetVedtakType)
                 setLong(2, vurdering.påklagetBehandling?.id)
                 setString(3, vurdering.vurdertAv)
+                setInstant(4, vurdering.opprettet ?: java.time.Instant.now())
             }
             setResultValidator { rowsUpdated ->
                 require(rowsUpdated == 1)

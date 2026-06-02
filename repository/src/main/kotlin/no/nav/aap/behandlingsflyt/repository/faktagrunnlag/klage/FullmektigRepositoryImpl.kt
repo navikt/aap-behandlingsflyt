@@ -66,8 +66,8 @@ class FullmektigRepositoryImpl(private val connection: DBConnection) : Fullmekti
     private fun lagreVurdering(vurdering: FullmektigVurdering): Long {
         val query = """
             INSERT INTO FULLMEKTIG_VURDERING 
-            (har_fullmektig, fullmektig_ident, fullmektig_ident_type, fullmektig_navn_og_adresse, vurdert_av)
-            VALUES (?, ?, ?, ?::jsonb, ?)
+            (har_fullmektig, fullmektig_ident, fullmektig_ident_type, fullmektig_navn_og_adresse, vurdert_av, opprettet_tid)
+            VALUES (?, ?, ?, ?::jsonb, ?, ?)
         """.trimIndent()
 
         return connection.executeReturnKey(query) {
@@ -77,6 +77,7 @@ class FullmektigRepositoryImpl(private val connection: DBConnection) : Fullmekti
                 setEnumName(3, vurdering.fullmektigIdent?.type)
                 setString(4, vurdering.fullmektigNavnOgAdresse?.let { DefaultJsonMapper.toJson(it) })
                 setString(5, vurdering.vurdertAv)
+                setInstant(6, vurdering.opprettet ?: java.time.Instant.now())
             }
             setResultValidator { rowsUpdated ->
                 require(rowsUpdated == 1)

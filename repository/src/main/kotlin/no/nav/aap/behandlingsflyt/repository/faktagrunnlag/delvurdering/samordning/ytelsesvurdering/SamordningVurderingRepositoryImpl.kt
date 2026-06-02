@@ -138,24 +138,26 @@ class SamordningVurderingRepositoryImpl(private val connection: DBConnection) :
         }
 
         val samordningVurderingerQuery = """
-            INSERT INTO SAMORDNING_VURDERINGER (begrunnelse, vurdert_av)
-            VALUES (?, ?)
+            INSERT INTO SAMORDNING_VURDERINGER (begrunnelse, vurdert_av, opprettet_tid)
+            VALUES (?, ?, ?)
             """.trimIndent()
         val vurderingerId = connection.executeReturnKey(samordningVurderingerQuery) {
             setParams {
                 setString(1, samordningVurderinger.begrunnelse)
                 setString(2, samordningVurderinger.vurdertAv)
+                setLocalDateTime(3, samordningVurderinger.vurdertTidspunkt ?: java.time.LocalDateTime.now())
             }
         }
 
         for (vurdering in samordningVurderinger.vurderinger) {
             val vurderingQuery = """
-                INSERT INTO SAMORDNING_VURDERING (vurderinger_id, ytelse_type) VALUES (?, ?)
+                INSERT INTO SAMORDNING_VURDERING (vurderinger_id, ytelse_type, opprettet_tid) VALUES (?, ?, ?)
                 """.trimIndent()
             val vurderingId = connection.executeReturnKey(vurderingQuery) {
                 setParams {
                     setLong(1, vurderingerId)
                     setEnumName(2, vurdering.ytelseType)
+                    setLocalDateTime(3, samordningVurderinger.vurdertTidspunkt ?: java.time.LocalDateTime.now())
                 }
             }
 

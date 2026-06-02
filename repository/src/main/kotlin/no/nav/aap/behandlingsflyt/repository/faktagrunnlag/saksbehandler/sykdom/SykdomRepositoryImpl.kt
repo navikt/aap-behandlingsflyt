@@ -172,9 +172,9 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
 
         val query = """
             INSERT INTO YRKESSKADE_VURDERING 
-            (BEGRUNNELSE, ARSAKSSAMMENHENG, ANDEL_AV_NEDSETTELSE, VURDERT_AV)
+            (BEGRUNNELSE, ARSAKSSAMMENHENG, ANDEL_AV_NEDSETTELSE, VURDERT_AV, OPPRETTET_TID)
             VALUES
-            (?, ?, ?, ?)
+            (?, ?, ?, ?, ?)
         """.trimIndent()
 
         val id = connection.executeReturnKey(query) {
@@ -183,6 +183,7 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
                 setBoolean(2, vurdering.erÅrsakssammenheng)
                 setInt(3, vurdering.andelAvNedsettelsen?.prosentverdi())
                 setString(4, vurdering.vurdertAv)
+                setLocalDateTime(5, vurdering.vurdertTidspunkt ?: java.time.LocalDateTime.now())
             }
         }
 

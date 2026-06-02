@@ -46,8 +46,8 @@ class SykepengerErstatningRepositoryImpl(private val connection: DBConnection) :
                 }
 
             val insertQuery = """
-                INSERT INTO SYKEPENGE_VURDERING (begrunnelse, oppfylt, grunn, vurdert_av, gjelder_fra, gjelder_tom, vurderinger_id, vurdert_i_behandling)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO SYKEPENGE_VURDERING (begrunnelse, oppfylt, grunn, vurdert_av, gjelder_fra, gjelder_tom, vurderinger_id, vurdert_i_behandling, opprettet_tid)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             """.trimIndent()
 
             vurderinger.forEach { vurdering ->
@@ -61,6 +61,7 @@ class SykepengerErstatningRepositoryImpl(private val connection: DBConnection) :
                         setLocalDate(6, vurdering.gjelderTom)
                         setLong(7, vurderingerId)
                         setLong(8, vurdering.vurdertIBehandling.toLong())
+                        setLocalDateTime(9, vurdering.vurdertTidspunkt ?: java.time.LocalDateTime.now())
                     }
                 }
 

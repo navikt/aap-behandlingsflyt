@@ -55,9 +55,9 @@ class VurderRettighetsperiodeRepositoryImpl(private val connection: DBConnection
         connection.execute(
             """
             insert into rettighetsperiode_vurdering
-                (vurderinger_id, begrunnelse, start_dato, har_rett_utover_soknadsdato, vurdert_av)
+                (vurderinger_id, begrunnelse, start_dato, har_rett_utover_soknadsdato, vurdert_av, opprettet)
             values
-                (?, ?, ?, ?, ?)
+                (?, ?, ?, ?, ?, ?)
             """.trimIndent()
         ) {
             setParams {
@@ -66,6 +66,7 @@ class VurderRettighetsperiodeRepositoryImpl(private val connection: DBConnection
                 setLocalDate(3, grunnlag.vurdering.startDato)
                 setEnumName(4, grunnlag.vurdering.harRettUtoverSøknadsdato)
                 setString(5, grunnlag.vurdering.vurdertAv)
+                setLocalDateTime(6, grunnlag.vurdering.vurdertDato)
             }
         }
     }

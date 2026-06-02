@@ -64,8 +64,8 @@ class KlagebehandlingNayRepositoryImpl(private val connection: DBConnection) : K
     private fun lagreVurdering(vurdering: KlagevurderingNay): Long {
         val query = """
             INSERT INTO KLAGE_NAY_VURDERING
-            (BEGRUNNELSE, NOTAT, INNSTILLING, VILKAAR_SOM_SKAL_OMGJOERES, VILKAAR_SOM_SKAL_OPPRETTHOLDES, VURDERT_AV)
-            VALUES (?, ?, ?, ?, ?, ?)
+            (BEGRUNNELSE, NOTAT, INNSTILLING, VILKAAR_SOM_SKAL_OMGJOERES, VILKAAR_SOM_SKAL_OPPRETTHOLDES, VURDERT_AV, OPPRETTET_TID)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
         """.trimIndent()
 
         return connection.executeReturnKey(query) {
@@ -76,6 +76,7 @@ class KlagebehandlingNayRepositoryImpl(private val connection: DBConnection) : K
                 setArray(4, vurdering.vilkårSomOmgjøres.map { it.hjemmel })
                 setArray(5, vurdering.vilkårSomOpprettholdes.map { it.hjemmel })
                 setString(6, vurdering.vurdertAv)
+                setInstant(7, vurdering.opprettet ?: java.time.Instant.now())
             }
             setResultValidator { rowsUpdated ->
                 require(rowsUpdated == 1)
