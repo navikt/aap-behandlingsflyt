@@ -88,16 +88,13 @@ class OrdinærAapFlytTest(val unleashGateway: KClass<UnleashGateway>) : Abstrakt
                         begrunnelse = "Er ikke syk nok",
                         dokumenterBruktIVurdering = listOf(JournalpostId("1231299")),
                         harSkadeSykdomEllerLyte = false,
-                        erArbeidsevnenNedsatt = null,
+                        harNedsattArbeidsevne = null,
                         erSkadeSykdomEllerLyteVesentligdel = null,
-                        erNedsettelseIArbeidsevneAvEnVissVarighet = null,
                         erNedsettelseIArbeidsevneMerEnnHalvparten = null,
                         erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
                         yrkesskadeBegrunnelse = null,
                         fom = fom,
                         tom = null,
-                        erNedsettelseMinstHalvparten = null,
-                        erNedsettelseMerEnnYrkesskadegrense = null,
                     )
                 )
             ),

@@ -23,4 +23,12 @@ data class UnderveisGrunnlag(
     fun utledStartdatoForRettighet(rettighetsType: RettighetsType): LocalDate? {
         return utledInnfriddePerioderForRettighet(rettighetsType).firstOrNull()?.periode?.fom
     }
+
+    fun rettighetstyper(): Tidslinje<RettighetsType> {
+        return this.somTidslinje()
+            .mapNotNull { it.rettighetsType }
+            .komprimer()
+    }
+
+    fun harRett(): Boolean = rettighetstyper().isNotEmpty()
 }

@@ -17,7 +17,6 @@ import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import no.nav.aap.behandlingsflyt.api.actuator.actuator
-import no.nav.aap.behandlingsflyt.api.config.definisjoner.configApi
 import no.nav.aap.behandlingsflyt.auditlog.auditlogApi
 import no.nav.aap.behandlingsflyt.behandling.aktivitetsplikt.avbrytaktivitetspliktbehandling.avbrytAktivitetspliktbehandlingGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.aktivitetsplikt.brudd_11_7.aktivitetsplikt11_7GrunnlagApi
@@ -45,7 +44,6 @@ import no.nav.aap.behandlingsflyt.behandling.brev.sykdomsvurderingForBrevApi
 import no.nav.aap.behandlingsflyt.behandling.etableringegenvirksomhet.etableringEgenVirksomhetApi
 import no.nav.aap.behandlingsflyt.behandling.foreslåvedtak.foreslaaVedtakApi
 import no.nav.aap.behandlingsflyt.behandling.foreslåvedtak.foreslaaVedtakVedtakslengdeApi
-import no.nav.aap.behandlingsflyt.behandling.grunnlag.medlemskap.medlemskapsgrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.grunnlag.samordning.samordningGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.inntektsbortfall.inntektsbortfallGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.institusjonsopphold.institusjonApi
@@ -82,7 +80,6 @@ import no.nav.aap.behandlingsflyt.behandling.underveis.underveisVurderingerApi
 import no.nav.aap.behandlingsflyt.behandling.vedtakslengde.vedtakslengdeGrunnlagApi
 import no.nav.aap.behandlingsflyt.drift.driftApi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.ApplikasjonsVersjon
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
 import no.nav.aap.behandlingsflyt.flyt.behandlingApi
 import no.nav.aap.behandlingsflyt.flyt.flytApi
 import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaConsumerConfig
@@ -106,8 +103,6 @@ import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.saksApi
 import no.nav.aap.behandlingsflyt.test.fullførBehandlingApi
 import no.nav.aap.behandlingsflyt.test.opprettDummySakApi
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbmigrering.Migrering
 import no.nav.aap.komponenter.gateway.GatewayProvider
@@ -158,8 +153,9 @@ internal object AppConfig {
      * er blocking, er det i praksis hva som begrenser antall parallelle kall.
      *
      * Vi har maks 100 connections i prod, og vi kjører med 3-4 pods, så det er en begrenset ressurs.
+     * Bruker kun 92 connections for å beholde noen til administrasjon.
      */
-    const val hikariMaxPoolSize = 100 / 4 /* max connections / max antall pods */
+    const val hikariMaxPoolSize = 92 / 4 /* max connections / max antall pods */
 }
 
 fun main() {
@@ -197,11 +193,6 @@ internal fun Application.server(
 ) {
     DefaultJsonMapper.objectMapper()
         .registerSubtypes(utledSubtypesTilAvklaringsbehovLøsning() + utledSubtypesTilMottattHendelseDTO())
-
-    val unleashGateway: UnleashGateway = gatewayProvider.provide()
-    if (unleashGateway.isEnabled(BehandlingsflytFeature.GJustering2026) && Miljø.erDev()) {
-        Grunnbeløp.aktiverGJustering2026()
-    }
 
     commonKtorModule(
         prometheus = prometheus,
@@ -258,7 +249,6 @@ internal fun Application.server(
             install(NavIdentInterceptor)
 
             apiRouting {
-                configApi()
                 personApi(fellesDataSource, repositoryRegistry, gatewayProvider)
                 saksApi(fellesDataSource, repositoryRegistry, gatewayProvider)
                 behandlingApi(fellesDataSource, repositoryRegistry, gatewayProvider)
@@ -274,7 +264,6 @@ internal fun Application.server(
                 arbeidsopptrappingGrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
                 etableringEgenVirksomhetApi(fellesDataSource, repositoryRegistry, gatewayProvider)
                 overgangUforeGrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
-                medlemskapsgrunnlagApi(fellesDataSource, repositoryRegistry)
                 studentgrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
                 sykestipendGrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
                 sykdomsgrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)

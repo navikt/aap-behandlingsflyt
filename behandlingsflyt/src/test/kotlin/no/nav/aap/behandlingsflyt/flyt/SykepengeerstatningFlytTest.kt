@@ -17,7 +17,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Ut
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ErNedsettelseMinstHalvpartenValg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.SykdomsvurderingLøsningDto
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
@@ -163,14 +162,11 @@ class SykepengeerstatningFlytTest(val unleashGateway: KClass<UnleashGateway>) :
                         erSkadeSykdomEllerLyteVesentligdel = true,
                         erNedsettelseIArbeidsevneMerEnnHalvparten = true,
                         // Nei på denne gir mulighet til å innvilge på 11-13
-                        erNedsettelseIArbeidsevneAvEnVissVarighet = false,
                         erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
-                        erArbeidsevnenNedsatt = true,
+                        harNedsattArbeidsevne = ArbeidsevneNedsattValg.JA_FORBIGÅENDE_PROBLEMER,
                         yrkesskadeBegrunnelse = null,
                         fom = sak.rettighetsperiode.fom,
                         tom = null,
-                        erNedsettelseMinstHalvparten = null,
-                        erNedsettelseMerEnnYrkesskadegrense = null,
                     )
                 )
             ),
@@ -288,15 +284,12 @@ class SykepengeerstatningFlytTest(val unleashGateway: KClass<UnleashGateway>) :
                             dokumenterBruktIVurdering = listOf(JournalpostId("123123")),
                             harSkadeSykdomEllerLyte = true,
                             erSkadeSykdomEllerLyteVesentligdel = true,
-                            erNedsettelseIArbeidsevneMerEnnHalvparten = null,
-                            erNedsettelseIArbeidsevneAvEnVissVarighet = null,
+                            erNedsettelseIArbeidsevneMerEnnHalvparten = true,
                             erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
-                            erArbeidsevnenNedsatt = true,
+                            harNedsattArbeidsevne = ArbeidsevneNedsattValg.JA_FORBIGÅENDE_PROBLEMER,
                             yrkesskadeBegrunnelse = null,
                             fom = revurdering2Fom,
                             tom = null,
-                            erNedsettelseMinstHalvparten = ErNedsettelseMinstHalvpartenValg.JA_FORBIGÅENDE_PROBLEMER,
-                            erNedsettelseMerEnnYrkesskadegrense = null,
                         )
                     )
                 )
@@ -341,15 +334,12 @@ class SykepengeerstatningFlytTest(val unleashGateway: KClass<UnleashGateway>) :
                         harSkadeSykdomEllerLyte = true,
                         erSkadeSykdomEllerLyteVesentligdel = true,
                         erNedsettelseIArbeidsevneMerEnnHalvparten = true,
-                        // Nei på denne gir mulighet til å innvilge på 11-13
-                        erNedsettelseIArbeidsevneAvEnVissVarighet = false,
                         erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
-                        erArbeidsevnenNedsatt = true,
+                        // Nei på denne gir mulighet til å innvilge på 11-13
+                        harNedsattArbeidsevne = ArbeidsevneNedsattValg.JA_FORBIGÅENDE_PROBLEMER,
                         yrkesskadeBegrunnelse = null,
                         fom = sak.rettighetsperiode.fom,
                         tom = null,
-                        erNedsettelseMinstHalvparten = null,
-                        erNedsettelseMerEnnYrkesskadegrense = null,
                     )
                 )
             ),
@@ -367,15 +357,12 @@ class SykepengeerstatningFlytTest(val unleashGateway: KClass<UnleashGateway>) :
                             harSkadeSykdomEllerLyte = true,
                             erSkadeSykdomEllerLyteVesentligdel = true,
                             erNedsettelseIArbeidsevneMerEnnHalvparten = true,
-                            // Nei på denne gir mulighet til å innvilge på 11-13
-                            erNedsettelseIArbeidsevneAvEnVissVarighet = false,
                             erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
-                            erArbeidsevnenNedsatt = true,
+                            // Nei på denne gir mulighet til å innvilge på 11-13
+                            harNedsattArbeidsevne = ArbeidsevneNedsattValg.JA_FORBIGÅENDE_PROBLEMER,
                             yrkesskadeBegrunnelse = null,
                             fom = nyStartDato,
                             tom = null,
-                            erNedsettelseMinstHalvparten = null,
-                            erNedsettelseMerEnnYrkesskadegrense = null,
                         )
                     )
                 ),

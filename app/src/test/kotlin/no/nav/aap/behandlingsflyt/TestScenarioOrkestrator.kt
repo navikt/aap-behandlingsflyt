@@ -103,7 +103,7 @@ class TestScenarioOrkestrator(
     fun løsSykdom(
         behandling: Behandling,
         vurderingGjelderFra: LocalDate,
-        erArbeidsevnenNedsatt: Boolean,
+        harNedsattArbeidsevne: ArbeidsevneNedsattValg,
         erNedsettelseIArbeidsevneMerEnnHalvparten: Boolean,
         erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense: Boolean? = null
     ): Behandling {
@@ -117,15 +117,11 @@ class TestScenarioOrkestrator(
                         harSkadeSykdomEllerLyte = true,
                         kodeverk = "ICPC2",
                         hoveddiagnose = "A03",
-                        erArbeidsevnenNedsatt = erArbeidsevnenNedsatt,
-                        harNedsattArbeidsevne = if (erArbeidsevnenNedsatt) ArbeidsevneNedsattValg.JA else ArbeidsevneNedsattValg.NEI,
+                        harNedsattArbeidsevne = harNedsattArbeidsevne,
                         erNedsettelseIArbeidsevneMerEnnHalvparten = erNedsettelseIArbeidsevneMerEnnHalvparten,
                         erSkadeSykdomEllerLyteVesentligdel = true,
-                        erNedsettelseIArbeidsevneAvEnVissVarighet = true,
                         erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense,
                         yrkesskadeBegrunnelse = if (erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense != null) "test" else null,
-                        erNedsettelseMinstHalvparten = null,
-                        erNedsettelseMerEnnYrkesskadegrense = null,
                         fom = vurderingGjelderFra,
                         tom = null
                     )

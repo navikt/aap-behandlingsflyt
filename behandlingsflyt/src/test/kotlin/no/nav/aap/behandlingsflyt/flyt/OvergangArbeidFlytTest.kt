@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.behandling.underveis.regler.ÅrMedHverdager
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.SykdomsvurderingLøsningDto
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
@@ -122,11 +123,8 @@ class OvergangArbeidFlytTest(val unleashGateway: KClass<UnleashGateway>) : Abstr
                             harSkadeSykdomEllerLyte = true,
                             erSkadeSykdomEllerLyteVesentligdel = true,
                             erNedsettelseIArbeidsevneMerEnnHalvparten = true,
-                            erNedsettelseIArbeidsevneAvEnVissVarighet = true,
-                            erNedsettelseMinstHalvparten = null,
-                            erNedsettelseMerEnnYrkesskadegrense = null,
                             erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
-                            erArbeidsevnenNedsatt = true,
+                            harNedsattArbeidsevne = ArbeidsevneNedsattValg.JA,
                             yrkesskadeBegrunnelse = null,
                             fom = startDato,
                             tom = startDato.plusDays(7)
@@ -137,11 +135,8 @@ class OvergangArbeidFlytTest(val unleashGateway: KClass<UnleashGateway>) : Abstr
                             harSkadeSykdomEllerLyte = false,
                             erSkadeSykdomEllerLyteVesentligdel = false,
                             erNedsettelseIArbeidsevneMerEnnHalvparten = false,
-                            erNedsettelseIArbeidsevneAvEnVissVarighet = false,
                             erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
-                            erNedsettelseMinstHalvparten = null,
-                            erNedsettelseMerEnnYrkesskadegrense = null,
-                            erArbeidsevnenNedsatt = false,
+                            harNedsattArbeidsevne = ArbeidsevneNedsattValg.NEI,
                             yrkesskadeBegrunnelse = null,
                             fom = startDato.plusDays(8),
                             tom = null

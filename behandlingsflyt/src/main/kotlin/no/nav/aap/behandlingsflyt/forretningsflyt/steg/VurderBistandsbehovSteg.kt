@@ -138,7 +138,7 @@ class VurderBistandsbehovSteg(
                 TidligereVurderinger.UunngåeligAvslag -> false
                 is TidligereVurderinger.PotensieltOppfylt -> {
                     when (behandlingsutfall.rettighetstype) {
-                        null -> sykdomsvurdering?.erOppfyltForOrdinærEllerYrkesskadeSettBortIfraÅrsakssammenhengMedUtlededeFelter() == true
+                        null -> sykdomsvurdering?.erOppfyltForOrdinærEllerYrkesskadeSettBortIfraÅrsakssammenheng() == true
                         else -> false
                     }
                 }

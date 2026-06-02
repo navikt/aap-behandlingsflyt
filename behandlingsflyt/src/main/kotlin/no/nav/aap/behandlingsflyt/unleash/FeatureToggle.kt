@@ -15,16 +15,14 @@ enum class BehandlingsflytFeature : FeatureToggle {
     MigrerStansOgOpphor,
     AvslagLovvalgMedlemskap,
     SamordningFaktagrunnlagBrev,
-    GReguleringsJobb,
     GReguleringUtplukkJobb,
     ForutgaaendeGap,
     FjernTilbakefoeringTransisjon,
     MaritimtArbeid,
     ForstegangsbehandlingEtterAvslagOppgave,
-    GrunnbeloepInformasjonskrav,
-    GJustering2026,
     AlleEndringerKreverKvalitetssikring,
-    RevurderingEtterAvslagSkalKvalitetssikres
+    RevurderingEtterAvslagSkalKvalitetssikres,
+    MeldepliktForsteFraForsteInnvilgelse,
     ;
 
     override fun key(): String = name

@@ -254,7 +254,64 @@ class BistandsvilkåretTest {
         assertThat(segment2.utfall).isEqualTo(Utfall.IKKE_OPPFYLT)
 
     }
+    
+    
 
+
+    @Test
+    fun `to vurderinger med ulike utfall gir riktig tidslinje`() {
+        val vilkårsresultat = Vilkårsresultat()
+        vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.BISTANDSVILKÅRET)
+
+        val vurdering1 = Bistandsvurdering(
+            begrunnelse = "Begrunnelse 1",
+            erBehovForAktivBehandling = false,
+            erBehovForArbeidsrettetTiltak = true,
+            erBehovForAnnenOppfølging = null,
+            overgangBegrunnelse = null,
+            skalVurdereAapIOvergangTilArbeid = null,
+            vurdertAv = "O146060",
+            vurderingenGjelderFra = LocalDate.of(2025, 11, 25),
+            tom = null,
+            opprettet = Instant.parse("2025-11-20T10:23:52.051Z"),
+            vurdertIBehandling = BehandlingId(5441)
+        )
+
+        val vurdering2 = Bistandsvurdering(
+            begrunnelse = "Begrunnelse 2",
+            erBehovForAktivBehandling = false,
+            erBehovForArbeidsrettetTiltak = false,
+            erBehovForAnnenOppfølging = false,
+            overgangBegrunnelse = null,
+            skalVurdereAapIOvergangTilArbeid = false,
+            vurdertAv = "S108601",
+            vurderingenGjelderFra = LocalDate.of(2026, 4, 21),
+            tom = null,
+            opprettet = Instant.parse("2026-05-20T10:23:52.051Z"),
+            vurdertIBehandling = BehandlingId(70608)
+        )
+
+        Bistandsvilkåret(vilkårsresultat).vurder(
+            BistandFaktagrunnlag(
+                sisteDagMedMuligYtelse = LocalDate.of(2999, 1, 1),
+                bistandGrunnlag = BistandGrunnlag(listOf(vurdering2, vurdering1)),
+            )
+        )
+
+        val vilkår = vilkårsresultat.finnVilkår(Vilkårtype.BISTANDSVILKÅRET)
+
+        assertThat(vilkår.vilkårsperioder()).hasSize(2)
+
+        val periode1 = vilkår.vilkårsperioder().first()
+        val periode2 = vilkår.vilkårsperioder().last()
+
+        assertThat(periode1.utfall).isEqualTo(Utfall.OPPFYLT)
+        assertThat(periode1.periode).isEqualTo(Periode(LocalDate.of(2025, 11, 25), LocalDate.of(2026, 4, 20)))
+
+        assertThat(periode2.utfall).isEqualTo(Utfall.IKKE_OPPFYLT)
+        assertThat(periode2.avslagsårsak).isEqualTo(Avslagsårsak.IKKE_BEHOV_FOR_OPPFOLGING)
+        assertThat(periode2.periode).isEqualTo(Periode(LocalDate.of(2026, 4, 21), LocalDate.of(2999, 1, 1)))
+    }
 
     private fun bistandvurdering(
         begrunnelse: String = "",
@@ -292,10 +349,8 @@ class BistandsvilkåretTest {
         harSkadeSykdomEllerLyte: Boolean = true,
         erSkadeSykdomEllerLyteVesentligdel: Boolean = true,
         erNedsettelseIArbeidsevneMerEnnHalvparten: Boolean = true,
-        erNedsettelseIArbeidsevneAvEnVissVarighet: Boolean? = true,
         erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense: Boolean = true,
         harNedsattArbeidsevne: ArbeidsevneNedsattValg = ArbeidsevneNedsattValg.JA,
-        erArbeidsevnenNedsatt: Boolean = true,
         vurderingenGjelderFra: LocalDate = 1 januar 2020,
         vurderingenGjelderTil: LocalDate? = null,
         opprettet: Instant = Instant.now(),
@@ -306,11 +361,7 @@ class BistandsvilkåretTest {
         harSkadeSykdomEllerLyte = harSkadeSykdomEllerLyte,
         erSkadeSykdomEllerLyteVesentligdel = erSkadeSykdomEllerLyteVesentligdel,
         erNedsettelseIArbeidsevneMerEnnHalvparten = erNedsettelseIArbeidsevneMerEnnHalvparten,
-        erNedsettelseIArbeidsevneAvEnVissVarighet = erNedsettelseIArbeidsevneAvEnVissVarighet,
         erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense,
-        erNedsettelseMinstHalvparten = null,
-        erNedsettelseMerEnnYrkesskadegrense = null,
-        erArbeidsevnenNedsatt = erArbeidsevnenNedsatt,
         harNedsattArbeidsevne = harNedsattArbeidsevne,
         yrkesskadeBegrunnelse = null,
         vurderingenGjelderFra = vurderingenGjelderFra,
