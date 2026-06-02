@@ -315,7 +315,7 @@ class ApiTest {
   "grunnlagUføre": null,
   "grunnlagYrkesskadeUføre": null,
   "gjeldendeGrunnbeløp": {
-    "grunnbeløp":130160.0,
+    "grunnbeløp":136549.0,
     "dato": "$dagensDato"
   }
 }"""
