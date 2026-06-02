@@ -144,24 +144,48 @@ class BrevUtlederService(
                 }
 
                 val resultat = resultatUtleder.utledResultatFørstegangsBehandling(behandlingId)
+                if (Miljø.erLokal() || Miljø.erDev()) {
+                    return when (resultat) {
+                        Resultat.INNVILGELSE -> {
+                            val perioder = underveisRepository.hentHvisEksisterer(behandling.id)?.perioder.orEmpty()
+                            val harOrdinærAAP = perioder.any { it.rettighetsType == RettighetsType.BISTANDSBEHOV }
+                            val harUføretrygd =
+                                perioder.any { it.rettighetsType == RettighetsType.VURDERES_FOR_UFØRETRYGD }
 
-                return when (resultat) {
-                    Resultat.INNVILGELSE -> {
-                        if (harRettighetsType(behandling.id, RettighetsType.VURDERES_FOR_UFØRETRYGD)
-                        ) {
-                            brevBehovVurderesForUføretrygd(behandling)
-                        } else {
-                            brevBehovInnvilgelse(behandling)
+                            if (harUføretrygd && !harOrdinærAAP) {
+                                brevBehovVurderesForUføretrygd(behandling)
+                            } else {
+                                brevBehovInnvilgelse(behandling)
+                            }
                         }
-                    }
 
-                    Resultat.AVSLAG -> {
-                        brevBehovAvslag(behandling)
-                    }
+                        Resultat.AVSLAG -> {
+                            brevBehovAvslag(behandling)
+                        }
 
-                    Resultat.TRUKKET -> null
-                    Resultat.AVBRUTT -> null
+                        Resultat.TRUKKET -> null
+                        Resultat.AVBRUTT -> null
+                    }.also { log.info("Brukt brevtype $it")}
+                } else {
+                    return when (resultat) {
+                        Resultat.INNVILGELSE -> {
+                            if (harRettighetsType(behandling.id, RettighetsType.VURDERES_FOR_UFØRETRYGD)
+                            ) {
+                                brevBehovVurderesForUføretrygd(behandling)
+                            } else {
+                                brevBehovInnvilgelse(behandling)
+                            }
+                        }
+
+                        Resultat.AVSLAG -> {
+                            brevBehovAvslag(behandling)
+                        }
+
+                        Resultat.TRUKKET -> null
+                        Resultat.AVBRUTT -> null
+                    }
                 }
+
             }
 
             TypeBehandling.Revurdering -> {
@@ -417,11 +441,21 @@ class BrevUtlederService(
             is GrunnlagYrkesskade -> {
                 when (val underliggende = grunnlag.underliggende()) {
                     is Grunnlag11_19 -> {
-                        utledGrunnlagBeregning11_9(underliggende, beregningstidspunktVurdering, beregningsgrunnlag, minstesats)
+                        utledGrunnlagBeregning11_9(
+                            underliggende,
+                            beregningstidspunktVurdering,
+                            beregningsgrunnlag,
+                            minstesats
+                        )
                     }
 
                     is GrunnlagUføre -> {
-                        utledGrunnlagBeregningUføre(underliggende, beregningstidspunktVurdering, beregningsgrunnlag, minstesats)
+                        utledGrunnlagBeregningUføre(
+                            underliggende,
+                            beregningstidspunktVurdering,
+                            beregningsgrunnlag,
+                            minstesats
+                        )
                     }
 
                     is GrunnlagYrkesskade -> throw IllegalStateException("GrunnlagYrkesskade kan ikke ha grunnlag som også er GrunnlagYrkesskade")
