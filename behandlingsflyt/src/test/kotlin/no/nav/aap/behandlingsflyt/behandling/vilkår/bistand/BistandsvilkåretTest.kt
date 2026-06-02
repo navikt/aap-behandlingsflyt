@@ -273,7 +273,7 @@ class BistandsvilkåretTest {
             vurdertAv = "O146060",
             vurderingenGjelderFra = LocalDate.of(2025, 11, 25),
             tom = null,
-            opprettet = Instant.parse("2026-05-20T10:23:52.051Z"),
+            opprettet = Instant.parse("2025-11-20T10:23:52.051Z"),
             vurdertIBehandling = BehandlingId(5441)
         )
 
