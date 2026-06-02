@@ -11,6 +11,10 @@ public enum class StegType(
         gruppe = StegGruppe.START_BEHANDLING,
         status = Status.OPPRETTET
     ),
+    KRAV(
+        gruppe = StegGruppe.KRAV,
+        status = Status.OPPRETTET
+    ),
     SEND_FORVALTNINGSMELDING(
         gruppe = StegGruppe.SEND_FORVALTNINGSMELDING,
         status = Status.OPPRETTET
