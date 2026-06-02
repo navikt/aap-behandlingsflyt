@@ -9,7 +9,6 @@ import java.time.LocalDateTime
 sealed interface KravVurdering {
     val journalpostId: JournalpostId
     val vurdertAv: String
-    val vurdertTidspunkt: LocalDateTime
     val begrunnelse: String
     val vurdertIBehandling: BehandlingId
     val opprettet: Instant
@@ -18,7 +17,6 @@ sealed interface KravVurdering {
 data class NyttKrav(
     override val journalpostId: JournalpostId,
     override val vurdertAv: String,
-    override val vurdertTidspunkt: LocalDateTime,
     override val begrunnelse: String,
     override val vurdertIBehandling: BehandlingId,
     override val opprettet: Instant,
@@ -33,7 +31,6 @@ data class NyttKrav(
 data class TrukketSøknad(
     override val journalpostId: JournalpostId,
     override val vurdertAv: String,
-    override val vurdertTidspunkt: LocalDateTime,
     override val begrunnelse: String,
     override val vurdertIBehandling: BehandlingId,
     override val opprettet: Instant,
@@ -42,7 +39,6 @@ data class TrukketSøknad(
 data class Gjenopptak(
     override val journalpostId: JournalpostId,
     override val vurdertAv: String,
-    override val vurdertTidspunkt: LocalDateTime,
     override val begrunnelse: String,
     override val vurdertIBehandling: BehandlingId,
     override val opprettet: Instant,
@@ -57,7 +53,6 @@ data class Gjenopptak(
 data class Klage(
     override val journalpostId: JournalpostId,
     override val vurdertAv: String,
-    override val vurdertTidspunkt: LocalDateTime,
     override val begrunnelse: String,
     override val vurdertIBehandling: BehandlingId,
     override val opprettet: Instant,
@@ -66,7 +61,6 @@ data class Klage(
 data class Tilleggsopplysning(
     override val journalpostId: JournalpostId,
     override val vurdertAv: String,
-    override val vurdertTidspunkt: LocalDateTime,
     override val begrunnelse: String,
     override val vurdertIBehandling: BehandlingId,
     override val opprettet: Instant,

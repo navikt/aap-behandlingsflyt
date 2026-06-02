@@ -50,7 +50,7 @@ class KravRepositoryImpl(private val connection: DBConnection) : KravRepository 
         connection.executeBatch(
             """
             INSERT INTO krav_vurdering (
-                krav_vurderinger_id, journalpost_id, vurdert_av, vurdert_tidspunkt,
+                krav_vurderinger_id, journalpost_id, vurdert_av, opprettet_tid,
                 krav_type, soknadsdato, soknadsdato_aarsak,
                 mulig_rett_fra, mulig_rett_fra_aarsak,
                 begrunnelse, kravdato, vurdert_i_behandling
@@ -62,7 +62,7 @@ class KravRepositoryImpl(private val connection: DBConnection) : KravRepository 
                 setLong(1, vurderingerId)
                 setString(2, v.journalpostId.identifikator)
                 setString(3, v.vurdertAv)
-                setLocalDateTime(4, v.vurdertTidspunkt)
+                setInstant(4, v.opprettet)
                 setString(10, v.begrunnelse)
                 setLong(12, v.vurdertIBehandling.id)
                 when (v) {
@@ -74,6 +74,7 @@ class KravRepositoryImpl(private val connection: DBConnection) : KravRepository 
                         setEnumName(9, v.muligRettFraÅrsak)
                         setLocalDate(11, v.kravdato)
                     }
+
                     is Gjenopptak -> {
                         setEnumName(5, KravType.GJENOPPTAK)
                         setLocalDate(6, v.soknadsdato)
@@ -82,6 +83,7 @@ class KravRepositoryImpl(private val connection: DBConnection) : KravRepository 
                         setEnumName(9, v.muligRettFraÅrsak)
                         setLocalDate(11, v.kravdato)
                     }
+
                     is TrukketSøknad -> {
                         setEnumName(5, KravType.TRUKKET_SOKNAD)
                         setLocalDate(6, null)
@@ -90,6 +92,7 @@ class KravRepositoryImpl(private val connection: DBConnection) : KravRepository 
                         setEnumName(9, null as Enum<*>?)
                         setLocalDate(11, null)
                     }
+
                     is Klage -> {
                         setEnumName(5, KravType.KLAGE)
                         setLocalDate(6, null)
@@ -98,6 +101,7 @@ class KravRepositoryImpl(private val connection: DBConnection) : KravRepository 
                         setEnumName(9, null as Enum<*>?)
                         setLocalDate(11, null)
                     }
+
                     is Tilleggsopplysning -> {
                         setEnumName(5, KravType.TILLEGGSOPPLYSNING)
                         setLocalDate(6, null)
@@ -140,7 +144,7 @@ class KravRepositoryImpl(private val connection: DBConnection) : KravRepository 
     private fun hentVurderinger(vurderingerId: Long): List<KravVurdering> {
         return connection.queryList(
             """
-            SELECT journalpost_id, vurdert_av, vurdert_tidspunkt, krav_type,
+            SELECT journalpost_id, vurdert_av, krav_type,
                    soknadsdato, soknadsdato_aarsak,
                    mulig_rett_fra, mulig_rett_fra_aarsak,
                    begrunnelse, kravdato, vurdert_i_behandling, opprettet_tid
@@ -156,15 +160,14 @@ class KravRepositoryImpl(private val connection: DBConnection) : KravRepository 
     private fun mapVurdering(row: Row): KravVurdering {
         val journalpostId = JournalpostId(row.getString("journalpost_id"))
         val vurdertAv = row.getString("vurdert_av")
-        val vurdertTidspunkt = row.getLocalDateTime("vurdert_tidspunkt")
+        val opprettet = row.getInstant("opprettet_tid")
         val begrunnelse = row.getString("begrunnelse")
         val vurdertIBehandling = BehandlingId(row.getLong("vurdert_i_behandling"))
-        val opprettet = row.getInstant("opprettet_tid")
 
         return when (val kravType = row.getEnum<KravType>("krav_type")) {
             KravType.NYTT_KRAV_AAP -> NyttKrav(
                 journalpostId = journalpostId, vurdertAv = vurdertAv,
-                vurdertTidspunkt = vurdertTidspunkt, begrunnelse = begrunnelse,
+                begrunnelse = begrunnelse,
                 vurdertIBehandling = vurdertIBehandling, opprettet = opprettet,
                 soknadsdato = row.getLocalDate("soknadsdato"),
                 soknadsdatoÅrsak = row.getEnumOrNull("soknadsdato_aarsak"),
@@ -172,9 +175,10 @@ class KravRepositoryImpl(private val connection: DBConnection) : KravRepository 
                 muligRettFraÅrsak = row.getEnumOrNull("mulig_rett_fra_aarsak"),
                 kravdato = row.getLocalDate("kravdato"),
             )
+
             KravType.GJENOPPTAK -> Gjenopptak(
                 journalpostId = journalpostId, vurdertAv = vurdertAv,
-                vurdertTidspunkt = vurdertTidspunkt, begrunnelse = begrunnelse,
+                begrunnelse = begrunnelse,
                 vurdertIBehandling = vurdertIBehandling, opprettet = opprettet,
                 soknadsdato = row.getLocalDateOrNull("soknadsdato"),
                 soknadsdatoÅrsak = row.getEnumOrNull("soknadsdato_aarsak"),
@@ -182,19 +186,22 @@ class KravRepositoryImpl(private val connection: DBConnection) : KravRepository 
                 muligRettFraÅrsak = row.getEnumOrNull("mulig_rett_fra_aarsak"),
                 kravdato = row.getLocalDate("kravdato"),
             )
+
             KravType.TRUKKET_SOKNAD -> TrukketSøknad(
                 journalpostId = journalpostId, vurdertAv = vurdertAv,
-                vurdertTidspunkt = vurdertTidspunkt, begrunnelse = begrunnelse,
+                begrunnelse = begrunnelse,
                 vurdertIBehandling = vurdertIBehandling, opprettet = opprettet,
             )
+
             KravType.KLAGE -> Klage(
                 journalpostId = journalpostId, vurdertAv = vurdertAv,
-                vurdertTidspunkt = vurdertTidspunkt, begrunnelse = begrunnelse,
+                begrunnelse = begrunnelse,
                 vurdertIBehandling = vurdertIBehandling, opprettet = opprettet,
             )
-            KravType.TILLEGGSOPPLYSNING-> Tilleggsopplysning(
+
+            KravType.TILLEGGSOPPLYSNING -> Tilleggsopplysning(
                 journalpostId = journalpostId, vurdertAv = vurdertAv,
-                vurdertTidspunkt = vurdertTidspunkt, begrunnelse = begrunnelse,
+                begrunnelse = begrunnelse,
                 vurdertIBehandling = vurdertIBehandling, opprettet = opprettet,
             )
         }

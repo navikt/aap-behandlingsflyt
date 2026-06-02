@@ -6,20 +6,19 @@ CREATE TABLE krav_vurderinger
 
 CREATE TABLE krav_vurdering
 (
-    id                    BIGSERIAL                              NOT NULL PRIMARY KEY,
-    krav_vurderinger_id   BIGINT                                 NOT NULL REFERENCES krav_vurderinger (id),
-    vurdert_i_behandling  BIGINT                                 NOT NULL REFERENCES behandling (id),
-    journalpost_id        TEXT                                   NOT NULL,
-    vurdert_av            TEXT                                   NOT NULL,
-    vurdert_tidspunkt     TIMESTAMP(3)                           NOT NULL,
-    begrunnelse           TEXT                                   NOT NULL,
-    opprettet_tid         TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    krav_type             TEXT                                   NOT NULL,
-    kravdato              DATE                                   NULL,
-    soknadsdato           DATE                                   NULL,
-    soknadsdato_aarsak    TEXT                                   NULL,
-    mulig_rett_fra        DATE                                   NULL,
-    mulig_rett_fra_aarsak TEXT                                   NULL
+    id                    BIGSERIAL    NOT NULL PRIMARY KEY,
+    krav_vurderinger_id   BIGINT       NOT NULL REFERENCES krav_vurderinger (id),
+    vurdert_i_behandling  BIGINT       NOT NULL REFERENCES behandling (id),
+    journalpost_id        TEXT         NOT NULL,
+    vurdert_av            TEXT         NOT NULL,
+    begrunnelse           TEXT         NOT NULL,
+    opprettet_tid         TIMESTAMP(3) NOT NULL,
+    krav_type             TEXT         NOT NULL,
+    kravdato              DATE         NULL,
+    soknadsdato           DATE         NULL,
+    soknadsdato_aarsak    TEXT         NULL,
+    mulig_rett_fra        DATE         NULL,
+    mulig_rett_fra_aarsak TEXT         NULL
 );
 
 CREATE TABLE krav_grunnlag

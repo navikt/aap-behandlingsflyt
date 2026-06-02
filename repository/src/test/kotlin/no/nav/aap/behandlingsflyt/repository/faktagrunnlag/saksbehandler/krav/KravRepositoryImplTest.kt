@@ -24,7 +24,6 @@ import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
-import java.time.LocalDateTime
 
 internal class KravRepositoryImplTest {
 
@@ -44,7 +43,6 @@ internal class KravRepositoryImplTest {
         private fun nyttKrav(behandlingId: BehandlingId) = NyttKrav(
             journalpostId = JournalpostId("JP-001"),
             vurdertAv = "Z123456",
-            vurdertTidspunkt = LocalDateTime.of(2024, 1, 15, 10, 0),
             begrunnelse = "Standard krav om AAP",
             vurdertIBehandling = behandlingId,
             opprettet = java.time.Instant.now(),
@@ -58,7 +56,6 @@ internal class KravRepositoryImplTest {
         private fun gjenopptak(behandlingId: BehandlingId) = Gjenopptak(
             journalpostId = JournalpostId("JP-002"),
             vurdertAv = "Kelvin",
-            vurdertTidspunkt = LocalDateTime.of(2024, 2, 1, 9, 0),
             begrunnelse = "",
             vurdertIBehandling = behandlingId,
             opprettet = java.time.Instant.now(),
@@ -204,7 +201,6 @@ internal class KravRepositoryImplTest {
                         TrukketSøknad(
                             journalpostId = JournalpostId("JP-SLETT"),
                             vurdertAv = "Z000001",
-                            vurdertTidspunkt = LocalDateTime.now(),
                             begrunnelse = "Søker trakk søknaden",
                             vurdertIBehandling = behandling.id,
                             opprettet = java.time.Instant.now(),
