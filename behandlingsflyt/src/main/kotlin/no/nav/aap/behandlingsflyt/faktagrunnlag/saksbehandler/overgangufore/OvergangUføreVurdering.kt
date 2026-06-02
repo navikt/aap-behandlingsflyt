@@ -4,6 +4,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import java.time.Instant
 import java.time.LocalDate
 
+const val AUTOMATISK_VURDERT = "Automatisk vurdert"
+
 data class OvergangUføreVurdering(
     val begrunnelse: String,
     val brukerHarSøktOmUføretrygd: Boolean,
@@ -23,6 +25,9 @@ data class OvergangUføreVurdering(
 }
 
 enum class UføreSøknadVedtakResultat(val verdi: String) {
-    JA_AVSLAG("JA_AVSLAG"), JA_INNVILGET_GRADERT("JA_INNVILGET_GRADERT"), JA_INNVILGET_FULL("JA_INNVILGET_FULL"), NEI("NEI")
+    JA_AVSLAG("JA_AVSLAG"),
+    JA_INNVILGET("JA_INNVILGET"),
+    JA_INNVILGET_GRADERT("JA_INNVILGET_GRADERT"),
+    JA_INNVILGET_FULL("JA_INNVILGET_FULL"),
+    NEI("NEI")
 }
-

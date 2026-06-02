@@ -8,6 +8,8 @@ import no.nav.aap.behandlingsflyt.behandling.vilkår.overganguføre.OvergangUfø
 import no.nav.aap.behandlingsflyt.behandling.vilkår.overganguføre.OvergangUføreVilkår
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.AUTOMATISK_VURDERT
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.UføreSøknadVedtakResultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreValidering.nårVurderingErKonsistentMedSykdomOgBistand
@@ -21,6 +23,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Tidslinje
@@ -48,28 +51,38 @@ class OvergangUføreSteg private constructor(
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        val perioderSomIkkeErTilstrekkeligVurdert: () -> Set<Periode> =
-            { perioderSomIkkeErTilstrekkeligVurdert(kontekst) }
+        if (erAutomatiskStans118(kontekst)) {
+            avklaringsbehovService.oppdaterAvklaringsbehov(
+                definisjon = Definisjon.AVKLAR_OVERGANG_UFORE,
+                vedtakBehøverVurdering = { false },
+                erTilstrekkeligVurdert = { true },
+                tilbakestillGrunnlag = {},
+                kontekst = kontekst
+            )
+        } else {
+            val perioderSomIkkeErTilstrekkeligVurdert: () -> Set<Periode> =
+                { perioderSomIkkeErTilstrekkeligVurdert(kontekst) }
 
-        avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkårTilstrekkeligVurdert(
-            kontekst = kontekst,
-            definisjon = Definisjon.AVKLAR_OVERGANG_UFORE,
-            tvingerAvklaringsbehov = setOf(
-                Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND,
-                Vurderingsbehov.OVERGANG_UFORE,
-            ),
-            nårVurderingErRelevant = ::nårVurderingErRelevant,
-            perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert,
-            tilbakestillGrunnlag = {
-                val vedtatteVurderinger =
-                    kontekst.forrigeBehandlingId?.let { overgangUføreRepository.hentHvisEksisterer(it) }?.vurderinger.orEmpty()
-                val aktiveVurderinger =
-                    overgangUføreRepository.hentHvisEksisterer(kontekst.behandlingId)?.vurderinger.orEmpty()
-                if (vedtatteVurderinger.toSet() != aktiveVurderinger.toSet()) {
-                    overgangUføreRepository.lagre(kontekst.behandlingId, vedtatteVurderinger)
-                }
-            },
-        )
+            avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkårTilstrekkeligVurdert(
+                kontekst = kontekst,
+                definisjon = Definisjon.AVKLAR_OVERGANG_UFORE,
+                tvingerAvklaringsbehov = setOf(
+                    Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND,
+                    Vurderingsbehov.OVERGANG_UFORE,
+                ),
+                nårVurderingErRelevant = ::nårVurderingErRelevant,
+                perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert,
+                tilbakestillGrunnlag = {
+                    val vedtatteVurderinger =
+                        kontekst.forrigeBehandlingId?.let { overgangUføreRepository.hentHvisEksisterer(it) }?.vurderinger.orEmpty()
+                    val aktiveVurderinger =
+                        overgangUføreRepository.hentHvisEksisterer(kontekst.behandlingId)?.vurderinger.orEmpty()
+                    if (vedtatteVurderinger.toSet() != aktiveVurderinger.toSet()) {
+                        overgangUføreRepository.lagre(kontekst.behandlingId, vedtatteVurderinger)
+                    }
+                },
+            )
+        }
 
         when (kontekst.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING, VurderingType.REVURDERING -> {
@@ -87,6 +100,21 @@ class OvergangUføreSteg private constructor(
         }
 
         return Fullført
+    }
+
+    private fun erAutomatiskStans118(kontekst: FlytKontekstMedPerioder): Boolean {
+        if (unleashGateway.isDisabled(BehandlingsflytFeature.AutomatiskStans118)) {
+            return false
+        }
+        val vurderinger = overgangUføreRepository.hentHvisEksisterer(kontekst.behandlingId)?.vurderinger.orEmpty()
+        return vurderinger.any {
+            it.vurdertAv == AUTOMATISK_VURDERT &&
+                    it.brukerHarFåttVedtakOmUføretrygd in setOf(
+                UføreSøknadVedtakResultat.JA_INNVILGET_FULL,
+                UføreSøknadVedtakResultat.JA_INNVILGET_GRADERT,
+                UføreSøknadVedtakResultat.JA_INNVILGET
+            )
+        }
     }
 
     override fun nårVurderingErRelevant(kontekst: FlytKontekstMedPerioder): Tidslinje<Boolean> {
