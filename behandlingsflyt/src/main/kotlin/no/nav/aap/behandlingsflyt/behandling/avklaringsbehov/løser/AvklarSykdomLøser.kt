@@ -62,10 +62,11 @@ class AvklarSykdomLøser(
             sykdomsvurderinger = gjeldendeSykdomsvurderinger,
             yrkesskadevurdering = null
         ).somSykdomsvurderingstidslinje()
-        val yrkesskadeGrunnlag = yrkersskadeRepository.hentHvisEksisterer(behandling.id)
 
-        val harYrkesskade = yrkesskadeGrunnlag?.yrkesskader?.harYrkesskade() == true
         sykdomLøsning.segmenter().forEach {
+            val yrkesskadeGrunnlag = yrkersskadeRepository.hentHvisEksisterer(it.verdi.vurdertIBehandling)
+            val harYrkesskade = yrkesskadeGrunnlag?.yrkesskader?.harYrkesskade() == true
+
             if (!it.verdi.erKonsistentForSykdom(harYrkesskade)) {
                 log.warn(
                     "Sykdomsvurderingen er ikke konsistent med yrkesskade. " +
