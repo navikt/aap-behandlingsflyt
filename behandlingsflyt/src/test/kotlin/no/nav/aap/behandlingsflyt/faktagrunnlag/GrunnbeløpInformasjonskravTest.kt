@@ -14,7 +14,6 @@ import no.nav.aap.behandlingsflyt.help.flytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.help.tomtTilkjentYtelseGrunnlag
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
-import no.nav.aap.behandlingsflyt.test.FakeUnleashBaseWithDefaultDisabled
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryTilkjentYtelseRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryUnderveisRepository
 import no.nav.aap.behandlingsflyt.test.april
@@ -24,7 +23,6 @@ import no.nav.aap.behandlingsflyt.test.juli
 import no.nav.aap.behandlingsflyt.test.juni
 import no.nav.aap.behandlingsflyt.test.mai
 import no.nav.aap.behandlingsflyt.test.mars
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.Dagsatser
@@ -41,10 +39,6 @@ import java.time.LocalDate
 
 class GrunnbeløpInformasjonskravTest {
 
-    private val unleash = FakeUnleashBaseWithDefaultDisabled(
-        listOf(BehandlingsflytFeature.GrunnbeloepInformasjonskrav)
-    )
-
     private lateinit var informasjonskrav: GrunnbeløpInformasjonskrav
 
     @BeforeEach
@@ -57,7 +51,6 @@ class GrunnbeløpInformasjonskravTest {
                 underveisRepository = InMemoryUnderveisRepository,
                 tilkjentYtelseRepository = InMemoryTilkjentYtelseRepository,
             ),
-            unleashGateway = unleash,
         )
     }
 
@@ -207,22 +200,6 @@ class GrunnbeløpInformasjonskravTest {
         val resultat = informasjonskrav.flettOpplysningerFraAtomærBehandling(flytKontekst())
 
         assertThat(resultat).isEqualTo(Informasjonskrav.Endret.IKKE_ENDRET)
-    }
-
-    @Test
-    fun `skal ikke være relevant når feature toggle er avskrudd`() {
-        val disabledUnleash = FakeUnleashBaseWithDefaultDisabled(emptyList())
-        val krav = GrunnbeløpInformasjonskrav(
-            gReguleringService = GReguleringService(
-                underveisRepository = InMemoryUnderveisRepository,
-                tilkjentYtelseRepository = InMemoryTilkjentYtelseRepository,
-            ),
-            unleashGateway = disabledUnleash,
-        )
-
-        val erRelevant = krav.erRelevant(kontekst(), no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.BEREGN_TILKJENT_YTELSE, null)
-
-        assertThat(erRelevant).isFalse()
     }
 
     private fun kontekst() = flytKontekstMedPerioder {
