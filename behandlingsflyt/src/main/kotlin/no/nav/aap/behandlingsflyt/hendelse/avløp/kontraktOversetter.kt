@@ -29,6 +29,8 @@ fun DomeneÅrsakTilRetur.oversettTilKontrakt(): ÅrsakTilReturKodeKontrakt {
         ÅrsakTilReturKode.SKRIVEFEIL -> ÅrsakTilReturKodeKontrakt.SKRIVEFEIL
         ÅrsakTilReturKode.FOR_DETALJERT -> ÅrsakTilReturKodeKontrakt.FOR_DETALJERT
         ÅrsakTilReturKode.IKKE_INDIVIDUELL_OG_KONKRET -> ÅrsakTilReturKodeKontrakt.IKKE_INDIVIDUELL_OG_KONKRET
+        ÅrsakTilReturKode.MANGLENDE_JOURNALFØRING -> ÅrsakTilReturKodeKontrakt.MANGLENDE_JOURNALFØRING
+        ÅrsakTilReturKode.MANGLENDE_KILDEHENVISNING -> ÅrsakTilReturKodeKontrakt.MANGLENDE_KILDEHENVISNING
     }
 }
 
