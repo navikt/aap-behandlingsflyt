@@ -1,6 +1,6 @@
 [versions]
 ktor = "3.4.0"
-komponenter = "2.0.56"
+komponenter = "2.0.61"
 tilgang = "1.0.221"
 utbetaling = "0.0.106"
 brev = "0.0.262"
@@ -50,7 +50,6 @@ jacksonDatatypeJsr310 = { module = "com.fasterxml.jackson.datatype:jackson-datat
 
 hikariCp = { module = "com.zaxxer:HikariCP", version = "7.0.2" }
 postgresql = { module = "org.postgresql:postgresql" }
-flywayDatabasePostgresql = { module = "org.flywaydb:flyway-database-postgresql", version = "11.17.2" }
 
 opentelemetryInstrumentationAnnotations = { module = "io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations", version = "2.22.0" }
 opentelemetryLogbackMdc = { module = "io.opentelemetry.instrumentation:opentelemetry-logback-mdc-1.0", version = "2.22.0-alpha" }
