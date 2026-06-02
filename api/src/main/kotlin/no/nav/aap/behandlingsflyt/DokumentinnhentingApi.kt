@@ -22,6 +22,7 @@ import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForSakResolver
 import no.nav.aap.dokumentinnhenting.kontrakt.BehandlingsflytToDokumentInnhentingBestillingDto
 import no.nav.aap.dokumentinnhenting.kontrakt.DialogmeldingForhåndsvisningDto
 import no.nav.aap.dokumentinnhenting.kontrakt.DialogmeldingStatusTilBehandslingsflytDto
+import no.nav.aap.dokumentinnhenting.kontrakt.DokumentasjonType
 import no.nav.aap.dokumentinnhenting.kontrakt.ForhåndsvisDialogmeldingDto
 import no.nav.aap.dokumentinnhenting.kontrakt.LegeerklæringPurringDto
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -69,8 +70,10 @@ fun NormalOpenAPIRoute.dokumentinnhentingApi(
                         val behandling = repositoryProvider.provide<BehandlingRepository>()
                             .hent(BehandlingReferanse(req.behandlingsReferanse))
 
-                        AvklaringsbehovOrkestrator(repositoryProvider, gatewayProvider)
-                            .settPåVentMensVentePåMedisinskeOpplysninger(behandling.id, bruker())
+                        if (req.dokumentasjonType != DokumentasjonType.MELDING_FRA_NAV) {
+                            AvklaringsbehovOrkestrator(repositoryProvider, gatewayProvider)
+                                .settPåVentMensVentePåMedisinskeOpplysninger(behandling.id, bruker())
+                        }
 
                         val personIdent = sak.person.aktivIdent()
                         val personinfo = personinfoGateway.hentPersoninfoForIdent(personIdent, token())
