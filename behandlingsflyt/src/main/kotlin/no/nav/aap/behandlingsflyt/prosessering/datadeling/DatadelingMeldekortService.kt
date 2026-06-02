@@ -32,13 +32,13 @@ class DatadelingMeldekortService(
 
     private val log = LoggerFactory.getLogger(javaClass)
 
-    internal fun opprettKontraktObjekter(
+    fun opprettKontraktObjekter(
         sakId: SakId, behandlingId: BehandlingId
     ): List<DetaljertMeldekortDTO> {
         val sak = saksRepository.hent(sakId)
         val personIdent = sak.person.aktivIdent()
 
-        val meldekortene = mottattDokumentRepository.hentDokumenterAvType(behandlingId, InnsendingType.MELDEKORT)
+        val meldekortene = mottattDokumentRepository.hentDokumenterAvType(sakId, InnsendingType.MELDEKORT)
             .map { it to it.strukturerteData<no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Meldekort>()?.data }
             .map { (dokument, m) ->
                 Meldekort.fraKontrakt(
