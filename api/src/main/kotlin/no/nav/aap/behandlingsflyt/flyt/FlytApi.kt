@@ -104,7 +104,7 @@ fun NormalOpenAPIRoute.flytApi(
 
                     val prosessering =
                         Prosessering(
-                            utledStatus(jobber, avklaringsbehovene),
+                            utledStatus(jobber),
                             jobber.map {
                                 JobbInfoDto(
                                     id = it.jobbId(),
@@ -126,7 +126,7 @@ fun NormalOpenAPIRoute.flytApi(
                     // Henter denne ut etter status er utledet for å være sikker på at dataene er i rett tilstand
                     behandling = behandling(behandlingRepository, req)
                     val flyt = behandling.flyt()
-                    val stegGrupper: Map<StegGruppe, List<StegType>> =
+                    val stegGrupper =
                         flyt.stegene().groupBy { steg -> steg.gruppe }
                     val aktivtSteg = behandling.aktivtSteg()
                     val aktivtStegDefinisjon = Definisjon.fraStegType(aktivtSteg)
@@ -172,9 +172,7 @@ fun NormalOpenAPIRoute.flytApi(
                                         stegType = stegType,
                                         avklaringsbehov = alleAvklaringsbehov
                                             .filter { avklaringsbehov ->
-                                                avklaringsbehov.skalLøsesISteg(
-                                                    stegType
-                                                )
+                                                avklaringsbehov.skalLøsesISteg(stegType)
                                             }
                                             .map { behov ->
                                                 AvklaringsbehovDTO(
@@ -207,6 +205,7 @@ fun NormalOpenAPIRoute.flytApi(
                         )
                     )
                 }
+                log.info("Flyt for behandling: $dto")
                 respond(dto)
             }
         }
@@ -395,12 +394,8 @@ private fun hentFeilmeldingHvisBehov(
     return null
 }
 
-private fun utledStatus(jobber: List<JobbInput>, avklaringsbehovene: Avklaringsbehovene): ProsesseringStatus {
+private fun utledStatus(jobber: List<JobbInput>): ProsesseringStatus {
     if (jobber.isEmpty()) {
-        if (avklaringsbehovene.harÅpentBrevVentebehov()) {
-            log.info("Har åpent brevventebehov i behandling")
-            return ProsesseringStatus.JOBBER
-        }
         return ProsesseringStatus.FERDIG
     }
     if (jobber.any { it.status() == JobbStatus.FEILET }) {
