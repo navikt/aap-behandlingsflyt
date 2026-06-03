@@ -110,7 +110,8 @@ class HåndterUførevedtakService(
     private fun skalOppretteAutomatiskStans118(
         uførevedtak: UførevedtakV0
     ): Boolean {
-        return unleashGateway.isEnabled(BehandlingsflytFeature.AutomatiskStans118) &&
-                uførevedtak.resultat == UførevedtakResultat.INNV && uførevedtak.virkningsdato.isAfter(LocalDate.now())
+        return unleashGateway.isEnabled(BehandlingsflytFeature.AutomatiskStans118)
+                && uførevedtak.resultat == UførevedtakResultat.INNV
+                && uførevedtak.virkningsdato.isAfter(LocalDate.now()) // Må endres i senere tid for del 2
     }
 }
