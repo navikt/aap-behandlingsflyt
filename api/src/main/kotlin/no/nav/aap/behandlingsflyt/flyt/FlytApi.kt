@@ -205,7 +205,6 @@ fun NormalOpenAPIRoute.flytApi(
                         )
                     )
                 }
-                log.info("Flyt for behandling: $dto")
                 respond(dto)
             }
         }
