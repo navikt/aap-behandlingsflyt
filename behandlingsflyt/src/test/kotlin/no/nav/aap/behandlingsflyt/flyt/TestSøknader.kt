@@ -35,7 +35,7 @@ object TestSøknader {
     )
 
     val SØKNAD_STUDENT = SøknadV0(
-        student = SøknadStudentDto(StudentStatus.Ja, JaNeiVetIkke.Ja),
+        student = SøknadStudentDto(StudentStatus.Avbrutt, JaNeiVetIkke.Ja),
         yrkesskade = "NEI",
         oppgitteBarn = null,
         medlemskap = SøknadMedlemskapDto("JA", "NEI", "NEI", "NEI", null)

@@ -85,7 +85,6 @@ dependencies {
     implementation(project(":behandlingsflyt"))
     implementation(project(":repository"))
     implementation(libs.hikariCp)
-    implementation(libs.flywayDatabasePostgresql)
 
     runtimeOnly(libs.postgresql) // låst versjon i root build.gradle.kts
 

@@ -9,14 +9,11 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType.FØRSTEGANGSBEHANDLING
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType.G_REGULERING
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType.REVURDERING
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 
 class GrunnbeløpInformasjonskrav(
     private val gReguleringService: GReguleringService,
-    private val unleashGateway: UnleashGateway,
 ) : Informasjonskrav<IngenInput, IngenRegisterData> {
 
     companion object : Informasjonskravkonstruktør {
@@ -28,7 +25,6 @@ class GrunnbeløpInformasjonskrav(
         ): GrunnbeløpInformasjonskrav {
             return GrunnbeløpInformasjonskrav(
                 gReguleringService = GReguleringService(repositoryProvider, gatewayProvider),
-                unleashGateway = gatewayProvider.provide(),
             )
         }
     }
@@ -40,8 +36,7 @@ class GrunnbeløpInformasjonskrav(
         steg: StegType,
         oppdatert: InformasjonskravOppdatert?
     ): Boolean {
-        return unleashGateway.isEnabled(BehandlingsflytFeature.GrunnbeloepInformasjonskrav)
-                && kontekst.vurderingType in setOf(FØRSTEGANGSBEHANDLING, REVURDERING, G_REGULERING)
+        return kontekst.vurderingType in setOf(FØRSTEGANGSBEHANDLING, REVURDERING, G_REGULERING)
     }
 
     override fun klargjør(kontekst: FlytKontekstMedPerioder) = IngenInput
@@ -62,10 +57,6 @@ class GrunnbeløpInformasjonskrav(
          * aktuelt å flette inn nye opplysninger så i prinsippet er dette strengt tatt ikke nødvendig da den åpne
          * behandlingen vil prosesseres og dermed gå gjennom alle informasjonskravene på nytt.
          */
-        if (unleashGateway.isEnabled(BehandlingsflytFeature.GrunnbeloepInformasjonskrav)) {
-            return if (gReguleringService.erGrunnbeløpEndretForBehandling(kontekst.behandlingId)) ENDRET else IKKE_ENDRET
-        } else {
-            return IKKE_ENDRET
-        }
+        return if (gReguleringService.erGrunnbeløpEndretForBehandling(kontekst.behandlingId)) ENDRET else IKKE_ENDRET
     }
 }

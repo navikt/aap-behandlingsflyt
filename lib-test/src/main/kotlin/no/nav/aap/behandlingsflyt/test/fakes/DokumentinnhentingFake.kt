@@ -6,12 +6,11 @@ import io.ktor.server.netty.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import no.nav.aap.behandlingsflyt.behandling.dokumentinnhenting.BestillLegeerklæringDto
-import no.nav.aap.behandlingsflyt.behandling.dokumentinnhenting.ForhåndsvisBrevRequest
-import no.nav.aap.behandlingsflyt.behandling.dokumentinnhenting.HentStatusLegeerklæring
-import no.nav.aap.behandlingsflyt.behandling.dokumentinnhenting.PurringLegeerklæringRequest
+import no.nav.aap.dokumentinnhenting.kontrakt.BehandlingsflytToDokumentInnhentingBestillingDto
 import no.nav.aap.dokumentinnhenting.kontrakt.DialogmeldingStatusTilBehandslingsflytDto
 import no.nav.aap.dokumentinnhenting.kontrakt.DialogmeldingStatusTilBehandslingsflytDto.MeldingStatusType
+import no.nav.aap.dokumentinnhenting.kontrakt.ForhåndsvisDialogmeldingDto
+import no.nav.aap.dokumentinnhenting.kontrakt.LegeerklæringPurringDto
 import java.time.LocalDateTime
 import java.util.*
 
@@ -27,8 +26,8 @@ class DokumentinnhentingFake : FakeServer() {
         installerContentNegotiation()
         installerStatusPages("DOKUMENTINNHENTING")
         routing {
-            post("/api/dokumentinnhenting/syfo/bestill") {
-                val dto = call.receive<BestillLegeerklæringDto>()
+            post("/api/dokumentinnhenting/syfo/dialogmeldingbestilling") {
+                val dto = call.receive<BehandlingsflytToDokumentInnhentingBestillingDto>()
                 val dialogmeldingId = UUID.randomUUID()
                 statuser.add(
                     DialogmeldingStatusTilBehandslingsflytDto(
@@ -41,37 +40,27 @@ class DokumentinnhentingFake : FakeServer() {
                         saksnummer = dto.saksnummer,
                         opprettet = LocalDateTime.now(),
                         behandlingsReferanse = dto.behandlingsReferanse,
-                        fritekst = dto.fritekst
+                        fritekst = dto.dialogmeldingTekst
                     )
                 )
                 call.respond(dialogmeldingId.toString())
             }
             post("/api/dokumentinnhenting/syfo/purring") {
-                val request = call.receive<PurringLegeerklæringRequest>()
-                val dialogmeldingId = UUID.randomUUID()
-                statuser.add(
-                    DialogmeldingStatusTilBehandslingsflytDto(
-                        dialogmeldingUuid = dialogmeldingId,
-                        status = MeldingStatusType.OK,
-                        statusTekst = "",
-                        behandlerRef = "behandlerRef",
-                        behandlerNavn = "behandlerNavn",
-                        personId = UUID.randomUUID().toString(),
-                        saksnummer = "saksnummer",
-                        opprettet = LocalDateTime.now(),
-                        behandlingsReferanse = request.behandlingsReferanse,
-                        fritekst = "fritekst"
+                val request = call.receive<LegeerklæringPurringDto>()
+                val status = requireNotNull(statuser.find { it.dialogmeldingUuid == request.dialogmeldingUuid })
+                    .copy(
+                        dialogmeldingUuid = UUID.randomUUID(),
                     )
-                )
-                call.respond(dialogmeldingId.toString())
+                statuser.add(status)
+                call.respond(status.dialogmeldingUuid.toString())
             }
             get("/api/dokumentinnhenting/syfo/status/{saksnummer}") {
-                val req = call.receive<HentStatusLegeerklæring>()
-                val filtered = statuser.filter { it.saksnummer == req.saksnummer }
+                val saksnummer = call.parameters["saksnummer"] ?: error("Mangler saksnummer")
+                val filtered = statuser.filter { it.saksnummer == saksnummer }
                 call.respond(filtered)
             }
             post("/api/dokumentinnhenting/syfo/brevpreview") {
-                val req = call.receive<ForhåndsvisBrevRequest>()
+                val req = call.receive<ForhåndsvisDialogmeldingDto>()
                 val fnr = 12341234123
                 val navn = "Ronny Råkjører"
 
@@ -80,7 +69,7 @@ class DokumentinnhentingFake : FakeServer() {
                     Gjelder pasient: $navn., $fnr.\n
                     Nav trenger opplysninger fra deg vedrørende din pasient. Du kan utelate opplysninger som etter din vurdering faller utenfor formålet.\n
                     «Legeerklæring ved arbeidsuførhet» leveres på blankett Nav 08-07.08, og honoreres med takst L40.\n
-                    ${req.fritekst}\n
+                    ${req.dialogmeldingTekst}\n
                     Lovhjemmel\n
                     Folketrygdloven § 21-4 andre ledd gir Nav rett til å innhente nødvendige opplysninger. Dette gjelder selv om opplysningene er taushetsbelagte, jf. § 21-4 sjette ledd.\n
                     Pålegget om utlevering av opplysninger kan påklages etter forvaltningsloven § 14.\n

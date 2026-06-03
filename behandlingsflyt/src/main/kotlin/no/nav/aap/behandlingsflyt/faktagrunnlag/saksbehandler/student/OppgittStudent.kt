@@ -8,8 +8,6 @@ class OppgittStudent(
     val erStudentStatus: ErStudentStatus,
     val skalGjenopptaStudieStatus: SkalGjenopptaStudieStatus? = null
 ) {
-    fun erStudent() = erStudentStatus == ErStudentStatus.JA || erStudentStatus == ErStudentStatus.AVBRUTT
-
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false

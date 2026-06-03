@@ -2,10 +2,12 @@ package no.nav.aap.behandlingsflyt.behandling.etableringegenvirksomhet
 
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companion.antallHverdager
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.Bistandsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EierVirksomhet
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.komponenter.tidslinje.Tidslinje
@@ -110,19 +112,39 @@ class EtableringEgenVirksomhetService(
     fun utledGyldighetsPeriode(
         behandlingId: BehandlingId
     ): List<Periode> {
-        val sykdomGrunnlag = sykdomRepository.hentHvisEksisterer(behandlingId)
-        val bistandGrunnlag = bistandRepository.hentHvisEksisterer(behandlingId)
-
-        val sykdomsvurderinger = sykdomGrunnlag?.somSykdomsvurderingstidslinje().orEmpty()
-        val bistandsvurderinger =
-            bistandGrunnlag?.somBistandsvurderingstidslinje().orEmpty()
-
-        val mapped = Tidslinje.zip2(sykdomsvurderinger, bistandsvurderinger)
+        val mapped = sykdomOgBistandTidslinje(behandlingId)
             .filter {
                 it.verdi.first?.erOppfyltForOrdinærEllerYrkesskadeSettBortIfraÅrsakssammenheng() == true
                         && it.verdi.second?.erBehovForArbeidsrettetTiltak == true
             }
         return mapped.perioder().toList()
+    }
+
+    fun utledIkkeVurderbarePerioder(behandlingId: BehandlingId): List<Periode> {
+        val førsteDagIOppfyltPeriode = sykdomOgBistandTidslinje(behandlingId)
+            .filter {
+                it.verdi.first?.erOppfyltForOrdinærEllerYrkesskadeSettBortIfraÅrsakssammenheng() == true || it.verdi.second?.erBehovForBistand() != true
+            }.perioder().toList().firstOrNull()?.fom
+
+        if (førsteDagIOppfyltPeriode == null) return emptyList()
+
+        val mapped = sykdomOgBistandTidslinje(behandlingId)
+            .filter {
+                it.verdi.first?.erOppfyltForOrdinærEllerYrkesskadeSettBortIfraÅrsakssammenheng() != true
+                        || it.verdi.second?.erBehovForArbeidsrettetTiltak != true
+            }
+
+        return mapped.perioder().plus(Periode(førsteDagIOppfyltPeriode, førsteDagIOppfyltPeriode)).toList()
+    }
+
+    private fun sykdomOgBistandTidslinje(behandlingId: BehandlingId): Tidslinje<Pair<Sykdomsvurdering?, Bistandsvurdering?>> {
+        val sykdomGrunnlag = sykdomRepository.hentHvisEksisterer(behandlingId)
+        val bistandGrunnlag = bistandRepository.hentHvisEksisterer(behandlingId)
+
+        return Tidslinje.zip2(
+            sykdomGrunnlag?.somSykdomsvurderingstidslinje().orEmpty(),
+            bistandGrunnlag?.somBistandsvurderingstidslinje().orEmpty(),
+        )
     }
 }
 

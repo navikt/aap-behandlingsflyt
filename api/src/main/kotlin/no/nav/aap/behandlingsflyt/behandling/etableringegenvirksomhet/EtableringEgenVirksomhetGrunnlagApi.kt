@@ -7,12 +7,8 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepo
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companion.antallHverdager
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurderingerMetaResponse
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.kanLøseBehovSomSkalVæreLåstEtterKvalitetssikring
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
@@ -25,10 +21,7 @@ import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
-import no.nav.aap.komponenter.tidslinje.Tidslinje
-import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.komponenter.tidslinje.somTidslinje
-import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.getGrunnlag
 import javax.sql.DataSource
@@ -52,8 +45,6 @@ fun NormalOpenAPIRoute.etableringEgenVirksomhetApi(
                     val etableringEgenVirksomhetRepository =
                         repositoryProvider.provide<EtableringEgenVirksomhetRepository>()
                     val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
-                    val sykdomRepository = repositoryProvider.provide<SykdomRepository>()
-                    val bistandRepository = repositoryProvider.provide<BistandRepository>()
 
                     val vurdertAvService = VurdertAvService(repositoryProvider, gatewayProvider)
                     val etableringEgenVirksomhetService = EtableringEgenVirksomhetService(repositoryProvider)
@@ -63,9 +54,6 @@ fun NormalOpenAPIRoute.etableringEgenVirksomhetApi(
                     val sak = sakRepository.hent(behandling.sakId)
                     val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
 
-                    val sykdomGrunnlag = sykdomRepository.hentHvisEksisterer(behandling.id)
-                    val bistandGrunnlag = bistandRepository.hentHvisEksisterer(behandling.id)
-
                     val etableringEgenVirksomhetGrunnlag =
                         etableringEgenVirksomhetRepository.hentHvisEksisterer(behandling.id)
                     val forrigeGrunnlag =
@@ -73,7 +61,7 @@ fun NormalOpenAPIRoute.etableringEgenVirksomhetApi(
                             ?: EtableringEgenVirksomhetGrunnlag(emptyList())
 
                     val ikkeVurderbarePerioder =
-                        utledIkkeVurderbarePerioder(sykdomGrunnlag, bistandGrunnlag)
+                        etableringEgenVirksomhetService.utledIkkeVurderbarePerioder(behandling.id)
 
                     val alleVurderinger =
                         etableringEgenVirksomhetGrunnlag?.vurderinger.orEmpty() + forrigeGrunnlag.vurderinger
@@ -123,30 +111,4 @@ fun NormalOpenAPIRoute.etableringEgenVirksomhetApi(
             )
         }
     }
-}
-
-private fun utledIkkeVurderbarePerioder(
-    sykdomGrunnlag: SykdomGrunnlag?,
-    bistandGrunnlag: BistandGrunnlag?,
-): List<Periode> {
-    val sykdomsvurderinger = sykdomGrunnlag?.somSykdomsvurderingstidslinje().orEmpty()
-    val bistandsvurderinger =
-        bistandGrunnlag?.somBistandsvurderingstidslinje().orEmpty()
-
-    val zipped = Tidslinje.zip2(sykdomsvurderinger, bistandsvurderinger)
-
-    val førsteDagIOppfyltPeriode = zipped
-        .filter {
-            it.verdi.first?.erOppfyltForOrdinærEllerYrkesskadeSettBortIfraÅrsakssammenheng() == true || it.verdi.second?.erBehovForBistand() != true
-        }.perioder().toList().firstOrNull()?.fom
-
-    if (førsteDagIOppfyltPeriode == null) return emptyList()
-
-    val mapped = zipped
-        .filter {
-            it.verdi.first?.erOppfyltForOrdinærEllerYrkesskadeSettBortIfraÅrsakssammenheng() != true
-                    || it.verdi.second?.erBehovForArbeidsrettetTiltak != true
-        }
-
-    return mapped.perioder().plus(Periode(førsteDagIOppfyltPeriode, førsteDagIOppfyltPeriode)).toList()
 }
