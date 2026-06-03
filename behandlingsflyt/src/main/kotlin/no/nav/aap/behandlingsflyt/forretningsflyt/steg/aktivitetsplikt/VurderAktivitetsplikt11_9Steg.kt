@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg.aktivitetsplikt
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.avbrytaktivitetspliktbehandling.AvbrytAktivitetspliktbehandlingService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_9Repository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
@@ -16,6 +17,7 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 class VurderAktivitetsplikt11_9Steg(
     private val aktivitetsplikt11_9Repository: Aktivitetsplikt11_9Repository,
     private val avklaringsbehovService: AvklaringsbehovService,
+    private val avbrytAktivitetspliktbehandlingService: AvbrytAktivitetspliktbehandlingService
 ) : BehandlingSteg {
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
@@ -43,7 +45,7 @@ class VurderAktivitetsplikt11_9Steg(
     }
 
     private fun vedtakBehøverVurdering(kontekst: FlytKontekstMedPerioder): Boolean {
-        return Vurderingsbehov.AKTIVITETSPLIKT_11_9 in kontekst.vurderingsbehovRelevanteForSteg
+        return Vurderingsbehov.AKTIVITETSPLIKT_11_9 in kontekst.vurderingsbehovRelevanteForSteg && !avbrytAktivitetspliktbehandlingService.behandlingErAvbrutt(kontekst.behandlingId)
     }
 
 
@@ -54,6 +56,7 @@ class VurderAktivitetsplikt11_9Steg(
             return VurderAktivitetsplikt11_9Steg(
                 aktivitetsplikt11_9Repository = repositoryProvider.provide(),
                 avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
+                avbrytAktivitetspliktbehandlingService = AvbrytAktivitetspliktbehandlingService(repositoryProvider)
             )
         }
 

@@ -33,6 +33,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.Periodiser
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.RefusjonkravLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivBrevAvklaringsbehovLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivVedtaksbrevLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivVedtaksbrevKlageLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SykdomsvurderingForBrevLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VurderInntektsbortfallLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VurderRettighetsperiodeLøsning
@@ -77,6 +78,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.rettighetsperiode.
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.rettighetsperiode.RettighetsperiodeVurderingDTO
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.VurderingerForSamordning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.sykestipend.SamordningSykestipendVurderingDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerGrunn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.PeriodisertSykepengerVurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.SykdomsvurderingLøsningDto
@@ -458,6 +460,11 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
         vissVarighet: Boolean? = true,
         erOppfylt: Boolean = true,
     ): Behandling {
+        val harNedsattArbeidsevne = when {
+            vissVarighet == false -> ArbeidsevneNedsattValg.JA_FORBIGÅENDE_PROBLEMER
+            erOppfylt -> ArbeidsevneNedsattValg.JA
+            else -> ArbeidsevneNedsattValg.NEI
+        }
         return løsAvklaringsBehov(
             behandling,
             AvklarSykdomLøsning(
@@ -472,14 +479,11 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
                             erOppfylt -> true
                             else -> null
                         },
-                        erNedsettelseIArbeidsevneAvEnVissVarighet = vissVarighet.takeIf { erOppfylt },
                         erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense,
-                        erArbeidsevnenNedsatt = true.takeIf { erOppfylt },
+                        harNedsattArbeidsevne = harNedsattArbeidsevne,
                         yrkesskadeBegrunnelse = if (erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense != null) "test" else null,
                         fom = vurderingGjelderFra,
                         tom = null,
-                        erNedsettelseMinstHalvparten = null,
-                        erNedsettelseMerEnnYrkesskadegrense = null,
                     )
                 )
             ),
@@ -1254,7 +1258,11 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
             KvalitetssikringLøsning(alleAvklaringsbehov.filter { behov -> behov.erTotrinn() || behov.kreverKvalitetssikring() }
                 .map { behov ->
                     TotrinnsVurdering(
-                        behov.definisjon.kode, behov.definisjon !in underkjennVurderinger, "begrunnelse", emptyList()
+                        behov.definisjon.kode,
+                        behov.definisjon !in underkjennVurderinger,
+                        "begrunnelse",
+                        emptyList(),
+                        markeringer = emptyList()
                     )
                 }),
             bruker,
@@ -1349,7 +1357,8 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
                             behov.definisjon.kode,
                             behov.definisjon !in underkjennVurderinger,
                             "begrunnelse",
-                            emptyList()
+                            emptyList(),
+                            markeringer = emptyList()
                         )
                     }),
             Bruker("BESLUTTER")
@@ -1438,10 +1447,23 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
         )
     }
 
+    protected fun vedtaksbrevKlageLøsning(brevbestillingReferanse: UUID): AvklaringsbehovLøsning {
+        return SkrivVedtaksbrevKlageLøsning(
+            brevbestillingReferanse = brevbestillingReferanse,
+            handling = SkrivBrevAvklaringsbehovLøsning.Handling.FERDIGSTILL
+        )
+    }
+
     protected fun Behandling.løsVedtaksbrev(typeBrev: TypeBrev = TypeBrev.VEDTAK_INNVILGELSE): Behandling {
         val brevbestilling = hentBrevAvType(this, typeBrev)
 
         return this.løsAvklaringsBehov(vedtaksbrevLøsning(brevbestilling.referanse.brevbestillingReferanse))
+    }
+
+    protected fun Behandling.løsVedtaksbrevKlage(typeBrev: TypeBrev = TypeBrev.VEDTAK_INNVILGELSE): Behandling {
+        val brevbestilling = hentBrevAvType(this, typeBrev)
+
+        return this.løsAvklaringsBehov(vedtaksbrevKlageLøsning(brevbestilling.referanse.brevbestillingReferanse))
     }
 
     protected fun prosesserBehandling(behandling: Behandling): Behandling {

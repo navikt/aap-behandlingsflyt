@@ -83,7 +83,8 @@ class FatteVedtakLøserTest {
                         definisjon = AvklaringsbehovKode.`5010`,
                         godkjent = false,
                         begrunnelse = "nei",
-                        grunner = null
+                        grunner = null,
+                        markeringer = emptyList()
                     )
                 ),
                 behovstype = AvklaringsbehovKode.`5010`

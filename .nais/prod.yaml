@@ -8,6 +8,9 @@ metadata:
     sub: behandlingsflyt
 spec:
   image: {{image}}
+  replicas:
+    min: 2
+    max: 4
   resources:
     limits:
       memory: 1536Mi
@@ -28,7 +31,7 @@ spec:
   gcp:
     sqlInstances:
       - type: POSTGRES_16
-        tier: db-custom-1-3840
+        tier: db-custom-2-7680
         diskAutoresize: true
         highAvailability: true
         pointInTimeRecovery: true

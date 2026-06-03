@@ -2,8 +2,8 @@ package no.nav.aap.behandlingsflyt.prosessering
 
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktRegel
-import no.nav.aap.behandlingsflyt.behandling.vedtak.Vedtak
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakRepository
+import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.meldeperiode.MeldeperiodeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
@@ -17,6 +17,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
@@ -30,6 +32,7 @@ import no.nav.aap.motor.JobbInput
 import no.nav.aap.motor.JobbUtfører
 import no.nav.aap.motor.ProvidersJobbSpesifikasjon
 import org.slf4j.LoggerFactory
+import java.time.LocalDate
 
 class MeldeperiodeTilMeldekortBackendJobbUtfører(
     private val sakService: SakService,
@@ -40,6 +43,8 @@ class MeldeperiodeTilMeldekortBackendJobbUtfører(
     private val meldepliktRepository: MeldepliktRepository,
     private val vedtakRepository: VedtakRepository,
     private val trukketSøknadService: TrukketSøknadService,
+    private val vedtakService: VedtakService,
+    private val unleashGateway: UnleashGateway,
 ) : JobbUtfører {
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -62,7 +67,10 @@ class MeldeperiodeTilMeldekortBackendJobbUtfører(
                 opplysningerVedVedtak(
                     sak = sak,
                     meldeperioder = meldeperioder,
-                    vedtak = vedtakRepository.hent(behandling.id),
+                    vedtaksdatoFørsteInnvilgelse = if (unleashGateway.isEnabled(BehandlingsflytFeature.MeldepliktForsteFraForsteInnvilgelse))
+                        vedtakService.vedtakstidspunktFørsteInnvilgelse(sak)?.toLocalDate()
+                    else
+                        vedtakRepository.hent(behandling.id)?.virkningstidspunkt,
                     meldepliktGrunnlag = meldepliktRepository.hentHvisEksisterer(behandling.id),
                     underveisGrunnlag = underveisGrunnlag
                 )
@@ -103,6 +111,8 @@ class MeldeperiodeTilMeldekortBackendJobbUtfører(
                 meldepliktRepository = repositoryProvider.provide(),
                 vedtakRepository = repositoryProvider.provide(),
                 trukketSøknadService = TrukketSøknadService(repositoryProvider),
+                vedtakService = VedtakService(repositoryProvider, gatewayProvider),
+                unleashGateway = gatewayProvider.provide(),
             )
         }
 
@@ -128,7 +138,7 @@ class MeldeperiodeTilMeldekortBackendJobbUtfører(
         internal fun opplysningerVedVedtak(
             sak: Sak,
             meldeperioder: List<no.nav.aap.komponenter.type.Periode>,
-            vedtak: Vedtak?,
+            vedtaksdatoFørsteInnvilgelse: LocalDate?,
             meldepliktGrunnlag: MeldepliktGrunnlag?,
             underveisGrunnlag: UnderveisGrunnlag?
         ): MeldeperioderV0 {
@@ -162,7 +172,7 @@ class MeldeperiodeTilMeldekortBackendJobbUtfører(
                     .map { it.periode }
                     .somKontraktperioder,
                 meldeplikt = MeldepliktRegel.fastsatteDagerMedMeldeplikt(
-                    vedtaksdatoFørstegangsbehandling = vedtak?.virkningstidspunkt,
+                    vedtaksdatoFørsteInnvilgelse = vedtaksdatoFørsteInnvilgelse,
                     fritak = fritaksvurderinger,
                     meldeperioder = meldeperioder,
                     underveis = underveisperioder

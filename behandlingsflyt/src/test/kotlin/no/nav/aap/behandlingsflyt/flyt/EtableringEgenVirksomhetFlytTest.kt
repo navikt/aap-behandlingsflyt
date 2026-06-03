@@ -15,6 +15,7 @@ import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.api.assertThrows
 
 class EtableringEgenVirksomhetFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
@@ -196,6 +197,32 @@ class EtableringEgenVirksomhetFlytTest : AbstraktFlytOrkestratorTest(AlleAvskrud
 
         assertThat(etableringGrunnlag?.vurderinger?.size).isEqualTo(2)
         assertThat(revurdering.status()).isEqualTo(Status.IVERKSETTES)
+    }
+
+    @Test
+    fun `Skal kunne sende inn tom etablering-vurdering i revurdering`() {
+        val (sak, behandling) = sendInnFørsteSøknad(person = TestPersoner.STANDARD_PERSON())
+
+        behandling
+            .løsSykdom(vurderingGjelderFra = sak.rettighetsperiode.fom, erOppfylt = true)
+            .løsBistand(fom = sak.rettighetsperiode.fom, erOppfylt = true, erBehovForArbeidsrettetTiltak = true)
+            .løsRefusjonskrav()
+            .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
+            .kvalitetssikre()
+            .løsBeregningstidspunkt()
+            .løsOppholdskrav(sak.rettighetsperiode.fom)
+            .løsAndreStatligeYtelser()
+            .løsForeslåVedtak()
+            .fattVedtak()
+            .løsVedtaksbrev()
+
+        assertDoesNotThrow {
+            sak.opprettManuellRevurdering(
+                listOf(Vurderingsbehov.ETABLERING_EGEN_VIRKSOMHET)
+            )
+                .løsAvklaringsBehov(EtableringEgenVirksomhetLøsning(emptyList()))
+        }
     }
 
     @Test

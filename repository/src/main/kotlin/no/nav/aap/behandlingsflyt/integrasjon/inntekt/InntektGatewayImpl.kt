@@ -19,8 +19,8 @@ import java.time.Year
 
 
 object InntektGatewayImpl : InntektRegisterGateway {
-    private val url = URI.create(requiredConfigForKey("integrasjon.inntekt.url"))
-    val config = ClientConfig(scope = requiredConfigForKey("integrasjon.inntekt.scope"))
+    private val url = URI.create(requiredConfigForKey("INTEGRASJON_INNTEKT_URL"))
+    val config = ClientConfig(scope = requiredConfigForKey("INTEGRASJON_INNTEKT_SCOPE"))
 
     private val client = RestClient.withDefaultResponseHandler(
         config = config,

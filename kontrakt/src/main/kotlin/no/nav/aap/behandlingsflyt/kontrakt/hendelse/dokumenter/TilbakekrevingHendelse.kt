@@ -10,6 +10,7 @@ import no.nav.aap.verdityper.dokument.Kanal
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.OffsetDateTime
 import java.util.*
 
 public sealed interface TilbakekrevingHendelse : Melding
@@ -20,10 +21,10 @@ public data class TilbakekrevingHendelseKafkaMelding(
     val hendelsestype: String,
     val versjon: Int,
     val eksternFagsakId: String,
-    val hendelseOpprettet: LocalDateTime,
+    val hendelseOpprettet: OffsetDateTime,
     val eksternBehandlingId: String?,
     val tilbakekreving: TilbakekrevingKafkaDto? = null,
-    val sakOpprettet: LocalDateTime? = null,
+    val sakOpprettet: OffsetDateTime? = null,
     val varselSendt: LocalDate? = null,
     val behandlingsstatus: TilbakekrevingBehandlingsstatus? = null,
     val totaltFeilutbetaltBeløp: BigDecimal? = null,
@@ -52,7 +53,7 @@ public data class TilbakekrevingHendelseKafkaMelding(
             hendelsestype = hendelsestype,
             versjon = versjon,
             eksternFagsakId = eksternFagsakId,
-            hendelseOpprettet = hendelseOpprettet,
+            hendelseOpprettet = hendelseOpprettet.toLocalDateTime(),
             eksternBehandlingId = eksternBehandlingId,
             tilbakekreving = nyTilbakekreving,
         )
@@ -123,16 +124,28 @@ public data class FagsysteminfoBehovV0(
 
 public data class TilbakekrevingKafkaDto(
     val behandlingId: UUID,
-    val sakOpprettet: LocalDateTime,
+    val sakOpprettet: OffsetDateTime,
     val varselSendt: LocalDate?,
+    val venter: TilbakekrevingVenterKafkaDto? = null,
     val behandlingsstatus: TilbakekrevingBehandlingsstatus,
     val totaltFeilutbetaltBeløp: BigDecimal,
     val saksbehandlingURL: String,
     val fullstendigPeriode: TilbakekrevingPeriode,
 )
 
+public data class TilbakekrevingVenterKafkaDto(
+    val grunn: TilbakekrevingGrunn,
+    val gjenopptas: LocalDate,
+)
+
+public enum class TilbakekrevingGrunn {
+    AVVENTER_BRUKERUTTALELSE
+}
+
+
 public enum class TilbakekrevingBehandlingsstatus {
     OPPRETTET,
+    TIL_FORHÅNDSVARSEL,
     TIL_BEHANDLING,
     TIL_GODKJENNING,
     TIL_BESLUTTER,

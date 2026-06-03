@@ -16,6 +16,7 @@ public data class AvsluttetBehandlingDTO(
     val vilkårsResultat: VilkårsResultatDTO,
     val beregningsGrunnlag: BeregningsgrunnlagDTO?,
     val diagnoser: Diagnoser? = null,
+    val diagnoserPeriodisert: List<DiagnoserMedPeriode>,
     val rettighetstypePerioder: List<RettighetstypePeriode>,
     val resultat: ResultatKode?,
     val vedtakstidspunkt: LocalDateTime?,
@@ -135,6 +136,14 @@ public enum class Avslagstype {
 }
 
 public data class Diagnoser(
+    val kodeverk: String,
+    val diagnosekode: String,
+    val bidiagnoser: List<String>
+)
+
+
+public data class DiagnoserMedPeriode(
+    val periodeDTO: PeriodeDTO,
     val kodeverk: String,
     val diagnosekode: String,
     val bidiagnoser: List<String>

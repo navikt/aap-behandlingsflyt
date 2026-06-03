@@ -48,14 +48,13 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.VisIkkeRelevantPeriode to true,
         BehandlingsflytFeature.MigrerStansOgOpphor to true,
         BehandlingsflytFeature.SamordningFaktagrunnlagBrev to true,
-        BehandlingsflytFeature.GReguleringsJobb to true,
         BehandlingsflytFeature.GReguleringUtplukkJobb to true,
         BehandlingsflytFeature.ForutgaaendeGap to true,
-        BehandlingsflytFeature.FjernTilbakefoeringTransisjon to true,
-        BehandlingsflytFeature.GrunnbeloepInformasjonskrav to true,
         BehandlingsflytFeature.MaritimtArbeid to true,
-        BehandlingsflytFeature.GJustering2026 to false,
-        BehandlingsflytFeature.BackfillYrkesskadeNyeFelter to true,
+        BehandlingsflytFeature.ForstegangsbehandlingEtterAvslagOppgave to true,
+        BehandlingsflytFeature.AlleEndringerKreverKvalitetssikring to true,
+        BehandlingsflytFeature.MeldepliktForsteFraForsteInnvilgelse to true,
+        BehandlingsflytFeature.RevurderingEtterAvslagSkalKvalitetssikres to true
         )
 )
 

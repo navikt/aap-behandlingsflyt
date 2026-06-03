@@ -13,6 +13,7 @@ services:
           cpus: "1.0"
           memory: 3840M
   texas:
+    profiles: ["dev-gcp"]
     image: ghcr.io/nais/texas:latest
     container_name: behandlingsflyt-texas
     ports:

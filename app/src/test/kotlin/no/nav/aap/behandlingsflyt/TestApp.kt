@@ -20,6 +20,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Opp
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.Uføre
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreSøknad
+import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseServiceFactory
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
 import no.nav.aap.behandlingsflyt.integrasjon.institusjonsopphold.InstitusjonsoppholdJSON
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
@@ -46,6 +48,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.SaksnummerParameter
 import no.nav.aap.behandlingsflyt.test.FakeServers
 import no.nav.aap.behandlingsflyt.test.FiktivtHelseoppholdNavnGenerator
 import no.nav.aap.behandlingsflyt.test.JSONTestPersonService
+import no.nav.aap.behandlingsflyt.test.TexasPortHolder
 import no.nav.aap.behandlingsflyt.test.LokalUnleash
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.behandlingsflyt.test.modell.TestYrkesskade
@@ -82,7 +85,8 @@ data class IdentOgOpphold(val ident: String, val opphold: List<Institusjonsoppho
 fun main() {
     val dbConfig = initDbConfig()
 
-    FakeServers.start(JSONTestPersonService()) // azurePort = 8081)
+    TexasPortHolder.setPort(8081)
+    FakeServers.start(JSONTestPersonService())
 
     // Starter server
     embeddedServer(Netty, configure = {
@@ -91,7 +95,9 @@ fun main() {
             port = 8080
         }
     }) {
-        val gatewayProvider = testGatewayProvider(LokalUnleash::class)
+        val gatewayProvider = testGatewayProvider(LokalUnleash::class) {
+            register<BehandlingHendelseServiceFactory>()
+        }
         val repositoryRegistry = postgresRepositoryRegistry
 
         // Useful for connecting to the test database locally
@@ -104,7 +110,7 @@ fun main() {
                 datasource,
                 jobber = ProsesseringsJobber.alle(),
                 repositoryRegistry = repositoryRegistry,
-                gatewayProvider
+                gatewayProvider = gatewayProvider
             )
         }.value
 
@@ -142,12 +148,25 @@ fun main() {
                 }
 
                 route("/endre/{saksnummer}/legg-til-yrkesskade") {
-                    post<SaksnummerParameter, Unit, Unit> { param, _ ->
+                    post<SaksnummerParameter, Unit, LeggTilYrkesskadeDTO> { param, dto ->
                         val ident = hentIdentForSak(Saksnummer(param.saksnummer))
 
                         val fakePersoner = JSONTestPersonService()
+                        val nyeYrkesskader = dto.yrkesskader.mapNotNull { entry ->
+                            when (entry.kilde) {
+                                Kilde.SØKNAD -> null
+                                Kilde.REGISTER -> TestYrkesskade(
+                                    skadedato = entry.skadedato,
+                                    skadeart = entry.skadeart,
+                                    diagnose = entry.diagnose,
+                                    skadebeskrivelse = entry.skadebeskrivelse,
+                                    vedtaksdato = entry.vedtaksdato,
+                                )
+                            }
+                        }.ifEmpty { listOf(TestYrkesskade()) }
+
                         val oppdatertPerson = fakePersoner.hentPerson(ident)?.let {
-                            it.medYrkesskade(it.yrkesskade + TestYrkesskade())
+                            it.medYrkesskade(it.yrkesskade + nyeYrkesskader)
                         }
 
                         if (oppdatertPerson != null) {
@@ -220,7 +239,7 @@ private fun slåSammenInstitusjonsopphold(
     val oppdaterte = fraFrontend.map { nytt ->
         val eksisterende = fraDb.find { it.startdato == nytt.oppholdFom }
         eksisterende?.let {
-            if ( it.forventetSluttdato != nytt.oppholdTom)
+            if (it.forventetSluttdato != nytt.oppholdTom)
                 it.copy(forventetSluttdato = nytt.oppholdTom)
             else it
         } ?: genererInstitusjonsopphold(nytt)
@@ -272,7 +291,7 @@ private fun genererBarn(dto: TestBarn): TestPerson {
 
 private fun mapTilSøknad(dto: OpprettTestcaseDTO, urelaterteBarn: List<TestPerson>): SøknadV0 {
     val erStudent = if (dto.student) StudentStatus.Ja else StudentStatus.Nei
-    val harYrkesskadeFraSøknad = dto.yrkesskader.any { it.kilde == "SØKNAD" && it.harYrkesskade }
+    val harYrkesskadeFraSøknad = dto.yrkesskader.any { it.kilde == Kilde.SØKNAD && it.harYrkesskade }
     val harYrkesskade = if (harYrkesskadeFraSøknad) "JA" else "NEI"
 
     val oppgitteBarn = if (urelaterteBarn.isNotEmpty()) {
@@ -306,7 +325,11 @@ private fun mapTilSøknad(dto: OpprettTestcaseDTO, urelaterteBarn: List<TestPers
     )
 }
 
-private fun sendInnSøknad(dto: OpprettTestcaseDTO, gatewayProvider: GatewayProvider, repositoryRegistry: RepositoryRegistry): Sak {
+private fun sendInnSøknad(
+    dto: OpprettTestcaseDTO,
+    gatewayProvider: GatewayProvider,
+    repositoryRegistry: RepositoryRegistry
+): Sak {
     val ident = genererIdent(dto.fødselsdato)
     val barn = dto.barn.filter { it.harRelasjon }.map { genererBarn(it) }
     val urelaterteBarnIPDL = dto.barn.filter { !it.harRelasjon && it.skalFinnesIPDL }.map { genererBarn(it) }
@@ -320,15 +343,14 @@ private fun sendInnSøknad(dto: OpprettTestcaseDTO, gatewayProvider: GatewayProv
             fødselsdato = Fødselsdato(dto.fødselsdato),
             yrkesskade = dto.yrkesskader.mapNotNull { entry ->
                 when (entry.kilde) {
-                    "SØKNAD" -> null
-                    "REGISTER" -> TestYrkesskade(
+                    Kilde.SØKNAD -> null
+                    Kilde.REGISTER -> TestYrkesskade(
                         skadedato = entry.skadedato,
                         skadeart = entry.skadeart,
                         diagnose = entry.diagnose,
                         skadebeskrivelse = entry.skadebeskrivelse,
                         vedtaksdato = entry.vedtaksdato,
                     )
-                    else -> null
                 }
             },
             uføre = dto.uføre?.let {
@@ -444,12 +466,12 @@ private fun opprettNySakOgBehandling(
             løsSykdom(
                 behandling = behandling,
                 vurderingGjelderFra = dto.søknadsdato ?: sak.rettighetsperiode.fom,
-                erArbeidsevnenNedsatt = dto.erArbeidsevnenNedsatt,
+                harNedsattArbeidsevne = if (dto.harNedsattArbeidsevne) ArbeidsevneNedsattValg.JA else ArbeidsevneNedsattValg.NEI,
                 erNedsettelseIArbeidsevneMerEnnHalvparten = dto.erNedsettelseIArbeidsevneMerEnnHalvparten
             )
         }
 
-        val harBehandlingsgrunnlag = dto.erArbeidsevnenNedsatt && dto.erNedsettelseIArbeidsevneMerEnnHalvparten
+        val harBehandlingsgrunnlag = dto.harNedsattArbeidsevne && dto.erNedsettelseIArbeidsevneMerEnnHalvparten
 
         if (harBehandlingsgrunnlag) {
             if (dto.steg == StegType.VURDER_BISTANDSBEHOV) return sak
@@ -471,7 +493,7 @@ private fun opprettNySakOgBehandling(
 
         if (harBehandlingsgrunnlag) {
             // Yrkesskade
-            val harYrkesskade = dto.yrkesskader.any { it.kilde == "REGISTER" }
+            val harYrkesskade = dto.yrkesskader.any { it.kilde == Kilde.REGISTER }
             if (harYrkesskade) {
                 if (dto.steg == StegType.VURDER_YRKESSKADE) return sak
                 løsYrkesSkade(behandling)

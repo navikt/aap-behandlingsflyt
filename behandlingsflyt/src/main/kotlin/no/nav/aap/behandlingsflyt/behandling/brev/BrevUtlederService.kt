@@ -2,10 +2,12 @@ package no.nav.aap.behandlingsflyt.behandling.brev
 
 import no.nav.aap.behandlingsflyt.behandling.Resultat
 import no.nav.aap.behandlingsflyt.behandling.ResultatUtleder
+import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.avbrytaktivitetspliktbehandling.AvbrytAktivitetspliktbehandlingService
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.BeregnTilkjentYtelseService
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.BeregnTilkjentYtelseService.Companion.ANTALL_ÅRLIGE_ARBEIDSDAGER
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.MINSTE_ÅRLIG_YTELSE_TIDSLINJE
+import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Minstesats
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.tilTidslinje
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakRepository
@@ -45,7 +47,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.BARNETILLEGG_SATS_REGULERING
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.EFFEKTUER_AKTIVITETSPLIKT
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.EFFEKTUER_AKTIVITETSPLIKT_11_9
@@ -80,6 +81,7 @@ class BrevUtlederService(
     private val tilkjentYtelseRepository: TilkjentYtelseRepository,
     private val underveisRepository: UnderveisRepository,
     private val aktivitetsplikt11_7Repository: Aktivitetsplikt11_7Repository,
+    private val avbrytAktivitetspliktbehandlingService: AvbrytAktivitetspliktbehandlingService,
     private val arbeidsopptrappingRepository: ArbeidsopptrappingRepository,
     private val sykdomsvurderingForBrevRepository: SykdomsvurderingForBrevRepository,
     private val overgangUføreRepository: OvergangUføreRepository,
@@ -119,6 +121,7 @@ class BrevUtlederService(
         samordningAndreStatligeYtelserRepository = repositoryProvider.provide(),
         sykdomRepository = repositoryProvider.provide(),
         yrkesskadeRepository = repositoryProvider.provide(),
+        avbrytAktivitetspliktbehandlingService = AvbrytAktivitetspliktbehandlingService(repositoryProvider)
     )
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -141,24 +144,48 @@ class BrevUtlederService(
                 }
 
                 val resultat = resultatUtleder.utledResultatFørstegangsBehandling(behandlingId)
+                if (Miljø.erLokal() || Miljø.erDev()) {
+                    return when (resultat) {
+                        Resultat.INNVILGELSE -> {
+                            val perioder = underveisRepository.hentHvisEksisterer(behandling.id)?.perioder.orEmpty()
+                            val harOrdinærAAP = perioder.any { it.rettighetsType == RettighetsType.BISTANDSBEHOV }
+                            val harUføretrygd =
+                                perioder.any { it.rettighetsType == RettighetsType.VURDERES_FOR_UFØRETRYGD }
 
-                return when (resultat) {
-                    Resultat.INNVILGELSE -> {
-                        if (harRettighetsType(behandling.id, RettighetsType.VURDERES_FOR_UFØRETRYGD)
-                        ) {
-                            brevBehovVurderesForUføretrygd(behandling)
-                        } else {
-                            brevBehovInnvilgelse(behandling)
+                            if (harUføretrygd && !harOrdinærAAP) {
+                                brevBehovVurderesForUføretrygd(behandling)
+                            } else {
+                                brevBehovInnvilgelse(behandling)
+                            }
                         }
-                    }
 
-                    Resultat.AVSLAG -> {
-                        brevBehovAvslag(behandling)
-                    }
+                        Resultat.AVSLAG -> {
+                            brevBehovAvslag(behandling)
+                        }
 
-                    Resultat.TRUKKET -> null
-                    Resultat.AVBRUTT -> null
+                        Resultat.TRUKKET -> null
+                        Resultat.AVBRUTT -> null
+                    }.also { log.info("Brukt brevtype $it")}
+                } else {
+                    return when (resultat) {
+                        Resultat.INNVILGELSE -> {
+                            if (harRettighetsType(behandling.id, RettighetsType.VURDERES_FOR_UFØRETRYGD)
+                            ) {
+                                brevBehovVurderesForUføretrygd(behandling)
+                            } else {
+                                brevBehovInnvilgelse(behandling)
+                            }
+                        }
+
+                        Resultat.AVSLAG -> {
+                            brevBehovAvslag(behandling)
+                        }
+
+                        Resultat.TRUKKET -> null
+                        Resultat.AVBRUTT -> null
+                    }
                 }
+
             }
 
             TypeBehandling.Revurdering -> {
@@ -229,6 +256,11 @@ class BrevUtlederService(
             }
 
             TypeBehandling.Aktivitetsplikt -> {
+                val behandlingErAvbrutt = avbrytAktivitetspliktbehandlingService.behandlingErAvbrutt(behandlingId)
+                if (behandlingErAvbrutt) {
+                    return null
+                }
+
                 val grunnlag = aktivitetsplikt11_7Repository.hentHvisEksisterer(behandlingId)
                 val vurderingForBehandling =
                     grunnlag?.vurderinger?.firstOrNull { it.vurdertIBehandling == behandlingId }
@@ -331,6 +363,7 @@ class BrevUtlederService(
         checkNotNull(vedtak.virkningstidspunkt) {
             "Vedtak for behandling med innvilgelse mangler virkningstidspunkt"
         }
+        // TODO: hentGrunnlagBeregning og utledTilkjentYtelse kaller begge tilkjentYtelseRepository — slå sammen til én henting her
         val grunnlagBeregning = hentGrunnlagBeregning(behandling.id, vedtak.virkningstidspunkt)
 
         val tilkjentYtelse = utledTilkjentYtelse(behandling.id, vedtak.virkningstidspunkt)
@@ -391,24 +424,38 @@ class BrevUtlederService(
             if (grunnlag != null && dato != null) beregnBeregningsgrunnlagBeløp(grunnlag, dato) else null
         val beregningstidspunktVurdering =
             beregningVurderingRepository.hentHvisEksisterer(behandlingId)?.tidspunktVurdering
+        // TODO: tilkjentYtelseRepository kalles også i utledTilkjentYtelse — trekk hentingen opp til kallstedet og send ned til begge
+        val minstesats = if (Miljø.erDev()) dato?.let {
+            tilkjentYtelseRepository.hentHvisEksisterer(behandlingId)?.tilTidslinje()?.segment(it)?.verdi?.minsteSats
+        } else null
 
         return when (grunnlag) {
             is Grunnlag11_19 -> {
-                utledGrunnlagBeregning11_9(grunnlag, beregningstidspunktVurdering, beregningsgrunnlag)
+                utledGrunnlagBeregning11_9(grunnlag, beregningstidspunktVurdering, beregningsgrunnlag, minstesats)
             }
 
             is GrunnlagUføre -> {
-                utledGrunnlagBeregningUføre(grunnlag, beregningstidspunktVurdering, beregningsgrunnlag)
+                utledGrunnlagBeregningUføre(grunnlag, beregningstidspunktVurdering, beregningsgrunnlag, minstesats)
             }
 
             is GrunnlagYrkesskade -> {
                 when (val underliggende = grunnlag.underliggende()) {
                     is Grunnlag11_19 -> {
-                        utledGrunnlagBeregning11_9(underliggende, beregningstidspunktVurdering, beregningsgrunnlag)
+                        utledGrunnlagBeregning11_9(
+                            underliggende,
+                            beregningstidspunktVurdering,
+                            beregningsgrunnlag,
+                            minstesats
+                        )
                     }
 
                     is GrunnlagUføre -> {
-                        utledGrunnlagBeregningUføre(underliggende, beregningstidspunktVurdering, beregningsgrunnlag)
+                        utledGrunnlagBeregningUføre(
+                            underliggende,
+                            beregningstidspunktVurdering,
+                            beregningsgrunnlag,
+                            minstesats
+                        )
                     }
 
                     is GrunnlagYrkesskade -> throw IllegalStateException("GrunnlagYrkesskade kan ikke ha grunnlag som også er GrunnlagYrkesskade")
@@ -441,7 +488,12 @@ class BrevUtlederService(
                 ?: internsak?.manuellYrkesskadeDato
                 ?: error("Mangler skadedato for yrkesskade med referanse ${ys.ref}")
             val inntekt = beregning?.vurderinger?.firstOrNull { it.referanse == ys.ref }?.antattÅrligInntekt
-            YrkesskadeBeregningBrev.Yrkesskade(skadedato, inntekt?.verdi)
+            YrkesskadeBeregningBrev.Yrkesskade(
+                yrkesskadedato = skadedato,
+                arbeidsinntektPaaSkadetidspunktet = inntekt?.verdi,
+                relevantForArbeidsevne = true, // TODO må utledes. Hvordan?
+                diagnose = ys.diagnose,
+            )
         }
 
         return YrkesskadeBeregningBrev(
@@ -460,6 +512,7 @@ class BrevUtlederService(
         grunnlag: Grunnlag11_19,
         beregningstidspunktVurdering: BeregningstidspunktVurdering?,
         beregningsgrunnlag: Beløp?,
+        minstesats: Minstesats?,
     ): GrunnlagBeregning {
         val beregningstidspunkt = beregningstidspunktVurdering?.nedsattArbeidsevneEllerStudieevneDato
         val inntekter = grunnlag.inntekter().grunnlagInntektTilInntektPerÅr()
@@ -467,6 +520,7 @@ class BrevUtlederService(
             beregningstidspunkt = beregningstidspunkt,
             inntekterPerÅr = inntekter,
             beregningsgrunnlag = beregningsgrunnlag,
+            beregningsutfallKategori = if (Miljø.erDev()) utledBeregningsutfallKategori(grunnlag, minstesats) else null,
         )
     }
 
@@ -474,14 +528,35 @@ class BrevUtlederService(
         grunnlag: GrunnlagUføre,
         beregningstidspunktVurdering: BeregningstidspunktVurdering?,
         beregningsgrunnlag: Beløp?,
+        minstesats: Minstesats?,
     ): GrunnlagBeregning {
         val beregningstidspunkt = utledBeregningstidspunktUføre(grunnlag, beregningstidspunktVurdering)
         val inntekter = utledInntekterPerÅrUføre(grunnlag)
+        val vinnende = when (grunnlag.type()) {
+            GrunnlagUføre.Type.STANDARD -> grunnlag.underliggende()
+            GrunnlagUføre.Type.YTTERLIGERE_NEDSATT -> grunnlag.underliggendeYtterligereNedsatt()
+        }
         return GrunnlagBeregning(
             beregningstidspunkt = beregningstidspunkt,
             inntekterPerÅr = inntekter,
             beregningsgrunnlag = beregningsgrunnlag,
+            beregningsutfallKategori = if (Miljø.erDev()) utledBeregningsutfallKategori(vinnende, minstesats) else null,
         )
+    }
+
+    private fun utledBeregningsutfallKategori(
+        grunnlag: Grunnlag11_19,
+        minstesats: Minstesats?,
+    ): GrunnlagBeregning.BeregningsutfallKategori {
+        return when (minstesats) {
+            Minstesats.MINSTESATS_OVER_25 -> GrunnlagBeregning.BeregningsutfallKategori.MINSTESATS_OVER_25
+            Minstesats.MINSTESATS_UNDER_25 -> GrunnlagBeregning.BeregningsutfallKategori.MINSTESATS_UNDER_25
+            else -> when {
+                grunnlag.erGjennomsnitt() -> GrunnlagBeregning.BeregningsutfallKategori.GJENNOMSNITT
+                grunnlag.inntekter().first().er6GBegrenset -> GrunnlagBeregning.BeregningsutfallKategori.INNTEKT_OVER_6G
+                else -> GrunnlagBeregning.BeregningsutfallKategori.SISTE_AAR
+            }
+        }
     }
 
     private fun utledTilkjentYtelse(behandlingId: BehandlingId, oppslagsDato: LocalDate): TilkjentYtelse? {

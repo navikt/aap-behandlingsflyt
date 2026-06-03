@@ -3,7 +3,7 @@ package no.nav.aap.behandlingsflyt
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
-import io.ktor.http.*
+import io.ktor.http.HttpStatusCode
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.brev.BrevGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.brev.BrevGrunnlag.Brev.Mottaker
@@ -23,6 +23,7 @@ import no.nav.aap.behandlingsflyt.mdc.LoggingKontekst
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersoninfoGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.BrevmalPreviewResponsDTO
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.BrevResponsDTO
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.DokumentResponsDTO
 import no.nav.aap.behandlingsflyt.tilgang.TilgangGateway
@@ -120,6 +121,7 @@ fun NormalOpenAPIRoute.brevApi(
                                 listOf(
                                     Definisjon.SKRIV_BREV,
                                     Definisjon.SKRIV_VEDTAKSBREV,
+                                    Definisjon.SKRIV_VEDTAKSBREV_SAKSBEHANDLER,
                                     Definisjon.SKRIV_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT_BREV,
                                     Definisjon.SKRIV_FORHÅNDSVARSEL_KLAGE_FORMKRAV_BREV
                                 )
@@ -157,6 +159,12 @@ fun NormalOpenAPIRoute.brevApi(
                                         Definisjon.SKRIV_VEDTAKSBREV
                                     }
 
+                                    brevbestilling.typeBrev.erVedtak() &&
+                                            skrivBrevAvklaringsbehov.any { it.definisjon == Definisjon.SKRIV_VEDTAKSBREV_SAKSBEHANDLER }
+                                        -> {
+                                        Definisjon.SKRIV_VEDTAKSBREV_SAKSBEHANDLER
+                                    }
+                                    
                                     brevbestilling.typeBrev == TypeBrev.FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT &&
                                             skrivBrevAvklaringsbehov.any { it.definisjon == Definisjon.SKRIV_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT_BREV } -> {
                                         Definisjon.SKRIV_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT_BREV
@@ -307,6 +315,27 @@ fun NormalOpenAPIRoute.brevApi(
                     respond(BrevResponsDTO(html))
                 }
             }
+
+            route("/{brevbestillingReferanse}/brevmal-preview") {
+                authorizedGet<BrevbestillingReferanse, BrevmalPreviewResponsDTO>(authorizationParamPathConfig) { brevbestillingReferanse ->
+                    val json = dataSource.transaction { connection ->
+                        val repositoryProvider = repositoryRegistry.provider(connection)
+                        val brevbestillingRepository =
+                            repositoryProvider.provide<BrevbestillingRepository>()
+
+                        val brevbestilling = brevbestillingRepository.hent(brevbestillingReferanse)
+                            ?: throw VerdiIkkeFunnetException("Fant ikke brevbestilling med referanse $brevbestillingReferanse")
+
+                        val signaturService = SignaturService(repositoryProvider, gatewayProvider)
+                        brevbestillingGateway.brevbyggerPreview(
+                            bestillingReferanse = brevbestillingReferanse,
+                            signaturer = signaturService.finnSignaturGrunnlag(brevbestilling, bruker()),
+                        )
+                    }
+
+                    respond(BrevmalPreviewResponsDTO(json))
+                }
+            }
         }
         route("/{brevbestillingReferanse}/kan-distribuere-brev") {
             authorizedPost<BrevbestillingReferanse, KanDistribuereBrevReponse, KanDistribuereBrevRequest>(
@@ -341,7 +370,7 @@ private suspend fun utledHarTilgangTilÅSendeBrev(
         tilgangGateway.sjekkTilgangTilBehandling(behandlingReferanse, tilDefinisjon, token, relevanteIdenter)
 
     return when (definisjon) {
-        Definisjon.SKRIV_VEDTAKSBREV -> {
+        Definisjon.SKRIV_VEDTAKSBREV, Definisjon.SKRIV_VEDTAKSBREV_SAKSBEHANDLER -> {
             val harTilgang = harTilgang(definisjon)
             if (!unleashGateway.isEnabled(BehandlingsflytFeature.IngenValidering, bruker.ident)) {
                 harTilgang && harIkkeGjortNoenVurderinger

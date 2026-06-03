@@ -325,6 +325,9 @@ class ForutgåendeMedlemskapVurderingService(
         val fantStatsborgerskapUtenforEØSiPerioden =
             grunnlag?.brukerPersonopplysning?.statsborgerskap
                 ?.any { it.erGyldigIPeriode(forutgåendePeriode) && it.land !in EØSLandEllerLandMedAvtale.gyldigeEØSLand.map { it.name } }
+        val harNorskStatsborgerskap =
+            grunnlag?.brukerPersonopplysning?.statsborgerskap
+                ?.any { it.land == EØSLandEllerLandMedAvtale.NOR.toString() && it.erGyldigIPeriode(forutgåendePeriode) }
 
         val manglerStatsborgerskapGrunnlag =
             grunnlag?.brukerPersonopplysning?.statsborgerskap
@@ -341,7 +344,7 @@ class ForutgåendeMedlemskapVurderingService(
             kilde = listOf(Kilde.PDL),
             indikasjon = Indikasjon.UTENFOR_NORGE,
             opplysning = "Har statsborgerskap utenfor EØS i perioden",
-            resultat = fantStatsborgerskapUtenforEØSiPerioden == true,
+            resultat = fantStatsborgerskapUtenforEØSiPerioden == true && harNorskStatsborgerskap != true,
             manglerStatsborgerskapGrunnlag = manglerStatsborgerskapGrunnlag,
             vurdertPeriode = VurdertPeriode.SISTE_5_ÅR.beskrivelse
         )
@@ -376,7 +379,7 @@ class ForutgåendeMedlemskapVurderingService(
         return TilhørighetVurdering(
             kilde = listOf(Kilde.A_INNTEKT, Kilde.AA_REGISTERET, Kilde.EREG),
             indikasjon = Indikasjon.I_NORGE,
-            opplysning = "Sammenhengende arbeid og inntekt i Norge siste 5 år",
+            opplysning = "Arbeids- og inntektshistorikk i Norge siste 5 år",
             resultat = sammenhengendeInntektSiste5År,
             arbeidInntektINorgeGrunnlag = arbeidInntektINorgeGrunnlag,
             vurdertPeriode = VurdertPeriode.SISTE_5_ÅR.beskrivelse,

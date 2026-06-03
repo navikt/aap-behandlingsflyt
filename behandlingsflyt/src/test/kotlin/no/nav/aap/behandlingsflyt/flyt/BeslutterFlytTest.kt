@@ -11,13 +11,13 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.Beregnin
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.SamordningVurderingData
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.VurderingerForSamordning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentVurderingDTO
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.SykdomsvurderingLøsningDto
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
@@ -32,8 +32,8 @@ import kotlin.reflect.KClass
 
 @ParameterizedClass
 @MethodSource("unleashTestDataSource")
-class BeslutterFlytTest(val unleashGateway: KClass<UnleashGateway>) : AbstraktFlytOrkestratorTest(unleashGateway){
-    
+class BeslutterFlytTest(val unleashGateway: KClass<UnleashGateway>) : AbstraktFlytOrkestratorTest(unleashGateway) {
+
     @Test
     fun `to-trinn og ingen endring i gruppe etter sendt tilbake fra beslutter`() {
         val fom = LocalDate.now()
@@ -71,11 +71,8 @@ class BeslutterFlytTest(val unleashGateway: KClass<UnleashGateway>) : AbstraktFl
                             harSkadeSykdomEllerLyte = true,
                             erSkadeSykdomEllerLyteVesentligdel = true,
                             erNedsettelseIArbeidsevneMerEnnHalvparten = true,
-                            erNedsettelseIArbeidsevneAvEnVissVarighet = true,
-                            erNedsettelseMinstHalvparten = null,
-                            erNedsettelseMerEnnYrkesskadegrense = null,
                             erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
-                            erArbeidsevnenNedsatt = true,
+                            harNedsattArbeidsevne = ArbeidsevneNedsattValg.JA,
                             yrkesskadeBegrunnelse = null,
                             fom = fom,
                             tom = null
@@ -116,11 +113,8 @@ class BeslutterFlytTest(val unleashGateway: KClass<UnleashGateway>) : AbstraktFl
             .beslutterGodkjennerIkke(underkjennVurderinger = listOf(Definisjon.AVKLAR_SYKDOM))
             .medKontekst {
                 assertThat(behandling.status()).isEqualTo(Status.UTREDES)
-                if (gatewayProvider.provide<UnleashGateway>().isEnabled(BehandlingsflytFeature.FjernTilbakefoeringTransisjon)) {
-                    assertThat(åpneAvklaringsbehov).allSatisfy { assertThat(it.definisjon).isEqualTo(Definisjon.AVKLAR_SYKDOM) }
-                } else {
-                    assertThat(åpneAvklaringsbehov.map{it.definisjon}).containsExactlyInAnyOrder(Definisjon.AVKLAR_SYKDOM, Definisjon.FATTE_VEDTAK)
-                }
+                assertThat(åpneAvklaringsbehov).allSatisfy { assertThat(it.definisjon).isEqualTo(Definisjon.AVKLAR_SYKDOM) }
+
             }.løsAvklaringsBehov(
                 AvklarSykdomLøsning(
                     løsningerForPerioder = listOf(
@@ -130,11 +124,8 @@ class BeslutterFlytTest(val unleashGateway: KClass<UnleashGateway>) : AbstraktFl
                             harSkadeSykdomEllerLyte = true,
                             erSkadeSykdomEllerLyteVesentligdel = true,
                             erNedsettelseIArbeidsevneMerEnnHalvparten = true,
-                            erNedsettelseIArbeidsevneAvEnVissVarighet = true,
-                            erNedsettelseMinstHalvparten = null,
-                            erNedsettelseMerEnnYrkesskadegrense = null,
                             erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
-                            erArbeidsevnenNedsatt = true,
+                            harNedsattArbeidsevne = ArbeidsevneNedsattValg.JA,
                             yrkesskadeBegrunnelse = null,
                             fom = fom,
                             tom = null
@@ -236,11 +227,8 @@ class BeslutterFlytTest(val unleashGateway: KClass<UnleashGateway>) : AbstraktFl
                         harSkadeSykdomEllerLyte = true,
                         erSkadeSykdomEllerLyteVesentligdel = true,
                         erNedsettelseIArbeidsevneMerEnnHalvparten = true,
-                        erNedsettelseIArbeidsevneAvEnVissVarighet = true,
-                        erNedsettelseMinstHalvparten = null,
-                        erNedsettelseMerEnnYrkesskadegrense = null,
                         erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
-                        erArbeidsevnenNedsatt = true,
+                        harNedsattArbeidsevne = ArbeidsevneNedsattValg.JA,
                         yrkesskadeBegrunnelse = null,
                         fom = fom,
                         tom = null

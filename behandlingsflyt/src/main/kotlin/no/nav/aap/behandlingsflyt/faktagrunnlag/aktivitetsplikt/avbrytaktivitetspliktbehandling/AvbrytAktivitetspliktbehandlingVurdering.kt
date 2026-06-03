@@ -1,11 +1,13 @@
-package no.nav.aap.behandlingsflyt.behandling.avbrytaktivitetspliktbehandling
+package no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.avbrytaktivitetspliktbehandling
 
 import no.nav.aap.komponenter.verdityper.Bruker
+import java.time.LocalDateTime
 
 data class AvbrytAktivitetspliktbehandlingVurdering(
     val årsak: AvbrytAktivitetspliktbehandlingÅrsak,
     val begrunnelse: String,
-    val vurdertAv: Bruker
+    val vurdertAv: Bruker,
+    val opprettetTidspunkt: LocalDateTime? = null,
 )
 
 enum class AvbrytAktivitetspliktbehandlingÅrsak {

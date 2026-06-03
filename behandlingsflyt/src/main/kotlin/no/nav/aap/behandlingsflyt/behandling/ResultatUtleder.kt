@@ -64,8 +64,8 @@ class ResultatUtleder(
         }
 
         val søknadMottatt = behandling.vurderingsbehov().any { it.type == Vurderingsbehov.MOTTATT_SØKNAD }
-        if (!harRett(forrigeBehandlingId) && søknadMottatt) {
-            return if (harRett(behandling.id))
+        if (!underveisService.harRett(forrigeBehandlingId) && søknadMottatt) {
+            return if (underveisService.harRett(behandling.id))
                 Resultat.INNVILGELSE
             else
                 Resultat.AVSLAG
@@ -89,7 +89,7 @@ class ResultatUtleder(
             return Resultat.TRUKKET
         }
 
-        val harOppfyltPeriode = harRett(behandling.id)
+        val harOppfyltPeriode = underveisService.harRett(behandling.id)
 
         return if (harOppfyltPeriode) Resultat.INNVILGELSE else Resultat.AVSLAG
     }
@@ -100,11 +100,11 @@ class ResultatUtleder(
             return false
         }
 
-        val harOppfyltPeriode = harRett(behandling.id)
+        val harOppfyltPeriode = underveisService.harRett(behandling.id)
 
         return !harOppfyltPeriode
     }
 
     fun harRett(behandlingId: BehandlingId) =
-        underveisService.rettighethetsType(behandlingId).isNotEmpty()
+        underveisService.rettighetsType(behandlingId).isNotEmpty()
 }

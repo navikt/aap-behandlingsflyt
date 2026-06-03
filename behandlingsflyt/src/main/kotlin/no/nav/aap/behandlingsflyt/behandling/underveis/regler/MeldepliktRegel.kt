@@ -44,15 +44,15 @@ class MeldepliktRegel: UnderveisRegel {
 
     companion object {
         fun fastsatteDagerMedMeldeplikt(
-            vedtaksdatoFørstegangsbehandling: LocalDate?,
+            vedtaksdatoFørsteInnvilgelse: LocalDate?,
             fritak: Tidslinje<Fritaksvurdering.FritaksvurderingData>,
             meldeperioder: List<Periode>,
             underveis: Tidslinje<Underveisperiode>,
         ): List<Periode> {
             /* TODO: uheldig at periodene vi sender til meldekort-backend ikke deler implementasjon
-             * med vilkårsprøvingen.
-             */
-            val meldepliktFraOgMed = vedtaksdatoFørstegangsbehandling?.plusDays(1)
+            * med vilkårsprøvingen.
+            */
+            val meldepliktFraOgMed = vedtaksdatoFørsteInnvilgelse?.plusDays(1)
                 ?: return emptyList()
 
             val harRett = underveis.mapValue {

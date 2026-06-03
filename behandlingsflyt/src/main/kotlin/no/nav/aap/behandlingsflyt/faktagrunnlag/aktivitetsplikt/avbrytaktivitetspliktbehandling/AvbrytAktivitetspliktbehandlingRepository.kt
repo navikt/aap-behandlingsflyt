@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.behandling.avbrytaktivitetspliktbehandling
+package no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.avbrytaktivitetspliktbehandling
 
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.lookup.repository.Repository

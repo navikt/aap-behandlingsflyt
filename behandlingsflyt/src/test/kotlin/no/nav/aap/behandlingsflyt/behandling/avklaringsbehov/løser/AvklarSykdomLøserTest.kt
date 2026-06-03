@@ -75,11 +75,8 @@ class AvklarSykdomLøserTest {
                         harSkadeSykdomEllerLyte = false,
                         erSkadeSykdomEllerLyteVesentligdel = null,
                         erNedsettelseIArbeidsevneMerEnnHalvparten = null,
-                        erNedsettelseIArbeidsevneAvEnVissVarighet = null,
                         erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
-                        erNedsettelseMinstHalvparten = null,
-                        erNedsettelseMerEnnYrkesskadegrense = null,
-                        erArbeidsevnenNedsatt = null,
+                        harNedsattArbeidsevne = null,
                         yrkesskadeBegrunnelse = null,
                         fom = 10 januar 2025,
                         tom = null
@@ -100,9 +97,7 @@ private fun sykdomsvurdering(
     harSkadeSykdomEllerLyte: Boolean = true,
     erSkadeSykdomEllerLyteVesentligdel: Boolean = true,
     erNedsettelseIArbeidsevneMerEnnHalvparten: Boolean = true,
-    erNedsettelseIArbeidsevneAvEnVissVarighet: Boolean? = true,
     erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense: Boolean = true,
-    erArbeidsevnenNedsatt: Boolean = true,
     harNedsattArbeidsevne: ArbeidsevneNedsattValg = ArbeidsevneNedsattValg.JA,
     vurderingenGjelderFra: LocalDate = 1 januar 2020,
     vurderingenGjelderTil: LocalDate? = null,
@@ -114,10 +109,8 @@ private fun sykdomsvurdering(
     harSkadeSykdomEllerLyte = harSkadeSykdomEllerLyte,
     erSkadeSykdomEllerLyteVesentligdel = erSkadeSykdomEllerLyteVesentligdel,
     erNedsettelseIArbeidsevneMerEnnHalvparten = erNedsettelseIArbeidsevneMerEnnHalvparten,
-    erNedsettelseIArbeidsevneAvEnVissVarighet = erNedsettelseIArbeidsevneAvEnVissVarighet,
     erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense,
 
-    erArbeidsevnenNedsatt = erArbeidsevnenNedsatt,
     harNedsattArbeidsevne = harNedsattArbeidsevne,
     yrkesskadeBegrunnelse = null,
     vurderingenGjelderFra = vurderingenGjelderFra,
@@ -125,8 +118,6 @@ private fun sykdomsvurdering(
     vurdertAv = Bruker("Z00000"),
     opprettet = opprettet.toInstant(ZoneOffset.UTC),
     vurdertIBehandling = vurdertIBehandling,
-    erNedsettelseMinstHalvparten = null,
-    erNedsettelseMerEnnYrkesskadegrense = null,
     diagnose = null
 )
 

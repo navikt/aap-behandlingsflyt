@@ -69,9 +69,9 @@ class BrevGateway : BrevbestillingGateway {
 
     private val log = LoggerFactory.getLogger(javaClass)
 
-    private val baseUri = URI.create(requiredConfigForKey("integrasjon.brev.url"))
+    private val baseUri = URI.create(requiredConfigForKey("INTEGRASJON_BREV_URL"))
     val config = ClientConfig(
-        scope = requiredConfigForKey("integrasjon.brev.scope"),
+        scope = requiredConfigForKey("INTEGRASJON_BREV_SCOPE"),
     )
 
     private val client = RestClient(
@@ -235,6 +235,29 @@ class BrevGateway : BrevbestillingGateway {
         val response: InputStream = requireNotNull(
             client.post(
                 uri = baseUri.resolve("/api/bestilling/$bestillingReferanse/forhandsvis-html"),
+                request = httpRequest,
+                mapper = { body, _ ->
+                    body
+                })
+        )
+        return response.readAllBytes().toString(Charsets.UTF_8)
+    }
+
+    override fun brevbyggerPreview(
+        bestillingReferanse: BrevbestillingReferanse,
+        signaturer: List<SignaturGrunnlag>
+    ): String {
+
+        val httpRequest = PostRequest(
+            body = ForhandsvisBrevRequest(signaturer),
+            additionalHeaders = listOf(
+                Header("Accept", "application/json")
+            )
+        )
+
+        val response: InputStream = requireNotNull(
+            client.post(
+                uri = baseUri.resolve("/api/bestilling/$bestillingReferanse/brevbygger-preview"),
                 request = httpRequest,
                 mapper = { body, _ ->
                     body
@@ -441,7 +464,9 @@ class BrevGateway : BrevbestillingGateway {
             yrkesskader = yrkesskadeBeregning.yrkesskader.map {
                 Faktagrunnlag.YrkesskadeBeregning.Yrkesskade(
                     yrkesskadedato = it.yrkesskadedato,
-                    arbeidsinntektPaaSkadetidspunktet = it.arbeidsinntektPaaSkadetidspunktet  ?: BigDecimal.ZERO,
+                    arbeidsinntektPaaSkadetidspunktet = it.arbeidsinntektPaaSkadetidspunktet,
+                    relevantForArbeidsevne = it.relevantForArbeidsevne,
+                    diagnose = it.diagnose,
                 )
             },
             andelAvNedsettelseSomSkyldesYrkesskade = yrkesskadeBeregning.andelAvNedsettelseSomSkyldesYrkesskade,
@@ -455,9 +480,20 @@ class BrevGateway : BrevbestillingGateway {
             inntekterPerÅr = grunnlagBeregning.inntekterPerÅr.map {
                 Faktagrunnlag.GrunnlagBeregning.InntektPerÅr(it.år, it.inntekt)
             },
+            beregningsutfallKategori = grunnlagBeregning.tilKontrakt(),
         )
 
     }
+
+    private fun GrunnlagBeregning.tilKontrakt(): Faktagrunnlag.GrunnlagBeregning.BeregningsutfallKategori? =
+        when (beregningsutfallKategori) {
+            GrunnlagBeregning.BeregningsutfallKategori.SISTE_AAR -> Faktagrunnlag.GrunnlagBeregning.BeregningsutfallKategori.SISTE_AAR
+            GrunnlagBeregning.BeregningsutfallKategori.GJENNOMSNITT -> Faktagrunnlag.GrunnlagBeregning.BeregningsutfallKategori.GJENNOMSNITT
+            GrunnlagBeregning.BeregningsutfallKategori.MINSTESATS_OVER_25 -> Faktagrunnlag.GrunnlagBeregning.BeregningsutfallKategori.MINSTESATS_OVER_25
+            GrunnlagBeregning.BeregningsutfallKategori.MINSTESATS_UNDER_25 -> Faktagrunnlag.GrunnlagBeregning.BeregningsutfallKategori.MINSTESATS_UNDER_25
+            GrunnlagBeregning.BeregningsutfallKategori.INNTEKT_OVER_6G -> Faktagrunnlag.GrunnlagBeregning.BeregningsutfallKategori.INNTEKT_OVER_6G
+            null -> null
+        }
 
     private fun forholdTilAndreYtelserTilFaktagrunnlag(forholdTilAndreYtelser: ForholdTilAndreYtelser): Faktagrunnlag {
         return Faktagrunnlag.ForholdTilAndreYtelser(

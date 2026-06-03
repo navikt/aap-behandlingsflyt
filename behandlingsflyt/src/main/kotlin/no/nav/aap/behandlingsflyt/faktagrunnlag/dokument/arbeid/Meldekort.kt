@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid
 
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.MeldekortV0
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
@@ -12,6 +13,27 @@ data class Meldekort(
     val timerArbeidPerPeriode: Set<ArbeidIPeriode>,
     val mottattTidspunkt: LocalDateTime
 ) {
+    companion object {
+        fun fraKontrakt(
+            journalpostId: JournalpostId,
+            mottattTidspunkt: LocalDateTime,
+            meldekort: no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Meldekort
+        ): Meldekort {
+            return when (meldekort) {
+                is MeldekortV0 -> Meldekort(
+                    journalpostId = journalpostId,
+                    timerArbeidPerPeriode = meldekort.timerArbeidPerPeriode.map {
+                        ArbeidIPeriode(
+                            periode = Periode(it.fraOgMedDato, it.tilOgMedDato),
+                            timerArbeid = TimerArbeid(it.timerArbeid.toBigDecimal())
+                        )
+                    }.toSet(),
+                    mottattTidspunkt = mottattTidspunkt
+                )
+            }
+        }
+    }
+
     fun somTidslinje(): Tidslinje<Pair<TimerArbeid, Int>> {
         return Tidslinje(timerArbeidPerPeriode.map {
             Segment(it.periode, it.timerArbeid to it.periode.antallDager())
@@ -19,9 +41,8 @@ data class Meldekort(
     }
 
     /**
-    @return Tidsperioden meldekortet inneholder arbeidstimer for.
-    Merk at det kan være dager i perioden meldekortet gjelder for som det ikke er rapportert timer på.
-    @param meldekort -
+     * @return Tidsperioden meldekortet inneholder arbeidstimer for.
+     * Merk at det kan være dager i perioden meldekortet gjelder for som det ikke er rapportert timer på.
      **/
     fun arbeidsperiode(): Periode? {
         if (timerArbeidPerPeriode.isEmpty()) {
@@ -34,6 +55,7 @@ data class Meldekort(
         return Periode(arbeidsPerioderStart, arbeidsPerioderSlutt)
     }
 }
+
 /**
  * Representerer arbeid i en Periode på et Meldekort.
  */

@@ -1,12 +1,15 @@
 package no.nav.aap.behandlingsflyt.behandling.vedtak
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -14,10 +17,12 @@ import java.time.LocalDateTime
 class VedtakService(
     private val vedtakRepository: VedtakRepository,
     private val behandlingRepository: BehandlingRepository,
+    private val underveisRepository: UnderveisRepository,
 ) {
-    constructor(repositoryProvider: RepositoryProvider) : this(
+    constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         vedtakRepository = repositoryProvider.provide(),
         behandlingRepository = repositoryProvider.provide(),
+        underveisRepository = repositoryProvider.provide(),
     )
 
     fun lagreVedtak(behandlingId: BehandlingId, vedtakstidspunkt: LocalDateTime, virkningstidspunkt: LocalDate?) {
@@ -30,6 +35,15 @@ class VedtakService(
             ?: return null
 
         return vedtakRepository.hent(førstegangsbehandlingen.id)?.vedtakstidspunkt
+    }
+
+    fun vedtakstidspunktFørsteInnvilgelse(sak: Sak): LocalDateTime? {
+        /* Denne  koden er ikke laget for å håndtere tilfeller der man omgjør en innvilgelse til avslag, og så senere innvilger igjen. */
+        return behandlingRepository.hentAlleMedVedtakFor(sak.person, TypeBehandling.ytelseBehandlingstyper())
+            .filter { it.saksnummer == sak.saksnummer }
+            .sortedBy { it.vedtakstidspunkt }
+            .firstOrNull { underveisRepository.hentHvisEksisterer(it.id)?.harRett() == true }
+            ?.vedtakstidspunkt
     }
 
     fun hentVedtak(behandlingId: BehandlingId): Vedtak? {
