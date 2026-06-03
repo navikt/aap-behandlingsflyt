@@ -53,10 +53,12 @@ class KravRepositoryImpl(private val connection: DBConnection) : KravRepository 
         connection.executeBatch(
             """
             INSERT INTO krav_vurdering (
-                krav_vurderinger_id, journalpost_id, vurdert_av, opprettet_tid,
+                krav_vurderinger_id, 
+                journalpost_id, vurdert_av, opprettet_tid,
+                begrunnelse, vurdert_i_behandling,
                 krav_type, soknadsdato, soknadsdato_aarsak,
                 mulig_rett_fra, mulig_rett_fra_aarsak,
-                begrunnelse, kravdato, vurdert_i_behandling
+                 kravdato
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """.trimIndent(),
             grunnlag.vurderinger
@@ -66,52 +68,52 @@ class KravRepositoryImpl(private val connection: DBConnection) : KravRepository 
                 setString(2, v.journalpostId.identifikator)
                 setString(3, v.vurdertAv)
                 setInstant(4, v.opprettet)
-                setString(10, v.begrunnelse)
-                setLong(12, v.vurdertIBehandling.id)
+                setString(5, v.begrunnelse)
+                setLong(6, v.vurdertIBehandling.id)
                 when (v) {
                     is NyttKrav -> {
-                        setEnumName(5, KravType.NYTT_KRAV_AAP)
-                        setLocalDate(6, v.soknadsdato)
-                        setEnumName(7, v.soknadsdatoÅrsak)
-                        setLocalDate(8, v.muligRettFra)
-                        setEnumName(9, v.muligRettFraÅrsak)
-                        setLocalDate(11, v.kravdato)
+                        setEnumName(7, KravType.NYTT_KRAV_AAP)
+                        setLocalDate(8, v.soknadsdato)
+                        setEnumName(9, v.soknadsdatoÅrsak)
+                        setLocalDate(10, v.muligRettFra)
+                        setEnumName(11, v.muligRettFraÅrsak)
+                        setLocalDate(12, v.kravdato)
                     }
 
                     is Gjenopptak -> {
-                        setEnumName(5, KravType.GJENOPPTAK)
-                        setLocalDate(6, v.soknadsdato)
-                        setEnumName(7, v.soknadsdatoÅrsak)
-                        setLocalDate(8, v.muligRettFra)
-                        setEnumName(9, v.muligRettFraÅrsak)
-                        setLocalDate(11, v.kravdato)
+                        setEnumName(7, KravType.GJENOPPTAK)
+                        setLocalDate(8, v.soknadsdato)
+                        setEnumName(9, v.soknadsdatoÅrsak)
+                        setLocalDate(10, v.muligRettFra)
+                        setEnumName(11, v.muligRettFraÅrsak)
+                        setLocalDate(12, v.kravdato)
                     }
 
                     is TrukketSøknad -> {
-                        setEnumName(5, KravType.TRUKKET_SØKNAD)
-                        setLocalDate(6, null)
-                        setEnumName(7, null as Enum<*>?)
+                        setEnumName(7, KravType.TRUKKET_SØKNAD)
                         setLocalDate(8, null)
                         setEnumName(9, null as Enum<*>?)
-                        setLocalDate(11, null)
+                        setLocalDate(10, null)
+                        setEnumName(11, null as Enum<*>?)
+                        setLocalDate(12, null)
                     }
 
                     is Klage -> {
-                        setEnumName(5, KravType.KLAGE)
-                        setLocalDate(6, null)
-                        setEnumName(7, null as Enum<*>?)
+                        setEnumName(7, KravType.KLAGE)
                         setLocalDate(8, null)
                         setEnumName(9, null as Enum<*>?)
-                        setLocalDate(11, null)
+                        setLocalDate(10, null)
+                        setEnumName(11, null as Enum<*>?)
+                        setLocalDate(12, null)
                     }
 
                     is Tilleggsopplysning -> {
-                        setEnumName(5, KravType.TILLEGGSOPPLYSNING)
-                        setLocalDate(6, null)
-                        setEnumName(7, null as Enum<*>?)
+                        setEnumName(7, KravType.TILLEGGSOPPLYSNING)
                         setLocalDate(8, null)
                         setEnumName(9, null as Enum<*>?)
-                        setLocalDate(11, null)
+                        setLocalDate(10, null)
+                        setEnumName(11, null as Enum<*>?)
+                        setLocalDate(12, null)
                     }
                 }
             }
