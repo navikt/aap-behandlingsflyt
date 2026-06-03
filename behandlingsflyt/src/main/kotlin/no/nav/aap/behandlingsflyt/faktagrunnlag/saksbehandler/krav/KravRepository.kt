@@ -4,7 +4,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.lookup.repository.Repository
 
 interface KravRepository : Repository {
-    fun lagre(behandlingId: BehandlingId, vurderinger: List<KravVurdering>)
+    fun lagre(behandlingId: BehandlingId, vurderinger: Set<KravVurdering>)
     fun hent(behandlingId: BehandlingId): KravGrunnlag
     fun hentHvisEksisterer(behandlingId: BehandlingId): KravGrunnlag?
     override fun slett(behandlingId: BehandlingId)

@@ -1,9 +1,9 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.krav
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Gjenopptak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.MuligRettFraÅrsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.NyttKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.SøknadsdatoÅrsak
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Tilleggsopplysning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.TrukketSøknad
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.help.sak
@@ -24,6 +24,7 @@ import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
+import java.time.Instant
 
 internal class KravRepositoryImplTest {
 
@@ -53,17 +54,12 @@ internal class KravRepositoryImplTest {
             kravdato = 1 januar 2024,
         )
 
-        private fun gjenopptak(behandlingId: BehandlingId) = Gjenopptak(
+        private fun tilleggsopplysning(behandlingId: BehandlingId) = Tilleggsopplysning(
             journalpostId = JournalpostId("JP-002"),
             vurdertAv = "Kelvin",
             begrunnelse = "",
             vurdertIBehandling = behandlingId,
-            opprettet = java.time.Instant.now(),
-            soknadsdato = null,
-            soknadsdatoÅrsak = null,
-            muligRettFra = null,
-            muligRettFraÅrsak = null,
-            kravdato = 1 januar 2024,
+            opprettet = Instant.now(),
         )
     }
 
@@ -74,7 +70,7 @@ internal class KravRepositoryImplTest {
             val sak = sak(connection)
             val behandling = finnEllerOpprettBehandling(connection, sak)
 
-            repo.lagre(behandling.id, emptyList())
+            repo.lagre(behandling.id, emptySet())
 
             assertThat(repo.hent(behandling.id).vurderinger).isEmpty()
         }
@@ -88,29 +84,29 @@ internal class KravRepositoryImplTest {
             val behandling = finnEllerOpprettBehandling(connection, sak)
             val vurdering = nyttKrav(behandling.id)
 
-            repo.lagre(behandling.id, listOf(vurdering))
+            repo.lagre(behandling.id, setOf(vurdering))
 
             val hentet = repo.hent(behandling.id)
             assertThat(hentet.vurderinger).usingRecursiveComparison()
                 .ignoringFields("opprettet")
-                .isEqualTo(listOf(vurdering))
+                .isEqualTo(setOf(vurdering))
         }
     }
 
     @Test
-    fun `kan lagre og hente Gjenopptak med bare obligatoriske felt`() {
+    fun `kan lagre og hente Tilleggsopplysning med bare obligatoriske felt`() {
         dataSource.transaction { connection ->
             val repo = KravRepositoryImpl(connection)
             val sak = sak(connection)
             val behandling = finnEllerOpprettBehandling(connection, sak)
-            val vurdering = gjenopptak(behandling.id)
+            val vurdering = tilleggsopplysning(behandling.id)
 
-            repo.lagre(behandling.id, listOf(vurdering))
+            repo.lagre(behandling.id, setOf(vurdering))
 
             val hentet = repo.hent(behandling.id)
             assertThat(hentet.vurderinger).usingRecursiveComparison()
                 .ignoringFields("opprettet")
-                .isEqualTo(listOf(vurdering))
+                .isEqualTo(setOf(vurdering))
         }
     }
 
@@ -121,14 +117,14 @@ internal class KravRepositoryImplTest {
             val sak = sak(connection)
             val behandling = finnEllerOpprettBehandling(connection, sak)
             val v1 = nyttKrav(behandling.id)
-            val v2 = gjenopptak(behandling.id)
+            val v2 = tilleggsopplysning(behandling.id)
 
-            repo.lagre(behandling.id, listOf(v1, v2))
+            repo.lagre(behandling.id, setOf(v1, v2))
 
             val hentet = repo.hent(behandling.id)
             assertThat(hentet.vurderinger).usingRecursiveComparison()
                 .ignoringFields("opprettet")
-                .isEqualTo(listOf(v1, v2))
+                .isEqualTo(setOf(v1, v2))
         }
     }
 
@@ -140,10 +136,10 @@ internal class KravRepositoryImplTest {
             val behandling = finnEllerOpprettBehandling(connection, sak)
 
             val v1 = nyttKrav(behandling.id)
-            repo.lagre(behandling.id, listOf(v1))
+            repo.lagre(behandling.id, setOf(v1))
 
             val oppdatert = v1.copy(begrunnelse = "Oppdatert begrunnelse")
-            repo.lagre(behandling.id, listOf(oppdatert))
+            repo.lagre(behandling.id, setOf(oppdatert))
 
             val hentet = repo.hent(behandling.id)
             assertThat(hentet.vurderinger).hasSize(1)
@@ -170,7 +166,7 @@ internal class KravRepositoryImplTest {
             val behandling = finnEllerOpprettBehandling(connection, sak)
             val vurdering = nyttKrav(behandling.id)
 
-            repo.lagre(behandling.id, listOf(vurdering))
+            repo.lagre(behandling.id, setOf(vurdering))
             Pair(behandling, vurdering)
         }
 
@@ -184,7 +180,7 @@ internal class KravRepositoryImplTest {
             assertThat(kopiert).isNotNull()
             assertThat(kopiert!!.vurderinger).usingRecursiveComparison()
                 .ignoringFields("opprettet")
-                .isEqualTo(listOf(vurdering))
+                .isEqualTo(setOf(vurdering))
         }
     }
 
@@ -197,7 +193,7 @@ internal class KravRepositoryImplTest {
                 val behandling = finnEllerOpprettBehandling(connection, sak)
 
                 repo.lagre(
-                    behandling.id, listOf(
+                    behandling.id, setOf(
                         TrukketSøknad(
                             journalpostId = JournalpostId("JP-SLETT"),
                             vurdertAv = "Z000001",

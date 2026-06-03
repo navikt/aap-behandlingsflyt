@@ -25,7 +25,7 @@ CREATE TABLE krav_grunnlag
 (
     id                  BIGSERIAL                              NOT NULL PRIMARY KEY,
     behandling_id       BIGINT                                 NOT NULL REFERENCES behandling (id),
-    krav_vurderinger_id BIGINT                                 NULL REFERENCES krav_vurderinger (id),
+    krav_vurderinger_id BIGINT                                 NOT NULL REFERENCES krav_vurderinger (id),
     aktiv               BOOLEAN      DEFAULT TRUE              NOT NULL,
     opprettet_tid       TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP NOT NULL
 );

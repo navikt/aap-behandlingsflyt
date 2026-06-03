@@ -25,7 +25,7 @@ class KravRepositoryImpl(private val connection: DBConnection) : KravRepository 
         }
     }
 
-    override fun lagre(behandlingId: BehandlingId, vurderinger: List<KravVurdering>) {
+    override fun lagre(behandlingId: BehandlingId, vurderinger: Set<KravVurdering>) {
         val eksisterende = hentHvisEksisterer(behandlingId)
         val nytt = KravGrunnlag(vurderinger)
 
@@ -37,7 +37,7 @@ class KravRepositoryImpl(private val connection: DBConnection) : KravRepository 
 
     private fun deaktiverGrunnlag(behandlingId: BehandlingId) {
         connection.execute(
-            "UPDATE krav_grunnlag SET aktiv = FALSE WHERE behandling_id = ? AND aktiv = TRUE"
+            "UPDATE krav_grunnlag SET aktiv = FALSE WHERE behandling_id = ? AND aktiv"
         ) {
             setParams { setLong(1, behandlingId.id) }
             setResultValidator { require(it == 1) }
@@ -85,7 +85,7 @@ class KravRepositoryImpl(private val connection: DBConnection) : KravRepository 
                     }
 
                     is TrukketSøknad -> {
-                        setEnumName(5, KravType.TRUKKET_SOKNAD)
+                        setEnumName(5, KravType.TRUKKET_SØKNAD)
                         setLocalDate(6, null)
                         setEnumName(7, null as Enum<*>?)
                         setLocalDate(8, null)
@@ -126,7 +126,7 @@ class KravRepositoryImpl(private val connection: DBConnection) : KravRepository 
 
     override fun hentHvisEksisterer(behandlingId: BehandlingId): KravGrunnlag? {
         return connection.queryFirstOrNull(
-            "SELECT krav_vurderinger_id FROM krav_grunnlag WHERE behandling_id = ? AND aktiv = TRUE"
+            "SELECT krav_vurderinger_id FROM krav_grunnlag WHERE behandling_id = ? AND aktiv"
         ) {
             setParams { setLong(1, behandlingId.id) }
             setRowMapper { row ->
@@ -141,8 +141,8 @@ class KravRepositoryImpl(private val connection: DBConnection) : KravRepository 
         }
     }
 
-    private fun hentVurderinger(vurderingerId: Long): List<KravVurdering> {
-        return connection.queryList(
+    private fun hentVurderinger(vurderingerId: Long): Set<KravVurdering> {
+        return connection.querySet(
             """
             SELECT journalpost_id, vurdert_av, krav_type,
                    soknadsdato, soknadsdato_aarsak,
@@ -180,14 +180,14 @@ class KravRepositoryImpl(private val connection: DBConnection) : KravRepository 
                 journalpostId = journalpostId, vurdertAv = vurdertAv,
                 begrunnelse = begrunnelse,
                 vurdertIBehandling = vurdertIBehandling, opprettet = opprettet,
-                soknadsdato = row.getLocalDateOrNull("soknadsdato"),
+                soknadsdato = row.getLocalDate("soknadsdato"),
                 soknadsdatoÅrsak = row.getEnumOrNull("soknadsdato_aarsak"),
                 muligRettFra = row.getLocalDateOrNull("mulig_rett_fra"),
                 muligRettFraÅrsak = row.getEnumOrNull("mulig_rett_fra_aarsak"),
                 kravdato = row.getLocalDate("kravdato"),
             )
 
-            KravType.TRUKKET_SOKNAD -> TrukketSøknad(
+            KravType.TRUKKET_SØKNAD -> TrukketSøknad(
                 journalpostId = journalpostId, vurdertAv = vurdertAv,
                 begrunnelse = begrunnelse,
                 vurdertIBehandling = vurdertIBehandling, opprettet = opprettet,
@@ -247,7 +247,7 @@ class KravRepositoryImpl(private val connection: DBConnection) : KravRepository 
             INSERT INTO krav_grunnlag (behandling_id, krav_vurderinger_id)
             SELECT ?, krav_vurderinger_id
             FROM krav_grunnlag
-            WHERE behandling_id = ? AND aktiv = TRUE
+            WHERE behandling_id = ? AND aktiv
             """.trimIndent()
         ) {
             setParams {

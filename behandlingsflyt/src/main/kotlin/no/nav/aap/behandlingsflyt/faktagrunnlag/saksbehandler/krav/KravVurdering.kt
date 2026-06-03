@@ -4,7 +4,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.verdityper.dokument.JournalpostId
 import java.time.Instant
 import java.time.LocalDate
-import java.time.LocalDateTime
 
 sealed interface KravVurdering {
     val journalpostId: JournalpostId
@@ -43,7 +42,7 @@ data class Gjenopptak(
     override val vurdertIBehandling: BehandlingId,
     override val opprettet: Instant,
 
-    val soknadsdato: LocalDate?,
+    val soknadsdato: LocalDate,
     val soknadsdatoÅrsak: SøknadsdatoÅrsak?,
     val muligRettFra: LocalDate?,
     val muligRettFraÅrsak: MuligRettFraÅrsak?,
@@ -68,7 +67,7 @@ data class Tilleggsopplysning(
 
 enum class KravType {
     NYTT_KRAV_AAP,
-    TRUKKET_SOKNAD,
+    TRUKKET_SØKNAD,
     GJENOPPTAK,
     KLAGE,
     TILLEGGSOPPLYSNING,
