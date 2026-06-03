@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarBist
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSykdomLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.ForeslåVedtakLøsning
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
@@ -26,6 +27,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.prosessering.HendelseMottattHåndteringJobbUtfører
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.underveis.UnderveisRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.overganguføre.OvergangUføreRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
@@ -366,12 +368,21 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(OvergangUføreFlytTes
                 .hentHvisEksisterer(revurdering.id)
                 ?.vurderinger
                 ?.singleOrNull { it.vurdertAv == AUTOMATISK_VURDERT && it.fom == virkningsdato }
-            assertThat(vurdering).isNotNull
+
             assertThat(vurdering!!.begrunnelse).isEqualTo(AUTOMATISK_VURDERT)
             assertThat(vurdering.vurdertAv).isEqualTo(AUTOMATISK_VURDERT)
             assertThat(vurdering.fom).isEqualTo(virkningsdato)
             assertThat(vurdering.brukerRettPåAAP).isFalse()
             assertThat(vurdering.brukerHarFåttVedtakOmUføretrygd).isEqualTo(UføreSøknadVedtakResultat.JA_INNVILGET_GRADERT)
+
+            val overgangUføreVilkår = VilkårsresultatRepositoryImpl(connection)
+                .hent(revurdering.id)
+                .finnVilkår(Vilkårtype.OVERGANGUFØREVILKÅRET)
+                .tidslinje()
+                .segment(virkningsdato)
+                ?.verdi
+            assertThat(overgangUføreVilkår!!.utfall).isEqualTo(Utfall.IKKE_OPPFYLT)
+            assertThat(overgangUføreVilkår.avslagsårsak).isEqualTo(Avslagsårsak.IKKE_RETT_PA_AAP_UNDER_BEHANDLING_AV_UFORE)
         }
     }
 
