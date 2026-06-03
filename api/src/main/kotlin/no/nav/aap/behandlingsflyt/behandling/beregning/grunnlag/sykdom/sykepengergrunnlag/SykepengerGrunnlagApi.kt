@@ -87,7 +87,6 @@ fun NormalOpenAPIRoute.sykepengerGrunnlagApi(
 private fun SykepengerVurdering.tilResponse(vurdertAvService: VurdertAvService): SykepengerVurderingResponse {
     return SykepengerVurderingResponse(
         begrunnelse = begrunnelse,
-        dokumenterBruktIVurdering = dokumenterBruktIVurdering,
         harRettPå = harRettPå,
         grunn = grunn,
         fom = gjelderFra,
