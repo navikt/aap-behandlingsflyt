@@ -98,27 +98,8 @@ fun NormalOpenAPIRoute.flytApi(
                     val jobber = flytJobbRepository.hentJobberForBehandling(behandling.id.toLong())
                         .filter { it.type() == ProsesserBehandlingJobbUtfører.type }
 
-                    val prosessering =
-                        Prosessering(
-                            utledStatus(jobber),
-                            jobber.map {
-                                JobbInfoDto(
-                                    id = it.jobbId(),
-                                    type = it.type(),
-                                    status = it.status(),
-                                    planlagtKjøretidspunkt = it.nesteKjøring(),
-                                    metadata = emptyMap(),
-                                    antallFeilendeForsøk = it.antallRetriesForsøkt(),
-                                    feilmelding = hentFeilmeldingHvisBehov(
-                                        it.status(),
-                                        it.jobbId(),
-                                        flytJobbRepository
-                                    ),
-                                    beskrivelse = it.beskrivelse(),
-                                    navn = it.navn(),
-                                    opprettetTidspunkt = it.opprettetTidspunkt(),
-                                )
-                            })
+                    val prosessering = lagProsessering(jobber, flytJobbRepository)
+
                     // Henter denne ut etter status er utledet for å være sikker på at dataene er i rett tilstand
                     behandling = BehandlingReferanseService(behandlingRepository).behandling(req)
                     val flyt = behandling.flyt()
@@ -215,36 +196,16 @@ fun NormalOpenAPIRoute.flytApi(
                 val prosessering = dataSource.transaction(readOnly = true) { connection ->
                     val repositoryProvider = repositoryRegistry.provider(connection)
                     val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
-                    val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
 
                     val behandlingId = BehandlingReferanseService(behandlingRepository).behandling(req).id
-                    val avklaringsbehovene = lazy { avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId) }
 
                     val flytJobbRepository = repositoryProvider.provide<FlytJobbRepository>()
 
                     val jobber = flytJobbRepository.hentJobberForBehandling(behandlingId.toLong())
                         .filter { it.type() == ProsesserBehandlingJobbUtfører.type }
 
-                    Prosessering(
-                        utledStatus(jobber, avklaringsbehovene),
-                        jobber.map {
-                            JobbInfoDto(
-                                id = it.jobbId(),
-                                type = it.type(),
-                                status = it.status(),
-                                planlagtKjøretidspunkt = it.nesteKjøring(),
-                                metadata = emptyMap(),
-                                antallFeilendeForsøk = it.antallRetriesForsøkt(),
-                                feilmelding = hentFeilmeldingHvisBehov(
-                                    it.status(),
-                                    it.jobbId(),
-                                    flytJobbRepository
-                                ),
-                                beskrivelse = it.beskrivelse(),
-                                navn = it.navn(),
-                                opprettetTidspunkt = it.opprettetTidspunkt(),
-                            )
-                        })
+                    lagProsessering(jobber, flytJobbRepository)
+
                 }
                 respond(prosessering)
             }
@@ -444,6 +405,30 @@ private fun utledStatus(jobber: List<JobbInput>): ProsesseringStatus {
     log.info("Har følgende jobber som ikke er utført: ${jobber.joinToString(", ") { it.navn() }}")
     return ProsesseringStatus.JOBBER
 }
+
+private fun lagProsessering(
+    jobber: List<JobbInput>,
+    flytJobbRepository: FlytJobbRepository
+): Prosessering = Prosessering(
+    utledStatus(jobber),
+    jobber.map {
+        JobbInfoDto(
+            id = it.jobbId(),
+            type = it.type(),
+            status = it.status(),
+            planlagtKjøretidspunkt = it.nesteKjøring(),
+            metadata = emptyMap(),
+            antallFeilendeForsøk = it.antallRetriesForsøkt(),
+            feilmelding = hentFeilmeldingHvisBehov(
+                it.status(),
+                it.jobbId(),
+                flytJobbRepository
+            ),
+            beskrivelse = it.beskrivelse(),
+            navn = it.navn(),
+            opprettetTidspunkt = it.opprettetTidspunkt(),
+        )
+    })
 
 private fun utledVisning(
     aktivtSteg: StegType,
