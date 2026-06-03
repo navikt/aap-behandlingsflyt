@@ -138,7 +138,6 @@ class SykepengerErstatningRepositoryImpl(private val connection: DBConnection) :
         val deletedRows = connection.executeReturnUpdated(
             """
             delete from sykepenge_erstatning_grunnlag where behandling_id = ?; 
-            delete from sykepenge_vurdering_dokumenter where vurdering_id in (select id from sykepenge_vurdering where vurderinger_id = ANY(?::bigint[]));
             delete from sykepenge_vurdering where vurderinger_id = ANY(?::bigint[]);
             delete from sykepenge_vurderinger where id = ANY(?::bigint[]);
         """.trimIndent()
@@ -147,7 +146,6 @@ class SykepengerErstatningRepositoryImpl(private val connection: DBConnection) :
                 setLong(1, behandlingId.id)
                 setLongArray(2, sykepengeVurderingerIds)
                 setLongArray(3, sykepengeVurderingerIds)
-                setLongArray(4, sykepengeVurderingerIds)
             }
         }
         log.info("Slettet $deletedRows rader fra sykepenge_erstatning_grunnlag")
