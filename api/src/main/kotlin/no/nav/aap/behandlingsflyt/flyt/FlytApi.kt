@@ -87,7 +87,7 @@ fun NormalOpenAPIRoute.flytApi(
                     val avklaringsbehovRepository =
                         repositoryProvider.provide<AvklaringsbehovRepository>()
 
-                    var behandling = behandling(behandlingRepository, req)
+                    var behandling = BehandlingReferanseService(behandlingRepository).behandling(req)
                     val sak = sakRepository.hent(behandling.sakId)
                     val avklaringsbehovene = lazy { avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id) }
                     val flytJobbRepository = repositoryProvider.provide<FlytJobbRepository>()
@@ -120,7 +120,7 @@ fun NormalOpenAPIRoute.flytApi(
                                 )
                             })
                     // Henter denne ut etter status er utledet for å være sikker på at dataene er i rett tilstand
-                    behandling = behandling(behandlingRepository, req)
+                    behandling = BehandlingReferanseService(behandlingRepository).behandling(req)
                     val flyt = behandling.flyt()
                     val stegGrupper: Map<StegGruppe, List<StegType>> =
                         flyt.stegene().groupBy { steg -> steg.gruppe }
@@ -550,10 +550,6 @@ private fun utledVisningAvKvalitetsikrerKort(
 
 private fun harÅpentKvalitetssikringsAvklaringsbehov(avklaringsbehovene: FrivilligeAvklaringsbehov): Boolean =
     avklaringsbehovene.hentBehovForDefinisjon(Definisjon.KVALITETSSIKRING)?.erÅpent() == true
-
-private fun behandling(behandlingRepository: BehandlingRepository, req: BehandlingReferanse): Behandling {
-    return BehandlingReferanseService(behandlingRepository).behandling(req)
-}
 
 private fun erEtterBeslutterstegetHvisEksisterer(flyt: BehandlingFlyt, aktivtSteg: StegType): Boolean {
     return flyt.stegene().contains(StegType.FATTE_VEDTAK) && !flyt.erStegFør(
