@@ -285,23 +285,17 @@ fun NormalOpenAPIRoute.saksApi(
                 routeConfig = AuthorizationMachineToMachineConfig(
                     authorizedAzps = listOf(Azp.Postmottak.uuid)
                 ).medAzureTokenGen()
-            ) { saksnummer, body ->
+            ) { saksnummer, typeBehandling ->
                 val behandlinger = dataSource.transaction { connection ->
                     val sakRepository = repositoryRegistry.provider(connection).provide<SakRepository>()
                     val behandlingRepository = repositoryRegistry.provider(connection).provide<BehandlingRepository>()
                     val sakId = sakRepository.hent(Saksnummer(saksnummer.saksnummer)).id
 
-                    val behandlinger = behandlingRepository.hentAlleFor(sakId)
-
-                    behandlinger.filter { it.typeBehandling() == body }.map {
-                        BehandlingAvTypeDTO(
-                            it.referanse.referanse, it.opprettetTidspunkt
-                        )
-                    }
-
-
+                    behandlingRepository.hentAlleFor(sakId, behandlingstypeFilter = listOf(typeBehandling))
                 }
-                respond(behandlinger)
+                respond(
+                    behandlinger.map { BehandlingAvTypeDTO(it.referanse.referanse, it.opprettetTidspunkt) }
+                )
             }
         }
 
