@@ -412,7 +412,7 @@ class MeldekortApiTest : BaseApiTest() {
     }
 
     @Test
-    fun `returnerer ikke meldeperioder med fom-dato frem i tid`() {
+    fun `returnerer også meldeperioder med fom-dato frem i tid`() {
         val sak = nySak()
         val behandling = opprettBehandling(sak, TypeBehandling.Førstegangsbehandling)
 
@@ -444,9 +444,7 @@ class MeldekortApiTest : BaseApiTest() {
 
             assertThat(response.status).isEqualTo(HttpStatusCode.OK)
             val body = response.body<MeldeperioderMedMeldekortResponse>()
-            assertThat(body.meldeperioderMedMeldekort).hasSize(2)
-            assertThat(body.meldeperioderMedMeldekort.first().meldeperiode).isEqualTo(forrigeMeldeperiode)
-            assertThat(body.meldeperioderMedMeldekort.last().meldeperiode).isEqualTo(inneværendeMeldeperiode)
+            assertThat(body.meldeperioderMedMeldekort).hasSize(3)
         }
     }
 

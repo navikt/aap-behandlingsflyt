@@ -75,7 +75,7 @@ fun NormalOpenAPIRoute.meldekortApi(
 
                 val meldeperiodeMedMeldekort = sisteFattedeVedtaksBehandling?.let { behandling ->
                     val underveisGrunnlag = underveisRepository.hentHvisEksisterer(behandling.id) ?: return@let null
-                    val meldeperioderMedOppfyltePerioder = hentAktuelleMeldeperioderMedOppfyltePerioder(underveisGrunnlag, clock)
+                    val meldeperioderMedOppfyltePerioder = hentAktuelleMeldeperioderMedOppfyltePerioder(underveisGrunnlag)
                     val meldekortene = meldekortRepository.hentHvisEksisterer(behandling.id)?.meldekort().orEmpty()
                     val mottatteDokumenter = mottattDokumentRepository
                         .hentDokumenterAvType(sak.id, InnsendingType.MELDEKORT)
@@ -278,13 +278,9 @@ private fun tidligereMeldekortForMeldeperiode(
  */
 private fun hentAktuelleMeldeperioderMedOppfyltePerioder(
     underveisGrunnlag: UnderveisGrunnlag,
-    clock: Clock
 ): Map<Periode, List<Periode>> {
-    val now = LocalDate.now(clock)
-
     return underveisGrunnlag.perioder
         .filter { it.utfall == Utfall.OPPFYLT }
-        .filter { it.periode.fom < now }
         .groupBy({ it.meldePeriode }, { it.periode })
         .mapValues { (_, perioder) ->
             // Slå sammen til sammenhengende perioder hvis mulig
