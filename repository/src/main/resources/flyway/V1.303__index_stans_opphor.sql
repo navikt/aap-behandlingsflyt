@@ -1,0 +1,2 @@
+create unique index uidx_stans_opphor_grunnlag_aktiv_behandling_id
+on stans_opphor_grunnlag(behandling_id) where aktiv;
