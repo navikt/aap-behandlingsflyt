@@ -15,6 +15,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepo
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.BehandlingTilstandValidator
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.FrivilligeAvklaringsbehov
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.flyt.flate.visning.DynamiskStegGruppeVisningService
 import no.nav.aap.behandlingsflyt.flyt.flate.visning.ProsesseringStatus
 import no.nav.aap.behandlingsflyt.flyt.flate.visning.Visning
@@ -208,6 +209,51 @@ fun NormalOpenAPIRoute.flytApi(
                     )
                 }
                 respond(dto)
+            }
+        }
+
+        route("/{referanse}/flyt/prosessering") {
+            authorizedGet<BehandlingReferanse, Prosessering>(
+                AuthorizationParamPathConfig(
+                    relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
+                    behandlingPathParam = BehandlingPathParam("referanse")
+                )
+            ) { req ->
+                val prosessering = dataSource.transaction(readOnly = true) { connection ->
+                    val repositoryProvider = repositoryRegistry.provider(connection)
+                    val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+                    val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
+
+                    val behandlingId = behandling(behandlingRepository, req).id
+                    val avklaringsbehovene = avklaringsbehov(avklaringsbehovRepository, behandlingId)
+
+                    val flytJobbRepository = repositoryProvider.provide<FlytJobbRepository>()
+
+                    val jobber = flytJobbRepository.hentJobberForBehandling(behandlingId.toLong())
+                        .filter { it.type() == ProsesserBehandlingJobbUtfører.type }
+
+                    Prosessering(
+                        utledStatus(jobber, avklaringsbehovene),
+                        jobber.map {
+                            JobbInfoDto(
+                                id = it.jobbId(),
+                                type = it.type(),
+                                status = it.status(),
+                                planlagtKjøretidspunkt = it.nesteKjøring(),
+                                metadata = emptyMap(),
+                                antallFeilendeForsøk = it.antallRetriesForsøkt(),
+                                feilmelding = hentFeilmeldingHvisBehov(
+                                    it.status(),
+                                    it.jobbId(),
+                                    flytJobbRepository
+                                ),
+                                beskrivelse = it.beskrivelse(),
+                                navn = it.navn(),
+                                opprettetTidspunkt = it.opprettetTidspunkt(),
+                            )
+                        })
+                }
+                respond(prosessering)
             }
         }
 
