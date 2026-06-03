@@ -152,7 +152,6 @@ class SykepengeerstatningVilkårTest {
         behandlingId: BehandlingId = BehandlingId(1L)
     ) = Sykdomsvurdering(
         begrunnelse = "",
-        dokumenterBruktIVurdering = emptyList(),
         harSkadeSykdomEllerLyte = harSkadeSykdomEllerLyte,
         erSkadeSykdomEllerLyteVesentligdel = erSkadeSykdomEllerLyteVesentligdel,
         erNedsettelseIArbeidsevneMerEnnHalvparten = erNedsettelseIArbeidsevneMerEnnHalvparten,

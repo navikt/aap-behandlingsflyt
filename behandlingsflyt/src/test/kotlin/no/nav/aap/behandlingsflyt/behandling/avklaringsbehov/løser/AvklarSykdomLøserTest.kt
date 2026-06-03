@@ -105,7 +105,6 @@ private fun sykdomsvurdering(
     vurdertIBehandling: BehandlingId
 ) = Sykdomsvurdering(
     begrunnelse = "",
-    dokumenterBruktIVurdering = emptyList(),
     harSkadeSykdomEllerLyte = harSkadeSykdomEllerLyte,
     erSkadeSykdomEllerLyteVesentligdel = erSkadeSykdomEllerLyteVesentligdel,
     erNedsettelseIArbeidsevneMerEnnHalvparten = erNedsettelseIArbeidsevneMerEnnHalvparten,
