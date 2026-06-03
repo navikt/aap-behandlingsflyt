@@ -6,7 +6,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.MuligRettFra
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.NyttKrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Søknadsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Tilleggsopplysning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.TrukketSøknad
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
@@ -46,7 +48,7 @@ class KravRepositoryImpl(private val connection: DBConnection) : KravRepository 
     }
 
     private fun lagreGrunnlag(behandlingId: BehandlingId, grunnlag: KravGrunnlag) {
-        val vurderingerId = connection.executeReturnKey("INSERT INTO krav_vurderinger (opprettet_tid) values (?)"){
+        val vurderingerId = connection.executeReturnKey("INSERT INTO krav_vurderinger (opprettet_tid) values (?)") {
             setParams { setInstant(1, Instant.now()) }
         }
 
@@ -73,19 +75,19 @@ class KravRepositoryImpl(private val connection: DBConnection) : KravRepository 
                 when (v) {
                     is NyttKrav -> {
                         setEnumName(7, KravType.NYTT_KRAV_AAP)
-                        setLocalDate(8, v.soknadsdato)
-                        setEnumName(9, v.soknadsdatoÅrsak)
-                        setLocalDate(10, v.muligRettFra)
-                        setEnumName(11, v.muligRettFraÅrsak)
+                        setLocalDate(8, v.søknadsdato.dato)
+                        setEnumName(9, v.søknadsdato.årsak)
+                        setLocalDate(10, v.muligRettFra?.dato)
+                        setEnumName(11, v.muligRettFra?.årsak)
                         setLocalDate(12, v.kravdato)
                     }
 
                     is Gjenopptak -> {
                         setEnumName(7, KravType.GJENOPPTAK)
-                        setLocalDate(8, v.soknadsdato)
-                        setEnumName(9, v.soknadsdatoÅrsak)
-                        setLocalDate(10, v.muligRettFra)
-                        setEnumName(11, v.muligRettFraÅrsak)
+                        setLocalDate(8, v.søknadsdato.dato)
+                        setEnumName(9, v.søknadsdato.årsak)
+                        setLocalDate(10, v.muligRettFra?.dato)
+                        setEnumName(11, v.muligRettFra?.årsak)
                         setLocalDate(12, v.kravdato)
                     }
 
@@ -175,10 +177,8 @@ class KravRepositoryImpl(private val connection: DBConnection) : KravRepository 
                 journalpostId = journalpostId, vurdertAv = vurdertAv,
                 begrunnelse = begrunnelse,
                 vurdertIBehandling = vurdertIBehandling, opprettet = opprettet,
-                soknadsdato = row.getLocalDate("soknadsdato"),
-                soknadsdatoÅrsak = row.getEnumOrNull("soknadsdato_aarsak"),
-                muligRettFra = row.getLocalDateOrNull("mulig_rett_fra"),
-                muligRettFraÅrsak = row.getEnumOrNull("mulig_rett_fra_aarsak"),
+                søknadsdato = mapSøknadsdato(row),
+                muligRettFra = mapMuligRett(row),
                 kravdato = row.getLocalDate("kravdato"),
             )
 
@@ -186,10 +186,8 @@ class KravRepositoryImpl(private val connection: DBConnection) : KravRepository 
                 journalpostId = journalpostId, vurdertAv = vurdertAv,
                 begrunnelse = begrunnelse,
                 vurdertIBehandling = vurdertIBehandling, opprettet = opprettet,
-                soknadsdato = row.getLocalDate("soknadsdato"),
-                soknadsdatoÅrsak = row.getEnumOrNull("soknadsdato_aarsak"),
-                muligRettFra = row.getLocalDateOrNull("mulig_rett_fra"),
-                muligRettFraÅrsak = row.getEnumOrNull("mulig_rett_fra_aarsak"),
+                søknadsdato = mapSøknadsdato(row),
+                muligRettFra = mapMuligRett(row),
                 kravdato = row.getLocalDate("kravdato"),
             )
 
@@ -211,6 +209,18 @@ class KravRepositoryImpl(private val connection: DBConnection) : KravRepository 
                 vurdertIBehandling = vurdertIBehandling, opprettet = opprettet,
             )
         }
+    }
+
+    private fun mapMuligRett(row: Row): MuligRettFra? {
+        return row.getLocalDateOrNull("mulig_rett_fra")
+            ?.let { MuligRettFra(dato = it, årsak = row.getEnum("mulig_rett_fra_aarsak")) }
+    }
+
+    private fun mapSøknadsdato(row: Row): Søknadsdato {
+        return Søknadsdato(
+            dato = row.getLocalDate("soknadsdato"),
+            årsak = row.getEnum("soknadsdato_aarsak")
+        )
     }
 
     override fun slett(behandlingId: BehandlingId) {

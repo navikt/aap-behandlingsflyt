@@ -1,7 +1,9 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.krav
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.MuligRettFra
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.MuligRettFraÅrsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.NyttKrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Søknadsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.SøknadsdatoÅrsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Tilleggsopplysning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.TrukketSøknad
@@ -46,11 +48,9 @@ internal class KravRepositoryImplTest {
             vurdertAv = "Z123456",
             begrunnelse = "Standard krav om AAP",
             vurdertIBehandling = behandlingId,
-            opprettet = java.time.Instant.now(),
-            soknadsdato = 1 januar 2024,
-            soknadsdatoÅrsak = SøknadsdatoÅrsak.BrukerHarSøktTidligere,
-            muligRettFra = 15 januar 2024,
-            muligRettFraÅrsak = MuligRettFraÅrsak.IkkeIStandTilÅSøkeTidligere,
+            opprettet = Instant.now(),
+            søknadsdato = Søknadsdato(1 januar 2024, SøknadsdatoÅrsak.BrukerHarSøktTidligere),
+            muligRettFra = MuligRettFra(15 januar 2024, MuligRettFraÅrsak.IkkeIStandTilÅSøkeTidligere),
             kravdato = 1 januar 2024,
         )
 

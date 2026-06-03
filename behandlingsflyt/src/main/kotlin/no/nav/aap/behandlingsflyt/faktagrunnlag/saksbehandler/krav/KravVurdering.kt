@@ -19,11 +19,9 @@ data class NyttKrav(
     override val begrunnelse: String,
     override val vurdertIBehandling: BehandlingId,
     override val opprettet: Instant,
-    
-    val soknadsdato: LocalDate,
-    val soknadsdatoÅrsak: SøknadsdatoÅrsak?,
-    val muligRettFra: LocalDate?,
-    val muligRettFraÅrsak: MuligRettFraÅrsak?,
+
+    val søknadsdato: Søknadsdato,
+    val muligRettFra: MuligRettFra?,
     val kravdato: LocalDate,
 ) : KravVurdering
 
@@ -42,10 +40,8 @@ data class Gjenopptak(
     override val vurdertIBehandling: BehandlingId,
     override val opprettet: Instant,
 
-    val soknadsdato: LocalDate,
-    val soknadsdatoÅrsak: SøknadsdatoÅrsak?,
-    val muligRettFra: LocalDate?,
-    val muligRettFraÅrsak: MuligRettFraÅrsak?,
+    val søknadsdato: Søknadsdato,
+    val muligRettFra: MuligRettFra?,
     val kravdato: LocalDate,
 ) : KravVurdering
 
@@ -73,9 +69,13 @@ enum class KravType {
     TILLEGGSOPPLYSNING,
 }
 
+data class MuligRettFra(val dato: LocalDate, val årsak: MuligRettFraÅrsak)
+data class Søknadsdato(val dato: LocalDate, val årsak: SøknadsdatoÅrsak)
+
 enum class SøknadsdatoÅrsak {
     BrukerHarSøktTidligere,
     FeilregistrertSøknadsdato,
+    JournalpostMottatt
 }
 
 enum class MuligRettFraÅrsak {
