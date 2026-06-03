@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt
 
 import com.fasterxml.jackson.core.JacksonException
-import io.ktor.client.plugins.HttpRequestTimeoutException
+import io.ktor.client.plugins.*
 import io.ktor.http.*
 import io.ktor.serialization.*
 import io.ktor.server.application.*
@@ -91,6 +91,26 @@ object StatusPagesConfigHelper {
                     secureLogger.error("SQL-feil ved kall til '$uri'.", cause)
 
                     call.respondWithError(InternfeilException("Feil ved kall til '$uri'"))
+                }
+
+                is ClientRequestException -> {
+                    if (cause.response.status == HttpStatusCode.RequestTimeout) {
+                        logger.warn("Timeout ved kall til '$uri'", cause)
+                        call.respondWithError(
+                            ApiException(
+                                status = HttpStatusCode.RequestTimeout,
+                                message = "Forespørselen tok for lang tid. Prøv igjen om litt."
+                            )
+                        )
+                    } else {
+                        logger.error("Feil ved kall til '$uri'.", cause)
+                        call.respondWithError(
+                            ApiException(
+                                status = cause.response.status,
+                                message = "Feil ved kall til '$uri'."
+                            )
+                        )
+                    }
                 }
 
                 is HttpRequestTimeoutException,
