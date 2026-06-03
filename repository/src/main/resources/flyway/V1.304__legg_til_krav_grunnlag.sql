@@ -1,7 +1,7 @@
 CREATE TABLE krav_vurderinger
 (
-    id            BIGSERIAL                              NOT NULL PRIMARY KEY,
-    opprettet_tid TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP NOT NULL
+    id            BIGSERIAL    NOT NULL PRIMARY KEY,
+    opprettet_tid TIMESTAMP(3) NOT NULL
 );
 
 CREATE TABLE krav_vurdering
@@ -23,11 +23,11 @@ CREATE TABLE krav_vurdering
 
 CREATE TABLE krav_grunnlag
 (
-    id                  BIGSERIAL                              NOT NULL PRIMARY KEY,
-    behandling_id       BIGINT                                 NOT NULL REFERENCES behandling (id),
-    krav_vurderinger_id BIGINT                                 NOT NULL REFERENCES krav_vurderinger (id),
-    aktiv               BOOLEAN      DEFAULT TRUE              NOT NULL,
-    opprettet_tid       TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP NOT NULL
+    id                  BIGSERIAL            NOT NULL PRIMARY KEY,
+    behandling_id       BIGINT               NOT NULL REFERENCES behandling (id),
+    krav_vurderinger_id BIGINT               NOT NULL REFERENCES krav_vurderinger (id),
+    aktiv               BOOLEAN DEFAULT TRUE NOT NULL,
+    opprettet_tid       TIMESTAMP(3)         NOT NULL
 );
 
 CREATE INDEX idx_krav_vurdering_vurderinger_id ON krav_vurdering (krav_vurderinger_id);

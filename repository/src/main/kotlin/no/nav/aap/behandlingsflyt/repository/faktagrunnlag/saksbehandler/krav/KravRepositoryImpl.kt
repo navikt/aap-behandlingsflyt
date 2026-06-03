@@ -15,6 +15,7 @@ import no.nav.aap.komponenter.dbconnect.Row
 import no.nav.aap.lookup.repository.Factory
 import no.nav.aap.verdityper.dokument.JournalpostId
 import org.slf4j.LoggerFactory
+import java.time.Instant
 
 class KravRepositoryImpl(private val connection: DBConnection) : KravRepository {
     private val log = LoggerFactory.getLogger(javaClass)
@@ -45,7 +46,9 @@ class KravRepositoryImpl(private val connection: DBConnection) : KravRepository 
     }
 
     private fun lagreGrunnlag(behandlingId: BehandlingId, grunnlag: KravGrunnlag) {
-        val vurderingerId = connection.executeReturnKey("INSERT INTO krav_vurderinger DEFAULT VALUES")
+        val vurderingerId = connection.executeReturnKey("INSERT INTO krav_vurderinger (opprettet_tid) values (?)"){
+            setParams { setInstant(1, Instant.now()) }
+        }
 
         connection.executeBatch(
             """
@@ -115,11 +118,12 @@ class KravRepositoryImpl(private val connection: DBConnection) : KravRepository 
         }
 
         connection.execute(
-            "INSERT INTO krav_grunnlag (behandling_id, krav_vurderinger_id) VALUES (?, ?)"
+            "INSERT INTO krav_grunnlag (behandling_id, krav_vurderinger_id, opprettet_tid) VALUES (?, ?, ?)"
         ) {
             setParams {
                 setLong(1, behandlingId.id)
                 setLong(2, vurderingerId)
+                setInstant(3, Instant.now())
             }
         }
     }
@@ -244,15 +248,16 @@ class KravRepositoryImpl(private val connection: DBConnection) : KravRepository 
 
         connection.execute(
             """
-            INSERT INTO krav_grunnlag (behandling_id, krav_vurderinger_id)
-            SELECT ?, krav_vurderinger_id
+            INSERT INTO krav_grunnlag (behandling_id, krav_vurderinger_id, opprettet_tid)
+            SELECT ?, krav_vurderinger_id, ?
             FROM krav_grunnlag
             WHERE behandling_id = ? AND aktiv
             """.trimIndent()
         ) {
             setParams {
                 setLong(1, tilBehandling.id)
-                setLong(2, fraBehandling.id)
+                setInstant(2, Instant.now())
+                setLong(3, fraBehandling.id)
             }
         }
     }
