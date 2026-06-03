@@ -8,14 +8,13 @@ import io.ktor.http.*
 import kotlinx.coroutines.runBlocking
 import no.nav.aap.behandlingsflyt.behandling.Resultat
 import no.nav.aap.behandlingsflyt.behandling.ResultatUtleder
-import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.avbrytaktivitetspliktbehandling.AvbrytAktivitetspliktbehandlingService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovOrkestrator
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.BehandlingTilstandValidator
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.FrivilligeAvklaringsbehov
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.avbrytaktivitetspliktbehandling.AvbrytAktivitetspliktbehandlingService
 import no.nav.aap.behandlingsflyt.flyt.flate.visning.DynamiskStegGruppeVisningService
 import no.nav.aap.behandlingsflyt.flyt.flate.visning.ProsesseringStatus
 import no.nav.aap.behandlingsflyt.flyt.flate.visning.Visning
@@ -31,7 +30,6 @@ import no.nav.aap.behandlingsflyt.mdc.LogKontekst
 import no.nav.aap.behandlingsflyt.mdc.LoggingKontekst
 import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingJobbUtfører
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
@@ -91,10 +89,7 @@ fun NormalOpenAPIRoute.flytApi(
 
                     var behandling = behandling(behandlingRepository, req)
                     val sak = sakRepository.hent(behandling.sakId)
-                    val avklaringsbehovene = avklaringsbehov(
-                        avklaringsbehovRepository,
-                        behandling.id
-                    )
+                    val avklaringsbehovene = lazy { avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id) }
                     val flytJobbRepository = repositoryProvider.provide<FlytJobbRepository>()
                     val gruppeVisningService = DynamiskStegGruppeVisningService(repositoryProvider)
                     val avbrytAktivitetspliktbehandlingService =
@@ -134,11 +129,11 @@ fun NormalOpenAPIRoute.flytApi(
                     var erFullført = true
 
                     val alleAvklaringsbehovInkludertFrivillige = FrivilligeAvklaringsbehov(
-                        avklaringsbehovene,
+                        avklaringsbehovene.value,
                         flyt, aktivtSteg
                     )
                     val vurdertStegPair =
-                        utledVurdertGruppe(prosessering, aktivtSteg, flyt, avklaringsbehovene)
+                        utledVurdertGruppe(prosessering, aktivtSteg, flyt, avklaringsbehovene.value)
                     val alleAvklaringsbehov = alleAvklaringsbehovInkludertFrivillige.alle()
                     val resultatKode = when {
                         ((behandling.typeBehandling() == TypeBehandling.Revurdering) && (resultatUtleder.utledResultatRevurderingsBehandling(
@@ -224,8 +219,8 @@ fun NormalOpenAPIRoute.flytApi(
                     val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
                     val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
 
-                    val behandlingId = behandling(behandlingRepository, req).id
-                    val avklaringsbehovene = avklaringsbehov(avklaringsbehovRepository, behandlingId)
+                    val behandlingId = BehandlingReferanseService(behandlingRepository).behandling(req).id
+                    val avklaringsbehovene = lazy { avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId) }
 
                     val flytJobbRepository = repositoryProvider.provide<FlytJobbRepository>()
 
@@ -270,7 +265,7 @@ fun NormalOpenAPIRoute.flytApi(
                     val repositoryProvider = repositoryRegistry.provider(connection)
                     val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
                     val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
-                    val behandling = behandling(behandlingRepository, request)
+                    val behandling = BehandlingReferanseService(behandlingRepository).behandling(request)
                     val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
                     val åpentAvklaringsbehov = avklaringsbehovene.åpne().filterNot { it.erVentepunkt() }
                         .sortedWith(behandling.flyt().avklaringsbehovComparator).first().definisjon
@@ -340,9 +335,8 @@ fun NormalOpenAPIRoute.flytApi(
                     val avklaringsbehovRepository =
                         repositoryProvider.provide<AvklaringsbehovRepository>()
 
-                    val behandling = behandling(behandlingRepository, request)
-                    val avklaringsbehovene =
-                        avklaringsbehov(avklaringsbehovRepository, behandling.id)
+                    val behandling = BehandlingReferanseService(behandlingRepository).behandling(request)
+                    val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
 
                     val ventepunkter = avklaringsbehovene.hentÅpneVentebehov()
                     if (avklaringsbehovene.erSattPåVent()) {
@@ -441,9 +435,9 @@ private fun hentFeilmeldingHvisBehov(
     return null
 }
 
-private fun utledStatus(jobber: List<JobbInput>, avklaringsbehovene: Avklaringsbehovene): ProsesseringStatus {
+private fun utledStatus(jobber: List<JobbInput>, avklaringsbehovene: Lazy<Avklaringsbehovene>): ProsesseringStatus {
     if (jobber.isEmpty()) {
-        if (avklaringsbehovene.harÅpentBrevVentebehov()) {
+        if (avklaringsbehovene.value.harÅpentBrevVentebehov()) {
             log.info("Har åpent brevventebehov i behandling")
             return ProsesseringStatus.JOBBER
         }
@@ -559,13 +553,6 @@ private fun harÅpentKvalitetssikringsAvklaringsbehov(avklaringsbehovene: Frivil
 
 private fun behandling(behandlingRepository: BehandlingRepository, req: BehandlingReferanse): Behandling {
     return BehandlingReferanseService(behandlingRepository).behandling(req)
-}
-
-private fun avklaringsbehov(
-    avklaringsbehovRepository: AvklaringsbehovRepository,
-    behandlingId: BehandlingId
-): Avklaringsbehovene {
-    return avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId)
 }
 
 private fun erEtterBeslutterstegetHvisEksisterer(flyt: BehandlingFlyt, aktivtSteg: StegType): Boolean {
