@@ -451,6 +451,65 @@ class MeldekortApiTest : BaseApiTest() {
     }
 
     @Test
+    fun `returnerer kun oppfylte perioder når meldeperiode har delvis oppfylt utfall`() {
+        val sak = nySak()
+        val behandling = opprettBehandling(sak, TypeBehandling.Førstegangsbehandling)
+
+        InMemoryVedtakRepository.lagre(behandling.id, LocalDateTime.now(), LocalDate.now())
+
+        // Meldeperiode 1: ikke oppfylt (4 dager) + oppfylt standard sats (5 dager) + oppfylt annen sats (5 dager)
+        val meldeperiode1 = Periode(6 januar 2025, 19 januar 2025)
+        val mp1IkkeOppfylt = Periode(6 januar 2025, 9 januar 2025)
+        val mp1OppfyltStandardSats = Periode(10 januar 2025, 14 januar 2025)
+        val mp1OppfyltAnnenSats = Periode(15 januar 2025, 19 januar 2025)
+
+        // Meldeperiode 2: oppfylt (8 dager) + ikke oppfylt (6 dager)
+        val meldeperiode2 = Periode(20 januar 2025, 2 februar 2025)
+        val mp2Oppfylt = Periode(20 januar 2025, 27 januar 2025)
+        val mp2IkkeOppfylt = Periode(28 januar 2025, 2 februar 2025)
+
+        InMemoryUnderveisRepository.lagre(
+            behandlingId = behandling.id,
+            underveisperioder = listOf(
+                underveisperiode(Utfall.IKKE_OPPFYLT, mp1IkkeOppfylt, meldePeriode = meldeperiode1),
+                underveisperiode(Utfall.OPPFYLT, mp1OppfyltStandardSats, meldePeriode = meldeperiode1),
+                underveisperiode(Utfall.OPPFYLT, mp1OppfyltAnnenSats, meldePeriode = meldeperiode1, trekk = Dagsatser(2)),
+                underveisperiode(Utfall.OPPFYLT, mp2Oppfylt, meldePeriode = meldeperiode2),
+                underveisperiode(Utfall.IKKE_OPPFYLT, mp2IkkeOppfylt, meldePeriode = meldeperiode2),
+            ),
+            input = object : Faktagrunnlag {}
+        )
+
+        testApplication {
+            installApplication {
+                meldekortApi(MockDataSource(), inMemoryRepositoryRegistry, createTestGatewayProvider(), fixedClock)
+            }
+
+            val response = createClient().get("/api/meldekort/${sak.saksnummer}") {
+                header("Authorization", "Bearer ${getToken().token()}")
+            }
+
+            assertThat(response.status).isEqualTo(HttpStatusCode.OK)
+            val body = response.body<MeldeperioderMedMeldekortResponse>()
+            assertThat(body.meldeperioderMedMeldekort).hasSize(2)
+
+            val sortert = body.meldeperioderMedMeldekort.sortedBy { it.meldeperiode.fom }
+
+            // Meldeperiode 1: de to oppfylte periodene slås sammen til én sammenhengende periode
+            val mp1 = sortert[0]
+            assertThat(mp1.meldeperiode).isEqualTo(meldeperiode1)
+            assertThat(mp1.perioder).containsExactly(Periode(10 januar 2025, 19 januar 2025))
+            assertThat(mp1.meldekort).isNull()
+
+            // Meldeperiode 2: kun den oppfylte perioden returneres
+            val mp2 = sortert[1]
+            assertThat(mp2.meldeperiode).isEqualTo(meldeperiode2)
+            assertThat(mp2.perioder).containsExactly(mp2Oppfylt)
+            assertThat(mp2.meldekort).isNull()
+        }
+    }
+
+    @Test
     fun `prosessering - returnerer KLAR når ingen ventende meldekort-jobber`() {
         val sak = nySak()
         opprettBehandling(sak, TypeBehandling.Førstegangsbehandling)
@@ -539,9 +598,9 @@ class MeldekortApiTest : BaseApiTest() {
         }
     }
 
-    private fun underveisperiode(utfall: Utfall, periode: Periode) = Underveisperiode(
+    private fun underveisperiode(utfall: Utfall, periode: Periode, meldePeriode: Periode = periode, trekk: Dagsatser = Dagsatser(0)) = Underveisperiode(
         periode = periode,
-        meldePeriode = periode,
+        meldePeriode = meldePeriode,
         utfall = utfall,
         rettighetsType = RettighetsType.BISTANDSBEHOV,
         avslagsårsak = if (utfall == Utfall.IKKE_OPPFYLT) UnderveisÅrsak.BRUDD_PÅ_AKTIVITETSPLIKT_11_7_STANS else null,
@@ -553,7 +612,7 @@ class MeldekortApiTest : BaseApiTest() {
             gradering = Prosent.`100_PROSENT`,
             opplysningerMottatt = null,
         ),
-        trekk = Dagsatser(0),
+        trekk = trekk,
         brukerAvKvoter = emptySet(),
         institusjonsoppholdReduksjon = `0_PROSENT`,
         meldepliktStatus = MeldepliktStatus.MELDT_SEG,
