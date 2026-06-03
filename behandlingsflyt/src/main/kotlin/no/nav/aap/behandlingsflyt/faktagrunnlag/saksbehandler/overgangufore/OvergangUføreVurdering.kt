@@ -26,7 +26,6 @@ data class OvergangUføreVurdering(
 
 enum class UføreSøknadVedtakResultat(val verdi: String) {
     JA_AVSLAG("JA_AVSLAG"),
-    JA_INNVILGET("JA_INNVILGET"),
     JA_INNVILGET_GRADERT("JA_INNVILGET_GRADERT"),
     JA_INNVILGET_FULL("JA_INNVILGET_FULL"),
     NEI("NEI")

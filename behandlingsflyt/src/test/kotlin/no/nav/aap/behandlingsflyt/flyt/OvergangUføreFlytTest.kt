@@ -9,6 +9,7 @@ import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.AUTOMATISK_VURDERT
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.BistandLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.UføreSøknadVedtakResultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
@@ -25,13 +26,15 @@ import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.prosessering.HendelseMottattHåndteringJobbUtfører
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.underveis.UnderveisRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.overganguføre.OvergangUføreRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
-import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
+import no.nav.aap.behandlingsflyt.test.FakeUnleashBaseWithDefaultDisabled
 import no.nav.aap.behandlingsflyt.test.minimalGatewayProvider
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.utils.toHumanReadable
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
@@ -47,7 +50,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
 
-class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
+class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(OvergangUføreFlytTestUnleash::class) {
 
     @Test
     fun `11-18 uføre underveis i en behandling`() {
@@ -337,17 +340,85 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::
         assertThat(revurdering.id).isEqualTo(behandling.id)
     }
 
-    // Send inn hendelse om avslag på uførevedtak
+    @Test
+    fun `innvilget uførevedtak fram i tid lagrer automatisk 11-18 vurdering uten kvalitetssikring`() {
+        val fom = LocalDate.now().minusMonths(2)
+        val (sak, sisteBehandling) = sendInnFørsteSøknad(mottattTidspunkt = fom.atStartOfDay())
+        val virkningsdato = LocalDate.now().plusMonths(1)
+
+        val (_, revurdering) = opprettUførevedtakshendelse(
+            sak = sak,
+            behandling = sisteBehandling,
+            virkningsdato = virkningsdato,
+            resultat = UførevedtakResultat.INNV,
+            avslag12_5 = false,
+        )
+
+        assertThat(hentAlleAvklaringsbehov(revurdering).map { it.definisjon }).doesNotContain(Definisjon.KVALITETSSIKRING)
+
+        dataSource.transaction { connection ->
+            val vurderingsbehovOgÅrsaker =
+                BehandlingRepositoryImpl(connection).hentVurderingsbehovOgÅrsaker(revurdering.id)
+            assertThat(vurderingsbehovOgÅrsaker.flatMap { it.vurderingsbehov.map { behov -> behov.type } })
+                .contains(Vurderingsbehov.OVERGANG_UFORE)
+
+            val vurdering = OvergangUføreRepositoryImpl(connection)
+                .hentHvisEksisterer(revurdering.id)
+                ?.vurderinger
+                ?.singleOrNull { it.vurdertAv == AUTOMATISK_VURDERT && it.fom == virkningsdato }
+            assertThat(vurdering).isNotNull
+            assertThat(vurdering!!.begrunnelse).isEqualTo(AUTOMATISK_VURDERT)
+            assertThat(vurdering.vurdertAv).isEqualTo(AUTOMATISK_VURDERT)
+            assertThat(vurdering.fom).isEqualTo(virkningsdato)
+            assertThat(vurdering.brukerRettPåAAP).isFalse()
+            assertThat(vurdering.brukerHarFåttVedtakOmUføretrygd).isEqualTo(UføreSøknadVedtakResultat.JA_INNVILGET_GRADERT)
+        }
+    }
+
+    @Test
+    fun `innvilget uførevedtak fram i tid bruker uføregateway for å utlede full innvilgelse`() {
+        val fom = LocalDate.now().minusMonths(2)
+        val virkningsdato = LocalDate.now().plusMonths(1)
+        val person = TestPersoner.STANDARD_PERSON().medUføre(
+            uføre = Prosent(100),
+            virkningstidspunkt = virkningsdato,
+        )
+        val (sak, sisteBehandling) = sendInnFørsteSøknad(
+            person = person,
+            mottattTidspunkt = fom.atStartOfDay(),
+        )
+
+        val (_, revurdering) = opprettUførevedtakshendelse(
+            sak = sak,
+            behandling = sisteBehandling,
+            virkningsdato = virkningsdato,
+            resultat = UførevedtakResultat.INNV,
+            avslag12_5 = false,
+        )
+
+        dataSource.transaction { connection ->
+            val vurdering = OvergangUføreRepositoryImpl(connection)
+                .hentHvisEksisterer(revurdering.id)
+                ?.vurderinger
+                ?.singleOrNull { it.vurdertAv == AUTOMATISK_VURDERT && it.fom == virkningsdato }
+            assertThat(vurdering).isNotNull
+            assertThat(vurdering!!.brukerHarFåttVedtakOmUføretrygd).isEqualTo(UføreSøknadVedtakResultat.JA_INNVILGET_FULL)
+        }
+    }
+
     private fun opprettUførevedtakshendelse(
         sak: Sak,
-        behandling: Behandling
+        behandling: Behandling,
+        virkningsdato: LocalDate = LocalDate.now(),
+        resultat: UførevedtakResultat = UførevedtakResultat.AVSL,
+        avslag12_5: Boolean = true,
     ): Pair<UførevedtakV0, Behandling> {
-        val avvistLegeerklæringId = UUID.randomUUID().toString()
+        val dokumentReferanse = UUID.randomUUID().toString()
         val melding = UførevedtakKafkaMelding(
             personId = sak.person.aktivIdent().toString(),
-            virkningsdato = LocalDate.now(),
-            resultat = UførevedtakResultat.AVSL,
-            avslag12_5 = true,
+            virkningsdato = virkningsdato,
+            resultat = resultat,
+            avslag12_5 = avslag12_5,
         ).tilUføreVedtakV0() as UførevedtakV0
         dataSource.transaction { connection ->
             val flytJobbRepository = FlytJobbRepository(connection)
@@ -356,7 +427,7 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::
                     sakId = behandling.sakId,
                     dokumentReferanse = InnsendingReferanse(
                         InnsendingReferanse.Type.UFØREVEDTAK_HENDELSE_ID,
-                        avvistLegeerklæringId
+                        dokumentReferanse
                     ),
                     brevkategori = InnsendingType.UFØRE_VEDTAK_HENDELSE,
                     kanal = Kanal.DIGITAL,
@@ -451,3 +522,10 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::
             }
     }
 }
+
+object OvergangUføreFlytTestUnleash : FakeUnleashBaseWithDefaultDisabled(
+    enabledFlags = listOf(
+        BehandlingsflytFeature.IngenValidering,
+        BehandlingsflytFeature.AutomatiskStans118,
+    )
+)

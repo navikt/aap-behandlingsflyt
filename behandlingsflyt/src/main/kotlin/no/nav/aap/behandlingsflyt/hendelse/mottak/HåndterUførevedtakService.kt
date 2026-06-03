@@ -2,13 +2,10 @@ package no.nav.aap.behandlingsflyt.hendelse.mottak
 
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.behandling.underveis.RettighetstypeService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.AUTOMATISK_VURDERT
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreVurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.UføreSøknadVedtakResultat
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.UførevedtakResultat
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.UførevedtakV0
+import no.nav.aap.behandlingsflyt.prosessering.HåndterAutomatiskStans118JobbUtfører
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
@@ -27,7 +24,6 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.JobbInput
 import org.slf4j.LoggerFactory
-import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -35,7 +31,6 @@ class HåndterUførevedtakService(
     private val behandlingService: BehandlingService,
     private val trukketSøknadService: TrukketSøknadService,
     private val rettighetstypeService: RettighetstypeService,
-    private val overgangUføreRepository: OvergangUføreRepository,
     private val mottaDokumentService: MottaDokumentService,
     private val prosesserBehandlingService: ProsesserBehandlingService,
     private val flytJobbRepository: FlytJobbRepository,
@@ -45,7 +40,6 @@ class HåndterUførevedtakService(
         behandlingService = BehandlingService(repositoryProvider, gatewayProvider),
         trukketSøknadService = TrukketSøknadService(repositoryProvider),
         rettighetstypeService = RettighetstypeService(repositoryProvider, gatewayProvider),
-        overgangUføreRepository = repositoryProvider.provide(),
         mottaDokumentService = MottaDokumentService(repositoryProvider),
         prosesserBehandlingService = ProsesserBehandlingService(repositoryProvider, gatewayProvider),
         flytJobbRepository = repositoryProvider.provide(),
@@ -78,43 +72,15 @@ class HåndterUførevedtakService(
                 rettighetstypeTidslinje.isNotEmpty() || sisteYtelsesBehandling.status().erÅpen()
 
             if (skalOppretteAutomatiskStans118(uførevedtak)) {
-                val vurderingsbehov = Vurderingsbehov.OVERGANG_UFORE
-                val opprettetBehandling = behandlingService.finnEllerOpprettBehandling(
-                    sakId,
-                    VurderingsbehovOgÅrsak(
-                        årsak = ÅrsakTilOpprettelse.ENDRING_I_REGISTERDATA,
-                        vurderingsbehov = listOf(VurderingsbehovMedPeriode(vurderingsbehov)),
-                        opprettet = mottattTidspunkt,
-                        beskrivelse = uførevedtak.beskrivelseVurderingsbehov()
+                flytJobbRepository.leggTil(
+                    HåndterAutomatiskStans118JobbUtfører.nyJobb(
+                        sakId = sakId,
+                        referanse = referanse,
+                        uførevedtak = uførevedtak,
+                        mottattTidspunkt = mottattTidspunkt,
                     )
                 )
-                val behandling = opprettetBehandling.åpenBehandling
-                    ?: error("Klarte ikke å finne eller opprette en behandling for sak $sakId")
-                val vedtatteVurderinger = behandling.forrigeBehandlingId
-                    ?.let { overgangUføreRepository.hentHvisEksisterer(it) }
-                    ?.vurderinger
-                    .orEmpty()
-
-                overgangUføreRepository.lagre(
-                    behandlingId = behandling.id,
-                    overgangUføreVurderinger = vedtatteVurderinger + OvergangUføreVurdering(
-                        begrunnelse = AUTOMATISK_VURDERT,
-                        brukerHarSøktOmUføretrygd = true,
-                        brukerHarFåttVedtakOmUføretrygd = UføreSøknadVedtakResultat.JA_INNVILGET,
-                        brukerRettPåAAP = false,
-                        fom = uførevedtak.virkningsdato,
-                        tom = null,
-                        vurdertAv = AUTOMATISK_VURDERT,
-                        vurdertIBehandling = behandling.id,
-                        opprettet = Instant.now(),
-                    )
-                )
-
-                prosesserBehandlingService.triggProsesserBehandling(
-                    sakId,
-                    behandling.id,
-                    vurderingsbehov = listOf(vurderingsbehov),
-                )
+                return
             } else {
                 log.info("Oppretter vurderingsbehov for mottatt uførevedtak for sak $sakId")
                 if (kanHaRettPåAapEtterVirkningsdato) {
@@ -144,8 +110,7 @@ class HåndterUførevedtakService(
     private fun skalOppretteAutomatiskStans118(
         uførevedtak: UførevedtakV0
     ): Boolean {
-        return !(unleashGateway.isDisabled(BehandlingsflytFeature.AutomatiskStans118)
-                || uførevedtak.resultat != UførevedtakResultat.INNV
-                || !uførevedtak.virkningsdato.isAfter(LocalDate.now()))
+        return unleashGateway.isEnabled(BehandlingsflytFeature.AutomatiskStans118) &&
+                uførevedtak.resultat == UførevedtakResultat.INNV && uførevedtak.virkningsdato.isAfter(LocalDate.now())
     }
 }

@@ -111,8 +111,7 @@ class OvergangUføreSteg private constructor(
             it.vurdertAv == AUTOMATISK_VURDERT &&
                     it.brukerHarFåttVedtakOmUføretrygd in setOf(
                 UføreSøknadVedtakResultat.JA_INNVILGET_FULL,
-                UføreSøknadVedtakResultat.JA_INNVILGET_GRADERT,
-                UføreSøknadVedtakResultat.JA_INNVILGET
+                UføreSøknadVedtakResultat.JA_INNVILGET_GRADERT
             )
         }
     }
