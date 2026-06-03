@@ -39,10 +39,11 @@ class SykepengerErstatningRepositoryImpl(private val connection: DBConnection) :
 
     private fun lagreVurderingerPåGrunnlag(grunnlagId: Long, vurderinger: List<SykepengerVurdering>) {
         if (vurderinger.isNotEmpty()) {
-            val vurderingerId = connection.queryFirst<Long>("SELECT vurderinger_id FROM SYKEPENGE_ERSTATNING_GRUNNLAG where id=?") {
-                setParams { setLong(1, grunnlagId) }
-                setRowMapper { it.getLong("vurderinger_id") }
-            }
+            val vurderingerId =
+                connection.queryFirst<Long>("SELECT vurderinger_id FROM SYKEPENGE_ERSTATNING_GRUNNLAG where id=?") {
+                    setParams { setLong(1, grunnlagId) }
+                    setRowMapper { it.getLong("vurderinger_id") }
+                }
 
             val insertQuery = """
                 INSERT INTO SYKEPENGE_VURDERING (begrunnelse, oppfylt, grunn, vurdert_av, gjelder_fra, gjelder_tom, vurderinger_id, vurdert_i_behandling)
@@ -50,7 +51,7 @@ class SykepengerErstatningRepositoryImpl(private val connection: DBConnection) :
             """.trimIndent()
 
             vurderinger.forEach { vurdering ->
-                val vurderingId = connection.executeReturnKey(insertQuery) {
+                connection.executeReturnKey(insertQuery) {
                     setParams {
                         setString(1, vurdering.begrunnelse)
                         setBoolean(2, vurdering.harRettPå)
@@ -63,21 +64,6 @@ class SykepengerErstatningRepositoryImpl(private val connection: DBConnection) :
                     }
                 }
 
-                lagreDokument(vurderingId, vurdering.dokumenterBruktIVurdering)
-            }
-        }
-    }
-
-    private fun lagreDokument(vurderingId: Long, journalpostIdEr: List<JournalpostId>) {
-        val query = """
-            INSERT INTO SYKEPENGE_VURDERING_DOKUMENTER (vurdering_id, journalpost) 
-            VALUES (?, ?)
-        """.trimIndent()
-
-        connection.executeBatch(query, journalpostIdEr) {
-            setParams { journalpostId ->
-                setLong(1, vurderingId)
-                setString(2, journalpostId.identifikator)
             }
         }
     }
@@ -135,7 +121,6 @@ class SykepengerErstatningRepositoryImpl(private val connection: DBConnection) :
             setRowMapper { row ->
                 SykepengerVurdering(
                     begrunnelse = row.getString("begrunnelse"),
-                    dokumenterBruktIVurdering = hentDokumenter(row.getLong("id")),
                     harRettPå = row.getBoolean("oppfylt"),
                     grunn = row.getEnumOrNull("grunn"),
                     vurdertIBehandling = BehandlingId(row.getLong("vurdert_i_behandling")),
@@ -148,26 +133,11 @@ class SykepengerErstatningRepositoryImpl(private val connection: DBConnection) :
         }
     }
 
-    private fun hentDokumenter(vurderingId: Long): List<JournalpostId> {
-        val query = """
-            SELECT journalpost FROM SYKEPENGE_VURDERING_DOKUMENTER WHERE vurdering_id = ?
-        """.trimIndent()
-        return connection.queryList(query) {
-            setParams {
-                setLong(1, vurderingId)
-            }
-            setRowMapper { row ->
-                JournalpostId(row.getString("journalpost"))
-            }
-        }
-    }
-
     override fun slett(behandlingId: BehandlingId) {
         val sykepengeVurderingerIds = getSykepengeVurderingerIds(behandlingId)
         val deletedRows = connection.executeReturnUpdated(
             """
             delete from sykepenge_erstatning_grunnlag where behandling_id = ?; 
-            delete from sykepenge_vurdering_dokumenter where vurdering_id in (select id from sykepenge_vurdering where vurderinger_id = ANY(?::bigint[]));
             delete from sykepenge_vurdering where vurderinger_id = ANY(?::bigint[]);
             delete from sykepenge_vurderinger where id = ANY(?::bigint[]);
         """.trimIndent()
@@ -176,7 +146,6 @@ class SykepengerErstatningRepositoryImpl(private val connection: DBConnection) :
                 setLong(1, behandlingId.id)
                 setLongArray(2, sykepengeVurderingerIds)
                 setLongArray(3, sykepengeVurderingerIds)
-                setLongArray(4, sykepengeVurderingerIds)
             }
         }
         log.info("Slettet $deletedRows rader fra sykepenge_erstatning_grunnlag")

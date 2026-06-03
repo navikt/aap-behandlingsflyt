@@ -39,7 +39,6 @@ internal class SykepengerErstatningRepositoryImplTest {
         }
         val vurderingSak2 = SykepengerVurdering(
             begrunnelse = "urelatert",
-            dokumenterBruktIVurdering = listOf(JournalpostId("3212")),
             harRettPå = true,
             grunn = null,
             vurdertAv = "saksbehandler",
@@ -49,7 +48,6 @@ internal class SykepengerErstatningRepositoryImplTest {
 
         val vurdering1 = SykepengerVurdering(
             begrunnelse = "yolo",
-            dokumenterBruktIVurdering = listOf(JournalpostId("123"), JournalpostId("321")),
             harRettPå = true,
             grunn = null,
             vurdertAv = "saksbehandler",
@@ -59,7 +57,6 @@ internal class SykepengerErstatningRepositoryImplTest {
 
         val vurdering2 = SykepengerVurdering(
             begrunnelse = "yolo x2",
-            dokumenterBruktIVurdering = listOf(JournalpostId("456")),
             harRettPå = false,
             grunn = SykepengerGrunn.SYKEPENGER_FORTSATT_ARBEIDSUFOR,
             vurdertAv = "saksbehandler!!",
