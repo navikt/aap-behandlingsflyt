@@ -15,6 +15,7 @@ import no.nav.aap.komponenter.httpklient.exception.ApiErrorCode
 import no.nav.aap.komponenter.httpklient.exception.ApiException
 import no.nav.aap.komponenter.httpklient.exception.IkkeTillattException
 import no.nav.aap.komponenter.httpklient.exception.InternfeilException
+import no.nav.aap.komponenter.httpklient.exception.TimeoutException
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.httpklient.exception.VerdiIkkeFunnetException
 import no.nav.aap.komponenter.httpklient.httpclient.error.IkkeFunnetException
@@ -96,12 +97,7 @@ object StatusPagesConfigHelper {
                 is ClientRequestException -> {
                     if (cause.response.status == HttpStatusCode.RequestTimeout) {
                         logger.warn("Timeout ved kall til '$uri'", cause)
-                        call.respondWithError(
-                            ApiException(
-                                status = HttpStatusCode.RequestTimeout,
-                                message = "Forespørselen tok for lang tid. Prøv igjen om litt."
-                            )
-                        )
+                        call.respondWithError(TimeoutException("Forespørselen tok for lang tid. Prøv igjen om litt."))
                     } else {
                         logger.error("Feil ved kall til '$uri'.", cause)
                         call.respondWithError(
@@ -116,12 +112,7 @@ object StatusPagesConfigHelper {
                 is HttpRequestTimeoutException,
                 is HttpTimeoutException -> {
                     logger.warn("Timeout ved kall til '$uri'", cause)
-                    call.respondWithError(
-                        ApiException(
-                            status = HttpStatusCode.RequestTimeout,
-                            message = "Forespørselen tok for lang tid. Prøv igjen om litt."
-                        )
-                    )
+                    call.respondWithError(TimeoutException("Forespørselen tok for lang tid. Prøv igjen om litt."))
                 }
 
                 else -> {
