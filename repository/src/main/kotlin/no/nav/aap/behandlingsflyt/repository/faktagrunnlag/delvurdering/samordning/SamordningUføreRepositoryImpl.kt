@@ -89,7 +89,7 @@ class SamordningUføreRepositoryImpl(private val connection: DBConnection) : Sam
         }
 
         val samordingUføreVurderingQuery = """
-            INSERT INTO SAMORDNING_UFORE_VURDERING (begrunnelse, vurdert_av) VALUES (?, ?)
+            INSERT INTO SAMORDNING_UFORE_VURDERING (begrunnelse, vurdert_av, opprettet_tid) VALUES (?, ?, ?)
         """.trimIndent()
 
         val vurderingId = connection.executeReturnKey(samordingUføreVurderingQuery) {

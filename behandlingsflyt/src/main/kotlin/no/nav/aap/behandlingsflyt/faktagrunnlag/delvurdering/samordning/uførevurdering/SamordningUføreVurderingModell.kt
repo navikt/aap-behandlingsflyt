@@ -16,7 +16,7 @@ data class SamordningUføreVurdering(
     val begrunnelse: String,
     val vurderingPerioder: List<SamordningUføreVurderingPeriode>,
     val vurdertAv: String,
-    val vurdertTidspunkt: LocalDateTime? = null
+    val vurdertTidspunkt: LocalDateTime
 ) {
     fun tilTidslinje(): Tidslinje<Prosent> {
         val sorterteVurderinger = vurderingPerioder.sortedBy { it.virkningstidspunkt }
