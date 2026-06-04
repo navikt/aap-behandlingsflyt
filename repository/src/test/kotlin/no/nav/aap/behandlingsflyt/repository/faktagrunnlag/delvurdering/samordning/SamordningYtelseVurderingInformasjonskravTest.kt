@@ -487,7 +487,8 @@ class SamordningYtelseVurderingInformasjonskravTest {
                     )
                 )
             ),
-            vurdertAv = "ident"
+            vurdertAv = "ident",
+            vurdertTidspunkt = LocalDateTime.now()
         )
 
         val nyYtelse = SamordningYtelse(
@@ -527,7 +528,8 @@ class SamordningYtelseVurderingInformasjonskravTest {
                     )
                 )
             ),
-            vurdertAv = "ident"
+            vurdertAv = "ident",
+            vurdertTidspunkt = LocalDateTime.now()
         )
 
         val nyYtelse = SamordningYtelse(
@@ -567,7 +569,8 @@ class SamordningYtelseVurderingInformasjonskravTest {
                     )
                 )
             ),
-            vurdertAv = "ident"
+            vurdertAv = "ident",
+            vurdertTidspunkt = LocalDateTime.now()
         )
 
         val nyYtelse = SamordningYtelse(
@@ -607,7 +610,8 @@ class SamordningYtelseVurderingInformasjonskravTest {
                     )
                 )
             ),
-            vurdertAv = "ident"
+            vurdertAv = "ident",
+            vurdertTidspunkt = LocalDateTime.now()
         )
 
         val nyYtelse = SamordningYtelse(
@@ -647,7 +651,8 @@ class SamordningYtelseVurderingInformasjonskravTest {
                     )
                 )
             ),
-            vurdertAv = "ident"
+            vurdertAv = "ident",
+            vurdertTidspunkt = LocalDateTime.now()
         )
 
         val nyYtelse = SamordningYtelse(
@@ -687,7 +692,8 @@ class SamordningYtelseVurderingInformasjonskravTest {
                     )
                 )
             ),
-            vurdertAv = "ident"
+            vurdertAv = "ident",
+            vurdertTidspunkt = LocalDateTime.now()
         )
 
         val nyYtelse = SamordningYtelse(
@@ -714,7 +720,8 @@ class SamordningYtelseVurderingInformasjonskravTest {
         val vurderingsGrunnlag = SamordningVurderingGrunnlag(
             begrunnelse = "Test",
             vurderinger = emptySet(),
-            vurdertAv = "ident"
+            vurdertAv = "ident",
+            vurdertTidspunkt = LocalDateTime.now()
         )
 
         val nyYtelse = SamordningYtelse(
@@ -754,7 +761,8 @@ class SamordningYtelseVurderingInformasjonskravTest {
                     )
                 )
             ),
-            vurdertAv = "ident"
+            vurdertAv = "ident",
+            vurdertTidspunkt = LocalDateTime.now()
         )
 
         assertFalse(harEndringerIYtelserIkkeDekketAvManuelleVurderinger(vurderingsGrunnlag, emptySet()))

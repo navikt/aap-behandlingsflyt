@@ -29,6 +29,7 @@ import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 
 internal class SamordningVurderingRepositoryImplTest {
