@@ -140,7 +140,7 @@ class StudentRepositoryImpl(private val connection: DBConnection) : StudentRepos
         }
 
         val query = """
-            INSERT INTO STUDENT_GRUNNLAG (behandling_id, student_vurderinger_id, oppgitt_student_id) VALUES (?, ?, ?)
+            INSERT INTO STUDENT_GRUNNLAG (behandling_id, student_vurderinger_id, oppgitt_student_id, opprettet_tid) VALUES (?, ?, ?, ?)
         """.trimIndent()
 
         connection.execute(query) {
@@ -153,7 +153,11 @@ class StudentRepositoryImpl(private val connection: DBConnection) : StudentRepos
     }
 
     private fun lagreVurdering(studentvurderinger: Set<StudentVurdering>): Long {
-        val vurderingerId = connection.executeReturnKey("""INSERT INTO STUDENT_VURDERINGER DEFAULT VALUES""")
+        val vurderingerId = connection.executeReturnKey(
+            "INSERT INTO STUDENT_VURDERINGER (opprettet_tid) VALUES (?)"
+        ) {
+            setParams { setInstant(1, java.time.Instant.now()) }
+        }
 
         val query = """
                 INSERT INTO STUDENT_VURDERING (begrunnelse, avbrutt_studie, godkjent_studie_av_laanekassen,
