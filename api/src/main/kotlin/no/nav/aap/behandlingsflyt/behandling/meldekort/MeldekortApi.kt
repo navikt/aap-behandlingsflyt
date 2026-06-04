@@ -8,12 +8,12 @@ import no.nav.aap.behandlingsflyt.Tags
 import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Meldekort
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.MeldekortRepository
 import no.nav.aap.behandlingsflyt.hendelse.mottak.MottattHendelseService
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
-import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ArbeidIPeriodeV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Innsending
@@ -28,8 +28,11 @@ import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.komponenter.server.auth.bruker
+import no.nav.aap.komponenter.tidslinje.Segment
+import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
+import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.Operasjon
 import no.nav.aap.tilgang.Rolle
@@ -72,13 +75,13 @@ fun NormalOpenAPIRoute.meldekortApi(
 
                 val meldeperiodeMedMeldekort = sisteFattedeVedtaksBehandling?.let { behandling ->
                     val underveisGrunnlag = underveisRepository.hentHvisEksisterer(behandling.id) ?: return@let null
-                    val meldeperioder = hentAktuelleMeldeperioder(underveisGrunnlag, clock)
+                    val meldeperioderMedOppfyltePerioder = hentAktuelleMeldeperioderMedOppfyltePerioder(underveisGrunnlag)
                     val meldekortene = meldekortRepository.hentHvisEksisterer(behandling.id)?.meldekort().orEmpty()
                     val mottatteDokumenter = mottattDokumentRepository
                         .hentDokumenterAvType(sak.id, InnsendingType.MELDEKORT)
                         .associateBy { it.referanse }
 
-                    meldeperioder.map { meldeperiode ->
+                    meldeperioderMedOppfyltePerioder.map { (meldeperiode, periode) ->
                         val meldekort = nyesteMeldekortForMeldeperiode(meldekortene, meldeperiode)
                         val tidligereMeldekortListe = tidligereMeldekortForMeldeperiode(meldekortene, meldeperiode)
 
@@ -90,6 +93,7 @@ fun NormalOpenAPIRoute.meldekortApi(
 
                             MeldeperiodeMedMeldekortDto(
                                 meldeperiode = meldeperiode,
+                                periode = periode,
                                 meldekort = meldekort.toDto(meldekortData?.begrunnelse, meldekortData?.opprettetAv, mottattDokument?.opprettetTid?.toLocalDate()),
                                 tidligereMeldekort = tidligereMeldekortListe.map { tidligere ->
                                     val ref = InnsendingReferanse(tidligere.journalpostId)
@@ -101,6 +105,7 @@ fun NormalOpenAPIRoute.meldekortApi(
                         } else {
                             MeldeperiodeMedMeldekortDto(
                                 meldeperiode = meldeperiode,
+                                periode = periode,
                                 meldekort = null,
                             )
                         }
@@ -265,25 +270,27 @@ private fun tidligereMeldekortForMeldeperiode(
  * - Inneværende periode inkluderes
  * - Perioder frem i tid inkluderes ikke
  *
- * Verdt å merke seg at dersom meldeplikten ikke er oppfylt for en periode, så vil Utfall == IKKE_OPPFYLT, mens
- * rettighetstypen vil fortsatt være satt. Dermed kan saksbehandler kunne sette timer i meldekortet for perioden.
- * Utfallet vil bli 0 utbetaling dersom saksbehandler ikke gjør annet enn å føre timer, og man er forbi meldevinduet.
- *
  * For at en bruker som i utgangspunktet ikke har oppfylt meldeplikten (ikke meldt seg til NKS, ikke sendt inn meldekort)
  * skal få utbetalt, må saksbehandler sørge for at meldeplikten oppfylles, enten ved
  * - Sette mottattdato på dokumentet innenfor meldevinduet. Dette er riktig dersom saksbehandler bare har vært treig med å legge inn timene.
  * - Gi fritak, dersom bruker skulle hatt fritak.
  * - Gi rimelig grunn, dersom bruker faktisk hadde rimelig grunn til ikke å ha meldt seg.
  */
-private fun hentAktuelleMeldeperioder(
+private fun hentAktuelleMeldeperioderMedOppfyltePerioder(
     underveisGrunnlag: UnderveisGrunnlag,
-    clock: Clock
-): List<Periode> {
-    val meldeperioder = underveisGrunnlag.perioder
-        .filter { it.rettighetsType != null }
-        .map { it.meldePeriode }
-        .sortedBy { it.fom }
-        .takeWhile { it.fom < LocalDate.now(clock) }
+): Map<Periode, Periode?> {
+    return underveisGrunnlag.perioder
+        .filter { it.utfall == Utfall.OPPFYLT }
+        .groupBy({ it.meldePeriode }, { it.periode })
+        .mapValues { (_, perioder) ->
+            // Slå sammen til sammenhengende perioder hvis mulig
+            val aktuellePerioder = Tidslinje(perioder.map { Segment(it, true) })
+                .komprimer()
+                .perioder()
+                .toList()
 
-    return meldeperioder
+            // Samme logikk som gjøres i meldekort-backend - returnerer en periode hvor start og slutt innskrenkes
+            if (aktuellePerioder.isEmpty()) null
+            else Periode(aktuellePerioder.first().fom, aktuellePerioder.last().tom)
+        }
 }

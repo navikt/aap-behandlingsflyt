@@ -5,7 +5,6 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSet
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.PeriodisertAvklaringsbehovLøsning
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
-import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
@@ -103,7 +102,7 @@ class Avklaringsbehovene(
                     perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering,
                     perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert
                 )
-                if (avklaringsbehov.erVentepunkt() || avklaringsbehov.erBrevVentebehov() || avklaringsbehov.erAutomatisk()) {
+                if (avklaringsbehov.erVentepunkt() || avklaringsbehov.erAutomatisk()) {
                     // TODO: Vurdere om funnet steg bør ligge på endringen...
                     repository.endreVentepunkt(avklaringsbehov.id, avklaringsbehov.historikk.last(), funnetISteg)
                 } else {
@@ -360,10 +359,6 @@ class Avklaringsbehovene(
 
     fun hentÅpneVentebehov(): List<Avklaringsbehov> {
         return alle().filter { it.erVentepunkt() && it.erÅpent() }
-    }
-
-    override fun harÅpentBrevVentebehov(): Boolean {
-        return alle().any { avklaringsbehov -> avklaringsbehov.erBrevVentebehov() && avklaringsbehov.erÅpent() }
     }
 
     override fun erVurdertTidligereIBehandlingen(definisjon: Definisjon): Boolean {
