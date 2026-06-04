@@ -40,8 +40,8 @@ data class UføreHistorikkRespons(val uforeperioder: List<UførePeriode>)
  */
 object UføreGateway : UføreRegisterGateway {
     private val log = LoggerFactory.getLogger(javaClass)
-    private val url = URI.create(requiredConfigForKey("integrasjon.pesys.url"))
-    private val config = ClientConfig(scope = requiredConfigForKey("integrasjon.pesys.scope"))
+    private val url = URI.create(requiredConfigForKey("INTEGRASJON_PESYS_URL"))
+    private val config = ClientConfig(scope = requiredConfigForKey("INTEGRASJON_PESYS_SCOPE"))
     private val client = RestClient.withDefaultResponseHandler(
         config = config,
         tokenProvider = AzureM2MTokenProvider,

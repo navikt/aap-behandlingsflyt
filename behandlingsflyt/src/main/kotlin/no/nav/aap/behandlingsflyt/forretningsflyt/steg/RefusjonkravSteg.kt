@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
-import no.nav.aap.behandlingsflyt.behandling.ResultatUtleder
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
@@ -13,8 +12,8 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 
@@ -23,49 +22,31 @@ class RefusjonkravSteg private constructor(
     private val tidligereVurderinger: TidligereVurderinger,
     private val avklaringsbehovService: AvklaringsbehovService,
     private val behandlingRepository: BehandlingRepository,
-    private val resultatUtleder: ResultatUtleder,
+    private val behandlingService: BehandlingService,
 ) : BehandlingSteg {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         refusjonkravRepository = repositoryProvider.provide(),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
         avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
         behandlingRepository = repositoryProvider.provide(),
-        resultatUtleder = ResultatUtleder(repositoryProvider, gatewayProvider),
+        behandlingService = BehandlingService(repositoryProvider, gatewayProvider),
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val grunnlag = lazy { refusjonkravRepository.hentHvisEksisterer(kontekst.behandlingId) }
+        val behandling = behandlingRepository.hent(kontekst.behandlingId)
+        val behandlingstype = behandlingService.utledFaktiskBehandlingstype(behandling)
 
         avklaringsbehovService.oppdaterAvklaringsbehov(
             definisjon = Definisjon.REFUSJON_KRAV,
             vedtakBehøverVurdering = {
-                when (kontekst.vurderingType) {
-                    VurderingType.FØRSTEGANGSBEHANDLING -> {
-                        when {
-                            kontekst.behandlingType == TypeBehandling.Førstegangsbehandling -> !tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(
-                                kontekst,
-                                type()
-                            )
+                when (behandlingstype) {
+                    TypeBehandling.Førstegangsbehandling -> !tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(
+                        kontekst,
+                        type()
+                    )
 
-                            else -> false
-                        }
-                    }
-
-                    VurderingType.REVURDERING -> {
-                        when {
-                            skalVurdereRefusjonkravIRevurdering(kontekst) -> true
-                            else -> false
-                        }
-                    }
-
-                    VurderingType.UTVID_VEDTAKSLENGDE,
-                    VurderingType.MIGRER_RETTIGHETSPERIODE,
-                    VurderingType.MELDEKORT,
-                    VurderingType.AUTOMATISK_BREV,
-                    VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
-                    VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9,
-                    VurderingType.G_REGULERING,
-                    VurderingType.IKKE_RELEVANT -> false
+                    else -> false
                 }
             },
             erTilstrekkeligVurdert = {
@@ -82,21 +63,6 @@ class RefusjonkravSteg private constructor(
         )
 
         return Fullført
-    }
-
-    private fun skalVurdereRefusjonkravIRevurdering(kontekst: FlytKontekstMedPerioder): Boolean {
-        return !tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, type()) &&
-                forrigeBehandlingVarRentAvslag(kontekst)
-    }
-
-    private fun forrigeBehandlingVarRentAvslag(kontekst: FlytKontekstMedPerioder): Boolean {
-        val forrigeBehandling = behandlingRepository.hent(
-            behandlingId = requireNotNull(
-                kontekst.forrigeBehandlingId
-            ) {
-                "Forrige behandling-id må finnes på revurdering"
-            })
-        return resultatUtleder.erRentAvslag(forrigeBehandling)
     }
 
     companion object : FlytSteg {

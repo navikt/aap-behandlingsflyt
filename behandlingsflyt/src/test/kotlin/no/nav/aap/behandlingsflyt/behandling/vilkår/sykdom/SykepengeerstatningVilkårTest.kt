@@ -37,7 +37,7 @@ class SykepengeerstatningVilkårTest {
                     yrkesskadevurdering = null, sykdomsvurderinger = listOf(
                         sykdomsvurdering(opprettet = opprettet, vurderingenGjelderFra = startDato),
                         sykdomsvurdering(
-                            erNedsettelseIArbeidsevneAvEnVissVarighet = false,
+                            harNedsattArbeidsevne = ArbeidsevneNedsattValg.JA_FORBIGÅENDE_PROBLEMER,
                             vurderingenGjelderFra = startDato,
                             opprettet = opprettet.plusSeconds(50)
                         )
@@ -48,7 +48,6 @@ class SykepengeerstatningVilkårTest {
                         vurderinger = listOf(
                             SykepengerVurdering(
                                 begrunnelse = "",
-                                dokumenterBruktIVurdering = emptyList(),
                                 harRettPå = true,
                                 grunn = SykepengerGrunn.SYKEPENGER_IGJEN_ARBEIDSUFOR,
                                 vurdertAv = "abc123",
@@ -87,7 +86,7 @@ class SykepengeerstatningVilkårTest {
                 yrkesskadevurdering = null, sykdomsvurderinger = listOf(
                     sykdomsvurdering(opprettet = opprettet, vurderingenGjelderFra = startDato),
                     sykdomsvurdering(
-                        erNedsettelseIArbeidsevneAvEnVissVarighet = false,
+                        harNedsattArbeidsevne = ArbeidsevneNedsattValg.JA_FORBIGÅENDE_PROBLEMER,
                         vurderingenGjelderFra = startDato,
                         opprettet = opprettet.plusSeconds(50)
                     )
@@ -98,7 +97,6 @@ class SykepengeerstatningVilkårTest {
                     vurderinger = listOf(
                         SykepengerVurdering(
                             begrunnelse = "",
-                            dokumenterBruktIVurdering = emptyList(),
                             harRettPå = true,
                             grunn = SykepengerGrunn.SYKEPENGER_IGJEN_ARBEIDSUFOR,
                             vurdertAv = "abc123",
@@ -108,7 +106,6 @@ class SykepengeerstatningVilkårTest {
                         ),
                         SykepengerVurdering(
                             begrunnelse = "",
-                            dokumenterBruktIVurdering = emptyList(),
                             harRettPå = true,
                             grunn = SykepengerGrunn.SYKEPENGER_IGJEN_ARBEIDSUFOR,
                             vurdertAv = "abc123",
@@ -144,25 +141,18 @@ class SykepengeerstatningVilkårTest {
         harSkadeSykdomEllerLyte: Boolean = true,
         erSkadeSykdomEllerLyteVesentligdel: Boolean = true,
         erNedsettelseIArbeidsevneMerEnnHalvparten: Boolean = true,
-        erNedsettelseIArbeidsevneAvEnVissVarighet: Boolean? = true,
         erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense: Boolean = true,
         harNedsattArbeidsevne: ArbeidsevneNedsattValg = ArbeidsevneNedsattValg.JA,
-        erArbeidsevnenNedsatt: Boolean = true,
         vurderingenGjelderFra: LocalDate,
         vurderingenGjelderTil: LocalDate? = null,
         opprettet: LocalDateTime = LocalDateTime.now(),
         behandlingId: BehandlingId = BehandlingId(1L)
     ) = Sykdomsvurdering(
         begrunnelse = "",
-        dokumenterBruktIVurdering = emptyList(),
         harSkadeSykdomEllerLyte = harSkadeSykdomEllerLyte,
         erSkadeSykdomEllerLyteVesentligdel = erSkadeSykdomEllerLyteVesentligdel,
         erNedsettelseIArbeidsevneMerEnnHalvparten = erNedsettelseIArbeidsevneMerEnnHalvparten,
-        erNedsettelseIArbeidsevneAvEnVissVarighet = erNedsettelseIArbeidsevneAvEnVissVarighet,
         erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense,
-        erNedsettelseMinstHalvparten = null,
-        erNedsettelseMerEnnYrkesskadegrense = null,
-        erArbeidsevnenNedsatt = erArbeidsevnenNedsatt,
         harNedsattArbeidsevne = harNedsattArbeidsevne,
         yrkesskadeBegrunnelse = null,
         vurderingenGjelderFra = vurderingenGjelderFra,

@@ -59,6 +59,7 @@ import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.arbeids
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.arbeidsgiver.SamordningArbeidsgiverRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.avbrytrevurdering.AvbrytRevurderingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.arbeidsopptrapping.ArbeidsopptrappingRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.avbrytaktivitetspliktbehandling.AvbrytAktivitetspliktbehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.bistand.BistandRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetRepositoryImpl
@@ -169,3 +170,4 @@ val postgresRepositoryRegistry = RepositoryRegistry()
     .register<RettighetstypeRepositoryImpl>()
     .register<EtableringEgenVirksomhetRepositoryImpl>()
     .register<StansOpphørRepositoryImpl>()
+    .register<AvbrytAktivitetspliktbehandlingRepositoryImpl>()

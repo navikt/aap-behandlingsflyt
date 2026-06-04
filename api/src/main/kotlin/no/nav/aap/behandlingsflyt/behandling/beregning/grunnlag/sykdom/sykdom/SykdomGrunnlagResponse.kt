@@ -5,8 +5,6 @@ import no.nav.aap.behandlingsflyt.VurderingDto
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurderingerMetaResponse
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ErNedsettelseMerEnnYrkesskadegrenseValg
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ErNedsettelseMinstHalvpartenValg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.InnhentetSykdomsOpplysninger
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
@@ -35,20 +33,11 @@ data class SykdomsvurderingResponse(
     /** Hvis null, så gjelder den fra starten. */
     val begrunnelse: String,
     val vurderingenGjelderFra: LocalDate?, @Deprecated("Bruk fom")
-    val dokumenterBruktIVurdering: List<JournalpostId>,
-    @Deprecated("Bruk harArbeidsevneNedsatt")
-    val erArbeidsevnenNedsatt: Boolean?,
     val harNedsattArbeidsevne: ArbeidsevneNedsattValg?,
     val harSkadeSykdomEllerLyte: Boolean,
     val erSkadeSykdomEllerLyteVesentligdel: Boolean?,
     val erNedsettelseIArbeidsevneMerEnnHalvparten: Boolean?,
-    @Deprecated("Bruk erNedsettelseIArbeidsevneMerEnnHalvparten")
-    val erNedsettelseMinstHalvparten: ErNedsettelseMinstHalvpartenValg?,
-    @Deprecated("Bruk erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense")
-    val erNedsettelseMerEnnYrkesskadegrense: ErNedsettelseMerEnnYrkesskadegrenseValg?,
     val erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense: Boolean?,
-    @Deprecated("Bruk harNedsattArbeidsevne")
-    val erNedsettelseIArbeidsevneAvEnVissVarighet: Boolean?,
     val yrkesskadeBegrunnelse: String?,
     val kodeverk: String? = null,
     val hoveddiagnose: String? = null,
@@ -82,14 +71,9 @@ data class SykdomsvurderingResponse(
         ) = SykdomsvurderingResponse(
             begrunnelse = sykdomsvurdering.begrunnelse,
             vurderingenGjelderFra = sykdomsvurdering.vurderingenGjelderFra,
-            dokumenterBruktIVurdering = sykdomsvurdering.dokumenterBruktIVurdering,
-            erArbeidsevnenNedsatt = sykdomsvurdering.erArbeidsevnenNedsatt,
             harNedsattArbeidsevne = sykdomsvurdering.harNedsattArbeidsevne,
             harSkadeSykdomEllerLyte = sykdomsvurdering.harSkadeSykdomEllerLyte,
             erSkadeSykdomEllerLyteVesentligdel = sykdomsvurdering.erSkadeSykdomEllerLyteVesentligdel,
-            erNedsettelseMinstHalvparten = sykdomsvurdering.erNedsettelseMinstHalvparten,
-            erNedsettelseMerEnnYrkesskadegrense = sykdomsvurdering.erNedsettelseMerEnnYrkesskadegrense,
-            erNedsettelseIArbeidsevneAvEnVissVarighet = sykdomsvurdering.erNedsettelseIArbeidsevneAvEnVissVarighet,
             erNedsettelseIArbeidsevneMerEnnHalvparten = sykdomsvurdering.erNedsettelseIArbeidsevneMerEnnHalvparten,
             erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = sykdomsvurdering.erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense,
             yrkesskadeBegrunnelse = sykdomsvurdering.yrkesskadeBegrunnelse,

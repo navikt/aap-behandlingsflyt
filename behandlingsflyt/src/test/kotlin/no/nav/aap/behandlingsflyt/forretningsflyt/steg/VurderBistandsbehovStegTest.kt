@@ -84,17 +84,12 @@ class VurderBistandsbehovStegTest {
                     sykdomsvurderinger = listOf(
                         Sykdomsvurdering(
                             begrunnelse = "",
-                            dokumenterBruktIVurdering = emptyList(),
                             harSkadeSykdomEllerLyte = true,
                             erSkadeSykdomEllerLyteVesentligdel = true,
                             erNedsettelseIArbeidsevneMerEnnHalvparten = true,
                             erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
-                            erNedsettelseMinstHalvparten = null,
-                            erNedsettelseMerEnnYrkesskadegrense = null,
-                            erArbeidsevnenNedsatt = true,
                             harNedsattArbeidsevne = ArbeidsevneNedsattValg.JA,
                             yrkesskadeBegrunnelse = null,
-                            erNedsettelseIArbeidsevneAvEnVissVarighet = true,
                             vurderingenGjelderFra = søknadsdato,
                             vurderingenGjelderTil = null,
                             vurdertAv = Bruker("Z00000"),

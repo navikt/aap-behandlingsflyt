@@ -51,12 +51,12 @@ class SykepengeerstatningVilkår(vilkårsresultat: Vilkårsresultat) :
         yrkesskadeVurdering: Yrkesskadevurdering?,
         grunnlag: SykepengerErstatningFaktagrunnlag,
     ): Vilkårsvurdering {
-        if (sykdomsvurdering?.erKonsistentMedSykepengeerstatningGammel(yrkesskadeVurdering) != sykdomsvurdering?.erKonsistentMedSykepengeerstatning(yrkesskadeVurdering)) {
+        if (sykdomsvurdering?.erKonsistentMedSykepengeerstatning(yrkesskadeVurdering) != sykdomsvurdering?.erKonsistentMedSykepengeerstatning(yrkesskadeVurdering)) {
             log.error("Fant diff i sykepengeerstatningvilkår. Fortsetter med gammelt vilkår ")
         }
         
         return if (sykepengeerstatningVurdering?.harRettPå == true &&
-            sykdomsvurdering?.erKonsistentMedSykepengeerstatningGammel(yrkesskadeVurdering) ?: false // TODO: Bytt ut denne med ny
+            sykdomsvurdering?.erKonsistentMedSykepengeerstatning(yrkesskadeVurdering) ?: false
         ) {
             Vilkårsvurdering(
                 Vilkårsperiode(

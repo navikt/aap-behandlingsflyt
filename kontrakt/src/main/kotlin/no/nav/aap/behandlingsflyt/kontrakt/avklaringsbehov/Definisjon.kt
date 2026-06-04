@@ -203,6 +203,16 @@ public enum class Definisjon(
         kreverToTrinn = true,
         løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL)
     ),
+
+    SKRIV_VEDTAKSBREV_SAKSBEHANDLER(
+        kode = AvklaringsbehovKode.`5041`,
+        løsesISteg = StegType.BREV,
+        type = BehovType.MANUELT_PÅKREVD,
+        løsesAv = listOf(
+            Rolle.SAKSBEHANDLER_NASJONAL
+        )
+    ),
+    
     SKRIV_SYKDOMSVURDERING_BREV(
         kode = AvklaringsbehovKode.`5053`,
         løsesISteg = StegType.SYKDOMSVURDERING_BREV,
@@ -584,6 +594,13 @@ public enum class Definisjon(
         løsesISteg = StegType.VURDER_AKTIVITETSPLIKT_11_7,
         løsesAv = listOf(Rolle.SAKSBEHANDLER_OPPFOLGING),
         defaultFrist = Period.ofWeeks(3),
+    ),
+
+    AVBRYT_AKTIVITETSPLIKTBEHANDING(
+        kode = AvklaringsbehovKode.`4301`,
+        type = BehovType.MANUELT_PÅKREVD,
+        løsesISteg = StegType.AVBRYT_AKTIVITETSPLIKTBEHANDLING,
+        løsesAv = listOf(Rolle.SAKSBEHANDLER_OPPFOLGING),
     );
 
     public companion object {

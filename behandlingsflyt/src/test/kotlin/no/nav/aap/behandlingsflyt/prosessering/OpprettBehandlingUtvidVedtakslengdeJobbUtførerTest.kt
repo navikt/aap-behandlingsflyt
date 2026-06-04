@@ -66,6 +66,7 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtførerTest {
         OpprettBehandlingUtvidVedtakslengdeJobbUtfører(
             prosesserBehandlingService = prosesserBehandlingService,
             behandlingService = behandlingService,
+            clock = clock,
             vedtakslengdeService = VedtakslengdeService(
                 vedtakslengdeRepository = vedtakslengdeRepository,
                 underveisRepository = underveisRepository,
@@ -158,6 +159,25 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtførerTest {
     }
 
     @Test
+    fun `skal ikke opprette automatisk behandling hvis forrigeSluttdato er lenger frem enn datoForUtvidelse`() {
+        val sak = sak()
+        val behandling = behandlingMedVedtak()
+        val vilkårsresultat = genererVilkårsresultat(sak.rettighetsperiode)
+
+        every { underveisRepository.hentHvisEksisterer(behandling.id) } returns underveisGrunnlag(perioder = underveisPerioderMedSluttdatoLangtFremITid())
+        every { behandlingService.finnBehandlingMedSisteFattedeVedtak(sakId) } returns behandlingMedVedtak()
+        every { vilkårsresultatRepository.hent(behandlingId) } returns vilkårsresultat
+        every { vedtakslengdeRepository.hentHvisEksisterer(behandling.id) } returns null
+        every { rettighetestypeRepository.hentHvisEksisterer(behandling.id) } returns rettighetstypeGrunnlag(
+            vilkårsresultat
+        )
+
+        opprettUtfører().utfør(jobbInput)
+
+        verify(exactly = 0) { prosesserBehandlingService.triggProsesserBehandling(any<BehandlingService.OpprettetBehandling>()) }
+    }
+
+    @Test
     fun `skal ikke opprette og sette i gang prosessering av behandling hvis bistandsvilkåret ikke er oppfylt frem i tid`() {
         val sak = sak()
         val behandling = behandlingMedVedtak()
@@ -243,6 +263,22 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtførerTest {
                 every { periode } returns Periode(
                     fom = dagensDato,
                     tom = dagensDato.plusDays(ANTALL_DAGER_FØR_UTVIDELSE)
+                )
+            },
+            mockk<Underveisperiode> {
+                every { periode } returns Periode(
+                    fom = dagensDato.minusYears(1),
+                    tom = dagensDato.minusDays(1)
+                )
+            },
+        )
+
+    private fun underveisPerioderMedSluttdatoLangtFremITid() =
+        listOf(
+            mockk<Underveisperiode> {
+                every { periode } returns Periode(
+                    fom = dagensDato,
+                    tom = dagensDato.plusDays(ANTALL_DAGER_FØR_UTVIDELSE + 30)
                 )
             },
             mockk<Underveisperiode> {

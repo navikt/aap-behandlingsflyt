@@ -2,17 +2,16 @@ package no.nav.aap.behandlingsflyt.integrasjon.arbeidsforhold
 
 import java.time.LocalDate
 
-data class ArbeidsforholdoversiktResponse(
-    val arbeidsforholdoversikter: List<ArbeidsforholdOversikt> = emptyList()
-)
-
-data class ArbeidsforholdOversikt(
+data class ArbeidsforholdResponse(
     val type: ArbeidsforholdTypeResponse,
     val arbeidssted: Arbeidssted,
+    val ansettelsesperiode: AnsettelsesperiodeResponse? = null,
+    val ansettelsesdetaljer: List<Ansettelsesdetalj> = emptyList()
+)
+
+data class AnsettelsesperiodeResponse(
     val startdato: LocalDate,
-    val sluttdato: LocalDate? = null,
-    val ansettelsesdetaljer: List<Ansettelsesdetalj> = emptyList(),
-    val yrke: Kodeverksentitet? = null
+    val sluttdato: LocalDate? = null
 )
 
 data class ArbeidsforholdTypeResponse(

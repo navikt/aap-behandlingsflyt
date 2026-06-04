@@ -8,6 +8,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 
@@ -62,8 +63,12 @@ class ResultatUtleder(
             return Resultat.AVBRUTT
         }
 
-        if (!harRett(forrigeBehandlingId) && harRett(behandling.id)) {
-            return Resultat.INNVILGELSE
+        val søknadMottatt = behandling.vurderingsbehov().any { it.type == Vurderingsbehov.MOTTATT_SØKNAD }
+        if (!underveisService.harRett(forrigeBehandlingId) && søknadMottatt) {
+            return if (underveisService.harRett(behandling.id))
+                Resultat.INNVILGELSE
+            else
+                Resultat.AVSLAG
         }
 
         return null
@@ -76,7 +81,6 @@ class ResultatUtleder(
 
     @WithSpan
     fun utledResultatFørstegangsBehandling(behandling: Behandling): Resultat {
-
         require(behandling.typeBehandling() == TypeBehandling.Førstegangsbehandling) {
             "Kan ikke utlede resultat for ${behandling.typeBehandling()} ennå."
         }
@@ -85,7 +89,7 @@ class ResultatUtleder(
             return Resultat.TRUKKET
         }
 
-        val harOppfyltPeriode = harRett(behandling.id)
+        val harOppfyltPeriode = underveisService.harRett(behandling.id)
 
         return if (harOppfyltPeriode) Resultat.INNVILGELSE else Resultat.AVSLAG
     }
@@ -96,11 +100,11 @@ class ResultatUtleder(
             return false
         }
 
-        val harOppfyltPeriode = harRett(behandling.id)
+        val harOppfyltPeriode = underveisService.harRett(behandling.id)
 
         return !harOppfyltPeriode
     }
 
     fun harRett(behandlingId: BehandlingId) =
-        underveisService.rettighethetsType(behandlingId).isNotEmpty()
+        underveisService.rettighetsType(behandlingId).isNotEmpty()
 }

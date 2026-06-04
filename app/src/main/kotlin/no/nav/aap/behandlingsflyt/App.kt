@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.papsign.ktor.openapigen.model.info.InfoModel
@@ -14,11 +13,12 @@ import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import io.ktor.server.plugins.statuspages.*
 import io.ktor.server.routing.*
+import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import no.nav.aap.behandlingsflyt.api.actuator.actuator
-import no.nav.aap.behandlingsflyt.api.config.definisjoner.configApi
 import no.nav.aap.behandlingsflyt.auditlog.auditlogApi
+import no.nav.aap.behandlingsflyt.behandling.aktivitetsplikt.avbrytaktivitetspliktbehandling.avbrytAktivitetspliktbehandlingGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.aktivitetsplikt.brudd_11_7.aktivitetsplikt11_7GrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.aktivitetsplikt.brudd_11_9.aktivitetsplikt11_9GrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.arbeidsevne.arbeidsevneGrunnlagApi
@@ -44,7 +44,6 @@ import no.nav.aap.behandlingsflyt.behandling.brev.sykdomsvurderingForBrevApi
 import no.nav.aap.behandlingsflyt.behandling.etableringegenvirksomhet.etableringEgenVirksomhetApi
 import no.nav.aap.behandlingsflyt.behandling.foreslåvedtak.foreslaaVedtakApi
 import no.nav.aap.behandlingsflyt.behandling.foreslåvedtak.foreslaaVedtakVedtakslengdeApi
-import no.nav.aap.behandlingsflyt.behandling.grunnlag.medlemskap.medlemskapsgrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.grunnlag.samordning.samordningGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.inntektsbortfall.inntektsbortfallGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.institusjonsopphold.institusjonApi
@@ -80,7 +79,6 @@ import no.nav.aap.behandlingsflyt.behandling.underveis.meldepliktOverstyringGrun
 import no.nav.aap.behandlingsflyt.behandling.underveis.underveisVurderingerApi
 import no.nav.aap.behandlingsflyt.behandling.vedtakslengde.vedtakslengdeGrunnlagApi
 import no.nav.aap.behandlingsflyt.drift.driftApi
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.StansEllerOpphørMigrering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.ApplikasjonsVersjon
 import no.nav.aap.behandlingsflyt.flyt.behandlingApi
 import no.nav.aap.behandlingsflyt.flyt.flytApi
@@ -105,9 +103,6 @@ import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.saksApi
 import no.nav.aap.behandlingsflyt.test.fullførBehandlingApi
 import no.nav.aap.behandlingsflyt.test.opprettDummySakApi
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
-import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbmigrering.Migrering
 import no.nav.aap.komponenter.gateway.GatewayProvider
@@ -124,15 +119,7 @@ import no.nav.aap.tilgang.TilgangGateway
 import org.apache.kafka.common.serialization.Deserializer
 import org.slf4j.LoggerFactory
 import org.slf4j.bridge.SLF4JBridgeHandler
-import java.net.InetAddress
-import java.net.URI
-import java.net.http.HttpClient
-import java.net.http.HttpRequest
-import java.net.http.HttpResponse
 import java.util.*
-import java.util.concurrent.Executors
-import java.util.concurrent.ScheduledExecutorService
-import java.util.concurrent.TimeUnit
 import java.util.logging.Level
 import java.util.logging.Logger
 import kotlin.time.Duration.Companion.seconds
@@ -166,8 +153,9 @@ internal object AppConfig {
      * er blocking, er det i praksis hva som begrenser antall parallelle kall.
      *
      * Vi har maks 100 connections i prod, og vi kjører med 3-4 pods, så det er en begrenset ressurs.
+     * Bruker kun 92 connections for å beholde noen til administrasjon.
      */
-    const val hikariMaxPoolSize = 100 / 4 /* max connections / max antall pods */
+    const val hikariMaxPoolSize = 92 / 4 /* max connections / max antall pods */
 }
 
 fun main() {
@@ -201,6 +189,7 @@ internal fun Application.server(
     dbConfig: DbConfig,
     repositoryRegistry: RepositoryRegistry,
     gatewayProvider: GatewayProvider,
+    prometheus: PrometheusMeterRegistry = no.nav.aap.behandlingsflyt.prometheus,
 ) {
     DefaultJsonMapper.objectMapper()
         .registerSubtypes(utledSubtypesTilAvklaringsbehovLøsning() + utledSubtypesTilMottattHendelseDTO())
@@ -224,16 +213,16 @@ internal fun Application.server(
     val fellesDataSource = initDatasource(
         dbConfig,
         maximumPoolSize = AppConfig.hikariMaxPoolSize - dedicatedMotorConnections,
+        prometheus = prometheus,
     )
     val motorDataSource = initDatasource(
         dbConfig,
         maximumPoolSize = dedicatedMotorConnections,
+        prometheus = prometheus,
     )
     Migrering.migrate(fellesDataSource)
 
-    val scheduler = utførMigreringer(fellesDataSource, gatewayProvider, environment.log)
-
-    val motor = startMotor(motorDataSource, repositoryRegistry, gatewayProvider)
+    val motor = startMotor(motorDataSource, repositoryRegistry, gatewayProvider, prometheus)
 
     startKafkakonsumenter(fellesDataSource, repositoryRegistry, gatewayProvider)
     TilgangGateway.initialiserPrometheus(prometheus)
@@ -247,7 +236,6 @@ internal fun Application.server(
     monitor.subscribe(ApplicationStopped) { environment ->
         environment.log.info("ktor har fullført nedstoppingen sin. Eventuelle requester og annet arbeid som ikke ble fullført innen timeout ble avbrutt.")
         try {
-            scheduler.shutdownNow()
             // Helt til slutt, nå som vi har stanset Motor, etc. Lukk database-koblingen.
             fellesDataSource.close()
             motorDataSource.close()
@@ -261,7 +249,6 @@ internal fun Application.server(
             install(NavIdentInterceptor)
 
             apiRouting {
-                configApi()
                 personApi(fellesDataSource, repositoryRegistry, gatewayProvider)
                 saksApi(fellesDataSource, repositoryRegistry, gatewayProvider)
                 behandlingApi(fellesDataSource, repositoryRegistry, gatewayProvider)
@@ -277,7 +264,6 @@ internal fun Application.server(
                 arbeidsopptrappingGrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
                 etableringEgenVirksomhetApi(fellesDataSource, repositoryRegistry, gatewayProvider)
                 overgangUforeGrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
-                medlemskapsgrunnlagApi(fellesDataSource, repositoryRegistry)
                 studentgrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
                 sykestipendGrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
                 sykdomsgrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
@@ -324,6 +310,7 @@ internal fun Application.server(
                 // Aktivitetsplikt
                 aktivitetsplikt11_7GrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
                 aktivitetsplikt11_9GrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
+                avbrytAktivitetspliktbehandlingGrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
                 // Meldekort
                 meldekortApi(fellesDataSource, repositoryRegistry, gatewayProvider)
                 // Flytt
@@ -443,48 +430,11 @@ private fun <K, V> Application.startKonsument(konsument: KafkaKonsument<K, V>) {
     }
 }
 
-// Bruker leaderElector for å sikre at kun en pod kjører migreringen og spinner opp en egen tråd for å ikke blokkere.
-private fun utførMigreringer(
-    dataSource: HikariDataSource,
-    gatewayProvider: GatewayProvider,
-    log: io.ktor.util.logging.Logger
-): ScheduledExecutorService {
-    val scheduler = Executors.newScheduledThreadPool(1)
-    /* Prøv på nytt, for å se om vi er elected til leader, hvert 9. minutt. Hvis vi blir elected, så vil metoden
-     * aldri returnere, og med fixed delay, så blir det heller ikke skjedulert flere tasks.
-    **/
-    scheduler.scheduleWithFixedDelay(Runnable {
-        val unleashGateway: UnleashGateway = gatewayProvider.provide()
-        val isLeader = isLeader(log)
-        log.info("isLeader = $isLeader")
-
-        if (unleashGateway.isEnabled(BehandlingsflytFeature.MigrerStansOgOpphor) && isLeader) {
-            // kjør migreringer
-            StansEllerOpphørMigrering(dataSource, postgresRepositoryRegistry, gatewayProvider).migrer()
-        }
-
-    }, 1, 9, TimeUnit.MINUTES)
-    return scheduler
-}
-
-private fun isLeader(log: io.ktor.util.logging.Logger): Boolean {
-    val electorUrl = requiredConfigForKey("elector.get.url")
-    val client = HttpClient.newHttpClient()
-    val response = client.send(
-        HttpRequest.newBuilder().uri(URI.create(electorUrl)).GET().build(),
-        HttpResponse.BodyHandlers.ofString()
-    )
-    val json = ObjectMapper().readTree(response.body())
-    val leaderHostname = json.get("name").asText()
-    val hostname = InetAddress.getLocalHost().hostName
-    log.info("electorUrl=${electorUrl}, leaderHostname=$leaderHostname, hostname=$hostname")
-    return hostname == leaderHostname
-}
-
 fun Application.startMotor(
     dataSource: HikariDataSource,
     repositoryRegistry: RepositoryRegistry,
     gatewayProvider: GatewayProvider,
+    prometheus: PrometheusMeterRegistry = no.nav.aap.behandlingsflyt.prometheus,
 ): Motor {
     val motor = Motor(
         dataSource = dataSource,
@@ -536,6 +486,7 @@ val postgresConfig = Properties().apply {
 fun initDatasource(
     dbConfig: DbConfig,
     maximumPoolSize: Int = AppConfig.hikariMaxPoolSize,
+    prometheus: PrometheusMeterRegistry = no.nav.aap.behandlingsflyt.prometheus,
 ): HikariDataSource = HikariDataSource(HikariConfig().apply {
     jdbcUrl = dbConfig.url
     username = dbConfig.username

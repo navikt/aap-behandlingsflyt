@@ -30,5 +30,21 @@ fun NormalOpenAPIRoute.tilkjentYtelseApi(dataSource: DataSource, repositoryRegis
             }
         }
 
+        route("/tilkjent-med-diff/{referanse}") {
+            authorizedGet<BehandlingReferanse, TilkjentYtelse2MedDiffDto>(
+                AuthorizationParamPathConfig(
+                    relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
+                    operasjon = Operasjon.SE,
+                    behandlingPathParam = BehandlingPathParam("referanse")
+                )
+            ) { behandlingreferanse ->
+                val tilkjentYtelseDto =
+                    TilkjentYtelseService(dataSource, repositoryRegistry)
+                        .hentTilkjentYtelseMedDiff(behandlingreferanse)
+
+                respond(tilkjentYtelseDto)
+            }
+        }
+
     }
 }

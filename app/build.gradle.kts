@@ -8,7 +8,7 @@ repositories {
 plugins {
     id("aap.conventions")
     alias(libs.plugins.ktor)
-    id("com.gradleup.shadow") version "9.4.1"
+    id("com.gradleup.shadow") version "9.4.2"
 }
 
 application {
@@ -85,7 +85,6 @@ dependencies {
     implementation(project(":behandlingsflyt"))
     implementation(project(":repository"))
     implementation(libs.hikariCp)
-    implementation(libs.flywayDatabasePostgresql)
 
     runtimeOnly(libs.postgresql) // låst versjon i root build.gradle.kts
 

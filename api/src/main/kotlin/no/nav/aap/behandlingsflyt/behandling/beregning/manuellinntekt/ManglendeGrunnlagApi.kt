@@ -19,13 +19,10 @@ import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.getGrunnlag
-import org.slf4j.LoggerFactory
 import java.math.BigDecimal
 import java.time.MonthDay
 import java.time.Year
 import javax.sql.DataSource
-
-private val log = LoggerFactory.getLogger("ManuellInntektGrunnlagApi")
 
 fun NormalOpenAPIRoute.manglendeGrunnlagApi(
     dataSource: DataSource,

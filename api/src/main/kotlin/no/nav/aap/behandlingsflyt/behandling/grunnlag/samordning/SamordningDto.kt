@@ -54,7 +54,7 @@ data class SamordningUføreVurderingGrunnlagDTO(
 )
 
 /**
- * @param kilde Alltid lik PESYS.
+ * @property kilde Alltid lik PESYS.
  */
 data class SamordningUføreGrunnlagDTO(
     val virkningstidspunkt: LocalDate,
@@ -119,11 +119,7 @@ data class TjenestepensjonYtelseDTO(
     val ordning: TjenestePensjonOrdning
 )
 
-data class AndreStatligeYtelserGrunnlagDto (
-    val perioder: List<AndreStatligeYtelserPeriodeDto> = emptyList()
-)
-
-data class AndreStatligeYtelserPeriodeDto (
+data class AndreStatligeYtelserPeriodeDto(
     val fom: LocalDate,
     val tom: LocalDate?,
     val kilde: AndreStatligeYtelserKilde,
@@ -145,16 +141,3 @@ enum class AndreStatligeYtelserType {
     TILTAKSPENGER_INAKTIV
 }
 
-enum class DagpengerYtelseType{
-    DAGPENGER_ARBEIDSSOKER_ORDINAER, DAGPENGER_PERMITTERING_ORDINAER, DAGPENGER_PERMITTERING_FISKEINDUSTRI
-}
-enum class DagpengerKilde{
-    ARENA, DP_SAK
-}
-
-enum class TiltakspengerYtelseType{
-    TILTAKSPENGER, TILTAKSPENGER_OG_BARNETILLEGG, TILTAKSPENGER_INAKTIV
-}
-enum class TiltakspengerKilde{
-    TPSAK, ARENA
-}

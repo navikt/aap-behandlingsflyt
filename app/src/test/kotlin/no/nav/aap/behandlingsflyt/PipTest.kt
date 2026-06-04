@@ -2,6 +2,8 @@ package no.nav.aap.behandlingsflyt
 
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
+import io.micrometer.prometheusmetrics.PrometheusConfig
+import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import kotlinx.coroutines.runBlocking
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Barn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnRepository
@@ -63,6 +65,7 @@ class PipTest {
                 dbConfig = dbConfig,
                 repositoryRegistry = postgresRepositoryRegistry,
                 gatewayProvider = defaultGatewayProvider { },
+                prometheus = PrometheusMeterRegistry(PrometheusConfig.DEFAULT),
             )
         }
 

@@ -81,7 +81,7 @@ import javax.sql.DataSource
 class TestScenarioOrkestrator(
     private val gatewayProvider: GatewayProvider,
     private val datasource: DataSource,
-    private val motor: ManuellMotorImpl
+    private val motor: ManuellMotorImpl,
 ) {
     fun løsStudent(behandling: Behandling): Behandling {
         return løsAvklaringsBehov(
@@ -103,7 +103,7 @@ class TestScenarioOrkestrator(
     fun løsSykdom(
         behandling: Behandling,
         vurderingGjelderFra: LocalDate,
-        erArbeidsevnenNedsatt: Boolean,
+        harNedsattArbeidsevne: ArbeidsevneNedsattValg,
         erNedsettelseIArbeidsevneMerEnnHalvparten: Boolean,
         erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense: Boolean? = null
     ): Behandling {
@@ -117,15 +117,11 @@ class TestScenarioOrkestrator(
                         harSkadeSykdomEllerLyte = true,
                         kodeverk = "ICPC2",
                         hoveddiagnose = "A03",
-                        erArbeidsevnenNedsatt = erArbeidsevnenNedsatt,
-                        harNedsattArbeidsevne = if (erArbeidsevnenNedsatt) ArbeidsevneNedsattValg.JA else ArbeidsevneNedsattValg.NEI,
+                        harNedsattArbeidsevne = harNedsattArbeidsevne,
                         erNedsettelseIArbeidsevneMerEnnHalvparten = erNedsettelseIArbeidsevneMerEnnHalvparten,
                         erSkadeSykdomEllerLyteVesentligdel = true,
-                        erNedsettelseIArbeidsevneAvEnVissVarighet = true,
                         erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense,
                         yrkesskadeBegrunnelse = if (erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense != null) "test" else null,
-                        erNedsettelseMinstHalvparten = null,
-                        erNedsettelseMerEnnYrkesskadegrense = null,
                         fom = vurderingGjelderFra,
                         tom = null
                     )
@@ -214,7 +210,7 @@ class TestScenarioOrkestrator(
             KvalitetssikringLøsning(alleAvklaringsbehov.filter { behov -> behov.erTotrinn() || behov.kreverKvalitetssikring() }
                 .map { behov ->
                     TotrinnsVurdering(
-                        behov.definisjon.kode, true, "begrunnelse", emptyList()
+                        behov.definisjon.kode, true, "begrunnelse", emptyList(), markeringer = emptyList()
                     )
                 }),
             bruker
@@ -397,14 +393,14 @@ class TestScenarioOrkestrator(
         )
     }
 
-    fun løsOppholdskrav(behandling: Behandling): Behandling {
+    fun løsOppholdskrav(behandling: Behandling, sak: Sak): Behandling {
         return løsAvklaringsBehov(
             behandling,
             AvklarOppholdskravLøsning(
                 løsningerForPerioder = listOf(
                     AvklarOppholdkravLøsningForPeriodeDto(
                         begrunnelse = "Oppholdskrav ok",
-                        fom = LocalDate.now().minusMonths(2),
+                        fom = sak.rettighetsperiode.fom,
                         tom = null,
                         oppfylt = true,
                         land = "Norge"
@@ -459,7 +455,11 @@ class TestScenarioOrkestrator(
                     .filter { behov -> behov.erTotrinn() }
                     .map { behov ->
                         TotrinnsVurdering(
-                            behov.definisjon.kode, behov.definisjon != returVed, "begrunnelse", emptyList()
+                            behov.definisjon.kode,
+                            behov.definisjon != returVed,
+                            "begrunnelse",
+                            emptyList(),
+                            markeringer = emptyList()
                         )
                     }),
             Bruker("BESLUTTER")

@@ -16,4 +16,5 @@ interface PersonRepository : Repository {
     fun hent(identifikator: UUID): Person
     fun finn(ident: Ident): Person?
     fun finn(identer: List<Ident>): Person?
+    fun oppdaterIdenter(person: Person, identer: List<Ident>): Person
 }

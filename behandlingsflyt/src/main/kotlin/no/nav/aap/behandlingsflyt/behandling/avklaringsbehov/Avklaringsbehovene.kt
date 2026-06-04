@@ -102,7 +102,7 @@ class Avklaringsbehovene(
                     perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering,
                     perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert
                 )
-                if (avklaringsbehov.erVentepunkt() || avklaringsbehov.erBrevVentebehov() || avklaringsbehov.erAutomatisk()) {
+                if (avklaringsbehov.erVentepunkt() || avklaringsbehov.erAutomatisk()) {
                     // TODO: Vurdere om funnet steg bør ligge på endringen...
                     repository.endreVentepunkt(avklaringsbehov.id, avklaringsbehov.historikk.last(), funnetISteg)
                 } else {
@@ -221,16 +221,8 @@ class Avklaringsbehovene(
         return alle().filter { it.erÅpent() }.toList()
     }
 
-    fun skalTilbakeføresEtterTotrinnsVurdering(): Boolean {
-        return tilbakeførtFraBeslutter().isNotEmpty()
-    }
-
     override fun skalTilbakeføresEtterKvalitetssikring(): Boolean {
         return tilbakeførtFraKvalitetssikrer().isNotEmpty()
-    }
-
-    fun tilbakeførtFraBeslutter(): List<Avklaringsbehov> {
-        return alle().filter { it.status() == Status.SENDT_TILBAKE_FRA_BESLUTTER }.toList()
     }
 
     fun tilbakeførtFraKvalitetssikrer(): List<Avklaringsbehov> {
@@ -270,6 +262,10 @@ class Avklaringsbehovene(
             .any { avklaringsbehov -> avklaringsbehov.erIkkeAvbrutt() }
     }
 
+    fun harAvklaringsbehovSomKreverKvalitetssikringMenIkkeErGodkjent(): Boolean {
+        return alle().any { it.erIkkeAvbrutt() && it.kreverKvalitetssikring() && !it.erKvalitetssikret() }
+    }
+
     fun harVærtSendtTilbakeFraBeslutterTidligere(): Boolean {
         return alle().any { avklaringsbehov -> avklaringsbehov.harVærtSendtTilbakeFraBeslutterTidligere() }
     }
@@ -305,6 +301,12 @@ class Avklaringsbehovene(
         kontekst: FlytKontekst,
         repositoryProvider: RepositoryProvider
     ) {
+        if (løsning.definisjon().erFrivillig()
+            && løsning.løsningerForPerioder.isEmpty()
+        ) {
+            return
+        }
+
         val perioderDekketAvLøsning = løsning.løsningerForPerioder.sortedBy { it.fom }
             .somTidslinje { Periode(fom = it.fom, tom = it.tom ?: Tid.MAKS) }
             .map { true }.komprimer()
@@ -357,10 +359,6 @@ class Avklaringsbehovene(
 
     fun hentÅpneVentebehov(): List<Avklaringsbehov> {
         return alle().filter { it.erVentepunkt() && it.erÅpent() }
-    }
-
-    override fun harÅpentBrevVentebehov(): Boolean {
-        return alle().any { avklaringsbehov -> avklaringsbehov.erBrevVentebehov() && avklaringsbehov.erÅpent() }
     }
 
     override fun erVurdertTidligereIBehandlingen(definisjon: Definisjon): Boolean {

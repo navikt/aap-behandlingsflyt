@@ -167,16 +167,17 @@ class ManuellInntektGrunnlagRepositoryImpl(private val connection: DBConnection)
     override fun slett(behandlingId: BehandlingId) {
         val manuellInntektVurderingerIds = hentVurderingerIds(behandlingId)
 
-        // TODO: burde ikke det slettes rader fra MANUELL_INNTEKT_VURDERINGER også?
         val deletedRows = connection.executeReturnUpdated(
             """
             delete from MANUELL_INNTEKT_VURDERING_GRUNNLAG where behandling_id = ?;
-            delete from MANUELL_INNTEKT_VURDERING where id = ANY(?::bigint[]);
+            delete from MANUELL_INNTEKT_VURDERING where MANUELL_INNTEKT_VURDERINGER_ID = ANY(?::bigint[]);
+            delete from MANUELL_INNTEKT_VURDERINGER where id = ANY(?::bigint[]);
         """.trimIndent()
         ) {
             setParams {
                 setLong(1, behandlingId.id)
                 setLongArray(2, manuellInntektVurderingerIds)
+                setLongArray(3, manuellInntektVurderingerIds)
             }
         }
         log.info("Slettet $deletedRows rader fra MANUELL_INNTEKT_VURDERING_GRUNNLAG")

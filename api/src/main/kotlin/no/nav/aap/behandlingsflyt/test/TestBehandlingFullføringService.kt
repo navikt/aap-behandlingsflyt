@@ -179,15 +179,11 @@ class TestBehandlingFullføringService(
                     harSkadeSykdomEllerLyte = true,
                     kodeverk = "ICPC2",
                     hoveddiagnose = "A03",
-                    erArbeidsevnenNedsatt = true,
                     harNedsattArbeidsevne = ArbeidsevneNedsattValg.JA,
                     erNedsettelseIArbeidsevneMerEnnHalvparten = true,
                     erSkadeSykdomEllerLyteVesentligdel = true,
-                    erNedsettelseIArbeidsevneAvEnVissVarighet = true,
                     erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
                     yrkesskadeBegrunnelse = null,
-                    erNedsettelseMinstHalvparten = null,
-                    erNedsettelseMerEnnYrkesskadegrense = null,
                     fom = sak.rettighetsperiode.fom,
                     tom = null,
                 )
@@ -236,7 +232,7 @@ class TestBehandlingFullføringService(
         Definisjon.KVALITETSSIKRING -> KvalitetssikringLøsning(
             alleAvklaringsbehov
                 .filter { it.erIkkeAvbrutt() && (it.erTotrinn() || it.kreverKvalitetssikring()) }
-                .map { TotrinnsVurdering(it.definisjon.kode, true, "begrunnelse", emptyList()) }
+                .map { TotrinnsVurdering(it.definisjon.kode, true, "begrunnelse", emptyList(), markeringer = emptyList()) }
         )
 
         Definisjon.FASTSETT_BEREGNINGSTIDSPUNKT -> FastsettBeregningstidspunktLøsning(
@@ -362,7 +358,7 @@ class TestBehandlingFullføringService(
         Definisjon.FATTE_VEDTAK -> FatteVedtakLøsning(
             alleAvklaringsbehov
                 .filter { it.erIkkeAvbrutt() && it.erTotrinn() }
-                .map { TotrinnsVurdering(it.definisjon.kode, true, "begrunnelse", emptyList()) }
+                .map { TotrinnsVurdering(it.definisjon.kode, true, "begrunnelse", emptyList(), markeringer = emptyList()) }
         )
 
         Definisjon.SKRIV_VEDTAKSBREV -> {

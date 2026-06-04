@@ -16,16 +16,63 @@ public data class AvsluttetBehandlingDTO(
     val vilkårsResultat: VilkårsResultatDTO,
     val beregningsGrunnlag: BeregningsgrunnlagDTO?,
     val diagnoser: Diagnoser? = null,
+    val diagnoserPeriodisert: List<DiagnoserMedPeriode>,
     val rettighetstypePerioder: List<RettighetstypePeriode>,
     val resultat: ResultatKode?,
     val vedtakstidspunkt: LocalDateTime?,
     val fritaksvurderinger: Iterable<Fritakvurdering>? = null,
     val perioderMedArbeidsopptrapping: List<PeriodeDTO>,
     val vedtattStansOpphør: List<StansEllerOpphør>,
+    val samordning: SamordningDTO,
     val institusjonsopphold: List<PeriodeDTO>
 )
 
 public data class PeriodeDTO(val fom: LocalDate, val tom: LocalDate)
+
+public data class SamordningDTO(
+    val uføre: List<UførePerioder>,
+    val statligeYtelser: List<StatligeYtelser>,
+    val avregningAndreYtelser: List<AvregningAndreYtelser>,
+    val arbeidsgiver: List<Arbeidsgiver>
+) {
+    public data class UførePerioder(val fom: LocalDate, val tom: LocalDate, val grad: Int)
+
+    public data class StatligeYtelser(
+        val fom: LocalDate,
+        val tom: LocalDate,
+        val ytelse: SamordningYtelser,
+        val prosent: Int
+    )
+
+    public enum class SamordningYtelser {
+        SYKEPENGER,
+        FORELDREPENGER,
+        PLEIEPENGER,
+        SVANGERSKAPSPENGER,
+        OMSORGSPENGER,
+        OPPLÆRINGSPENGER,
+        FERIE_I_SYKEPENGEPERIODE,
+    }
+
+    public data class Arbeidsgiver(val fom: LocalDate, val tom: LocalDate)
+
+    public data class AvregningAndreYtelser(
+        val fom: LocalDate,
+        val tom: LocalDate,
+        val ytelse: AndreStatligeYtelser,
+    )
+
+    public enum class AndreStatligeYtelser {
+        SYKEPENGER,
+        FORELDREPENGER,
+        TILTAKSPENGER,
+        OMSTILLINGSSTØNAD,
+        OVERGANGSSTØNAD,
+        DAGPENGER,
+        BARNEPENSJON,
+        GJENLEVENDEPENSJON,
+    }
+}
 
 public data class Fritakvurdering(
     val harFritak: Boolean,
@@ -89,6 +136,14 @@ public enum class Avslagstype {
 }
 
 public data class Diagnoser(
+    val kodeverk: String,
+    val diagnosekode: String,
+    val bidiagnoser: List<String>
+)
+
+
+public data class DiagnoserMedPeriode(
+    val periodeDTO: PeriodeDTO,
     val kodeverk: String,
     val diagnosekode: String,
     val bidiagnoser: List<String>

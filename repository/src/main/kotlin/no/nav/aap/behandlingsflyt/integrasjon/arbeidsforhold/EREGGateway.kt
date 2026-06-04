@@ -17,8 +17,8 @@ import org.slf4j.LoggerFactory
 import java.net.URI
 
 class EREGGateway : EnhetsregisteretGateway {
-    private val url = URI.create(requiredConfigForKey("integrasjon.ereg.url") + "/api/v2/organisasjon")
-    private val config = ClientConfig(scope = requiredConfigForKey("integrasjon.ereg.scope"))
+    private val url = URI.create(requiredConfigForKey("INTEGRASJON_EREG_URL") + "/api/v2/organisasjon")
+    private val config = ClientConfig(scope = requiredConfigForKey("INTEGRASJON_EREG_SCOPE"))
     private val log = LoggerFactory.getLogger(javaClass)
 
     companion object : Factory<EnhetsregisteretGateway> {

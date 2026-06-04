@@ -14,11 +14,15 @@ import no.nav.aap.motor.JobbInput
 import no.nav.aap.motor.JobbUtfører
 import no.nav.aap.motor.ProvidersJobbSpesifikasjon
 import org.slf4j.LoggerFactory
+import java.time.Clock
+import java.time.LocalDate
+import java.time.LocalDate.now
 
 class OpprettBehandlingUtvidVedtakslengdeJobbUtfører(
     private val prosesserBehandlingService: ProsesserBehandlingService,
     private val behandlingService: BehandlingService,
     private val vedtakslengdeService: VedtakslengdeService,
+    private val clock: Clock = Clock.systemDefaultZone()
 ) : JobbUtfører {
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -38,6 +42,11 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtfører(
 
             when (vedtakslengdeUtvidelse) {
                 is VedtakslengdeUtvidelse.Automatisk -> {
+                    val datoForUtvidelse = now(clock).plusDays(VedtakslengdeService.ANTALL_DAGER_FØR_UTVIDELSE)
+                    if (vedtakslengdeUtvidelse.forrigeSluttdato > datoForUtvidelse) {
+                        log.error("Saken er ikke aktuell for utvidelse ennå - sjekk ut hvorfor dette skjer ($vedtakslengdeUtvidelse)")
+                        return
+                    }
                     log.info("Oppretter automatisk behandling for utvidelse ($vedtakslengdeUtvidelse) av vedtakslengde for sak $sakId")
 
                     val utvidVedtakslengdeBehandling = opprettNyBehandling(sakId, Vurderingsbehov.UTVID_VEDTAKSLENGDE)

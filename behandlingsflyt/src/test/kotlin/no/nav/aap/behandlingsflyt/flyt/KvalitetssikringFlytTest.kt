@@ -1,9 +1,10 @@
 package no.nav.aap.behandlingsflyt.flyt
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.ForeslåVedtakLøsning
+import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov
-import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
+import no.nav.aap.behandlingsflyt.test.FakeUnleashBaseWithDefaultDisabled
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import org.assertj.core.api.Assertions.assertThat
@@ -11,7 +12,9 @@ import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status as AvklaringsbehovStatus
 
-class KvalitetssikringFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
+class KvalitetssikringFlytTest : AbstraktFlytOrkestratorTest(
+    KvalitetssikringFlytTestUnleash::class
+) {
     @Test
     fun `Kvalitetssikrer godkjenner alle avklaringsbehov`() {
         val fom = LocalDate.now().minusMonths(3)
@@ -83,12 +86,18 @@ class KvalitetssikringFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash
 
                 assertThat(avklaringsbehovene.hentBehovForDefinisjon(Definisjon.KVALITETSSIKRING))
                     .extracting { it?.status() }
-                    .isEqualTo(AvklaringsbehovStatus.OPPRETTET)
+                    .describedAs { "Avklaringsbehovet skal først gjenåpnes når flyten er tilbake igjen til kvalitetssikring" }
+                    .isEqualTo(AvklaringsbehovStatus.AVSLUTTET)
+            }
+            .løsSykdom(fom)
+            .bekreftVurderinger()
+            .medKontekst {
+                assertThat(åpneAvklaringsbehov).hasSize(1)
+                assertThat(åpneAvklaringsbehov.first().definisjon)
+                    .describedAs { "Kvalitetssikring skal gjenåpnes etter ny løsning av underkjent behov" }
+                    .isEqualTo(Definisjon.KVALITETSSIKRING)
             }
 
-        val stegetsEgetBehov = hentAlleAvklaringsbehov(behandling)
-            .filter { behov -> behov.definisjon == Definisjon.KVALITETSSIKRING }
-        assertThat(stegetsEgetBehov.first().status()).isEqualTo(AvklaringsbehovStatus.OPPRETTET)
     }
 
     @Test
@@ -334,4 +343,37 @@ class KvalitetssikringFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash
             .filter { behov -> behov.definisjon == Definisjon.FASTSETT_BEREGNINGSTIDSPUNKT }
         assertThat(fastsettBeregningstidspunktBehov.first().status()).isEqualTo(AvklaringsbehovStatus.OPPRETTET)
     }
+
+    @Test
+    fun `Revurdering skal innom kvalitetssikrer hvis forrige behandling var avslag og det kommer ny søknad`() {
+        val fom = LocalDate.now().minusMonths(3)
+
+        val person = TestPersoner.STANDARD_PERSON()
+
+        val (sak, behandlingMedAvslag) = sendInnFørsteSøknad(person = person)
+        behandlingMedAvslag
+            .løsSykdom(fom, erOppfylt = false)
+            .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
+            .kvalitetssikre()
+            .fattVedtak()
+            .løsVedtaksbrev(typeBrev = TypeBrev.VEDTAK_AVSLAG)
+
+        assertThat(hentÅpneAvklaringsbehov(behandlingMedAvslag)).isEmpty()
+
+        val revurdering = sak.sendInnSøknad(TestSøknader.STANDARD_SØKNAD)
+        revurdering.løsSykdom(fom)
+            .løsBistand(fom)
+            .løsRefusjonskrav()
+            .løsSykdomsvurderingBrev()
+            .bekreftVurderinger().medKontekst {
+                assertThat(hentÅpneAvklaringsbehov(revurdering).map { it.definisjon }).describedAs(
+                    "Revurdering etter avslag skal innom kvalitetssikring"
+                ).containsOnly(Definisjon.KVALITETSSIKRING)
+            }
+    }
 }
+
+object KvalitetssikringFlytTestUnleash : FakeUnleashBaseWithDefaultDisabled(
+    enabledFlags = listOf(BehandlingsflytFeature.RevurderingEtterAvslagSkalKvalitetssikres)
+)

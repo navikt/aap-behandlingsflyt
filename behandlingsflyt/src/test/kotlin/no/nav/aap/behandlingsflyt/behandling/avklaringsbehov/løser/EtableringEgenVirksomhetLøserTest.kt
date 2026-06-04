@@ -7,8 +7,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.Bistandsvu
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EierVirksomhet
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ErNedsettelseMerEnnYrkesskadegrenseValg
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ErNedsettelseMinstHalvpartenValg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.help.opprettInMemorySakOgBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
@@ -182,17 +180,12 @@ class EtableringEgenVirksomhetLøserTest {
                     begrunnelse = "...",
                     vurderingenGjelderFra = LocalDate.now(),
                     vurderingenGjelderTil = LocalDate.now().plusMonths(6),
-                    dokumenterBruktIVurdering = emptyList(),
                     harSkadeSykdomEllerLyte = true,
                     harNedsattArbeidsevne = ArbeidsevneNedsattValg.JA,
                     erSkadeSykdomEllerLyteVesentligdel = true,
-                    erNedsettelseIArbeidsevneAvEnVissVarighet = true,
                     erNedsettelseIArbeidsevneMerEnnHalvparten = true,
-                    erNedsettelseMinstHalvparten = ErNedsettelseMinstHalvpartenValg.JA,
                     erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = false,
-                    erNedsettelseMerEnnYrkesskadegrense = ErNedsettelseMerEnnYrkesskadegrenseValg.JA,
                     yrkesskadeBegrunnelse = null,
-                    erArbeidsevnenNedsatt = true,
                     diagnose = null,
                     vurdertIBehandling = behandling.id,
                     opprettet = Instant.now(),

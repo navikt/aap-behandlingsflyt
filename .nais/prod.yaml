@@ -8,12 +8,15 @@ metadata:
     sub: behandlingsflyt
 spec:
   image: {{image}}
+  replicas:
+    min: 2
+    max: 4
   resources:
     limits:
-      memory: 1024Mi
+      memory: 1536Mi
     requests:
-      cpu: 500m
-      memory: 750Mi
+      cpu: 1000m
+      memory: 1024Mi
   observability:
     autoInstrumentation:
       enabled: true
@@ -28,7 +31,7 @@ spec:
   gcp:
     sqlInstances:
       - type: POSTGRES_16
-        tier: db-custom-1-3840
+        tier: db-custom-2-7680
         diskAutoresize: true
         highAvailability: true
         pointInTimeRecovery: true

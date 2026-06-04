@@ -15,6 +15,10 @@ open class FakeUnleashBase(
     override fun isEnabled(featureToggle: FeatureToggle, ident: String) = isEnabled(featureToggle)
 
     override fun isEnabled(featureToggle: FeatureToggle, ident: String, typeBrev: TypeBrev) = isEnabled(featureToggle)
+
+    override fun isVariantEnabled(featureToggle: FeatureToggle, variantName: String) = false
+
+    override fun getVariantValue(featureToggle: FeatureToggle, variantName: String) = ""
 }
 
 open class FakeUnleashBaseWithDefaultDisabled(
@@ -26,6 +30,10 @@ open class FakeUnleashBaseWithDefaultDisabled(
     override fun isEnabled(featureToggle: FeatureToggle, ident: String) = isEnabled(featureToggle)
 
     override fun isEnabled(featureToggle: FeatureToggle, ident: String, typeBrev: TypeBrev) = isEnabled(featureToggle)
+
+    override fun isVariantEnabled(featureToggle: FeatureToggle, variantName: String) = false
+
+    override fun getVariantValue(featureToggle: FeatureToggle, variantName: String) = ""
 }
 
 
@@ -39,13 +47,14 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.KvalitetssikringVed2213 to true,
         BehandlingsflytFeature.VisIkkeRelevantPeriode to true,
         BehandlingsflytFeature.MigrerStansOgOpphor to true,
-        BehandlingsflytFeature.ForeslaaVedtakVedtakslengde to true,
         BehandlingsflytFeature.SamordningFaktagrunnlagBrev to true,
-        BehandlingsflytFeature.GReguleringsJobb to true,
         BehandlingsflytFeature.GReguleringUtplukkJobb to true,
         BehandlingsflytFeature.ForutgaaendeGap to true,
-        BehandlingsflytFeature.FjernTilbakefoeringTransisjon to true,
         BehandlingsflytFeature.MaritimtArbeid to true,
+        BehandlingsflytFeature.ForstegangsbehandlingEtterAvslagOppgave to true,
+        BehandlingsflytFeature.AlleEndringerKreverKvalitetssikring to true,
+        BehandlingsflytFeature.MeldepliktForsteFraForsteInnvilgelse to true,
+        BehandlingsflytFeature.RevurderingEtterAvslagSkalKvalitetssikres to true
         )
 )
 

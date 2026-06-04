@@ -5,8 +5,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.Skadekombina
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.Yrkesskade
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Diagnose
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ErNedsettelseMerEnnYrkesskadegrenseValg
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ErNedsettelseMinstHalvpartenValg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.verdityper.Bruker
@@ -50,18 +48,10 @@ data class SykdomsvurderingLøsningDto(
     override val tom: LocalDate?,
     val dokumenterBruktIVurdering: List<JournalpostId>,
     val harSkadeSykdomEllerLyte: Boolean,
-    @Deprecated("Erstattes av harNedsattArbeidsevne")
-    val erArbeidsevnenNedsatt: Boolean?,
     val harNedsattArbeidsevne: ArbeidsevneNedsattValg? = null,
     val erSkadeSykdomEllerLyteVesentligdel: Boolean?,
-    @Deprecated("Bakes inn i harNedsattArbeidsevne")
-    val erNedsettelseIArbeidsevneAvEnVissVarighet: Boolean?,
     val erNedsettelseIArbeidsevneMerEnnHalvparten: Boolean?,
-    @Deprecated("Bruk erNedsettelseIArbeidsevneMerEnnHalvparten")
-    val erNedsettelseMinstHalvparten: ErNedsettelseMinstHalvpartenValg?,
     val erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense: Boolean?,
-    @Deprecated("Bruk erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense")
-    val erNedsettelseMerEnnYrkesskadegrense: ErNedsettelseMerEnnYrkesskadegrenseValg?,
     val yrkesskadeBegrunnelse: String?,
     val kodeverk: String? = null,
     val hoveddiagnose: String? = null,
@@ -75,79 +65,16 @@ data class SykdomsvurderingLøsningDto(
             begrunnelse = begrunnelse,
             vurderingenGjelderFra = fom,
             vurderingenGjelderTil = tom,
-            dokumenterBruktIVurdering = dokumenterBruktIVurdering,
-            erArbeidsevnenNedsatt = erArbeidsevnenNedsatt,
-            harNedsattArbeidsevne = utledHarNedsattArbeidsevne(),
+            harNedsattArbeidsevne = harNedsattArbeidsevne,
             harSkadeSykdomEllerLyte = harSkadeSykdomEllerLyte,
             erSkadeSykdomEllerLyteVesentligdel = erSkadeSykdomEllerLyteVesentligdel,
             erNedsettelseIArbeidsevneMerEnnHalvparten = erNedsettelseIArbeidsevneMerEnnHalvparten,
-            erNedsettelseMinstHalvparten = utledErNedsettelseMinstHalvparten(),
-            erNedsettelseIArbeidsevneAvEnVissVarighet = erNedsettelseIArbeidsevneAvEnVissVarighet,
             erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense,
-            erNedsettelseMerEnnYrkesskadegrense = utledErNedsettelseMerEnnYrkesskadegrense(),
             yrkesskadeBegrunnelse = yrkesskadeBegrunnelse,
             diagnose = kodeverk?.let { Diagnose(kodeverk, hoveddiagnose, bidiagnoser) },
             vurdertAv = bruker,
             opprettet = Instant.now(),
             vurdertIBehandling = vurdertIBehandling
         )
-    }
-
-    private fun utledHarNedsattArbeidsevne(): ArbeidsevneNedsattValg? {
-        if (harNedsattArbeidsevne != null) return harNedsattArbeidsevne
-
-        if (erArbeidsevnenNedsatt == null) return null
-        if (!erArbeidsevnenNedsatt) return ArbeidsevneNedsattValg.NEI
-
-        val erSykdomMedVissVarighet =
-            utledErNedsettelseMinstHalvparten() == ErNedsettelseMinstHalvpartenValg.JA_FORBIGÅENDE_PROBLEMER || utledErNedsettelseMerEnnYrkesskadegrense() == ErNedsettelseMerEnnYrkesskadegrenseValg.JA_FORBIGÅENDE_PROBLEMER
-        if (erSykdomMedVissVarighet) {
-            return ArbeidsevneNedsattValg.JA_FORBIGÅENDE_PROBLEMER
-        }
-        return ArbeidsevneNedsattValg.JA
-    }
-
-    private fun utledErNedsettelseMinstHalvparten(): ErNedsettelseMinstHalvpartenValg? {
-        if (erNedsettelseMinstHalvparten != null) {
-            return erNedsettelseMinstHalvparten
-        }
-
-        return when (erNedsettelseIArbeidsevneMerEnnHalvparten) {
-            true if erNedsettelseIArbeidsevneAvEnVissVarighet == true ->
-                ErNedsettelseMinstHalvpartenValg.JA
-
-            true if erNedsettelseIArbeidsevneAvEnVissVarighet == false ->
-                ErNedsettelseMinstHalvpartenValg.JA_FORBIGÅENDE_PROBLEMER
-
-            true if erSkadeSykdomEllerLyteVesentligdel == true ->
-                ErNedsettelseMinstHalvpartenValg.JA
-
-            false ->
-                ErNedsettelseMinstHalvpartenValg.NEI
-
-            else -> null
-        }
-    }
-
-    private fun utledErNedsettelseMerEnnYrkesskadegrense(): ErNedsettelseMerEnnYrkesskadegrenseValg? {
-        if (erNedsettelseMerEnnYrkesskadegrense != null) {
-            return erNedsettelseMerEnnYrkesskadegrense
-        }
-
-        return when (erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense) {
-            true if erNedsettelseIArbeidsevneAvEnVissVarighet == true ->
-                ErNedsettelseMerEnnYrkesskadegrenseValg.JA
-
-            true if erNedsettelseIArbeidsevneAvEnVissVarighet == false ->
-                ErNedsettelseMerEnnYrkesskadegrenseValg.JA_FORBIGÅENDE_PROBLEMER
-
-            true if erSkadeSykdomEllerLyteVesentligdel == true ->
-                ErNedsettelseMerEnnYrkesskadegrenseValg.JA
-
-            false ->
-                ErNedsettelseMerEnnYrkesskadegrenseValg.NEI
-
-            else -> null
-        }
     }
 }

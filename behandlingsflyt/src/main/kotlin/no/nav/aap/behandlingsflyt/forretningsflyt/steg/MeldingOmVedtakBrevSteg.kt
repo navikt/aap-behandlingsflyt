@@ -1,10 +1,12 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.avbrytaktivitetspliktbehandling.AvbrytAktivitetspliktbehandlingService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.brev.BarnetilleggSatsRegulering
 import no.nav.aap.behandlingsflyt.behandling.brev.BrevBehov
 import no.nav.aap.behandlingsflyt.behandling.brev.BrevUtlederService
+import no.nav.aap.behandlingsflyt.behandling.brev.KlageOpprettholdelse
 import no.nav.aap.behandlingsflyt.behandling.brev.UtvidVedtakslengde
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingService
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
@@ -35,6 +37,7 @@ class MeldingOmVedtakBrevSteg(
     private val behandlingRepository: BehandlingRepository,
     private val sakRepository: SakRepository,
     private val trekkKlageService: TrekkKlageService,
+    private val avbrytAktivitetspliktbehandlingService: AvbrytAktivitetspliktbehandlingService,
     private val avklaringsbehovService: AvklaringsbehovService,
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
     private val unleashGateway: UnleashGateway,
@@ -45,23 +48,34 @@ class MeldingOmVedtakBrevSteg(
         behandlingRepository = repositoryProvider.provide(),
         sakRepository = repositoryProvider.provide(),
         trekkKlageService = TrekkKlageService(repositoryProvider),
+        avbrytAktivitetspliktbehandlingService = AvbrytAktivitetspliktbehandlingService(repositoryProvider),
         avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
         avklaringsbehovRepository = repositoryProvider.provide(),
         unleashGateway = gatewayProvider.provide(),
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        val klageErTrukket = trekkKlageService.klageErTrukket(kontekst.behandlingId)
+        val behandlingErAvbrutt =
+            avbrytAktivitetspliktbehandlingService.behandlingErAvbrutt(kontekst.behandlingId)
+                    || trekkKlageService.klageErTrukket(kontekst.behandlingId)
         val brevBehov = brevUtlederService.utledBehovForMeldingOmVedtak(kontekst.behandlingId)
         val harBestillingOmVedtakBrev = brevbestillingService.harBestillingOmVedtak(kontekst.behandlingId)
-        avklaringsbehovService.oppdaterAvklaringsbehov(
+
+        listOf(
             Definisjon.SKRIV_VEDTAKSBREV,
-            vedtakBehøverVurdering = { vedtakBehøverVurdering(klageErTrukket, brevBehov) },
-            erTilstrekkeligVurdert = { brevbestillingService.erAlleBestillingerOmVedtakIEndeTilstand(kontekst.behandlingId) },
-            tilbakestillGrunnlag = { tilbakestillGrunnlag(kontekst.behandlingId) },
-            kontekst
-        )
-        if (brevBehov != null && !klageErTrukket && !harBestillingOmVedtakBrev) {
+            Definisjon.SKRIV_VEDTAKSBREV_SAKSBEHANDLER
+        ).forEach { definisjon ->
+            avklaringsbehovService.oppdaterAvklaringsbehov(
+                definisjon,
+                vedtakBehøverVurdering = { vedtakBehøverVurdering(behandlingErAvbrutt, definisjon, brevBehov) },
+                erTilstrekkeligVurdert =
+                    { brevbestillingService.erAlleBestillingerOmVedtakIEndeTilstand(kontekst.behandlingId) },
+                tilbakestillGrunnlag = { tilbakestillGrunnlag(kontekst.behandlingId) },
+                kontekst
+            )
+        }
+
+        if (brevBehov != null && !behandlingErAvbrutt && !harBestillingOmVedtakBrev) {
             bestillBrev(kontekst, brevBehov)
         }
         return Fullført
@@ -84,8 +98,16 @@ class MeldingOmVedtakBrevSteg(
         }
     }
 
-    private fun vedtakBehøverVurdering(klageErTrukket: Boolean, brevBehov: BrevBehov?): Boolean {
-        return !klageErTrukket && brevBehov != null && !brevBehov.typeBrev.erAutomatiskBrev()
+    private fun vedtakBehøverVurdering(
+        behandlingErAvbrutt: Boolean,
+        forDefinisjon: Definisjon,
+        brevBehov: BrevBehov?
+    ): Boolean {
+        val harManueltBrevbehov = (!behandlingErAvbrutt && brevBehov != null && !brevBehov.typeBrev.erAutomatiskBrev())
+        return when (brevBehov) {
+            is KlageOpprettholdelse -> harManueltBrevbehov && forDefinisjon == Definisjon.SKRIV_VEDTAKSBREV_SAKSBEHANDLER
+            else -> harManueltBrevbehov && forDefinisjon == Definisjon.SKRIV_VEDTAKSBREV
+        }
     }
 
     private fun bestillBrev(kontekst: FlytKontekstMedPerioder, brevBehov: BrevBehov) {

@@ -71,12 +71,12 @@ class ApiInternGatewayImpl : ApiInternGateway {
     private val log = LoggerFactory.getLogger(javaClass)
 
     private val restClient = RestClient.withDefaultResponseHandler(
-        config = ClientConfig(scope = requiredConfigForKey("integrasjon.datadeling.scope")),
+        config = ClientConfig(scope = requiredConfigForKey("INTEGRASJON_DATADELING_SCOPE")),
         tokenProvider = AzureM2MTokenProvider,
         prometheus = prometheus
     )
 
-    private val uri = URI.create(requiredConfigForKey("integrasjon.datadeling.url"))
+    private val uri = URI.create(requiredConfigForKey("INTEGRASJON_DATADELING_URL"))
 
     override fun sendPerioder(ident: String, perioder: List<Periode>) {
         restClient.post(

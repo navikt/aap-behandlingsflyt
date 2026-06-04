@@ -8,12 +8,12 @@ import no.nav.aap.behandlingsflyt.Tags
 import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Meldekort
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.MeldekortRepository
 import no.nav.aap.behandlingsflyt.hendelse.mottak.MottattHendelseService
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
-import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ArbeidIPeriodeV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Innsending
@@ -28,8 +28,11 @@ import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.komponenter.server.auth.bruker
+import no.nav.aap.komponenter.tidslinje.Segment
+import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
+import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.Operasjon
 import no.nav.aap.tilgang.Rolle
@@ -41,7 +44,6 @@ import no.nav.aap.verdityper.dokument.Kanal
 import java.time.Clock
 import java.time.Instant
 import java.time.LocalDate
-import java.time.LocalDateTime
 import java.time.ZoneId
 import javax.sql.DataSource
 
@@ -66,7 +68,6 @@ fun NormalOpenAPIRoute.meldekortApi(
                 val underveisRepository = repositoryProvider.provide<UnderveisRepository>()
                 val sakRepository = repositoryProvider.provide<SakRepository>()
                 val mottattDokumentRepository = repositoryProvider.provide<MottattDokumentRepository>()
-                val flytJobbRepository = repositoryProvider.provide<FlytJobbRepository>()
                 val behandlingService = BehandlingService(repositoryProvider, gatewayProvider)
 
                 val sak = sakRepository.hent(Saksnummer(req.saksnummer))
@@ -74,35 +75,37 @@ fun NormalOpenAPIRoute.meldekortApi(
 
                 val meldeperiodeMedMeldekort = sisteFattedeVedtaksBehandling?.let { behandling ->
                     val underveisGrunnlag = underveisRepository.hentHvisEksisterer(behandling.id) ?: return@let null
-                    val meldeperioder = hentAktuelleMeldeperioder(underveisGrunnlag, clock)
+                    val meldeperioderMedOppfyltePerioder = hentAktuelleMeldeperioderMedOppfyltePerioder(underveisGrunnlag)
                     val meldekortene = meldekortRepository.hentHvisEksisterer(behandling.id)?.meldekort().orEmpty()
                     val mottatteDokumenter = mottattDokumentRepository
-                        .hentDokumenterAvType(behandling.id, InnsendingType.MELDEKORT)
+                        .hentDokumenterAvType(sak.id, InnsendingType.MELDEKORT)
                         .associateBy { it.referanse }
 
-                    meldeperioder.map { meldeperiode ->
+                    meldeperioderMedOppfyltePerioder.map { (meldeperiode, perioder) ->
                         val meldekort = nyesteMeldekortForMeldeperiode(meldekortene, meldeperiode)
                         val tidligereMeldekortListe = tidligereMeldekortForMeldeperiode(meldekortene, meldeperiode)
 
                         if (meldekort != null) {
                             // Henter ut relevante metadata for meldekort hvor saksbehandler har korrigert timer
                             val innsendingReferanse = InnsendingReferanse(meldekort.journalpostId)
-                            val meldekortData = mottatteDokumenter[innsendingReferanse]
-                                ?.strukturerteData<MeldekortV0>()?.data
+                            val mottattDokument = mottatteDokumenter[innsendingReferanse]
+                            val meldekortData = mottattDokument?.strukturerteData<MeldekortV0>()?.data
 
                             MeldeperiodeMedMeldekortDto(
                                 meldeperiode = meldeperiode,
-                                meldekort = meldekort.toDto(meldekortData?.begrunnelse, meldekortData?.opprettetAv),
+                                perioder = perioder,
+                                meldekort = meldekort.toDto(meldekortData?.begrunnelse, meldekortData?.opprettetAv, mottattDokument?.opprettetTid?.toLocalDate()),
                                 tidligereMeldekort = tidligereMeldekortListe.map { tidligere ->
                                     val ref = InnsendingReferanse(tidligere.journalpostId)
-                                    val data = mottatteDokumenter[ref]
-                                        ?.strukturerteData<MeldekortV0>()?.data
-                                    tidligere.toDto(data?.begrunnelse, data?.opprettetAv)
+                                    val tidligereDokument = mottatteDokumenter[ref]
+                                    val data = tidligereDokument?.strukturerteData<MeldekortV0>()?.data
+                                    tidligere.toDto(data?.begrunnelse, data?.opprettetAv, tidligereDokument?.opprettetTid?.toLocalDate())
                                 },
                             )
                         } else {
                             MeldeperiodeMedMeldekortDto(
                                 meldeperiode = meldeperiode,
+                                perioder = perioder,
                                 meldekort = null,
                             )
                         }
@@ -111,7 +114,6 @@ fun NormalOpenAPIRoute.meldekortApi(
 
                 MeldeperioderMedMeldekortResponse(
                     meldeperioderMedMeldekort = meldeperiodeMedMeldekort?.toSet() ?: emptySet(),
-                    meldekortProsesseringStatus = hentProsesseringStatus(flytJobbRepository, sak)
                 )
             }
 
@@ -149,16 +151,44 @@ fun NormalOpenAPIRoute.meldekortApi(
                     tidspunkt = tidspunkt
                 )
 
-                val innsending = tilInnsending(sak, journalpostId, tidspunkt, meldekort)
+                val innsending = tilInnsending(sak, journalpostId, body.meldeDato, meldekort)
 
                 // Oppretter mottatt hendelse som prosesseres som en meldekort-behandling
                 MottattHendelseService(repositoryProvider).registrerMottattHendelse(innsending)
 
-                OppdaterMeldekortResponse(journalpostId.identifikator)
+                OppdaterMeldekortResponse(
+                    journalpostId = journalpostId.identifikator,
+                    oppdatertTidspunkt = LocalDate.ofInstant(tidspunkt, ZoneId.of("Europe/Oslo")),
+                )
             }
 
             respond(response)
         }
+
+        route("prosessering") {
+            authorizedGet<SaksnummerParameter, MeldekortProsesseringResponse>(
+                AuthorizationParamPathConfig(
+                    relevanteIdenterResolver = relevanteIdenterForSakResolver(repositoryRegistry, dataSource),
+                    sakPathParam = SakPathParam("saksnummer")
+                ),
+                null,
+                modules = arrayOf(TagModule(listOf(Tags.Sak))),
+            ) { req ->
+                val response = dataSource.transaction(readOnly = true) { connection ->
+                    val repositoryProvider = repositoryRegistry.provider(connection)
+                    val sakRepository = repositoryProvider.provide<SakRepository>()
+                    val flytJobbRepository = repositoryProvider.provide<FlytJobbRepository>()
+
+                    val sak = sakRepository.hent(Saksnummer(req.saksnummer))
+                    MeldekortProsesseringResponse(
+                        meldekortProsesseringStatus = hentProsesseringStatus(flytJobbRepository, sak)
+                    )
+                }
+
+                respond(response)
+            }
+        }
+
     }
 }
 
@@ -179,14 +209,14 @@ private fun hentProsesseringStatus(
 private fun tilInnsending(
     sak: Sak,
     journalpostId: JournalpostId,
-    tidspunkt: Instant,
+    meldeDato: LocalDate,
     meldekort: MeldekortV0
 ): Innsending = Innsending(
     saksnummer = sak.saksnummer,
     referanse = InnsendingReferanse(journalpostId),
     type = InnsendingType.MELDEKORT,
     kanal = Kanal.DIGITAL,
-    mottattTidspunkt = LocalDateTime.ofInstant(tidspunkt, ZoneId.of("Europe/Oslo")),
+    mottattTidspunkt = meldeDato.atStartOfDay(),
     melding = meldekort,
 )
 
@@ -199,7 +229,7 @@ private fun tilMeldekort(oppdaterMeldekortRequest: OppdaterMeldekortRequest, vur
             ArbeidIPeriodeV0(
                 fraOgMedDato = it.dato,
                 tilOgMedDato = it.dato,
-                timerArbeid = it.timerArbeidet ?: 0.0,
+                timerArbeid = it.timerArbeidet,
             )
         }
     )
@@ -240,25 +270,23 @@ private fun tidligereMeldekortForMeldeperiode(
  * - Inneværende periode inkluderes
  * - Perioder frem i tid inkluderes ikke
  *
- * Verdt å merke seg at dersom meldeplikten ikke er oppfylt for en periode, så vil Utfall == IKKE_OPPFYLT, mens
- * rettighetstypen vil fortsatt være satt. Dermed kan saksbehandler kunne sette timer i meldekortet for perioden.
- * Utfallet vil bli 0 utbetaling dersom saksbehandler ikke gjør annet enn å føre timer, og man er forbi meldevinduet.
- *
  * For at en bruker som i utgangspunktet ikke har oppfylt meldeplikten (ikke meldt seg til NKS, ikke sendt inn meldekort)
  * skal få utbetalt, må saksbehandler sørge for at meldeplikten oppfylles, enten ved
  * - Sette mottattdato på dokumentet innenfor meldevinduet. Dette er riktig dersom saksbehandler bare har vært treig med å legge inn timene.
  * - Gi fritak, dersom bruker skulle hatt fritak.
  * - Gi rimelig grunn, dersom bruker faktisk hadde rimelig grunn til ikke å ha meldt seg.
  */
-private fun hentAktuelleMeldeperioder(
+private fun hentAktuelleMeldeperioderMedOppfyltePerioder(
     underveisGrunnlag: UnderveisGrunnlag,
-    clock: Clock
-): List<Periode> {
-    val meldeperioder = underveisGrunnlag.perioder
-        .filter { it.rettighetsType != null }
-        .map { it.meldePeriode }
-        .sortedBy { it.fom }
-        .takeWhile { it.fom < LocalDate.now(clock) }
-
-    return meldeperioder
+): Map<Periode, List<Periode>> {
+    return underveisGrunnlag.perioder
+        .filter { it.utfall == Utfall.OPPFYLT }
+        .groupBy({ it.meldePeriode }, { it.periode })
+        .mapValues { (_, perioder) ->
+            // Slå sammen til sammenhengende perioder hvis mulig
+            Tidslinje(perioder.map { Segment(it, true) })
+                .komprimer()
+                .perioder()
+                .toList()
+        }
 }
