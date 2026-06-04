@@ -26,6 +26,7 @@ fun NormalOpenAPIRoute.underveisVurderingerApi(datasource: DataSource, repositor
             relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, datasource),
         ),
         null,
+        null,
         info(
             summary = "Hente alle underveis-vurderinger på en behandling",
             description = """
@@ -55,6 +56,7 @@ fun NormalOpenAPIRoute.underveisVurderingerApi(datasource: DataSource, repositor
             behandlingPathParam = BehandlingPathParam("referanse"),
             relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, datasource),
         ),
+        null,
         null,
         info(
             summary = "Hente underveisperioder med diff-vurderinger på gjeldende og forrige behandling"
