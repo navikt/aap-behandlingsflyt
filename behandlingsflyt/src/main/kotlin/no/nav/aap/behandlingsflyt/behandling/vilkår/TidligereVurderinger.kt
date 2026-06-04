@@ -114,16 +114,6 @@ class TidligereVurderingerImpl(
                 ikkeOppfyltFørerTilAvslag(Vilkårtype.ALDERSVILKÅRET, vilkårsresultat)
             },
 
-            Sjekk(StegType.AVKLAR_STUDENT) { vilkårsresultat, _, _ ->
-                vilkårsresultat.tidslinjeFor(Vilkårtype.STUDENT).map {
-                    TidligereVurderinger.PotensieltOppfylt(
-                        when {
-                            it.utfall == Utfall.OPPFYLT -> RettighetsType.STUDENT
-                            else -> null
-                        }
-                    )
-                }
-            },
 
             Sjekk(StegType.AVKLAR_SYKDOM) { _, kontekst, tidligereVurderinger ->
                 val sykdomstidslinje =
@@ -205,6 +195,17 @@ class TidligereVurderingerImpl(
 
                         else -> TidligereVurderinger.PotensieltOppfylt(null)
                     }
+                }
+            },
+
+            Sjekk(StegType.AVKLAR_STUDENT_V2) { vilkårsresultat, _, _ ->
+                vilkårsresultat.tidslinjeFor(Vilkårtype.STUDENT).map {
+                    TidligereVurderinger.PotensieltOppfylt(
+                        when {
+                            it.utfall == Utfall.OPPFYLT -> RettighetsType.STUDENT
+                            else -> null
+                        }
+                    )
                 }
             },
 

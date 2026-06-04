@@ -105,6 +105,11 @@ public enum class AvklaringsbehovKode {
     `5001`,
 
     /**
+     * [AVKLAR_STUDENT_KODE_V2]
+     */
+    `5037`,
+
+    /**
      * [OVERSTYR_IKKE_OPPFYLT_MELDEPLIKT_KODE]
      */
     `5002`,

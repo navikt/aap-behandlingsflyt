@@ -43,6 +43,10 @@ public enum class StegType(
         gruppe = StegGruppe.STUDENT,
         status = Status.UTREDES
     ),
+    AVKLAR_STUDENT_V2(
+        gruppe = StegGruppe.STUDENT,
+        status = Status.UTREDES,
+    ),
     AVKLAR_SYKDOM(
         gruppe = StegGruppe.SYKDOM,
         status = Status.UTREDES

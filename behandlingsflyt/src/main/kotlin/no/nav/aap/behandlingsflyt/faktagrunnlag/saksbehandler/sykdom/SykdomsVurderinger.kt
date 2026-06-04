@@ -109,5 +109,6 @@ enum class ArbeidsevneNedsattValg {
     JA,
     JA_FORBIGÅENDE_PROBLEMER,
     NEI,
+    NEI_MEN_STUDENT
 }
 

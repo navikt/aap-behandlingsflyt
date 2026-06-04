@@ -9,6 +9,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.skalVurdereStudent
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
@@ -23,38 +25,40 @@ import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 
-class VurderStudentSteg private constructor(
+class VurderStudentStegV2 private constructor(
     private val studentRepository: StudentRepository,
     private val tidligereVurderinger: TidligereVurderinger,
     private val vilkårsresultatRepository: VilkårsresultatRepository,
-    private val avklaringsbehovService: AvklaringsbehovService
-) : BehandlingSteg {
+    private val sykdomRepository: SykdomRepository,
+    private val avklaringsbehovService: AvklaringsbehovService,
+    private val unleashGateway: UnleashGateway,
+    ) : BehandlingSteg {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         studentRepository = repositoryProvider.provide(),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
         vilkårsresultatRepository = repositoryProvider.provide(),
+        sykdomRepository = repositoryProvider.provide(),
         avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
+        unleashGateway = gatewayProvider.provide(),
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val studentGrunnlag = studentRepository.hentHvisEksisterer(kontekst.behandlingId)
-        val unleashGateway = GatewayProvider.provide<UnleashGateway>()
-
-
+        val neiMenErStudent = sykdomRepository.hent(kontekst.behandlingId).sykdomsvurderinger.last().harNedsattArbeidsevne
+        if (unleashGateway.isEnabled(BehandlingsflytFeature.StudentV2) || neiMenErStudent != ArbeidsevneNedsattValg.NEI_MEN_STUDENT) {
+            return Fullført
+        }
 
         avklaringsbehovService.oppdaterAvklaringsbehov(
             definisjon = Definisjon.AVKLAR_STUDENT,
             vedtakBehøverVurdering = {
                 when (kontekst.vurderingType) {
-                    VurderingType.FØRSTEGANGSBEHANDLING -> {
-                        if (!unleashGateway.isEnabled(BehandlingsflytFeature.StudentV2)){
-                            return@oppdaterAvklaringsbehov false
-                        }
-                        tidligereVurderinger.muligMedRettTilAAP(kontekst, type()) &&
+                    VurderingType.FØRSTEGANGSBEHANDLING ->
+                        tidligereVurderinger.muligMedRettTilAAP(kontekst, VurderStudentSteg.Companion.type()) &&
                                 (studentGrunnlag.skalVurdereStudent() || Vurderingsbehov.REVURDER_STUDENT in kontekst.vurderingsbehovRelevanteForSteg)
-                    }
+
                     VurderingType.REVURDERING ->
-                        tidligereVurderinger.muligMedRettTilAAP(kontekst, type()) &&
+                        tidligereVurderinger.muligMedRettTilAAP(kontekst, VurderStudentSteg.Companion.type()) &&
                                 Vurderingsbehov.REVURDER_STUDENT in kontekst.vurderingsbehovRelevanteForSteg
 
                     VurderingType.UTVID_VEDTAKSLENGDE,
@@ -97,6 +101,7 @@ class VurderStudentSteg private constructor(
         }
 
         return Fullført
+
     }
 
     private fun vurderStudentvilkår(kontekst: FlytKontekstMedPerioder) {
@@ -116,11 +121,11 @@ class VurderStudentSteg private constructor(
             repositoryProvider: RepositoryProvider,
             gatewayProvider: GatewayProvider
         ): BehandlingSteg {
-            return VurderStudentSteg(repositoryProvider, gatewayProvider)
+            return VurderStudentStegV2(repositoryProvider, gatewayProvider)
         }
 
         override fun type(): StegType {
-            return StegType.AVKLAR_STUDENT
+            return StegType.AVKLAR_STUDENT_V2
         }
     }
 }
