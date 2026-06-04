@@ -390,6 +390,9 @@ class BrevGateway : BrevbestillingGateway {
                     brevBehov.yrkesskadeBeregning?.let { yrkesskadeBeregning ->
                         add(yrkesskadeBeregningTilFaktagrunnlag(yrkesskadeBeregning))
                     }
+                    brevBehov.yrkesSkadeISøknadIkkeIRegister?.let {
+                        add(Faktagrunnlag.YrkesskadeISøknadIkkeIRegister(it))
+                    }
                 }
 
             is VurderesForUføretrygd -> {
