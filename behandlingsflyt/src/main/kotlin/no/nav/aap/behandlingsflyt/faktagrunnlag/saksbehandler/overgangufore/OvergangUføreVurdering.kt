@@ -4,8 +4,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import java.time.Instant
 import java.time.LocalDate
 
-const val AUTOMATISK_VURDERT = "Automatisk vurdert"
-
 data class OvergangUføreVurdering(
     val begrunnelse: String,
     val brukerHarSøktOmUføretrygd: Boolean,

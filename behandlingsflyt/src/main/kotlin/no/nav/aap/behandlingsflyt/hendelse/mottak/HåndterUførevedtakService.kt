@@ -5,7 +5,7 @@ import no.nav.aap.behandlingsflyt.behandling.underveis.RettighetstypeService
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.UførevedtakResultat
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.UførevedtakV0
-import no.nav.aap.behandlingsflyt.prosessering.HåndterAutomatiskStans118JobbUtfører
+import no.nav.aap.behandlingsflyt.prosessering.AutomatiskOpphørVedUføreInnvilgetJobbUtfører
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
@@ -73,7 +73,7 @@ class HåndterUførevedtakService(
 
             if (skalOppretteAutomatiskStans118(uførevedtak)) {
                 flytJobbRepository.leggTil(
-                    HåndterAutomatiskStans118JobbUtfører.nyJobb(
+                    AutomatiskOpphørVedUføreInnvilgetJobbUtfører.nyJobb(
                         sakId = sakId,
                         referanse = referanse,
                         uførevedtak = uførevedtak,

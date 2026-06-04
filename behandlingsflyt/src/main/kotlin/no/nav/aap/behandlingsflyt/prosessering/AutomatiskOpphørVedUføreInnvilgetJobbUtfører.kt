@@ -1,9 +1,9 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
+import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreRegisterGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.tilTidslinje
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.AUTOMATISK_VURDERT
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.UføreSøknadVedtakResultat
@@ -31,7 +31,7 @@ import java.time.Year
 private const val REFERANSE = "referanse"
 private const val MOTTATT_TIDSPUNKT = "mottattTidspunkt"
 
-class HåndterAutomatiskStans118JobbUtfører(
+class AutomatiskOpphørVedUføreInnvilgetJobbUtfører(
     private val sakService: SakService,
     private val behandlingService: BehandlingService,
     private val mottaDokumentService: MottaDokumentService,
@@ -83,7 +83,7 @@ class HåndterAutomatiskStans118JobbUtfører(
             .orEmpty()
         val eksisterendeVurderinger = overgangUføreRepository.hentHvisEksisterer(behandling.id)?.vurderinger.orEmpty()
         val harAutomatiskVurderingAllerede = eksisterendeVurderinger.any {
-            it.vurdertAv == AUTOMATISK_VURDERT && it.fom == uførevedtak.virkningsdato
+            it.vurdertAv == SYSTEMBRUKER.ident && it.fom == uførevedtak.virkningsdato
         }
 
         if (!harAutomatiskVurderingAllerede) {
@@ -91,13 +91,13 @@ class HåndterAutomatiskStans118JobbUtfører(
             overgangUføreRepository.lagre(
                 behandlingId = behandling.id,
                 overgangUføreVurderinger = vurderingerSomSkalLagres + OvergangUføreVurdering(
-                    begrunnelse = AUTOMATISK_VURDERT,
+                    begrunnelse = SYSTEMBRUKER.ident,
                     brukerHarSøktOmUføretrygd = true,
                     brukerHarFåttVedtakOmUføretrygd = vedtakResultat,
                     brukerRettPåAAP = false,
                     fom = uførevedtak.virkningsdato,
                     tom = null,
-                    vurdertAv = AUTOMATISK_VURDERT,
+                    vurdertAv = SYSTEMBRUKER.ident,
                     vurdertIBehandling = behandling.id,
                     opprettet = Instant.now(),
                 )
@@ -134,7 +134,7 @@ class HåndterAutomatiskStans118JobbUtfører(
             referanse: InnsendingReferanse,
             uførevedtak: UførevedtakV0,
             mottattTidspunkt: LocalDateTime,
-        ) = JobbInput(HåndterAutomatiskStans118JobbUtfører).apply {
+        ) = JobbInput(AutomatiskOpphørVedUføreInnvilgetJobbUtfører).apply {
             forSak(sakId.toLong())
             medCallId()
             medParameter(REFERANSE, DefaultJsonMapper.toJson(referanse))
@@ -143,7 +143,7 @@ class HåndterAutomatiskStans118JobbUtfører(
         }
 
         override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): JobbUtfører {
-            return HåndterAutomatiskStans118JobbUtfører(
+            return AutomatiskOpphørVedUføreInnvilgetJobbUtfører(
                 sakService = SakService(repositoryProvider, gatewayProvider),
                 behandlingService = BehandlingService(repositoryProvider, gatewayProvider),
                 mottaDokumentService = MottaDokumentService(repositoryProvider),

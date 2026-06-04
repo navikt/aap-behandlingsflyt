@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.flyt
 
+import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.behandling.Resultat
 import no.nav.aap.behandlingsflyt.behandling.ResultatUtleder
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarBistandsbehovLøsning
@@ -10,7 +11,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Av
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.AUTOMATISK_VURDERT
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.BistandLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.UføreSøknadVedtakResultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
@@ -367,10 +367,10 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(OvergangUføreFlytTes
             val vurdering = OvergangUføreRepositoryImpl(connection)
                 .hentHvisEksisterer(revurdering.id)
                 ?.vurderinger
-                ?.singleOrNull { it.vurdertAv == AUTOMATISK_VURDERT && it.fom == virkningsdato }
+                ?.singleOrNull { it.vurdertAv == SYSTEMBRUKER.ident && it.fom == virkningsdato }
 
-            assertThat(vurdering!!.begrunnelse).isEqualTo(AUTOMATISK_VURDERT)
-            assertThat(vurdering.vurdertAv).isEqualTo(AUTOMATISK_VURDERT)
+            assertThat(vurdering!!.begrunnelse).isEqualTo(SYSTEMBRUKER.ident)
+            assertThat(vurdering.vurdertAv).isEqualTo(SYSTEMBRUKER.ident)
             assertThat(vurdering.fom).isEqualTo(virkningsdato)
             assertThat(vurdering.brukerRettPåAAP).isFalse()
             assertThat(vurdering.brukerHarFåttVedtakOmUføretrygd).isEqualTo(UføreSøknadVedtakResultat.JA_INNVILGET_GRADERT)
@@ -411,7 +411,7 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(OvergangUføreFlytTes
             val vurdering = OvergangUføreRepositoryImpl(connection)
                 .hentHvisEksisterer(revurdering.id)
                 ?.vurderinger
-                ?.singleOrNull { it.vurdertAv == AUTOMATISK_VURDERT && it.fom == virkningsdato }
+                ?.singleOrNull { it.vurdertAv == SYSTEMBRUKER.ident && it.fom == virkningsdato }
             assertThat(vurdering).isNotNull
             assertThat(vurdering!!.brukerHarFåttVedtakOmUføretrygd).isEqualTo(UføreSøknadVedtakResultat.JA_INNVILGET_FULL)
         }
