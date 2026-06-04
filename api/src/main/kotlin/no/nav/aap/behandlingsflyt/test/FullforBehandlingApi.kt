@@ -16,6 +16,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
+import no.nav.aap.behandlingsflyt.utils.withMdc
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
@@ -46,7 +47,7 @@ fun NormalOpenAPIRoute.fullførBehandlingApi(
                             andreUtbetalinger = req.andreUtbetalinger?.tilKontrakt(),
                         )
                 }
-                thread(isDaemon = true) { service.fullforBehandling(sak) }
+                thread(isDaemon = true, block = withMdc { service.fullforBehandling(sak) })
                 respond(OpprettOgFullforBehandlingRespons(sak.saksnummer.toString()))
             } catch (e: OpprettTestSakException) {
                 throw UgyldigForespørselException(message = e.message ?: "Ukjent feil", cause = e)

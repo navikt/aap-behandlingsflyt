@@ -13,7 +13,6 @@ data class Sykdomsvurdering(
     val begrunnelse: String,
     val vurderingenGjelderFra: LocalDate,
     val vurderingenGjelderTil: LocalDate?,
-    val dokumenterBruktIVurdering: List<JournalpostId>,
     val harSkadeSykdomEllerLyte: Boolean,
     val erSkadeSykdomEllerLyteVesentligdel: Boolean?,
     val erNedsettelseIArbeidsevneMerEnnHalvparten: Boolean?,

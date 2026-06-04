@@ -7,7 +7,6 @@ import java.time.LocalDateTime
 
 data class SykepengerVurdering(
     val begrunnelse: String,
-    val dokumenterBruktIVurdering: List<JournalpostId>,
     val harRettPå: Boolean,
     val vurdertIBehandling: BehandlingId,
     val grunn: SykepengerGrunn? = null,

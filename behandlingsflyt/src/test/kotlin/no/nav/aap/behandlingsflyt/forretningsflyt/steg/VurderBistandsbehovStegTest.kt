@@ -84,7 +84,6 @@ class VurderBistandsbehovStegTest {
                     sykdomsvurderinger = listOf(
                         Sykdomsvurdering(
                             begrunnelse = "",
-                            dokumenterBruktIVurdering = emptyList(),
                             harSkadeSykdomEllerLyte = true,
                             erSkadeSykdomEllerLyteVesentligdel = true,
                             erNedsettelseIArbeidsevneMerEnnHalvparten = true,
