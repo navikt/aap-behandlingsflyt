@@ -32,8 +32,8 @@ class BarnepensjonRepositoryImpl(private val connection: DBConnection) : Barnepe
         connection.execute(
             """
             insert into samordning_barnepensjon_grunnlag (
-                behandling_id, vurdering_id, aktiv
-            ) values (?, ?, true)
+                behandling_id, vurdering_id, aktiv, opprettet
+            ) values (?, ?, true, ?)
             """.trimIndent()
         ) {
             setParams {
@@ -173,15 +173,16 @@ class BarnepensjonRepositoryImpl(private val connection: DBConnection) : Barnepe
 
         connection.execute(
             """
-            insert into samordning_barnepensjon_grunnlag (behandling_id, vurdering_id)
-            select ?, vurdering_id
+            insert into samordning_barnepensjon_grunnlag (behandling_id, vurdering_id, opprettet)
+            select ?, vurdering_id, ?
             from samordning_barnepensjon_grunnlag
             where behandling_id = ? and aktiv
             """.trimIndent()
         ) {
             setParams {
                 setLong(1, tilBehandling.toLong())
-                setLong(2, fraBehandling.toLong())
+                setInstant(2, java.time.Instant.now())
+                setLong(3, fraBehandling.toLong())
             }
         }
     }
