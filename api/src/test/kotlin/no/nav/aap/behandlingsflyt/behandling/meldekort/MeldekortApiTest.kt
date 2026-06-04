@@ -496,13 +496,13 @@ class MeldekortApiTest : BaseApiTest() {
             // Meldeperiode 1: de to oppfylte periodene slås sammen til én sammenhengende periode
             val mp1 = sortert[0]
             assertThat(mp1.meldeperiode).isEqualTo(meldeperiode1)
-            assertThat(mp1.perioder).containsExactly(Periode(10 januar 2025, 19 januar 2025))
+            assertThat(mp1.periode).isEqualTo(Periode(10 januar 2025, 19 januar 2025))
             assertThat(mp1.meldekort).isNull()
 
             // Meldeperiode 2: kun den oppfylte perioden returneres
             val mp2 = sortert[1]
             assertThat(mp2.meldeperiode).isEqualTo(meldeperiode2)
-            assertThat(mp2.perioder).containsExactly(mp2Oppfylt)
+            assertThat(mp2.periode).isEqualTo(mp2Oppfylt)
             assertThat(mp2.meldekort).isNull()
         }
     }
