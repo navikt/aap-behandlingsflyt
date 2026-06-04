@@ -49,14 +49,15 @@ class KlagebehandlingKontorRepositoryImpl(private val connection: DBConnection) 
     private fun lagre(behandlingId: BehandlingId, nyttGrunnlag: KlagebehandlingKontorGrunnlag) {
         val vurderingId = lagreVurdering(nyttGrunnlag.vurdering)
         val query = """
-            INSERT INTO KLAGE_KONTOR_GRUNNLAG (BEHANDLING_ID, VURDERING_ID, AKTIV) 
-            VALUES (?, ?, TRUE)
+            INSERT INTO KLAGE_KONTOR_GRUNNLAG (BEHANDLING_ID, VURDERING_ID, AKTIV, OPPRETTET_TID) 
+            VALUES (?, ?, TRUE, ?)
         """.trimIndent()
 
         connection.execute(query) {
             setParams {
                 setLong(1, behandlingId.toLong())
                 setLong(2, vurderingId)
+                setInstant(3, java.time.Instant.now())
             }
         }
     }
@@ -64,8 +65,8 @@ class KlagebehandlingKontorRepositoryImpl(private val connection: DBConnection) 
     private fun lagreVurdering(vurdering: KlagevurderingKontor): Long {
         val query = """
             INSERT INTO KLAGE_KONTOR_VURDERING
-            (BEGRUNNELSE, NOTAT, INNSTILLING, VILKAAR_SOM_SKAL_OMGJOERES, VILKAAR_SOM_SKAL_OPPRETTHOLDES, VURDERT_AV)
-            VALUES (?, ?, ?, ?, ?, ?)
+            (BEGRUNNELSE, NOTAT, INNSTILLING, VILKAAR_SOM_SKAL_OMGJOERES, VILKAAR_SOM_SKAL_OPPRETTHOLDES, VURDERT_AV, OPPRETTET_TID)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
         """.trimIndent()
 
         return connection.executeReturnKey(query) {
