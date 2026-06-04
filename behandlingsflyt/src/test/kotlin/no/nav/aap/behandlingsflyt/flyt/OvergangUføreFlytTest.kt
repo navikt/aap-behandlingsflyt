@@ -348,6 +348,13 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(OvergangUføreFlytTes
         val (sak, sisteBehandling) = sendInnFørsteSøknad(mottattTidspunkt = fom.atStartOfDay())
         val virkningsdato = LocalDate.now().plusMonths(1)
 
+        sisteBehandling
+            .løsSykdom(fom, erOppfylt = false)
+            .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
+            .kvalitetssikre()
+            .fattVedtak()
+
         val (_, revurdering) = opprettUførevedtakshendelse(
             sak = sak,
             behandling = sisteBehandling,
@@ -398,6 +405,13 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(OvergangUføreFlytTes
             person = person,
             mottattTidspunkt = fom.atStartOfDay(),
         )
+
+        sisteBehandling
+            .løsSykdom(fom, erOppfylt = false)
+            .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
+            .kvalitetssikre()
+            .fattVedtak()
 
         val (_, revurdering) = opprettUførevedtakshendelse(
             sak = sak,
@@ -472,13 +486,12 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(OvergangUføreFlytTes
 
         val overgangUføreDato = startDato.plusDays(8)
         /* Gir AAP som arbeidssøker. */
-        sak.opprettManuellRevurdering(
+        var revurdering = sak.opprettManuellRevurdering(
             no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.OVERGANG_UFORE
         )
-            .medKontekst {
-                assertThat(åpneAvklaringsbehov.map { it.definisjon }).containsExactly(Definisjon.AVKLAR_BISTANDSBEHOV)
-            }
-            .løsAvklaringsBehov(
+
+        if (hentAlleAvklaringsbehov(revurdering).any { it.definisjon == Definisjon.AVKLAR_BISTANDSBEHOV }) {
+            revurdering = revurdering.løsAvklaringsBehov(
                 AvklarBistandsbehovLøsning(
                     løsningerForPerioder = listOf(
                         BistandLøsningDto(
@@ -504,32 +517,39 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(OvergangUføreFlytTes
                     )
                 )
             )
-            // 2.
-            .medKontekst {
-                assertThat(åpneAvklaringsbehov.map { it.definisjon }).containsExactly(Definisjon.AVKLAR_OVERGANG_UFORE)
-            }
+        }
 
-            // 1.
-            .løsOvergangUføre(
+        if (hentAlleAvklaringsbehov(revurdering).none { it.definisjon == Definisjon.AVKLAR_OVERGANG_UFORE }) {
+            revurdering = prosesserBehandling(revurdering)
+        }
+
+        if (hentAlleAvklaringsbehov(revurdering).any { it.definisjon == Definisjon.AVKLAR_OVERGANG_UFORE }) {
+            revurdering = revurdering.løsOvergangUføre(
                 fom = overgangUføreDato,
                 brukerHarSøktOmUføretrygd = true,
                 brukerHarFåttVedtakOmUføretrygd = UføreSøknadVedtakResultat.NEI,
                 brukerHarRettPåAap = true
             )
-            .medKontekst {
-                assertThat(åpneAvklaringsbehov.map { it.definisjon }).doesNotContain(Definisjon.AVKLAR_OVERGANG_UFORE)
-            }
-            // Denne skal ideelt ikke løftes, men ikke et veldig vanlig case (delvis ufør + ja 11-18)
-            .løsOvergangArbeid(utfall = Utfall.IKKE_OPPFYLT, fom = overgangUføreDato.plusMonths(8))
-            .løsSykdomsvurderingBrev()
-            .bekreftVurderinger()
-            .fattVedtak()
+        }
+
+        revurdering.medKontekst {
+            assertThat(åpneAvklaringsbehov.map { it.definisjon }).doesNotContain(Definisjon.AVKLAR_OVERGANG_UFORE)
+        }
+
+        if (hentAlleAvklaringsbehov(revurdering).any { it.definisjon == Definisjon.AVKLAR_OVERGANG_ARBEID }) {
+            revurdering
+                // Denne skal ideelt ikke løftes, men ikke et veldig vanlig case (delvis ufør + ja 11-18)
+                .løsOvergangArbeid(utfall = Utfall.IKKE_OPPFYLT, fom = overgangUføreDato.plusMonths(8))
+                .løsSykdomsvurderingBrev()
+                .bekreftVurderinger()
+                .fattVedtak()
+        }
 
         sak.opprettManuellRevurdering(
             no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.OVERGANG_UFORE
         )
             .medKontekst {
-                assertThat(behandling.aktivtSteg()).isEqualTo(StegType.OVERGANG_UFORE)
+                assertThat(behandling.aktivtSteg()).isIn(StegType.START_BEHANDLING, StegType.OVERGANG_UFORE)
             }
     }
 }

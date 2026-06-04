@@ -17,7 +17,6 @@ object ProsesseringsJobber {
             VarsleOppgaveOmHendelseJobbUtFører,
             GjenopptaBehandlingJobbUtfører,
             HendelseMottattHåndteringJobbUtfører,
-            AutomatiskOpphørVedUføreInnvilgetJobbUtfører,
             StatistikkJobbUtfører,
             ResendStatistikkJobbUtfører,
             DatadelingMeldePerioderOgSakStatusJobbUtfører,

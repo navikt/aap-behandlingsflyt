@@ -5,7 +5,6 @@ import no.nav.aap.behandlingsflyt.behandling.underveis.RettighetstypeService
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.UførevedtakResultat
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.UførevedtakV0
-import no.nav.aap.behandlingsflyt.prosessering.AutomatiskOpphørVedUføreInnvilgetJobbUtfører
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
@@ -56,6 +55,7 @@ class HåndterUførevedtakService(
     ) {
         val sisteYtelsesBehandling = behandlingService.finnSisteYtelsesbehandlingFor(sakId)
             ?: error("Finnes ingen ytelsesbehandling for sakId $sakId")
+        var behandlingSomHarHåndtertDokument = sisteYtelsesBehandling.id
         if (trukketSøknadService.søknadErTrukket(sisteYtelsesBehandling.id)) {
             log.info("Søknad er trukket for sak $sakId, ignorerer nytt uførevedtak")
         } else if (uførevedtak.resultat.erOpphørEllerEndring()) {
@@ -72,15 +72,25 @@ class HåndterUførevedtakService(
                 rettighetstypeTidslinje.isNotEmpty() || sisteYtelsesBehandling.status().erÅpen()
 
             if (skalOppretteAutomatiskStans11_18(uførevedtak)) {
-                flytJobbRepository.leggTil(
-                    AutomatiskOpphørVedUføreInnvilgetJobbUtfører.nyJobb(
-                        sakId = sakId,
-                        referanse = referanse,
-                        uførevedtak = uførevedtak,
-                        mottattTidspunkt = mottattTidspunkt,
+                val vurderingsbehov = Vurderingsbehov.OVERGANG_UFORE
+                val opprettetBehandling = behandlingService.finnEllerOpprettBehandling(
+                    sakId,
+                    VurderingsbehovOgÅrsak(
+                        årsak = ÅrsakTilOpprettelse.ENDRING_I_REGISTERDATA,
+                        vurderingsbehov = listOf(VurderingsbehovMedPeriode(vurderingsbehov)),
+                        opprettet = mottattTidspunkt,
+                        beskrivelse = uførevedtak.beskrivelseVurderingsbehov()
                     )
                 )
-                return
+                prosesserBehandlingService.triggProsesserBehandling(
+                    opprettetBehandling = opprettetBehandling,
+                    vurderingsbehov = listOf(vurderingsbehov),
+                )
+                val behandlingSomSkalOppdateres = when (opprettetBehandling) {
+                    is BehandlingService.MåBehandlesAtomært -> opprettetBehandling.nyBehandling.id
+                    is BehandlingService.Ordinær -> opprettetBehandling.åpenBehandling.id
+                }
+                behandlingSomHarHåndtertDokument = behandlingSomSkalOppdateres
             } else {
                 log.info("Oppretter vurderingsbehov for mottatt uførevedtak for sak $sakId")
                 if (kanHaRettPåAapEtterVirkningsdato) {
@@ -99,12 +109,13 @@ class HåndterUførevedtakService(
                         behandling.id,
                         vurderingsbehov = listOf(vurderingsbehov),
                     )
+                    behandlingSomHarHåndtertDokument = behandling.id
                 } else {
                     log.info("Har ikke åpen behandling eller rett på aap for sakId=$sakId, oppretter ikke revurdering ved uførevedtakhendelse")
                 }
             }
         }
-        mottaDokumentService.markerSomBehandlet(sakId, sisteYtelsesBehandling.id, referanse)
+        mottaDokumentService.markerSomBehandlet(sakId, behandlingSomHarHåndtertDokument, referanse)
     }
 
     private fun skalOppretteAutomatiskStans11_18(
