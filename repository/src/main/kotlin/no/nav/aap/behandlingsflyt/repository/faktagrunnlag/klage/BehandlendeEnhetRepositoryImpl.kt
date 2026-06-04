@@ -88,14 +88,15 @@ class BehandlendeEnhetRepositoryImpl(private val connection: DBConnection) : Beh
     private fun lagre(behandlingId: BehandlingId, nyttGrunnlag: BehandlendeEnhetGrunnlag) {
         val vurderingId = lagreVurdering(nyttGrunnlag.vurdering)
         val query = """
-            INSERT INTO BEHANDLENDE_ENHET_GRUNNLAG (BEHANDLING_ID, VURDERING_ID, AKTIV) 
-            VALUES (?, ?, TRUE)
+            INSERT INTO BEHANDLENDE_ENHET_GRUNNLAG (BEHANDLING_ID, VURDERING_ID, AKTIV, OPPRETTET_TID) 
+            VALUES (?, ?, TRUE, ?)
         """.trimIndent()
 
         connection.execute(query) {
             setParams {
                 setLong(1, behandlingId.toLong())
                 setLong(2, vurderingId)
+                setInstant(3, java.time.Instant.now())
             }
         }
     }
