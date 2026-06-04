@@ -156,7 +156,7 @@ class SamordningYtelseRepositoryImpl(private val dbConnection: DBConnection) : S
         }
 
         val sql = """
-            INSERT INTO SAMORDNING_YTELSE_GRUNNLAG (BEHANDLING_ID, samordning_ytelse_id, aktiv) VALUES (?, ?, ?)
+            INSERT INTO SAMORDNING_YTELSE_GRUNNLAG (BEHANDLING_ID, samordning_ytelse_id, aktiv, OPPRETTET) VALUES (?, ?, ?, ?)
         """.trimIndent()
 
         val grunnlagId = dbConnection.executeReturnKey(sql) {
@@ -164,6 +164,7 @@ class SamordningYtelseRepositoryImpl(private val dbConnection: DBConnection) : S
                 setLong(1, behandlingId.toLong())
                 setLong(2, ytelserId)
                 setBoolean(3, true)
+                setInstant(4, java.time.Instant.now())
             }
         }
         log.info("Lagret samordningytelsegrunnlag med id $grunnlagId for behandling $behandlingId.")
@@ -177,8 +178,8 @@ class SamordningYtelseRepositoryImpl(private val dbConnection: DBConnection) : S
         }
         val query = """
             INSERT INTO samordning_ytelse_grunnlag 
-                (behandling_id, samordning_ytelse_id, aktiv) 
-            SELECT ?, samordning_ytelse_id, true
+                (behandling_id, samordning_ytelse_id, aktiv, opprettet) 
+            SELECT ?, samordning_ytelse_id, true, ?
                 from samordning_ytelse_grunnlag 
                 where behandling_id = ? and aktiv
         """.trimIndent()
@@ -186,7 +187,8 @@ class SamordningYtelseRepositoryImpl(private val dbConnection: DBConnection) : S
         dbConnection.execute(query) {
             setParams {
                 setLong(1, tilBehandling.toLong())
-                setLong(2, fraBehandling.toLong())
+                setInstant(2, java.time.Instant.now())
+                setLong(3, fraBehandling.toLong())
             }
             setResultValidator { require(it == 1) }
             log.info("Kopiert fra behandling $fraBehandling til $tilBehandling")

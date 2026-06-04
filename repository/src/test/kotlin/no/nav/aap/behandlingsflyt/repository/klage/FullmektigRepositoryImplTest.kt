@@ -15,6 +15,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
+import java.time.Instant
 
 class FullmektigRepositoryImplTest {
     companion object {
@@ -42,7 +43,8 @@ class FullmektigRepositoryImplTest {
             val vurdering = FullmektigVurdering(
                 harFullmektig = true,
                 fullmektigIdent = IdentMedType("12345678901", IdentType.FNR_DNR),
-                vurdertAv = "Saksbehandler"
+                vurdertAv = "Saksbehandler",
+                opprettet = Instant.now()
             )
 
             fullmektigRepository.lagre(klageBehandling.id, vurdering)
@@ -71,7 +73,7 @@ class FullmektigRepositoryImplTest {
 
             val fullmektigRepository = FullmektigRepositoryImpl(connection)
             val vurdering = FullmektigVurdering(
-                harFullmektig = true, fullmektigNavnOgAdresse = navnOgAdresse, vurdertAv = "Saksbehandler"
+                harFullmektig = true, fullmektigNavnOgAdresse = navnOgAdresse, vurdertAv = "Saksbehandler", opprettet = java.time.Instant.now()
             )
 
             fullmektigRepository.lagre(klagebehandling.id, vurdering)

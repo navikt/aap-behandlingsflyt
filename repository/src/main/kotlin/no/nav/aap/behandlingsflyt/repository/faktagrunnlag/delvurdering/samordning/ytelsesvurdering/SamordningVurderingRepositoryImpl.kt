@@ -145,7 +145,7 @@ class SamordningVurderingRepositoryImpl(private val connection: DBConnection) :
             setParams {
                 setString(1, samordningVurderinger.begrunnelse)
                 setString(2, samordningVurderinger.vurdertAv)
-                setLocalDateTime(3, samordningVurderinger.vurdertTidspunkt ?: java.time.LocalDateTime.now())
+                setLocalDateTime(3, samordningVurderinger.vurdertTidspunkt)
             }
         }
 
@@ -157,7 +157,7 @@ class SamordningVurderingRepositoryImpl(private val connection: DBConnection) :
                 setParams {
                     setLong(1, vurderingerId)
                     setEnumName(2, vurdering.ytelseType)
-                    setLocalDateTime(3, samordningVurderinger.vurdertTidspunkt ?: java.time.LocalDateTime.now())
+                    setLocalDateTime(3, samordningVurderinger.vurdertTidspunkt)
                 }
             }
 

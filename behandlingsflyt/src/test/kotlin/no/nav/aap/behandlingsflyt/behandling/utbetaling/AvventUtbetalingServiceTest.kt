@@ -33,6 +33,7 @@ import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.parallel.Execution
 import org.junit.jupiter.api.parallel.ExecutionMode
 import java.time.LocalDate
+import java.time.LocalDateTime
 import kotlin.test.Test
 
 @Execution(ExecutionMode.SAME_THREAD)
@@ -296,6 +297,7 @@ class AvventUtbetalingServiceTest {
                     vurdering = SamordningAndreStatligeYtelserVurdering(
                         begrunnelse = "bla bla",
                         vurdertAv = "noen",
+                        vurdertTidspunkt = LocalDateTime.now(),
                         vurderingPerioder = listOf(
                             SamordningAndreStatligeYtelserVurderingPeriode(
                                 ytelse = AndreStatligeYtelser.TILTAKSPENGER,

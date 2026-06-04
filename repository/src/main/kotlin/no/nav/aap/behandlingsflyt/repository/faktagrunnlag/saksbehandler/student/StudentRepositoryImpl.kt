@@ -140,7 +140,7 @@ class StudentRepositoryImpl(private val connection: DBConnection) : StudentRepos
         }
 
         val query = """
-            INSERT INTO STUDENT_GRUNNLAG (behandling_id, student_vurderinger_id, oppgitt_student_id) VALUES (?, ?, ?)
+            INSERT INTO STUDENT_GRUNNLAG (behandling_id, student_vurderinger_id, oppgitt_student_id, opprettet_tid) VALUES (?, ?, ?, ?)
         """.trimIndent()
 
         connection.execute(query) {
@@ -148,12 +148,17 @@ class StudentRepositoryImpl(private val connection: DBConnection) : StudentRepos
                 setLong(1, behandlingId.toLong())
                 setLong(2, vurderingerId)
                 setLong(3, oppgittStudentId)
+                setInstant(4, java.time.Instant.now())
             }
         }
     }
 
     private fun lagreVurdering(studentvurderinger: Set<StudentVurdering>): Long {
-        val vurderingerId = connection.executeReturnKey("""INSERT INTO STUDENT_VURDERINGER DEFAULT VALUES""")
+        val vurderingerId = connection.executeReturnKey(
+            "INSERT INTO STUDENT_VURDERINGER (opprettet_tid) VALUES (?)"
+        ) {
+            setParams { setInstant(1, java.time.Instant.now()) }
+        }
 
         val query = """
                 INSERT INTO STUDENT_VURDERING (begrunnelse, avbrutt_studie, godkjent_studie_av_laanekassen,
@@ -195,14 +200,15 @@ class StudentRepositoryImpl(private val connection: DBConnection) : StudentRepos
         }
 
         val query = """
-            INSERT INTO STUDENT_GRUNNLAG (behandling_id, oppgitt_student_id, student_vurderinger_id) 
-            SELECT ?, oppgitt_student_id, student_vurderinger_id from STUDENT_GRUNNLAG where behandling_id = ? and aktiv
+            INSERT INTO STUDENT_GRUNNLAG (behandling_id, oppgitt_student_id, student_vurderinger_id, opprettet_tid) 
+            SELECT ?, oppgitt_student_id, student_vurderinger_id, ? from STUDENT_GRUNNLAG where behandling_id = ? and aktiv
         """.trimIndent()
 
         connection.execute(query) {
             setParams {
                 setLong(1, tilBehandling.toLong())
-                setLong(2, fraBehandling.toLong())
+                setInstant(2, java.time.Instant.now())
+                setLong(3, fraBehandling.toLong())
             }
         }
     }

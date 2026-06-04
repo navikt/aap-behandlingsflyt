@@ -82,10 +82,13 @@ class MeldepliktRepositoryImpl(private val connection: DBConnection) : Meldeplik
         deaktiverEksisterende(behandlingId)
         val meldepliktId = connection.executeReturnKey("INSERT INTO MELDEPLIKT_FRITAK DEFAULT VALUES")
 
-        connection.execute("INSERT INTO MELDEPLIKT_FRITAK_GRUNNLAG (BEHANDLING_ID, MELDEPLIKT_ID) VALUES (?, ?)") {
+        connection.execute(
+            "INSERT INTO MELDEPLIKT_FRITAK_GRUNNLAG (BEHANDLING_ID, MELDEPLIKT_ID, OPPRETTET_TID) VALUES (?, ?, ?)"
+        ) {
             setParams {
                 setLong(1, behandlingId.toLong())
                 setLong(2, meldepliktId)
+                setInstant(3, java.time.Instant.now())
             }
         }
 
@@ -153,10 +156,13 @@ class MeldepliktRepositoryImpl(private val connection: DBConnection) : Meldeplik
 
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
         require(fraBehandling != tilBehandling)
-        connection.execute("INSERT INTO MELDEPLIKT_FRITAK_GRUNNLAG (BEHANDLING_ID, MELDEPLIKT_ID) SELECT ?, MELDEPLIKT_ID FROM MELDEPLIKT_FRITAK_GRUNNLAG WHERE AKTIV AND BEHANDLING_ID = ?") {
+        connection.execute(
+            "INSERT INTO MELDEPLIKT_FRITAK_GRUNNLAG (BEHANDLING_ID, MELDEPLIKT_ID, OPPRETTET_TID) SELECT ?, MELDEPLIKT_ID, ? FROM MELDEPLIKT_FRITAK_GRUNNLAG WHERE AKTIV AND BEHANDLING_ID = ?"
+        ) {
             setParams {
                 setLong(1, tilBehandling.toLong())
-                setLong(2, fraBehandling.toLong())
+                setInstant(2, java.time.Instant.now())
+                setLong(3, fraBehandling.toLong())
             }
         }
     }

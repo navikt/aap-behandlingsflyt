@@ -52,11 +52,12 @@ class Reduksjon11_9RepositoryImpl(private val connection: DBConnection) :
 
         val grunnlagId = connection.executeReturnKey(
             """
-            insert into reduksjon_11_9_grunnlag (behandling_id, aktiv) values (?, true)
+            insert into reduksjon_11_9_grunnlag (behandling_id, aktiv, opprettet_tid) values (?, true, ?)
         """.trimIndent()
         ) {
             setParams {
                 setLong(1, behandlingId.toLong())
+                setInstant(2, java.time.Instant.now())
             }
         }
 

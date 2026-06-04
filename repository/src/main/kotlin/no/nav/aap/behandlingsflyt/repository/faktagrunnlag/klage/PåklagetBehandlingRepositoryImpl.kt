@@ -75,14 +75,15 @@ class PåklagetBehandlingRepositoryImpl(private val connection: DBConnection) : 
     private fun lagre(behandlingId: BehandlingId, nyttGrunnlag: PåklagetBehandlingGrunnlag) {
         val vurderingId = lagreVurdering(nyttGrunnlag.vurdering)
         val query = """
-            INSERT INTO PAAKLAGET_BEHANDLING_GRUNNLAG (BEHANDLING_ID, VURDERING_ID, AKTIV) 
-            VALUES (?, ?, TRUE)
+            INSERT INTO PAAKLAGET_BEHANDLING_GRUNNLAG (BEHANDLING_ID, VURDERING_ID, AKTIV, OPPRETTET_TID) 
+            VALUES (?, ?, TRUE, ?)
         """.trimIndent()
 
         connection.execute(query) {
             setParams {
                 setLong(1, behandlingId.toLong())
                 setLong(2, vurderingId)
+                setInstant(3, java.time.Instant.now())
             }
         }
     }
@@ -99,7 +100,7 @@ class PåklagetBehandlingRepositoryImpl(private val connection: DBConnection) : 
                 setEnumName(1, vurdering.påklagetVedtakType)
                 setLong(2, vurdering.påklagetBehandling?.id)
                 setString(3, vurdering.vurdertAv)
-                setInstant(4, vurdering.opprettet ?: java.time.Instant.now())
+                setInstant(4, vurdering.opprettet)
             }
             setResultValidator { rowsUpdated ->
                 require(rowsUpdated == 1)

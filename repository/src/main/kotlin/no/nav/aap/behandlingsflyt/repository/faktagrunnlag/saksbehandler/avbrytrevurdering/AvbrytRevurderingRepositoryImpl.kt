@@ -75,12 +75,13 @@ class AvbrytRevurderingRepositoryImpl(
     private fun lagreGrunnlag(behandlingId: BehandlingId, vurdering: Long): Long {
         return connection.executeReturnKey("""
             insert into avbryt_revurdering_grunnlag(
-                BEHANDLING_ID, VURDERING_ID, AKTIV
-            ) values (?, ?, TRUE)
+                BEHANDLING_ID, VURDERING_ID, AKTIV, OPPRETTET_TID
+            ) values (?, ?, TRUE, ?)
         """.trimIndent()) {
             setParams {
                 setLong(1, behandlingId.toLong())
                 setLong(2, vurdering)
+                setInstant(3, java.time.Instant.now())
             }
         }
     }

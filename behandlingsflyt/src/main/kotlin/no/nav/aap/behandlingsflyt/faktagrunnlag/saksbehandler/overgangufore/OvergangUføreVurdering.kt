@@ -13,7 +13,7 @@ data class OvergangUføreVurdering(
     val tom: LocalDate?,
     val vurdertAv: String,
     val vurdertIBehandling: BehandlingId,
-    val opprettet: Instant? = null
+    val opprettet: Instant
 ) {
     fun harRettPåAAPMedOvergangUføre(): Boolean {
         return brukerHarSøktOmUføretrygd

@@ -53,6 +53,7 @@ class KabalGatewayTest {
                         )
                     ),
                     vurdertAv = "Saksbehandler",
+                    opprettet = java.time.Instant.now(),
                 )
             )
         }

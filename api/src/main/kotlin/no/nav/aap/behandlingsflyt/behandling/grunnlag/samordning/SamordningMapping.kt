@@ -32,9 +32,7 @@ fun mapSamordningAndreStatligeYtelserVurderingDTO(
             behandlingId = behandlingId,
             vurdertAv = vurdertAvService.medNavnOgEnhet(
                 ident = vurdering.vurdertAv,
-                dato = requireNotNull(vurdering.vurdertTidspunkt?.toLocalDate()) {
-                    "Fant ikke vurdert tidspunkt for samordningAndreStatligeYtelserVurdering"
-                },
+                dato = vurdering.vurdertTidspunkt.toLocalDate(),
             ),
         ),
     )
@@ -82,9 +80,7 @@ fun mapSamordningVurdering(
             behandlingId = behandlingId,
             vurdertAv = vurdertAvService.medNavnOgEnhet(
                 ident = samordning.vurdertAv,
-                dato = requireNotNull(samordning.vurdertTidspunkt?.toLocalDate()) {
-                    "Fant ikke vurderingstidspunkt for yrkesskadevurdering"
-                },
+                dato = samordning.vurdertTidspunkt.toLocalDate(),
             ),
         ),
     )
@@ -110,9 +106,7 @@ fun mapSamordningUføreVurdering(
                 behandlingId = behandlingId,
                 vurdertAv = vurdertAvService.medNavnOgEnhet(
                     ident = it.vurdertAv,
-                    dato = requireNotNull(it.vurdertTidspunkt?.toLocalDate()) {
-                        "Fant ikke vurderingstidspunkt for samordning uføre"
-                    },
+                    dato = it.vurdertTidspunkt.toLocalDate(),
                 ),
             ),
         )

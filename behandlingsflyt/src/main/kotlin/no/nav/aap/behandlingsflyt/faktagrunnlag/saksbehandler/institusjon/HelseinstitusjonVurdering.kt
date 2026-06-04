@@ -12,5 +12,5 @@ data class HelseinstitusjonVurdering(
     val periode: Periode,
     val vurdertIBehandling: BehandlingId,
     val vurdertAv: String? = null,
-    val vurdertTidspunkt: LocalDateTime?
+    val vurdertTidspunkt: LocalDateTime
 )

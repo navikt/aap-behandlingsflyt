@@ -68,14 +68,15 @@ class SvarFraAndreinstansRepositoryImpl(private val connection: DBConnection) : 
     private fun lagre(behandlingId: BehandlingId, nyttGrunnlag: SvarFraAndreinstansGrunnlag) {
         val vurderingId = lagreVurdering(nyttGrunnlag.vurdering)
         val query = """
-            INSERT INTO SVAR_FRA_ANDREINSTANS_GRUNNLAG (BEHANDLING_ID, VURDERING_ID, AKTIV) 
-            VALUES (?, ?, TRUE)
+            INSERT INTO SVAR_FRA_ANDREINSTANS_GRUNNLAG (BEHANDLING_ID, VURDERING_ID, AKTIV, OPPRETTET_TID) 
+            VALUES (?, ?, TRUE, ?)
         """.trimIndent()
 
         connection.execute(query) {
             setParams {
                 setLong(1, behandlingId.toLong())
                 setLong(2, vurderingId)
+                setInstant(3, java.time.Instant.now())
             }
         }
     }
@@ -93,7 +94,7 @@ class SvarFraAndreinstansRepositoryImpl(private val connection: DBConnection) : 
                 setEnumName(2, vurdering.konsekvens)
                 setArray(3, vurdering.vilkårSomOmgjøres.map { it.hjemmel })
                 setString(4, vurdering.vurdertAv)
-                setInstant(5, vurdering.opprettet ?: java.time.Instant.now())
+                setInstant(5, vurdering.opprettet)
             }
             setResultValidator { rowsUpdated ->
                 require(rowsUpdated == 1)

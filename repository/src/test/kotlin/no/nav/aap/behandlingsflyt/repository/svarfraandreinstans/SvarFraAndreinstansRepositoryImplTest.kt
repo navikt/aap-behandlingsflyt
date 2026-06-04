@@ -12,6 +12,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
+import java.time.Instant
 import java.time.LocalDate
 
 class SvarFraAndreinstansRepositoryImplTest {
@@ -44,7 +45,8 @@ class SvarFraAndreinstansRepositoryImplTest {
                 begrunnelse = "Begrunnelse",
                 konsekvens = SvarFraAndreinstansKonsekvens.INGENTING,
                 vurdertAv = "saksbehandler",
-                vilkårSomOmgjøres = emptyList()
+                vilkårSomOmgjøres = emptyList(),
+                opprettet = Instant.now()
             )
             // Lagre vurdering
             repository.lagre(behandling.id, vurdering)

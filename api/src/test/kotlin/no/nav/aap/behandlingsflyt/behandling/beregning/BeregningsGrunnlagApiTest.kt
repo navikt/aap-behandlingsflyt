@@ -16,6 +16,7 @@ import java.math.BigDecimal
 import java.math.MathContext
 import java.math.RoundingMode
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.YearMonth
 
 class BeregningsGrunnlagApiTest {
@@ -37,7 +38,8 @@ class BeregningsGrunnlagApiTest {
                 andelAvNedsettelsen = Prosent(30),
                 erÅrsakssammenheng = true,
                 relevanteSaker = listOf(YrkesskadeSak("yrkesskadesaken", null)),
-                vurdertAv = "saksbehandler"
+                vurdertAv = "saksbehandler",
+                vurdertTidspunkt = LocalDateTime.now()
             ),
             ytterligereNedsettelsesDato = LocalDate.of(2023, 1, 1),
             yrkesskadeBeløpVurderinger = listOf(
@@ -95,7 +97,8 @@ class BeregningsGrunnlagApiTest {
                 andelAvNedsettelsen = Prosent(30),
                 erÅrsakssammenheng = true,
                 relevanteSaker = listOf(YrkesskadeSak("yrkesskadesaken", null)),
-                vurdertAv = "saksbehandler"
+                vurdertAv = "saksbehandler",
+                vurdertTidspunkt = LocalDateTime.now()
             ),
             ytterligereNedsettelsesDato = LocalDate.of(2023, 1, 1),
             yrkesskadeBeløpVurderinger = listOf(
@@ -222,4 +225,3 @@ class BeregningsGrunnlagApiTest {
         }.toSet()
     }
 }
-

@@ -13,6 +13,7 @@ import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertNotNull
+import java.time.Instant
 import java.time.LocalDate
 
 internal class PåklagetBehandlingRepositoryImplTest {
@@ -43,7 +44,8 @@ internal class PåklagetBehandlingRepositoryImplTest {
             val vurdering = PåklagetBehandlingVurdering(
                 påklagetVedtakType = PåklagetVedtakType.KELVIN_BEHANDLING,
                 påklagetBehandling = behandling.id,
-                vurdertAv = "ident"
+                vurdertAv = "ident",
+                opprettet = Instant.now()
             )
             
             påklagetBehandlingRepository.lagre(klageBehandling.id, vurdering)
@@ -66,7 +68,8 @@ internal class PåklagetBehandlingRepositoryImplTest {
             val vurdering = PåklagetBehandlingVurdering(
                 påklagetVedtakType = PåklagetVedtakType.KELVIN_BEHANDLING,
                 påklagetBehandling = behandling.id,
-                vurdertAv = "ident"
+                vurdertAv = "ident",
+                opprettet = java.time.Instant.now()
             )
 
             påklagetBehandlingRepository.lagre(klageBehandling.id, vurdering)

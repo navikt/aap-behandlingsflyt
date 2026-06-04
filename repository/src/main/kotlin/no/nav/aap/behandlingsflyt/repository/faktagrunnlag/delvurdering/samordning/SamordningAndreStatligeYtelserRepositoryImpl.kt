@@ -86,7 +86,7 @@ class SamordningAndreStatligeYtelserRepositoryImpl(private val connection: DBCon
             setParams {
                 setString(1, vurdering.begrunnelse)
                 setString(2, vurdering.vurdertAv)
-                setLocalDateTime(3, vurdering.vurdertTidspunkt ?: java.time.LocalDateTime.now())
+                setLocalDateTime(3, vurdering.vurdertTidspunkt)
             }
         }
 

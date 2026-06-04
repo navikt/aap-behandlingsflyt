@@ -37,13 +37,14 @@ class SykestipendRepositoryImpl(private val connection: DBConnection) : Sykestip
         connection.execute(
             """
             insert into sykestipend_grunnlag (
-                behandling_id, vurdering_id, aktiv
-            ) values (?, ?, true)
+                behandling_id, vurdering_id, aktiv, opprettet
+            ) values (?, ?, true, ?)
             """.trimIndent()
         ) {
             setParams {
                 setLong(1, behandlingId.toLong())
                 setLong(2, vurderingId)
+                setInstant(3, java.time.Instant.now())
             }
         }
     }
@@ -105,15 +106,16 @@ class SykestipendRepositoryImpl(private val connection: DBConnection) : Sykestip
         require(fraBehandling != tilBehandling)
         connection.execute(
             """
-                insert into sykestipend_grunnlag (behandling_id, vurdering_id)
-                select ?, vurdering_id
+                insert into sykestipend_grunnlag (behandling_id, vurdering_id, opprettet)
+                select ?, vurdering_id, ?
                 from sykestipend_grunnlag 
                 where behandling_id = ? and aktiv
             """.trimIndent()
         ) {
             setParams {
                 setLong(1, tilBehandling.toLong())
-                setLong(2, fraBehandling.toLong())
+                setInstant(2, java.time.Instant.now())
+                setLong(3, fraBehandling.toLong())
             }
         }
     }

@@ -8,7 +8,7 @@ data class PåklagetBehandlingVurdering(
     val påklagetVedtakType: PåklagetVedtakType,
     val påklagetBehandling: BehandlingId?,
     val vurdertAv: String,
-    val opprettet: Instant? = null
+    val opprettet: Instant
 ) {
     init {
         require(!(påklagetVedtakType == PåklagetVedtakType.KELVIN_BEHANDLING && påklagetBehandling == null)) {
@@ -22,7 +22,7 @@ data class PåklagetBehandlingVurderingMedReferanse(
     val påklagetBehandling: BehandlingId?,
     val referanse: BehandlingReferanse?,
     val vurdertAv: String,
-    val opprettet: Instant? = null
+    val opprettet: Instant
 ) {
     init {
         require(!(påklagetVedtakType == PåklagetVedtakType.KELVIN_BEHANDLING && påklagetBehandling == null)) {
