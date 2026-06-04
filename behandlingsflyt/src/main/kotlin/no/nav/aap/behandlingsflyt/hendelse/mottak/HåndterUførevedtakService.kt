@@ -71,7 +71,7 @@ class HåndterUførevedtakService(
             val kanHaRettPåAapEtterVirkningsdato =
                 rettighetstypeTidslinje.isNotEmpty() || sisteYtelsesBehandling.status().erÅpen()
 
-            if (skalOppretteAutomatiskStans118(uførevedtak)) {
+            if (skalOppretteAutomatiskStans11_18(uførevedtak)) {
                 flytJobbRepository.leggTil(
                     AutomatiskOpphørVedUføreInnvilgetJobbUtfører.nyJobb(
                         sakId = sakId,
@@ -107,10 +107,10 @@ class HåndterUførevedtakService(
         mottaDokumentService.markerSomBehandlet(sakId, sisteYtelsesBehandling.id, referanse)
     }
 
-    private fun skalOppretteAutomatiskStans118(
+    private fun skalOppretteAutomatiskStans11_18(
         uførevedtak: UførevedtakV0
     ): Boolean {
-        return unleashGateway.isEnabled(BehandlingsflytFeature.AutomatiskStans118)
+        return unleashGateway.isEnabled(BehandlingsflytFeature.AutomatiskStans1118)
                 && uførevedtak.resultat == UførevedtakResultat.INNV
                 && uførevedtak.virkningsdato.isAfter(LocalDate.now()) // Må endres i senere tid for del 2
     }

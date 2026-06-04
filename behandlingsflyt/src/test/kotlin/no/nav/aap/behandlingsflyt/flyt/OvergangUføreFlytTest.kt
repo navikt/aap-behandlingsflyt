@@ -537,6 +537,6 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(OvergangUføreFlytTes
 object OvergangUføreFlytTestUnleash : FakeUnleashBaseWithDefaultDisabled(
     enabledFlags = listOf(
         BehandlingsflytFeature.IngenValidering,
-        BehandlingsflytFeature.AutomatiskStans118,
+        BehandlingsflytFeature.AutomatiskStans1118,
     )
 )

@@ -51,7 +51,7 @@ class OvergangUføreSteg private constructor(
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        if (erAutomatiskStans118(kontekst)) {
+        if (erAutomatiskStans11_18(kontekst)) {
             avklaringsbehovService.oppdaterAvklaringsbehov(
                 definisjon = Definisjon.AVKLAR_OVERGANG_UFORE,
                 vedtakBehøverVurdering = { false },
@@ -102,8 +102,8 @@ class OvergangUføreSteg private constructor(
         return Fullført
     }
 
-    private fun erAutomatiskStans118(kontekst: FlytKontekstMedPerioder): Boolean {
-        if (unleashGateway.isDisabled(BehandlingsflytFeature.AutomatiskStans118)) {
+    private fun erAutomatiskStans11_18(kontekst: FlytKontekstMedPerioder): Boolean {
+        if (unleashGateway.isDisabled(BehandlingsflytFeature.AutomatiskStans1118)) {
             return false
         }
         val vurderinger = overgangUføreRepository.hentHvisEksisterer(kontekst.behandlingId)?.vurderinger.orEmpty()

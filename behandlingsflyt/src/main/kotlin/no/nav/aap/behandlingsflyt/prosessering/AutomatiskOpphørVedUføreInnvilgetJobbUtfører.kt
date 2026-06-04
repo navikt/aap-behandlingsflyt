@@ -50,7 +50,7 @@ class AutomatiskOpphørVedUføreInnvilgetJobbUtfører(
         val sisteYtelsesBehandling = behandlingService.finnSisteYtelsesbehandlingFor(sakId)
             ?: error("Finnes ingen ytelsesbehandling for sakId $sakId")
 
-        håndterAutomatiskStans118(
+        håndterAutomatiskStans11_18(
             sakId = sakId,
             uførevedtak = uførevedtak,
             mottattTidspunkt = mottattTidspunkt,
@@ -59,7 +59,7 @@ class AutomatiskOpphørVedUføreInnvilgetJobbUtfører(
         mottaDokumentService.markerSomBehandlet(sakId, sisteYtelsesBehandling.id, referanse)
     }
 
-    private fun håndterAutomatiskStans118(
+    private fun håndterAutomatiskStans11_18(
         sakId: SakId,
         uførevedtak: UførevedtakV0,
         mottattTidspunkt: LocalDateTime,
@@ -153,7 +153,7 @@ class AutomatiskOpphørVedUføreInnvilgetJobbUtfører(
             )
         }
 
-        override val type = "hendelse.automatiskStans118"
+        override val type = "hendelse.automatiskStans11_18"
         override val navn = "Automatisk stans 11-18"
         override val beskrivelse = "Håndterer automatisk stans 11-18 for innvilget uførevedtak."
     }
