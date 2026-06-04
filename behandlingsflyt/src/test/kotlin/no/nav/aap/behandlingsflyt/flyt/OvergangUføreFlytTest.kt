@@ -376,20 +376,39 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(OvergangUføreFlytTes
                 ?.vurderinger
                 ?.singleOrNull { it.vurdertAv == SYSTEMBRUKER.ident && it.fom == virkningsdato }
 
-            assertThat(vurdering!!.begrunnelse).isEqualTo(SYSTEMBRUKER.ident)
+            assertThat(vurdering!!.begrunnelse).isEqualTo("Automatisk opphør på grunn av vedtak om uføre")
             assertThat(vurdering.vurdertAv).isEqualTo(SYSTEMBRUKER.ident)
             assertThat(vurdering.fom).isEqualTo(virkningsdato)
             assertThat(vurdering.brukerRettPåAAP).isFalse()
             assertThat(vurdering.brukerHarFåttVedtakOmUføretrygd).isEqualTo(UføreSøknadVedtakResultat.JA_INNVILGET_GRADERT)
 
-            val overgangUføreVilkår = VilkårsresultatRepositoryImpl(connection)
+            val vilkårsresultat = VilkårsresultatRepositoryImpl(connection)
                 .hent(revurdering.id)
+
+            val automatiskVurdering = OvergangUføreRepositoryImpl(connection)
+                .hentHvisEksisterer(revurdering.id)
+                ?.vurderinger
+                ?.singleOrNull { it.vurdertAv == SYSTEMBRUKER.ident && it.fom == virkningsdato }
+            
+            assertThat(automatiskVurdering!!.begrunnelse).isEqualTo("Automatisk opphør på grunn av vedtak om uføre")
+            assertThat(automatiskVurdering.fom).isEqualTo(virkningsdato)
+
+            val overgangUføreVilkårFør = vilkårsresultat
+                .finnVilkår(Vilkårtype.OVERGANGUFØREVILKÅRET)
+                .tidslinje()
+                .segment(virkningsdato.minusDays(1))
+                ?.verdi
+
+            assertThat(overgangUføreVilkårFør!!.utfall).isNotEqualTo(Utfall.IKKE_OPPFYLT)
+                .withFailMessage("Periode før virkningsdato skal ikke være IKKE_OPPFYLT enda")
+
+            val overgangUføreVilkårEtter = vilkårsresultat
                 .finnVilkår(Vilkårtype.OVERGANGUFØREVILKÅRET)
                 .tidslinje()
                 .segment(virkningsdato)
                 ?.verdi
-            assertThat(overgangUføreVilkår!!.utfall).isEqualTo(Utfall.IKKE_OPPFYLT)
-            assertThat(overgangUføreVilkår.avslagsårsak).isEqualTo(Avslagsårsak.IKKE_RETT_PA_AAP_UNDER_BEHANDLING_AV_UFORE)
+            assertThat(overgangUføreVilkårEtter!!.utfall).isEqualTo(Utfall.IKKE_OPPFYLT)
+            assertThat(overgangUføreVilkårEtter.avslagsårsak).isEqualTo(Avslagsårsak.IKKE_RETT_PA_AAP_UNDER_BEHANDLING_AV_UFORE)
         }
     }
 

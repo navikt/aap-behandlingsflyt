@@ -162,7 +162,7 @@ class OvergangUføreSteg private constructor(
         if (harAutomatiskVurderingAllerede) return
 
         val automatiskVurdering = OvergangUføreVurdering(
-            begrunnelse = SYSTEMBRUKER.ident,
+            begrunnelse = "Automatisk opphør på grunn av vedtak om uføre",
             brukerHarSøktOmUføretrygd = true,
             brukerHarFåttVedtakOmUføretrygd = vedtakResultat,
             brukerRettPåAAP = false,
