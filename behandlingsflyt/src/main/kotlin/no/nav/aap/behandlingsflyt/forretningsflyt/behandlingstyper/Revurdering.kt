@@ -194,7 +194,8 @@ object Revurdering : BehandlingType {
             .medSteg(
                 steg = OvergangUføreSteg,
                 informasjonskrav = listOf(
-                    UføreSøknadInformasjonskrav
+                    UføreSøknadInformasjonskrav,
+                    UføreInformasjonskrav
                 ),
                 vurderingsbehovRelevanteForSteg = listOf(
                     Vurderingsbehov.MOTTATT_SØKNAD,
