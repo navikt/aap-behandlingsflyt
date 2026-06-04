@@ -12,7 +12,7 @@ data class SvarFraAndreinstansVurdering(
     val konsekvens: SvarFraAndreinstansKonsekvens,
     val vilkårSomOmgjøres: List<Hjemmel>,
     val vurdertAv: String,
-    val opprettet: Instant? = null
+    val opprettet: Instant
 )
 
 enum class SvarFraAndreinstansKonsekvens {
