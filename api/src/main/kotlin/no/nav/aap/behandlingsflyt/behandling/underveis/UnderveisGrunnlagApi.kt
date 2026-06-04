@@ -75,8 +75,8 @@ fun NormalOpenAPIRoute.underveisVurderingerApi(datasource: DataSource, repositor
         }
 
         val diff = diffTidslinjer(
-            forrigeUnderveisGrunnlag?.tilDto()?.somTidslinje() ?: Tidslinje(),
-            gjeldendeUnderveisGrunnlag?.tilDto()?.somTidslinje() ?: Tidslinje(),
+            forrigeUnderveisGrunnlag?.tilDto()?.somTidslinje()?.komprimer() ?: Tidslinje(),
+            gjeldendeUnderveisGrunnlag?.tilDto()?.somTidslinje()?.komprimer() ?: Tidslinje(),
         ).mapValue { it.somDto() }
 
         respond(UnderveisGrunnlagMedDiffDto(diff.verdier().toList()))
