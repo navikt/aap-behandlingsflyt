@@ -81,7 +81,7 @@ fun NormalOpenAPIRoute.meldekortApi(
                         .hentDokumenterAvType(sak.id, InnsendingType.MELDEKORT)
                         .associateBy { it.referanse }
 
-                    meldeperioderMedOppfyltePerioder.map { (meldeperiode, perioder) ->
+                    meldeperioderMedOppfyltePerioder.map { (meldeperiode, periode) ->
                         val meldekort = nyesteMeldekortForMeldeperiode(meldekortene, meldeperiode)
                         val tidligereMeldekortListe = tidligereMeldekortForMeldeperiode(meldekortene, meldeperiode)
 
@@ -93,7 +93,7 @@ fun NormalOpenAPIRoute.meldekortApi(
 
                             MeldeperiodeMedMeldekortDto(
                                 meldeperiode = meldeperiode,
-                                perioder = perioder,
+                                periode = periode,
                                 meldekort = meldekort.toDto(meldekortData?.begrunnelse, meldekortData?.opprettetAv, mottattDokument?.opprettetTid?.toLocalDate()),
                                 tidligereMeldekort = tidligereMeldekortListe.map { tidligere ->
                                     val ref = InnsendingReferanse(tidligere.journalpostId)
@@ -105,7 +105,7 @@ fun NormalOpenAPIRoute.meldekortApi(
                         } else {
                             MeldeperiodeMedMeldekortDto(
                                 meldeperiode = meldeperiode,
-                                perioder = perioder,
+                                periode = periode,
                                 meldekort = null,
                             )
                         }
@@ -278,15 +278,19 @@ private fun tidligereMeldekortForMeldeperiode(
  */
 private fun hentAktuelleMeldeperioderMedOppfyltePerioder(
     underveisGrunnlag: UnderveisGrunnlag,
-): Map<Periode, List<Periode>> {
+): Map<Periode, Periode?> {
     return underveisGrunnlag.perioder
         .filter { it.utfall == Utfall.OPPFYLT }
         .groupBy({ it.meldePeriode }, { it.periode })
         .mapValues { (_, perioder) ->
             // Slå sammen til sammenhengende perioder hvis mulig
-            Tidslinje(perioder.map { Segment(it, true) })
+            val aktuellePerioder = Tidslinje(perioder.map { Segment(it, true) })
                 .komprimer()
                 .perioder()
                 .toList()
+
+            // Samme logikk som gjøres i meldekort-backend - returnerer en periode hvor start og slutt innskrenkes
+            if (aktuellePerioder.isEmpty()) null
+            else Periode(aktuellePerioder.first().fom, aktuellePerioder.last().tom)
         }
 }
