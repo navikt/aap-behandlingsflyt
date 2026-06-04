@@ -47,6 +47,10 @@ data class Sykdomsvurdering(
         return true
     }
 
+    fun potensieltOppfulltStudent(): Boolean {
+        return harNedsattArbeidsevne == ArbeidsevneNedsattValg.NEI_MEN_STUDENT
+    }
+
     fun erOppfyltOrdinærMedUtlededeFelter(): Boolean {
         return harSkadeSykdomEllerLyte
                 && harNedsattArbeidsevne == ArbeidsevneNedsattValg.JA

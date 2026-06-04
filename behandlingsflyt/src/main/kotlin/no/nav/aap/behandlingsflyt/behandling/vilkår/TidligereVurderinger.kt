@@ -124,6 +124,7 @@ class TidligereVurderingerImpl(
                     val sykdomDefinitivtAvslag = sykdomsvurdering?.erOppfyltOrdinærMedUtlededeFelter() == false
                             && !sykdomsvurdering.erOppfyltForOrdinærEllerYrkesskadeSettBortIfraÅrsakssammenheng()
                             && !sykdomsvurdering.skalVurderesForSykepengeerstatning()
+                            && !sykdomsvurdering.potensieltOppfulltStudent()
                             && !potensieltOppfyltOvergangArbeid(
                         kontekst.rettighetsperiode,
                         segmentPeriode,
@@ -191,7 +192,7 @@ class TidligereVurderingerImpl(
                             RettighetsType.ARBEIDSSØKER
                         )
 
-                        foreløpigUtfall is TidligereVurderinger.PotensieltOppfylt && foreløpigUtfall.rettighetstype == null && sykdomsvurdering?.skalVurderesForSykepengeerstatning() != true -> TidligereVurderinger.UunngåeligAvslag
+                        foreløpigUtfall is TidligereVurderinger.PotensieltOppfylt && foreløpigUtfall.rettighetstype == null && (sykdomsvurdering?.skalVurderesForSykepengeerstatning() != true && sykdomsvurdering?.potensieltOppfulltStudent() != true )-> TidligereVurderinger.UunngåeligAvslag
 
                         else -> TidligereVurderinger.PotensieltOppfylt(null)
                     }

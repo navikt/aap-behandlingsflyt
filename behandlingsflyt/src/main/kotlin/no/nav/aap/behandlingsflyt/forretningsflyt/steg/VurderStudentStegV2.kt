@@ -32,7 +32,7 @@ class VurderStudentStegV2 private constructor(
     private val sykdomRepository: SykdomRepository,
     private val avklaringsbehovService: AvklaringsbehovService,
     private val unleashGateway: UnleashGateway,
-    ) : BehandlingSteg {
+) : BehandlingSteg {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         studentRepository = repositoryProvider.provide(),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
@@ -44,22 +44,25 @@ class VurderStudentStegV2 private constructor(
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val studentGrunnlag = studentRepository.hentHvisEksisterer(kontekst.behandlingId)
-        val neiMenErStudent = sykdomRepository.hent(kontekst.behandlingId).sykdomsvurderinger.last().harNedsattArbeidsevne
-        if (unleashGateway.isEnabled(BehandlingsflytFeature.StudentV2) || neiMenErStudent != ArbeidsevneNedsattValg.NEI_MEN_STUDENT) {
-            return Fullført
-        }
+        val neiMenErStudent =
+            sykdomRepository.hent(kontekst.behandlingId).sykdomsvurderinger.last().harNedsattArbeidsevne
 
         avklaringsbehovService.oppdaterAvklaringsbehov(
-            definisjon = Definisjon.AVKLAR_STUDENT,
+            definisjon = Definisjon.AVKLAR_STUDENT_V2,
             vedtakBehøverVurdering = {
                 when (kontekst.vurderingType) {
-                    VurderingType.FØRSTEGANGSBEHANDLING ->
-                        tidligereVurderinger.muligMedRettTilAAP(kontekst, VurderStudentSteg.Companion.type()) &&
-                                (studentGrunnlag.skalVurdereStudent() || Vurderingsbehov.REVURDER_STUDENT in kontekst.vurderingsbehovRelevanteForSteg)
+                    VurderingType.FØRSTEGANGSBEHANDLING -> {
+                        if (neiMenErStudent != ArbeidsevneNedsattValg.NEI_MEN_STUDENT || !unleashGateway.isEnabled(BehandlingsflytFeature.StudentV2)) return@oppdaterAvklaringsbehov false
 
-                    VurderingType.REVURDERING ->
-                        tidligereVurderinger.muligMedRettTilAAP(kontekst, VurderStudentSteg.Companion.type()) &&
+                        tidligereVurderinger.muligMedRettTilAAP(kontekst, type())
+                    }
+
+                    VurderingType.REVURDERING -> {
+                        if (neiMenErStudent != ArbeidsevneNedsattValg.NEI_MEN_STUDENT || !unleashGateway.isEnabled(BehandlingsflytFeature.StudentV2)) return@oppdaterAvklaringsbehov false
+
+                        tidligereVurderinger.muligMedRettTilAAP(kontekst, type()) &&
                                 Vurderingsbehov.REVURDER_STUDENT in kontekst.vurderingsbehovRelevanteForSteg
+                    }
 
                     VurderingType.UTVID_VEDTAKSLENGDE,
                     VurderingType.MIGRER_RETTIGHETSPERIODE,

@@ -27,20 +27,19 @@ class VurderStudentSteg private constructor(
     private val studentRepository: StudentRepository,
     private val tidligereVurderinger: TidligereVurderinger,
     private val vilkårsresultatRepository: VilkårsresultatRepository,
-    private val avklaringsbehovService: AvklaringsbehovService
+    private val avklaringsbehovService: AvklaringsbehovService,
+    private val unleashGateway: UnleashGateway
 ) : BehandlingSteg {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         studentRepository = repositoryProvider.provide(),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
         vilkårsresultatRepository = repositoryProvider.provide(),
         avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
+        unleashGateway = gatewayProvider.provide()
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val studentGrunnlag = studentRepository.hentHvisEksisterer(kontekst.behandlingId)
-        val unleashGateway = GatewayProvider.provide<UnleashGateway>()
-
-
 
         avklaringsbehovService.oppdaterAvklaringsbehov(
             definisjon = Definisjon.AVKLAR_STUDENT,
@@ -53,10 +52,13 @@ class VurderStudentSteg private constructor(
                         tidligereVurderinger.muligMedRettTilAAP(kontekst, type()) &&
                                 (studentGrunnlag.skalVurdereStudent() || Vurderingsbehov.REVURDER_STUDENT in kontekst.vurderingsbehovRelevanteForSteg)
                     }
-                    VurderingType.REVURDERING ->
+                    VurderingType.REVURDERING -> {
+                        if (!unleashGateway.isEnabled(BehandlingsflytFeature.StudentV2)) {
+                            return@oppdaterAvklaringsbehov false
+                        }
                         tidligereVurderinger.muligMedRettTilAAP(kontekst, type()) &&
                                 Vurderingsbehov.REVURDER_STUDENT in kontekst.vurderingsbehovRelevanteForSteg
-
+                    }
                     VurderingType.UTVID_VEDTAKSLENGDE,
                     VurderingType.MIGRER_RETTIGHETSPERIODE,
                     VurderingType.MELDEKORT,
