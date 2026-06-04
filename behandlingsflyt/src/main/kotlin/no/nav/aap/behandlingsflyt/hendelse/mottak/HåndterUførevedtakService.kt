@@ -72,7 +72,7 @@ class HåndterUførevedtakService(
                 rettighetstypeTidslinje.isNotEmpty() || sisteYtelsesBehandling.status().erÅpen()
 
             if (skalOppretteAutomatiskStans11_18(uførevedtak)) {
-                val vurderingsbehov = Vurderingsbehov.OVERGANG_UFORE
+                val vurderingsbehov = Vurderingsbehov.OVERGANG_UFORE_AUTOMATISK_STANS
                 val opprettetBehandling = behandlingService.finnEllerOpprettBehandling(
                     sakId,
                     VurderingsbehovOgÅrsak(

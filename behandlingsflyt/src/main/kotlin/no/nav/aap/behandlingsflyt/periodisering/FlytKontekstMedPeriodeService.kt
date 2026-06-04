@@ -115,6 +115,7 @@ class FlytKontekstMedPeriodeService(
             Vurderingsbehov.REVURDER_MANUELL_INNTEKT,
             Vurderingsbehov.REVURDER_MELDEPLIKT_RIMELIG_GRUNN,
             Vurderingsbehov.OVERGANG_UFORE,
+            Vurderingsbehov.OVERGANG_UFORE_AUTOMATISK_STANS,
             Vurderingsbehov.OVERGANG_ARBEID,
             Vurderingsbehov.OPPHOLDSKRAV,
             Vurderingsbehov.ETABLERING_EGEN_VIRKSOMHET,

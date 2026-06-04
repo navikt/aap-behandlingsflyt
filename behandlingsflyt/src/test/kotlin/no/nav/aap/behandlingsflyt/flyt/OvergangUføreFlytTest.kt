@@ -369,7 +369,7 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(OvergangUføreFlytTes
             val vurderingsbehovOgÅrsaker =
                 BehandlingRepositoryImpl(connection).hentVurderingsbehovOgÅrsaker(revurdering.id)
             assertThat(vurderingsbehovOgÅrsaker.flatMap { it.vurderingsbehov.map { behov -> behov.type } })
-                .contains(Vurderingsbehov.OVERGANG_UFORE)
+                .contains(Vurderingsbehov.OVERGANG_UFORE_AUTOMATISK_STANS)
 
             val vurdering = OvergangUføreRepositoryImpl(connection)
                 .hentHvisEksisterer(revurdering.id)
