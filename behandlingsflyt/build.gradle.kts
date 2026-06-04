@@ -1,9 +1,8 @@
-
 plugins {
     id("aap.conventions")
 }
 
-tasks{
+tasks {
     val projectProps by registering(WriteProperties::class) {
         destinationFile = layout.buildDirectory.file("behandlingsflyt-version.properties")
         // Define property.
@@ -25,10 +24,17 @@ dokka {
 }
 
 fun getCheckedOutGitCommitHash(): String {
-    if (System.getenv("GITHUB_ACTIONS") == "true") {
-        return System.getenv("GITHUB_SHA")
+    // Check for explicit environment variable first (useful when git is unavailable)
+    System.getenv("GIT_COMMIT")?.takeIf { it.isNotBlank() }?.let { return it }
+    System.getenv("GITHUB_SHA")?.takeIf { it.isNotBlank() }?.let { return it }
+
+    // Try to run git command
+    return try {
+        runCommand("git rev-parse --verify HEAD")
+    } catch (e: Exception) {
+        // Fallback: use a deterministic value when git is unavailable
+        "unknown-no-git"
     }
-    return runCommand("git rev-parse --verify HEAD")
 }
 
 fun runCommand(command: String): String {
@@ -37,7 +43,7 @@ fun runCommand(command: String): String {
         commandLine(command.split("\\s".toRegex()))
     }.standardOutput.asText
 
-    return execResult.get()
+    return execResult.get().trim()
 }
 
 dependencies {
@@ -65,7 +71,6 @@ dependencies {
     implementation(libs.tidslinje)
     implementation(libs.kafkaClients)
     implementation(kotlin("reflect"))
-    implementation(libs.flywayDatabasePostgresql)
     runtimeOnly(libs.postgresql) // låst versjon i root build.gradle.kts
 
 

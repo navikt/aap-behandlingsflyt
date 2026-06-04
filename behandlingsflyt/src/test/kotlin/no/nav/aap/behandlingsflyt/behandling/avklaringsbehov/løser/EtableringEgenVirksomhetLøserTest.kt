@@ -180,7 +180,6 @@ class EtableringEgenVirksomhetLøserTest {
                     begrunnelse = "...",
                     vurderingenGjelderFra = LocalDate.now(),
                     vurderingenGjelderTil = LocalDate.now().plusMonths(6),
-                    dokumenterBruktIVurdering = emptyList(),
                     harSkadeSykdomEllerLyte = true,
                     harNedsattArbeidsevne = ArbeidsevneNedsattValg.JA,
                     erSkadeSykdomEllerLyteVesentligdel = true,

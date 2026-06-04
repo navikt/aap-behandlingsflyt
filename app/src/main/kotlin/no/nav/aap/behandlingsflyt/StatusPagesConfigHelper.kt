@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt
 
 import com.fasterxml.jackson.core.JacksonException
-import io.ktor.client.plugins.HttpRequestTimeoutException
+import io.ktor.client.plugins.*
 import io.ktor.http.*
 import io.ktor.serialization.*
 import io.ktor.server.application.*
@@ -15,6 +15,7 @@ import no.nav.aap.komponenter.httpklient.exception.ApiErrorCode
 import no.nav.aap.komponenter.httpklient.exception.ApiException
 import no.nav.aap.komponenter.httpklient.exception.IkkeTillattException
 import no.nav.aap.komponenter.httpklient.exception.InternfeilException
+import no.nav.aap.komponenter.httpklient.exception.TimeoutException
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.httpklient.exception.VerdiIkkeFunnetException
 import no.nav.aap.komponenter.httpklient.httpclient.error.IkkeFunnetException
@@ -93,15 +94,25 @@ object StatusPagesConfigHelper {
                     call.respondWithError(InternfeilException("Feil ved kall til '$uri'"))
                 }
 
+                is ClientRequestException -> {
+                    if (cause.response.status == HttpStatusCode.RequestTimeout) {
+                        logger.warn("Timeout ved kall til '$uri'", cause)
+                        call.respondWithError(TimeoutException("Forespørselen tok for lang tid. Prøv igjen om litt."))
+                    } else {
+                        logger.error("Feil ved kall til '$uri'.", cause)
+                        call.respondWithError(
+                            ApiException(
+                                status = cause.response.status,
+                                message = "Feil ved kall til '$uri'."
+                            )
+                        )
+                    }
+                }
+
                 is HttpRequestTimeoutException,
                 is HttpTimeoutException -> {
                     logger.warn("Timeout ved kall til '$uri'", cause)
-                    call.respondWithError(
-                        ApiException(
-                            status = HttpStatusCode.RequestTimeout,
-                            message = "Forespørselen tok for lang tid. Prøv igjen om litt."
-                        )
-                    )
+                    call.respondWithError(TimeoutException("Forespørselen tok for lang tid. Prøv igjen om litt."))
                 }
 
                 else -> {

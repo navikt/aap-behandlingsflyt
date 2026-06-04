@@ -64,8 +64,7 @@ class BehandlingService(
                 val forrigeBehandlingId = requireNotNull(behandling.forrigeBehandlingId) {
                     "Revurdering skal alltid ha forrigeBehandling"
                 }
-                val vurderingsbehov = behandling.vurderingsbehov().map { it.type }
-                if (!underveisService.harRett(forrigeBehandlingId) && vurderingsbehov.contains(Vurderingsbehov.MOTTATT_SØKNAD)) {
+                if (!underveisService.harRett(forrigeBehandlingId)) {
                     TypeBehandling.Førstegangsbehandling
                 } else {
                     TypeBehandling.Revurdering

@@ -201,7 +201,6 @@ class OvergangArbeidStegTest {
 
     private fun sykdom(erSyk: Boolean, vurderingenGjelderFra: LocalDate) = Sykdomsvurdering(
         begrunnelse = "",
-        dokumenterBruktIVurdering = emptyList(),
         harSkadeSykdomEllerLyte = erSyk,
         erSkadeSykdomEllerLyteVesentligdel = erSyk,
         erNedsettelseIArbeidsevneMerEnnHalvparten = erSyk,
@@ -218,7 +217,6 @@ class OvergangArbeidStegTest {
 
     private fun sykdomMedYrkesskadefordel(vurderingenGjelderFra: LocalDate) = Sykdomsvurdering(
         begrunnelse = "",
-        dokumenterBruktIVurdering = emptyList(),
         harSkadeSykdomEllerLyte = true,
         erSkadeSykdomEllerLyteVesentligdel = true,
         erNedsettelseIArbeidsevneMerEnnHalvparten = false,

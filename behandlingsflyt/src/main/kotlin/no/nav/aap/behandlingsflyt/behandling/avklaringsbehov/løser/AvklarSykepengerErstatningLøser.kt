@@ -46,7 +46,6 @@ class AvklarSykepengerErstatningLøser(
         vurdertAv: String
     ): SykepengerVurdering = SykepengerVurdering(
         begrunnelse = dto.begrunnelse,
-        dokumenterBruktIVurdering = dto.dokumenterBruktIVurdering,
         harRettPå = dto.harRettPå,
         grunn = dto.grunn,
         vurdertIBehandling = behandlingId,
