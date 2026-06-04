@@ -23,7 +23,7 @@ class DatadelingMeldekortService(
     private val mottattDokumentRepository: MottattDokumentRepository,
     private val meldeperiodeRepository: MeldeperiodeRepository,
 ) {
-    constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
+    constructor(repositoryProvider: RepositoryProvider, @Suppress("unused") gatewayProvider: GatewayProvider) : this(
         saksRepository = repositoryProvider.provide(),
         underveisRepository = repositoryProvider.provide(),
         mottattDokumentRepository = repositoryProvider.provide(),
@@ -32,59 +32,68 @@ class DatadelingMeldekortService(
 
     private val log = LoggerFactory.getLogger(javaClass)
 
-    internal fun opprettKontraktObjekter(
+    fun opprettKontraktObjekter(
         sakId: SakId, behandlingId: BehandlingId
-    ): List<DetaljertMeldekortDTO> {
+    ): List<DetaljertMeldekortDTO> = hentOgKonverterMeldekort(sakId, behandlingId).orEmpty()
+
+    private fun hentOgKonverterMeldekort(
+        sakId: SakId, behandlingId: BehandlingId
+    ): List<DetaljertMeldekortDTO>? {
         val sak = saksRepository.hent(sakId)
         val personIdent = sak.person.aktivIdent()
 
-        val meldekortene = mottattDokumentRepository.hentDokumenterAvType(behandlingId, InnsendingType.MELDEKORT)
+        val meldekortene = mottattDokumentRepository.hentDokumenterAvType(sakId, InnsendingType.MELDEKORT)
             .map { it to it.strukturerteData<no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Meldekort>()?.data }
             .map { (dokument, m) ->
                 Meldekort.fraKontrakt(
                     dokument.referanse.asJournalpostId,
                     dokument.mottattTidspunkt,
-                    requireNotNull(m) { "Meldekort mangler strukturert data. JournalpostId=${dokument.referanse.asJournalpostId}" }
-                )
-            }
-
-
-        if (meldekortene.isEmpty()) {
-            return emptyList()
-        }
+                    requireNotNull(m) { "Meldekort mangler strukturert data. JournalpostId=${dokument.referanse.asJournalpostId}" })
+            }.ifEmpty { return null }
 
         val underveisGrunnlag = underveisRepository.hentHvisEksisterer(behandlingId)
-
         val helePerioden = underveisGrunnlag?.somTidslinje()?.helePerioden() ?: sak.rettighetsperiodeEttÅrFraStartDato()
+        val meldePeriodene = meldeperiodeRepository.hentMeldeperioder(behandlingId, helePerioden)
 
-        val meldePeriodene =
-            meldeperiodeRepository.hentMeldeperioder(behandlingId, helePerioden)
-        if (meldePeriodene.isEmpty()) {
+        return if (meldePeriodene.isNotEmpty()) {
+            filtrerOgMapMeldekort(meldekortene, meldePeriodene, personIdent, sak, behandlingId)
+        } else {
             log.warn("Ingen meldeperioder funnet for behandlingId=${behandlingId.id}")
-            return emptyList()
+            null
         }
+    }
 
-        val kontraktObjekter = meldekortene.mapNotNull { meldekort ->
+    private fun filtrerOgMapMeldekort(
+        meldekortene: List<Meldekort>,
+        meldePeriodene: List<Periode>,
+        personIdent: Ident,
+        sak: no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak,
+        behandlingId: BehandlingId
+    ): List<DetaljertMeldekortDTO> {
+        return meldekortene.mapNotNull { meldekort ->
             val arbeidsperiode = meldekort.arbeidsperiode()
             val meldekortetsPeriode = arbeidsperiode?.let { finnMeldekortetsPeriode(arbeidsperiode, meldePeriodene) }
 
-            if (arbeidsperiode == null) {
-                log.warn(
-                    "Meldekort uten arbeidstimer ble ignorert. journalpostId=${meldekort.journalpostId.identifikator}, behandlingId=${behandlingId.id}"
-                )
-                null
-            } else if (meldekortetsPeriode == null) {
-                log.warn(
-                    "Meldekort med arbeidstimer som ikke samsvarer med noen meldekortperiode for behandlingen ble ignorert. journalpostId=${meldekort.journalpostId.identifikator}, behandlingId=${behandlingId.id}, arbeidsperiode=$arbeidsperiode"
-                )
-                null
-            } else {
-                tilKontrakt(
+            when {
+                arbeidsperiode == null -> {
+                    log.warn(
+                        "Meldekort uten arbeidstimer ble ignorert. journalpostId=${meldekort.journalpostId.identifikator}, behandlingId=${behandlingId.id}"
+                    )
+                    null
+                }
+
+                meldekortetsPeriode == null -> {
+                    log.warn(
+                        "Meldekort med arbeidstimer som ikke samsvarer med noen meldekortperiode for behandlingen ble ignorert. journalpostId=${meldekort.journalpostId.identifikator}, behandlingId=${behandlingId.id}, arbeidsperiode=$arbeidsperiode"
+                    )
+                    null
+                }
+
+                else -> tilKontrakt(
                     meldekort, personIdent, sak.saksnummer, behandlingId, meldekortetsPeriode
                 )
             }
         }
-        return kontraktObjekter
     }
 
     internal fun tilKontrakt(

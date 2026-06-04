@@ -76,7 +76,6 @@ class AvklarSykdomLøser(
                                     begrunnelse = "",
                                     yrkesskadeBegrunnelse = "",
                                     diagnose = null,
-                                    dokumenterBruktIVurdering = emptyList()
                                 )
                             }"
                 )

@@ -84,7 +84,6 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
             """
             delete from sykdom_grunnlag where behandling_id = ?; 
             delete from sykdom_vurdering_bidiagnoser where vurdering_id = ANY(?::bigint[]);
-            delete from sykdom_vurdering_dokumenter where vurdering_id = ANY(?::bigint[]);
             delete from sykdom_vurdering where sykdom_vurderinger_id = ANY(?::bigint[]);
             delete from sykdom_vurderinger where id = ANY(?::bigint[]);
             delete from yrkesskade_relaterte_saker where vurdering_id = ANY(?::bigint[]);
@@ -94,11 +93,10 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
             setParams {
                 setLong(1, behandlingId.id)
                 setLongArray(2, sykdomVurderingIds)
-                setLongArray(3, sykdomVurderingIds)
+                setLongArray(3, sykdomVurderingerIds)
                 setLongArray(4, sykdomVurderingerIds)
-                setLongArray(5, sykdomVurderingerIds)
+                setLongArray(5, yrkesskadevurderingIds)
                 setLongArray(6, yrkesskadevurderingIds)
-                setLongArray(7, yrkesskadevurderingIds)
             }
         }
         log.info("Slettet $deletedRows rader fra sykdom_grunnlag")
@@ -241,7 +239,6 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
                 }
             }
 
-            lagreSykdomDokumenter(id, vurdering.dokumenterBruktIVurdering)
             lagreBidiagnose(id, vurdering.diagnose?.bidiagnoser.orEmpty())
         }
 
@@ -258,21 +255,6 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
             setParams { kode ->
                 setLong(1, sykdomsId)
                 setString(2, kode)
-            }
-        }
-    }
-
-
-    private fun lagreSykdomDokumenter(sykdomsId: Long, journalpostIder: List<JournalpostId>) {
-        val query = """
-            INSERT INTO SYKDOM_VURDERING_DOKUMENTER (VURDERING_ID, JOURNALPOST) 
-            VALUES (?, ?)
-        """.trimIndent()
-
-        connection.executeBatch(query, journalpostIder) {
-            setParams {
-                setLong(1, sykdomsId)
-                setString(2, it.identifikator)
             }
         }
     }
@@ -351,7 +333,6 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
         return Sykdomsvurdering(
             begrunnelse = row.getString("BEGRUNNELSE"),
             vurderingenGjelderFra = row.getLocalDate("VURDERINGEN_GJELDER_FRA"),
-            dokumenterBruktIVurdering = hentSykdomsDokumenter(sykdomsvurderingId),
             harSkadeSykdomEllerLyte = row.getBoolean("HAR_SYKDOM_SKADE_LYTE"),
             erSkadeSykdomEllerLyteVesentligdel = row.getBooleanOrNull("ER_SYKDOM_SKADE_LYTE_VESETLING_DEL"),
             erNedsettelseIArbeidsevneMerEnnHalvparten = row.getBooleanOrNull("ER_NEDSETTELSE_MER_ENN_HALVPARTEN"),
@@ -383,16 +364,6 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
         }
     }
 
-    private fun hentSykdomsDokumenter(yrkesskadeId: Long): List<JournalpostId> {
-        return connection.queryList("SELECT JOURNALPOST FROM SYKDOM_VURDERING_DOKUMENTER WHERE VURDERING_ID = ?") {
-            setParams {
-                setLong(1, yrkesskadeId)
-            }
-            setRowMapper { row ->
-                JournalpostId(row.getString("JOURNALPOST"))
-            }
-        }
-    }
 
     private fun mapYrkesskade(yrkesskadeId: Long?): Yrkesskadevurdering? {
         if (yrkesskadeId == null) {
