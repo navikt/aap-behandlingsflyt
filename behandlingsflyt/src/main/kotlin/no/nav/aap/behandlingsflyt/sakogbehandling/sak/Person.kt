@@ -7,10 +7,11 @@ import java.util.*
 @JvmInline
 value class PersonId(val id: Long)
 
-class Person(val id: PersonId, val referanse: UUID, private var identer: List<Ident>) {
-
-    constructor(identifikator: UUID, identer: List<Ident>) : this(PersonId(-0), identifikator, identer)
-
+ class Person(
+     val id: PersonId,
+     val referanse: UUID,
+     private var identer: List<Ident>,
+ ) {
     fun er(ident: Ident): Boolean {
         return identer.any { it == ident }
     }
