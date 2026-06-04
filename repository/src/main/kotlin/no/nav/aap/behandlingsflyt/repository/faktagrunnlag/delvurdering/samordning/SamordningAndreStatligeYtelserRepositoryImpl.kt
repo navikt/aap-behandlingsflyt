@@ -80,7 +80,7 @@ class SamordningAndreStatligeYtelserRepositoryImpl(private val connection: DBCon
         }
 
         val samordingAndreStatligeYtelserVurderingQuery = """
-            INSERT INTO SAMORDNING_ANDRE_STATLIGE_YTELSER_VURDERING (begrunnelse, vurdert_av) VALUES (?, ?)
+            INSERT INTO SAMORDNING_ANDRE_STATLIGE_YTELSER_VURDERING (begrunnelse, vurdert_av, opprettet_tid) VALUES (?, ?, ?)
         """.trimIndent()
         val vurderingId = connection.executeReturnKey(samordingAndreStatligeYtelserVurderingQuery) {
             setParams {
