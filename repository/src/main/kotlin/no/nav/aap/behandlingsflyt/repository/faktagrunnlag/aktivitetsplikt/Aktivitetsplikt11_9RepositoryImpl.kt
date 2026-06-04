@@ -79,8 +79,8 @@ class Aktivitetsplikt11_9RepositoryImpl(private val connection: DBConnection) : 
         }
 
         val query = """
-            insert into aktivitetsplikt_11_9_grunnlag (behandling_id, vurderinger_id, aktiv)
-            select ?, vurderinger_id, true
+            insert into aktivitetsplikt_11_9_grunnlag (behandling_id, vurderinger_id, aktiv, opprettet_tid)
+            select ?, vurderinger_id, true, ?
             from aktivitetsplikt_11_9_grunnlag
             where behandling_id = ? and aktiv
         """.trimIndent()
@@ -101,23 +101,24 @@ class Aktivitetsplikt11_9RepositoryImpl(private val connection: DBConnection) : 
         val vurderingerId = lagreVurderinger(nyttGrunnlag.vurderinger)
         val query = """
             insert into aktivitetsplikt_11_9_grunnlag 
-            (behandling_id, vurderinger_id, aktiv) 
-            values (?, ?, true)
+            (behandling_id, vurderinger_id, aktiv, opprettet_tid) 
+            values (?, ?, true, ?)
         """.trimIndent()
         connection.execute(query) {
             setParams {
                 setLong(1, behandlingId.toLong())
                 setLong(2, vurderingerId)
+                setInstant(3, java.time.Instant.now())
             }
         }
     }
 
     private fun lagreVurderinger(vurderinger: Set<Aktivitetsplikt11_9Vurdering>): Long {
         val vurderingerId = connection.executeReturnKey(
-            """
-            insert into aktivitetsplikt_11_9_vurderinger default values
-        """.trimIndent()
-        )
+            "insert into aktivitetsplikt_11_9_vurderinger (opprettet_tid) values (?)"
+        ) {
+            setParams { setInstant(1, java.time.Instant.now()) }
+        }
 
         val query = """
             INSERT INTO aktivitetsplikt_11_9_vurdering 
