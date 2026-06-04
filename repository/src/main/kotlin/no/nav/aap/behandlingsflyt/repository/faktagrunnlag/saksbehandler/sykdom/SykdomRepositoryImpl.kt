@@ -150,7 +150,7 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
         val yrkesskadeId = lagreYrkesskade(nyttGrunnlag.yrkesskadevurdering)
 
         val query = """
-            INSERT INTO SYKDOM_GRUNNLAG (BEHANDLING_ID, YRKESSKADE_ID, SYKDOM_VURDERINGER_ID) VALUES (?, ?, ?)
+            INSERT INTO SYKDOM_GRUNNLAG (BEHANDLING_ID, YRKESSKADE_ID, SYKDOM_VURDERINGER_ID, OPPRETTET_TID) VALUES (?, ?, ?, ?)
         """.trimIndent()
 
         connection.execute(query) {
@@ -158,6 +158,7 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
                 setLong(1, behandlingId.toLong())
                 setLong(2, yrkesskadeId)
                 setLong(3, sykdomsvurderingerId)
+                setInstant(4, java.time.Instant.now())
             }
         }
     }
@@ -172,9 +173,9 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
 
         val query = """
             INSERT INTO YRKESSKADE_VURDERING 
-            (BEGRUNNELSE, ARSAKSSAMMENHENG, ANDEL_AV_NEDSETTELSE, VURDERT_AV)
+            (BEGRUNNELSE, ARSAKSSAMMENHENG, ANDEL_AV_NEDSETTELSE, VURDERT_AV, OPPRETTET_TID)
             VALUES
-            (?, ?, ?, ?)
+            (?, ?, ?, ?, ?)
         """.trimIndent()
 
         val id = connection.executeReturnKey(query) {
@@ -183,6 +184,7 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
                 setBoolean(2, vurdering.erÅrsakssammenheng)
                 setInt(3, vurdering.andelAvNedsettelsen?.prosentverdi())
                 setString(4, vurdering.vurdertAv)
+                setLocalDateTime(5, vurdering.vurdertTidspunkt)
             }
         }
 
@@ -202,7 +204,11 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
     }
 
     private fun lagreSykdom(vurderinger: List<Sykdomsvurdering>): Long {
-        val sykdomsvurderingerId = connection.executeReturnKey("""INSERT INTO SYKDOM_VURDERINGER DEFAULT VALUES""")
+        val sykdomsvurderingerId = connection.executeReturnKey(
+            "INSERT INTO SYKDOM_VURDERINGER (opprettet_tid) VALUES (?)"
+        ) {
+            setParams { setInstant(1, java.time.Instant.now()) }
+        }
 
         val query = """
             INSERT INTO SYKDOM_VURDERING (
@@ -265,15 +271,16 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
             return
         }
         val query = """
-            INSERT INTO SYKDOM_GRUNNLAG (BEHANDLING_ID, YRKESSKADE_ID, SYKDOM_VURDERINGER_ID)
-            SELECT ?, YRKESSKADE_ID, SYKDOM_VURDERINGER_ID
+            INSERT INTO SYKDOM_GRUNNLAG (BEHANDLING_ID, YRKESSKADE_ID, SYKDOM_VURDERINGER_ID, OPPRETTET_TID)
+            SELECT ?, YRKESSKADE_ID, SYKDOM_VURDERINGER_ID, ?
             FROM SYKDOM_GRUNNLAG WHERE BEHANDLING_ID = ? AND AKTIV
         """.trimIndent()
 
         connection.execute(query) {
             setParams {
                 setLong(1, tilBehandling.toLong())
-                setLong(2, fraBehandling.toLong())
+                setInstant(2, java.time.Instant.now())
+                setLong(3, fraBehandling.toLong())
             }
         }
     }

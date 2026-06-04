@@ -227,6 +227,6 @@ class AvklarHelseinstitusjonLøser(
         val harFasteUtgifter: Boolean? = null,
         val vurdertIBehandling: BehandlingId,
         val vurdertAv: String? = null,
-        val vurdertTidspunkt: LocalDateTime? = null
+        val vurdertTidspunkt: LocalDateTime
     )
 }

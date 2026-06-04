@@ -31,6 +31,7 @@ import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 internal class SamordningServiceTest {
     companion object {
@@ -98,6 +99,7 @@ internal class SamordningServiceTest {
                 ytelseVurderingRepo, behandlingId, vurderinger = SamordningVurderingGrunnlag(
                     begrunnelse = "En god begrunnelse",
                     vurdertAv = "ident",
+                    vurdertTidspunkt = LocalDateTime.now(),
                     vurderinger = setOf(
                         SamordningVurdering(
                             ytelseType = Ytelse.SYKEPENGER,
@@ -176,6 +178,7 @@ internal class SamordningServiceTest {
             val vurderinger = SamordningVurderingGrunnlag(
                 begrunnelse = "En god begrunnelse",
                 vurdertAv = "ident",
+                vurdertTidspunkt = LocalDateTime.now(),
                 vurderinger = setOf(
                     SamordningVurdering(
                         Ytelse.SYKEPENGER,
@@ -258,6 +261,7 @@ internal class SamordningServiceTest {
         vurderinger: SamordningVurderingGrunnlag = SamordningVurderingGrunnlag(
             begrunnelse = "En god begrunnelse",
             vurdertAv = "ident",
+            vurdertTidspunkt = LocalDateTime.now(),
             vurderinger = setOf(
                 SamordningVurdering(
                     Ytelse.SYKEPENGER,

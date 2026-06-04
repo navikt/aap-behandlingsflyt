@@ -74,10 +74,13 @@ class ArbeidsevneRepositoryImpl(private val connection: DBConnection) : Arbeidse
 
         val arbeidsevneId = connection.executeReturnKey("INSERT INTO ARBEIDSEVNE DEFAULT VALUES")
 
-        connection.execute("INSERT INTO ARBEIDSEVNE_GRUNNLAG (BEHANDLING_ID, ARBEIDSEVNE_ID) VALUES (?, ?)") {
+        connection.execute(
+            "INSERT INTO ARBEIDSEVNE_GRUNNLAG (BEHANDLING_ID, ARBEIDSEVNE_ID, OPPRETTET_TID) VALUES (?, ?, ?)"
+        ) {
             setParams {
                 setLong(1, behandlingId.toLong())
                 setLong(2, arbeidsevneId)
+                setInstant(3, java.time.Instant.now())
             }
         }
 
@@ -115,10 +118,13 @@ class ArbeidsevneRepositoryImpl(private val connection: DBConnection) : Arbeidse
 
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
         require(fraBehandling != tilBehandling)
-        connection.execute("INSERT INTO ARBEIDSEVNE_GRUNNLAG (BEHANDLING_ID, ARBEIDSEVNE_ID) SELECT ?, ARBEIDSEVNE_ID FROM ARBEIDSEVNE_GRUNNLAG WHERE AKTIV AND BEHANDLING_ID = ?") {
+        connection.execute(
+            "INSERT INTO ARBEIDSEVNE_GRUNNLAG (BEHANDLING_ID, ARBEIDSEVNE_ID, OPPRETTET_TID) SELECT ?, ARBEIDSEVNE_ID, ? FROM ARBEIDSEVNE_GRUNNLAG WHERE AKTIV AND BEHANDLING_ID = ?"
+        ) {
             setParams {
                 setLong(1, tilBehandling.toLong())
-                setLong(2, fraBehandling.toLong())
+                setInstant(2, java.time.Instant.now())
+                setLong(3, fraBehandling.toLong())
             }
         }
     }

@@ -119,16 +119,23 @@ class BistandRepositoryImpl(private val connection: DBConnection) : BistandRepos
     private fun lagre(behandlingId: BehandlingId, nyttGrunnlag: BistandGrunnlag) {
         val bistandvurderingerId = lagreBistandsvurderinger(nyttGrunnlag.vurderinger)
 
-        connection.execute("INSERT INTO BISTAND_GRUNNLAG (BEHANDLING_ID, BISTAND_VURDERINGER_ID) VALUES (?, ?)") {
+        connection.execute(
+            "INSERT INTO BISTAND_GRUNNLAG (BEHANDLING_ID, BISTAND_VURDERINGER_ID, OPPRETTET_TID) VALUES (?, ?, ?)"
+        ) {
             setParams {
                 setLong(1, behandlingId.toLong())
                 setLong(2, bistandvurderingerId)
+                setInstant(3, java.time.Instant.now())
             }
         }
     }
 
     private fun lagreBistandsvurderinger(vurderinger: List<Bistandsvurdering>): Long {
-        val bistandvurderingerId = connection.executeReturnKey("""INSERT INTO BISTAND_VURDERINGER DEFAULT VALUES""")
+        val bistandvurderingerId = connection.executeReturnKey(
+            "INSERT INTO BISTAND_VURDERINGER (opprettet_tid) VALUES (?)"
+        ) {
+            setParams { setInstant(1, java.time.Instant.now()) }
+        }
 
         connection.executeBatch(
             "INSERT INTO BISTAND (BEGRUNNELSE, BEHOV_FOR_AKTIV_BEHANDLING, BEHOV_FOR_ARBEIDSRETTET_TILTAK, BEHOV_FOR_ANNEN_OPPFOELGING, VURDERINGEN_GJELDER_FRA, VURDERT_AV, OVERGANG_BEGRUNNELSE, OVERGANG_TIL_ARBEID, BISTAND_VURDERINGER_ID, VURDERT_I_BEHANDLING, TOM, opprettet_tid) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
@@ -168,14 +175,15 @@ class BistandRepositoryImpl(private val connection: DBConnection) : BistandRepos
         require(fraBehandling != tilBehandling)
         connection.execute(
             """
-            INSERT INTO BISTAND_GRUNNLAG (BEHANDLING_ID, BISTAND_VURDERINGER_ID) 
-            SELECT ?, BISTAND_VURDERINGER_ID 
+            INSERT INTO BISTAND_GRUNNLAG (BEHANDLING_ID, BISTAND_VURDERINGER_ID, OPPRETTET_TID) 
+            SELECT ?, BISTAND_VURDERINGER_ID, ?
             FROM BISTAND_GRUNNLAG WHERE AKTIV AND BEHANDLING_ID = ?
             """.trimIndent()
         ) {
             setParams {
                 setLong(1, tilBehandling.toLong())
-                setLong(2, fraBehandling.toLong())
+                setInstant(2, java.time.Instant.now())
+                setLong(3, fraBehandling.toLong())
             }
         }
     }

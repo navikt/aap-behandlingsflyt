@@ -14,6 +14,7 @@ import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 internal class SamordningAndreStatligeYtelserRepositoryImplTest {
     companion object {
@@ -44,6 +45,7 @@ internal class SamordningAndreStatligeYtelserRepositoryImplTest {
         val vurdering = SamordningAndreStatligeYtelserVurdering(
             begrunnelse = "En fin begrunnelse",
             vurdertAv = "Lokalsaksbehandler",
+            vurdertTidspunkt = LocalDateTime.now(),
             vurderingPerioder = listOf(
                 SamordningAndreStatligeYtelserVurderingPeriode(
                     periode = periode,
@@ -77,6 +79,7 @@ internal class SamordningAndreStatligeYtelserRepositoryImplTest {
                 behandling.id, SamordningAndreStatligeYtelserVurdering(
                     begrunnelse = "En fin begrunnelse",
                     vurdertAv = "Lokalsaksbehandler",
+                    vurdertTidspunkt = LocalDateTime.now(),
                     vurderingPerioder = listOf(
                         SamordningAndreStatligeYtelserVurderingPeriode(
                             periode = periode,
@@ -93,6 +96,7 @@ internal class SamordningAndreStatligeYtelserRepositoryImplTest {
                 behandling.id, SamordningAndreStatligeYtelserVurdering(
                     begrunnelse = "En fin begrunnelse",
                     vurdertAv = "Lokalsaksbehandler",
+                    vurdertTidspunkt = LocalDateTime.now(),
                     vurderingPerioder = listOf(
                         SamordningAndreStatligeYtelserVurderingPeriode(
                             periode = periode,

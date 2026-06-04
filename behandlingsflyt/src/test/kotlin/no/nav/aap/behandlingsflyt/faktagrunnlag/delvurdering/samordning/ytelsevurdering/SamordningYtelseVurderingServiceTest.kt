@@ -37,6 +37,7 @@ import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 @Fakes
 class SamordningYtelseVurderingServiceTest {
@@ -337,7 +338,8 @@ class SamordningYtelseVurderingServiceTest {
                         )
                     )
                 ),
-                vurdertAv = "ident"
+                vurdertAv = "ident",
+                vurdertTidspunkt = LocalDateTime.now()
             )
         )
     }

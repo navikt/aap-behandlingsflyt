@@ -82,7 +82,7 @@ class TjenestepensjonRefusjonskravVurderingRepositoryImpl(private val connection
 
     private fun lagreVurdering(vurdering: TjenestepensjonRefusjonskravVurdering): Long {
         val query = """
-            INSERT INTO TJENESTEPENSJON_REFUSJONSKRAV_VURDERING (HAR_KRAV, FOM, TOM, BEGRUNNELSE) VALUES (?, ?, ?, ?)
+            INSERT INTO TJENESTEPENSJON_REFUSJONSKRAV_VURDERING (HAR_KRAV, FOM, TOM, BEGRUNNELSE, OPPRETTET_TID) VALUES (?, ?, ?, ?, ?)
         """.trimIndent()
 
         return connection.executeReturnKey(query) {
@@ -91,6 +91,7 @@ class TjenestepensjonRefusjonskravVurderingRepositoryImpl(private val connection
                 setLocalDate(2, vurdering.fom)
                 setLocalDate(3, vurdering.tom)
                 setString(4, vurdering.begrunnelse)
+                setInstant(5, java.time.Instant.now())
             }
         }
     }

@@ -6,12 +6,12 @@ import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.help.sak
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
-import no.nav.aap.verdityper.dokument.JournalpostId
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 internal class SykepengerErstatningRepositoryImplTest {
     companion object {
@@ -43,6 +43,7 @@ internal class SykepengerErstatningRepositoryImplTest {
             grunn = null,
             vurdertAv = "saksbehandler",
             gjelderFra = LocalDate.now(),
+            vurdertTidspunkt = LocalDateTime.now(),
             vurdertIBehandling = behandling2.id
         )
 
@@ -52,6 +53,7 @@ internal class SykepengerErstatningRepositoryImplTest {
             grunn = null,
             vurdertAv = "saksbehandler",
             gjelderFra = LocalDate.now(),
+            vurdertTidspunkt = LocalDateTime.now(),
             vurdertIBehandling = behandling.id
         )
 
@@ -61,7 +63,8 @@ internal class SykepengerErstatningRepositoryImplTest {
             grunn = SykepengerGrunn.SYKEPENGER_FORTSATT_ARBEIDSUFOR,
             vurdertAv = "saksbehandler!!",
             vurdertIBehandling = behandling.id,
-            gjelderFra = LocalDate.now()
+            gjelderFra = LocalDate.now(),
+            vurdertTidspunkt = LocalDateTime.now()
         )
 
         dataSource.transaction { connection ->

@@ -105,14 +105,15 @@ class RettighetstypeRepositoryImpl(private val connection: DBConnection) : Retti
             }
         }
         val grunnlagQuery = """
-            insert into rettighetstype_grunnlag (behandling_id, perioder_id, aktiv)
-            values (?, ?, true)
+            insert into rettighetstype_grunnlag (behandling_id, perioder_id, aktiv, opprettet_tid)
+            values (?, ?, true, ?)
         """.trimIndent()
 
         return connection.executeReturnKey(grunnlagQuery) {
             setParams {
                 setLong(1, behandlingId.toLong())
                 setLong(2, perioderId)
+                setInstant(3, java.time.Instant.now())
             }
         }
     }
@@ -130,13 +131,14 @@ class RettighetstypeRepositoryImpl(private val connection: DBConnection) : Retti
         hentHvisEksisterer(fraBehandling) ?: return
 
         val query = """
-            insert into rettighetstype_grunnlag (behandling_id, perioder_id, aktiv)
-            select ?, perioder_id, true from rettighetstype_grunnlag where behandling_id = ? and aktiv
+            insert into rettighetstype_grunnlag (behandling_id, perioder_id, aktiv, opprettet_tid)
+            select ?, perioder_id, true, ? from rettighetstype_grunnlag where behandling_id = ? and aktiv
         """.trimIndent()
         connection.execute(query) {
             setParams {
                 setLong(1, tilBehandling.toLong())
-                setLong(2, fraBehandling.toLong())
+                setInstant(2, java.time.Instant.now())
+                setLong(3, fraBehandling.toLong())
             }
         }
     }

@@ -50,6 +50,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import java.time.Instant
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.util.stream.Stream
 
 class SamordningStegTest {
@@ -133,7 +134,8 @@ class SamordningStegTest {
                         )
                     )
                 ),
-                vurdertAv = "ident"
+                vurdertAv = "ident",
+                vurdertTidspunkt = LocalDateTime.now()
             )
         )
         løsBehovet(behandling)
@@ -190,7 +192,8 @@ class SamordningStegTest {
                         )
                     )
                 ),
-                vurdertAv = "ident"
+                vurdertAv = "ident",
+                vurdertTidspunkt = LocalDateTime.now()
             )
         )
 
@@ -232,7 +235,8 @@ class SamordningStegTest {
                         )
                     )
                 ),
-                vurdertAv = "ident"
+                vurdertAv = "ident",
+                vurdertTidspunkt = LocalDateTime.now()
             )
         )
 
@@ -293,7 +297,8 @@ class SamordningStegTest {
                         )
                     )
                 ),
-                vurdertAv = "ident"
+                vurdertAv = "ident",
+                vurdertTidspunkt = LocalDateTime.now()
             )
         )
 
@@ -340,7 +345,8 @@ class SamordningStegTest {
                         )
                     )
                 ),
-                vurdertAv = "ident"
+                vurdertAv = "ident",
+                vurdertTidspunkt = LocalDateTime.now()
             )
         )
         løsBehovet(behandling)
@@ -384,7 +390,8 @@ class SamordningStegTest {
                         )
                     )
                 ),
-                vurdertAv = "ident"
+                vurdertAv = "ident",
+                vurdertTidspunkt = LocalDateTime.now()
             )
         )
 
@@ -425,7 +432,8 @@ class SamordningStegTest {
                         )
                     )
                 ),
-                vurdertAv = "ident"
+                vurdertAv = "ident",
+                vurdertTidspunkt = LocalDateTime.now()
             )
         )
 

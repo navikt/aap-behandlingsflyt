@@ -17,6 +17,7 @@ import no.nav.aap.komponenter.verdityper.Prosent
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.Year
 import java.time.YearMonth
 
@@ -111,6 +112,7 @@ class BeregningTest {
                 erÅrsakssammenheng = true,
                 andelAvNedsettelsen = Prosent(70),
                 vurdertAv = "Jojo Joyes",
+                vurdertTidspunkt = LocalDateTime.now()
             ),
             registrerteYrkesskader = Yrkesskader(
                 listOf(

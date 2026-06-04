@@ -41,17 +41,20 @@ class TrukketSøknadRepositoryImpl(
         }
 
         val vurderingerId = connection.executeReturnKey(
-            """insert into trukket_soknad_vurderinger default values"""
-        )
+            "insert into trukket_soknad_vurderinger (opprettet) values (?)"
+        ) {
+            setParams { setInstant(1, java.time.Instant.now()) }
+        }
 
         connection.execute(
             """
-            insert into trukket_soknad_grunnlag(behandling_id, vurderinger_id) values (?, ?)
+            insert into trukket_soknad_grunnlag(behandling_id, vurderinger_id, opprettet) values (?, ?, ?)
         """.trimIndent()
         ) {
             setParams {
                 setLong(1, behandlingId.toLong())
                 setLong(2, vurderingerId)
+                setInstant(3, java.time.Instant.now())
             }
         }
 

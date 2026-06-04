@@ -36,21 +36,24 @@ class VedtakslengdeRepositoryImpl(private val connection: DBConnection) : Vedtak
         connection.executeReturnKey(
             """
             insert into vedtakslengde_grunnlag (
-                behandling_id, vurderinger_id, aktiv
-            ) values (?, ?, true)
+                behandling_id, vurderinger_id, aktiv, opprettet
+            ) values (?, ?, true, ?)
             """.trimIndent()
         ) {
             setParams {
                 setLong(1, behandlingId.toLong())
                 setLong(2, vurderingerId)
+                setInstant(3, java.time.Instant.now())
             }
         }
     }
 
     private fun lagreVurderinger(vurderinger: List<VedtakslengdeVurdering>): Long {
         val vurderingerId = connection.executeReturnKey(
-            "insert into vedtakslengde_vurderinger default values"
-        )
+            "insert into vedtakslengde_vurderinger (opprettet) values (?)"
+        ) {
+            setParams { setInstant(1, java.time.Instant.now()) }
+        }
 
         connection.executeBatch(
             """
@@ -143,15 +146,16 @@ class VedtakslengdeRepositoryImpl(private val connection: DBConnection) : Vedtak
 
         connection.execute(
             """
-                insert into vedtakslengde_grunnlag (behandling_id, vurderinger_id)
-                select ?, vurderinger_id
+                insert into vedtakslengde_grunnlag (behandling_id, vurderinger_id, opprettet)
+                select ?, vurderinger_id, ?
                 from vedtakslengde_grunnlag 
                 where behandling_id = ? and aktiv
             """.trimIndent()
         ) {
             setParams {
                 setLong(1, tilBehandling.toLong())
-                setLong(2, fraBehandling.toLong())
+                setInstant(2, java.time.Instant.now())
+                setLong(3, fraBehandling.toLong())
             }
         }
     }

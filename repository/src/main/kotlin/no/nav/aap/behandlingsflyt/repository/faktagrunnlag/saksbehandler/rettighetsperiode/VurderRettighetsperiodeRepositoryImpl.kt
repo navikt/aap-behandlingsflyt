@@ -38,26 +38,29 @@ class VurderRettighetsperiodeRepositoryImpl(private val connection: DBConnection
         }
 
         val vurderingerId = connection.executeReturnKey(
-            """insert into rettighetsperiode_vurderinger default values"""
-        )
+            "insert into rettighetsperiode_vurderinger (opprettet) values (?)"
+        ) {
+            setParams { setInstant(1, java.time.Instant.now()) }
+        }
 
         connection.execute(
             """
-            insert into rettighetsperiode_grunnlag(behandling_id, vurderinger_id) values (?, ?)
+            insert into rettighetsperiode_grunnlag(behandling_id, vurderinger_id, opprettet) values (?, ?, ?)
         """.trimIndent()
         ) {
             setParams {
                 setLong(1, behandlingId.toLong())
                 setLong(2, vurderingerId)
+                setInstant(3, java.time.Instant.now())
             }
         }
 
         connection.execute(
             """
             insert into rettighetsperiode_vurdering
-                (vurderinger_id, begrunnelse, start_dato, har_rett_utover_soknadsdato, vurdert_av)
+                (vurderinger_id, begrunnelse, start_dato, har_rett_utover_soknadsdato, vurdert_av, opprettet)
             values
-                (?, ?, ?, ?, ?)
+                (?, ?, ?, ?, ?, ?)
             """.trimIndent()
         ) {
             setParams {
@@ -66,6 +69,7 @@ class VurderRettighetsperiodeRepositoryImpl(private val connection: DBConnection
                 setLocalDate(3, grunnlag.vurdering.startDato)
                 setEnumName(4, grunnlag.vurdering.harRettUtoverSøknadsdato)
                 setString(5, grunnlag.vurdering.vurdertAv)
+                setLocalDateTime(6, grunnlag.vurdering.vurdertDato)
             }
         }
     }

@@ -13,6 +13,7 @@ import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 internal class SamordningUføreRepositoryImplTest {
     companion object {
@@ -50,7 +51,8 @@ internal class SamordningUføreRepositoryImplTest {
                     uføregradTilSamordning = Prosent.`70_PROSENT`
                 )
             ),
-            "ident"
+            vurdertAv = "ident",
+            vurdertTidspunkt = LocalDateTime.now()
         )
         dataSource.transaction {
             SamordningUføreRepositoryImpl(it).lagre(behandling.id, vurdering)
@@ -84,7 +86,8 @@ internal class SamordningUføreRepositoryImplTest {
                                 uføregradTilSamordning = Prosent.`70_PROSENT`
                             )
                         ),
-                        vurdertAv = "ident"
+                        vurdertAv = "ident",
+                        vurdertTidspunkt = LocalDateTime.now()
                     )
                 )
                 samordningUføreRepository.lagre(
@@ -100,7 +103,8 @@ internal class SamordningUføreRepositoryImplTest {
                                 uføregradTilSamordning = Prosent.`70_PROSENT`
                             )
                         ),
-                        vurdertAv = "ident"
+                        vurdertAv = "ident",
+                        vurdertTidspunkt = LocalDateTime.now()
                     )
                 )
                 assertDoesNotThrow {

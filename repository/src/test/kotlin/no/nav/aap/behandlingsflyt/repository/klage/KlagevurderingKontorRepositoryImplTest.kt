@@ -15,6 +15,7 @@ import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertNotNull
 import org.junit.jupiter.api.assertNull
+import java.time.Instant
 
 class KlagevurderingKontorRepositoryImplTest {
     companion object {
@@ -46,7 +47,8 @@ class KlagevurderingKontorRepositoryImplTest {
                 innstilling = KlageInnstilling.OPPRETTHOLD,
                 vilkårSomOmgjøres = emptyList(),
                 vilkårSomOpprettholdes = listOf(Hjemmel.FOLKETRYGDLOVEN_11_5),
-                vurdertAv = "ident"
+                vurdertAv = "ident",
+                opprettet = Instant.now()
             )
 
             klagebehandlingKontorRepository.lagre(klageBehandling.id, vurdering)
