@@ -10,7 +10,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.BehandlingFlytStoppetHendelse
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.BehandlingsEtEllerAnnet
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.BehandlingMetadata
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.TilbakekrevingsbehandlingOppdatertHendelse
 import no.nav.aap.behandlingsflyt.kontrakt.oppgave.EnhetNrDto
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
@@ -57,7 +57,7 @@ class VarsleOppgaveOmHendelseJobbUtførerTest {
 
         utfører.utfør(jobbInput(TypeBehandling.Revurdering))
 
-        assertThat(CapturingOppgavestyringGateway.instans.hendelseTilOppgave?.behandlingsEtEllerAnnet).isNull()
+        assertThat(CapturingOppgavestyringGateway.instans.hendelseTilOppgave?.behandlingMetadata).isNull()
     }
 
     @Test
@@ -67,14 +67,14 @@ class VarsleOppgaveOmHendelseJobbUtførerTest {
 
         utfører.utfør(jobbInput(TypeBehandling.Førstegangsbehandling))
 
-        assertThat(CapturingOppgavestyringGateway.instans.hendelseTilOppgave?.behandlingsEtEllerAnnet).isNull()
+        assertThat(CapturingOppgavestyringGateway.instans.hendelseTilOppgave?.behandlingMetadata).isNull()
     }
 
     @Test
     fun `førstegangsbehandling uten sykdomsgrunnlag setter ikke AVSLAG_11_5_FØRSTEGANGSBEHANDLING`() {
         utfører.utfør(jobbInput(TypeBehandling.Førstegangsbehandling))
 
-        assertThat(CapturingOppgavestyringGateway.instans.hendelseTilOppgave?.behandlingsEtEllerAnnet).isNull()
+        assertThat(CapturingOppgavestyringGateway.instans.hendelseTilOppgave?.behandlingMetadata).isNull()
     }
 
     @Test
@@ -83,7 +83,7 @@ class VarsleOppgaveOmHendelseJobbUtførerTest {
 
         utfører.utfør(jobbInput(TypeBehandling.Førstegangsbehandling))
 
-        assertThat(CapturingOppgavestyringGateway.instans.hendelseTilOppgave?.behandlingsEtEllerAnnet).isNull()
+        assertThat(CapturingOppgavestyringGateway.instans.hendelseTilOppgave?.behandlingMetadata).isNull()
     }
 
     @Test
@@ -92,8 +92,8 @@ class VarsleOppgaveOmHendelseJobbUtførerTest {
 
         utfører.utfør(jobbInput(TypeBehandling.Førstegangsbehandling))
 
-        assertThat(CapturingOppgavestyringGateway.instans.hendelseTilOppgave?.behandlingsEtEllerAnnet)
-            .isEqualTo(BehandlingsEtEllerAnnet.AVSLAG_11_5_FØRSTEGANGSBEHANDLING)
+        assertThat(CapturingOppgavestyringGateway.instans.hendelseTilOppgave?.behandlingMetadata)
+            .isEqualTo(BehandlingMetadata.AVSLAG_11_5_FØRSTEGANGSBEHANDLING)
     }
 
     @Test
@@ -102,7 +102,7 @@ class VarsleOppgaveOmHendelseJobbUtførerTest {
 
         utfører.utfør(jobbInput(TypeBehandling.Førstegangsbehandling))
 
-        assertThat(CapturingOppgavestyringGateway.instans.hendelseTilOppgave?.behandlingsEtEllerAnnet).isNull()
+        assertThat(CapturingOppgavestyringGateway.instans.hendelseTilOppgave?.behandlingMetadata).isNull()
     }
 
     @Test
@@ -111,7 +111,7 @@ class VarsleOppgaveOmHendelseJobbUtførerTest {
 
         utfører.utfør(jobbInput(TypeBehandling.Førstegangsbehandling))
 
-        assertThat(CapturingOppgavestyringGateway.instans.hendelseTilOppgave?.behandlingsEtEllerAnnet).isNull()
+        assertThat(CapturingOppgavestyringGateway.instans.hendelseTilOppgave?.behandlingMetadata).isNull()
     }
 
     @Test
@@ -120,7 +120,7 @@ class VarsleOppgaveOmHendelseJobbUtførerTest {
 
         utfører.utfør(jobbInput(TypeBehandling.Førstegangsbehandling))
 
-        assertThat(CapturingOppgavestyringGateway.instans.hendelseTilOppgave?.behandlingsEtEllerAnnet).isNull()
+        assertThat(CapturingOppgavestyringGateway.instans.hendelseTilOppgave?.behandlingMetadata).isNull()
     }
 
 

@@ -5,7 +5,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepos
 import no.nav.aap.behandlingsflyt.hendelse.oppgavestyring.OppgavestyringGateway
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.BehandlingFlytStoppetHendelse
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.BehandlingsEtEllerAnnet
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.BehandlingMetadata
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
@@ -29,7 +29,7 @@ class VarsleOppgaveOmHendelseJobbUtFører private constructor(
         log.info("Varsler hendelse til OppgaveStyring. ${hendelse.saksnummer} :: ${hendelse.referanse.referanse}")
         val oppdatertHendelse =
             if (erFørstegangsbehandlingMedKunAvslagEtterSykdomsvilkår(hendelse, BehandlingId(input.behandlingId()))) {
-                hendelse.copy(behandlingsEtEllerAnnet = BehandlingsEtEllerAnnet.AVSLAG_11_5_FØRSTEGANGSBEHANDLING)
+                hendelse.copy(behandlingMetadata = BehandlingMetadata.AVSLAG_11_5_FØRSTEGANGSBEHANDLING)
             } else hendelse
         oppgavestyringGateway.varsleHendelse(oppdatertHendelse)
     }
