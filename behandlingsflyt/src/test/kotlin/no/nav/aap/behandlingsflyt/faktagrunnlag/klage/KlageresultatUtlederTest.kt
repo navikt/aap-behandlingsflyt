@@ -101,7 +101,8 @@ class KlageresultatUtlederTest {
             begrunnelse = "Opprettholdes",
             vilkårSomOmgjøres = emptyList(),
             vilkårSomOpprettholdes = listOf(Hjemmel.FOLKETRYGDLOVEN_11_5),
-            notat = null
+            notat = null,
+            opprettet = Instant.now()
         )
 
         val klageresultat = KlageresultatUtleder.utledKlagebehandlingResultat(
@@ -127,7 +128,8 @@ class KlageresultatUtlederTest {
             begrunnelse = "Opprettholdes",
             vilkårSomOmgjøres = listOf(Hjemmel.FOLKETRYGDLOVEN_11_6),
             vilkårSomOpprettholdes = listOf(Hjemmel.FOLKETRYGDLOVEN_11_5),
-            notat = null
+            notat = null,
+            opprettet = Instant.now()
         )
 
         val klageresultat = KlageresultatUtleder.utledKlagebehandlingResultat(
@@ -156,7 +158,8 @@ class KlageresultatUtlederTest {
             begrunnelse = "Opprettholdes",
             vilkårSomOmgjøres = listOf(Hjemmel.FOLKETRYGDLOVEN_11_6),
             vilkårSomOpprettholdes = emptyList(),
-            notat = null
+            notat = null,
+            opprettet = Instant.now()
         )
 
         val klageresultat = KlageresultatUtleder.utledKlagebehandlingResultat(
@@ -184,7 +187,8 @@ class KlageresultatUtlederTest {
             begrunnelse = "Opprettholdes",
             vilkårSomOmgjøres = emptyList(),
             vilkårSomOpprettholdes = listOf(Hjemmel.FOLKETRYGDLOVEN_11_5),
-            notat = null
+            notat = null,
+            opprettet = Instant.now()
         )
 
         val kontorVurdering = KlagevurderingKontor(
@@ -193,7 +197,8 @@ class KlageresultatUtlederTest {
             begrunnelse = "Omgjøres",
             vilkårSomOmgjøres = listOf(Hjemmel.FOLKETRYGDLOVEN_11_6),
             vilkårSomOpprettholdes = emptyList(),
-            notat = null
+            notat = null,
+            opprettet = Instant.now()
         )
 
         val klageresultat = KlageresultatUtleder.utledKlagebehandlingResultat(
@@ -222,7 +227,8 @@ class KlageresultatUtlederTest {
             begrunnelse = "Opprettholdes",
             vilkårSomOmgjøres = emptyList(),
             vilkårSomOpprettholdes = listOf(Hjemmel.FOLKETRYGDLOVEN_11_5),
-            notat = null
+            notat = null,
+            opprettet = Instant.now()
         )
 
         val kontorVurdering = KlagevurderingKontor(
@@ -231,7 +237,8 @@ class KlageresultatUtlederTest {
             begrunnelse = "Omgjøres",
             vilkårSomOmgjøres = listOf(Hjemmel.FOLKETRYGDLOVEN_11_6),
             vilkårSomOpprettholdes = listOf(Hjemmel.FOLKETRYGDLOVEN_11_5),
-            notat = null
+            notat = null,
+            opprettet = Instant.now()
         )
 
         val klageresultat = KlageresultatUtleder.utledKlagebehandlingResultat(
@@ -279,7 +286,8 @@ class KlageresultatUtlederTest {
             begrunnelse = "Omgjøres",
             vilkårSomOmgjøres = listOf(Hjemmel.FOLKETRYGDLOVEN_11_6),
             vilkårSomOpprettholdes = emptyList(),
-            notat = null
+            notat = null,
+            opprettet = Instant.now()
         )
 
         val klageresultat = KlageresultatUtleder.utledKlagebehandlingResultat(
