@@ -70,6 +70,7 @@ class FlytKontekstMedPeriodeService(
             UTVID_VEDTAKSLENGDE in vurderingTyper -> UTVID_VEDTAKSLENGDE
             MIGRER_RETTIGHETSPERIODE in vurderingTyper -> MIGRER_RETTIGHETSPERIODE
             AUTOMATISK_BREV in vurderingTyper -> AUTOMATISK_BREV
+            OVERGANG_UFORE_STANS in vurderingTyper -> OVERGANG_UFORE_STANS
             else -> IKKE_RELEVANT
         }
     }

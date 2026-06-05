@@ -78,13 +78,6 @@ class OvergangUføreSteg private constructor(
                 forrigeBehandlingId = kontekst.forrigeBehandlingId,
                 virkningsdato = uførevedtak.virkningsdato,
             )
-            avklaringsbehovService.oppdaterAvklaringsbehov(
-                definisjon = Definisjon.AVKLAR_OVERGANG_UFORE,
-                vedtakBehøverVurdering = { false },
-                erTilstrekkeligVurdert = { true },
-                tilbakestillGrunnlag = {},
-                kontekst = kontekst
-            )
         } else {
             val perioderSomIkkeErTilstrekkeligVurdert: () -> Set<Periode> =
                 { perioderSomIkkeErTilstrekkeligVurdert(kontekst) }
@@ -160,6 +153,7 @@ class OvergangUføreSteg private constructor(
             it.vurdertAv == SYSTEMBRUKER.ident && it.fom == uførevedtak.virkningsdato
         }
         if (harAutomatiskVurderingAllerede) return
+
 
         val automatiskVurdering = OvergangUføreVurdering(
             begrunnelse = "Automatisk opphør på grunn av vedtak om uføre",

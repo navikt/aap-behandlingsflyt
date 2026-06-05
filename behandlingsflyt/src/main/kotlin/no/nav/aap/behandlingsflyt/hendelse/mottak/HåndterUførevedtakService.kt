@@ -76,7 +76,7 @@ class HåndterUførevedtakService(
                 val opprettetBehandling = behandlingService.finnEllerOpprettBehandling(
                     sakId,
                     VurderingsbehovOgÅrsak(
-                        årsak = ÅrsakTilOpprettelse.ENDRING_I_REGISTERDATA,
+                        årsak = ÅrsakTilOpprettelse.UFØRE_VEDTAK_HENDELSE,
                         vurderingsbehov = listOf(VurderingsbehovMedPeriode(vurderingsbehov)),
                         opprettet = mottattTidspunkt,
                         beskrivelse = uførevedtak.beskrivelseVurderingsbehov()
