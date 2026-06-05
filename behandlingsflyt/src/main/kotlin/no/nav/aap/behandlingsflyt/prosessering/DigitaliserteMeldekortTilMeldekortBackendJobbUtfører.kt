@@ -42,7 +42,9 @@ class DigitaliserteMeldekortTilMeldekortBackendJobbUtfører(
             harDuJobbet = ubehandletMeldekort.harDuArbeidet,
             dager = ubehandletMeldekort.timerArbeidPerPeriode.map {
                 TimerArbeidetDto(it.periode.fom, it.timerArbeid.antallTimer.toDouble())
-            }
+            },
+            erDigitalisert = ubehandletMeldekort.digitalisertAvPostmottak,
+            opprettetAv = ubehandletMeldekort.opprettetAv
         )
         meldekortGateway.sendTimerArbeidetIPeriode(request)
     }
