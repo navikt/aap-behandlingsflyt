@@ -35,6 +35,7 @@ import no.nav.aap.verdityper.dokument.JournalpostId
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
+import java.time.LocalDateTime
 
 /**
  * Eksemplene er hentet fra https://navno.sharepoint.com/:w:/r/sites/POAAP/Shared%20Documents/Regelverk/Regelverksavklaringer/Juridiske%20avklaringer/Beregningscaser.docx?web=1
@@ -525,7 +526,8 @@ class TilkjentYtelseGrunnlagTest {
                     SamordningUføreVurdering(
                         begrunnelse = "",
                         vurderingPerioder = listOf(),
-                        vurdertAv = "Z00000",
+                        vurdertAv = "Z00000",,
+                    vurdertTidspunkt = LocalDateTime.now()
                     )
                 ),
                 barnepensjonGrunnlag = null,

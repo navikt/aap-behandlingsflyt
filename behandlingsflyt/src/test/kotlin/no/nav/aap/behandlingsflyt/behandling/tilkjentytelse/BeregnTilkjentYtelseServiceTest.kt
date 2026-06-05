@@ -45,6 +45,7 @@ import java.math.BigDecimal
 import java.time.Instant
 import java.time.LocalDate
 import java.time.YearMonth
+import java.time.LocalDateTime
 
 class BeregnTilkjentYtelseServiceTest {
 
@@ -66,6 +67,8 @@ class BeregnTilkjentYtelseServiceTest {
             vurdering = SamordningArbeidsgiverVurdering(
                 "",
                 listOf(Periode(LocalDate.now(), LocalDate.now())), vurdertAv = "ident"
+            ,
+            vurdertTidspunkt = LocalDateTime.now()
             )
         )
 
@@ -144,6 +147,8 @@ class BeregnTilkjentYtelseServiceTest {
             vurdering = SamordningArbeidsgiverVurdering(
                 "",
                 listOf(Periode(LocalDate.now(), LocalDate.now())), vurdertAv = "ident"
+            ,
+            vurdertTidspunkt = LocalDateTime.now()
             )
         )
 
@@ -405,6 +410,8 @@ class BeregnTilkjentYtelseServiceTest {
             vurdering = SamordningArbeidsgiverVurdering(
                 "",
                 listOf(Periode(LocalDate.now(), LocalDate.now())), vurdertAv = "ident"
+            ,
+            vurdertTidspunkt = LocalDateTime.now()
             )
         )
 
@@ -473,6 +480,8 @@ class BeregnTilkjentYtelseServiceTest {
             vurdering = SamordningArbeidsgiverVurdering(
                 "",
                 listOf(Periode(LocalDate.now(), LocalDate.now())), vurdertAv = "ident"
+            ,
+            vurdertTidspunkt = LocalDateTime.now()
             )
         )
 
@@ -540,6 +549,8 @@ class BeregnTilkjentYtelseServiceTest {
             vurdering = SamordningArbeidsgiverVurdering(
                 "",
                 listOf(Periode(LocalDate.now(), LocalDate.now())), vurdertAv = "ident"
+            ,
+            vurdertTidspunkt = LocalDateTime.now()
             )
         )
 
@@ -607,6 +618,8 @@ class BeregnTilkjentYtelseServiceTest {
             vurdering = SamordningArbeidsgiverVurdering(
                 "",
                 listOf(Periode(LocalDate.now(), LocalDate.now())), vurdertAv = "ident"
+            ,
+            vurdertTidspunkt = LocalDateTime.now()
             )
         )
 
@@ -680,7 +693,8 @@ class BeregnTilkjentYtelseServiceTest {
                     SamordningUføreVurderingPeriode(virkningstidspunkt = 1 juli 2023, Prosent.`30_PROSENT`),
                     SamordningUføreVurderingPeriode(virkningstidspunkt = 2 august 2023, Prosent.`0_PROSENT`)
                 ),
-                "ident"
+                "ident",
+            vurdertTidspunkt = LocalDateTime.now()
             )
         )
 
@@ -688,6 +702,8 @@ class BeregnTilkjentYtelseServiceTest {
             vurdering = SamordningArbeidsgiverVurdering(
                 "",
                 listOf(Periode(LocalDate.now(), LocalDate.now())), vurdertAv = "ident"
+            ,
+            vurdertTidspunkt = LocalDateTime.now()
             )
         )
 
@@ -798,7 +814,8 @@ class BeregnTilkjentYtelseServiceTest {
                     SamordningUføreVurderingPeriode(virkningstidspunkt = 1 mars 2023, Prosent.`50_PROSENT`),
                     SamordningUføreVurderingPeriode(virkningstidspunkt = 1 juli 2023, Prosent.`70_PROSENT`)
                 ),
-                "ident"
+                "ident",
+            vurdertTidspunkt = LocalDateTime.now()
             )
         )
 
@@ -806,6 +823,8 @@ class BeregnTilkjentYtelseServiceTest {
             vurdering = SamordningArbeidsgiverVurdering(
                 "",
                 listOf(Periode(LocalDate.now(), LocalDate.now())), vurdertAv = "ident"
+            ,
+            vurdertTidspunkt = LocalDateTime.now()
             )
         )
 
@@ -893,6 +912,8 @@ class BeregnTilkjentYtelseServiceTest {
             vurdering = SamordningArbeidsgiverVurdering(
                 "",
                 listOf(Periode(LocalDate.now(), LocalDate.now())), vurdertAv = "ident"
+            ,
+            vurdertTidspunkt = LocalDateTime.now()
             )
         )
 
@@ -963,6 +984,8 @@ class BeregnTilkjentYtelseServiceTest {
             vurdering = SamordningArbeidsgiverVurdering(
                 "",
                 listOf(Periode(LocalDate.now(), LocalDate.now())), vurdertAv = "ident"
+            ,
+            vurdertTidspunkt = LocalDateTime.now()
             )
         )
 
@@ -1062,6 +1085,8 @@ class BeregnTilkjentYtelseServiceTest {
             vurdering = SamordningArbeidsgiverVurdering(
                 "Har fått sluttpakke",
                 listOf(Periode(LocalDate.of(2023, 6, 1), LocalDate.of(2023, 8, 1))), vurdertAv = "ident"
+            ,
+            vurdertTidspunkt = LocalDateTime.now()
             )
         )
 
@@ -1130,7 +1155,8 @@ class BeregnTilkjentYtelseServiceTest {
                 "", listOf(
                     SamordningUføreVurderingPeriode(virkningstidspunkt = periode.fom, Prosent.`30_PROSENT`)
                 ),
-                "ident"
+                "ident",
+            vurdertTidspunkt = LocalDateTime.now()
             )
         )
 
@@ -1138,6 +1164,8 @@ class BeregnTilkjentYtelseServiceTest {
             vurdering = SamordningArbeidsgiverVurdering(
                 "",
                 listOf(Periode(LocalDate.now(), LocalDate.now())), vurdertAv = "ident"
+            ,
+            vurdertTidspunkt = LocalDateTime.now()
             )
         )
 
@@ -1231,7 +1259,8 @@ class BeregnTilkjentYtelseServiceTest {
                 "", listOf(
                     SamordningUføreVurderingPeriode(virkningstidspunkt = periode.fom, Prosent(uforegrad))
                 ),
-                "ident"
+                "ident",
+            vurdertTidspunkt = LocalDateTime.now()
             )
         )
 
@@ -1314,6 +1343,8 @@ class BeregnTilkjentYtelseServiceTest {
             vurdering = SamordningArbeidsgiverVurdering(
                 "",
                 listOf(Periode(LocalDate.now(), LocalDate.now())), vurdertAv = "ident"
+            ,
+            vurdertTidspunkt = LocalDateTime.now()
             )
         )
 
@@ -1479,12 +1510,16 @@ class BeregnTilkjentYtelseServiceTest {
     private fun utenBarnetillegg(): BarnetilleggGrunnlag = BarnetilleggGrunnlag(emptyList())
 
     private fun utenSamordningUføre(): SamordningUføreGrunnlag =
-        SamordningUføreGrunnlag(SamordningUføreVurdering("", emptyList(), "ident"))
+        SamordningUføreGrunnlag(SamordningUføreVurdering("", emptyList(), "ident", LocalDateTime.now(),
+        vurdertTidspunkt = LocalDateTime.now()
+        ))
 
     private fun utenSamordningArbeidsgiver(): SamordningArbeidsgiverGrunnlag = SamordningArbeidsgiverGrunnlag(
         vurdering = SamordningArbeidsgiverVurdering(
             "",
             emptyList(), vurdertAv = "ident"
+        ,
+        vurdertTidspunkt = LocalDateTime.now()
         )
     )
     private fun utenBarnepensjon() = null
