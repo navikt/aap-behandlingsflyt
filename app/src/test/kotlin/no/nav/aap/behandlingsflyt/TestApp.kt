@@ -460,7 +460,7 @@ private fun opprettNySakOgBehandling(
     with(testScenarioOrkestrator) {
         // Student eller sykdom
         if (dto.student) {
-            løsStudent(behandling)
+            løsStudent(behandling, vurderingenGjelderFra = dto.søknadsdato ?: sak.rettighetsperiode.fom,)
         } else {
             if (dto.steg == StegType.AVKLAR_SYKDOM) return sak
             løsSykdom(

@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.flyt
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSamordningGraderingLøsning
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarStudentEnkelLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarStudentLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSykdomLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FastsettBeregningstidspunktLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.ForeslåVedtakLøsning
@@ -10,7 +10,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.SamordningVurderingData
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.VurderingerForSamordning
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentVurderingDTO
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.PeriodisertStudentDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.SykdomsvurderingLøsningDto
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
@@ -51,15 +51,18 @@ class BeslutterFlytTest(val unleashGateway: KClass<UnleashGateway>) : AbstraktFl
             assertThat(behandling.status()).isEqualTo(Status.UTREDES)
         }
             .løsAvklaringsBehov(
-                AvklarStudentEnkelLøsning(
-                    studentvurdering = StudentVurderingDTO(
-                        begrunnelse = "Er student",
-                        avbruttStudieDato = LocalDate.now(),
-                        avbruddMerEnn6Måneder = true,
-                        harBehovForBehandling = true,
-                        harAvbruttStudie = true,
-                        avbruttPgaSykdomEllerSkade = true,
-                        godkjentStudieAvLånekassen = false,
+                AvklarStudentLøsning(
+                    løsningerForPerioder = listOf(
+                        PeriodisertStudentDto(
+                            fom = fom,
+                            begrunnelse = "Er student",
+                            avbruttStudieDato = LocalDate.now(),
+                            avbruddMerEnn6Måneder = true,
+                            harBehovForBehandling = true,
+                            harAvbruttStudie = true,
+                            avbruttPgaSykdomEllerSkade = true,
+                            godkjentStudieAvLånekassen = false,
+                        )
                     )
                 ),
             ).løsAvklaringsBehov(
