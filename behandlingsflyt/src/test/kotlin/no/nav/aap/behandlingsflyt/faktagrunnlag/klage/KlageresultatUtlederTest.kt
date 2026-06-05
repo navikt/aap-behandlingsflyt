@@ -93,6 +93,8 @@ class KlageresultatUtlederTest {
             vurdertAv = "Saksbehandler",
             skalBehandlesAvNay = true,
             skalBehandlesAvKontor = false
+        ,
+        opprettet = Instant.now()
         )
 
         val nayVurdering = KlagevurderingNay(
@@ -120,6 +122,8 @@ class KlageresultatUtlederTest {
             vurdertAv = "Saksbehandler",
             skalBehandlesAvNay = true,
             skalBehandlesAvKontor = false
+        ,
+        opprettet = Instant.now()
         )
 
         val nayVurdering = KlagevurderingNay(
@@ -150,6 +154,8 @@ class KlageresultatUtlederTest {
             vurdertAv = "Saksbehandler",
             skalBehandlesAvNay = true,
             skalBehandlesAvKontor = false
+        ,
+        opprettet = Instant.now()
         )
 
         val nayVurdering = KlagevurderingNay(
@@ -179,6 +185,8 @@ class KlageresultatUtlederTest {
             vurdertAv = "Saksbehandler",
             skalBehandlesAvNay = true,
             skalBehandlesAvKontor = true
+        ,
+        opprettet = Instant.now()
         )
 
         val nayVurdering = KlagevurderingNay(
@@ -219,6 +227,8 @@ class KlageresultatUtlederTest {
             vurdertAv = "Saksbehandler",
             skalBehandlesAvNay = true,
             skalBehandlesAvKontor = true
+        ,
+        opprettet = Instant.now()
         )
 
         val nayVurdering = KlagevurderingNay(
@@ -278,6 +288,8 @@ class KlageresultatUtlederTest {
             vurdertAv = "Saksbehandler",
             skalBehandlesAvNay = true,
             skalBehandlesAvKontor = true
+        ,
+        opprettet = Instant.now()
         )
 
         val nayVurdering = KlagevurderingNay(

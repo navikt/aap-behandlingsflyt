@@ -6,7 +6,7 @@ data class BehandlendeEnhetVurdering(
     val skalBehandlesAvNay: Boolean,
     val skalBehandlesAvKontor: Boolean,
     val vurdertAv: String,
-    val opprettet: Instant? = null
+    val opprettet: Instant
 ) {
     fun skalBehandlesAvBådeNavKontorOgNay(): Boolean = skalBehandlesAvNay && skalBehandlesAvKontor
 
