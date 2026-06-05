@@ -14,6 +14,7 @@ import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 internal class SamordningAndreStatligeYtelserRepositoryImplTest {
     companion object {
@@ -53,7 +54,8 @@ internal class SamordningAndreStatligeYtelserRepositoryImplTest {
                     periode = periodeTo,
                     ytelse = AndreStatligeYtelser.BARNEPENSJON,
                 )
-            )
+            ),
+        vurdertTidspunkt = LocalDateTime.now()
         )
         dataSource.transaction {
             SamordningAndreStatligeYtelserRepositoryImpl(it).lagre(behandling.id, vurdering)
@@ -86,7 +88,8 @@ internal class SamordningAndreStatligeYtelserRepositoryImplTest {
                             periode = periodeTo,
                             ytelse = AndreStatligeYtelser.BARNEPENSJON,
                         )
-                    )
+                    ),
+                vurdertTidspunkt = LocalDateTime.now()
                 )
             )
             samordningAndreStatligeYtelserRepository.lagre(
@@ -102,7 +105,8 @@ internal class SamordningAndreStatligeYtelserRepositoryImplTest {
                             periode = periodeTo,
                             ytelse = AndreStatligeYtelser.TILTAKSPENGER,
                         )
-                    )
+                    ),
+                vurdertTidspunkt = LocalDateTime.now()
                 )
             )
             assertDoesNotThrow {
