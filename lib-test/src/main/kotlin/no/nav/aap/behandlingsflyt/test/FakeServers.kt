@@ -46,7 +46,7 @@ object FakeServers : AutoCloseable {
 
     // Fakes with own state
     private val statistikk = StatistikkFake()
-    private val dokumentinnhenting = DokumentinnhentingFake()
+    private val dokumentinnhenting = DokumentinnhentingFake { fakePersoner }
     private val brev = BrevFake()
 
     // Stateless fakes

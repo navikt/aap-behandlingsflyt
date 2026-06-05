@@ -6,15 +6,18 @@ import io.ktor.server.netty.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import no.nav.aap.behandlingsflyt.test.TestPersonService
 import no.nav.aap.dokumentinnhenting.kontrakt.BehandlingsflytToDokumentInnhentingBestillingDto
 import no.nav.aap.dokumentinnhenting.kontrakt.DialogmeldingStatusTilBehandslingsflytDto
 import no.nav.aap.dokumentinnhenting.kontrakt.DialogmeldingStatusTilBehandslingsflytDto.MeldingStatusType
+import no.nav.aap.dokumentinnhenting.kontrakt.FastlegeDto
 import no.nav.aap.dokumentinnhenting.kontrakt.ForhåndsvisDialogmeldingDto
+import no.nav.aap.dokumentinnhenting.kontrakt.HentFastlegeDto
 import no.nav.aap.dokumentinnhenting.kontrakt.LegeerklæringPurringDto
 import java.time.LocalDateTime
 import java.util.*
 
-class DokumentinnhentingFake : FakeServer() {
+class DokumentinnhentingFake(private val fakePersoner: () -> TestPersonService) : FakeServer() {
     internal val statuser = mutableListOf<DialogmeldingStatusTilBehandslingsflytDto>()
 
     override val server = embeddedServer(Netty, port = 0, module = module())
@@ -26,7 +29,7 @@ class DokumentinnhentingFake : FakeServer() {
         installerContentNegotiation()
         installerStatusPages("DOKUMENTINNHENTING")
         routing {
-            post("/api/dokumentinnhenting/syfo/dialogmeldingbestilling") {
+            post("/syfo/dialogmeldingbestilling") {
                 val dto = call.receive<BehandlingsflytToDokumentInnhentingBestillingDto>()
                 val dialogmeldingId = UUID.randomUUID()
                 statuser.add(
@@ -43,9 +46,9 @@ class DokumentinnhentingFake : FakeServer() {
                         fritekst = dto.dialogmeldingTekst
                     )
                 )
-                call.respond(dialogmeldingId.toString())
+                call.respond(dialogmeldingId)
             }
-            post("/api/dokumentinnhenting/syfo/purring") {
+            post("/syfo/purring") {
                 val request = call.receive<LegeerklæringPurringDto>()
                 val status = requireNotNull(statuser.find { it.dialogmeldingUuid == request.dialogmeldingUuid })
                     .copy(
@@ -54,12 +57,12 @@ class DokumentinnhentingFake : FakeServer() {
                 statuser.add(status)
                 call.respond(status.dialogmeldingUuid.toString())
             }
-            get("/api/dokumentinnhenting/syfo/status/{saksnummer}") {
+            get("/syfo/status/{saksnummer}") {
                 val saksnummer = call.parameters["saksnummer"] ?: error("Mangler saksnummer")
                 val filtered = statuser.filter { it.saksnummer == saksnummer }
                 call.respond(filtered)
             }
-            post("/api/dokumentinnhenting/syfo/brevpreview") {
+            post("/syfo/brevpreview") {
                 val req = call.receive<ForhåndsvisDialogmeldingDto>()
                 val fnr = 12341234123
                 val navn = "Ronny Råkjører"
@@ -77,6 +80,11 @@ class DokumentinnhentingFake : FakeServer() {
                 """.trimIndent()
 
                 call.respond(brev)
+            }
+            post("/syfo/behandleroppslag/fastlege") {
+                val request = call.receive<HentFastlegeDto>()
+                val person = fakePersoner().hentPerson(request.personIdent)
+                call.respond(FastlegeDto(fastlege = person?.fastlege))
             }
         }
     }
