@@ -16,6 +16,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType.MELDEKORT
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType.MIGRER_RETTIGHETSPERIODE
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType.REVURDERING
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType.UTVID_VEDTAKSLENGDE
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType.OVERGANG_UFORE_STANS
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.gateway.GatewayProvider
@@ -115,7 +116,6 @@ class FlytKontekstMedPeriodeService(
             Vurderingsbehov.REVURDER_MANUELL_INNTEKT,
             Vurderingsbehov.REVURDER_MELDEPLIKT_RIMELIG_GRUNN,
             Vurderingsbehov.OVERGANG_UFORE,
-            Vurderingsbehov.OVERGANG_UFORE_AUTOMATISK_STANS,
             Vurderingsbehov.OVERGANG_ARBEID,
             Vurderingsbehov.OPPHOLDSKRAV,
             Vurderingsbehov.ETABLERING_EGEN_VIRKSOMHET,
@@ -139,6 +139,7 @@ class FlytKontekstMedPeriodeService(
             Vurderingsbehov.MIGRER_RETTIGHETSPERIODE -> MIGRER_RETTIGHETSPERIODE
             Vurderingsbehov.BARNETILLEGG_SATS_REGULERING -> AUTOMATISK_BREV
             Vurderingsbehov.G_REGULERING -> G_REGULERING
+            Vurderingsbehov.OVERGANG_UFORE_AUTOMATISK_STANS -> OVERGANG_UFORE_STANS
         }
     }
 }
