@@ -20,13 +20,14 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Opp
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.Uføre
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreSøknad
-import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseServiceFactory
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
+import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseServiceFactory
 import no.nav.aap.behandlingsflyt.integrasjon.institusjonsopphold.InstitusjonsoppholdJSON
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.AndreUtbetalingerDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Ident
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.JaNeiVetIkke
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ManueltOppgittBarn
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.OppgitteBarn
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.StudentStatus
@@ -48,8 +49,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.SaksnummerParameter
 import no.nav.aap.behandlingsflyt.test.FakeServers
 import no.nav.aap.behandlingsflyt.test.FiktivtHelseoppholdNavnGenerator
 import no.nav.aap.behandlingsflyt.test.JSONTestPersonService
-import no.nav.aap.behandlingsflyt.test.TexasPortHolder
 import no.nav.aap.behandlingsflyt.test.LokalUnleash
+import no.nav.aap.behandlingsflyt.test.TexasPortHolder
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.behandlingsflyt.test.modell.TestYrkesskade
 import no.nav.aap.behandlingsflyt.test.modell.genererIdent
@@ -290,7 +291,14 @@ private fun genererBarn(dto: TestBarn): TestPerson {
 }
 
 private fun mapTilSøknad(dto: OpprettTestcaseDTO, urelaterteBarn: List<TestPerson>): SøknadV0 {
-    val erStudent = if (dto.student) StudentStatus.Ja else StudentStatus.Nei
+    val erStudent = if (dto.student) {
+        SøknadStudentDto(
+            erStudent = StudentStatus.Avbrutt,
+            kommeTilbake = JaNeiVetIkke.Ja
+        )
+    } else {
+        null
+    }
     val harYrkesskadeFraSøknad = dto.yrkesskader.any { it.kilde == Kilde.SØKNAD && it.harYrkesskade }
     val harYrkesskade = if (harYrkesskadeFraSøknad) "JA" else "NEI"
 
@@ -318,7 +326,7 @@ private fun mapTilSøknad(dto: OpprettTestcaseDTO, urelaterteBarn: List<TestPers
             stønad = dto.andreUtbetalinger?.stønad,
             afp = dto.andreUtbetalinger?.afp
         ),
-        student = SøknadStudentDto(erStudent),
+        student = erStudent,
         yrkesskade = harYrkesskade,
         oppgitteBarn = oppgitteBarn,
         medlemskap = SøknadMedlemskapDto(harMedlemskap, null, null, null, emptyList()),
