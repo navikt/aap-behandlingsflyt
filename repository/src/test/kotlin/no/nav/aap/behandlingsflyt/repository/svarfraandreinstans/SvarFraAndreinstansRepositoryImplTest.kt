@@ -13,6 +13,7 @@ import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
+import java.time.Instant
 
 class SvarFraAndreinstansRepositoryImplTest {
     companion object {
@@ -44,7 +45,8 @@ class SvarFraAndreinstansRepositoryImplTest {
                 begrunnelse = "Begrunnelse",
                 konsekvens = SvarFraAndreinstansKonsekvens.INGENTING,
                 vurdertAv = "saksbehandler",
-                vilkårSomOmgjøres = emptyList()
+                vilkårSomOmgjøres = emptyList(),
+                opprettet = Instant.now()
             )
             // Lagre vurdering
             repository.lagre(behandling.id, vurdering)
