@@ -188,7 +188,9 @@ class PersonRepositoryImpl(private val connection: DBConnection) : PersonReposit
             }
         }
 
-        return Person(PersonId(personId), identifikator, identer)
+        val person = Person(PersonId(personId), identifikator, identer)
+        personByIdCache[person.id] = person
+        return person
     }
 
     override fun finn(ident: Ident): Person? {
