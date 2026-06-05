@@ -32,5 +32,13 @@ public data class BehandlingFlytStoppetHendelse(
     val reserverTil: String? = null,
     val opprettetTidspunkt: LocalDateTime,
     val hendelsesTidspunkt: LocalDateTime,
-    val versjon: String
+    val versjon: String,
+    val behandlingsEtEllerAnnet: BehandlingsEtEllerAnnet? = null,
 )
+
+/**
+ * Kan brukes til div greier
+ */
+public enum class BehandlingsEtEllerAnnet{
+    AVSLAG_11_5_FØRSTEGANGSBEHANDLING
+}
