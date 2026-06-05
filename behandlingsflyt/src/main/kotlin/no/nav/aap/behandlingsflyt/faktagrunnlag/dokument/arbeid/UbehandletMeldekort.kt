@@ -13,7 +13,7 @@ data class UbehandletMeldekort(
     val mottattTidspunkt: LocalDateTime,
     val harDuArbeidet: Boolean?,
     val digitalisertAvPostmottak: Boolean?,
-    val endretAvSaksbehandler: Boolean?,
+    val opprettetAv: String?,
 ) {
     companion object {
         fun fraKontrakt(
@@ -34,7 +34,7 @@ data class UbehandletMeldekort(
                     mottattTidspunkt = mottattTidspunkt,
                     harDuArbeidet = meldekort.harDuArbeidet,
                     digitalisertAvPostmottak = digitalisertAvPostmottak,
-                    endretAvSaksbehandler = meldekort.opprettetAv != null
+                    opprettetAv = meldekort.opprettetAv
                 )
             }
         }

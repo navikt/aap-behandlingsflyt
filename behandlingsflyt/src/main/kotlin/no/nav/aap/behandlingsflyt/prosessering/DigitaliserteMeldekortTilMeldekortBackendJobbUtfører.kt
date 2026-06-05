@@ -42,8 +42,9 @@ class DigitaliserteMeldekortTilMeldekortBackendJobbUtfører(
             harDuJobbet = ubehandletMeldekort.harDuArbeidet,
             dager = ubehandletMeldekort.timerArbeidPerPeriode.map {
                 TimerArbeidetDto(it.periode.fom, it.timerArbeid.antallTimer.toDouble())
-            }
-            // TODO må vi sende noe her som indikerer at meldekortet er endret av en saksbehandler?
+            },
+            erDigitalisert = ubehandletMeldekort.digitalisertAvPostmottak,
+            opprettetAv = ubehandletMeldekort.opprettetAv
         )
         meldekortGateway.sendTimerArbeidetIPeriode(request)
     }

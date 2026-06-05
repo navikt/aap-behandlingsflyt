@@ -89,7 +89,7 @@ class MeldekortInformasjonskrav private constructor(
             allePlussNye.add(nyttMeldekort)
 
             val endretAvSaksbehandler = unleashGateway.isEnabled(BehandlingsflytFeature.MeldekortEndretAvSaksbehandler)
-                && ubehandletMeldekort.endretAvSaksbehandler == true
+                && ubehandletMeldekort.opprettetAv != null
             if (ubehandletMeldekort.digitalisertAvPostmottak == true || endretAvSaksbehandler) {
                 flytJobbRepository.leggTil(
                     JobbInput(jobb = DigitaliserteMeldekortTilMeldekortBackendJobbUtfører).medPayload(
