@@ -145,6 +145,7 @@ object Revurdering : BehandlingType {
                     Vurderingsbehov.HELHETLIG_VURDERING,
                     Vurderingsbehov.DØDSFALL_BRUKER,
                     Vurderingsbehov.OVERGANG_ARBEID,
+                    Vurderingsbehov.REVURDER_STUDENT
                 )
             )
             .medSteg(
