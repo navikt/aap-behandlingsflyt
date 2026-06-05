@@ -15,6 +15,7 @@ import no.nav.aap.behandlingsflyt.forretningsflyt.behandlingstyper.Førstegangsb
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Tidslinje
@@ -111,6 +112,17 @@ class TidligereVurderingerImpl(
 
             Sjekk(StegType.VURDER_ALDER) { vilkårsresultat, _, _ ->
                 ikkeOppfyltFørerTilAvslag(Vilkårtype.ALDERSVILKÅRET, vilkårsresultat)
+            },
+
+            Sjekk(StegType.AVKLAR_STUDENT) { vilkårsresultat, _, _ ->
+                vilkårsresultat.tidslinjeFor(Vilkårtype.STUDENT).map {
+                    TidligereVurderinger.PotensieltOppfylt(
+                        when {
+                            it.utfall == Utfall.OPPFYLT -> RettighetsType.STUDENT
+                            else -> null
+                        }
+                    )
+                }
             },
 
 
@@ -258,13 +270,21 @@ class TidligereVurderingerImpl(
 
     private fun lagSjekker(definerteSjekker: List<Sjekk>) = buildList {
         val førstegangsbehandling = Førstegangsbehandling.flyt()
-        definerteSjekker.windowed(2).forEach { (sjekk1, sjekk2) ->
+
+        val listeMedSjekker = if (unleashGateway.isEnabled(BehandlingsflytFeature.StudentV2)) {
+            // skip gammel student-sjekk når nytt steg er påskrudd
+            definerteSjekker.filterNot { it.steg == StegType.AVKLAR_STUDENT }
+        } else {
+            definerteSjekker
+        }
+
+        listeMedSjekker.windowed(2).forEach { (sjekk1, sjekk2) ->
             require(førstegangsbehandling.erStegFør(sjekk1.steg, sjekk2.steg)) {
                 "Koden for avslag-logikk forutsetter at ${sjekk1.steg} kommer før ${sjekk2.steg} i flyten, noe som ikke stemmer."
             }
         }
 
-        val sjekker = definerteSjekker.iterator()
+        val sjekker = listeMedSjekker.iterator()
         var sjekk: Sjekk? = sjekker.next()
 
         /* legg på default sjekk der det mangler. */
@@ -342,7 +362,8 @@ class TidligereVurderingerImpl(
                     foreløpigUtfall is TidligereVurderinger.UunngåeligAvslag || nesteUtfall is TidligereVurderinger.UunngåeligAvslag -> TidligereVurderinger.UunngåeligAvslag
                     foreløpigUtfall is TidligereVurderinger.PotensieltOppfylt && nesteUtfall is TidligereVurderinger.PotensieltOppfylt -> TidligereVurderinger.PotensieltOppfylt(
                         rettighetstype = foreløpigUtfall.rettighetstype ?: nesteUtfall.rettighetstype,
-                        muligRettFraNavKontor = foreløpigUtfall.muligRettFraNavKontor ?: nesteUtfall.muligRettFraNavKontor // TODO blir dette riktig?
+                        muligRettFraNavKontor = foreløpigUtfall.muligRettFraNavKontor
+                            ?: nesteUtfall.muligRettFraNavKontor // TODO blir dette riktig?
                     )
 
                     else -> error("Uventet kombinasjon av utfall: $foreløpigUtfall og $nesteUtfall")
