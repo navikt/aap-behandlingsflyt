@@ -14,6 +14,7 @@ import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertNotNull
 import java.time.LocalDate
+import java.time.Instant
 
 internal class PåklagetBehandlingRepositoryImplTest {
     companion object {
@@ -43,7 +44,8 @@ internal class PåklagetBehandlingRepositoryImplTest {
             val vurdering = PåklagetBehandlingVurdering(
                 påklagetVedtakType = PåklagetVedtakType.KELVIN_BEHANDLING,
                 påklagetBehandling = behandling.id,
-                vurdertAv = "ident"
+                vurdertAv = "ident",
+            opprettet = Instant.now()
             )
             
             påklagetBehandlingRepository.lagre(klageBehandling.id, vurdering)
@@ -66,7 +68,8 @@ internal class PåklagetBehandlingRepositoryImplTest {
             val vurdering = PåklagetBehandlingVurdering(
                 påklagetVedtakType = PåklagetVedtakType.KELVIN_BEHANDLING,
                 påklagetBehandling = behandling.id,
-                vurdertAv = "ident"
+                vurdertAv = "ident",
+            opprettet = Instant.now()
             )
 
             påklagetBehandlingRepository.lagre(klageBehandling.id, vurdering)
