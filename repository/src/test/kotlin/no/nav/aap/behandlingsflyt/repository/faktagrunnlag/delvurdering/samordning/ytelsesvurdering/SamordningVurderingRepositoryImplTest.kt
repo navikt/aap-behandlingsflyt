@@ -95,7 +95,8 @@ internal class SamordningVurderingRepositoryImplTest {
                 samordningVurderinger = SamordningVurderingGrunnlag(
                     begrunnelse = "En god begrunnelse",
                     vurderinger = setOf(vurdering, vurdering2),
-                    vurdertAv = "ident"
+                    vurdertAv = "ident",
+                vurdertTidspunkt = LocalDateTime.now()
                 )
             )
         }
@@ -116,7 +117,8 @@ internal class SamordningVurderingRepositoryImplTest {
                 behandling.id, SamordningVurderingGrunnlag(
                     begrunnelse = "xxxx",
                     vurderinger = emptySet(),
-                    vurdertAv = "ident"
+                    vurdertAv = "ident",
+                vurdertTidspunkt = LocalDateTime.now()
                 )
             )
         }
@@ -154,7 +156,8 @@ internal class SamordningVurderingRepositoryImplTest {
                     samordningVurderinger = SamordningVurderingGrunnlag(
                         begrunnelse = "En god begrunnelse",
                         vurderinger = setOf(vurdering),
-                        vurdertAv = "ident"
+                        vurdertAv = "ident",
+                    vurdertTidspunkt = LocalDateTime.now()
                     )
                 )
             }
@@ -191,7 +194,8 @@ internal class SamordningVurderingRepositoryImplTest {
                 samordningVurderinger = SamordningVurderingGrunnlag(
                     begrunnelse = "Første begrunnelse",
                     vurderinger = setOf(førsteVurdering),
-                    vurdertAv = "ident"
+                    vurdertAv = "ident",
+                vurdertTidspunkt = LocalDateTime.now()
                 )
             )
         }
@@ -232,7 +236,8 @@ internal class SamordningVurderingRepositoryImplTest {
                 samordningVurderinger = SamordningVurderingGrunnlag(
                     begrunnelse = andreBegrunnelse,
                     vurderinger = setOf(andreVurdering1, andreVurdering2),
-                    vurdertAv = "ident"
+                    vurdertAv = "ident",
+                vurdertTidspunkt = LocalDateTime.now()
                 )
             )
         }
@@ -313,7 +318,8 @@ internal class SamordningVurderingRepositoryImplTest {
                                     )
                                 )
                             )
-                        )
+                        ),
+                    vurdertTidspunkt = LocalDateTime.now()
                     )
                 )
                 samordningVurderingRepository.lagreVurderinger(
@@ -331,7 +337,8 @@ internal class SamordningVurderingRepositoryImplTest {
                                     )
                                 )
                             )
-                        )
+                        ),
+                    vurdertTidspunkt = LocalDateTime.now()
                     )
                 )
                 assertDoesNotThrow {
@@ -404,7 +411,8 @@ internal class SamordningVurderingRepositoryImplTest {
                         )
                     )
                 )
-            )
+            ),
+        vurdertTidspunkt = LocalDateTime.now()
         )
     }
 
