@@ -4,7 +4,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.verdityper.Prosent
-import no.nav.aap.verdityper.dokument.JournalpostId
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -28,15 +27,15 @@ data class Sykdomsvurdering(
         if (!harSkadeSykdomEllerLyte && erSkadeSykdomEllerLyteVesentligdel == true) {
             return false
         }
-        
+
         if (harSkadeSykdomEllerLyte && harNedsattArbeidsevne == null) {
             return false
         }
-        
+
         if (harNedsattArbeidsevne == ArbeidsevneNedsattValg.NEI && (erNedsettelseIArbeidsevneMerEnnHalvparten == true)) {
             return false
         }
-        
+
         if (erNedsettelseIArbeidsevneMerEnnHalvparten != null &&
             !erNedsettelseIArbeidsevneMerEnnHalvparten &&
             harYrkesskadeRegistrert &&
@@ -47,8 +46,8 @@ data class Sykdomsvurdering(
         return true
     }
 
-    fun potensieltOppfulltStudent(): Boolean {
-        return harNedsattArbeidsevne == ArbeidsevneNedsattValg.NEI_MEN_STUDENT
+    fun potensieltOppfyltStudent(): Boolean {
+        return harSkadeSykdomEllerLyte && harNedsattArbeidsevne == ArbeidsevneNedsattValg.NEI_MEN_STUDENT
     }
 
     fun erOppfyltOrdinærMedUtlededeFelter(): Boolean {

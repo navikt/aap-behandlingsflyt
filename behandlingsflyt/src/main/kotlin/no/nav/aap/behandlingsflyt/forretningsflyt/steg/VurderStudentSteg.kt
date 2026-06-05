@@ -46,18 +46,12 @@ class VurderStudentSteg private constructor(
             vedtakBehøverVurdering = {
                 when (kontekst.vurderingType) {
                     VurderingType.FØRSTEGANGSBEHANDLING -> {
-                        if (!unleashGateway.isEnabled(BehandlingsflytFeature.StudentV2)){
-                            return@oppdaterAvklaringsbehov false
-                        }
                         tidligereVurderinger.muligMedRettTilAAP(kontekst, type()) &&
-                                (studentGrunnlag.skalVurdereStudent() || Vurderingsbehov.REVURDER_STUDENT in kontekst.vurderingsbehovRelevanteForSteg)
+                                (studentGrunnlag.skalVurdereStudent() || Vurderingsbehov.REVURDER_STUDENT in kontekst.vurderingsbehovRelevanteForSteg) && !unleashGateway.isEnabled(BehandlingsflytFeature.StudentV2)
                     }
                     VurderingType.REVURDERING -> {
-                        if (!unleashGateway.isEnabled(BehandlingsflytFeature.StudentV2)) {
-                            return@oppdaterAvklaringsbehov false
-                        }
                         tidligereVurderinger.muligMedRettTilAAP(kontekst, type()) &&
-                                Vurderingsbehov.REVURDER_STUDENT in kontekst.vurderingsbehovRelevanteForSteg
+                                Vurderingsbehov.REVURDER_STUDENT in kontekst.vurderingsbehovRelevanteForSteg && !unleashGateway.isEnabled(BehandlingsflytFeature.StudentV2)
                     }
                     VurderingType.UTVID_VEDTAKSLENGDE,
                     VurderingType.MIGRER_RETTIGHETSPERIODE,

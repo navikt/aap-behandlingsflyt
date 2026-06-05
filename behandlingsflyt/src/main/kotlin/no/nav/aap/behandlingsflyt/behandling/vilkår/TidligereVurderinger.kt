@@ -9,7 +9,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.forretningsflyt.behandlingstyper.Førstegangsbehandling
@@ -25,9 +24,6 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
-import kotlin.collections.component1
-import kotlin.collections.component2
-import kotlin.collections.windowed
 
 /** Når kan vi definitivt si at det er avslag, slik
  * at vi ikke trenger å vurdere flere vilkår.
@@ -54,7 +50,10 @@ interface TidligereVurderinger {
     sealed interface Behandlingsutfall
     data object IkkeBehandlingsgrunnlag : Behandlingsutfall
     data object UunngåeligAvslag : Behandlingsutfall
-    data class PotensieltOppfylt(val rettighetstype: RettighetsType?) : Behandlingsutfall
+    data class PotensieltOppfylt(
+        val rettighetstype: RettighetsType?,
+        val muligRettFraNavKontor: RettighetsType? = null
+    ) : Behandlingsutfall
 
     fun behandlingsutfall(
         kontekst: FlytKontekstMedPerioder, førSteg: StegType, etterSteg: StegType? = null
@@ -124,7 +123,7 @@ class TidligereVurderingerImpl(
                     val sykdomDefinitivtAvslag = sykdomsvurdering?.erOppfyltOrdinærMedUtlededeFelter() == false
                             && !sykdomsvurdering.erOppfyltForOrdinærEllerYrkesskadeSettBortIfraÅrsakssammenheng()
                             && !sykdomsvurdering.skalVurderesForSykepengeerstatning()
-                            && !sykdomsvurdering.potensieltOppfulltStudent()
+                            && !sykdomsvurdering.potensieltOppfyltStudent()
                             && !potensieltOppfyltOvergangArbeid(
                         kontekst.rettighetsperiode,
                         segmentPeriode,
@@ -191,10 +190,11 @@ class TidligereVurderingerImpl(
                         overgangArbeidVilkåret?.utfall == Utfall.OPPFYLT -> TidligereVurderinger.PotensieltOppfylt(
                             RettighetsType.ARBEIDSSØKER
                         )
-
-                        foreløpigUtfall is TidligereVurderinger.PotensieltOppfylt && foreløpigUtfall.rettighetstype == null && (sykdomsvurdering?.skalVurderesForSykepengeerstatning() != true && sykdomsvurdering?.potensieltOppfulltStudent() != true )-> TidligereVurderinger.UunngåeligAvslag
-
-                        else -> TidligereVurderinger.PotensieltOppfylt(null)
+                        foreløpigUtfall is TidligereVurderinger.PotensieltOppfylt && foreløpigUtfall.rettighetstype == null && (sykdomsvurdering?.skalVurderesForSykepengeerstatning() != true && sykdomsvurdering?.potensieltOppfyltStudent() != true) -> TidligereVurderinger.UunngåeligAvslag
+                        else -> TidligereVurderinger.PotensieltOppfylt(
+                            null,
+                            mapSykdomsvurderingTilMuligRettighetstypeFraNavKontor(sykdomsvurdering)
+                        )
                     }
                 }
             },
@@ -306,6 +306,14 @@ class TidligereVurderingerImpl(
         }
     }
 
+    private fun mapSykdomsvurderingTilMuligRettighetstypeFraNavKontor(sykdomsvurdering: Sykdomsvurdering?): RettighetsType? {
+        return when {
+            sykdomsvurdering?.skalVurderesForSykepengeerstatning() == true -> RettighetsType.SYKEPENGEERSTATNING
+            sykdomsvurdering?.potensieltOppfyltStudent() == true -> RettighetsType.STUDENT
+            else -> null
+        }
+    }
+
 
     override fun behandlingsutfall(
         kontekst: FlytKontekstMedPerioder, førSteg: StegType, etterSteg: StegType?
@@ -333,7 +341,8 @@ class TidligereVurderingerImpl(
                     foreløpigUtfall is TidligereVurderinger.IkkeBehandlingsgrunnlag || nesteUtfall is TidligereVurderinger.IkkeBehandlingsgrunnlag -> TidligereVurderinger.IkkeBehandlingsgrunnlag
                     foreløpigUtfall is TidligereVurderinger.UunngåeligAvslag || nesteUtfall is TidligereVurderinger.UunngåeligAvslag -> TidligereVurderinger.UunngåeligAvslag
                     foreløpigUtfall is TidligereVurderinger.PotensieltOppfylt && nesteUtfall is TidligereVurderinger.PotensieltOppfylt -> TidligereVurderinger.PotensieltOppfylt(
-                        foreløpigUtfall.rettighetstype ?: nesteUtfall.rettighetstype
+                        rettighetstype = foreløpigUtfall.rettighetstype ?: nesteUtfall.rettighetstype,
+                        muligRettFraNavKontor = foreløpigUtfall.muligRettFraNavKontor ?: nesteUtfall.muligRettFraNavKontor // TODO blir dette riktig?
                     )
 
                     else -> error("Uventet kombinasjon av utfall: $foreløpigUtfall og $nesteUtfall")

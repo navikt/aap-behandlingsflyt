@@ -44,7 +44,7 @@ public enum class StegType(
         status = Status.UTREDES
     ),
     AVKLAR_STUDENT_V2(
-        gruppe = StegGruppe.STUDENT,
+        gruppe = StegGruppe.SYKDOM,
         status = Status.UTREDES,
     ),
     AVKLAR_SYKDOM(
