@@ -49,7 +49,8 @@ class KlagevurderingNayRepositoryImplTest {
                 innstilling = KlageInnstilling.OPPRETTHOLD,
                 vilkårSomOmgjøres = emptyList(),
                 vilkårSomOpprettholdes = listOf(Hjemmel.FOLKETRYGDLOVEN_11_5),
-                vurdertAv = "ident"
+                vurdertAv = "ident",
+            opprettet = Instant.now()
             )
 
             klagebehandlingNayRepository.lagre(klageBehandling.id, vurdering)
