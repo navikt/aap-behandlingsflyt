@@ -48,7 +48,7 @@ class KlagevurderingKontorRepositoryImplTest {
                 vilkårSomOmgjøres = emptyList(),
                 vilkårSomOpprettholdes = listOf(Hjemmel.FOLKETRYGDLOVEN_11_5),
                 vurdertAv = "ident",
-            opprettet = Instant.now()
+                opprettet = Instant.now()
             )
 
             klagebehandlingKontorRepository.lagre(klageBehandling.id, vurdering)

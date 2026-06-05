@@ -24,7 +24,7 @@ class KlagebehandlingKontorRepositoryImpl(private val connection: DBConnection) 
             SELECT * FROM KLAGE_KONTOR_VURDERING
             WHERE id IN (
                 SELECT vurdering_id FROM KLAGE_KONTOR_GRUNNLAG
-                WHERE BEHANDLING_ID = ? AND AKTIV = TRUE
+                WHERE BEHANDLING_ID = ? AND AKTIV
             )
         """.trimIndent()
         return connection.queryFirstOrNull(query) {
@@ -77,6 +77,7 @@ class KlagebehandlingKontorRepositoryImpl(private val connection: DBConnection) 
                 setArray(4, vurdering.vilkårSomOmgjøres.map { it.hjemmel })
                 setArray(5, vurdering.vilkårSomOpprettholdes.map { it.hjemmel })
                 setString(6, vurdering.vurdertAv)
+                setInstant(7, vurdering.opprettet)
             }
             setResultValidator { rowsUpdated ->
                 require(rowsUpdated == 1)

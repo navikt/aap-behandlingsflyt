@@ -77,6 +77,7 @@ class KlagebehandlingNayRepositoryImpl(private val connection: DBConnection) : K
                 setArray(4, vurdering.vilkårSomOmgjøres.map { it.hjemmel })
                 setArray(5, vurdering.vilkårSomOpprettholdes.map { it.hjemmel })
                 setString(6, vurdering.vurdertAv)
+                setInstant(7, vurdering.opprettet)
             }
             setResultValidator { rowsUpdated ->
                 require(rowsUpdated == 1)
