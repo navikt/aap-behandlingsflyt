@@ -11,7 +11,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarPeri
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSamordningAndreStatligeYtelserLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSamordningGraderingLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSoningsforholdLøsning
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarStudentEnkelLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarStudentLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSykdomLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarYrkesskadeLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklaringsbehovLøsning
@@ -86,8 +86,8 @@ class TestScenarioOrkestrator(
     fun løsStudent(behandling: Behandling): Behandling {
         return løsAvklaringsBehov(
             behandling,
-            AvklarStudentEnkelLøsning(
-                studentvurdering = StudentVurderingDTO(
+            AvklarStudentLøsning(
+                løsningerForPerioder = listOf(PeriodisertStudentDto(
                     begrunnelse = "Er student ok",
                     harAvbruttStudie = true,
                     godkjentStudieAvLånekassen = true,

@@ -12,7 +12,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarPeri
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSamordningAndreStatligeYtelserLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSamordningGraderingLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSamordningSykestipendLøsning
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarStudentEnkelLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarStudentLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSykdomLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarYrkesskadeLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklaringsbehovLøsning
@@ -159,8 +159,8 @@ class TestBehandlingFullføringService(
         sak: Sak,
         behandlingId: BehandlingId,
     ): AvklaringsbehovLøsning? = when (behov.definisjon) {
-        Definisjon.AVKLAR_STUDENT -> AvklarStudentEnkelLøsning(
-            studentvurdering = StudentVurderingDTO(
+        Definisjon.AVKLAR_STUDENT -> AvklarStudentLøsning(
+            løsningerForPerioder = listOf(PeriodisertStudentDto(
                 begrunnelse = "Er student ok",
                 harAvbruttStudie = true,
                 godkjentStudieAvLånekassen = true,
