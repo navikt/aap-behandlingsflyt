@@ -302,7 +302,7 @@ class AvventUtbetalingServiceTest {
                                 ytelse = AndreStatligeYtelser.TILTAKSPENGER,
                                 periode = Periode(LocalDate.parse("2025-01-04"), LocalDate.parse("2025-01-12")),
                             )
-                        ),,
+                        ),
                     vurdertTidspunkt = LocalDateTime.now()
                     )
                 )
