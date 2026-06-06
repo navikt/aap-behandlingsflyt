@@ -111,8 +111,8 @@ class BeregningTest {
                 relevanteSaker = listOf(YrkesskadeSak("123", LocalDate.of(2023, 1, 1))),
                 erÅrsakssammenheng = true,
                 andelAvNedsettelsen = Prosent(70),
-                vurdertAv = "Jojo Joyes",,
-            vurdertTidspunkt = LocalDateTime.now()
+                vurdertAv = "Jojo Joyes",
+                vurdertTidspunkt = LocalDateTime.now()
             ),
             registrerteYrkesskader = Yrkesskader(
                 listOf(
