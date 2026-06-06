@@ -41,6 +41,7 @@ data class HåndterSvarFraAndreinstansLøsningDto(
         vurdertAv = vurdertAv.ident,
         begrunnelse = begrunnelse,
         konsekvens = konsekvens,
-        vilkårSomOmgjøres = vilkårSomOmgjøres
+        vilkårSomOmgjøres = vilkårSomOmgjøres,
+        opprettet = java.time.Instant.now()
     )
 }
