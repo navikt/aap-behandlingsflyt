@@ -11,6 +11,7 @@ import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.lookup.repository.Factory
 import org.slf4j.LoggerFactory
+import java.time.Instant
 import java.time.YearMonth
 
 class BarnepensjonRepositoryImpl(private val connection: DBConnection) : BarnepensjonRepository {
@@ -39,6 +40,7 @@ class BarnepensjonRepositoryImpl(private val connection: DBConnection) : Barnepe
             setParams {
                 setLong(1, behandlingId.toLong())
                 setLong(2, vurderingId)
+                setInstant(3, Instant.now())
             }
         }
 
@@ -181,7 +183,7 @@ class BarnepensjonRepositoryImpl(private val connection: DBConnection) : Barnepe
         ) {
             setParams {
                 setLong(1, tilBehandling.toLong())
-                setInstant(2, java.time.Instant.now())
+                setInstant(2, Instant.now())
                 setLong(3, fraBehandling.toLong())
             }
         }
