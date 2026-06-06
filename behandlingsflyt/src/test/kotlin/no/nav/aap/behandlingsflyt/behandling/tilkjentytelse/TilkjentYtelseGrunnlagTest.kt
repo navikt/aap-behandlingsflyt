@@ -526,8 +526,8 @@ class TilkjentYtelseGrunnlagTest {
                     SamordningUføreVurdering(
                         begrunnelse = "",
                         vurderingPerioder = listOf(),
-                        vurdertAv = "Z00000",,
-                    vurdertTidspunkt = LocalDateTime.now()
+                        vurdertAv = "Z00000",
+                        vurdertTidspunkt = LocalDateTime.now()
                     )
                 ),
                 barnepensjonGrunnlag = null,
