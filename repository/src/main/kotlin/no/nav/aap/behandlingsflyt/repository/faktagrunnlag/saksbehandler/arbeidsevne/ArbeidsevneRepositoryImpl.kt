@@ -9,6 +9,7 @@ import no.nav.aap.komponenter.dbconnect.Row
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.lookup.repository.Factory
 import org.slf4j.LoggerFactory
+import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -58,7 +59,15 @@ class ArbeidsevneRepositoryImpl(private val connection: DBConnection) : Arbeidse
         val vurdertAv: String
     ) {
         fun toArbeidsevnevurdering(): ArbeidsevneVurdering {
-            return ArbeidsevneVurdering(begrunnelse, arbeidsevne, fraDato, tilDato, vurdertIBehandling, opprettetTid, vurdertAv)
+            return ArbeidsevneVurdering(
+                begrunnelse,
+                arbeidsevne,
+                fraDato,
+                tilDato,
+                vurdertIBehandling,
+                opprettetTid,
+                vurdertAv
+            )
         }
     }
 
@@ -72,12 +81,17 @@ class ArbeidsevneRepositoryImpl(private val connection: DBConnection) : Arbeidse
     override fun lagre(behandlingId: BehandlingId, vurderinger: List<ArbeidsevneVurdering>) {
         deaktiverEksisterende(behandlingId)
 
-        val arbeidsevneId = connection.executeReturnKey("INSERT INTO ARBEIDSEVNE DEFAULT VALUES")
+        val arbeidsevneId = connection.executeReturnKey("INSERT INTO ARBEIDSEVNE (opprettet_tid) VALUES (?)") {
+            setParams {
+                setInstant(1, Instant.now())
+            }
+        }
 
         connection.execute("INSERT INTO ARBEIDSEVNE_GRUNNLAG (BEHANDLING_ID, ARBEIDSEVNE_ID, OPPRETTET_TID) VALUES (?, ?, ?)") {
             setParams {
                 setLong(1, behandlingId.toLong())
                 setLong(2, arbeidsevneId)
+                setInstant(3, Instant.now())
             }
         }
 
@@ -118,7 +132,8 @@ class ArbeidsevneRepositoryImpl(private val connection: DBConnection) : Arbeidse
         connection.execute("INSERT INTO ARBEIDSEVNE_GRUNNLAG (BEHANDLING_ID, ARBEIDSEVNE_ID, OPPRETTET_TID) SELECT ?, ARBEIDSEVNE_ID, ? FROM ARBEIDSEVNE_GRUNNLAG WHERE AKTIV AND BEHANDLING_ID = ?") {
             setParams {
                 setLong(1, tilBehandling.toLong())
-                setLong(2, fraBehandling.toLong())
+                setInstant(2, Instant.now())
+                setLong(3, fraBehandling.toLong())
             }
         }
     }
@@ -127,12 +142,14 @@ class ArbeidsevneRepositoryImpl(private val connection: DBConnection) : Arbeidse
 
         val arbeidsevneIds = getArbeidsevneIds(behandlingId)
 
-        val deletedRows = connection.executeReturnUpdated("""
+        val deletedRows = connection.executeReturnUpdated(
+            """
             delete from arbeidsevne_grunnlag where behandling_id = ?; 
             delete from arbeidsevne_vurdering where arbeidsevne_id = ANY(?::bigint[]);
             delete from arbeidsevne where id = ANY(?::bigint[]);
            
-        """.trimIndent()) {
+        """.trimIndent()
+        ) {
             setParams {
                 setLong(1, behandlingId.id)
                 setLongArray(2, arbeidsevneIds)
