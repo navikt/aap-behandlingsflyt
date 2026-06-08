@@ -227,6 +227,8 @@ internal fun Application.server(
     startKafkakonsumenter(fellesDataSource, repositoryRegistry, gatewayProvider)
     TilgangGateway.initialiserPrometheus(prometheus)
 
+    BackfillStansOpphør(fellesDataSource, gatewayProvider).kjør()
+
     monitor.subscribe(ApplicationStopPreparing) { environment ->
         environment.log.info("ktor forbereder seg på å stoppe.")
     }
