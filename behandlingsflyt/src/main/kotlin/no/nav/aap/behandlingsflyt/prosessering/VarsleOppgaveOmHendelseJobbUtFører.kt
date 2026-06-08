@@ -3,7 +3,6 @@ package no.nav.aap.behandlingsflyt.prosessering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.hendelse.oppgavestyring.OppgavestyringGateway
-import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.BehandlingFlytStoppetHendelse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.BehandlingMetadata
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
@@ -38,24 +37,25 @@ class VarsleOppgaveOmHendelseJobbUtFører private constructor(
         hendelse: BehandlingFlytStoppetHendelse,
         behandlingId: BehandlingId
     ): Boolean {
-        /**
-         * TODO: Hvordan skal vi agere hvis det har vært en studentvurdering, men "Nei"
-         */
-        if (hendelse.behandlingType == TypeBehandling.Førstegangsbehandling && !harStudentVurdering(behandlingId)) {
-            val sykdomsGrunnlag = sykdomRepository.hentHvisEksisterer(behandlingId)
-            if (sykdomsGrunnlag == null || sykdomsGrunnlag.sykdomsvurderinger.isEmpty()) return false
-
-            val erSykdomDefinitivtAvslag = sykdomsGrunnlag.sykdomsvurderinger.all { sykdomsvurdering ->
-                !sykdomsvurdering.erOppfyltOrdinærMedUtlededeFelter() && !sykdomsvurdering.erOppfyltForOrdinærEllerYrkesskadeSettBortIfraÅrsakssammenheng() && !sykdomsvurdering.skalVurderesForSykepengeerstatning()
-            }
-            return erSykdomDefinitivtAvslag
+        if (hendelse.erFørstegangsbehandlingHosBeslutterEllerVedtatt() && !harOppfyltStudentVurdering(behandlingId)) {
+            return erSykdomDefinitivtAvslag(behandlingId)
         }
         return false
     }
 
-    private fun harStudentVurdering(behandlingId: BehandlingId): Boolean {
+    private fun erSykdomDefinitivtAvslag(behandlingId: BehandlingId): Boolean {
+        val sykdomsGrunnlag = sykdomRepository.hentHvisEksisterer(behandlingId)
+        if (sykdomsGrunnlag == null || sykdomsGrunnlag.sykdomsvurderinger.isEmpty()) return false
+
+        val erSykdomDefinitivtAvslag = sykdomsGrunnlag.sykdomsvurderinger.all { sykdomsvurdering ->
+            !sykdomsvurdering.erOppfyltOrdinærMedUtlededeFelter() && !sykdomsvurdering.erOppfyltForOrdinærEllerYrkesskadeSettBortIfraÅrsakssammenheng() && !sykdomsvurdering.skalVurderesForSykepengeerstatning()
+        }
+        return erSykdomDefinitivtAvslag
+    }
+
+    private fun harOppfyltStudentVurdering(behandlingId: BehandlingId): Boolean {
         val studentGrunnlag = studentRepository.hentHvisEksisterer(behandlingId)
-        return studentGrunnlag != null && studentGrunnlag.vurderinger?.isNotEmpty() == true
+        return studentGrunnlag != null && studentGrunnlag.vurderinger?.isNotEmpty() == true && studentGrunnlag.vurderinger.any { it.erOppfylt() }
     }
 
     companion object : ProvidersJobbSpesifikasjon {

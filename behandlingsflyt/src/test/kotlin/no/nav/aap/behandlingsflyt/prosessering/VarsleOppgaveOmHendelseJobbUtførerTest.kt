@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
+import com.papsign.ktor.openapigen.route.status
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
@@ -14,6 +15,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.BehandlingMetadata
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.TilbakekrevingsbehandlingOppdatertHendelse
 import no.nav.aap.behandlingsflyt.kontrakt.oppgave.EnhetNrDto
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
+import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySykdomRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryStudentRepository
@@ -61,13 +63,24 @@ class VarsleOppgaveOmHendelseJobbUtførerTest {
     }
 
     @Test
-    fun `førstegangsbehandling med studentvurdering setter ikke AVSLAG_11_5_FØRSTEGANGSBEHANDLING`() {
+    fun `førstegangsbehandling med oppfylt studentvurdering setter ikke AVSLAG_11_5_FØRSTEGANGSBEHANDLING`() {
         InMemorySykdomRepository.lagre(behandlingId, listOf(avslagSykdomsvurdering()))
-        InMemoryStudentRepository.lagre(behandlingId, setOf(enStudentVurdering()))
+        InMemoryStudentRepository.lagre(behandlingId, setOf(enStudentVurdering(true)))
 
         utfører.utfør(jobbInput(TypeBehandling.Førstegangsbehandling))
 
         assertThat(CapturingOppgavestyringGateway.instans.hendelseTilOppgave?.behandlingMetadata).isNull()
+    }
+
+
+    @Test
+    fun `førstegangsbehandling med ikke-oppfylt studentvurdering setter AVSLAG_11_5_FØRSTEGANGSBEHANDLING`() {
+        InMemorySykdomRepository.lagre(behandlingId, listOf(avslagSykdomsvurdering()))
+        InMemoryStudentRepository.lagre(behandlingId, setOf(enStudentVurdering(false)))
+
+        utfører.utfør(jobbInput(TypeBehandling.Førstegangsbehandling))
+
+        assertThat(CapturingOppgavestyringGateway.instans.hendelseTilOppgave?.behandlingMetadata).isEqualTo(BehandlingMetadata.AVSLAG_11_5_FØRSTEGANGSBEHANDLING)
     }
 
     @Test
@@ -87,10 +100,30 @@ class VarsleOppgaveOmHendelseJobbUtførerTest {
     }
 
     @Test
-    fun `førstegangsbehandling med kun avslag sykdomsvurderinger setter AVSLAG_11_5_FØRSTEGANGSBEHANDLING`() {
+    fun `førstegangsbehandling med kun avslag sykdomsvurderinger setter AVSLAG_11_5_FØRSTEGANGSBEHANDLING når den står i fatte vedtak-steg`() {
         InMemorySykdomRepository.lagre(behandlingId, listOf(avslagSykdomsvurdering(), avslagSykdomsvurdering()))
 
-        utfører.utfør(jobbInput(TypeBehandling.Førstegangsbehandling))
+        utfører.utfør(jobbInput(TypeBehandling.Førstegangsbehandling, aktivtSteg = StegType.FATTE_VEDTAK, status = Status.UTREDES))
+
+        assertThat(CapturingOppgavestyringGateway.instans.hendelseTilOppgave?.behandlingMetadata)
+            .isEqualTo(BehandlingMetadata.AVSLAG_11_5_FØRSTEGANGSBEHANDLING)
+    }
+
+    @Test
+    fun `førstegangsbehandling med kun avslag sykdomsvurderinger setter AVSLAG_11_5_FØRSTEGANGSBEHANDLING når den er står i brevsteg`() {
+        InMemorySykdomRepository.lagre(behandlingId, listOf(avslagSykdomsvurdering(), avslagSykdomsvurdering()))
+
+        utfører.utfør(jobbInput(TypeBehandling.Førstegangsbehandling, status = Status.IVERKSETTES, aktivtSteg = StegType.BREV))
+
+        assertThat(CapturingOppgavestyringGateway.instans.hendelseTilOppgave?.behandlingMetadata)
+            .isEqualTo(BehandlingMetadata.AVSLAG_11_5_FØRSTEGANGSBEHANDLING)
+    }
+
+    @Test
+    fun `førstegangsbehandling med kun avslag sykdomsvurderinger setter AVSLAG_11_5_FØRSTEGANGSBEHANDLING når den er avsluttet`() {
+        InMemorySykdomRepository.lagre(behandlingId, listOf(avslagSykdomsvurdering(), avslagSykdomsvurdering()))
+
+        utfører.utfør(jobbInput(TypeBehandling.Førstegangsbehandling, status = Status.AVSLUTTET, aktivtSteg = null))
 
         assertThat(CapturingOppgavestyringGateway.instans.hendelseTilOppgave?.behandlingMetadata)
             .isEqualTo(BehandlingMetadata.AVSLAG_11_5_FØRSTEGANGSBEHANDLING)
@@ -124,12 +157,12 @@ class VarsleOppgaveOmHendelseJobbUtførerTest {
     }
 
 
-    private fun jobbInput(behandlingType: TypeBehandling): JobbInput =
+    private fun jobbInput(behandlingType: TypeBehandling, status: Status = Status.OPPRETTET, aktivtSteg: StegType? = StegType.FATTE_VEDTAK): JobbInput =
         JobbInput(VarsleOppgaveOmHendelseJobbUtFører)
-            .medPayload(enHendelse(behandlingType))
+            .medPayload(enHendelse(behandlingType, status, aktivtSteg))
             .forBehandling(sakId, behandlingId.id)
 
-    private fun enHendelse(behandlingType: TypeBehandling) = BehandlingFlytStoppetHendelse(
+    private fun enHendelse(behandlingType: TypeBehandling, status: Status, aktivtSteg: StegType?) = BehandlingFlytStoppetHendelse(
         personIdent = "12345678901",
         saksnummer = Saksnummer("SAK-001"),
         referanse = BehandlingReferanse(),
@@ -137,7 +170,8 @@ class VarsleOppgaveOmHendelseJobbUtførerTest {
         årsakerTilBehandling = emptyList(),
         vurderingsbehov = emptyList(),
         årsakTilOpprettelse = ÅrsakTilOpprettelse.SØKNAD,
-        status = Status.OPPRETTET,
+        status = status,
+        aktivtSteg = aktivtSteg,
         avklaringsbehov = emptyList(),
         erPåVent = false,
         relevanteIdenterPåBehandling = emptyList(),
@@ -211,14 +245,14 @@ class VarsleOppgaveOmHendelseJobbUtførerTest {
         vurdertAv = Bruker("Z00000"),
     )
 
-    private fun enStudentVurdering() = StudentVurdering(
+    private fun enStudentVurdering(oppfylt: Boolean) = StudentVurdering(
         fom = LocalDate.now(),
         tom = null,
         begrunnelse = "Student",
         harAvbruttStudie = true,
         godkjentStudieAvLånekassen = true,
         avbruttPgaSykdomEllerSkade = true,
-        harBehovForBehandling = true,
+        harBehovForBehandling = oppfylt,
         avbruttStudieDato = LocalDate.now(),
         avbruddMerEnn6Måneder = true,
         vurdertAv = "Z00000",
