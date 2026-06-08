@@ -40,7 +40,7 @@ class TilbakekrevingHendelseKafkaMeldingTest {
 
         assertThat(melding.hendelsestype).isEqualTo("behandling_endret")
         assertThat(melding.tilbakekreving!!.varselSendt).isEqualTo(LocalDate.parse("2026-05-11"))
-        assertThat(melding.tilbakekreving!!.venter!!.grunn).isEqualTo(TilbakekrevingGrunn.AVVENTER_BRUKERUTTALELSE)
+        assertThat(melding.tilbakekreving!!.venter!!.grunn).isEqualTo(TilbakekrevingVenteGrunn.AVVENTER_BRUKERUTTALELSE)
         assertThat(melding.tilbakekreving!!.venter!!.gjenopptas).isEqualTo(LocalDate.parse("2026-06-01"))
     }
 

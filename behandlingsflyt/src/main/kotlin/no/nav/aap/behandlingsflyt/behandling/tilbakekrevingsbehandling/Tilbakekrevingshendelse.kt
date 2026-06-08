@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.tilbakekrevingsbehandling
 
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.TilbakekrevingVenteGrunn
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import java.net.URI
@@ -14,6 +15,8 @@ data class Tilbakekrevingshendelse(
     val eksternBehandlingId: String?,
     val sakOpprettet: LocalDateTime,
     val varselSendt: LocalDate?,
+    val venteGrunn: TilbakekrevingVenteGrunn?,
+    val gjenopptas: LocalDate?,
     val behandlingsstatus: TilbakekrevingBehandlingsstatus,
     val totaltFeilutbetaltBeløp: Beløp,
     val tilbakekrevingSaksbehandlingUrl: URI,
