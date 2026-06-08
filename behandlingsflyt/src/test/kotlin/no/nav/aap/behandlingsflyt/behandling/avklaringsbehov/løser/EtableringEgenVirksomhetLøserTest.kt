@@ -96,7 +96,7 @@ class EtableringEgenVirksomhetLøserTest {
         )
 
         val feil = assertThrows<UgyldigForespørselException> { løser.løs(kontekst, løsning) }
-        assertThat(feil.message).contains("vurderingenGjelderFra må være minst én dag etter første mulige dag med AAP")
+        assertThat(feil.message).contains("Vurderingen kan tidligst gjelde fra dagen etter første mulige dag med AAP")
     }
 
     @Test
