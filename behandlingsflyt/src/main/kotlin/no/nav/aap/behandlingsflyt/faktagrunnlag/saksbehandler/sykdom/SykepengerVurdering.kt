@@ -11,7 +11,7 @@ data class SykepengerVurdering(
     val vurdertIBehandling: BehandlingId,
     val grunn: SykepengerGrunn? = null,
     val vurdertAv: String,
-    val vurdertTidspunkt: LocalDateTime? = null,
+    val vurdertTidspunkt: LocalDateTime,
     val gjelderFra: LocalDate,
     val gjelderTom: LocalDate? = null,
 )
