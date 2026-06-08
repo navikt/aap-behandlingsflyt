@@ -25,6 +25,7 @@ import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
+import java.time.LocalDateTime
 
 class SamordningYtelseVurderingInformasjonskravTest {
 
@@ -487,7 +488,8 @@ class SamordningYtelseVurderingInformasjonskravTest {
                     )
                 )
             ),
-            vurdertAv = "ident"
+            vurdertAv = "ident",
+            vurdertTidspunkt = LocalDateTime.now()
         )
 
         val nyYtelse = SamordningYtelse(
@@ -527,7 +529,8 @@ class SamordningYtelseVurderingInformasjonskravTest {
                     )
                 )
             ),
-            vurdertAv = "ident"
+            vurdertAv = "ident",
+            vurdertTidspunkt = LocalDateTime.now()
         )
 
         val nyYtelse = SamordningYtelse(
@@ -567,7 +570,8 @@ class SamordningYtelseVurderingInformasjonskravTest {
                     )
                 )
             ),
-            vurdertAv = "ident"
+            vurdertAv = "ident",
+            vurdertTidspunkt = LocalDateTime.now()
         )
 
         val nyYtelse = SamordningYtelse(
@@ -607,7 +611,8 @@ class SamordningYtelseVurderingInformasjonskravTest {
                     )
                 )
             ),
-            vurdertAv = "ident"
+            vurdertAv = "ident",
+            vurdertTidspunkt = LocalDateTime.now()
         )
 
         val nyYtelse = SamordningYtelse(
@@ -647,7 +652,8 @@ class SamordningYtelseVurderingInformasjonskravTest {
                     )
                 )
             ),
-            vurdertAv = "ident"
+            vurdertAv = "ident",
+            vurdertTidspunkt = LocalDateTime.now()
         )
 
         val nyYtelse = SamordningYtelse(
@@ -687,7 +693,8 @@ class SamordningYtelseVurderingInformasjonskravTest {
                     )
                 )
             ),
-            vurdertAv = "ident"
+            vurdertAv = "ident",
+            vurdertTidspunkt = LocalDateTime.now()
         )
 
         val nyYtelse = SamordningYtelse(
@@ -714,7 +721,8 @@ class SamordningYtelseVurderingInformasjonskravTest {
         val vurderingsGrunnlag = SamordningVurderingGrunnlag(
             begrunnelse = "Test",
             vurderinger = emptySet(),
-            vurdertAv = "ident"
+            vurdertAv = "ident",
+            vurdertTidspunkt = LocalDateTime.now()
         )
 
         val nyYtelse = SamordningYtelse(
@@ -754,7 +762,8 @@ class SamordningYtelseVurderingInformasjonskravTest {
                     )
                 )
             ),
-            vurdertAv = "ident"
+            vurdertAv = "ident",
+            vurdertTidspunkt = LocalDateTime.now()
         )
 
         assertFalse(harEndringerIYtelserIkkeDekketAvManuelleVurderinger(vurderingsGrunnlag, emptySet()))
