@@ -19,7 +19,6 @@ enum class BehandlingsflytFeature : FeatureToggle {
     ForutgaaendeGap,
     FjernTilbakefoeringTransisjon,
     MaritimtArbeid,
-    ForstegangsbehandlingEtterAvslagOppgave,
     AlleEndringerKreverKvalitetssikring,
     RevurderingEtterAvslagSkalKvalitetssikres,
     MeldepliktForsteFraForsteInnvilgelse,
