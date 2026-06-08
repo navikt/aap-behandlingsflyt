@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.behandling.tilbakekrevingsbehandling.Tilbakekr
 import no.nav.aap.behandlingsflyt.behandling.tilbakekrevingsbehandling.Tilbakekrevingshendelse
 import no.nav.aap.behandlingsflyt.help.opprettSak
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.TilbakekrevingVenteGrunn
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.tilbakekrevingsbehandling.TilbakekrevingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
@@ -93,6 +94,8 @@ class BehandlingServiceTest {
             eksternBehandlingId = UUID.randomUUID().toString(),
             sakOpprettet = LocalDateTime.now(),
             varselSendt = LocalDate.now(),
+            venteGrunn = TilbakekrevingVenteGrunn.AVVENTER_BRUKERUTTALELSE,
+            gjenopptas = LocalDate.now().plusMonths(1),
             behandlingsstatus = TilbakekrevingBehandlingsstatus.OPPRETTET,
             totaltFeilutbetaltBeløp = Beløp(1000),
             tilbakekrevingSaksbehandlingUrl = URI.create("https://localhost"),
