@@ -62,7 +62,8 @@ class MeldekortRepositoryImpl(private val connection: DBConnection) : MeldekortR
                 Meldekort(
                     JournalpostId(it.getString("journalpost")),
                     hentTimerPerPeriode(it.getLong("id")),
-                    it.getLocalDateTime("mottatt_tidspunkt")
+                    it.getLocalDateTime("mottatt_tidspunkt"),
+                    it.getLocalDateTime("opprettet_tid"),
                 )
             }
         }.toSet()
@@ -124,13 +125,14 @@ class MeldekortRepositoryImpl(private val connection: DBConnection) : MeldekortR
 
         meldekortene.forEach { meldekort ->
             val query = """
-            INSERT INTO MELDEKORT (journalpost, meldekortene_id, mottatt_tidspunkt) VALUES (?, ?, ?)
+            INSERT INTO MELDEKORT (journalpost, meldekortene_id, mottatt_tidspunkt, opprettet_tid) VALUES (?, ?, ?, ?)
             """.trimIndent()
             val meldekortId = connection.executeReturnKey(query) {
                 setParams {
                     setString(1, meldekort.journalpostId.identifikator)
                     setLong(2, meldekorteneId)
                     setLocalDateTime(3, meldekort.mottattTidspunkt)
+                    setLocalDateTime(4, meldekort.opprettetTidspunkt)
                 }
             }
 

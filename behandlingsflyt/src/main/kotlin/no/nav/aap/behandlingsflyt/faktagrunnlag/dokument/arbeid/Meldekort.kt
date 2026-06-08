@@ -7,11 +7,13 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.TimerArbeid
 import no.nav.aap.verdityper.dokument.JournalpostId
 import java.time.LocalDateTime
+import java.time.temporal.ChronoUnit
 
 data class Meldekort(
     val journalpostId: JournalpostId,
     val timerArbeidPerPeriode: Set<ArbeidIPeriode>,
-    val mottattTidspunkt: LocalDateTime
+    val mottattTidspunkt: LocalDateTime,
+    val opprettetTidspunkt: LocalDateTime = LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS),
 ) {
     companion object {
         fun fraKontrakt(
