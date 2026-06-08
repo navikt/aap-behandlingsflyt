@@ -327,7 +327,7 @@ class MeldekortApiTest : BaseApiTest() {
             val meldeperiodeMedMeldekort = body.meldeperioderMedMeldekort.first()
             assertThat(meldeperiodeMedMeldekort.meldekort).isNotNull
             assertThat(meldeperiodeMedMeldekort.meldekort!!.id).isEqualTo(korrigertMeldekort.journalpostId.identifikator)
-            assertThat(meldeperiodeMedMeldekort.meldekort.meldeDato).isEqualTo(korrigertMeldekort.mottattTidspunkt.toLocalDate())
+            assertThat(meldeperiodeMedMeldekort.meldekort.meldeDato).isEqualTo(opprinneligMeldekort.mottattTidspunkt.toLocalDate())
             assertThat(meldeperiodeMedMeldekort.meldekort.oppdatertTidspunkt).isEqualTo(LocalDate.of(2025, 1, 25))
             assertThat(meldeperiodeMedMeldekort.meldekort.begrunnelse).isEqualTo("Feil i opprinnelig rapportering")
             assertThat(meldeperiodeMedMeldekort.meldekort.oppdatertAv).isEqualTo("Z654321")

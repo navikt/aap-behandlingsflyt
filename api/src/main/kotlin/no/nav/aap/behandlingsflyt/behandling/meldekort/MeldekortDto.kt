@@ -17,6 +17,7 @@ data class MeldeperiodeMedMeldekortDto(
     val meldeperiode: Periode,
     val periode: Periode?,
     val meldekort: MeldekortDto?,
+    val meldeDato: LocalDate?,
     val tidligereMeldekort: List<MeldekortDto> = emptyList(),
 )
 
@@ -52,11 +53,11 @@ data class MeldekortProsesseringResponse(
     val meldekortProsesseringStatus: MeldekortProsesseringStatus,
 )
 
-fun Meldekort.toDto(begrunnelse: String?, oppdatertAv: String?, oppdatertTidspunkt: LocalDate?): MeldekortDto =
+fun Meldekort.toDto(meldeDato: LocalDate?, begrunnelse: String?, oppdatertAv: String?, oppdatertTidspunkt: LocalDate?): MeldekortDto =
     MeldekortDto(
         id = journalpostId.identifikator,
         journalpostId = journalpostId.identifikator,
-        meldeDato = mottattTidspunkt.toLocalDate(),
+        meldeDato = meldeDato ?: mottattTidspunkt.toLocalDate(),
         oppdatertTidspunkt = oppdatertTidspunkt,
         begrunnelse = begrunnelse,
         oppdatertAv = oppdatertAv,

@@ -84,6 +84,7 @@ fun NormalOpenAPIRoute.meldekortApi(
                     meldeperioderMedOppfyltePerioder.map { (meldeperiode, periode) ->
                         val meldekort = nyesteMeldekortForMeldeperiode(meldekortene, meldeperiode)
                         val tidligereMeldekortListe = tidligereMeldekortForMeldeperiode(meldekortene, meldeperiode)
+                        val meldeDato = tidligsteMeldeDatoForMeldeperiode(meldekortene, meldeperiode)
 
                         if (meldekort != null) {
                             // Henter ut relevante metadata for meldekort hvor saksbehandler har korrigert timer
@@ -94,18 +95,20 @@ fun NormalOpenAPIRoute.meldekortApi(
                             MeldeperiodeMedMeldekortDto(
                                 meldeperiode = meldeperiode,
                                 periode = periode,
-                                meldekort = meldekort.toDto(meldekortData?.begrunnelse, meldekortData?.opprettetAv, mottattDokument?.opprettetTid?.toLocalDate()),
+                                meldeDato = meldeDato,
+                                meldekort = meldekort.toDto(meldeDato, meldekortData?.begrunnelse, meldekortData?.opprettetAv, mottattDokument?.opprettetTid?.toLocalDate()),
                                 tidligereMeldekort = tidligereMeldekortListe.map { tidligere ->
                                     val ref = InnsendingReferanse(tidligere.journalpostId)
                                     val tidligereDokument = mottatteDokumenter[ref]
                                     val data = tidligereDokument?.strukturerteData<MeldekortV0>()?.data
-                                    tidligere.toDto(data?.begrunnelse, data?.opprettetAv, tidligereDokument?.opprettetTid?.toLocalDate())
+                                    tidligere.toDto(meldeDato, data?.begrunnelse, data?.opprettetAv, tidligereDokument?.opprettetTid?.toLocalDate())
                                 },
                             )
                         } else {
                             MeldeperiodeMedMeldekortDto(
                                 meldeperiode = meldeperiode,
                                 periode = periode,
+                                meldeDato = meldeDato,
                                 meldekort = null,
                             )
                         }
@@ -245,6 +248,22 @@ private fun nyesteMeldekortForMeldeperiode(
     val arbeidsperiode = meldekort.arbeidsperiode()
     arbeidsperiode != null && meldeperiode.inneholder(arbeidsperiode)
 }
+
+/**
+ * For å finne meldedato ser vi på følgende:
+ * - Meldekort levert med timer for meldeperioden
+ * - Meldekort levert med timer for andre perioder men mottatt innenfor meldeperioden
+ */
+private fun tidligsteMeldeDatoForMeldeperiode(
+    meldekortene: List<Meldekort>,
+    meldeperiode: Periode
+): LocalDate? = meldekortene.firstOrNull { meldekort ->
+    val arbeidsperiode = meldekort.arbeidsperiode()
+    val timerRegistrertForMeldeperioden = arbeidsperiode != null && meldeperiode.inneholder(arbeidsperiode)
+    val timerRegistrertForAnnenMeldeperiodeMottattInnenforMeldeperioden =  meldeperiode.inneholder(meldekort.mottattTidspunkt.toLocalDate())
+
+    timerRegistrertForMeldeperioden || timerRegistrertForAnnenMeldeperiodeMottattInnenforMeldeperioden
+}?.mottattTidspunkt?.toLocalDate()
 
 /**
  * Henter ut alle tidligere meldekort for en meldeperiode, sortert synkende på mottattTidspunkt (nyest først).
