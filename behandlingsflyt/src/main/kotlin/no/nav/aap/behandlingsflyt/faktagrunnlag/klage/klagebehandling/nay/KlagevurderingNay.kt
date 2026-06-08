@@ -11,5 +11,5 @@ data class KlagevurderingNay(
     val vilkårSomOpprettholdes: List<Hjemmel>,
     val vilkårSomOmgjøres: List<Hjemmel>,
     val vurdertAv: String,
-    val opprettet: Instant? = null
+    val opprettet: Instant
 )

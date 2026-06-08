@@ -27,30 +27,34 @@ class SykepengerErstatningRepositoryImpl(private val connection: DBConnection) :
     }
 
     private fun opprettTomtGrunnlag(behandlingId: BehandlingId): Long {
-        val vurderingerId = connection.executeReturnKey("INSERT INTO SYKEPENGE_VURDERINGER DEFAULT VALUES;")
+        val vurderingerId = connection.executeReturnKey("INSERT INTO SYKEPENGE_VURDERINGER (opprettet_tid) VALUES (?)") {
+            setParams { setInstant(1, java.time.Instant.now()) }
+        }
 
-        return connection.executeReturnKey("INSERT INTO SYKEPENGE_ERSTATNING_GRUNNLAG (behandling_id, vurderinger_id) VALUES (?, ?)") {
+        return connection.executeReturnKey("INSERT INTO SYKEPENGE_ERSTATNING_GRUNNLAG (behandling_id, vurderinger_id, opprettet_tid) VALUES (?, ?, ?)") {
             setParams {
                 setLong(1, behandlingId.toLong())
                 setLong(2, vurderingerId)
+                setInstant(3, java.time.Instant.now())
             }
         }
     }
 
     private fun lagreVurderingerPåGrunnlag(grunnlagId: Long, vurderinger: List<SykepengerVurdering>) {
         if (vurderinger.isNotEmpty()) {
-            val vurderingerId = connection.queryFirst<Long>("SELECT vurderinger_id FROM SYKEPENGE_ERSTATNING_GRUNNLAG where id=?") {
-                setParams { setLong(1, grunnlagId) }
-                setRowMapper { it.getLong("vurderinger_id") }
-            }
+            val vurderingerId =
+                connection.queryFirst<Long>("SELECT vurderinger_id FROM SYKEPENGE_ERSTATNING_GRUNNLAG where id=?") {
+                    setParams { setLong(1, grunnlagId) }
+                    setRowMapper { it.getLong("vurderinger_id") }
+                }
 
             val insertQuery = """
-                INSERT INTO SYKEPENGE_VURDERING (begrunnelse, oppfylt, grunn, vurdert_av, gjelder_fra, gjelder_tom, vurderinger_id, vurdert_i_behandling)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO SYKEPENGE_VURDERING (begrunnelse, oppfylt, grunn, vurdert_av, gjelder_fra, gjelder_tom, vurderinger_id, vurdert_i_behandling, opprettet_tid)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             """.trimIndent()
 
             vurderinger.forEach { vurdering ->
-                val vurderingId = connection.executeReturnKey(insertQuery) {
+                connection.executeReturnKey(insertQuery) {
                     setParams {
                         setString(1, vurdering.begrunnelse)
                         setBoolean(2, vurdering.harRettPå)
@@ -60,24 +64,10 @@ class SykepengerErstatningRepositoryImpl(private val connection: DBConnection) :
                         setLocalDate(6, vurdering.gjelderTom)
                         setLong(7, vurderingerId)
                         setLong(8, vurdering.vurdertIBehandling.toLong())
+                        setLocalDateTime(9, vurdering.vurdertTidspunkt)
                     }
                 }
 
-                lagreDokument(vurderingId, vurdering.dokumenterBruktIVurdering)
-            }
-        }
-    }
-
-    private fun lagreDokument(vurderingId: Long, journalpostIdEr: List<JournalpostId>) {
-        val query = """
-            INSERT INTO SYKEPENGE_VURDERING_DOKUMENTER (vurdering_id, journalpost) 
-            VALUES (?, ?)
-        """.trimIndent()
-
-        connection.executeBatch(query, journalpostIdEr) {
-            setParams { journalpostId ->
-                setLong(1, vurderingId)
-                setString(2, journalpostId.identifikator)
             }
         }
     }
@@ -94,14 +84,15 @@ class SykepengerErstatningRepositoryImpl(private val connection: DBConnection) :
         hentHvisEksisterer(fraBehandling) ?: return
 
         val query = """
-            INSERT INTO SYKEPENGE_ERSTATNING_GRUNNLAG (behandling_id, vurderinger_id)
-            SELECT ?, vurderinger_id from SYKEPENGE_ERSTATNING_GRUNNLAG where behandling_id = ? and aktiv
+            INSERT INTO SYKEPENGE_ERSTATNING_GRUNNLAG (behandling_id, vurderinger_id, opprettet_tid)
+            SELECT ?, vurderinger_id, ? from SYKEPENGE_ERSTATNING_GRUNNLAG where behandling_id = ? and aktiv
         """.trimIndent()
 
         connection.execute(query) {
             setParams {
                 setLong(1, tilBehandling.toLong())
-                setLong(2, fraBehandling.toLong())
+                setInstant(2, java.time.Instant.now())
+                setLong(3, fraBehandling.toLong())
             }
         }
     }
@@ -135,7 +126,6 @@ class SykepengerErstatningRepositoryImpl(private val connection: DBConnection) :
             setRowMapper { row ->
                 SykepengerVurdering(
                     begrunnelse = row.getString("begrunnelse"),
-                    dokumenterBruktIVurdering = hentDokumenter(row.getLong("id")),
                     harRettPå = row.getBoolean("oppfylt"),
                     grunn = row.getEnumOrNull("grunn"),
                     vurdertIBehandling = BehandlingId(row.getLong("vurdert_i_behandling")),
@@ -148,26 +138,11 @@ class SykepengerErstatningRepositoryImpl(private val connection: DBConnection) :
         }
     }
 
-    private fun hentDokumenter(vurderingId: Long): List<JournalpostId> {
-        val query = """
-            SELECT journalpost FROM SYKEPENGE_VURDERING_DOKUMENTER WHERE vurdering_id = ?
-        """.trimIndent()
-        return connection.queryList(query) {
-            setParams {
-                setLong(1, vurderingId)
-            }
-            setRowMapper { row ->
-                JournalpostId(row.getString("journalpost"))
-            }
-        }
-    }
-
     override fun slett(behandlingId: BehandlingId) {
         val sykepengeVurderingerIds = getSykepengeVurderingerIds(behandlingId)
         val deletedRows = connection.executeReturnUpdated(
             """
             delete from sykepenge_erstatning_grunnlag where behandling_id = ?; 
-            delete from sykepenge_vurdering_dokumenter where vurdering_id in (select id from sykepenge_vurdering where vurderinger_id = ANY(?::bigint[]));
             delete from sykepenge_vurdering where vurderinger_id = ANY(?::bigint[]);
             delete from sykepenge_vurderinger where id = ANY(?::bigint[]);
         """.trimIndent()
@@ -176,7 +151,6 @@ class SykepengerErstatningRepositoryImpl(private val connection: DBConnection) :
                 setLong(1, behandlingId.id)
                 setLongArray(2, sykepengeVurderingerIds)
                 setLongArray(3, sykepengeVurderingerIds)
-                setLongArray(4, sykepengeVurderingerIds)
             }
         }
         log.info("Slettet $deletedRows rader fra sykepenge_erstatning_grunnlag")

@@ -12,7 +12,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarPeri
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSamordningAndreStatligeYtelserLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSamordningGraderingLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSamordningSykestipendLøsning
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarStudentEnkelLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarStudentLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSykdomLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarYrkesskadeLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklaringsbehovLøsning
@@ -45,7 +45,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.Bist
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravVurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.VurderingerForSamordning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.sykestipend.SamordningSykestipendVurderingDto
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentVurderingDTO
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.SykdomsvurderingLøsningDto
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
@@ -53,6 +52,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.LovvalgDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.MedlemskapDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.PeriodisertManuellVurderingForLovvalgMedlemskapDto
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.EØSLandEllerLandMedAvtale
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.PeriodisertStudentDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
@@ -159,15 +159,18 @@ class TestBehandlingFullføringService(
         sak: Sak,
         behandlingId: BehandlingId,
     ): AvklaringsbehovLøsning? = when (behov.definisjon) {
-        Definisjon.AVKLAR_STUDENT -> AvklarStudentEnkelLøsning(
-            studentvurdering = StudentVurderingDTO(
-                begrunnelse = "Er student ok",
-                harAvbruttStudie = true,
-                godkjentStudieAvLånekassen = true,
-                avbruttPgaSykdomEllerSkade = true,
-                harBehovForBehandling = true,
-                avbruttStudieDato = LocalDate.now().minusMonths(1),
-                avbruddMerEnn6Måneder = true,
+        Definisjon.AVKLAR_STUDENT -> AvklarStudentLøsning(
+            løsningerForPerioder = listOf(
+                PeriodisertStudentDto(
+                    fom = sak.rettighetsperiode.fom,
+                    begrunnelse = "Er student ok",
+                    harAvbruttStudie = true,
+                    godkjentStudieAvLånekassen = true,
+                    avbruttPgaSykdomEllerSkade = true,
+                    harBehovForBehandling = true,
+                    avbruttStudieDato = LocalDate.now().minusMonths(1),
+                    avbruddMerEnn6Måneder = true,
+                )
             )
         )
 
@@ -232,7 +235,15 @@ class TestBehandlingFullføringService(
         Definisjon.KVALITETSSIKRING -> KvalitetssikringLøsning(
             alleAvklaringsbehov
                 .filter { it.erIkkeAvbrutt() && (it.erTotrinn() || it.kreverKvalitetssikring()) }
-                .map { TotrinnsVurdering(it.definisjon.kode, true, "begrunnelse", emptyList(), markeringer = emptyList()) }
+                .map {
+                    TotrinnsVurdering(
+                        it.definisjon.kode,
+                        true,
+                        "begrunnelse",
+                        emptyList(),
+                        markeringer = emptyList()
+                    )
+                }
         )
 
         Definisjon.FASTSETT_BEREGNINGSTIDSPUNKT -> FastsettBeregningstidspunktLøsning(
@@ -358,7 +369,15 @@ class TestBehandlingFullføringService(
         Definisjon.FATTE_VEDTAK -> FatteVedtakLøsning(
             alleAvklaringsbehov
                 .filter { it.erIkkeAvbrutt() && it.erTotrinn() }
-                .map { TotrinnsVurdering(it.definisjon.kode, true, "begrunnelse", emptyList(), markeringer = emptyList()) }
+                .map {
+                    TotrinnsVurdering(
+                        it.definisjon.kode,
+                        true,
+                        "begrunnelse",
+                        emptyList(),
+                        markeringer = emptyList()
+                    )
+                }
         )
 
         Definisjon.SKRIV_VEDTAKSBREV -> {

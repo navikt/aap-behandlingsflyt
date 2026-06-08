@@ -330,7 +330,7 @@ object Revurdering : BehandlingType {
             .medSteg(
                 steg = InstitusjonsoppholdSteg,
                 informasjonskrav = listOf(InstitusjonsoppholdInformasjonskrav),
-                vurderingsbehovRelevanteForSteg = listOf(Vurderingsbehov.INSTITUSJONSOPPHOLD)
+                vurderingsbehovRelevanteForSteg = listOf(Vurderingsbehov.INSTITUSJONSOPPHOLD, Vurderingsbehov.MOTTATT_SØKNAD)
             )
             .medSteg(
                 steg = SamordningSteg,

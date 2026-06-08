@@ -364,6 +364,7 @@ class KvalitetssikringFlytTest : AbstraktFlytOrkestratorTest(
         val revurdering = sak.sendInnSøknad(TestSøknader.STANDARD_SØKNAD)
         revurdering.løsSykdom(fom)
             .løsBistand(fom)
+            .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
             .bekreftVurderinger().medKontekst {
                 assertThat(hentÅpneAvklaringsbehov(revurdering).map { it.definisjon }).describedAs(

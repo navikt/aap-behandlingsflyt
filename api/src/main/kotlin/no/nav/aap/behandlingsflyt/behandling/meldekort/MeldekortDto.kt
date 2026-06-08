@@ -15,6 +15,7 @@ enum class MeldekortProsesseringStatus {
 
 data class MeldeperiodeMedMeldekortDto(
     val meldeperiode: Periode,
+    val periode: Periode?,
     val meldekort: MeldekortDto?,
     val tidligereMeldekort: List<MeldekortDto> = emptyList(),
 )

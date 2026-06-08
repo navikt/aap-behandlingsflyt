@@ -19,7 +19,6 @@ class SykepengerErstatningGrunnlagTest {
         val vurderinger = listOf(
             SykepengerVurdering(
                 begrunnelse = "vurdering1",
-                dokumenterBruktIVurdering = emptyList(),
                 harRettPå = true,
                 vurdertIBehandling = BehandlingId(1L),
                 grunn = SykepengerGrunn.SYKEPENGER_IGJEN_ARBEIDSUFOR,
@@ -30,7 +29,6 @@ class SykepengerErstatningGrunnlagTest {
             ),
             SykepengerVurdering(
                 begrunnelse = "vurdering2",
-                dokumenterBruktIVurdering = emptyList(),
                 harRettPå = false,
                 vurdertIBehandling = BehandlingId(1L),
                 grunn = null,
@@ -65,7 +63,6 @@ class SykepengerErstatningGrunnlagTest {
         val vurderinger = listOf(
             SykepengerVurdering(
                 begrunnelse = "vurdering1",
-                dokumenterBruktIVurdering = emptyList(),
                 harRettPå = true,
                 vurdertIBehandling = BehandlingId(1L),
                 grunn = SykepengerGrunn.SYKEPENGER_IGJEN_ARBEIDSUFOR,
@@ -76,7 +73,6 @@ class SykepengerErstatningGrunnlagTest {
             ),
             SykepengerVurdering(
                 begrunnelse = "vurdering2",
-                dokumenterBruktIVurdering = emptyList(),
                 harRettPå = false,
                 vurdertIBehandling = BehandlingId(1L),
                 grunn = null,
@@ -87,7 +83,6 @@ class SykepengerErstatningGrunnlagTest {
             ),
             SykepengerVurdering(
                 begrunnelse = "vurdering3",
-                dokumenterBruktIVurdering = emptyList(),
                 harRettPå = true,
                 vurdertIBehandling = BehandlingId(2L),
                 grunn = SykepengerGrunn.SYKEPENGER_FORTSATT_ARBEIDSUFOR,
@@ -128,7 +123,6 @@ class SykepengerErstatningGrunnlagTest {
         val vurderinger = listOf(
             SykepengerVurdering(
                 begrunnelse = "vurdering2",
-                dokumenterBruktIVurdering = emptyList(),
                 harRettPå = false,
                 vurdertIBehandling = BehandlingId(1L),
                 grunn = null,
@@ -139,7 +133,6 @@ class SykepengerErstatningGrunnlagTest {
             ),
             SykepengerVurdering(
                 begrunnelse = "vurdering1",
-                dokumenterBruktIVurdering = emptyList(),
                 harRettPå = true,
                 vurdertIBehandling = BehandlingId(1L),
                 grunn = SykepengerGrunn.SYKEPENGER_IGJEN_ARBEIDSUFOR,

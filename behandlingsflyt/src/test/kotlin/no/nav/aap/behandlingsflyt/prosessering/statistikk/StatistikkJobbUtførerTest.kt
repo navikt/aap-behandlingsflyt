@@ -423,7 +423,6 @@ class StatistikkJobbUtførerTest {
                 behandlingId = opprettetBehandling.id, listOf(
                     Sykdomsvurdering(
                         begrunnelse = "123",
-                        dokumenterBruktIVurdering = emptyList(),
                         harSkadeSykdomEllerLyte = true,
                         erSkadeSykdomEllerLyteVesentligdel = true,
                         erNedsettelseIArbeidsevneMerEnnHalvparten = true,
