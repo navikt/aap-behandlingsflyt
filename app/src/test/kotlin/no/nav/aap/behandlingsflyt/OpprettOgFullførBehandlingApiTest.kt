@@ -296,7 +296,7 @@ class OpprettOgFullførBehandlingApiTest {
                     harYrkesskade = false,
                     harMedlemskap = true,
                     andreUtbetalinger = null,
-                    søknadsdato = søknadsdato,
+                    soeknadsdato = søknadsdato,
                 )
             )
         )
