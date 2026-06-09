@@ -24,6 +24,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.SØKNAD
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.VURDER_ALDER
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.VURDER_LOVVALG
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.VURDER_RETTIGHETSPERIODE
+import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.KRAV
 import no.nav.aap.behandlingsflyt.periodisering.FlytKontekstMedPeriodeService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.StegTilstand
@@ -40,7 +41,6 @@ import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryservice.InMemoryBehandlingService
 import no.nav.aap.behandlingsflyt.test.modell.genererIdent
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
@@ -275,6 +275,7 @@ class EnklereFlytOrkestratorTest {
             .distinct()).containsExactlyElementsOf(
             listOf(
                 START_BEHANDLING,
+                KRAV,
                 SEND_FORVALTNINGSMELDING,
                 AVBRYT_REVURDERING,
                 SØKNAD,
@@ -297,6 +298,7 @@ class EnklereFlytOrkestratorTest {
             .distinct()).containsExactlyElementsOf(
             listOf(
                 START_BEHANDLING,
+                KRAV,
                 SEND_FORVALTNINGSMELDING,
                 AVBRYT_REVURDERING,
                 SØKNAD,
@@ -372,6 +374,31 @@ class EnklereFlytOrkestratorTest {
                     aktiv = false
                 ),
                 StegTilstand(stegType = START_BEHANDLING, stegStatus = StegStatus.AVSLUTTER, aktiv = false),
+                StegTilstand(
+                    stegType = KRAV,
+                    stegStatus = StegStatus.START,
+                    aktiv = false
+                ),
+                StegTilstand(
+                    stegType = KRAV,
+                    stegStatus = StegStatus.OPPDATER_FAKTAGRUNNLAG,
+                    aktiv = false
+                ),
+                StegTilstand(
+                    stegType = KRAV,
+                    stegStatus = StegStatus.UTFØRER,
+                    aktiv = false
+                ),
+                StegTilstand(
+                    stegType = KRAV,
+                    stegStatus = StegStatus.AVKLARINGSPUNKT,
+                    aktiv = false
+                ),
+                StegTilstand(
+                    stegType = KRAV,
+                    stegStatus = StegStatus.AVSLUTTER,
+                    aktiv = false
+                ),
                 StegTilstand(
                     stegType = SEND_FORVALTNINGSMELDING,
                     stegStatus = StegStatus.START,
@@ -545,6 +572,31 @@ class EnklereFlytOrkestratorTest {
                     aktiv = false
                 ),
                 StegTilstand(stegType = START_BEHANDLING, stegStatus = StegStatus.AVSLUTTER, aktiv = false),
+                StegTilstand(
+                    stegType = KRAV,
+                    stegStatus = StegStatus.START,
+                    aktiv = false
+                ),
+                StegTilstand(
+                    stegType = KRAV,
+                    stegStatus = StegStatus.OPPDATER_FAKTAGRUNNLAG,
+                    aktiv = false
+                ),
+                StegTilstand(
+                    stegType = KRAV,
+                    stegStatus = StegStatus.UTFØRER,
+                    aktiv = false
+                ),
+                StegTilstand(
+                    stegType = KRAV,
+                    stegStatus = StegStatus.AVKLARINGSPUNKT,
+                    aktiv = false
+                ),
+                StegTilstand(
+                    stegType = KRAV,
+                    stegStatus = StegStatus.AVSLUTTER,
+                    aktiv = false
+                ),
                 StegTilstand(
                     stegType = SEND_FORVALTNINGSMELDING,
                     stegStatus = StegStatus.START,
