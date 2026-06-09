@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.flyt
 
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarStudentEnkelLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarStudentLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.ForeslåVedtakLøsning
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companion.plussEtÅrMedHverdager
@@ -11,7 +10,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Ut
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.PeriodisertStudentDto
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentVurderingDTO
 import no.nav.aap.behandlingsflyt.help.assertTidslinje
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov
@@ -45,32 +43,41 @@ class StudentV1FlytTest : AbstraktFlytOrkestratorTest(
         val avbruttStudieDato = 1 oktober 2025
         val forventetVarighetSluttStudent = avbruttStudieDato.plusMonths(6)
 
-        behandling = behandling.løsAvklaringsBehov(
-            AvklarStudentEnkelLøsning(
-                studentvurdering = StudentVurderingDTO(
-                    begrunnelse = "...",
-                    harAvbruttStudie = true,
-                    godkjentStudieAvLånekassen = true,
-                    avbruttPgaSykdomEllerSkade = true,
-                    harBehovForBehandling = true,
-                    avbruttStudieDato = avbruttStudieDato,
-                    avbruddMerEnn6Måneder = true
-                ),
+        behandling = behandling
+            .løsAvklaringsBehov(
+                AvklarStudentLøsning(
+                    løsningerForPerioder = listOf(
+                        PeriodisertStudentDto(
+                            fom = fom,
+                            begrunnelse = "...",
+                            harAvbruttStudie = true,
+                            godkjentStudieAvLånekassen = true,
+                            avbruttPgaSykdomEllerSkade = true,
+                            harBehovForBehandling = true,
+                            avbruttStudieDato = avbruttStudieDato,
+                            avbruddMerEnn6Måneder = true
+                        )
+                    ),
+                )
             )
-        ).medKontekst {
-            val vilkår = repositoryProvider.provide<VilkårsresultatRepository>().hent(this.behandling.id)
+            .medKontekst {
+                val vilkår = repositoryProvider.provide<VilkårsresultatRepository>().hent(this.behandling.id)
 
-            val studentVilkår = vilkår.finnVilkår(Vilkårtype.STUDENT)
+                val studentVilkår = vilkår.finnVilkår(Vilkårtype.STUDENT)
 
-            studentVilkår.tidslinje()
-                .assertTidslinje(Segment(Periode(fom, avbruttStudieDato.plusMonths(6).minusDays(1))) { vurdering ->
-                    assertThat(vurdering.utfall).isEqualTo(Utfall.OPPFYLT)
-                }, Segment(Periode(forventetVarighetSluttStudent, Tid.MAKS)) { vurdering ->
-                    assertThat(vurdering.utfall).isEqualTo(Utfall.IKKE_OPPFYLT)
-                    assertThat(vurdering.avslagsårsak).isEqualTo(Avslagsårsak.VARIGHET_OVERSKREDET_STUDENT)
-                })
+                studentVilkår.tidslinje().assertTidslinje(
+                    Segment(Periode(fom, avbruttStudieDato.plusMonths(6).minusDays(1))) { vurdering ->
+                        assertThat(vurdering.utfall).isEqualTo(Utfall.OPPFYLT)
+                    },
+                    Segment(Periode(forventetVarighetSluttStudent, Tid.MAKS)) { vurdering ->
+                        assertThat(vurdering.utfall).isEqualTo(Utfall.IKKE_OPPFYLT)
+                        assertThat(vurdering.avslagsårsak).isEqualTo(Avslagsårsak.VARIGHET_OVERSKREDET_STUDENT)
+                    }
+                )
 
-        }.løsSykdom(forventetVarighetSluttStudent, erOppfylt = false).løsRefusjonskrav().løsSykdomsvurderingBrev()
+            }.løsSykdom(forventetVarighetSluttStudent, erOppfylt = false)
+            .løsRefusjonskrav()
+            .løsSykdomsvurderingBrev()
             .bekreftVurderinger().kvalitetssikre().løsBeregningstidspunkt().løsOppholdskrav(fom)
             .løsSykestipend(listOf(sykestipendPeriode)).medKontekst {
                 val vilkår = repositoryProvider.provide<VilkårsresultatRepository>().hent(this.behandling.id)
@@ -92,33 +99,41 @@ class StudentV1FlytTest : AbstraktFlytOrkestratorTest(
 
         sak.opprettManuellRevurdering(
             relevanteVurderingsbehov,
-        ).løsAvklaringsBehov(
-            AvklarStudentEnkelLøsning(
-                studentvurdering = StudentVurderingDTO(
-                    begrunnelse = "...",
-                    harAvbruttStudie = false,
-                    godkjentStudieAvLånekassen = null,
-                    avbruttPgaSykdomEllerSkade = null,
-                    harBehovForBehandling = null,
-                    avbruttStudieDato = null,
-                    avbruddMerEnn6Måneder = null,
+        )
+            .løsAvklaringsBehov(
+                AvklarStudentLøsning(
+                    løsningerForPerioder = listOf(
+                        PeriodisertStudentDto(
+                            fom = fom,
+                            begrunnelse = "...",
+                            harAvbruttStudie = false,
+                            godkjentStudieAvLånekassen = null,
+                            avbruttPgaSykdomEllerSkade = null,
+                            harBehovForBehandling = null,
+                            avbruttStudieDato = null,
+                            avbruddMerEnn6Måneder = null,
+                        )
+                    )
                 )
             )
-        ).medKontekst {
-            val vilkår = repositoryProvider.provide<VilkårsresultatRepository>().hent(this.behandling.id)
+            .medKontekst {
+                val vilkår = repositoryProvider.provide<VilkårsresultatRepository>().hent(this.behandling.id)
 
-            val studentVilkår = vilkår.finnVilkår(Vilkårtype.STUDENT)
-            studentVilkår.tidslinje().assertTidslinje(
-                Segment(Periode(fom, Tid.MAKS)) { vurdering ->
-                    assertThat(vurdering.utfall).isEqualTo(Utfall.IKKE_OPPFYLT)
-                    assertThat(vurdering.avslagsårsak).isEqualTo(Avslagsårsak.IKKE_RETT_PA_STUDENT)
-                })
+                val studentVilkår = vilkår.finnVilkår(Vilkårtype.STUDENT)
+                studentVilkår.tidslinje().assertTidslinje(
+                    Segment(Periode(fom, Tid.MAKS)) { vurdering ->
+                        assertThat(vurdering.utfall).isEqualTo(Utfall.IKKE_OPPFYLT)
+                        assertThat(vurdering.avslagsårsak).isEqualTo(Avslagsårsak.IKKE_RETT_PA_STUDENT)
+                    }
+                )
 
-        }.medKontekst {
-            assertThat(this.åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
-                .describedAs { "Skal vurderes for ordinær dersom ikke oppfylt student" }
-                .containsExactlyInAnyOrder(Definisjon.AVKLAR_SYKDOM)
-        }.løsSykdom(sak.rettighetsperiode.fom).medKontekst {
+            }
+            .medKontekst {
+                assertThat(this.åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
+                    .describedAs { "Skal vurderes for ordinær dersom ikke oppfylt student" }
+                    .containsExactlyInAnyOrder(Definisjon.AVKLAR_SYKDOM)
+            }.løsSykdom(sak.rettighetsperiode.fom).medKontekst {
+
             assertThat(this.åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
                 .describedAs { "Skal vurderes for ordinær dersom ikke oppfylt student" }
                 .containsExactlyInAnyOrder(Definisjon.AVKLAR_BISTANDSBEHOV)
@@ -154,19 +169,23 @@ class StudentV1FlytTest : AbstraktFlytOrkestratorTest(
             person = person, mottattTidspunkt = fom.atStartOfDay(), søknad = TestSøknader.SØKNAD_STUDENT
         )
 
-        behandling.løsAvklaringsBehov(
-            AvklarStudentEnkelLøsning(
-                studentvurdering = StudentVurderingDTO(
-                    begrunnelse = "...",
-                    harAvbruttStudie = true,
-                    godkjentStudieAvLånekassen = true,
-                    avbruttPgaSykdomEllerSkade = true,
-                    harBehovForBehandling = true,
-                    avbruttStudieDato = avbruttStudieDato,
-                    avbruddMerEnn6Måneder = true
-                ),
-            )
-        ).løsSykdom(avbruttStudieDato.plusMonths(6), erOppfylt = false).løsRefusjonskrav().løsSykdomsvurderingBrev()
+        behandling
+            .løsAvklaringsBehov(
+                AvklarStudentLøsning(
+                    løsningerForPerioder = listOf(
+                        PeriodisertStudentDto(
+                            fom = fom,
+                            begrunnelse = "...",
+                            harAvbruttStudie = true,
+                            godkjentStudieAvLånekassen = true,
+                            avbruttPgaSykdomEllerSkade = true,
+                            harBehovForBehandling = true,
+                            avbruttStudieDato = avbruttStudieDato,
+                            avbruddMerEnn6Måneder = true
+                        )
+                    ),
+                )
+            ).løsSykdom(avbruttStudieDato.plusMonths(6), erOppfylt = false).løsRefusjonskrav().løsSykdomsvurderingBrev()
             .bekreftVurderinger().kvalitetssikre().løsBeregningstidspunkt().løsOppholdskrav(fom)
             .løsSykestipend(listOf(sykestipendPeriode)).løsAndreStatligeYtelser()
             .løsAvklaringsBehov(ForeslåVedtakLøsning()).fattVedtak()
