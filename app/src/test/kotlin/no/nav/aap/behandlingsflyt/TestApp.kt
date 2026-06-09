@@ -26,7 +26,12 @@ import no.nav.aap.behandlingsflyt.integrasjon.institusjonsopphold.Institusjonsop
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.AndreUtbetalingerDto
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.BehandlerDto
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.FastlegeDto
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.FastlegeKontaktInformasjonDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Ident
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.JaNei
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.JaNeiVetIkke
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ManueltOppgittBarn
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.OppgitteBarn
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.StudentStatus
@@ -70,6 +75,7 @@ import java.time.Duration
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
+import java.util.UUID
 import java.util.concurrent.TimeUnit
 import javax.sql.DataSource
 import kotlin.random.Random
@@ -487,7 +493,7 @@ private fun sendInnSøknad(
 
         val flytJobbRepository = FlytJobbRepository(connection)
 
-        val melding = mapTilSøknad(dto, urelaterteBarnIkkeIPDL + urelaterteBarnIPDL)
+        val melding = mapTilSøknad(dto, urelaterteBarnIkkeIPDL + urelaterteBarnIPDL, fastlege)
 
         flytJobbRepository.leggTil(
             HendelseMottattHåndteringJobbUtfører.nyJobb(
