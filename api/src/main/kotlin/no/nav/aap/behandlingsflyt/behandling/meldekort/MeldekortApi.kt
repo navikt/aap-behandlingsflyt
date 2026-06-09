@@ -93,15 +93,16 @@ fun NormalOpenAPIRoute.meldekortApi(
                             val meldekortData = mottattDokument?.strukturerteData<MeldekortV0>()?.data
 
                             // Fallback til bruker dersom meldekortData.opprettetAv er null ettersom den blir satt eksplisitt ved korrigering
-                            val oppdatertAv = meldekortData?.opprettetAv ?: sak.person.aktivIdent().identifikator
+                            val oppdatertAvSaksbehandler = meldekortData?.opprettetAv != null
 
                             MeldeperiodeMedMeldekortDto(
                                 meldeperiode = meldeperiode,
                                 periode = periode,
                                 meldekort = meldekort.toDto(
                                     meldekortData?.begrunnelse,
-                                    oppdatertAv,
-                                    mottattDokument?.opprettetTid?.toLocalDate()
+                                    oppdatertAv = meldekortData?.opprettetAv,
+                                    mottattDokument?.opprettetTid?.toLocalDate(),
+                                    oppdatertAvSaksbehandler
                                 ),
                                 tidligereMeldekort = tidligereMeldekortListe.map { tidligere ->
                                     val ref = InnsendingReferanse(tidligere.journalpostId)
@@ -109,8 +110,9 @@ fun NormalOpenAPIRoute.meldekortApi(
                                     val data = tidligereDokument?.strukturerteData<MeldekortV0>()?.data
                                     tidligere.toDto(
                                         data?.begrunnelse,
-                                        oppdatertAv,
-                                        tidligereDokument?.opprettetTid?.toLocalDate()
+                                        oppdatertAv = meldekortData?.opprettetAv,
+                                        tidligereDokument?.opprettetTid?.toLocalDate(),
+                                        oppdatertAvSaksbehandler
                                     )
                                 },
                             )
