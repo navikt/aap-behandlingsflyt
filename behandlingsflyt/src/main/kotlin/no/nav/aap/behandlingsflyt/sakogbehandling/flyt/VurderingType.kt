@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.sakogbehandling.flyt
 enum class VurderingType {
     FØRSTEGANGSBEHANDLING,
     REVURDERING,
+    OVERGANG_UFORE_STANS,
     MELDEKORT,
     UTVID_VEDTAKSLENGDE,
     MIGRER_RETTIGHETSPERIODE,

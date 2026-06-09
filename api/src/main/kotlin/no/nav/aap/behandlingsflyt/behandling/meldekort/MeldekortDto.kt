@@ -29,6 +29,7 @@ data class MeldekortDto(
     val oppdatertTidspunkt: LocalDate? = null,
     val begrunnelse: String? = null,
     val oppdatertAv: String? = null,
+    val oppdatertAvSaksbehandler: Boolean,
     val dager: Set<DagDto>,
 )
 
@@ -53,7 +54,13 @@ data class MeldekortProsesseringResponse(
     val meldekortProsesseringStatus: MeldekortProsesseringStatus,
 )
 
-fun Meldekort.toDto(meldeDato: LocalDate?, begrunnelse: String?, oppdatertAv: String?, oppdatertTidspunkt: LocalDate?): MeldekortDto =
+fun Meldekort.toDto(
+    meldeDato: LocalDate?,
+    begrunnelse: String?,
+    oppdatertAv: String?,
+    oppdatertTidspunkt: LocalDate?,
+    oppdatertAvSaksbehandler: Boolean
+): MeldekortDto =
     MeldekortDto(
         id = journalpostId.identifikator,
         journalpostId = journalpostId.identifikator,
@@ -61,6 +68,7 @@ fun Meldekort.toDto(meldeDato: LocalDate?, begrunnelse: String?, oppdatertAv: St
         oppdatertTidspunkt = oppdatertTidspunkt,
         begrunnelse = begrunnelse,
         oppdatertAv = oppdatertAv,
+        oppdatertAvSaksbehandler = oppdatertAvSaksbehandler,
         dager = timerArbeidPerPeriode.map { arbeid ->
             DagDto(
                 dato = arbeid.periode.fom,

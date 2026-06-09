@@ -65,6 +65,7 @@ class SykestipendSteg private constructor(
                     VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9,
                     VurderingType.AUTOMATISK_BREV,
                     VurderingType.G_REGULERING,
+                    VurderingType.OVERGANG_UFORE_STANS,
                     VurderingType.IKKE_RELEVANT ->
                         false
                 }

@@ -318,7 +318,7 @@ internal fun Application.server(
                 dokumentinnhentingApi(fellesDataSource, repositoryRegistry, gatewayProvider)
                 mottattHendelseApi(fellesDataSource, repositoryRegistry)
                 underveisVurderingerApi(fellesDataSource, repositoryRegistry)
-                lovvalgMedlemskapApi(fellesDataSource, repositoryRegistry, gatewayProvider)
+                lovvalgMedlemskapApi(fellesDataSource, repositoryRegistry)
                 lovvalgMedlemskapGrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
                 samordningGrunnlag(fellesDataSource, repositoryRegistry, gatewayProvider)
                 forutgåendeMedlemskapApi(fellesDataSource, repositoryRegistry, gatewayProvider)

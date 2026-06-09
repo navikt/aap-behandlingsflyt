@@ -11,6 +11,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.lookup.repository.RepositoryProvider
+import java.time.LocalDateTime
 
 class AvbrytAktivitetspliktbehandlingLøser(
     private val behandlingRepository: BehandlingRepository,
@@ -44,6 +45,7 @@ class AvbrytAktivitetspliktbehandlingLøser(
                 årsak = løsning.vurdering.årsak.name.let { AvbrytAktivitetspliktbehandlingÅrsak.valueOf(it) },
                 begrunnelse = løsning.vurdering.begrunnelse,
                 vurdertAv = kontekst.bruker,
+                opprettetTidspunkt = LocalDateTime.now(),
             ),
         )
 

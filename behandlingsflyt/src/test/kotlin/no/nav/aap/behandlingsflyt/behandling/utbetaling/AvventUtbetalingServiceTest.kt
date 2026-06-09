@@ -34,6 +34,7 @@ import org.junit.jupiter.api.parallel.Execution
 import org.junit.jupiter.api.parallel.ExecutionMode
 import java.time.LocalDate
 import kotlin.test.Test
+import java.time.LocalDateTime
 
 @Execution(ExecutionMode.SAME_THREAD)
 class AvventUtbetalingServiceTest {
@@ -302,6 +303,7 @@ class AvventUtbetalingServiceTest {
                                 periode = Periode(LocalDate.parse("2025-01-04"), LocalDate.parse("2025-01-12")),
                             )
                         ),
+                    vurdertTidspunkt = LocalDateTime.now()
                     )
                 )
         every { samordningArbeidsgiverRepositoryMock.hentHvisEksisterer(any()) } returns null

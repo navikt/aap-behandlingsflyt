@@ -57,6 +57,7 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZoneId
+import no.nav.aap.behandlingsflyt.help.opprettInMemorySak
 
 @Fakes
 class MeldekortApiTest : BaseApiTest() {
@@ -79,7 +80,7 @@ class MeldekortApiTest : BaseApiTest() {
 
     @Test
     fun `returnerer tomt sett når ingen vedtak finnes`() {
-        val sak = nySak()
+        val sak = opprettInMemorySak()
         opprettBehandling(sak, TypeBehandling.Førstegangsbehandling)
 
         testApplication {
@@ -99,7 +100,7 @@ class MeldekortApiTest : BaseApiTest() {
 
     @Test
     fun `returnerer tomt meldekort for meldeperiode uten innsendt meldekort`() {
-        val sak = nySak()
+        val sak = opprettInMemorySak()
         val behandling = opprettBehandling(sak, TypeBehandling.Førstegangsbehandling)
 
         InMemoryVedtakRepository.lagre(behandling.id, LocalDateTime.now(), LocalDate.now())
@@ -133,7 +134,7 @@ class MeldekortApiTest : BaseApiTest() {
 
     @Test
     fun `returnerer meldekort for siste fattede vedtak`() {
-        val sak = nySak()
+        val sak = opprettInMemorySak()
         val behandling = opprettBehandling(sak, TypeBehandling.Førstegangsbehandling)
 
         InMemoryVedtakRepository.lagre(behandling.id, LocalDateTime.now(), LocalDate.now())
@@ -201,7 +202,7 @@ class MeldekortApiTest : BaseApiTest() {
 
     @Test
     fun `returnerer flere meldekort`() {
-        val sak = nySak()
+        val sak = opprettInMemorySak()
         val behandling = opprettBehandling(sak, TypeBehandling.Førstegangsbehandling)
 
         InMemoryVedtakRepository.lagre(behandling.id, LocalDateTime.now(), LocalDate.now())
@@ -259,7 +260,7 @@ class MeldekortApiTest : BaseApiTest() {
 
     @Test
     fun `returnerer korrigert meldekort når flere meldekort finnes for samme periode`() {
-        val sak = nySak()
+        val sak = opprettInMemorySak()
         val behandling = opprettBehandling(sak, TypeBehandling.Førstegangsbehandling)
 
         InMemoryVedtakRepository.lagre(behandling.id, LocalDateTime.now(), LocalDate.now())
@@ -342,7 +343,7 @@ class MeldekortApiTest : BaseApiTest() {
 
     @Test
     fun `returnerer tidligere meldekort sortert synkende på mottattTidspunkt`() {
-        val sak = nySak()
+        val sak = opprettInMemorySak()
         val behandling = opprettBehandling(sak, TypeBehandling.Førstegangsbehandling)
 
         InMemoryVedtakRepository.lagre(behandling.id, LocalDateTime.now(), LocalDate.now())
@@ -413,7 +414,7 @@ class MeldekortApiTest : BaseApiTest() {
 
     @Test
     fun `returnerer også meldeperioder med fom-dato frem i tid`() {
-        val sak = nySak()
+        val sak = opprettInMemorySak()
         val behandling = opprettBehandling(sak, TypeBehandling.Førstegangsbehandling)
 
         InMemoryVedtakRepository.lagre(behandling.id, LocalDateTime.now(), LocalDate.now())
@@ -450,7 +451,7 @@ class MeldekortApiTest : BaseApiTest() {
 
     @Test
     fun `returnerer kun oppfylte perioder når meldeperiode har delvis oppfylt utfall`() {
-        val sak = nySak()
+        val sak = opprettInMemorySak()
         val behandling = opprettBehandling(sak, TypeBehandling.Førstegangsbehandling)
 
         InMemoryVedtakRepository.lagre(behandling.id, LocalDateTime.now(), LocalDate.now())
@@ -509,7 +510,7 @@ class MeldekortApiTest : BaseApiTest() {
 
     @Test
     fun `prosessering - returnerer KLAR når ingen ventende meldekort-jobber`() {
-        val sak = nySak()
+        val sak = opprettInMemorySak()
         opprettBehandling(sak, TypeBehandling.Førstegangsbehandling)
 
         testApplication {
@@ -529,7 +530,7 @@ class MeldekortApiTest : BaseApiTest() {
 
     @Test
     fun `prosessering - returnerer PROSESSERER_MELDEKORT når det finnes ventende meldekort-jobber`() {
-        val sak = nySak()
+        val sak = opprettInMemorySak()
         opprettBehandling(sak, TypeBehandling.Førstegangsbehandling)
 
         InMemoryFlytJobbRepository.leggTil(
@@ -559,7 +560,7 @@ class MeldekortApiTest : BaseApiTest() {
 
     @Test
     fun `skal journalføre oppdatert meldekort og returnere journalpostId`() {
-        val sak = nySak()
+        val sak = opprettInMemorySak()
         val behandling = opprettBehandling(sak, TypeBehandling.Førstegangsbehandling)
 
         InMemoryVedtakRepository.lagre(behandling.id, LocalDateTime.now(), LocalDate.now())
