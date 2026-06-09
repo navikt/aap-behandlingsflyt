@@ -16,7 +16,6 @@ enum class BehandlingsflytFeature : FeatureToggle {
     AvslagLovvalgMedlemskap,
     SamordningFaktagrunnlagBrev,
     GReguleringUtplukkJobb,
-    ForutgaaendeGap,
     FjernTilbakefoeringTransisjon,
     MaritimtArbeid,
     ForstegangsbehandlingEtterAvslagOppgave,

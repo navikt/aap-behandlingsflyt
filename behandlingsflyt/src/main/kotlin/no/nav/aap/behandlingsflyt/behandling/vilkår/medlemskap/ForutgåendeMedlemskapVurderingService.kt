@@ -358,11 +358,7 @@ class ForutgåendeMedlemskapVurderingService(
 
         val inntekterINorgePerioder = inntektINorgeGrunnlag?.map { it.periode }
         val sammenhengendeInntektSiste5År =
-            if (unleashGateway?.isEnabled(BehandlingsflytFeature.ForutgaaendeGap) == true) {
-                sammenhengendePerioderMedEttMånedsgap(inntekterINorgePerioder, forutgåendePeriode)
-            } else {
-                sammenhengendePerioderAlleMndSiste5år(inntekterINorgePerioder, forutgåendePeriode)
-            }
+            sammenhengendePerioderMedEttMånedsgap(inntekterINorgePerioder, forutgåendePeriode)
 
         val arbeidInntektINorgeGrunnlag =
             inntektINorgeGrunnlag?.map {
