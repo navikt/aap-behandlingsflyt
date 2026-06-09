@@ -16,6 +16,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.StrukturertDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.ArbeidIPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Meldekort
+import no.nav.aap.behandlingsflyt.help.opprettInMemorySak
 import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
 import no.nav.aap.behandlingsflyt.integrasjon.organisasjon.NomInfoGateway
 import no.nav.aap.behandlingsflyt.integrasjon.organisasjon.NorgGateway
@@ -43,6 +44,7 @@ import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryRegistry
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.behandlingsflyt.test.mars
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.verdityper.Dagsatser
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.komponenter.verdityper.Prosent.Companion.`0_PROSENT`
@@ -57,7 +59,6 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZoneId
-import no.nav.aap.behandlingsflyt.help.opprettInMemorySak
 
 @Fakes
 class MeldekortApiTest : BaseApiTest() {
@@ -595,6 +596,21 @@ class MeldekortApiTest : BaseApiTest() {
             // fixedClock = 2025-04-01T00:00:00Z = 2025-04-01T02:00:00 i Europe/Oslo (CEST)
             assertThat(body.oppdatertTidspunkt).isEqualTo(LocalDate.of(2025, 4, 1))
         }
+    }
+
+    @Test
+    fun `når kun meldeDato og ingen timer sendes inn, settes harDuArbeidet til null`() {
+        val request = OppdaterMeldekortRequest(
+            meldeperiode = Periode(6 januar 2025, 7 januar 2025),
+            begrunnelse = "Korrigering av meldedato uten timer",
+            meldeDato = 6 januar 2025,
+            dager = emptySet(),
+        )
+
+        val meldekort = tilMeldekort(request, Bruker("saksbehandler"))
+
+        assertThat(meldekort.harDuArbeidet).isNull()
+        assertThat(meldekort.timerArbeidPerPeriode).isEmpty()
     }
 
     private fun underveisperiode(utfall: Utfall, periode: Periode, meldePeriode: Periode = periode, trekk: Dagsatser = Dagsatser(0)) = Underveisperiode(

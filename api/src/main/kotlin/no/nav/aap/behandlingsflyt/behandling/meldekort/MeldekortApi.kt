@@ -234,9 +234,10 @@ private fun tilInnsending(
     melding = meldekort,
 )
 
-private fun tilMeldekort(oppdaterMeldekortRequest: OppdaterMeldekortRequest, vurdertAv: Bruker): MeldekortV0 {
+internal fun tilMeldekort(oppdaterMeldekortRequest: OppdaterMeldekortRequest, vurdertAv: Bruker): MeldekortV0 {
     return MeldekortV0(
-        harDuArbeidet = oppdaterMeldekortRequest.dager.sumOf { it.timerArbeidet } > 0.0,
+        harDuArbeidet = oppdaterMeldekortRequest.dager
+            .takeIf { it.isNotEmpty() }?.let { it.sumOf { dag -> dag.timerArbeidet } > 0.0 },
         opprettetAv = vurdertAv.ident,
         begrunnelse = oppdaterMeldekortRequest.begrunnelse,
         timerArbeidPerPeriode = oppdaterMeldekortRequest.dager.map {
