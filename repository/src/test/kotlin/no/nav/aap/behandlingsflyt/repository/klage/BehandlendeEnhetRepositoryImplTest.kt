@@ -39,7 +39,8 @@ internal class BehandlendeEnhetRepositoryImplTest {
             val vurdering = BehandlendeEnhetVurdering(
                 skalBehandlesAvNay = true,
                 skalBehandlesAvKontor = false,
-                vurdertAv = "ident"
+                vurdertAv = "ident",
+                opprettet = java.time.Instant.now()
             )
 
             behandlendeEnhetRepository.lagre(klageBehandling.id, vurdering)

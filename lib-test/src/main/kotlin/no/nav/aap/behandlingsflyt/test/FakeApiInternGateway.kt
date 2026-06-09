@@ -70,4 +70,5 @@ class FakeApiInternGateway : ApiInternGateway {
     ) {
         // No-op
     }
+
 }

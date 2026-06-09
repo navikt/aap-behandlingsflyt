@@ -79,6 +79,7 @@ class VurderForutgåendeMedlemskapSteg private constructor(
             VurderingType.UTVID_VEDTAKSLENGDE,
             VurderingType.AUTOMATISK_BREV,
             VurderingType.G_REGULERING,
+            VurderingType.OVERGANG_UFORE_STANS,
             VurderingType.IKKE_RELEVANT -> {
             }
         }

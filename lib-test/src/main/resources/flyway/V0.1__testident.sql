@@ -1,4 +1,0 @@
-CREATE SEQUENCE TESTIDENT;
-
-DROP ROLE IF EXISTS cloudsqliamuser;
-CREATE ROLE cloudsqliamuser;

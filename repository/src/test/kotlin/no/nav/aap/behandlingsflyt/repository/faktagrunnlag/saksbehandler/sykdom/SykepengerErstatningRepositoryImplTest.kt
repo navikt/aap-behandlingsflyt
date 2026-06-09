@@ -12,6 +12,7 @@ import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 internal class SykepengerErstatningRepositoryImplTest {
     companion object {
@@ -39,32 +40,32 @@ internal class SykepengerErstatningRepositoryImplTest {
         }
         val vurderingSak2 = SykepengerVurdering(
             begrunnelse = "urelatert",
-            dokumenterBruktIVurdering = listOf(JournalpostId("3212")),
             harRettPå = true,
             grunn = null,
             vurdertAv = "saksbehandler",
             gjelderFra = LocalDate.now(),
-            vurdertIBehandling = behandling2.id
+            vurdertIBehandling = behandling2.id,
+        vurdertTidspunkt = LocalDateTime.now()
         )
 
         val vurdering1 = SykepengerVurdering(
             begrunnelse = "yolo",
-            dokumenterBruktIVurdering = listOf(JournalpostId("123"), JournalpostId("321")),
             harRettPå = true,
             grunn = null,
             vurdertAv = "saksbehandler",
             gjelderFra = LocalDate.now(),
-            vurdertIBehandling = behandling.id
+            vurdertIBehandling = behandling.id,
+        vurdertTidspunkt = LocalDateTime.now()
         )
 
         val vurdering2 = SykepengerVurdering(
             begrunnelse = "yolo x2",
-            dokumenterBruktIVurdering = listOf(JournalpostId("456")),
             harRettPå = false,
             grunn = SykepengerGrunn.SYKEPENGER_FORTSATT_ARBEIDSUFOR,
             vurdertAv = "saksbehandler!!",
             vurdertIBehandling = behandling.id,
-            gjelderFra = LocalDate.now()
+            gjelderFra = LocalDate.now(),
+        vurdertTidspunkt = LocalDateTime.now()
         )
 
         dataSource.transaction { connection ->

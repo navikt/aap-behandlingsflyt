@@ -5,10 +5,13 @@ import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovOrkestrator
 import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.BestillLegeerklæringDto
+import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.FastlegeResponse
+import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.FastlegeService
 import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.ForhåndsvisBrevRequest
 import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.HentStatusLegeerklæring
 import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.PurringLegeerklæringRequest
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.DokumentinnhentingGateway
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.mdc.LogKontekst
@@ -17,11 +20,13 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersoninfoGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.SaksnummerParameter
 import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
 import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForSakResolver
 import no.nav.aap.dokumentinnhenting.kontrakt.BehandlingsflytToDokumentInnhentingBestillingDto
 import no.nav.aap.dokumentinnhenting.kontrakt.DialogmeldingForhåndsvisningDto
 import no.nav.aap.dokumentinnhenting.kontrakt.DialogmeldingStatusTilBehandslingsflytDto
+import no.nav.aap.dokumentinnhenting.kontrakt.DokumentasjonType
 import no.nav.aap.dokumentinnhenting.kontrakt.ForhåndsvisDialogmeldingDto
 import no.nav.aap.dokumentinnhenting.kontrakt.LegeerklæringPurringDto
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -46,6 +51,24 @@ fun NormalOpenAPIRoute.dokumentinnhentingApi(
     val personinfoGateway = gatewayProvider.provide(PersoninfoGateway::class)
 
     route("/api/dokumentinnhenting/syfo") {
+
+        route("/fastlege/{saksnummer}") {
+            authorizedGet<SaksnummerParameter, FastlegeResponse>(
+                AuthorizationParamPathConfig(
+                    relevanteIdenterResolver = relevanteIdenterForSakResolver(repositoryRegistry, dataSource),
+                    operasjon = Operasjon.SAKSBEHANDLE,
+                    sakPathParam = SakPathParam("saksnummer"),
+                    påkrevdRolle = Definisjon.BESTILL_LEGEERKLÆRING.løsesAv,
+                )
+            ) { saksnummer ->
+                val fastlegeResponse = dataSource.transaction { connection ->
+                    FastlegeService(repositoryRegistry.provider(connection), gatewayProvider)
+                        .utledFastlege(Saksnummer(saksnummer.saksnummer), token())
+                }
+                respond(fastlegeResponse)
+            }
+        }
+
         route("/bestill") {
             authorizedPost<Unit, String, BestillLegeerklæringDto>(
                 AuthorizationBodyPathConfig(
@@ -69,8 +92,10 @@ fun NormalOpenAPIRoute.dokumentinnhentingApi(
                         val behandling = repositoryProvider.provide<BehandlingRepository>()
                             .hent(BehandlingReferanse(req.behandlingsReferanse))
 
-                        AvklaringsbehovOrkestrator(repositoryProvider, gatewayProvider)
-                            .settPåVentMensVentePåMedisinskeOpplysninger(behandling.id, bruker())
+                        if (req.dokumentasjonType != DokumentasjonType.MELDING_FRA_NAV) {
+                            AvklaringsbehovOrkestrator(repositoryProvider, gatewayProvider)
+                                .settPåVentMensVentePåMedisinskeOpplysninger(behandling.id, bruker())
+                        }
 
                         val personIdent = sak.person.aktivIdent()
                         val personinfo = personinfoGateway.hentPersoninfoForIdent(personIdent, token())

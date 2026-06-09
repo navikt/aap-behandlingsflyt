@@ -7,6 +7,7 @@ import com.papsign.ktor.openapigen.route.route
 import io.ktor.http.HttpStatusCode
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.AndreUtbetalingerDto
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
@@ -26,9 +27,10 @@ fun NormalOpenAPIRoute.opprettDummySakApi(
                 "Kan ikke opprette dummy-sak i produksjonsmiljøet"
             }
             try {
-                dataSource.transaction(readOnly = false) { connection ->
-                    val sakService = TestSakService(repositoryRegistry.provider(connection), gatewayProvider)
-                    sakService.opprettTestSak(
+                dataSource.transaction { connection ->
+                    val provider = repositoryRegistry.provider(connection)
+                    validerIngenEksisterendeSaker(PersonOgSakService(gatewayProvider, provider), Ident(req.ident))
+                    TestSakService(provider, gatewayProvider).opprettTestSak(
                         ident = Ident(req.ident),
                         erStudent = req.erStudent,
                         harYrkesskade = req.harYrkesskade,
@@ -42,6 +44,15 @@ fun NormalOpenAPIRoute.opprettDummySakApi(
             }
         }
     }
+}
+
+private fun validerIngenEksisterendeSaker(personOgSakService: PersonOgSakService, ident: Ident) {
+    val eksisterendeSak = personOgSakService.finnSakerFor(ident).firstOrNull() ?: return
+    throw OpprettTestSakException(
+        "Det finnes allerede en eller flere saker for bruker. " +
+                "Fant sak med saksnummer: ${eksisterendeSak.saksnummer}. " +
+                "Vennligst bruk en annen testbruker eller gjenbruk den åpne saken."
+    )
 }
 
 data class OpprettDummySakDto(

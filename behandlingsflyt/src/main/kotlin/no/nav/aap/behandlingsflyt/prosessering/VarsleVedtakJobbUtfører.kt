@@ -1,8 +1,6 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Tilkjent
-import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
-import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.tilTidslinje
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakRepository
 import no.nav.aap.behandlingsflyt.datadeling.sam.SamGateway
 import no.nav.aap.behandlingsflyt.datadeling.sam.SamordneVedtakRequest
@@ -46,11 +44,6 @@ class VarsleVedtakJobbUtfører(
             requireNotNull(vedtakRepository.hentId(behandling.id)) { "Fant ikke vedtak for behandlingId $behandlingId." }
         val forrigeBehandlingId = behandling.forrigeBehandlingId
 
-        val tilkjentRepository: TilkjentYtelseRepository = repositoryProvider.provide()
-        val forrigeTilkjentYtelse =
-            forrigeBehandlingId?.let { tilkjentRepository.hentHvisEksisterer(it) }?.tilTidslinje()
-        val nåværendeTilkjentYtelse = tilkjentRepository.hentHvisEksisterer(behandling.id)?.tilTidslinje()
-
         val underveisRepo: UnderveisRepository = repositoryProvider.provide()
         val forrigeUnderveisGrunnlag = forrigeBehandlingId?.let { underveisRepo.hentHvisEksisterer(it) }
         val nåværendeUnderveisGrunnlag = underveisRepo.hentHvisEksisterer(behandling.id)
@@ -78,28 +71,28 @@ class VarsleVedtakJobbUtfører(
         )
 
 
-        //val relevantPeriode = Periode(virkFom, sak.rettighetsperiode.tom.coerceAtMost(LocalDate.now().minusWeeks(2)))
         val førstegangsbehandling = behandling.typeBehandling() == TypeBehandling.Førstegangsbehandling
         val endringIRettighetsTypeTidslinje = endringIRettighetstypeTidslinje(
             forrigeUnderveisGrunnlag,
             nåværendeUnderveisGrunnlag!!
         )
 
-        val tpYtelser = repositoryProvider.provide<TjenestePensjonRepository>().hentHvisEksisterer(behandling.id)?.flatMap { it.ytelser }
+        val tpYtelser =
+            repositoryProvider.provide<TjenestePensjonRepository>().hentHvisEksisterer(behandling.id).orEmpty()
+                .flatMap { it.ytelser }
 
         val relevantEndring =
             listOf(
                 førstegangsbehandling,
-                //endringITilkjentYtelseTidslinje(forrigeTilkjentYtelse?.begrensetTil(relevantPeriode), nåværendeTilkjentYtelse?.begrensetTil(relevantPeriode)),
                 endringIRettighetsTypeTidslinje
             )
 
 
-        if (relevantEndring.contains(true) && tpYtelser?.isNotEmpty()?:false) {
+        if (relevantEndring.contains(true) && tpYtelser.isNotEmpty()) {
             log.info("Varsler SAM for behandling med referanse ${behandling.referanse} og saksnummer ${sak.saksnummer}. Årsak: førstegangsbehandling=${førstegangsbehandling}, endringIRettighetstype=${endringIRettighetsTypeTidslinje}")
             samGateway.varsleVedtak(request)
-        }else{
-            log.info("Varsler ikke SAM for behandling med referanse ${behandling.referanse} og saksnummer ${sak.saksnummer}. Årsak: førstegangsbehandling=${førstegangsbehandling}, endringIRettighetstype=${endringIRettighetsTypeTidslinje}, tpYtelser=${tpYtelser?.size ?: 0}")
+        } else {
+            log.info("Varsler ikke SAM for behandling med referanse ${behandling.referanse} og saksnummer ${sak.saksnummer}. Årsak: førstegangsbehandling=${førstegangsbehandling}, endringIRettighetstype=${endringIRettighetsTypeTidslinje}, tpYtelser=${tpYtelser.size}")
         }
 
         val flytJobbRepository: FlytJobbRepository = repositoryProvider.provide()
@@ -121,21 +114,22 @@ class VarsleVedtakJobbUtfører(
             if (forrigeTilkjentYtelse == null && nåværendeTilkjentYtelse == null) return false
             else if (forrigeTilkjentYtelse == null) return true
 
-            requireNotNull(nåværendeTilkjentYtelse){"Hvis forrigeTilkjentYtelse ikke er null, så kan ikke nåværendeTilkjentYtelse være det."}
+            requireNotNull(nåværendeTilkjentYtelse) { "Hvis forrigeTilkjentYtelse ikke er null, så kan ikke nåværendeTilkjentYtelse være det." }
 
-            return forrigeTilkjentYtelse.komprimer().outerJoin(nåværendeTilkjentYtelse.komprimer()) { left: Tilkjent?, right: Tilkjent? ->
-                when {
-                    left == null && right == null -> false
-                    left == null -> right?.gradering != Prosent.`0_PROSENT`
-                    right == null -> left.gradering != Prosent.`0_PROSENT`
-                    else -> {
-                        val leftErNull = left.gradering == Prosent.`0_PROSENT`
-                        val rightErNull = right.gradering == Prosent.`0_PROSENT`
-                        val positivEndringDagsats = (left.dagsats.verdi ) < (right.dagsats.verdi)
-                        (leftErNull != rightErNull) || positivEndringDagsats
+            return forrigeTilkjentYtelse.komprimer()
+                .outerJoin(nåværendeTilkjentYtelse.komprimer()) { left: Tilkjent?, right: Tilkjent? ->
+                    when {
+                        left == null && right == null -> false
+                        left == null -> right?.gradering != Prosent.`0_PROSENT`
+                        right == null -> left.gradering != Prosent.`0_PROSENT`
+                        else -> {
+                            val leftErNull = left.gradering == Prosent.`0_PROSENT`
+                            val rightErNull = right.gradering == Prosent.`0_PROSENT`
+                            val positivEndringDagsats = (left.dagsats.verdi) < (right.dagsats.verdi)
+                            (leftErNull != rightErNull) || positivEndringDagsats
+                        }
                     }
-                }
-            }.filter { it.verdi }.isNotEmpty()
+                }.filter { it.verdi }.isNotEmpty()
 
         }
 
@@ -143,8 +137,6 @@ class VarsleVedtakJobbUtfører(
         override val navn = "VarsleVedtakSam"
         override val type = "flyt.Varsler"
     }
-
-
 
     fun underveisTilRettighetsTypeTidslinje(
         underveis: UnderveisGrunnlag?

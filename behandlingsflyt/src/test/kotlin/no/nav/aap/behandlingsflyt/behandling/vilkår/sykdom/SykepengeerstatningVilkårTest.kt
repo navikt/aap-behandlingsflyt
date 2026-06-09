@@ -48,7 +48,6 @@ class SykepengeerstatningVilkårTest {
                         vurderinger = listOf(
                             SykepengerVurdering(
                                 begrunnelse = "",
-                                dokumenterBruktIVurdering = emptyList(),
                                 harRettPå = true,
                                 grunn = SykepengerGrunn.SYKEPENGER_IGJEN_ARBEIDSUFOR,
                                 vurdertAv = "abc123",
@@ -98,7 +97,6 @@ class SykepengeerstatningVilkårTest {
                     vurderinger = listOf(
                         SykepengerVurdering(
                             begrunnelse = "",
-                            dokumenterBruktIVurdering = emptyList(),
                             harRettPå = true,
                             grunn = SykepengerGrunn.SYKEPENGER_IGJEN_ARBEIDSUFOR,
                             vurdertAv = "abc123",
@@ -108,7 +106,6 @@ class SykepengeerstatningVilkårTest {
                         ),
                         SykepengerVurdering(
                             begrunnelse = "",
-                            dokumenterBruktIVurdering = emptyList(),
                             harRettPå = true,
                             grunn = SykepengerGrunn.SYKEPENGER_IGJEN_ARBEIDSUFOR,
                             vurdertAv = "abc123",
@@ -152,7 +149,6 @@ class SykepengeerstatningVilkårTest {
         behandlingId: BehandlingId = BehandlingId(1L)
     ) = Sykdomsvurdering(
         begrunnelse = "",
-        dokumenterBruktIVurdering = emptyList(),
         harSkadeSykdomEllerLyte = harSkadeSykdomEllerLyte,
         erSkadeSykdomEllerLyteVesentligdel = erSkadeSykdomEllerLyteVesentligdel,
         erNedsettelseIArbeidsevneMerEnnHalvparten = erNedsettelseIArbeidsevneMerEnnHalvparten,

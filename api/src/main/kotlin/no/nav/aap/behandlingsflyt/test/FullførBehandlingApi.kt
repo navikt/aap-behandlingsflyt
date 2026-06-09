@@ -16,12 +16,14 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
+import no.nav.aap.behandlingsflyt.utils.withMdc
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.miljo.Miljø
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import javax.sql.DataSource
+import java.time.LocalDate
 import kotlin.concurrent.thread
 
 fun NormalOpenAPIRoute.fullførBehandlingApi(
@@ -44,9 +46,10 @@ fun NormalOpenAPIRoute.fullførBehandlingApi(
                             harYrkesskade = req.harYrkesskade,
                             harMedlemskap = req.harMedlemskap,
                             andreUtbetalinger = req.andreUtbetalinger?.tilKontrakt(),
+                            søknadsdato = req.søknadsdato,
                         )
                 }
-                thread(isDaemon = true) { service.fullforBehandling(sak) }
+                thread(isDaemon = true, block = withMdc { service.fullforBehandling(sak) })
                 respond(OpprettOgFullforBehandlingRespons(sak.saksnummer.toString()))
             } catch (e: OpprettTestSakException) {
                 throw UgyldigForespørselException(message = e.message ?: "Ukjent feil", cause = e)
@@ -108,7 +111,9 @@ data class OpprettOgFullforBehandlingRequest(
     @property:Description("Om personen svarer at han/hun har bodd/jobbet i Norge i siste 5 år.")
     val harMedlemskap: Boolean,
     @property:Description("Om søker svarte at hen mottar andre utbetalinger i søknaden.")
-    val andreUtbetalinger: AndreUtbetalingerApiDto?
+    val andreUtbetalinger: AndreUtbetalingerApiDto?,
+    @property:Description("Søknadsdato. Brukes som rettighetsperiode.fom og mottattTidspunkt. Defaulter til dagens dato.")
+    val søknadsdato: LocalDate? = null,
 )
 
 data class BehandlingStatusRequest(val ident: String)

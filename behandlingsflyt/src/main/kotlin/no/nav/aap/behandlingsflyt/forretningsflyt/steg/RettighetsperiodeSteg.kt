@@ -52,6 +52,7 @@ class RettighetsperiodeSteg(
                     VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
                     VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9,
                     VurderingType.G_REGULERING,
+                    VurderingType.OVERGANG_UFORE_STANS,
                     VurderingType.IKKE_RELEVANT ->
                         false
                 }
@@ -84,7 +85,8 @@ class RettighetsperiodeSteg(
             VurderingType.MELDEKORT,
             VurderingType.AUTOMATISK_BREV,
             VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
-            VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9 -> {
+            VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9,
+            VurderingType.OVERGANG_UFORE_STANS -> {
                 // Ikke relevant
             }
         }

@@ -119,7 +119,6 @@ class OvergangArbeidStegTest {
             avklaringsbehovService = AvklaringsbehovService(inMemoryRepositoryProvider),
             uføreRepository = mockk<UføreRepository> {
                 every { hentHvisEksisterer(any()) } returns UføreGrunnlag(
-                    behandlingId = behandling.id,
                     vurderinger = setOf(Uføre(virkningstidspunkt = 1 januar 2010, uføregrad = Prosent(50)))
                 )
             }
@@ -201,7 +200,6 @@ class OvergangArbeidStegTest {
 
     private fun sykdom(erSyk: Boolean, vurderingenGjelderFra: LocalDate) = Sykdomsvurdering(
         begrunnelse = "",
-        dokumenterBruktIVurdering = emptyList(),
         harSkadeSykdomEllerLyte = erSyk,
         erSkadeSykdomEllerLyteVesentligdel = erSyk,
         erNedsettelseIArbeidsevneMerEnnHalvparten = erSyk,
@@ -218,7 +216,6 @@ class OvergangArbeidStegTest {
 
     private fun sykdomMedYrkesskadefordel(vurderingenGjelderFra: LocalDate) = Sykdomsvurdering(
         begrunnelse = "",
-        dokumenterBruktIVurdering = emptyList(),
         harSkadeSykdomEllerLyte = true,
         erSkadeSykdomEllerLyteVesentligdel = true,
         erNedsettelseIArbeidsevneMerEnnHalvparten = false,

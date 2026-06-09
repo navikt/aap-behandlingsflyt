@@ -200,7 +200,8 @@ object Revurdering : BehandlingType {
             .medSteg(
                 steg = OvergangUføreSteg,
                 informasjonskrav = listOf(
-                    UføreSøknadInformasjonskrav
+                    UføreSøknadInformasjonskrav,
+                    UføreInformasjonskrav
                 ),
                 vurderingsbehovRelevanteForSteg = listOf(
                     Vurderingsbehov.MOTTATT_SØKNAD,
@@ -209,6 +210,7 @@ object Revurdering : BehandlingType {
                     Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND,
                     Vurderingsbehov.HELHETLIG_VURDERING,
                     Vurderingsbehov.OVERGANG_UFORE,
+                    Vurderingsbehov.OVERGANG_UFORE_AUTOMATISK_STANS,
                 )
             )
             .medSteg(
@@ -336,7 +338,7 @@ object Revurdering : BehandlingType {
             .medSteg(
                 steg = InstitusjonsoppholdSteg,
                 informasjonskrav = listOf(InstitusjonsoppholdInformasjonskrav),
-                vurderingsbehovRelevanteForSteg = listOf(Vurderingsbehov.INSTITUSJONSOPPHOLD)
+                vurderingsbehovRelevanteForSteg = listOf(Vurderingsbehov.INSTITUSJONSOPPHOLD, Vurderingsbehov.MOTTATT_SØKNAD)
             )
             .medSteg(
                 steg = SamordningSteg,

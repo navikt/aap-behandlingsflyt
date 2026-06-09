@@ -64,8 +64,7 @@ class BehandlingService(
                 val forrigeBehandlingId = requireNotNull(behandling.forrigeBehandlingId) {
                     "Revurdering skal alltid ha forrigeBehandling"
                 }
-                val vurderingsbehov = behandling.vurderingsbehov().map { it.type }
-                if (!underveisService.harRett(forrigeBehandlingId) && vurderingsbehov.contains(Vurderingsbehov.MOTTATT_SØKNAD)) {
+                if (!underveisService.harRett(forrigeBehandlingId)) {
                     TypeBehandling.Førstegangsbehandling
                 } else {
                     TypeBehandling.Revurdering
@@ -113,7 +112,8 @@ class BehandlingService(
         Vurderingsbehov.EFFEKTUER_AKTIVITETSPLIKT,
         Vurderingsbehov.EFFEKTUER_AKTIVITETSPLIKT_11_9,
         Vurderingsbehov.BARNETILLEGG_SATS_REGULERING,
-        Vurderingsbehov.G_REGULERING
+        Vurderingsbehov.G_REGULERING,
+        Vurderingsbehov.OVERGANG_UFORE_AUTOMATISK_STANS
     )
 
     fun finnEllerOpprettBehandling(sakId: SakId, vurderingsbehovOgÅrsak: VurderingsbehovOgÅrsak): OpprettetBehandling {

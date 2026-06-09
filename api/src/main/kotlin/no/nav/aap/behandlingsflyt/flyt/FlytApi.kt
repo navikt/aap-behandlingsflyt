@@ -8,13 +8,13 @@ import io.ktor.http.*
 import kotlinx.coroutines.runBlocking
 import no.nav.aap.behandlingsflyt.behandling.Resultat
 import no.nav.aap.behandlingsflyt.behandling.ResultatUtleder
-import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.avbrytaktivitetspliktbehandling.AvbrytAktivitetspliktbehandlingService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovOrkestrator
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.BehandlingTilstandValidator
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.FrivilligeAvklaringsbehov
+import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.avbrytaktivitetspliktbehandling.AvbrytAktivitetspliktbehandlingService
 import no.nav.aap.behandlingsflyt.flyt.flate.visning.DynamiskStegGruppeVisningService
 import no.nav.aap.behandlingsflyt.flyt.flate.visning.ProsesseringStatus
 import no.nav.aap.behandlingsflyt.flyt.flate.visning.Visning
@@ -30,7 +30,6 @@ import no.nav.aap.behandlingsflyt.mdc.LogKontekst
 import no.nav.aap.behandlingsflyt.mdc.LoggingKontekst
 import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingJobbUtfører
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
@@ -88,12 +87,9 @@ fun NormalOpenAPIRoute.flytApi(
                     val avklaringsbehovRepository =
                         repositoryProvider.provide<AvklaringsbehovRepository>()
 
-                    var behandling = behandling(behandlingRepository, req)
+                    var behandling = BehandlingReferanseService(behandlingRepository).behandling(req)
                     val sak = sakRepository.hent(behandling.sakId)
-                    val avklaringsbehovene = avklaringsbehov(
-                        avklaringsbehovRepository,
-                        behandling.id
-                    )
+                    val avklaringsbehovene = lazy { avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id) }
                     val flytJobbRepository = repositoryProvider.provide<FlytJobbRepository>()
                     val gruppeVisningService = DynamiskStegGruppeVisningService(repositoryProvider)
                     val avbrytAktivitetspliktbehandlingService =
@@ -102,42 +98,23 @@ fun NormalOpenAPIRoute.flytApi(
                     val jobber = flytJobbRepository.hentJobberForBehandling(behandling.id.toLong())
                         .filter { it.type() == ProsesserBehandlingJobbUtfører.type }
 
-                    val prosessering =
-                        Prosessering(
-                            utledStatus(jobber, avklaringsbehovene),
-                            jobber.map {
-                                JobbInfoDto(
-                                    id = it.jobbId(),
-                                    type = it.type(),
-                                    status = it.status(),
-                                    planlagtKjøretidspunkt = it.nesteKjøring(),
-                                    metadata = emptyMap(),
-                                    antallFeilendeForsøk = it.antallRetriesForsøkt(),
-                                    feilmelding = hentFeilmeldingHvisBehov(
-                                        it.status(),
-                                        it.jobbId(),
-                                        flytJobbRepository
-                                    ),
-                                    beskrivelse = it.beskrivelse(),
-                                    navn = it.navn(),
-                                    opprettetTidspunkt = it.opprettetTidspunkt(),
-                                )
-                            })
+                    val prosessering = lagProsessering(jobber, flytJobbRepository)
+
                     // Henter denne ut etter status er utledet for å være sikker på at dataene er i rett tilstand
-                    behandling = behandling(behandlingRepository, req)
+                    behandling = BehandlingReferanseService(behandlingRepository).behandling(req)
                     val flyt = behandling.flyt()
-                    val stegGrupper: Map<StegGruppe, List<StegType>> =
+                    val stegGrupper =
                         flyt.stegene().groupBy { steg -> steg.gruppe }
                     val aktivtSteg = behandling.aktivtSteg()
                     val aktivtStegDefinisjon = Definisjon.fraStegType(aktivtSteg)
                     var erFullført = true
 
                     val alleAvklaringsbehovInkludertFrivillige = FrivilligeAvklaringsbehov(
-                        avklaringsbehovene,
+                        avklaringsbehovene.value,
                         flyt, aktivtSteg
                     )
                     val vurdertStegPair =
-                        utledVurdertGruppe(prosessering, aktivtSteg, flyt, avklaringsbehovene)
+                        utledVurdertGruppe(prosessering, aktivtSteg, flyt, avklaringsbehovene.value)
                     val alleAvklaringsbehov = alleAvklaringsbehovInkludertFrivillige.alle()
                     val resultatKode = when {
                         ((behandling.typeBehandling() == TypeBehandling.Revurdering) && (resultatUtleder.utledResultatRevurderingsBehandling(
@@ -172,9 +149,7 @@ fun NormalOpenAPIRoute.flytApi(
                                         stegType = stegType,
                                         avklaringsbehov = alleAvklaringsbehov
                                             .filter { avklaringsbehov ->
-                                                avklaringsbehov.skalLøsesISteg(
-                                                    stegType
-                                                )
+                                                avklaringsbehov.skalLøsesISteg(stegType)
                                             }
                                             .map { behov ->
                                                 AvklaringsbehovDTO(
@@ -211,6 +186,31 @@ fun NormalOpenAPIRoute.flytApi(
             }
         }
 
+        route("/{referanse}/flyt/prosessering") {
+            authorizedGet<BehandlingReferanse, Prosessering>(
+                AuthorizationParamPathConfig(
+                    relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
+                    behandlingPathParam = BehandlingPathParam("referanse")
+                )
+            ) { req ->
+                val prosessering = dataSource.transaction(readOnly = true) { connection ->
+                    val repositoryProvider = repositoryRegistry.provider(connection)
+                    val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+
+                    val behandlingId = BehandlingReferanseService(behandlingRepository).behandling(req).id
+
+                    val flytJobbRepository = repositoryProvider.provide<FlytJobbRepository>()
+
+                    val jobber = flytJobbRepository.hentJobberForBehandling(behandlingId.toLong())
+                        .filter { it.type() == ProsesserBehandlingJobbUtfører.type }
+
+                    lagProsessering(jobber, flytJobbRepository)
+
+                }
+                respond(prosessering)
+            }
+        }
+
         route("/{referanse}/sett-på-vent") {
             authorizedPost<BehandlingReferanse, BehandlingResultatDto, SettPåVentRequest>(
                 AuthorizationParamPathConfig(
@@ -224,7 +224,7 @@ fun NormalOpenAPIRoute.flytApi(
                     val repositoryProvider = repositoryRegistry.provider(connection)
                     val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
                     val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
-                    val behandling = behandling(behandlingRepository, request)
+                    val behandling = BehandlingReferanseService(behandlingRepository).behandling(request)
                     val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
                     val åpentAvklaringsbehov = avklaringsbehovene.åpne().filterNot { it.erVentepunkt() }
                         .sortedWith(behandling.flyt().avklaringsbehovComparator).first().definisjon
@@ -294,9 +294,8 @@ fun NormalOpenAPIRoute.flytApi(
                     val avklaringsbehovRepository =
                         repositoryProvider.provide<AvklaringsbehovRepository>()
 
-                    val behandling = behandling(behandlingRepository, request)
-                    val avklaringsbehovene =
-                        avklaringsbehov(avklaringsbehovRepository, behandling.id)
+                    val behandling = BehandlingReferanseService(behandlingRepository).behandling(request)
+                    val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
 
                     val ventepunkter = avklaringsbehovene.hentÅpneVentebehov()
                     if (avklaringsbehovene.erSattPåVent()) {
@@ -395,12 +394,8 @@ private fun hentFeilmeldingHvisBehov(
     return null
 }
 
-private fun utledStatus(jobber: List<JobbInput>, avklaringsbehovene: Avklaringsbehovene): ProsesseringStatus {
+private fun utledStatus(jobber: List<JobbInput>): ProsesseringStatus {
     if (jobber.isEmpty()) {
-        if (avklaringsbehovene.harÅpentBrevVentebehov()) {
-            log.info("Har åpent brevventebehov i behandling")
-            return ProsesseringStatus.JOBBER
-        }
         return ProsesseringStatus.FERDIG
     }
     if (jobber.any { it.status() == JobbStatus.FEILET }) {
@@ -410,6 +405,30 @@ private fun utledStatus(jobber: List<JobbInput>, avklaringsbehovene: Avklaringsb
     log.info("Har følgende jobber som ikke er utført: ${jobber.joinToString(", ") { it.navn() }}")
     return ProsesseringStatus.JOBBER
 }
+
+private fun lagProsessering(
+    jobber: List<JobbInput>,
+    flytJobbRepository: FlytJobbRepository
+): Prosessering = Prosessering(
+    utledStatus(jobber),
+    jobber.map {
+        JobbInfoDto(
+            id = it.jobbId(),
+            type = it.type(),
+            status = it.status(),
+            planlagtKjøretidspunkt = it.nesteKjøring(),
+            metadata = emptyMap(),
+            antallFeilendeForsøk = it.antallRetriesForsøkt(),
+            feilmelding = hentFeilmeldingHvisBehov(
+                it.status(),
+                it.jobbId(),
+                flytJobbRepository
+            ),
+            beskrivelse = it.beskrivelse(),
+            navn = it.navn(),
+            opprettetTidspunkt = it.opprettetTidspunkt(),
+        )
+    })
 
 private fun utledVisning(
     aktivtSteg: StegType,
@@ -510,17 +529,6 @@ private fun utledVisningAvKvalitetsikrerKort(
 
 private fun harÅpentKvalitetssikringsAvklaringsbehov(avklaringsbehovene: FrivilligeAvklaringsbehov): Boolean =
     avklaringsbehovene.hentBehovForDefinisjon(Definisjon.KVALITETSSIKRING)?.erÅpent() == true
-
-private fun behandling(behandlingRepository: BehandlingRepository, req: BehandlingReferanse): Behandling {
-    return BehandlingReferanseService(behandlingRepository).behandling(req)
-}
-
-private fun avklaringsbehov(
-    avklaringsbehovRepository: AvklaringsbehovRepository,
-    behandlingId: BehandlingId
-): Avklaringsbehovene {
-    return avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId)
-}
 
 private fun erEtterBeslutterstegetHvisEksisterer(flyt: BehandlingFlyt, aktivtSteg: StegType): Boolean {
     return flyt.stegene().contains(StegType.FATTE_VEDTAK) && !flyt.erStegFør(

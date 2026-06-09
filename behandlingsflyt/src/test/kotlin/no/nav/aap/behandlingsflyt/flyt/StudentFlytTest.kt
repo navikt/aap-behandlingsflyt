@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.flyt
 
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarStudentEnkelLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarStudentLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.ForeslåVedtakLøsning
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companion.plussEtÅrMedHverdager
@@ -11,7 +10,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Ut
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.PeriodisertStudentDto
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentVurderingDTO
 import no.nav.aap.behandlingsflyt.help.assertTidslinje
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov
@@ -51,15 +49,18 @@ class StudentFlytTest(val unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
 
         behandling = behandling
             .løsAvklaringsBehov(
-                AvklarStudentEnkelLøsning(
-                    studentvurdering = StudentVurderingDTO(
-                        begrunnelse = "...",
-                        harAvbruttStudie = true,
-                        godkjentStudieAvLånekassen = true,
-                        avbruttPgaSykdomEllerSkade = true,
-                        harBehovForBehandling = true,
-                        avbruttStudieDato = avbruttStudieDato,
-                        avbruddMerEnn6Måneder = true
+                AvklarStudentLøsning(
+                    løsningerForPerioder = listOf(
+                        PeriodisertStudentDto(
+                            fom = fom,
+                            begrunnelse = "...",
+                            harAvbruttStudie = true,
+                            godkjentStudieAvLånekassen = true,
+                            avbruttPgaSykdomEllerSkade = true,
+                            harBehovForBehandling = true,
+                            avbruttStudieDato = avbruttStudieDato,
+                            avbruddMerEnn6Måneder = true
+                        )
                     ),
                 )
             )
@@ -114,15 +115,18 @@ class StudentFlytTest(val unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             relevanteVurderingsbehov,
         )
             .løsAvklaringsBehov(
-                AvklarStudentEnkelLøsning(
-                    studentvurdering = StudentVurderingDTO(
-                        begrunnelse = "...",
-                        harAvbruttStudie = false,
-                        godkjentStudieAvLånekassen = null,
-                        avbruttPgaSykdomEllerSkade = null,
-                        harBehovForBehandling = null,
-                        avbruttStudieDato = null,
-                        avbruddMerEnn6Måneder = null,
+                AvklarStudentLøsning(
+                    løsningerForPerioder = listOf(
+                        PeriodisertStudentDto(
+                            fom = fom,
+                            begrunnelse = "...",
+                            harAvbruttStudie = false,
+                            godkjentStudieAvLånekassen = null,
+                            avbruttPgaSykdomEllerSkade = null,
+                            harBehovForBehandling = null,
+                            avbruttStudieDato = null,
+                            avbruddMerEnn6Måneder = null,
+                        )
                     )
                 )
             )
@@ -153,7 +157,7 @@ class StudentFlytTest(val unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             .løsSykdomsvurderingBrev()
             .bekreftVurderinger()
             // Kjent bug at oppholdskrav løftes på nytt ved diff i nårVurderingErRelevant, selv om vurderingen er gjort for hele perioden
-            .løsOppholdskrav(fom) 
+            .løsOppholdskrav(fom)
             .løsSykestipend()
             .medKontekst {
                 val vilkår = repositoryProvider.provide<VilkårsresultatRepository>().hent(this.behandling.id)
@@ -195,15 +199,18 @@ class StudentFlytTest(val unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
 
         behandling
             .løsAvklaringsBehov(
-                AvklarStudentEnkelLøsning(
-                    studentvurdering = StudentVurderingDTO(
-                        begrunnelse = "...",
-                        harAvbruttStudie = true,
-                        godkjentStudieAvLånekassen = true,
-                        avbruttPgaSykdomEllerSkade = true,
-                        harBehovForBehandling = true,
-                        avbruttStudieDato = avbruttStudieDato,
-                        avbruddMerEnn6Måneder = true
+                AvklarStudentLøsning(
+                    løsningerForPerioder = listOf(
+                        PeriodisertStudentDto(
+                            fom = fom,
+                            begrunnelse = "...",
+                            harAvbruttStudie = true,
+                            godkjentStudieAvLånekassen = true,
+                            avbruttPgaSykdomEllerSkade = true,
+                            harBehovForBehandling = true,
+                            avbruttStudieDato = avbruttStudieDato,
+                            avbruddMerEnn6Måneder = true
+                        )
                     ),
                 )
             )

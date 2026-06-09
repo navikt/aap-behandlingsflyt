@@ -13,11 +13,11 @@ public enum class StegType(
     ),
     KRAV(
         gruppe = StegGruppe.KRAV,
-        status = Status.OPPRETTET
+        status = Status.UTREDES
     ),
     SEND_FORVALTNINGSMELDING(
         gruppe = StegGruppe.SEND_FORVALTNINGSMELDING,
-        status = Status.OPPRETTET
+        status = Status.UTREDES
     ),
     AVBRYT_REVURDERING(
         gruppe = StegGruppe.AVBRYT_REVURDERING,

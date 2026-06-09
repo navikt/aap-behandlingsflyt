@@ -299,6 +299,7 @@ class AvklaringsbehovService(
             VurderingType.EFFEKTUER_AKTIVITETSPLIKT -> Pair(false, emptySet())
             VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9 -> Pair(false, emptySet())
             VurderingType.G_REGULERING -> Pair(false, emptySet())
+            VurderingType.OVERGANG_UFORE_STANS -> Pair(false, emptySet())
             VurderingType.IKKE_RELEVANT -> Pair(false, emptySet())
         }
 

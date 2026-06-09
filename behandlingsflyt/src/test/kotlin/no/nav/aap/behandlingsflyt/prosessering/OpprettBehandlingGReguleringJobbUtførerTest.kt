@@ -22,8 +22,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.test.desember
 import no.nav.aap.behandlingsflyt.test.fixedClock
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.motor.JobbInput
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
@@ -39,27 +37,16 @@ class OpprettBehandlingGReguleringJobbUtførerTest {
     private val prosesserBehandlingService = mockk<ProsesserBehandlingService>()
     private val behandlingService = mockk<BehandlingService>()
     private val gReguleringService = mockk<GReguleringService>()
-    private val unleashGateway = mockk<UnleashGateway>()
 
     private fun opprettUtfører() =
         OpprettBehandlingGReguleringJobbUtfører(
             prosesserBehandlingService = prosesserBehandlingService,
             behandlingService = behandlingService,
             gReguleringService = gReguleringService,
-            unleashGateway = unleashGateway,
         )
-
-    private fun enableToggle() {
-        every { unleashGateway.isDisabled(BehandlingsflytFeature.GReguleringsJobb) } returns false
-    }
-
-    private fun disableToggle() {
-        every { unleashGateway.isDisabled(BehandlingsflytFeature.GReguleringsJobb) } returns true
-    }
 
     @Test
     fun `skal opprette behandling når grunnbeløpet er endret for gjeldende behandling`() {
-        enableToggle()
         every { behandlingService.finnSisteYtelsesbehandlingFor(sakId) } returns null
         every { behandlingService.finnBehandlingMedSisteFattedeVedtak(sakId) } returns behandlingMedVedtak()
         every { gReguleringService.erGrunnbeløpEndretForBehandling(behandlingId) } returns true
@@ -90,7 +77,6 @@ class OpprettBehandlingGReguleringJobbUtførerTest {
 
     @Test
     fun `skal ikke opprette behandling når grunnbeløpet ikke er endret for gjeldende behandling`() {
-        enableToggle()
         every { behandlingService.finnSisteYtelsesbehandlingFor(sakId) } returns null
         every { behandlingService.finnBehandlingMedSisteFattedeVedtak(sakId) } returns behandlingMedVedtak()
         every { gReguleringService.erGrunnbeløpEndretForBehandling(behandlingId) } returns false
@@ -103,7 +89,6 @@ class OpprettBehandlingGReguleringJobbUtførerTest {
 
     @Test
     fun `skal ikke opprette behandling når det ikke finnes gjeldende behandling`() {
-        enableToggle()
         every { behandlingService.finnSisteYtelsesbehandlingFor(sakId) } returns null
         every { behandlingService.finnBehandlingMedSisteFattedeVedtak(sakId) } returns null
 
@@ -114,19 +99,7 @@ class OpprettBehandlingGReguleringJobbUtførerTest {
     }
 
     @Test
-    fun `skal ikke opprette behandling når feature toggle er avskrudd`() {
-        disableToggle()
-
-        opprettUtfører().utfør(jobbInput)
-
-        verify(exactly = 0) { behandlingService.finnSisteYtelsesbehandlingFor(any()) }
-        verify(exactly = 0) { behandlingService.finnBehandlingMedSisteFattedeVedtak(any()) }
-        verify(exactly = 0) { prosesserBehandlingService.triggProsesserBehandling(any<BehandlingService.OpprettetBehandling>()) }
-    }
-
-    @Test
     fun `skal ikke opprette behandling når saken har en åpen førstegangsbehandling`() {
-        enableToggle()
         every { behandlingService.finnSisteYtelsesbehandlingFor(sakId) } returns behandling(
             status = Status.OPPRETTET,
             typeBehandling = TypeBehandling.Førstegangsbehandling,
@@ -141,7 +114,6 @@ class OpprettBehandlingGReguleringJobbUtførerTest {
 
     @Test
     fun `skal opprette behandling når saken har en åpen revurdering og grunnbeløpet er endret`() {
-        enableToggle()
         every { behandlingService.finnSisteYtelsesbehandlingFor(sakId) } returns behandling(
             status = Status.UTREDES,
             typeBehandling = TypeBehandling.Revurdering,

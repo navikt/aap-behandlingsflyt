@@ -9,8 +9,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅ
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.JobbInput
@@ -22,17 +20,11 @@ class OpprettBehandlingGReguleringJobbUtfører(
     private val prosesserBehandlingService: ProsesserBehandlingService,
     private val behandlingService: BehandlingService,
     private val gReguleringService: GReguleringService,
-    private val unleashGateway: UnleashGateway,
 ) : JobbUtfører {
 
     private val log = LoggerFactory.getLogger(javaClass)
 
     override fun utfør(input: JobbInput) {
-        if (unleashGateway.isDisabled(BehandlingsflytFeature.GReguleringsJobb)) {
-            log.info("Feature toggle GReguleringsJobb er avskrudd, hopper over G-regulering")
-            return
-        }
-
         val sakId = SakId(input.sakId())
 
         // Åpne førstegangsbehandlinger trenger ikke egen g-regulering. Disse oppdateres evnt med informasjonskrav.
@@ -77,7 +69,6 @@ class OpprettBehandlingGReguleringJobbUtfører(
                 prosesserBehandlingService = ProsesserBehandlingService(repositoryProvider, gatewayProvider),
                 behandlingService = BehandlingService(repositoryProvider, gatewayProvider),
                 gReguleringService = GReguleringService(repositoryProvider, gatewayProvider),
-                unleashGateway = gatewayProvider.provide(),
             )
         }
 
