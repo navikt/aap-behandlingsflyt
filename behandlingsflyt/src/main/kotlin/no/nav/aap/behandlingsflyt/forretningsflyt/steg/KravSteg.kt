@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
@@ -14,6 +15,7 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 
 class KravSteg(
     private val unleashGateway: UnleashGateway
+    private val kravRepository: KravRepository
 ) : BehandlingSteg {
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
@@ -40,7 +42,8 @@ class KravSteg(
             gatewayProvider: GatewayProvider
         ): BehandlingSteg {
             return KravSteg(
-                unleashGateway = gatewayProvider.provide()
+                unleashGateway = gatewayProvider.provide(),
+                kravRepository = repositoryProvider.provide()
             )
         }
 
