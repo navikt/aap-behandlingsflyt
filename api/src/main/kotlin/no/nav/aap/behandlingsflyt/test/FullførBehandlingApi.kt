@@ -23,6 +23,7 @@ import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.miljo.Miljø
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import javax.sql.DataSource
+import java.time.LocalDate
 import kotlin.concurrent.thread
 
 fun NormalOpenAPIRoute.fullførBehandlingApi(
@@ -45,6 +46,7 @@ fun NormalOpenAPIRoute.fullførBehandlingApi(
                             harYrkesskade = req.harYrkesskade,
                             harMedlemskap = req.harMedlemskap,
                             andreUtbetalinger = req.andreUtbetalinger?.tilKontrakt(),
+                            søknadsdato = req.søknadsdato,
                         )
                 }
                 thread(isDaemon = true, block = withMdc { service.fullforBehandling(sak) })
@@ -109,7 +111,9 @@ data class OpprettOgFullforBehandlingRequest(
     @property:Description("Om personen svarer at han/hun har bodd/jobbet i Norge i siste 5 år.")
     val harMedlemskap: Boolean,
     @property:Description("Om søker svarte at hen mottar andre utbetalinger i søknaden.")
-    val andreUtbetalinger: AndreUtbetalingerApiDto?
+    val andreUtbetalinger: AndreUtbetalingerApiDto?,
+    @property:Description("Søknadsdato. Brukes som rettighetsperiode.fom og mottattTidspunkt. Defaulter til dagens dato.")
+    val søknadsdato: LocalDate? = LocalDate.now(),
 )
 
 data class BehandlingStatusRequest(val ident: String)

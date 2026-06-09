@@ -46,7 +46,8 @@ class TestSakService(
         erStudent: Boolean,
         harYrkesskade: Boolean,
         harMedlemskap: Boolean,
-        andreUtbetalinger: AndreUtbetalingerDto?
+        andreUtbetalinger: AndreUtbetalingerDto?,
+        søknadsdato: LocalDate? = null,
     ): Sak {
         if (Miljø.erProd()) {
             error("Man kan ikke opprette testsaker i produksjon")
@@ -61,9 +62,10 @@ class TestSakService(
             sakRepository
         )
 
-        validerIngenEksisterendeSaker(personOgSakService, ident)
+        // Idempotent: returner eksisterende sak hvis én allerede finnes
+        personOgSakService.finnSakerFor(ident).firstOrNull()?.let { return it }
 
-        val sak = personOgSakService.finnEllerOpprett(ident, LocalDate.now())
+        val sak = personOgSakService.finnEllerOpprett(ident, søknadsdato ?: LocalDate.now())
 
         val melding = SøknadV0(
             student = SøknadStudentDto(erStudent = erStudent.toJaNei()),
@@ -86,7 +88,7 @@ class TestSakService(
                 brevkategori = InnsendingType.SØKNAD,
                 kanal = Kanal.DIGITAL,
                 melding = melding,
-                mottattTidspunkt = LocalDateTime.now(),
+                mottattTidspunkt = søknadsdato?.atStartOfDay() ?: LocalDateTime.now(),
             )
         )
 
@@ -105,17 +107,6 @@ class TestSakService(
         }
         if (identer.isEmpty()) {
             throw OpprettTestSakException("Fant ikke ident i PDL. Har man brukt en gyldig bruker fra Dolly?")
-        }
-    }
-
-    private fun validerIngenEksisterendeSaker(personOgSakService: PersonOgSakService, ident: Ident) {
-        val eksisterendeSaker = personOgSakService.finnSakerFor(ident)
-        if (eksisterendeSaker.isNotEmpty()) {
-            throw OpprettTestSakException(
-                "Det finnes allerede en eller flere saker for bruker ${ident.getMasked()}. " +
-                        "Fant sak med saksnummer: ${eksisterendeSaker.first().saksnummer}. " +
-                        "Vennligst bruk en annen testbruker eller gjenbruk den åpne saken."
-            )
         }
     }
 
