@@ -53,8 +53,17 @@ object InMemoryBarnRepository : BarnRepository {
         }
     }
 
-    override fun hentVurderteBarnHvisEksisterer(behandlingId: BehandlingId): VurderteBarn {
-        TODO("Not yet implemented")
+    override fun hentVurderteBarnHvisEksisterer(behandlingId: BehandlingId): VurderteBarn? {
+        synchronized(lock) {
+            return vurdertBarn[behandlingId]?.let {
+                VurderteBarn(
+                    id = 0,
+                    barn = it,
+                    vurdertAv = "ingen",
+                    vurdertTidspunkt = LocalDateTime.now()
+                )
+            }
+        }
     }
 
     override fun hent(behandlingId: BehandlingId): BarnGrunnlag {
