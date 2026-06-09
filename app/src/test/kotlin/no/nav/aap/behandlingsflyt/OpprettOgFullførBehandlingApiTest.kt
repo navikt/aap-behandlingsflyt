@@ -50,7 +50,7 @@ import kotlin.time.Duration.Companion.milliseconds
 
 @Fakes
 @Execution(ExecutionMode.SAME_THREAD)
-class OpprettOgFullforBehandlingApiTest {
+class OpprettOgFullførBehandlingApiTest {
 
     private val log = LoggerFactory.getLogger(javaClass)
 
@@ -141,6 +141,131 @@ class OpprettOgFullforBehandlingApiTest {
             erStudent = false,
             harMedlemskap = false,
         )
+    }
+
+    @Test
+    fun `kall med samme ident to ganger returnerer samme saksnummer - idempotent`() {
+        val ident = "10107099953"
+        FakePersoner.leggTil(
+            TestPerson(
+                identer = setOf(Ident(ident)),
+                fødselsdato = Fødselsdato(LocalDate.now().minusYears(25)),
+            ).medInntekter(defaultInntekt()),
+        )
+
+        val request = PostRequest(
+            body = OpprettOgFullforBehandlingRequest(
+                ident = ident,
+                erStudent = false,
+                harYrkesskade = false,
+                harMedlemskap = true,
+                andreUtbetalinger = null,
+            )
+        )
+        val url = URI.create("http://localhost:$port/api/test/opprettOgFullfoerBehandling")
+
+        val førstRespons: OpprettOgFullforBehandlingRespons? = ccClient.post(url, request)
+        requireNotNull(førstRespons) { "Ingen respons fra første kall" }
+
+        pollBehandlingStatus(ident)
+
+        val andreRespons: OpprettOgFullforBehandlingRespons? = ccClient.post(url, request)
+        requireNotNull(andreRespons) { "Ingen respons fra andre kall" }
+
+        assertThat(andreRespons.saksnummer).isEqualTo(førstRespons.saksnummer)
+
+        val dataSource = initDatasource(dbConfig)
+        dataSource.transaction { connection ->
+            val sakRepo = postgresRepositoryRegistry.provider(connection).provide<SakRepository>()
+            val sak = sakRepo.hent(Saksnummer(førstRespons.saksnummer))
+
+            val behandlingRepo = postgresRepositoryRegistry.provider(connection).provide<BehandlingRepository>()
+            val behandlinger = behandlingRepo.hentAlleFor(sak.id)
+            assertThat(behandlinger).hasSize(1)
+        }
+    }
+
+    @Test
+    fun `andre kall fortsetter behandling som henger midt i et steg`() {
+        val ident = "10107099954"
+        FakePersoner.leggTil(
+            TestPerson(
+                identer = setOf(Ident(ident)),
+                fødselsdato = Fødselsdato(LocalDate.now().minusYears(25)),
+            ).medInntekter(defaultInntekt()),
+        )
+
+        val request = PostRequest(
+            body = OpprettOgFullforBehandlingRequest(
+                ident = ident,
+                erStudent = false,
+                harYrkesskade = false,
+                harMedlemskap = true,
+                andreUtbetalinger = null,
+            )
+        )
+        val url = URI.create("http://localhost:$port/api/test/opprettOgFullfoerBehandling")
+
+        // Første kall: oppretter sak og starter bakgrunnstråd — klienten gir ikke opp og venter ikke
+        val førstRespons: OpprettOgFullforBehandlingRespons? = ccClient.post(url, request)
+        requireNotNull(førstRespons) { "Ingen respons fra første kall" }
+
+        // Andre kall umiddelbart: behandlingen er fortsatt underveis (bakgrunnstråden er ikke ferdig)
+        val andreRespons: OpprettOgFullforBehandlingRespons? = ccClient.post(url, request)
+        requireNotNull(andreRespons) { "Ingen respons fra andre kall" }
+
+        assertThat(andreRespons.saksnummer).isEqualTo(førstRespons.saksnummer)
+
+        // Behandlingen skal til slutt fullføres (enten av første eller andre tråd)
+        val behandlingStatus = pollBehandlingStatus(ident)
+        assertThat(behandlingStatus?.ferdig).isTrue()
+        assertThat(behandlingStatus?.behandlingStatus).isEqualTo(BehandlingStatusEnum.AVSLUTTET)
+
+        val dataSource = initDatasource(dbConfig)
+        dataSource.transaction { connection ->
+            val sakRepo = postgresRepositoryRegistry.provider(connection).provide<SakRepository>()
+            val sak = sakRepo.hent(Saksnummer(førstRespons.saksnummer))
+
+            val behandlingRepo = postgresRepositoryRegistry.provider(connection).provide<BehandlingRepository>()
+            val behandlinger = behandlingRepo.hentAlleFor(sak.id)
+            assertThat(behandlinger).hasSize(1)
+            assertThat(behandlinger.first().status()).isEqualTo(Status.AVSLUTTET)
+        }
+    }
+
+    @Test
+    fun `søknadsdato settes som rettighetsperiode fom`() {
+        val ident = "10107099957"
+        val søknadsdato = LocalDate.now().minusYears(2)
+        FakePersoner.leggTil(
+            TestPerson(
+                identer = setOf(Ident(ident)),
+                fødselsdato = Fødselsdato(LocalDate.now().minusYears(25)),
+            ).medInntekter(defaultInntekt()),
+        )
+
+        val respons: OpprettOgFullforBehandlingRespons? = ccClient.post(
+            URI.create("http://localhost:$port/api/test/opprettOgFullfoerBehandling"),
+            PostRequest(
+                body = OpprettOgFullforBehandlingRequest(
+                    ident = ident,
+                    erStudent = false,
+                    harYrkesskade = false,
+                    harMedlemskap = true,
+                    andreUtbetalinger = null,
+                    søknadsdato = søknadsdato,
+                )
+            )
+        )
+
+        requireNotNull(respons) { "Ingen respons fra opprettOgFullforBehandling" }
+
+        val dataSource = initDatasource(dbConfig)
+        dataSource.transaction { connection ->
+            val sakRepo = postgresRepositoryRegistry.provider(connection).provide<SakRepository>()
+            val sak = sakRepo.hent(Saksnummer(respons.saksnummer))
+            assertThat(sak.rettighetsperiode.fom).isEqualTo(søknadsdato)
+        }
     }
 
     private fun opprettOgVerifiserBehandling(

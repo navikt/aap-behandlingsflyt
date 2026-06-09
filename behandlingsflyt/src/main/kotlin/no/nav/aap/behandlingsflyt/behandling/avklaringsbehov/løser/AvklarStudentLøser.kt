@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarStudentEnkelLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarStudentLøsning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
@@ -11,7 +11,7 @@ import kotlin.collections.orEmpty
 class AvklarStudentLøser(
     private val studentRepository: StudentRepository,
     private val sakRepository: SakRepository
-) : AvklaringsbehovsLøser<AvklarStudentEnkelLøsning> {
+) : AvklaringsbehovsLøser<AvklarStudentLøsning> {
 
     constructor(repositoryProvider: RepositoryProvider) : this(
         studentRepository = repositoryProvider.provide(),
@@ -20,25 +20,17 @@ class AvklarStudentLøser(
 
     override fun løs(
         kontekst: AvklaringsbehovKontekst,
-        løsning: AvklarStudentEnkelLøsning
+        løsning: AvklarStudentLøsning
     ): LøsningsResultat {
         val sak = sakRepository.hent(kontekst.kontekst.sakId)
 
         val nyeVurderinger = (
-                løsning.løsningerForPerioder
-                    ?.map {
+                løsning.løsningerForPerioder.map {
                         it.tilStudentVurdering(
                             kontekst.bruker,
                             kontekst.behandlingId(),
                         )
                     }
-                    ?: listOfNotNull(
-                        løsning.studentvurdering?.tilStudentVurdering(
-                            kontekst.bruker,
-                            kontekst.behandlingId(),
-                            sak.rettighetsperiode.fom
-                        )
-                    )
                 ).toSet()
 
 
@@ -57,7 +49,7 @@ class AvklarStudentLøser(
         )
 
         return LøsningsResultat(
-            begrunnelse = løsning.studentvurdering?.begrunnelse ?: "Vurdert avklar student"
+            begrunnelse = nyeVurderinger.joinToString("\n") { it.begrunnelse }
         )
     }
 

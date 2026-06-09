@@ -23,6 +23,8 @@ enum class BehandlingsflytFeature : FeatureToggle {
     AlleEndringerKreverKvalitetssikring,
     RevurderingEtterAvslagSkalKvalitetssikres,
     MeldepliktForsteFraForsteInnvilgelse,
+    MeldekortEndretAvSaksbehandler,
+    AutomatiskStans1118,
     ;
 
     override fun key(): String = name

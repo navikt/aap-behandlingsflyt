@@ -79,8 +79,9 @@ class RettighetstypeSteg(
 
         when (kontekst.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING,
-            VurderingType.REVURDERING ->
-
+            VurderingType.REVURDERING,
+            VurderingType.OVERGANG_UFORE_STANS,
+                ->
                 lagreStansOgOpphør(
                     behandlingId,
                     kontekst.forrigeBehandlingId,

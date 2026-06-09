@@ -11,7 +11,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarPeri
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSamordningAndreStatligeYtelserLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSamordningGraderingLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSoningsforholdLøsning
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarStudentEnkelLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarStudentLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSykdomLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarYrkesskadeLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklaringsbehovLøsning
@@ -53,7 +53,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.Refus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.SamordningVurderingData
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.VurderingerForSamordning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.refusjonskrav.TjenestepensjonRefusjonskravVurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentVurderingDTO
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.PeriodisertStudentDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.SykdomsvurderingLøsningDto
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
@@ -83,19 +83,21 @@ class TestScenarioOrkestrator(
     private val datasource: DataSource,
     private val motor: ManuellMotorImpl,
 ) {
-    fun løsStudent(behandling: Behandling): Behandling {
+    fun løsStudent(behandling: Behandling, vurderingenGjelderFra: LocalDate): Behandling {
         return løsAvklaringsBehov(
             behandling,
-            AvklarStudentEnkelLøsning(
-                studentvurdering = StudentVurderingDTO(
-                    begrunnelse = "Er student ok",
-                    harAvbruttStudie = true,
-                    godkjentStudieAvLånekassen = true,
-                    avbruttPgaSykdomEllerSkade = true,
-                    harBehovForBehandling = true,
-                    avbruttStudieDato = LocalDate.now().minusMonths(1),
-                    avbruddMerEnn6Måneder = true,
-                )
+            AvklarStudentLøsning(
+                løsningerForPerioder = listOf(
+                    PeriodisertStudentDto(
+                        fom = vurderingenGjelderFra,
+                        begrunnelse = "Er student ok",
+                        harAvbruttStudie = true,
+                        godkjentStudieAvLånekassen = true,
+                        avbruttPgaSykdomEllerSkade = true,
+                        harBehovForBehandling = true,
+                        avbruttStudieDato = LocalDate.now().minusMonths(1),
+                        avbruddMerEnn6Måneder = true,
+                    ))
             )
         )
     }
