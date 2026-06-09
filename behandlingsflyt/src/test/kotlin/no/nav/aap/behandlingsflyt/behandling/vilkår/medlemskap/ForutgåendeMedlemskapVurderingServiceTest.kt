@@ -51,9 +51,7 @@ class ForutgåendeMedlemskapVurderingServiceTest {
     fun `stopp om akkumulert gap overstiger ti måneder med gap-toleranse`() {
         val rettighetsFom = LocalDate.now().withDayOfMonth(1)
         val rettighetsperiode = Periode(rettighetsFom, rettighetsFom.plusYears(1))
-        val service = ForutgåendeMedlemskapVurderingService(
-            FakeUnleashBaseWithDefaultDisabled(listOf(BehandlingsflytFeature.ForutgaaendeGap))
-        )
+        val service = ForutgåendeMedlemskapVurderingService()
         val grunnlag = lagGrunnlagMedAkkumulerteEnMånedsgap(rettighetsFom, antallGapMåneder = 11)
 
         val resultat = service.vurderTilhørighet(grunnlag, rettighetsperiode)
@@ -513,8 +511,10 @@ class ForutgåendeMedlemskapVurderingServiceTest {
                             listOf(
                                 Statsborgerskap(
                                     "NOR",
-                                    gyldigFraOgMed = if (norskStatsborgerskapUtgåttFørPerioden) LocalDate.now().minusYears(20) else LocalDate.now().minusYears(1),
-                                    gyldigTilOgMed = if (norskStatsborgerskapUtgåttFørPerioden) LocalDate.now().minusYears(9) else LocalDate.now()
+                                    gyldigFraOgMed = if (norskStatsborgerskapUtgåttFørPerioden) LocalDate.now()
+                                        .minusYears(20) else LocalDate.now().minusYears(1),
+                                    gyldigTilOgMed = if (norskStatsborgerskapUtgåttFørPerioden) LocalDate.now()
+                                        .minusYears(9) else LocalDate.now()
                                 )
                             )
                         } else {
