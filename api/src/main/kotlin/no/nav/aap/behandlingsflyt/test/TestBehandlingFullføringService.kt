@@ -56,7 +56,6 @@ import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.EØSLandEllerLan
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.PeriodisertStudentDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -84,18 +83,23 @@ class TestBehandlingFullføringService(
     private val log = LoggerFactory.getLogger(javaClass)
 
     fun fullforBehandling(sak: Sak, ventPåNyBehandling: Boolean = false) {
+        // Dersom vi ikke venter på ny behandling og siste allerede er avsluttet, er det ingen jobb å gjøre
+        if (!ventPåNyBehandling && erBehandlingAvsluttet(sak)) {
+            return
+        }
+
         val behandlingId = ventPåÅpenBehandlingOgReturnerBehandlingId(sak, ventPåNyBehandling) ?: run {
             log.error("Fant ingen åpen behandling for sak ${sak.id} innen tidsgrensen")
             return
         }
 
         val sisteBehandlingId = (1..MAKS_ITERASJONER).asSequence()
-            .takeWhile { !erBehandlingAvsluttet(behandlingId) }
+            .takeWhile { !erBehandlingAvsluttet(sak) }
             .fold<Int, BehandlingId?>(null) { forrige, _ ->
                 prosesserNesteSteg(sak, behandlingId) ?: forrige
             }
 
-        if (!erBehandlingAvsluttet(behandlingId)) {
+        if (!erBehandlingAvsluttet(sak)) {
             log.error("Behandling ${sisteBehandlingId ?: behandlingId} ble ikke avsluttet innen $MAKS_ITERASJONER iterasjoner")
         }
     }
@@ -116,10 +120,11 @@ class TestBehandlingFullføringService(
         return null
     }
 
-    private fun erBehandlingAvsluttet(behandlingId: BehandlingId): Boolean {
+    private fun erBehandlingAvsluttet(sak: Sak): Boolean {
         val behandling = dataSource.transaction(readOnly = true) { connection ->
-            repositoryRegistry.provider(connection).provide<BehandlingRepository>().hent(behandlingId)
-        }
+            BehandlingService(repositoryRegistry.provider(connection), gatewayProvider)
+                .finnSisteYtelsesbehandlingFor(sak.id)
+        } ?: return false
         return behandling.status() == Status.AVSLUTTET
     }
 
