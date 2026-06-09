@@ -16,6 +16,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
+import no.nav.aap.behandlingsflyt.test.TestAutomatiskMeldekortSakRepository
 import no.nav.aap.behandlingsflyt.utils.withMdc
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
@@ -48,6 +49,13 @@ fun NormalOpenAPIRoute.fullførBehandlingApi(
                             andreUtbetalinger = req.andreUtbetalinger?.tilKontrakt(),
                             søknadsdato = req.søknadsdato,
                         )
+                }
+                if (req.automatiskMeldekort) {
+                    dataSource.transaction { connection ->
+                        repositoryRegistry.provider(connection)
+                            .provide<TestAutomatiskMeldekortSakRepository>()
+                            .leggTil(sak.id)
+                    }
                 }
                 thread(isDaemon = true, block = withMdc { service.fullforBehandling(sak) })
                 respond(OpprettOgFullforBehandlingRespons(sak.saksnummer.toString()))
@@ -114,6 +122,8 @@ data class OpprettOgFullforBehandlingRequest(
     val andreUtbetalinger: AndreUtbetalingerApiDto?,
     @property:Description("Søknadsdato. Brukes som rettighetsperiode.fom og mottattTidspunkt. Defaulter til dagens dato.")
     val søknadsdato: LocalDate? = null,
+    @property:Description("Om det skal sendes automatisk meldekort ukentlig, så lenge saken har aktiv rettighetsperiode.")
+    val automatiskMeldekort: Boolean = false,
 )
 
 data class BehandlingStatusRequest(val ident: String)
