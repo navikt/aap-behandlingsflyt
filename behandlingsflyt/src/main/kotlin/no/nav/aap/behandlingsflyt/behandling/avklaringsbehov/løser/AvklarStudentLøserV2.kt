@@ -71,7 +71,7 @@ class AvklarStudentLøserV2(
         val inkonsistentePerioder =
             Tidslinje.map2(studentTidslinje, sykdomTidslinje) { studentVurdering, sykdomsvurdering ->
                 sykdomsvurdering?.potensieltOppfyltStudent() != true && studentVurdering?.erOppfylt() == true
-            }.perioder().toSet()
+            }.filter { it.verdi } .perioder().toSet()
 
         if (inkonsistentePerioder.isNotEmpty()) {
             throw UgyldigForespørselException(
