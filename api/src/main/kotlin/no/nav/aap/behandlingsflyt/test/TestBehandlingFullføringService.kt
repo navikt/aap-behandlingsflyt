@@ -23,6 +23,8 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FatteVedta
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.ForeslåVedtakLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.KvalitetssikringLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.RefusjonkravLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.TjenestepensjonRefusjonskravLøsning
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.refusjonskrav.TjenestepensjonRefusjonskravVurdering
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivBrevAvklaringsbehovLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivVedtaksbrevLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SykdomsvurderingForBrevLøsning
@@ -361,6 +363,15 @@ class TestBehandlingFullføringService(
                         Periode(sak.rettighetsperiode.fom, sak.rettighetsperiode.fom.plusMonths(1))
                     )
                 )
+            )
+        )
+
+        Definisjon.SAMORDNING_REFUSJONS_KRAV -> TjenestepensjonRefusjonskravLøsning(
+            samordningRefusjonskrav = TjenestepensjonRefusjonskravVurdering(
+                harKrav = false,
+                fom = null,
+                tom = null,
+                begrunnelse = "Ingen refusjonskrav",
             )
         )
 
