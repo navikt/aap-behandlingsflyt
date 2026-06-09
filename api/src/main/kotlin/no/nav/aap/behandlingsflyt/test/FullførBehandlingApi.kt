@@ -113,7 +113,7 @@ data class OpprettOgFullforBehandlingRequest(
     @property:Description("Om søker svarte at hen mottar andre utbetalinger i søknaden.")
     val andreUtbetalinger: AndreUtbetalingerApiDto?,
     @property:Description("Søknadsdato. Brukes som rettighetsperiode.fom og mottattTidspunkt. Defaulter til dagens dato.")
-    val søknadsdato: LocalDate? = LocalDate.now(),
+    val søknadsdato: LocalDate? = null,
 )
 
 data class BehandlingStatusRequest(val ident: String)

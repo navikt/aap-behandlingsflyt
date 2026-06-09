@@ -62,7 +62,6 @@ class TestSakService(
             sakRepository
         )
 
-        // Idempotent: returner eksisterende sak hvis én allerede finnes
         personOgSakService.finnSakerFor(ident).firstOrNull()?.let { return it }
 
         val sak = personOgSakService.finnEllerOpprett(ident, søknadsdato ?: LocalDate.now())
