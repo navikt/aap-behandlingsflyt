@@ -70,7 +70,7 @@ class TjenestePensjonRepositoryImpl(private val dbConnection: DBConnection) : Tj
         return ordning
     }
 
-    private fun hentYtelse(ordningId: Long): List<TjenestePensjonYtelse> {
+    private fun hentYtelse(ordningId: Long): Set<TjenestePensjonYtelse> {
         val sql = """
             SELECT *
                 FROM TJENESTEPENSJON_YTELSE WHERE TJENESTEPENSJON_ORDNING_ID = ?
@@ -87,7 +87,7 @@ class TjenestePensjonRepositoryImpl(private val dbConnection: DBConnection) : Tj
                     ytelseId = it.getLong("EXTERN_ID")
                 )
             }
-        }
+        }.toSet()
     }
 
 
@@ -137,7 +137,7 @@ class TjenestePensjonRepositoryImpl(private val dbConnection: DBConnection) : Tj
         }
     }
 
-    private fun lagreYtelse(ytelseDto: List<TjenestePensjonYtelse>, forholdKey: Long) {
+    private fun lagreYtelse(ytelseDto: Set<TjenestePensjonYtelse>, forholdKey: Long) {
         val sql = """
             INSERT INTO TJENESTEPENSJON_YTELSE (TJENESTEPENSJON_ORDNING_ID, YTELSE_TYPE, INNMELDT_FOM, IVERKSATT_FOM, IVERKSATT_TOM, EXTERN_ID)
             VALUES (?, ?, ?, ?, ?, ?)
