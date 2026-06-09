@@ -84,10 +84,7 @@ class BehandlingHendelseServiceImpl(
         )
 
         // Bør prate med øvrige konsumenter før vi begynner å sende utledet førstegangsbehandling 
-        val hendelseTilOppgave =
-            if (unleashGateway.isEnabled(BehandlingsflytFeature.ForstegangsbehandlingEtterAvslagOppgave))
-                hendelse.copy(behandlingType = behandlingService.utledFaktiskBehandlingstype(behandling))
-            else hendelse
+        val hendelseTilOppgave = hendelse.copy(behandlingType = behandlingService.utledFaktiskBehandlingstype(behandling))
 
         log.info("Legger til flytjobber til statistikk og stoppethendelse for behandling: ${behandling.id}")
         flytJobbRepository.leggTil(

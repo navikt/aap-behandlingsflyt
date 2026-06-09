@@ -296,7 +296,7 @@ class OpprettOgFullførBehandlingApiTest {
                     harYrkesskade = false,
                     harMedlemskap = true,
                     andreUtbetalinger = null,
-                    søknadsdato = søknadsdato,
+                    soeknadsdato = søknadsdato,
                 )
             )
         )
@@ -372,7 +372,6 @@ class OpprettOgFullførBehandlingApiTest {
             assertThat(behandlinger.first().status()).isEqualTo(Status.AVSLUTTET)
         }
     }
-
     private fun standardTestPerson(ident: String) = TestPerson(
         identer = setOf(Ident(ident)),
         fødselsdato = Fødselsdato(LocalDate.now().minusYears(25)),

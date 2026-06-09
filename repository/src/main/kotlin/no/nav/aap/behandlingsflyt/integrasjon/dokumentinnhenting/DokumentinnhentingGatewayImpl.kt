@@ -5,7 +5,9 @@ import no.nav.aap.behandlingsflyt.prometheus
 import no.nav.aap.dokumentinnhenting.kontrakt.BehandlingsflytToDokumentInnhentingBestillingDto
 import no.nav.aap.dokumentinnhenting.kontrakt.DialogmeldingForhåndsvisningDto
 import no.nav.aap.dokumentinnhenting.kontrakt.DialogmeldingStatusTilBehandslingsflytDto
+import no.nav.aap.dokumentinnhenting.kontrakt.FastlegeDto
 import no.nav.aap.dokumentinnhenting.kontrakt.ForhåndsvisDialogmeldingDto
+import no.nav.aap.dokumentinnhenting.kontrakt.HentFastlegeDto
 import no.nav.aap.dokumentinnhenting.kontrakt.LegeerklæringPurringDto
 import no.nav.aap.dokumentinnhenting.kontrakt.MarkerBestillingSomMottattDto
 import no.nav.aap.komponenter.config.requiredConfigForKey
@@ -16,7 +18,9 @@ import no.nav.aap.komponenter.httpklient.httpclient.RestClient
 import no.nav.aap.komponenter.httpklient.httpclient.post
 import no.nav.aap.komponenter.httpklient.httpclient.request.GetRequest
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
+import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureM2MTokenProvider
+import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureOBOTokenProvider
 import no.nav.aap.komponenter.json.DefaultJsonMapper
 import java.net.URI
 
@@ -30,6 +34,12 @@ class DokumentinnhentingGatewayImpl : DokumentinnhentingGateway {
     private val client = RestClient.withDefaultResponseHandler(
         config = config,
         tokenProvider = AzureM2MTokenProvider,
+        prometheus = prometheus
+    )
+
+    private val oboClient = RestClient.withDefaultResponseHandler(
+        config = config,
+        tokenProvider = AzureOBOTokenProvider,
         prometheus = prometheus
     )
 
@@ -106,5 +116,18 @@ class DokumentinnhentingGatewayImpl : DokumentinnhentingGateway {
         )
 
         return requireNotNull(client.post(uri = URI.create("$syfoUri/brevpreview"), request))
+    }
+
+    override fun hentFastlege(request: HentFastlegeDto, currentToken: OidcToken): FastlegeDto {
+        val request = PostRequest(
+            body = request,
+            additionalHeaders = listOf(
+                Header("Nav-Consumer-Id", "aap-behandlingsflyt"),
+                Header("Accept", "application/json")
+            ),
+            currentToken = currentToken,
+        )
+
+        return requireNotNull(oboClient.post(uri = URI.create("$syfoUri/behandleroppslag/fastlege"), request))
     }
 }
