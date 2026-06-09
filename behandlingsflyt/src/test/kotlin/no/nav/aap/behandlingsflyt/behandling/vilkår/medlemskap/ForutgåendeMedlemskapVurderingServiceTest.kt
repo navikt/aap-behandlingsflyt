@@ -20,8 +20,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Pers
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningMedHistorikkGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Statsborgerskap
 import no.nav.aap.behandlingsflyt.test.Fakes
-import no.nav.aap.behandlingsflyt.test.FakeUnleashBaseWithDefaultDisabled
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
@@ -155,9 +153,7 @@ class ForutgåendeMedlemskapVurderingServiceTest {
     @Test
     fun `NIS-turistskip inkluderer arbeidsforhold som startet før relevant periode og fortsatt pågår`() {
         val rettighetsperiode = Periode(LocalDate.now(), LocalDate.now().plusYears(1))
-        val serviceWithMaritimtArbeid = ForutgåendeMedlemskapVurderingService(
-            FakeUnleashBaseWithDefaultDisabled(listOf(BehandlingsflytFeature.MaritimtArbeid))
-        )
+        val serviceWithMaritimtArbeid = ForutgåendeMedlemskapVurderingService()
 
         val vurdering = serviceWithMaritimtArbeid
             .vurderTilhørighet(
@@ -182,9 +178,7 @@ class ForutgåendeMedlemskapVurderingServiceTest {
     @Test
     fun `stopp behandling når arbeidstaker har jobbet på NIS-turistskip i perioden`() {
         val rettighetsperiode = Periode(LocalDate.now(), LocalDate.now().plusYears(1))
-        val service = ForutgåendeMedlemskapVurderingService(
-            FakeUnleashBaseWithDefaultDisabled(listOf(BehandlingsflytFeature.MaritimtArbeid))
-        )
+        val service = ForutgåendeMedlemskapVurderingService()
 
         val resultat = service.vurderTilhørighet(lagGrunnlagMedNisTuristskip(), rettighetsperiode)
 
@@ -194,9 +188,7 @@ class ForutgåendeMedlemskapVurderingServiceTest {
     @Test
     fun `maritimt arbeidsforhold trigges ikke når skipstype er ANNET selv om register er NIS`() {
         val rettighetsperiode = Periode(LocalDate.now(), LocalDate.now().plusYears(1))
-        val service = ForutgåendeMedlemskapVurderingService(
-            FakeUnleashBaseWithDefaultDisabled(listOf(BehandlingsflytFeature.MaritimtArbeid))
-        )
+        val service = ForutgåendeMedlemskapVurderingService()
 
         val vurdering = service.vurderTilhørighet(
             lagGrunnlagMedMaritimtArbeid(skipsregister = Skipsregister.NIS, skipstype = Skipstype.ANNET),
@@ -209,9 +201,7 @@ class ForutgåendeMedlemskapVurderingServiceTest {
     @Test
     fun `maritimt arbeidsforhold trigges ikke når skipstype er TURIST men register er NOR`() {
         val rettighetsperiode = Periode(LocalDate.now(), LocalDate.now().plusYears(1))
-        val service = ForutgåendeMedlemskapVurderingService(
-            FakeUnleashBaseWithDefaultDisabled(listOf(BehandlingsflytFeature.MaritimtArbeid))
-        )
+        val service = ForutgåendeMedlemskapVurderingService()
 
         val vurdering = service.vurderTilhørighet(
             lagGrunnlagMedMaritimtArbeid(skipsregister = Skipsregister.NOR, skipstype = Skipstype.TURIST),
