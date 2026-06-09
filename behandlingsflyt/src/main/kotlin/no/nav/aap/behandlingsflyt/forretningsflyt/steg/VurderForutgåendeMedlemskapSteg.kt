@@ -26,7 +26,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.orEmpty
@@ -39,8 +38,7 @@ class VurderForutgåendeMedlemskapSteg private constructor(
     private val personopplysningForutgåendeRepository: PersonopplysningForutgåendeRepository,
     private val sykdomRepository: SykdomRepository,
     private val tidligereVurderinger: TidligereVurderinger,
-    private val avklaringsbehovService: AvklaringsbehovService,
-    private val unleashGateway: UnleashGateway
+    private val avklaringsbehovService: AvklaringsbehovService
 ) : BehandlingSteg, AvklaringsbehovMetadataUtleder {
 
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
@@ -50,8 +48,7 @@ class VurderForutgåendeMedlemskapSteg private constructor(
         personopplysningForutgåendeRepository = repositoryProvider.provide(),
         sykdomRepository = repositoryProvider.provide(),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
-        avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
-        unleashGateway = gatewayProvider.provide<UnleashGateway>()
+        avklaringsbehovService = AvklaringsbehovService(repositoryProvider)
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
@@ -117,15 +114,13 @@ class VurderForutgåendeMedlemskapSteg private constructor(
             if (harYrkesskadeSammenheng(kontekst)) {
                 ForutgåendeMedlemskapvilkåret(
                     vilkårsresultat,
-                    kontekst.rettighetsperiode,
-                    unleashGateway
+                    kontekst.rettighetsperiode
                 ).leggTilYrkesskadeVurdering()
                 vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
 
             } else {
                 ForutgåendeMedlemskapvilkåret(
-                    vilkårsresultat, kontekst.rettighetsperiode,
-                    unleashGateway
+                    vilkårsresultat, kontekst.rettighetsperiode
                 ).vurder(grunnlag)
                 vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
             }
@@ -190,11 +185,10 @@ class VurderForutgåendeMedlemskapSteg private constructor(
         if (harYrkesskadeSammenheng(kontekst)) {
             ForutgåendeMedlemskapvilkåret(
                 vilkårsresultat,
-                kontekst.rettighetsperiode,
-                unleashGateway
+                kontekst.rettighetsperiode
             ).leggTilYrkesskadeVurdering()
         } else {
-            ForutgåendeMedlemskapvilkåret(vilkårsresultat, kontekst.rettighetsperiode, unleashGateway)
+            ForutgåendeMedlemskapvilkåret(vilkårsresultat, kontekst.rettighetsperiode)
                 .vurder(grunnlagUtenManuellVurdering)
         }
 

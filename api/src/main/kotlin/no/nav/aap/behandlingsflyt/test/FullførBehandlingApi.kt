@@ -47,7 +47,7 @@ fun NormalOpenAPIRoute.fullførBehandlingApi(
                             harYrkesskade = req.harYrkesskade,
                             harMedlemskap = req.harMedlemskap,
                             andreUtbetalinger = req.andreUtbetalinger?.tilKontrakt(),
-                            søknadsdato = req.søknadsdato,
+                            søknadsdato = req.soeknadsdato,
                         )
                 }
                 if (req.automatiskMeldekort) {
@@ -121,7 +121,7 @@ data class OpprettOgFullforBehandlingRequest(
     @property:Description("Om søker svarte at hen mottar andre utbetalinger i søknaden.")
     val andreUtbetalinger: AndreUtbetalingerApiDto?,
     @property:Description("Søknadsdato. Brukes som rettighetsperiode.fom og mottattTidspunkt. Defaulter til dagens dato.")
-    val søknadsdato: LocalDate? = null,
+    val soeknadsdato: LocalDate? = null,
     @property:Description("Om det skal sendes automatisk meldekort ukentlig, så lenge saken har aktiv rettighetsperiode.")
     val automatiskMeldekort: Boolean = false,
 )

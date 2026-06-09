@@ -10,13 +10,11 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.type.Periode
 
 class ForutgåendeMedlemskapvilkåret(
     vilkårsresultat: Vilkårsresultat,
-    private val rettighetsPeriode: Periode,
-    private val unleashGateway: UnleashGateway
+    private val rettighetsPeriode: Periode
 ) : Vilkårsvurderer<ForutgåendeMedlemskapGrunnlag> {
     private val vilkår = vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.MEDLEMSKAP)
 
@@ -54,7 +52,7 @@ class ForutgåendeMedlemskapvilkåret(
             val vurderingsResultat = VurderingsResultat(Utfall.IKKE_RELEVANT, null, null)
             leggTilVurdering(grunnlag, vurderingsResultat)
         } else {
-            val kanBehandlesAutomatisk = ForutgåendeMedlemskapVurderingService(unleashGateway).vurderTilhørighet(
+            val kanBehandlesAutomatisk = ForutgåendeMedlemskapVurderingService().vurderTilhørighet(
                 grunnlag,
                 rettighetsPeriode
             ).kanBehandlesAutomatisk

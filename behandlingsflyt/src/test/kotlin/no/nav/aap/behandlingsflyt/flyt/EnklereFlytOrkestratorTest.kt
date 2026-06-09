@@ -7,6 +7,7 @@ import no.nav.aap.behandlingsflyt.flyt.testutil.DummyInformasjonskravGrunnlag
 import no.nav.aap.behandlingsflyt.flyt.testutil.DummyStegKonstruktør
 import no.nav.aap.behandlingsflyt.flyt.testutil.DummyVentebehovEvaluererService
 import no.nav.aap.behandlingsflyt.forretningsflyt.behandlingstyper.Førstegangsbehandling
+import no.nav.aap.behandlingsflyt.help.opprettInMemorySak
 import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseService
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
@@ -32,21 +33,17 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅ
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.test.FakeUnleashBaseWithDefaultDisabled
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryservice.InMemoryBehandlingService
-import no.nav.aap.behandlingsflyt.test.modell.genererIdent
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
-import java.util.*
 
 class EnklereFlytOrkestratorTest {
     private val sakRepository = InMemorySakRepository
@@ -99,10 +96,8 @@ class EnklereFlytOrkestratorTest {
 
     @Test
     fun `starter og stopper behandling mellom fatte vedtak og iverksett vedtak`() {
-        val person = Person(UUID.randomUUID(), listOf(genererIdent(LocalDate.now().minusYears(23))))
-
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(1))
-        val sak = sakRepository.finnEllerOpprett(person, periode.fom)
+        val sak = opprettInMemorySak(søknadsdato = periode.fom)
         val behandling = behandlingRepository.opprettBehandling(
             sakId = sak.id,
             vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
@@ -173,9 +168,7 @@ class EnklereFlytOrkestratorTest {
 
     @Test
     fun `skal gå gjennom alle stegene definert i behandlingsflyt`() {
-        val person = Person(UUID.randomUUID(), listOf(genererIdent(LocalDate.now().minusYears(23))))
-
-        val sak = sakRepository.finnEllerOpprett(person, LocalDate.now())
+        val sak = opprettInMemorySak()
         val behandling =
             behandlingRepository.opprettBehandling(
                 sakId = sak.id,
@@ -200,11 +193,9 @@ class EnklereFlytOrkestratorTest {
 
     @Test
     fun `hendelse blir avgitt ved en automatisk lukket behandling`() {
-        val person = Person(UUID.randomUUID(), listOf(genererIdent(LocalDate.now().minusYears(23))))
-        val sak = sakRepository.finnEllerOpprett(person, LocalDate.now())
         val behandling =
             behandlingRepository.opprettBehandling(
-                sakId = sak.id,
+                sakId = opprettInMemorySak().id,
                 typeBehandling = TypeBehandling.Førstegangsbehandling,
                 forrigeBehandlingId = null,
                 vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
@@ -248,12 +239,9 @@ class EnklereFlytOrkestratorTest {
 
     @Test
     fun `skal ikke kunne gå forbi et åpent avklaringsbehov`() {
-        val person = Person(UUID.randomUUID(), listOf(genererIdent(LocalDate.now().minusYears(23))))
-
-        val sak = sakRepository.finnEllerOpprett(person, LocalDate.now())
         val behandling =
             behandlingRepository.opprettBehandling(
-                sakId = sak.id,
+                sakId = opprettInMemorySak().id,
                 typeBehandling = TypeBehandling.Førstegangsbehandling,
                 forrigeBehandlingId = null,
                 vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
@@ -330,12 +318,9 @@ class EnklereFlytOrkestratorTest {
 
     @Test
     fun `skal hoppe tilbake til steget behovet finnes i når det løses i UTFØRT status og står i senere steg`() {
-        val person = Person(UUID.randomUUID(), listOf(genererIdent(LocalDate.now().minusYears(23))))
-
-        val sak = sakRepository.finnEllerOpprett(person, LocalDate.now())
         val behandling =
             behandlingRepository.opprettBehandling(
-                sakId = sak.id,
+                sakId = opprettInMemorySak().id,
                 typeBehandling = TypeBehandling.Førstegangsbehandling,
                 forrigeBehandlingId = null,
                 vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
@@ -719,11 +704,9 @@ class EnklereFlytOrkestratorTest {
 
     @Test
     fun `skal rulle tilbake hvis åpent avklaringsbehov er passert`() {
-        val person = Person(UUID.randomUUID(), listOf(genererIdent(LocalDate.now().minusYears(23))))
-        val sak = sakRepository.finnEllerOpprett(person, LocalDate.now())
         val behandling =
             behandlingRepository.opprettBehandling(
-                sakId = sak.id,
+                sakId = opprettInMemorySak().id,
                 typeBehandling = TypeBehandling.Førstegangsbehandling,
                 forrigeBehandlingId = null,
                 vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(

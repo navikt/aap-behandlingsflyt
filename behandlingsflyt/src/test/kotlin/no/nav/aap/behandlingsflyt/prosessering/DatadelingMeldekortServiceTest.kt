@@ -22,7 +22,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
-import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.type.Periode
@@ -32,6 +31,7 @@ import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
+import no.nav.aap.behandlingsflyt.help.ident
 
 
 class DatadelingMeldekortServiceTest {

@@ -67,3 +67,14 @@ object FiktivtNavnGenerator {
         }
     }
 }
+
+enum class Kjønn {
+    KVINNE,
+    MANN;
+
+    companion object {
+        fun random(): Kjønn {
+            return Kjønn.entries.random()
+        }
+    }
+}
