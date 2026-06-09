@@ -317,36 +317,57 @@ private fun mapTilSøknad(dto: OpprettTestcaseDTO, urelaterteBarn: List<TestPers
         null
     }
     val harMedlemskap = if (dto.medlemskap) "JA" else "NEI"
-    val fastlegeSøknad = if (dto.fastlege?.harFastlege ?: false) {
-        if (!dto.fastlege.harEndretFastlege && fastlege == null) {
-            null
-        } else if (!dto.fastlege.harEndretFastlege && fastlege != null) {
-            FastlegeDto(
-                navn = listOfNotNull(fastlege.fornavn, fastlege.mellomnavn, fastlege.etternavn).joinToString { " " },
-                behandlerRef = fastlege.behandlerRef,
-                kontaktinformasjon = FastlegeKontaktInformasjonDto(
-                    kontor = fastlege.kontor,
-                    adresse = fastlege.adresse,
-                    telefon = fastlege.telefon
-                ),
-                erRegistrertFastlegeRiktig = if (dto.fastlege.varFastlegeRiktigPåSøknadstidspunkt) JaNei.Ja else JaNei.Nei,
-            )
-        } else {
-            FastlegeDto(
-                navn = "Navn",
-                behandlerRef = UUID.randomUUID().toString(),
-                kontaktinformasjon = FastlegeKontaktInformasjonDto(
-                    kontor = "kontor",
-                    adresse = "adresse",
-                    telefon = "telefon"
-                ),
-                erRegistrertFastlegeRiktig = if (dto.fastlege.varFastlegeRiktigPåSøknadstidspunkt) JaNei.Ja else JaNei.Nei,
-            )
-        }
-    } else {
+
+    return SøknadV0(
+        andreUtbetalinger = AndreUtbetalingerDto(
+            lønn = dto.andreUtbetalinger?.lønn,
+            stønad = dto.andreUtbetalinger?.stønad,
+            afp = dto.andreUtbetalinger?.afp
+        ),
+        student = SøknadStudentDto(erStudent),
+        yrkesskade = harYrkesskade,
+        oppgitteBarn = oppgitteBarn,
+        medlemskap = SøknadMedlemskapDto(harMedlemskap, null, null, null, emptyList()),
+        fastlege = listOfNotNull(fastlegeISøknad(dto, fastlege)),
+        andreBehandlere = andreBehandlereOppgittISøknad(dto)
+    )
+}
+
+private fun fastlegeISøknad(
+    dto: OpprettTestcaseDTO,
+    fastlege: BehandlerDto?
+): FastlegeDto? = if (dto.fastlege?.harFastlege ?: false) {
+    if (!dto.fastlege.harEndretFastlege && fastlege == null) {
         null
+    } else if (!dto.fastlege.harEndretFastlege && fastlege != null) {
+        FastlegeDto(
+            navn = listOfNotNull(fastlege.fornavn, fastlege.mellomnavn, fastlege.etternavn).joinToString { " " },
+            behandlerRef = fastlege.behandlerRef,
+            kontaktinformasjon = FastlegeKontaktInformasjonDto(
+                kontor = fastlege.kontor,
+                adresse = fastlege.adresse,
+                telefon = fastlege.telefon
+            ),
+            erRegistrertFastlegeRiktig = if (dto.fastlege.varFastlegeRiktigPåSøknadstidspunkt) JaNei.Ja else JaNei.Nei,
+        )
+    } else {
+        FastlegeDto(
+            navn = "Navn",
+            behandlerRef = UUID.randomUUID().toString(),
+            kontaktinformasjon = FastlegeKontaktInformasjonDto(
+                kontor = "kontor",
+                adresse = "adresse",
+                telefon = "telefon"
+            ),
+            erRegistrertFastlegeRiktig = if (dto.fastlege.varFastlegeRiktigPåSøknadstidspunkt) JaNei.Ja else JaNei.Nei,
+        )
     }
-    val andreBehandlere = if (dto.fastlege?.harOppgittAndreBehandlere ?: false) {
+} else {
+    null
+}
+
+private fun andreBehandlereOppgittISøknad(dto: OpprettTestcaseDTO): List<no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.BehandlerDto> =
+    if (dto.fastlege?.harOppgittAndreBehandlere ?: false) {
         List(Random.nextInt(1, 3)) { index ->
             no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.BehandlerDto(
                 firstname = "firstname $index",
@@ -363,21 +384,6 @@ private fun mapTilSøknad(dto: OpprettTestcaseDTO, urelaterteBarn: List<TestPers
         emptyList()
     }
 
-    return SøknadV0(
-        andreUtbetalinger = AndreUtbetalingerDto(
-            lønn = dto.andreUtbetalinger?.lønn,
-            stønad = dto.andreUtbetalinger?.stønad,
-            afp = dto.andreUtbetalinger?.afp
-        ),
-        student = SøknadStudentDto(erStudent),
-        yrkesskade = harYrkesskade,
-        oppgitteBarn = oppgitteBarn,
-        medlemskap = SøknadMedlemskapDto(harMedlemskap, null, null, null, emptyList()),
-        fastlege = listOfNotNull(fastlegeSøknad),
-        andreBehandlere = andreBehandlere
-    )
-}
-
 private fun sendInnSøknad(
     dto: OpprettTestcaseDTO,
     gatewayProvider: GatewayProvider,
@@ -388,22 +394,7 @@ private fun sendInnSøknad(
     val urelaterteBarnIPDL = dto.barn.filter { !it.harRelasjon && it.skalFinnesIPDL }.map { genererBarn(it) }
     val urelaterteBarnIkkeIPDL = dto.barn.filter { !it.harRelasjon && !it.skalFinnesIPDL }.map { genererBarn(it) }
     val jsonTestPersonService = JSONTestPersonService()
-    val fastlege = if (dto.fastlege?.harFastlege ?: false) {
-        BehandlerDto(
-            behandlerRef = UUID.randomUUID().toString(),
-            hprId = Random.nextInt(100000000, 999999999).toString(),
-            fornavn = "Fornavn",
-            mellomnavn = "Mellomnavn",
-            etternavn = "Etternavn",
-            kontor = "Kontor",
-            adresse = "Adresse",
-            postnummer = "0000",
-            poststed = "Poststed",
-            telefon = "00000000",
-        )
-    } else {
-        null
-    }
+    val fastlege = genererFastlege(dto)
     barn.forEach { jsonTestPersonService.leggTil(it) }
     urelaterteBarnIPDL.forEach { jsonTestPersonService.leggTil(it) }
     jsonTestPersonService.leggTil(
@@ -510,6 +501,23 @@ private fun sendInnSøknad(
     }
 
     return sak
+}
+
+private fun genererFastlege(dto: OpprettTestcaseDTO): BehandlerDto? = if (dto.fastlege?.harFastlege ?: false) {
+    BehandlerDto(
+        behandlerRef = UUID.randomUUID().toString(),
+        hprId = Random.nextInt(100000000, 999999999).toString(),
+        fornavn = "Fornavn",
+        mellomnavn = "Mellomnavn",
+        etternavn = "Etternavn",
+        kontor = "Kontor",
+        adresse = "Adresse",
+        postnummer = "0000",
+        poststed = "Poststed",
+        telefon = "00000000",
+    )
+} else {
+    null
 }
 
 private fun opprettNySakOgBehandling(
