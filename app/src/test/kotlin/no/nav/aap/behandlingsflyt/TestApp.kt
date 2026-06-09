@@ -20,14 +20,13 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Opp
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.Uføre
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreSøknad
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
 import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseServiceFactory
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
 import no.nav.aap.behandlingsflyt.integrasjon.institusjonsopphold.InstitusjonsoppholdJSON
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.AndreUtbetalingerDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Ident
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.JaNeiVetIkke
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ManueltOppgittBarn
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.OppgitteBarn
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.StudentStatus
@@ -49,8 +48,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.SaksnummerParameter
 import no.nav.aap.behandlingsflyt.test.FakeServers
 import no.nav.aap.behandlingsflyt.test.FiktivtHelseoppholdNavnGenerator
 import no.nav.aap.behandlingsflyt.test.JSONTestPersonService
-import no.nav.aap.behandlingsflyt.test.LokalUnleash
 import no.nav.aap.behandlingsflyt.test.TexasPortHolder
+import no.nav.aap.behandlingsflyt.test.LokalUnleash
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.behandlingsflyt.test.modell.TestYrkesskade
 import no.nav.aap.behandlingsflyt.test.modell.genererIdent
@@ -290,7 +289,7 @@ private fun genererBarn(dto: TestBarn): TestPerson {
     )
 }
 
-private fun mapTilSøknad(dto: OpprettTestcaseDTO, urelaterteBarn: List<TestPerson>): SøknadV0 {
+private fun mapTilSøknad(dto: OpprettTestcaseDTO, urelaterteBarn: List<TestPerson>, fastlege: BehandlerDto?): SøknadV0 {
     val erStudent = if (dto.student) {
         SøknadStudentDto(
             erStudent = StudentStatus.Avbrutt,
@@ -320,6 +319,7 @@ private fun mapTilSøknad(dto: OpprettTestcaseDTO, urelaterteBarn: List<TestPers
         null
     }
     val harMedlemskap = if (dto.medlemskap) "JA" else "NEI"
+
     return SøknadV0(
         andreUtbetalinger = AndreUtbetalingerDto(
             lønn = dto.andreUtbetalinger?.lønn,
@@ -330,8 +330,61 @@ private fun mapTilSøknad(dto: OpprettTestcaseDTO, urelaterteBarn: List<TestPers
         yrkesskade = harYrkesskade,
         oppgitteBarn = oppgitteBarn,
         medlemskap = SøknadMedlemskapDto(harMedlemskap, null, null, null, emptyList()),
+        fastlege = listOfNotNull(fastlegeISøknad(dto, fastlege)),
+        andreBehandlere = andreBehandlereOppgittISøknad(dto)
     )
 }
+
+private fun fastlegeISøknad(
+    dto: OpprettTestcaseDTO,
+    fastlege: BehandlerDto?
+): FastlegeDto? = if (dto.fastlege?.harFastlege ?: false) {
+    if (!dto.fastlege.harEndretFastlege && fastlege == null) {
+        null
+    } else if (!dto.fastlege.harEndretFastlege && fastlege != null) {
+        FastlegeDto(
+            navn = listOfNotNull(fastlege.fornavn, fastlege.mellomnavn, fastlege.etternavn).joinToString { " " },
+            behandlerRef = fastlege.behandlerRef,
+            kontaktinformasjon = FastlegeKontaktInformasjonDto(
+                kontor = fastlege.kontor,
+                adresse = fastlege.adresse,
+                telefon = fastlege.telefon
+            ),
+            erRegistrertFastlegeRiktig = if (dto.fastlege.varFastlegeRiktigPåSøknadstidspunkt) JaNei.Ja else JaNei.Nei,
+        )
+    } else {
+        FastlegeDto(
+            navn = "Navn",
+            behandlerRef = UUID.randomUUID().toString(),
+            kontaktinformasjon = FastlegeKontaktInformasjonDto(
+                kontor = "kontor",
+                adresse = "adresse",
+                telefon = "telefon"
+            ),
+            erRegistrertFastlegeRiktig = if (dto.fastlege.varFastlegeRiktigPåSøknadstidspunkt) JaNei.Ja else JaNei.Nei,
+        )
+    }
+} else {
+    null
+}
+
+private fun andreBehandlereOppgittISøknad(dto: OpprettTestcaseDTO): List<no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.BehandlerDto> =
+    if (dto.fastlege?.harOppgittAndreBehandlere ?: false) {
+        List(Random.nextInt(1, 3)) { index ->
+            no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.BehandlerDto(
+                firstname = "firstname $index",
+                lastname = "lastname $index",
+                legekontor = "legekontor $index",
+                id = "id $index",
+                gateadresse = "gateadresse $index",
+                postnummer = "postnummer $index",
+                poststed = "poststed $index",
+                telefon = "$index$index$index$index$index$index$index$index",
+            )
+        }
+    } else {
+        emptyList()
+    }
 
 private fun sendInnSøknad(
     dto: OpprettTestcaseDTO,
@@ -343,6 +396,7 @@ private fun sendInnSøknad(
     val urelaterteBarnIPDL = dto.barn.filter { !it.harRelasjon && it.skalFinnesIPDL }.map { genererBarn(it) }
     val urelaterteBarnIkkeIPDL = dto.barn.filter { !it.harRelasjon && !it.skalFinnesIPDL }.map { genererBarn(it) }
     val jsonTestPersonService = JSONTestPersonService()
+    val fastlege = genererFastlege(dto)
     barn.forEach { jsonTestPersonService.leggTil(it) }
     urelaterteBarnIPDL.forEach { jsonTestPersonService.leggTil(it) }
     jsonTestPersonService.leggTil(
@@ -422,6 +476,7 @@ private fun sendInnSøknad(
                     )
                 )
             ) else null,
+            fastlege = fastlege
         )
     )
 
@@ -450,6 +505,23 @@ private fun sendInnSøknad(
     return sak
 }
 
+private fun genererFastlege(dto: OpprettTestcaseDTO): BehandlerDto? = if (dto.fastlege?.harFastlege ?: false) {
+    BehandlerDto(
+        behandlerRef = UUID.randomUUID().toString(),
+        hprId = Random.nextInt(100000000, 999999999).toString(),
+        fornavn = "Fornavn",
+        mellomnavn = "Mellomnavn",
+        etternavn = "Etternavn",
+        kontor = "Kontor",
+        adresse = "Adresse",
+        postnummer = "0000",
+        poststed = "Poststed",
+        telefon = "00000000",
+    )
+} else {
+    null
+}
+
 private fun opprettNySakOgBehandling(
     dto: OpprettTestcaseDTO,
     gatewayProvider: GatewayProvider,
@@ -468,7 +540,7 @@ private fun opprettNySakOgBehandling(
     with(testScenarioOrkestrator) {
         // Student eller sykdom
         if (dto.student) {
-            løsStudent(behandling)
+            løsStudent(behandling, vurderingenGjelderFra = dto.søknadsdato ?: sak.rettighetsperiode.fom)
         } else {
             if (dto.steg == StegType.AVKLAR_SYKDOM) return sak
             løsSykdom(

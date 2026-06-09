@@ -63,7 +63,16 @@ class BekreftVurderingerOppfølgingSteg(
                 return sykdomsbehovLøstAvKontor.isNotEmpty()
             }
 
-            VurderingType.UTVID_VEDTAKSLENGDE, VurderingType.MIGRER_RETTIGHETSPERIODE, VurderingType.MELDEKORT, VurderingType.AUTOMATISK_BREV, VurderingType.EFFEKTUER_AKTIVITETSPLIKT, VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9, VurderingType.G_REGULERING, VurderingType.IKKE_RELEVANT -> false
+            VurderingType.UTVID_VEDTAKSLENGDE,
+            VurderingType.MIGRER_RETTIGHETSPERIODE,
+            VurderingType.MELDEKORT,
+            VurderingType.AUTOMATISK_BREV,
+            VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
+            VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9,
+            VurderingType.G_REGULERING,
+            VurderingType.IKKE_RELEVANT,
+            VurderingType.OVERGANG_UFORE_STANS,
+                -> false
         }
     }
 
@@ -83,7 +92,7 @@ class BekreftVurderingerOppfølgingSteg(
                 ?.tidsstempel
 
         val mellomlagredeVurderingerForRelevanteBehov =
-            // Filtrer vekk avbrutte behov som kan ha mellomlagrede vurderinger som det ikke er mulig for saksbehandler å slette
+        // Filtrer vekk avbrutte behov som kan ha mellomlagrede vurderinger som det ikke er mulig for saksbehandler å slette
             // Bør nok heller løses ved automatisk sletting ved avbrutt i avklaringsbehovservice
             mellomlagretVurderingService.hentMellomlagredeVurderingerForAktiveBehovFørSteg(
                 behandlingId, type(), listOf(Rolle.SAKSBEHANDLER_OPPFOLGING)

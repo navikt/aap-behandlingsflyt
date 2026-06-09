@@ -20,7 +20,6 @@ import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
-import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.parallel.Execution
 import org.junit.jupiter.api.parallel.ExecutionMode
 import java.io.InputStream
@@ -35,7 +34,7 @@ class PdlBarnGatewayTest {
     private lateinit var gateway: PdlBarnGateway
     private val mockPerson: Person = Person(
         id = PersonId(0L),
-        identifikator = UUID.randomUUID(),
+        referanse = UUID.randomUUID(),
         identer = listOf(Ident("12345678901"))
     )
 

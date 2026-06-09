@@ -10,7 +10,7 @@ data class SamordningAndreStatligeYtelserGrunnlag(
 data class SamordningAndreStatligeYtelserVurdering(
     val begrunnelse: String,
     val vurdertAv: String,
-    val vurdertTidspunkt: LocalDateTime? = null,
+    val vurdertTidspunkt: LocalDateTime,
     val vurderingPerioder: List<SamordningAndreStatligeYtelserVurderingPeriode>,
     val historiskePerioder: List<SamordningAndreStatligeYtelserVurderingPeriode>? = null,
 )

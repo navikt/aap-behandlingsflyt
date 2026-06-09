@@ -88,7 +88,7 @@ class OpprettBehandlingFritakMeldepliktJobbUtførerTest {
             saksnummer = Saksnummer("BLABLA"),
             person = Person(
                 id = 456L.let(::PersonId),
-                identifikator = UUID.randomUUID(),
+                referanse = UUID.randomUUID(),
                 identer = emptyList()
             ),
             rettighetsperiode = Periode(LocalDate.now().minusDays(14), LocalDate.now().plusDays(14)),

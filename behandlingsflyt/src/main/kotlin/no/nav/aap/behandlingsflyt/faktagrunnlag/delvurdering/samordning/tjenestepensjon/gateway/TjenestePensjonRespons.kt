@@ -26,7 +26,7 @@ data class TjenestePensjonRespons(
                         ytelseIverksattTom = ytelse.datoYtelseIverksattTom,
                         ytelseId = ytelse.ytelseId
                     )
-                }
+                }.toSet()
             )
         }.filter { it.ytelser.isNotEmpty() }
     }
@@ -43,9 +43,9 @@ data class TpOrdning(
 )
 
 data class SamhandlerYtelseDto(
-    val datoInnmeldtYtelseFom: LocalDate?, // Nullable to handle null values
+    val datoInnmeldtYtelseFom: LocalDate?,
     val ytelseType: YtelseTypeCode,
     val datoYtelseIverksattFom: LocalDate,
-    val datoYtelseIverksattTom: LocalDate?, // Nullable to handle null values
+    val datoYtelseIverksattTom: LocalDate?,
     val ytelseId: Long
 )

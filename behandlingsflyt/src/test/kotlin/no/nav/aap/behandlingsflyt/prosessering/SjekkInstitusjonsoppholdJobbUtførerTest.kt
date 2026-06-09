@@ -43,8 +43,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.test.januar
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Dagsatser
 import no.nav.aap.komponenter.verdityper.Prosent
@@ -129,7 +127,7 @@ class SjekkInstitusjonsoppholdJobbUtførerTest {
             saksnummer = Saksnummer("DUMMYSAKSNR"),
             person = Person(
                 id = 456L.let(::PersonId),
-                identifikator = UUID.randomUUID(),
+                referanse = UUID.randomUUID(),
                 identer = emptyList()
             ),
             rettighetsperiode = Periode(LocalDate.now().minusDays(14), LocalDate.now().plusDays(14)),
@@ -259,7 +257,7 @@ class SjekkInstitusjonsoppholdJobbUtførerTest {
                     saksnummer = Saksnummer("DUMMYSAKSNR"),
                     person = Person(
                         id = 456L.let(::PersonId),
-                        identifikator = UUID.randomUUID(),
+                        referanse = UUID.randomUUID(),
                         identer = emptyList()
                     ),
                     rettighetsperiode = Periode(LocalDate.now().minusDays(14), LocalDate.now().plusDays(14)),
@@ -274,7 +272,7 @@ class SjekkInstitusjonsoppholdJobbUtførerTest {
                         saksnummer = Saksnummer("DUMMYSAKSNR"),
                         person = Person(
                             id = 456L.let(::PersonId),
-                            identifikator = UUID.randomUUID(),
+                            referanse = UUID.randomUUID(),
                             identer = emptyList()
                         ),
                         rettighetsperiode = Periode(LocalDate.now().minusDays(14), LocalDate.now().plusDays(14)),
