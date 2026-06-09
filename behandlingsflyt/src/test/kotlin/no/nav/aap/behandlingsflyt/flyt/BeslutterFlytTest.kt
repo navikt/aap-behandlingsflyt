@@ -43,7 +43,7 @@ class BeslutterFlytTest(val unleashGateway: KClass<UnleashGateway>) : AbstraktFl
         val (_, behandling) = sendInnFørsteSøknad(
             mottattTidspunkt = fom.atStartOfDay(),
             person = person,
-            søknad = TestSøknader.SØKNAD_STUDENT
+            søknad = TestSøknader.STANDARD_SØKNAD
         )
         behandling.medKontekst {
             assertThat(behandling.typeBehandling()).isEqualTo(TypeBehandling.Førstegangsbehandling)
@@ -51,18 +51,6 @@ class BeslutterFlytTest(val unleashGateway: KClass<UnleashGateway>) : AbstraktFl
             assertThat(behandling.status()).isEqualTo(Status.UTREDES)
         }
             .løsAvklaringsBehov(
-                AvklarStudentEnkelLøsning(
-                    studentvurdering = StudentVurderingDTO(
-                        begrunnelse = "Er student",
-                        avbruttStudieDato = LocalDate.now(),
-                        avbruddMerEnn6Måneder = true,
-                        harBehovForBehandling = true,
-                        harAvbruttStudie = true,
-                        avbruttPgaSykdomEllerSkade = true,
-                        godkjentStudieAvLånekassen = false,
-                    )
-                ),
-            ).løsAvklaringsBehov(
                 AvklarSykdomLøsning(
                     løsningerForPerioder = listOf(
                         SykdomsvurderingLøsningDto(
