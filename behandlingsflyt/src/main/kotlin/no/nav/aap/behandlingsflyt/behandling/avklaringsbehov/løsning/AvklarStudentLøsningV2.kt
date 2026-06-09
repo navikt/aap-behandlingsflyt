@@ -27,7 +27,7 @@ class AvklarStudentLøsningV2(
         "behovstype",
         required = true,
         defaultValue = AVKLAR_STUDENT_KODE_V2
-    ) val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`5001`
+    ) val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`5037`
 ) : PeriodisertAvklaringsbehovLøsning<PeriodisertStudentDto> {
     override fun løs(
         repositoryProvider: RepositoryProvider,
