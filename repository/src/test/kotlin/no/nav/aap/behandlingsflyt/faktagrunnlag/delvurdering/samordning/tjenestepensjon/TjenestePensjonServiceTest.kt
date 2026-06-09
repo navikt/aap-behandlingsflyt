@@ -11,13 +11,13 @@ class TjenestePensjonServiceTest {
         val eksisterende = listOf(
             TjenestePensjonForhold(
                 TjenestePensjonOrdning("Navn", "1111", "2222"),
-                listOf(
+                setOf(
                     TjenestePensjonYtelse(null, YtelseTypeCode.AFP, LocalDate.now(), null, 1L)
                 )
             ),
             TjenestePensjonForhold(
                 TjenestePensjonOrdning("Navn 2", "123456789", "987654321"),
-                listOf(
+                setOf(
                     TjenestePensjonYtelse(null, YtelseTypeCode.AFP, LocalDate.now(), null, 1L),
                     TjenestePensjonYtelse(LocalDate.now(), YtelseTypeCode.UFORE, LocalDate.now(), null, 2L),
                 )
@@ -27,14 +27,14 @@ class TjenestePensjonServiceTest {
         val ny = listOf(
             TjenestePensjonForhold(
                 TjenestePensjonOrdning("Navn 2", "123456789", "987654321"),
-                listOf(
+                setOf(
                     TjenestePensjonYtelse(LocalDate.now(), YtelseTypeCode.UFORE, LocalDate.now(), null, 2L),
                     TjenestePensjonYtelse(null, YtelseTypeCode.AFP, LocalDate.now(), null, 1L),
                 )
             ),
             TjenestePensjonForhold(
                 TjenestePensjonOrdning("Navn", "1111", "2222"),
-                listOf(
+                setOf(
                     TjenestePensjonYtelse(null, YtelseTypeCode.AFP, LocalDate.now(), null, 1L)
                 )
             ),

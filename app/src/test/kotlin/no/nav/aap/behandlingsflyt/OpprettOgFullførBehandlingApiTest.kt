@@ -6,7 +6,11 @@ import io.micrometer.prometheusmetrics.PrometheusConfig
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.YtelseTypeCode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.gateway.SamhandlerForholdDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.gateway.SamhandlerYtelseDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.gateway.TjenestePensjonRespons
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.gateway.TpOrdning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.AfpDto
@@ -92,15 +96,16 @@ class OpprettOgFullførBehandlingApiTest {
             postgres.close()
         }
 
-        private val port: Number get() = runBlocking {
-            server.engine.resolvedConnectors().first { it.type == ConnectorType.HTTP }.port
-        }
+        private val port: Number
+            get() = runBlocking {
+                server.engine.resolvedConnectors().first { it.type == ConnectorType.HTTP }.port
+            }
     }
 
     @Test
     fun `oppretter og fullfører behandling automatisk`() {
         opprettOgVerifiserBehandling(
-            ident = "10107099950",
+            testPerson = standardTestPerson("10107099950"),
             erStudent = false,
         )
     }
@@ -108,7 +113,7 @@ class OpprettOgFullførBehandlingApiTest {
     @Test
     fun `oppretter og fullfører behandling automatisk for student`() {
         opprettOgVerifiserBehandling(
-            ident = "10107099951",
+            testPerson = standardTestPerson("10107099951"),
             erStudent = true,
         )
     }
@@ -116,16 +121,15 @@ class OpprettOgFullførBehandlingApiTest {
     @Test
     fun `oppretter og fullfører behandling automatisk uten inntekt`() {
         opprettOgVerifiserBehandling(
-            ident = "10107099955",
+            testPerson = standardTestPerson("10107099955").medInntekter(emptyList()),
             erStudent = true,
-            brukersInntekter = emptyList()
         )
     }
 
     @Test
     fun `oppretter og fullfører behandling automatisk med samordning afp`() {
         opprettOgVerifiserBehandling(
-            ident = "10107099956",
+            testPerson = standardTestPerson("10107099956"),
             erStudent = true,
             andreUtbetalingerApiDto = AndreUtbetalingerApiDto(
                 loenn = JaNeiDto.JA,
@@ -138,7 +142,7 @@ class OpprettOgFullførBehandlingApiTest {
     @Test
     fun `oppretter og fullfører behandling automatisk uten medlemskap`() {
         opprettOgVerifiserBehandling(
-            ident = "10107099952",
+            testPerson = standardTestPerson("10107099952"),
             erStudent = false,
             harMedlemskap = false,
         )
@@ -235,8 +239,46 @@ class OpprettOgFullførBehandlingApiTest {
     }
 
     @Test
-    fun `søknadsdato settes som rettighetsperiode fom`() {
+    fun `tp-ordning med samordning afp`() {
         val ident = "10107099957"
+        val testPerson1 = TestPerson(
+            identer = setOf(Ident(ident)),
+            fødselsdato = Fødselsdato(LocalDate.now().minusYears(25)),
+            tjenestePensjon = TjenestePensjonRespons(
+                fnr = ident,
+                forhold = listOf(
+                    SamhandlerForholdDto(
+                        ordning = TpOrdning(
+                            navn = "3100 MARITIM PENSJONSKASSE",
+                            tpNr = "3100",
+                            orgNr = "1234"
+                        ),
+                        ytelser = listOf(
+                            SamhandlerYtelseDto(
+                                datoInnmeldtYtelseFom = LocalDate.now().minusYears(1),
+                                ytelseType = YtelseTypeCode.AFP,
+                                datoYtelseIverksattFom = LocalDate.now().minusMonths(1),
+                                datoYtelseIverksattTom = LocalDate.now().plusYears(1).minusMonths(1),
+                                ytelseId = 3100
+                            )
+                        )
+                    )
+                )
+            )
+        )
+
+        assertThat(testPerson1.aktivIdent().identifikator).isEqualTo(ident)
+        opprettOgVerifiserBehandling(
+            testPerson = testPerson1,
+            erStudent = false,
+            harMedlemskap = false,
+        )
+
+    }
+
+    @Test
+    fun `søknadsdato settes som rettighetsperiode fom`() {
+        val ident = "10107099958"
         val søknadsdato = LocalDate.now().minusYears(2)
         FakePersoner.leggTil(
             TestPerson(
@@ -269,22 +311,21 @@ class OpprettOgFullførBehandlingApiTest {
         }
     }
 
+    private fun standardTestPerson(ident: String) = TestPerson(
+        identer = setOf(Ident(ident)),
+        fødselsdato = Fødselsdato(LocalDate.now().minusYears(25)),
+    ).medInntekter(defaultInntekt())
+
     private fun opprettOgVerifiserBehandling(
-        ident: String,
+        testPerson: TestPerson,
         erStudent: Boolean,
         harMedlemskap: Boolean = true,
         harYrkesskade: Boolean = false,
         andreUtbetalingerApiDto: AndreUtbetalingerApiDto? = null,
-        brukersInntekter: List<InntektPerÅr>? = null,
     ) {
-        FakePersoner.leggTil(
-            TestPerson(
-                identer = setOf(Ident(ident)),
-                fødselsdato = Fødselsdato(
-                    LocalDate.now().minusYears(25)
-                ),
-            ).medInntekter(brukersInntekter ?: defaultInntekt()),
-        )
+        FakePersoner.leggTil(testPerson)
+
+        val ident = testPerson.aktivIdent().identifikator
 
         val respons: OpprettOgFullforBehandlingRespons? = ccClient.post(
             URI.create("http://localhost:$port/api/test/opprettOgFullfoerBehandling"),

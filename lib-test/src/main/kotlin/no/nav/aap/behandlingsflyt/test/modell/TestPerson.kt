@@ -25,6 +25,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreSøknad
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.gateway.TiltakspengerKilde
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.gateway.TiltakspengerYtelseType
 
+import no.nav.aap.dokumentinnhenting.kontrakt.BehandlerDto
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.Prosent
 import java.time.LocalDate
@@ -63,6 +64,7 @@ class TestPerson(
         )
     ),
     val medlStatus: List<MedlemskapDataIntern> = emptyList(),
+    var fastlege: BehandlerDto? = null,
     var sykepenger: List<Sykepenger>? = null,
     var dagpenger: List<Dagpenger>? = null,
     var tiltakspenger: List<Tiltakspenger>? = null,
@@ -111,6 +113,11 @@ class TestPerson(
 
     fun medUføre(uføre: Prosent?, virkningstidspunkt: LocalDate = LocalDate.now().minusYears(3), uføregradTom: LocalDate? = null): TestPerson {
         this.uføre = uføre?.let { Uføre(virkningstidspunkt = virkningstidspunkt, uføregrad = uføre, uføregradTom = uføregradTom) }
+        return this
+    }
+
+    fun medFastlege(fastlege: BehandlerDto): TestPerson {
+        this.fastlege = fastlege
         return this
     }
 

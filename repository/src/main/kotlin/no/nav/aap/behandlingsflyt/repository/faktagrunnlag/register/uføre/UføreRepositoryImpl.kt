@@ -32,7 +32,6 @@ class UføreRepositoryImpl(private val connection: DBConnection) : UføreReposit
             }
             setRowMapper { row ->
                 UføreGrunnlag(
-                    behandlingId = behandlingId,
                     vurderinger = hentVurderinger(row.getLong("ufore_id"))
                 )
             }
@@ -54,7 +53,6 @@ class UføreRepositoryImpl(private val connection: DBConnection) : UføreReposit
             }
             setRowMapper { row ->
                 UføreGrunnlag(
-                    behandlingId = behandlingId,
                     vurderinger = hentVurderinger(row.getLong("ufore_id"))
                 )
             }

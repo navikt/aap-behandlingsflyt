@@ -3,10 +3,13 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting
 import no.nav.aap.dokumentinnhenting.kontrakt.BehandlingsflytToDokumentInnhentingBestillingDto
 import no.nav.aap.dokumentinnhenting.kontrakt.DialogmeldingForhåndsvisningDto
 import no.nav.aap.dokumentinnhenting.kontrakt.DialogmeldingStatusTilBehandslingsflytDto
+import no.nav.aap.dokumentinnhenting.kontrakt.FastlegeDto
 import no.nav.aap.dokumentinnhenting.kontrakt.ForhåndsvisDialogmeldingDto
+import no.nav.aap.dokumentinnhenting.kontrakt.HentFastlegeDto
 import no.nav.aap.dokumentinnhenting.kontrakt.LegeerklæringPurringDto
 import no.nav.aap.dokumentinnhenting.kontrakt.MarkerBestillingSomMottattDto
 import no.nav.aap.komponenter.gateway.Gateway
+import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
 
 interface DokumentinnhentingGateway : Gateway {
 
@@ -15,4 +18,5 @@ interface DokumentinnhentingGateway : Gateway {
     fun markerDialogmeldingStatusSomMottatt(markerSomMottattRequest: MarkerBestillingSomMottattDto): DialogmeldingStatusTilBehandslingsflytDto
     fun legeerklæringStatus(saksnummer: String): List<DialogmeldingStatusTilBehandslingsflytDto>
     fun forhåndsvisDialogmelding(request: ForhåndsvisDialogmeldingDto): DialogmeldingForhåndsvisningDto
+    fun hentFastlege(request: HentFastlegeDto, currentToken: OidcToken): FastlegeDto
 }

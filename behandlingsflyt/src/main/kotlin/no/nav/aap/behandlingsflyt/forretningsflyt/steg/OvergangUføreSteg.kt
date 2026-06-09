@@ -1,15 +1,21 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
+import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovMetadataUtleder
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.behandling.vilkår.overganguføre.OvergangUføreFaktagrunnlag
 import no.nav.aap.behandlingsflyt.behandling.vilkår.overganguføre.OvergangUføreVilkår
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.tilTidslinje
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.UføreSøknadVedtakResultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreValidering.nårVurderingErKonsistentMedSykdomOgBistand
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
@@ -17,16 +23,25 @@ import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.UførevedtakResultat
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.UførevedtakV0
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
+import org.slf4j.LoggerFactory
+import java.time.Instant
+import java.time.LocalDate
 
 class OvergangUføreSteg private constructor(
     private val vilkårsresultatRepository: VilkårsresultatRepository,
@@ -35,8 +50,12 @@ class OvergangUføreSteg private constructor(
     private val tidligereVurderinger: TidligereVurderinger,
     private val bistandRepository: BistandRepository,
     private val avklaringsbehovService: AvklaringsbehovService,
+    private val mottattDokumentRepository: MottattDokumentRepository,
+    private val uføreRepository: UføreRepository,
     private val unleashGateway: UnleashGateway,
 ) : BehandlingSteg, AvklaringsbehovMetadataUtleder {
+    private val log = LoggerFactory.getLogger(javaClass)
+
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         vilkårsresultatRepository = repositoryProvider.provide(),
         overgangUføreRepository = repositoryProvider.provide(),
@@ -44,35 +63,47 @@ class OvergangUføreSteg private constructor(
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
         bistandRepository = repositoryProvider.provide(),
         avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
+        mottattDokumentRepository = repositoryProvider.provide(),
+        uføreRepository = repositoryProvider.provide(),
         unleashGateway = gatewayProvider.provide()
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        val perioderSomIkkeErTilstrekkeligVurdert: () -> Set<Periode> =
-            { perioderSomIkkeErTilstrekkeligVurdert(kontekst) }
+        if (erAutomatiskOpphør11_18(kontekst)) {
+            val uførevedtak = hentUførevedtak(kontekst.sakId) ?: return Fullført
+            lagreAutomatiskOpphør11_18(
+                sakId = kontekst.sakId,
+                behandlingId = kontekst.behandlingId,
+                forrigeBehandlingId = kontekst.forrigeBehandlingId,
+                virkningsdato = uførevedtak.virkningsdato,
+            )
+        } else {
+            val perioderSomIkkeErTilstrekkeligVurdert: () -> Set<Periode> =
+                { perioderSomIkkeErTilstrekkeligVurdert(kontekst) }
 
-        avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkårTilstrekkeligVurdert(
-            kontekst = kontekst,
-            definisjon = Definisjon.AVKLAR_OVERGANG_UFORE,
-            tvingerAvklaringsbehov = setOf(
-                Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND,
-                Vurderingsbehov.OVERGANG_UFORE,
-            ),
-            nårVurderingErRelevant = ::nårVurderingErRelevant,
-            perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert,
-            tilbakestillGrunnlag = {
-                val vedtatteVurderinger =
-                    kontekst.forrigeBehandlingId?.let { overgangUføreRepository.hentHvisEksisterer(it) }?.vurderinger.orEmpty()
-                val aktiveVurderinger =
-                    overgangUføreRepository.hentHvisEksisterer(kontekst.behandlingId)?.vurderinger.orEmpty()
-                if (vedtatteVurderinger.toSet() != aktiveVurderinger.toSet()) {
-                    overgangUføreRepository.lagre(kontekst.behandlingId, vedtatteVurderinger)
-                }
-            },
-        )
+            avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkårTilstrekkeligVurdert(
+                kontekst = kontekst,
+                definisjon = Definisjon.AVKLAR_OVERGANG_UFORE,
+                tvingerAvklaringsbehov = setOf(
+                    Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND,
+                    Vurderingsbehov.OVERGANG_UFORE,
+                ),
+                nårVurderingErRelevant = ::nårVurderingErRelevant,
+                perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert,
+                tilbakestillGrunnlag = {
+                    val vedtatteVurderinger =
+                        kontekst.forrigeBehandlingId?.let { overgangUføreRepository.hentHvisEksisterer(it) }?.vurderinger.orEmpty()
+                    val aktiveVurderinger =
+                        overgangUføreRepository.hentHvisEksisterer(kontekst.behandlingId)?.vurderinger.orEmpty()
+                    if (vedtatteVurderinger.toSet() != aktiveVurderinger.toSet()) {
+                        overgangUføreRepository.lagre(kontekst.behandlingId, vedtatteVurderinger)
+                    }
+                },
+            )
+        }
 
         when (kontekst.vurderingType) {
-            VurderingType.FØRSTEGANGSBEHANDLING, VurderingType.REVURDERING -> {
+            VurderingType.FØRSTEGANGSBEHANDLING, VurderingType.REVURDERING, VurderingType.OVERGANG_UFORE_STANS -> {
                 val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
                 vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.OVERGANGUFØREVILKÅRET)
                 val grunnlag = OvergangUføreFaktagrunnlag(
@@ -89,6 +120,87 @@ class OvergangUføreSteg private constructor(
         return Fullført
     }
 
+    private fun erAutomatiskOpphør11_18(kontekst: FlytKontekstMedPerioder): Boolean {
+        if (unleashGateway.isDisabled(BehandlingsflytFeature.AutomatiskStans1118)) {
+            return false
+        }
+
+        val uførevedtak = hentUførevedtak(kontekst.sakId) ?: return false
+        return uførevedtak.resultat == UførevedtakResultat.INNV &&
+                uførevedtak.virkningsdato.isAfter(LocalDate.now())
+    }
+
+    private fun lagreAutomatiskOpphør11_18(
+        sakId: SakId,
+        behandlingId: BehandlingId,
+        forrigeBehandlingId: BehandlingId?,
+        virkningsdato: LocalDate,
+    ) {
+        val uførevedtak = hentUførevedtak(sakId) ?: return
+        log.info("Lagrer automatisk 11-18 for sak $sakId i behandling $behandlingId")
+        val vedtakResultat = utledVedtakResultat(
+            behandlingId = behandlingId,
+            virkningsdato = virkningsdato,
+        )
+
+        val vedtatteVurderinger = forrigeBehandlingId
+            ?.let { overgangUføreRepository.hentHvisEksisterer(it) }
+            ?.vurderinger
+            .orEmpty()
+        val eksisterendeVurderinger = overgangUføreRepository.hentHvisEksisterer(behandlingId)?.vurderinger.orEmpty()
+        val harAutomatiskVurderingAllerede = eksisterendeVurderinger.any {
+            it.vurdertAv == SYSTEMBRUKER.ident && it.fom == uførevedtak.virkningsdato
+        }
+        if (harAutomatiskVurderingAllerede) return
+
+        val automatiskVurdering = OvergangUføreVurdering(
+            begrunnelse = "Automatisk opphør på grunn av vedtak om uføre",
+            brukerHarSøktOmUføretrygd = true,
+            brukerHarFåttVedtakOmUføretrygd = vedtakResultat,
+            brukerRettPåAAP = false,
+            fom = virkningsdato,
+            tom = null,
+            vurdertAv = SYSTEMBRUKER.ident,
+            vurdertIBehandling = behandlingId,
+            opprettet = Instant.now(),
+        )
+
+        overgangUføreRepository.lagre(
+            behandlingId = behandlingId,
+            overgangUføreVurderinger = (eksisterendeVurderinger + vedtatteVurderinger) + automatiskVurdering,
+        )
+    }
+
+    private fun hentUførevedtak(sakId: SakId): UførevedtakV0? {
+        val dokument = mottattDokumentRepository.hentDokumenterAvType(
+            sakId = sakId,
+            type = InnsendingType.UFØRE_VEDTAK_HENDELSE
+        ).maxByOrNull { it.mottattTidspunkt } ?: return null
+
+        return requireNotNull(dokument.strukturerteData<UførevedtakV0>()?.data) {
+            "Fant ikke uførevedtak for sak $sakId"
+        }
+    }
+
+    private fun utledVedtakResultat(
+        behandlingId: BehandlingId,
+        virkningsdato: LocalDate,
+    ): UføreSøknadVedtakResultat {
+        val uføregrad = uføreRepository.hentHvisEksisterer(behandlingId)
+            ?.vurderinger
+            .orEmpty()
+            .tilTidslinje()
+            .segment(virkningsdato)
+            ?.verdi
+            ?.prosentverdi()
+
+        return when (uføregrad) {
+            100 -> UføreSøknadVedtakResultat.JA_INNVILGET_FULL
+            null -> UføreSøknadVedtakResultat.JA_INNVILGET_GRADERT
+            else -> UføreSøknadVedtakResultat.JA_INNVILGET_GRADERT
+        }
+    }
+
     override fun nårVurderingErRelevant(kontekst: FlytKontekstMedPerioder): Tidslinje<Boolean> {
         val utfall = tidligereVurderinger.behandlingsutfall(kontekst, type())
         val sykdomsvurderinger =
@@ -97,7 +209,7 @@ class OvergangUføreSteg private constructor(
         return Tidslinje.map2(
             utfall,
             sykdomsvurderinger
-        ) { segmentPeriode, utfall, sykdomsvurering ->
+        ) { _, utfall, sykdomsvurering ->
             when (utfall) {
                 TidligereVurderinger.IkkeBehandlingsgrunnlag, TidligereVurderinger.UunngåeligAvslag -> false
                 is TidligereVurderinger.PotensieltOppfylt -> {
