@@ -12,6 +12,9 @@ import no.nav.aap.dokumentinnhenting.kontrakt.HentFastlegeDto
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
 import no.nav.aap.lookup.repository.RepositoryProvider
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.BehandlerDto as SøknadBehandlerDto
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.FastlegeDto as SøknadFastlegeDto
+import no.nav.aap.dokumentinnhenting.kontrakt.BehandlerDto as DokumentinnhentingBehandlerDto
 
 class FastlegeService(
     private val dokumentinnhentingGateway: DokumentinnhentingGateway,
@@ -62,13 +65,13 @@ class FastlegeService(
     }
 
     private fun erSammeBehandler(
-        gjeldendeFastlege: no.nav.aap.dokumentinnhenting.kontrakt.BehandlerDto?,
-        fastlegeFraSøknad: no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.FastlegeDto?
+        gjeldendeFastlege: DokumentinnhentingBehandlerDto?,
+        fastlegeFraSøknad: SøknadFastlegeDto?
     ): Boolean {
         return gjeldendeFastlege?.behandlerRef == fastlegeFraSøknad?.behandlerRef
     }
 
-    private fun no.nav.aap.dokumentinnhenting.kontrakt.BehandlerDto.tilDto(): BehandlerDto {
+    private fun DokumentinnhentingBehandlerDto.tilDto(): BehandlerDto {
         return BehandlerDto(
             behandlerRef = behandlerRef,
             hprId = hprId,
@@ -81,7 +84,7 @@ class FastlegeService(
         )
     }
 
-    private fun no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.BehandlerDto.tilDto(): ManueltOppgittBehandlerDto {
+    private fun SøknadBehandlerDto.tilDto(): ManueltOppgittBehandlerDto {
         return ManueltOppgittBehandlerDto(
             navn = listOfNotNull(firstname, lastname).joinToString(" "),
             legekontor = legekontor,
