@@ -105,10 +105,7 @@ class OpprettOgFullførBehandlingApiTest {
     @Test
     fun `oppretter og fullfører behandling automatisk`() {
         opprettOgVerifiserBehandling(
-            testPerson = TestPerson(
-                identer = setOf(Ident("10107099950")),
-                fødselsdato = Fødselsdato(LocalDate.now().minusYears(25)),
-            ).medInntekter(defaultInntekt()),
+            testPerson = standardTestPerson("10107099950"),
             erStudent = false,
         )
     }
@@ -116,10 +113,7 @@ class OpprettOgFullførBehandlingApiTest {
     @Test
     fun `oppretter og fullfører behandling automatisk for student`() {
         opprettOgVerifiserBehandling(
-            testPerson = TestPerson(
-                identer = setOf(Ident("10107099951")),
-                fødselsdato = Fødselsdato(LocalDate.now().minusYears(25)),
-            ).medInntekter(defaultInntekt()),
+            testPerson = standardTestPerson("10107099951"),
             erStudent = true,
         )
     }
@@ -127,10 +121,7 @@ class OpprettOgFullførBehandlingApiTest {
     @Test
     fun `oppretter og fullfører behandling automatisk uten inntekt`() {
         opprettOgVerifiserBehandling(
-            testPerson = TestPerson(
-                identer = setOf(Ident("10107099955")),
-                fødselsdato = Fødselsdato(LocalDate.now().minusYears(25)),
-            ).medInntekter(emptyList()),
+            testPerson = standardTestPerson("10107099955").medInntekter(emptyList()),
             erStudent = true,
         )
     }
@@ -138,10 +129,7 @@ class OpprettOgFullførBehandlingApiTest {
     @Test
     fun `oppretter og fullfører behandling automatisk med samordning afp`() {
         opprettOgVerifiserBehandling(
-            testPerson = TestPerson(
-                identer = setOf(Ident("10107099956")),
-                fødselsdato = Fødselsdato(LocalDate.now().minusYears(25)),
-            ).medInntekter(defaultInntekt()),
+            testPerson = standardTestPerson("10107099956"),
             erStudent = true,
             andreUtbetalingerApiDto = AndreUtbetalingerApiDto(
                 loenn = JaNeiDto.JA,
@@ -154,10 +142,7 @@ class OpprettOgFullførBehandlingApiTest {
     @Test
     fun `oppretter og fullfører behandling automatisk uten medlemskap`() {
         opprettOgVerifiserBehandling(
-            testPerson = TestPerson(
-                identer = setOf(Ident("10107099952")),
-                fødselsdato = Fødselsdato(LocalDate.now().minusYears(25)),
-            ).medInntekter(defaultInntekt()),
+            testPerson = standardTestPerson("10107099952"),
             erStudent = false,
             harMedlemskap = false,
         )
@@ -325,6 +310,11 @@ class OpprettOgFullførBehandlingApiTest {
             assertThat(sak.rettighetsperiode.fom).isEqualTo(søknadsdato)
         }
     }
+
+    private fun standardTestPerson(ident: String) = TestPerson(
+        identer = setOf(Ident(ident)),
+        fødselsdato = Fødselsdato(LocalDate.now().minusYears(25)),
+    ).medInntekter(defaultInntekt())
 
     private fun opprettOgVerifiserBehandling(
         testPerson: TestPerson,
