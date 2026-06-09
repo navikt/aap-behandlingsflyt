@@ -76,7 +76,7 @@ class TjenestePensjonRepositoryImpl(private val dbConnection: DBConnection) : Tj
                 FROM TJENESTEPENSJON_YTELSE WHERE TJENESTEPENSJON_ORDNING_ID = ?
         """.trimIndent()
 
-        return dbConnection.queryList(sql) {
+        return dbConnection.querySet(sql) {
             setParams { setLong(1, ordningId) }
             setRowMapper {
                 TjenestePensjonYtelse(
@@ -87,7 +87,7 @@ class TjenestePensjonRepositoryImpl(private val dbConnection: DBConnection) : Tj
                     ytelseId = it.getLong("EXTERN_ID")
                 )
             }
-        }.toSet()
+        }
     }
 
 
