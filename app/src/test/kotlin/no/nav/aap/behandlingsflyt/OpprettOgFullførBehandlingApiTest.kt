@@ -370,6 +370,7 @@ class OpprettOgFullførBehandlingApiTest {
             val behandlinger = behandlingRepo.hentAlleFor(sak.id)
             assertThat(behandlinger).hasSize(2)
             assertThat(behandlinger.first().status()).isEqualTo(Status.AVSLUTTET)
+            assertThat(behandlinger.last().status()).isEqualTo(Status.AVSLUTTET)
         }
     }
     private fun standardTestPerson(ident: String) = TestPerson(
