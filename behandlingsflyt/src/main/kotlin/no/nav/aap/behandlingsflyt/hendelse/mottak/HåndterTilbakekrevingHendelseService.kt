@@ -111,6 +111,7 @@ class HåndterTilbakekrevingHendelseService(
             ÅrsakTilOpprettelse.UTVID_VEDTAKSLENGDE,
             ÅrsakTilOpprettelse.BARNETILLEGG_SATSENDRING,
             ÅrsakTilOpprettelse.MIGRER_RETTIGHETSPERIODE,
+            ÅrsakTilOpprettelse.UFØRE_VEDTAK_HENDELSE,
             ÅrsakTilOpprettelse.G_REGULERING -> FagsysteminfoSvarHendelse.RevurderingDto.Årsak.NYE_OPPLYSNINGER
 
             ÅrsakTilOpprettelse.MELDEKORT,

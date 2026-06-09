@@ -41,7 +41,7 @@ object MottattHendelseUtleder {
             InnsendingType.SYKEPENGE_VEDTAK_HENDELSE -> throw IllegalArgumentException("Sykepengevedtakhendelser skal trigge sjekk av informasjonskrav og ikke opprette en behandling direkte")
             InnsendingType.FORELDREPENGE_VEDTAK_HENDELSE -> throw IllegalArgumentException("Foreldrepengevedtakhendelser skal trigge sjekk av informasjonskrav og ikke opprette en behandling direkte")
             InnsendingType.PDL_HENDELSE_FOLKEREGISTERIDENT -> throw IllegalArgumentException("Folkeregisteridenthendelser skal trigge oppdatering av person og sak - ikke opprette en behandling")
-            InnsendingType.UFØRE_VEDTAK_HENDELSE -> ÅrsakTilOpprettelse.ENDRING_I_REGISTERDATA
+            InnsendingType.UFØRE_VEDTAK_HENDELSE -> ÅrsakTilOpprettelse.UFØRE_VEDTAK_HENDELSE
         }
     }
 
