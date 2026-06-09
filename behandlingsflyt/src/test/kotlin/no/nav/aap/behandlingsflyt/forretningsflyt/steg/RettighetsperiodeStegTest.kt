@@ -269,7 +269,7 @@ class RettighetsperiodeStegTest {
     private fun person(): Person =
         Person(
             id = PersonId(Random(1235123).nextLong()),
-            identifikator = UUID.randomUUID(),
+            referanse = UUID.randomUUID(),
             identer = listOf(genererIdent(LocalDate.now().minusYears(23)))
         )
 }
