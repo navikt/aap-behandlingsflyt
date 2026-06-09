@@ -14,7 +14,7 @@ import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 
 class KravSteg(
-    private val unleashGateway: UnleashGateway
+    private val unleashGateway: UnleashGateway,
     private val kravRepository: KravRepository
 ) : BehandlingSteg {
 
