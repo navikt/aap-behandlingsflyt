@@ -381,7 +381,7 @@ class BrevUtlederService(
             sykdomsvurdering = sykdomsvurdering,
             forholdTilAndreYtelser = samordning,
             yrkesskadeBeregning = yrkesskadeBeregning,
-            yrkesSkadeISøknadIkkeIRegister = yrkesSkadeISøknadIkkeIRegister
+            yrkesSkadeISøknadIkkeIRegister = yrkesSkadeISøknadIkkeIRegister,
             foreldreansvarVurderinger = foreldreAnsvarVurderinger
         )
     }
