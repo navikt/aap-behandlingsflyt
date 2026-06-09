@@ -65,7 +65,7 @@ class FastlegeService(
         gjeldendeFastlege: no.nav.aap.dokumentinnhenting.kontrakt.BehandlerDto?,
         fastlegeFraSøknad: no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.FastlegeDto?
     ): Boolean {
-        return gjeldendeFastlege?.behandlerRef != null && gjeldendeFastlege.behandlerRef == fastlegeFraSøknad?.behandlerRef
+        return gjeldendeFastlege?.behandlerRef == fastlegeFraSøknad?.behandlerRef
     }
 
     private fun no.nav.aap.dokumentinnhenting.kontrakt.BehandlerDto.tilDto(): BehandlerDto {
