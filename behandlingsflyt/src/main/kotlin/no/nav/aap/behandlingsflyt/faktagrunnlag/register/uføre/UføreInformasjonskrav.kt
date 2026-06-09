@@ -107,11 +107,14 @@ class UføreInformasjonskrav(
         val grunnlag = uføreRepository.hentHvisEksisterer(kontekst.behandlingId)
         val forrigeGrunnlag = uføreRepository.hentHvisEksisterer(forrigeBehandlingId)
 
-        return if (grunnlag != forrigeGrunnlag) {
-            uføreRepository.kopier(forrigeBehandlingId, kontekst.behandlingId)
-            ENDRET
-        } else {
+        val forrigeVurderinger = forrigeGrunnlag?.vurderinger ?: return IKKE_ENDRET
+
+        return if (grunnlag?.vurderinger == forrigeVurderinger) {
             IKKE_ENDRET
+        } else {
+            val mergedVurderinger = (grunnlag?.vurderinger ?: emptySet()) + forrigeVurderinger
+            uføreRepository.lagre(kontekst.behandlingId, mergedVurderinger)
+            ENDRET
         }
     }
 

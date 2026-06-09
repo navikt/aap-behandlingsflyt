@@ -20,7 +20,7 @@ object InMemoryUføreRepository : UføreRepository {
         behandlingId: BehandlingId,
         uføre: Set<no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.Uføre>
     ) = synchronized(mutex) {
-        grunnlag[behandlingId] = UføreGrunnlag(behandlingId, uføre)
+        grunnlag[behandlingId] = UføreGrunnlag(uføre)
     }
 
     override fun kopier(
@@ -29,7 +29,7 @@ object InMemoryUføreRepository : UføreRepository {
     ) = synchronized(mutex) {
         val fraGrunnlag = grunnlag[fraBehandling]
         if (fraGrunnlag != null) {
-            grunnlag[tilBehandling] = fraGrunnlag.copy(behandlingId = tilBehandling)
+            grunnlag[tilBehandling] = fraGrunnlag
         }
     }
 
