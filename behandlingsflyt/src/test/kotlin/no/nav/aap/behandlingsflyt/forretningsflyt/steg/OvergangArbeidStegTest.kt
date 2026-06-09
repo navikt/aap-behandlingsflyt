@@ -119,7 +119,6 @@ class OvergangArbeidStegTest {
             avklaringsbehovService = AvklaringsbehovService(inMemoryRepositoryProvider),
             uføreRepository = mockk<UføreRepository> {
                 every { hentHvisEksisterer(any()) } returns UføreGrunnlag(
-                    behandlingId = behandling.id,
                     vurderinger = setOf(Uføre(virkningstidspunkt = 1 januar 2010, uføregrad = Prosent(50)))
                 )
             }

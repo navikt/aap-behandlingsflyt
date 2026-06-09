@@ -116,8 +116,6 @@ class BehandlingHendelseServiceTest {
 
         every { avklaringsbehovene.alle() } returns emptyList()
         every { avklaringsbehovene.hentÅpneVentebehov() } returns emptyList()
-        every { unleashGateway.isEnabled(any()) } returns true
-
 
         // ACT
 

@@ -51,11 +51,11 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.GReguleringUtplukkJobb to true,
         BehandlingsflytFeature.ForutgaaendeGap to true,
         BehandlingsflytFeature.MaritimtArbeid to true,
-        BehandlingsflytFeature.ForstegangsbehandlingEtterAvslagOppgave to true,
         BehandlingsflytFeature.AlleEndringerKreverKvalitetssikring to true,
         BehandlingsflytFeature.MeldepliktForsteFraForsteInnvilgelse to true,
         BehandlingsflytFeature.RevurderingEtterAvslagSkalKvalitetssikres to true,
         BehandlingsflytFeature.MeldekortEndretAvSaksbehandler to true,
+        BehandlingsflytFeature.AutomatiskStans1118 to true
         )
 )
 
