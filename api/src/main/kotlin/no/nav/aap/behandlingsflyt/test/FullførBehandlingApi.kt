@@ -49,7 +49,7 @@ fun NormalOpenAPIRoute.fullførBehandlingApi(
                             søknadsdato = req.soeknadsdato,
                         )
                 }
-                thread(isDaemon = true, block = withMdc { service.fullforBehandling(resultat.sak, resultat.ventPåNyBehandling) })
+                thread(isDaemon = true, block = withMdc { service.fullførBehandling(resultat.sak, resultat.ventPåNyBehandling) })
                 respond(OpprettOgFullforBehandlingRespons(resultat.sak.saksnummer.toString()))
             } catch (e: OpprettTestSakException) {
                 throw UgyldigForespørselException(message = e.message ?: "Ukjent feil", cause = e)
