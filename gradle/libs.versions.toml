@@ -1,10 +1,10 @@
 [versions]
 ktor = "3.4.0"
-komponenter = "2.0.71"
+komponenter = "2.0.72"
 tilgang = "1.0.225"
 utbetaling = "0.0.110"
 brev = "0.0.264"
-oppgave = "0.0.175"
+oppgave = "0.0.177"
 meldekort = "0.0.214"
 apiIntern = "0.0.82"
 dokumentinnhenting = "0.0.2"
