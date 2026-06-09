@@ -278,7 +278,7 @@ class OpprettOgFullførBehandlingApiTest {
 
     @Test
     fun `søknadsdato settes som rettighetsperiode fom`() {
-        val ident = "10107099957"
+        val ident = "10107099958"
         val søknadsdato = LocalDate.now().minusYears(2)
         FakePersoner.leggTil(
             TestPerson(
