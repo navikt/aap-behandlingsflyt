@@ -481,7 +481,7 @@ private fun sendInnSøknad(
     val sak = datasource.transaction { connection ->
         val repositoryProvider = repositoryRegistry.provider(connection)
         val sakService = PersonOgSakService(gatewayProvider, repositoryProvider)
-        val sak = sakService.finnEllerOpprett(ident, dto.soeknadsdato ?: LocalDate.now())
+        val sak = sakService.finnEllerOpprett(ident, dto.søknadsdato ?: LocalDate.now())
 
         val flytJobbRepository = FlytJobbRepository(connection)
 
@@ -494,7 +494,7 @@ private fun sendInnSøknad(
                 brevkategori = InnsendingType.SØKNAD,
                 kanal = Kanal.DIGITAL,
                 melding = melding,
-                mottattTidspunkt = dto.soeknadsdato?.atStartOfDay() ?: LocalDateTime.now(),
+                mottattTidspunkt = dto.søknadsdato?.atStartOfDay() ?: LocalDateTime.now(),
             )
         )
         sak
@@ -538,12 +538,12 @@ private fun opprettNySakOgBehandling(
     with(testScenarioOrkestrator) {
         // Student eller sykdom
         if (dto.student) {
-            løsStudent(behandling, vurderingenGjelderFra = dto.soeknadsdato ?: sak.rettighetsperiode.fom)
+            løsStudent(behandling, vurderingenGjelderFra = dto.søknadsdato ?: sak.rettighetsperiode.fom)
         } else {
             if (dto.steg == StegType.AVKLAR_SYKDOM) return sak
             løsSykdom(
                 behandling = behandling,
-                vurderingGjelderFra = dto.soeknadsdato ?: sak.rettighetsperiode.fom,
+                vurderingGjelderFra = dto.søknadsdato ?: sak.rettighetsperiode.fom,
                 harNedsattArbeidsevne = if (dto.harNedsattArbeidsevne) ArbeidsevneNedsattValg.JA else ArbeidsevneNedsattValg.NEI,
                 erNedsettelseIArbeidsevneMerEnnHalvparten = dto.erNedsettelseIArbeidsevneMerEnnHalvparten
             )
@@ -553,7 +553,7 @@ private fun opprettNySakOgBehandling(
 
         if (harBehandlingsgrunnlag) {
             if (dto.steg == StegType.VURDER_BISTANDSBEHOV) return sak
-            løsBistand(behandling, dto.soeknadsdato ?: sak.rettighetsperiode.fom)
+            løsBistand(behandling, dto.søknadsdato ?: sak.rettighetsperiode.fom)
 
             // Vurderinger i sykdom
             if (dto.steg == StegType.REFUSJON_KRAV) return sak
@@ -646,7 +646,7 @@ private fun opprettNySakOgBehandling(
 }
 
 private fun manglendeInntektsår(dto: OpprettTestcaseDTO): List<Int> {
-    val søknadsdato = dto.soeknadsdato ?: LocalDate.now()
+    val søknadsdato = dto.søknadsdato ?: LocalDate.now()
     val nåværendeÅr = søknadsdato.year
     val siste3År = listOf(nåværendeÅr - 1, nåværendeÅr - 2, nåværendeÅr - 3)
 
