@@ -31,7 +31,6 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.Sykdomsvur
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.YrkesskadeSakDto
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.YrkesskadevurderingDto
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingRepository
-import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.AvklarOppholdkravLøsningForPeriodeDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.AndreStatligeYtelser
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.SamordningAndreStatligeYtelserVurderingDto
@@ -57,6 +56,7 @@ import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.EØSLandEllerLan
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.PeriodisertStudentDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -83,23 +83,43 @@ class TestBehandlingFullføringService(
 ) {
     private val log = LoggerFactory.getLogger(javaClass)
 
-    fun fullforBehandling(sak: Sak) {
+    fun fullforBehandling(sak: Sak, ventPåNyBehandling: Boolean = false) {
+        val behandlingId = ventPåÅpenBehandlingOgReturnerBehandlingId(sak, ventPåNyBehandling) ?: run {
+            log.error("Fant ingen åpen behandling for sak ${sak.id} innen tidsgrensen")
+            return
+        }
+
         val sisteBehandlingId = (1..MAKS_ITERASJONER).asSequence()
-            .takeWhile { !erBehandlingAvsluttet(sak) }
+            .takeWhile { !erBehandlingAvsluttet(behandlingId) }
             .fold<Int, BehandlingId?>(null) { forrige, _ ->
-                prosesserNesteSteg(sak) ?: forrige
+                prosesserNesteSteg(sak, behandlingId) ?: forrige
             }
 
-        if (!erBehandlingAvsluttet(sak)) {
-            log.error("Behandling ${sisteBehandlingId ?: "ukjent"} ble ikke avsluttet innen $MAKS_ITERASJONER iterasjoner")
+        if (!erBehandlingAvsluttet(behandlingId)) {
+            log.error("Behandling ${sisteBehandlingId ?: behandlingId} ble ikke avsluttet innen $MAKS_ITERASJONER iterasjoner")
         }
     }
 
-    private fun erBehandlingAvsluttet(sak: Sak): Boolean {
+    private fun ventPåÅpenBehandlingOgReturnerBehandlingId(sak: Sak, ventPåNyBehandling: Boolean): BehandlingId? {
+        val maksForsøk = if (ventPåNyBehandling) 300 else 150
+        repeat(maksForsøk) {
+            val behandling = dataSource.transaction(readOnly = true) { connection ->
+                BehandlingService(repositoryRegistry.provider(connection), gatewayProvider)
+                    .finnSisteYtelsesbehandlingFor(sak.id)
+            }
+            if (behandling != null && behandling.status() != Status.AVSLUTTET) {
+                return behandling.id
+            }
+            Thread.sleep(200)
+        }
+        log.error("Tidsavbrudd ved venting på åpen behandling for sak ${sak.id}")
+        return null
+    }
+
+    private fun erBehandlingAvsluttet(behandlingId: BehandlingId): Boolean {
         val behandling = dataSource.transaction(readOnly = true) { connection ->
-            BehandlingService(repositoryRegistry.provider(connection), gatewayProvider)
-                .finnSisteYtelsesbehandlingFor(sak.id)
-        } ?: return false
+            repositoryRegistry.provider(connection).provide<BehandlingRepository>().hent(behandlingId)
+        }
         return behandling.status() == Status.AVSLUTTET
     }
 
@@ -107,13 +127,13 @@ class TestBehandlingFullføringService(
      * Henter avklaringsbehov og løser det første åpne. Returnerer behandlingId hvis et behov ble løst.
      */
     @Suppress("ReturnCount")
-    private fun prosesserNesteSteg(sak: Sak): BehandlingId? {
+    private fun prosesserNesteSteg(sak: Sak, forventetBehandlingId: BehandlingId): BehandlingId? {
         val behandling = dataSource.transaction(readOnly = true) { connection ->
             BehandlingService(repositoryRegistry.provider(connection), gatewayProvider)
                 .finnSisteYtelsesbehandlingFor(sak.id)
         }
 
-        if (behandling == null || behandling.status() == Status.AVSLUTTET) {
+        if (behandling == null || behandling.id != forventetBehandlingId || behandling.status() == Status.AVSLUTTET) {
             Thread.sleep(200)
             return null
         }
@@ -396,7 +416,7 @@ class TestBehandlingFullføringService(
                 repositoryRegistry.provider(connection)
                     .provide<BrevbestillingRepository>()
                     .hent(behandlingId)
-                    .firstOrNull { it.typeBrev == TypeBrev.VEDTAK_INNVILGELSE }
+                    .firstOrNull { it.typeBrev.erVedtak() && !it.typeBrev.erAutomatiskBrev() }
                     ?: error("Fant ikke vedtaksbrev for behandling $behandlingId")
             }
             SkrivVedtaksbrevLøsning(
