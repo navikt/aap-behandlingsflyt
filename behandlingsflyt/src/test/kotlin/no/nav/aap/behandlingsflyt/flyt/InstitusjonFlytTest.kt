@@ -17,6 +17,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurdertBarnDt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.flate.HelseinstitusjonVurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.flate.HelseinstitusjonVurderingerDto
 import no.nav.aap.behandlingsflyt.help.assertTidslinje
+import no.nav.aap.behandlingsflyt.help.ident
 import no.nav.aap.behandlingsflyt.integrasjon.institusjonsopphold.InstitusjonsoppholdJSON
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
@@ -32,7 +33,6 @@ import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.behandlingsflyt.test.juli
 import no.nav.aap.behandlingsflyt.test.mai
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
-import no.nav.aap.behandlingsflyt.test.modell.genererIdent
 import no.nav.aap.behandlingsflyt.test.november
 import no.nav.aap.behandlingsflyt.test.oktober
 import no.nav.aap.behandlingsflyt.test.september
@@ -820,7 +820,7 @@ class InstitusjonFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::cla
         ) { "Tilkjent ytelse skal være beregnet her." }
 
     private fun lagBarn(fødselsdato: LocalDate): TestPerson {
-        val ident = genererIdent(fødselsdato)
+        val ident = ident()
         return TestPerson(
             identer = setOf(ident),
             navn = PersonNavn("Tuva", "Hansen"),

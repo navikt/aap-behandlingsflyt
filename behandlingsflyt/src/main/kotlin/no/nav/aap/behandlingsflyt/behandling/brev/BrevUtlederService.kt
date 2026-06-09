@@ -32,6 +32,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.DelvisOmgjøres
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageresultatUtleder
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.Opprettholdes
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsopptrapping.ArbeidsopptrappingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsopptrapping.perioderMedArbeidsopptrapping
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepository
@@ -357,10 +358,15 @@ class BrevUtlederService(
         } else {
             null
         }
+        val yrkesskader = if (Miljø.erDev()) yrkesskadeRepository.hentHvisEksisterer(behandling.id) else null
 
-        val yrkesskadeBeregning = if (Miljø.erDev())
-            utledYrkesskadeBeregning(behandling.id)
-        else null
+        val yrkesSkadeISøknadIkkeIRegister = if (Miljø.erDev()) {
+            yrkesskader != null && yrkesskader.oppgittYrkesskadeISøknad == true && !yrkesskader.yrkesskader.harYrkesskade()
+        } else null
+
+        val yrkesskadeBeregning = if (Miljø.erDev()) {
+            utledYrkesskadeBeregning(behandling.id, yrkesskader)
+        } else null
 
         return Innvilgelse(
             virkningstidspunkt = vedtak.virkningstidspunkt,
@@ -370,6 +376,7 @@ class BrevUtlederService(
             sykdomsvurdering = sykdomsvurdering,
             forholdTilAndreYtelser = samordning,
             yrkesskadeBeregning = yrkesskadeBeregning,
+            yrkesSkadeISøknadIkkeIRegister = yrkesSkadeISøknadIkkeIRegister
         )
     }
 
@@ -446,11 +453,10 @@ class BrevUtlederService(
         }
     }
 
-    private fun utledYrkesskadeBeregning(behandlingId: BehandlingId): YrkesskadeBeregningBrev? {
+    private fun utledYrkesskadeBeregning(behandlingId: BehandlingId, yrkesSkadeGrunnlag: YrkesskadeGrunnlag?): YrkesskadeBeregningBrev? {
         val sykdomGrunnlag = sykdomRepository.hentHvisEksisterer(behandlingId)
         val yrkesSkaderMedManuelledatoer = sykdomGrunnlag?.yrkesskadevurdering?.relevanteSaker ?: emptyList()
 
-        val yrkesSkadeGrunnlag = yrkesskadeRepository.hentHvisEksisterer(behandlingId)
         val yrkesSkaderFraEksterntRegister = yrkesSkadeGrunnlag?.yrkesskader?.yrkesskader ?: emptyList()
         val andelAvNedsettelsen = sykdomGrunnlag?.yrkesskadevurdering?.andelAvNedsettelsen?.prosentverdi()
 

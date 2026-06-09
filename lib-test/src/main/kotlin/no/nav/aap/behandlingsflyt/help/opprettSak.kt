@@ -11,7 +11,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.FakeApiInternGateway
-import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryPersonRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryservice.InMemoryBehandlingService
@@ -31,17 +30,13 @@ fun opprettSak(connection: DBConnection, ident: Ident, søknadsdato: LocalDate):
     ).finnEllerOpprett(ident, søknadsdato)
 }
 
-fun opprettInMemorySak(ident: Ident, søknadsdato: LocalDate): Sak {
+fun opprettInMemorySak(søknadsdato: LocalDate = LocalDate.now(), ident: Ident = ident()): Sak {
     return PersonOgSakService(
         FakePdlGateway,
         FakeApiInternGateway.konstruer(),
         InMemoryPersonRepository,
         InMemorySakRepository
     ).finnEllerOpprett(ident, søknadsdato)
-}
-
-fun opprettInMemorySak(søknadsdato: LocalDate, ident: Ident = ident()): Sak {
-    return opprettInMemorySak(ident, søknadsdato)
 }
 
 fun opprettInMemorySakOgBehandling(
