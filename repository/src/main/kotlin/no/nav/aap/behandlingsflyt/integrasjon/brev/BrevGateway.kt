@@ -15,7 +15,6 @@ import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingRefer
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.HåndterConflictResponseHandler
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurderingAvForeldreAnsvar
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurdertBarn
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.prometheus
@@ -57,7 +56,6 @@ import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureM
 import no.nav.aap.komponenter.json.DefaultJsonMapper
 import org.slf4j.LoggerFactory
 import java.io.InputStream
-import java.math.BigDecimal
 import java.net.URI
 import kotlin.collections.orEmpty
 
