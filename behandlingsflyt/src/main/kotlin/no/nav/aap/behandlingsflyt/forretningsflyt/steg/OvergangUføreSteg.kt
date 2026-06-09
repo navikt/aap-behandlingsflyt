@@ -13,7 +13,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.tilTidslinje
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.UføreSøknadVedtakResultat
@@ -70,9 +69,9 @@ class OvergangUføreSteg private constructor(
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        if (erAutomatiskStans11_18(kontekst)) {
+        if (erAutomatiskOpphør11_18(kontekst)) {
             val uførevedtak = hentUførevedtak(kontekst.sakId) ?: return Fullført
-            lagreAutomatiskStans11_18(
+            lagreAutomatiskOpphør11_18(
                 sakId = kontekst.sakId,
                 behandlingId = kontekst.behandlingId,
                 forrigeBehandlingId = kontekst.forrigeBehandlingId,
@@ -121,7 +120,7 @@ class OvergangUføreSteg private constructor(
         return Fullført
     }
 
-    private fun erAutomatiskStans11_18(kontekst: FlytKontekstMedPerioder): Boolean {
+    private fun erAutomatiskOpphør11_18(kontekst: FlytKontekstMedPerioder): Boolean {
         if (unleashGateway.isDisabled(BehandlingsflytFeature.AutomatiskStans1118)) {
             return false
         }
@@ -131,7 +130,7 @@ class OvergangUføreSteg private constructor(
                 uførevedtak.virkningsdato.isAfter(LocalDate.now())
     }
 
-    private fun lagreAutomatiskStans11_18(
+    private fun lagreAutomatiskOpphør11_18(
         sakId: SakId,
         behandlingId: BehandlingId,
         forrigeBehandlingId: BehandlingId?,
@@ -153,7 +152,6 @@ class OvergangUføreSteg private constructor(
             it.vurdertAv == SYSTEMBRUKER.ident && it.fom == uførevedtak.virkningsdato
         }
         if (harAutomatiskVurderingAllerede) return
-
 
         val automatiskVurdering = OvergangUføreVurdering(
             begrunnelse = "Automatisk opphør på grunn av vedtak om uføre",

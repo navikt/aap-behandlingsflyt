@@ -71,7 +71,7 @@ class HåndterUførevedtakService(
             val kanHaRettPåAapEtterVirkningsdato =
                 rettighetstypeTidslinje.isNotEmpty() || sisteYtelsesBehandling.status().erÅpen()
 
-            if (skalOppretteAutomatiskStans11_18(uførevedtak)) {
+            if (skalOppretteAutomatiskOpphør11_18(uførevedtak)) {
                 val vurderingsbehov = Vurderingsbehov.OVERGANG_UFORE_AUTOMATISK_STANS
                 val opprettetBehandling = behandlingService.finnEllerOpprettBehandling(
                     sakId,
@@ -118,7 +118,7 @@ class HåndterUførevedtakService(
         mottaDokumentService.markerSomBehandlet(sakId, behandlingSomHarHåndtertDokument, referanse)
     }
 
-    private fun skalOppretteAutomatiskStans11_18(
+    private fun skalOppretteAutomatiskOpphør11_18(
         uførevedtak: UførevedtakV0
     ): Boolean {
         return unleashGateway.isEnabled(BehandlingsflytFeature.AutomatiskStans1118)
