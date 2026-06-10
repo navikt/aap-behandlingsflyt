@@ -22,10 +22,13 @@ import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.miljo.Miljø
 import no.nav.aap.komponenter.repository.RepositoryRegistry
-import javax.sql.DataSource
 import java.time.LocalDate
+import javax.sql.DataSource
 import kotlin.concurrent.thread
 
+/**
+ * Dette er Dolly-integrasjonen.
+ */
 fun NormalOpenAPIRoute.fullførBehandlingApi(
     dataSource: DataSource,
     repositoryRegistry: RepositoryRegistry,
@@ -49,7 +52,17 @@ fun NormalOpenAPIRoute.fullførBehandlingApi(
                             søknadsdato = req.soeknadsdato,
                         )
                 }
-                thread(isDaemon = true, block = withMdc { service.fullførBehandling(resultat.sak, resultat.ventPåNyBehandling) })
+                if (req.automatiskMeldekort) {
+                    dataSource.transaction { connection ->
+                        repositoryRegistry.provider(connection)
+                            .provide<TestAutomatiskMeldekortSakRepository>()
+                            .leggTil(resultat.sak.id)
+                    }
+                }
+                thread(
+                    isDaemon = true,
+                    block = withMdc { service.fullførBehandling(resultat.sak, resultat.ventPåNyBehandling) },
+                )
                 respond(OpprettOgFullforBehandlingRespons(resultat.sak.saksnummer.toString()))
             } catch (e: OpprettTestSakException) {
                 throw UgyldigForespørselException(message = e.message ?: "Ukjent feil", cause = e)
@@ -72,11 +85,13 @@ fun NormalOpenAPIRoute.fullførBehandlingApi(
                     ?: return@transaction BehandlingStatusRespons(sak.saksnummer.toString(), null, false)
                 val status = behandling.status()
 
-                val søknad = provider.provide<MottattDokumentRepository>()
+                val dokument = provider.provide<MottattDokumentRepository>()
                     .hentDokumenterAvType(behandling.id, InnsendingType.SØKNAD)
                     .firstOrNull()
-                    ?.strukturerteData<SøknadV0>()
-                    ?.data
+
+                val (søknad, mottattTidspunkt) = dokument
+                    ?.let { it.strukturerteData<SøknadV0>()?.data to it.mottattTidspunkt }
+                    ?: (null to null)
 
                 val soeknadDetaljer = søknad?.let {
                     SoeknadDetaljer(
@@ -84,6 +99,7 @@ fun NormalOpenAPIRoute.fullførBehandlingApi(
                         harYrkesskade = it.yrkesskade.equals("Ja", ignoreCase = true),
                         harMedlemskap = it.medlemskap?.harBoddINorgeSiste5År.equals("JA", ignoreCase = true),
                         andreUtbetalinger = it.andreUtbetalinger?.let { a -> AndreUtbetalingerApiDto.fraKontrakt(a) },
+                        soeknadsdato = mottattTidspunkt?.toLocalDate(),
                     )
                 }
 
@@ -114,6 +130,8 @@ data class OpprettOgFullforBehandlingRequest(
     val andreUtbetalinger: AndreUtbetalingerApiDto?,
     @property:Description("Søknadsdato. Brukes som rettighetsperiode.fom og mottattTidspunkt. Defaulter til dagens dato.")
     val soeknadsdato: LocalDate? = null,
+    @property:Description("Om det skal sendes automatisk meldekort ukentlig, så lenge saken har aktiv rettighetsperiode.")
+    val automatiskMeldekort: Boolean = false,
 )
 
 data class BehandlingStatusRequest(val ident: String)
@@ -149,4 +167,5 @@ data class SoeknadDetaljer(
     val harYrkesskade: Boolean, // dårlig navn,
     val harMedlemskap: Boolean,
     val andreUtbetalinger: AndreUtbetalingerApiDto?,
+    val soeknadsdato: LocalDate?,
 )

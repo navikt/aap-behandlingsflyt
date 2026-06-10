@@ -44,6 +44,7 @@ import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.overgangarbeid.Overga
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.personopplysning.PersonopplysningForutgåendeRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.personopplysning.PersonopplysningRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.barn.BarnRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.test.TestAutomatiskMeldekortSakRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.dagpenger.DagpengerRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.inntekt.InntektGrunnlagRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.inntekt.ManuellInntektGrunnlagRepositoryImpl
@@ -171,3 +172,4 @@ val postgresRepositoryRegistry = RepositoryRegistry()
     .register<EtableringEgenVirksomhetRepositoryImpl>()
     .register<StansOpphørRepositoryImpl>()
     .register<AvbrytAktivitetspliktbehandlingRepositoryImpl>()
+    .register<TestAutomatiskMeldekortSakRepositoryImpl>()
