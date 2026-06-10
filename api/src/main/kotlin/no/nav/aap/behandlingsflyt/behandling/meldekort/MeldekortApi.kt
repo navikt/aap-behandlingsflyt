@@ -75,7 +75,8 @@ fun NormalOpenAPIRoute.meldekortApi(
 
                 val meldeperiodeMedMeldekort = sisteFattedeVedtaksBehandling?.let { behandling ->
                     val underveisGrunnlag = underveisRepository.hentHvisEksisterer(behandling.id) ?: return@let null
-                    val meldeperioderMedOppfyltePerioder = hentAktuelleMeldeperioderMedOppfyltePerioder(underveisGrunnlag)
+                    val meldeperioderMedOppfyltePerioder =
+                        hentAktuelleMeldeperioderMedOppfyltePerioder(underveisGrunnlag)
                     val meldekortene = meldekortRepository.hentHvisEksisterer(behandling.id)?.meldekort().orEmpty()
                     val mottatteDokumenter = mottattDokumentRepository
                         .hentDokumenterAvType(sak.id, InnsendingType.MELDEKORT)
@@ -91,15 +92,28 @@ fun NormalOpenAPIRoute.meldekortApi(
                             val mottattDokument = mottatteDokumenter[innsendingReferanse]
                             val meldekortData = mottattDokument?.strukturerteData<MeldekortV0>()?.data
 
+                            // Fallback til bruker dersom meldekortData.opprettetAv er null ettersom den blir satt eksplisitt ved korrigering
+                            val oppdatertAvSaksbehandler = meldekortData?.opprettetAv != null
+
                             MeldeperiodeMedMeldekortDto(
                                 meldeperiode = meldeperiode,
                                 periode = periode,
-                                meldekort = meldekort.toDto(meldekortData?.begrunnelse, meldekortData?.opprettetAv, mottattDokument?.opprettetTid?.toLocalDate()),
+                                meldekort = meldekort.toDto(
+                                    meldekortData?.begrunnelse,
+                                    oppdatertAv = meldekortData?.opprettetAv,
+                                    mottattDokument?.opprettetTid?.toLocalDate(),
+                                    oppdatertAvSaksbehandler
+                                ),
                                 tidligereMeldekort = tidligereMeldekortListe.map { tidligere ->
                                     val ref = InnsendingReferanse(tidligere.journalpostId)
                                     val tidligereDokument = mottatteDokumenter[ref]
                                     val data = tidligereDokument?.strukturerteData<MeldekortV0>()?.data
-                                    tidligere.toDto(data?.begrunnelse, data?.opprettetAv, tidligereDokument?.opprettetTid?.toLocalDate())
+                                    tidligere.toDto(
+                                        data?.begrunnelse,
+                                        oppdatertAv = meldekortData?.opprettetAv,
+                                        tidligereDokument?.opprettetTid?.toLocalDate(),
+                                        oppdatertAvSaksbehandler
+                                    )
                                 },
                             )
                         } else {

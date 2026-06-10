@@ -38,7 +38,7 @@ fun NormalOpenAPIRoute.fullførBehandlingApi(
         post<Unit, OpprettOgFullforBehandlingRespons, OpprettOgFullforBehandlingRequest> { _, req ->
             require(!Miljø.erProd()) { "Ikke tilgjengelig i produksjonsmiljøet" }
             try {
-                val sak = dataSource.transaction { connection ->
+                val resultat = dataSource.transaction { connection ->
                     TestSakService(repositoryRegistry.provider(connection), gatewayProvider)
                         .opprettTestSak(
                             ident = Ident(req.ident),
@@ -46,11 +46,11 @@ fun NormalOpenAPIRoute.fullførBehandlingApi(
                             harYrkesskade = req.harYrkesskade,
                             harMedlemskap = req.harMedlemskap,
                             andreUtbetalinger = req.andreUtbetalinger?.tilKontrakt(),
-                            søknadsdato = req.søknadsdato,
+                            søknadsdato = req.soeknadsdato,
                         )
                 }
-                thread(isDaemon = true, block = withMdc { service.fullforBehandling(sak) })
-                respond(OpprettOgFullforBehandlingRespons(sak.saksnummer.toString()))
+                thread(isDaemon = true, block = withMdc { service.fullførBehandling(resultat.sak, resultat.ventPåNyBehandling) })
+                respond(OpprettOgFullforBehandlingRespons(resultat.sak.saksnummer.toString()))
             } catch (e: OpprettTestSakException) {
                 throw UgyldigForespørselException(message = e.message ?: "Ukjent feil", cause = e)
             }
@@ -113,7 +113,7 @@ data class OpprettOgFullforBehandlingRequest(
     @property:Description("Om søker svarte at hen mottar andre utbetalinger i søknaden.")
     val andreUtbetalinger: AndreUtbetalingerApiDto?,
     @property:Description("Søknadsdato. Brukes som rettighetsperiode.fom og mottattTidspunkt. Defaulter til dagens dato.")
-    val søknadsdato: LocalDate? = null,
+    val soeknadsdato: LocalDate? = null,
 )
 
 data class BehandlingStatusRequest(val ident: String)

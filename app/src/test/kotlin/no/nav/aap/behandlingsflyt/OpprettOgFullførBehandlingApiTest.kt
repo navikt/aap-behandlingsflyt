@@ -296,7 +296,7 @@ class OpprettOgFullførBehandlingApiTest {
                     harYrkesskade = false,
                     harMedlemskap = true,
                     andreUtbetalinger = null,
-                    søknadsdato = søknadsdato,
+                    soeknadsdato = søknadsdato,
                 )
             )
         )
@@ -311,6 +311,68 @@ class OpprettOgFullførBehandlingApiTest {
         }
     }
 
+    @Test
+    fun `andre kall med annen payload oppretter revurdering`() {
+        val ident = "10107099959"
+        FakePersoner.leggTil(
+            TestPerson(
+                identer = setOf(Ident(ident)),
+                fødselsdato = Fødselsdato(LocalDate.now().minusYears(25)),
+            ).medInntekter(defaultInntekt()),
+        )
+
+        val url = URI.create("http://localhost:$port/api/test/opprettOgFullfoerBehandling")
+
+        val førstRespons: OpprettOgFullforBehandlingRespons? = ccClient.post(
+            url,
+            PostRequest(
+                body = OpprettOgFullforBehandlingRequest(
+                    ident = ident,
+                    erStudent = false,
+                    harYrkesskade = false,
+                    harMedlemskap = true,
+                    andreUtbetalinger = null,
+                )
+            )
+        )
+        requireNotNull(førstRespons) { "Ingen respons fra første kall" }
+
+        pollBehandlingStatus(ident)
+
+        // Andre kall med annen payload (erStudent endret til true)
+        val andreRespons: OpprettOgFullforBehandlingRespons? = ccClient.post(
+            url,
+            PostRequest(
+                body = OpprettOgFullforBehandlingRequest(
+                    ident = ident,
+                    erStudent = true,
+                    harYrkesskade = false,
+                    harMedlemskap = true,
+                    andreUtbetalinger = null,
+                )
+            )
+        )
+        requireNotNull(andreRespons) { "Ingen respons fra andre kall" }
+
+        assertThat(andreRespons.saksnummer).isEqualTo(førstRespons.saksnummer)
+
+        // Vent spesifikt på at revurderingen er opprettet og avsluttet (pollBehandlingStatus
+        // returnerer umiddelbart fordi den første behandlingen allerede er AVSLUTTET)
+        val revurderingFerdig = pollRevurderingAvsluttet(førstRespons.saksnummer, antallForventet = 2)
+        assertThat(revurderingFerdig).isTrue()
+
+        val dataSource = initDatasource(dbConfig)
+        dataSource.transaction { connection ->
+            val sakRepo = postgresRepositoryRegistry.provider(connection).provide<SakRepository>()
+            val sak = sakRepo.hent(Saksnummer(førstRespons.saksnummer))
+
+            val behandlingRepo = postgresRepositoryRegistry.provider(connection).provide<BehandlingRepository>()
+            val behandlinger = behandlingRepo.hentAlleFor(sak.id)
+            assertThat(behandlinger).hasSize(2)
+            assertThat(behandlinger.first().status()).isEqualTo(Status.AVSLUTTET)
+            assertThat(behandlinger.last().status()).isEqualTo(Status.AVSLUTTET)
+        }
+    }
     private fun standardTestPerson(ident: String) = TestPerson(
         identer = setOf(Ident(ident)),
         fødselsdato = Fødselsdato(LocalDate.now().minusYears(25)),
@@ -359,6 +421,27 @@ class OpprettOgFullførBehandlingApiTest {
             assertThat(behandlinger).hasSize(1)
             assertThat(behandlinger.first().status()).isEqualTo(Status.AVSLUTTET)
         }
+    }
+
+    private fun pollRevurderingAvsluttet(saksnummer: String, antallForventet: Int): Boolean = runBlocking {
+        val dataSource = initDatasource(dbConfig)
+        repeat(120) {
+            try {
+                val behandlinger = dataSource.transaction(readOnly = true) { connection ->
+                    val sakRepo = postgresRepositoryRegistry.provider(connection).provide<SakRepository>()
+                    val sak = sakRepo.hent(Saksnummer(saksnummer))
+                    val behandlingRepo = postgresRepositoryRegistry.provider(connection).provide<BehandlingRepository>()
+                    behandlingRepo.hentAlleFor(sak.id)
+                }
+                if (behandlinger.size >= antallForventet && behandlinger.first().status() == Status.AVSLUTTET) {
+                    return@runBlocking true
+                }
+            } catch (e: Exception) {
+                log.info("pollRevurderingAvsluttet exception: $e")
+            }
+            delay(1000.milliseconds)
+        }
+        false
     }
 
     private fun pollBehandlingStatus(ident: String): BehandlingStatusRespons? = runBlocking {
