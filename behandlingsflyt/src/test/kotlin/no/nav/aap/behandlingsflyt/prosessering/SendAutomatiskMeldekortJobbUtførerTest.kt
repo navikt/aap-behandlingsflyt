@@ -15,6 +15,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.komponenter.json.DefaultJsonMapper
+import org.assertj.core.api.Assertions.assertThat
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
@@ -108,9 +109,7 @@ class SendAutomatiskMeldekortJobbUtførerTest {
         val slot = slot<JobbInput>()
         verify(exactly = 1) { flytJobbRepository.leggTil(capture(slot)) }
         val referanse = DefaultJsonMapper.fromJson<InnsendingReferanse>(slot.captured.parameter("referanse"))
-        assert(referanse.type == InnsendingReferanse.Type.JOURNALPOST) {
-            "Forventer JOURNALPOST-type, men fikk: ${referanse.type}"
-        }
+        assertThat(referanse.type).isEqualTo(InnsendingReferanse.Type.JOURNALPOST)
     }
 
     @Test

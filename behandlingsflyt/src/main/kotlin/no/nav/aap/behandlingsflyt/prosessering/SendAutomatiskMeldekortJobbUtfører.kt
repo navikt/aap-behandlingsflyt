@@ -54,36 +54,24 @@ class SendAutomatiskMeldekortJobbUtfører(
     }
 
     private fun sendMeldekortHvisAktiv(sakId: SakId, idag: LocalDate) {
+        fullførteMeldeperioder(sakId, idag).forEach { sendMeldekort(sakId, it) }
+    }
+
+    private fun fullførteMeldeperioder(sakId: SakId, idag: LocalDate): List<Periode> {
         val sisteBehandling = behandlingService.finnSisteYtelsesbehandlingFor(sakId)
+            ?.takeIf { harAktivRettighet(it.id, idag) }
+            ?: return emptyList<Periode>().also {
+                log.info("Sak $sakId har ingen aktiv ytelsesbehandling på $idag, hopper over")
+            }
 
-        if (sisteBehandling == null) {
-            log.info("Sak $sakId har ingen ytelsesbehandling, hopper over")
-            return
-        }
-
-        if (!harAktivRettighet(sisteBehandling.id, idag)) {
-            log.info("Sak $sakId har ingen aktiv rettighetstype på $idag, hopper over")
-            return
-        }
-
-        val førsteMeldeperiode = meldeperiodeRepository.hentFørsteMeldeperiode(sisteBehandling.id)
-        if (førsteMeldeperiode == null) {
-            log.info("Sak $sakId har ingen fastsatt meldeperiode, hopper over")
-            return
-        }
-
-        val meldeperioder = meldeperiodeRepository
-            .hentMeldeperioder(sisteBehandling.id, Periode(førsteMeldeperiode.fom, idag))
-            .filter { it.tom < idag }
-
-        if (meldeperioder.isEmpty()) {
-            log.info("Sak $sakId har ingen fullførte meldeperioder frem til $idag, hopper over")
-            return
-        }
-
-        meldeperioder.forEach { periode ->
-            sendMeldekort(sakId, periode)
-        }
+        return meldeperiodeRepository.hentFørsteMeldeperiode(sisteBehandling.id)
+            ?.let { første ->
+                meldeperiodeRepository
+                    .hentMeldeperioder(sisteBehandling.id, Periode(første.fom, idag))
+                    .filter { it.tom < idag }
+                    .also { if (it.isEmpty()) log.info("Sak $sakId har ingen fullførte meldeperioder frem til $idag, hopper over") }
+            }
+            ?: emptyList<Periode>().also { log.info("Sak $sakId har ingen fastsatt meldeperiode, hopper over") }
     }
 
     private fun sendMeldekort(sakId: SakId, periode: Periode) {
