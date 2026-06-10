@@ -382,7 +382,7 @@ class BrevUtlederService(
             forholdTilAndreYtelser = samordning,
             yrkesskadeBeregning = yrkesskadeBeregning,
             yrkesSkadeISøknadIkkeIRegister = yrkesSkadeISøknadIkkeIRegister,
-            foreldreansvarVurderinger = foreldreAnsvarVurderinger
+            foreldreansvarVurderinger = foreldreAnsvarVurderinger,
         )
     }
 
@@ -687,11 +687,11 @@ class BrevUtlederService(
         )
     }
 
-    fun hentBarnVurderingPerioder(behandlingId: BehandlingId): List<VurderingAvForeldreAnsvar> {
+    fun hentBarnVurderingPerioder(behandlingId: BehandlingId): List<VurderingAvForeldreAnsvar>{
         return barnRepository.hentVurderteBarnHvisEksisterer(behandlingId)
             ?.barn
             ?.flatMap { it.vurderinger }
-            ?: emptyList()
+            .orEmpty()
     }
 
     private fun hentSamordningAndreYtelser(behandlingId: BehandlingId): List<SamordningYtelse> {
