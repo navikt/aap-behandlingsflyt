@@ -34,7 +34,8 @@ class OppfølgingsBehandlingFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddU
                 datoForOppfølging = LocalDate.now().plusDays(1),
                 hvaSkalFølgesOpp = "noe",
                 hvemSkalFølgeOpp = HvemSkalFølgeOpp.NasjonalEnhet,
-                reserverTilBruker = "MEGSELV"
+                reserverTilBruker = "MEGSELV",
+                opprettetAv = null
             ),
             mottattTidspunkt = LocalDateTime.now().minusMonths(3),
         )
@@ -88,6 +89,7 @@ class OppfølgingsBehandlingFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddU
                 hvaSkalFølgesOpp = "noe",
                 hvemSkalFølgeOpp = HvemSkalFølgeOpp.NasjonalEnhet,
                 reserverTilBruker = "MEGSELV",
+                opprettetAv = null,
                 opprinnelse = Opprinnelse(
                     behandlingsreferanse = førstegangsbehandling.referanse.toString(),
                     avklaringsbehovKode = AvklaringsbehovKode.`5028`.toString()

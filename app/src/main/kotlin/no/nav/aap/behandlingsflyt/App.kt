@@ -305,7 +305,7 @@ internal fun Application.server(
                 // Svar fra kabal
                 svarFraAndreinstansGrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
                 // Oppfølgingsbehandling
-                avklarOppfolgingsoppgaveGrunnlag(fellesDataSource, repositoryRegistry)
+                avklarOppfolgingsoppgaveGrunnlag(fellesDataSource, repositoryRegistry, gatewayProvider)
                 oppfølgingsOppgaveApi(fellesDataSource, repositoryRegistry)
                 // Aktivitetsplikt
                 aktivitetsplikt11_7GrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
