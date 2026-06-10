@@ -149,7 +149,8 @@ class MeldekortApiTest : BaseApiTest() {
                 ArbeidIPeriode(Periode(dag1, dag1), TimerArbeid(BigDecimal("7.5"))),
                 ArbeidIPeriode(Periode(dag2, dag2), TimerArbeid(BigDecimal("3.0"))),
             ),
-            mottattTidspunkt = LocalDateTime.of(2025, 1, 20, 9, 0)
+            mottattTidspunkt = LocalDateTime.of(2025, 1, 20, 9, 0),
+            opprettetTidspunkt = LocalDateTime.of(2025, 1, 20, 9, 0)
         )
 
         InMemoryUnderveisRepository.lagre(
@@ -216,14 +217,16 @@ class MeldekortApiTest : BaseApiTest() {
             timerArbeidPerPeriode = setOf(
                 ArbeidIPeriode(Periode(dag, dag), TimerArbeid(BigDecimal("4.0"))),
             ),
-            mottattTidspunkt = LocalDateTime.of(2025, 2, 17, 9, 0)
+            mottattTidspunkt = LocalDateTime.of(2025, 2, 17, 9, 0),
+            opprettetTidspunkt = LocalDateTime.of(2025, 2, 17, 9, 0)
         )
         val meldekort2 = Meldekort(
             journalpostId = JournalpostId("bbb"),
             timerArbeidPerPeriode = setOf(
                 ArbeidIPeriode(Periode(dag.plusWeeks(2), dag.plusWeeks(2)), TimerArbeid(BigDecimal("6.0"))),
             ),
-            mottattTidspunkt = LocalDateTime.of(2025, 3, 3, 9, 0)
+            mottattTidspunkt = LocalDateTime.of(2025, 3, 3, 9, 0),
+            opprettetTidspunkt = LocalDateTime.of(2025, 3, 3, 9, 0),
         )
 
         InMemoryUnderveisRepository.lagre(
@@ -274,14 +277,16 @@ class MeldekortApiTest : BaseApiTest() {
             timerArbeidPerPeriode = setOf(
                 ArbeidIPeriode(Periode(dag1, dag1), TimerArbeid(BigDecimal("7.5"))),
             ),
-            mottattTidspunkt = LocalDateTime.of(2025, 1, 20, 9, 0)
+            mottattTidspunkt = LocalDateTime.of(2025, 1, 20, 9, 0),
+            opprettetTidspunkt = LocalDateTime.of(2025, 1, 20, 9, 0),
         )
         val korrigertMeldekort = Meldekort(
             journalpostId = JournalpostId("222"),
             timerArbeidPerPeriode = setOf(
                 ArbeidIPeriode(Periode(dag1, dag1), TimerArbeid(BigDecimal.ZERO)),
             ),
-            mottattTidspunkt = LocalDateTime.of(2025, 1, 25, 9, 0)
+            mottattTidspunkt = LocalDateTime.of(2025, 1, 25, 9, 0),
+            opprettetTidspunkt = LocalDateTime.of(2025, 1, 25, 9, 0)
         )
 
         InMemoryUnderveisRepository.lagre(
@@ -357,21 +362,24 @@ class MeldekortApiTest : BaseApiTest() {
             timerArbeidPerPeriode = setOf(
                 ArbeidIPeriode(Periode(dag1, dag1), TimerArbeid(BigDecimal("7.5"))),
             ),
-            mottattTidspunkt = LocalDateTime.of(2025, 1, 20, 9, 0)
+            mottattTidspunkt = LocalDateTime.of(2025, 1, 20, 9, 0),
+            opprettetTidspunkt = LocalDateTime.of(2025, 1, 20, 9, 0)
         )
         val andreMeldekort = Meldekort(
             journalpostId = JournalpostId("222"),
             timerArbeidPerPeriode = setOf(
                 ArbeidIPeriode(Periode(dag1, dag1), TimerArbeid(BigDecimal("5.0"))),
             ),
-            mottattTidspunkt = LocalDateTime.of(2025, 1, 22, 9, 0)
+            mottattTidspunkt = LocalDateTime.of(2025, 1, 22, 9, 0),
+            opprettetTidspunkt = LocalDateTime.of(2025, 1, 22, 9, 0)
         )
         val tredjeMeldekort = Meldekort(
             journalpostId = JournalpostId("333"),
             timerArbeidPerPeriode = setOf(
                 ArbeidIPeriode(Periode(dag1, dag1), TimerArbeid(BigDecimal("3.0"))),
             ),
-            mottattTidspunkt = LocalDateTime.of(2025, 1, 25, 9, 0)
+            mottattTidspunkt = LocalDateTime.of(2025, 1, 25, 9, 0),
+            opprettetTidspunkt = LocalDateTime.of(2025, 1, 25, 9, 0)
         )
 
         InMemoryUnderveisRepository.lagre(

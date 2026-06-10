@@ -61,7 +61,9 @@ class MeldekortRepositoryImplTest {
                 journalpostId = mottattMeldekort.referanse.asJournalpostId,
                 timerArbeidPerPeriode = setOf(
                     ArbeidIPeriode(periode = meldekortPeriode, timerArbeid = TimerArbeid(BigDecimal.TEN))
-                ), mottattTidspunkt = mottattMeldekort.mottattTidspunkt
+                ),
+                mottattTidspunkt = mottattMeldekort.mottattTidspunkt,
+                opprettetTidspunkt = mottattMeldekort.mottattTidspunkt
             )
             dokumentRepositoryImpl.lagre(mottattMeldekort)
             meldekortRepositoryImpl.lagre(behandling.id, meldekortene = setOf(meldekortInitielt))
@@ -77,7 +79,9 @@ class MeldekortRepositoryImplTest {
                 journalpostId = mottattMeldekortKorrigert.referanse.asJournalpostId,
                 timerArbeidPerPeriode = setOf(
                     ArbeidIPeriode(periode = meldekortPeriode, timerArbeid = TimerArbeid(BigDecimal.ZERO))
-                ), mottattTidspunkt = mottattMeldekortKorrigert.mottattTidspunkt
+                ),
+                mottattTidspunkt = mottattMeldekortKorrigert.mottattTidspunkt,
+                opprettetTidspunkt = mottattMeldekort.mottattTidspunkt
             )
 
             meldekortRepositoryImpl.lagre(behandling.id, setOf(meldekortInitielt, meldekortKorrigert))
