@@ -58,7 +58,7 @@ class UførevedtakKafkaKonsument(
             val ident = Ident(uførevedtakMelding.personId)
             val person = personRepository.finn(ident) ?: finnPersonMedIdenterFraPdl(ident, personRepository)
             if (person != null) {
-                val saker = sakRepository.finnSakerFor(person)
+                val saker = sakRepository.finnSakerFor(person.id)
                 for (saken in saker) {
                     log.info("Oppretter mottatt uførevedtakshendelse for sak ${saken.saksnummer}")
                     hendelseService.registrerMottattHendelse(

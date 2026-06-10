@@ -40,7 +40,7 @@ data class SamordningVurderingGrunnlag(
     val begrunnelse: String?,
     val vurderinger: Set<SamordningVurdering>,
     val vurdertAv: String,
-    val vurdertTidspunkt: LocalDateTime? = null
+    val vurdertTidspunkt: LocalDateTime
 )
 
 interface SamordningPeriode {

@@ -10,6 +10,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
+import java.time.LocalDateTime
 
 class AvklarSykepengerErstatningLøser(
     private val behandlingRepository: BehandlingRepository,
@@ -50,6 +51,7 @@ class AvklarSykepengerErstatningLøser(
         grunn = dto.grunn,
         vurdertIBehandling = behandlingId,
         vurdertAv = vurdertAv,
+        vurdertTidspunkt = LocalDateTime.now(),
         gjelderFra = dto.fom,
         gjelderTom = dto.tom,
     )

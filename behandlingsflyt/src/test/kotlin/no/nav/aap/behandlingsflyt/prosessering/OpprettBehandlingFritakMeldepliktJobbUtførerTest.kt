@@ -8,6 +8,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.meldeperiode.Meldep
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.Fritaksvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktRepository
+import no.nav.aap.behandlingsflyt.help.person
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
@@ -23,8 +24,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedP
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
@@ -86,11 +85,7 @@ class OpprettBehandlingFritakMeldepliktJobbUtførerTest {
         every { sakServiceMock.hent(any<SakId>()) } returns Sak(
             id = sakId,
             saksnummer = Saksnummer("BLABLA"),
-            person = Person(
-                id = 456L.let(::PersonId),
-                identifikator = UUID.randomUUID(),
-                identer = emptyList()
-            ),
+            person = person(),
             rettighetsperiode = Periode(LocalDate.now().minusDays(14), LocalDate.now().plusDays(14)),
             status = no.nav.aap.behandlingsflyt.kontrakt.sak.Status.OPPRETTET,
             opprettetTidspunkt = LocalDateTime.now(),

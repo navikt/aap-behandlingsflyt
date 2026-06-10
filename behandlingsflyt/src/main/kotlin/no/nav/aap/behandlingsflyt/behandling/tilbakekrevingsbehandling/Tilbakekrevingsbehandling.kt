@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.tilbakekrevingsbehandling
 
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.TilbakekrevingVenteGrunn
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import java.net.URI
@@ -25,7 +26,18 @@ data class Tilbakekrevingsbehandling(
      * Når tilbakekrevingssaken ble opprettet (ikke Kelvin-saken).
      */
     val sakOpprettet: LocalDateTime,
+    /**
+     * Når ble varsel sendt.
+     */
     val varselSendt: LocalDate?,
+    /**
+     * Grunn til at tilbakekreving er satt på vent.
+     */
+    val venteGrunn: TilbakekrevingVenteGrunn?,
+    /**
+     * Når behandling tas av på vent.
+     */
+    val gjenopptas: LocalDate?,
     val behandlingsstatus: TilbakekrevingBehandlingsstatus,
     val totaltFeilutbetaltBeløp: Beløp,
     /**

@@ -37,6 +37,7 @@ data class KlagevurderingNayLøsningDto(
         innstilling = innstilling,
         vilkårSomOpprettholdes = vilkårSomOpprettholdes,
         vilkårSomOmgjøres = vilkårSomOmgjøres,
-        vurdertAv = vurdertAv.ident
+        vurdertAv = vurdertAv.ident,
+        opprettet = java.time.Instant.now()
     )
 }

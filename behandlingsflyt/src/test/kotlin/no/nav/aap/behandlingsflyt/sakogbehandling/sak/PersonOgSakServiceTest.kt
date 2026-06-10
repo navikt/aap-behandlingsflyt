@@ -15,8 +15,6 @@ import no.nav.aap.behandlingsflyt.hendelse.datadeling.ArenaStatusResponse
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
-import no.nav.aap.behandlingsflyt.test.ident
-import no.nav.aap.behandlingsflyt.test.minimalGatewayProvider
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
@@ -35,6 +33,7 @@ import org.junit.jupiter.api.assertThrows
 import java.sql.SQLException
 import java.time.Instant
 import java.time.LocalDate
+import no.nav.aap.behandlingsflyt.help.ident
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class PersonOgSakServiceTest {

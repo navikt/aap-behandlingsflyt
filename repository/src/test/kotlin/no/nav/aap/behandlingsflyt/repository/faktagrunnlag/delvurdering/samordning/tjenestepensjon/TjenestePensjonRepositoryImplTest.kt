@@ -44,7 +44,7 @@ class TjenestePensjonRepositoryImplTest {
                     tpNr = "3010",
                     orgNr = "123445675645"
                 ),
-                ytelser = listOf(
+                ytelser = setOf(
                     TjenestePensjonYtelse(
                         innmeldtYtelseFom = null,
                         ytelseType = YtelseTypeCode.ALDER,
@@ -86,7 +86,7 @@ class TjenestePensjonRepositoryImplTest {
                                 tpNr = "tpNr",
                                 orgNr = "orgNr",
                             ),
-                            ytelser = listOf(
+                            ytelser = setOf(
                                 TjenestePensjonYtelse(
                                     innmeldtYtelseFom = null,
                                     ytelseType = YtelseTypeCode.BETINGET_TP,
@@ -107,7 +107,7 @@ class TjenestePensjonRepositoryImplTest {
                                 tpNr = "tpNr",
                                 orgNr = "orgNr",
                             ),
-                            ytelser = listOf(
+                            ytelser = setOf(
                                 TjenestePensjonYtelse(
                                     innmeldtYtelseFom = null,
                                     ytelseType = YtelseTypeCode.BETINGET_TP,

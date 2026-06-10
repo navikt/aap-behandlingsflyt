@@ -12,7 +12,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarPeri
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSamordningAndreStatligeYtelserLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSamordningGraderingLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSamordningSykestipendLøsning
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarStudentEnkelLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarStudentLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSykdomLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarYrkesskadeLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklaringsbehovLøsning
@@ -26,34 +26,35 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.Refusjonkr
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivBrevAvklaringsbehovLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivVedtaksbrevLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SykdomsvurderingForBrevLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.TjenestepensjonRefusjonskravLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.YrkesskadeSakDto
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.YrkesskadevurderingDto
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingRepository
-import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.AvklarOppholdkravLøsningForPeriodeDto
+import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.EØSLandEllerLandMedAvtale
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.AndreStatligeYtelser
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.SamordningAndreStatligeYtelserVurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.SamordningAndreStatligeYtelserVurderingPeriodeDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.LovvalgDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.MedlemskapDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.PeriodisertManuellVurderingForForutgåendeMedlemskapDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.PeriodisertManuellVurderingForLovvalgMedlemskapDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningYrkeskaderBeløpVurderingDTO
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.ManuellInntektVurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.YrkesskadeBeløpVurderingDTO
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.ÅrsVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.BistandLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravVurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.VurderingerForSamordning
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.refusjonskrav.TjenestepensjonRefusjonskravVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.PeriodisertStudentDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.sykestipend.SamordningSykestipendVurderingDto
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentVurderingDTO
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.SykdomsvurderingLøsningDto
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
-import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.LovvalgDto
-import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.MedlemskapDto
-import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.PeriodisertManuellVurderingForLovvalgMedlemskapDto
-import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.EØSLandEllerLandMedAvtale
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
@@ -81,16 +82,42 @@ class TestBehandlingFullføringService(
 ) {
     private val log = LoggerFactory.getLogger(javaClass)
 
-    fun fullforBehandling(sak: Sak) {
+    fun fullførBehandling(sak: Sak, ventPåNyBehandling: Boolean = false) {
+        // Dersom vi ikke venter på ny behandling og siste allerede er avsluttet, er det ingen jobb å gjøre
+        if (!ventPåNyBehandling && erBehandlingAvsluttet(sak)) {
+            return
+        }
+
+        val behandlingId = ventPåÅpenBehandlingOgReturnerBehandlingId(sak, ventPåNyBehandling) ?: run {
+            log.error("Fant ingen åpen behandling for sak ${sak.id} innen tidsgrensen")
+            return
+        }
+
         val sisteBehandlingId = (1..MAKS_ITERASJONER).asSequence()
             .takeWhile { !erBehandlingAvsluttet(sak) }
             .fold<Int, BehandlingId?>(null) { forrige, _ ->
-                prosesserNesteSteg(sak) ?: forrige
+                prosesserNesteSteg(sak, behandlingId) ?: forrige
             }
 
         if (!erBehandlingAvsluttet(sak)) {
-            log.error("Behandling ${sisteBehandlingId ?: "ukjent"} ble ikke avsluttet innen $MAKS_ITERASJONER iterasjoner")
+            log.error("Behandling ${sisteBehandlingId ?: behandlingId} ble ikke avsluttet innen $MAKS_ITERASJONER iterasjoner")
         }
+    }
+
+    private fun ventPåÅpenBehandlingOgReturnerBehandlingId(sak: Sak, ventPåNyBehandling: Boolean): BehandlingId? {
+        val maksForsøk = if (ventPåNyBehandling) 300 else 150
+        repeat(maksForsøk) {
+            val behandling = dataSource.transaction(readOnly = true) { connection ->
+                BehandlingService(repositoryRegistry.provider(connection), gatewayProvider)
+                    .finnSisteYtelsesbehandlingFor(sak.id)
+            }
+            if (behandling != null && behandling.status() != Status.AVSLUTTET) {
+                return behandling.id
+            }
+            Thread.sleep(200)
+        }
+        log.error("Tidsavbrudd ved venting på åpen behandling for sak ${sak.id}")
+        return null
     }
 
     private fun erBehandlingAvsluttet(sak: Sak): Boolean {
@@ -105,13 +132,13 @@ class TestBehandlingFullføringService(
      * Henter avklaringsbehov og løser det første åpne. Returnerer behandlingId hvis et behov ble løst.
      */
     @Suppress("ReturnCount")
-    private fun prosesserNesteSteg(sak: Sak): BehandlingId? {
+    private fun prosesserNesteSteg(sak: Sak, forventetBehandlingId: BehandlingId): BehandlingId? {
         val behandling = dataSource.transaction(readOnly = true) { connection ->
             BehandlingService(repositoryRegistry.provider(connection), gatewayProvider)
                 .finnSisteYtelsesbehandlingFor(sak.id)
         }
 
-        if (behandling == null || behandling.status() == Status.AVSLUTTET) {
+        if (behandling == null || behandling.id != forventetBehandlingId || behandling.status() == Status.AVSLUTTET) {
             Thread.sleep(200)
             return null
         }
@@ -159,15 +186,18 @@ class TestBehandlingFullføringService(
         sak: Sak,
         behandlingId: BehandlingId,
     ): AvklaringsbehovLøsning? = when (behov.definisjon) {
-        Definisjon.AVKLAR_STUDENT -> AvklarStudentEnkelLøsning(
-            studentvurdering = StudentVurderingDTO(
-                begrunnelse = "Er student ok",
-                harAvbruttStudie = true,
-                godkjentStudieAvLånekassen = true,
-                avbruttPgaSykdomEllerSkade = true,
-                harBehovForBehandling = true,
-                avbruttStudieDato = LocalDate.now().minusMonths(1),
-                avbruddMerEnn6Måneder = true,
+        Definisjon.AVKLAR_STUDENT -> AvklarStudentLøsning(
+            løsningerForPerioder = listOf(
+                PeriodisertStudentDto(
+                    fom = sak.rettighetsperiode.fom,
+                    begrunnelse = "Er student ok",
+                    harAvbruttStudie = true,
+                    godkjentStudieAvLånekassen = true,
+                    avbruttPgaSykdomEllerSkade = true,
+                    harBehovForBehandling = true,
+                    avbruttStudieDato = LocalDate.now().minusMonths(1),
+                    avbruddMerEnn6Måneder = true,
+                )
             )
         )
 
@@ -232,7 +262,15 @@ class TestBehandlingFullføringService(
         Definisjon.KVALITETSSIKRING -> KvalitetssikringLøsning(
             alleAvklaringsbehov
                 .filter { it.erIkkeAvbrutt() && (it.erTotrinn() || it.kreverKvalitetssikring()) }
-                .map { TotrinnsVurdering(it.definisjon.kode, true, "begrunnelse", emptyList(), markeringer = emptyList()) }
+                .map {
+                    TotrinnsVurdering(
+                        it.definisjon.kode,
+                        true,
+                        "begrunnelse",
+                        emptyList(),
+                        markeringer = emptyList()
+                    )
+                }
         )
 
         Definisjon.FASTSETT_BEREGNINGSTIDSPUNKT -> FastsettBeregningstidspunktLøsning(
@@ -353,12 +391,29 @@ class TestBehandlingFullføringService(
             )
         )
 
+        Definisjon.SAMORDNING_REFUSJONS_KRAV -> TjenestepensjonRefusjonskravLøsning(
+            samordningRefusjonskrav = TjenestepensjonRefusjonskravVurdering(
+                harKrav = false,
+                fom = null,
+                tom = null,
+                begrunnelse = "Ingen refusjonskrav",
+            )
+        )
+
         Definisjon.FORESLÅ_VEDTAK -> ForeslåVedtakLøsning()
 
         Definisjon.FATTE_VEDTAK -> FatteVedtakLøsning(
             alleAvklaringsbehov
                 .filter { it.erIkkeAvbrutt() && it.erTotrinn() }
-                .map { TotrinnsVurdering(it.definisjon.kode, true, "begrunnelse", emptyList(), markeringer = emptyList()) }
+                .map {
+                    TotrinnsVurdering(
+                        it.definisjon.kode,
+                        true,
+                        "begrunnelse",
+                        emptyList(),
+                        markeringer = emptyList()
+                    )
+                }
         )
 
         Definisjon.SKRIV_VEDTAKSBREV -> {
@@ -366,7 +421,7 @@ class TestBehandlingFullføringService(
                 repositoryRegistry.provider(connection)
                     .provide<BrevbestillingRepository>()
                     .hent(behandlingId)
-                    .firstOrNull { it.typeBrev == TypeBrev.VEDTAK_INNVILGELSE }
+                    .firstOrNull { it.typeBrev.erVedtak() && !it.typeBrev.erAutomatiskBrev() }
                     ?: error("Fant ikke vedtaksbrev for behandling $behandlingId")
             }
             SkrivVedtaksbrevLøsning(

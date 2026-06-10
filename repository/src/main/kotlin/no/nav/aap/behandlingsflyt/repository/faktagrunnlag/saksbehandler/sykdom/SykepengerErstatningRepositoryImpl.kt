@@ -27,12 +27,15 @@ class SykepengerErstatningRepositoryImpl(private val connection: DBConnection) :
     }
 
     private fun opprettTomtGrunnlag(behandlingId: BehandlingId): Long {
-        val vurderingerId = connection.executeReturnKey("INSERT INTO SYKEPENGE_VURDERINGER DEFAULT VALUES;")
+        val vurderingerId = connection.executeReturnKey("INSERT INTO SYKEPENGE_VURDERINGER (opprettet_tid) VALUES (?)") {
+            setParams { setInstant(1, java.time.Instant.now()) }
+        }
 
-        return connection.executeReturnKey("INSERT INTO SYKEPENGE_ERSTATNING_GRUNNLAG (behandling_id, vurderinger_id) VALUES (?, ?)") {
+        return connection.executeReturnKey("INSERT INTO SYKEPENGE_ERSTATNING_GRUNNLAG (behandling_id, vurderinger_id, opprettet_tid) VALUES (?, ?, ?)") {
             setParams {
                 setLong(1, behandlingId.toLong())
                 setLong(2, vurderingerId)
+                setInstant(3, java.time.Instant.now())
             }
         }
     }
@@ -46,8 +49,8 @@ class SykepengerErstatningRepositoryImpl(private val connection: DBConnection) :
                 }
 
             val insertQuery = """
-                INSERT INTO SYKEPENGE_VURDERING (begrunnelse, oppfylt, grunn, vurdert_av, gjelder_fra, gjelder_tom, vurderinger_id, vurdert_i_behandling)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO SYKEPENGE_VURDERING (begrunnelse, oppfylt, grunn, vurdert_av, gjelder_fra, gjelder_tom, vurderinger_id, vurdert_i_behandling, opprettet_tid)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             """.trimIndent()
 
             vurderinger.forEach { vurdering ->
@@ -61,6 +64,7 @@ class SykepengerErstatningRepositoryImpl(private val connection: DBConnection) :
                         setLocalDate(6, vurdering.gjelderTom)
                         setLong(7, vurderingerId)
                         setLong(8, vurdering.vurdertIBehandling.toLong())
+                        setLocalDateTime(9, vurdering.vurdertTidspunkt)
                     }
                 }
 
@@ -80,14 +84,15 @@ class SykepengerErstatningRepositoryImpl(private val connection: DBConnection) :
         hentHvisEksisterer(fraBehandling) ?: return
 
         val query = """
-            INSERT INTO SYKEPENGE_ERSTATNING_GRUNNLAG (behandling_id, vurderinger_id)
-            SELECT ?, vurderinger_id from SYKEPENGE_ERSTATNING_GRUNNLAG where behandling_id = ? and aktiv
+            INSERT INTO SYKEPENGE_ERSTATNING_GRUNNLAG (behandling_id, vurderinger_id, opprettet_tid)
+            SELECT ?, vurderinger_id, ? from SYKEPENGE_ERSTATNING_GRUNNLAG where behandling_id = ? and aktiv
         """.trimIndent()
 
         connection.execute(query) {
             setParams {
                 setLong(1, tilBehandling.toLong())
-                setLong(2, fraBehandling.toLong())
+                setInstant(2, java.time.Instant.now())
+                setLong(3, fraBehandling.toLong())
             }
         }
     }

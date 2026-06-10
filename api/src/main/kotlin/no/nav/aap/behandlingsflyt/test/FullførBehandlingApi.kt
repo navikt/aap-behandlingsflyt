@@ -23,6 +23,7 @@ import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.miljo.Miljø
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import javax.sql.DataSource
+import java.time.LocalDate
 import kotlin.concurrent.thread
 
 fun NormalOpenAPIRoute.fullførBehandlingApi(
@@ -37,7 +38,7 @@ fun NormalOpenAPIRoute.fullførBehandlingApi(
         post<Unit, OpprettOgFullforBehandlingRespons, OpprettOgFullforBehandlingRequest> { _, req ->
             require(!Miljø.erProd()) { "Ikke tilgjengelig i produksjonsmiljøet" }
             try {
-                val sak = dataSource.transaction { connection ->
+                val resultat = dataSource.transaction { connection ->
                     TestSakService(repositoryRegistry.provider(connection), gatewayProvider)
                         .opprettTestSak(
                             ident = Ident(req.ident),
@@ -45,10 +46,11 @@ fun NormalOpenAPIRoute.fullførBehandlingApi(
                             harYrkesskade = req.harYrkesskade,
                             harMedlemskap = req.harMedlemskap,
                             andreUtbetalinger = req.andreUtbetalinger?.tilKontrakt(),
+                            søknadsdato = req.soeknadsdato,
                         )
                 }
-                thread(isDaemon = true, block = withMdc { service.fullforBehandling(sak) })
-                respond(OpprettOgFullforBehandlingRespons(sak.saksnummer.toString()))
+                thread(isDaemon = true, block = withMdc { service.fullførBehandling(resultat.sak, resultat.ventPåNyBehandling) })
+                respond(OpprettOgFullforBehandlingRespons(resultat.sak.saksnummer.toString()))
             } catch (e: OpprettTestSakException) {
                 throw UgyldigForespørselException(message = e.message ?: "Ukjent feil", cause = e)
             }
@@ -63,7 +65,7 @@ fun NormalOpenAPIRoute.fullførBehandlingApi(
                 val provider = repositoryRegistry.provider(connection)
                 val person = provider.provide<PersonRepository>().finn(Ident(req.ident))
                     ?: return@transaction BehandlingStatusRespons(req.ident, null, false)
-                val sak = provider.provide<SakRepository>().finnSakerFor(person).firstOrNull()
+                val sak = provider.provide<SakRepository>().finnSakerFor(person.id).firstOrNull()
                     ?: return@transaction BehandlingStatusRespons(req.ident, null, false)
                 val behandling = BehandlingService(provider, gatewayProvider)
                     .finnSisteYtelsesbehandlingFor(sak.id)
@@ -109,7 +111,9 @@ data class OpprettOgFullforBehandlingRequest(
     @property:Description("Om personen svarer at han/hun har bodd/jobbet i Norge i siste 5 år.")
     val harMedlemskap: Boolean,
     @property:Description("Om søker svarte at hen mottar andre utbetalinger i søknaden.")
-    val andreUtbetalinger: AndreUtbetalingerApiDto?
+    val andreUtbetalinger: AndreUtbetalingerApiDto?,
+    @property:Description("Søknadsdato. Brukes som rettighetsperiode.fom og mottattTidspunkt. Defaulter til dagens dato.")
+    val soeknadsdato: LocalDate? = null,
 )
 
 data class BehandlingStatusRequest(val ident: String)

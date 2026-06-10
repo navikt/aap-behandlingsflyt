@@ -17,13 +17,14 @@ import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryRegistry
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
+import no.nav.aap.behandlingsflyt.help.opprettInMemorySak
 
 @Fakes
 class MellomlagretVurderingApiTest : BaseApiTest() {
     @Test
     fun `hente ut mellomlagret vurdering fra API`() {
         val ds = MockDataSource()
-        val behandling = opprettBehandling(nySak(), TypeBehandling.Revurdering)
+        val behandling = opprettBehandling(opprettInMemorySak(), TypeBehandling.Revurdering)
         val avklaringsbehovKode = AvklaringsbehovKode.`5056`
 
         val mellomlagretVurdering = MellomlagretVurdering(
@@ -69,7 +70,7 @@ class MellomlagretVurderingApiTest : BaseApiTest() {
     @Test
     fun `skal overskrive ut mellomlagret vurdering fra API`() {
         val ds = MockDataSource()
-        val behandling = opprettBehandling(nySak(), TypeBehandling.Revurdering)
+        val behandling = opprettBehandling(opprettInMemorySak(), TypeBehandling.Revurdering)
         val avklaringsbehovKode = AvklaringsbehovKode.`5001`
 
         val mellomlagretVurdering = MellomlagretVurdering(
@@ -118,7 +119,7 @@ class MellomlagretVurderingApiTest : BaseApiTest() {
     @Test
     fun `skal få tom verdi dersom man prøver å hente ut uten at det finnes noe mellomlagret verdi`() {
         val ds = MockDataSource()
-        val behandling = opprettBehandling(nySak(), TypeBehandling.Revurdering)
+        val behandling = opprettBehandling(opprettInMemorySak(), TypeBehandling.Revurdering)
         val avklaringsbehovKode = AvklaringsbehovKode.`8001`
         testApplication {
             installApplication {
@@ -145,7 +146,7 @@ class MellomlagretVurderingApiTest : BaseApiTest() {
     @Test
     fun `skal slette mellomlagret vurdering fra API`() {
         val ds = MockDataSource()
-        val behandling = opprettBehandling(nySak(), TypeBehandling.Revurdering)
+        val behandling = opprettBehandling(opprettInMemorySak(), TypeBehandling.Revurdering)
         val avklaringsbehovKode = AvklaringsbehovKode.`5001`
 
         val mellomlagretVurdering = MellomlagretVurdering(

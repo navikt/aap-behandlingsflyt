@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.behandling.Resultat
 import no.nav.aap.behandlingsflyt.behandling.ResultatUtleder
 import no.nav.aap.behandlingsflyt.behandling.tilbakekrevingsbehandling.TilbakekrevingBehandlingsstatus
 import no.nav.aap.behandlingsflyt.behandling.tilbakekrevingsbehandling.TilbakekrevingRepository
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.ResultatKode
@@ -38,7 +39,7 @@ class SakOgBehandlingService(
     fun finnSaksinfo(ident: Ident): List<SaksinfoDTO> {
         val person = personRepository.finn(ident) ?: return emptyList()
 
-        return sakRepository.finnSakerFor(person).map { sak ->
+        return sakRepository.finnSakerFor(person.id).map { sak ->
             val gjeldendeBehandling = behandlingRepository.finnGjeldendeVedtattBehandlingForSak(sak.id)
                 ?.let { behandlingRepository.hent(it.behandlingId) }
 
@@ -96,11 +97,13 @@ class SakOgBehandlingService(
                 referanse = tilbakekrevingBehandling.tilbakekrevingBehandlingId,
                 typeBehandling = TypeBehandling.Tilbakekreving,
                 status = when (tilbakekrevingBehandling.behandlingsstatus) {
-                    TilbakekrevingBehandlingsstatus.OPPRETTET -> no.nav.aap.behandlingsflyt.kontrakt.behandling.Status.OPPRETTET
-                    TilbakekrevingBehandlingsstatus.TIL_BEHANDLING -> no.nav.aap.behandlingsflyt.kontrakt.behandling.Status.UTREDES
-                    TilbakekrevingBehandlingsstatus.RETUR_FRA_BESLUTTER -> no.nav.aap.behandlingsflyt.kontrakt.behandling.Status.UTREDES
-                    TilbakekrevingBehandlingsstatus.TIL_GODKJENNING -> no.nav.aap.behandlingsflyt.kontrakt.behandling.Status.UTREDES
-                    TilbakekrevingBehandlingsstatus.AVSLUTTET -> no.nav.aap.behandlingsflyt.kontrakt.behandling.Status.AVSLUTTET
+                    TilbakekrevingBehandlingsstatus.OPPRETTET -> Status.OPPRETTET
+                    TilbakekrevingBehandlingsstatus.TIL_BEHANDLING -> Status.UTREDES
+                    TilbakekrevingBehandlingsstatus.RETUR_FRA_BESLUTTER -> Status.UTREDES
+                    TilbakekrevingBehandlingsstatus.TIL_GODKJENNING -> Status.UTREDES
+                    TilbakekrevingBehandlingsstatus.TIL_FORHÅNDSVARSEL -> Status.UTREDES
+                    TilbakekrevingBehandlingsstatus.TIL_BESLUTTER -> Status.UTREDES
+                    TilbakekrevingBehandlingsstatus.AVSLUTTET -> Status.AVSLUTTET
                 },
                 vurderingsbehov = emptyList(),
                 årsakTilOpprettelse = ÅrsakTilOpprettelse.TILBAKEKREVING_HENDELSE,

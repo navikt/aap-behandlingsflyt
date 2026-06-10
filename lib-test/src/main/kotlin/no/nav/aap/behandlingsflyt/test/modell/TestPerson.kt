@@ -16,7 +16,6 @@ import no.nav.aap.behandlingsflyt.integrasjon.pdl.PersonStatus
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.test.FakePersoner
 import no.nav.aap.behandlingsflyt.test.FiktivtNavnGenerator
-import no.nav.aap.behandlingsflyt.test.FødselsnummerGenerator
 import no.nav.aap.behandlingsflyt.test.PersonNavn
 import no.nav.aap.behandlingsflyt.test.TestPersonService
 import no.nav.aap.komponenter.type.Periode
@@ -24,15 +23,13 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andresta
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreSøknad
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.gateway.TiltakspengerKilde
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.gateway.TiltakspengerYtelseType
+import no.nav.aap.behandlingsflyt.help.ident
 
+import no.nav.aap.dokumentinnhenting.kontrakt.BehandlerDto
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.Prosent
 import java.time.LocalDate
 import java.time.Year
-
-fun genererIdent(fødselsdato: LocalDate): Ident {
-    return Ident(FødselsnummerGenerator.Builder().fodselsdato(fødselsdato).buildAndGenerate())
-}
 
 fun defaultInntekt(): List<InntektPerÅr> {
     return (0..10).map { InntektPerÅr(Year.now().minusYears(it.toLong()), Beløp("400000.0")) }
@@ -40,7 +37,7 @@ fun defaultInntekt(): List<InntektPerÅr> {
 
 class TestPerson(
     val fødselsdato: Fødselsdato = Fødselsdato(LocalDate.now().minusYears(19)),
-    val identer: Set<Ident> = setOf(genererIdent(fødselsdato.toLocalDate())),
+    val identer: Set<Ident> = setOf(ident()),
     val dødsdato: Dødsdato? = null,
     var barn: List<TestPerson> = emptyList(),
     val navn: PersonNavn = FiktivtNavnGenerator.genererNavn(),
@@ -63,6 +60,7 @@ class TestPerson(
         )
     ),
     val medlStatus: List<MedlemskapDataIntern> = emptyList(),
+    var fastlege: BehandlerDto? = null,
     var sykepenger: List<Sykepenger>? = null,
     var dagpenger: List<Dagpenger>? = null,
     var tiltakspenger: List<Tiltakspenger>? = null,
@@ -111,6 +109,11 @@ class TestPerson(
 
     fun medUføre(uføre: Prosent?, virkningstidspunkt: LocalDate = LocalDate.now().minusYears(3), uføregradTom: LocalDate? = null): TestPerson {
         this.uføre = uføre?.let { Uføre(virkningstidspunkt = virkningstidspunkt, uføregrad = uføre, uføregradTom = uføregradTom) }
+        return this
+    }
+
+    fun medFastlege(fastlege: BehandlerDto): TestPerson {
+        this.fastlege = fastlege
         return this
     }
 

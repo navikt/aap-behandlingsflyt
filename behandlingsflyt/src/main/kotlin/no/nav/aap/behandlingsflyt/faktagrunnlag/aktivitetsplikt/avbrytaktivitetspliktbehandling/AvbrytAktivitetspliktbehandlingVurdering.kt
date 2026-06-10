@@ -7,7 +7,7 @@ data class AvbrytAktivitetspliktbehandlingVurdering(
     val årsak: AvbrytAktivitetspliktbehandlingÅrsak,
     val begrunnelse: String,
     val vurdertAv: Bruker,
-    val opprettetTidspunkt: LocalDateTime? = null,
+    val opprettetTidspunkt: LocalDateTime,
 )
 
 enum class AvbrytAktivitetspliktbehandlingÅrsak {

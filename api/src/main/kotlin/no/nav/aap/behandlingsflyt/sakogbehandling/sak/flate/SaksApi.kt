@@ -140,7 +140,7 @@ fun NormalOpenAPIRoute.saksApi(
                     if (person == null) {
                         null
                     } else {
-                        val sakerForPerson = repositoryProvider.provide<SakRepository>().finnSakerFor(person)
+                        val sakerForPerson = repositoryProvider.provide<SakRepository>().finnSakerFor(person.id)
 
                         log.info("Fant ${sakerForPerson.size} saker for person. Mottattidspunkt: ${dto.mottattTidspunkt}")
 
@@ -321,7 +321,7 @@ fun NormalOpenAPIRoute.saksApi(
                     SakPersoninfoDTO(
                         fnr = personinfo.ident.identifikator,
                         navn = personinfo.fulltNavn(),
-                        personReferanse = sak.person.identifikator,
+                        personReferanse = sak.person.referanse,
                         fødselsdato = personinfo.fødselsdato,
                         dødsdato = personinfo.dødsdato,
                     )

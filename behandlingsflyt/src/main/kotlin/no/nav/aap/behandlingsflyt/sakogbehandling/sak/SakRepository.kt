@@ -11,7 +11,7 @@ interface SakRepository : Repository {
 
     fun finnEllerOpprett(person: Person, søknadsdato: LocalDate): Sak
 
-    fun finnSakerFor(person: Person): List<Sak>
+    fun finnSakerFor(personId: PersonId): List<Sak>
 
     fun finnAlleSakIder(): List<SakId>
 

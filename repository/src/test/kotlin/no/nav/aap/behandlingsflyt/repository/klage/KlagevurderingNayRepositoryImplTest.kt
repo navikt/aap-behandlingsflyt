@@ -13,6 +13,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
+import java.time.Instant
 import org.junit.jupiter.api.assertNotNull
 import org.junit.jupiter.api.assertNull
 import java.time.LocalDate
@@ -48,7 +49,8 @@ class KlagevurderingNayRepositoryImplTest {
                 innstilling = KlageInnstilling.OPPRETTHOLD,
                 vilkårSomOmgjøres = emptyList(),
                 vilkårSomOpprettholdes = listOf(Hjemmel.FOLKETRYGDLOVEN_11_5),
-                vurdertAv = "ident"
+                vurdertAv = "ident",
+            opprettet = Instant.now()
             )
 
             klagebehandlingNayRepository.lagre(klageBehandling.id, vurdering)

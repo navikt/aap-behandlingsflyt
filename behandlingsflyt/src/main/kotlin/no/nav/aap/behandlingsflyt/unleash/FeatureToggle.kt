@@ -16,13 +16,12 @@ enum class BehandlingsflytFeature : FeatureToggle {
     AvslagLovvalgMedlemskap,
     SamordningFaktagrunnlagBrev,
     GReguleringUtplukkJobb,
-    ForutgaaendeGap,
     FjernTilbakefoeringTransisjon,
-    MaritimtArbeid,
-    ForstegangsbehandlingEtterAvslagOppgave,
     AlleEndringerKreverKvalitetssikring,
     RevurderingEtterAvslagSkalKvalitetssikres,
     MeldepliktForsteFraForsteInnvilgelse,
+    MeldekortEndretAvSaksbehandler,
+    AutomatiskStans1118,
     ;
 
     override fun key(): String = name
