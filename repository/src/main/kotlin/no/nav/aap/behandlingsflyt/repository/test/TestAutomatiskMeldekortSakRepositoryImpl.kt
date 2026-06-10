@@ -24,6 +24,14 @@ class TestAutomatiskMeldekortSakRepositoryImpl(private val connection: DBConnect
         }
     }
 
+    override fun eksisterer(sakId: SakId): Boolean {
+        return connection.queryFirst("SELECT EXISTS(SELECT 1 FROM test_automatisk_meldekort_sak WHERE sak_id = ?)") {
+            setParams {
+                setLong(1, sakId.toLong())
+            }
+        }
+    }
+
     override fun hentAlle(): List<SakId> =
         connection.queryList("SELECT sak_id FROM test_automatisk_meldekort_sak") {
             setRowMapper { row -> SakId(row.getLong("sak_id")) }
