@@ -91,7 +91,7 @@ fun NormalOpenAPIRoute.flytApi(
                     val sak = sakRepository.hent(behandling.sakId)
                     val avklaringsbehovene = lazy { avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id) }
                     val flytJobbRepository = repositoryProvider.provide<FlytJobbRepository>()
-                    val gruppeVisningService = DynamiskStegGruppeVisningService(repositoryProvider)
+                    val gruppeVisningService = DynamiskStegGruppeVisningService(repositoryProvider, gatewayProvider)
                     val avbrytAktivitetspliktbehandlingService =
                         AvbrytAktivitetspliktbehandlingService(repositoryProvider)
 
