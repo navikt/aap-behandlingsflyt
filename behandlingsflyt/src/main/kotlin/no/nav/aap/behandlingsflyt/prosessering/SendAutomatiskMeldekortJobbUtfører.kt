@@ -123,7 +123,7 @@ class SendAutomatiskMeldekortJobbUtfører(
                 flytJobbRepository = repositoryProvider.provide(),
             )
 
-        override val type = "batch.SendAutomatiskMeldekort"
+        override val type = "batch.dolly.sendautomatiskmeldekort"
         override val navn = "Send automatisk meldekort for test-saker"
         override val beskrivelse = "Sender ukentlig meldekort (0 timer) for test-saker registrert via Dolly."
 
