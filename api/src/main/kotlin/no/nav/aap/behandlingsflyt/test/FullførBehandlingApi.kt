@@ -61,7 +61,8 @@ fun NormalOpenAPIRoute.fullførBehandlingApi(
                 }
                 thread(
                     isDaemon = true,
-                    block = withMdc { service.fullførBehandling(resultat.sak, resultat.ventPåNyBehandling) })
+                    block = withMdc { service.fullførBehandling(resultat.sak, resultat.ventPåNyBehandling) },
+                )
                 respond(OpprettOgFullforBehandlingRespons(resultat.sak.saksnummer.toString()))
             } catch (e: OpprettTestSakException) {
                 throw UgyldigForespørselException(message = e.message ?: "Ukjent feil", cause = e)
@@ -88,9 +89,9 @@ fun NormalOpenAPIRoute.fullførBehandlingApi(
                     .hentDokumenterAvType(behandling.id, InnsendingType.SØKNAD)
                     .firstOrNull()
 
-                val (søknad, mottattTidspunkt) = dokument?.let {
-                    Pair(it.strukturerteData<SøknadV0>()?.data, it.mottattTidspunkt)
-                } ?: Pair(null, null)
+                val (søknad, mottattTidspunkt) = dokument
+                    ?.let { it.strukturerteData<SøknadV0>()?.data to it.mottattTidspunkt }
+                    ?: (null to null)
 
                 val soeknadDetaljer = søknad?.let {
                     SoeknadDetaljer(
@@ -98,7 +99,7 @@ fun NormalOpenAPIRoute.fullførBehandlingApi(
                         harYrkesskade = it.yrkesskade.equals("Ja", ignoreCase = true),
                         harMedlemskap = it.medlemskap?.harBoddINorgeSiste5År.equals("JA", ignoreCase = true),
                         andreUtbetalinger = it.andreUtbetalinger?.let { a -> AndreUtbetalingerApiDto.fraKontrakt(a) },
-                        soeknadsdato = mottattTidspunkt?.toLocalDate()
+                        soeknadsdato = mottattTidspunkt?.toLocalDate(),
                     )
                 }
 

@@ -48,31 +48,30 @@ class SendAutomatiskMeldekortJobbUtfører(
 
         log.info("Behandler ${saker.size} saker for automatisk meldekort")
 
-        saker.forEach { sakId ->
-            sendMeldekortHvisAktiv(sakId, idag)
-        }
+        saker.forEach { sendMeldekortHvisAktiv(it, idag) }
     }
 
     private fun sendMeldekortHvisAktiv(sakId: SakId, idag: LocalDate) {
         fullførteMeldeperioder(sakId, idag).forEach { sendMeldekort(sakId, it) }
     }
 
-    private fun fullførteMeldeperioder(sakId: SakId, idag: LocalDate): List<Periode> {
-        val sisteBehandling = behandlingService.finnSisteYtelsesbehandlingFor(sakId)
+    private fun fullførteMeldeperioder(sakId: SakId, idag: LocalDate): List<Periode> =
+        behandlingService.finnSisteYtelsesbehandlingFor(sakId)
             ?.takeIf { harAktivRettighet(it.id, idag) }
-            ?: return emptyList<Periode>().also {
-                log.info("Sak $sakId har ingen aktiv ytelsesbehandling på $idag, hopper over")
+            ?.let { sisteBehandling ->
+                meldeperiodeRepository.hentFørsteMeldeperiode(sisteBehandling.id)
+                    ?.let { førsteMeldeperiode ->
+                        meldeperiodeRepository
+                            .hentMeldeperioder(sisteBehandling.id, Periode(førsteMeldeperiode.fom, idag))
+                            .filter { it.tom < idag }
+                            .ifEmpty {
+                                log.info("Sak $sakId har ingen fullførte meldeperioder frem til $idag, hopper over")
+                                emptyList()
+                            }
+                    }
+                    ?: tomListeMedLogg("Sak $sakId har ingen fastsatt meldeperiode, hopper over")
             }
-
-        return meldeperiodeRepository.hentFørsteMeldeperiode(sisteBehandling.id)
-            ?.let { første ->
-                meldeperiodeRepository
-                    .hentMeldeperioder(sisteBehandling.id, Periode(første.fom, idag))
-                    .filter { it.tom < idag }
-                    .also { if (it.isEmpty()) log.info("Sak $sakId har ingen fullførte meldeperioder frem til $idag, hopper over") }
-            }
-            ?: emptyList<Periode>().also { log.info("Sak $sakId har ingen fastsatt meldeperiode, hopper over") }
-    }
+            ?: tomListeMedLogg("Sak $sakId har ingen aktiv ytelsesbehandling på $idag, hopper over")
 
     private fun sendMeldekort(sakId: SakId, periode: Periode) {
         val meldekort = MeldekortV0(
@@ -86,14 +85,9 @@ class SendAutomatiskMeldekortJobbUtfører(
             ),
         )
 
-        val referanse = InnsendingReferanse(
-            type = InnsendingReferanse.Type.JOURNALPOST,
-            verdi = Random.nextLong(1_000_000_000L, 9_999_999_999_999L).toString(),
-        )
-
         val jobb = HendelseMottattHåndteringJobbUtfører.nyJobb(
             sakId = sakId,
-            dokumentReferanse = referanse,
+            dokumentReferanse = journalpostReferanse(),
             brevkategori = InnsendingType.MELDEKORT,
             kanal = Kanal.DIGITAL,
             melding = meldekort,
@@ -107,6 +101,16 @@ class SendAutomatiskMeldekortJobbUtfører(
     private fun harAktivRettighet(behandlingId: BehandlingId, idag: LocalDate): Boolean {
         val grunnlag = rettighetstypeRepository.hentHvisEksisterer(behandlingId) ?: return false
         return grunnlag.rettighetstypeTidslinje.begrensetTil(Periode(idag, idag)).isNotEmpty()
+    }
+
+    private fun journalpostReferanse() = InnsendingReferanse(
+        type = InnsendingReferanse.Type.JOURNALPOST,
+        verdi = Random.nextLong(1_000_000_000L, 9_999_999_999_999L).toString(),
+    )
+
+    private fun tomListeMedLogg(melding: String): List<Periode> {
+        log.info(melding)
+        return emptyList()
     }
 
     companion object : ProvidersJobbSpesifikasjon {
