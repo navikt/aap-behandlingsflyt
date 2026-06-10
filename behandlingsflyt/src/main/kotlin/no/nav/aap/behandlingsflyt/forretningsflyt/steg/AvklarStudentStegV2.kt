@@ -30,7 +30,7 @@ import no.nav.aap.komponenter.tidslinje.tidslinjeOf
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
 
-class VurderStudentStegV2 private constructor(
+class AvklarStudentStegV2 private constructor(
     private val studentRepository: StudentRepository,
     private val tidligereVurderinger: TidligereVurderinger,
     private val vilkårsresultatRepository: VilkårsresultatRepository,
@@ -158,7 +158,7 @@ class VurderStudentStegV2 private constructor(
             repositoryProvider: RepositoryProvider,
             gatewayProvider: GatewayProvider
         ): BehandlingSteg {
-            return VurderStudentStegV2(repositoryProvider, gatewayProvider)
+            return AvklarStudentStegV2(repositoryProvider, gatewayProvider)
         }
 
         override fun type(): StegType {
