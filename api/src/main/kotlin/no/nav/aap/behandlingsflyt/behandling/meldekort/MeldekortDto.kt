@@ -17,6 +17,7 @@ data class MeldeperiodeMedMeldekortDto(
     val meldeperiode: Periode,
     val periode: Periode?,
     val meldekort: MeldekortDto?,
+    val meldeDato: LocalDate?,
     val tidligereMeldekort: List<MeldekortDto> = emptyList(),
 )
 
@@ -24,6 +25,7 @@ data class MeldekortDto(
     @Deprecated("Bruk journalpostId i stedet for id, da det er mer beskrivende")
     val id: String,
     val journalpostId: String,
+    @Deprecated("Bruk heller meldeDato fra MeldeperiodeMedMeldekortDto")
     val meldeDato: LocalDate,
     val oppdatertTidspunkt: LocalDate? = null,
     val begrunnelse: String? = null,
@@ -53,11 +55,17 @@ data class MeldekortProsesseringResponse(
     val meldekortProsesseringStatus: MeldekortProsesseringStatus,
 )
 
-fun Meldekort.toDto(begrunnelse: String?, oppdatertAv: String?, oppdatertTidspunkt: LocalDate?, oppdatertAvSaksbehandler: Boolean): MeldekortDto =
+fun Meldekort.toDto(
+    meldeDato: LocalDate?,
+    begrunnelse: String?,
+    oppdatertAv: String?,
+    oppdatertTidspunkt: LocalDate?,
+    oppdatertAvSaksbehandler: Boolean
+): MeldekortDto =
     MeldekortDto(
         id = journalpostId.identifikator,
         journalpostId = journalpostId.identifikator,
-        meldeDato = mottattTidspunkt.toLocalDate(),
+        meldeDato = meldeDato ?: mottattTidspunkt.toLocalDate(),
         oppdatertTidspunkt = oppdatertTidspunkt,
         begrunnelse = begrunnelse,
         oppdatertAv = oppdatertAv,

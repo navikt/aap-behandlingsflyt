@@ -14,6 +14,7 @@ import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingGatew
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingReferanse
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.HåndterConflictResponseHandler
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurderingAvForeldreAnsvar
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.prometheus
@@ -55,7 +56,6 @@ import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureM
 import no.nav.aap.komponenter.json.DefaultJsonMapper
 import org.slf4j.LoggerFactory
 import java.io.InputStream
-import java.math.BigDecimal
 import java.net.URI
 import kotlin.collections.orEmpty
 
@@ -380,8 +380,14 @@ class BrevGateway : BrevbestillingGateway {
                         )
                     }
 
-                    if(brevBehov.sykdomsvurdering != null) {
+                    if (brevBehov.sykdomsvurdering != null) {
                         add(Faktagrunnlag.Sykdomsvurdering(brevBehov.sykdomsvurdering!!))
+                    }
+
+                    if (brevBehov.foreldreansvarVurderinger != null) {
+                        add(
+                            foreldreansvarVurderingerTilFaktaGrunnlag(brevBehov.foreldreansvarVurderinger!!)
+                        )
                     }
 
                     brevBehov.forholdTilAndreYtelser?.let { forholdTilAndreYtelser ->
@@ -426,7 +432,7 @@ class BrevGateway : BrevbestillingGateway {
 
             is Avslag -> {
                 buildSet {
-                    if(brevBehov.sykdomsvurdering != null) {
+                    if (brevBehov.sykdomsvurdering != null) {
                         add(Faktagrunnlag.Sykdomsvurdering(brevBehov.sykdomsvurdering!!))
                     }
                 }
@@ -475,6 +481,19 @@ class BrevGateway : BrevbestillingGateway {
             andelAvNedsettelseSomSkyldesYrkesskade = yrkesskadeBeregning.andelAvNedsettelseSomSkyldesYrkesskade,
         )
     }
+
+    private fun foreldreansvarVurderingerTilFaktaGrunnlag(foreldreansvarVurderinger: List<VurderingAvForeldreAnsvar>): Faktagrunnlag.BarnUtenBarnetillegg {
+        return Faktagrunnlag.BarnUtenBarnetillegg(
+           foreldreansvarVurderinger.map { vurdering ->
+                Faktagrunnlag.BarnUtenBarnetillegg.Barn(
+                    harForeldreAnsvar = vurdering.harForeldreAnsvar,
+                    begrunnelse = vurdering.begrunnelse,
+                    erFosterforelder = vurdering.erFosterForelder,
+                )
+            }
+        )
+    }
+
 
     private fun grunnlagBeregningTilFaktagrunnlag(grunnlagBeregning: GrunnlagBeregning): Faktagrunnlag.GrunnlagBeregning {
         return Faktagrunnlag.GrunnlagBeregning(
