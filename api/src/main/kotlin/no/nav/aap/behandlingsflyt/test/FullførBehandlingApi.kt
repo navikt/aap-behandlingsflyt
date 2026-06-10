@@ -65,7 +65,7 @@ fun NormalOpenAPIRoute.fullførBehandlingApi(
                 val provider = repositoryRegistry.provider(connection)
                 val person = provider.provide<PersonRepository>().finn(Ident(req.ident))
                     ?: return@transaction BehandlingStatusRespons(req.ident, null, false)
-                val sak = provider.provide<SakRepository>().finnSakerFor(person).firstOrNull()
+                val sak = provider.provide<SakRepository>().finnSakerFor(person.id).firstOrNull()
                     ?: return@transaction BehandlingStatusRespons(req.ident, null, false)
                 val behandling = BehandlingService(provider, gatewayProvider)
                     .finnSisteYtelsesbehandlingFor(sak.id)

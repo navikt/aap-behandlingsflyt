@@ -80,7 +80,7 @@ class PdlHendelseService(
             val harOppdatertIdent = person.aktivIdent() != nyAktivIdent
             if (harOppdatertIdent) {
                 log.info("Oppdaterert ident for personId ${person.id} med ny aktiv ident fra PDL")
-                sakRepository.finnSakerFor(person).forEach { sak ->
+                sakRepository.finnSakerFor(person.id).forEach { sak ->
                     hendelseService.registrerMottattHendelse(
                         personHendelse.tilInnsendingFolkeregisterIdentHendelse(
                             sak.saksnummer,
@@ -169,7 +169,7 @@ class PdlHendelseService(
         }
 
         // Finn sak på person
-        sakRepository.finnSakerFor(person).forEach { sak ->
+        sakRepository.finnSakerFor(person.id).forEach { sak ->
             log.info("Registrerer mottatt hendelse på ${sak.saksnummer}")
             val sisteOpprettedeBehandling = behandlingService.finnSisteYtelsesbehandlingFor(
                 sak.id

@@ -49,9 +49,9 @@ object InMemorySakRepository : SakRepository {
         }
     }
 
-    override fun finnSakerFor(person: Person): List<Sak> {
+    override fun finnSakerFor(personId: PersonId): List<Sak> {
         synchronized(lock) {
-            return memory.values.filter { sak -> sak.person == person }
+            return memory.values.filter { sak -> sak.person.id == personId }
         }
     }
 
