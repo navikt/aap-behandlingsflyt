@@ -8,6 +8,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapUn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonStatus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Personopplysning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.erGyldigIPeriode
+import no.nav.aap.behandlingsflyt.lovvalgAutomatiskGjennomslipp
+import no.nav.aap.behandlingsflyt.lovvalgÅrsakTilManuellVurdering
+import no.nav.aap.behandlingsflyt.prometheus
 import no.nav.aap.komponenter.type.Periode
 
 class MedlemskapLovvalgVurderingService {
@@ -20,11 +23,36 @@ class MedlemskapLovvalgVurderingService {
 
         val oppfyltMinstEttKrav = førsteDelVurderinger.any { it.resultat }
         val ingenInntruffet = andreDelVurdering.all { !it.resultat }
+        val kanBehandlesAutomatisk = oppfyltMinstEttKrav && ingenInntruffet
+
+        // No-op: sporer automatisk gjennomslipp av lovvalg
+        if (kanBehandlesAutomatisk) {
+            prometheus.lovvalgAutomatiskGjennomslipp().increment()
+        }
+
+        // No-op: sporer hvilke kriterier som hindrer automatisk vurdering
+        if (!kanBehandlesAutomatisk) {
+            if (!oppfyltMinstEttKrav) {
+                prometheus.lovvalgÅrsakTilManuellVurdering("ingen_i_norge_kriterier_oppfylt").increment()
+            }
+            andreDelVurdering.filter { it.resultat }.forEach { vurdering ->
+                prometheus.lovvalgÅrsakTilManuellVurdering(lovvalgÅrsakNavn(vurdering.opplysning)).increment()
+            }
+        }
 
         return KanBehandlesAutomatiskVurdering(
-            oppfyltMinstEttKrav && ingenInntruffet,
+            kanBehandlesAutomatisk,
             førsteDelVurderinger + andreDelVurdering
         )
+    }
+
+    private fun lovvalgÅrsakNavn(opplysning: String): String = when (opplysning) {
+        "Arbeid i utland" -> "arbeid_i_utland"
+        "Opphold i utland" -> "opphold_i_utland"
+        "Utenlandsk adresse" -> "utenlandsk_adresse"
+        "Vedtak om annet lovvalgsland finnes" -> "annet_lovvalgsland"
+        "Mangler statsborgerskap i EØS" -> "mangler_statsborgerskap_eos"
+        else -> opplysning.replace(" ", "_").lowercase()
     }
 
     // Minst én må oppfylles
