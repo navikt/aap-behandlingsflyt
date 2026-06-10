@@ -15,7 +15,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedP
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Query
@@ -381,7 +381,7 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
     }
 
     override fun hentAlleMedVedtakFor(
-        person: Person,
+        personId: PersonId,
         behandlingstypeFilter: List<TypeBehandling>
     ): List<BehandlingMedVedtak> {
         val query = """
@@ -411,7 +411,7 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
 
         return connection.queryList(query) {
             setParams {
-                setLong(1, person.id.id)
+                setLong(1, personId.id)
                 setArray(2, behandlingstypeFilter.map { it.identifikator() })
             }
             setRowMapper {

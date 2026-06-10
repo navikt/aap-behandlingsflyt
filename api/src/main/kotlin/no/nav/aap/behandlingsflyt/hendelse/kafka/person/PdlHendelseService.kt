@@ -20,6 +20,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.IdentGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
@@ -115,7 +116,7 @@ class PdlHendelseService(
         // Sjekk om personen er et barn fr apersontabellen eller aap-mottaker
         if (person != null) {
             håndterDødPersonSomBrukerEllerBarn(
-                person,
+                person.id,
                 funnetIdent!!,
                 personHendelse,
             )
@@ -132,7 +133,7 @@ class PdlHendelseService(
     }
 
     private fun håndterDødPersonSomBrukerEllerBarn(
-        person: Person,
+        personId: PersonId,
         funnetIdent: Ident,
         personHendelse: PdlPersonHendelse,
     ) {
@@ -169,7 +170,7 @@ class PdlHendelseService(
         }
 
         // Finn sak på person
-        sakRepository.finnSakerFor(person.id).forEach { sak ->
+        sakRepository.finnSakerFor(personId).forEach { sak ->
             log.info("Registrerer mottatt hendelse på ${sak.saksnummer}")
             val sisteOpprettedeBehandling = behandlingService.finnSisteYtelsesbehandlingFor(
                 sak.id
