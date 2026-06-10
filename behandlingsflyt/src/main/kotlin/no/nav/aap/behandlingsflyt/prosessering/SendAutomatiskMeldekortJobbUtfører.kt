@@ -18,6 +18,7 @@ import no.nav.aap.motor.JobbInput
 import no.nav.aap.motor.JobbUtfører
 import no.nav.aap.motor.ProvidersJobbSpesifikasjon
 import no.nav.aap.motor.cron.CronExpression
+import no.nav.aap.verdityper.dokument.JournalpostId
 import no.nav.aap.verdityper.dokument.Kanal
 import org.slf4j.LoggerFactory
 import java.time.Clock
@@ -79,10 +80,7 @@ class SendAutomatiskMeldekortJobbUtfører(
             ),
         )
 
-        val referanse = InnsendingReferanse(
-            type = InnsendingReferanse.Type.SAKSBEHANDLER_KELVIN_REFERANSE,
-            verdi = UUID.randomUUID().toString(),
-        )
+        val referanse = InnsendingReferanse(JournalpostId(UUID.randomUUID().toString()))
 
         val jobb = HendelseMottattHåndteringJobbUtfører.nyJobb(
             sakId = sakId,

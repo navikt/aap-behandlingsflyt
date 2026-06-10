@@ -4,6 +4,7 @@ import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
+import io.mockk.slot
 import io.mockk.verify
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.rettighetstype.RettighetstypeGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.rettighetstype.RettighetstypeRepository
@@ -11,6 +12,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Re
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
+import no.nav.aap.komponenter.json.DefaultJsonMapper
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
@@ -77,6 +80,29 @@ class SendAutomatiskMeldekortJobbUtførerTest {
         utfører.utfør(jobbInput)
 
         verify(exactly = 0) { flytJobbRepository.leggTil(any()) }
+    }
+
+    @Test
+    fun `meldekort-jobb opprettes med referanse av type JOURNALPOST`() {
+        val idag = LocalDate.of(2026, 6, 9)
+        val utfører = lagUtfører(idag)
+
+        every { automatiskMeldekortSakRepository.hentAlle() } returns listOf(sakId)
+        every { behandlingService.finnSisteYtelsesbehandlingFor(sakId) } returns lagBehandling()
+        every { rettighetstypeRepository.hentHvisEksisterer(behandlingId) } returns lagRettighetstypeGrunnlag(
+            fom = idag.minusDays(30),
+            tom = idag.plusDays(30),
+        )
+        every { flytJobbRepository.leggTil(any()) } just Runs
+
+        utfører.utfør(jobbInput)
+
+        val slot = slot<JobbInput>()
+        verify(exactly = 1) { flytJobbRepository.leggTil(capture(slot)) }
+        val referanse = DefaultJsonMapper.fromJson<InnsendingReferanse>(slot.captured.parameter("referanse"))
+        assert(referanse.type == InnsendingReferanse.Type.JOURNALPOST) {
+            "Forventer JOURNALPOST-type, men fikk: ${referanse.type}"
+        }
     }
 
     @Test
