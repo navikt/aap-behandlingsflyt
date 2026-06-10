@@ -27,7 +27,7 @@ class MedlemskapLovvalgVurderingService {
 
         // No-op: sporer automatisk gjennomslipp av lovvalg
         if (kanBehandlesAutomatisk) {
-            prometheus.lovvalgAutomatiskGjennomslipp().increment()
+            prometheus.lovvalgAutomatiskGjennomslipp(kanBehandlesAutomatisk).increment()
         }
 
         // No-op: sporer hvilke kriterier som hindrer automatisk vurdering
@@ -244,13 +244,14 @@ class MedlemskapLovvalgVurderingService {
             grunnlag?.statsborgerskap
                 ?.none { it.land in EØSLandEllerLandMedAvtale.gyldigeEØSLand.map { it.name } }
 
-        val manglerStatsborgerskapGrunnlag = grunnlag?.statsborgerskap?.filter { it.erGyldigIPeriode(rettighetsPeriode) }?.map {
-            ManglerStatsborgerskapGrunnlag(
-                land = it.land,
-                gyldigFraOgMed = it.gyldigFraOgMed,
-                gyldigTilOgMed = it.gyldigTilOgMed
-            )
-        }
+        val manglerStatsborgerskapGrunnlag =
+            grunnlag?.statsborgerskap?.filter { it.erGyldigIPeriode(rettighetsPeriode) }?.map {
+                ManglerStatsborgerskapGrunnlag(
+                    land = it.land,
+                    gyldigFraOgMed = it.gyldigFraOgMed,
+                    gyldigTilOgMed = it.gyldigTilOgMed
+                )
+            }
 
         return TilhørighetVurdering(
             kilde = listOf(Kilde.PDL),

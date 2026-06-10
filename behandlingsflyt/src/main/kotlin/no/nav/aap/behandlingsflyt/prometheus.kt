@@ -35,8 +35,8 @@ fun PrometheusMeterRegistry.forutgåendeMedlemskapNorskOgUtfallInntekt(resultat:
 fun PrometheusMeterRegistry.forutgåendeMedlemskapNorskOgAvslag(resultat: Boolean): Counter =
     this.counter("behandlingsflyt_forutgaaende_medlemskap_norsk_avslag", listOf(Tag.of("norskavslag", resultat.toString())))
 
-fun PrometheusMeterRegistry.lovvalgAutomatiskGjennomslipp(): Counter =
-    this.counter("behandlingsflyt_lovvalg_automatisk_vurdert_total")
+fun PrometheusMeterRegistry.lovvalgAutomatiskGjennomslipp(resultat: Boolean): Counter =
+    this.counter("behandlingsflyt_lovvalg_automatisk_vurdert_total", listOf(Tag.of("lovvalggjennomslipp", resultat.toString())))
 
 fun PrometheusMeterRegistry.lovvalgÅrsakTilManuellVurdering(årsak: String): Counter =
     this.counter("behandlingsflyt_lovvalg_aarsak_manuell_vurdering_total", listOf(Tag.of("aarsak", årsak)))
