@@ -50,7 +50,7 @@ class AvklarStudentStegV2 private constructor(
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkårTilstrekkeligVurdert(
             definisjon = Definisjon.AVKLAR_STUDENT_V2,
-            tvingerAvklaringsbehov = setOf(Vurderingsbehov.REVURDER_STUDENT), // TODO funker dette?
+            tvingerAvklaringsbehov = setOf(Vurderingsbehov.REVURDER_STUDENT),
             nårVurderingErRelevant = ::nårVurderingErRelevant,
             kontekst = kontekst,
             tilbakestillGrunnlag = {

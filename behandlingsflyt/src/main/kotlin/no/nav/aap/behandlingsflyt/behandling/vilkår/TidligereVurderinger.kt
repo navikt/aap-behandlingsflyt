@@ -363,7 +363,7 @@ class TidligereVurderingerImpl(
                     foreløpigUtfall is TidligereVurderinger.PotensieltOppfylt && nesteUtfall is TidligereVurderinger.PotensieltOppfylt -> TidligereVurderinger.PotensieltOppfylt(
                         rettighetstype = foreløpigUtfall.rettighetstype ?: nesteUtfall.rettighetstype,
                         muligRettFraNavKontor = foreløpigUtfall.muligRettFraNavKontor
-                            ?: nesteUtfall.muligRettFraNavKontor // TODO blir dette riktig?
+                            ?: nesteUtfall.muligRettFraNavKontor
                     )
 
                     else -> error("Uventet kombinasjon av utfall: $foreløpigUtfall og $nesteUtfall")
