@@ -20,6 +20,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurderingerFo
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurdertBarnDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurderingDto
 import no.nav.aap.behandlingsflyt.help.assertTidslinje
+import no.nav.aap.behandlingsflyt.help.ident
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
@@ -44,7 +45,6 @@ import no.nav.aap.behandlingsflyt.test.FakePersoner
 import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.test.PersonNavn
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
-import no.nav.aap.behandlingsflyt.test.modell.genererIdent
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
@@ -65,7 +65,7 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
 
         val barnfødseldato = fom.minusYears(17).minusMonths(2)
 
-        val barnIdent = genererIdent(barnfødseldato)
+        val barnIdent = ident()
         val barnNavn = PersonNavn("Lille", "Larsson")
         val person = TestPersoner.STANDARD_PERSON().medBarn(
             listOf(
@@ -433,7 +433,7 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
 
     @Test
     fun `barn lagres i pip i starten av behandlingen`() {
-        val manueltBarnIdent = genererIdent(LocalDate.now().minusYears(3))
+        val manueltBarnIdent = ident()
         val person = TestPersoner.STANDARD_PERSON()
 
         // Oppretter søknad med manuelt barn
@@ -487,7 +487,7 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
         )
 
         val registerBarn = lagTestPerson("Jenny", "Løvland", LocalDate.now().minusYears(7))
-        val registerBarnIdent = genererIdent(registerBarn.fødselsdato.toLocalDate())
+        val registerBarnIdent = ident()
         val personMedRegistrerteBarn = TestPersoner.STANDARD_PERSON().medBarn(
             listOf(
                 TestPerson(
@@ -838,7 +838,7 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
         val periode = Periode(LocalDate.of(2026, 1, 1), Tid.MAKS)
         val barnfødseldato = periode.fom.minusYears(10)
 
-        val barnIdent = genererIdent(barnfødseldato)
+        val barnIdent = ident()
         val barnNavn = PersonNavn("Mari", "Måke")
         val person = TestPersoner.STANDARD_PERSON().medBarn(
             listOf(
@@ -911,7 +911,7 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
     fun `førstegangsbehandling der et barn fjernes reduserer barnetillegg tilsvarende`() {
         val periode = Periode(LocalDate.of(2026, 1, 1), Tid.MAKS)
         val registerBarn = lagTestPerson("Slapp", "Isbjørn", periode.fom.minusYears(7))
-        val registerBarnIdent = genererIdent(registerBarn.fødselsdato.toLocalDate())
+        val registerBarnIdent = ident()
         val personMedRegistrerteBarn = TestPersoner.STANDARD_PERSON().medBarn(
             listOf(
                 TestPerson(
@@ -1001,7 +1001,7 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
     fun `førstegangsbehandling legge til nytt barn gir det ekstra barnetillegg tilsvarende`() {
         val periode = Periode(LocalDate.of(2026, 1, 1), Tid.MAKS)
         val registerBarn = lagTestPerson("Tuva", "Trallala", periode.fom.minusYears(7))
-        val registerBarnIdent = genererIdent(registerBarn.fødselsdato.toLocalDate())
+        val registerBarnIdent = ident()
         val personMedRegistrerteBarn = TestPersoner.STANDARD_PERSON().medBarn(
             listOf(
                 TestPerson(
@@ -1092,7 +1092,7 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
         val fom = LocalDate.of(2026, 1, 1)
         val dødtBarnFødselsdato = fom.minusYears(5)
         val dødtBarnDødsdato = Dødsdato(fom.plusMonths(5))
-        val dødtBarnIdent = genererIdent(dødtBarnFødselsdato)
+        val dødtBarnIdent = ident()
         val dødtBarnNavn = PersonNavn("Kunstig", "Gramatikk")
         val personMedDødtBarn = TestPersoner.STANDARD_PERSON().medBarn(
             listOf(

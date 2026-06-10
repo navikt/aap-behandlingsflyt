@@ -4,7 +4,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingMedVedtak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonId
 
 class PåklagetBehandlingVurderingService(
     val behandlingRepository: BehandlingRepository,
@@ -14,8 +14,8 @@ class PåklagetBehandlingVurderingService(
         return påklagetBehandlingRepository.hentGjeldendeVurderingMedReferanse(behandlingsreferanse)
     }
 
-    fun hentAlleBehandlingerMedVedtakForPerson(person: Person): List<BehandlingMedVedtak> {
-        return behandlingRepository.hentAlleMedVedtakFor(person, TypeBehandling.entries.filter { it != TypeBehandling.Klage })
+    fun hentAlleBehandlingerMedVedtakForPerson(personId: PersonId): List<BehandlingMedVedtak> {
+        return behandlingRepository.hentAlleMedVedtakFor(personId, TypeBehandling.entries.filter { it != TypeBehandling.Klage })
     }
 
 }

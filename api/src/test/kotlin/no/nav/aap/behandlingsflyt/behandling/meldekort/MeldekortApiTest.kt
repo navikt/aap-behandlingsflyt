@@ -16,6 +16,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.StrukturertDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.ArbeidIPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Meldekort
+import no.nav.aap.behandlingsflyt.help.opprettInMemorySak
 import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
 import no.nav.aap.behandlingsflyt.integrasjon.organisasjon.NomInfoGateway
 import no.nav.aap.behandlingsflyt.integrasjon.organisasjon.NorgGateway
@@ -43,6 +44,7 @@ import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryRegistry
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.behandlingsflyt.test.mars
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.verdityper.Dagsatser
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.komponenter.verdityper.Prosent.Companion.`0_PROSENT`
@@ -79,7 +81,7 @@ class MeldekortApiTest : BaseApiTest() {
 
     @Test
     fun `returnerer tomt sett når ingen vedtak finnes`() {
-        val sak = nySak()
+        val sak = opprettInMemorySak()
         opprettBehandling(sak, TypeBehandling.Førstegangsbehandling)
 
         testApplication {
@@ -99,7 +101,7 @@ class MeldekortApiTest : BaseApiTest() {
 
     @Test
     fun `returnerer tomt meldekort for meldeperiode uten innsendt meldekort`() {
-        val sak = nySak()
+        val sak = opprettInMemorySak()
         val behandling = opprettBehandling(sak, TypeBehandling.Førstegangsbehandling)
 
         InMemoryVedtakRepository.lagre(behandling.id, LocalDateTime.now(), LocalDate.now())
@@ -133,7 +135,7 @@ class MeldekortApiTest : BaseApiTest() {
 
     @Test
     fun `returnerer meldekort for siste fattede vedtak`() {
-        val sak = nySak()
+        val sak = opprettInMemorySak()
         val behandling = opprettBehandling(sak, TypeBehandling.Førstegangsbehandling)
 
         InMemoryVedtakRepository.lagre(behandling.id, LocalDateTime.now(), LocalDate.now())
@@ -201,7 +203,7 @@ class MeldekortApiTest : BaseApiTest() {
 
     @Test
     fun `returnerer flere meldekort`() {
-        val sak = nySak()
+        val sak = opprettInMemorySak()
         val behandling = opprettBehandling(sak, TypeBehandling.Førstegangsbehandling)
 
         InMemoryVedtakRepository.lagre(behandling.id, LocalDateTime.now(), LocalDate.now())
@@ -259,7 +261,7 @@ class MeldekortApiTest : BaseApiTest() {
 
     @Test
     fun `returnerer korrigert meldekort når flere meldekort finnes for samme periode`() {
-        val sak = nySak()
+        val sak = opprettInMemorySak()
         val behandling = opprettBehandling(sak, TypeBehandling.Førstegangsbehandling)
 
         InMemoryVedtakRepository.lagre(behandling.id, LocalDateTime.now(), LocalDate.now())
@@ -342,7 +344,7 @@ class MeldekortApiTest : BaseApiTest() {
 
     @Test
     fun `returnerer tidligere meldekort sortert synkende på mottattTidspunkt`() {
-        val sak = nySak()
+        val sak = opprettInMemorySak()
         val behandling = opprettBehandling(sak, TypeBehandling.Førstegangsbehandling)
 
         InMemoryVedtakRepository.lagre(behandling.id, LocalDateTime.now(), LocalDate.now())
@@ -413,7 +415,7 @@ class MeldekortApiTest : BaseApiTest() {
 
     @Test
     fun `returnerer også meldeperioder med fom-dato frem i tid`() {
-        val sak = nySak()
+        val sak = opprettInMemorySak()
         val behandling = opprettBehandling(sak, TypeBehandling.Førstegangsbehandling)
 
         InMemoryVedtakRepository.lagre(behandling.id, LocalDateTime.now(), LocalDate.now())
@@ -450,7 +452,7 @@ class MeldekortApiTest : BaseApiTest() {
 
     @Test
     fun `returnerer kun oppfylte perioder når meldeperiode har delvis oppfylt utfall`() {
-        val sak = nySak()
+        val sak = opprettInMemorySak()
         val behandling = opprettBehandling(sak, TypeBehandling.Førstegangsbehandling)
 
         InMemoryVedtakRepository.lagre(behandling.id, LocalDateTime.now(), LocalDate.now())
@@ -509,7 +511,7 @@ class MeldekortApiTest : BaseApiTest() {
 
     @Test
     fun `prosessering - returnerer KLAR når ingen ventende meldekort-jobber`() {
-        val sak = nySak()
+        val sak = opprettInMemorySak()
         opprettBehandling(sak, TypeBehandling.Førstegangsbehandling)
 
         testApplication {
@@ -529,7 +531,7 @@ class MeldekortApiTest : BaseApiTest() {
 
     @Test
     fun `prosessering - returnerer PROSESSERER_MELDEKORT når det finnes ventende meldekort-jobber`() {
-        val sak = nySak()
+        val sak = opprettInMemorySak()
         opprettBehandling(sak, TypeBehandling.Førstegangsbehandling)
 
         InMemoryFlytJobbRepository.leggTil(
@@ -559,7 +561,7 @@ class MeldekortApiTest : BaseApiTest() {
 
     @Test
     fun `skal journalføre oppdatert meldekort og returnere journalpostId`() {
-        val sak = nySak()
+        val sak = opprettInMemorySak()
         val behandling = opprettBehandling(sak, TypeBehandling.Førstegangsbehandling)
 
         InMemoryVedtakRepository.lagre(behandling.id, LocalDateTime.now(), LocalDate.now())
@@ -594,6 +596,21 @@ class MeldekortApiTest : BaseApiTest() {
             // fixedClock = 2025-04-01T00:00:00Z = 2025-04-01T02:00:00 i Europe/Oslo (CEST)
             assertThat(body.oppdatertTidspunkt).isEqualTo(LocalDate.of(2025, 4, 1))
         }
+    }
+
+    @Test
+    fun `når kun meldeDato og ingen timer sendes inn, settes harDuArbeidet til null`() {
+        val request = OppdaterMeldekortRequest(
+            meldeperiode = Periode(6 januar 2025, 7 januar 2025),
+            begrunnelse = "Korrigering av meldedato uten timer",
+            meldeDato = 6 januar 2025,
+            dager = emptySet(),
+        )
+
+        val meldekort = tilMeldekort(request, Bruker("saksbehandler"))
+
+        assertThat(meldekort.harDuArbeidet).isNull()
+        assertThat(meldekort.timerArbeidPerPeriode).isEmpty()
     }
 
     private fun underveisperiode(utfall: Utfall, periode: Periode, meldePeriode: Periode = periode, trekk: Dagsatser = Dagsatser(0)) = Underveisperiode(

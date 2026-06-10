@@ -13,6 +13,7 @@ import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 class AvbrytAktivitetspliktbehandlingRepositoryImplTest {
     companion object {
@@ -39,7 +40,8 @@ class AvbrytAktivitetspliktbehandlingRepositoryImplTest {
             val avbrytAktivitetspliktbehandlingVurdering = AvbrytAktivitetspliktbehandlingVurdering(
                 årsak = AvbrytAktivitetspliktbehandlingÅrsak.BEHANDLINGEN_BLE_OPPRETTET_VED_EN_FEIL,
                 begrunnelse = "Trykket feil",
-                vurdertAv = Bruker("Saksbehandler")
+                vurdertAv = Bruker("Saksbehandler"),
+            opprettetTidspunkt = LocalDateTime.now()
             )
 
             avbrytAktivitetspliktbehandlingRepository.lagre(behandling.id, avbrytAktivitetspliktbehandlingVurdering)

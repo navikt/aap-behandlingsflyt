@@ -12,10 +12,10 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.StegTilstand
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.AtomicLong
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonId
 
 object InMemoryBehandlingRepository : BehandlingRepository {
     private val log = LoggerFactory.getLogger(javaClass)
@@ -147,7 +147,7 @@ object InMemoryBehandlingRepository : BehandlingRepository {
     }
 
     override fun hentAlleMedVedtakFor(
-        person: Person,
+        personId: PersonId,
         behandlingstypeFilter: List<TypeBehandling>
     ): List<BehandlingMedVedtak> = synchronized(lock) {
         memory.values.mapNotNull { behandling ->
@@ -156,7 +156,7 @@ object InMemoryBehandlingRepository : BehandlingRepository {
             }
 
             val sak = InMemorySakRepository.hent(behandling.sakId)
-            if (sak.person.id != person.id) {
+            if (sak.person.id != personId) {
                 return@mapNotNull null
             }
             val vedtak = InMemoryVedtakRepository.hent(behandling.id)

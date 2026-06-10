@@ -62,14 +62,15 @@ class AvbrytAktivitetspliktbehandlingRepositoryImpl(
     private fun lagreVurdering(vurdering: AvbrytAktivitetspliktbehandlingVurdering): Long {
         return connection.executeReturnKey(
             """
-            insert into avbryt_aktivitetspliktbehandling_vurdering (aarsak, begrunnelse, vurdert_av)
-            values (?, ?, ?)
+            insert into avbryt_aktivitetspliktbehandling_vurdering (aarsak, begrunnelse, vurdert_av, opprettet_tid)
+            values (?, ?, ?, ?)
         """.trimIndent()
         ) {
             setParams {
                 setEnumName(1, vurdering.årsak)
                 setString(2, vurdering.begrunnelse)
                 setString(3, vurdering.vurdertAv.ident)
+                setLocalDateTime(4, vurdering.opprettetTidspunkt)
             }
         }
     }
@@ -78,13 +79,14 @@ class AvbrytAktivitetspliktbehandlingRepositoryImpl(
         connection.executeReturnKey(
             """
             insert into avbryt_aktivitetspliktbehandling_grunnlag(
-                BEHANDLING_ID, VURDERING_ID, AKTIV
-            ) values (?, ?, TRUE)
+                BEHANDLING_ID, VURDERING_ID, AKTIV, OPPRETTET_TID
+            ) values (?, ?, TRUE, ?)
         """.trimIndent()
         ) {
             setParams {
                 setLong(1, behandlingId.toLong())
                 setLong(2, vurderingId)
+                setInstant(3, java.time.Instant.now())
             }
         }
     }

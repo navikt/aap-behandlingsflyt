@@ -7,6 +7,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovServ
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.help.flytKontekstMedPerioder
+import no.nav.aap.behandlingsflyt.help.opprettInMemorySak
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
@@ -15,25 +16,18 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅ
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonId
 import no.nav.aap.behandlingsflyt.test.FakeTidligereVurderinger
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryTrukketSøknadRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryVilkårsresultatRepository
-import no.nav.aap.behandlingsflyt.test.modell.genererIdent
 import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
-import java.util.*
 
 class ForeslåVedtakStegTest {
-
-    private val random = Random(1235123)
-
     private val avklaringsbehovRepository = InMemoryAvklaringsbehovRepository
     private val avklaringsbehovService = AvklaringsbehovService(
         mockk<AvbrytRevurderingService> {
@@ -55,13 +49,9 @@ class ForeslåVedtakStegTest {
 
     @Test
     fun `hvis ingen avklaringsbehov skal det ikke gi foreslå vedtak`() {
-        val person =
-            Person(PersonId(random.nextLong()), UUID.randomUUID(), listOf(genererIdent(LocalDate.now().minusYears(23))))
-
-        val sak = sakRepository.finnEllerOpprett(person, LocalDate.now())
         val behandling =
             behandlingRepository.opprettBehandling(
-                sakId = sak.id,
+                sakId = opprettInMemorySak().id,
                 typeBehandling = TypeBehandling.Førstegangsbehandling,
                 forrigeBehandlingId = null,
                 vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
@@ -83,13 +73,9 @@ class ForeslåVedtakStegTest {
 
     @Test
     fun `hvis ingen avklaringsbehov løst av NAY skal foreslå vedtak hoppes over`() {
-        val person =
-            Person(PersonId(random.nextLong()), UUID.randomUUID(), listOf(genererIdent(LocalDate.now().minusYears(23))))
-
-        val sak = sakRepository.finnEllerOpprett(person, LocalDate.now())
         val behandling =
             behandlingRepository.opprettBehandling(
-                sakId = sak.id,
+                sakId = opprettInMemorySak().id,
                 typeBehandling = TypeBehandling.Førstegangsbehandling,
                 forrigeBehandlingId = null,
                 vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
@@ -117,13 +103,9 @@ class ForeslåVedtakStegTest {
 
     @Test
     fun `hvis avklaringsbehov løst av NAY, gå innom foreslå vedtak`() {
-        val person =
-            Person(PersonId(random.nextLong()), UUID.randomUUID(), listOf(genererIdent(LocalDate.now().minusYears(23))))
-
-        val sak = sakRepository.finnEllerOpprett(person, LocalDate.now())
         val behandling =
             behandlingRepository.opprettBehandling(
-                sakId = sak.id,
+                sakId = opprettInMemorySak().id,
                 typeBehandling = TypeBehandling.Førstegangsbehandling,
                 forrigeBehandlingId = null,
                 vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
@@ -152,13 +134,9 @@ class ForeslåVedtakStegTest {
 
     @Test
     fun `hvis NAY kun har behandlet lovvalg og behandling går mot avslag på lokalkontor, ikke gå innom foreslå vedtak`() {
-        val person =
-            Person(PersonId(random.nextLong()), UUID.randomUUID(), listOf(genererIdent(LocalDate.now().minusYears(23))))
-
-        val sak = sakRepository.finnEllerOpprett(person, LocalDate.now())
         val behandling =
             behandlingRepository.opprettBehandling(
-                sakId = sak.id,
+                sakId = opprettInMemorySak().id,
                 typeBehandling = TypeBehandling.Førstegangsbehandling,
                 forrigeBehandlingId = null,
                 vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
@@ -192,13 +170,9 @@ class ForeslåVedtakStegTest {
 
     @Test
     fun `hvis NAY har behandlet lovvalg og medlemskap til avslag, gå innom foreslå vedtak`() {
-        val person =
-            Person(PersonId(random.nextLong()), UUID.randomUUID(), listOf(genererIdent(LocalDate.now().minusYears(23))))
-
-        val sak = sakRepository.finnEllerOpprett(person, LocalDate.now())
         val behandling =
             behandlingRepository.opprettBehandling(
-                sakId = sak.id,
+                sakId = opprettInMemorySak().id,
                 typeBehandling = TypeBehandling.Førstegangsbehandling,
                 forrigeBehandlingId = null,
                 vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
@@ -227,13 +201,9 @@ class ForeslåVedtakStegTest {
 
     @Test
     fun `hvis NAY-avklaringsbehov finnes, skal foreslå vedtak åpnes også etter tilbakehopp`() {
-        val person =
-            Person(PersonId(random.nextLong()), UUID.randomUUID(), listOf(genererIdent(LocalDate.now().minusYears(23))))
-
-        val sak = sakRepository.finnEllerOpprett(person, LocalDate.now())
         val behandling =
             behandlingRepository.opprettBehandling(
-                sakId = sak.id,
+                sakId = opprettInMemorySak().id,
                 typeBehandling = TypeBehandling.Førstegangsbehandling,
                 forrigeBehandlingId = null,
                 vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
