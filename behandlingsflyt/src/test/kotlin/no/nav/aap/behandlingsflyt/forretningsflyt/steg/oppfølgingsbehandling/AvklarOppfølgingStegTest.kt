@@ -86,6 +86,7 @@ class AvklarOppfølgingStegTest {
             datoForOppfølging = LocalDate.now(),
             hvemSkalFølgeOpp = HvemSkalFølgeOpp.NasjonalEnhet,
             hvaSkalFølgesOpp = "...",
+            opprettetAv = null,
             reserverTilBruker = null
         )
 
