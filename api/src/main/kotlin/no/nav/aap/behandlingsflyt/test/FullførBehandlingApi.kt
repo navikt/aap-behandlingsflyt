@@ -93,6 +93,8 @@ fun NormalOpenAPIRoute.fullførBehandlingApi(
                     ?.let { it.strukturerteData<SøknadV0>()?.data to it.mottattTidspunkt }
                     ?: (null to null)
 
+                val sendeAutomatiskMeldekort = provider.provide<TestAutomatiskMeldekortSakRepository>().eksisterer(sak.id)
+
                 val soeknadDetaljer = søknad?.let {
                     SoeknadDetaljer(
                         erStudent = it.student?.erStudent == StudentStatus.Ja,
@@ -100,6 +102,7 @@ fun NormalOpenAPIRoute.fullførBehandlingApi(
                         harMedlemskap = it.medlemskap?.harBoddINorgeSiste5År.equals("JA", ignoreCase = true),
                         andreUtbetalinger = it.andreUtbetalinger?.let { a -> AndreUtbetalingerApiDto.fraKontrakt(a) },
                         soeknadsdato = mottattTidspunkt?.toLocalDate(),
+                        automatiskMeldekort = sendeAutomatiskMeldekort
                     )
                 }
 
@@ -168,4 +171,5 @@ data class SoeknadDetaljer(
     val harMedlemskap: Boolean,
     val andreUtbetalinger: AndreUtbetalingerApiDto?,
     val soeknadsdato: LocalDate?,
+    val automatiskMeldekort: Boolean,
 )
