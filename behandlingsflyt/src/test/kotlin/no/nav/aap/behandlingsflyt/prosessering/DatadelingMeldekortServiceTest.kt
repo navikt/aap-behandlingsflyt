@@ -185,6 +185,7 @@ private fun lagreMeldekort(
             Meldekort.fraKontrakt(
                 mottattMeldekort.referanse.asJournalpostId,
                 mottattMeldekort.mottattTidspunkt,
+                mottattMeldekort.opprettetTid,
                 strukturertDokument
             )
 

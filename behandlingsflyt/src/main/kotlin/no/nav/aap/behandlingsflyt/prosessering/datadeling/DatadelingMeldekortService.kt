@@ -48,6 +48,7 @@ class DatadelingMeldekortService(
                 Meldekort.fraKontrakt(
                     dokument.referanse.asJournalpostId,
                     dokument.mottattTidspunkt,
+                    dokument.opprettetTid,
                     requireNotNull(m) { "Meldekort mangler strukturert data. JournalpostId=${dokument.referanse.asJournalpostId}" })
             }.ifEmpty { return null }
 
