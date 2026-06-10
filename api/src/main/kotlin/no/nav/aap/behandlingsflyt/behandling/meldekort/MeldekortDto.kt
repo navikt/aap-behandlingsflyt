@@ -25,6 +25,7 @@ data class MeldekortDto(
     @Deprecated("Bruk journalpostId i stedet for id, da det er mer beskrivende")
     val id: String,
     val journalpostId: String,
+    @Deprecated("Bruk heller meldeDato fra MeldeperiodeMedMeldekortDto")
     val meldeDato: LocalDate,
     val oppdatertTidspunkt: LocalDate? = null,
     val begrunnelse: String? = null,
