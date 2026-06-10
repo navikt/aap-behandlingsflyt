@@ -87,6 +87,12 @@ data class FradragYtelse(
     val tilOgMed: LocalDate,
 )
 
+data class FritakMeldepliktBrev(
+    val harFritak: Boolean,
+    val fraDato: LocalDate,
+    val tilDato: LocalDate?,
+)
+
 data class YrkesskadeBeregningBrev(
     val yrkesskader: List<Yrkesskade>,
     val andelAvNedsettelseSomSkyldesYrkesskade: Int?,

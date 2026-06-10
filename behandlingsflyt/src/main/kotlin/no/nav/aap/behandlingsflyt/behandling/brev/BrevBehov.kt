@@ -13,8 +13,9 @@ data class Innvilgelse(
     val sykdomsvurdering: String?,
     val forholdTilAndreYtelser: ForholdTilAndreYtelser?,
     val yrkesskadeBeregning: YrkesskadeBeregningBrev? = null,
-    val yrkesSkadeISøknadIkkeIRegister: Boolean? = null
-) : BrevBehov(TypeBrev.VEDTAK_INNVILGELSE)
+    val yrkesSkadeISøknadIkkeIRegister: Boolean? = null,
+    val fritakMeldeplikt: FritakMeldepliktBrev? = null,
+    ) : BrevBehov(TypeBrev.VEDTAK_INNVILGELSE)
 
 data class VurderesForUføretrygd(
     val kravdatoUføretrygd: LocalDate,
@@ -35,7 +36,7 @@ data class UtvidVedtakslengde(
     val vedtakslengdeTypeBrev: TypeBrev,
 ) : BrevBehov(vedtakslengdeTypeBrev)
 
-data class Avslag(val sykdomsvurdering: String?): BrevBehov(TypeBrev.VEDTAK_AVSLAG)
+data class Avslag(val sykdomsvurdering: String?) : BrevBehov(TypeBrev.VEDTAK_AVSLAG)
 object VedtakEndring : BrevBehov(TypeBrev.VEDTAK_ENDRING)
 object BarnetilleggSatsRegulering : BrevBehov(TypeBrev.BARNETILLEGG_SATS_REGULERING)
 object VarselOmBestilling : BrevBehov(TypeBrev.VARSEL_OM_BESTILLING)

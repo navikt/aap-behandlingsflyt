@@ -393,6 +393,14 @@ class BrevGateway : BrevbestillingGateway {
                     brevBehov.yrkesSkadeISøknadIkkeIRegister?.let {
                         add(Faktagrunnlag.YrkesskadeISøknadIkkeIRegister(it))
                     }
+
+                    brevBehov.fritakMeldeplikt?.let { fritak ->
+                        add(Faktagrunnlag.FritakMeldeplikt(
+                            harFritak = fritak.harFritak,
+                            fraDato = fritak.fraDato,
+                            tilDato = fritak.tilDato,
+                        ))
+                    }
                 }
 
             is VurderesForUføretrygd -> {
