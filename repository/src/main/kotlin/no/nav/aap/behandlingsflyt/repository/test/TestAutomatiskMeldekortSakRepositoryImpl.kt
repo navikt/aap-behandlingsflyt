@@ -29,6 +29,9 @@ class TestAutomatiskMeldekortSakRepositoryImpl(private val connection: DBConnect
             setParams {
                 setLong(1, sakId.toLong())
             }
+            setRowMapper {
+                it.getBoolean("exists")
+            }
         }
     }
 
