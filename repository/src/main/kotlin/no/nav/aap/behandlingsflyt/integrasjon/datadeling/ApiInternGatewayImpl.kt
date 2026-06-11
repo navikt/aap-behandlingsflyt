@@ -49,6 +49,7 @@ import java.math.BigDecimal
 import java.net.URI
 import java.time.Duration
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 class ApiInternGatewayImpl : ApiInternGateway {
 
@@ -120,7 +121,8 @@ class ApiInternGatewayImpl : ApiInternGateway {
         rettighetsTypeTidslinje: Tidslinje<RettighetsType>,
         stansOpphørGrunnlag: Set<GjeldendeStansEllerOpphør>?,
         arenavedtak: Tidslinje<UtledArenaVedtakstype.ArenaVedtak>,
-        muligMaksdato: LocalDate?
+        muligMaksdato: LocalDate?,
+        søknadsdatoer: List<LocalDateTime>
     ) {
         log.info("Sender behandling for behandlingId=${behandling.id} med vedtakId=$vedtakId, sak: ${sak.saksnummer}. Beregningsgrunnlag: $beregningsgrunnlag")
         restClient.post(
@@ -176,6 +178,7 @@ class ApiInternGatewayImpl : ApiInternGateway {
                                 .toSet(),
                         )
                     }.toSet(),
+                    søknadsdatoer = søknadsdatoer,
                     arenavedtak = arenavedtak.segmenter().map {
                         ArenavedtakDTO(
                             vedtakId = it.verdi.vedtakId.id,

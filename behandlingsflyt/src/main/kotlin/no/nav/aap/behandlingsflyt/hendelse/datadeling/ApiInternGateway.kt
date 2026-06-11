@@ -17,6 +17,7 @@ import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import java.math.BigDecimal
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 interface ApiInternGateway : Gateway {
     fun sendPerioder(ident: String, perioder: List<Periode>)
@@ -38,6 +39,7 @@ interface ApiInternGateway : Gateway {
         stansOpphørGrunnlag: Set<GjeldendeStansEllerOpphør>?,
         arenavedtak: Tidslinje<UtledArenaVedtakstype.ArenaVedtak>,
         muligMaksdato: LocalDate?,
+        søknadsdatoer: List<LocalDateTime>,
     )
 
     fun sendDetaljertMeldekortListe(
