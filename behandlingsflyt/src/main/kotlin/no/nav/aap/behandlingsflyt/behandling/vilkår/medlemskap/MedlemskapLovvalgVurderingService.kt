@@ -28,7 +28,7 @@ class MedlemskapLovvalgVurderingService {
         val kanBehandlesAutomatisk = oppfyltMinstEttKrav && ingenInntruffet
 
         // No-op: Metrikker for videre utviklingsplan
-        if (type != null) {
+        if (type == VurderingType.FØRSTEGANGSBEHANDLING) {
             if (kanBehandlesAutomatisk) {
                 prometheus.lovvalgAutomatiskGjennomslipp(kanBehandlesAutomatisk).increment()
             }
