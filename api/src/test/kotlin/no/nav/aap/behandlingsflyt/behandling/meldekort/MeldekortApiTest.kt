@@ -16,6 +16,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.StrukturertDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.ArbeidIPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Meldekort
+import no.nav.aap.behandlingsflyt.help.opprettInMemorySak
 import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
 import no.nav.aap.behandlingsflyt.integrasjon.organisasjon.NomInfoGateway
 import no.nav.aap.behandlingsflyt.integrasjon.organisasjon.NorgGateway
@@ -43,6 +44,7 @@ import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryRegistry
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.behandlingsflyt.test.mars
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.verdityper.Dagsatser
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.komponenter.verdityper.Prosent.Companion.`0_PROSENT`
@@ -57,7 +59,6 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZoneId
-import no.nav.aap.behandlingsflyt.help.opprettInMemorySak
 
 @Fakes
 class MeldekortApiTest : BaseApiTest() {
@@ -148,7 +149,8 @@ class MeldekortApiTest : BaseApiTest() {
                 ArbeidIPeriode(Periode(dag1, dag1), TimerArbeid(BigDecimal("7.5"))),
                 ArbeidIPeriode(Periode(dag2, dag2), TimerArbeid(BigDecimal("3.0"))),
             ),
-            mottattTidspunkt = LocalDateTime.of(2025, 1, 20, 9, 0)
+            mottattTidspunkt = LocalDateTime.of(2025, 1, 20, 9, 0),
+            opprettetTidspunkt = LocalDateTime.of(2025, 1, 20, 9, 0)
         )
 
         InMemoryUnderveisRepository.lagre(
@@ -215,14 +217,16 @@ class MeldekortApiTest : BaseApiTest() {
             timerArbeidPerPeriode = setOf(
                 ArbeidIPeriode(Periode(dag, dag), TimerArbeid(BigDecimal("4.0"))),
             ),
-            mottattTidspunkt = LocalDateTime.of(2025, 2, 17, 9, 0)
+            mottattTidspunkt = LocalDateTime.of(2025, 2, 17, 9, 0),
+            opprettetTidspunkt = LocalDateTime.of(2025, 2, 17, 9, 0)
         )
         val meldekort2 = Meldekort(
             journalpostId = JournalpostId("bbb"),
             timerArbeidPerPeriode = setOf(
                 ArbeidIPeriode(Periode(dag.plusWeeks(2), dag.plusWeeks(2)), TimerArbeid(BigDecimal("6.0"))),
             ),
-            mottattTidspunkt = LocalDateTime.of(2025, 3, 3, 9, 0)
+            mottattTidspunkt = LocalDateTime.of(2025, 3, 3, 9, 0),
+            opprettetTidspunkt = LocalDateTime.of(2025, 3, 3, 9, 0),
         )
 
         InMemoryUnderveisRepository.lagre(
@@ -273,14 +277,16 @@ class MeldekortApiTest : BaseApiTest() {
             timerArbeidPerPeriode = setOf(
                 ArbeidIPeriode(Periode(dag1, dag1), TimerArbeid(BigDecimal("7.5"))),
             ),
-            mottattTidspunkt = LocalDateTime.of(2025, 1, 20, 9, 0)
+            mottattTidspunkt = LocalDateTime.of(2025, 1, 20, 9, 0),
+            opprettetTidspunkt = LocalDateTime.of(2025, 1, 20, 9, 0),
         )
         val korrigertMeldekort = Meldekort(
             journalpostId = JournalpostId("222"),
             timerArbeidPerPeriode = setOf(
                 ArbeidIPeriode(Periode(dag1, dag1), TimerArbeid(BigDecimal.ZERO)),
             ),
-            mottattTidspunkt = LocalDateTime.of(2025, 1, 25, 9, 0)
+            mottattTidspunkt = LocalDateTime.of(2025, 1, 25, 9, 0),
+            opprettetTidspunkt = LocalDateTime.of(2025, 1, 25, 9, 0)
         )
 
         InMemoryUnderveisRepository.lagre(
@@ -328,7 +334,7 @@ class MeldekortApiTest : BaseApiTest() {
             val meldeperiodeMedMeldekort = body.meldeperioderMedMeldekort.first()
             assertThat(meldeperiodeMedMeldekort.meldekort).isNotNull
             assertThat(meldeperiodeMedMeldekort.meldekort!!.id).isEqualTo(korrigertMeldekort.journalpostId.identifikator)
-            assertThat(meldeperiodeMedMeldekort.meldekort.meldeDato).isEqualTo(korrigertMeldekort.mottattTidspunkt.toLocalDate())
+            assertThat(meldeperiodeMedMeldekort.meldekort.meldeDato).isEqualTo(opprinneligMeldekort.mottattTidspunkt.toLocalDate())
             assertThat(meldeperiodeMedMeldekort.meldekort.oppdatertTidspunkt).isEqualTo(LocalDate.of(2025, 1, 25))
             assertThat(meldeperiodeMedMeldekort.meldekort.begrunnelse).isEqualTo("Feil i opprinnelig rapportering")
             assertThat(meldeperiodeMedMeldekort.meldekort.oppdatertAv).isEqualTo("Z654321")
@@ -356,21 +362,24 @@ class MeldekortApiTest : BaseApiTest() {
             timerArbeidPerPeriode = setOf(
                 ArbeidIPeriode(Periode(dag1, dag1), TimerArbeid(BigDecimal("7.5"))),
             ),
-            mottattTidspunkt = LocalDateTime.of(2025, 1, 20, 9, 0)
+            mottattTidspunkt = LocalDateTime.of(2025, 1, 20, 9, 0),
+            opprettetTidspunkt = LocalDateTime.of(2025, 1, 20, 9, 0)
         )
         val andreMeldekort = Meldekort(
             journalpostId = JournalpostId("222"),
             timerArbeidPerPeriode = setOf(
                 ArbeidIPeriode(Periode(dag1, dag1), TimerArbeid(BigDecimal("5.0"))),
             ),
-            mottattTidspunkt = LocalDateTime.of(2025, 1, 22, 9, 0)
+            mottattTidspunkt = LocalDateTime.of(2025, 1, 22, 9, 0),
+            opprettetTidspunkt = LocalDateTime.of(2025, 1, 22, 9, 0)
         )
         val tredjeMeldekort = Meldekort(
             journalpostId = JournalpostId("333"),
             timerArbeidPerPeriode = setOf(
                 ArbeidIPeriode(Periode(dag1, dag1), TimerArbeid(BigDecimal("3.0"))),
             ),
-            mottattTidspunkt = LocalDateTime.of(2025, 1, 25, 9, 0)
+            mottattTidspunkt = LocalDateTime.of(2025, 1, 25, 9, 0),
+            opprettetTidspunkt = LocalDateTime.of(2025, 1, 25, 9, 0)
         )
 
         InMemoryUnderveisRepository.lagre(
@@ -595,6 +604,21 @@ class MeldekortApiTest : BaseApiTest() {
             // fixedClock = 2025-04-01T00:00:00Z = 2025-04-01T02:00:00 i Europe/Oslo (CEST)
             assertThat(body.oppdatertTidspunkt).isEqualTo(LocalDate.of(2025, 4, 1))
         }
+    }
+
+    @Test
+    fun `når kun meldeDato og ingen timer sendes inn, settes harDuArbeidet til null`() {
+        val request = OppdaterMeldekortRequest(
+            meldeperiode = Periode(6 januar 2025, 7 januar 2025),
+            begrunnelse = "Korrigering av meldedato uten timer",
+            meldeDato = 6 januar 2025,
+            dager = emptySet(),
+        )
+
+        val meldekort = tilMeldekort(request, Bruker("saksbehandler"))
+
+        assertThat(meldekort.harDuArbeidet).isNull()
+        assertThat(meldekort.timerArbeidPerPeriode).isEmpty()
     }
 
     private fun underveisperiode(utfall: Utfall, periode: Periode, meldePeriode: Periode = periode, trekk: Dagsatser = Dagsatser(0)) = Underveisperiode(

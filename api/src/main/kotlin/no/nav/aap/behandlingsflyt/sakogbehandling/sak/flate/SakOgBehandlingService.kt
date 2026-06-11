@@ -39,7 +39,7 @@ class SakOgBehandlingService(
     fun finnSaksinfo(ident: Ident): List<SaksinfoDTO> {
         val person = personRepository.finn(ident) ?: return emptyList()
 
-        return sakRepository.finnSakerFor(person).map { sak ->
+        return sakRepository.finnSakerFor(person.id).map { sak ->
             val gjeldendeBehandling = behandlingRepository.finnGjeldendeVedtattBehandlingForSak(sak.id)
                 ?.let { behandlingRepository.hent(it.behandlingId) }
 

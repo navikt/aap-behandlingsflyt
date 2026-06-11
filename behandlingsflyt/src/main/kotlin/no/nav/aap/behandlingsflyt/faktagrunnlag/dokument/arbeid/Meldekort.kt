@@ -11,12 +11,14 @@ import java.time.LocalDateTime
 data class Meldekort(
     val journalpostId: JournalpostId,
     val timerArbeidPerPeriode: Set<ArbeidIPeriode>,
-    val mottattTidspunkt: LocalDateTime
+    val mottattTidspunkt: LocalDateTime,
+    val opprettetTidspunkt: LocalDateTime,
 ) {
     companion object {
         fun fraKontrakt(
             journalpostId: JournalpostId,
             mottattTidspunkt: LocalDateTime,
+            opprettetTidspunkt: LocalDateTime,
             meldekort: no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Meldekort
         ): Meldekort {
             return when (meldekort) {
@@ -28,7 +30,8 @@ data class Meldekort(
                             timerArbeid = TimerArbeid(it.timerArbeid.toBigDecimal())
                         )
                     }.toSet(),
-                    mottattTidspunkt = mottattTidspunkt
+                    mottattTidspunkt = mottattTidspunkt,
+                    opprettetTidspunkt = opprettetTidspunkt
                 )
             }
         }

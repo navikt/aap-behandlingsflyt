@@ -9,7 +9,9 @@ import io.ktor.server.routing.*
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.dokarkiv.DokumentInfo
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.dokarkiv.Journalpost
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.dokarkiv.JournalpostResponse
+import no.nav.aap.behandlingsflyt.test.Kjønn.Companion.random
 import org.slf4j.LoggerFactory
+import kotlin.random.Random
 
 class DokarkivFake : FakeServer() {
     private val logger = LoggerFactory.getLogger(javaClass)
@@ -26,7 +28,7 @@ class DokarkivFake : FakeServer() {
                     val journalpost = call.receive<Journalpost>()
                     call.respond(
                         JournalpostResponse(
-                            journalpostId = 123456789L,
+                            journalpostId = Random.nextLong(1L, Long.MAX_VALUE),
                             melding = null,
                             journalpostferdigstilt = call.request.queryParameters["forsoekFerdigstill"]?.toBoolean() ?: false,
                             dokumenter = journalpost.dokumenter?.mapIndexed { index, _ ->

@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.behandling.brev
 
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurderingAvForeldreAnsvar
 import java.time.LocalDate
 
 sealed class BrevBehov(val typeBrev: TypeBrev)
@@ -13,6 +14,7 @@ data class Innvilgelse(
     val sykdomsvurdering: String?,
     val forholdTilAndreYtelser: ForholdTilAndreYtelser?,
     val yrkesskadeBeregning: YrkesskadeBeregningBrev? = null,
+    val foreldreansvarVurderinger: List<VurderingAvForeldreAnsvar>? = null,
     val yrkesSkadeISøknadIkkeIRegister: Boolean? = null
 ) : BrevBehov(TypeBrev.VEDTAK_INNVILGELSE)
 

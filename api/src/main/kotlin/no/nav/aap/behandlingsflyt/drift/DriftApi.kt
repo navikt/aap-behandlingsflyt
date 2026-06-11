@@ -291,11 +291,11 @@ fun NormalOpenAPIRoute.driftApi(
                     val sak = sakRepository.hentHvisFinnes(Saksnummer(params.saksnummer))
                         ?: throw VerdiIkkeFunnetException("Sak med saksnummer ${params.saksnummer} finnes ikke")
 
-                    val andreSakerPåBruker = sakRepository.finnSakerFor(sak.person)
+                    val andreSakerPåBruker = sakRepository.finnSakerFor(sak.person.id)
                         .filterNot { it.id == sak.id }
                         .map { it.saksnummer.toString() }
 
-                    val vedtak = behandlingRepository.hentAlleMedVedtakFor(sak.person)
+                    val vedtak = behandlingRepository.hentAlleMedVedtakFor(sak.person.id)
                     val behandlinger = behandlingRepository.hentAlleFor(sak.id)
                         .map { behandling ->
                             val avklaringsbehovene = avklaringsbehovRepository
