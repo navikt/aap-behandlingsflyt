@@ -75,7 +75,7 @@ data class Søknadsdato(val dato: LocalDate, val årsak: SøknadsdatoÅrsak)
 enum class SøknadsdatoÅrsak {
     BrukerHarSøktTidligere,
     FeilregistrertSøknadsdato,
-    JournalpostMottatt
+    SøknadMottatt
 }
 
 enum class MuligRettFraÅrsak {

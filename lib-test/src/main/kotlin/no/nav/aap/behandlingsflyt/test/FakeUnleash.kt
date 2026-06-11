@@ -53,7 +53,8 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.MeldepliktForsteFraForsteInnvilgelse to true,
         BehandlingsflytFeature.RevurderingEtterAvslagSkalKvalitetssikres to true,
         BehandlingsflytFeature.MeldekortEndretAvSaksbehandler to true,
-        BehandlingsflytFeature.AutomatiskStans1118 to true
+        BehandlingsflytFeature.AutomatiskStans1118 to true,
+        BehandlingsflytFeature.KravSteg to true,
         )
 )
 

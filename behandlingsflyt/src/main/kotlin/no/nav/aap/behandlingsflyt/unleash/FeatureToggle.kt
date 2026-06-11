@@ -20,6 +20,7 @@ enum class BehandlingsflytFeature : FeatureToggle {
     AlleEndringerKreverKvalitetssikring,
     RevurderingEtterAvslagSkalKvalitetssikres,
     MeldepliktForsteFraForsteInnvilgelse,
+    KravSteg,
     MeldekortEndretAvSaksbehandler,
     AutomatiskStans1118,
     ;
