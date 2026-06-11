@@ -2,12 +2,17 @@ package no.nav.aap.behandlingsflyt
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.papsign.ktor.openapigen.annotations.Response
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.gateway.DagpengerKilde
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.gateway.DagpengerYtelseType
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.gateway.TiltakspengerKilde
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.gateway.TiltakspengerYtelseType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjonstype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Oppholdstype
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.AndreUtbetalingerDto
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
+import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import org.jetbrains.annotations.NotNull
 import java.time.LocalDate
@@ -29,6 +34,27 @@ data class TestYrkesskadeDto(
     val vedtaksdato: LocalDate? = null,
 )
 
+enum class SamordningType {
+    SYKEPENGER,
+    DAGPENGER,
+    TILTAKSPENGER,
+}
+
+data class SamordningDto(
+    val type: SamordningType,
+    val grad: Int? = null,                                          // SYKEPENGER
+    val dagpengerYtelseType: String? = null,                        // DAGPENGER
+    val dagpengerKilde: String? = null,                             // DAGPENGER
+    val tiltakspengerYtelseType: String? = null,                    // TILTAKSPENGER
+    val tiltakspengerKilde: String? = null,                         // TILTAKSPENGER
+    val periode: PeriodeDto,
+)
+
+data class PeriodeDto(
+    val fom: LocalDate,
+    val tom: LocalDate,
+)
+
 @Response(statusCode = 202)
 data class OpprettTestcaseDTO(
     @param:JsonProperty(value = "fødselsdato", required = true) val fødselsdato: LocalDate,
@@ -44,20 +70,41 @@ data class OpprettTestcaseDTO(
     @param:JsonProperty(value = "inntekterPerAr") val inntekterPerAr: List<InntektPerÅrDto>? = null,
     @param:JsonProperty(value = "tjenestePensjon") val tjenestePensjon: Boolean? = null,
     val institusjoner: Institusjoner = Institusjoner(),
-    val sykepenger: List<TestPerson.Sykepenger> = emptyList(),
-    val dagpenger: List<TestPerson.Dagpenger> = emptyList(),
-    val tiltakspenger: List<TestPerson.Tiltakspenger> = emptyList(),
+    val samordning: List<SamordningDto> = emptyList(),
     val søknadsdato: LocalDate? = null,
     val andreUtbetalinger: AndreUtbetalingerDto? = null,
     val steg: StegType? = null,
     val harNedsattArbeidsevne: Boolean = true,
     val erNedsettelseIArbeidsevneMerEnnHalvparten: Boolean = true,
 ) {
-    val harYrkesskadeFraSøknad: Boolean
-        get() = yrkesskader.any { it.kilde == Kilde.SØKNAD && it.harYrkesskade }
+    val sykepenger: List<TestPerson.Sykepenger>
+        get() = samordning
+            .filter { it.type == SamordningType.SYKEPENGER }
+            .map { TestPerson.Sykepenger(grad = it.grad ?: 100, periode = Periode(it.periode.fom, it.periode.tom)) }
 
-    val harYrkesskade: Boolean
-        get() = harYrkesskadeFraSøknad || yrkesskader.any { it.kilde == Kilde.REGISTER }
+    val dagpenger: List<TestPerson.Dagpenger>
+        get() = samordning
+            .filter { it.type == SamordningType.DAGPENGER }
+            .map {
+                TestPerson.Dagpenger(
+                    periode = Periode(it.periode.fom, it.periode.tom),
+                    kilde = it.dagpengerKilde?.let { k -> DagpengerKilde.valueOf(k) } ?: DagpengerKilde.DP_SAK,
+                    dagpengerYtelseType = it.dagpengerYtelseType?.let { t -> DagpengerYtelseType.valueOf(t) }
+                        ?: DagpengerYtelseType.DAGPENGER_ARBEIDSSOKER_ORDINAER,
+                )
+            }
+
+    val tiltakspenger: List<TestPerson.Tiltakspenger>
+        get() = samordning
+            .filter { it.type == SamordningType.TILTAKSPENGER }
+            .map {
+                TestPerson.Tiltakspenger(
+                    periode = Periode(it.periode.fom, it.periode.tom),
+                    kilde = it.tiltakspengerKilde?.let { k -> TiltakspengerKilde.valueOf(k) } ?: TiltakspengerKilde.TPSAK,
+                    ytelseType = it.tiltakspengerYtelseType?.let { t -> TiltakspengerYtelseType.valueOf(t) }
+                        ?: TiltakspengerYtelseType.TILTAKSPENGER,
+                )
+            }
 }
 
 enum class Kilde {
