@@ -25,7 +25,6 @@ public data class DatadelingDTO(
     val beregningsgrunnlag: BigDecimal?,
     val stansOpphørVurdering: Set<GjeldendeStansEllerOpphørDTO>?,
     val arenavedtak: List<ArenavedtakDTO>,
-    val søknadsdatoer: List<LocalDateTime>,
 )
 
 public data class ArenavedtakDTO(

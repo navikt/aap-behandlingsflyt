@@ -80,10 +80,6 @@ class DatadelingBehandlingJobbUtfører(
 
         val maksdato = rettighetstypeService.sisteDagMedRett(sak.saksnummer)
 
-        val søknadsdatoer = mottattDokumentRepository
-            .hentDokumenterAvType(sak.id, InnsendingType.SØKNAD)
-            .map { it.mottattTidspunkt }
-
         apiInternGateway.sendBehandling(
             sak = sak,
             behandling = behandling,
@@ -95,7 +91,6 @@ class DatadelingBehandlingJobbUtfører(
             rettighetsTypeTidslinje = vilkårsresultatTidslinje,
             muligMaksdato = maksdato,
             stansOpphørGrunnlag = stansOpphør,
-            søknadsdatoer = søknadsdatoer,
             arenavedtak = utledArenaVedtakstype.utledVedtak(sak),
         )
     }

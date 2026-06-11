@@ -1,17 +1,25 @@
 package no.nav.aap.behandlingsflyt.datadeling
 
 import no.nav.aap.komponenter.type.Periode
+import java.time.LocalDate
 
 data class SakStatus(
     val sakId: String,
     val status: DatadelingBehandlingStatus,
+    val søknadsdatoer: List<LocalDate>,
     val periode: Periode,
 ) {
     companion object {
-        fun fromKelvin(saksnummer: String, datadelingBehandlingStatus: DatadelingBehandlingStatus, periode: Periode): SakStatus {
+        fun fromKelvin(
+            saksnummer: String,
+            datadelingBehandlingStatus: DatadelingBehandlingStatus,
+            periode: Periode,
+            søknadsdatoer: List<LocalDate>
+        ): SakStatus {
             return SakStatus(
                 sakId = saksnummer,
                 status = datadelingBehandlingStatus,
+                søknadsdatoer = søknadsdatoer,
                 periode = periode,
             )
         }

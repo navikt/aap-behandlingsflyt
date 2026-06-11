@@ -39,7 +39,6 @@ interface ApiInternGateway : Gateway {
         stansOpphørGrunnlag: Set<GjeldendeStansEllerOpphør>?,
         arenavedtak: Tidslinje<UtledArenaVedtakstype.ArenaVedtak>,
         muligMaksdato: LocalDate?,
-        søknadsdatoer: List<LocalDateTime>,
     )
 
     fun sendDetaljertMeldekortListe(
