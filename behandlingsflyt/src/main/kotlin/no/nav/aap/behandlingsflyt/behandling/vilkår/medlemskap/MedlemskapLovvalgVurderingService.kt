@@ -29,13 +29,10 @@ class MedlemskapLovvalgVurderingService {
 
         // No-op: Metrikker for videre utviklingsplan
         if (type == VurderingType.FØRSTEGANGSBEHANDLING) {
-            if (kanBehandlesAutomatisk) {
-                prometheus.lovvalgAutomatiskGjennomslipp(kanBehandlesAutomatisk).increment()
-            }
-            else {
-                if (!oppfyltMinstEttKrav) {
-                    prometheus.lovvalgÅrsakTilManuellVurdering("ingen_i_norge_kriterier_oppfylt").increment()
-                }
+            prometheus.lovvalgAutomatiskGjennomslipp(kanBehandlesAutomatisk).increment()
+
+            if (!oppfyltMinstEttKrav) {
+                prometheus.lovvalgÅrsakTilManuellVurdering("ingen_i_norge_kriterier_oppfylt").increment()
                 andreDelVurdering.filter { it.resultat }.forEach { vurdering ->
                     prometheus.lovvalgÅrsakTilManuellVurdering(lovvalgÅrsakNavn(vurdering.opplysning)).increment()
                 }
