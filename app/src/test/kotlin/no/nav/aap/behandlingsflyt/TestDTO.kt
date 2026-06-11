@@ -77,6 +77,12 @@ data class OpprettTestcaseDTO(
     val harNedsattArbeidsevne: Boolean = true,
     val erNedsettelseIArbeidsevneMerEnnHalvparten: Boolean = true,
 ) {
+    val harYrkesskade: Boolean
+        get() = harYrkesskadeFraSøknad || yrkesskader.any { it.kilde == Kilde.REGISTER }
+
+    val harYrkesskadeFraSøknad: Boolean
+        get() = yrkesskader.any { it.kilde == Kilde.SØKNAD && it.harYrkesskade }
+
     val sykepenger: List<TestPerson.Sykepenger>
         get() = samordning
             .filter { it.type == SamordningType.SYKEPENGER }
