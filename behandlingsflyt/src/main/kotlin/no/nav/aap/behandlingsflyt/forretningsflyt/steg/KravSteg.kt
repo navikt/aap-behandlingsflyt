@@ -11,6 +11,7 @@ import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
@@ -25,7 +26,8 @@ import java.time.Instant
 class KravSteg(
     private val unleashGateway: UnleashGateway,
     private val kravRepository: KravRepository,
-    private val mottattDokumentRepository: MottattDokumentRepository
+    private val mottattDokumentRepository: MottattDokumentRepository,
+    private val avklaringsbehovService: AvklaringsbehovService
 ) : BehandlingSteg {
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
@@ -36,6 +38,14 @@ class KravSteg(
         when (kontekst.behandlingType) {
             TypeBehandling.Førstegangsbehandling, TypeBehandling.Revurdering -> {
                 vurderAutomatiskHvisMulig(kontekst)
+                
+                avklaringsbehovService.oppdaterAvklaringsbehov(
+                    definisjon = Definisjon.VURDER_KRAV,
+                    vedtakBehøverVurdering = TODO(),
+                    erTilstrekkeligVurdert = TODO(),
+                    tilbakestillGrunnlag = TODO(),
+                    kontekst = TODO()
+                )
             }
 
             else -> {}
@@ -88,6 +98,7 @@ class KravSteg(
                 unleashGateway = gatewayProvider.provide(),
                 kravRepository = repositoryProvider.provide(),
                 mottattDokumentRepository = repositoryProvider.provide(),
+                avklaringsbehovService = AvklaringsbehovService(repositoryProvider)
             )
         }
 
