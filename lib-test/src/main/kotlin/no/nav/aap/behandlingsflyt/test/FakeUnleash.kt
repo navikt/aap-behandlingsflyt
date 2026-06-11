@@ -55,6 +55,7 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.MeldekortEndretAvSaksbehandler to true,
         BehandlingsflytFeature.AutomatiskStans1118 to true,
         BehandlingsflytFeature.KravSteg to true,
+        BehandlingsflytFeature.StudentV2 to true
         )
 )
 
