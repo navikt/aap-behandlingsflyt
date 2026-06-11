@@ -296,7 +296,7 @@ private fun genererBarn(dto: TestBarn): TestPerson {
 }
 
 private fun mapTilSøknad(dto: OpprettTestcaseDTO, urelaterteBarn: List<TestPerson>, fastlege: BehandlerDto?): SøknadV0 {
-    val erStudent = if (dto.student) {
+    val søknadStudentDto = if (dto.student) {
         SøknadStudentDto(
             erStudent = StudentStatus.Avbrutt,
             kommeTilbake = JaNeiVetIkke.Ja
@@ -332,7 +332,7 @@ private fun mapTilSøknad(dto: OpprettTestcaseDTO, urelaterteBarn: List<TestPers
             stønad = dto.andreUtbetalinger?.stønad,
             afp = dto.andreUtbetalinger?.afp
         ),
-        student = erStudent,
+        student = søknadStudentDto,
         yrkesskade = harYrkesskade,
         oppgitteBarn = oppgitteBarn,
         medlemskap = SøknadMedlemskapDto(harMedlemskap, null, null, null, emptyList()),
