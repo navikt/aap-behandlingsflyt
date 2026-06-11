@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav
 
 import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.verdityper.dokument.JournalpostId
@@ -20,6 +21,12 @@ sealed interface KravVurdering {
     }
 }
 
+interface KravMedDato : KravVurdering {
+    val søknadsdato: Søknadsdato
+    val muligRettFra: MuligRettFra?
+    val kravdato: LocalDate
+}
+
 data class NyttKrav(
     override val journalpostId: JournalpostId,
     override val vurdertAv: Bruker,
@@ -27,10 +34,10 @@ data class NyttKrav(
     override val vurdertIBehandling: BehandlingId,
     override val opprettet: Instant,
 
-    val søknadsdato: Søknadsdato,
-    val muligRettFra: MuligRettFra?,
-    val kravdato: LocalDate,
-) : KravVurdering
+    override val søknadsdato: Søknadsdato,
+    override val muligRettFra: MuligRettFra?,
+    override val kravdato: LocalDate,
+) : KravMedDato
 
 data class TrukketSøknad(
     override val journalpostId: JournalpostId,
@@ -47,10 +54,10 @@ data class Gjenopptak(
     override val vurdertIBehandling: BehandlingId,
     override val opprettet: Instant,
 
-    val søknadsdato: Søknadsdato,
-    val muligRettFra: MuligRettFra?,
-    val kravdato: LocalDate,
-) : KravVurdering
+    override val søknadsdato: Søknadsdato,
+    override val muligRettFra: MuligRettFra?,
+    override val kravdato: LocalDate,
+) : KravMedDato
 
 data class Klage(
     override val journalpostId: JournalpostId,

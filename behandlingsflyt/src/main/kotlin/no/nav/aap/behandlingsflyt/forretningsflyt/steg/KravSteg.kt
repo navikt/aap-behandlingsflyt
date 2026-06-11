@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravValidering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.NyttKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Søknadsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.SøknadsdatoÅrsak
@@ -80,12 +81,9 @@ class KravSteg(
     private fun erTilstrekkeligVurdert(kontekst: FlytKontekstMedPerioder): Boolean {
         val søknaderIBehandling =
             mottattDokumentRepository.hentDokumenterAvType(kontekst.behandlingId, InnsendingType.SØKNAD)
-        val kravVurderinger = kravRepository.hentHvisEksisterer(kontekst.behandlingId)?.vurderinger ?: emptyList()
+        val kravVurderinger = kravRepository.hentHvisEksisterer(kontekst.behandlingId)?.vurderinger ?: emptySet()
 
-        val erAlleSøknaderIBehandlingVurdert =
-            søknaderIBehandling.all { søknad -> kravVurderinger.any { it.journalpostId == søknad.referanse.asJournalpostId } }
-
-        return erAlleSøknaderIBehandlingVurdert
+        return KravValidering.erKravVurderingTilstrekkeligVurdert(søknaderIBehandling, kravVurderinger)
     }
 
     private fun vedtakBehøverVurdering(kontekst: FlytKontekstMedPerioder): Boolean {
