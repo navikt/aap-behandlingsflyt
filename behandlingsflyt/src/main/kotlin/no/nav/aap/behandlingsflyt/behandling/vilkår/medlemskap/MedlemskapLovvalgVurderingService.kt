@@ -11,12 +11,14 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.erGy
 import no.nav.aap.behandlingsflyt.lovvalgAutomatiskGjennomslipp
 import no.nav.aap.behandlingsflyt.lovvalgÅrsakTilManuellVurdering
 import no.nav.aap.behandlingsflyt.prometheus
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.komponenter.type.Periode
 
 class MedlemskapLovvalgVurderingService {
     fun vurderTilhørighet(
         grunnlag: MedlemskapLovvalgGrunnlag,
-        rettighetsPeriode: Periode
+        rettighetsPeriode: Periode,
+        type: VurderingType? = null
     ): KanBehandlesAutomatiskVurdering {
         val førsteDelVurderinger = vurderFørsteDelKriteier(grunnlag)
         val andreDelVurdering = vurderAndreDelKriterier(grunnlag, rettighetsPeriode)
@@ -25,18 +27,15 @@ class MedlemskapLovvalgVurderingService {
         val ingenInntruffet = andreDelVurdering.all { !it.resultat }
         val kanBehandlesAutomatisk = oppfyltMinstEttKrav && ingenInntruffet
 
-        // No-op: sporer automatisk gjennomslipp av lovvalg
-        if (kanBehandlesAutomatisk) {
+        // No-op: Metrikker for videre utviklingsplan
+        if (type == VurderingType.FØRSTEGANGSBEHANDLING) {
             prometheus.lovvalgAutomatiskGjennomslipp(kanBehandlesAutomatisk).increment()
-        }
 
-        // No-op: sporer hvilke kriterier som hindrer automatisk vurdering
-        if (!kanBehandlesAutomatisk) {
             if (!oppfyltMinstEttKrav) {
                 prometheus.lovvalgÅrsakTilManuellVurdering("ingen_i_norge_kriterier_oppfylt").increment()
-            }
-            andreDelVurdering.filter { it.resultat }.forEach { vurdering ->
-                prometheus.lovvalgÅrsakTilManuellVurdering(lovvalgÅrsakNavn(vurdering.opplysning)).increment()
+                andreDelVurdering.filter { it.resultat }.forEach { vurdering ->
+                    prometheus.lovvalgÅrsakTilManuellVurdering(lovvalgÅrsakNavn(vurdering.opplysning)).increment()
+                }
             }
         }
 

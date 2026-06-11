@@ -9,13 +9,13 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
-import no.nav.aap.behandlingsflyt.forutgåendeMedlemskapNorskOgAvslag
-import no.nav.aap.behandlingsflyt.prometheus
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.komponenter.type.Periode
 
 class Medlemskapvilkåret(
     vilkårsresultat: Vilkårsresultat,
     private val rettighetsPeriode: Periode,
+    private val vurderingstype: VurderingType? = null
 ) : Vilkårsvurderer<MedlemskapLovvalgGrunnlag> {
     private val vilkår = vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.LOVVALG)
 
@@ -56,12 +56,6 @@ class Medlemskapvilkåret(
                 .komprimer()
                 .begrensetTil(rettighetsPeriode)
 
-            // No-op: av kun norske, hvor mange får nei på manuell vurdering?
-            val kunNorskStatsborgerskap =
-                grunnlag.personopplysning?.statsborgerskap?.singleOrNull()?.land == "NOR"
-            val ikkeoppfyltePerioder = vilkårsvurderinger.filter { it.verdi.utfall == Utfall.IKKE_OPPFYLT }.isNotEmpty()
-            prometheus.forutgåendeMedlemskapNorskOgAvslag(kunNorskStatsborgerskap && ikkeoppfyltePerioder).increment()
-
             vilkår.leggTilVurderinger(vilkårsvurderinger)
 
         } else if (grunnlag.nyeSoknadGrunnlag == null) {
@@ -70,7 +64,8 @@ class Medlemskapvilkåret(
         } else {
             val kanBehandlesAutomatisk = MedlemskapLovvalgVurderingService().vurderTilhørighet(
                 grunnlag,
-                rettighetsPeriode
+                rettighetsPeriode,
+                vurderingstype
             ).kanBehandlesAutomatisk
             val utfall = if (kanBehandlesAutomatisk) Utfall.OPPFYLT else Utfall.IKKE_VURDERT
             val vurderingsResultat = VurderingsResultat(utfall, null, null)
