@@ -45,10 +45,7 @@ class KravSteg(
     }
 
     private fun vurderAutomatiskHvisMulig(kontekst: FlytKontekstMedPerioder) {
-        val erFørstegangsbehandling =
-            Vurderingsbehov.MOTTATT_SØKNAD in kontekst.vurderingsbehovRelevanteForSteg && kontekst.behandlingType == TypeBehandling.Førstegangsbehandling
-
-        if (erFørstegangsbehandling && kravRepository.hentHvisEksisterer(kontekst.behandlingId)?.vurderinger.isNullOrEmpty()) {
+        if (erFørstegangsbehandlingUtenEksisterendeKrav(kontekst)) {
             val søknaderMottattIBehandling =
                 mottattDokumentRepository.hentDokumenterAvType(kontekst.behandlingId, InnsendingType.SØKNAD)
 
@@ -73,6 +70,13 @@ class KravSteg(
                 )
             }
         }
+    }
+
+    private fun erFørstegangsbehandlingUtenEksisterendeKrav(kontekst: FlytKontekstMedPerioder): Boolean {
+        val erFørstegangsbehandling =
+            Vurderingsbehov.MOTTATT_SØKNAD in kontekst.vurderingsbehovRelevanteForSteg && kontekst.behandlingType == TypeBehandling.Førstegangsbehandling
+        return erFørstegangsbehandling 
+                && kravRepository.hentHvisEksisterer(kontekst.behandlingId)?.vurderinger.isNullOrEmpty()
     }
 
     companion object : FlytSteg {
