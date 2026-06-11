@@ -20,6 +20,18 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Opp
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.Uføre
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreSøknad
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Gjenopptak
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Klage
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravType
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.MuligRettFra
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.MuligRettFraÅrsak
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.NyttKrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Søknadsdato
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.SøknadsdatoÅrsak
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Tilleggsopplysning
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.TrukketSøknad
 import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseServiceFactory
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
 import no.nav.aap.behandlingsflyt.help.ident
@@ -44,6 +56,7 @@ import no.nav.aap.behandlingsflyt.prosessering.HendelseMottattHåndteringJobbUtf
 import no.nav.aap.behandlingsflyt.prosessering.ProsesseringsJobber
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
@@ -72,6 +85,7 @@ import org.testcontainers.containers.output.Slf4jLogConsumer
 import org.testcontainers.containers.wait.strategy.HostPortWaitStrategy
 import org.testcontainers.postgresql.PostgreSQLContainer
 import java.time.Duration
+import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
@@ -182,6 +196,24 @@ fun main() {
                             log.warn("Finner ikke person med ident $ident for å legge til yrkesskade")
                             respondWithStatus(HttpStatusCode.BadRequest)
                         }
+                    }
+                }
+
+                route("/endre/{saksnummer}/legg-til-kravvurdering") {
+                    post<SaksnummerParameter, Unit, LeggTilKravVurderingDTO> { param, dto ->
+                        val behandling = hentSisteBehandlingForSak(
+                            hentSakId(Saksnummer(param.saksnummer)),
+                            gatewayProvider
+                        )
+                        datasource.transaction { connection ->
+                            val repositoryProvider = postgresRepositoryRegistry.provider(connection)
+                            val kravRepository = repositoryProvider.provide<KravRepository>()
+                            val vurderinger = dto.kravVurderinger.map { krav ->
+                                mapKravVurdering(krav, behandling.id)
+                            }.toSet()
+                            kravRepository.lagre(behandling.id, vurderinger)
+                        }
+                        respondWithStatus(HttpStatusCode.OK)
                     }
                 }
             }
@@ -700,4 +732,65 @@ internal fun postgreSQLContainer(): PostgreSQLContainer {
         }
     postgres.start() // venter til container er klar
     return postgres
+}
+
+private fun hentSakId(saksnummer: Saksnummer): SakId {
+    return datasource.transaction(readOnly = true) { connection ->
+        val repositoryProvider = postgresRepositoryRegistry.provider(connection)
+        repositoryProvider.provide<SakRepository>().hent(saksnummer).id
+    }
+}
+
+private fun mapKravVurdering(krav: KravVurderingTestDto, behandlingId: BehandlingId): KravVurdering {
+    val journalpostId = JournalpostId("test-krav-${UUID.randomUUID()}")
+    val now = Instant.now()
+    return when (krav.kravType) {
+        KravType.NYTT_KRAV_AAP -> NyttKrav(
+            journalpostId = journalpostId,
+            vurdertAv = "TESTBRUKER",
+            begrunnelse = "Nytt krav: søknad mottatt i tide, trenger manuell vurdering av vilkår.",
+            vurdertIBehandling = behandlingId,
+            opprettet = now,
+            søknadsdato = Søknadsdato(
+                dato = krav.søknadsdato ?: LocalDate.now().minusMonths(3),
+                årsak = SøknadsdatoÅrsak.SøknadMottatt
+            ),
+            muligRettFra = krav.muligRettFra?.let { MuligRettFra(it, MuligRettFraÅrsak.IkkeIStandTilÅSøkeTidligere) },
+            kravdato = krav.kravdato ?: LocalDate.now().minusMonths(3)
+        )
+        KravType.GJENOPPTAK -> Gjenopptak(
+            journalpostId = journalpostId,
+            vurdertAv = "TESTBRUKER",
+            begrunnelse = "Gjenopptak: nye opplysninger tilsier at saken skal vurderes på nytt.",
+            vurdertIBehandling = behandlingId,
+            opprettet = now,
+            søknadsdato = Søknadsdato(
+                dato = krav.søknadsdato ?: LocalDate.now().minusMonths(3),
+                årsak = SøknadsdatoÅrsak.SøknadMottatt
+            ),
+            muligRettFra = krav.muligRettFra?.let { MuligRettFra(it, MuligRettFraÅrsak.IkkeIStandTilÅSøkeTidligere) },
+            kravdato = krav.kravdato ?: LocalDate.now().minusMonths(3)
+        )
+        KravType.TRUKKET_SØKNAD -> TrukketSøknad(
+            journalpostId = journalpostId,
+            vurdertAv = "TESTBRUKER",
+            begrunnelse = "Trukket søknad: søker har bekreftet at kravet ikke lenger opprettholdes.",
+            vurdertIBehandling = behandlingId,
+            opprettet = now,
+        )
+        KravType.KLAGE -> Klage(
+            journalpostId = journalpostId,
+            vurdertAv = "TESTBRUKER",
+            begrunnelse = "Klage: tidligere vurdering bestrides, sendes til ny behandling.",
+            vurdertIBehandling = behandlingId,
+            opprettet = now,
+        )
+        KravType.TILLEGGSOPPLYSNING -> Tilleggsopplysning(
+            journalpostId = journalpostId,
+            vurdertAv = "TESTBRUKER",
+            begrunnelse = "Tilleggsopplysning: mottatt ny dokumentasjon som påvirker rettighetsvurderingen.",
+            vurdertIBehandling = behandlingId,
+            opprettet = now,
+        )
+    }
 }

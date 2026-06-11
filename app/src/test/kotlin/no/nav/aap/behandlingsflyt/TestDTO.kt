@@ -9,6 +9,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andresta
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjonstype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Oppholdstype
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.AndreUtbetalingerDto
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
@@ -55,6 +56,17 @@ data class PeriodeDto(
     val tom: LocalDate,
 )
 
+data class KravVurderingTestDto(
+    val kravType: KravType,
+    val søknadsdato: LocalDate? = LocalDate.now().minusMonths(3),
+    val kravdato: LocalDate? = LocalDate.now().minusMonths(3),
+    val muligRettFra: LocalDate? = LocalDate.now().minusMonths(1),
+)
+
+data class LeggTilKravVurderingDTO(
+    val kravVurderinger: List<KravVurderingTestDto> = listOf(KravVurderingTestDto(KravType.NYTT_KRAV_AAP))
+)
+
 @Response(statusCode = 202)
 data class OpprettTestcaseDTO(
     @param:JsonProperty(value = "fødselsdato", required = true) val fødselsdato: LocalDate,
@@ -71,6 +83,7 @@ data class OpprettTestcaseDTO(
     @param:JsonProperty(value = "tjenestePensjon") val tjenestePensjon: Boolean? = null,
     val institusjoner: Institusjoner = Institusjoner(),
     val samordning: List<SamordningDto> = emptyList(),
+    val kravVurderinger: List<KravVurderingTestDto> = emptyList(),
     val søknadsdato: LocalDate? = null,
     val andreUtbetalinger: AndreUtbetalingerDto? = null,
     val steg: StegType? = null,
