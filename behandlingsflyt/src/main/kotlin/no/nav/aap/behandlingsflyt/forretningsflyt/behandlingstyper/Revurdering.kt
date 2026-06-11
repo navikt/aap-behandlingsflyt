@@ -92,7 +92,7 @@ object Revurdering : BehandlingType {
             .medSteg(
                 steg = KravSteg,
                 informasjonskrav = emptyList(),
-                vurderingsbehovRelevanteForSteg = listOf(Vurderingsbehov.MOTTATT_SØKNAD)  // TODO: Vurderingsbehov for krav
+                vurderingsbehovRelevanteForSteg = listOf(Vurderingsbehov.MOTTATT_SØKNAD, Vurderingsbehov.VURDER_KRAV)
             )
             .medSteg(
                 steg = SendForvaltningsmeldingSteg,
