@@ -202,7 +202,7 @@ class TidligereVurderingerImpl(
                         overgangArbeidVilkåret?.utfall == Utfall.OPPFYLT -> TidligereVurderinger.PotensieltOppfylt(
                             RettighetsType.ARBEIDSSØKER
                         )
-                        foreløpigUtfall is TidligereVurderinger.PotensieltOppfylt && foreløpigUtfall.rettighetstype == null && (sykdomsvurdering?.skalVurderesForSykepengeerstatning() != true && sykdomsvurdering?.potensieltOppfyltStudent() != true) -> TidligereVurderinger.UunngåeligAvslag
+                        foreløpigUtfall is TidligereVurderinger.PotensieltOppfylt && foreløpigUtfall.rettighetstype == null && skalIkkeVurderesForStudentEllerSykepengeerstatning(sykdomsvurdering) -> TidligereVurderinger.UunngåeligAvslag
                         else -> TidligereVurderinger.PotensieltOppfylt(
                             null,
                             mapSykdomsvurderingTilMuligRettighetstypeFraNavKontor(sykdomsvurdering)
@@ -334,6 +334,9 @@ class TidligereVurderingerImpl(
         }
     }
 
+    private fun skalIkkeVurderesForStudentEllerSykepengeerstatning(sykdomsvurdering: Sykdomsvurdering?): Boolean {
+        return sykdomsvurdering?.skalVurderesForSykepengeerstatning() != true && sykdomsvurdering?.potensieltOppfyltStudent() != true
+    }
 
     override fun behandlingsutfall(
         kontekst: FlytKontekstMedPerioder, førSteg: StegType, etterSteg: StegType?

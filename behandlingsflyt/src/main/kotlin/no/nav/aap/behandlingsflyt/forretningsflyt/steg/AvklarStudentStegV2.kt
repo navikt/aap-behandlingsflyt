@@ -8,9 +8,8 @@ import no.nav.aap.behandlingsflyt.behandling.vilkår.student.StudentVilkår
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentValidering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.somSykdomsvurderingTidslinje
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
@@ -118,7 +117,7 @@ class AvklarStudentStegV2 private constructor(
                 erRelevant && studentVurdering == null
             }
 
-        val nårVurderingErKonsistentMedSykdom = nårVurderingErKonsistentMedSykdom(
+        val nårVurderingErKonsistentMedSykdom = StudentValidering.nårVurderingErKonsistentMedSykdom(
             studentTidslinje,
             sykdomTidslinje
         )
@@ -130,15 +129,6 @@ class AvklarStudentStegV2 private constructor(
             vurderingMangler == true || erKonsistent == false
         }.komprimer().filter { erUtilstrekkelig -> erUtilstrekkelig.verdi }.perioder().toSet()
 
-    }
-
-    private fun nårVurderingErKonsistentMedSykdom(
-        studentTidslinje: Tidslinje<StudentVurdering>,
-        sykdomstidslinje: Tidslinje<Sykdomsvurdering>
-    ): Tidslinje<Boolean> {
-        return Tidslinje.map2(studentTidslinje, sykdomstidslinje) { studentVurdering, sykdomsvurdering ->
-            !(sykdomsvurdering?.potensieltOppfyltStudent() != true && studentVurdering?.erOppfylt() == true)
-        }
     }
 
     private fun vurderStudentvilkår(kontekst: FlytKontekstMedPerioder) {

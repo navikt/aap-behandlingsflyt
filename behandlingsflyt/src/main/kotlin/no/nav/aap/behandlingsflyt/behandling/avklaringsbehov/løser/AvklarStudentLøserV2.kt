@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKont
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarStudentLøsningV2
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentValidering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
@@ -51,7 +52,7 @@ class AvklarStudentLøserV2(
             vurderinger = nyePlussVedtatte,
             oppgittStudent = null
         ).somStudenttidslinje()
-        valider(kontekst.behandlingId(), nyTidslinje)
+        validerPerioder(kontekst.behandlingId(), nyTidslinje)
 
         studentRepository.lagre(
             behandlingId = kontekst.behandlingId(),
@@ -63,19 +64,18 @@ class AvklarStudentLøserV2(
         )
     }
 
-    private fun valider(behandlingId: BehandlingId, studentTidslinje: Tidslinje<StudentVurdering>) {
+    private fun validerPerioder(behandlingId: BehandlingId, studentTidslinje: Tidslinje<StudentVurdering>) {
         val sykdomTidslinje = sykdomRepository.hentHvisEksisterer(behandlingId)
             ?.somSykdomsvurderingstidslinje()
             .orEmpty()
 
-        val inkonsistentePerioder =
-            Tidslinje.map2(studentTidslinje, sykdomTidslinje) { studentVurdering, sykdomsvurdering ->
-                sykdomsvurdering?.potensieltOppfyltStudent() != true && studentVurdering?.erOppfylt() == true
-            }.filter { it.verdi } .perioder().toSet()
+        val ugyldigePerioder =
+            StudentValidering.nårVurderingErKonsistentMedSykdom(studentTidslinje, sykdomTidslinje).filter { !it.verdi }
+                .perioder().toSet()
 
-        if (inkonsistentePerioder.isNotEmpty()) {
+        if (ugyldigePerioder.isNotEmpty()) {
             throw UgyldigForespørselException(
-                "Vurderingene for ${inkonsistentePerioder.toHumanReadable()} stemmer ikke med periodene i § 11-5." // todo bedre feilmelding
+                "Vurderingene for ${ugyldigePerioder.toHumanReadable()} stemmer ikke med periodene i § 11-5." // todo bedre feilmelding
             )
         }
     }
