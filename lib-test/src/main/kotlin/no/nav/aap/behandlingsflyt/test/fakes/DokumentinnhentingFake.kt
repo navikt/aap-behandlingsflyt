@@ -63,7 +63,7 @@ class DokumentinnhentingFake(private val fakePersoner: () -> TestPersonService) 
             get("/syfo/status/{saksnummer}") {
                 val saksnummer = call.parameters["saksnummer"] ?: error("Mangler saksnummer")
                 val filtered = statuser.filter { it.second.saksnummer == saksnummer }
-                call.respond(filtered)
+                call.respond(filtered.map { it.second })
             }
             post("/syfo/brevpreview") {
                 val req = call.receive<ForhåndsvisDialogmeldingDto>()

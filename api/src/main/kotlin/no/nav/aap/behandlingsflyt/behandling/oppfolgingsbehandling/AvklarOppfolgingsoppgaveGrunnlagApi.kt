@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.behandling.oppfolgingsbehandling
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
+import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
 import no.nav.aap.behandlingsflyt.behandling.oppfølgingsbehandling.OppfølgingsBehandlingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
@@ -12,6 +13,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingRef
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
 import no.nav.aap.komponenter.dbconnect.transaction
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.getGrunnlag
@@ -43,11 +45,12 @@ data class AvklarOppfolgingsoppgaveGrunnlagResponse(
     val hvaSkalFølgesOpp: String,
     val hvemSkalFølgeOpp: HvemSkalFølgeOpp,
     val grunnlag: OppfølgingsoppgaveGrunnlagResponse? = null,
+    val opprettetAv: String?,
 )
 
 
 fun NormalOpenAPIRoute.avklarOppfolgingsoppgaveGrunnlag(
-    dataSource: DataSource, repositoryRegistry: RepositoryRegistry
+    dataSource: DataSource, repositoryRegistry: RepositoryRegistry, gatewayProvider: GatewayProvider,
 ) {
     route("/api/behandling/{referanse}/grunnlag/oppfolgingsoppgave")
         .getGrunnlag<BehandlingReferanse, AvklarOppfolgingsoppgaveGrunnlagResponse>(
@@ -74,6 +77,12 @@ fun NormalOpenAPIRoute.avklarOppfolgingsoppgaveGrunnlag(
                         )
                     ) { "Skal alltid finnes dokumenter på oppfølgingsbehandlinger. BehandlingId: ${behandling.id}" }
 
+                val opprettetAv =
+                    dokument.opprettetAv?.let { navIdent ->
+                        AnsattInfoService(gatewayProvider).hentAnsatteVisningsnavn(listOf(navIdent))
+                            .firstOrNull()?.visningsnavn ?: navIdent
+                    }
+
                 AvklarOppfolgingsoppgaveGrunnlagResponse(
                     datoForOppfølging = dokument.datoForOppfølging,
                     hvaSkalFølgesOpp = dokument.hvaSkalFølgesOpp,
@@ -81,6 +90,7 @@ fun NormalOpenAPIRoute.avklarOppfolgingsoppgaveGrunnlag(
                         no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.HvemSkalFølgeOpp.NasjonalEnhet -> HvemSkalFølgeOpp.NasjonalEnhet
                         no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.HvemSkalFølgeOpp.Lokalkontor -> HvemSkalFølgeOpp.Lokalkontor
                     },
+                    opprettetAv = opprettetAv,
                     grunnlag = oppfølgingsbehandlingvurdering?.let {
                         OppfølgingsoppgaveGrunnlagResponse(
                             konsekvensAvOppfølging = when (it.konsekvensAvOppfølging) {
@@ -89,7 +99,7 @@ fun NormalOpenAPIRoute.avklarOppfolgingsoppgaveGrunnlag(
                             },
                             opplysningerTilRevurdering = it.opplysningerTilRevurdering,
                             årsak = it.årsak,
-                            vurdertAv = it.vurdertAv
+                            vurdertAv = it.vurdertAv,
                         )
                     })
             }

@@ -32,6 +32,7 @@ import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.util.*
+import no.nav.aap.behandlingsflyt.help.opprettInMemorySak
 
 @Fakes
 class TilkjentYtelseApiTest : BaseApiTest() {
@@ -39,7 +40,7 @@ class TilkjentYtelseApiTest : BaseApiTest() {
     @Test
     fun `teste v2`() {
         val ds = MockDataSource()
-        val sak = nySak(LocalDate.parse("2025-08-06"))
+        val sak = opprettInMemorySak(LocalDate.parse("2025-08-06"))
         val behandling = opprettBehandling(sak, TypeBehandling.Revurdering)
 
         testApplication {
@@ -160,7 +161,7 @@ class TilkjentYtelseApiTest : BaseApiTest() {
     @Test
     fun `tilkjent ytelse skal generere diff-objekter`() {
         val ds = MockDataSource()
-        val sak = nySak(LocalDate.parse("2025-08-06"))
+        val sak = opprettInMemorySak(LocalDate.parse("2025-08-06"))
         val behandling = opprettBehandling(sak, TypeBehandling.Revurdering)
         val behandling2 = opprettBehandling(sak, TypeBehandling.Revurdering, forrigeBehandlingId = behandling.id)
 
@@ -391,7 +392,8 @@ class TilkjentYtelseApiTest : BaseApiTest() {
                     TimerArbeid(BigDecimal("10.0"))
                 )
             ),
-            mottattTidspunkt = LocalDate.parse("2025-08-07").atTime(9, 0)
+            mottattTidspunkt = LocalDate.parse("2025-08-07").atTime(9, 0),
+            opprettetTidspunkt = LocalDate.parse("2025-08-07").atTime(9, 0)
         ),
         Meldekort(
             journalpostId = JournalpostId("1234567810"),
@@ -401,7 +403,8 @@ class TilkjentYtelseApiTest : BaseApiTest() {
                     TimerArbeid(BigDecimal("11.0"))
                 )
             ),
-            mottattTidspunkt = LocalDate.parse("2025-08-07").atTime(10, 0)
+            mottattTidspunkt = LocalDate.parse("2025-08-07").atTime(10, 0),
+            opprettetTidspunkt = LocalDate.parse("2025-08-07").atTime(10, 0)
         ),
     )
 

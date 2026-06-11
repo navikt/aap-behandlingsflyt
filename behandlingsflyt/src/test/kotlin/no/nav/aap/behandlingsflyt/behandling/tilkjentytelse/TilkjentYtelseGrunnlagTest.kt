@@ -35,6 +35,7 @@ import no.nav.aap.verdityper.dokument.JournalpostId
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
+import java.time.LocalDateTime
 
 /**
  * Eksemplene er hentet fra https://navno.sharepoint.com/:w:/r/sites/POAAP/Shared%20Documents/Regelverk/Regelverksavklaringer/Juridiske%20avklaringer/Beregningscaser.docx?web=1
@@ -489,7 +490,8 @@ class TilkjentYtelseGrunnlagTest {
                             timerArbeid = TimerArbeid(BigDecimal(timer)),
                         )
                     }.toSet(),
-                    mottattTidspunkt = (14 desember 2025).atTime(14, 0)
+                    mottattTidspunkt = (14 desember 2025).atTime(14, 0),
+                    opprettetTidspunkt = (14 desember 2025).atTime(14, 0),
                 )
             ),
             innsendingsTidspunkt = mapOf(15 desember 2025 to JournalpostId("0")),

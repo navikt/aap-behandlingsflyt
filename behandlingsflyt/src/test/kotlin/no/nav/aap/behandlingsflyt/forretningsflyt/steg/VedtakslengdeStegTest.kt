@@ -28,8 +28,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedP
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.test.FakeTidligereVurderinger
@@ -43,7 +41,6 @@ import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryVedtakslengdeReposit
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryVilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryProvider
 import no.nav.aap.behandlingsflyt.test.januar
-import no.nav.aap.behandlingsflyt.test.modell.genererIdent
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Dagsatser
 import no.nav.aap.komponenter.verdityper.Prosent
@@ -53,20 +50,15 @@ import no.nav.aap.komponenter.verdityper.TimerArbeid
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
-import java.time.LocalDate
-import java.util.*
 
 class VedtakslengdeStegTest {
-    private val random = Random(1235123)
-
     private val sakRepository = InMemorySakRepository
     private val behandlingRepository = InMemoryBehandlingRepository
 
     @Test
     fun `Skal forlenge sluttdato med 261 dager for fremtidig rett på ordinær`() {
         val rettighetsperiode = Periode(1 januar 2020, Tid.MAKS)
-        val person = person()
-        val sak = opprettInMemorySak(rettighetsperiode.fom, person.aktivIdent())
+        val sak = opprettInMemorySak(rettighetsperiode.fom)
         val forrigeBehandling = førstegangsbehandling(sak.id)
 
         val ikkeOppfyltPeriode = Periode(2 desember 2020, 1 januar 2021)
@@ -169,9 +161,6 @@ class VedtakslengdeStegTest {
         )
 
     }
-
-    private fun person(): Person =
-        Person(PersonId(random.nextLong()), UUID.randomUUID(), listOf(genererIdent(LocalDate.now().minusYears(23))))
 
     private fun genererVilkårsresultat(periode: Periode, straffePeriode: Periode): Vilkårsresultat {
         val aldersVilkåret =

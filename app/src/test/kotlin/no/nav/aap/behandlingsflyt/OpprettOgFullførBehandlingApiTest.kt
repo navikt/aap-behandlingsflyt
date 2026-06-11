@@ -6,7 +6,11 @@ import io.micrometer.prometheusmetrics.PrometheusConfig
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.YtelseTypeCode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.gateway.SamhandlerForholdDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.gateway.SamhandlerYtelseDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.gateway.TjenestePensjonRespons
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.gateway.TpOrdning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.AfpDto
@@ -92,15 +96,16 @@ class OpprettOgFullførBehandlingApiTest {
             postgres.close()
         }
 
-        private val port: Number get() = runBlocking {
-            server.engine.resolvedConnectors().first { it.type == ConnectorType.HTTP }.port
-        }
+        private val port: Number
+            get() = runBlocking {
+                server.engine.resolvedConnectors().first { it.type == ConnectorType.HTTP }.port
+            }
     }
 
     @Test
     fun `oppretter og fullfører behandling automatisk`() {
         opprettOgVerifiserBehandling(
-            ident = "10107099950",
+            testPerson = standardTestPerson("10107099950"),
             erStudent = false,
         )
     }
@@ -108,7 +113,7 @@ class OpprettOgFullførBehandlingApiTest {
     @Test
     fun `oppretter og fullfører behandling automatisk for student`() {
         opprettOgVerifiserBehandling(
-            ident = "10107099951",
+            testPerson = standardTestPerson("10107099951"),
             erStudent = true,
         )
     }
@@ -116,16 +121,15 @@ class OpprettOgFullførBehandlingApiTest {
     @Test
     fun `oppretter og fullfører behandling automatisk uten inntekt`() {
         opprettOgVerifiserBehandling(
-            ident = "10107099955",
+            testPerson = standardTestPerson("10107099955").medInntekter(emptyList()),
             erStudent = true,
-            brukersInntekter = emptyList()
         )
     }
 
     @Test
     fun `oppretter og fullfører behandling automatisk med samordning afp`() {
         opprettOgVerifiserBehandling(
-            ident = "10107099956",
+            testPerson = standardTestPerson("10107099956"),
             erStudent = true,
             andreUtbetalingerApiDto = AndreUtbetalingerApiDto(
                 loenn = JaNeiDto.JA,
@@ -138,7 +142,7 @@ class OpprettOgFullførBehandlingApiTest {
     @Test
     fun `oppretter og fullfører behandling automatisk uten medlemskap`() {
         opprettOgVerifiserBehandling(
-            ident = "10107099952",
+            testPerson = standardTestPerson("10107099952"),
             erStudent = false,
             harMedlemskap = false,
         )
@@ -235,8 +239,46 @@ class OpprettOgFullførBehandlingApiTest {
     }
 
     @Test
-    fun `søknadsdato settes som rettighetsperiode fom`() {
+    fun `tp-ordning med samordning afp`() {
         val ident = "10107099957"
+        val testPerson1 = TestPerson(
+            identer = setOf(Ident(ident)),
+            fødselsdato = Fødselsdato(LocalDate.now().minusYears(25)),
+            tjenestePensjon = TjenestePensjonRespons(
+                fnr = ident,
+                forhold = listOf(
+                    SamhandlerForholdDto(
+                        ordning = TpOrdning(
+                            navn = "3100 MARITIM PENSJONSKASSE",
+                            tpNr = "3100",
+                            orgNr = "1234"
+                        ),
+                        ytelser = listOf(
+                            SamhandlerYtelseDto(
+                                datoInnmeldtYtelseFom = LocalDate.now().minusYears(1),
+                                ytelseType = YtelseTypeCode.AFP,
+                                datoYtelseIverksattFom = LocalDate.now().minusMonths(1),
+                                datoYtelseIverksattTom = LocalDate.now().plusYears(1).minusMonths(1),
+                                ytelseId = 3100
+                            )
+                        )
+                    )
+                )
+            )
+        )
+
+        assertThat(testPerson1.aktivIdent().identifikator).isEqualTo(ident)
+        opprettOgVerifiserBehandling(
+            testPerson = testPerson1,
+            erStudent = false,
+            harMedlemskap = false,
+        )
+
+    }
+
+    @Test
+    fun `søknadsdato settes som rettighetsperiode fom`() {
+        val ident = "10107099958"
         val søknadsdato = LocalDate.now().minusYears(2)
         FakePersoner.leggTil(
             TestPerson(
@@ -254,7 +296,7 @@ class OpprettOgFullførBehandlingApiTest {
                     harYrkesskade = false,
                     harMedlemskap = true,
                     andreUtbetalinger = null,
-                    søknadsdato = søknadsdato,
+                    soeknadsdato = søknadsdato,
                 )
             )
         )
@@ -269,22 +311,83 @@ class OpprettOgFullførBehandlingApiTest {
         }
     }
 
+    @Test
+    fun `andre kall med annen payload oppretter revurdering`() {
+        val ident = "10107099959"
+        FakePersoner.leggTil(
+            TestPerson(
+                identer = setOf(Ident(ident)),
+                fødselsdato = Fødselsdato(LocalDate.now().minusYears(25)),
+            ).medInntekter(defaultInntekt()),
+        )
+
+        val url = URI.create("http://localhost:$port/api/test/opprettOgFullfoerBehandling")
+
+        val førstRespons: OpprettOgFullforBehandlingRespons? = ccClient.post(
+            url,
+            PostRequest(
+                body = OpprettOgFullforBehandlingRequest(
+                    ident = ident,
+                    erStudent = false,
+                    harYrkesskade = false,
+                    harMedlemskap = true,
+                    andreUtbetalinger = null,
+                )
+            )
+        )
+        requireNotNull(førstRespons) { "Ingen respons fra første kall" }
+
+        pollBehandlingStatus(ident)
+
+        // Andre kall med annen payload (erStudent endret til true)
+        val andreRespons: OpprettOgFullforBehandlingRespons? = ccClient.post(
+            url,
+            PostRequest(
+                body = OpprettOgFullforBehandlingRequest(
+                    ident = ident,
+                    erStudent = true,
+                    harYrkesskade = false,
+                    harMedlemskap = true,
+                    andreUtbetalinger = null,
+                )
+            )
+        )
+        requireNotNull(andreRespons) { "Ingen respons fra andre kall" }
+
+        assertThat(andreRespons.saksnummer).isEqualTo(førstRespons.saksnummer)
+
+        // Vent spesifikt på at revurderingen er opprettet og avsluttet (pollBehandlingStatus
+        // returnerer umiddelbart fordi den første behandlingen allerede er AVSLUTTET)
+        val revurderingFerdig = pollRevurderingAvsluttet(førstRespons.saksnummer, antallForventet = 2)
+        assertThat(revurderingFerdig).isTrue()
+
+        val dataSource = initDatasource(dbConfig)
+        dataSource.transaction { connection ->
+            val sakRepo = postgresRepositoryRegistry.provider(connection).provide<SakRepository>()
+            val sak = sakRepo.hent(Saksnummer(førstRespons.saksnummer))
+
+            val behandlingRepo = postgresRepositoryRegistry.provider(connection).provide<BehandlingRepository>()
+            val behandlinger = behandlingRepo.hentAlleFor(sak.id)
+            assertThat(behandlinger).hasSize(2)
+            assertThat(behandlinger.first().status()).isEqualTo(Status.AVSLUTTET)
+            assertThat(behandlinger.last().status()).isEqualTo(Status.AVSLUTTET)
+        }
+    }
+    private fun standardTestPerson(ident: String) = TestPerson(
+        identer = setOf(Ident(ident)),
+        fødselsdato = Fødselsdato(LocalDate.now().minusYears(25)),
+    ).medInntekter(defaultInntekt())
+
     private fun opprettOgVerifiserBehandling(
-        ident: String,
+        testPerson: TestPerson,
         erStudent: Boolean,
         harMedlemskap: Boolean = true,
         harYrkesskade: Boolean = false,
         andreUtbetalingerApiDto: AndreUtbetalingerApiDto? = null,
-        brukersInntekter: List<InntektPerÅr>? = null,
     ) {
-        FakePersoner.leggTil(
-            TestPerson(
-                identer = setOf(Ident(ident)),
-                fødselsdato = Fødselsdato(
-                    LocalDate.now().minusYears(25)
-                ),
-            ).medInntekter(brukersInntekter ?: defaultInntekt()),
-        )
+        FakePersoner.leggTil(testPerson)
+
+        val ident = testPerson.aktivIdent().identifikator
 
         val respons: OpprettOgFullforBehandlingRespons? = ccClient.post(
             URI.create("http://localhost:$port/api/test/opprettOgFullfoerBehandling"),
@@ -318,6 +421,27 @@ class OpprettOgFullførBehandlingApiTest {
             assertThat(behandlinger).hasSize(1)
             assertThat(behandlinger.first().status()).isEqualTo(Status.AVSLUTTET)
         }
+    }
+
+    private fun pollRevurderingAvsluttet(saksnummer: String, antallForventet: Int): Boolean = runBlocking {
+        val dataSource = initDatasource(dbConfig)
+        repeat(120) {
+            try {
+                val behandlinger = dataSource.transaction(readOnly = true) { connection ->
+                    val sakRepo = postgresRepositoryRegistry.provider(connection).provide<SakRepository>()
+                    val sak = sakRepo.hent(Saksnummer(saksnummer))
+                    val behandlingRepo = postgresRepositoryRegistry.provider(connection).provide<BehandlingRepository>()
+                    behandlingRepo.hentAlleFor(sak.id)
+                }
+                if (behandlinger.size >= antallForventet && behandlinger.first().status() == Status.AVSLUTTET) {
+                    return@runBlocking true
+                }
+            } catch (e: Exception) {
+                log.info("pollRevurderingAvsluttet exception: $e")
+            }
+            delay(1000.milliseconds)
+        }
+        false
     }
 
     private fun pollBehandlingStatus(ident: String): BehandlingStatusRespons? = runBlocking {

@@ -33,6 +33,7 @@ import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 import java.util.*
 import kotlin.random.Random
+import no.nav.aap.behandlingsflyt.help.opprettInMemorySak
 
 @Fakes
 class KlageresultatApiTest : BaseApiTest() {
@@ -40,7 +41,7 @@ class KlageresultatApiTest : BaseApiTest() {
     @Test
     fun `skal returnere resultat med tom liste dersom klageresultater fra kabal ikke finnes`() {
         val ds = MockDataSource()
-        val behandling = opprettBehandling(nySak(), TypeBehandling.Revurdering)
+        val behandling = opprettBehandling(opprettInMemorySak(), TypeBehandling.Revurdering)
 
         testApplication {
             installApplication {
@@ -59,7 +60,7 @@ class KlageresultatApiTest : BaseApiTest() {
     @Test
     fun `skal returnere resultat med et element når det foreligger en hendelse fra kabal`() {
         val ds = MockDataSource()
-        val sak = nySak()
+        val sak = opprettInMemorySak()
         val behandling = opprettBehandling(sak, TypeBehandling.Revurdering)
         val kabalHendelse = KabalHendelseV0(
             eventId = UUID.randomUUID(),
@@ -99,7 +100,7 @@ class KlageresultatApiTest : BaseApiTest() {
     @Test
     fun `skal returnere resultater med flere element når det foreligger flere hendelse fra kabal`() {
         val ds = MockDataSource()
-        val sak = nySak()
+        val sak = opprettInMemorySak()
         val behandling = opprettBehandling(sak, TypeBehandling.Revurdering)
         val klageAvsluttet = KabalHendelseV0(
             eventId = UUID.randomUUID(),

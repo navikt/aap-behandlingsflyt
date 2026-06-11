@@ -47,7 +47,7 @@ class FakeApiInternGateway : ApiInternGateway {
         rettighetsTypeTidslinje: Tidslinje<RettighetsType>,
         stansOpphørGrunnlag: Set<GjeldendeStansEllerOpphør>?,
         arenavedtak: Tidslinje<UtledArenaVedtakstype.ArenaVedtak>,
-        muligMaksdato: LocalDate?
+        muligMaksdato: LocalDate?,
     ) {
         // No-op
     }

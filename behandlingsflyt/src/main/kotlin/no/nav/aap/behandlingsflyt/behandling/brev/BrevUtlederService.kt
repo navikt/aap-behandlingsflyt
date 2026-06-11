@@ -31,12 +31,15 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.Avslått
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.DelvisOmgjøres
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageresultatUtleder
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.Opprettholdes
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsopptrapping.ArbeidsopptrappingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsopptrapping.perioderMedArbeidsopptrapping
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurderingAvForeldreAnsvar
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.barnepensjon.BarnepensjonRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.refusjonskrav.TjenestepensjonRefusjonsKravVurderingRepository
@@ -96,6 +99,7 @@ class BrevUtlederService(
     private val samordningAndreStatligeYtelserRepository: SamordningAndreStatligeYtelserRepository,
     private val sykdomRepository: SykdomRepository,
     private val yrkesskadeRepository: YrkesskadeRepository,
+    private val barnRepository: BarnRepository,
 ) {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         behandlingRepository = repositoryProvider.provide(),
@@ -121,6 +125,7 @@ class BrevUtlederService(
         samordningAndreStatligeYtelserRepository = repositoryProvider.provide(),
         sykdomRepository = repositoryProvider.provide(),
         yrkesskadeRepository = repositoryProvider.provide(),
+        barnRepository = repositoryProvider.provide(),
         avbrytAktivitetspliktbehandlingService = AvbrytAktivitetspliktbehandlingService(repositoryProvider)
     )
 
@@ -357,11 +362,17 @@ class BrevUtlederService(
         } else {
             null
         }
+        val yrkesskader = if (Miljø.erDev()) yrkesskadeRepository.hentHvisEksisterer(behandling.id) else null
 
-        val yrkesskadeBeregning = if (Miljø.erDev())
-            utledYrkesskadeBeregning(behandling.id)
-        else null
+        val yrkesSkadeISøknadIkkeIRegister = if (Miljø.erDev()) {
+            yrkesskader != null && yrkesskader.oppgittYrkesskadeISøknad == true && !yrkesskader.yrkesskader.harYrkesskade()
+        } else null
 
+        val yrkesskadeBeregning = if (Miljø.erDev()) {
+            utledYrkesskadeBeregning(behandling.id, yrkesskader)
+        } else null
+
+        val foreldreAnsvarVurderinger = hentBarnVurderingPerioder(behandling.id)
         return Innvilgelse(
             virkningstidspunkt = vedtak.virkningstidspunkt,
             sisteDagMedYtelse = underveisGrunnlag.sisteDagMedYtelse(),
@@ -370,6 +381,8 @@ class BrevUtlederService(
             sykdomsvurdering = sykdomsvurdering,
             forholdTilAndreYtelser = samordning,
             yrkesskadeBeregning = yrkesskadeBeregning,
+            yrkesSkadeISøknadIkkeIRegister = yrkesSkadeISøknadIkkeIRegister,
+            foreldreansvarVurderinger = foreldreAnsvarVurderinger,
         )
     }
 
@@ -446,11 +459,10 @@ class BrevUtlederService(
         }
     }
 
-    private fun utledYrkesskadeBeregning(behandlingId: BehandlingId): YrkesskadeBeregningBrev? {
+    private fun utledYrkesskadeBeregning(behandlingId: BehandlingId, yrkesSkadeGrunnlag: YrkesskadeGrunnlag?): YrkesskadeBeregningBrev? {
         val sykdomGrunnlag = sykdomRepository.hentHvisEksisterer(behandlingId)
         val yrkesSkaderMedManuelledatoer = sykdomGrunnlag?.yrkesskadevurdering?.relevanteSaker ?: emptyList()
 
-        val yrkesSkadeGrunnlag = yrkesskadeRepository.hentHvisEksisterer(behandlingId)
         val yrkesSkaderFraEksterntRegister = yrkesSkadeGrunnlag?.yrkesskader?.yrkesskader ?: emptyList()
         val andelAvNedsettelsen = sykdomGrunnlag?.yrkesskadevurdering?.andelAvNedsettelsen?.prosentverdi()
 
@@ -673,6 +685,13 @@ class BrevUtlederService(
             samordningBarnepensjon = samordningBarnepensjon,
             fradragAndreYtelser = fradragAndreYtelser,
         )
+    }
+
+    fun hentBarnVurderingPerioder(behandlingId: BehandlingId): List<VurderingAvForeldreAnsvar>{
+        return barnRepository.hentVurderteBarnHvisEksisterer(behandlingId)
+            ?.barn
+            ?.flatMap { it.vurderinger }
+            .orEmpty()
     }
 
     private fun hentSamordningAndreYtelser(behandlingId: BehandlingId): List<SamordningYtelse> {

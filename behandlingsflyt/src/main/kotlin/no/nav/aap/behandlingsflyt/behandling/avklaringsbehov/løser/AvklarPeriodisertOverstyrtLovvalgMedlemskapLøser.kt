@@ -7,6 +7,8 @@ import no.nav.aap.behandlingsflyt.behandling.lovvalg.validerGyldigVurderinger
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.validerGyldigForRettighetsperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapArbeidInntektRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.lovvalgAutomatiskVurderingOverstyrt
+import no.nav.aap.behandlingsflyt.prometheus
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
@@ -49,6 +51,9 @@ class AvklarPeriodisertOverstyrtLovvalgMedlemskapLøser(
                     vurderinger = vurderinger
                 )
             }
+
+        // No-op: sporer hvor ofte automatisk lovvalg-vurdering overstyres av saksbehandler
+        prometheus.lovvalgAutomatiskVurderingOverstyrt().increment()
 
         return LøsningsResultat("OVERSTYRT: Vurdert lovvalg & medlemskap manuelt.")
     }
