@@ -42,11 +42,11 @@ enum class SamordningType {
 
 data class SamordningDto(
     val type: SamordningType,
-    val grad: Int? = null,                                          // SYKEPENGER
-    val dagpengerYtelseType: String? = null,                        // DAGPENGER
-    val dagpengerKilde: String? = null,                             // DAGPENGER
-    val tiltakspengerYtelseType: String? = null,                    // TILTAKSPENGER
-    val tiltakspengerKilde: String? = null,                         // TILTAKSPENGER
+    val sykepengerGrad: Int? = null,
+    val dagpengerYtelseType: String? = null,
+    val dagpengerKilde: String? = null,
+    val tiltakspengerYtelseType: String? = null,
+    val tiltakspengerKilde: String? = null,
     val periode: PeriodeDto,
 )
 
@@ -80,7 +80,7 @@ data class OpprettTestcaseDTO(
     val sykepenger: List<TestPerson.Sykepenger>
         get() = samordning
             .filter { it.type == SamordningType.SYKEPENGER }
-            .map { TestPerson.Sykepenger(grad = it.grad ?: 100, periode = Periode(it.periode.fom, it.periode.tom)) }
+            .map { TestPerson.Sykepenger(grad = it.sykepengerGrad ?: 100, periode = Periode(it.periode.fom, it.periode.tom)) }
 
     val dagpenger: List<TestPerson.Dagpenger>
         get() = samordning
