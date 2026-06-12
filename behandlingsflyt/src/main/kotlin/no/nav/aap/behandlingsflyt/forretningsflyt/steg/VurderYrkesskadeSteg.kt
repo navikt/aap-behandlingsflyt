@@ -32,17 +32,21 @@ class VurderYrkesskadeSteg private constructor(
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val behandlingId = kontekst.behandlingId
-        val yrkesskader = yrkesskadeRepository.hentHvisEksisterer(behandlingId)
+        val yrkesskadeGrunnlag = yrkesskadeRepository.hentHvisEksisterer(behandlingId)
         val sykdomsgrunnlag = sykdomRepository.hentHvisEksisterer(behandlingId)
 
         avklaringsbehovService.oppdaterAvklaringsbehov(
             definisjon = Definisjon.AVKLAR_YRKESSKADE,
             vedtakBehøverVurdering = {
                 behøverVurdering(
-                    kontekst, tidligereVurderinger, yrkesskader
+                    kontekst, tidligereVurderinger, yrkesskadeGrunnlag
                 )
             },
-            erTilstrekkeligVurdert = { sykdomsgrunnlag != null && sykdomsgrunnlag.yrkesskadevurdering != null },
+            erTilstrekkeligVurdert = {
+                val vurdering = sykdomsgrunnlag?.yrkesskadevurdering
+                val aktiveRefs = yrkesskadeGrunnlag?.yrkesskader?.yrkesskader?.map { it.ref }.orEmpty()
+                vurdering != null && vurdering.relevanteSaker.all { it.referanse in aktiveRefs }
+            },
             tilbakestillGrunnlag = {
                 val forrigeGrunnlag =
                     kontekst.forrigeBehandlingId?.let { sykdomRepository.hentHvisEksisterer(it) }?.yrkesskadevurdering
