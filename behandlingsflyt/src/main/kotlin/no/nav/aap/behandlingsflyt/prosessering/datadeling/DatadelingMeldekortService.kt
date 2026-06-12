@@ -88,18 +88,11 @@ class DatadelingMeldekortService(
     ): List<DetaljertMeldekortDTO> {
         return meldekortene.mapNotNull { meldekort ->
             val arbeidsperiode = meldekort.arbeidsperiode()
-            val meldekortetsPeriode = arbeidsperiode?.let { finnMeldekortetsPeriode(arbeidsperiode, meldePeriodene) }
+            val meldekortetsPeriode = finnMeldekortetsPeriode(meldekort, meldePeriodene)
 
             when {
-                arbeidsperiode == null -> {
-                    print(
-                        "Meldekort uten arbeidstimer ble ignorert. journalpostId=${meldekort.journalpostId.identifikator}, behandlingId=${behandlingId.id}"
-                    )//???
-                    null
-                }
-
                 meldekortetsPeriode == null -> {
-                    print(
+                    println(
                         "Meldekort med arbeidstimer som ikke samsvarer med noen meldekortperiode for behandlingen ble ignorert. journalpostId=${meldekort.journalpostId.identifikator}, behandlingId=${behandlingId.id}, arbeidsperiode=$arbeidsperiode"
                     )
                     ///?
@@ -161,8 +154,15 @@ class DatadelingMeldekortService(
     }
 
     internal fun finnMeldekortetsPeriode(
-        arbeidsperiode: Periode, meldeperioder: List<Periode>
+        meldekort: Meldekort, meldeperioder: List<Periode>
     ): Periode? {
-        return meldeperioder.firstOrNull { it.overlapper(arbeidsperiode) }
+        val arbeidsperiode = meldekort.arbeidsperiode()
+
+        return meldeperioder.firstOrNull { arbeidsperiode?.overlapper(arbeidsperiode) ?: false }
+            ?: meldeperioder.firstOrNull {
+                it.inneholder(
+                    meldekort.mottattTidspunkt.toLocalDate()
+                )
+            }
     }
 }
