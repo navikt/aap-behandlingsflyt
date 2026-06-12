@@ -61,18 +61,18 @@ class VurderKravLøser(
     ) {
         if (søknadForVurdering != null) {
             if (vurdering.søknadsdato.årsak == SøknadsdatoÅrsak.SøknadMottatt && søknadForVurdering.mottattTidspunkt.toLocalDate() != vurdering.søknadsdato.dato) {
-                throw UgyldigForespørselException("Søknadsdato for krav må være lik mottatt dato for den digitaliserte søknaden")
+                throw UgyldigForespørselException("Søknadsdato for krav må være lik mottatt dato for den digitaliserte søknaden.")
             }
         }
         val muligRettFra = vurdering.muligRettFra
         if (muligRettFra != null && muligRettFra.dato > vurdering.søknadsdato.dato) {
-            throw UgyldigForespørselException("Med rett fra annen dato enn søknadsdato må den nye rettighetsdatoen være tidligere enn søknadsdatoen")
+            throw UgyldigForespørselException("Med rett fra annen dato enn søknadsdato må den nye rettighetsdatoen være tidligere enn søknadsdatoen.")
         }
     }
 
     private fun validerGyldighet(vurderinger: Set<KravVurdering>, søknaderIBehandling: Set<MottattDokument>) {
         if (!KravValidering.erKravVurderingTilstrekkeligVurdert(søknaderIBehandling, vurderinger)) {
-            throw UgyldigForespørselException("Mangler vurdering av krav for innsendt søknad")
+            throw UgyldigForespørselException("Mangler vurdering av krav for innsendt søknad.")
         }
 
         vurderinger.forEach { vurdering ->
@@ -109,7 +109,7 @@ private fun KravVurderingLøsningDto.tilVurdering(
         )
 
         is TrukketSøknadKravLøsningDto, is GjenopptakKravLøsningDto, is KlageKravLøsningDto, is TilleggsopplysningKravLøsningDto -> throw UgyldigForespørselException(
-            "Kelvin støtter foreløpig ikke ${this.kravType}"
+            "Kelvin støtter foreløpig ikke ${this.kravType}."
         )
     }
 
