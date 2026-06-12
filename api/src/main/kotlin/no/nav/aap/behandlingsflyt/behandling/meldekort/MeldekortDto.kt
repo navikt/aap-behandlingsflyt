@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.meldekort
 
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Meldekort
 import no.nav.aap.komponenter.type.Periode
 import java.time.LocalDate
@@ -19,6 +20,7 @@ data class MeldeperiodeMedMeldekortDto(
     val meldekort: MeldekortDto?,
     val meldeDato: LocalDate?,
     val tidligereMeldekort: List<MeldekortDto> = emptyList(),
+    val meldepliktStatus: Set<MeldepliktStatus>,
 )
 
 data class MeldekortDto(
@@ -27,6 +29,7 @@ data class MeldekortDto(
     val journalpostId: String,
     @Deprecated("Bruk heller meldeDato fra MeldeperiodeMedMeldekortDto")
     val meldeDato: LocalDate,
+    val mottattTidspunkt: LocalDate? = null,
     val oppdatertTidspunkt: LocalDate? = null,
     val begrunnelse: String? = null,
     val oppdatertAv: String? = null,
@@ -59,14 +62,14 @@ fun Meldekort.toDto(
     meldeDato: LocalDate?,
     begrunnelse: String?,
     oppdatertAv: String?,
-    oppdatertTidspunkt: LocalDate?,
     oppdatertAvSaksbehandler: Boolean
 ): MeldekortDto =
     MeldekortDto(
         id = journalpostId.identifikator,
         journalpostId = journalpostId.identifikator,
         meldeDato = meldeDato ?: mottattTidspunkt.toLocalDate(),
-        oppdatertTidspunkt = oppdatertTidspunkt,
+        mottattTidspunkt = mottattTidspunkt.toLocalDate(),
+        oppdatertTidspunkt = opprettetTidspunkt.toLocalDate(),
         begrunnelse = begrunnelse,
         oppdatertAv = oppdatertAv,
         oppdatertAvSaksbehandler = oppdatertAvSaksbehandler,
