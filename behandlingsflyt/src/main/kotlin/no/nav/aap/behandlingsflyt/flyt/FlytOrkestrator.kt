@@ -219,8 +219,6 @@ class FlytOrkestrator(
         while (true) {
             if (gjeldendeSteg.type().status in stoppNårStatus) {
                 loggStopp(behandling, avklaringsbehovene)
-                val oppdatertBehandling = behandlingRepository.hent(behandling.id)
-                behandlingHendelseService.stoppet(oppdatertBehandling, avklaringsbehovene)
                 return
             }
 
