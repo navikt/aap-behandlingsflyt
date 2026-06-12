@@ -6,7 +6,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.ArbeidsGr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisperiodeId
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.ApplikasjonsVersjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
@@ -92,7 +91,6 @@ class UnderveisRepositoryImpl(private val connection: DBConnection) : UnderveisR
             arbeidsgradering = arbeidsGradering,
             trekk = Dagsatser(it.getInt("trekk_dagsatser")),
             brukerAvKvoter = it.getArray("bruker_av_kvoter", String::class).map { Kvote.valueOf(it) }.toSet(),
-            id = UnderveisperiodeId(it.getLong("id")),
             institusjonsoppholdReduksjon = Prosent(it.getInt("institusjonsoppholdreduksjon")),
             meldepliktStatus = it.getEnumOrNull("meldeplikt_status"),
             meldepliktGradering = it.getIntOrNull("meldeplikt_gradering")?.let { Prosent(it) },

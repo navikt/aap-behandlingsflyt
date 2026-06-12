@@ -6,7 +6,6 @@ import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus.I
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.ArbeidsGradering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisperiodeId
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisÅrsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisÅrsak.IKKE_GRUNNLEGGENDE_RETT
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisÅrsak.MELDEPLIKT_FRIST_IKKE_PASSERT
@@ -178,7 +177,6 @@ class MeldeperiodeTilMeldekortBackendJobbUtførerTest {
         trekk = Dagsatser(0),
         brukerAvKvoter = emptySet(),
         meldepliktStatus = meldepliktStatus,
-        id = UnderveisperiodeId(id.also { id += 1 }),
         meldepliktGradering = Prosent.`0_PROSENT`,
     )
 
