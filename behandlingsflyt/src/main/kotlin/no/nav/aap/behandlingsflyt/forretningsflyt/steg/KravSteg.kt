@@ -81,7 +81,7 @@ class KravSteg(
     private fun erTilstrekkeligVurdert(kontekst: FlytKontekstMedPerioder): Boolean {
         val søknaderIBehandling =
             mottattDokumentRepository.hentDokumenterAvType(kontekst.behandlingId, InnsendingType.SØKNAD)
-        val kravVurderinger = kravRepository.hentHvisEksisterer(kontekst.behandlingId)?.vurderinger ?: emptySet()
+        val kravVurderinger = kravRepository.hentHvisEksisterer(kontekst.behandlingId)?.vurderinger.orEmpty()
 
         return KravValidering.erKravVurderingTilstrekkeligVurdert(søknaderIBehandling, kravVurderinger)
     }
