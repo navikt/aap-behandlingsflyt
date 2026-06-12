@@ -12,7 +12,6 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.flate.Historikk
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.vedtak.TotrinnsVurdering
 import no.nav.aap.behandlingsflyt.flyt.BehandlingFlyt
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
-import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.FATTE_VEDTAK_KODE
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
@@ -173,10 +172,10 @@ private fun beslutterVurdering(avklaringsbehovene: Avklaringsbehovene, flyt: Beh
         .filter { it.erIkkeAvbrutt() }
         .filter { it.erTotrinn() }
         .sortedWith(compareBy(flyt.stegComparator) { it.løsesISteg() })
-        .map { tilKvalitetssikring(it) }
+        .map { tilTotrinnsvurdering(it) }
 }
 
-private fun tilKvalitetssikring(it: Avklaringsbehov): TotrinnsVurdering {
+private fun tilTotrinnsvurdering(it: Avklaringsbehov): TotrinnsVurdering {
     return if (it.erTotrinnsVurdert() || it.harVærtSendtTilbakeFraBeslutterTidligere()) {
         val sisteVurdering =
             it.aktivHistorikk.lastOrNull {
