@@ -38,7 +38,7 @@ class VurderKravLøser(
         val søknaderIBehandling =
             mottattDokumentRepository.hentDokumenterAvType(kontekst.behandlingId(), InnsendingType.SØKNAD)
 
-        val nyeVurderinger = løsning.krav_vurderinger.map { vurderingDto ->
+        val nyeVurderinger = løsning.kravVurderinger.map { vurderingDto ->
             vurderingDto.tilVurdering(kontekst.behandlingId(), kontekst.bruker, Instant.now())
         }.toSet()
 

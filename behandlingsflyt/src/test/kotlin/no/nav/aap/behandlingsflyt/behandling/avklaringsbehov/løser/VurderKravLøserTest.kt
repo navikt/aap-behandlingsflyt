@@ -41,7 +41,7 @@ class VurderKravLøserTest {
         )
 
         val løsning = VurderKravLøsning(
-            krav_vurderinger = setOf(
+            kravVurderinger = setOf(
                 NyttKravLøsningDto(
                     journalpostId = JournalpostId("1112223"),
                     begrunnelse = "test",
@@ -64,7 +64,7 @@ class VurderKravLøserTest {
         )
 
         val løsning = VurderKravLøsning(
-            krav_vurderinger = setOf(
+            kravVurderinger = setOf(
                 NyttKravLøsningDto(
                     journalpostId = JournalpostId("1112223"),
                     begrunnelse = "test",
@@ -90,7 +90,7 @@ class VurderKravLøserTest {
         )
 
         val løsning = VurderKravLøsning(
-            krav_vurderinger = setOf(
+            kravVurderinger = setOf(
                 GjenopptakKravLøsningDto(
                     journalpostId = JournalpostId("1112223"),
                     begrunnelse = "test",
@@ -113,7 +113,7 @@ class VurderKravLøserTest {
         )
 
         val løsning = VurderKravLøsning(
-            krav_vurderinger = setOf(
+            kravVurderinger = setOf(
                 NyttKravLøsningDto(
                     journalpostId = JournalpostId("1112223"),
                     begrunnelse = "Gyldig krav",
