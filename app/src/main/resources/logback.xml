@@ -9,10 +9,13 @@
                 </valueMask>
             </decorator>
         </encoder>
-    </appender>
-
-    <appender name="OTEL" class="io.opentelemetry.instrumentation.logback.mdc.v1_0.OpenTelemetryAppender">
-        <appender-ref ref="json"/>
+        <filter class="ch.qos.logback.core.filter.EvaluatorFilter">
+            <evaluator class="ch.qos.logback.classic.boolex.OnMarkerEvaluator">
+                <marker>TEAM_LOGS</marker>
+            </evaluator>
+            <OnMatch>DENY</OnMatch>
+            <OnMismatch>ACCEPT</OnMismatch>
+        </filter>
     </appender>
 
     <appender name="team-logs" class="net.logstash.logback.appender.LogstashTcpSocketAppender">
@@ -23,6 +26,13 @@
             </customFields>
             <includeContext>false</includeContext>
         </encoder>
+        <filter class="ch.qos.logback.core.filter.EvaluatorFilter">
+            <evaluator class="ch.qos.logback.classic.boolex.OnMarkerEvaluator">
+                <marker>TEAM_LOGS</marker>
+            </evaluator>
+            <OnMatch>ACCEPT</OnMatch>
+            <OnMismatch>DENY</OnMismatch>
+        </filter>
     </appender>
 
     <appender name="auditLogger" class="com.papertrailapp.logback.Syslog4jAppender">
@@ -43,23 +53,17 @@
     </appender>
 
     <!-- additivity=false gjør at loggene ikke blir sendt til andre loggappendere -->
-    <logger level="TRACE" name="team-logs" additivity="false">
-        <appender-ref ref="team-logs"/>
+    <logger level="INFO" name="team-logs" additivity="false">
+        <appender-ref ref="team-logs" />
     </logger>
 
-    <logger level="WARN" name="no.nav.aap.komponenter.httpklient.httpclient.tokenprovider"/>
-
-    <logger level="WARN" name="org.postgresql" additivity="false">
-        <appender-ref ref="OTEL"/>
-    </logger>
+    <logger level="WARN" name="no.nav.aap.komponenter.httpklient.httpclient.tokenprovider" />
 
     <logger level="INFO" name="auditLogger" additivity="false">
-        <appender-ref ref="auditLogger"/>
+        <appender-ref ref="auditLogger" />
     </logger>
 
-
     <root level="INFO">
-        <appender-ref ref="OTEL"/>
+        <appender-ref ref="json" />
     </root>
-
 </configuration>
