@@ -350,7 +350,7 @@ public enum class Definisjon(
     ),
 
     VURDER_KRAV(
-        kode = AvklaringsbehovKode.`5037`,
+        kode = AvklaringsbehovKode.`5038`,
         type = BehovType.MANUELT_PÅKREVD,
         løsesISteg = StegType.KRAV,
         løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL),

@@ -19,7 +19,7 @@ class VurderKravLøsning(
         "behovstype",
         required = true,
         defaultValue = VURDER_KRAV_KODE
-    ) val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`5037`
+    ) val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`5038`
 ) : EnkeltAvklaringsbehovLøsning {
     override fun løs(
         repositoryProvider: RepositoryProvider,
