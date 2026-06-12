@@ -16,6 +16,7 @@ import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingRepos
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingService
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Status
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
+import no.nav.aap.behandlingsflyt.behandling.gregulering.GReguleringService
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.mdc.LogKontekst
@@ -99,7 +100,7 @@ fun NormalOpenAPIRoute.brevApi(
                 ) { behandlingReferanse ->
                     class DataResultat(
                         val harIkkeGjortNoenVurderinger: Boolean,
-                        val brevGrunnlag: List<Pair<Definisjon, BrevGrunnlag.Brev>>
+                        val brevGrunnlag: List<Pair<Definisjon, BrevGrunnlag.Brev>>,
                     )
 
                     val databasetilstand = dataSource.transaction(readOnly = true) { connection ->
@@ -115,6 +116,8 @@ fun NormalOpenAPIRoute.brevApi(
                         val sak = SakService(repositoryProvider, gatewayProvider).hent(behandling.sakId)
                         val personIdent = sak.person.aktivIdent()
                         val personinfo = personinfoGateway.hentPersoninfoForIdent(personIdent, token())
+                        val erGrunnbeløpetEndret = GReguleringService(repositoryProvider, gatewayProvider).erGrunnbeløpEndretForRettighetsTypeTidslinje(behandling.id)
+
 
                         val skrivBrevAvklaringsbehov = avklaringsbehovene
                             .hentBehovForDefinisjon(
@@ -137,8 +140,8 @@ fun NormalOpenAPIRoute.brevApi(
                         DataResultat(
                             harIkkeGjortNoenVurderinger = avklaringsbehovene
                                 .alle()
-                            .filter { it.erTotrinn() }
-                            .none { it.brukere().contains(bruker().ident) },
+                                .filter { it.erTotrinn() }
+                                .none { it.brukere().contains(bruker().ident) },
                             brevGrunnlag = brevbestillinger.map { brevbestilling ->
                                 val brevbestillingResponse =
                                     brevbestillingService.hentBrevbestilling(brevbestilling.referanse)
@@ -200,6 +203,7 @@ fun NormalOpenAPIRoute.brevApi(
                                     ),
                                     signaturer = signaturer,
                                     harTilgangTilÅSendeBrev = false, // nb. settes utenfor transaksjonen pga kall til tilgang som vi ønsker skal være async
+                                    erGrunnbeløpetEndret = erGrunnbeløpetEndret,
                                 )
                             })
                     }

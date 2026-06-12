@@ -8,6 +8,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
@@ -72,5 +73,21 @@ class GReguleringService(
             return true
         }
         return false
+    }
+        /*
+         * Er grunnbeløpet endret i perioden som tidslinjen dekker
+         */
+    fun erGrunnbeløpEndretForRettighetsTypeTidslinje(behandlingId: BehandlingId): Boolean {
+        val rettighetsTypeTidslinje = underveisRepository.hentHvisEksisterer(behandlingId)
+                ?.somTidslinje().orEmpty()
+                .mapNotNull { it.rettighetsType }
+                .komprimer()
+        val grunnbeløpTidslinje = Grunnbeløp.tilTidslinje()
+
+        val rettighetstypeKombinertMedGrunnbeløp = rettighetsTypeTidslinje
+            .innerJoin(grunnbeløpTidslinje) { _, beløp -> beløp }
+            .komprimer()
+
+        return rettighetstypeKombinertMedGrunnbeløp.perioder().toSet().size > 1
     }
 }
