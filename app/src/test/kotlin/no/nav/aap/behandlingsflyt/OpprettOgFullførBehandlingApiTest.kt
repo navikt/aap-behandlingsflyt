@@ -85,7 +85,6 @@ class OpprettOgFullførBehandlingApiTest {
         @JvmStatic
         @BeforeAll
         fun beforeAll() {
-            System.setProperty("NAIS_CLUSTER_NAME", "LOCAL")
             server.start()
         }
 

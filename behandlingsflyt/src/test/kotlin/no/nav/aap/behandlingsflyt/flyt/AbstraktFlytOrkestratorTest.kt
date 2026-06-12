@@ -174,7 +174,6 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
         @JvmStatic
         fun setup() {
             dataSource = TestDataSource()
-            System.setProperty("NAIS_CLUSTER_NAME", "LOCAL")
         }
 
         @AfterAll
