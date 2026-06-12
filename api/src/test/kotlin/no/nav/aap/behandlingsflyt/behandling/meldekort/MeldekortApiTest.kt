@@ -572,15 +572,21 @@ class MeldekortApiTest : BaseApiTest() {
         val sak = opprettInMemorySak()
         val behandling = opprettBehandling(sak, TypeBehandling.Førstegangsbehandling)
 
-        InMemoryVedtakRepository.lagre(behandling.id, LocalDateTime.now(), LocalDate.now())
-
         val dag1 = 6 januar 2025
         val dag2 = 7 januar 2025
+
+        InMemoryUnderveisRepository.lagre(
+            behandlingId = behandling.id,
+            underveisperioder = listOf(underveisperiode(Utfall.OPPFYLT, Periode(dag1, dag2))),
+            input = object : Faktagrunnlag {}
+        )
+
+        InMemoryVedtakRepository.lagre(behandling.id, LocalDateTime.now(), LocalDate.now())
 
         val request = OppdaterMeldekortRequest(
             meldeperiode = Periode(dag1, dag2),
             begrunnelse = "Korrigering av timer",
-            meldeDato = dag1,
+            meldeDato = dag2.plusDays(1),
             dager = setOf(
                 DagDto(dato = dag1, timerArbeidet = 7.5),
                 DagDto(dato = dag2, timerArbeidet = 3.0),

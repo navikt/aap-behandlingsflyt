@@ -116,6 +116,13 @@ public enum class Definisjon(
         kreverToTrinn = true,
         løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL)
     ),
+    AVKLAR_STUDENT_V2(
+        kode = AvklaringsbehovKode.`5037`,
+        type = BehovType.MANUELT_PÅKREVD,
+        løsesISteg = StegType.AVKLAR_STUDENT_V2,
+        kreverToTrinn = true,
+        løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL)
+    ),
     AVKLAR_SAMORDNING_SYKESTIPEND(
         kode = AvklaringsbehovKode.`5034`,
         type = BehovType.MANUELT_FRIVILLIG,

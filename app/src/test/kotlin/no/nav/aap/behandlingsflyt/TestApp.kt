@@ -31,6 +31,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.FastlegeDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.FastlegeKontaktInformasjonDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Ident
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.JaNei
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.JaNeiVetIkke
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ManueltOppgittBarn
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.OppgitteBarn
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.StudentStatus
@@ -295,7 +296,14 @@ private fun genererBarn(dto: TestBarn): TestPerson {
 }
 
 private fun mapTilSøknad(dto: OpprettTestcaseDTO, urelaterteBarn: List<TestPerson>, fastlege: BehandlerDto?): SøknadV0 {
-    val erStudent = if (dto.student) StudentStatus.Ja else StudentStatus.Nei
+    val søknadStudentDto = if (dto.student) {
+        SøknadStudentDto(
+            erStudent = StudentStatus.Avbrutt,
+            kommeTilbake = JaNeiVetIkke.Ja
+        )
+    } else {
+        null
+    }
     val harYrkesskadeFraSøknad = dto.yrkesskader.any { it.kilde == Kilde.SØKNAD && it.harYrkesskade }
     val harYrkesskade = if (harYrkesskadeFraSøknad) "JA" else "NEI"
 
@@ -324,7 +332,7 @@ private fun mapTilSøknad(dto: OpprettTestcaseDTO, urelaterteBarn: List<TestPers
             stønad = dto.andreUtbetalinger?.stønad,
             afp = dto.andreUtbetalinger?.afp
         ),
-        student = SøknadStudentDto(erStudent),
+        student = søknadStudentDto,
         yrkesskade = harYrkesskade,
         oppgitteBarn = oppgitteBarn,
         medlemskap = SøknadMedlemskapDto(harMedlemskap, null, null, null, emptyList()),

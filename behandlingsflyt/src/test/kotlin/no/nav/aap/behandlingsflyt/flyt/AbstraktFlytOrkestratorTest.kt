@@ -730,6 +730,29 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
         )
     }
 
+    @JvmName("løsSykdomSomPotensieltOppfyltStudentExt")
+    protected fun Behandling.løsSykdomSomPotensieltOppfyltStudent(vurderingGjelderFra: LocalDate): Behandling {
+        return løsAvklaringsBehov(
+            this,
+            AvklarSykdomLøsning(
+                løsningerForPerioder = listOf(
+                    SykdomsvurderingLøsningDto(
+                        begrunnelse = "Er syk som student",
+                        dokumenterBruktIVurdering = listOf(JournalpostId("123123")),
+                        harSkadeSykdomEllerLyte = true,
+                        erSkadeSykdomEllerLyteVesentligdel = null,
+                        erNedsettelseIArbeidsevneMerEnnHalvparten = null,
+                        erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
+                        harNedsattArbeidsevne = ArbeidsevneNedsattValg.NEI_MEN_STUDENT,
+                        yrkesskadeBegrunnelse = null,
+                        fom = vurderingGjelderFra,
+                        tom = null,
+                    )
+                )
+            ),
+        )
+    }
+
     @JvmName("mellomlagreSykdomExt")
     protected fun Behandling.mellomlagreSykdom(): Behandling {
         return mellomlagreSykdom(this)
