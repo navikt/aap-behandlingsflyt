@@ -21,7 +21,7 @@ sealed interface KravVurdering {
     }
 }
 
-interface KravMedDato : KravVurdering {
+interface KravMedDato {
     val søknadsdato: Søknadsdato
     val muligRettFra: MuligRettFra?
     val kravdato: LocalDate
@@ -37,7 +37,7 @@ data class NyttKrav(
     override val søknadsdato: Søknadsdato,
     override val muligRettFra: MuligRettFra?,
     override val kravdato: LocalDate,
-) : KravMedDato
+) : KravMedDato, KravVurdering
 
 data class TrukketSøknad(
     override val journalpostId: JournalpostId,
@@ -57,7 +57,7 @@ data class Gjenopptak(
     override val søknadsdato: Søknadsdato,
     override val muligRettFra: MuligRettFra?,
     override val kravdato: LocalDate,
-) : KravMedDato
+) : KravMedDato, KravVurdering
 
 data class Klage(
     override val journalpostId: JournalpostId,
