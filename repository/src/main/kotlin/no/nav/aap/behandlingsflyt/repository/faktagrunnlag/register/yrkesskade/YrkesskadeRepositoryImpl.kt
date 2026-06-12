@@ -9,6 +9,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.lookup.repository.Factory
 import org.slf4j.LoggerFactory
+import java.time.Instant
 import java.time.LocalDateTime
 
 class YrkesskadeRepositoryImpl(private val connection: DBConnection) : YrkesskadeRepository {
@@ -100,16 +101,23 @@ class YrkesskadeRepositoryImpl(private val connection: DBConnection) : Yrkesskad
         val yrkesskadeId: Long? = registerYrkesskader
             ?.yrkesskader
             ?.takeIf { it.isNotEmpty() }
-            ?.let { connection.executeReturnKey("INSERT INTO YRKESSKADE DEFAULT VALUES") }
+            ?.let {
+                connection.executeReturnKey("INSERT INTO YRKESSKADE (opprettet_tid) VALUES (?)") {
+                    setParams {
+                        setInstant(1, Instant.now())
+                    }
+                }
+            }
 
         // Grunnlag kobler de to — begge kan være null uavhengig av hverandre
         connection.execute(
-            "INSERT INTO YRKESSKADE_GRUNNLAG (BEHANDLING_ID, YRKESSKADE_ID, OPPGITT_YRKESSKADE_I_SOKNAD) VALUES (?, ?, ?)"
+            "INSERT INTO YRKESSKADE_GRUNNLAG (BEHANDLING_ID, YRKESSKADE_ID, OPPGITT_YRKESSKADE_I_SOKNAD, OPPRETTET_TID) VALUES (?, ?, ?, ?)"
         ) {
             setParams {
                 setLong(1, behandlingId.toLong())
                 setLong(2, yrkesskadeId)   // nullable — setter NULL hvis ingen registerdata
                 setBoolean(3, oppgittYrkesskadeISøknad)
+                setInstant(4, Instant.now())
             }
         }
 
@@ -174,11 +182,12 @@ class YrkesskadeRepositoryImpl(private val connection: DBConnection) : Yrkesskad
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
         require(fraBehandling != tilBehandling)
         connection.execute(
-            "INSERT INTO YRKESSKADE_GRUNNLAG (BEHANDLING_ID, YRKESSKADE_ID, OPPGITT_YRKESSKADE_I_SOKNAD) SELECT ?, YRKESSKADE_ID, OPPGITT_YRKESSKADE_I_SOKNAD FROM YRKESSKADE_GRUNNLAG WHERE AKTIV AND BEHANDLING_ID = ?"
+            "INSERT INTO YRKESSKADE_GRUNNLAG (BEHANDLING_ID, OPPRETTET_TID, YRKESSKADE_ID, OPPGITT_YRKESSKADE_I_SOKNAD) SELECT ?, ?, YRKESSKADE_ID, OPPGITT_YRKESSKADE_I_SOKNAD FROM YRKESSKADE_GRUNNLAG WHERE AKTIV AND BEHANDLING_ID = ?"
         ) {
             setParams {
                 setLong(1, tilBehandling.toLong())
-                setLong(2, fraBehandling.toLong())
+                setInstant(2, Instant.now())
+                setLong(3, fraBehandling.toLong())
             }
         }
     }

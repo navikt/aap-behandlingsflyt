@@ -25,6 +25,7 @@ import java.math.RoundingMode
 import java.time.LocalDate
 import java.time.Year
 import java.time.YearMonth
+import java.time.LocalDateTime
 
 class BeregningTest {
 
@@ -117,7 +118,8 @@ class BeregningTest {
                 andelAvNedsettelsen = Prosent(40),
                 erÅrsakssammenheng = true,
                 relevanteSaker = listOf(YrkesskadeSak("yrkesskadesaken", null)),
-                vurdertAv = "saksbehandler"
+                vurdertAv = "saksbehandler",
+            vurdertTidspunkt = LocalDateTime.now()
             ),
             ytterligereNedsettelsesDato = null,
             yrkesskadeBeløpVurderinger = listOf(
@@ -164,7 +166,8 @@ class BeregningTest {
                 andelAvNedsettelsen = Prosent(30),
                 erÅrsakssammenheng = true,
                 relevanteSaker = listOf(YrkesskadeSak("yrkesskadesaken", null)),
-                vurdertAv = "saksbehandler"
+                vurdertAv = "saksbehandler",
+            vurdertTidspunkt = LocalDateTime.now()
             ),
             ytterligereNedsettelsesDato = LocalDate.of(2023, 1, 1),
             yrkesskadeBeløpVurderinger = listOf(
