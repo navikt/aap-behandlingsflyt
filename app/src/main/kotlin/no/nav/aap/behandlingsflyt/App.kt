@@ -88,6 +88,7 @@ import no.nav.aap.behandlingsflyt.hendelse.kafka.foreldrepenger.Foreldrepengeved
 import no.nav.aap.behandlingsflyt.hendelse.kafka.inst2.InstitusjonsOppholdKafkaKonsument
 import no.nav.aap.behandlingsflyt.hendelse.kafka.klage.KabalKafkaKonsument
 import no.nav.aap.behandlingsflyt.hendelse.kafka.person.PdlHendelseKafkaKonsument
+import no.nav.aap.behandlingsflyt.hendelse.kafka.sykepenger.SykepengeutbetalingKafkaKonsument
 import no.nav.aap.behandlingsflyt.hendelse.kafka.sykepenger.SykepengevedtakKafkaKonsument
 import no.nav.aap.behandlingsflyt.hendelse.kafka.tilbakekreving.TilbakekrevingKafkaKonsument
 import no.nav.aap.behandlingsflyt.hendelse.kafka.uføre.UførevedtakKafkaKonsument
@@ -372,6 +373,15 @@ private fun Application.startKafkakonsumenter(
         )
         startKonsument(
             SykepengevedtakKafkaKonsument(
+                config = KafkaConsumerConfig(),
+                dataSource = dataSource,
+                repositoryRegistry = repositoryRegistry,
+                closeTimeout = AppConfig.stansArbeidTimeout,
+                gatewayProvider = gatewayProvider
+            )
+        )
+        startKonsument(
+            SykepengeutbetalingKafkaKonsument(
                 config = KafkaConsumerConfig(),
                 dataSource = dataSource,
                 repositoryRegistry = repositoryRegistry,
