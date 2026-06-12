@@ -90,7 +90,7 @@ class KravSteg(
         val søknaderIBehandling =
             mottattDokumentRepository.hentDokumenterAvType(kontekst.behandlingId, InnsendingType.SØKNAD)
         val harSøknadIBehandling = søknaderIBehandling.isNotEmpty()
-        val kravVurderinger = kravRepository.hentHvisEksisterer(kontekst.behandlingId)?.vurderinger ?: emptyList()
+        val kravVurderinger = kravRepository.hentHvisEksisterer(kontekst.behandlingId)?.vurderinger.orEmpty()
 
         val erAlleSøknaderIBehandlingAutomatiskVurdert =
             søknaderIBehandling.all { søknad -> kravVurderinger.any { it.journalpostId == søknad.referanse.asJournalpostId && it.erAutomatiskVurdert() } }
