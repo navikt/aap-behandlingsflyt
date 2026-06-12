@@ -40,7 +40,7 @@ private val ANTALL_TIMER_I_MELDEPERIODE =
 
 /** § 11-23. Reduksjon ved delvis nedsatt arbeidsevne
  *
- * Graderer arbeid der hvor det ikke er avslått pga en regel tidliger i løpet
+ * Graderer arbeid der hvor det ikke er avslått pga en regel tidligere i løpet
  *
  * - Arbeid fra meldeplikt
  */
@@ -216,7 +216,7 @@ class GraderingArbeidRegel : UnderveisRegel {
         }
         return opplysningerOmArbeid.mapValue { arbeid ->
             requireNotNull(arbeid.grenseverdi) {
-                "grenseverdi for hvor mye medlemmet har  lov til å jobbe må være satt for å kunne gradere basert på timer arbeidet"
+                "grenseverdi for hvor mye medlemmet har lov til å jobbe må være satt for å kunne gradere basert på timer arbeidet"
             }
             val fastsattArbeidsevne = arbeid.arbeidsevne ?: `0_PROSENT`
             val andelArbeidGittLeverteTimer = if (arbeid.harLevertTimer()) andelArbeid else `0_PROSENT`

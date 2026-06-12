@@ -3,6 +3,9 @@ package no.nav.aap.behandlingsflyt.datadeling
 import no.nav.aap.komponenter.type.Periode
 import java.time.LocalDate
 
+/**
+ * Info om sak og saksbehandling til deling til api-intern.
+ */
 data class SakStatus(
     val sakId: String,
     val status: DatadelingBehandlingStatus,
