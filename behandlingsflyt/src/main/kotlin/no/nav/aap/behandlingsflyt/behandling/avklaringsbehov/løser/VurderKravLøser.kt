@@ -46,7 +46,7 @@ class VurderKravLøser(
 
         val iverksatteVurderinger = kontekst.kontekst.forrigeBehandlingId?.let {
             kravRepository.hentHvisEksisterer(it)
-        }?.vurderinger ?: emptySet()
+        }?.vurderinger.orEmpty()
 
         val alleVurderinger = nyeVurderinger + iverksatteVurderinger
 
