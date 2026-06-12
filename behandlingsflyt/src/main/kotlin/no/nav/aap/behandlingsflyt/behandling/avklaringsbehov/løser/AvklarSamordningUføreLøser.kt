@@ -11,6 +11,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.lookup.repository.RepositoryProvider
+import java.time.LocalDateTime
 
 class AvklarSamordningUføreLøser(
     private val samordningUføreRepository: SamordningUføreRepository,
@@ -38,7 +39,8 @@ class AvklarSamordningUføreLøser(
                         uføregradTilSamordning = it.uføregradTilSamordning.let(::Prosent)
                     )
                 },
-                vurdertAv = kontekst.bruker.ident
+                vurdertAv = kontekst.bruker.ident,
+                vurdertTidspunkt = LocalDateTime.now()
             )
         )
         return LøsningsResultat("Vurdert samordning uføre")
