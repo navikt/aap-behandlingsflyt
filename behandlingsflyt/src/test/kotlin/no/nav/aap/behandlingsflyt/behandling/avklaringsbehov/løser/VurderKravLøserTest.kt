@@ -34,10 +34,11 @@ class VurderKravLøserTest {
     private val løser = VurderKravLøser(InMemoryKravRepository, InMemoryMottattDokumentRepository)
 
     @Test
-    fun `skal feile hvis søknadsdato er ulik dato for mottatt søknad`() {
+    fun `skal feile hvis søknadsdato er ulik dato for mottatt søknad i samme behandling`() {
+        val sakId = SakId(Random.nextLong())
         val behandlingId = BehandlingId(Random.nextLong())
         InMemoryMottattDokumentRepository.lagre(
-            mottattDokument(behandlingId, journalpostId = "1112223", mottattTidspunkt = (15 januar 2026).atStartOfDay())
+            mottattDokument(behandlingId, sakId, journalpostId = "1112223", mottattTidspunkt = (15 januar 2026).atStartOfDay())
         )
 
         val løsning = VurderKravLøsning(
@@ -52,15 +53,43 @@ class VurderKravLøserTest {
         )
 
         assertThrows<UgyldigForespørselException> {
-            løser.løs(kontekst(behandlingId), løsning)
+            løser.løs(kontekst(sakId, behandlingId), løsning)
         }
     }
 
     @Test
+    fun `skal feile hvis søknadsdato er ulik dato for mottatt søknad i samme sak`() {
+        val sakId = SakId(Random.nextLong())
+        val gammelBehandlingId = BehandlingId(Random.nextLong())
+        val behandlingId = BehandlingId(Random.nextLong())
+
+        InMemoryMottattDokumentRepository.lagre(
+            mottattDokument(gammelBehandlingId, sakId, journalpostId = "111122224", mottattTidspunkt = (10 januar 2026).atStartOfDay())
+        )
+
+        val løsning = VurderKravLøsning(
+            kravVurderinger = setOf(
+                NyttKravLøsningDto(
+                    journalpostId = JournalpostId("111122224"),
+                    begrunnelse = "Ny søknad",
+                    søknadsdato = Søknadsdato(15 januar 2026, SøknadsdatoÅrsak.SøknadMottatt),
+                    muligRettFra = null,
+                )
+            )
+        )
+
+        assertThrows<UgyldigForespørselException> {
+            løser.løs(kontekst(sakId, behandlingId), løsning)
+        }
+    }
+
+
+    @Test
     fun `skal feile hvis mulig rett fra dato er etter søknadsdato`() {
+        val sakId = SakId(Random.nextLong())
         val behandlingId = BehandlingId(Random.nextLong())
         InMemoryMottattDokumentRepository.lagre(
-            mottattDokument(behandlingId, journalpostId = "1112223", mottattTidspunkt = (15 januar 2026).atStartOfDay())
+            mottattDokument(behandlingId, sakId, journalpostId = "1112223", mottattTidspunkt = (15 januar 2026).atStartOfDay())
         )
 
         val løsning = VurderKravLøsning(
@@ -78,15 +107,16 @@ class VurderKravLøserTest {
         )
 
         assertThrows<UgyldigForespørselException> {
-            løser.løs(kontekst(behandlingId), løsning)
+            løser.løs(kontekst(sakId, behandlingId), løsning)
         }
     }
 
     @Test
     fun `skal feile for kravtyper som ikke er implementert`() {
+        val sakId = SakId(Random.nextLong())
         val behandlingId = BehandlingId(Random.nextLong())
         InMemoryMottattDokumentRepository.lagre(
-            mottattDokument(behandlingId, journalpostId = "1112223")
+            mottattDokument(behandlingId, sakId, journalpostId = "1112223")
         )
 
         val løsning = VurderKravLøsning(
@@ -101,15 +131,16 @@ class VurderKravLøserTest {
         )
 
         assertThrows<UgyldigForespørselException> {
-            løser.løs(kontekst(behandlingId), løsning)
+            løser.løs(kontekst(sakId, behandlingId), løsning)
         }
     }
 
     @Test
     fun `skal mappe nytt krav`() {
+        val sakId = SakId(Random.nextLong())
         val behandlingId = BehandlingId(Random.nextLong())
         InMemoryMottattDokumentRepository.lagre(
-            mottattDokument(behandlingId, journalpostId = "1112223", mottattTidspunkt = (15 januar 2026).atStartOfDay())
+            mottattDokument(behandlingId, sakId, journalpostId = "1112223", mottattTidspunkt = (15 januar 2026).atStartOfDay())
         )
 
         val løsning = VurderKravLøsning(
@@ -123,7 +154,7 @@ class VurderKravLøserTest {
             )
         )
 
-        val resultat = løser.løs(kontekst(behandlingId), løsning)
+        val resultat = løser.løs(kontekst(sakId, behandlingId), løsning)
 
         val lagretVurdering = InMemoryKravRepository.hentHvisEksisterer(behandlingId)!!.vurderinger.single() as NyttKrav
         assertThat(lagretVurdering.journalpostId).isEqualTo(JournalpostId("1112223"))
@@ -131,20 +162,21 @@ class VurderKravLøserTest {
         assertThat(lagretVurdering.begrunnelse).isEqualTo("Gyldig krav")
         assertThat(resultat.begrunnelse).isEqualTo("Fullført")
     }
-
-    private fun kontekst(behandlingId: BehandlingId): AvklaringsbehovKontekst =
+    
+    private fun kontekst(sakId: SakId, behandlingId: BehandlingId): AvklaringsbehovKontekst =
         AvklaringsbehovKontekst(
             Bruker("Z123456"),
-            FlytKontekst(SakId(Random.nextLong()), behandlingId, null, TypeBehandling.Førstegangsbehandling)
+            FlytKontekst(sakId, behandlingId, null, TypeBehandling.Førstegangsbehandling)
         )
 
     private fun mottattDokument(
         behandlingId: BehandlingId,
+        sakId: SakId,
         journalpostId: String = "1112223",
         mottattTidspunkt: LocalDateTime = LocalDateTime.now(),
     ) = MottattDokument(
         referanse = InnsendingReferanse(JournalpostId(journalpostId)),
-        sakId = SakId(Random.nextLong()),
+        sakId = sakId,
         behandlingId = behandlingId,
         mottattTidspunkt = mottattTidspunkt,
         type = InnsendingType.SØKNAD,

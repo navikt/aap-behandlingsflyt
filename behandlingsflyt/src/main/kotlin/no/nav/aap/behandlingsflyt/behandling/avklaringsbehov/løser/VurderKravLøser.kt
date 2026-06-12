@@ -35,14 +35,14 @@ class VurderKravLøser(
     )
 
     override fun løs(kontekst: AvklaringsbehovKontekst, løsning: VurderKravLøsning): LøsningsResultat {
-        val søknaderIBehandling =
-            mottattDokumentRepository.hentDokumenterAvType(kontekst.behandlingId(), InnsendingType.SØKNAD)
+        val søknaderISak =
+            mottattDokumentRepository.hentDokumenterAvType(kontekst.sakId(), InnsendingType.SØKNAD)
 
         val nyeVurderinger = løsning.kravVurderinger.map { vurderingDto ->
             vurderingDto.tilVurdering(kontekst.behandlingId(), kontekst.bruker, Instant.now())
         }.toSet()
 
-        validerGyldighet(nyeVurderinger, søknaderIBehandling)
+        validerGyldighet(kontekst.behandlingId(), nyeVurderinger, søknaderISak)
 
         val iverksatteVurderinger = kontekst.kontekst.forrigeBehandlingId?.let {
             kravRepository.hentHvisEksisterer(it)
@@ -70,7 +70,13 @@ class VurderKravLøser(
         }
     }
 
-    private fun validerGyldighet(vurderinger: Set<KravVurdering>, søknaderIBehandling: Set<MottattDokument>) {
+    private fun validerGyldighet(
+        behnadlingId: BehandlingId,
+        vurderinger: Set<KravVurdering>,
+        søknaderISak: Set<MottattDokument>
+    ) {
+        val søknaderIBehandling = søknaderISak.filter { it.behandlingId == behnadlingId }.toSet()
+
         if (!KravValidering.erKravVurderingTilstrekkeligVurdert(søknaderIBehandling, vurderinger)) {
             throw UgyldigForespørselException("Mangler vurdering av krav for innsendt søknad.")
         }
@@ -79,7 +85,7 @@ class VurderKravLøser(
             if (vurdering is KravMedDato) {
                 validerKravMedDato(
                     vurdering,
-                    søknaderIBehandling.find { it.referanse.asJournalpostId == vurdering.journalpostId })
+                    søknaderISak.find { it.referanse.asJournalpostId == vurdering.journalpostId })
             }
 
         }
