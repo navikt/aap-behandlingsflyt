@@ -42,5 +42,6 @@ data class FullmektigLøsningDto(
         fullmektigIdent = this.fullmektigIdentMedType,
         fullmektigNavnOgAdresse = this.fullmektigNavnOgAdresse,
         vurdertAv = vurdertAv.ident,
+        opprettet = java.time.Instant.now(),
     )
 }
