@@ -22,6 +22,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadStudentDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadV0
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.test.minimalGatewayProvider
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.type.Periode
@@ -231,12 +232,19 @@ class OrdinærAapFlytTest(val unleashGateway: KClass<UnleashGateway>) : Abstrakt
             ),
         ).medKontekst {
             assertThat(behandling.status()).isEqualTo(Status.UTREDES)
-            assertThat(åpneAvklaringsbehov.map { it.definisjon })
-                .containsExactlyInAnyOrder(
-                    Definisjon.VURDER_KRAV,
-                    Definisjon.MANUELT_SATT_PÅ_VENT,
-                    Definisjon.AVKLAR_SYKDOM
-                )
+
+            if (unleashGateway.objectInstance!!.isEnabled(BehandlingsflytFeature.KravSteg)) {
+                assertThat(åpneAvklaringsbehov.map { it.definisjon })
+                    .containsExactlyInAnyOrder(
+                        Definisjon.VURDER_KRAV,
+                        Definisjon.MANUELT_SATT_PÅ_VENT,
+                        Definisjon.AVKLAR_SYKDOM
+                    )
+            } else {
+                assertThat(åpneAvklaringsbehov.map { it.definisjon })
+                    .containsExactlyInAnyOrder(Definisjon.MANUELT_SATT_PÅ_VENT, Definisjon.AVKLAR_SYKDOM)
+            }
+
         }
     }
 }
