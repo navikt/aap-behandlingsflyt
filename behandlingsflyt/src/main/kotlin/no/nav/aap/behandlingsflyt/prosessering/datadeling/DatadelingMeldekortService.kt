@@ -5,14 +5,18 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveis
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Meldekort
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.ArbeidIPeriodeDTO
+import no.nav.aap.behandlingsflyt.kontrakt.datadeling.ArbeidsgraderingDTO
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.DetaljertMeldekortDTO
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
@@ -53,11 +57,21 @@ class DatadelingMeldekortService(
             }.ifEmpty { return null }
 
         val underveisGrunnlag = underveisRepository.hentHvisEksisterer(behandlingId)
-        val helePerioden = underveisGrunnlag?.somTidslinje()?.helePerioden() ?: sak.rettighetsperiodeEttÅrFraStartDato()
+        val underveistidslinje = underveisGrunnlag?.somTidslinje()
+        val helePerioden = underveistidslinje?.helePerioden() ?: sak.rettighetsperiodeEttÅrFraStartDato()
         val meldePeriodene = meldeperiodeRepository.hentMeldeperioder(behandlingId, helePerioden)
 
+        val arbeidsgradering = underveistidslinje.orEmpty().map {
+            Arbeidsgradering(
+                benyttetGrenseverdi = it.grenseverdi.prosentverdi(),
+                gradering = it.arbeidsgradering.gradering.prosentverdi(),
+                fastsattArbeidsevne = it.arbeidsgradering.fastsattArbeidsevne.prosentverdi(),
+                arbeidetOverGrenseverdi = it.arbeidsgradering.andelArbeid.prosentverdi() > it.grenseverdi.prosentverdi()
+            )
+        }
+
         return if (meldePeriodene.isNotEmpty()) {
-            filtrerOgMapMeldekort(meldekortene, meldePeriodene, personIdent, sak, behandlingId)
+            filtrerOgMapMeldekort(meldekortene, meldePeriodene, personIdent, sak, behandlingId, arbeidsgradering)
         } else {
             log.warn("Ingen meldeperioder funnet for behandlingId=${behandlingId.id}")
             null
@@ -68,8 +82,9 @@ class DatadelingMeldekortService(
         meldekortene: List<Meldekort>,
         meldePeriodene: List<Periode>,
         personIdent: Ident,
-        sak: no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak,
-        behandlingId: BehandlingId
+        sak: Sak,
+        behandlingId: BehandlingId,
+        arbeidsgradering: Tidslinje<Arbeidsgradering>
     ): List<DetaljertMeldekortDTO> {
         return meldekortene.mapNotNull { meldekort ->
             val arbeidsperiode = meldekort.arbeidsperiode()
@@ -77,32 +92,46 @@ class DatadelingMeldekortService(
 
             when {
                 arbeidsperiode == null -> {
-                    log.warn(
+                    print(
                         "Meldekort uten arbeidstimer ble ignorert. journalpostId=${meldekort.journalpostId.identifikator}, behandlingId=${behandlingId.id}"
-                    )
+                    )//???
                     null
                 }
 
                 meldekortetsPeriode == null -> {
-                    log.warn(
+                    print(
                         "Meldekort med arbeidstimer som ikke samsvarer med noen meldekortperiode for behandlingen ble ignorert. journalpostId=${meldekort.journalpostId.identifikator}, behandlingId=${behandlingId.id}, arbeidsperiode=$arbeidsperiode"
                     )
+                    ///?
                     null
                 }
 
                 else -> tilKontrakt(
-                    meldekort, personIdent, sak.saksnummer, behandlingId, meldekortetsPeriode
+                    meldekort = meldekort,
+                    personIdent = personIdent,
+                    saksnummer = sak.saksnummer,
+                    behandlingId = behandlingId,
+                    meldeperiode = meldekortetsPeriode,
+                    arbeidsgradering = arbeidsgradering
                 )
             }
         }
     }
 
-    internal fun tilKontrakt(
+    private data class Arbeidsgradering(
+        val benyttetGrenseverdi: Int,
+        val gradering: Int,
+        val fastsattArbeidsevne: Int,
+        val arbeidetOverGrenseverdi: Boolean
+    )
+
+    private fun tilKontrakt(
         meldekort: Meldekort,
         personIdent: Ident,
         saksnummer: Saksnummer,
         behandlingId: BehandlingId,
         meldeperiode: Periode,
+        arbeidsgradering: Tidslinje<Arbeidsgradering>,
     ): DetaljertMeldekortDTO {
         return DetaljertMeldekortDTO(
             personIdent = personIdent.identifikator,
@@ -117,10 +146,21 @@ class DatadelingMeldekortService(
                     it.periode.fom, it.periode.tom, it.timerArbeid.antallTimer
                 )
             },
+            arbeidsgradering = arbeidsgradering.begrensetTil(Periode(meldeperiode.fom, meldeperiode.tom)).komprimer()
+                .segmenter().map { (periode, arbeidsgradering) ->
+                    ArbeidsgraderingDTO(
+                        periodeFom = periode.fom,
+                        periodeTom = periode.tom,
+                        benyttetGrenseverdi = arbeidsgradering.benyttetGrenseverdi,
+                        gradering = arbeidsgradering.gradering,
+                        fastsattArbeidsevne = arbeidsgradering.fastsattArbeidsevne,
+                        harArbeidetOverGrenseverdi = arbeidsgradering.arbeidetOverGrenseverdi
+                    )
+                }
         )
     }
 
-    private fun finnMeldekortetsPeriode(
+    internal fun finnMeldekortetsPeriode(
         arbeidsperiode: Periode, meldeperioder: List<Periode>
     ): Periode? {
         return meldeperioder.firstOrNull { it.overlapper(arbeidsperiode) }

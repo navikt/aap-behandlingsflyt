@@ -7,6 +7,7 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.TimerArbeid
 import no.nav.aap.verdityper.dokument.JournalpostId
 import java.time.LocalDateTime
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Meldekort as KontraktMeldekort
 
 data class Meldekort(
     val journalpostId: JournalpostId,
@@ -19,7 +20,7 @@ data class Meldekort(
             journalpostId: JournalpostId,
             mottattTidspunkt: LocalDateTime,
             opprettetTidspunkt: LocalDateTime,
-            meldekort: no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Meldekort
+            meldekort: KontraktMeldekort
         ): Meldekort {
             return when (meldekort) {
                 is MeldekortV0 -> Meldekort(
