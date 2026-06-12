@@ -9,13 +9,6 @@
                 </valueMask>
             </decorator>
         </encoder>
-        <filter class="ch.qos.logback.core.filter.EvaluatorFilter">
-            <evaluator class="ch.qos.logback.classic.boolex.OnMarkerEvaluator">
-                <marker>TEAM_LOGS</marker>
-            </evaluator>
-            <OnMatch>DENY</OnMatch>
-            <OnMismatch>ACCEPT</OnMismatch>
-        </filter>
     </appender>
 
     <appender name="team-logs" class="net.logstash.logback.appender.LogstashTcpSocketAppender">
@@ -26,13 +19,6 @@
             </customFields>
             <includeContext>false</includeContext>
         </encoder>
-        <filter class="ch.qos.logback.core.filter.EvaluatorFilter">
-            <evaluator class="ch.qos.logback.classic.boolex.OnMarkerEvaluator">
-                <marker>TEAM_LOGS</marker>
-            </evaluator>
-            <OnMatch>ACCEPT</OnMatch>
-            <OnMismatch>DENY</OnMismatch>
-        </filter>
     </appender>
 
     <appender name="auditLogger" class="com.papertrailapp.logback.Syslog4jAppender">
