@@ -262,7 +262,7 @@ class RettighetsperiodeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
                             dato = nå.toLocalDate()
                         ),
                         journalpostId = journalpostId,
-                        vurdertAv = SYSTEMBRUKER.ident,
+                        vurdertAv = SYSTEMBRUKER,
                         begrunnelse = "Automatisk vurdert",
                         opprettet = Instant.now(), //Ignorer
                         muligRettFra = null,
