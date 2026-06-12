@@ -99,6 +99,12 @@ lateinit var testScenarioOrkestrator: TestScenarioOrkestrator
 lateinit var motor: ManuellMotorImpl
 lateinit var datasource: DataSource
 
+private val nesteJournalpostIdIterator = generateSequence(9_000_000) { it + 1 }.iterator()
+
+private fun nyJournalpostId(): JournalpostId = synchronized(nesteJournalpostIdIterator) {
+    JournalpostId(nesteJournalpostIdIterator.next().toString())
+}
+
 data class IdentOgOpphold(val ident: String, val opphold: List<InstitusjonsoppholdJSON>)
 
 // Kjøres opp for å få logback i console uten json
@@ -575,6 +581,17 @@ private fun opprettNySakOgBehandling(
     log.info("Fullfører førstegangsbehandling for sak ${sak.id}")
     val behandling = hentSisteBehandlingForSak(sak.id, gatewayProvider)
 
+    if (dto.kravVurderinger.isNotEmpty()) {
+        datasource.transaction { connection ->
+            val repositoryProvider = repositoryRegistry.provider(connection)
+            val kravRepository = repositoryProvider.provide<KravRepository>()
+            kravRepository.lagre(
+                behandling.id,
+                dto.kravVurderinger.map { mapKravVurdering(it, behandling.id) }.toSet()
+            )
+        }
+    }
+
     with(testScenarioOrkestrator) {
         // Student eller sykdom
         if (dto.student) {
@@ -742,12 +759,13 @@ private fun hentSakId(saksnummer: Saksnummer): SakId {
 }
 
 private fun mapKravVurdering(krav: KravVurderingTestDto, behandlingId: BehandlingId): KravVurdering {
-    val journalpostId = JournalpostId("test-krav-${UUID.randomUUID()}")
+    val journalpostId = nyJournalpostId()
+
     val now = Instant.now()
     return when (krav.kravType) {
         KravType.NYTT_KRAV_AAP -> NyttKrav(
             journalpostId = journalpostId,
-            vurdertAv = "TESTBRUKER",
+            vurdertAv = "Testbruker",
             begrunnelse = "Nytt krav: søknad mottatt i tide, trenger manuell vurdering av vilkår.",
             vurdertIBehandling = behandlingId,
             opprettet = now,
@@ -760,7 +778,7 @@ private fun mapKravVurdering(krav: KravVurderingTestDto, behandlingId: Behandlin
         )
         KravType.GJENOPPTAK -> Gjenopptak(
             journalpostId = journalpostId,
-            vurdertAv = "TESTBRUKER",
+            vurdertAv = "Testbruker",
             begrunnelse = "Gjenopptak: nye opplysninger tilsier at saken skal vurderes på nytt.",
             vurdertIBehandling = behandlingId,
             opprettet = now,
@@ -773,21 +791,21 @@ private fun mapKravVurdering(krav: KravVurderingTestDto, behandlingId: Behandlin
         )
         KravType.TRUKKET_SØKNAD -> TrukketSøknad(
             journalpostId = journalpostId,
-            vurdertAv = "TESTBRUKER",
+            vurdertAv = "Testbruker",
             begrunnelse = "Trukket søknad: søker har bekreftet at kravet ikke lenger opprettholdes.",
             vurdertIBehandling = behandlingId,
             opprettet = now,
         )
         KravType.KLAGE -> Klage(
             journalpostId = journalpostId,
-            vurdertAv = "TESTBRUKER",
+            vurdertAv = "Testbruker",
             begrunnelse = "Klage: tidligere vurdering bestrides, sendes til ny behandling.",
             vurdertIBehandling = behandlingId,
             opprettet = now,
         )
         KravType.TILLEGGSOPPLYSNING -> Tilleggsopplysning(
             journalpostId = journalpostId,
-            vurdertAv = "TESTBRUKER",
+            vurdertAv = "Testbruker",
             begrunnelse = "Tilleggsopplysning: mottatt ny dokumentasjon som påvirker rettighetsvurderingen.",
             vurdertIBehandling = behandlingId,
             opprettet = now,
