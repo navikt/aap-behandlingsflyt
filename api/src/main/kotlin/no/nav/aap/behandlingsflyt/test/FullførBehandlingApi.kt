@@ -22,12 +22,16 @@ import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.miljo.Miljø
 import no.nav.aap.komponenter.repository.RepositoryRegistry
+import org.slf4j.LoggerFactory
 import java.time.LocalDate
 import javax.sql.DataSource
 import kotlin.concurrent.thread
 
+private val log = LoggerFactory.getLogger("dolly-integrasjon")
+
+
 /**
- * Dette er Dolly-integrasjonen.
+ * Dette er Dolly-integrasjonen. Se [sysdok](https://aap-sysdoc.ansatt.nav.no/teknisk/dolly) for detaljer og Slack-kanalen [#dolly-kelvin-integrasjon](https://nav-it.slack.com/archives/C0AU222E7SB).
  */
 fun NormalOpenAPIRoute.fullførBehandlingApi(
     dataSource: DataSource,
@@ -35,12 +39,15 @@ fun NormalOpenAPIRoute.fullførBehandlingApi(
     gatewayProvider: GatewayProvider,
 ) {
     val service = TestBehandlingFullføringService(dataSource, repositoryRegistry, gatewayProvider)
+
     if (Miljø.erProd()) return
     route("/api/test/opprettOgFullfoerBehandling").tag(Tags.Dolly) {
         @Suppress("UnauthorizedPost")
         post<Unit, OpprettOgFullforBehandlingRespons, OpprettOgFullforBehandlingRequest> { _, req ->
-            require(!Miljø.erProd()) { "Ikke tilgjengelig i produksjonsmiljøet" }
+            require(!Miljø.erProd()) { "Dolly-integrasjon ikke tilgjengelig i produksjonsmiljøet." }
+
             try {
+                log.info("Oppretter Dolly-test-sak")
                 val resultat = dataSource.transaction { connection ->
                     TestSakService(repositoryRegistry.provider(connection), gatewayProvider)
                         .opprettTestSak(
@@ -53,6 +60,7 @@ fun NormalOpenAPIRoute.fullførBehandlingApi(
                         )
                 }
                 if (req.automatiskMeldekort) {
+                    log.info("Setter opp automatisk meldekort for sak ${resultat.sak.saksnummer} med id ${resultat.sak.id}")
                     dataSource.transaction { connection ->
                         repositoryRegistry.provider(connection)
                             .provide<TestAutomatiskMeldekortSakRepository>()
