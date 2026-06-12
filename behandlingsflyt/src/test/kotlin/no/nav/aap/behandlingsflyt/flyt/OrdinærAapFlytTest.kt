@@ -116,7 +116,9 @@ class OrdinærAapFlytTest(val unleashGateway: KClass<UnleashGateway>) : Abstrakt
         assertThat(vedtak.vedtakstidspunkt.toLocalDate()).isToday
 
         val resultat = dataSource.transaction {
-            ResultatUtleder(postgresRepositoryRegistry.provider(it), minimalGatewayProvider { }).utledResultatFørstegangsBehandling(behandling.id)
+            ResultatUtleder(
+                postgresRepositoryRegistry.provider(it),
+                minimalGatewayProvider { }).utledResultatFørstegangsBehandling(behandling.id)
         }
         assertThat(resultat).isEqualTo(Resultat.AVSLAG)
         val brevbestilling = hentBrevAvType(behandling, TypeBrev.VEDTAK_AVSLAG)
@@ -185,7 +187,7 @@ class OrdinærAapFlytTest(val unleashGateway: KClass<UnleashGateway>) : Abstrakt
             .medKontekst {
                 assertThat(åpneAvklaringsbehov).anySatisfy { assertThat(it.definisjon).isEqualTo(Definisjon.SKRIV_SYKDOMSVURDERING_BREV) }
             }
-            .løsSykdomsvurderingBrev() 
+            .løsSykdomsvurderingBrev()
             .bekreftVurderinger() // Krever ikke kvalitetskontroll i revurdering
             .fattVedtak()
             .løsVedtaksbrev(typeBrev = TypeBrev.VEDTAK_ENDRING)
@@ -230,7 +232,11 @@ class OrdinærAapFlytTest(val unleashGateway: KClass<UnleashGateway>) : Abstrakt
         ).medKontekst {
             assertThat(behandling.status()).isEqualTo(Status.UTREDES)
             assertThat(åpneAvklaringsbehov.map { it.definisjon })
-                .containsExactlyInAnyOrder(Definisjon.MANUELT_SATT_PÅ_VENT, Definisjon.AVKLAR_SYKDOM)
+                .containsExactlyInAnyOrder(
+                    Definisjon.VURDER_KRAV,
+                    Definisjon.MANUELT_SATT_PÅ_VENT,
+                    Definisjon.AVKLAR_SYKDOM
+                )
         }
     }
 }

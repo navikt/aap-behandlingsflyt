@@ -14,6 +14,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.NyttKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.NyttKravLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.SøknadsdatoÅrsak
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Tilleggsopplysning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.TilleggsopplysningKravLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.TrukketSøknadKravLøsningDto
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
@@ -114,7 +115,15 @@ private fun KravVurderingLøsningDto.tilVurdering(
             kravdato = kravDato()
         )
 
-        is TrukketSøknadKravLøsningDto, is GjenopptakKravLøsningDto, is KlageKravLøsningDto, is TilleggsopplysningKravLøsningDto -> throw UgyldigForespørselException(
+        is TilleggsopplysningKravLøsningDto -> Tilleggsopplysning(
+            journalpostId = journalpostId,
+            vurdertAv = bruker,
+            begrunnelse = begrunnelse,
+            vurdertIBehandling = behandlingId,
+            opprettet = opprettetTid,
+        )
+
+        is TrukketSøknadKravLøsningDto, is GjenopptakKravLøsningDto, is KlageKravLøsningDto -> throw UgyldigForespørselException(
             "Kelvin støtter foreløpig ikke ${this.kravType}."
         )
     }
