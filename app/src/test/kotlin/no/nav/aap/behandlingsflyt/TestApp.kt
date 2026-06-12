@@ -766,7 +766,7 @@ private fun mapKravVurdering(krav: KravVurderingTestDto, behandlingId: Behandlin
         KravType.NYTT_KRAV_AAP -> NyttKrav(
             journalpostId = journalpostId,
             vurdertAv = "Testbruker",
-            begrunnelse = "Nytt krav: søknad mottatt i tide, trenger manuell vurdering av vilkår.",
+            begrunnelse = "Nytt krav",
             vurdertIBehandling = behandlingId,
             opprettet = now,
             søknadsdato = Søknadsdato(
@@ -779,7 +779,7 @@ private fun mapKravVurdering(krav: KravVurderingTestDto, behandlingId: Behandlin
         KravType.GJENOPPTAK -> Gjenopptak(
             journalpostId = journalpostId,
             vurdertAv = "Testbruker",
-            begrunnelse = "Gjenopptak: nye opplysninger tilsier at saken skal vurderes på nytt.",
+            begrunnelse = "Gjenopptak",
             vurdertIBehandling = behandlingId,
             opprettet = now,
             søknadsdato = Søknadsdato(
@@ -792,21 +792,21 @@ private fun mapKravVurdering(krav: KravVurderingTestDto, behandlingId: Behandlin
         KravType.TRUKKET_SØKNAD -> TrukketSøknad(
             journalpostId = journalpostId,
             vurdertAv = "Testbruker",
-            begrunnelse = "Trukket søknad: søker har bekreftet at kravet ikke lenger opprettholdes.",
+            begrunnelse = "Trukket søknad",
             vurdertIBehandling = behandlingId,
             opprettet = now,
         )
         KravType.KLAGE -> Klage(
             journalpostId = journalpostId,
             vurdertAv = "Testbruker",
-            begrunnelse = "Klage: tidligere vurdering bestrides, sendes til ny behandling.",
+            begrunnelse = "Klage",
             vurdertIBehandling = behandlingId,
             opprettet = now,
         )
         KravType.TILLEGGSOPPLYSNING -> Tilleggsopplysning(
             journalpostId = journalpostId,
             vurdertAv = "Testbruker",
-            begrunnelse = "Tilleggsopplysning: mottatt ny dokumentasjon som påvirker rettighetsvurderingen.",
+            begrunnelse = "Tilleggsopplysning",
             vurdertIBehandling = behandlingId,
             opprettet = now,
         )
