@@ -621,7 +621,7 @@ class MeldekortApiTest : BaseApiTest() {
             dager = emptySet(),
         )
 
-        val meldekort = tilMeldekort(request, Bruker("saksbehandler"))
+        val meldekort = request.tilMeldekort(Bruker("saksbehandler"))
 
         assertThat(meldekort.harDuArbeidet).isNull()
         assertThat(meldekort.timerArbeidPerPeriode).isEmpty()
