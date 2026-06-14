@@ -69,7 +69,7 @@ class VurderRettighetsperiodeLøser(
         if (løsning.rettighetsperiodeVurdering.harRett.toBoolean() && nyStartDato != null) {
             log.info("Oppdaterer rettighetsperioden til å gjelde fra $ for sak ${sak.id}")
             sakService.overstyrRettighetsperioden(
-                sakId = sak.id,
+                sak = sak,
                 startDato = nyStartDato,
                 sluttDato = Tid.MAKS
             )
@@ -79,7 +79,7 @@ class VurderRettighetsperiodeLøser(
             if (sak.rettighetsperiode.fom != søknadsdato) {
                 log.info("Tilbakestiller rettighetsperioden til å gjelde fra søknadsdato $søknadsdato for sak ${sak.id}")
                 sakService.overstyrRettighetsperioden(
-                    sakId = sak.id,
+                    sak = sak,
                     startDato = søknadsdato,
                     sluttDato = Tid.MAKS
                 )

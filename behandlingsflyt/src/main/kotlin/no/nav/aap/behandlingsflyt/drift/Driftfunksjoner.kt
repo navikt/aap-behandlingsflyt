@@ -22,11 +22,11 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.IdentGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.repository.RepositoryProvider
-import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.verdityper.Tid
 import org.slf4j.LoggerFactory
@@ -47,6 +47,7 @@ class Driftfunksjoner(
     private val identGateway: IdentGateway,
     private val meldekortGateway: MeldekortGateway,
     private val apiInternGateway: ApiInternGateway,
+    private val sakService: SakService,
 ) {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         sakRepository = repositoryProvider.provide(),
@@ -65,6 +66,7 @@ class Driftfunksjoner(
         identGateway = gatewayProvider.provide(),
         meldekortGateway = gatewayProvider.provide(),
         apiInternGateway = gatewayProvider.provide(),
+        sakService = SakService(repositoryProvider, gatewayProvider),
     )
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -132,7 +134,7 @@ class Driftfunksjoner(
             validerGyldigTilstandFørUtvidelseAvRettighetsperiode(behandling, stegType)
 
             log.info("Utvider rettighetsperiode til Tid.MAKS og setter aktivt steg fra ${behandling.aktivtSteg()} til $stegType")
-            sakRepository.oppdaterRettighetsperiode(behandling.sakId, Periode(sak.rettighetsperiode.fom, Tid.MAKS))
+            sakService.overstyrRettighetsperioden(sak, sak.rettighetsperiode.fom, Tid.MAKS)
             behandlingRepository.leggTilNyttAktivtSteg(
                 behandling.id, StegTilstand(
                     stegType = stegType,

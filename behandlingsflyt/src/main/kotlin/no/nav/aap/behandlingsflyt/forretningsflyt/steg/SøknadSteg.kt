@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
@@ -14,8 +13,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.gateway.GatewayProvider
-import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.Repository
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
@@ -33,7 +32,7 @@ class SøknadSteg(
     private val sakRepository: SakRepository,
     private val repositoryProvider: RepositoryProvider,
     private val avklaringsbehovService: AvklaringsbehovService,
-    private val avklaringsbehovRepository: AvklaringsbehovRepository
+    private val sakService: SakService,
 ) : BehandlingSteg {
     private val log = LoggerFactory.getLogger(javaClass)
 
@@ -60,8 +59,8 @@ class SøknadSteg(
         if (erTilstrekkeligVurdert && harTrukketSøknad) {
             val rettighetsperiode = kontekst.rettighetsperiode
             // Setter ny rettighetsperiode til én dag lang
-            val nyRettighetsPeriode = Periode(rettighetsperiode.fom, rettighetsperiode.fom)
-            sakRepository.oppdaterRettighetsperiode(kontekst.sakId, nyRettighetsPeriode)
+            val sak = sakRepository.hent(kontekst.sakId)
+            sakService.overstyrRettighetsperioden(sak, rettighetsperiode.fom, rettighetsperiode.fom)
             slettVurderingerOgRegisterdata(kontekst.behandlingId)
         }
 
@@ -86,8 +85,8 @@ class SøknadSteg(
                 trukketSøknadRepository = repositoryProvider.provide(),
                 repositoryProvider = repositoryProvider,
                 sakRepository = repositoryProvider.provide(),
-                avklaringsbehovRepository = repositoryProvider.provide(),
-                avklaringsbehovService = AvklaringsbehovService(repositoryProvider)
+                avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
+                sakService = SakService(repositoryProvider, gatewayProvider),
             )
         }
 

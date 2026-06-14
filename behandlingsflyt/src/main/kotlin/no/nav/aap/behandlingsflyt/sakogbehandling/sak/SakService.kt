@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
+import no.nav.aap.behandlingsflyt.utils.FarligMutering
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Tid
@@ -29,33 +30,30 @@ class SakService(private val sakRepository: SakRepository, private val behandlin
         return sakRepository.hent(behandling.sakId)
     }
 
-    fun oppdaterRettighetsperioden(sakId: SakId, brevkategori: InnsendingType, mottattDato: LocalDate) {
+    fun oppdaterRettighetsperioden(sak: Sak, brevkategori: InnsendingType, mottattDato: LocalDate) {
         if (brevkategori == InnsendingType.SØKNAD) {
-            val rettighetsperiode = sakRepository.hent(sakId).rettighetsperiode
+            val sakMedOppdatertRettighetsperiode = sakRepository.hent(sak.id)
+            val rettighetsperiode = sakMedOppdatertRettighetsperiode.rettighetsperiode
             val fom = if (rettighetsperiode.fom.isAfter(mottattDato)) {
                 mottattDato
             } else {
                 rettighetsperiode.fom
             }
-            val periode = Periode(
-                fom,
-                Tid.MAKS
-            )
-            if (periode != rettighetsperiode) {
-                sakRepository.oppdaterRettighetsperiode(sakId, periode)
-            }
+            overstyrRettighetsperioden(sak, fom, Tid.MAKS)
         }
     }
 
-    fun overstyrRettighetsperioden(sakId: SakId, startDato: LocalDate, sluttDato: LocalDate) {
-        val rettighetsperiode = sakRepository.hent(sakId).rettighetsperiode
+    fun overstyrRettighetsperioden(sak: Sak, startDato: LocalDate, sluttDato: LocalDate) {
+        val sakMedOppdatertRettighetsperiode = sakRepository.hent(sak.id)
+        val rettighetsperiode = sakMedOppdatertRettighetsperiode.rettighetsperiode
         val periode = Periode(
             startDato,
             sluttDato
         )
         if (periode != rettighetsperiode) {
-            sakRepository.oppdaterRettighetsperiode(sakId, periode)
+            @OptIn(FarligMutering::class)
+            sakRepository.oppdaterRettighetsperiode(sak, periode)
+            sak.rettighetsperiode = periode
         }
     }
-
 }
