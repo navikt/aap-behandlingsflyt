@@ -12,6 +12,11 @@ import java.util.*
 
 class PersonRepositoryImpl(private val connection: DBConnection) : PersonRepository {
 
+    // Transaction-scoped cache: én behandlingsjobb = én person, men repo kalles for hvert steg.
+    // PersonId-tabellene (PERSON, PERSON_IDENT) skrives aldri fra ProsesserBehandling —
+    // kun fra HåndterFolkeregisterIdentHendelseService (Kafka). Ingen eviction nødvendig.
+    private val personByIdCache = HashMap<PersonId, Person>()
+
     companion object : Factory<PersonRepository> {
         override fun konstruer(connection: DBConnection): PersonRepository {
             return PersonRepositoryImpl(connection)
@@ -40,7 +45,7 @@ class PersonRepositoryImpl(private val connection: DBConnection) : PersonReposit
         val person = finn(identer)
         return if (person != null) {
             oppdater(person, identer)
-            // Henter på nytt etter oppdatering
+            personByIdCache.remove(person.id)
             hent(person.id)
         } else {
             opprettPerson(identer)
@@ -49,6 +54,7 @@ class PersonRepositoryImpl(private val connection: DBConnection) : PersonReposit
 
     override fun oppdaterIdenter(person: Person, identer: List<Ident>): Person {
         oppdater(person, identer)
+        personByIdCache.remove(person.id)
         return hent(person.id)
     }
 
@@ -126,13 +132,15 @@ class PersonRepositoryImpl(private val connection: DBConnection) : PersonReposit
 
 
     override fun hent(personId: PersonId): Person {
-        return connection.queryFirst("SELECT referanse FROM PERSON WHERE id = ?") {
-            setParams {
-                setLong(1, personId.id)
-            }
-            setRowMapper { row ->
-                val identer = hentIdenter(personId)
-                Person(personId, row.getUUID("referanse"), identer)
+        return personByIdCache.getOrPut(personId) {
+            connection.queryFirst("SELECT referanse FROM PERSON WHERE id = ?") {
+                setParams {
+                    setLong(1, personId.id)
+                }
+                setRowMapper { row ->
+                    val identer = hentIdenter(personId)
+                    Person(personId, row.getUUID("referanse"), identer)
+                }
             }
         }
     }
@@ -180,7 +188,9 @@ class PersonRepositoryImpl(private val connection: DBConnection) : PersonReposit
             }
         }
 
-        return Person(PersonId(personId), identifikator, identer)
+        val person = Person(PersonId(personId), identifikator, identer)
+        personByIdCache[person.id] = person
+        return person
     }
 
     override fun finn(ident: Ident): Person? {
