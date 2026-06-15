@@ -42,6 +42,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.Beregnin
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurderingAvForeldreAnsvar
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.Fritaksvurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.UføreSøknadVedtakResultat
@@ -415,7 +416,7 @@ class BrevUtlederService(
             yrkesskadeBeregning = yrkesskadeBeregning,
             yrkesSkadeISøknadIkkeIRegister = yrkesSkadeISøknadIkkeIRegister,
             foreldreansvarVurderinger = foreldreAnsvarVurderinger,
-            fritaksvurdering = meldepliktGrunnlag,
+            meldepliktGrunnlag = meldepliktGrunnlag,
         )
     }
 
@@ -730,8 +731,8 @@ class BrevUtlederService(
             .orEmpty()
     }
 
-    fun hentMeldepliktVurderingPerioder(behandlingId: BehandlingId): List<Fritaksvurdering>? {
-        return meldepliktRepository.hentHvisEksisterer(behandlingId)?.vurderinger
+    fun hentMeldepliktVurderingPerioder(behandlingId: BehandlingId): MeldepliktGrunnlag? {
+        return meldepliktRepository.hentHvisEksisterer(behandlingId)
     }
 
     private fun hentSamordningAndreYtelser(behandlingId: BehandlingId): List<SamordningYtelse> {

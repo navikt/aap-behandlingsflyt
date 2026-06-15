@@ -404,7 +404,7 @@ class BrevGateway : BrevbestillingGateway {
                     brevBehov.yrkesSkadeISøknadIkkeIRegister?.let {
                         add(Faktagrunnlag.YrkesskadeISøknadIkkeIRegister(it))
                     }
-                    brevBehov.fritaksvurdering?.let {
+                    brevBehov.meldepliktGrunnlag?.let {
                         add(
                             fritakmeldepliktTilFaktagrunnlag(it))
                     }
