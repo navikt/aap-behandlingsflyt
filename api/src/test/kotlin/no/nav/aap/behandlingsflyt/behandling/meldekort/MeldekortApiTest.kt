@@ -189,15 +189,15 @@ class MeldekortApiTest : BaseApiTest() {
 
             val meldeperiodeMedMeldekort = body.meldeperioderMedMeldekort.first()
             assertThat(meldeperiodeMedMeldekort.meldeperiode).isEqualTo(meldeperiode)
-            assertThat(meldeperiodeMedMeldekort.meldekort).isNotNull
-            assertThat(meldeperiodeMedMeldekort.meldekort!!.id).isEqualTo(meldekort.journalpostId.identifikator)
-            assertThat(meldeperiodeMedMeldekort.meldekort.meldeDato).isEqualTo(meldekort.mottattTidspunkt.toLocalDate())
-            assertThat(meldeperiodeMedMeldekort.meldekort.oppdatertTidspunkt).isEqualTo(LocalDate.of(2025, 1, 20))
-            assertThat(meldeperiodeMedMeldekort.meldekort.begrunnelse).isEqualTo("Korrigering av timer")
-            assertThat(meldeperiodeMedMeldekort.meldekort.oppdatertAv).isEqualTo("Z123456")
-            assertThat(meldeperiodeMedMeldekort.meldekort.dager).hasSize(2)
-            assertThat(meldeperiodeMedMeldekort.meldekort.dager.map { it.dato }).containsExactlyInAnyOrder(dag1, dag2)
-            assertThat(meldeperiodeMedMeldekort.meldekort.dager.map { it.timerArbeidet }).containsExactlyInAnyOrder(7.5, 3.0)
+            val meldekortDto = requireNotNull(meldeperiodeMedMeldekort.meldekort) { "Forventet meldekort, men var null" }
+            assertThat(meldekortDto.id).isEqualTo(meldekort.journalpostId.identifikator)
+            assertThat(meldekortDto.meldeDato).isEqualTo(meldekort.mottattTidspunkt.toLocalDate())
+            assertThat(meldekortDto.oppdatertTidspunkt).isEqualTo(LocalDate.of(2025, 1, 20))
+            assertThat(meldekortDto.begrunnelse).isEqualTo("Korrigering av timer")
+            assertThat(meldekortDto.oppdatertAv).isEqualTo("Z123456")
+            assertThat(meldekortDto.dager).hasSize(2)
+            assertThat(meldekortDto.dager.map { it.dato }).containsExactlyInAnyOrder(dag1, dag2)
+            assertThat(meldekortDto.dager.map { it.timerArbeidet }).containsExactlyInAnyOrder(7.5, 3.0)
             assertThat(meldeperiodeMedMeldekort.tidligereMeldekort).isEmpty()
         }
     }
@@ -332,14 +332,14 @@ class MeldekortApiTest : BaseApiTest() {
             assertThat(body.meldeperioderMedMeldekort).hasSize(1)
 
             val meldeperiodeMedMeldekort = body.meldeperioderMedMeldekort.first()
-            assertThat(meldeperiodeMedMeldekort.meldekort).isNotNull
-            assertThat(meldeperiodeMedMeldekort.meldekort!!.id).isEqualTo(korrigertMeldekort.journalpostId.identifikator)
-            assertThat(meldeperiodeMedMeldekort.meldekort.meldeDato).isEqualTo(opprinneligMeldekort.mottattTidspunkt.toLocalDate())
-            assertThat(meldeperiodeMedMeldekort.meldekort.oppdatertTidspunkt).isEqualTo(LocalDate.of(2025, 1, 25))
-            assertThat(meldeperiodeMedMeldekort.meldekort.begrunnelse).isEqualTo("Feil i opprinnelig rapportering")
-            assertThat(meldeperiodeMedMeldekort.meldekort.oppdatertAv).isEqualTo("Z654321")
-            assertThat(meldeperiodeMedMeldekort.meldekort.dager).hasSize(1)
-            assertThat(meldeperiodeMedMeldekort.meldekort.dager.first().timerArbeidet).isEqualTo(0.0)
+            val meldekortDto = requireNotNull(meldeperiodeMedMeldekort.meldekort) { "Forventet meldekort, men var null" }
+            assertThat(meldekortDto.id).isEqualTo(korrigertMeldekort.journalpostId.identifikator)
+            assertThat(meldekortDto.meldeDato).isEqualTo(opprinneligMeldekort.mottattTidspunkt.toLocalDate())
+            assertThat(meldekortDto.oppdatertTidspunkt).isEqualTo(LocalDate.of(2025, 1, 25))
+            assertThat(meldekortDto.begrunnelse).isEqualTo("Feil i opprinnelig rapportering")
+            assertThat(meldekortDto.oppdatertAv).isEqualTo("Z654321")
+            assertThat(meldekortDto.dager).hasSize(1)
+            assertThat(meldekortDto.dager.first().timerArbeidet).isEqualTo(0.0)
             assertThat(meldeperiodeMedMeldekort.tidligereMeldekort).hasSize(1)
             assertThat(meldeperiodeMedMeldekort.tidligereMeldekort.first().id).isEqualTo(opprinneligMeldekort.journalpostId.identifikator)
             assertThat(meldeperiodeMedMeldekort.tidligereMeldekort.first().meldeDato).isEqualTo(opprinneligMeldekort.mottattTidspunkt.toLocalDate())
@@ -410,7 +410,8 @@ class MeldekortApiTest : BaseApiTest() {
             assertThat(body.meldeperioderMedMeldekort).hasSize(1)
 
             val meldeperiodeMedMeldekort = body.meldeperioderMedMeldekort.first()
-            assertThat(meldeperiodeMedMeldekort.meldekort!!.id).isEqualTo(tredjeMeldekort.journalpostId.identifikator)
+            val meldekortDto = requireNotNull(meldeperiodeMedMeldekort.meldekort) { "Forventet meldekort, men var null" }
+            assertThat(meldekortDto.id).isEqualTo(tredjeMeldekort.journalpostId.identifikator)
 
             assertThat(meldeperiodeMedMeldekort.tidligereMeldekort).hasSize(2)
             assertThat(meldeperiodeMedMeldekort.tidligereMeldekort.map { it.id })
