@@ -142,6 +142,8 @@ fun main() {
 
         testScenarioOrkestrator = TestScenarioOrkestrator(gatewayProvider, datasource, motor)
 
+        BackfillStansOpphør(datasource, gatewayProvider).kjør()
+
         apiRouting {
             route("/test") {
                 route("/opprett") {
