@@ -138,16 +138,17 @@ class MottattDokumentRepositoryImpl(private val connection: DBConnection) : Mott
     private fun mapMottattDokument(row: Row): MottattDokument {
         val brevkategori: InnsendingType = row.getEnum("type")
         val referanse = mapDokumentReferanse(row)
+        val sakId = SakId(row.getLong("sak_id"))
         return MottattDokument(
             referanse = referanse,
-            sakId = SakId(row.getLong("sak_id")),
+            sakId = sakId,
             behandlingId = row.getLongOrNull("BEHANDLING_ID")?.let { BehandlingId(it) },
             mottattTidspunkt = row.getLocalDateTime("MOTTATT_TID"),
             opprettetTid = row.getLocalDateTime("OPPRETTET_TID"),
             type = brevkategori,
             kanal = row.getEnum("kanal"),
             status = row.getEnum("status"),
-            strukturertDokument = LazyStrukturertDokument(referanse, connection),
+            strukturertDokument = LazyStrukturertDokument(referanse, connection, sakId),
             digitalisertAvPostmottak = row.getBooleanOrNull("DIGITALISERT_MANUELT_POSTMOTTAK")
         )
     }
