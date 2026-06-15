@@ -63,7 +63,7 @@ enum class Journalposttype {
 }
 
 enum class OverstyrInnsynsregler {
-    VISES_MASKINELT_GODKJENT
+    VISES_MANUELT_GODKJENT
 }
 
 // Se https://confluence.adeo.no/display/BOA/Tema

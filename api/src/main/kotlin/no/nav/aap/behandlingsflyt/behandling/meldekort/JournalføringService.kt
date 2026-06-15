@@ -108,7 +108,7 @@ class JournalføringService(
             tittel = tittel,
             eksternReferanseId = UUID.randomUUID().toString(),
             datoMottatt = tidspunkt.toString(),
-            overstyrInnsynsregler = OverstyrInnsynsregler.VISES_MASKINELT_GODKJENT,
+            overstyrInnsynsregler = OverstyrInnsynsregler.VISES_MANUELT_GODKJENT,
             dokumenter = listOf(
                 Dokument(
                     tittel = tittel,
