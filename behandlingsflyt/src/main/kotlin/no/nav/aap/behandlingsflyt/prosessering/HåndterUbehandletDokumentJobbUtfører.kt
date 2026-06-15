@@ -31,11 +31,12 @@ class HåndterUbehandletDokumentJobbUtfører(
     private val log = LoggerFactory.getLogger(javaClass)
 
     override fun utfør(input: JobbInput) {
+        val sakId = SakId(input.sakId())
         val innsendingsreferanse = InnsendingReferanse(
             verdi = input.parameter(INNSENDINGSREFERANSE_VERDI),
             type = InnsendingReferanse.Type.valueOf(input.parameter(INNSENDINGSREFERANSE_TYPE))
         )
-        val dokument = mottattDokumentRepository.hent(innsendingsreferanse)
+        val dokument = mottattDokumentRepository.hent(sakId, innsendingsreferanse)
         when (dokument.type) {
             InnsendingType.MELDEKORT -> håndterUbehandletMeldekort(dokument)
             else -> log.warn("Jobb ble opprettet for innsendingstype som ikke støttes")

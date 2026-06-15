@@ -43,15 +43,16 @@ class MottattDokumentRepositoryImpl(private val connection: DBConnection) : Mott
         }
     }
 
-    override fun hent(innsendingsreferanse: InnsendingReferanse): MottattDokument {
+    override fun hent(sakId: SakId, innsendingsreferanse: InnsendingReferanse): MottattDokument {
         val query = """
-            SELECT * FROM MOTTATT_DOKUMENT WHERE referanse = ? and referanse_type = ?
+            SELECT * FROM MOTTATT_DOKUMENT WHERE sak_id = ? and referanse = ? and referanse_type = ?
         """.trimIndent()
 
         return connection.queryFirst(query) {
             setParams {
-                setString(1, innsendingsreferanse.verdi)
-                setEnumName(2, innsendingsreferanse.type)
+                setLong(1, sakId.id)
+                setString(2, innsendingsreferanse.verdi)
+                setEnumName(3, innsendingsreferanse.type)
             }
             setRowMapper { row ->
                 mapMottattDokument(row)
