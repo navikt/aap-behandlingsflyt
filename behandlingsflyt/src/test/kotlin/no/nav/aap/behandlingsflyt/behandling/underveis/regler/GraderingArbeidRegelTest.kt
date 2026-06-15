@@ -149,7 +149,7 @@ class GraderingArbeidRegelTest {
     }
 
     @Test
-    fun `Kan ikke jobbe  over 60 prosent uten arbeidsopptrapping`() {
+    fun `Kan ikke jobbe over 60 prosent uten arbeidsopptrapping`() {
         assertMeldekortutregning(
             fastsattArbeidsevne = null,
             opptrapping = false,

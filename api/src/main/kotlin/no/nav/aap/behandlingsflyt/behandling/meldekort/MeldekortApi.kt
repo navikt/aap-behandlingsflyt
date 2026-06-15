@@ -213,7 +213,8 @@ fun NormalOpenAPIRoute.meldekortApi(
                         journalpostId = journalpostId.identifikator,
                         oppdatertTidspunkt = LocalDate.ofInstant(tidspunkt, ZoneId.of("Europe/Oslo")),
                     )
-                } ?: throw UgyldigForespørselException("Kan ikke legge inn meldekort når ingen vedtak eksisterer for saken")
+                }
+                    ?: throw UgyldigForespørselException("Kan ikke legge inn meldekort når ingen vedtak eksisterer for saken")
             }
 
             respond(response)
@@ -377,10 +378,11 @@ private fun hentAktuelleMeldeperioderMedMeldepliktStatus(
         .filter { it.utfall == Utfall.OPPFYLT && it.periode.fom < LocalDate.now() }
         .groupBy({ it.meldePeriode })
         .mapValues { (_, underveisPerioder) ->
-            val periodeMedMeldepliktStatus = Tidslinje(underveisPerioder.map { Segment(it.periode, it.meldepliktStatus) })
-                .komprimer()
-                .segmenter()
-                .map { Pair(it.periode, it.verdi) }
+            val periodeMedMeldepliktStatus =
+                Tidslinje(underveisPerioder.map { Segment(it.periode, it.meldepliktStatus) })
+                    .komprimer()
+                    .segmenter()
+                    .map { Pair(it.periode, it.verdi) }
 
             // Samme logikk som gjøres i meldekort-backend - returnerer en periode hvor start og slutt innskrenkes
             val periode = if (periodeMedMeldepliktStatus.isEmpty()) null
