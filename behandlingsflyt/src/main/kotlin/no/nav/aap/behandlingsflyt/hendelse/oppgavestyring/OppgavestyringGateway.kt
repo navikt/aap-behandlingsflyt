@@ -6,10 +6,12 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.TilbakekrevingsbehandlingOpp
 import no.nav.aap.behandlingsflyt.kontrakt.oppgave.EnhetNrDto
 import no.nav.aap.komponenter.gateway.Gateway
 import no.nav.aap.oppgave.enhet.OppgaveEnhetResponse
+import no.nav.aap.oppgave.markering.MarkeringDto
 
 interface OppgavestyringGateway : Gateway {
     fun varsleHendelse(hendelse: BehandlingFlytStoppetHendelse)
     fun varsleTilbakekrevingHendelse(hendelse: TilbakekrevingsbehandlingOppdatertHendelse)
     fun finnNayEnhetForPerson(personIdent: String, relevanteIdenter: List<String>): EnhetNrDto
     fun hentOppgaveEnhet(behandlingReferanse: BehandlingReferanse): OppgaveEnhetResponse
+    fun hentMarkeringer(behandlingReferanse: BehandlingReferanse): List<MarkeringDto>
 }

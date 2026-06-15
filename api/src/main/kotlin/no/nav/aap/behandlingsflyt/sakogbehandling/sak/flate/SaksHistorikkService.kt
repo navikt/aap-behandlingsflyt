@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovForSak
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovOperasjonerRepository
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadRepository
+import no.nav.aap.behandlingsflyt.hendelse.oppgavestyring.OppgavestyringGateway
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status.SENDT_TILBAKE_FRA_BESLUTTER
@@ -12,11 +13,21 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryProvider
 
 class SaksHistorikkService(
-    val repositoryProvider: RepositoryProvider
+    private val repositoryProvider: RepositoryProvider,
+    private val oppgavestyringGateway: OppgavestyringGateway,
 ) {
+    constructor(
+        repositoryProvider: RepositoryProvider,
+        gatewayProvider: GatewayProvider
+    ) : this(
+        repositoryProvider = repositoryProvider,
+        oppgavestyringGateway = gatewayProvider.provide()
+    )
+
     fun utledSaksHistorikk(sakId: SakId): List<BehandlingHistorikkDTO> {
         val alleBehandlinger = repositoryProvider.provide<BehandlingRepository>().hentAlleFor(sakId)
         val behandlingerMedBehov = repositoryProvider.provide<AvklaringsbehovOperasjonerRepository>()
@@ -25,8 +36,9 @@ class SaksHistorikkService(
         val opprettelsesHendelser = utledOpprettelseHendelser(alleBehandlinger)
         val behandlingHendelser = utledBehandlingHendelser(behandlingerMedBehov)
         val returerMedÅrsakHendelser = utledReturerMedÅrsak(behandlingerMedBehov)
+        val markeringerHendelser = utledMarkeringerHendelser(alleBehandlinger)
 
-        return (opprettelsesHendelser + behandlingHendelser + returerMedÅrsakHendelser)
+        return (opprettelsesHendelser + behandlingHendelser + returerMedÅrsakHendelser + markeringerHendelser)
             .groupBy { it.behandlingId }
             .map { (_, behandlingData) ->
                 val samlet = behandlingData
@@ -259,6 +271,29 @@ class SaksHistorikkService(
                     )
                 )
             )
+        }
+    }
+
+    private fun utledMarkeringerHendelser(alleBehandlinger: List<Behandling>): List<BehandlingHistorikkInternal> {
+        return alleBehandlinger.mapNotNull { behandling ->
+            val markeringer = oppgavestyringGateway.hentMarkeringer(behandling.referanse)
+            val hendelser = markeringer.map { markering ->
+                val hendelseType = when (markering.hendelseType) {
+                    "OPPRETTET" -> BehandlingHendelseType.MARKERING_OPPRETTET
+                    "FJERNET" -> BehandlingHendelseType.MARKERING_FJERNET
+                    else -> BehandlingHendelseType.MARKERING_OPPRETTET
+                }
+                BehandlingHendelseDTO(
+                    hendelse = hendelseType,
+                    tidspunkt = markering.opprettetTidspunkt,
+                    utførtAv = markering.opprettetAv,
+                    begrunnelse = markering.begrunnelse,
+                    resultat = markering.markeringType.name
+                )
+            }
+            if (hendelser.isNotEmpty()) {
+                BehandlingHistorikkInternal(behandling.id, hendelser)
+            } else null
         }
     }
 
