@@ -158,7 +158,7 @@ class DatadelingMeldekortService(
     ): Periode? {
         val arbeidsperiode = meldekort.arbeidsperiode()
 
-        return meldeperioder.firstOrNull { arbeidsperiode?.overlapper(arbeidsperiode) ?: false }
+        return meldeperioder.firstOrNull { arbeidsperiode != null && it.overlapper(arbeidsperiode) }
             ?: meldeperioder.firstOrNull {
                 it.inneholder(
                     meldekort.mottattTidspunkt.toLocalDate()
