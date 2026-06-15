@@ -10,6 +10,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
+import no.nav.aap.behandlingsflyt.utils.FarligMutering
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
 import no.nav.aap.komponenter.type.Periode
@@ -195,8 +196,9 @@ class SakRepositoryImpl(private val connection: DBConnection) : SakRepository {
         opprettetTidspunkt = row.getLocalDateTime("opprettet_tid")
     )
 
+    @FarligMutering
     @WithSpan
-    override fun oppdaterRettighetsperiode(sakId: SakId, periode: Periode) {
+    override fun oppdaterRettighetsperiode(sak: Sak, periode: Periode) {
         val query = """
             UPDATE SAK SET rettighetsperiode = ?::daterange WHERE id = ?
         """.trimIndent()
@@ -204,7 +206,7 @@ class SakRepositoryImpl(private val connection: DBConnection) : SakRepository {
         connection.execute(query) {
             setParams {
                 setPeriode(1, periode)
-                setLong(2, sakId.toLong())
+                setLong(2, sak.id.toLong())
             }
         }
     }
