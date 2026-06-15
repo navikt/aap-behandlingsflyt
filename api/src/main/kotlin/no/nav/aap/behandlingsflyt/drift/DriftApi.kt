@@ -9,8 +9,14 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepo
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingReferanse
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingRepository
+import no.nav.aap.behandlingsflyt.behandling.tidligerevurderinger.BehandlingsutfallType
+import no.nav.aap.behandlingsflyt.behandling.tidligerevurderinger.TidligereVurderingDto
+import no.nav.aap.behandlingsflyt.behandling.tidligerevurderinger.TidligereVurderingerDto
+import no.nav.aap.behandlingsflyt.behandling.tidligerevurderinger.TidligereVurderingerReq
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelse2Dto
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseService
+import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
+import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.rettighetstype.RettighetstypeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.Opphør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.Stans
@@ -30,9 +36,11 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
+import no.nav.aap.behandlingsflyt.periodisering.FlytKontekstMedPeriodeService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
@@ -51,6 +59,7 @@ import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.Operasjon
 import no.nav.aap.tilgang.SakPathParam
+import no.nav.aap.tilgang.authorizedGet
 import no.nav.aap.tilgang.authorizedPost
 import no.nav.aap.tilgang.plugin.kontrakt.BehandlingreferanseResolver
 import no.nav.aap.verdityper.dokument.Kanal
@@ -100,6 +109,7 @@ fun NormalOpenAPIRoute.driftApi(
             authorizedPost<BehandlingReferanse, Unit, Unit>(
                 AuthorizationParamPathConfig(
                     behandlingPathParam = BehandlingPathParam("referanse"),
+                    relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
                     operasjon = Operasjon.DRIFTE
                 )
             ) { params, request ->
@@ -272,6 +282,49 @@ fun NormalOpenAPIRoute.driftApi(
                 }
                 respond(res)
             }
+        }
+
+        route("/behandling/{referanse}/tidligere-vurderinger").authorizedGet<TidligereVurderingerReq, TidligereVurderingerDto>(
+            AuthorizationParamPathConfig(
+                relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
+                behandlingPathParam = BehandlingPathParam(
+                    "referanse"
+                ),
+                operasjon = Operasjon.DRIFTE
+            )
+        ) { req ->
+            val response = dataSource.transaction(readOnly = true) { connection ->
+                val repositoryProvider = repositoryRegistry.provider(connection)
+
+                val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+                val behandling =
+                    BehandlingReferanseService(behandlingRepository).behandling(BehandlingReferanse(req.referanse))
+
+                val kontekst = FlytKontekstMedPeriodeService(repositoryProvider, gatewayProvider).utled(
+                    behandling.flytKontekst(),
+                    req.førSteg
+                )
+
+                val tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider)
+                TidligereVurderingerDto(
+                    tidligereVurderinger.behandlingsutfall(kontekst, req.førSteg, req.etterSteg).segmenter().map {
+                        val verdi = it.verdi
+                        TidligereVurderingDto(
+                            periode = it.periode,
+                            utfall = BehandlingsutfallType.fraBehandlingsutfall(verdi),
+                            rettighetstype = when (verdi) {
+                                is TidligereVurderinger.PotensieltOppfylt -> verdi.rettighetstype
+                                else -> null
+                            },
+                            muligRettighetstypeFraNavkontor = when (verdi) {
+                                is TidligereVurderinger.PotensieltOppfylt -> verdi.muligRettFraNavKontor
+                                else -> null
+                            }
+                        )
+                    })
+            }
+
+            respond(response)
         }
 
         route("/sak/{saksnummer}/info") {
