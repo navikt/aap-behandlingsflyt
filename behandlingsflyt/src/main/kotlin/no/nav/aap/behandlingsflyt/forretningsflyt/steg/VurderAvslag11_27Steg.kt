@@ -1,0 +1,99 @@
+package no.nav.aap.behandlingsflyt.forretningsflyt.steg
+
+import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
+import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
+import no.nav.aap.behandlingsflyt.behandling.vilkår.alder.Aldersgrunnlag
+import no.nav.aap.behandlingsflyt.behandling.vilkår.alder.Aldersvilkåret
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårService
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningRepository
+import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
+import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
+import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
+import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
+import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
+import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.lookup.repository.RepositoryProvider
+
+class VurderAvslag11_27Steg private constructor(
+    private val vilkårsresultatRepository: VilkårsresultatRepository,
+    private val vilkårService: VilkårService,
+    private val personopplysningRepository: PersonopplysningRepository,
+    private val tidligereVurderinger: TidligereVurderinger,
+    private val unleashGateway: UnleashGateway
+) : BehandlingSteg {
+
+    constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
+        vilkårsresultatRepository = repositoryProvider.provide(),
+        vilkårService = VilkårService(repositoryProvider),
+        personopplysningRepository = repositoryProvider.provide(),
+        tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
+        unleashGateway = gatewayProvider.provide()
+    )
+
+    override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
+        when (kontekst.vurderingType) {
+            VurderingType.FØRSTEGANGSBEHANDLING, VurderingType.REVURDERING, VurderingType.MIGRER_RETTIGHETSPERIODE -> {
+                if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
+                    vilkårService.ingenNyeVurderinger(
+                        kontekst.behandlingId,
+                        Vilkårtype.SAMORDNING,
+                        kontekst.rettighetsperiode,
+                        begrunnelse = "mangler behandlingsgrunnlag"
+                    )
+                } else {
+                    vurderVilkår(kontekst)
+                }
+            }
+
+            VurderingType.MELDEKORT,
+            VurderingType.UTVID_VEDTAKSLENGDE,
+            VurderingType.AUTOMATISK_BREV,
+            VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
+            VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9,
+            VurderingType.G_REGULERING,
+            VurderingType.OVERGANG_UFORE_STANS,
+            VurderingType.IKKE_RELEVANT -> {
+                // Do nothing
+            }
+        }
+
+        return Fullført
+    }
+
+    private fun vurderVilkår(kontekst: FlytKontekstMedPerioder) {
+        val brukerPersonopplysning =
+            personopplysningRepository.hentBrukerPersonOpplysningHvisEksisterer(kontekst.behandlingId)
+                ?: throw IllegalStateException("Forventet å finne personopplysninger")
+
+        val grenseForAntallMånederFørFylte18 = if (unleashGateway.isEnabled(BehandlingsflytFeature.Under18)) 3L else 0L
+
+        val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
+        val aldersgrunnlag =
+            Aldersgrunnlag(
+                kontekst.rettighetsperiode,
+                brukerPersonopplysning.fødselsdato,
+                grenseForAntallMånederFørFylte18,
+            )
+        Aldersvilkåret(vilkårsresultat).vurder(aldersgrunnlag)
+        vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
+    }
+
+    companion object : FlytSteg {
+        override fun konstruer(
+            repositoryProvider: RepositoryProvider,
+            gatewayProvider: GatewayProvider
+        ): BehandlingSteg {
+            return VurderAvslag11_27Steg(repositoryProvider, gatewayProvider)
+        }
+
+        override fun type(): StegType {
+            return StegType.VURDER_AVSLAG_11_27
+        }
+    }
+}

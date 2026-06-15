@@ -219,6 +219,13 @@ public enum class Definisjon(
             Rolle.SAKSBEHANDLER_NASJONAL
         )
     ),
+
+    VURDER_AVSLAG_11_27(
+        kode = AvklaringsbehovKode.`5042`,
+        løsesISteg = StegType.VURDER_AVSLAG_11_27,
+        type = BehovType.MANUELT_PÅKREVD,
+        løsesAv = listOf( Rolle.SAKSBEHANDLER_NASJONAL),
+    ),
     
     SKRIV_SYKDOMSVURDERING_BREV(
         kode = AvklaringsbehovKode.`5053`,

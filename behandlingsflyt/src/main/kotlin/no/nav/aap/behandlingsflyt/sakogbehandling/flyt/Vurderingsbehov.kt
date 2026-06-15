@@ -59,7 +59,8 @@ enum class Vurderingsbehov {
     BARNETILLEGG_SATS_REGULERING,
     REVURDER_SYKESTIPEND,
     ETABLERING_EGEN_VIRKSOMHET,
-    AKTIVITETSPLIKTBEHANDLING_AVBRUTT
+    AKTIVITETSPLIKTBEHANDLING_AVBRUTT,
+    VURDER_AVSLAG_11_27
     ;
 
     companion object {
@@ -144,4 +145,5 @@ fun EksponertÅrsak.tilVurderingsbehov() =
         EksponertÅrsak.REVURDER_SYKESTIPEND -> Vurderingsbehov.REVURDER_SYKESTIPEND
         EksponertÅrsak.ETABLERING_EGEN_VIRKSOMHET -> Vurderingsbehov.ETABLERING_EGEN_VIRKSOMHET
         EksponertÅrsak.AKTIVITETSPLIKTBEHANDLING_AVBRUTT -> Vurderingsbehov.AKTIVITETSPLIKTBEHANDLING_AVBRUTT
+        EksponertÅrsak.VURDER_AVSLAG_11_27 -> Vurderingsbehov.VURDER_AVSLAG_11_27
     }

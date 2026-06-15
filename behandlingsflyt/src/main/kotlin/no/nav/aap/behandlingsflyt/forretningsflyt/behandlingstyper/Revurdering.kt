@@ -71,6 +71,7 @@ import no.nav.aap.behandlingsflyt.forretningsflyt.steg.UnderveisSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VedtakslengdeSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VisGrunnlagSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderAlderSteg
+import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderAvslag11_27Steg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderBistandsbehovSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderForutgåendeMedlemskapSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderLovvalgSteg
@@ -127,6 +128,7 @@ object Revurdering : BehandlingType {
             )
             .medSteg(steg = FastsettMeldeperiodeSteg, vurderingsbehovRelevanteForSteg = Vurderingsbehov.alle())
             .medSteg(steg = VurderAlderSteg, vurderingsbehovRelevanteForSteg = Vurderingsbehov.alle())
+            .medSteg(steg = VurderAvslag11_27Steg, vurderingsbehovRelevanteForSteg = listOf(Vurderingsbehov.VURDER_AVSLAG_11_27))
             .medSteg(
                 steg = VurderStudentSteg,
                 vurderingsbehovRelevanteForSteg = listOf(
