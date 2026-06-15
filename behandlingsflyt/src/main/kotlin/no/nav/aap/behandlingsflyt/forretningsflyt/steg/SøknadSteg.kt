@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
@@ -13,9 +12,13 @@ import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.komponenter.tidslinje.somTidslinje
+import no.nav.aap.komponenter.tidslinje.tidslinjeOf
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.lookup.repository.Repository
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
@@ -33,7 +36,6 @@ class SøknadSteg(
     private val sakRepository: SakRepository,
     private val repositoryProvider: RepositoryProvider,
     private val avklaringsbehovService: AvklaringsbehovService,
-    private val avklaringsbehovRepository: AvklaringsbehovRepository
 ) : BehandlingSteg {
     private val log = LoggerFactory.getLogger(javaClass)
 
@@ -58,14 +60,26 @@ class SøknadSteg(
         )
 
         if (erTilstrekkeligVurdert && harTrukketSøknad) {
-            val rettighetsperiode = kontekst.rettighetsperiode
-            // Setter ny rettighetsperiode til én dag lang
-            val nyRettighetsPeriode = Periode(rettighetsperiode.fom, rettighetsperiode.fom)
-            sakRepository.oppdaterRettighetsperiode(kontekst.sakId, nyRettighetsPeriode)
+            /* Frem til [KravSteg] er ferdig utviklet, så kan personer ha flere saker.
+             * Det er ikke uvanlig at saker blir trukket ved en feil, og at det så opprettes
+             * en ny sak som ville ha overlappet med den trukne saken. Vi setter derfor
+             * en fiktiv rettighetsperiode på den trukne saken. */
+            sakRepository.oppdaterRettighetsperiode(kontekst.sakId, finnUgyldigRettighetsperiode(kontekst.sakId))
             slettVurderingerOgRegisterdata(kontekst.behandlingId)
         }
 
         return Fullført
+    }
+
+    private fun finnUgyldigRettighetsperiode(sakId: SakId): Periode {
+        val førsteLedigeDato = sakRepository.finnSakerFor(sakRepository.finnPersonId(sakId))
+            .somTidslinje({ it.rettighetsperiode }, { false }).komprimer()
+            .mergePrioriterVenstre(tidslinjeOf(Periode(Tid.MIN, Tid.MAKS) to true))
+            .filter { it.verdi }
+            .perioder()
+            .first()
+            .fom
+        return Periode(førsteLedigeDato, førsteLedigeDato)
     }
 
     private fun slettVurderingerOgRegisterdata(behandlingId: BehandlingId) {
@@ -86,7 +100,6 @@ class SøknadSteg(
                 trukketSøknadRepository = repositoryProvider.provide(),
                 repositoryProvider = repositoryProvider,
                 sakRepository = repositoryProvider.provide(),
-                avklaringsbehovRepository = repositoryProvider.provide(),
                 avklaringsbehovService = AvklaringsbehovService(repositoryProvider)
             )
         }
