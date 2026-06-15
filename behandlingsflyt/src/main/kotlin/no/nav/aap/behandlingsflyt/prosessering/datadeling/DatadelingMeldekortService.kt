@@ -61,14 +61,15 @@ class DatadelingMeldekortService(
         val helePerioden = underveistidslinje?.helePerioden() ?: sak.rettighetsperiodeEttÅrFraStartDato()
         val meldePeriodene = meldeperiodeRepository.hentMeldeperioder(behandlingId, helePerioden)
 
-        val arbeidsgradering = underveistidslinje.orEmpty().map {
-            Arbeidsgradering(
-                benyttetGrenseverdi = it.grenseverdi.prosentverdi(),
-                gradering = it.arbeidsgradering.gradering.prosentverdi(),
-                fastsattArbeidsevne = it.arbeidsgradering.fastsattArbeidsevne.prosentverdi(),
-                arbeidetOverGrenseverdi = it.arbeidsgradering.andelArbeid.prosentverdi() > it.grenseverdi.prosentverdi()
-            )
-        }
+        val arbeidsgradering = underveistidslinje
+            .orEmpty().map {
+                Arbeidsgradering(
+                    benyttetGrenseverdi = it.grenseverdi.prosentverdi(),
+                    gradering = it.arbeidsgradering.gradering.prosentverdi(),
+                    fastsattArbeidsevne = it.arbeidsgradering.fastsattArbeidsevne.prosentverdi(),
+                    arbeidetOverGrenseverdi = it.arbeidsgradering.andelArbeid.prosentverdi() > it.grenseverdi.prosentverdi()
+                )
+            }
 
         return if (meldePeriodene.isNotEmpty()) {
             filtrerOgMapMeldekort(meldekortene, meldePeriodene, personIdent, sak, behandlingId, arbeidsgradering)
@@ -92,10 +93,9 @@ class DatadelingMeldekortService(
 
             when {
                 meldekortetsPeriode == null -> {
-                    println(
+                    log.warn(
                         "Meldekort med arbeidstimer som ikke samsvarer med noen meldekortperiode for behandlingen ble ignorert. journalpostId=${meldekort.journalpostId.identifikator}, behandlingId=${behandlingId.id}, arbeidsperiode=$arbeidsperiode"
                     )
-                    ///?
                     null
                 }
 
@@ -158,7 +158,9 @@ class DatadelingMeldekortService(
     ): Periode? {
         val arbeidsperiode = meldekort.arbeidsperiode()
 
-        return meldeperioder.firstOrNull { arbeidsperiode != null && it.overlapper(arbeidsperiode) }
+        val periodeViaArbeidsperiode =
+            meldeperioder.firstOrNull { arbeidsperiode != null && it.overlapper(arbeidsperiode) }
+        return periodeViaArbeidsperiode
             ?: meldeperioder.firstOrNull {
                 it.inneholder(
                     meldekort.mottattTidspunkt.toLocalDate()
