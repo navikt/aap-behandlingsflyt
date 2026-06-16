@@ -76,6 +76,7 @@ import no.nav.aap.dokumentinnhenting.kontrakt.BehandlerDto
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.testutil.ManuellMotorImpl
@@ -770,7 +771,7 @@ private fun mapKravVurdering(krav: KravVurderingTestDto, behandlingId: Behandlin
         KravType.NYTT_KRAV_AAP -> NyttKrav(
             referanse = referanse,
             journalpostId = journalpostId,
-            vurdertAv = "Testbruker",
+            vurdertAv = Bruker("Testbruker"),
             begrunnelse = "Nytt krav",
             vurdertIBehandling = behandlingId,
             opprettet = now,
@@ -784,7 +785,7 @@ private fun mapKravVurdering(krav: KravVurderingTestDto, behandlingId: Behandlin
         KravType.GJENOPPTAK -> Gjenopptak(
             referanse = referanse,
             journalpostId = journalpostId,
-            vurdertAv = "Testbruker",
+            vurdertAv = Bruker("Testbruker"),
             begrunnelse = "Gjenopptak",
             vurdertIBehandling = behandlingId,
             opprettet = now,
@@ -798,7 +799,7 @@ private fun mapKravVurdering(krav: KravVurderingTestDto, behandlingId: Behandlin
         KravType.TRUKKET_SØKNAD -> TrukketSøknad(
             referanse = referanse,
             journalpostId = journalpostId,
-            vurdertAv = "Testbruker",
+            vurdertAv = Bruker("Testbruker"),
             begrunnelse = "Trukket søknad",
             vurdertIBehandling = behandlingId,
             opprettet = now,
@@ -806,7 +807,7 @@ private fun mapKravVurdering(krav: KravVurderingTestDto, behandlingId: Behandlin
         KravType.KLAGE -> Klage(
             referanse = referanse,
             journalpostId = journalpostId,
-            vurdertAv = "Testbruker",
+            vurdertAv = Bruker("Testbruker"),
             begrunnelse = "Klage",
             vurdertIBehandling = behandlingId,
             opprettet = now,
@@ -814,7 +815,7 @@ private fun mapKravVurdering(krav: KravVurderingTestDto, behandlingId: Behandlin
         KravType.TILLEGGSOPPLYSNING -> Tilleggsopplysning(
             referanse = referanse,
             journalpostId = journalpostId,
-            vurdertAv = "Testbruker",
+            vurdertAv = Bruker("Testbruker"),
             begrunnelse = "Tilleggsopplysning",
             vurdertIBehandling = behandlingId,
             opprettet = now,

@@ -15,6 +15,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.TrukketSøkna
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.lookup.repository.Factory
 import no.nav.aap.verdityper.dokument.JournalpostId
 import org.slf4j.LoggerFactory
@@ -69,7 +70,7 @@ class KravRepositoryImpl(private val connection: DBConnection) : KravRepository 
             setParams { v ->
                 setLong(1, vurderingerId)
                 setString(2, v.journalpostId.identifikator)
-                setString(3, v.vurdertAv)
+                setString(3, v.vurdertAv.ident)
                 setInstant(4, v.opprettet)
                 setString(5, v.begrunnelse)
                 setLong(6, v.vurdertIBehandling.id)
@@ -170,7 +171,7 @@ class KravRepositoryImpl(private val connection: DBConnection) : KravRepository 
     private fun mapVurdering(row: Row): KravVurdering {
         val referanse = Kravreferanse(row.getUUID("referanse"))
         val journalpostId = JournalpostId(row.getString("journalpost_id"))
-        val vurdertAv = row.getString("vurdert_av")
+        val vurdertAv = Bruker(row.getString("vurdert_av"))
         val opprettet = row.getInstant("opprettet_tid")
         val begrunnelse = row.getString("begrunnelse")
         val vurdertIBehandling = BehandlingId(row.getLong("vurdert_i_behandling"))
@@ -232,22 +233,7 @@ class KravRepositoryImpl(private val connection: DBConnection) : KravRepository 
     }
 
     override fun slett(behandlingId: BehandlingId) {
-        val vurderingerIder = hentVurderingerIder(behandlingId)
-
-        val deletedRows = connection.executeReturnUpdated(
-            """
-            DELETE FROM krav_grunnlag WHERE behandling_id = ?;
-            DELETE FROM krav_vurdering WHERE krav_vurderinger_id = ANY(?::bigint[]);
-            DELETE FROM krav_vurderinger WHERE id = ANY(?::bigint[]);
-            """.trimIndent()
-        ) {
-            setParams {
-                setLong(1, behandlingId.id)
-                setLongArray(2, vurderingerIder)
-                setLongArray(3, vurderingerIder)
-            }
-        }
-        log.info("Slettet $deletedRows rader fra krav-tabeller for behandling $behandlingId")
+        // Skal ikke slette krav selv om søknad trekkes
     }
 
     private fun hentVurderingerIder(behandlingId: BehandlingId): List<Long> {

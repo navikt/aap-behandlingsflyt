@@ -43,7 +43,6 @@ import java.math.BigDecimal
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
-import java.util.UUID
 import kotlin.reflect.KClass
 
 @ParameterizedClass
@@ -266,7 +265,7 @@ class RettighetsperiodeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
                                     dato = nå.toLocalDate()
                                 ),
                                 journalpostId = journalpostId,
-                                vurdertAv = SYSTEMBRUKER.ident,
+                                vurdertAv = SYSTEMBRUKER,
                                 begrunnelse = "Automatisk vurdert",
                                 opprettet = Instant.now(), //Ignorert
                                 overstyrMuligRettFra = null,

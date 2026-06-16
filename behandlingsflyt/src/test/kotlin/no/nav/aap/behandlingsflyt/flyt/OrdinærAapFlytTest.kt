@@ -22,6 +22,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadStudentDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadV0
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.test.minimalGatewayProvider
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.type.Periode
@@ -116,7 +117,9 @@ class OrdinærAapFlytTest(val unleashGateway: KClass<UnleashGateway>) : Abstrakt
         assertThat(vedtak.vedtakstidspunkt.toLocalDate()).isToday
 
         val resultat = dataSource.transaction {
-            ResultatUtleder(postgresRepositoryRegistry.provider(it), minimalGatewayProvider { }).utledResultatFørstegangsBehandling(behandling.id)
+            ResultatUtleder(
+                postgresRepositoryRegistry.provider(it),
+                minimalGatewayProvider { }).utledResultatFørstegangsBehandling(behandling.id)
         }
         assertThat(resultat).isEqualTo(Resultat.AVSLAG)
         val brevbestilling = hentBrevAvType(behandling, TypeBrev.VEDTAK_AVSLAG)
@@ -185,7 +188,7 @@ class OrdinærAapFlytTest(val unleashGateway: KClass<UnleashGateway>) : Abstrakt
             .medKontekst {
                 assertThat(åpneAvklaringsbehov).anySatisfy { assertThat(it.definisjon).isEqualTo(Definisjon.SKRIV_SYKDOMSVURDERING_BREV) }
             }
-            .løsSykdomsvurderingBrev() 
+            .løsSykdomsvurderingBrev()
             .bekreftVurderinger() // Krever ikke kvalitetskontroll i revurdering
             .fattVedtak()
             .løsVedtaksbrev(typeBrev = TypeBrev.VEDTAK_ENDRING)
@@ -229,8 +232,19 @@ class OrdinærAapFlytTest(val unleashGateway: KClass<UnleashGateway>) : Abstrakt
             ),
         ).medKontekst {
             assertThat(behandling.status()).isEqualTo(Status.UTREDES)
-            assertThat(åpneAvklaringsbehov.map { it.definisjon })
-                .containsExactlyInAnyOrder(Definisjon.MANUELT_SATT_PÅ_VENT, Definisjon.AVKLAR_SYKDOM)
+
+            if (unleashGateway.objectInstance!!.isEnabled(BehandlingsflytFeature.KravSteg)) {
+                assertThat(åpneAvklaringsbehov.map { it.definisjon })
+                    .containsExactlyInAnyOrder(
+                        Definisjon.VURDER_KRAV,
+                        Definisjon.MANUELT_SATT_PÅ_VENT,
+                        Definisjon.AVKLAR_SYKDOM
+                    )
+            } else {
+                assertThat(åpneAvklaringsbehov.map { it.definisjon })
+                    .containsExactlyInAnyOrder(Definisjon.MANUELT_SATT_PÅ_VENT, Definisjon.AVKLAR_SYKDOM)
+            }
+
         }
     }
 }
