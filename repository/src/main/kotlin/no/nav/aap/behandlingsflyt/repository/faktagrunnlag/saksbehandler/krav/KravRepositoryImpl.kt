@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Kravreferanse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.OverstyrMuligRettFra
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.NyttKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Søknadsdato
@@ -72,7 +73,7 @@ class KravRepositoryImpl(private val connection: DBConnection) : KravRepository 
                 setInstant(4, v.opprettet)
                 setString(5, v.begrunnelse)
                 setLong(6, v.vurdertIBehandling.id)
-                setUUID(13, v.referanse)
+                setUUID(13, v.referanse.verdi)
                 when (v) {
                     is NyttKrav -> {
                         setEnumName(7, KravType.NYTT_KRAV_AAP)
@@ -99,7 +100,6 @@ class KravRepositoryImpl(private val connection: DBConnection) : KravRepository 
                         setLocalDate(10, null)
                         setEnumName(11, null as Enum<*>?)
                         setLocalDate(12, null)
-                        setUUID(13, v.referanse)
                     }
 
                     is Klage -> {
@@ -177,7 +177,7 @@ class KravRepositoryImpl(private val connection: DBConnection) : KravRepository 
 
         return when (val kravType = row.getEnum<KravType>("krav_type")) {
             KravType.NYTT_KRAV_AAP -> NyttKrav(
-                referanse = referanse,
+                referanse = Kravreferanse(referanse),
                 journalpostId = journalpostId, vurdertAv = vurdertAv,
                 begrunnelse = begrunnelse,
                 vurdertIBehandling = vurdertIBehandling, opprettet = opprettet,
@@ -187,7 +187,7 @@ class KravRepositoryImpl(private val connection: DBConnection) : KravRepository 
             )
 
             KravType.GJENOPPTAK -> Gjenopptak(
-                referanse = referanse,
+                referanse = Kravreferanse(referanse),
                 journalpostId = journalpostId, vurdertAv = vurdertAv,
                 begrunnelse = begrunnelse,
                 vurdertIBehandling = vurdertIBehandling, opprettet = opprettet,
@@ -197,21 +197,21 @@ class KravRepositoryImpl(private val connection: DBConnection) : KravRepository 
             )
 
             KravType.TRUKKET_SØKNAD -> TrukketSøknad(
-                referanse = referanse,
+                referanse = Kravreferanse(referanse),
                 journalpostId = journalpostId, vurdertAv = vurdertAv,
                 begrunnelse = begrunnelse,
                 vurdertIBehandling = vurdertIBehandling, opprettet = opprettet,
             )
 
             KravType.KLAGE -> Klage(
-                referanse = referanse,
+                referanse = Kravreferanse(referanse),
                 journalpostId = journalpostId, vurdertAv = vurdertAv,
                 begrunnelse = begrunnelse,
                 vurdertIBehandling = vurdertIBehandling, opprettet = opprettet,
             )
 
             KravType.TILLEGGSOPPLYSNING -> Tilleggsopplysning(
-                referanse = referanse,
+                referanse = Kravreferanse(referanse),
                 journalpostId = journalpostId, vurdertAv = vurdertAv,
                 begrunnelse = begrunnelse,
                 vurdertIBehandling = vurdertIBehandling, opprettet = opprettet,

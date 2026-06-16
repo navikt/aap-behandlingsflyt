@@ -6,8 +6,15 @@ import java.time.Instant
 import java.time.LocalDate
 import java.util.UUID
 
+@JvmInline
+value class Kravreferanse(val verdi: UUID) {
+    companion object {
+        fun ny(): Kravreferanse = Kravreferanse(UUID.randomUUID())
+    }
+}
+
 sealed interface KravVurdering {
-    val referanse: UUID
+    val referanse: Kravreferanse
     val journalpostId: JournalpostId
     val vurdertAv: String
     val begrunnelse: String
@@ -16,7 +23,7 @@ sealed interface KravVurdering {
 }
 
 data class NyttKrav(
-    override val referanse: UUID,
+    override val referanse: Kravreferanse,
     override val journalpostId: JournalpostId,
     override val vurdertAv: String,
     override val begrunnelse: String,
@@ -29,7 +36,7 @@ data class NyttKrav(
 ) : KravVurdering
 
 data class TrukketSøknad(
-    override val referanse: UUID,
+    override val referanse: Kravreferanse,
     override val journalpostId: JournalpostId,
     override val vurdertAv: String,
     override val begrunnelse: String,
@@ -38,7 +45,7 @@ data class TrukketSøknad(
 ) : KravVurdering
 
 data class Gjenopptak(
-    override val referanse: UUID,
+    override val referanse: Kravreferanse,
     override val journalpostId: JournalpostId,
     override val vurdertAv: String,
     override val begrunnelse: String,
@@ -51,7 +58,7 @@ data class Gjenopptak(
 ) : KravVurdering
 
 data class Klage(
-    override val referanse: UUID,
+    override val referanse: Kravreferanse,
     override val journalpostId: JournalpostId,
     override val vurdertAv: String,
     override val begrunnelse: String,
@@ -60,7 +67,7 @@ data class Klage(
 ) : KravVurdering
 
 data class Tilleggsopplysning(
-    override val referanse: UUID,
+    override val referanse: Kravreferanse,
     override val journalpostId: JournalpostId,
     override val vurdertAv: String,
     override val begrunnelse: String,

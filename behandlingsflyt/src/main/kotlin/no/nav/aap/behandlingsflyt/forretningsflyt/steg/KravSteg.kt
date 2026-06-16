@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Kravreferanse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.NyttKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Søknadsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.SøknadsdatoÅrsak
@@ -54,7 +55,7 @@ class KravSteg(
                 kravRepository.lagre(
                     kontekst.behandlingId, vurderinger = setOf(
                         NyttKrav(
-                            referanse = UUID.randomUUID(),
+                            referanse = Kravreferanse.ny(),
                             journalpostId = søknad.referanse.asJournalpostId,
                             vurdertAv = SYSTEMBRUKER.ident,
                             begrunnelse = "Automatisk vurdert",
