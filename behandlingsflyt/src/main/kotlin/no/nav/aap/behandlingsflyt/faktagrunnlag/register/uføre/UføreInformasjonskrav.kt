@@ -142,8 +142,8 @@ class UføreInformasjonskrav(
         val sak = uføreInput.sak
         val beregningVurdering = uføreInput.beregningVurdering
         // prøver å sette fraDato riktig hvis den finnes
-        val fraDato = uføreInput.fødselsdato?.dato ?: utledFraDato(beregningVurdering, sak.rettighetsperiode.fom)
-        return uføreRegisterGateway.innhentMedHistorikk(sak.person, treÅrFør(fraDato))
+        val fraDato = utledFraDato(beregningVurdering, sak.rettighetsperiode.fom)
+        return uføreRegisterGateway.innhentMedHistorikk(sak.person, uføreInput.fødselsdato?.dato ?: treÅrFør(fraDato))
     }
 
     private fun utledFraDato(
