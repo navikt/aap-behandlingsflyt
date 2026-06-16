@@ -58,9 +58,8 @@ data class PeriodeDto(
 
 data class KravVurderingTestDto(
     val kravType: KravType,
-    val søknadsdato: LocalDate? = LocalDate.now().minusMonths(3),
-    val kravdato: LocalDate? = LocalDate.now().minusMonths(3),
-    val muligRettFra: LocalDate? = LocalDate.now().minusMonths(1),
+    val søknadsdato: LocalDate = LocalDate.now().minusMonths(1),
+    val overstyrMuligRettFra: LocalDate? = null,
 )
 
 data class LeggTilKravVurderingDTO(

@@ -25,8 +25,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Klage
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravVurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.MuligRettFra
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.MuligRettFraÅrsak
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Kravreferanse
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.OverstyrMuligRettFra
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.OverstyrMuligRettFraÅrsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.NyttKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Søknadsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.SøknadsdatoÅrsak
@@ -762,36 +763,40 @@ private fun hentSakId(saksnummer: Saksnummer): SakId {
 
 private fun mapKravVurdering(krav: KravVurderingTestDto, behandlingId: BehandlingId): KravVurdering {
     val journalpostId = nyJournalpostId()
-
+    val referanse = Kravreferanse.ny()
+    
     val now = Instant.now()
     return when (krav.kravType) {
         KravType.NYTT_KRAV_AAP -> NyttKrav(
+            referanse = referanse,
             journalpostId = journalpostId,
             vurdertAv = "Testbruker",
             begrunnelse = "Nytt krav",
             vurdertIBehandling = behandlingId,
             opprettet = now,
             søknadsdato = Søknadsdato(
-                dato = krav.søknadsdato ?: LocalDate.now().minusMonths(3),
+                dato = krav.søknadsdato,
                 årsak = SøknadsdatoÅrsak.SøknadMottatt
             ),
-            muligRettFra = krav.muligRettFra?.let { MuligRettFra(it, MuligRettFraÅrsak.IkkeIStandTilÅSøkeTidligere) },
-            kravdato = krav.kravdato ?: LocalDate.now().minusMonths(3)
+            overstyrMuligRettFra = krav.overstyrMuligRettFra?.let { OverstyrMuligRettFra(it, OverstyrMuligRettFraÅrsak.IkkeIStandTilÅSøkeTidligere) },
+            muligRettFra = krav.overstyrMuligRettFra ?: krav.søknadsdato
         )
         KravType.GJENOPPTAK -> Gjenopptak(
+            referanse = referanse,
             journalpostId = journalpostId,
             vurdertAv = "Testbruker",
             begrunnelse = "Gjenopptak",
             vurdertIBehandling = behandlingId,
             opprettet = now,
             søknadsdato = Søknadsdato(
-                dato = krav.søknadsdato ?: LocalDate.now().minusMonths(3),
+                dato = krav.søknadsdato,
                 årsak = SøknadsdatoÅrsak.SøknadMottatt
             ),
-            muligRettFra = krav.muligRettFra?.let { MuligRettFra(it, MuligRettFraÅrsak.IkkeIStandTilÅSøkeTidligere) },
-            kravdato = krav.kravdato ?: LocalDate.now().minusMonths(3)
+            overstyrMuligRettFra = krav.overstyrMuligRettFra?.let { OverstyrMuligRettFra(it, OverstyrMuligRettFraÅrsak.IkkeIStandTilÅSøkeTidligere) },
+            muligRettFra = krav.overstyrMuligRettFra ?: krav.søknadsdato
         )
         KravType.TRUKKET_SØKNAD -> TrukketSøknad(
+            referanse = referanse,
             journalpostId = journalpostId,
             vurdertAv = "Testbruker",
             begrunnelse = "Trukket søknad",
@@ -799,6 +804,7 @@ private fun mapKravVurdering(krav: KravVurderingTestDto, behandlingId: Behandlin
             opprettet = now,
         )
         KravType.KLAGE -> Klage(
+            referanse = referanse,
             journalpostId = journalpostId,
             vurdertAv = "Testbruker",
             begrunnelse = "Klage",
@@ -806,6 +812,7 @@ private fun mapKravVurdering(krav: KravVurderingTestDto, behandlingId: Behandlin
             opprettet = now,
         )
         KravType.TILLEGGSOPPLYSNING -> Tilleggsopplysning(
+            referanse = referanse,
             journalpostId = journalpostId,
             vurdertAv = "Testbruker",
             begrunnelse = "Tilleggsopplysning",

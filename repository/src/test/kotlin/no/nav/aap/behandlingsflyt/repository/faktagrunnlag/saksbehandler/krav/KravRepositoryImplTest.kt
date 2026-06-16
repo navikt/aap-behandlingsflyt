@@ -1,7 +1,8 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.krav
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.MuligRettFra
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.MuligRettFraÅrsak
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Kravreferanse
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.OverstyrMuligRettFra
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.OverstyrMuligRettFraÅrsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.NyttKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Søknadsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.SøknadsdatoÅrsak
@@ -27,6 +28,7 @@ import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import java.time.Instant
+import java.util.UUID
 
 internal class KravRepositoryImplTest {
 
@@ -44,17 +46,19 @@ internal class KravRepositoryImplTest {
         fun tearDown() = dataSource.close()
 
         private fun nyttKrav(behandlingId: BehandlingId) = NyttKrav(
+            referanse = Kravreferanse.ny(),
             journalpostId = JournalpostId("JP-001"),
             vurdertAv = "Z123456",
             begrunnelse = "Standard krav om AAP",
             vurdertIBehandling = behandlingId,
             opprettet = Instant.now(),
             søknadsdato = Søknadsdato(1 januar 2024, SøknadsdatoÅrsak.BrukerHarSøktTidligere),
-            muligRettFra = MuligRettFra(15 januar 2024, MuligRettFraÅrsak.IkkeIStandTilÅSøkeTidligere),
-            kravdato = 1 januar 2024,
+            overstyrMuligRettFra = OverstyrMuligRettFra(15 januar 2024, OverstyrMuligRettFraÅrsak.IkkeIStandTilÅSøkeTidligere),
+            muligRettFra = 1 januar 2024,
         )
 
         private fun tilleggsopplysning(behandlingId: BehandlingId) = Tilleggsopplysning(
+            referanse = Kravreferanse.ny(),
             journalpostId = JournalpostId("JP-002"),
             vurdertAv = "Kelvin",
             begrunnelse = "",
@@ -195,11 +199,12 @@ internal class KravRepositoryImplTest {
                 repo.lagre(
                     behandling.id, setOf(
                         TrukketSøknad(
+                            referanse = Kravreferanse.ny(),
                             journalpostId = JournalpostId("JP-SLETT"),
                             vurdertAv = "Z000001",
                             begrunnelse = "Søker trakk søknaden",
                             vurdertIBehandling = behandling.id,
-                            opprettet = java.time.Instant.now(),
+                            opprettet = Instant.now(),
                         )
                     )
                 )
