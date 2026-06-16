@@ -14,14 +14,17 @@ import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.verdityper.dokument.JournalpostId
 import java.time.Instant
 import java.time.LocalDate
+import java.util.UUID
 
 data class KravGrunnlagDto(
     val harTilgangTilÅSaksbehandle: Boolean,
     val nyeVurderinger: List<KravVurderingDto>,
-    val vedtatteVurderinger: List<KravVurderingDto>
+    val vedtatteVurderinger: List<KravVurderingDto>,
+    val søknaderUtenKravvurdering: List<SøknadUtenKravDto>,
 )
 
 sealed interface KravVurderingDto {
+    val referanse: UUID
     val type: KravType
     val journalpostId: JournalpostId
     val vurdertAv: Bruker
@@ -37,6 +40,7 @@ interface KravMedDatoDto {
 }
 
 data class NyttKravDto(
+    override val referanse: UUID,
     override val journalpostId: JournalpostId,
     override val vurdertAv: Bruker,
     override val begrunnelse: String,
@@ -51,6 +55,7 @@ data class NyttKravDto(
 }
 
 data class TrukketSøknadDto(
+    override val referanse: UUID,
     override val journalpostId: JournalpostId,
     override val vurdertAv: Bruker,
     override val begrunnelse: String,
@@ -61,6 +66,7 @@ data class TrukketSøknadDto(
 }
 
 data class GjenopptakDto(
+    override val referanse: UUID,
     override val journalpostId: JournalpostId,
     override val vurdertAv: Bruker,
     override val begrunnelse: String,
@@ -75,6 +81,7 @@ data class GjenopptakDto(
 }
 
 data class KlageDto(
+    override val referanse: UUID,
     override val journalpostId: JournalpostId,
     override val vurdertAv: Bruker,
     override val begrunnelse: String,
@@ -86,6 +93,7 @@ data class KlageDto(
 }
 
 data class TilleggsopplysningDto(
+    override val referanse: UUID,
     override val journalpostId: JournalpostId,
     override val vurdertAv: Bruker,
     override val begrunnelse: String,
@@ -97,6 +105,7 @@ data class TilleggsopplysningDto(
 
 fun KravVurdering.somDto(): KravVurderingDto = when (this) {
     is NyttKrav -> NyttKravDto(
+        referanse = this.referanse.verdi,
         journalpostId = this.journalpostId,
         vurdertAv = this.vurdertAv,
         begrunnelse = this.begrunnelse,
@@ -108,6 +117,7 @@ fun KravVurdering.somDto(): KravVurderingDto = when (this) {
     )
 
     is TrukketSøknad -> TrukketSøknadDto(
+        referanse = this.referanse.verdi,
         journalpostId = this.journalpostId,
         vurdertAv = this.vurdertAv,
         begrunnelse = this.begrunnelse,
@@ -116,6 +126,7 @@ fun KravVurdering.somDto(): KravVurderingDto = when (this) {
     )
 
     is Gjenopptak -> GjenopptakDto(
+        referanse = this.referanse.verdi,
         journalpostId = this.journalpostId,
         vurdertAv = this.vurdertAv,
         begrunnelse = this.begrunnelse,
@@ -127,6 +138,7 @@ fun KravVurdering.somDto(): KravVurderingDto = when (this) {
     )
 
     is Klage -> KlageDto(
+        referanse = this.referanse.verdi,
         journalpostId = this.journalpostId,
         vurdertAv = this.vurdertAv,
         begrunnelse = this.begrunnelse,
@@ -135,6 +147,7 @@ fun KravVurdering.somDto(): KravVurderingDto = when (this) {
     )
 
     is Tilleggsopplysning -> TilleggsopplysningDto(
+        referanse = this.referanse.verdi,
         journalpostId = this.journalpostId,
         vurdertAv = this.vurdertAv,
         begrunnelse = this.begrunnelse,
