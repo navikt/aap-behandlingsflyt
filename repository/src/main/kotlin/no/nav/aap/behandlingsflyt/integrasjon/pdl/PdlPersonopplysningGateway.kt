@@ -40,7 +40,6 @@ object PdlPersonopplysningGateway : PersonopplysningGateway {
         })
 
         return Personopplysning(
-            id = 0, // Setter no bs her for å få det gjennom
             fødselsdato = foedselsdato,
             dødsdato = response.data.hentPerson.doedsfall?.firstOrNull()?.doedsdato?.let { Dødsdato.parse(it) },
             statsborgerskap = statsborgerskap,
