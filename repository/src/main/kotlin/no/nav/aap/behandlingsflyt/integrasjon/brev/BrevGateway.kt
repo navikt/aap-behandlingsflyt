@@ -17,6 +17,7 @@ import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingRefer
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.HåndterConflictResponseHandler
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurderingAvForeldreAnsvar
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktGrunnlag
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.prometheus
@@ -403,6 +404,10 @@ class BrevGateway : BrevbestillingGateway {
                     brevBehov.yrkesSkadeISøknadIkkeIRegister?.let {
                         add(Faktagrunnlag.YrkesskadeISøknadIkkeIRegister(it))
                     }
+                    brevBehov.meldepliktGrunnlag?.let {
+                        add(
+                            fritakmeldepliktTilFaktagrunnlag(it))
+                    }
                 }
 
             is VurderesForUføretrygd -> {
@@ -499,6 +504,20 @@ class BrevGateway : BrevbestillingGateway {
                 )
             },
             andelAvNedsettelseSomSkyldesYrkesskade = yrkesskadeBeregning.andelAvNedsettelseSomSkyldesYrkesskade,
+        )
+    }
+
+    private fun fritakmeldepliktTilFaktagrunnlag(
+        meldepliktGrunnlag: MeldepliktGrunnlag
+    ): Faktagrunnlag.FritakMeldepliktGrunnlag {
+        return Faktagrunnlag.FritakMeldepliktGrunnlag(
+            fritakMeldepliktGrunnlag = meldepliktGrunnlag.vurderinger.map { vurdering ->
+                Faktagrunnlag.FritakMeldepliktGrunnlag.FritakMeldepliktVurdering(
+                    harFritak = vurdering.harFritak,
+                    fraDato = vurdering.fraDato,
+                    tilDato = vurdering.tilDato,
+                )
+            }
         )
     }
 

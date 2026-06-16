@@ -356,6 +356,14 @@ public enum class Definisjon(
         kreverToTrinn = true
     ),
 
+    VURDER_KRAV(
+        kode = AvklaringsbehovKode.`5038`,
+        type = BehovType.MANUELT_PÅKREVD,
+        løsesISteg = StegType.KRAV,
+        løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL),
+        kreverToTrinn = true
+    ),
+
     @Deprecated("Brukt i tidligere behandlinger")
     EFFEKTUER_11_7(
         kode = AvklaringsbehovKode.`5015`,

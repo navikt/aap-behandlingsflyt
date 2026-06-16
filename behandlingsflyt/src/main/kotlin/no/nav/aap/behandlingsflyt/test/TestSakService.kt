@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.test
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PdlQueryException
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravRepository
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
@@ -31,6 +32,7 @@ class TestSakService(
     private val personOgSakService: PersonOgSakService,
     private val behandlingService: BehandlingService,
     private val mottattDokumentRepository: MottattDokumentRepository,
+    private val kravRepository: KravRepository
 ) {
 
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
@@ -39,6 +41,7 @@ class TestSakService(
         personOgSakService = PersonOgSakService(gatewayProvider, repositoryProvider),
         behandlingService = BehandlingService(repositoryProvider, gatewayProvider),
         mottattDokumentRepository = repositoryProvider.provide(),
+        kravRepository = repositoryProvider.provide()
     )
 
     fun opprettTestSak(

@@ -8,7 +8,6 @@ public const val VENTE_PÅ_FRIST_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT: String =
 public const val VURDER_BRUDD_11_9_KODE: String = "4201"
 public const val AVBRYT_AKTIVITETSPLIKTBEHANDING_KODE: String = "4301"
 public const val AVKLAR_STUDENT_KODE: String = "5001"
-public const val AVKLAR_STUDENT_KODE_V2: String = "5037"
 public const val OVERSTYR_IKKE_OPPFYKT_MELDEPLIKT_KODE: String = "5002"
 public const val AVKLAR_SYKDOM_KODE: String = "5003"
 public const val FASTSETT_ARBEIDSEVNE_KODE: String = "5004"
@@ -41,6 +40,8 @@ public const val AVBRYT_REVURDERING_KODE: String = "5033"
 public const val AVKLAR_SAMORDNING_SYKESTIPEND_KODE: String = "5034"
 public const val AVKLAR_OPPHOLDSKRAV: String = "5035"
 public const val AVKLAR_SAMORDNING_BARNEPENSJON_KODE: String = "5036"
+public const val AVKLAR_STUDENT_KODE_V2: String = "5037"
+public const val VURDER_KRAV_KODE: String = "5038"
 public const val VURDER_INNTEKTSBORTFALL: String = "5040"
 public const val SKRIV_VEDTAKSBREV_SAKSBEHANDLER_KODE: String = "5041"
 public const val VURDER_AVSLAG_11_27_KODE: String = "5042"
@@ -105,11 +106,6 @@ public enum class AvklaringsbehovKode {
      * [AVKLAR_STUDENT_KODE]
      */
     `5001`,
-
-    /**
-     * [AVKLAR_STUDENT_KODE_V2]
-     */
-    `5037`,
 
     /**
      * [OVERSTYR_IKKE_OPPFYLT_MELDEPLIKT_KODE]
@@ -289,6 +285,16 @@ public enum class AvklaringsbehovKode {
      * [AVKLAR_SAMORDNING_BARNEPENSJON_KODE]
      */
     `5036`,
+
+    /**
+     * [AVKLAR_STUDENT_KODE_V2]
+     */
+    `5037`,
+
+    /**
+     * [VURDER_KRAV_KODE]
+     */
+    `5038`,
 
     /**
      * [VURDER_INNTEKTSBORTFALL]

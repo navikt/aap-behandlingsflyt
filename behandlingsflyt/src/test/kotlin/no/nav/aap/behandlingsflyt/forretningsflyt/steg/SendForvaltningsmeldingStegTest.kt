@@ -56,7 +56,11 @@ class SendForvaltningsmeldingStegTest {
     @Test
     fun `steg før SendForvaltningsmeldingSteg skal ikke føre til avklaringsbehov som vil forsinke utsending`() {
         // Dersom det er definisjoner som ikke vil hindre i tilfeler det skal sendes forvaltningsmelding, så kan disse legges i unntak
-        val unntak = listOf(Definisjon.SAMORDNING_VENT_PA_VIRKNINGSTIDSPUNKT, Definisjon.VENTE_PÅ_KLAGE_IMPLEMENTASJON)
+        val unntak = listOf(
+            Definisjon.SAMORDNING_VENT_PA_VIRKNINGSTIDSPUNKT,
+            Definisjon.VENTE_PÅ_KLAGE_IMPLEMENTASJON,
+            Definisjon.VURDER_KRAV
+        )
 
         assertThat(
             definisjonerSomLøsesFørSteg(
