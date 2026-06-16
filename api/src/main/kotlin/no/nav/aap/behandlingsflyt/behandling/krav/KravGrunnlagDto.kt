@@ -16,6 +16,7 @@ import java.time.Instant
 import java.time.LocalDate
 
 data class KravGrunnlagDto(
+    val harTilgangTilÅSaksbehandle: Boolean,
     val nyeVurderinger: List<KravVurderingDto>,
     val vedtatteVurderinger: List<KravVurderingDto>
 )

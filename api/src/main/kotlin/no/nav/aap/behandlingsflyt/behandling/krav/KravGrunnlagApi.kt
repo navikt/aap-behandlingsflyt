@@ -8,6 +8,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
+import no.nav.aap.behandlingsflyt.tilgang.kanSaksbehandle
 import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.repository.RepositoryRegistry
@@ -47,6 +48,7 @@ fun NormalOpenAPIRoute.kravGrunnlagApi(
                     kravGrunnlag?.gjeldendeVedtatteVurderinger(behandling.id).orEmpty().map { it.somDto() }
 
                 KravGrunnlagDto(
+                    harTilgangTilÅSaksbehandle = kanSaksbehandle(),
                     nyeVurderinger = nyeVurderinger,
                     vedtatteVurderinger = sisteVedtatte
                 )
