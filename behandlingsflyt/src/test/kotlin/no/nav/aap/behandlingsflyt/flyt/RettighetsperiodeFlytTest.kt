@@ -42,6 +42,7 @@ import java.math.BigDecimal
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.util.UUID
 import kotlin.reflect.KClass
 
 @ParameterizedClass
@@ -248,26 +249,30 @@ class RettighetsperiodeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
         val ident = sak.person.aktivIdent()
         val nyStartDato = sak.rettighetsperiode.fom.minusDays(7)
         behandling
-            .medKontekst{
+            .medKontekst {
                 if (unleashGateway.objectInstance!!.isEnabled(BehandlingsflytFeature.KravSteg)) {
                     val kravGrunnlag = repositoryProvider.provide<KravRepository>().hentHvisEksisterer(behandling.id)
                     assertThat(kravGrunnlag?.vurderinger).hasSize(1)
                     assertThat(kravGrunnlag?.vurderinger?.first())
                         .usingRecursiveComparison()
                         .ignoringFields("opprettet")
-                        .isEqualTo(NyttKrav(
-                        muligRettFra = nå.toLocalDate(),
-                        søknadsdato = Søknadsdato(
-                            årsak = SøknadsdatoÅrsak.SøknadMottatt,
-                            dato = nå.toLocalDate()
-                        ),
-                        journalpostId = journalpostId,
-                        vurdertAv = SYSTEMBRUKER.ident,
-                        begrunnelse = "Automatisk vurdert",
-                        opprettet = Instant.now(), //Ignorer
-                        overstyrMuligRettFra = null,
-                        vurdertIBehandling = behandling.id
-                    ))
+                        .ignoringFields("referanse")
+                        .isEqualTo(
+                            NyttKrav(
+                                muligRettFra = nå.toLocalDate(),
+                                søknadsdato = Søknadsdato(
+                                    årsak = SøknadsdatoÅrsak.SøknadMottatt,
+                                    dato = nå.toLocalDate()
+                                ),
+                                journalpostId = journalpostId,
+                                vurdertAv = SYSTEMBRUKER.ident,
+                                begrunnelse = "Automatisk vurdert",
+                                opprettet = Instant.now(), //Ignorert
+                                overstyrMuligRettFra = null,
+                                vurdertIBehandling = behandling.id,
+                                referanse = UUID.randomUUID() // Ignorert
+                            )
+                        )
                 }
             }
             .løsSykdom(sak.rettighetsperiode.fom)
