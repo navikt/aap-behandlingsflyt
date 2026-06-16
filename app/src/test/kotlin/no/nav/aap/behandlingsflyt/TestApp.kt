@@ -25,8 +25,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Klage
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravVurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.MuligRettFra
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.MuligRettFraÅrsak
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.OverstyrMuligRettFra
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.OverstyrMuligRettFraÅrsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.NyttKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Søknadsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.SøknadsdatoÅrsak
@@ -772,11 +772,11 @@ private fun mapKravVurdering(krav: KravVurderingTestDto, behandlingId: Behandlin
             vurdertIBehandling = behandlingId,
             opprettet = now,
             søknadsdato = Søknadsdato(
-                dato = krav.søknadsdato ?: LocalDate.now().minusMonths(3),
+                dato = krav.søknadsdato,
                 årsak = SøknadsdatoÅrsak.SøknadMottatt
             ),
-            muligRettFra = krav.muligRettFra?.let { MuligRettFra(it, MuligRettFraÅrsak.IkkeIStandTilÅSøkeTidligere) },
-            kravdato = krav.kravdato ?: LocalDate.now().minusMonths(3)
+            overstyrMuligRettFra = krav.overstyrMuligRettFra?.let { OverstyrMuligRettFra(it, OverstyrMuligRettFraÅrsak.IkkeIStandTilÅSøkeTidligere) },
+            muligRettFra = krav.overstyrMuligRettFra ?: krav.søknadsdato
         )
         KravType.GJENOPPTAK -> Gjenopptak(
             journalpostId = journalpostId,
@@ -785,11 +785,11 @@ private fun mapKravVurdering(krav: KravVurderingTestDto, behandlingId: Behandlin
             vurdertIBehandling = behandlingId,
             opprettet = now,
             søknadsdato = Søknadsdato(
-                dato = krav.søknadsdato ?: LocalDate.now().minusMonths(3),
+                dato = krav.søknadsdato,
                 årsak = SøknadsdatoÅrsak.SøknadMottatt
             ),
-            muligRettFra = krav.muligRettFra?.let { MuligRettFra(it, MuligRettFraÅrsak.IkkeIStandTilÅSøkeTidligere) },
-            kravdato = krav.kravdato ?: LocalDate.now().minusMonths(3)
+            overstyrMuligRettFra = krav.overstyrMuligRettFra?.let { OverstyrMuligRettFra(it, OverstyrMuligRettFraÅrsak.IkkeIStandTilÅSøkeTidligere) },
+            muligRettFra = krav.overstyrMuligRettFra ?: krav.søknadsdato
         )
         KravType.TRUKKET_SØKNAD -> TrukketSøknad(
             journalpostId = journalpostId,

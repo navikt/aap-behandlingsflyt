@@ -256,7 +256,7 @@ class RettighetsperiodeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
                         .usingRecursiveComparison()
                         .ignoringFields("opprettet")
                         .isEqualTo(NyttKrav(
-                        kravdato = nå.toLocalDate(),
+                        muligRettFra = nå.toLocalDate(),
                         søknadsdato = Søknadsdato(
                             årsak = SøknadsdatoÅrsak.SøknadMottatt,
                             dato = nå.toLocalDate()
@@ -265,7 +265,7 @@ class RettighetsperiodeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
                         vurdertAv = SYSTEMBRUKER.ident,
                         begrunnelse = "Automatisk vurdert",
                         opprettet = Instant.now(), //Ignorer
-                        muligRettFra = null,
+                        overstyrMuligRettFra = null,
                         vurdertIBehandling = behandling.id
                     ))
                 }

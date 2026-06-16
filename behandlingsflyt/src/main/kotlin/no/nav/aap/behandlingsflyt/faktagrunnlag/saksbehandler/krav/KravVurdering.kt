@@ -21,8 +21,8 @@ data class NyttKrav(
     override val opprettet: Instant,
 
     val søknadsdato: Søknadsdato,
-    val muligRettFra: MuligRettFra?,
-    val kravdato: LocalDate,
+    val overstyrMuligRettFra: OverstyrMuligRettFra?,
+    val muligRettFra: LocalDate,
 ) : KravVurdering
 
 data class TrukketSøknad(
@@ -41,8 +41,8 @@ data class Gjenopptak(
     override val opprettet: Instant,
 
     val søknadsdato: Søknadsdato,
-    val muligRettFra: MuligRettFra?,
-    val kravdato: LocalDate,
+    val overstyrMuligRettFra: OverstyrMuligRettFra?,
+    val muligRettFra: LocalDate,
 ) : KravVurdering
 
 data class Klage(
@@ -69,7 +69,7 @@ enum class KravType {
     TILLEGGSOPPLYSNING,
 }
 
-data class MuligRettFra(val dato: LocalDate, val årsak: MuligRettFraÅrsak)
+data class OverstyrMuligRettFra(val dato: LocalDate, val årsak: OverstyrMuligRettFraÅrsak)
 data class Søknadsdato(val dato: LocalDate, val årsak: SøknadsdatoÅrsak)
 
 enum class SøknadsdatoÅrsak {
@@ -78,7 +78,7 @@ enum class SøknadsdatoÅrsak {
     SøknadMottatt
 }
 
-enum class MuligRettFraÅrsak {
+enum class OverstyrMuligRettFraÅrsak {
     IkkeIStandTilÅSøkeTidligere,
     MisvisendeOpplysninger,
 }

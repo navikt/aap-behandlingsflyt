@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.krav
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.MuligRettFra
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.MuligRettFraÅrsak
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.OverstyrMuligRettFra
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.OverstyrMuligRettFraÅrsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.NyttKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Søknadsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.SøknadsdatoÅrsak
@@ -50,8 +50,8 @@ internal class KravRepositoryImplTest {
             vurdertIBehandling = behandlingId,
             opprettet = Instant.now(),
             søknadsdato = Søknadsdato(1 januar 2024, SøknadsdatoÅrsak.BrukerHarSøktTidligere),
-            muligRettFra = MuligRettFra(15 januar 2024, MuligRettFraÅrsak.IkkeIStandTilÅSøkeTidligere),
-            kravdato = 1 januar 2024,
+            overstyrMuligRettFra = OverstyrMuligRettFra(15 januar 2024, OverstyrMuligRettFraÅrsak.IkkeIStandTilÅSøkeTidligere),
+            muligRettFra = 1 januar 2024,
         )
 
         private fun tilleggsopplysning(behandlingId: BehandlingId) = Tilleggsopplysning(

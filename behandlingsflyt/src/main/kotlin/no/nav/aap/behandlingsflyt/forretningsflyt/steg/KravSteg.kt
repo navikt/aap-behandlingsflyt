@@ -1,7 +1,6 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.NyttKrav
@@ -63,8 +62,8 @@ class KravSteg(
                                 søknad.mottattTidspunkt.toLocalDate(),
                                 SøknadsdatoÅrsak.SøknadMottatt
                             ),
-                            muligRettFra = null,
-                            kravdato = søknad.mottattTidspunkt.toLocalDate()
+                            overstyrMuligRettFra = null,
+                            muligRettFra = søknad.mottattTidspunkt.toLocalDate()
                         )
                     )
                 )
