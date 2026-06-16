@@ -35,13 +35,13 @@ class ResendStatistikkJobbUtfører(
             personIdent = sak.person.aktivIdent().identifikator,
             saksnummer = sak.saksnummer,
             referanse = behandling.referanse,
-            behandlingType = behandling.typeBehandling(),
+            behandlingType = behandlingService.utledFaktiskBehandlingstype(behandling),
             status = behandling.status(),
             avklaringsbehov = sortererteAvklaringsbehov(behandling, avklaringsbehovene.alle()),
             opprettetTidspunkt = behandling.opprettetTidspunkt,
             hendelsesTidspunkt = LocalDateTime.now(),
             versjon = ApplikasjonsVersjon.versjon
-        ).copy(behandlingType = behandlingService.utledFaktiskBehandlingstype(behandling))
+        )
 
         val kontraktHendelse = statistikkMetoder.oversettHendelseTilKontrakt(hendelseTilStatistikk)
 
