@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.test
 
+import no.nav.aap.behandlingsflyt.hendelse.oppgavestyring.MarkeringNyDto
 import no.nav.aap.behandlingsflyt.hendelse.oppgavestyring.OppgavestyringGateway
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.BehandlingFlytStoppetHendelse
@@ -30,6 +31,10 @@ class FakeOppgavestyringGateway : OppgavestyringGateway {
 
     override fun hentOppgaveEnhet(behandlingReferanse: BehandlingReferanse): OppgaveEnhetResponse {
         return OppgaveEnhetResponse(emptyList())
+    }
+
+    override fun hentMarkeringer(behandlingReferanse: BehandlingReferanse): List<MarkeringNyDto> {
+        return emptyList()
     }
 
     companion object : Factory<OppgavestyringGateway> {
