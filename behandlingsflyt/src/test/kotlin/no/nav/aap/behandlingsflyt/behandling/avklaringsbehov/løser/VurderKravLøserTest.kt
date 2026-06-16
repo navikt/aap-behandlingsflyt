@@ -4,10 +4,10 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKont
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VurderKravLøsning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.GjenopptakKravLøsningDto
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.MuligRettFra
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.MuligRettFraÅrsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.NyttKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.NyttKravLøsningDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.OverstyrMuligRettFra
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.OverstyrMuligRettFraÅrsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Søknadsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.SøknadsdatoÅrsak
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
@@ -47,7 +47,7 @@ class VurderKravLøserTest {
                     journalpostId = JournalpostId("1112223"),
                     begrunnelse = "test",
                     søknadsdato = Søknadsdato(16 januar 2026, SøknadsdatoÅrsak.SøknadMottatt),
-                    muligRettFra = null,
+                    overstyrMuligRettFra = null,
                 )
             )
         )
@@ -73,7 +73,7 @@ class VurderKravLøserTest {
                     journalpostId = JournalpostId("111122224"),
                     begrunnelse = "Ny søknad",
                     søknadsdato = Søknadsdato(15 januar 2026, SøknadsdatoÅrsak.SøknadMottatt),
-                    muligRettFra = null,
+                    overstyrMuligRettFra = null,
                 )
             )
         )
@@ -98,9 +98,9 @@ class VurderKravLøserTest {
                     journalpostId = JournalpostId("1112223"),
                     begrunnelse = "test",
                     søknadsdato = Søknadsdato(15 januar 2026, SøknadsdatoÅrsak.SøknadMottatt),
-                    muligRettFra = MuligRettFra(
+                    overstyrMuligRettFra = OverstyrMuligRettFra(
                         20 januar 2026,
-                        MuligRettFraÅrsak.IkkeIStandTilÅSøkeTidligere
+                        OverstyrMuligRettFraÅrsak.IkkeIStandTilÅSøkeTidligere
                     ),
                 )
             )
@@ -149,7 +149,7 @@ class VurderKravLøserTest {
                     journalpostId = JournalpostId("1112223"),
                     begrunnelse = "Gyldig krav",
                     søknadsdato = Søknadsdato(15 januar 2026, SøknadsdatoÅrsak.SøknadMottatt),
-                    muligRettFra = null,
+                    overstyrMuligRettFra = null,
                 )
             )
         )

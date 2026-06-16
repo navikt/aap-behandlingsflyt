@@ -11,6 +11,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravRepositor
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravValidering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravVurderingLøsningDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Kravreferanse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.NyttKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.NyttKravLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.SøknadsdatoÅrsak
@@ -65,8 +66,8 @@ class VurderKravLøser(
                 throw UgyldigForespørselException("Søknadsdato for krav må være lik mottatt dato for den digitaliserte søknaden.")
             }
         }
-        val muligRettFra = vurdering.muligRettFra
-        if (muligRettFra != null && muligRettFra.dato > vurdering.søknadsdato.dato) {
+        val overstyrMuligRettFra = vurdering.overstyrMuligRettFra
+        if (overstyrMuligRettFra != null && overstyrMuligRettFra.dato > vurdering.søknadsdato.dato) {
             throw UgyldigForespørselException("Med rett fra annen dato enn søknadsdato må den nye rettighetsdatoen være tidligere enn søknadsdatoen.")
         }
     }
@@ -105,17 +106,19 @@ private fun KravVurderingLøsningDto.tilVurdering(
 ): KravVurdering {
     return when (this) {
         is NyttKravLøsningDto -> NyttKrav(
+            referanse = referanse?.let(::Kravreferanse) ?: Kravreferanse.ny(),
             journalpostId = journalpostId,
             vurdertAv = bruker,
             begrunnelse = begrunnelse,
             vurdertIBehandling = behandlingId,
             opprettet = opprettetTid,
             søknadsdato = søknadsdato,
-            muligRettFra = muligRettFra,
-            kravdato = kravDato()
+            overstyrMuligRettFra = overstyrMuligRettFra,
+            muligRettFra = muligRettFra()
         )
 
         is TilleggsopplysningKravLøsningDto -> Tilleggsopplysning(
+            referanse = referanse?.let(::Kravreferanse) ?: Kravreferanse.ny(),
             journalpostId = journalpostId,
             vurdertAv = bruker,
             begrunnelse = begrunnelse,
