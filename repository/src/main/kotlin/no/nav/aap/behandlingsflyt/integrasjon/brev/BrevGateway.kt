@@ -507,14 +507,17 @@ class BrevGateway : BrevbestillingGateway {
         )
     }
 
-    private fun fritakmeldepliktTilFaktagrunnlag(meldepliktGrunnlag: MeldepliktGrunnlag): Faktagrunnlag.FritakMeldepliktGrunnlag {
-        val vurdering = meldepliktGrunnlag.vurderinger.first()
+    private fun fritakmeldepliktTilFaktagrunnlag(
+        meldepliktGrunnlag: MeldepliktGrunnlag
+    ): Faktagrunnlag.FritakMeldepliktGrunnlag {
         return Faktagrunnlag.FritakMeldepliktGrunnlag(
-            fritakMeldepliktGrunnlag = Faktagrunnlag.FritakMeldepliktGrunnlag.FritakMeldeplikt(
-                harFritak = vurdering.harFritak,
-                fraDato = vurdering.fraDato,
-                tilDato = vurdering.tilDato,
-            )
+            fritakMeldepliktGrunnlag = meldepliktGrunnlag.vurderinger.map { vurdering ->
+                Faktagrunnlag.FritakMeldepliktGrunnlag.FritakMeldepliktVurdering(
+                    harFritak = vurdering.harFritak,
+                    fraDato = vurdering.fraDato,
+                    tilDato = vurdering.tilDato,
+                )
+            }
         )
     }
 
