@@ -5,23 +5,23 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.Meldepl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 object InMemoryMeldepliktRepository : MeldepliktRepository {
-    private val tomtMeldepliktGrunnlag = mutableMapOf<BehandlingId, MeldepliktGrunnlag>()
+    private val meldepliktGrunnlag = mutableMapOf<BehandlingId, MeldepliktGrunnlag>()
 
     override fun hentHvisEksisterer(behandlingId: BehandlingId): MeldepliktGrunnlag? =
-        tomtMeldepliktGrunnlag[behandlingId]
+        meldepliktGrunnlag[behandlingId]
 
     override fun lagre(
         behandlingId: BehandlingId,
         vurderinger: List<Fritaksvurdering>
     ) {
-        tomtMeldepliktGrunnlag[behandlingId] = MeldepliktGrunnlag(vurderinger)
+        meldepliktGrunnlag[behandlingId] = MeldepliktGrunnlag(vurderinger)
     }
 
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
-        tomtMeldepliktGrunnlag[fraBehandling]?.let { tomtMeldepliktGrunnlag[tilBehandling] = it }
+        meldepliktGrunnlag[fraBehandling]?.let { meldepliktGrunnlag[tilBehandling] = it }
     }
 
     override fun slett(behandlingId: BehandlingId) {
-        tomtMeldepliktGrunnlag.remove(behandlingId)
+        meldepliktGrunnlag.remove(behandlingId)
     }
 }
