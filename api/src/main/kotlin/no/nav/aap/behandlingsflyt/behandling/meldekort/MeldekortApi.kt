@@ -202,6 +202,7 @@ fun NormalOpenAPIRoute.meldekortApi(
                         oppdatertAv = bruker,
                         enhet = enhet,
                         tidspunkt = tidspunkt,
+                        meldeDato = meldedato,
                         korrigert = gjeldendeMeldekortForMeldeperiode(meldekortene, meldeperiode) != null
                     )
 
