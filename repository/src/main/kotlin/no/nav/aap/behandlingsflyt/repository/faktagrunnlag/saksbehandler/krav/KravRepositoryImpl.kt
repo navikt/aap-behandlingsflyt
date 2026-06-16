@@ -168,7 +168,7 @@ class KravRepositoryImpl(private val connection: DBConnection) : KravRepository 
     }
 
     private fun mapVurdering(row: Row): KravVurdering {
-        val referanse = row.getUUID("referanse")
+        val referanse = Kravreferanse(row.getUUID("referanse"))
         val journalpostId = JournalpostId(row.getString("journalpost_id"))
         val vurdertAv = row.getString("vurdert_av")
         val opprettet = row.getInstant("opprettet_tid")
@@ -177,7 +177,7 @@ class KravRepositoryImpl(private val connection: DBConnection) : KravRepository 
 
         return when (val kravType = row.getEnum<KravType>("krav_type")) {
             KravType.NYTT_KRAV_AAP -> NyttKrav(
-                referanse = Kravreferanse(referanse),
+                referanse = referanse,
                 journalpostId = journalpostId, vurdertAv = vurdertAv,
                 begrunnelse = begrunnelse,
                 vurdertIBehandling = vurdertIBehandling, opprettet = opprettet,
@@ -187,7 +187,7 @@ class KravRepositoryImpl(private val connection: DBConnection) : KravRepository 
             )
 
             KravType.GJENOPPTAK -> Gjenopptak(
-                referanse = Kravreferanse(referanse),
+                referanse = referanse,
                 journalpostId = journalpostId, vurdertAv = vurdertAv,
                 begrunnelse = begrunnelse,
                 vurdertIBehandling = vurdertIBehandling, opprettet = opprettet,
@@ -197,21 +197,21 @@ class KravRepositoryImpl(private val connection: DBConnection) : KravRepository 
             )
 
             KravType.TRUKKET_SØKNAD -> TrukketSøknad(
-                referanse = Kravreferanse(referanse),
+                referanse = referanse,
                 journalpostId = journalpostId, vurdertAv = vurdertAv,
                 begrunnelse = begrunnelse,
                 vurdertIBehandling = vurdertIBehandling, opprettet = opprettet,
             )
 
             KravType.KLAGE -> Klage(
-                referanse = Kravreferanse(referanse),
+                referanse = referanse,
                 journalpostId = journalpostId, vurdertAv = vurdertAv,
                 begrunnelse = begrunnelse,
                 vurdertIBehandling = vurdertIBehandling, opprettet = opprettet,
             )
 
             KravType.TILLEGGSOPPLYSNING -> Tilleggsopplysning(
-                referanse = Kravreferanse(referanse),
+                referanse = referanse,
                 journalpostId = journalpostId, vurdertAv = vurdertAv,
                 begrunnelse = begrunnelse,
                 vurdertIBehandling = vurdertIBehandling, opprettet = opprettet,
