@@ -277,7 +277,7 @@ class SaksHistorikkService(
 
     private fun utledMarkeringerHendelser(alleBehandlinger: List<Behandling>): List<BehandlingHistorikkInternal> {
         return alleBehandlinger.mapNotNull { behandling ->
-            val markeringer = oppgavestyringGateway.hentMarkeringerNy(behandling.referanse)
+            val markeringer = oppgavestyringGateway.hentMarkeringer(behandling.referanse)
             val hendelser = markeringer.map { markering ->
                 val hendelseType = when (markering.hendelseType) {
                     MarkeringHendelseType.OPPRETTET -> BehandlingHendelseType.MARKERING_OPPRETTET
