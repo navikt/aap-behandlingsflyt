@@ -201,7 +201,8 @@ fun NormalOpenAPIRoute.meldekortApi(
                         meldekort = meldekort,
                         oppdatertAv = bruker,
                         enhet = enhet,
-                        tidspunkt = tidspunkt
+                        tidspunkt = tidspunkt,
+                        meldeDato = meldedato,
                     )
 
                     val innsending = tilInnsending(sak, journalpostId, mottattTidspunkt, meldekort)
