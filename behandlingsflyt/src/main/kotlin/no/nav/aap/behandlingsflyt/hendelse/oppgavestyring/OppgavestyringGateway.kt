@@ -10,7 +10,7 @@ import no.nav.aap.oppgave.verdityper.MarkeringForBehandling
 import java.time.LocalDateTime
 
 // TODO: Henet fra oppgave-lib
-data class MarkeringDto(
+data class MarkeringNyDto(
     val markeringType: MarkeringForBehandling,
     val begrunnelse: String? = null,
     val opprettetAv: String? = null,
@@ -30,5 +30,5 @@ interface OppgavestyringGateway : Gateway {
     fun varsleTilbakekrevingHendelse(hendelse: TilbakekrevingsbehandlingOppdatertHendelse)
     fun finnNayEnhetForPerson(personIdent: String, relevanteIdenter: List<String>): EnhetNrDto
     fun hentOppgaveEnhet(behandlingReferanse: BehandlingReferanse): OppgaveEnhetResponse
-    fun hentMarkeringer(behandlingReferanse: BehandlingReferanse): List<MarkeringDto>
+    fun hentMarkeringer(behandlingReferanse: BehandlingReferanse): List<MarkeringNyDto>
 }

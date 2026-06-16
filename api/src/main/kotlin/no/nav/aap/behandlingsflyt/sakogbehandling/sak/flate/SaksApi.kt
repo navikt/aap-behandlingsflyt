@@ -344,7 +344,7 @@ fun NormalOpenAPIRoute.saksApi(
                 val sakRepository = repositoryProvider.provide<SakRepository>()
 
                 val sakId = sakRepository.hent(Saksnummer(saksnummer)).id
-                val saksHistorikkService = SaksHistorikkService(repositoryProvider)
+                val saksHistorikkService = SaksHistorikkService(repositoryProvider, gatewayProvider)
 
                 saksHistorikkService.utledSaksHistorikk(sakId)
             }

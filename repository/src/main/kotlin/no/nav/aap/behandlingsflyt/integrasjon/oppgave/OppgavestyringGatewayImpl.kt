@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.integrasjon.oppgave
 
+import no.nav.aap.behandlingsflyt.hendelse.oppgavestyring.MarkeringNyDto
 import no.nav.aap.behandlingsflyt.hendelse.oppgavestyring.OppgavestyringGateway
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.BehandlingFlytStoppetHendelse
@@ -18,7 +19,6 @@ import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureM2MTokenProvider
 import no.nav.aap.komponenter.json.DefaultJsonMapper
 import no.nav.aap.oppgave.enhet.OppgaveEnhetResponse
-import no.nav.aap.oppgave.markering.MarkeringDto
 import java.net.URI
 
 object OppgavestyringGatewayImpl : OppgavestyringGateway {
@@ -75,14 +75,14 @@ object OppgavestyringGatewayImpl : OppgavestyringGateway {
         }
     }
 
-    override fun hentMarkeringer(behandlingReferanse: BehandlingReferanse): List<MarkeringDto> {
+    override fun hentMarkeringer(behandlingReferanse: BehandlingReferanse): List<MarkeringNyDto> {
         val request = GetRequest(
             additionalHeaders = listOf(
                 Header("Accept", "application/json")
             )
         )
         return checkNotNull(
-            client.get<List<MarkeringDto>>(
+            client.get<List<MarkeringNyDto>>(
                 uri = url.resolve("/${behandlingReferanse.referanse}/hent-markeringer"),
                 request = request
             )
