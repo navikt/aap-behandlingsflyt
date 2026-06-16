@@ -75,6 +75,7 @@ import no.nav.aap.dokumentinnhenting.kontrakt.BehandlerDto
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.testutil.ManuellMotorImpl
@@ -767,7 +768,7 @@ private fun mapKravVurdering(krav: KravVurderingTestDto, behandlingId: Behandlin
     return when (krav.kravType) {
         KravType.NYTT_KRAV_AAP -> NyttKrav(
             journalpostId = journalpostId,
-            vurdertAv = "Testbruker",
+            vurdertAv = Bruker("Testbruker"),
             begrunnelse = "Nytt krav",
             vurdertIBehandling = behandlingId,
             opprettet = now,
@@ -780,7 +781,7 @@ private fun mapKravVurdering(krav: KravVurderingTestDto, behandlingId: Behandlin
         )
         KravType.GJENOPPTAK -> Gjenopptak(
             journalpostId = journalpostId,
-            vurdertAv = "Testbruker",
+            vurdertAv = Bruker("Testbruker"),
             begrunnelse = "Gjenopptak",
             vurdertIBehandling = behandlingId,
             opprettet = now,
@@ -793,21 +794,21 @@ private fun mapKravVurdering(krav: KravVurderingTestDto, behandlingId: Behandlin
         )
         KravType.TRUKKET_SØKNAD -> TrukketSøknad(
             journalpostId = journalpostId,
-            vurdertAv = "Testbruker",
+            vurdertAv = Bruker("Testbruker"),
             begrunnelse = "Trukket søknad",
             vurdertIBehandling = behandlingId,
             opprettet = now,
         )
         KravType.KLAGE -> Klage(
             journalpostId = journalpostId,
-            vurdertAv = "Testbruker",
+            vurdertAv = Bruker("Testbruker"),
             begrunnelse = "Klage",
             vurdertIBehandling = behandlingId,
             opprettet = now,
         )
         KravType.TILLEGGSOPPLYSNING -> Tilleggsopplysning(
             journalpostId = journalpostId,
-            vurdertAv = "Testbruker",
+            vurdertAv = Bruker("Testbruker"),
             begrunnelse = "Tilleggsopplysning",
             vurdertIBehandling = behandlingId,
             opprettet = now,
