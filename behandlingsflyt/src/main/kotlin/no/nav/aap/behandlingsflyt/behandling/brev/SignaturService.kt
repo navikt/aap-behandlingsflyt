@@ -72,7 +72,6 @@ class SignaturService(
         innloggetBruker: Bruker
     ): List<SignaturGrunnlag> {
         val behandling = behandlingRepository.hent(brevbestilling.behandlingId)
-        oppgavestyringGateway.varsleHendelse()
         val oppgaveEnhetListe = oppgavestyringGateway.hentOppgaveEnhet(behandling.referanse).oppgaver
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(brevbestilling.behandlingId)
 
