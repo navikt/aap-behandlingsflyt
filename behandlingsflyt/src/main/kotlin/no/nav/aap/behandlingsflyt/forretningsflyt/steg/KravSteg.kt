@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovServ
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravValidering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Kravreferanse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.NyttKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Søknadsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.SøknadsdatoÅrsak
@@ -110,6 +111,7 @@ class KravSteg(
                 kravRepository.lagre(
                     kontekst.behandlingId, vurderinger = setOf(
                         NyttKrav(
+                            referanse = Kravreferanse.ny(),
                             journalpostId = søknad.referanse.asJournalpostId,
                             vurdertAv = SYSTEMBRUKER,
                             begrunnelse = "Automatisk vurdert",
@@ -119,8 +121,8 @@ class KravSteg(
                                 søknad.mottattTidspunkt.toLocalDate(),
                                 SøknadsdatoÅrsak.SøknadMottatt
                             ),
-                            muligRettFra = null,
-                            kravdato = søknad.mottattTidspunkt.toLocalDate()
+                            overstyrMuligRettFra = null,
+                            muligRettFra = søknad.mottattTidspunkt.toLocalDate()
                         )
                     )
                 )

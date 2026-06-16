@@ -24,6 +24,7 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.verdityper.dokument.JournalpostId
 import java.time.Instant
+import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.temporal.WeekFields
 import java.util.*
@@ -44,12 +45,14 @@ class JournalføringService(
         oppdatertAv: Bruker,
         enhet: String,
         tidspunkt: Instant,
+        meldeDato: LocalDate,
     ): JournalpostId {
         val meldekortPdfRequest = meldekort.tilPdfRequest(
             ident = sak.person.aktivIdent().identifikator,
             meldeperiode = meldeperiode,
             utførtAv = oppdatertAv.ident,
-            tidspunkt = tidspunkt
+            tidspunkt = tidspunkt,
+            meldeDato = meldeDato,
         )
 
         val pdf = pdfgenGateway.genererMeldekortPdf(
