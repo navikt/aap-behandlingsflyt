@@ -19,7 +19,7 @@ data class Avslag11_27KravDto(
                     søknadsdokument = krav.journalpostId.identifikator,
                     type = KravType.NYTT_KRAV_AAP.name,
                     søknadsdato = krav.søknadsdato.dato,
-                    muligRettighetFra = krav.muligRettFra?.dato,
+                    muligRettighetFra = krav.muligRettFra,
                 )
             }
         }
