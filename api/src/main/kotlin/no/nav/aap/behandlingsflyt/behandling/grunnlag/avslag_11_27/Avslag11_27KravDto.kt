@@ -24,30 +24,30 @@ data class Avslag11_27KravDto(
             }
         }
     }
+}
 
-    data class Avslag11_27GrunnlagDto(
-        val harTilgangTilÅSaksbehandle: Boolean,
-        val krav: List<Avslag11_27KravDto>,
-        val vurderinger: List<Avslag11_27VurderingDto>?,
-        val vedtatteVurdering: List<Avslag11_27VurderingDto>?,
-    )
+data class Avslag11_27GrunnlagDto(
+    val harTilgangTilÅSaksbehandle: Boolean,
+    val krav: List<Avslag11_27KravDto>,
+    val vurderinger: List<Avslag11_27VurderingDto>?,
+    val vedtatteVurdering: List<Avslag11_27VurderingDto>?,
+)
 
-    data class Avslag11_27VurderingDto(
-        val journalpostId: String,
-        val begrunnelse: String,
-        val harAnnenFullYtelse: Boolean,
-        val brukersYtelse: Ytelse? = null,
-        val harSykepengegrunnlagOver2G: Boolean? = null, // Kun for sykepenger
-        val skalAvslås1127: Boolean
-    )
+data class Avslag11_27VurderingDto(
+    val journalpostId: String,
+    val begrunnelse: String,
+    val harAnnenFullYtelse: Boolean,
+    val brukersYtelse: Ytelse? = null,
+    val harSykepengegrunnlagOver2G: Boolean? = null, // Kun for sykepenger
+    val skalAvslås1127: Boolean
+)
 
-    enum class Avslag11_27KravVurderingDto {
-        AVSLÅTT,
-        GODKJENT
-    }
+enum class Avslag11_27KravVurderingDto {
+    AVSLÅTT,
+    GODKJENT
+}
 
-    fun Avslag11_27KravVurdering.toDto() = when (this) {
-        Avslag11_27KravVurdering.AVSLÅTT -> Avslag11_27KravVurderingDto.AVSLÅTT
-        Avslag11_27KravVurdering.GODKJENT -> Avslag11_27KravVurderingDto.GODKJENT
-    }
+fun Avslag11_27KravVurdering.toDto() = when (this) {
+    Avslag11_27KravVurdering.AVSLÅTT -> Avslag11_27KravVurderingDto.AVSLÅTT
+    Avslag11_27KravVurdering.GODKJENT -> Avslag11_27KravVurderingDto.GODKJENT
 }

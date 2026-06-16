@@ -25,7 +25,7 @@ fun NormalOpenAPIRoute.avslag11_27GrunnlagApi(
     repositoryRegistry: RepositoryRegistry,
     gatewayProvider: GatewayProvider,
 ) {
-    route("/api/behandling/{referanse}/grunnlag/avslag-11-27").authorizedGet<BehandlingReferanse, Avslag11_27KravDto.Avslag11_27GrunnlagDto>(
+    route("/api/behandling/{referanse}/grunnlag/avslag-11-27").authorizedGet<BehandlingReferanse, Avslag11_27GrunnlagDto>(
         AuthorizationParamPathConfig(
             relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
             operasjon = Operasjon.SE,
@@ -54,7 +54,7 @@ fun NormalOpenAPIRoute.avslag11_27GrunnlagApi(
 
             val nyttKravListeDto = Avslag11_27KravDto.avslag11_27TilDto(nyttKravListe);
 
-            Avslag11_27KravDto.Avslag11_27GrunnlagDto(
+            Avslag11_27GrunnlagDto(
                 harTilgangTilÅSaksbehandle = kanSaksbehandle(),
                 krav = nyttKravListeDto,
                 vurderinger = mapVurderingerTilDto(nyVurderinger),
@@ -66,9 +66,9 @@ fun NormalOpenAPIRoute.avslag11_27GrunnlagApi(
     }
 }
 
-private fun mapVurderingerTilDto(vurderinger: List<Avslag11_27Vurdering>): List<Avslag11_27KravDto.Avslag11_27VurderingDto> {
+private fun mapVurderingerTilDto(vurderinger: List<Avslag11_27Vurdering>): List<Avslag11_27VurderingDto> {
     return vurderinger.map { vurdering ->
-        Avslag11_27KravDto.Avslag11_27VurderingDto(
+        Avslag11_27VurderingDto(
             journalpostId = vurdering.journalpostId.identifikator,
             begrunnelse = vurdering.begrunnelse,
             harAnnenFullYtelse = vurdering.harAnnenFullYtelse,
