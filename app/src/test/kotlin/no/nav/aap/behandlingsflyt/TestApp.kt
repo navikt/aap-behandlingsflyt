@@ -766,6 +766,7 @@ private fun mapKravVurdering(krav: KravVurderingTestDto, behandlingId: Behandlin
     val now = Instant.now()
     return when (krav.kravType) {
         KravType.NYTT_KRAV_AAP -> NyttKrav(
+            referanse = UUID.randomUUID(),
             journalpostId = journalpostId,
             vurdertAv = "Testbruker",
             begrunnelse = "Nytt krav",
@@ -779,6 +780,7 @@ private fun mapKravVurdering(krav: KravVurderingTestDto, behandlingId: Behandlin
             muligRettFra = krav.overstyrMuligRettFra ?: krav.søknadsdato
         )
         KravType.GJENOPPTAK -> Gjenopptak(
+            referanse = UUID.randomUUID(),
             journalpostId = journalpostId,
             vurdertAv = "Testbruker",
             begrunnelse = "Gjenopptak",
@@ -792,6 +794,7 @@ private fun mapKravVurdering(krav: KravVurderingTestDto, behandlingId: Behandlin
             muligRettFra = krav.overstyrMuligRettFra ?: krav.søknadsdato
         )
         KravType.TRUKKET_SØKNAD -> TrukketSøknad(
+            referanse = UUID.randomUUID(),
             journalpostId = journalpostId,
             vurdertAv = "Testbruker",
             begrunnelse = "Trukket søknad",
@@ -799,6 +802,7 @@ private fun mapKravVurdering(krav: KravVurderingTestDto, behandlingId: Behandlin
             opprettet = now,
         )
         KravType.KLAGE -> Klage(
+            referanse = UUID.randomUUID(),
             journalpostId = journalpostId,
             vurdertAv = "Testbruker",
             begrunnelse = "Klage",
@@ -806,6 +810,7 @@ private fun mapKravVurdering(krav: KravVurderingTestDto, behandlingId: Behandlin
             opprettet = now,
         )
         KravType.TILLEGGSOPPLYSNING -> Tilleggsopplysning(
+            referanse = UUID.randomUUID(),
             journalpostId = journalpostId,
             vurdertAv = "Testbruker",
             begrunnelse = "Tilleggsopplysning",

@@ -27,6 +27,7 @@ import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import java.time.Instant
+import java.util.UUID
 
 internal class KravRepositoryImplTest {
 
@@ -44,6 +45,7 @@ internal class KravRepositoryImplTest {
         fun tearDown() = dataSource.close()
 
         private fun nyttKrav(behandlingId: BehandlingId) = NyttKrav(
+            referanse = UUID.randomUUID(),
             journalpostId = JournalpostId("JP-001"),
             vurdertAv = "Z123456",
             begrunnelse = "Standard krav om AAP",
@@ -55,6 +57,7 @@ internal class KravRepositoryImplTest {
         )
 
         private fun tilleggsopplysning(behandlingId: BehandlingId) = Tilleggsopplysning(
+            referanse = UUID.randomUUID(),
             journalpostId = JournalpostId("JP-002"),
             vurdertAv = "Kelvin",
             begrunnelse = "",
@@ -195,11 +198,12 @@ internal class KravRepositoryImplTest {
                 repo.lagre(
                     behandling.id, setOf(
                         TrukketSøknad(
+                            referanse = UUID.randomUUID(),
                             journalpostId = JournalpostId("JP-SLETT"),
                             vurdertAv = "Z000001",
                             begrunnelse = "Søker trakk søknaden",
                             vurdertIBehandling = behandling.id,
-                            opprettet = java.time.Instant.now(),
+                            opprettet = Instant.now(),
                         )
                     )
                 )

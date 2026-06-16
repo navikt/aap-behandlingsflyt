@@ -60,8 +60,8 @@ class KravRepositoryImpl(private val connection: DBConnection) : KravRepository 
                 begrunnelse, vurdert_i_behandling,
                 krav_type, soknadsdato, soknadsdato_aarsak,
                 overstyr_mulig_rett_fra, overstyr_mulig_rett_fra_aarsak,
-                 mulig_rett_fra
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                mulig_rett_fra, referanse
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """.trimIndent(),
             grunnlag.vurderinger
         ) {
@@ -72,6 +72,7 @@ class KravRepositoryImpl(private val connection: DBConnection) : KravRepository 
                 setInstant(4, v.opprettet)
                 setString(5, v.begrunnelse)
                 setLong(6, v.vurdertIBehandling.id)
+                setUUID(13, v.referanse)
                 when (v) {
                     is NyttKrav -> {
                         setEnumName(7, KravType.NYTT_KRAV_AAP)
@@ -98,6 +99,7 @@ class KravRepositoryImpl(private val connection: DBConnection) : KravRepository 
                         setLocalDate(10, null)
                         setEnumName(11, null as Enum<*>?)
                         setLocalDate(12, null)
+                        setUUID(13, v.referanse)
                     }
 
                     is Klage -> {
@@ -152,7 +154,7 @@ class KravRepositoryImpl(private val connection: DBConnection) : KravRepository 
     private fun hentVurderinger(vurderingerId: Long): Set<KravVurdering> {
         return connection.querySet(
             """
-            SELECT journalpost_id, vurdert_av, krav_type,
+            SELECT referanse, journalpost_id, vurdert_av, krav_type,
                    soknadsdato, soknadsdato_aarsak,
                    overstyr_mulig_rett_fra, overstyr_mulig_rett_fra_aarsak,
                    begrunnelse, mulig_rett_fra, vurdert_i_behandling, opprettet_tid
@@ -166,6 +168,7 @@ class KravRepositoryImpl(private val connection: DBConnection) : KravRepository 
     }
 
     private fun mapVurdering(row: Row): KravVurdering {
+        val referanse = row.getUUID("referanse")
         val journalpostId = JournalpostId(row.getString("journalpost_id"))
         val vurdertAv = row.getString("vurdert_av")
         val opprettet = row.getInstant("opprettet_tid")
@@ -174,6 +177,7 @@ class KravRepositoryImpl(private val connection: DBConnection) : KravRepository 
 
         return when (val kravType = row.getEnum<KravType>("krav_type")) {
             KravType.NYTT_KRAV_AAP -> NyttKrav(
+                referanse = referanse,
                 journalpostId = journalpostId, vurdertAv = vurdertAv,
                 begrunnelse = begrunnelse,
                 vurdertIBehandling = vurdertIBehandling, opprettet = opprettet,
@@ -183,6 +187,7 @@ class KravRepositoryImpl(private val connection: DBConnection) : KravRepository 
             )
 
             KravType.GJENOPPTAK -> Gjenopptak(
+                referanse = referanse,
                 journalpostId = journalpostId, vurdertAv = vurdertAv,
                 begrunnelse = begrunnelse,
                 vurdertIBehandling = vurdertIBehandling, opprettet = opprettet,
@@ -192,18 +197,21 @@ class KravRepositoryImpl(private val connection: DBConnection) : KravRepository 
             )
 
             KravType.TRUKKET_SØKNAD -> TrukketSøknad(
+                referanse = referanse,
                 journalpostId = journalpostId, vurdertAv = vurdertAv,
                 begrunnelse = begrunnelse,
                 vurdertIBehandling = vurdertIBehandling, opprettet = opprettet,
             )
 
             KravType.KLAGE -> Klage(
+                referanse = referanse,
                 journalpostId = journalpostId, vurdertAv = vurdertAv,
                 begrunnelse = begrunnelse,
                 vurdertIBehandling = vurdertIBehandling, opprettet = opprettet,
             )
 
             KravType.TILLEGGSOPPLYSNING -> Tilleggsopplysning(
+                referanse = referanse,
                 journalpostId = journalpostId, vurdertAv = vurdertAv,
                 begrunnelse = begrunnelse,
                 vurdertIBehandling = vurdertIBehandling, opprettet = opprettet,
