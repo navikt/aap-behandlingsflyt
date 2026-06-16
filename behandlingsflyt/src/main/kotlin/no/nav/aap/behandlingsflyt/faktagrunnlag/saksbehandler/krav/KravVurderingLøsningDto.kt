@@ -3,7 +3,6 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav
 import no.nav.aap.verdityper.dokument.JournalpostId
 import java.time.LocalDate
 
-
 sealed class KravVurderingLøsningDto(
     val kravType: KravType
 )
