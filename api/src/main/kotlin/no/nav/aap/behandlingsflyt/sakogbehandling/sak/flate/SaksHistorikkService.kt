@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovForSak
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovOperasjonerRepository
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadRepository
+import no.nav.aap.behandlingsflyt.hendelse.oppgavestyring.MarkeringHendelseType
 import no.nav.aap.behandlingsflyt.hendelse.oppgavestyring.OppgavestyringGateway
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
@@ -279,8 +280,8 @@ class SaksHistorikkService(
             val markeringer = oppgavestyringGateway.hentMarkeringer(behandling.referanse)
             val hendelser = markeringer.map { markering ->
                 val hendelseType = when (markering.hendelseType) {
-                    "OPPRETTET" -> BehandlingHendelseType.MARKERING_OPPRETTET
-                    "FJERNET" -> BehandlingHendelseType.MARKERING_FJERNET
+                    MarkeringHendelseType.OPPRETTET -> BehandlingHendelseType.MARKERING_OPPRETTET
+                    MarkeringHendelseType.FJERNET -> BehandlingHendelseType.MARKERING_FJERNET
                     else -> BehandlingHendelseType.MARKERING_OPPRETTET
                 }
                 BehandlingHendelseDTO(
