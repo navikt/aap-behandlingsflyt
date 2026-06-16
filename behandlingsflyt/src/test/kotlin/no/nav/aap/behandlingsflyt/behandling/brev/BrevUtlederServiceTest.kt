@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.brev
 
+import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import io.mockk.mockk
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.GraderingGrunnlag
@@ -107,6 +108,10 @@ class BrevUtlederServiceTest {
     val stansOpphørRepository = repositoryProvider.provide<StansOpphørRepository>()
 
     val brevUtlederService = BrevUtlederService(
+        repositoryProvider,
+        gatewayProvider
+    )
+    val brevUtlederServiceMedAutomatiskStans1118 = BrevUtlederService(
         repositoryProvider,
         gatewayProvider
     )
@@ -338,7 +343,8 @@ class BrevUtlederServiceTest {
                     utfall = Utfall.OPPFYLT,
                 ),
             )
-            overgangUføreRepository.lagre(behandling.id,
+            overgangUføreRepository.lagre(
+                behandling.id,
                 listOf(
                     OvergangUføreVurdering(
                         begrunnelse = "test",
@@ -390,7 +396,8 @@ class BrevUtlederServiceTest {
                     utfall = Utfall.OPPFYLT,
                 )
             )
-            beregningsgrunnlagRepository.lagre(revurdering.id, Grunnlag11_19(
+            beregningsgrunnlagRepository.lagre(
+                revurdering.id, Grunnlag11_19(
                     grunnlaget = GUnit(2),
                     erGjennomsnitt = false,
                     gjennomsnittligInntektIG = GUnit(0),
@@ -402,7 +409,8 @@ class BrevUtlederServiceTest {
                 )
             )
             val kravdatoUføretrygd = LocalDate.of(2023, 2, 20)
-            beregningVurderingRepository.lagre(revurdering.id,
+            beregningVurderingRepository.lagre(
+                revurdering.id,
                 BeregningstidspunktVurdering(
                     begrunnelse = "",
                     nedsattArbeidsevneEllerStudieevneDato = kravdatoUføretrygd,
@@ -411,11 +419,13 @@ class BrevUtlederServiceTest {
                     vurdertAv = ""
                 )
             )
-            vedtakRepository.lagre(revurdering.id,
+            vedtakRepository.lagre(
+                revurdering.id,
                 LocalDateTime.now(),
                 kravdatoUføretrygd
             )
-            overgangUføreRepository.lagre(revurdering.id,
+            overgangUføreRepository.lagre(
+                revurdering.id,
                 listOf(
                     OvergangUføreVurdering(
                         begrunnelse = "test",
@@ -451,6 +461,98 @@ class BrevUtlederServiceTest {
     }
 
     @Nested
+    inner class TestGruppe_AutomatiskStans1118 {
+        @ParameterizedTest(name = "skal utlede {1} når bruker har fått vedtak om uføretrygd = {0}")
+        @MethodSource("no.nav.aap.behandlingsflyt.behandling.brev.BrevUtlederServiceTest#automatiskStans1118Brevtyper")
+        fun `skal utlede automatisk opphørsbrev ved revurdering for § 11-18`(
+            brukerHarFåttVedtakOmUføretrygd: UføreSøknadVedtakResultat,
+            forventetTypeBrev: TypeBrev,
+        ) {
+            val revurdering = gittRevurderingForAutomatiskStans1118(brukerHarFåttVedtakOmUføretrygd)
+            val resultat = brevUtlederServiceMedAutomatiskStans1118.utledBehovForMeldingOmVedtak(revurdering.id)
+
+            assertNotNull(resultat)
+            assertEquals(forventetTypeBrev, resultat.typeBrev)
+        }
+
+        private fun gittRevurderingForAutomatiskStans1118(
+            brukerHarFåttVedtakOmUføretrygd: UføreSøknadVedtakResultat,
+        ): Behandling {
+            val førstegangsbehandling = gittBehandling(TypeBehandling.Førstegangsbehandling)
+            val revurdering = gittBehandling(
+                typeBehandling = TypeBehandling.Revurdering,
+                forrigeBehandlingId = førstegangsbehandling.id,
+                årsakTilOpprettelse = ÅrsakTilOpprettelse.UFØRE_VEDTAK_HENDELSE,
+                vurderingsbehov = listOf(Vurderingsbehov.OVERGANG_UFORE),
+            )
+
+            gittUnderveisGrunnlag(
+                førstegangsbehandling.id,
+                underveisperiode(
+                    periode = Periode(1 januar 2023, 31 desember 2023),
+                    rettighetsType = RettighetsType.BISTANDSBEHOV,
+                    utfall = Utfall.OPPFYLT,
+                )
+            )
+            gittUnderveisGrunnlag(
+                revurdering.id,
+                underveisperiode(
+                    periode = Periode(1 januar 2023, 28 februar 2023),
+                    rettighetsType = RettighetsType.BISTANDSBEHOV,
+                    utfall = Utfall.OPPFYLT,
+                ),
+                underveisperiode(
+                    periode = Periode(1 mars 2023, 31 desember 2023),
+                    rettighetsType = RettighetsType.VURDERES_FOR_UFØRETRYGD,
+                    utfall = Utfall.OPPFYLT,
+                ),
+            )
+            beregningsgrunnlagRepository.lagre(
+                revurdering.id,
+                Grunnlag11_19(
+                    grunnlaget = GUnit(2),
+                    erGjennomsnitt = false,
+                    gjennomsnittligInntektIG = GUnit(0),
+                    inntekter = listOf(
+                        grunnlagInntekt(2024, 220_000),
+                        grunnlagInntekt(2023, 210_000),
+                        grunnlagInntekt(2022, 200_000),
+                    )
+                )
+            )
+            val kravdatoUføretrygd = LocalDate.of(2023, 2, 20)
+            beregningVurderingRepository.lagre(
+                revurdering.id,
+                BeregningstidspunktVurdering(
+                    begrunnelse = "",
+                    nedsattArbeidsevneEllerStudieevneDato = kravdatoUføretrygd,
+                    ytterligereNedsattBegrunnelse = null,
+                    ytterligereNedsattArbeidsevneDato = null,
+                    vurdertAv = ""
+                )
+            )
+            vedtakRepository.lagre(revurdering.id, LocalDateTime.now(), kravdatoUføretrygd)
+            overgangUføreRepository.lagre(
+                revurdering.id,
+                listOf(
+                    OvergangUføreVurdering(
+                        begrunnelse = "test",
+                        brukerHarSøktOmUføretrygd = true,
+                        brukerHarFåttVedtakOmUføretrygd = brukerHarFåttVedtakOmUføretrygd,
+                        brukerRettPåAAP = true,
+                        fom = kravdatoUføretrygd,
+                        tom = 31 desember 2023,
+                        vurdertAv = SYSTEMBRUKER.ident,
+                        vurdertIBehandling = revurdering.id,
+                    )
+                )
+            )
+
+            return revurdering
+        }
+    }
+
+    @Nested
     inner class TestGruppe_BeregningsutfallKategori {
 
         @BeforeEach
@@ -477,7 +579,10 @@ class BrevUtlederServiceTest {
             val resultat = brevUtlederService.utledBehovForMeldingOmVedtak(revurdering.id)
 
             assertIs<VurderesForUføretrygd>(resultat)
-            assertEquals(GrunnlagBeregning.BeregningsutfallKategori.SISTE_AAR, resultat.grunnlagBeregning?.beregningsutfallKategori)
+            assertEquals(
+                GrunnlagBeregning.BeregningsutfallKategori.SISTE_AAR,
+                resultat.grunnlagBeregning?.beregningsutfallKategori
+            )
         }
 
         @Test
@@ -494,7 +599,10 @@ class BrevUtlederServiceTest {
             val resultat = brevUtlederService.utledBehovForMeldingOmVedtak(revurdering.id)
 
             assertIs<VurderesForUføretrygd>(resultat)
-            assertEquals(GrunnlagBeregning.BeregningsutfallKategori.GJENNOMSNITT, resultat.grunnlagBeregning?.beregningsutfallKategori)
+            assertEquals(
+                GrunnlagBeregning.BeregningsutfallKategori.GJENNOMSNITT,
+                resultat.grunnlagBeregning?.beregningsutfallKategori
+            )
         }
 
         @Test
@@ -520,7 +628,10 @@ class BrevUtlederServiceTest {
             val resultat = brevUtlederService.utledBehovForMeldingOmVedtak(revurdering.id)
 
             assertIs<VurderesForUføretrygd>(resultat)
-            assertEquals(GrunnlagBeregning.BeregningsutfallKategori.INNTEKT_OVER_6G, resultat.grunnlagBeregning?.beregningsutfallKategori)
+            assertEquals(
+                GrunnlagBeregning.BeregningsutfallKategori.INNTEKT_OVER_6G,
+                resultat.grunnlagBeregning?.beregningsutfallKategori
+            )
         }
 
         @Test
@@ -535,7 +646,8 @@ class BrevUtlederServiceTest {
                     gjennomsnittligInntektIG = GUnit("4.27"),
                     inntekter = listOf(
                         grunnlagInntekt(2024, 500_000),                          // 4.09G — ikke 6G-begrenset
-                        GrunnlagInntekt(                                          // 6.02G — 6G-begrenset, men ikke brukt
+                        GrunnlagInntekt(
+                            // 6.02G — 6G-begrenset, men ikke brukt
                             år = Year.of(2023),
                             inntektIKroner = Beløp(700_000),
                             grunnbeløp = Beløp(116_239),
@@ -551,7 +663,10 @@ class BrevUtlederServiceTest {
             val resultat = brevUtlederService.utledBehovForMeldingOmVedtak(revurdering.id)
 
             assertIs<VurderesForUføretrygd>(resultat)
-            assertEquals(GrunnlagBeregning.BeregningsutfallKategori.GJENNOMSNITT, resultat.grunnlagBeregning?.beregningsutfallKategori)
+            assertEquals(
+                GrunnlagBeregning.BeregningsutfallKategori.GJENNOMSNITT,
+                resultat.grunnlagBeregning?.beregningsutfallKategori
+            )
         }
 
         @Test
@@ -569,7 +684,10 @@ class BrevUtlederServiceTest {
             val resultat = brevUtlederService.utledBehovForMeldingOmVedtak(behandling.id)
 
             assertIs<Innvilgelse>(resultat)
-            assertEquals(GrunnlagBeregning.BeregningsutfallKategori.MINSTESATS_OVER_25, resultat.grunnlagBeregning?.beregningsutfallKategori)
+            assertEquals(
+                GrunnlagBeregning.BeregningsutfallKategori.MINSTESATS_OVER_25,
+                resultat.grunnlagBeregning?.beregningsutfallKategori
+            )
         }
 
         @Test
@@ -587,7 +705,10 @@ class BrevUtlederServiceTest {
             val resultat = brevUtlederService.utledBehovForMeldingOmVedtak(behandling.id)
 
             assertIs<Innvilgelse>(resultat)
-            assertEquals(GrunnlagBeregning.BeregningsutfallKategori.MINSTESATS_UNDER_25, resultat.grunnlagBeregning?.beregningsutfallKategori)
+            assertEquals(
+                GrunnlagBeregning.BeregningsutfallKategori.MINSTESATS_UNDER_25,
+                resultat.grunnlagBeregning?.beregningsutfallKategori
+            )
         }
 
         private fun gittRevurderingMedGrunnlag(
@@ -609,7 +730,11 @@ class BrevUtlederServiceTest {
             gittUnderveisGrunnlag(
                 revurdering.id,
                 underveisperiode(Periode(1 januar 2023, 28 februar 2023), RettighetsType.BISTANDSBEHOV, Utfall.OPPFYLT),
-                underveisperiode(Periode(1 mars 2023, sisteDag), RettighetsType.VURDERES_FOR_UFØRETRYGD, Utfall.OPPFYLT),
+                underveisperiode(
+                    Periode(1 mars 2023, sisteDag),
+                    RettighetsType.VURDERES_FOR_UFØRETRYGD,
+                    Utfall.OPPFYLT
+                ),
             )
             beregningsgrunnlagRepository.lagre(revurdering.id, grunnlag)
             beregningVurderingRepository.lagre(
@@ -650,7 +775,11 @@ class BrevUtlederServiceTest {
             val behandling = gittBehandling(TypeBehandling.Førstegangsbehandling)
             gittUnderveisGrunnlag(
                 behandling.id,
-                underveisperiode(Periode(virkningstidspunkt, 31 desember 2025), RettighetsType.BISTANDSBEHOV, Utfall.OPPFYLT)
+                underveisperiode(
+                    Periode(virkningstidspunkt, 31 desember 2025),
+                    RettighetsType.BISTANDSBEHOV,
+                    Utfall.OPPFYLT
+                )
             )
             beregningsgrunnlagRepository.lagre(behandling.id, grunnlag)
             beregningVurderingRepository.lagre(
@@ -666,7 +795,12 @@ class BrevUtlederServiceTest {
             val periode = Periode(virkningstidspunkt, 31 desember 2025)
             tilkjentYtelseRepository.lagre(
                 behandling.id,
-                listOf(TilkjentYtelsePeriode(periode, tilkjentYtelseDto(Beløp("1000.00"), periode.tom).copy(minsteSats = minstesats))),
+                listOf(
+                    TilkjentYtelsePeriode(
+                        periode,
+                        tilkjentYtelseDto(Beløp("1000.00"), periode.tom).copy(minsteSats = minstesats)
+                    )
+                ),
                 mockk<TilkjentYtelseGrunnlag>(),
                 ""
             )
@@ -741,7 +875,8 @@ class BrevUtlederServiceTest {
                 typeBehandling = TypeBehandling.Aktivitetsplikt,
                 årsakTilOpprettelse = ÅrsakTilOpprettelse.AKTIVITETSPLIKT,
             )
-            aktivitetspliktRepository.lagre(aktivitetspliktBehandling.id,
+            aktivitetspliktRepository.lagre(
+                aktivitetspliktBehandling.id,
                 listOf(aktivitetspliktBruddOppfylt(aktivitetspliktBehandling.id))
             )
 
@@ -758,7 +893,8 @@ class BrevUtlederServiceTest {
             )
 
             val gammelBruddDato = LocalDate.now().minusDays(100)
-            aktivitetspliktRepository.lagre(aktivitetspliktBehandling.id,
+            aktivitetspliktRepository.lagre(
+                aktivitetspliktBehandling.id,
                 listOf(
                     aktivitetspliktBrudd(BehandlingId(100), fra = gammelBruddDato),
                     aktivitetspliktBrudd(BehandlingId(101), fra = gammelBruddDato.plusDays(1)),
@@ -808,7 +944,8 @@ class BrevUtlederServiceTest {
                 ),
             )
             val dagsats = Beløp("1000.00")
-            tilkjentYtelseRepository.lagre(behandling.id,
+            tilkjentYtelseRepository.lagre(
+                behandling.id,
                 stubTilkjentYtelse(dagsats),
                 mockk<TilkjentYtelseGrunnlag>(),
                 ""
@@ -881,7 +1018,8 @@ class BrevUtlederServiceTest {
                 ),
             )
 
-            val resultatFørstegangsbehandling = brevUtlederService.utledBehovForMeldingOmVedtak(førstegangsbehandling.id)
+            val resultatFørstegangsbehandling =
+                brevUtlederService.utledBehovForMeldingOmVedtak(førstegangsbehandling.id)
             val resultatAndreBehandling = brevUtlederService.utledBehovForMeldingOmVedtak(revurdering.id)
 
             assertIs<Avslag>(resultatFørstegangsbehandling, "første behandling gir avslag")
@@ -1014,7 +1152,8 @@ class BrevUtlederServiceTest {
                 årsakTilOpprettelse = ÅrsakTilOpprettelse.AKTIVITETSPLIKT,
             )
 
-            aktivitetspliktRepository.lagre(aktivitetspliktBehandling.id,
+            aktivitetspliktRepository.lagre(
+                aktivitetspliktBehandling.id,
                 listOf(aktivitetspliktBrudd(aktivitetspliktBehandling.id))
             )
 
@@ -1031,7 +1170,8 @@ class BrevUtlederServiceTest {
             )
 
             val gammelBruddDato = LocalDate.now().minusDays(100)
-            aktivitetspliktRepository.lagre(aktivitetspliktBehandling.id,
+            aktivitetspliktRepository.lagre(
+                aktivitetspliktBehandling.id,
                 listOf(
                     aktivitetspliktBrudd(BehandlingId(100), fra = gammelBruddDato),
                     aktivitetspliktBrudd(BehandlingId(101), fra = gammelBruddDato.plusDays(1)),
@@ -1056,11 +1196,13 @@ class BrevUtlederServiceTest {
                 typeBehandling = TypeBehandling.Revurdering,
                 vurderingsbehov = listOf(Vurderingsbehov.OVERGANG_ARBEID)
             )
-            arbeidsopptrappingRepository.lagre(revurdering.id, arbeidsopptrappingGrunnlag(
-                revurdering,
-                1 januar 2024,
-                31 desember 2024
-            ))
+            arbeidsopptrappingRepository.lagre(
+                revurdering.id, arbeidsopptrappingGrunnlag(
+                    revurdering,
+                    1 januar 2024,
+                    31 desember 2024
+                )
+            )
             gittUnderveisGrunnlag(
                 revurdering.id,
                 underveisperiode(
@@ -1080,13 +1222,15 @@ class BrevUtlederServiceTest {
                 typeBehandling = TypeBehandling.Revurdering,
                 vurderingsbehov = listOf(Vurderingsbehov.OVERGANG_ARBEID)
             )
-            arbeidsopptrappingRepository.lagre(revurdering.id, arbeidsopptrappingGrunnlag(
+            arbeidsopptrappingRepository.lagre(
+                revurdering.id, arbeidsopptrappingGrunnlag(
                     revurdering,
                     1 januar 2024,
                     31 desember 2024
                 )
             )
-            arbeidsopptrappingRepository.lagre(revurdering.forrigeBehandlingId!!, arbeidsopptrappingGrunnlag(
+            arbeidsopptrappingRepository.lagre(
+                revurdering.forrigeBehandlingId!!, arbeidsopptrappingGrunnlag(
                     revurdering,
                     1 januar 2023,
                     31 desember 2023
@@ -1339,9 +1483,18 @@ class BrevUtlederServiceTest {
             ),
             Arguments.of(Avslagsårsak.ANNEN_FULL_YTELSE, TypeBrev.VEDTAK_FORLENGELSE_UNDER_ETT_ÅR_11_27),
         )
+
+        @JvmStatic
+        fun automatiskStans1118Brevtyper(): Stream<Arguments> = Stream.of(
+            Arguments.of(UføreSøknadVedtakResultat.JA_INNVILGET_GRADERT, TypeBrev.VEDTAK_11_18_OPPHØR_DELVIS_UFØR),
+            Arguments.of(UføreSøknadVedtakResultat.JA_INNVILGET_FULL, TypeBrev.VEDTAK_11_18_OPPHØR_FULL_UFØR),
+        )
     }
 }
 
 object BrevUtlederServiceTestUnleash : FakeUnleashBaseWithDefaultDisabled(
-    enabledFlags = listOf(BehandlingsflytFeature.SamordningFaktagrunnlagBrev)
+    enabledFlags = listOf(
+        BehandlingsflytFeature.SamordningFaktagrunnlagBrev,
+        BehandlingsflytFeature.AutomatiskStans1118,
+    )
 )

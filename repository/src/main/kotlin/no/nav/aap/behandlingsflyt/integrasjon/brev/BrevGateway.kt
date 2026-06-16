@@ -8,6 +8,8 @@ import no.nav.aap.behandlingsflyt.behandling.brev.Innvilgelse
 import no.nav.aap.behandlingsflyt.behandling.brev.ForholdTilAndreYtelser
 import no.nav.aap.behandlingsflyt.behandling.brev.TilkjentYtelse
 import no.nav.aap.behandlingsflyt.behandling.brev.UtvidVedtakslengde
+import no.nav.aap.behandlingsflyt.behandling.brev.Vedtak11_18OpphørDelvisUfør
+import no.nav.aap.behandlingsflyt.behandling.brev.Vedtak11_18OpphørFullUfør
 import no.nav.aap.behandlingsflyt.behandling.brev.VurderesForUføretrygd
 import no.nav.aap.behandlingsflyt.behandling.brev.YrkesskadeBeregningBrev
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingGateway
@@ -361,6 +363,8 @@ class BrevGateway : BrevbestillingGateway {
         TypeBrev.VEDTAK_FORLENGELSE_UNDER_ETT_ÅR_11_12 -> Brevtype.VEDTAK_FORLENGELSE_UNDER_ETT_ÅR_11_12
         TypeBrev.VEDTAK_FORLENGELSE_UNDER_ETT_ÅR_11_26 -> Brevtype.VEDTAK_FORLENGELSE_UNDER_ETT_ÅR_11_26
         TypeBrev.VEDTAK_FORLENGELSE_UNDER_ETT_ÅR_11_27 -> Brevtype.VEDTAK_FORLENGELSE_UNDER_ETT_ÅR_11_27
+        TypeBrev.VEDTAK_11_18_OPPHØR_FULL_UFØR -> Brevtype.VEDTAK_11_18_OPPHØR_FULL_UFØR
+        TypeBrev.VEDTAK_11_18_OPPHØR_DELVIS_UFØR -> Brevtype.VEDTAK_11_18_OPPHØR_DELVIS_UFØR
     }
 
     private fun mapFaktagrunnlag(brevBehov: BrevBehov): Set<Faktagrunnlag> {
@@ -449,6 +453,22 @@ class BrevGateway : BrevbestillingGateway {
                 }
             }
 
+            is Vedtak11_18OpphørFullUfør -> {
+                buildSet {
+                    add(
+                        Faktagrunnlag.InnvilgetUføretrygd(brevBehov.virkningstidspunkt)
+                    )
+                }
+            }
+
+            is Vedtak11_18OpphørDelvisUfør -> {
+                buildSet {
+                    add(
+                        Faktagrunnlag.InnvilgetUføretrygd(brevBehov.virkningstidspunkt)
+                    )
+                }
+            }
+
             else -> emptySet()
         }
     }
@@ -484,7 +504,7 @@ class BrevGateway : BrevbestillingGateway {
 
     private fun foreldreansvarVurderingerTilFaktaGrunnlag(foreldreansvarVurderinger: List<VurderingAvForeldreAnsvar>): Faktagrunnlag.BarnUtenBarnetillegg {
         return Faktagrunnlag.BarnUtenBarnetillegg(
-           foreldreansvarVurderinger.map { vurdering ->
+            foreldreansvarVurderinger.map { vurdering ->
                 Faktagrunnlag.BarnUtenBarnetillegg.Barn(
                     harForeldreAnsvar = vurdering.harForeldreAnsvar,
                     begrunnelse = vurdering.begrunnelse,

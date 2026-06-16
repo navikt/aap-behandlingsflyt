@@ -10,6 +10,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.dokarkiv.FagsaksSystem
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.dokarkiv.Filetype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.dokarkiv.Journalpost
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.dokarkiv.Journalposttype
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.dokarkiv.OverstyrInnsynsregler
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.dokarkiv.Sakstype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.dokarkiv.Tema
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.dokarkiv.Variantformat
@@ -88,7 +89,7 @@ class JournalføringService(
         val fra = meldeperiode.fom.format(dateFormatter)
         val til = meldeperiode.tom.format(dateFormatter)
         val tittelsuffix =
-            "for uke $uke1 - $uke2 ($fra - $til) elektronisk mottatt av NAV" // TODO tittelen her bør vurderes
+            "for uke $uke1 - $uke2 ($fra - $til) elektronisk mottatt av NAV"
         val tittel = "Korrigert meldekort $tittelsuffix"
 
         return Journalpost(
@@ -107,6 +108,7 @@ class JournalføringService(
             tittel = tittel,
             eksternReferanseId = UUID.randomUUID().toString(),
             datoMottatt = tidspunkt.toString(),
+            overstyrInnsynsregler = OverstyrInnsynsregler.VISES_MANUELT_GODKJENT,
             dokumenter = listOf(
                 Dokument(
                     tittel = tittel,

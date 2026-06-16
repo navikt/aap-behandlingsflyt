@@ -9,10 +9,10 @@ import no.nav.aap.komponenter.verdityper.Dagsatser
 import no.nav.aap.komponenter.verdityper.Prosent
 import java.util.*
 
-data class UnderveisperiodeId(val asLong: Long)
-
 /**
+ * @param grenseverdi Hvilken grenseverdi som ble brukt for å avgjøre om søker har jobbet for mye. Se [no.nav.aap.behandlingsflyt.behandling.underveis.regler.FastsettGrenseverdiArbeidRegel].
  * @param institusjonsoppholdReduksjon Hvor mange prosent institusjonsopphold skal redusere. Merk: ikke prosentpoeng.
+ * @param meldepliktGradering Hvis meldeplikten er oppfylt, 100%, ellers 0 prosent.
  */
 class Underveisperiode(
     val periode: Periode,
@@ -27,7 +27,6 @@ class Underveisperiode(
     val brukerAvKvoter: Set<Kvote>,
     val meldepliktStatus: MeldepliktStatus?,
     val meldepliktGradering: Prosent?,
-    val id: UnderveisperiodeId? = null,
 ) : Comparable<Underveisperiode> {
     init {
         if (utfall == Utfall.IKKE_OPPFYLT) requireNotNull(avslagsårsak) { "Må ha avslagsårsak om utfall ikke oppfylt." }
@@ -44,7 +43,6 @@ class Underveisperiode(
 
     fun copy(
         periode: Periode,
-        id: UnderveisperiodeId?,
         meldepliktStatus: MeldepliktStatus?,
     ) = Underveisperiode(
         periode = periode,
@@ -59,7 +57,6 @@ class Underveisperiode(
         brukerAvKvoter = brukerAvKvoter,
         meldepliktStatus = meldepliktStatus,
         meldepliktGradering = meldepliktGradering,
-        id = id,
     )
 
     override fun equals(other: Any?) =
@@ -97,7 +94,6 @@ class Underveisperiode(
             brukerAvKvoter = $brukerAvKvoter,
             meldepliktStatus = $meldepliktStatus,
             meldepliktGradering = $meldepliktGradering,
-            id = $id,
         )
         """.trimIndent()
 }

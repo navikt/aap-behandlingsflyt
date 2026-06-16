@@ -37,7 +37,15 @@ data class UtvidVedtakslengde(
     val vedtakslengdeTypeBrev: TypeBrev,
 ) : BrevBehov(vedtakslengdeTypeBrev)
 
-data class Avslag(val sykdomsvurdering: String?): BrevBehov(TypeBrev.VEDTAK_AVSLAG)
+data class Vedtak11_18OpphørDelvisUfør(
+    val virkningstidspunkt: LocalDate
+) : BrevBehov(TypeBrev.VEDTAK_11_18_OPPHØR_DELVIS_UFØR)
+
+data class Vedtak11_18OpphørFullUfør(
+    val virkningstidspunkt: LocalDate
+) : BrevBehov(TypeBrev.VEDTAK_11_18_OPPHØR_FULL_UFØR)
+
+data class Avslag(val sykdomsvurdering: String?) : BrevBehov(TypeBrev.VEDTAK_AVSLAG)
 object VedtakEndring : BrevBehov(TypeBrev.VEDTAK_ENDRING)
 object BarnetilleggSatsRegulering : BrevBehov(TypeBrev.BARNETILLEGG_SATS_REGULERING)
 object VarselOmBestilling : BrevBehov(TypeBrev.VARSEL_OM_BESTILLING)

@@ -48,8 +48,6 @@ class RettighetstypeSteg(
         kvoteService = KvoteService(),
     )
 
-    private val log = LoggerFactory.getLogger(javaClass)
-
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val behandlingId = kontekst.behandlingId
 
@@ -138,6 +136,8 @@ class RettighetstypeSteg(
     }
 
     companion object : FlytSteg {
+        private val log = LoggerFactory.getLogger(javaClass)
+
         override fun konstruer(
             repositoryProvider: RepositoryProvider,
             gatewayProvider: GatewayProvider
@@ -148,42 +148,47 @@ class RettighetstypeSteg(
         override fun type(): StegType {
             return StegType.FASTSETT_RETTIGHETSTYPE
         }
-    }
 
-    private fun validerStansOpphør(
-        grunnlag: StansOpphørGrunnlag,
-        rettighetstyper: Tidslinje<RettighetsType>,
-    ) {
-        if (grunnlag.stansOpphørV2 != null) {
-            val stansOpphørV1 = grunnlag.gjeldendeStansOgOpphør().associate {
-                it.fom to when (it.vurdering) {
-                    is Opphør -> Opphør(it.vurdering.årsaker)
-                    is Stans -> Stans(it.vurdering.årsaker)
+        fun validerStansOpphør(
+            grunnlag: StansOpphørGrunnlag,
+            rettighetstyper: Tidslinje<RettighetsType>,
+        ): Boolean {
+            var ok = true
+            if (grunnlag.stansOpphørV2 != null) {
+                val stansOpphørV1 = grunnlag.gjeldendeStansOgOpphør().associate {
+                    it.fom to when (it.vurdering) {
+                        is Opphør -> Opphør(it.vurdering.årsaker)
+                        is Stans -> Stans(it.vurdering.årsaker)
+                    }
                 }
-            }
-            if (stansOpphørV1 != grunnlag.stansOpphørV2) {
-                log.warn(
-                    "stansOpphørV2 samsvarer ikke med gjeldendeStansOgOpphør() V1={} V2={}",
-                    stansOpphørV1,
-                    grunnlag.stansOpphørV2
-                )
-            }
-
-            for (fom in grunnlag.stansOpphørV2.keys) {
-                val rettighetstypePåStansOpphørDag = rettighetstyper.segment(fom)
-                if (rettighetstypePåStansOpphørDag != null) {
+                if (stansOpphørV1 != grunnlag.stansOpphørV2) {
                     log.warn(
-                        "har rett {} til AAP på samme dag som stans/opphør {}",
-                        rettighetstypePåStansOpphørDag.verdi,
-                        fom
+                        "stansOpphørV2 samsvarer ikke med gjeldendeStansOgOpphør() V1={} V2={}",
+                        stansOpphørV1,
+                        grunnlag.stansOpphørV2
                     )
+                    ok = false
                 }
 
-                val rettFørFom = rettighetstyper.segment(fom.minusDays(1))
-                if (rettFørFom == null) {
-                    log.warn("har stans/opphør på {}, men har ikke rett dagen før heller", fom)
+                for (fom in grunnlag.stansOpphørV2.keys) {
+                    val rettighetstypePåStansOpphørDag = rettighetstyper.segment(fom)
+                    if (rettighetstypePåStansOpphørDag != null) {
+                        log.warn(
+                            "har rett {} til AAP på samme dag som stans/opphør {}",
+                            rettighetstypePåStansOpphørDag.verdi,
+                            fom
+                        )
+                        ok = false
+                    }
+
+                    val rettFørFom = rettighetstyper.segment(fom.minusDays(1))
+                    if (rettFørFom == null) {
+                        log.warn("har stans/opphør på {}, men har ikke rett dagen før heller", fom)
+                        ok = false
+                    }
                 }
             }
+            return ok
         }
     }
 }
