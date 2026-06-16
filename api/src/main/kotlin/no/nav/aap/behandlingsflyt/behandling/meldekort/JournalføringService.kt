@@ -46,6 +46,7 @@ class JournalføringService(
         enhet: String,
         tidspunkt: Instant,
         meldeDato: LocalDate,
+        korrigert: Boolean
     ): JournalpostId {
         val meldekortPdfRequest = meldekort.tilPdfRequest(
             ident = sak.person.aktivIdent().identifikator,
@@ -67,6 +68,7 @@ class JournalføringService(
             tidspunkt = tidspunkt,
             pdf = pdf,
             sak = sak,
+            korrigert = korrigert
         )
 
         val response = dokarkivGateway.oppdater(
@@ -86,14 +88,14 @@ class JournalføringService(
         tidspunkt: Instant,
         pdf: ByteArray,
         sak: Sak,
+        korrigert: Boolean,
     ): Journalpost {
         val uke1 = meldeperiode.fom.get(uke)
         val uke2 = meldeperiode.tom.get(uke)
         val fra = meldeperiode.fom.format(dateFormatter)
         val til = meldeperiode.tom.format(dateFormatter)
-        val tittelsuffix =
-            "for uke $uke1 - $uke2 ($fra - $til) elektronisk mottatt av NAV"
-        val tittel = "Korrigert meldekort $tittelsuffix"
+        val prefix = if (korrigert) "Korrigert meldekort" else "Meldekort"
+        val tittel = "$prefix for uke $uke1 - $uke2 ($fra - $til)"
 
         return Journalpost(
             journalposttype = Journalposttype.NOTAT,
@@ -111,11 +113,12 @@ class JournalføringService(
             tittel = tittel,
             eksternReferanseId = UUID.randomUUID().toString(),
             datoMottatt = tidspunkt.toString(),
+            // Overstyrer for å vise notat på Mine AAP
             overstyrInnsynsregler = OverstyrInnsynsregler.VISES_MANUELT_GODKJENT,
             dokumenter = listOf(
                 Dokument(
                     tittel = tittel,
-                    brevkode = "NAV 00-10.03", // Korrigering
+                    brevkode = if (korrigert) "NAV 00-10.03" else "NAV 00-10.02",
                     dokumentvarianter = listOf(
                         DokumentVariant(
                             filtype = Filetype.PDF,
