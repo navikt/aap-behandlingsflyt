@@ -44,7 +44,7 @@ object PdlPersonopplysningGateway : PersonopplysningGateway {
             dødsdato = response.data.hentPerson.doedsfall?.firstOrNull()?.doedsdato?.let { Dødsdato.parse(it) },
             statsborgerskap = statsborgerskap,
             status = pdlStatusTilDomene(status),
-            utenlandsAddresser = mapUtenlandsAdresser(response.data.hentPerson)
+            utenlandsAddresser = mapUtenlandsAdresser(response.data.hentPerson).orEmpty()
         )
     }
 

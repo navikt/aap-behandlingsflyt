@@ -7,5 +7,5 @@ data class Personopplysning(
     val dødsdato: Dødsdato? = null,
     val status: PersonStatus,
     val statsborgerskap: List<Statsborgerskap>,
-    val utenlandsAddresser: List<UtenlandsAdresse>? = null
+    val utenlandsAddresser: List<UtenlandsAdresse> = emptyList()
 )
