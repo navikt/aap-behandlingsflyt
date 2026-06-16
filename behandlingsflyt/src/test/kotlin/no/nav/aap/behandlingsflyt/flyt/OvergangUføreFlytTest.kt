@@ -482,8 +482,10 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(OvergangUføreFlytTes
         }
         motor.kjørJobber()
 
-        val revurdering = hentSisteOpprettedeBehandlingForSak(sak.id)
-        prosesserBehandling(revurdering)
+        var revurdering = hentSisteOpprettedeBehandlingForSak(sak.id)
+        if (!revurdering.status().erAvsluttet()) {
+            revurdering = prosesserBehandling(revurdering)
+        }
         return Pair(melding, revurdering)
     }
 

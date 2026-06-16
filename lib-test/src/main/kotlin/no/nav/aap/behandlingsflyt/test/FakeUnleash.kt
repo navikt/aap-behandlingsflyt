@@ -55,9 +55,14 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.MeldekortEndretAvSaksbehandler to true,
         BehandlingsflytFeature.AutomatiskStans1118 to true,
         BehandlingsflytFeature.KravSteg to true,
-        BehandlingsflytFeature.StudentV2 to true
+        BehandlingsflytFeature.StudentV2 to true,
+        BehandlingsflytFeature.BackfillStansOpphor to true,
         )
-)
+) {
+    override fun getVariantValue(featureToggle: FeatureToggle, variantName: String): String {
+        return "1,100"
+    }
+}
 
 /** Unleash for bruk i tester - for å teste "prodlikt", hvor alle toggles er skrudd av
  * For det meste brukes denne i integrasjonstester og flyt-tester for å sjekke at ting som

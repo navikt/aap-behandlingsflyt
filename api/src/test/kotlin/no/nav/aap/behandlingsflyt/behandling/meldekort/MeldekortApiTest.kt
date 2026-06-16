@@ -614,6 +614,103 @@ class MeldekortApiTest : BaseApiTest() {
     }
 
     @Test
+    fun `tittel blir Meldekort-prefiks når det ikke finnes meldekort fra før på meldeperioden`() {
+        val sak = opprettInMemorySak()
+        val behandling = opprettBehandling(sak, TypeBehandling.Førstegangsbehandling)
+
+        val dag1 = 6 januar 2025
+        val dag2 = 7 januar 2025
+
+        InMemoryUnderveisRepository.lagre(
+            behandlingId = behandling.id,
+            underveisperioder = listOf(underveisperiode(Utfall.OPPFYLT, Periode(dag1, dag2))),
+            input = object : Faktagrunnlag {}
+        )
+
+        InMemoryVedtakRepository.lagre(behandling.id, LocalDateTime.now(), LocalDate.now())
+
+        val request = OppdaterMeldekortRequest(
+            meldeperiode = Periode(dag1, dag2),
+            begrunnelse = "Registrering av timer",
+            meldeDato = dag2.plusDays(1),
+            dager = setOf(DagDto(dato = dag1, timerArbeidet = 7.5)),
+        )
+
+        testApplication {
+            installApplication {
+                meldekortApi(MockDataSource(), inMemoryRepositoryRegistry, createTestGatewayProviderMedDokarkiv(), fixedClock)
+            }
+
+            val response = createClient().post("/api/meldekort/${sak.saksnummer}") {
+                header("Authorization", "Bearer ${getToken().token()}")
+                contentType(ContentType.Application.Json)
+                setBody(request)
+            }
+
+            assertThat(response.status).isEqualTo(HttpStatusCode.OK)
+
+            val journalpost = FakeDokarkivGateway.journalposter.values.single()
+            assertThat(journalpost.tittel).startsWith("Meldekort for uke")
+            assertThat(journalpost.dokumenter!!.single().tittel).startsWith("Meldekort for uke")
+            assertThat(journalpost.dokumenter!!.single().brevkode).isEqualTo("NAV 00-10.02")
+        }
+    }
+
+    @Test
+    fun `tittel blir Korrigert meldekort-prefiks når det finnes meldekort fra før på meldeperioden`() {
+        val sak = opprettInMemorySak()
+        val behandling = opprettBehandling(sak, TypeBehandling.Førstegangsbehandling)
+
+        val dag1 = 6 januar 2025
+        val dag2 = 7 januar 2025
+        val meldeperiode = Periode(dag1, dag2)
+
+        InMemoryUnderveisRepository.lagre(
+            behandlingId = behandling.id,
+            underveisperioder = listOf(underveisperiode(Utfall.OPPFYLT, meldeperiode)),
+            input = object : Faktagrunnlag {}
+        )
+
+        InMemoryVedtakRepository.lagre(behandling.id, LocalDateTime.now(), LocalDate.now())
+
+        val eksisterendeMeldekort = Meldekort(
+            journalpostId = JournalpostId("eksisterende"),
+            timerArbeidPerPeriode = setOf(
+                ArbeidIPeriode(Periode(dag1, dag1), TimerArbeid(BigDecimal("7.5"))),
+            ),
+            mottattTidspunkt = LocalDateTime.of(2025, 1, 20, 9, 0),
+            opprettetTidspunkt = LocalDateTime.of(2025, 1, 20, 9, 0),
+        )
+        InMemoryMeldekortRepository.lagre(behandling.id, setOf(eksisterendeMeldekort))
+
+        val request = OppdaterMeldekortRequest(
+            meldeperiode = meldeperiode,
+            begrunnelse = "Korrigering av timer",
+            meldeDato = dag2.plusDays(1),
+            dager = setOf(DagDto(dato = dag1, timerArbeidet = 3.0)),
+        )
+
+        testApplication {
+            installApplication {
+                meldekortApi(MockDataSource(), inMemoryRepositoryRegistry, createTestGatewayProviderMedDokarkiv(), fixedClock)
+            }
+
+            val response = createClient().post("/api/meldekort/${sak.saksnummer}") {
+                header("Authorization", "Bearer ${getToken().token()}")
+                contentType(ContentType.Application.Json)
+                setBody(request)
+            }
+
+            assertThat(response.status).isEqualTo(HttpStatusCode.OK)
+
+            val journalpost = FakeDokarkivGateway.journalposter.values.single()
+            assertThat(journalpost.tittel).startsWith("Korrigert meldekort for uke")
+            assertThat(journalpost.dokumenter!!.single().tittel).startsWith("Korrigert meldekort for uke")
+            assertThat(journalpost.dokumenter!!.single().brevkode).isEqualTo("NAV 00-10.03")
+        }
+    }
+
+    @Test
     fun `når kun meldeDato og ingen timer sendes inn, settes harDuArbeidet til null`() {
         val request = OppdaterMeldekortRequest(
             meldeperiode = Periode(6 januar 2025, 7 januar 2025),

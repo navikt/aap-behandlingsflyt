@@ -175,7 +175,9 @@ class MeldekortService(
                 meldekort = meldekort,
                 oppdatertAv = bruker,
                 enhet = enhet,
-                tidspunkt = tidspunkt
+                tidspunkt = tidspunkt,
+                meldeDato = meldedato,
+                korrigert = gjeldendeMeldekortForMeldeperiode(meldekortene, meldeperiode) != null
             )
 
             val innsending = tilInnsending(sak, journalpostId, mottattTidspunkt, meldekort)

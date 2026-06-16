@@ -23,7 +23,8 @@ enum class BehandlingsflytFeature : FeatureToggle {
     KravSteg,
     MeldekortEndretAvSaksbehandler,
     AutomatiskStans1118,
-    StudentV2
+    StudentV2,
+    BackfillStansOpphor,
     ;
 
     override fun key(): String = name
