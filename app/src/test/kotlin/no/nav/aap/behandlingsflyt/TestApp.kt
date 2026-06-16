@@ -25,6 +25,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Klage
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Kravreferanse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.OverstyrMuligRettFra
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.OverstyrMuligRettFraÅrsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.NyttKrav
@@ -762,11 +763,12 @@ private fun hentSakId(saksnummer: Saksnummer): SakId {
 
 private fun mapKravVurdering(krav: KravVurderingTestDto, behandlingId: BehandlingId): KravVurdering {
     val journalpostId = nyJournalpostId()
-
+    val referanse = Kravreferanse.ny()
+    
     val now = Instant.now()
     return when (krav.kravType) {
         KravType.NYTT_KRAV_AAP -> NyttKrav(
-            referanse = UUID.randomUUID(),
+            referanse = referanse,
             journalpostId = journalpostId,
             vurdertAv = "Testbruker",
             begrunnelse = "Nytt krav",
@@ -780,7 +782,7 @@ private fun mapKravVurdering(krav: KravVurderingTestDto, behandlingId: Behandlin
             muligRettFra = krav.overstyrMuligRettFra ?: krav.søknadsdato
         )
         KravType.GJENOPPTAK -> Gjenopptak(
-            referanse = UUID.randomUUID(),
+            referanse = referanse,
             journalpostId = journalpostId,
             vurdertAv = "Testbruker",
             begrunnelse = "Gjenopptak",
@@ -794,7 +796,7 @@ private fun mapKravVurdering(krav: KravVurderingTestDto, behandlingId: Behandlin
             muligRettFra = krav.overstyrMuligRettFra ?: krav.søknadsdato
         )
         KravType.TRUKKET_SØKNAD -> TrukketSøknad(
-            referanse = UUID.randomUUID(),
+            referanse = referanse,
             journalpostId = journalpostId,
             vurdertAv = "Testbruker",
             begrunnelse = "Trukket søknad",
@@ -802,7 +804,7 @@ private fun mapKravVurdering(krav: KravVurderingTestDto, behandlingId: Behandlin
             opprettet = now,
         )
         KravType.KLAGE -> Klage(
-            referanse = UUID.randomUUID(),
+            referanse = referanse,
             journalpostId = journalpostId,
             vurdertAv = "Testbruker",
             begrunnelse = "Klage",
@@ -810,7 +812,7 @@ private fun mapKravVurdering(krav: KravVurderingTestDto, behandlingId: Behandlin
             opprettet = now,
         )
         KravType.TILLEGGSOPPLYSNING -> Tilleggsopplysning(
-            referanse = UUID.randomUUID(),
+            referanse = referanse,
             journalpostId = journalpostId,
             vurdertAv = "Testbruker",
             begrunnelse = "Tilleggsopplysning",
