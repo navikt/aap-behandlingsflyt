@@ -4,8 +4,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Gjenopptak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Klage
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravVurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.MuligRettFra
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.NyttKrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.OverstyrMuligRettFra
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Søknadsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Tilleggsopplysning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.TrukketSøknad
@@ -31,8 +31,8 @@ sealed interface KravVurderingDto {
 
 interface KravMedDatoDto {
     val søknadsdato: Søknadsdato
-    val muligRettFra: MuligRettFra?
-    val kravdato: LocalDate
+    val overstyrMuligRettFra: OverstyrMuligRettFra?
+    val muligRettFra: LocalDate
 }
 
 data class NyttKravDto(
@@ -43,8 +43,8 @@ data class NyttKravDto(
     override val opprettet: Instant,
 
     override val søknadsdato: Søknadsdato,
-    override val muligRettFra: MuligRettFra?,
-    override val kravdato: LocalDate,
+    override val overstyrMuligRettFra: OverstyrMuligRettFra?,
+    override val muligRettFra: LocalDate,
 ) : KravMedDatoDto, KravVurderingDto {
     override val type: KravType = KravType.NYTT_KRAV_AAP
 }
@@ -67,8 +67,8 @@ data class GjenopptakDto(
     override val opprettet: Instant,
 
     override val søknadsdato: Søknadsdato,
-    override val muligRettFra: MuligRettFra?,
-    override val kravdato: LocalDate,
+    override val overstyrMuligRettFra: OverstyrMuligRettFra?,
+    override val muligRettFra: LocalDate,
 ) : KravMedDatoDto, KravVurderingDto {
     override val type: KravType = KravType.GJENOPPTAK
 }
@@ -102,8 +102,8 @@ fun KravVurdering.somDto(): KravVurderingDto = when (this) {
         vurdertIBehandling = this.vurdertIBehandling,
         opprettet = this.opprettet,
         søknadsdato = this.søknadsdato,
+        overstyrMuligRettFra = this.overstyrMuligRettFra,
         muligRettFra = this.muligRettFra,
-        kravdato = this.kravdato,
     )
 
     is TrukketSøknad -> TrukketSøknadDto(
@@ -121,8 +121,8 @@ fun KravVurdering.somDto(): KravVurderingDto = when (this) {
         vurdertIBehandling = this.vurdertIBehandling,
         opprettet = this.opprettet,
         søknadsdato = this.søknadsdato,
+        overstyrMuligRettFra = this.overstyrMuligRettFra,
         muligRettFra = this.muligRettFra,
-        kravdato = this.kravdato,
     )
 
     is Klage -> KlageDto(
