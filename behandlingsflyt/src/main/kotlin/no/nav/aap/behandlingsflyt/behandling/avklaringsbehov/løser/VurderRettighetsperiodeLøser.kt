@@ -184,17 +184,40 @@ class VurderRettighetsperiodeLøser(
 
         val eksisterendeKravGrunnlag = kravRepository.hentHvisEksisterer(behandlingId)
 
-        /** Så lenge vi skrur av rettighetsperiodesteget før vi skrur på manuell løsning av krav, 
-         * kan vi anta at alle overstyrte krav i inneværende behandling kan fjernes fra grunnlaget
-         * Det kan ha kommet andre automatiske kravurderinger i mellomtiden */
-        if (eksisterendeKravGrunnlag != null) {
-            kravRepository.lagre(
-                behandlingId = behandlingId,
-                vurderinger = eksisterendeKravGrunnlag.vurderinger
-                    .filterNot { it.vurdertIBehandling == behandlingId && it.erRettighetsperiodeVurdering() }
-                    .toSet()
-            )
+        val førsteKrav =
+            eksisterendeKravGrunnlag?.vurderinger
+                ?.filterIsInstance<NyttKrav>()?.minBy { it.opprettet }
+
+        if (førsteKrav == null) {
+            log.info("Det finnes ingen krav å tilbakestille")
+            return
         }
+
+        val nyttKrav = NyttKrav(
+            referanse = førsteKrav.referanse,
+            journalpostId = førsteKrav.journalpostId,
+            vurdertAv = Bruker(rettighetsperiodeVurdering.vurdertAv),
+            begrunnelse = rettighetsperiodeVurdering.begrunnelse,
+            vurdertIBehandling = behandlingId,
+            opprettet = rettighetsperiodeVurdering.vurdertDato.toInstant(ZoneOffset.UTC),
+            søknadsdato = førsteKrav.søknadsdato,
+            overstyrMuligRettFra = null,
+            muligRettFra = førsteKrav.muligRettFra,
+        )
+
+        /** Så lenge vi skrur av rettighetsperiodesteget før vi skrur på manuell løsning av krav, 
+         * kan vi anta at alle overstyrte krav i inneværende behandling kan fjernes fra grunnlaget.
+         * Det kan ha kommet andre automatiske kravurderinger i mellomtiden, og vi må legge til et nytt krav med datoer lik første krav,
+         * i tilfelle det finnes overstyrte krav i vedtatte behandlinger.
+         * */
+        val nyeVurderinger = eksisterendeKravGrunnlag.vurderinger
+            .filterNot { it.vurdertIBehandling == behandlingId && it.erRettighetsperiodeVurdering() }
+            .toSet() + nyttKrav
+
+        kravRepository.lagre(
+            behandlingId = behandlingId,
+            vurderinger = nyeVurderinger
+        )
     }
 
 
