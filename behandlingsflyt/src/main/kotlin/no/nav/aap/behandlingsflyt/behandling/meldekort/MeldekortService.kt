@@ -84,9 +84,9 @@ class MeldekortService(
                 .associateBy { it.referanse }
 
             meldeperioderMedOppfyltePerioder.map { (meldeperiode, meldeperiodeData) ->
-                val gjeldendeMeldekort = gjeldendeMeldekortForMeldeperiode(meldekortene, meldeperiode)
+                val gjeldendeMeldekort = nyesteMeldekortForMeldeperiode(meldekortene, meldeperiode)
                 val tidligereMeldekort = tidligereMeldekortForMeldeperiode(meldekortene, meldeperiode)
-                val meldedato = tidligsteMeldeDatoForMeldeperiode(meldekortene, meldeperiode)
+                val meldedato = meldedatoForMeldeperiode(meldekortene, meldeperiode)
 
                 if (gjeldendeMeldekort != null) {
                     // Henter ut relevante metadata for meldekort hvor saksbehandler har korrigert timer
@@ -177,7 +177,7 @@ class MeldekortService(
                 enhet = enhet,
                 tidspunkt = tidspunkt,
                 meldeDato = meldedato,
-                korrigert = gjeldendeMeldekortForMeldeperiode(meldekortene, meldeperiode) != null
+                korrigert = nyesteMeldekortForMeldeperiode(meldekortene, meldeperiode) != null
             )
 
             val innsending = tilInnsending(sak, journalpostId, mottattTidspunkt, meldekort)
@@ -266,9 +266,10 @@ private fun utledetMottattTidspunkt(meldedato: LocalDate, nyesteMeldekortPåDato
     }
 
 /**
- * Henter ut nyeste meldekort som sammenfaller med meldeperiode basert på innmeldte timer
+ * Henter ut nyeste meldekort som sammenfaller med meldeperiode basert på innmeldte timer.
+ * Dette vil ikke returnere meldekort som ikke inneholder innmeldte timer.
  */
-private fun gjeldendeMeldekortForMeldeperiode(
+private fun nyesteMeldekortForMeldeperiode(
     meldekortene: List<Meldekort>,
     meldeperiode: Periode,
 ): Meldekort? = meldekortene.lastOrNull { meldekort ->
@@ -276,7 +277,8 @@ private fun gjeldendeMeldekortForMeldeperiode(
 }
 
 /**
- * Henter ut nyeste meldekort som sammenfaller med meldeperiode basert på innmeldte timer på en gitt dato
+ * Henter ut nyeste meldekort som sammenfaller med meldeperiode basert på innmeldte timer og angitt dato.
+ * Dette vil ikke returnere meldekort som ikke inneholder innmeldte timer.
  */
 private fun nyesteMeldekortForMeldeperiodePåDato(
     meldekortene: List<Meldekort>,
@@ -294,7 +296,7 @@ private fun tidligereMeldekortForMeldeperiode(
     meldekortene: List<Meldekort>,
     meldeperiode: Periode,
 ): List<Meldekort> {
-    val nyesteMeldekort = gjeldendeMeldekortForMeldeperiode(meldekortene, meldeperiode)
+    val nyesteMeldekort = nyesteMeldekortForMeldeperiode(meldekortene, meldeperiode)
     return meldekortene
         .filter { meldekort ->
             meldekort.tilhørerMeldeperiode(meldeperiode) && meldekort != nyesteMeldekort
@@ -303,16 +305,14 @@ private fun tidligereMeldekortForMeldeperiode(
 }
 
 /**
- * For å finne meldedato for en meldeperiode finner vi første av:
- * - Meldekort levert med timer for meldeperioden
- * - Meldekort levert i påfølgende meldeperiode
+ * Første dagen i en meldeperiode hvor det er mottatt et meldekort - dette kan være med eller uten timer
  */
-private fun tidligsteMeldeDatoForMeldeperiode(
+private fun meldedatoForMeldeperiode(
     meldekortene: List<Meldekort>,
     meldeperiode: Periode,
-): LocalDate? = meldekortene.firstOrNull { meldekort ->
-    meldekort.tilhørerMeldeperiode(meldeperiode)
-}?.mottattTidspunkt?.toLocalDate()
+): LocalDate? = meldekortene.map { it.mottattTidspunkt.toLocalDate() }.firstOrNull { mottattDato ->
+    meldeperiode.inneholder(mottattDato)
+}
 
 
 private fun Meldekort.tilhørerMeldeperiode(meldeperiode: Periode): Boolean {

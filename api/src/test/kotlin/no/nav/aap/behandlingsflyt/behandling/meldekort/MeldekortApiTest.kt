@@ -271,6 +271,7 @@ class MeldekortApiTest : BaseApiTest() {
 
         val dag1 = 6 januar 2025
         val meldeperiode = Periode(dag1, dag1.plusDays(13))
+        val meldeperiode2 = Periode(meldeperiode.tom.plusDays(1), meldeperiode.tom.plusDays(1).plusDays(13))
 
         val opprinneligMeldekort = Meldekort(
             journalpostId = JournalpostId("111"),
@@ -291,7 +292,10 @@ class MeldekortApiTest : BaseApiTest() {
 
         InMemoryUnderveisRepository.lagre(
             behandlingId = behandling.id,
-            underveisperioder = listOf(underveisperiode(Utfall.OPPFYLT, meldeperiode)),
+            underveisperioder = listOf(
+                underveisperiode(Utfall.OPPFYLT, meldeperiode),
+                underveisperiode(Utfall.OPPFYLT, meldeperiode2)
+            ),
             input = object : Faktagrunnlag {}
         )
 
@@ -329,12 +333,12 @@ class MeldekortApiTest : BaseApiTest() {
 
             assertThat(response.status).isEqualTo(HttpStatusCode.OK)
             val body = response.body<MeldeperioderMedMeldekortResponse>()
-            assertThat(body.meldeperioderMedMeldekort).hasSize(1)
+            assertThat(body.meldeperioderMedMeldekort).hasSize(2)
 
             val meldeperiodeMedMeldekort = body.meldeperioderMedMeldekort.first()
+            assertThat(meldeperiodeMedMeldekort.meldeDato).isNull() // Først i neste
             val meldekortDto = requireNotNull(meldeperiodeMedMeldekort.meldekort) { "Forventet meldekort, men var null" }
             assertThat(meldekortDto.id).isEqualTo(korrigertMeldekort.journalpostId.identifikator)
-            assertThat(meldekortDto.meldeDato).isEqualTo(opprinneligMeldekort.mottattTidspunkt.toLocalDate())
             assertThat(meldekortDto.oppdatertTidspunkt).isEqualTo(LocalDate.of(2025, 1, 25))
             assertThat(meldekortDto.begrunnelse).isEqualTo("Feil i opprinnelig rapportering")
             assertThat(meldekortDto.oppdatertAv).isEqualTo("Z654321")
@@ -342,8 +346,10 @@ class MeldekortApiTest : BaseApiTest() {
             assertThat(meldekortDto.dager.first().timerArbeidet).isEqualTo(0.0)
             assertThat(meldeperiodeMedMeldekort.tidligereMeldekort).hasSize(1)
             assertThat(meldeperiodeMedMeldekort.tidligereMeldekort.first().id).isEqualTo(opprinneligMeldekort.journalpostId.identifikator)
-            assertThat(meldeperiodeMedMeldekort.tidligereMeldekort.first().meldeDato).isEqualTo(opprinneligMeldekort.mottattTidspunkt.toLocalDate())
             assertThat(meldeperiodeMedMeldekort.tidligereMeldekort.first().oppdatertTidspunkt).isEqualTo(LocalDate.of(2025, 1, 20))
+
+            val meldeperiodeMedMeldekort2 = body.meldeperioderMedMeldekort.elementAt(1)
+            assertThat(meldeperiodeMedMeldekort2.meldeDato).isEqualTo(opprinneligMeldekort.mottattTidspunkt.toLocalDate())
         }
     }
 
