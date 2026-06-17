@@ -56,7 +56,7 @@ fun NormalOpenAPIRoute.meldekortApi(
                 relevanteIdenterResolver = relevanteIdenterForSakResolver(repositoryRegistry, dataSource),
                 sakPathParam = SakPathParam("saksnummer"),
                 operasjon = Operasjon.SAKSBEHANDLE,
-                påkrevdRolle = listOf(Rolle.SAKSBEHANDLER_NASJONAL),
+                påkrevdRolle = listOf(Rolle.SAKSBEHANDLER_NASJONAL, Rolle.SAKSBEHANDLER_OPPFOLGING),
             ),
             modules = arrayOf(TagModule(listOf(Tags.Sak))),
         ) { req, body ->
