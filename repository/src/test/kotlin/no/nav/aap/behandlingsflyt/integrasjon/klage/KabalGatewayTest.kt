@@ -12,6 +12,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.test.Fakes
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
+import java.time.Instant
 import java.time.LocalDate
 import java.util.*
 
@@ -44,6 +45,7 @@ class KabalGatewayTest {
                         )
                     ),
                     vurdertAv = "Saksbehandler",
+                    opprettet = Instant.now(),
                 )
             )
         }
