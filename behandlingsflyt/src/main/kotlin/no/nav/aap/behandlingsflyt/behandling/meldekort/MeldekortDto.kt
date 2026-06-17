@@ -1,7 +1,10 @@
 package no.nav.aap.behandlingsflyt.behandling.meldekort
 
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Meldekort
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.MeldekortV0
 import no.nav.aap.komponenter.type.Periode
 import java.time.LocalDate
 
@@ -18,22 +21,17 @@ data class MeldeperiodeMedMeldekortDto(
     val meldeperiode: Periode,
     val periode: Periode?,
     val meldekort: MeldekortDto?,
-    val meldeDato: LocalDate?,
     val tidligereMeldekort: List<MeldekortDto> = emptyList(),
     val meldepliktStatus: Set<MeldepliktStatus>,
 )
 
 data class MeldekortDto(
-    @Deprecated("Bruk journalpostId i stedet for id, da det er mer beskrivende")
-    val id: String,
     val journalpostId: String,
-    @Deprecated("Bruk heller meldeDato fra MeldeperiodeMedMeldekortDto")
-    val meldeDato: LocalDate,
     val mottattTidspunkt: LocalDate? = null,
     val oppdatertTidspunkt: LocalDate? = null,
-    val begrunnelse: String? = null,
     val oppdatertAv: String? = null,
     val oppdatertAvSaksbehandler: Boolean,
+    val begrunnelse: String? = null,
     val dager: Set<DagDto>,
 )
 
@@ -52,15 +50,12 @@ data class MeldekortProsesseringResponse(
 )
 
 fun Meldekort.toDto(
-    meldeDato: LocalDate?,
     begrunnelse: String?,
     oppdatertAv: String?,
     oppdatertAvSaksbehandler: Boolean
 ): MeldekortDto =
     MeldekortDto(
-        id = journalpostId.identifikator,
         journalpostId = journalpostId.identifikator,
-        meldeDato = meldeDato ?: mottattTidspunkt.toLocalDate(),
         mottattTidspunkt = mottattTidspunkt.toLocalDate(),
         oppdatertTidspunkt = opprettetTidspunkt.toLocalDate(),
         begrunnelse = begrunnelse,
@@ -73,3 +68,51 @@ fun Meldekort.toDto(
             )
         }.toSet()
     )
+
+/**
+ * Bygger DTO for én meldeperiode med tilhørende meldekort.
+ * Slår opp metadata (begrunnelse / oppdatertAv) fra mottatte dokumenter.
+ */
+fun toMeldeperiodeMedMeldekortDto(
+    meldeperiode: Periode,
+    meldeperiodeData: OppfyltMeldeperiodeMedMeldepliktStatus,
+    gjeldendeMeldekort: Meldekort?,
+    tidligereMeldekort: List<Meldekort>,
+    mottatteDokumenter: Map<InnsendingReferanse, MottattDokument>,
+): MeldeperiodeMedMeldekortDto {
+    if (gjeldendeMeldekort == null) {
+        return MeldeperiodeMedMeldekortDto(
+            meldeperiode = meldeperiode,
+            periode = meldeperiodeData.periode,
+            meldepliktStatus = meldeperiodeData.meldepliktStatus,
+            meldekort = null,
+        )
+    }
+
+    val meldekortData = mottatteDokumenter.metadataFor(gjeldendeMeldekort)
+
+    // Fallback til bruker dersom opprettetAv er null – settes eksplisitt ved korrigering
+    val oppdatertAvSaksbehandler = meldekortData?.opprettetAv != null
+
+    return MeldeperiodeMedMeldekortDto(
+        meldeperiode = meldeperiode,
+        periode = meldeperiodeData.periode,
+        meldepliktStatus = meldeperiodeData.meldepliktStatus,
+        meldekort = gjeldendeMeldekort.toDto(
+            begrunnelse = meldekortData?.begrunnelse,
+            oppdatertAv = meldekortData?.opprettetAv,
+            oppdatertAvSaksbehandler = oppdatertAvSaksbehandler,
+        ),
+        tidligereMeldekort = tidligereMeldekort.map { tidligere ->
+            val data = mottatteDokumenter.metadataFor(tidligere)
+            tidligere.toDto(
+                begrunnelse = data?.begrunnelse,
+                oppdatertAv = data?.opprettetAv,
+                oppdatertAvSaksbehandler = oppdatertAvSaksbehandler,
+            )
+        },
+    )
+}
+
+private fun Map<InnsendingReferanse, MottattDokument>.metadataFor(meldekort: Meldekort): MeldekortV0? =
+    this[InnsendingReferanse(meldekort.journalpostId)]?.strukturerteData<MeldekortV0>()?.data
