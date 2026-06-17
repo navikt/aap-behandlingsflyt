@@ -42,15 +42,12 @@ fun NormalOpenAPIRoute.avslag11_27GrunnlagApi(
             val nyttKravListe =
                 kravRepository.hentHvisEksisterer(behandling.id)?.vurderinger?.filterIsInstance<NyttKrav>()
                     ?: emptyList()
-            val grunnlag = avslag_11_27Repository.hentHvisEksisterer(behandling.id)
 
             val nyVurderinger =
-                grunnlag?.vurderinger?.filter { it.vurdertIBehandling === behandling.id }
-                    ?: emptyList()
+                behandling.id.let { avslag_11_27Repository.hentHvisEksisterer(it) }?.vurderinger.orEmpty()
 
             val vedtatteVurderinger =
-                grunnlag?.vurderinger?.filter { it.vurdertIBehandling === behandling.forrigeBehandlingId }
-                    ?: emptyList()
+                behandling.forrigeBehandlingId?.let { avslag_11_27Repository.hentHvisEksisterer(it) }?.vurderinger.orEmpty()
 
             val nyttKravListeDto = Avslag11_27KravDto.avslag11_27TilDto(nyttKravListe);
 
