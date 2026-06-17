@@ -15,7 +15,7 @@ CREATE TABLE avslag_11_27_vurdering
     skal_avslaas_1127                   BOOLEAN      NOT NULL,
     begrunnelse                         TEXT         NOT NULL,
     vurdert_i_behandling                BIGINT       NOT NULL REFERENCES behandling (id),
-    opprettet_tid                       TIMESTAMP(3) NOT NULL,
+    vurdert_tidspunkt                   TIMESTAMP(3) NOT NULL,
     vurdert_av                          TEXT         NOT NULL
 );
 

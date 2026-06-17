@@ -6,10 +6,11 @@ import no.nav.aap.behandlingsflyt.behandling.avslag11_27.Avslag11_27Vurdering
 import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
-import no.nav.aap.lookup.repository.Factory
 import no.nav.aap.komponenter.verdityper.Bruker
+import no.nav.aap.lookup.repository.Factory
 import no.nav.aap.verdityper.dokument.JournalpostId
 import org.slf4j.LoggerFactory
+import java.time.Instant
 
 class Avslag11_27RepositoryImpl(private val connection: DBConnection) : Avslag11_27Repository {
 
@@ -29,12 +30,13 @@ class Avslag11_27RepositoryImpl(private val connection: DBConnection) : Avslag11
         val vurderingerId = lagreAvslag11_27Vurderinger(vurderinger)
         connection.execute(
             """
-                INSERT INTO avslag_11_27_grunnlag (behandling_id, avslag_11_27_vurderinger_id) VALUES (?, ?)
+                INSERT INTO avslag_11_27_grunnlag (behandling_id, avslag_11_27_vurderinger_id, opprettet_tid) VALUES (?, ?, ?)
             """.trimIndent()
         ) {
             setParams {
                 setLong(1, behandlingId.id)
                 setLong(2, vurderingerId)
+                setInstant(3, Instant.now())
             }
         }
 
@@ -51,6 +53,7 @@ class Avslag11_27RepositoryImpl(private val connection: DBConnection) : Avslag11
                 v.har_sykepengegrunnlag_over_2g   AS v_har_sykepengegrunnlag_over_2g,
                 v.skal_avslaas_1127               AS v_skal_avslaas_1127,
                 v.vurdert_i_behandling            AS v_vurdert_i_behandling,
+                v.vurdert_tidspunkt               AS v_vurdert_tidspunkt,
                 v.vurdert_av                      AS v_vurdert_av
             FROM avslag_11_27_grunnlag g
             LEFT JOIN avslag_11_27_vurdering v ON v.avslag_11_27_vurderinger_id = g.avslag_11_27_vurderinger_id
@@ -65,10 +68,11 @@ class Avslag11_27RepositoryImpl(private val connection: DBConnection) : Avslag11
                     journalpostId = JournalpostId(it.getString("v_journalpost_id")),
                     begrunnelse = it.getString("v_begrunnelse"),
                     harAnnenFullYtelse = it.getBoolean("v_har_annen_full_ytelse"),
-                    brukersYtelse = Ytelse.valueOf(it.getString("v_brukers_ytelse")),
+                    brukersYtelse = it.getStringOrNull("v_brukers_ytelse")?.let { Ytelse.valueOf(it) },
                     harSykepengegrunnlagOver2G = it.getBooleanOrNull("v_har_sykepengegrunnlag_over_2g"),
                     skalAvslås1127 = it.getBoolean("v_skal_avslaas_1127"),
                     vurdertIBehandling = BehandlingId(it.getLong("v_vurdert_i_behandling")),
+                    vurdertTidspunkt = it.getInstant("v_vurdert_tidspunkt"),
                     vurdertAv = Bruker(it.getString("v_vurdert_av"))
                 )
             }
@@ -146,13 +150,17 @@ class Avslag11_27RepositoryImpl(private val connection: DBConnection) : Avslag11
         if (vurderinger.isEmpty()) return null
 
         val vuderingerId = connection.executeReturnKey(
-            "INSERT INTO avslag_11_27_vurderinger DEFAULT VALUES"
-        )
+            "INSERT INTO avslag_11_27_vurderinger (opprettet_tid) VALUES (?)"
+        ) {
+            setParams {
+                setInstant(1, Instant.now())
+            }
+        }
 
         val query = """
                 INSERT INTO avslag_11_27_vurdering 
-                (journalpost_id, begrunnelse, har_annen_full_ytelse, brukers_ytelse, har_sykepengegrunnlag_over_2g, skal_avslaas_1127, vurdert_i_behandling, vurdert_av, avslag_11_27_vurderinger_id) 
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                (journalpost_id, begrunnelse, har_annen_full_ytelse, brukers_ytelse, har_sykepengegrunnlag_over_2g, skal_avslaas_1127, vurdert_i_behandling, vurdert_tidspunkt, vurdert_av, avslag_11_27_vurderinger_id) 
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?,?)
             """.trimIndent()
 
         connection.executeBatch(query, vurderinger) {
@@ -164,8 +172,9 @@ class Avslag11_27RepositoryImpl(private val connection: DBConnection) : Avslag11
                 setBoolean(5, vurdering.harSykepengegrunnlagOver2G)
                 setBoolean(6, vurdering.skalAvslås1127)
                 setLong(7, vurdering.vurdertIBehandling.toLong())
-                setString(8, vurdering.vurdertAv.toString())
-                setLong(9, vuderingerId)
+                setInstant(8, vurdering.vurdertTidspunkt)
+                setString(9, vurdering.vurdertAv.toString())
+                setLong(10, vuderingerId)
             }
         }
 

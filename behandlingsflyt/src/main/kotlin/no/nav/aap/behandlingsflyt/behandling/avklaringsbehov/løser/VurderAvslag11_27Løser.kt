@@ -11,11 +11,12 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.verdityper.dokument.JournalpostId
+import java.time.Instant
 
-class VurderAvslag11_27Løser (
+class VurderAvslag11_27Løser(
     private val behandlingRepository: BehandlingRepository,
     private val avslag1127repository: Avslag11_27Repository
-): AvklaringsbehovsLøser<VurderAvslag11_27Løsning> {
+) : AvklaringsbehovsLøser<VurderAvslag11_27Løsning> {
 
     constructor(repositoryProvider: RepositoryProvider) : this(
         behandlingRepository = repositoryProvider.provide(),
@@ -30,10 +31,10 @@ class VurderAvslag11_27Løser (
 
         avslag1127repository.lagre(
             kontekst.behandlingId(),
-            tilAvslag11_27Vurderinger(løsning.avslag11_27Vurdering.vurderinger, vurdertAv,kontekst.behandlingId())
+            tilAvslag11_27Vurderinger(løsning.avslag11_27Vurdering.vurderinger, vurdertAv, kontekst.behandlingId())
         )
 
-        return LøsningsResultat(løsning.avslag11_27Vurdering.vurderinger.joinToString(" ") {it.begrunnelse})
+        return LøsningsResultat(løsning.avslag11_27Vurdering.vurderinger.joinToString(" ") { it.begrunnelse })
     }
 
     override fun forBehov(): Definisjon {
@@ -44,16 +45,17 @@ class VurderAvslag11_27Løser (
         nyeVurderinger: List<Avslag11_27VurderingDto>,
         vurdertAv: String,
         behandlingId: BehandlingId
-): List<Avslag11_27Vurdering> = nyeVurderinger.map { vurdering ->
-    Avslag11_27Vurdering(
-        journalpostId = JournalpostId(vurdering.journalpostId),
-        skalAvslås1127 = vurdering.skalAvslås1127,
-        brukersYtelse = vurdering.brukersYtelse,
-        harSykepengegrunnlagOver2G = vurdering.harSykepengegrunnlagOver2G,
-        harAnnenFullYtelse = vurdering.harAnnenFullYtelse,
-        begrunnelse = vurdering.begrunnelse,
-        vurdertAv = Bruker(vurdertAv),
-        vurdertIBehandling = behandlingId
-    )
-}
+    ): List<Avslag11_27Vurdering> = nyeVurderinger.map { vurdering ->
+        Avslag11_27Vurdering(
+            journalpostId = JournalpostId(vurdering.journalpostId),
+            skalAvslås1127 = vurdering.skalAvslås1127,
+            brukersYtelse = vurdering.brukersYtelse,
+            harSykepengegrunnlagOver2G = vurdering.harSykepengegrunnlagOver2G,
+            harAnnenFullYtelse = vurdering.harAnnenFullYtelse,
+            begrunnelse = vurdering.begrunnelse,
+            vurdertIBehandling = behandlingId,
+            vurdertAv = Bruker(vurdertAv),
+            vurdertTidspunkt = Instant.now(),
+        )
+    }
 }
